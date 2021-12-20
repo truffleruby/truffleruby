@@ -1,4 +1,4 @@
-FROM buildpack-deps:buster
+FROM buildpack-deps:stable
 
 ENV LANG C.UTF-8
 

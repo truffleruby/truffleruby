@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 
 base_images = {
-  nil => "buildpack-deps:buster",
-  "slim" => "debian:buster-slim",
+  nil => "buildpack-deps:stable",
+  "slim" => "debian:stable-slim",
 }
 
 common_pre_install = <<~EOF
