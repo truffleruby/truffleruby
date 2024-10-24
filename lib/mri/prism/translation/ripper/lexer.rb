@@ -16,6 +16,16 @@ module Prism
           end
         end
 
+        def lex(raise_errors: false)
+          result = Prism.lex_compat(@source, filepath: @filename, line: @lineno)
+
+          if result.failure? && raise_errors
+            raise SyntaxError, result.errors.first.message
+          else
+            result.value
+          end
+        end
+
         class State
           attr_reader :to_int, :to_s
 
