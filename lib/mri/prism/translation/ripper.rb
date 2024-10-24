@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 # :markup: markdown
 
-require "ripper"
-
 module Prism
   module Translation
     # This class provides a compatibility layer between prism and Ripper. It
@@ -69,7 +67,8 @@ module Prism
       #          [[1,  9], :on_kw,     "nil", END      ],
       #          [[1, 12], :on_sp,     " ",   END      ],
       #          [[1, 13], :on_kw,     "end", END      ]]
-      #
+      # The main difference with Ripper.lex is that the
+      # `:on_sp` token is not emitted.
       def self.lex(src, filename = "-", lineno = 1, raise_errors: false)
         result = Prism.lex_compat(src, filepath: filename, line: lineno)
 
@@ -77,6 +76,27 @@ module Prism
           raise SyntaxError, result.errors.first.message
         else
           result.value
+        end
+      end
+
+      # Tokenizes the Ruby program and returns an array of strings.
+      # The +filename+ and +lineno+ arguments are mostly ignored, since the
+      # return value is just the tokenized input.
+      # By default, this method does not handle syntax errors in +src+,
+      # use the +raise_errors+ keyword to raise a SyntaxError for an error in +src+.
+      #
+      #   p Ripper.tokenize("def m(a) nil end")
+      #      # => ["def", " ", "m", "(", "a", ")", " ", "nil", " ", "end"]
+      #
+      # The main difference with Ripper.tokenize is that the
+      # `:on_sp` token is not emitted.
+      def self.tokenize(src, filename = '-', lineno = 1, **kw)
+        result = Prism.lex_compat(src, filepath: filename, line: lineno)
+
+        if result.failure? && raise_errors
+          raise SyntaxError, result.errors.first.message
+        else
+          result.value.map { |_, _, token, _| token }
         end
       end
 
@@ -428,6 +448,48 @@ module Prism
 
       autoload :SexpBuilder, "prism/translation/ripper/sexp"
       autoload :SexpBuilderPP, "prism/translation/ripper/sexp"
+
+      # expect lex_state to be Integer
+      def self.lex_state_name(lex_state)
+        names = []
+        (0..lex_state.size - 1).each do |i|
+          names << LEX_STATE_NAMES[i] if lex_state[i] == 1
+        end
+
+        if names.empty?
+          return 'NONE'
+        end
+
+        names.join('|')
+      end
+
+      # based on src/main/c/ripper/parse.c
+      LEX_STATE_NAMES = [
+        "BEG",    "END",    "ENDARG", "ENDFN",  "ARG",
+        "CMDARG", "MID",    "FNAME",  "DOT",    "CLASS",
+        "LABEL",  "LABELED","FITEM",
+      ]
+
+      EXPR_BEG      = 1 << 0
+      EXPR_END      = 1 << 1
+      EXPR_ENDARG   = 1 << 2
+      EXPR_ENDFN    = 1 << 3
+      EXPR_ARG      = 1 << 4
+      EXPR_CMDARG   = 1 << 5
+      EXPR_MID      = 1 << 6
+      EXPR_FNAME    = 1 << 7
+      EXPR_DOT      = 1 << 8
+      EXPR_CLASS    = 1 << 9
+      EXPR_LABEL    = 1 << 10
+      EXPR_LABELED  = 1 << 11
+      EXPR_FITEM    = 1 << 12
+      EXPR_VALUE    = EXPR_BEG
+      EXPR_BEG_ANY  = EXPR_BEG | EXPR_MID | EXPR_CLASS
+      EXPR_ARG_ANY  = EXPR_ARG | EXPR_CMDARG
+      EXPR_END_ANY  = EXPR_END | EXPR_ENDARG | EXPR_ENDFN
+      EXPR_NONE     = 0
+
+      autoload :Lexer, "prism/translation/ripper/lexer"
 
       # The source that is being parsed.
       attr_reader :source
