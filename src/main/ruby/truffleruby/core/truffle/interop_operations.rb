@@ -25,10 +25,10 @@ module Truffle
       end
     end
 
-    RESOLVE_POLYGLOT_CLASS_MUTEX = Mutex.new
+    RESOLVE_POLYGLOT_CLASS_MUTEX = Object.new
 
-    def self.resolve_polyglot_class(*traits)
-      return Polyglot::ForeignObject if traits.empty?
+    def self.resolve_polyglot_class(object, *traits)
+      # return Polyglot::ForeignObject if traits.empty?
 
       name_traits = traits.dup
 
@@ -46,20 +46,59 @@ module Truffle
       end
 
       name = "Foreign#{name_traits.join}"
+      name = 'ForeignObject' if traits.empty?
+      traits_class = nil
 
-      RESOLVE_POLYGLOT_CLASS_MUTEX.synchronize do
+      TruffleRuby.synchronized(RESOLVE_POLYGLOT_CLASS_MUTEX) do
         if Polyglot.const_defined?(name, false)
-          Polyglot.const_get(name, false)
+          traits_class = Polyglot.const_get(name, false)
         else
           superclass = traits.include?(:Exception) ? Polyglot::ForeignException : Polyglot::ForeignObject
-          foreign_class = Class.new(superclass)
+          traits_class = Class.new(superclass)
           traits.reverse_each do |trait|
-            foreign_class.include Polyglot.const_get("#{trait}Trait", false)
+            traits_class.include Polyglot.const_get("#{trait}Trait", false)
           end
-          Polyglot.const_set(name, foreign_class)
-          foreign_class
+          Polyglot.const_set(name, traits_class)
+          traits_class
         end
       end
+
+      foreign_class = traits_class
+      if Truffle::Interop.has_meta_object?(object) and language = Truffle::Interop.language(object)
+        TruffleRuby.synchronized(RESOLVE_POLYGLOT_CLASS_MUTEX) do
+          if Polyglot.const_defined?(language, false)
+            language_module = Polyglot.const_get(language, false)
+          else
+            language_module = Polyglot.const_set(language, Module.new)
+          end
+
+          meta_object = Truffle::Interop.meta_object(object)
+          meta_object_name = Truffle::Interop.meta_qualified_name(meta_object)
+
+          base = language_module
+          meta_components = meta_object_name.split('.')
+          meta_components[0...-1].each do |component|
+            component = component.capitalize
+            if base.const_defined?(component, false)
+              base = base.const_get(component, false)
+            else
+              base = base.const_set(component, Module.new)
+            end
+          end
+          final_component = meta_components.last
+          final_component = final_component.capitalize unless final_component.start_with?(/[A-Z]/)
+
+          if base.const_defined?(final_component, false)
+            foreign_class = base.const_get(final_component)
+            raise unless foreign_class.superclass == traits_class
+          else
+            foreign_class = Class.new(traits_class)
+            base.const_set(final_component, foreign_class)
+          end
+        end
+      end
+
+      foreign_class
     end
 
     def self.foreign_inspect_nonrecursive(object)
