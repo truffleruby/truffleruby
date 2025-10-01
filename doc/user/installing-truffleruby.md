@@ -30,7 +30,7 @@ Thanks to these additional features, TruffleRuby runs [faster and more memory ef
 
 ### Native Standalone
 
-Releases of the Native Standalone are [available on GitHub](https://github.com/oracle/truffleruby/releases/latest).
+Releases of the Native Standalone are [available on GitHub](https://github.com/truffleruby/truffleruby/releases/latest).
 The Native Standalones are the files:
 ```
 # Oracle GraalVM Native Standalone
@@ -45,7 +45,7 @@ The Native Standalones are the files `truffleruby-community-dev-PLATFORM.tar.gz`
 
 ### JVM Standalone
 
-Releases of the Native Standalone are [available on GitHub](https://github.com/oracle/truffleruby/releases/latest).
+Releases of the Native Standalone are [available on GitHub](https://github.com/truffleruby/truffleruby/releases/latest).
 The JVM Standalones are the files:
 ```
 # Oracle GraalVM JVM Standalone

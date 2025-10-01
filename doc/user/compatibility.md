@@ -9,7 +9,7 @@ TruffleRuby [passes around 97% of ruby/spec](https://eregon.me/blog/2020/06/27/r
 more than any other alternative Ruby implementation.
 
 Any incompatibility with MRI is considered a bug, except for rare cases detailed below.
-If you find an incompatibility with MRI, please [report](https://github.com/oracle/truffleruby/issues) it.
+If you find an incompatibility with MRI, please [report](https://github.com/truffleruby/truffleruby/issues) it.
 
 TruffleRuby tries to match the behavior of MRI as much as possible.
 In a few limited cases, TruffleRuby is deliberately incompatible with MRI in order to provide a greater capability.
@@ -33,9 +33,9 @@ Most features of Ruby 3.2 and earlier are supported in TruffleRuby.
 However, some features are not yet implemented.
 See the following issues for details:
 
-* [Ruby 3.2 features](https://github.com/oracle/truffleruby/issues/3039)
-* [Ruby 3.1 features](https://github.com/oracle/truffleruby/issues/2733)
-* [Ruby 3.0 features](https://github.com/oracle/truffleruby/issues/2453)
+* [Ruby 3.2 features](https://github.com/truffleruby/truffleruby/issues/3039)
+* [Ruby 3.1 features](https://github.com/truffleruby/truffleruby/issues/2733)
+* [Ruby 3.0 features](https://github.com/truffleruby/truffleruby/issues/2453)
 
 ## Features Entirely Missing
 

@@ -122,7 +122,7 @@ module RbConfig
 
     # The below should not be needed as it's redundant but is still necessary
     # until grpc's extconf.rb is changed, as that does not use dir_config("openssl").
-    # See https://github.com/oracle/truffleruby/issues/3170#issuecomment-1649471551
+    # See https://github.com/truffleruby/truffleruby/issues/3170#issuecomment-1649471551
     # We change the same variables as MRI's --with-opt-dir configure option would.
     cppflags << " -I#{openssl_prefix}/include"
     ldflags << " -L#{openssl_prefix}/lib"

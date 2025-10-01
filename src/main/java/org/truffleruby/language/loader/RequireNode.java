@@ -82,7 +82,7 @@ public abstract class RequireNode extends RubyBaseNode {
      * {@code FeatureLoader#registeredAutoloads}) and mark them as started loading (via locks). After require we
      * re-select autoload constants (because their list can be supplemented with constants that are loaded themselves
      * (i.e. Object.autoload(:C, __FILE__))) and remove them from autoload registry. More details here:
-     * https://github.com/oracle/truffleruby/pull/2060#issuecomment-668627142 **/
+     * https://github.com/truffleruby/truffleruby/pull/2060#issuecomment-668627142 **/
     private boolean requireConsideringAutoload(String feature, String expandedPath, Object pathString) {
         final FeatureLoader featureLoader = getContext().getFeatureLoader();
         final List<RubyConstant> constantsUnfiltered = featureLoader.getAutoloadConstants(expandedPath);
@@ -305,7 +305,7 @@ public abstract class RequireNode extends RubyBaseNode {
             if (feature.equals("openssl.so")) {
                 message = String.format(
                         "%s (%s)",
-                        "you may need to install the system OpenSSL library libssl - see https://github.com/oracle/truffleruby/blob/master/doc/user/installing-libssl.md",
+                        "you may need to install the system OpenSSL library libssl - see https://github.com/truffleruby/truffleruby/blob/master/doc/user/installing-libssl.md",
                         linkError);
             } else {
                 message = linkError;

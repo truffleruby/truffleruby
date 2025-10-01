@@ -38,7 +38,7 @@ rvm:
 ```
 
 See [the TravisCI documentation](https://docs.travis-ci.com/user/languages/ruby#truffleruby) for details.
-Please [report](https://github.com/oracle/truffleruby/issues) any issue you might find.
+Please [report](https://github.com/truffleruby/truffleruby/issues) any issue you might find.
 
 ## Testing TruffleRuby in CI
 
@@ -47,11 +47,11 @@ download and extract the archive, add it to `PATH`, and run the post-install scr
 
 ## Latest Release
 
-Set `TRUFFLERUBY_VERSION` to the latest TruffleRuby version from [GitHub releases](https://github.com/oracle/truffleruby/releases/latest).
+Set `TRUFFLERUBY_VERSION` to the latest TruffleRuby version from [GitHub releases](https://github.com/truffleruby/truffleruby/releases/latest).
 
 ```bash
 export TRUFFLERUBY_VERSION=<desired_version>
-curl -L https://github.com/oracle/truffleruby/releases/download/graal-$TRUFFLERUBY_VERSION/truffleruby-$TRUFFLERUBY_VERSION-linux-amd64.tar.gz | tar xz
+curl -L https://github.com/truffleruby/truffleruby/releases/download/graal-$TRUFFLERUBY_VERSION/truffleruby-$TRUFFLERUBY_VERSION-linux-amd64.tar.gz | tar xz
 export PATH="$PWD/truffleruby-$TRUFFLERUBY_VERSION-linux-amd64/bin:$PATH"
 $PWD/truffleruby-$TRUFFLERUBY_VERSION-linux-amd64/lib/truffle/post_install_hook.sh
 ruby -v

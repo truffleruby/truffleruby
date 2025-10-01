@@ -18,7 +18,7 @@ describe "IO#read(n)" do
     @w.close
   end
 
-  # https://github.com/oracle/truffleruby/issues/1951
+  # https://github.com/truffleruby/truffleruby/issues/1951
   it "only reads the requested bytes and does not buffer more" do
     r, w = @r, @w
     # To make sure it works regardless of sync

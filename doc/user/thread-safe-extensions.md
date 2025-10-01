@@ -56,7 +56,7 @@ This is similar to [the conditions for Ractor-safe extensions](https://github.co
    It helps gem users to avoid sharing objects between threads incorrectly.
 2. The extension's own code must be thread-safe, e.g. not mutate state shared between threads without synchronization.
    For example accesses to a `struct` shared between threads should typically be synchronized if it's not immutable.
-3. If the extension calls native library functions which are not thread-safe it must ensure that function cannot be called from multiple threads at the same time, e.g. using a [lock](https://github.com/oracle/truffleruby/blob/fd8dc74a72d107f8e58feaf1be1cfbb2f31d2e85/lib/cext/include/ruby/thread_native.h).
+3. If the extension calls native library functions which are not thread-safe it must ensure that function cannot be called from multiple threads at the same time, e.g. using a [lock](https://github.com/truffleruby/truffleruby/blob/fd8dc74a72d107f8e58feaf1be1cfbb2f31d2e85/lib/cext/include/ruby/thread_native.h).
 4. Ruby C API functions/macros (like `rb_*()`) are generally thread-safe on TruffleRuby, because most of them end up calling some Ruby method.
 
 These are the differences in comparison to Ractor-safe:

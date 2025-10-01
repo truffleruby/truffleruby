@@ -20,7 +20,7 @@ extern "C" {
 #endif
 
 static VALUE thread_spec_rb_thread_call_without_gvl_native_function(VALUE self) {
-  // Must be a real native function, see https://github.com/oracle/truffleruby/issues/2090
+  // Must be a real native function, see https://github.com/truffleruby/truffleruby/issues/2090
   pid_t ret = (pid_t) (long) rb_thread_call_without_gvl((void *(*)(void *)) getpid, 0, RUBY_UBF_IO, 0);
   return LONG2FIX(ret);
 }

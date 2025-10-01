@@ -12,9 +12,9 @@ suite = {
         "organizationUrl": "http://www.graalvm.org/",
     },
     "scm": {
-        "url": "https://github.com/oracle/truffleruby",
-        "read": "https://github.com/oracle/truffleruby.git",
-        "write": "git@github.com:oracle/truffleruby.git",
+        "url": "https://github.com/truffleruby/truffleruby",
+        "read": "https://github.com/truffleruby/truffleruby.git",
+        "write": "git@github.com:truffleruby/truffleruby.git",
     },
 
     "imports": {
