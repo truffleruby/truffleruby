@@ -527,6 +527,8 @@ suite = {
                 "-Dorg.graalvm.language.ruby.home=<path:TRUFFLERUBY_STANDALONE_COMMON>",
                 # Configure launcher
                 "-Dorg.graalvm.launcher.class=org.truffleruby.launcher.RubyLauncher",
+                # DEBUG
+                "-H:+IncludeNodeSourcePositions",
             ],
             "dynamicBuildArgs": "librubyvm_build_args",
         },
