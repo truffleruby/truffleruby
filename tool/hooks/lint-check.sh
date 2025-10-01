@@ -8,6 +8,10 @@
 #   cp tool/hooks/lint-check.sh .git/hooks/pre-push
 # The choice is yours.
 
+# Unset variable set by the git which confuses git commands on other repositories
+unset GIT_DIR
+unset GIT_INDEX_FILE
+
 filename=$(basename "${BASH_SOURCE[0]}")
 
 case "$filename" in
