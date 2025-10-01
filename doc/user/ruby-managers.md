@@ -29,7 +29,7 @@ We assume you already have [`ruby-build`](https://github.com/rbenv/ruby-build) i
 First, you need to upgrade `ruby-build` to get the latest TruffleRuby definition.
 See [`ruby-build`'s instructions for upgrading](https://github.com/rbenv/ruby-build#upgrading).
 
-On macOS, if `ruby-build` is installed via Homebrew and you do not see the [latest TruffleRuby release](https://github.com/oracle/truffleruby/releases/latest), you might need to install the HEAD version of `ruby-build` with:
+On macOS, if `ruby-build` is installed via Homebrew and you do not see the [latest TruffleRuby release](https://github.com/truffleruby/truffleruby/releases/latest), you might need to install the HEAD version of `ruby-build` with:
 
 ```bash
 brew reinstall --HEAD ruby-build

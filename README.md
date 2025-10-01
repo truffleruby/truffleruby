@@ -49,7 +49,7 @@ chruby: $ ruby-install truffleruby-graalvm
 
 You can use `gem` and `bundle` to install gems, as usual.
 
-Please report any issues you might find on [GitHub](https://github.com/oracle/truffleruby/issues).
+Please report any issues you might find on [GitHub](https://github.com/truffleruby/truffleruby/issues).
 
 ## Aim
 
@@ -119,7 +119,7 @@ See the [contributor workflow](doc/contributor/workflow.md) document if you wish
 We recommend that people trying TruffleRuby on their gems and applications [get in touch with us](#contact) for any help they might need.
 
 TruffleRuby runs Rails and is compatible with many gems, including C extensions.
-TruffleRuby is not 100% compatible with MRI 3.3 yet. Please [report](https://github.com/oracle/truffleruby/issues) any compatibility issues you might find.
+TruffleRuby is not 100% compatible with MRI 3.3 yet. Please [report](https://github.com/truffleruby/truffleruby/issues) any compatibility issues you might find.
 TruffleRuby [passes around 97% of ruby/spec](https://eregon.me/rubyspec-stats/),
 more than any other alternative Ruby implementation.
 
@@ -132,7 +132,7 @@ If you find any performance issue, please see [this guide](doc/user/reporting-pe
 
 TruffleRuby is released at the same time as GraalVM.
 TruffleRuby continues to use the release numbering based on the calendar year, for example, 21.x, and 22.x., same as GraalVM prior to 2023.
-See the [release roadmap](https://www.graalvm.org/release-notes/version-roadmap/) and [the upcoming releases list](https://github.com/oracle/truffleruby/milestones?state=open) for the release dates and information about how long releases are supported.
+See the [release roadmap](https://www.graalvm.org/release-notes/version-roadmap/) and [the upcoming releases list](https://github.com/truffleruby/truffleruby/milestones?state=open) for the release dates and information about how long releases are supported.
 GraalVM Community Edition releases are supported at most one year.
 [Longer support](https://docs.oracle.com/en/graalvm/enterprise/22/docs/release-calendar/) is available for Oracle GraalVM.
 
@@ -151,7 +151,7 @@ should read our [migration guide](doc/user/jruby-migration.md).
 
 Extensive user documentation is available in [`doc/user`](doc/user).
 
-See our [source code repository](https://github.com/oracle/truffleruby) and
+See our [source code repository](https://github.com/truffleruby/truffleruby) and
 [contributor documentation](CONTRIBUTING.md) to contribute to TruffleRuby.
 In particular, see the [contributor workflow](doc/contributor/workflow.md)
 document for how to build and run TruffleRuby.

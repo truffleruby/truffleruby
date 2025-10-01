@@ -24,7 +24,7 @@ cd truffleruby-ws
 
 You can then clone the repository:
 ```bash
-git clone https://github.com/oracle/truffleruby.git
+git clone https://github.com/truffleruby/truffleruby.git
 cd truffleruby
 ```
 

@@ -61,4 +61,4 @@ However, if the node already uses `@Cached` *and there are guards on the
 When `@Cached` is used to create a Polymorphic Inline Cache, add a `limit`
 property to set the maximum size of the cache, and add a corresponding entry to
 `Options`. For examples see
-https://github.com/oracle/truffleruby/commit/cbacdd5a2be32d74ed152a1c306beaa927e80e4e.
+https://github.com/truffleruby/truffleruby/commit/cbacdd5a2be32d74ed152a1c306beaa927e80e4e.

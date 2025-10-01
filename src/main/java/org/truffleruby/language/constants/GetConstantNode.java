@@ -90,7 +90,7 @@ public abstract class GetConstantNode extends RubyBaseNode {
             // We found an autoload constant while we are already require-ing the autoload file,
             // consider it missing to avoid circular require warnings and calling #require twice.
             // For instance, autoload :RbConfig, "rbconfig"; require "rbconfig" causes this.
-            // Also see https://github.com/oracle/truffleruby/pull/1779 and GR-14590
+            // Also see https://github.com/truffleruby/truffleruby/pull/1779 and GR-14590
             if (getContext().getOptions().LOG_AUTOLOAD) {
                 RubyLanguage.LOGGER.info(() -> String.format(
                         "%s: %s::%s is being treated as missing while loading %s",

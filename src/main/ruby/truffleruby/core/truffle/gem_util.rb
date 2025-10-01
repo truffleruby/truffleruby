@@ -116,7 +116,7 @@ module Truffle::GemUtil
       warn "[ruby] WARNING gem paths: #{bad_dirs.join ', '} are not marked as installed by TruffleRuby. " +
                'They might belong to another Ruby implementation and break unexpectedly. ' +
                'Configure your Ruby manager to use TruffleRuby, or `unset GEM_HOME GEM_PATH`. ' +
-               'See https://github.com/oracle/truffleruby/blob/master/doc/user/ruby-managers.md'
+               'See https://github.com/truffleruby/truffleruby/blob/master/doc/user/ruby-managers.md'
     end
     bad_dirs
   end

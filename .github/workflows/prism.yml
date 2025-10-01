@@ -9,7 +9,7 @@ permissions:
 jobs:
   # Inspired from the job "build" in ../ci.yml
   test-import-prism:
-    if: github.repository == 'oracle/truffleruby'
+    if: github.repository == 'truffleruby/truffleruby'
     runs-on: ubuntu-22.04
     env:
       BUNDLE_WITHOUT: "memcheck:types"

@@ -43,7 +43,7 @@ module Truffle
         result = []
         # To simplify the code, we present a single block
         # that either calls user (origin) block or adds a substring to the resulting array
-        # See motivation: https://github.com/oracle/truffleruby/pull/2052#issuecomment-663449395
+        # See motivation: https://github.com/truffleruby/truffleruby/pull/2052#issuecomment-663449395
         callable = orig_block || result.method(:<<)
 
         return (orig_block ? string : result) if string.empty?
@@ -69,7 +69,7 @@ module Truffle
           awk_limit = limit < 0 ? -1 : limit
 
           # We pass the original block to string_awk_split to handle it on Java side
-          # See motivation: https://github.com/oracle/truffleruby/pull/2052#issuecomment-663494235
+          # See motivation: https://github.com/truffleruby/truffleruby/pull/2052#issuecomment-663494235
           return Primitive.string_awk_split string, awk_limit, orig_block
         elsif Primitive.is_a?(pattern, Regexp)
           split_type_regexp(string, pattern, limit, callable)

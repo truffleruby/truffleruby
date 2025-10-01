@@ -19,11 +19,11 @@ We also have a [code of conduct for contributors](http://www.graalvm.org/communi
 And finally, we have some more technical contributor documentation, which might
 be useful to someone working on TruffleRuby.
 
-https://github.com/oracle/truffleruby/tree/master/doc/contributor
+https://github.com/truffleruby/truffleruby/tree/master/doc/contributor
 
 You can find the most common issues described in a How-To Guide.
 
-https://github.com/oracle/truffleruby/tree/master/doc/contributor/how-to-guide.md
+https://github.com/truffleruby/truffleruby/tree/master/doc/contributor/how-to-guide.md
 
 ## Slack
 

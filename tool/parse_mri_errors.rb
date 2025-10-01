@@ -106,7 +106,7 @@ module Patterns
   #
   # [101/125] TestM17N#test_string_inspect_encoding
   # truffleruby: an internal exception escaped out of the interpreter,
-  # please report it to https://github.com/oracle/truffleruby/issues
+  # please report it to https://github.com/truffleruby/truffleruby/issues
   #
   # ```
   # <no message> (java.lang.AssertionError)
@@ -223,7 +223,7 @@ module PatternTests
   output = <<-OUTPUT
 [101/125] TestM17N#test_string_inspect_encoding
 truffleruby: an internal exception escaped out of the interpreter,
-please report it to https://github.com/oracle/truffleruby/issues
+please report it to https://github.com/truffleruby/truffleruby/issues
 
 ```
 <no message> (java.lang.AssertionError)

@@ -376,7 +376,7 @@ public final class BacktraceFormatter {
         final BacktraceFormatter formatter = context.getDefaultBacktraceFormatter();
         stream.println();
         stream.println("truffleruby: " + from + ",");
-        stream.println("please report it to https://github.com/oracle/truffleruby/issues");
+        stream.println("please report it to https://github.com/truffleruby/truffleruby/issues");
         stream.println();
         stream.println("```");
 
