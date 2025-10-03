@@ -37,8 +37,6 @@ JDKS_CACHE_DIR = File.expand_path('~/.mx/jdks')
 CACHE_EXTRA_DIR = File.expand_path('~/.mx/cache/truffleruby')
 FileUtils.mkdir_p(CACHE_EXTRA_DIR)
 
-TRUFFLERUBY_GEM_TEST_PACK_VERSION = '8d89d2e3ca7990af900f9d8491ba49b0a625e549'
-
 JDEBUG = '--vm.agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=y'
 METRICS_REPS = Integer(ENV['TRUFFLERUBY_METRICS_REPS'] || 10)
 DEFAULT_PROFILE_OPTIONS = %w[--cpusampler --cpusampler.Output=flamegraph]
@@ -883,7 +881,6 @@ module Commands
       jt lint fast                                   run fast lints, recommended as a git hook (see tool/hooks/lint-check.sh)
       jt rubocop [rubocop options]                   run rubocop rules (using ruby available in the environment)
       ---
-      jt gem-test-pack                               check that the gem test pack is downloaded, or download it for you, and print the path
       jt metrics alloc [--json] ...                  how much memory is allocated running a program
       jt metrics instructions ...                    how many CPU instructions are used to run a program
       jt metrics minheap ...                         what is the smallest heap you can use to run an application
@@ -1762,36 +1759,6 @@ module Commands
     prefixed_ruby_args = [*(vm_args if truffleruby?), *ruby_args].map { |v| "-T#{v}" }
     run_mspec env_vars, command, *options, *prefixed_ruby_args, *args
   end
-
-  def gem_test_pack
-    name = 'truffleruby-gem-test-pack'
-    gem_test_pack = File.expand_path(name, TRUFFLERUBY_DIR)
-
-    unless Dir.exist?(gem_test_pack)
-      STDERR.puts 'Cloning the truffleruby-gem-test-pack repository'
-      git_clone(bitbucket_url(name), gem_test_pack)
-    end
-
-    # Unset variable set by the pre-commit hook which confuses git
-    env = { 'GIT_DIR' => nil, 'GIT_INDEX_FILE' => nil }
-
-    current = sh(env, 'git', '-C', gem_test_pack, 'rev-parse', 'HEAD', capture: :out, no_print_cmd: true).chomp
-    unless current == TRUFFLERUBY_GEM_TEST_PACK_VERSION
-      if ENV['GEM_TEST_PACK_WIP'] == 'true'
-        STDERR.puts 'WARNING: the gem test pack commit is different than TRUFFLERUBY_GEM_TEST_PACK_VERSION in jt.rb'
-      else
-        has_commit = sh env, 'git', '-C', gem_test_pack, 'cat-file', '-e', TRUFFLERUBY_GEM_TEST_PACK_VERSION, continue_on_failure: true
-        unless has_commit
-          sh env, 'git', '-C', gem_test_pack, 'fetch', Remotes.bitbucket(gem_test_pack), continue_on_failure: true
-        end
-        sh env, 'git', '-C', gem_test_pack, 'checkout', '-q', TRUFFLERUBY_GEM_TEST_PACK_VERSION
-      end
-    end
-
-    puts gem_test_pack
-    gem_test_pack
-  end
-  alias_method :'gem-test-pack', :gem_test_pack
 
   def tag(path, *args)
     require_ruby_launcher!
@@ -3254,10 +3221,6 @@ class JT
   def self.ruby(*args)
     jt = JT.new
     jt.send(:run_ruby, *args)
-  end
-
-  def self.gem_test_pack
-    JT.new.gem_test_pack
   end
 
   def initialize

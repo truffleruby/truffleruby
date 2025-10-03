@@ -112,7 +112,6 @@ suite = {
                 "mxbuild",
                 "profiles",
                 ".ext",
-                "truffleruby-gem-test-pack",
                 "lib/json/java",
                 "lib/ruby",
                 "test/truffle/ecosystem/blog6",

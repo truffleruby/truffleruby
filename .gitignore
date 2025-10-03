@@ -95,7 +95,6 @@ test/truffle/gems/default-bundled-gems/.bundle/config
 /test/truffle/ecosystem/blog6/Gemfile
 /test/truffle/ecosystem/blog6/Gemfile.lock
 /test/truffle/integration/gem-testing
-/truffleruby-gem-test-pack
 /tool/docker
 /tool/llvm-ol7/*.tar.gz
 
