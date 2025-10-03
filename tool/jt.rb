@@ -712,20 +712,14 @@ module Utilities
     end
   end
 
-  def run_gem_test_pack_gem_or_install(name, version, *args)
-    if gem_test_pack?
-      gem_home = "#{gem_test_pack}/#{name}-gems"
-      env = { 'GEM_HOME' => gem_home, 'GEM_PATH' => "#{gem_home}:" }
-      sh env, RbConfig.ruby, "#{gem_home}/bin/#{name}", "_#{version}_", *args
-    else
-      env = ruby_running_jt_env
-      if Gem::Specification.find_all_by_name(name, version).empty?
-        sh env, 'gem', 'install', name, '-v', version
-      end
-      sh env, name, "_#{version}_", *args
+  def run_gem_or_install(name, version, *args)
+    env = ruby_running_jt_env
+    if Gem::Specification.find_all_by_name(name, version).empty?
+      sh env, 'gem', 'install', name, '-v', version
     end
+    sh env, name, "_#{version}_", *args
   end
-  ruby2_keywords :run_gem_test_pack_gem_or_install if respond_to?(:ruby2_keywords, true)
+  ruby2_keywords :run_gem_or_install if respond_to?(:ruby2_keywords, true)
 
   def args_split(args)
     delimiter_index = args.index('--')
@@ -1678,10 +1672,8 @@ module Commands
   end
 
   private def test_ecosystem(*args)
-    gem_test_pack if gem_test_pack?
-
     run_tests('test/truffle/ecosystem', args) do |test_script|
-      sh test_script, *(gem_test_pack if gem_test_pack?)
+      sh test_script
     end
   end
 
@@ -1813,11 +1805,6 @@ module Commands
 
     prefixed_ruby_args = [*(vm_args if truffleruby?), *ruby_args].map { |v| "-T#{v}" }
     run_mspec env_vars, command, *options, *prefixed_ruby_args, *args
-  end
-
-  def gem_test_pack?
-    return true if Dir.exist?(File.expand_path('truffleruby-gem-test-pack', TRUFFLERUBY_DIR))
-    ci? or Remotes.bitbucket
   end
 
   def gem_test_pack
@@ -2426,7 +2413,7 @@ module Commands
     if seafoam_dir
       sh(RbConfig.ruby, "-I#{seafoam_dir}/lib", "#{seafoam_dir}/bin/seafoam", *args)
     else
-      run_gem_test_pack_gem_or_install('seafoam', SEAFOAM_VERSION, *args)
+      run_gem_or_install('seafoam', SEAFOAM_VERSION, *args)
     end
   end
   ruby2_keywords :seafoam if respond_to?(:ruby2_keywords, true)
@@ -2436,7 +2423,7 @@ module Commands
     if cfg2asm_dir
       sh(RbConfig.ruby, "-I#{cfg2asm_dir}/lib", "#{cfg2asm_dir}/bin/cfg2asm", *args)
     else
-      run_gem_test_pack_gem_or_install('cfg2asm', CFG2ASM_VERSION, *args)
+      run_gem_or_install('cfg2asm', CFG2ASM_VERSION, *args)
     end
   end
   ruby2_keywords :cfg2asm if respond_to?(:ruby2_keywords, true)
