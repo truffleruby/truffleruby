@@ -3169,6 +3169,18 @@ module Commands
     check_polyglot_methods
   end
 
+  def check_lockfiles(changed_lock_files = nil)
+    unless changed_lock_files.is_a?(Array)
+      changed_lock_files = `git -C #{TRUFFLERUBY_DIR} ls-files '**/*.lock'`.lines.map(&:chomp)
+    end
+    changed_lock_files.each do |file|
+      contents = File.read(file)
+      if contents.include?('BUNDLED WITH')
+        abort "#{file} should not contain a BUNDLED WITH section to avoid needing to update this file when updating Bundler, and to ensure the Bundler version shipped with TruffleRuby is used"
+      end
+    end
+  end
+
   def lint(*args)
     in_truffleruby_repo_root!
     fast = args.first == 'fast'
@@ -3194,6 +3206,7 @@ module Commands
     checkstyle(changed['.java']) if changed['.java']
     command_format(changed['.java']) if changed['.java']
     shellcheck if changed['.sh'] or changed['.inc']
+    check_lockfiles(changed['.lock']) if changed['.lock']
 
     mx 'verify-ci' if changed['.py'] and !ENV['JT_IMPORTS_DONT_ASK']
 
