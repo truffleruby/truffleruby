@@ -2,15 +2,19 @@
 
 source test/truffle/common.sh.inc
 
-gem_test_pack=$(jt gem-test-pack)
-
-ruby_home="$(jt ruby -e 'puts Truffle::Boot.ruby_home')"
+ruby_home="$(jt ruby-home)"
 export PATH="$ruby_home/bin:$PATH"
 
-cd "$gem_test_pack/gem-testing/msgpack-ruby" || exit 1
+cd "test/truffle/cexts/msgpack" || exit 1
 
-bundle config --local cache_path ./gem-cache
+rm -rf msgpack-ruby
+git clone --branch v1.2.6 git@github.com:msgpack/msgpack-ruby.git msgpack-ruby
 
-bundle install --local --no-cache
+cd msgpack-ruby || exit 1
+export BUNDLE_PATH=vendor/bundle
+bundle install
 bundle exec rake compile
 bundle exec rake spec
+
+cd ..
+rm -rf msgpack-ruby
