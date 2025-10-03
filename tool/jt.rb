@@ -1674,64 +1674,39 @@ module Commands
       %w[--standalone],
       %w[--deployment]
     ]
-    gems = %w[algebrick]
 
-    rubylib = ["#{gem_test_pack}/gems/gems/webrick-1.7.0/lib"]
-    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('3.3.0')
-      rubylib << "#{gem_test_pack}/gems/gems/rubygems-server-0.2.0/lib"
-    end
+    bundle_install_flags.each do |install_flags|
+      puts "\n\nTesting Bundler with install flags: #{install_flags}"
+      temp_dir = Dir.mktmpdir('algebrick')
+      begin
+        gem_home = "#{temp_dir}/gems"
+        puts "Using temporary GEM_HOME: #{gem_home}"
 
-    # TODO: probably we should use https://github.com/rubygems/gemstash in the future
-    gem_server_env = ruby_running_jt_env.merge({ 'RUBYLIB' => rubylib.join(File::PATH_SEPARATOR) })
-    gem_server = spawn(gem_server_env, 'gem', 'server', '-b', '127.0.0.1', '-p', '0', '-d', "#{gem_test_pack}/gems")
-    SUBPROCESSES << gem_server
-    begin
-      ports = find_ports_for_pid(gem_server)
-      raise 'More than one port opened' if ports.lines.size > 1
-      port = Integer(ports)
+        gem_source_tree = "#{temp_dir}/algebrick"
+        sh 'git', 'clone', '--branch', 'v0.7.5', 'git@github.com:pitr-ch/algebrick.git', gem_source_tree
 
-      bundle_install_flags.each do |install_flags|
-        puts "\n\nTesting Bundler with install flags: #{install_flags}"
-        gems.each do |gem_name|
-          temp_dir = Dir.mktmpdir(gem_name)
-          begin
-            gem_home = "#{temp_dir}/gems"
-            puts "Using temporary GEM_HOME: #{gem_home}"
+        overlays = "#{TRUFFLERUBY_DIR}/test/truffle/bundle/algebrick"
+        FileUtils.copy_entry(overlays, gem_source_tree)
 
-            puts "Copying gem #{gem_name} source into temp directory: #{temp_dir}"
-            original_source_tree = "#{gem_test_pack}/gem-testing/#{gem_name}"
-            gem_source_tree = "#{temp_dir}/#{gem_name}"
-            FileUtils.copy_entry(original_source_tree, gem_source_tree)
+        chdir(gem_source_tree) do
+          environment = no_gem_vars_env.merge(
+            'GEM_HOME' => gem_home,
+            'GEM_PATH' => gem_home,
+            # add bin from gem_home to PATH
+            'PATH' => ["#{gem_home}/bin", ENV['PATH']].join(File::PATH_SEPARATOR))
 
-            chdir(gem_source_tree) do
-              environment = no_gem_vars_env.merge(
-                'GEM_HOME' => gem_home,
-                'GEM_PATH' => gem_home,
-                # add bin from gem_home to PATH
-                'PATH' => ["#{gem_home}/bin", ENV['PATH']].join(File::PATH_SEPARATOR))
+          options = %w[--experimental-options --exceptions-print-java]
 
-              options = %w[--experimental-options --exceptions-print-java]
+          run_ruby(environment, *args, *options,
+            '-Sbundle', 'install', '-V', *install_flags)
 
-              run_ruby(environment, *args, *options,
-                '-Sbundle', 'config', '--local', 'mirror.http://localhost:8808', "http://localhost:#{port}")
-
-              run_ruby(environment, *args, *options,
-                '-Sbundle', 'install', '-V', *install_flags)
-
-              run_ruby(environment, *args, *options,
-                '-Sbundle', 'exec', '-V', 'rake')
-            end
-          ensure
-            STDERR.puts 'Removing temp dir'
-            FileUtils.remove_entry_secure temp_dir
-          end
+          run_ruby(environment, *args, *options,
+            '-Sbundle', 'exec', '-V', 'rake')
         end
+      ensure
+        STDERR.puts 'Removing temp dir'
+        FileUtils.remove_entry_secure temp_dir
       end
-    ensure
-      STDERR.puts 'Terminating gem server'
-      terminate_process(gem_server)
-      SUBPROCESSES.delete(gem_server)
-      STDERR.puts 'gem server terminated'
     end
   end
 
