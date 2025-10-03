@@ -92,7 +92,7 @@ gem 'omniauth-oauth2', require: false
 gem 'omniauth-google-oauth2'
 
 gem 'oj'
-gem 'pg'
+# gem 'pg' # requires postgres headers, inconvenient (TruffleRuby change)
 gem 'mini_sql'
 gem 'pry-rails', require: false
 gem 'r2', '~> 0.2.5', require: false
@@ -109,7 +109,7 @@ gem 'mini_scheduler'
 gem 'tilt', require: false
 
 gem 'execjs', require: false
-gem 'mini_racer'
+# gem 'mini_racer' # fails on install on TruffleRuby
 gem 'highline', '~> 1.7.0', require: false
 gem 'rack-protection' # security
 
@@ -148,7 +148,7 @@ group :test, :development do
 end
 
 group :development do
-  gem 'ruby-prof', require: false
+  # gem 'ruby-prof', require: false # fails on install on TruffleRuby
   gem 'bullet', require: !!ENV['BULLET']
   gem 'better_errors'
   gem 'binding_of_caller'
@@ -189,15 +189,15 @@ gem 'ruby-readability', require: false
 gem 'stackprof', require: false, platform: :mri
 gem 'memory_profiler', require: false, platform: :mri
 
-gem 'cppjieba_rb', require: false
+# gem 'cppjieba_rb', require: false # fails on install on TruffleRuby
 
 gem 'lograge', require: false
 gem 'logstash-event', require: false
 gem 'logstash-logger', require: false
 gem 'logster'
 
-gem 'sassc', require: false
-gem "sassc-rails"
+# gem 'sassc', require: false # fails on install on TruffleRuby
+# gem "sassc-rails" # fails on install on TruffleRuby
 
 gem 'rotp'
 gem 'rqrcode'
