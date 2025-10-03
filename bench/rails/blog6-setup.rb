@@ -9,8 +9,6 @@ module Blog6Setup
       FileUtils.cp 'Gemfile.renamed', 'Gemfile'
       FileUtils.cp 'Gemfile.lock.renamed', 'Gemfile.lock'
 
-      gem_test_pack = JT.gem_test_pack
-      JT.ruby(*%w[-S bundle config --local cache_path], "#{gem_test_pack}/gem-cache")
       JT.ruby(*%w[-S bundle config --local without postgresql mysql])
       JT.ruby(*%w[-S bundle config --local path vendor/bundle])
     end
@@ -18,7 +16,7 @@ module Blog6Setup
 
   def self.bundle_install
     Dir.chdir(BLOG6_DIR) do
-      JT.ruby(*%w[-S bundle install --local --no-cache])
+      JT.ruby(*%w[-S bundle install])
     end
   end
 end

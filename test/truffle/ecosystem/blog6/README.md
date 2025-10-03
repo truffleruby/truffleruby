@@ -123,7 +123,3 @@ You can add `gem "racc"` to your `Gemfile` to work around this.
 You will then see
 `Circular dependency detected while autoloading constant PostsController`
 while attempting to view a page.
-
-# Maintenance of the blog app
-
-If the gems need to be updated, follow the instructions in the gem_test_pack README.

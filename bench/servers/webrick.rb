@@ -6,10 +6,6 @@
 # GNU General Public License version 2, or
 # GNU Lesser General Public License version 2.1.
 
-if ENV['GEM_TEST_PACK']
-  $: << "#{ENV['GEM_TEST_PACK']}/gems/gems/webrick-1.7.0/lib"
-end
-
 require 'webrick'
 
 server = WEBrick::HTTPServer.new(
