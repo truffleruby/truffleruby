@@ -66,7 +66,6 @@ RUBOCOP_INCLUDE_LIST = %w[
   spec/truffle
 ]
 
-RUBOCOP_VERSION = '1.36.0'
 SEAFOAM_VERSION = '0.17'
 CFG2ASM_VERSION = '0.2'
 
@@ -2678,11 +2677,14 @@ module Commands
   end
 
   def rubocop(*args)
+    in_truffleruby_repo_root!
     if args.empty? or args.all? { |arg| arg.start_with?('-') }
       args += RUBOCOP_INCLUDE_LIST
     end
 
-    run_gem_test_pack_gem_or_install('rubocop', RUBOCOP_VERSION, *args)
+    env = { **ruby_running_jt_env, 'BUNDLE_GEMFILE' => 'tool/rubocop-bundle/Gemfile' }
+    sh env, 'bundle', 'install'
+    sh env, 'bundle', 'exec', 'rubocop', *args
   end
 
   def idea(*args)

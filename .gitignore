@@ -73,9 +73,8 @@ test/mri/tests/cext-c/**/depend
 
 # Bundle
 spec/ffi/.bundle/config
-spec/ffi/vendor/bundle
-test/truffle/cexts/grpc/vendor/bundle
 test/truffle/gems/default-bundled-gems/.bundle/config
+**/vendor/bundle
 
 # mx
 /mx.truffleruby/.pydevproject
