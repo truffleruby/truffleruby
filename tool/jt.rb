@@ -1647,8 +1647,6 @@ module Commands
   end
 
   private def test_gems(*args)
-    gem_test_pack
-
     run_tests('test/truffle/gems', args) do |test_script|
       sh test_script
     end

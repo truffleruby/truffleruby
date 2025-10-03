@@ -11,7 +11,7 @@ fi
 
 gem_test_pack=$(jt gem-test-pack)
 
-ruby_home="$(jt ruby -e 'print RbConfig::CONFIG["prefix"]')"
+ruby_home="$(jt ruby-home)"
 export PATH="$ruby_home/bin:$PATH"
 
 cd "$truffle/cexts/grpc" || exit 1
