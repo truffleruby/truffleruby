@@ -1679,7 +1679,7 @@ module Commands
         puts "Using temporary GEM_HOME: #{gem_home}"
 
         gem_source_tree = "#{temp_dir}/algebrick"
-        sh 'git', 'clone', '--branch', 'v0.7.5', 'git@github.com:pitr-ch/algebrick.git', gem_source_tree
+        sh 'git', 'clone', '--branch', 'v0.7.5', 'https://github.com/pitr-ch/algebrick.git', gem_source_tree
 
         overlays = "#{TRUFFLERUBY_DIR}/test/truffle/bundle/algebrick"
         FileUtils.copy_entry(overlays, gem_source_tree)
