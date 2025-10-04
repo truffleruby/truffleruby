@@ -1194,7 +1194,6 @@ module Commands
     when 'bundle' then test_bundle(*rest)
     when 'compiler' then test_compiler(*rest)
     when 'cexts' then test_cexts(*rest)
-    when 'report' then test_report(*rest)
     when 'integration' then test_integration(*rest)
     when 'gems' then test_gems(*rest)
     when 'ecosystem' then test_ecosystem(*rest)
