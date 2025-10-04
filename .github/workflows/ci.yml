@@ -137,7 +137,7 @@ jobs:
     - name: Setup jt
       run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
 
-    - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+    - uses: actions/download-artifact@v4
       with:
         name: truffleruby-jvm
     - uses: ./.github/actions/setup-truffleruby
@@ -164,7 +164,7 @@ jobs:
       - name: Setup jt
         run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
 
-      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+      - uses: actions/download-artifact@v4
         with:
           name: truffleruby-jvm
       - uses: ./.github/actions/setup-truffleruby
@@ -183,7 +183,7 @@ jobs:
       - name: Setup jt
         run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
 
-      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+      - uses: actions/download-artifact@v4
         with:
           name: truffleruby-jvm
       - uses: ./.github/actions/setup-truffleruby
@@ -202,7 +202,7 @@ jobs:
       - name: Setup jt
         run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
 
-      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+      - uses: actions/download-artifact@v4
         with:
           name: truffleruby-native
       - uses: ./.github/actions/setup-truffleruby
@@ -228,7 +228,7 @@ jobs:
       - name: Setup jt
         run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
 
-      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+      - uses: actions/download-artifact@v4
         with:
           name: truffleruby-native
       - uses: ./.github/actions/setup-truffleruby
