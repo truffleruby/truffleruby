@@ -171,10 +171,19 @@ jobs:
 
       - run: jt test --timeout 180 ${{ matrix.specs }}
 
-  test_integration:
-    name: test integration
+  test_groups:
+    name: test ${{ matrix.group }}
     needs: [build]
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        group:
+        - bundle
+        - cexts
+        - integration
+        - gems
+        - ecosystem
     steps:
       - name: Clone TruffleRuby
         uses: actions/checkout@v4
@@ -188,7 +197,7 @@ jobs:
           name: truffleruby-jvm
       - uses: ./.github/actions/setup-truffleruby
 
-      - run: jt test integration
+      - run: jt test ${{ matrix.group }}
 
   test_native:
     name: test native
