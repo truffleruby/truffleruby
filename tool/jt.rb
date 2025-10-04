@@ -1746,7 +1746,7 @@ module Commands
       options += %w[--excl-tag slow]
     end
 
-    options += %w[--timeout 600] if ci?
+    options += %w[--timeout 180] if ENV['CI']
 
     args, ruby_args = args_split(args)
 

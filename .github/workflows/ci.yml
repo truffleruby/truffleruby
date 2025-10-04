@@ -125,6 +125,47 @@ jobs:
           path: ${{ github.workspace }}/truffleruby-native.tar
           include-hidden-files: true
 
+  test_unit_tck_polyglot:
+    name: tests needing build files
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        # Use build/ too for consistency in steps and cache reuse
+        working-directory: build
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+      with:
+        path: build
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        working-directory: build
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+
+    - name: Restore ~/.mx/cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.mx/cache
+        key: mx-cache-build-${{ runner.os }}-${{ hashFiles('build/common.json') }}
+
+    - uses: ./build/.github/actions/setup-jvmci-graal
+
+    - run: jt build
+    - run: jt mx build
+    - run: jt test unit --verbose
+    - run: jt test tck
+    - run: jt test polyglot
+    # platform checks
+    - run: ruby -e "pp RbConfig::MAKEFILE_CONFIG" # For convenience
+    - run: ruby tool/generate-native-config.rb
+    - run: cat src/main/java/org/truffleruby/platform/LinuxAMD64NativeConfiguration.java
+    - run: tool/generate-config-header.sh
+    - run: cat lib/cext/include/truffleruby/config_linux_amd64.h
+    - run: jt check_native_configuration
+    - run: jt check_config_header
+
   fast_specs:
     name: fast specs
     needs: [build]
@@ -145,17 +186,29 @@ jobs:
     - run: jt test fast
     - run: jt test :next
 
-  all_specs:
-    name: specs ${{ matrix.specs }}
+  all_tests:
+    name: specs ${{ matrix.test }}
     needs: [build]
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        specs:
-        - :truffle # ~12min
-        - :language :core # ~3min + ~9min
-        - :library :cext :security :command_line :tracepoint # command_line ~5min, others < 2min
+        test:
+        - :truffle # ~15min
+        - :language # ~3.5min
+        - :core # ~9min
+        - :library # ~2.5min
+        - :cext # ~1.5min
+        - :cxx
+        - :security # ~0.75min
+        - :command_line # ~5.5min
+        - :tracepoint # ~0.5min
+        - bundle # ~1.5min
+        - cexts # ~12min
+        - integration # ~10min
+        - gems # ~3min
+        - ecosystem # ~7min
+        - basictest # ~0.5min
     steps:
       - name: Clone TruffleRuby
         uses: actions/checkout@v4
@@ -169,26 +222,7 @@ jobs:
           name: truffleruby-jvm
       - uses: ./.github/actions/setup-truffleruby
 
-      - run: jt test --timeout 180 ${{ matrix.specs }}
-
-  test_integration:
-    name: test integration
-    needs: [build]
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Clone TruffleRuby
-        uses: actions/checkout@v4
-      - name: Setup system Ruby
-        uses: ruby/setup-ruby@v1
-      - name: Setup jt
-        run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: truffleruby-jvm
-      - uses: ./.github/actions/setup-truffleruby
-
-      - run: jt test integration
+      - run: jt test ${{ matrix.test }}
 
   test_native:
     name: test native
