@@ -90,10 +90,6 @@ local part_definitions = {
       },
     },
 
-    gem_test_pack: {
-      setup+: jt(["gem-test-pack"]),
-    },
-
     mri: {
       environment+: {
         HOST_VM: "mri",
@@ -499,9 +495,6 @@ local part_definitions = {
       packages+: {
         "apache/ab": "==2.3",
       },
-      setup+: [
-        ["set-export", "GEM_TEST_PACK", jt(["gem-test-pack"])[0]],
-      ],
       benchmarks+:: ["server"],
     },
 
@@ -550,14 +543,14 @@ local composition_environment = utils.add_inclusion_tracking(part_definitions, "
       "ruby-test-mri-darwin-amd64":     $.platform.darwin_amd64 + $.jdk.latest + $.env.native_ee + gate + $.run.test_mri + { timelimit: "01:30:00" },
       "ruby-test-mri-darwin-aarch64":   $.platform.darwin_aarch64 + $.jdk.latest + $.env.native_ee + gate + $.run.test_mri + { timelimit: "01:30:00" },
       "ruby-test-integration-linux-amd64": $.platform.linux  + $.jdk.latest + $.env.jvm + gate + $.run.test_integration,
-      "ruby-test-cexts-linux-amd64":    $.platform.linux  + $.jdk.latest + $.env.jvm + gate + $.use.gem_test_pack + $.use.sqlite331 + $.run.test_cexts,
-      "ruby-test-cexts-linux-aarch64":  $.platform.linux_aarch64 + $.jdk.latest + $.env.jvm + gate + $.use.gem_test_pack + $.use.sqlite331 + $.run.test_cexts,
-      "ruby-test-cexts-darwin-amd64":   $.platform.darwin_amd64 + $.jdk.latest + $.env.jvm + gate + $.use.gem_test_pack + $.run.test_cexts + { timelimit: "01:30:00" },
-      "ruby-test-cexts-darwin-aarch64": $.platform.darwin_aarch64 + $.jdk.latest + $.env.jvm + gate + $.use.gem_test_pack + $.run.test_cexts + { timelimit: "00:40:00" },
-      "ruby-test-gems-linux-amd64":     $.platform.linux  + $.jdk.latest + $.env.jvm + gate + $.use.gem_test_pack + $.run.test_gems,
-      "ruby-test-gems-darwin-amd64":    $.platform.darwin_amd64 + $.jdk.latest + $.env.jvm + gate + $.use.gem_test_pack + $.run.test_gems,
-      "ruby-test-gems-darwin-aarch64":  $.platform.darwin_aarch64 + $.jdk.latest + $.env.jvm + gate + $.use.gem_test_pack + $.run.test_gems,
-      "ruby-test-ecosystem-linux-amd64":  $.platform.linux  + $.jdk.latest + $.env.jvm + gate + $.use.node + $.use.sqlite331 + $.use.gem_test_pack + $.run.test_ecosystem,
+      "ruby-test-cexts-linux-amd64":    $.platform.linux  + $.jdk.latest + $.env.jvm + gate + $.use.sqlite331 + $.run.test_cexts,
+      "ruby-test-cexts-linux-aarch64":  $.platform.linux_aarch64 + $.jdk.latest + $.env.jvm + gate + $.use.sqlite331 + $.run.test_cexts,
+      "ruby-test-cexts-darwin-amd64":   $.platform.darwin_amd64 + $.jdk.latest + $.env.jvm + gate + $.run.test_cexts + { timelimit: "01:30:00" },
+      "ruby-test-cexts-darwin-aarch64": $.platform.darwin_aarch64 + $.jdk.latest + $.env.jvm + gate + $.run.test_cexts + { timelimit: "00:40:00" },
+      "ruby-test-gems-linux-amd64":     $.platform.linux  + $.jdk.latest + $.env.jvm + gate + $.run.test_gems,
+      "ruby-test-gems-darwin-amd64":    $.platform.darwin_amd64 + $.jdk.latest + $.env.jvm + gate + $.run.test_gems,
+      "ruby-test-gems-darwin-aarch64":  $.platform.darwin_aarch64 + $.jdk.latest + $.env.jvm + gate + $.run.test_gems,
+      "ruby-test-ecosystem-linux-amd64":  $.platform.linux  + $.jdk.latest + $.env.jvm + gate + $.use.node + $.use.sqlite331 + $.run.test_ecosystem,
 
       "ruby-test-compiler-ce-stable": $.platform.linux + $.jdk.stable + $.env.jvm_ce + gate + $.use.truffleruby + $.run.test_compiler,
       "ruby-test-compiler-ce-latest": $.platform.linux + $.jdk.latest + $.env.jvm_ce + gate + $.use.truffleruby + $.run.test_compiler,
@@ -709,7 +702,7 @@ local composition_environment = utils.add_inclusion_tracking(part_definitions, "
       "ruby-benchmarks-cext":
         $.platform.linux + $.jdk.latest + $.use.common +
         $.use.truffleruby + $.use.truffleruby_cexts +
-        $.env.jvm_ce + $.use.build + $.use.gem_test_pack +
+        $.env.jvm_ce + $.use.build +
         $.cap.bench + $.cap.weekly +
         $.benchmark.runner + $.benchmark.cext_chunky +
         { timelimit: "00:40:00" },

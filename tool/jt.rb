@@ -37,8 +37,6 @@ JDKS_CACHE_DIR = File.expand_path('~/.mx/jdks')
 CACHE_EXTRA_DIR = File.expand_path('~/.mx/cache/truffleruby')
 FileUtils.mkdir_p(CACHE_EXTRA_DIR)
 
-TRUFFLERUBY_GEM_TEST_PACK_VERSION = '8d89d2e3ca7990af900f9d8491ba49b0a625e549'
-
 JDEBUG = '--vm.agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=y'
 METRICS_REPS = Integer(ENV['TRUFFLERUBY_METRICS_REPS'] || 10)
 DEFAULT_PROFILE_OPTIONS = %w[--cpusampler --cpusampler.Output=flamegraph]
@@ -66,7 +64,6 @@ RUBOCOP_INCLUDE_LIST = %w[
   spec/truffle
 ]
 
-RUBOCOP_VERSION = '1.36.0'
 SEAFOAM_VERSION = '0.17'
 CFG2ASM_VERSION = '0.2'
 
@@ -712,20 +709,14 @@ module Utilities
     end
   end
 
-  def run_gem_test_pack_gem_or_install(name, version, *args)
-    if gem_test_pack?
-      gem_home = "#{gem_test_pack}/#{name}-gems"
-      env = { 'GEM_HOME' => gem_home, 'GEM_PATH' => "#{gem_home}:" }
-      sh env, RbConfig.ruby, "#{gem_home}/bin/#{name}", "_#{version}_", *args
-    else
-      env = ruby_running_jt_env
-      if Gem::Specification.find_all_by_name(name, version).empty?
-        sh env, 'gem', 'install', name, '-v', version
-      end
-      sh env, name, "_#{version}_", *args
+  def run_gem_or_install(name, version, *args)
+    env = ruby_running_jt_env
+    if Gem::Specification.find_all_by_name(name, version).empty?
+      sh env, 'gem', 'install', name, '-v', version
     end
+    sh env, name, "_#{version}_", *args
   end
-  ruby2_keywords :run_gem_test_pack_gem_or_install if respond_to?(:ruby2_keywords, true)
+  ruby2_keywords :run_gem_or_install if respond_to?(:ruby2_keywords, true)
 
   def args_split(args)
     delimiter_index = args.index('--')
@@ -890,7 +881,6 @@ module Commands
       jt lint fast                                   run fast lints, recommended as a git hook (see tool/hooks/lint-check.sh)
       jt rubocop [rubocop options]                   run rubocop rules (using ruby available in the environment)
       ---
-      jt gem-test-pack                               check that the gem test pack is downloaded, or download it for you, and print the path
       jt metrics alloc [--json] ...                  how much memory is allocated running a program
       jt metrics instructions ...                    how many CPU instructions are used to run a program
       jt metrics minheap ...                         what is the smallest heap you can use to run an application
@@ -1584,25 +1574,9 @@ module Commands
         sh({'TRUFFLERUBY_RECOMPILE_OPENSSL' => 'true'}, "#{ruby_home}/lib/truffle/post_install_hook.sh")
 
       when 'oily_png', 'psd_native'
-        gem_home = "#{gem_test_pack}/gems"
-        tests = {
-          'oily_png' => [['chunky_png-1.3.6', 'oily_png-1.2.0'], ['oily_png']],
-          'psd_native' => [['chunky_png-1.3.6', 'oily_png-1.2.0', 'bindata-2.3.1', 'hashie-3.4.4', 'psd-enginedata-1.1.1', 'psd-2.1.2', 'psd_native-1.1.3'], ['oily_png', 'psd_native']],
-        }
-
-        gem_name = test_name
-        dependencies, libs = tests.fetch(gem_name)
-
-        puts '', gem_name
-        gem_root = "#{TRUFFLERUBY_DIR}/test/truffle/cexts/#{gem_name}"
-        ext_dir = Dir.glob("#{gem_home}/gems/#{gem_name}*/")[0] + "ext/#{gem_name}"
-
-        compile_cext gem_name, ext_dir, "#{gem_root}/lib/#{gem_name}/#{gem_name}.#{DLEXT}"
-
-        next if gem_name == 'psd_native' # psd_native is excluded just for running
-        run_ruby(*dependencies.map { |d| "-I#{gem_home}/gems/#{d}/lib" },
-                 *libs.map { |l| "-I#{TRUFFLERUBY_DIR}/test/truffle/cexts/#{l}/lib" },
-                 "#{TRUFFLERUBY_DIR}/test/truffle/cexts/#{gem_name}/test.rb", gem_root)
+        dir = "test/truffle/cexts/#{test_name}"
+        run_ruby('-Sbundle', 'install', chdir: dir)
+        run_ruby('-rbundler/setup', 'test.rb', chdir: dir)
 
       # Tests using gem install to compile the cexts
       when 'puma'
@@ -1670,18 +1644,14 @@ module Commands
   end
 
   private def test_gems(*args)
-    gem_test_pack
-
     run_tests('test/truffle/gems', args) do |test_script|
       sh test_script
     end
   end
 
   private def test_ecosystem(*args)
-    gem_test_pack if gem_test_pack?
-
     run_tests('test/truffle/ecosystem', args) do |test_script|
-      sh test_script, *(gem_test_pack if gem_test_pack?)
+      sh test_script
     end
   end
 
@@ -1701,64 +1671,39 @@ module Commands
       %w[--standalone],
       %w[--deployment]
     ]
-    gems = %w[algebrick]
 
-    rubylib = ["#{gem_test_pack}/gems/gems/webrick-1.7.0/lib"]
-    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('3.3.0')
-      rubylib << "#{gem_test_pack}/gems/gems/rubygems-server-0.2.0/lib"
-    end
+    bundle_install_flags.each do |install_flags|
+      puts "\n\nTesting Bundler with install flags: #{install_flags}"
+      temp_dir = Dir.mktmpdir('algebrick')
+      begin
+        gem_home = "#{temp_dir}/gems"
+        puts "Using temporary GEM_HOME: #{gem_home}"
 
-    # TODO: probably we should use https://github.com/rubygems/gemstash in the future
-    gem_server_env = ruby_running_jt_env.merge({ 'RUBYLIB' => rubylib.join(File::PATH_SEPARATOR) })
-    gem_server = spawn(gem_server_env, 'gem', 'server', '-b', '127.0.0.1', '-p', '0', '-d', "#{gem_test_pack}/gems")
-    SUBPROCESSES << gem_server
-    begin
-      ports = find_ports_for_pid(gem_server)
-      raise 'More than one port opened' if ports.lines.size > 1
-      port = Integer(ports)
+        gem_source_tree = "#{temp_dir}/algebrick"
+        sh 'git', 'clone', '--branch', 'v0.7.5', 'git@github.com:pitr-ch/algebrick.git', gem_source_tree
 
-      bundle_install_flags.each do |install_flags|
-        puts "\n\nTesting Bundler with install flags: #{install_flags}"
-        gems.each do |gem_name|
-          temp_dir = Dir.mktmpdir(gem_name)
-          begin
-            gem_home = "#{temp_dir}/gems"
-            puts "Using temporary GEM_HOME: #{gem_home}"
+        overlays = "#{TRUFFLERUBY_DIR}/test/truffle/bundle/algebrick"
+        FileUtils.copy_entry(overlays, gem_source_tree)
 
-            puts "Copying gem #{gem_name} source into temp directory: #{temp_dir}"
-            original_source_tree = "#{gem_test_pack}/gem-testing/#{gem_name}"
-            gem_source_tree = "#{temp_dir}/#{gem_name}"
-            FileUtils.copy_entry(original_source_tree, gem_source_tree)
+        chdir(gem_source_tree) do
+          environment = no_gem_vars_env.merge(
+            'GEM_HOME' => gem_home,
+            'GEM_PATH' => gem_home,
+            # add bin from gem_home to PATH
+            'PATH' => ["#{gem_home}/bin", ENV['PATH']].join(File::PATH_SEPARATOR))
 
-            chdir(gem_source_tree) do
-              environment = no_gem_vars_env.merge(
-                'GEM_HOME' => gem_home,
-                'GEM_PATH' => gem_home,
-                # add bin from gem_home to PATH
-                'PATH' => ["#{gem_home}/bin", ENV['PATH']].join(File::PATH_SEPARATOR))
+          options = %w[--experimental-options --exceptions-print-java]
 
-              options = %w[--experimental-options --exceptions-print-java]
+          run_ruby(environment, *args, *options,
+            '-Sbundle', 'install', '-V', *install_flags)
 
-              run_ruby(environment, *args, *options,
-                '-Sbundle', 'config', '--local', 'mirror.http://localhost:8808', "http://localhost:#{port}")
-
-              run_ruby(environment, *args, *options,
-                '-Sbundle', 'install', '-V', *install_flags)
-
-              run_ruby(environment, *args, *options,
-                '-Sbundle', 'exec', '-V', 'rake')
-            end
-          ensure
-            STDERR.puts 'Removing temp dir'
-            FileUtils.remove_entry_secure temp_dir
-          end
+          run_ruby(environment, *args, *options,
+            '-Sbundle', 'exec', '-V', 'rake')
         end
+      ensure
+        STDERR.puts 'Removing temp dir'
+        FileUtils.remove_entry_secure temp_dir
       end
-    ensure
-      STDERR.puts 'Terminating gem server'
-      terminate_process(gem_server)
-      SUBPROCESSES.delete(gem_server)
-      STDERR.puts 'gem server terminated'
     end
   end
 
@@ -1814,41 +1759,6 @@ module Commands
     prefixed_ruby_args = [*(vm_args if truffleruby?), *ruby_args].map { |v| "-T#{v}" }
     run_mspec env_vars, command, *options, *prefixed_ruby_args, *args
   end
-
-  def gem_test_pack?
-    return true if Dir.exist?(File.expand_path('truffleruby-gem-test-pack', TRUFFLERUBY_DIR))
-    ci? or Remotes.bitbucket
-  end
-
-  def gem_test_pack
-    name = 'truffleruby-gem-test-pack'
-    gem_test_pack = File.expand_path(name, TRUFFLERUBY_DIR)
-
-    unless Dir.exist?(gem_test_pack)
-      STDERR.puts 'Cloning the truffleruby-gem-test-pack repository'
-      git_clone(bitbucket_url(name), gem_test_pack)
-    end
-
-    # Unset variable set by the pre-commit hook which confuses git
-    env = { 'GIT_DIR' => nil, 'GIT_INDEX_FILE' => nil }
-
-    current = sh(env, 'git', '-C', gem_test_pack, 'rev-parse', 'HEAD', capture: :out, no_print_cmd: true).chomp
-    unless current == TRUFFLERUBY_GEM_TEST_PACK_VERSION
-      if ENV['GEM_TEST_PACK_WIP'] == 'true'
-        STDERR.puts 'WARNING: the gem test pack commit is different than TRUFFLERUBY_GEM_TEST_PACK_VERSION in jt.rb'
-      else
-        has_commit = sh env, 'git', '-C', gem_test_pack, 'cat-file', '-e', TRUFFLERUBY_GEM_TEST_PACK_VERSION, continue_on_failure: true
-        unless has_commit
-          sh env, 'git', '-C', gem_test_pack, 'fetch', Remotes.bitbucket(gem_test_pack), continue_on_failure: true
-        end
-        sh env, 'git', '-C', gem_test_pack, 'checkout', '-q', TRUFFLERUBY_GEM_TEST_PACK_VERSION
-      end
-    end
-
-    puts gem_test_pack
-    gem_test_pack
-  end
-  alias_method :'gem-test-pack', :gem_test_pack
 
   def tag(path, *args)
     require_ruby_launcher!
@@ -2426,7 +2336,7 @@ module Commands
     if seafoam_dir
       sh(RbConfig.ruby, "-I#{seafoam_dir}/lib", "#{seafoam_dir}/bin/seafoam", *args)
     else
-      run_gem_test_pack_gem_or_install('seafoam', SEAFOAM_VERSION, *args)
+      run_gem_or_install('seafoam', SEAFOAM_VERSION, *args)
     end
   end
   ruby2_keywords :seafoam if respond_to?(:ruby2_keywords, true)
@@ -2436,7 +2346,7 @@ module Commands
     if cfg2asm_dir
       sh(RbConfig.ruby, "-I#{cfg2asm_dir}/lib", "#{cfg2asm_dir}/bin/cfg2asm", *args)
     else
-      run_gem_test_pack_gem_or_install('cfg2asm', CFG2ASM_VERSION, *args)
+      run_gem_or_install('cfg2asm', CFG2ASM_VERSION, *args)
     end
   end
   ruby2_keywords :cfg2asm if respond_to?(:ruby2_keywords, true)
@@ -2691,11 +2601,14 @@ module Commands
   end
 
   def rubocop(*args)
+    in_truffleruby_repo_root!
     if args.empty? or args.all? { |arg| arg.start_with?('-') }
       args += RUBOCOP_INCLUDE_LIST
     end
 
-    run_gem_test_pack_gem_or_install('rubocop', RUBOCOP_VERSION, *args)
+    env = { **ruby_running_jt_env, 'BUNDLE_GEMFILE' => 'tool/rubocop-bundle/Gemfile' }
+    sh env, 'bundle', 'install'
+    sh env, 'bundle', 'exec', 'rubocop', *args
   end
 
   def idea(*args)
@@ -3169,6 +3082,18 @@ module Commands
     check_polyglot_methods
   end
 
+  def check_lockfiles(changed_lock_files = nil)
+    unless changed_lock_files.is_a?(Array)
+      changed_lock_files = `git -C #{TRUFFLERUBY_DIR} ls-files '**/*.lock'`.lines.map(&:chomp)
+    end
+    changed_lock_files.each do |file|
+      contents = File.read(file)
+      if contents.include?('BUNDLED WITH')
+        abort "#{file} should not contain a BUNDLED WITH section to avoid needing to update this file when updating Bundler, and to ensure the Bundler version shipped with TruffleRuby is used"
+      end
+    end
+  end
+
   def lint(*args)
     in_truffleruby_repo_root!
     fast = args.first == 'fast'
@@ -3194,6 +3119,7 @@ module Commands
     checkstyle(changed['.java']) if changed['.java']
     command_format(changed['.java']) if changed['.java']
     shellcheck if changed['.sh'] or changed['.inc']
+    check_lockfiles(changed['.lock']) if changed['.lock']
 
     mx 'verify-ci' if changed['.py'] and !ENV['JT_IMPORTS_DONT_ASK']
 
@@ -3295,10 +3221,6 @@ class JT
   def self.ruby(*args)
     jt = JT.new
     jt.send(:run_ruby, *args)
-  end
-
-  def self.gem_test_pack
-    JT.new.gem_test_pack
   end
 
   def initialize

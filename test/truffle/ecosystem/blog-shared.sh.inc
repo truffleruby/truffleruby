@@ -6,27 +6,14 @@ source "$truffle/common.sh.inc"
 
 alias truffleruby="jt ruby -S"
 
-gem_test_pack_path="$1"
-
 # NOTE: part of this logic is duplicated in bench/rails/blog6-setup.rb
 # The Gemfile and Gemfile.lock are renamed to avoid GitHub thinking those gems are dependencies of TruffleRuby
 cp Gemfile.renamed Gemfile
 cp Gemfile.lock.renamed Gemfile.lock
 
-if [ "$gem_test_pack_path" ]; then
-  truffleruby bundle config --local cache_path "$gem_test_pack_path/gem-cache"
-  truffleruby bundle config --local no_prune true
-else
-  truffleruby bundle config --delete cache_path
-fi
-
 truffleruby bundle config --local without postgresql mysql
 
-if [ "$gem_test_pack_path" ]; then
-  truffleruby bundle install --local --no-cache
-else
-  truffleruby bundle install
-fi
+truffleruby bundle install
 
 truffleruby bin/rails db:setup
 truffleruby bin/rails log:clear tmp:clear

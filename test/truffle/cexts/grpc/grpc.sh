@@ -9,15 +9,13 @@ if [[ "$platform" == "Linux-aarch64" ]]; then
   exit 0
 fi
 
-gem_test_pack=$(jt gem-test-pack)
-
-ruby_home="$(jt ruby -e 'print RbConfig::CONFIG["prefix"]')"
+ruby_home="$(jt ruby-home)"
 export PATH="$ruby_home/bin:$PATH"
 
 cd "$truffle/cexts/grpc" || exit 1
 
-bundle config --local cache_path "$gem_test_pack/gem-cache"
-bundle install --local --no-cache
+export BUNDLE_PATH=vendor/bundle
+bundle install
 
 output=$(bundle exec ruby -rzlib -ropenssl -e 'require "grpc"; p GRPC')
 

@@ -2,9 +2,11 @@
 
 source test/truffle/common.sh.inc
 
-gem_test_pack=$(jt gem-test-pack)
+ruby_home="$(jt ruby-home)"
+export PATH="$ruby_home/bin:$PATH"
 
-jt ruby \
-  -I"$gem_test_pack"/gems/gems/rack-1.6.1/lib \
-  -I"$gem_test_pack"/gems/gems/webrick-1.7.0/lib \
-  test/truffle/gems/rack-server/rack-server.rb & test_server
+cd test/truffle/gems/rack-server || exit 1
+
+export BUNDLE_PATH=vendor/bundle
+bundle install
+ruby -rbundler/setup rack-server.rb & test_server
