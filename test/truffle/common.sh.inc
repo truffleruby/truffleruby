@@ -24,7 +24,7 @@ function test_server {
   if [[ $(echo "$ports" | wc -l) -gt 1 ]]; then
     echo "More than one port opened!" >&2
     echo "$ports" >&2
-    kill -9 $serverpid
+    kill -9 "$serverpid"
     exit 1
   else
     echo "Found port: $ports"
@@ -37,10 +37,10 @@ function test_server {
   done
 
   jobs -l
-  kill $serverpid
+  kill "$serverpid"
 
   status=0
-  wait $serverpid || status=$?
+  wait "$serverpid" || status=$?
   if [[ "$status" == "134" ]]; then
     echo "Server aborted! $status"
     exit 1
