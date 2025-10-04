@@ -1197,6 +1197,7 @@ module Commands
     when 'integration' then test_integration(*rest)
     when 'gems' then test_gems(*rest)
     when 'ecosystem' then test_ecosystem(*rest)
+    when 'polyglot' then test_polyglot(*rest)
     when 'specs' then test_specs('run', *rest)
     when 'basictest' then test_basictest(*rest)
     when 'bootstraptest' then test_bootstraptest(*rest)
@@ -1650,6 +1651,12 @@ module Commands
 
   private def test_ecosystem(*args)
     run_tests('test/truffle/ecosystem', args) do |test_script|
+      sh test_script
+    end
+  end
+
+  private def test_polyglot(*args)
+    run_tests('test/truffle/polyglot', args) do |test_script|
       sh test_script
     end
   end
