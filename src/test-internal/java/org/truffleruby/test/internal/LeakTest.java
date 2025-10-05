@@ -267,11 +267,6 @@ public class LeakTest extends AbstractLanguageLauncher {
     }
 
     @Override
-    protected String[] getDefaultLanguages() {
-        return new String[]{ languageId };
-    }
-
-    @Override
     protected void printHelp(OptionCategory maxCategory) {
         System.out.println(
                 "--lang ID --code CODE --forbidden-class FQN [--forbidden-class FQN]* [--shared-engine] [--keep-dump] [POLYGLOT-OPTIONS]");
