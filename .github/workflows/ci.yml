@@ -67,6 +67,14 @@ jobs:
         key: mx-cache-build-${{ runner.os }}-${{ hashFiles('build/common.json') }}
 
     - uses: ./build/.github/actions/setup-jvmci-graal
+    - name: Download BOOTSTRAP_GRAALVM
+      uses: graalvm/setup-graalvm@v1
+      with:
+        java-version: '25'
+        distribution: 'graalvm'
+        set-java-home: 'false'
+    - name: Set BOOTSTRAP_GRAALVM
+      run: echo "BOOTSTRAP_GRAALVM=$GRAALVM_HOME" >> $GITHUB_ENV
 
     - name: Build TruffleRuby
       run: jt build
@@ -109,6 +117,14 @@ jobs:
           key: mx-cache-build-native-${{ runner.os }}-${{ hashFiles('build/common.json') }}
 
       - uses: ./build/.github/actions/setup-jvmci-graal
+      - name: Download BOOTSTRAP_GRAALVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: 'graalvm'
+          set-java-home: 'false'
+      - name: Set BOOTSTRAP_GRAALVM
+        run: echo "BOOTSTRAP_GRAALVM=$GRAALVM_HOME" >> $GITHUB_ENV
 
       - run: free -m
       - name: Build TruffleRuby
@@ -151,6 +167,14 @@ jobs:
         key: mx-cache-build-${{ runner.os }}-${{ hashFiles('build/common.json') }}
 
     - uses: ./build/.github/actions/setup-jvmci-graal
+    - name: Download BOOTSTRAP_GRAALVM
+      uses: graalvm/setup-graalvm@v1
+      with:
+        java-version: '25'
+        distribution: 'graalvm'
+        set-java-home: 'false'
+    - name: Set BOOTSTRAP_GRAALVM
+      run: echo "BOOTSTRAP_GRAALVM=$GRAALVM_HOME" >> $GITHUB_ENV
 
     - run: jt build
     - run: jt mx build
