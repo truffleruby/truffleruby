@@ -157,6 +157,9 @@ class MSpecScript
   # Specs needing C-extensions support.
   set :cext, get(:capi) + get(:truffle_capi) + get(:library_cext)
 
+  # Run C API specs in C++ mode
+  set :cxx, get(:capi)
+
   # All specs, including specs needing C-extensions support.
   # :next specs are not included as they need to run in a separate process.
   # :tracepoint specs are not included as they need should run in a separate process.
@@ -175,6 +178,8 @@ if MSpecScript.child_process?
 
     ::VersionGuard.send :remove_const, :FULL_RUBY_VERSION
     ::VersionGuard::FULL_RUBY_VERSION = SpecVersion.new(next_version)
+  elsif ARGV.include? ":cxx"
+    ENV["SPEC_CAPI_CXX"] = "true"
   end
 end
 
