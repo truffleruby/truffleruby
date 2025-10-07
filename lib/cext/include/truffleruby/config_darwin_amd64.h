@@ -460,5 +460,5 @@
 #define RUBY_JMP_BUF sigjmp_buf
 #define USE_YJIT 1
 #define USE_RJIT 1
-#define RUBY_PLATFORM "x86_64-darwin22"
+#define RUBY_PLATFORM "x86_64-darwin24"
 #endif /* INCLUDE_RUBY_CONFIG_H */
