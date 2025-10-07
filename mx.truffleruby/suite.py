@@ -1014,24 +1014,6 @@ suite = {
             },
         },
 
-        "TRUFFLERUBY_NATIVE_STANDALONE_RELEASE_ARCHIVE": {
-            "class": "DeliverableStandaloneArchive",
-            "platformDependent": True,
-            "standalone_dist": "TRUFFLERUBY_NATIVE_STANDALONE",
-            "community_archive_name": "truffleruby-community",
-            "enterprise_archive_name": "truffleruby",
-            "language_id": "ruby",
-        },
-
-        "TRUFFLERUBY_JVM_STANDALONE_RELEASE_ARCHIVE": {
-            "class": "DeliverableStandaloneArchive",
-            "platformDependent": True,
-            "standalone_dist": "TRUFFLERUBY_JVM_STANDALONE",
-            "community_archive_name": "truffleruby-community-jvm",
-            "enterprise_archive_name": "truffleruby-jvm",
-            "language_id": "ruby",
-        },
-
         "TRUFFLERUBY_GRAALVM_LICENSES": {
             "fileListPurpose": "native-image-resources",
             "native": True,
