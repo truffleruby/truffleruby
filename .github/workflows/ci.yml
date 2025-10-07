@@ -305,7 +305,7 @@ jobs:
       fail-fast: false
       matrix:
         ruby: ['3.2', '3.3', '3.4']
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04-arm
     steps:
     - uses: actions/checkout@v4
     - uses: ruby/setup-ruby@v1
