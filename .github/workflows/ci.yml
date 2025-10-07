@@ -1,5 +1,6 @@
 # Differences to ci.jsonnet (the old internal CI):
 # * In general most tests are run on a single platform rather than all platforms
+# * ubuntu-22.04-arm is chosen as the default platform because it is the fastest on GitHub Actions
 # * Test on a single JDK instead of stable + latest
 # * No `jt test mri --fast --no-sulong` on JVM
 # * `jt test mri --fast --no-sulong` on Native instead of `test mri --no-sulong`
@@ -13,9 +14,9 @@ permissions:
   contents: read
 
 jobs:
-  lint: # ~13min
+  lint: # ~10min
     name: lint
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     env:
       JT_JDK: '21'
     steps:
@@ -44,9 +45,9 @@ jobs:
       run: jt build -- --jdt builtin --warning-as-error --force-deprecation-as-warning
     - run: jt lint
 
-  build: # ~6min
+  build: # ~5min
     name: build jvm
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     defaults:
       run:
         # Ensure all build files are in build/.
@@ -86,9 +87,9 @@ jobs:
         path: ${{ github.workspace }}/truffleruby-jvm.tar
         include-hidden-files: true
 
-  build_native: # ~14min
+  build_native: # ~10min
     name: build native
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     defaults:
       run:
         # Ensure all build files are in build/.
@@ -173,9 +174,9 @@ jobs:
     - run: jt build # ~4-6min, 13min on macos-13
     - run: jt test fast # ~1.5min
 
-  test_needing_build_files: # ~21min
+  test_needing_build_files: # ~17min
     name: tests needing build files
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     defaults:
       run:
         # Use build/ too for consistency in steps and cache reuse
@@ -215,28 +216,28 @@ jobs:
   all_tests:
     name: jt test ${{ matrix.test }}
     needs: [build]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     strategy:
       fail-fast: false
       matrix:
         test:
         - fast # ~1.5min
-        - :truffle # ~15min
-        - :language # ~3.5min
-        - :core # ~9min
-        - :library # ~2.5min
+        - :truffle # ~12min
+        - :language # ~3min
+        - :core # ~7min
+        - :library # ~2min
         - :cext # ~1.5min
         - :cxx # ~1min
         - :security # ~0.75min
-        - :command_line # ~5.5min
+        - :command_line # ~5min
         - :tracepoint # ~0.5min
         - :next # ~0.25min
         - bundle # ~1.5min
-        - cexts # ~12min
-        - mri --all-sulong # ~7min
+        - cexts # ~6.5min
+        - mri --all-sulong # ~6min
         - integration # ~10min
-        - gems # ~3min
-        - ecosystem # ~7min
+        - gems # ~2min
+        - ecosystem # ~6min
         - basictest # ~0.5min
     steps:
     - name: Clone TruffleRuby
@@ -253,10 +254,10 @@ jobs:
 
     - run: jt test ${{ matrix.test }}
 
-  test_native: # ~9min
+  test_native: # ~8min
     name: test native
     needs: [build_native]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     steps:
     - name: Clone TruffleRuby
       uses: actions/checkout@v4
@@ -273,14 +274,14 @@ jobs:
         archive: truffleruby-native
 
     - run: jt test compiler # ~3min
-    - run: jt test :all # ~6min
+    - run: jt test :all # ~5min
     # To catch slow :truffle specs which only apply to native
     - run: jt test fast :truffle # ~10s
 
-  test_native_mri_tests: # ~18min
+  test_native_mri_tests: # ~15min
     name: run MRI tests on native
     needs: [build_native]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     steps:
     - name: Clone TruffleRuby
       uses: actions/checkout@v4
