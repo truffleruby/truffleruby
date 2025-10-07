@@ -278,7 +278,7 @@ jobs:
     # To catch slow :truffle specs which only apply to native
     - run: jt test fast :truffle # ~10s
 
-  test_native_mri_tests: # ~15min
+  test_native_mri_tests: # ~6min
     name: run MRI tests on native
     needs: [build_native]
     runs-on: ubuntu-22.04-arm
@@ -297,7 +297,7 @@ jobs:
       with:
         archive: truffleruby-native
 
-    - run: jt test mri --fast --no-sulong
+    - run: jt test mri --fast --no-sulong -- --jobs=4 --longest=10
 
   ruby_spec_cruby: # ~3min
     name: ruby/spec on CRuby ${{ matrix.ruby }}
