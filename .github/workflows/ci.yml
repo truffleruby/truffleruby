@@ -136,7 +136,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-22.04-arm, macos-13, macos-14]
+        os: [ubuntu-22.04, ubuntu-22.04-arm, macos-15-intel, macos-14]
     defaults:
       run:
         # Use build/ too for consistency in steps and cache reuse
@@ -171,7 +171,7 @@ jobs:
     - run: jt check_native_configuration
     - run: jt check_config_header
     # run jt test fast on each platform
-    - run: jt build # ~4-6min, 13min on macos-13
+    - run: jt build # ~4-6min, 13min on macos-15-intel
     - run: jt test fast # ~1.5min
 
   test_needing_build_files: # ~17min
