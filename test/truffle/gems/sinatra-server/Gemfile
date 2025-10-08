@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 gem 'sinatra', '4.0.0'
 gem 'mustermann', '3.0.0'
-gem 'rack', '3.0.9'
+gem 'rack', '3.0.16'
 gem 'webrick', '1.8.1'
 gem 'rack-protection', '4.0.0'
 gem 'rack-session', '2.0.0'
