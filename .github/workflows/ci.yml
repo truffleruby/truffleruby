@@ -223,14 +223,8 @@ jobs:
         test:
         - fast # ~1.5min
         - :truffle # ~12min
-        - :language # ~3min
-        - :core # ~7min
-        - :library # ~2min
-        - :cext # ~1.5min
-        - :cxx # ~1min
-        - :security # ~0.75min
-        - :command_line # ~5min
-        - :tracepoint # ~0.5min
+        - :language :core :cxx # ~3min ~7min ~1min
+        - :command_line :library :cext :security :tracepoint # ~5min ~2min ~1.5min ~0.75min ~0.5min
         - :next # ~0.25min
         - bundle # ~1.5min
         - cexts # ~6.5min
