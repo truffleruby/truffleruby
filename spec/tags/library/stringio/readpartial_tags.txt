@@ -1,0 +1,1 @@
+fails:StringIO#readpartial raises ArgumentError if the negative argument is provided

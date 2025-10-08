@@ -1,0 +1,1 @@
+fails:Socket.getaddrinfo raises ResolutionError when fails to resolve address
