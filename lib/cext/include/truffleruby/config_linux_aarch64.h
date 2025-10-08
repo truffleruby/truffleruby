@@ -60,6 +60,7 @@
 #define HAVE_SYS_IOCTL_H 1
 #define HAVE_SYS_PARAM_H 1
 #define HAVE_SYS_PRCTL_H 1
+#define HAVE_SYS_RANDOM_H 1
 #define HAVE_SYS_RESOURCE_H 1
 #define HAVE_SYS_SELECT_H 1
 #define HAVE_SYS_SENDFILE_H 1
@@ -182,7 +183,7 @@
 #define RUBY_FUNC_NONNULL(n,x) __attribute__ ((__nonnull__(n))) x
 #define RUBY_FUNCTION_NAME_STRING __func__
 #define ENUM_OVER_INT 1
-#define HAVE_DECL_SYS_NERR 1
+#define HAVE_DECL_SYS_NERR 0
 #define HAVE_DECL_GETENV 1
 #define SIZEOF_SIZE_T 8
 #define SIZEOF_PTRDIFF_T 8
@@ -200,6 +201,7 @@
 #define HAVE_STRUCT_STAT_ST_ATIM 1
 #define HAVE_STRUCT_STAT_ST_MTIM 1
 #define HAVE_STRUCT_STAT_ST_CTIM 1
+#define HAVE_STRUCT_STATX_STX_BTIME 1
 #define HAVE_STRUCT_TIMEVAL 1
 #define SIZEOF_STRUCT_TIMEVAL_TV_SEC SIZEOF_TIME_T
 #define HAVE_STRUCT_TIMESPEC 1
@@ -243,6 +245,7 @@
 #define HAVE_CBRT 1
 #define HAVE_CRYPT 1
 #define HAVE_ERF 1
+#define HAVE_EXPLICIT_BZERO 1
 #define HAVE_FFS 1
 #define HAVE_FLOCK 1
 #define HAVE_HYPOT 1
@@ -269,6 +272,7 @@
 #define HAVE_CHOWN 1
 #define HAVE_CHROOT 1
 #define HAVE_CLOCK_GETTIME 1
+#define HAVE_COPY_FILE_RANGE 1
 #define HAVE_COSH 1
 #define HAVE_CRYPT_R 1
 #define HAVE_DIRFD 1
@@ -296,6 +300,7 @@
 #define HAVE_FTRUNCATE64 1
 #define HAVE_GETCWD 1
 #define HAVE_GETEGID 1
+#define HAVE_GETENTROPY 1
 #define HAVE_GETEUID 1
 #define HAVE_GETGID 1
 #define HAVE_GETGRNAM 1
@@ -311,6 +316,7 @@
 #define HAVE_GETPWNAM_R 1
 #define HAVE_GETPWUID 1
 #define HAVE_GETPWUID_R 1
+#define HAVE_GETRANDOM 1
 #define HAVE_GETRESGID 1
 #define HAVE_GETRESUID 1
 #define HAVE_GETRLIMIT 1
@@ -323,6 +329,7 @@
 #define HAVE_IOCTL 1
 #define HAVE_KILL 1
 #define HAVE_KILLPG 1
+#define HAVE_LCHMOD 1
 #define HAVE_LCHOWN 1
 #define HAVE_LINK 1
 #define HAVE_LLABS 1
@@ -398,6 +405,7 @@
 #define HAVE_UTIMES 1
 #define HAVE_WAIT4 1
 #define HAVE_WAITPID 1
+#define HAVE_STATX 1
 #define HAVE_CRYPT_H 1
 #define HAVE_STRUCT_CRYPT_DATA_INITIALIZED 1
 #define HAVE_BUILTIN___BUILTIN_ALLOCA_WITH_ALIGN 1
@@ -438,6 +446,7 @@
 #define POSIX_SIGNAL 1
 #define HAVE_SIG_T 1
 #define RSHIFT(x,y) ((x)>>(int)(y))
+#define USE_COPY_FILE_RANGE 1
 #define HAVE__SC_CLK_TCK 1
 #define STACK_GROW_DIRECTION -1
 #define COROUTINE_H "coroutine/arm64/Context.h"
@@ -468,7 +477,7 @@
 #define HAVE__SETJMP 1
 #define RUBY_SETJMP(env) __builtin_setjmp((env))
 #define RUBY_LONGJMP(env,val) __builtin_longjmp((env),val)
-#define USE_YJIT 0
+#define USE_YJIT 1
 #define USE_RJIT 1
 #define RUBY_PLATFORM "aarch64-linux"
 #endif /* INCLUDE_RUBY_CONFIG_H */

@@ -166,6 +166,8 @@
 #define NO_ADDRESS_SAFETY_ANALYSIS(x) __attribute__ ((__no_address_safety_analysis__)) x
 #define WARN_UNUSED_RESULT(x) __attribute__ ((__warn_unused_result__)) x
 #define MAYBE_UNUSED(x) __attribute__ ((__unused__)) x
+#define ERRORFUNC(mesg,x) __attribute__ ((__error__ mesg)) x
+#define WARNINGFUNC(mesg,x) __attribute__ ((__warning__ mesg)) x
 #define WEAK(x) __attribute__ ((__weak__)) x
 #define HAVE_FUNC_WEAK 1
 #define RUBY_CXX_DEPRECATED(msg) __attribute__((__deprecated__(msg)))
@@ -456,7 +458,7 @@
 #define RUBY_SETJMP(env) sigsetjmp((env),0)
 #define RUBY_LONGJMP(env,val) siglongjmp((env),val)
 #define RUBY_JMP_BUF sigjmp_buf
-#define USE_YJIT 0
+#define USE_YJIT 1
 #define USE_RJIT 1
-#define RUBY_PLATFORM "x86_64-darwin20"
+#define RUBY_PLATFORM "x86_64-darwin24"
 #endif /* INCLUDE_RUBY_CONFIG_H */

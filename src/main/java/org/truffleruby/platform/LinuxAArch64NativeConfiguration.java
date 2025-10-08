@@ -438,8 +438,8 @@ public final class LinuxAArch64NativeConfiguration extends DefaultNativeConfigur
         configuration.config("platform.socket.PF_ISDN", 34);
         configuration.config("platform.socket.AF_LOCAL", 1);
         configuration.config("platform.socket.PF_LOCAL", 1);
-        configuration.config("platform.socket.AF_MAX", 41);
-        configuration.config("platform.socket.PF_MAX", 41);
+        configuration.config("platform.socket.AF_MAX", 46);
+        configuration.config("platform.socket.PF_MAX", 46);
         configuration.config("platform.socket.AF_PACKET", 17);
         configuration.config("platform.socket.PF_PACKET", 17);
         configuration.config("platform.socket.AF_ROUTE", 16);
@@ -517,6 +517,7 @@ public final class LinuxAArch64NativeConfiguration extends DefaultNativeConfigur
         configuration.config("platform.socket.IPPROTO_TP", 29);
         configuration.config("platform.socket.IPPROTO_UDP", 17);
         configuration.config("platform.socket.IPV6_CHECKSUM", 7);
+        configuration.config("platform.socket.IPV6_DONTFRAG", 62);
         configuration.config("platform.socket.IPV6_DSTOPTS", 59);
         configuration.config("platform.socket.IPV6_HOPLIMIT", 52);
         configuration.config("platform.socket.IPV6_HOPOPTS", 54);
@@ -526,10 +527,12 @@ public final class LinuxAArch64NativeConfiguration extends DefaultNativeConfigur
         configuration.config("platform.socket.IPV6_MULTICAST_IF", 17);
         configuration.config("platform.socket.IPV6_MULTICAST_LOOP", 19);
         configuration.config("platform.socket.IPV6_NEXTHOP", 9);
+        configuration.config("platform.socket.IPV6_PATHMTU", 61);
         configuration.config("platform.socket.IPV6_PKTINFO", 50);
         configuration.config("platform.socket.IPV6_RECVDSTOPTS", 58);
         configuration.config("platform.socket.IPV6_RECVHOPLIMIT", 51);
         configuration.config("platform.socket.IPV6_RECVHOPOPTS", 53);
+        configuration.config("platform.socket.IPV6_RECVPATHMTU", 60);
         configuration.config("platform.socket.IPV6_RECVPKTINFO", 49);
         configuration.config("platform.socket.IPV6_RECVRTHDR", 56);
         configuration.config("platform.socket.IPV6_RECVTCLASS", 66);
@@ -706,7 +709,7 @@ public final class LinuxAArch64NativeConfiguration extends DefaultNativeConfigur
         configuration.config("platform.socket.TCP_USER_TIMEOUT", 18);
         configuration.config("platform.socket.TCP_WINDOW_CLAMP", 10);
         configuration.config("platform.socket.UDP_CORK", 1);
-        configuration.config("platform.socket.SOMAXCONN", 128);
+        configuration.config("platform.socket.SOMAXCONN", 4096);
         configuration.config("platform.process.EXIT_SUCCESS", 0);
         configuration.config("platform.process.EXIT_FAILURE", 1);
         configuration.config("platform.process.WNOHANG", 1);
@@ -835,8 +838,8 @@ public final class LinuxAArch64NativeConfiguration extends DefaultNativeConfigur
         configuration.config("platform.typedef.caddr_t", string(context, "string"));
         configuration.config("platform.typedef.key_t", string(context, "int"));
         configuration.config("platform.typedef.clock_t", string(context, "long"));
-        configuration.config("platform.typedef.time_t", string(context, "long"));
         configuration.config("platform.typedef.clockid_t", string(context, "int"));
+        configuration.config("platform.typedef.time_t", string(context, "long"));
         configuration.config("platform.typedef.timer_t", string(context, "pointer"));
         configuration.config("platform.typedef.useconds_t", string(context, "uint"));
         configuration.config("platform.typedef.suseconds_t", string(context, "long"));
@@ -846,7 +849,7 @@ public final class LinuxAArch64NativeConfiguration extends DefaultNativeConfigur
         configuration.config("platform.typedef.u_int8_t", string(context, "uchar"));
         configuration.config("platform.typedef.u_int16_t", string(context, "ushort"));
         configuration.config("platform.typedef.u_int32_t", string(context, "uint"));
-        configuration.config("platform.typedef.u_int64_t", string(context, "ulong_long"));
+        configuration.config("platform.typedef.u_int64_t", string(context, "ulong"));
         configuration.config("platform.typedef.register_t", string(context, "long"));
         configuration.config("platform.typedef.fd_mask", string(context, "long"));
         configuration.config("platform.typedef.blksize_t", string(context, "int"));

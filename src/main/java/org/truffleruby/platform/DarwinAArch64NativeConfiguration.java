@@ -559,7 +559,9 @@ public final class DarwinAArch64NativeConfiguration extends DefaultNativeConfigu
         configuration.config("platform.socket.SCM_RIGHTS", 1);
         configuration.config("platform.socket.SCM_TIMESTAMP", 2);
         configuration.config("platform.socket.SEEK_CUR", 1);
+        configuration.config("platform.socket.SEEK_DATA", 4);
         configuration.config("platform.socket.SEEK_END", 2);
+        configuration.config("platform.socket.SEEK_HOLE", 3);
         configuration.config("platform.socket.SEEK_SET", 0);
         configuration.config("platform.socket.SHUT_RD", 0);
         configuration.config("platform.socket.SHUT_RDWR", 2);

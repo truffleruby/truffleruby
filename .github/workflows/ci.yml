@@ -1,5 +1,10 @@
-# NOTE: This is only a small subset of the CI which runs on GitHub Actions.
-# Most of the CI is defined in ci.jsonnet.
+# Differences to ci.jsonnet (the old internal CI):
+# * In general most tests are run on a single platform rather than all platforms
+# * ubuntu-22.04-arm is chosen as the default platform because it is the fastest on GitHub Actions
+# * Test on a single JDK instead of stable + latest
+# * No `jt test mri --fast --no-sulong` on JVM
+# * `jt test mri --fast --no-sulong` on Native instead of `test mri --no-sulong`
+# Those differences are intentional to avoid making the CI too slow.
 name: CI
 on:
   pull_request:
@@ -9,9 +14,9 @@ permissions:
   contents: read
 
 jobs:
-  lint:
+  lint: # ~10min
     name: lint
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     env:
       JT_JDK: '21'
     steps:
@@ -40,9 +45,9 @@ jobs:
       run: jt build -- --jdt builtin --warning-as-error --force-deprecation-as-warning
     - run: jt lint
 
-  build:
+  build: # ~5min
     name: build jvm
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     defaults:
       run:
         # Ensure all build files are in build/.
@@ -82,53 +87,158 @@ jobs:
         path: ${{ github.workspace }}/truffleruby-jvm.tar
         include-hidden-files: true
 
-  build_native:
+  build_native: # ~10min
     name: build native
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     defaults:
       run:
         # Ensure all build files are in build/.
         # Test jobs don't have build/ to ensure nothing uses the build files.
         working-directory: build
     steps:
-      - name: Clone TruffleRuby
-        uses: actions/checkout@v4
-        with:
-          path: build
-      - name: Setup system Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          working-directory: build
-      - name: Setup jt
-        run: echo "$PWD/bin" >> $GITHUB_PATH
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+      with:
+        path: build
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        working-directory: build
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
 
-      - name: Restore ~/.mx/cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.mx/cache
-          key: mx-cache-build-native-${{ runner.os }}-${{ hashFiles('build/common.json') }}
+    - name: Restore ~/.mx/cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.mx/cache
+        key: mx-cache-build-native-${{ runner.os }}-${{ hashFiles('build/common.json') }}
 
-      - uses: ./build/.github/actions/setup-jvmci-graal
+    - uses: ./build/.github/actions/setup-jvmci-graal
 
-      - run: free -m
-      - name: Build TruffleRuby
-        run: jt build --env native
+    - run: free -m
+    - name: Build TruffleRuby
+      run: jt build --env native
 
-      - name: Create archive
-        run: |
-          mv "$(jt -u native ruby-home)" "${{ github.workspace }}/truffleruby-native"
-          cd ${{ github.workspace }}
-          tar cf ${{ github.workspace }}/truffleruby-native.tar truffleruby-native
-      - uses: actions/upload-artifact@v4
-        with:
-          name: truffleruby-native
-          path: ${{ github.workspace }}/truffleruby-native.tar
-          include-hidden-files: true
+    - name: Create archive
+      run: |
+        mv "$(jt -u native ruby-home)" "${{ github.workspace }}/truffleruby-native"
+        cd ${{ github.workspace }}
+        tar cf ${{ github.workspace }}/truffleruby-native.tar truffleruby-native
+    - uses: actions/upload-artifact@v4
+      with:
+        name: truffleruby-native
+        path: ${{ github.workspace }}/truffleruby-native.tar
+        include-hidden-files: true
 
-  fast_specs:
-    name: fast specs
+  platform_checks: # ~7-9min
+    name: platform ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-22.04-arm, macos-15-intel, macos-14]
+    defaults:
+      run:
+        # Use build/ too for consistency in steps and cache reuse
+        working-directory: build
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+      with:
+        path: build
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        working-directory: build
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+
+    - name: Restore ~/.mx/cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.mx/cache
+        key: mx-cache-build-${{ runner.os }}-${{ hashFiles('build/common.json') }}
+
+    - uses: ./build/.github/actions/setup-jvmci-graal
+
+    # platform checks
+    - name: MAKEFILE_CONFIG on CRuby for comparison and convenience
+      run: ruby -e "pp RbConfig::MAKEFILE_CONFIG"
+    - run: ruby tool/generate-native-config.rb
+    - run: cat $(jt native_configuration_file)
+    - run: tool/generate-config-header.sh
+    - run: cat $(jt config_header_file)
+    - run: jt check_native_configuration
+    - run: jt check_config_header
+    # run jt test fast on each platform
+    - run: jt build # ~4-6min, 13min on macos-15-intel
+    - run: jt test fast # ~1.5min
+
+  test_needing_build_files: # ~17min
+    name: tests needing build files
+    runs-on: ubuntu-22.04-arm
+    defaults:
+      run:
+        # Use build/ too for consistency in steps and cache reuse
+        working-directory: build
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+      with:
+        path: build
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        working-directory: build
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+
+    - name: Restore ~/.mx/cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.mx/cache
+        key: mx-cache-build-${{ runner.os }}-${{ hashFiles('build/common.json') }}
+
+    - uses: ./build/.github/actions/setup-jvmci-graal
+
+    - run: jt build
+    - run: jt mx build
+    - run: jt test unit --verbose # ~1min
+    - run: jt test tck # ~1min
+    - run: jt test polyglot # ~5min
+    # jt test compiler needs jvm-ce, test it here for simplicity
+    - run: jt build --env jvm-ce
+    - run: jt -u jvm-ce test compiler
+
+  # NOTE: these tests could run on native instead of jvm and take less cumulative CI time,
+  # but that would delay their start since building native takes longer,
+  # and increase CI duration (jvm 6min build + 14min :truffle vs native 14min build + 10min cexts).
+  all_tests:
+    name: jt test ${{ matrix.test }}
     needs: [build]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        test:
+        - fast # ~1.5min
+        - :truffle # ~12min
+        - :language # ~3min
+        - :core # ~7min
+        - :library # ~2min
+        - :cext # ~1.5min
+        - :cxx # ~1min
+        - :security # ~0.75min
+        - :command_line # ~5min
+        - :tracepoint # ~0.5min
+        - :next # ~0.25min
+        - bundle # ~1.5min
+        - cexts # ~6.5min
+        - mri --all-sulong # ~6min
+        - integration # ~10min
+        - gems # ~2min
+        - ecosystem # ~6min
+        - basictest # ~0.5min
     steps:
     - name: Clone TruffleRuby
       uses: actions/checkout@v4
@@ -142,114 +252,66 @@ jobs:
         name: truffleruby-jvm
     - uses: ./.github/actions/setup-truffleruby
 
-    - run: jt test fast
-    - run: jt test :next
+    - run: jt test ${{ matrix.test }}
 
-  all_specs:
-    name: specs ${{ matrix.specs }}
-    needs: [build]
-    runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: false
-      matrix:
-        specs:
-        - :truffle # ~12min
-        - :language :core # ~3min + ~9min
-        - :library :cext :security :command_line :tracepoint # command_line ~5min, others < 2min
-    steps:
-      - name: Clone TruffleRuby
-        uses: actions/checkout@v4
-      - name: Setup system Ruby
-        uses: ruby/setup-ruby@v1
-      - name: Setup jt
-        run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: truffleruby-jvm
-      - uses: ./.github/actions/setup-truffleruby
-
-      - run: jt test --timeout 180 ${{ matrix.specs }}
-
-  test_integration:
-    name: test integration
-    needs: [build]
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Clone TruffleRuby
-        uses: actions/checkout@v4
-      - name: Setup system Ruby
-        uses: ruby/setup-ruby@v1
-      - name: Setup jt
-        run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: truffleruby-jvm
-      - uses: ./.github/actions/setup-truffleruby
-
-      - run: jt test integration
-
-  test_native:
+  test_native: # ~8min
     name: test native
     needs: [build_native]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     steps:
-      - name: Clone TruffleRuby
-        uses: actions/checkout@v4
-      - name: Setup system Ruby
-        uses: ruby/setup-ruby@v1
-      - name: Setup jt
-        run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+    - name: Setup jt
+      run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: truffleruby-native
-      - uses: ./.github/actions/setup-truffleruby
-        with:
-          archive: truffleruby-native
+    - uses: actions/download-artifact@v4
+      with:
+        name: truffleruby-native
+    - uses: ./.github/actions/setup-truffleruby
+      with:
+        archive: truffleruby-native
 
-      - run: jt test compiler
-      # A subset of specs that are more likely to differ on native and run quickly
-      - run: jt test :command_line
-      - run: jt test :language
-      # To catch slow :truffle specs which only apply to native
-      - run: jt test fast :truffle
+    - run: jt test compiler # ~3min
+    - run: jt test :all # ~5min
+    # To catch slow :truffle specs which only apply to native
+    - run: jt test fast :truffle # ~10s
 
-  test_mri:
+  test_native_mri_tests: # ~6min
     name: run MRI tests on native
     needs: [build_native]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     steps:
-      - name: Clone TruffleRuby
-        uses: actions/checkout@v4
-      - name: Setup system Ruby
-        uses: ruby/setup-ruby@v1
-      - name: Setup jt
-        run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+    - name: Setup jt
+      run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: truffleruby-native
-      - uses: ./.github/actions/setup-truffleruby
-        with:
-          archive: truffleruby-native
+    - uses: actions/download-artifact@v4
+      with:
+        name: truffleruby-native
+    - uses: ./.github/actions/setup-truffleruby
+      with:
+        archive: truffleruby-native
 
-      - run: jt test mri --fast --no-sulong
+    - run: jt test mri --fast --no-sulong -- --jobs=4 --longest=10
 
-  ruby_spec_cruby:
+  ruby_spec_cruby: # ~3min
     name: ruby/spec on CRuby ${{ matrix.ruby }}
     strategy:
       fail-fast: false
       matrix:
         ruby: ['3.2', '3.3', '3.4']
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04-arm
     steps:
-      - uses: actions/checkout@v4
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: ${{ matrix.ruby }}
-          bundler: none
-      - name: Setup jt
-        run: echo "$PWD/bin" >> $GITHUB_PATH
-      - run: CHECK_LEAKS=true jt -u ruby mspec -fdot --timeout 30 spec/ruby
+    - uses: actions/checkout@v4
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+        bundler: none
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+    - run: CHECK_LEAKS=true jt -u ruby mspec -fdot --timeout 30 spec/ruby
