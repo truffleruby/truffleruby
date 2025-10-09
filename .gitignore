@@ -92,8 +92,6 @@ test/truffle/gems/default-bundled-gems/.bundle/config
 
 # Tests
 /mri_tests.txt
-/test/truffle/ecosystem/blog6/Gemfile
-/test/truffle/ecosystem/blog6/Gemfile.lock
 /test/truffle/integration/gem-testing
 /tool/docker
 /tool/llvm-ol7/*.tar.gz
