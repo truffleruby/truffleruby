@@ -161,10 +161,6 @@ module Utilities
     @aarch64 ||= RbConfig::CONFIG['host_cpu'] =~ /arm64|aarch64/
   end
 
-  def ci?
-    ENV.key?('BUILD_URL')
-  end
-
   def soext
     # RbConfig::CONFIG["SOEXT"] is not set for system ruby 2.3 in macOS CI
     RbConfig::CONFIG.fetch('SOEXT') { darwin? ? 'dylib' : 'so' }
@@ -365,7 +361,7 @@ module Utilities
     name = File.basename url, '.git'
     path = File.expand_path("../#{name}", TRUFFLERUBY_DIR)
     unless Dir.exist? path
-      git_clone url, path
+      sh 'git', 'clone', url, path
       sh 'git', 'checkout', commit, chdir: path if commit
     end
     path
@@ -630,7 +626,6 @@ module Utilities
           raise "$JAVA_HOME does not seem to point to a JVMCI-enabled JDK (`#{java_home}/bin/java -version` does not contain 'jvmci').\n#{fix}"
         end
       else
-        raise '$JAVA_HOME should be set in CI' if ci?
         install_jvmci("$JAVA_HOME is not set, downloading JDK#{@jdk_version} with JVMCI")
       end
     end
@@ -686,16 +681,6 @@ module Utilities
       raise 'Need a git remote in truffleruby with the internal repository URL'
     end
     Remotes.url(Remotes.bitbucket).sub('truffleruby', repo)
-  end
-
-  def git_clone(url, path)
-    if ci?
-      # Use mx sclone to use the git cache in CI
-      # Unset $JAVA_HOME, mx sclone should not use it, and $JAVA_HOME might be set to the standalone home in graalvm tests
-      mx('sclone', '--kind', 'git', url, path, java_home: :none)
-    else
-      sh 'git', 'clone', url, path
-    end
   end
 
   def run_mspec(env_vars, command = 'run', *args)
@@ -2470,7 +2455,7 @@ module Commands
     if File.directory?(ee_path)
       false
     else
-      git_clone(bitbucket_url('graal-enterprise'), ee_path)
+      sh 'git', 'clone', bitbucket_url('graal-enterprise'), ee_path
       true
     end
   end
@@ -3152,8 +3137,8 @@ module Commands
       check_documentation_urls
       check_license
 
-      check_source_files if ci?
-      check_heap_dump if ci?
+      check_source_files if ENV['CI']
+      check_heap_dump if ENV['CI']
 
       run_ruby('tool/find_unused_primitives.rb')
 

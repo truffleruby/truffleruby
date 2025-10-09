@@ -5,12 +5,7 @@ set -x
 
 VERSION=$(cat .ruby-version)
 
-if [ -n "$TRUFFLERUBY_CI" ]; then
-    # The source archive, a copy from https://www.ruby-lang.org/en/downloads/
-    url=$(mx urlrewrite "https://lafo.ssw.uni-linz.ac.at/pub/graal-external-deps/ruby-$VERSION.tar.gz")
-else
-    url="https://cache.ruby-lang.org/pub/ruby/${VERSION%.*}/ruby-$VERSION.tar.gz"
-fi
+url="https://cache.ruby-lang.org/pub/ruby/${VERSION%.*}/ruby-$VERSION.tar.gz"
 
 os=$(uname -s)
 os=${os/Linux/linux}

@@ -13,8 +13,7 @@ require_relative '../../ruby/spec_helper'
 describe "Truffle::Interop" do
   # Run locally and in TruffleRuby's CI but not in GraalVM's CI to not prevent adding new interop messages
   guard -> {
-    (!ENV.key?('BUILD_URL') || ENV.key?('TRUFFLERUBY_CI')) &&
-      ENV['TRUFFLERUBY_ALL_INTEROP_LIBRARY_METHODS_SPEC'] != 'false'
+    ENV['TRUFFLERUBY_ALL_INTEROP_LIBRARY_METHODS_SPEC'] != 'false'
   } do
     it "has a method for each InteropLibrary message" do
       all_methods = Primitive.interop_library_all_methods
