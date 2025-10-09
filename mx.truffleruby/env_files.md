@@ -5,8 +5,7 @@ Here is how the various env files relate to each other:
     * `native`: + librubyvm + `Truffle SVM Macro`
       * `native-host-inlining`: + `TruffleHostInliningPrintExplored`
       * `native-profiling`: + `-H:-DeleteLocalSymbols`
-  * `jvm-ee`: + Oracle GraalVM Compiler + `Truffle enterprise` + license + `LLVM Runtime Native Enterprise`
-    * `jvm-ee-libgraal`: + libgraal
-    * `native-ee`: + librubyvm + `Truffle SVM Macro Enterprise` + Native Image G1
+  * `jvm-ee`: + Oracle GraalVM Compiler + libgraal
+    * `native-ee`: + librubyvm + Native Image G1
       * `native-ee-host-inlining`: + `TruffleHostInliningPrintExplored`
       * `native-ee-aux`: + `AuxiliaryEngineCache`, - Native Image G1 (currently incompatible)

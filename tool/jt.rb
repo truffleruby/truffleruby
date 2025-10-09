@@ -81,6 +81,8 @@ LTS_JDK_VERSION = '21'
 IGV_JDK_VERSION = '21'
 DEFAULT_JDK_VERSION = 'latest'
 
+BOOTSTRAP_GRAALVM_VERSION = '25.0.0'
+
 # Not yet 'jdk.graal' as we test against 21 and 21 does not know 'jdk.graal'
 GRAAL_OPTION_PREFIX = 'graal'
 
@@ -187,10 +189,6 @@ module Utilities
     @mx_env.include?('ee') || @ruby_name.include?('ee')
   end
 
-  def ee_jdk?
-    ee?
-  end
-
   def graal_common_json
     "#{GRAAL_DIR}/common.json"
   end
@@ -203,14 +201,13 @@ module Utilities
     @jvmci_version ||= begin
       sforceimports unless File.directory?(GRAAL_DIR)
       common_json = File.read(graal_common_json)
-      edition = ee_jdk? ? 'ee' : 'ce'
       if @jdk_version == 'latest'
         # The version after "-jvmci-" is not enough for latest, we also need the JDK version
-        regex = /"labsjdk-#{edition}-#{@jdk_version}":\s*\{\s*"name":\s*"labsjdk"\s*,\s*"version":\s*"(?:ce|ee)-([^"]+-jvmci-[^"]+)"\s*,/
+        regex = /"labsjdk-ce-#{@jdk_version}":\s*\{\s*"name":\s*"labsjdk"\s*,\s*"version":\s*"(?:ce|ee)-([^"]+-jvmci-[^"]+)"\s*,/
       else
-        regex = /"labsjdk-#{edition}-#{@jdk_version}":\s*\{\s*"name":\s*"labsjdk"\s*,\s*"version":\s*"[^"]+-(jvmci-[^"]+)"\s*,/
+        regex = /"labsjdk-ce-#{@jdk_version}":\s*\{\s*"name":\s*"labsjdk"\s*,\s*"version":\s*"[^"]+-(jvmci-[^"]+)"\s*,/
       end
-      raise "JVMCI version not found for labsjdk-#{edition}-#{@jdk_version} in #{graal_common_json}" unless regex =~ common_json
+      raise "JVMCI version not found for labsjdk-ce-#{@jdk_version} in #{graal_common_json}" unless regex =~ common_json
       $1
     end
   end
@@ -901,7 +898,7 @@ module Commands
     when 'core-symbols'
       sh 'tool/generate-core-symbols.rb'
     else
-      build_graalvm(*project, *options)
+      build_standalone(*project, *options)
     end
   end
 
@@ -2299,6 +2296,8 @@ module Commands
     case name
     when 'jvmci'
       puts install_jvmci("Downloading JDK#{@jdk_version} with JVMCI")
+    when 'graalvm'
+      puts install_graalvm
     when 'eclipse'
       puts install_eclipse
     else
@@ -2308,7 +2307,6 @@ module Commands
 
   private def install_jvmci(download_message, jdk_version: @jdk_version)
     raise "Unknown JDK version: #{jdk_version}" unless JDK_VERSIONS.include?(jdk_version)
-    raise 'Cannot install labsjdk-ee' if ee_jdk?
 
     jdk_name = "labsjdk-ce-#{jdk_version}"
     # We try to match the default directory name that mx fetch-jdk uses here to avoid extra symlinks
@@ -2328,6 +2326,25 @@ module Commands
     abort "#{java} does not exist" unless File.executable?(java)
 
     java_home
+  end
+
+  private def install_graalvm
+    version = BOOTSTRAP_GRAALVM_VERSION
+    major = version[/^(\d+)/, 1]
+    archive_version = version.sub(/\.0\.0$/, '')
+    os = { 'linux' => 'linux', 'darwin' => 'macos' }.fetch(mx_os)
+    arch = { 'amd64' => 'x64', 'aarch64' => 'aarch64' }.fetch(mx_arch)
+    url = "https://download.oracle.com/graalvm/#{major}/archive/graalvm-jdk-#{archive_version}_#{os}-#{arch}_bin.tar.gz"
+    dir = "#{JDKS_CACHE_DIR}/graalvm-#{version}"
+    archive = "#{dir}.tar.gz"
+    unless File.file?(archive)
+      sh 'wget', '-O', "#{JDKS_CACHE_DIR}/graalvm-#{version}.tar.gz", url
+    end
+    unless File.directory?(dir)
+      Dir.mkdir(dir)
+      sh 'tar', '--extract', '--file', archive, '--directory', dir, '--strip-components', '1'
+    end
+    dir
   end
 
   private def install_eclipse
@@ -2433,10 +2450,7 @@ module Commands
     mx('sforceimports', java_home: :none, primary_suite: TRUFFLERUBY_DIR)
   end
 
-  private def build_graalvm(*options)
-    raise 'use --env jvm-ce instead' if options.delete('--graal')
-    raise 'use --env native instead' if options.delete('--native')
-
+  private def build_standalone(*options)
     if options.delete('--new-hash')
       build_information_path = "#{TRUFFLERUBY_DIR}/src/shared/java/org/truffleruby/shared/BuildInformation.java"
       raise unless File.exist?(build_information_path) # in case the file moves in the future
@@ -2461,6 +2475,11 @@ module Commands
     name = "truffleruby-#{@ruby_name}"
     mx_base_args = ['--env', env]
 
+    os_env = {}
+    if ee?
+      os_env['BOOTSTRAP_GRAALVM'] = install_graalvm
+    end
+
     if options.delete('--sforceimports') || sforceimports?(mx_base_args)
       sforceimports
     end
@@ -2468,7 +2487,7 @@ module Commands
     mx_options, mx_build_options = args_split(options)
     mx_args = mx_base_args + mx_options
 
-    mx(*mx_args, 'build', *mx_build_options, primary_suite: TRUFFLERUBY_DIR)
+    mx(os_env, *mx_args, 'build', *mx_build_options, primary_suite: TRUFFLERUBY_DIR)
 
     standalone_dist = env.include?('native') ? 'TRUFFLERUBY_NATIVE_STANDALONE' : 'TRUFFLERUBY_JVM_STANDALONE'
     build_dir = "#{TRUFFLERUBY_DIR}/mxbuild/#{mx_os}-#{mx_arch}/#{standalone_dist}"

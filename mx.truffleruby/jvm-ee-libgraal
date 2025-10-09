@@ -1,5 +1,0 @@
-DYNAMIC_IMPORTS=/tools,/graal-enterprise,/truffle-enterprise,/substratevm-enterprise
-BUILD_TARGETS=TRUFFLERUBY_JVM_STANDALONE
-COMPONENTS=LibGraal Enterprise
-NATIVE_IMAGES=lib:jvmcicompiler
-GRAALVM_SKIP_ARCHIVE=true
