@@ -6,9 +6,6 @@ module Blog6Setup
 
   def self.setup_bundler
     Dir.chdir(BLOG6_DIR) do
-      FileUtils.cp 'Gemfile.renamed', 'Gemfile'
-      FileUtils.cp 'Gemfile.lock.renamed', 'Gemfile.lock'
-
       JT.ruby(*%w[-S bundle config --local without postgresql mysql])
       JT.ruby(*%w[-S bundle config --local path vendor/bundle])
     end
