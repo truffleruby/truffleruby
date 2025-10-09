@@ -190,19 +190,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Group tests to fit under the max time (12min) and minimize the number of jobs to be under GitHub Actions concurrency limits (20)
         test:
-        - fast # ~1.5min
         - :truffle # ~12min
         - :language :core :cxx # ~3min ~7min ~1min
-        - :command_line :library :cext :security :tracepoint # ~5min ~2min ~1.5min ~0.75min ~0.5min
-        - :next # ~0.25min
-        - bundle # ~1.5min
-        - cexts # ~6.5min
+        - :command_line :library :cext :security :tracepoint :next # ~5min ~2min ~1.5min ~0.75min ~0.5min ~0.25min
+        - fast bundle cexts # ~1.5min ~1.5min ~6.5min
         - mri --all-sulong # ~6min
-        - integration # ~10min
-        - gems # ~2min
-        - ecosystem # ~6min
-        - basictest # ~0.5min
+        - integration basictest # ~10min ~0.5min
+        - gems ecosystem # ~2min ~6min
     steps:
     - name: Clone TruffleRuby
       uses: actions/checkout@v4
@@ -216,7 +212,11 @@ jobs:
         name: truffleruby-jvm
     - uses: ./.github/actions/setup-truffleruby
 
-    - run: jt test ${{ matrix.test }}
+    # Special case because this is 'jt test mri --all-sulong', not 'jt test mri' & 'jt test --all-sulong'
+    - run: jt test mri --all-sulong
+      if: matrix.test == 'mri --all-sulong'
+    - run: echo '${{ matrix.test }}' | xargs --verbose -n 1 jt test
+      if: matrix.test != 'mri --all-sulong'
 
   test_native: # ~8min
     name: test native
