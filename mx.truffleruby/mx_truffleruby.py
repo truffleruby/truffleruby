@@ -19,7 +19,6 @@ import mx
 import mx_util
 import mx_gate
 import mx_sdk
-import mx_sdk_vm
 import mx_sdk_vm_ng
 import mx_subst
 import mx_spotbugs
@@ -30,10 +29,7 @@ import mx_unittest
 from mx_sdk_shaded import ShadedLibraryProject # pylint: disable=unused-import
 from mx_sdk_vm_ng import StandaloneLicenses, ThinLauncherProject, LanguageLibraryProject, DynamicPOMDistribution  # pylint: disable=unused-import
 
-# Fail early and clearly when trying to build with a too old JDK
-jdk = mx.get_jdk(mx.JavaCompliance('11+'), 'building TruffleRuby which requires JDK 11 or newer')
-if mx_sdk_vm.base_jdk_version() < 11:
-    mx.abort('Building TruffleRuby requires JDK 11 or newer')
+jdk = mx.get_jdk(mx.JavaCompliance('17+'), 'building TruffleRuby which requires JDK 17 or newer')
 
 if 'RUBY_BENCHMARKS' in os.environ:
     import mx_truffleruby_benchmark  # pylint: disable=unused-import
@@ -316,78 +312,6 @@ def ruby_maven_deploy_public(args):
 
 def ruby_maven_deploy_public_repo_dir(args):
     print(mx_sdk.maven_deploy_public_repo_dir())
-
-mx_sdk_vm.register_graalvm_component(mx_sdk_vm.GraalVmLanguage(
-    suite=_suite,
-    name='TruffleRuby license files',
-    short_name='rbyl',
-    dir_name='ruby',
-    license_files=['LICENSE_TRUFFLERUBY.txt'],
-    third_party_license_files=['3rd_party_licenses_truffleruby.txt'],
-    dependencies=[],
-    truffle_jars=[],
-    support_distributions=[
-        'truffleruby:TRUFFLERUBY_GRAALVM_LICENSES',
-    ],
-    priority=5,
-    stability="experimental"))
-
-mx_sdk_vm.register_graalvm_component(mx_sdk_vm.GraalVmLanguage(
-    suite=_suite,
-    name='TruffleRuby',
-    short_name='rby',
-    dir_name='ruby',
-    license_files=[],
-    third_party_license_files=[],
-    dependencies=['rbyl', 'Truffle', 'Truffle NFI', 'LLVM Runtime Native', 'TRegex'],  # Use short name for license to select by priority
-    truffle_jars=[
-        # Distributions
-        'truffleruby:TRUFFLERUBY',
-        'truffleruby:TRUFFLERUBY-SHARED',
-        'truffleruby:TRUFFLERUBY-ANNOTATIONS',
-        'sdk:JLINE3',
-        # Library distributions
-        'truffle:TRUFFLE_JCODINGS',
-        'truffleruby:TRUFFLERUBY_JONI',
-    ],
-    support_distributions=[
-        'truffleruby:TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_AGNOSTIC',
-        'truffleruby:TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_SPECIFIC',
-        'truffleruby:TRUFFLERUBY_GRAALVM_SUPPORT_NO_NI_RESOURCES',
-    ],
-    provided_executables=[
-        'bin/bundle',
-        'bin/bundler',
-        'bin/erb',
-        'bin/gem',
-        'bin/irb',
-        'bin/racc',
-        'bin/rake',
-        'bin/rbs',
-        'bin/rdbg',
-        'bin/rdoc',
-        'bin/ri',
-        'bin/syntax_suggest',
-    ],
-    library_configs=[
-        mx_sdk_vm.LanguageLibraryConfig(
-            destination='lib/<lib:rubyvm>',
-            launchers=['bin/<exe:ruby>', 'bin/<exe:truffleruby>', 'bin/<exe:truffleruby-polyglot-get>'],
-            jar_distributions=['truffleruby:TRUFFLERUBY-LAUNCHER', 'sdk:MAVEN_DOWNLOADER'],
-            main_class='org.truffleruby.launcher.RubyLauncher',
-            build_args=[
-                '-H:+DetectUserDirectoriesInImageHeap',
-            ],
-            # G1 is only supported on linux currently
-            build_args_enterprise=(['--gc=G1', '-H:-ProtectionKeys'] if (mx.get_os() == 'linux' and 'NATIVE_IMAGE_AUXILIARY_ENGINE_CACHE' not in os.environ) else []),
-            language='ruby',
-            option_vars=[
-                'RUBYOPT',
-                'TRUFFLERUBYOPT'
-            ]
-        )
-    ],
-    stability="experimental"))
 
 mx.update_commands(_suite, {
     'ruby': [ruby_run_ruby, ''],
