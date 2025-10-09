@@ -873,7 +873,7 @@ suite = {
         },
 
         "TRUFFLERUBY_GRAALVM_SUPPORT_NO_NI_RESOURCES": {
-            "description": "TruffleRuby support distribution for the GraalVM, the contents is not included as native image resources.",
+            "description": "TruffleRuby support distribution, the contents is not included as native image resources.",
             "native": True,
             "platformDependent": True,
             "layout": {
@@ -1010,17 +1010,6 @@ suite = {
                 "modules/": [
                     "classpath-dependencies:TRUFFLERUBY_STANDALONE_DEPENDENCIES",
                 ],
-            },
-        },
-
-        "TRUFFLERUBY_GRAALVM_LICENSES": {
-            "fileListPurpose": "native-image-resources",
-            "native": True,
-            "platformDependent": True,
-            "description": "TruffleRuby support distribution for the GraalVM license files",
-            "layout": {
-                "LICENSE_TRUFFLERUBY.txt": "file:LICENCE.md",
-                "3rd_party_licenses_truffleruby.txt": "file:3rd_party_licenses.txt",
             },
         },
 
