@@ -12,6 +12,10 @@ on:
     branches: [master]
 permissions:
   contents: read
+# This can be inconvenient when modifying CI, feel free to comment it out temporarily
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   lint: # ~10min
