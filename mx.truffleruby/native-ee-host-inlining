@@ -1,6 +1,5 @@
-DYNAMIC_IMPORTS=/tools,/graal-enterprise,/truffle-enterprise,/substratevm-enterprise,substratevm-enterprise-gcs
+DYNAMIC_IMPORTS=/tools
 BUILD_TARGETS=TRUFFLERUBY_NATIVE_STANDALONE
-COMPONENTS=SubstrateVM Enterprise,Truffle SVM Macro Enterprise,suite:substratevm-enterprise-gcs
 NATIVE_IMAGES=lib:rubyvm
 EXTRA_IMAGE_BUILDER_ARGUMENTS=rubyvm:-H:+UnlockExperimentalVMOptions rubyvm:-H:BuildOutputJSONFile=native-image-build-rubyvm.json rubyvm:-H:Log=HostInliningPhase,~CanonicalizerPhase,~GraphBuilderPhase rubyvm:-H:+TruffleHostInliningPrintExplored rubyvm:-H:MethodFilter=org.truffleruby.*.* rubyvm:-H:-UnlockExperimentalVMOptions rubyvm:-Dgraal.LogFile=host-inlining.txt
 GENERATE_DEBUGINFO=false

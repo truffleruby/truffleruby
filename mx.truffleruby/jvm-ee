@@ -1,2 +1,2 @@
-DYNAMIC_IMPORTS=/tools,/graal-enterprise,/truffle-enterprise
+DYNAMIC_IMPORTS=/tools
 BUILD_TARGETS=TRUFFLERUBY_JVM_STANDALONE

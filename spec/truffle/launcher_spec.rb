@@ -43,9 +43,6 @@ describe "The launcher" do
     ENV['GEM_HOME'] = nil
     @stderr = tmp("stderr")
     @redirect = "2>#{@stderr}"
-
-    # GR-23507, GR-44103: prevent thread warnings on stdout to break specs/tests
-    @ignore_jvm_thread_warnings = '--vm.Xlog:os+thread=off,gc+task=off'
   end
 
   after :each do

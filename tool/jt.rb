@@ -81,6 +81,8 @@ LTS_JDK_VERSION = '21'
 IGV_JDK_VERSION = '21'
 DEFAULT_JDK_VERSION = 'latest'
 
+BOOTSTRAP_GRAALVM_VERSION = '25.0.0'
+
 # Not yet 'jdk.graal' as we test against 21 and 21 does not know 'jdk.graal'
 GRAAL_OPTION_PREFIX = 'graal'
 
@@ -161,10 +163,6 @@ module Utilities
     @aarch64 ||= RbConfig::CONFIG['host_cpu'] =~ /arm64|aarch64/
   end
 
-  def ci?
-    ENV.key?('BUILD_URL')
-  end
-
   def soext
     # RbConfig::CONFIG["SOEXT"] is not set for system ruby 2.3 in macOS CI
     RbConfig::CONFIG.fetch('SOEXT') { darwin? ? 'dylib' : 'so' }
@@ -191,10 +189,6 @@ module Utilities
     @mx_env.include?('ee') || @ruby_name.include?('ee')
   end
 
-  def ee_jdk?
-    ee?
-  end
-
   def graal_common_json
     "#{GRAAL_DIR}/common.json"
   end
@@ -207,14 +201,13 @@ module Utilities
     @jvmci_version ||= begin
       sforceimports unless File.directory?(GRAAL_DIR)
       common_json = File.read(graal_common_json)
-      edition = ee_jdk? ? 'ee' : 'ce'
       if @jdk_version == 'latest'
         # The version after "-jvmci-" is not enough for latest, we also need the JDK version
-        regex = /"labsjdk-#{edition}-#{@jdk_version}":\s*\{\s*"name":\s*"labsjdk"\s*,\s*"version":\s*"(?:ce|ee)-([^"]+-jvmci-[^"]+)"\s*,/
+        regex = /"labsjdk-ce-#{@jdk_version}":\s*\{\s*"name":\s*"labsjdk"\s*,\s*"version":\s*"(?:ce|ee)-([^"]+-jvmci-[^"]+)"\s*,/
       else
-        regex = /"labsjdk-#{edition}-#{@jdk_version}":\s*\{\s*"name":\s*"labsjdk"\s*,\s*"version":\s*"[^"]+-(jvmci-[^"]+)"\s*,/
+        regex = /"labsjdk-ce-#{@jdk_version}":\s*\{\s*"name":\s*"labsjdk"\s*,\s*"version":\s*"[^"]+-(jvmci-[^"]+)"\s*,/
       end
-      raise "JVMCI version not found for labsjdk-#{edition}-#{@jdk_version} in #{graal_common_json}" unless regex =~ common_json
+      raise "JVMCI version not found for labsjdk-ce-#{@jdk_version} in #{graal_common_json}" unless regex =~ common_json
       $1
     end
   end
@@ -365,7 +358,7 @@ module Utilities
     name = File.basename url, '.git'
     path = File.expand_path("../#{name}", TRUFFLERUBY_DIR)
     unless Dir.exist? path
-      git_clone url, path
+      sh 'git', 'clone', url, path
       sh 'git', 'checkout', commit, chdir: path if commit
     end
     path
@@ -630,7 +623,6 @@ module Utilities
           raise "$JAVA_HOME does not seem to point to a JVMCI-enabled JDK (`#{java_home}/bin/java -version` does not contain 'jvmci').\n#{fix}"
         end
       else
-        raise '$JAVA_HOME should be set in CI' if ci?
         install_jvmci("$JAVA_HOME is not set, downloading JDK#{@jdk_version} with JVMCI")
       end
     end
@@ -678,23 +670,6 @@ module Utilities
       'aarch64'
     else
       abort 'Unknown OS'
-    end
-  end
-
-  def bitbucket_url(repo)
-    unless Remotes.bitbucket
-      raise 'Need a git remote in truffleruby with the internal repository URL'
-    end
-    Remotes.url(Remotes.bitbucket).sub('truffleruby', repo)
-  end
-
-  def git_clone(url, path)
-    if ci?
-      # Use mx sclone to use the git cache in CI
-      # Unset $JAVA_HOME, mx sclone should not use it, and $JAVA_HOME might be set to the standalone home in graalvm tests
-      mx('sclone', '--kind', 'git', url, path, java_home: :none)
-    else
-      sh 'git', 'clone', url, path
     end
   end
 
@@ -748,36 +723,6 @@ module Utilities
   # https://misc.flogisoft.com/bash/tip_colors_and_formatting
   TERM_COLOR_RED = "\e[31m"
   TERM_COLOR_DEFAULT = "\e[39m"
-end
-
-module Remotes
-  include Utilities
-  extend self
-
-  def bitbucket(dir = TRUFFLERUBY_DIR)
-    candidate = remote_urls(dir).find { |_r, u| u.include? 'ol-bitbucket' }
-    candidate.first if candidate
-  end
-
-  def github(dir = TRUFFLERUBY_DIR)
-    candidate = remote_urls(dir).find { |_r, u| u.match %r(github.com[:/]oracle) }
-    candidate.first if candidate
-  end
-
-  def remote_urls(dir = TRUFFLERUBY_DIR)
-    @remote_urls ||= Hash.new
-    @remote_urls[dir] ||= begin
-      out = sh 'git', '-C', dir, 'remote', capture: :out, no_print_cmd: true
-      out.split.map do |remote|
-        url = sh 'git', '-C', dir, 'config', '--get', "remote.#{remote}.url", capture: :out, no_print_cmd: true
-        [remote, url.chomp]
-      end
-    end
-  end
-
-  def url(remote_name, dir = TRUFFLERUBY_DIR)
-    remote_urls(dir).find { |r, _u| r == remote_name }.last
-  end
 end
 
 module Commands
@@ -953,7 +898,7 @@ module Commands
     when 'core-symbols'
       sh 'tool/generate-core-symbols.rb'
     else
-      build_graalvm(*project, *options)
+      build_standalone(*project, *options)
     end
   end
 
@@ -1102,22 +1047,6 @@ module Commands
     if core_load_path and truffleruby_jvm? and used_ruby_is_mx_env_name?
       add_experimental_options.call
       vm_args << "--core-load-path=#{TRUFFLERUBY_DIR}/src/main/ruby/truffleruby"
-    end
-
-    if ci?
-      # GR-23507: prevent thread warnings on stdout to break specs/tests/programs using execve().
-      # The problem happens if one thread is calling execve() and the other about the same time is calling pthread_create().
-      # In such case, pthread_create() can return EAGAIN "just because there is a concurrent execve()".
-      # See https://bugs.openjdk.org/browse/JDK-8268605?focusedCommentId=14473665#comment-14473665
-      # To ignore those warnings we use '--vm.Xlog:os+thread=off,gc+task=off'.
-      # --vm.Xlog:all=warning:stderr could be nice but for some reason that can end up causing a warning on stderr AND stdout, which fails specs.
-      # Example warnings:
-      # JVM:
-      # [11.028s][warning][os,thread] Failed to start thread - pthread_create failed (EAGAIN) for attributes: stacksize: 2048k, guardsize: 0k, detached.
-      # SVM with G1:
-      # [0.094s][warning][os,thread] Failed to start thread "GC Thread#1" - pthread_create failed (EAGAIN) for attributes: stacksize: 1024k, guardsize: 4k, detached.
-      # [0.094s][error  ][gc,task  ] GC(0) Failed to create worker thread
-      vm_args << '--vm.Xlog:os+thread=off,gc+task=off'
     end
 
     [vm_args, ruby_args + args, options]
@@ -2367,6 +2296,8 @@ module Commands
     case name
     when 'jvmci'
       puts install_jvmci("Downloading JDK#{@jdk_version} with JVMCI")
+    when 'graalvm'
+      puts install_graalvm
     when 'eclipse'
       puts install_eclipse
     else
@@ -2377,19 +2308,13 @@ module Commands
   private def install_jvmci(download_message, jdk_version: @jdk_version)
     raise "Unknown JDK version: #{jdk_version}" unless JDK_VERSIONS.include?(jdk_version)
 
-    ee = ee_jdk?
-    jdk_name = ee ? "labsjdk-ee-#{jdk_version}" : "labsjdk-ce-#{jdk_version}"
+    jdk_name = "labsjdk-ce-#{jdk_version}"
     # We try to match the default directory name that mx fetch-jdk uses here to avoid extra symlinks
     java_home = "#{JDKS_CACHE_DIR}/#{jdk_name}-#{jvmci_version}"
     unless File.directory?(java_home)
       STDERR.puts "#{download_message} (#{jdk_name})"
-      if ee
-        clone_enterprise
-        jdk_binaries = File.expand_path '../graal-enterprise/ci/jdk-binaries.json', TRUFFLERUBY_DIR
-      end
       mx '-y', 'fetch-jdk',
          '--configuration', graal_common_json,
-         *(['--jdk-binaries', jdk_binaries] if jdk_binaries),
          '--java-distribution', jdk_name,
          '--to', JDKS_CACHE_DIR,
          '--alias', java_home, # ensure the JDK ends up in the path we expect
@@ -2401,6 +2326,25 @@ module Commands
     abort "#{java} does not exist" unless File.executable?(java)
 
     java_home
+  end
+
+  private def install_graalvm
+    version = BOOTSTRAP_GRAALVM_VERSION
+    major = version[/^(\d+)/, 1]
+    archive_version = version.sub(/\.0\.0$/, '')
+    os = { 'linux' => 'linux', 'darwin' => 'macos' }.fetch(mx_os)
+    arch = { 'amd64' => 'x64', 'aarch64' => 'aarch64' }.fetch(mx_arch)
+    url = "https://download.oracle.com/graalvm/#{major}/archive/graalvm-jdk-#{archive_version}_#{os}-#{arch}_bin.tar.gz"
+    dir = "#{JDKS_CACHE_DIR}/graalvm-#{version}"
+    archive = "#{dir}.tar.gz"
+    unless File.file?(archive)
+      sh 'wget', '-O', "#{JDKS_CACHE_DIR}/graalvm-#{version}.tar.gz", url
+    end
+    unless File.directory?(dir)
+      Dir.mkdir(dir)
+      sh 'tar', '--extract', '--file', archive, '--directory', dir, '--strip-components', '1'
+    end
+    dir
   end
 
   private def install_eclipse
@@ -2465,20 +2409,6 @@ module Commands
     eclipse_path
   end
 
-  def clone_enterprise
-    ee_path = File.expand_path '../graal-enterprise', TRUFFLERUBY_DIR
-    if File.directory?(ee_path)
-      false
-    else
-      git_clone(bitbucket_url('graal-enterprise'), ee_path)
-      true
-    end
-  end
-
-  def checkout_enterprise_revision(env = 'jvm-ee')
-    mx('--env', env, 'checkout-downstream', 'compiler', 'graal-enterprise', primary_suite: TRUFFLERUBY_DIR)
-  end
-
   private def sforceimports?(mx_base_args)
     return true unless File.directory?(GRAAL_DIR)
 
@@ -2520,10 +2450,7 @@ module Commands
     mx('sforceimports', java_home: :none, primary_suite: TRUFFLERUBY_DIR)
   end
 
-  private def build_graalvm(*options)
-    raise 'use --env jvm-ce instead' if options.delete('--graal')
-    raise 'use --env native instead' if options.delete('--native')
-
+  private def build_standalone(*options)
     if options.delete('--new-hash')
       build_information_path = "#{TRUFFLERUBY_DIR}/src/shared/java/org/truffleruby/shared/BuildInformation.java"
       raise unless File.exist?(build_information_path) # in case the file moves in the future
@@ -2548,28 +2475,19 @@ module Commands
     name = "truffleruby-#{@ruby_name}"
     mx_base_args = ['--env', env]
 
-    ee = ee?
-    cloned = clone_enterprise if ee
+    os_env = {}
+    if ee?
+      os_env['BOOTSTRAP_GRAALVM'] = install_graalvm
+    end
 
-    # If we just cloned graal-enterprise, we want to sforceimports to use the correct substratevm-enterprise-gcs commit.
-    # Because `mx checkout-downstream compiler graal-enterprise` has the effect to clone substratevm-enterprise-gcs as
-    # the import in graal-enterprise master, becauses it clones it before checking out the right graal-enterprise commit.
-    if cloned || options.delete('--sforceimports') || sforceimports?(mx_base_args)
+    if options.delete('--sforceimports') || sforceimports?(mx_base_args)
       sforceimports
-      if ee
-        checkout_enterprise_revision(env)
-        # sforceimports for optional suites imported in vm-enterprise like substratevm-enterprise-gcs
-        vm_enterprise = File.expand_path '../graal-enterprise/vm-enterprise', TRUFFLERUBY_DIR
-        mx('--env', env_path(env), 'sforceimports', java_home: :none, primary_suite: vm_enterprise)
-        # And still make sure we import the graal revision as in mx.truffleruby/suite.py
-        sforceimports
-      end
     end
 
     mx_options, mx_build_options = args_split(options)
     mx_args = mx_base_args + mx_options
 
-    mx(*mx_args, 'build', *mx_build_options, primary_suite: TRUFFLERUBY_DIR)
+    mx(os_env, *mx_args, 'build', *mx_build_options, primary_suite: TRUFFLERUBY_DIR)
 
     standalone_dist = env.include?('native') ? 'TRUFFLERUBY_NATIVE_STANDALONE' : 'TRUFFLERUBY_JVM_STANDALONE'
     build_dir = "#{TRUFFLERUBY_DIR}/mxbuild/#{mx_os}-#{mx_arch}/#{standalone_dist}"
@@ -3152,8 +3070,8 @@ module Commands
       check_documentation_urls
       check_license
 
-      check_source_files if ci?
-      check_heap_dump if ci?
+      check_source_files if ENV['CI']
+      check_heap_dump if ENV['CI']
 
       run_ruby('tool/find_unused_primitives.rb')
 
