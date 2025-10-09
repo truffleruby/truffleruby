@@ -1,11 +1,11 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    asciidoctor (1.5.5)
+    asciidoctor (1.5.8)
 
 PLATFORMS
   ruby
   x86_64-linux
 
 DEPENDENCIES
-  asciidoctor (= 1.5.5)
+  asciidoctor (= 1.5.8)
