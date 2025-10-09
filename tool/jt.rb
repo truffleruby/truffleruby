@@ -676,13 +676,6 @@ module Utilities
     end
   end
 
-  def bitbucket_url(repo)
-    unless Remotes.bitbucket
-      raise 'Need a git remote in truffleruby with the internal repository URL'
-    end
-    Remotes.url(Remotes.bitbucket).sub('truffleruby', repo)
-  end
-
   def run_mspec(env_vars, command = 'run', *args)
     # Pass spec/truffleruby.mspec explicitly because we also want to use it when
     # running specs on CRuby so that it finds that specs are under spec/ruby.
@@ -733,36 +726,6 @@ module Utilities
   # https://misc.flogisoft.com/bash/tip_colors_and_formatting
   TERM_COLOR_RED = "\e[31m"
   TERM_COLOR_DEFAULT = "\e[39m"
-end
-
-module Remotes
-  include Utilities
-  extend self
-
-  def bitbucket(dir = TRUFFLERUBY_DIR)
-    candidate = remote_urls(dir).find { |_r, u| u.include? 'ol-bitbucket' }
-    candidate.first if candidate
-  end
-
-  def github(dir = TRUFFLERUBY_DIR)
-    candidate = remote_urls(dir).find { |_r, u| u.match %r(github.com[:/]oracle) }
-    candidate.first if candidate
-  end
-
-  def remote_urls(dir = TRUFFLERUBY_DIR)
-    @remote_urls ||= Hash.new
-    @remote_urls[dir] ||= begin
-      out = sh 'git', '-C', dir, 'remote', capture: :out, no_print_cmd: true
-      out.split.map do |remote|
-        url = sh 'git', '-C', dir, 'config', '--get', "remote.#{remote}.url", capture: :out, no_print_cmd: true
-        [remote, url.chomp]
-      end
-    end
-  end
-
-  def url(remote_name, dir = TRUFFLERUBY_DIR)
-    remote_urls(dir).find { |r, _u| r == remote_name }.last
-  end
 end
 
 module Commands
@@ -2345,20 +2308,15 @@ module Commands
 
   private def install_jvmci(download_message, jdk_version: @jdk_version)
     raise "Unknown JDK version: #{jdk_version}" unless JDK_VERSIONS.include?(jdk_version)
+    raise 'Cannot install labsjdk-ee' if ee_jdk?
 
-    ee = ee_jdk?
-    jdk_name = ee ? "labsjdk-ee-#{jdk_version}" : "labsjdk-ce-#{jdk_version}"
+    jdk_name = "labsjdk-ce-#{jdk_version}"
     # We try to match the default directory name that mx fetch-jdk uses here to avoid extra symlinks
     java_home = "#{JDKS_CACHE_DIR}/#{jdk_name}-#{jvmci_version}"
     unless File.directory?(java_home)
       STDERR.puts "#{download_message} (#{jdk_name})"
-      if ee
-        clone_enterprise
-        jdk_binaries = File.expand_path '../graal-enterprise/ci/jdk-binaries.json', TRUFFLERUBY_DIR
-      end
       mx '-y', 'fetch-jdk',
          '--configuration', graal_common_json,
-         *(['--jdk-binaries', jdk_binaries] if jdk_binaries),
          '--java-distribution', jdk_name,
          '--to', JDKS_CACHE_DIR,
          '--alias', java_home, # ensure the JDK ends up in the path we expect
@@ -2434,20 +2392,6 @@ module Commands
     eclipse_path
   end
 
-  def clone_enterprise
-    ee_path = File.expand_path '../graal-enterprise', TRUFFLERUBY_DIR
-    if File.directory?(ee_path)
-      false
-    else
-      sh 'git', 'clone', bitbucket_url('graal-enterprise'), ee_path
-      true
-    end
-  end
-
-  def checkout_enterprise_revision(env = 'jvm-ee')
-    mx('--env', env, 'checkout-downstream', 'compiler', 'graal-enterprise', primary_suite: TRUFFLERUBY_DIR)
-  end
-
   private def sforceimports?(mx_base_args)
     return true unless File.directory?(GRAAL_DIR)
 
@@ -2517,22 +2461,8 @@ module Commands
     name = "truffleruby-#{@ruby_name}"
     mx_base_args = ['--env', env]
 
-    ee = ee?
-    cloned = clone_enterprise if ee
-
-    # If we just cloned graal-enterprise, we want to sforceimports to use the correct substratevm-enterprise-gcs commit.
-    # Because `mx checkout-downstream compiler graal-enterprise` has the effect to clone substratevm-enterprise-gcs as
-    # the import in graal-enterprise master, becauses it clones it before checking out the right graal-enterprise commit.
-    if cloned || options.delete('--sforceimports') || sforceimports?(mx_base_args)
+    if options.delete('--sforceimports') || sforceimports?(mx_base_args)
       sforceimports
-      if ee
-        checkout_enterprise_revision(env)
-        # sforceimports for optional suites imported in vm-enterprise like substratevm-enterprise-gcs
-        vm_enterprise = File.expand_path '../graal-enterprise/vm-enterprise', TRUFFLERUBY_DIR
-        mx('--env', env_path(env), 'sforceimports', java_home: :none, primary_suite: vm_enterprise)
-        # And still make sure we import the graal revision as in mx.truffleruby/suite.py
-        sforceimports
-      end
     end
 
     mx_options, mx_build_options = args_split(options)
