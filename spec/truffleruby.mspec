@@ -123,10 +123,6 @@ class MSpecScript
       excludes << 'native'
       if GC.heap_stats.values.none?(Hash)
         excludes << 'native-g1'
-        # GR-23507: exclude specs using execve() as concurrent pthread_create()
-        # return EAGAIN and cause extra logging on stdout,
-        # and -Xlog configuration is not available yet on Native Image.
-        excludes << 'execve'
       end
     else
       excludes << 'jvm'

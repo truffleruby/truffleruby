@@ -82,10 +82,6 @@ slow:The launcher supports running rdoc in bin/
 slow:The launcher supports running ri in bin/
 slow:The launcher supports running ruby in bin/
 slow:The launcher supports running truffleruby in bin/
-execve:The launcher runtime configuration flags should recognize ruby --vm options in RUBYOPT when switching to JVM
-execve:The launcher runtime configuration flags should recognize ruby --vm options in TRUFFLERUBYOPT when switching to JVM
-execve:The launcher runtime configuration flags switches to JVM with --jvm as a Ruby argument
-execve:The launcher runtime configuration flags keeps --jvm as an application argument if given as an application argument
 slow:The launcher runs syntax_suggest as an -S command
 slow:The launcher supports running syntax_suggest in bin/
 slow:The launcher supports running syntax_suggest symlinked
