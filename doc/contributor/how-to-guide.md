@@ -1186,7 +1186,6 @@ Steps to do:
 
 - choose a proper jcodings version (probably the latest one)
   - Unicode version is hardcoded [here](https://github.com/jruby/jcodings/blob/jcodings-1.0.58/src/org/jcodings/Config.java)
-- ask for approval to upgrade the third-party component (example Jira ticket: GR-43593)
 - upgrade the library ([example PR](https://github.com/truffleruby/truffleruby/pull/2930))
 - Ruby constants `UNICODE_VERSION` and `UNICODE_EMOJI_VERSION` should have a proper value now
 
