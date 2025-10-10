@@ -3024,7 +3024,7 @@ module Commands
     changed_lock_files.each do |file|
       contents = File.read(file)
       if contents.include?('BUNDLED WITH')
-        abort "#{file} should not contain a BUNDLED WITH section to avoid needing to update this file when updating Bundler, and to ensure the Bundler version shipped with TruffleRuby is used"
+        abort "#{file} should not contain a BUNDLED WITH section to avoid needing to update this file when updating Bundler, and to ensure the Bundler version shipped with TruffleRuby is used.\nRemove the BUNDLED WITH section manually to solve this."
       end
     end
   end
