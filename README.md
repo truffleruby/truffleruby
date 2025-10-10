@@ -160,24 +160,17 @@ document for how to build and run TruffleRuby.
 
 The best way to get in touch with us is to join the `#truffleruby` channel on
 [GraalVM Slack](https://www.graalvm.org/community/#community-support).
-You can also Tweet to [@TruffleRuby](https://twitter.com/truffleruby), or email
-_benoit.daloze@oracle.com_.
+You can also mention or DM [@TruffleRuby](https://bsky.app/profile/truffleruby.bsky.social) on BlueSky.
 
-Please report security vulnerabilities via the process outlined in the [reporting vulnerabilities guide](https://www.oracle.com/corporate/security-practices/assurance/vulnerability/reporting.html), rather than by something public such as a GitHub issue or a Gitter conversation.
-
-## Mailing List
-
-Announcements about GraalVM, including TruffleRuby, are made on the
-[graal-dev](http://mail.openjdk.java.net/mailman/listinfo/graal-dev) mailing list.
+Please report security vulnerabilities via the process outlined in [SECURITY.md](SECURITY.md).
 
 ## Authors
 
-The main authors of TruffleRuby ordered by first contribution are:
-Chris Seaton, Benoit Daloze, Kevin Menard, Petr Chalupa, Brandon Fish, Duncan MacGregor, Christian Wirth, Rafael França, Alan Wu, Nicolas Laurent, Carol Chen, Nikolay Sverchkov, Lillian Zhang, Tom Stuart, and Maple Ong.
+The main authors of TruffleRuby can be seen [on GitHub](https://github.com/truffleruby/truffleruby/graphs/contributors?from=1%2F1%2F2014).
 
 ## Security
 
-See [SECURITY](SECURITY.md) for how to report security vulnerabilities to Oracle.
+See [SECURITY.md](SECURITY.md) for how to report security vulnerabilities.
 For known vulnerabilities in Ruby, please refer to the [known-cves](doc/user/known-cves.md) file.
 
 ## Licence
