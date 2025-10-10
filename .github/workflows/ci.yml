@@ -272,19 +272,30 @@ jobs:
     - run: jt test mri --fast --no-sulong -- --jobs=4 --longest=10
 
   ruby_spec_cruby: # ~3min
-    name: ruby/spec on CRuby ${{ matrix.ruby }}
-    strategy:
-      fail-fast: false
-      matrix:
-        ruby: ['3.2', '3.3', '3.4']
+    name: ruby/spec on CRuby
     runs-on: ubuntu-22.04-arm
     timeout-minutes: 30
+    env:
+      CHECK_LEAKS: 'true'
     steps:
     - uses: actions/checkout@v4
-    - uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: ${{ matrix.ruby }}
-        bundler: none
     - name: Setup jt
       run: echo "$PWD/bin" >> $GITHUB_PATH
-    - run: CHECK_LEAKS=true jt -u ruby mspec -fdot --timeout 30 spec/ruby
+
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.2
+        bundler: none
+    - run: jt -u ruby mspec -fdot --timeout 30 spec/ruby
+
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.3
+        bundler: none
+    - run: jt -u ruby mspec -fdot --timeout 30 spec/ruby
+
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.4
+        bundler: none
+    - run: jt -u ruby mspec -fdot --timeout 30 spec/ruby
