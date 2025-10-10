@@ -12,9 +12,10 @@ public abstract class ParsingOptions {
      * See pm_options_version_t in include/prism/options.h.
      */
     public enum SyntaxVersion {
-        LATEST(0),
+        LATEST(0), // Handled in pm_parser_init
         V3_3(1),
-        V3_4(2);
+        V3_4(2),
+        V3_5(3);
 
         private final int value;
 

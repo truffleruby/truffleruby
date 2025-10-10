@@ -44,6 +44,8 @@ cp -R $PRISM/lib/* lib/mri
 # Copy Prism tests (and override the ones from the MRI import)
 rm -rf test/mri/tests/prism
 cp -R $PRISM/test/prism test/mri/tests/
+rm -rf test/mri/snapshots
+cp -R $PRISM/snapshots test/mri/
 
 # Create and copy default gem gemspec
 pushd $PRISM

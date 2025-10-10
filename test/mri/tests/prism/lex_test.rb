@@ -17,7 +17,7 @@ module Prism
       "spanning_heredoc.txt",
       "spanning_heredoc_newlines.txt",
       # Prism emits a single :on_tstring_content in <<- style heredocs when there
-      # is a line continuation preceeded by escaped backslashes. It should emit two, same
+      # is a line continuation preceded by escaped backslashes. It should emit two, same
       # as if the backslashes are not present.
       "heredocs_with_fake_newlines.txt",
     ]
@@ -41,6 +41,12 @@ module Prism
       # https://bugs.ruby-lang.org/issues/19281
       except << "whitequark/ruby_bug_19281.txt"
     end
+
+    # https://bugs.ruby-lang.org/issues/20925
+    except << "leading_logical.txt"
+
+    # https://bugs.ruby-lang.org/issues/17398#note-12
+    except << "endless_methods_command_call.txt"
 
     Fixture.each(except: except) do |fixture|
       define_method(fixture.test_name) { assert_lex(fixture) }

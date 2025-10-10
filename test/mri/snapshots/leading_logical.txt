@@ -1,0 +1,109 @@
+@ ProgramNode (location: (1,0)-(21,5))
+├── flags: ∅
+├── locals: []
+└── statements:
+    @ StatementsNode (location: (1,0)-(21,5))
+    ├── flags: ∅
+    └── body: (length: 8)
+        ├── @ AndNode (location: (1,0)-(3,4))
+        │   ├── flags: newline
+        │   ├── left:
+        │   │   @ AndNode (location: (1,0)-(2,4))
+        │   │   ├── flags: ∅
+        │   │   ├── left:
+        │   │   │   @ IntegerNode (location: (1,0)-(1,1))
+        │   │   │   ├── flags: static_literal, decimal
+        │   │   │   └── value: 1
+        │   │   ├── right:
+        │   │   │   @ IntegerNode (location: (2,3)-(2,4))
+        │   │   │   ├── flags: static_literal, decimal
+        │   │   │   └── value: 2
+        │   │   └── operator_loc: (2,0)-(2,2) = "&&"
+        │   ├── right:
+        │   │   @ IntegerNode (location: (3,3)-(3,4))
+        │   │   ├── flags: static_literal, decimal
+        │   │   └── value: 3
+        │   └── operator_loc: (3,0)-(3,2) = "&&"
+        ├── @ OrNode (location: (5,0)-(7,4))
+        │   ├── flags: newline
+        │   ├── left:
+        │   │   @ OrNode (location: (5,0)-(6,4))
+        │   │   ├── flags: ∅
+        │   │   ├── left:
+        │   │   │   @ IntegerNode (location: (5,0)-(5,1))
+        │   │   │   ├── flags: static_literal, decimal
+        │   │   │   └── value: 1
+        │   │   ├── right:
+        │   │   │   @ IntegerNode (location: (6,3)-(6,4))
+        │   │   │   ├── flags: static_literal, decimal
+        │   │   │   └── value: 2
+        │   │   └── operator_loc: (6,0)-(6,2) = "||"
+        │   ├── right:
+        │   │   @ IntegerNode (location: (7,3)-(7,4))
+        │   │   ├── flags: static_literal, decimal
+        │   │   └── value: 3
+        │   └── operator_loc: (7,0)-(7,2) = "||"
+        ├── @ AndNode (location: (9,0)-(11,5))
+        │   ├── flags: newline
+        │   ├── left:
+        │   │   @ AndNode (location: (9,0)-(10,5))
+        │   │   ├── flags: ∅
+        │   │   ├── left:
+        │   │   │   @ IntegerNode (location: (9,0)-(9,1))
+        │   │   │   ├── flags: static_literal, decimal
+        │   │   │   └── value: 1
+        │   │   ├── right:
+        │   │   │   @ IntegerNode (location: (10,4)-(10,5))
+        │   │   │   ├── flags: static_literal, decimal
+        │   │   │   └── value: 2
+        │   │   └── operator_loc: (10,0)-(10,3) = "and"
+        │   ├── right:
+        │   │   @ IntegerNode (location: (11,4)-(11,5))
+        │   │   ├── flags: static_literal, decimal
+        │   │   └── value: 3
+        │   └── operator_loc: (11,0)-(11,3) = "and"
+        ├── @ OrNode (location: (13,0)-(15,4))
+        │   ├── flags: newline
+        │   ├── left:
+        │   │   @ OrNode (location: (13,0)-(14,4))
+        │   │   ├── flags: ∅
+        │   │   ├── left:
+        │   │   │   @ IntegerNode (location: (13,0)-(13,1))
+        │   │   │   ├── flags: static_literal, decimal
+        │   │   │   └── value: 1
+        │   │   ├── right:
+        │   │   │   @ IntegerNode (location: (14,3)-(14,4))
+        │   │   │   ├── flags: static_literal, decimal
+        │   │   │   └── value: 2
+        │   │   └── operator_loc: (14,0)-(14,2) = "or"
+        │   ├── right:
+        │   │   @ IntegerNode (location: (15,3)-(15,4))
+        │   │   ├── flags: static_literal, decimal
+        │   │   └── value: 3
+        │   └── operator_loc: (15,0)-(15,2) = "or"
+        ├── @ IntegerNode (location: (17,0)-(17,1))
+        │   ├── flags: newline, static_literal, decimal
+        │   └── value: 1
+        ├── @ CallNode (location: (18,0)-(18,6))
+        │   ├── flags: newline, variable_call, ignore_visibility
+        │   ├── receiver: ∅
+        │   ├── call_operator_loc: ∅
+        │   ├── name: :andfoo
+        │   ├── message_loc: (18,0)-(18,6) = "andfoo"
+        │   ├── opening_loc: ∅
+        │   ├── arguments: ∅
+        │   ├── closing_loc: ∅
+        │   └── block: ∅
+        ├── @ IntegerNode (location: (20,0)-(20,1))
+        │   ├── flags: newline, static_literal, decimal
+        │   └── value: 2
+        └── @ CallNode (location: (21,0)-(21,5))
+            ├── flags: newline, variable_call, ignore_visibility
+            ├── receiver: ∅
+            ├── call_operator_loc: ∅
+            ├── name: :orfoo
+            ├── message_loc: (21,0)-(21,5) = "orfoo"
+            ├── opening_loc: ∅
+            ├── arguments: ∅
+            ├── closing_loc: ∅
+            └── block: ∅

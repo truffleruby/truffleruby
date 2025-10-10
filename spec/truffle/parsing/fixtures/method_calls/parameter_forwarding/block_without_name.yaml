@@ -92,7 +92,7 @@ ast: |
                                           notEmptyKeywordsProfile = false
                                           notRuby2KeywordsHashProfile = false
                                           sourceCharIndex = 13
-                                          sourceLength = 5
+                                          sourceLength = 6
                                       children:
                                           block =
                                               ToProcNodeGen
