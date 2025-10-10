@@ -264,9 +264,13 @@ public abstract class TruffleDebugNodes {
 
             var rubySource = createRubySource(codeString);
             var parseResult = getParseResult(getLanguage(node), rubySource);
-            var ast = parseResult.value;
-
-            return createString(node, fromJavaStringNode, ast.toString(), Encodings.UTF_8);
+            if (parseResult.errors.length > 0) {
+                return createString(node, fromJavaStringNode, "SyntaxError: " + parseResult.errors[0].message,
+                        Encodings.UTF_8);
+            } else {
+                var ast = parseResult.value;
+                return createString(node, fromJavaStringNode, ast.toString(), Encodings.UTF_8);
+            }
         }
 
         private static RubySource createRubySource(TStringWithEncoding code) {
