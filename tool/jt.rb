@@ -1216,7 +1216,7 @@ module Commands
   end
 
   private def get_mri_test_files(patterns)
-    patterns << "#{MRI_TEST_PREFIX}/**/test_*.rb" if patterns.empty?
+    patterns << "#{MRI_TEST_PREFIX}/**/{test_*,*_test}.rb" if patterns.empty?
 
     patterns.flat_map do |pattern|
       if pattern.start_with?(MRI_TEST_RELATIVE_PREFIX)
@@ -1224,9 +1224,10 @@ module Commands
       elsif !pattern.start_with?(MRI_TEST_PREFIX)
         pattern = "#{MRI_TEST_PREFIX}/#{pattern}"
       end
+
       glob = Dir.glob(pattern).flat_map do |path|
         if File.directory?(path)
-          Dir.glob("#{path}/**/test_*.rb")
+          Dir.glob("#{path}/**/{test_*,*_test}.rb")
         else
           path
         end
