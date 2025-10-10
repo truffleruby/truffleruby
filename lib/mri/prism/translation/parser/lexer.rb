@@ -1,7 +1,9 @@
 # frozen_string_literal: true
+# :markup: markdown
 
 require "strscan"
 require_relative "../../polyfill/append_as_bytes"
+require_relative "../../polyfill/scan_byte"
 
 module Prism
   module Translation
@@ -200,8 +202,8 @@ module Prism
         # The `PARENTHESIS_LEFT` token in Prism is classified as either `tLPAREN` or `tLPAREN2` in the Parser gem.
         # The following token types are listed as those classified as `tLPAREN`.
         LPAREN_CONVERSION_TOKEN_TYPES = Set.new([
-          :kBREAK, :kCASE, :tDIVIDE, :kFOR, :kIF, :kNEXT, :kRETURN, :kUNTIL, :kWHILE, :tAMPER, :tANDOP, :tBANG, :tCOMMA, :tDOT2, :tDOT3,
-          :tEQL, :tLPAREN, :tLPAREN2, :tLPAREN_ARG, :tLSHFT, :tNL, :tOP_ASGN, :tOROP, :tPIPE, :tSEMI, :tSTRING_DBEG, :tUMINUS, :tUPLUS
+          :kBREAK, :tCARET, :kCASE, :tDIVIDE, :kFOR, :kIF, :kNEXT, :kRETURN, :kUNTIL, :kWHILE, :tAMPER, :tANDOP, :tBANG, :tCOMMA, :tDOT2, :tDOT3,
+          :tEQL, :tLPAREN, :tLPAREN2, :tLPAREN_ARG, :tLSHFT, :tNL, :tOP_ASGN, :tOROP, :tPIPE, :tSEMI, :tSTRING_DBEG, :tUMINUS, :tUPLUS, :tLCURLY
         ])
 
         # Types of tokens that are allowed to continue a method call with comments in-between.
@@ -275,20 +277,20 @@ module Prism
             when :tCOMMENT
               if token.type == :EMBDOC_BEGIN
 
-                while !((next_token = lexed[index][0]) && next_token.type == :EMBDOC_END) && (index < length - 1)
+                while !((next_token = lexed[index]&.first) && next_token.type == :EMBDOC_END) && (index < length - 1)
                   value += next_token.value
                   index += 1
                 end
 
                 value += next_token.value
-                location = range(token.location.start_offset, lexed[index][0].location.end_offset)
+                location = range(token.location.start_offset, next_token.location.end_offset)
                 index += 1
               else
                 is_at_eol = value.chomp!.nil?
                 location = range(token.location.start_offset, token.location.end_offset + (is_at_eol ? 0 : -1))
 
-                prev_token = lexed[index - 2][0] if index - 2 >= 0
-                next_token = lexed[index][0]
+                prev_token, _ = lexed[index - 2] if index - 2 >= 0
+                next_token, _ = lexed[index]
 
                 is_inline_comment = prev_token&.location&.start_line == token.location.start_line
                 if is_inline_comment && !is_at_eol && !COMMENT_CONTINUATION_TYPES.include?(next_token&.type)
@@ -307,7 +309,7 @@ module Prism
                 end
               end
             when :tNL
-              next_token = next_token = lexed[index][0]
+              next_token, _ = lexed[index]
               # Newlines after comments are emitted out of order.
               if next_token&.type == :COMMENT
                 comment_newline_location = location
@@ -344,8 +346,8 @@ module Prism
               location = range(token.location.start_offset, token.location.start_offset + percent_array_leading_whitespace(value))
               value = nil
             when :tSTRING_BEG
-              next_token = lexed[index][0]
-              next_next_token = lexed[index + 1][0]
+              next_token, _ = lexed[index]
+              next_next_token, _ = lexed[index + 1]
               basic_quotes = value == '"' || value == "'"
 
               if basic_quotes && next_token&.type == :STRING_END
@@ -413,7 +415,8 @@ module Prism
                 while token.type == :STRING_CONTENT
                   current_length += token.value.bytesize
                   # Heredoc interpolation can have multiple STRING_CONTENT nodes on the same line.
-                  is_first_token_on_line = lexed[index - 1] && token.location.start_line != lexed[index - 2][0].location&.start_line
+                  prev_token, _ = lexed[index - 2] if index - 2 >= 0
+                  is_first_token_on_line = prev_token && token.location.start_line != prev_token.location.start_line
                   # The parser gem only removes indentation when the heredoc is not nested
                   not_nested = heredoc_stack.size == 1
                   if is_percent_array
@@ -423,11 +426,16 @@ module Prism
                   end
 
                   current_string << unescape_string(value, quote_stack.last)
-                  if (backslash_count = token.value[/(\\{1,})\n/, 1]&.length).nil? || backslash_count.even? || !interpolation?(quote_stack.last)
+                  relevant_backslash_count = if quote_stack.last.start_with?("%W", "%I")
+                                               0 # the last backslash escapes the newline
+                                             else
+                                               token.value[/(\\{1,})\n/, 1]&.length || 0
+                                             end
+                  if relevant_backslash_count.even? || !interpolation?(quote_stack.last)
                     tokens << [:tSTRING_CONTENT, [current_string, range(start_offset, start_offset + current_length)]]
                     break
                   end
-                  token = lexed[index][0]
+                  token, _ = lexed[index]
                   index += 1
                 end
               else
@@ -482,7 +490,7 @@ module Prism
               end
 
               if percent_array?(quote_stack.pop)
-                prev_token = lexed[index - 2][0] if index - 2 >= 0
+                prev_token, _ = lexed[index - 2] if index - 2 >= 0
                 empty = %i[PERCENT_LOWER_I PERCENT_LOWER_W PERCENT_UPPER_I PERCENT_UPPER_W].include?(prev_token&.type)
                 ends_with_whitespace = prev_token&.type == :WORDS_SEP
                 # parser always emits a space token after content in a percent array, even if no actual whitespace is present.
@@ -491,7 +499,7 @@ module Prism
                 end
               end
             when :tSYMBEG
-              if (next_token = lexed[index][0]) && next_token.type != :STRING_CONTENT && next_token.type != :EMBEXPR_BEGIN && next_token.type != :EMBVAR && next_token.type != :STRING_END
+              if (next_token = lexed[index]&.first) && next_token.type != :STRING_CONTENT && next_token.type != :EMBEXPR_BEGIN && next_token.type != :EMBVAR && next_token.type != :STRING_END
                 next_location = token.location.join(next_token.location)
                 type = :tSYMBOL
                 value = next_token.value
@@ -506,13 +514,13 @@ module Prism
                 type = :tIDENTIFIER
               end
             when :tXSTRING_BEG
-              if (next_token = lexed[index][0]) && !%i[STRING_CONTENT STRING_END EMBEXPR_BEGIN].include?(next_token.type)
+              if (next_token = lexed[index]&.first) && !%i[STRING_CONTENT STRING_END EMBEXPR_BEGIN].include?(next_token.type)
                 # self.`()
                 type = :tBACK_REF2
               end
               quote_stack.push(value)
             when :tSYMBOLS_BEG, :tQSYMBOLS_BEG, :tWORDS_BEG, :tQWORDS_BEG
-              if (next_token = lexed[index][0]) && next_token.type == :WORDS_SEP
+              if (next_token = lexed[index]&.first) && next_token.type == :WORDS_SEP
                 index += 1
               end
 
@@ -588,9 +596,9 @@ module Prism
           previous_line = -1
           result = Float::MAX
 
-          while (lexed[next_token_index] && next_token = lexed[next_token_index][0])
+          while (next_token = lexed[next_token_index]&.first)
             next_token_index += 1
-            next_next_token = lexed[next_token_index] && lexed[next_token_index][0]
+            next_next_token, _ = lexed[next_token_index]
             first_token_on_line = next_token.location.start_column == 0
 
             # String content inside nested heredocs and interpolation is ignored
@@ -761,12 +769,12 @@ module Prism
           elsif (value = scanner.scan(/M-\\?(?=[[:print:]])/))
             # \M-x where x is an ASCII printable character
             escape_read(result, scanner, control, true)
-          elsif (byte = scanner.get_byte)
+          elsif (byte = scanner.scan_byte)
             # Something else after an escape.
-            if control && byte == "?"
+            if control && byte == 0x3f # ASCII '?'
               result.append_as_bytes(escape_build(0x7f, false, meta))
             else
-              result.append_as_bytes(escape_build(byte.ord, control, meta))
+              result.append_as_bytes(escape_build(byte, control, meta))
             end
           end
         end

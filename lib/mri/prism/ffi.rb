@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# :markup: markdown
 # typed: ignore
 
 # This file is responsible for mirroring the API provided by the C extension by
@@ -6,6 +7,10 @@
 
 require "rbconfig"
 require "ffi"
+
+# We want to eagerly load this file if there are Ractors so that it does not get
+# autoloaded from within a non-main Ractor.
+require "prism/serialize" if defined?(Ractor)
 
 module Prism
   module LibRubyParser # :nodoc:
@@ -81,6 +86,7 @@ module Prism
     end
 
     callback :pm_parse_stream_fgets_t, [:pointer, :int, :pointer], :pointer
+    callback :pm_parse_stream_feof_t, [:pointer], :int
     enum :pm_string_init_result_t, %i[PM_STRING_INIT_SUCCESS PM_STRING_INIT_ERROR_GENERIC PM_STRING_INIT_ERROR_DIRECTORY]
     enum :pm_string_query_t, [:PM_STRING_QUERY_ERROR, -1, :PM_STRING_QUERY_FALSE, :PM_STRING_QUERY_TRUE]
 
@@ -96,7 +102,7 @@ module Prism
       "pm_string_query_local",
       "pm_string_query_constant",
       "pm_string_query_method_name",
-      [:pm_parse_stream_fgets_t]
+      [:pm_parse_stream_fgets_t, :pm_parse_stream_feof_t]
     )
 
     load_exported_functions_from(
@@ -159,6 +165,9 @@ module Prism
     class PrismString # :nodoc:
       SIZEOF = LibRubyParser.pm_string_sizeof
 
+      PLATFORM_EXPECTS_UTF8 =
+        RbConfig::CONFIG["host_os"].match?(/bccwin|cygwin|djgpp|mingw|mswin|wince|darwin/i)
+
       attr_reader :pointer, :length
 
       def initialize(pointer, length, from_string)
@@ -193,8 +202,7 @@ module Prism
         # On Windows and Mac, it's expected that filepaths will be encoded in
         # UTF-8. If they are not, we need to convert them to UTF-8 before
         # passing them into pm_string_mapped_init.
-        if RbConfig::CONFIG["host_os"].match?(/bccwin|cygwin|djgpp|mingw|mswin|wince|darwin/i) &&
-           (encoding = filepath.encoding) != Encoding::ASCII_8BIT && encoding != Encoding::UTF_8
+        if PLATFORM_EXPECTS_UTF8 && (encoding = filepath.encoding) != Encoding::ASCII_8BIT && encoding != Encoding::UTF_8
           filepath = filepath.encode(Encoding::UTF_8)
         end
 
@@ -223,7 +231,7 @@ module Prism
   private_constant :LibRubyParser
 
   # The version constant is set by reading the result of calling pm_version.
-  VERSION = LibRubyParser.pm_version.read_string
+  VERSION = LibRubyParser.pm_version.read_string.freeze
 
   class << self
     # Mirror the Prism.dump API by using the serialization API.
@@ -274,12 +282,14 @@ module Prism
           end
         }
 
+        eof_callback = -> (_) { stream.eof?  }
+
         # In the pm_serialize_parse_stream function it accepts a pointer to the
         # IO object as a void* and then passes it through to the callback as the
         # third argument, but it never touches it itself. As such, since we have
         # access to the IO object already through the closure of the lambda, we
         # can pass a null pointer here and not worry.
-        LibRubyParser.pm_serialize_parse_stream(buffer.pointer, nil, callback, dump_options(options))
+        LibRubyParser.pm_serialize_parse_stream(buffer.pointer, nil, callback, eof_callback, dump_options(options))
         Prism.load(source, buffer.read, options.fetch(:freeze, false))
       end
     end
@@ -415,13 +425,13 @@ module Prism
     def dump_options_version(version)
       case version
       when nil, "latest"
-        0
+        0 # Handled in pm_parser_init
       when /\A3\.3(\.\d+)?\z/
         1
       when /\A3\.4(\.\d+)?\z/
         2
       when /\A3\.5(\.\d+)?\z/
-        0
+        3
       else
         raise ArgumentError, "invalid version: #{version}"
       end

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# :markup: markdown
 
 module Prism
   module Translation
@@ -133,8 +134,8 @@ module Prism
         def visit_assoc_node(node)
           key = node.key
 
-          if in_pattern
-            if node.value.is_a?(ImplicitNode)
+          if  node.value.is_a?(ImplicitNode)
+            if in_pattern
               if key.is_a?(SymbolNode)
                 if key.opening.nil?
                   builder.match_hash_var([key.unescaped, srange(key.location)])
@@ -144,23 +145,19 @@ module Prism
               else
                 builder.match_hash_var_from_str(token(key.opening_loc), visit_all(key.parts), token(key.closing_loc))
               end
-            elsif key.opening.nil?
-              builder.pair_keyword([key.unescaped, srange(key.location)], visit(node.value))
             else
-              builder.pair_quoted(token(key.opening_loc), [builder.string_internal([key.unescaped, srange(key.value_loc)])], token(key.closing_loc), visit(node.value))
-            end
-          elsif node.value.is_a?(ImplicitNode)
-            value = node.value.value
+              value = node.value.value
 
-            implicit_value = if value.is_a?(CallNode)
-              builder.call_method(nil, nil, [value.name, srange(value.message_loc)])
-            elsif value.is_a?(ConstantReadNode)
-              builder.const([value.name, srange(key.value_loc)])
-            else
-              builder.ident([value.name, srange(key.value_loc)]).updated(:lvar)
-            end
+              implicit_value = if value.is_a?(CallNode)
+                builder.call_method(nil, nil, [value.name, srange(value.message_loc)])
+              elsif value.is_a?(ConstantReadNode)
+                builder.const([value.name, srange(key.value_loc)])
+              else
+                builder.ident([value.name, srange(key.value_loc)]).updated(:lvar)
+              end
 
-            builder.pair_keyword([key.unescaped, srange(key)], implicit_value)
+              builder.pair_keyword([key.unescaped, srange(key)], implicit_value)
+            end
           elsif node.operator_loc
             builder.pair(visit(key), token(node.operator_loc), visit(node.value))
           elsif key.is_a?(SymbolNode) && key.opening_loc.nil?
@@ -696,13 +693,37 @@ module Prism
         # defined?(a)
         # ^^^^^^^^^^^
         def visit_defined_node(node)
-          builder.keyword_cmd(
-            :defined?,
-            token(node.keyword_loc),
-            token(node.lparen_loc),
-            [visit(node.value)],
-            token(node.rparen_loc)
-          )
+          # Very weird circumstances here where something like:
+          #
+          #     defined?
+          #     (1)
+          #
+          # gets parsed in Ruby as having only the `1` expression but in parser
+          # it gets parsed as having a begin. In this case we need to synthesize
+          # that begin to match parser's behavior.
+          if node.lparen_loc && node.keyword_loc.join(node.lparen_loc).slice.include?("\n")
+            builder.keyword_cmd(
+              :defined?,
+              token(node.keyword_loc),
+              nil,
+              [
+                builder.begin(
+                  token(node.lparen_loc),
+                  visit(node.value),
+                  token(node.rparen_loc)
+                )
+              ],
+              nil
+            )
+          else
+            builder.keyword_cmd(
+              :defined?,
+              token(node.keyword_loc),
+              token(node.lparen_loc),
+              [visit(node.value)],
+              token(node.rparen_loc)
+            )
+          end
         end
 
         # if foo then bar else baz end
@@ -1032,7 +1053,7 @@ module Prism
           builder.index_asgn(
             visit(node.receiver),
             token(node.opening_loc),
-            visit_all(node.arguments.arguments),
+            visit_all(node.arguments&.arguments || []),
             token(node.closing_loc),
           )
         end
@@ -1461,7 +1482,8 @@ module Prism
         # foo => ^(bar)
         #        ^^^^^^
         def visit_pinned_expression_node(node)
-          expression = builder.begin(token(node.lparen_loc), visit(node.expression), token(node.rparen_loc))
+          parts = node.expression.accept(copy_compiler(in_pattern: false)) # Don't treat * and similar as match_rest
+          expression = builder.begin(token(node.lparen_loc), parts, token(node.rparen_loc))
           builder.pin(token(node.operator_loc), expression)
         end
 

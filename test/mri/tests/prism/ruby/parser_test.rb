@@ -56,6 +56,22 @@ Parser::AST::Node.prepend(
 
 module Prism
   class ParserTest < TestCase
+    # These files contain code with valid syntax that can't be parsed.
+    skip_syntax_error = [
+      # alias/undef with %s(abc) symbol literal
+      "alias.txt",
+      "seattlerb/bug_215.txt",
+
+      # 1.. && 2
+      "ranges.txt",
+
+      # Cannot yet handling leading logical operators.
+      "leading_logical.txt",
+
+      # Ruby >= 3.5 specific syntax
+      "endless_methods_command_call.txt",
+    ]
+
     # These files contain code that is being parsed incorrectly by the parser
     # gem, and therefore we don't want to compare against our translation.
     skip_incorrect = [
@@ -89,16 +105,6 @@ module Prism
       "seattlerb/regexp_esc_C_slash.txt",
     ]
 
-    # These files are either failing to parse or failing to translate, so we'll
-    # skip them for now.
-    skip_all = skip_incorrect | [
-    ]
-
-    # Not sure why these files are failing on JRuby, but skipping them for now.
-    if RUBY_ENGINE == "jruby"
-      skip_all.push("emoji_method_calls.txt", "symbols.txt")
-    end
-
     # These files are failing to translate their lexer output into the lexer
     # output expected by the parser gem, so we'll skip them for now.
     skip_tokens = [
@@ -127,22 +133,56 @@ module Prism
       "whitequark/newline_in_hash_argument.txt",
       "whitequark/pattern_matching_expr_in_paren.txt",
       "whitequark/pattern_matching_hash.txt",
-      "whitequark/pin_expr.txt",
       "whitequark/ruby_bug_14690.txt",
       "whitequark/ruby_bug_9669.txt",
       "whitequark/space_args_arg_block.txt",
       "whitequark/space_args_block.txt"
     ]
 
-    Fixture.each do |fixture|
+    Fixture.each(except: skip_syntax_error) do |fixture|
       define_method(fixture.test_name) do
         assert_equal_parses(
           fixture,
-          compare_asts: !skip_all.include?(fixture.path),
+          compare_asts: !skip_incorrect.include?(fixture.path),
           compare_tokens: !skip_tokens.include?(fixture.path),
           compare_comments: fixture.path != "embdoc_no_newline_at_end.txt"
         )
       end
+    end
+
+    def test_non_prism_builder_class_deprecated
+      warnings = capture_warnings { Prism::Translation::Parser33.new(Parser::Builders::Default.new) }
+
+      assert_include(warnings, "#{__FILE__}:#{__LINE__ - 2}")
+      assert_include(warnings, "is not a `Prism::Translation::Parser::Builder` subclass")
+
+      warnings = capture_warnings { Prism::Translation::Parser33.new }
+      assert_empty(warnings)
+    end
+
+    if RUBY_VERSION >= "3.3"
+      def test_current_parser_for_current_ruby
+        major, minor, _patch = Gem::Version.new(RUBY_VERSION).segments
+        # Let's just hope there never is a Ruby 3.10 or similar
+        expected = major * 10 + minor
+        assert_equal(expected, Translation::ParserCurrent.new.version)
+      end
+    end
+
+    def test_invalid_syntax
+      code = <<~RUBY
+        foo do
+          case bar
+          when
+          end
+        end
+      RUBY
+      buffer = Parser::Source::Buffer.new("(string)")
+      buffer.source = code
+
+      parser = Prism::Translation::Parser33.new
+      parser.diagnostics.all_errors_are_fatal = true
+      assert_raise(Parser::SyntaxError) { parser.tokenize(buffer) }
     end
 
     def test_it_block_parameter_syntax
@@ -153,9 +193,13 @@ module Prism
       actual_ast = Prism::Translation::Parser34.new.tokenize(buffer)[0]
 
       it_block_parameter_sexp = parse_sexp {
+        s(:begin,
         s(:itblock,
           s(:send, nil, :x), :it,
-          s(:lvar, :it))
+          s(:lvar, :it)),
+        s(:itblock,
+          s(:lambda), :it,
+          s(:lvar, :it)))
       }
 
       assert_equal(it_block_parameter_sexp, actual_ast.to_sexp)
@@ -172,11 +216,7 @@ module Prism
       parser.diagnostics.all_errors_are_fatal = true
 
       expected_ast, expected_comments, expected_tokens =
-        begin
-          ignore_warnings { parser.tokenize(buffer) }
-        rescue ArgumentError, Parser::SyntaxError
-          return
-        end
+        ignore_warnings { parser.tokenize(buffer) }
 
       actual_ast, actual_comments, actual_tokens =
         ignore_warnings { Prism::Translation::Parser33.new.tokenize(buffer) }

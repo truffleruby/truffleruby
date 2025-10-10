@@ -55,7 +55,7 @@ module Prism
       end
 
       def snapshot_path
-        File.join(__dir__, "snapshots", path)
+        File.join(File.expand_path("../..", __dir__), "snapshots", path)
       end
 
       def test_name
@@ -212,6 +212,11 @@ module Prism
       yield Encoding::EUC_TW, codepoints_euc_tw
     end
 
+    # True if the current platform is Windows.
+    def self.windows?
+      RbConfig::CONFIG["host_os"].match?(/bccwin|cygwin|djgpp|mingw|mswin|wince/i)
+    end
+
     private
 
     if RUBY_ENGINE == "ruby" && RubyVM::InstructionSequence.compile("").to_a[4][:parser] != :prism
@@ -314,15 +319,16 @@ module Prism
       end
     end
 
-    def ignore_warnings
-      previous = $VERBOSE
-      $VERBOSE = nil
+    def capture_warnings
+      $stderr = StringIO.new
+      yield
+      $stderr.string
+    ensure
+      $stderr = STDERR
+    end
 
-      begin
-        yield
-      ensure
-        $VERBOSE = previous
-      end
+    def ignore_warnings
+      capture_warnings { return yield }
     end
   end
 end

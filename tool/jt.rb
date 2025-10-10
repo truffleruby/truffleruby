@@ -1216,7 +1216,7 @@ module Commands
   end
 
   private def get_mri_test_files(patterns)
-    patterns << "#{MRI_TEST_PREFIX}/**/test_*.rb" if patterns.empty?
+    patterns << "#{MRI_TEST_PREFIX}/**/{test_*,*_test}.rb" if patterns.empty?
 
     patterns.flat_map do |pattern|
       if pattern.start_with?(MRI_TEST_RELATIVE_PREFIX)
@@ -1224,9 +1224,10 @@ module Commands
       elsif !pattern.start_with?(MRI_TEST_PREFIX)
         pattern = "#{MRI_TEST_PREFIX}/#{pattern}"
       end
+
       glob = Dir.glob(pattern).flat_map do |path|
         if File.directory?(path)
-          Dir.glob("#{path}/**/test_*.rb")
+          Dir.glob("#{path}/**/{test_*,*_test}.rb")
         else
           path
         end
@@ -3023,7 +3024,7 @@ module Commands
     changed_lock_files.each do |file|
       contents = File.read(file)
       if contents.include?('BUNDLED WITH')
-        abort "#{file} should not contain a BUNDLED WITH section to avoid needing to update this file when updating Bundler, and to ensure the Bundler version shipped with TruffleRuby is used"
+        abort "#{file} should not contain a BUNDLED WITH section to avoid needing to update this file when updating Bundler, and to ensure the Bundler version shipped with TruffleRuby is used.\nRemove the BUNDLED WITH section manually to solve this."
       end
     end
   end
