@@ -1,19 +1,12 @@
 Thank you for thinking about contributing something to TruffleRuby!
 
-## Building
-
-See the [building instructions](doc/contributor/workflow.md) to build TruffleRuby from source.
-
 ## Contributor Documentation
 
-And finally, we have some more technical contributor documentation, which might
-be useful to someone working on TruffleRuby.
+See the [workflow docs](doc/contributor/workflow.md) for how to build TruffleRuby from source, run tests, etc.
 
-https://github.com/truffleruby/truffleruby/tree/master/doc/contributor
+We have some more technical contributor documentation under [doc/contributor](doc/contributor).
 
-You can find the most common issues described in a How-To Guide.
-
-https://github.com/truffleruby/truffleruby/tree/master/doc/contributor/how-to-guide.md
+You can find the most common issues described in a [How-To Guide](doc/contributor/how-to-guide.md).
 
 ## Slack
 
