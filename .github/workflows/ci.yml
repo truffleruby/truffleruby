@@ -206,7 +206,7 @@ jobs:
         - :language :core :cxx # ~3min ~7min ~1min
         - :command_line :library :cext :security :tracepoint :next # ~5min ~2min ~1.5min ~0.75min ~0.5min ~0.25min
         - fast bundle cexts # ~1.5min ~1.5min ~6.5min
-        - mri --all-sulong # ~6min
+        - "'mri --all-sulong'" # ~6min
         - integration basictest # ~10min ~0.5min
         - gems ecosystem # ~2min ~6min
     steps:
@@ -222,11 +222,7 @@ jobs:
         name: truffleruby-jvm
     - uses: ./.github/actions/setup-truffleruby
 
-    # Special case because this is 'jt test mri --all-sulong', not 'jt test mri' & 'jt test --all-sulong'
-    - run: jt test mri --all-sulong
-      if: matrix.test == 'mri --all-sulong'
-    - run: echo '${{ matrix.test }}' | xargs --verbose -n 1 jt test
-      if: matrix.test != 'mri --all-sulong'
+    - run: for t in ${{ matrix.test }}; do echo jt test $t; jt test $t || exit $?; done
 
   test_native: # ~8min
     name: test native
@@ -276,19 +272,30 @@ jobs:
     - run: jt test mri --fast --no-sulong -- --jobs=4 --longest=10
 
   ruby_spec_cruby: # ~3min
-    name: ruby/spec on CRuby ${{ matrix.ruby }}
-    strategy:
-      fail-fast: false
-      matrix:
-        ruby: ['3.2', '3.3', '3.4']
+    name: ruby/spec on CRuby
     runs-on: ubuntu-22.04-arm
     timeout-minutes: 30
+    env:
+      CHECK_LEAKS: 'true'
     steps:
     - uses: actions/checkout@v4
-    - uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: ${{ matrix.ruby }}
-        bundler: none
     - name: Setup jt
       run: echo "$PWD/bin" >> $GITHUB_PATH
-    - run: CHECK_LEAKS=true jt -u ruby mspec -fdot --timeout 30 spec/ruby
+
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.2
+        bundler: none
+    - run: jt -u ruby mspec -fdot --timeout 30 spec/ruby
+
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.3
+        bundler: none
+    - run: jt -u ruby mspec -fdot --timeout 30 spec/ruby
+
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.4
+        bundler: none
+    - run: jt -u ruby mspec -fdot --timeout 30 spec/ruby
