@@ -1,0 +1,28 @@
+name: Daily
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 13 * * *'
+permissions:
+  contents: read
+
+jobs:
+  # Keep in sync with the same job in ci.yml
+  platform_checks: # ~7-9min, ~30min on macos-15-intel
+    name: platform ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        # NOTE: macos-15-intel is tested in daily.yml because it's much slower
+        os: [macos-15-intel]
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+    - uses: ./.github/actions/setup-jvmci-graal
+    - uses: ./.github/actions/platform-checks

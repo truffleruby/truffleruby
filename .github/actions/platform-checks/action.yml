@@ -1,0 +1,29 @@
+name: 'CI checks for every platform'
+runs:
+  using: "composite"
+  steps:
+    # platform checks
+    - name: MAKEFILE_CONFIG on CRuby for comparison and convenience
+      run: ruby -e "pp RbConfig::MAKEFILE_CONFIG"
+      shell: bash
+
+    - run: ruby tool/generate-native-config.rb
+      shell: bash
+    - run: cat $(jt native_configuration_file)
+      shell: bash
+
+    - run: tool/generate-config-header.sh
+      shell: bash
+    - run: cat $(jt config_header_file)
+      shell: bash
+
+    - run: jt check_native_configuration
+      shell: bash
+    - run: jt check_config_header
+      shell: bash
+
+    # run jt test fast on each platform
+    - run: jt build # ~4-6min, 13min on macos-15-intel
+      shell: bash
+    - run: jt test fast # ~1.5min
+      shell: bash

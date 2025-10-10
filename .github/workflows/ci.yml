@@ -7,6 +7,7 @@
 # Those differences are intentional to avoid making the CI too slow.
 name: CI
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches: [master]
@@ -119,44 +120,25 @@ jobs:
         path: ${{ github.workspace }}/truffleruby-native.tar
         include-hidden-files: true
 
-  platform_checks: # ~7-9min
+  # Keep in sync with the same job in daily.yml
+  platform_checks: # ~7-9min, ~30min on macos-15-intel
     name: platform ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-22.04-arm, macos-15-intel, macos-14]
-    defaults:
-      run:
-        # Use build/ too for consistency in steps and cache reuse
-        working-directory: build
+        # NOTE: macos-15-intel is tested in daily.yml because it's much slower
+        os: [ubuntu-22.04, ubuntu-22.04-arm, macos-14]
     steps:
     - name: Clone TruffleRuby
       uses: actions/checkout@v4
-      with:
-        path: build
     - name: Setup system Ruby
       uses: ruby/setup-ruby@v1
-      with:
-        working-directory: build
     - name: Setup jt
       run: echo "$PWD/bin" >> $GITHUB_PATH
-
-    - uses: ./build/.github/actions/setup-jvmci-graal
-
-    # platform checks
-    - name: MAKEFILE_CONFIG on CRuby for comparison and convenience
-      run: ruby -e "pp RbConfig::MAKEFILE_CONFIG"
-    - run: ruby tool/generate-native-config.rb
-    - run: cat $(jt native_configuration_file)
-    - run: tool/generate-config-header.sh
-    - run: cat $(jt config_header_file)
-    - run: jt check_native_configuration
-    - run: jt check_config_header
-    # run jt test fast on each platform
-    - run: jt build # ~4-6min, 13min on macos-15-intel
-    - run: jt test fast # ~1.5min
+    - uses: ./.github/actions/setup-jvmci-graal
+    - uses: ./.github/actions/platform-checks
 
   test_needing_build_files: # ~17min
     name: tests needing build files
@@ -164,7 +146,7 @@ jobs:
     timeout-minutes: 30
     defaults:
       run:
-        # Use build/ too for consistency in steps and cache reuse
+        # Use build/ too for consistency in steps
         working-directory: build
     steps:
     - name: Clone TruffleRuby
