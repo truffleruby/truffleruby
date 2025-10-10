@@ -4,16 +4,6 @@ Thank you for thinking about contributing something to TruffleRuby!
 
 See the [building instructions](doc/contributor/workflow.md) to build TruffleRuby from source.
 
-## Contributor Agreement
-
-You will need to sign the [Oracle Contributor Agreement](https://www.oracle.com/technical-resources/oracle-contributor-agreement.html)
-(using an online form) for us to able to review and merge your work.
-
-See [Contribute to GraalVM](https://www.graalvm.org/community/contributors/#ii-sign-the-oracle-contributor-agreement)
-for more details.
-
-We also have a [code of conduct for contributors](http://www.graalvm.org/community/conduct/).
-
 ## Contributor Documentation
 
 And finally, we have some more technical contributor documentation, which might
@@ -68,3 +58,7 @@ CHANGELOG.md
 ```
 This is a bug in GitHub's UI, there is never any conflict as `CHANGELOG.md` uses union merge.
 Please do not use the `Resolve conflicts` button as that will create a redundant merge commit.
+
+## Code of Conduct
+
+We have a [code of conduct for contributors](https://www.contributor-covenant.org/version/1/4/code-of-conduct/).
