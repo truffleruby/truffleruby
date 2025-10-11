@@ -3,7 +3,6 @@ rpm: &rpm
   specs: which findutils
   zlib: zlib-devel
   openssl: openssl-devel
-  yaml: libyaml-devel
   cext: gcc make
   c++: gcc-c++
   set-locale:
@@ -15,7 +14,6 @@ deb: &deb
   specs: netbase
   zlib: libz-dev
   openssl: libssl-dev
-  yaml: libyaml-dev
   cext: gcc make
   c++: g++
   set-locale:
@@ -28,22 +26,19 @@ deb: &deb
 # Too old g++
 #ol7:
 #  base: oraclelinux:7-slim
-#  # --enablerepo needed for libyaml-devel
-#  install: RUN yum install --enablerepo=ol7_optional_latest -y
+#  install: RUN yum install -y
 #  locale:
 #  <<: *rpm
 
 ol8:
   base: oraclelinux:8-slim
-  # --enablerepo needed for libyaml-devel
-  install: RUN microdnf install --enablerepo=ol8_codeready_builder -y
+  install: RUN microdnf install -y
   locale: glibc-langpack-en
   <<: *rpm
 
 ol9:
   base: oraclelinux:9-slim
-  # --enablerepo needed for libyaml-devel
-  install: RUN microdnf install --enablerepo=ol9_codeready_builder -y
+  install: RUN microdnf install -y
   locale: glibc-langpack-en
   <<: *rpm
 

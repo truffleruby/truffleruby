@@ -93,6 +93,11 @@ suite = {
               "version": "RELEASE120-1",
             },
         },
+
+        "LIBYAML_0_2_5": {
+            "urls": ["https://github.com/yaml/libyaml/releases/download/0.2.5/yaml-0.2.5.tar.gz"],
+            "digest": "sha512:dadd7d8e0d88b5ebab005e5d521d56d541580198aa497370966b98c904586e642a1cd4f3881094eb57624f218d50db77417bbfd0ffdce50340f011e35e8c4c02",
+        },
     },
 
     "externalProjects": {
@@ -420,11 +425,13 @@ suite = {
                 "sulong:SULONG_HOME", # polyglot.h
                 "truffle:TRUFFLE_NFI_NATIVE", # trufflenfi.h
                 "TRUFFLERUBY-BOOTSTRAP-LAUNCHER",
+                "LIBYAML_LAYOUT_DIST",
             ],
             "buildEnv": {
                 "TRUFFLERUBY_BOOTSTRAP_LAUNCHER": "<path:TRUFFLERUBY-BOOTSTRAP-LAUNCHER>/miniruby",
                 "GRAALVM_TOOLCHAIN_CC": "<toolchainGetToolPath:native,CC>",
                 "TRUFFLE_NFI_NATIVE_INCLUDE": "<path:truffle:TRUFFLE_NFI_NATIVE>/include",
+                "LIBYAML_SRC": "<path:LIBYAML_LAYOUT_DIST>",
             },
             "output": ".",
             "results": [
@@ -872,10 +879,29 @@ suite = {
             "maven": False,
         },
 
+        "LIBYAML_LAYOUT_DIST": {
+            "description": "A layout dist with libyaml sources, since packedResource libraries do not support excludes and extracting subpaths",
+            "type": "dir",
+            "platformDependent": False,
+            "platforms": "local",
+            "layout": {
+                "./": [
+                    {
+                        "source_type": "extracted-dependency",
+                        "dependency": "LIBYAML_0_2_5",
+                        "path": "yaml-0.2.5/*",
+                        "exclude": ["yaml-0.2.5/doc"],
+                    },
+                ],
+            },
+            "maven": False,
+        },
+
         "TRUFFLERUBY_GRAALVM_SUPPORT_NO_NI_RESOURCES": {
             "description": "TruffleRuby support distribution, the contents is not included as native image resources.",
-            "native": True,
-            "platformDependent": True,
+            "type": "dir",
+            "platformDependent": False,
+            "platforms": "local",
             "layout": {
                 "./": [
                     "file:CHANGELOG.md",
@@ -896,16 +922,15 @@ suite = {
                 "logo/png/": [
                     "file:logo/png/truffleruby_logo_horizontal_medium.png",
                 ],
+                # See the comment about --with-libyaml-source-dir in rbconfig.rb
+                # "src/main/c/libyaml/": [
+                #     "dependency:LIBYAML_LAYOUT_DIST/*",
+                # ],
                 "src/main/c/openssl/": [
                     "file:src/main/c/openssl/extconf.rb",
                     "file:src/main/c/openssl/*.c",
                     "file:src/main/c/openssl/ossl*.h",
                     "file:src/main/c/openssl/openssl_missing.h",
-                ],
-                "src/main/c/psych/": [
-                    "file:src/main/c/psych/extconf.rb",
-                    "file:src/main/c/psych/*.c",
-                    "file:src/main/c/psych/psych*.h",
                 ],
             },
             "maven": False,
@@ -932,7 +957,7 @@ suite = {
                 "./": [
                     "extracted-dependency:TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_AGNOSTIC",
                     "extracted-dependency:TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_SPECIFIC",
-                    "extracted-dependency:TRUFFLERUBY_GRAALVM_SUPPORT_NO_NI_RESOURCES",
+                    "dependency:TRUFFLERUBY_GRAALVM_SUPPORT_NO_NI_RESOURCES/*",
                     "dependency:truffleruby_licenses/*",
                 ],
                 "bin/ruby": "dependency:truffleruby_thin_launcher",
