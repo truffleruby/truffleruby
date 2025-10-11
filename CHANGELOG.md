@@ -2,6 +2,7 @@
 
 New features:
 
+* TruffleRuby now ships with its own `libyaml` and no longer need a system `libyaml` to be installed (#3479, @eregon).
 
 Bug fixes:
 

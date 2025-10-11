@@ -129,10 +129,7 @@ module RbConfig
     dldflags << " -L#{openssl_prefix}/lib"
   end
 
-  require 'truffle/libyaml-prefix'
-  if libyaml_prefix = ENV['LIBYAML_PREFIX']
-    configure_args << " '--with-libyaml-dir=#{libyaml_prefix}'"
-  end
+  configure_args << " '--with-libyaml-source-dir=#{prefix}/src/main/c/libyaml'"
 
   # Set extra flags needed for --building-core-cexts
   if Truffle::Boot.get_option 'building-core-cexts'

@@ -49,7 +49,8 @@ clean_cexts:
 	$(Q) rm -f cext/Makefile cext/*.o $(LIBTRUFFLERUBY)
 	$(Q) rm -f openssl/Makefile openssl/*.o openssl/openssl.$(DLEXT) openssl/extconf.h
 	$(Q) rm -f zlib/Makefile zlib/*.o zlib/zlib.$(DLEXT)
-	$(Q) rm -f psych/Makefile psych/*.o psych/yaml/*.o psych/psych.$(DLEXT)
+	$(Q) rm -f psych/Makefile psych/*.o psych/psych.$(DLEXT)
+	$(Q) rm -rf psych/libyaml psych/libyaml.a
 	$(Q) rm -f ripper/Makefile ripper/*.o ripper/ripper.$(DLEXT)
 	$(Q) rm -f syslog/Makefile syslog/*.o syslog/syslog.$(DLEXT)
 	$(Q) rm -f nkf/Makefile nkf/*.o nkf/nkf.$(DLEXT)
@@ -154,7 +155,9 @@ rbconfig-sizeof/sizeof.$(DLEXT): rbconfig-sizeof/Makefile rbconfig-sizeof/sizes.
 
 # psych
 psych/Makefile: psych/extconf.rb $(EXTCONF_DEPS)
-	$(Q) cd psych && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
+	$(Q) rm -rf libyaml
+	$(Q) cp -pR $(LIBYAML_SRC) libyaml
+	$(Q) cd psych && $(RUBY) extconf.rb --with-libyaml-source-dir=$(CURDIR)/libyaml || $(IF_EXTCONF_FAIL)
 
 psych/psych.$(DLEXT): psych/Makefile psych/*.c psych/*.h
 	$(Q) cd psych && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
