@@ -16,6 +16,7 @@ Performance:
 
 Changes:
 
+* The `--single-threaded` option now defaults to false also when embedding TruffleRuby (#3958, @eregon).
 
 Memory Footprint:
 

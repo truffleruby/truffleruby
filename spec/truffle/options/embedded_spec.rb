@@ -22,7 +22,7 @@ describe "The --embedded option" do
   end
 
   it "sets dependent options when set manually" do
-    ruby_exe("p Truffle::Boot.get_option('single-threaded')", options: "--experimental-options --embedded").should == "true\n"
+    ruby_exe("p Truffle::Boot.get_option('polyglot-stdio')", options: "--experimental-options --embedded").should == "true\n"
   end
 
   it "when enabled can run basic expressions" do
