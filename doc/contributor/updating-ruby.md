@@ -1,8 +1,5 @@
 # Updating our version of Ruby
 
-> [!IMPORTANT]
-> Before you do anything, check with Benoit Daloze for clearance to upgrade.
-
 TruffleRuby contains some MRI source code files e.g. default gems source code,
 some C headers that define public API, etc. Some of them are modified to provide
 TruffleRuby-specific implementation or disable some functionality. During
