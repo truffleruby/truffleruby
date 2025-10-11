@@ -922,9 +922,10 @@ suite = {
                 "logo/png/": [
                     "file:logo/png/truffleruby_logo_horizontal_medium.png",
                 ],
-                "src/main/c/libyaml/": [
-                    "dependency:LIBYAML_LAYOUT_DIST/*",
-                ],
+                # See the comment about --with-libyaml-source-dir in rbconfig.rb
+                # "src/main/c/libyaml/": [
+                #     "dependency:LIBYAML_LAYOUT_DIST/*",
+                # ],
                 "src/main/c/openssl/": [
                     "file:src/main/c/openssl/extconf.rb",
                     "file:src/main/c/openssl/*.c",
