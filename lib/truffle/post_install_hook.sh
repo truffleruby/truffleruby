@@ -38,15 +38,4 @@ else
   recompile openssl
 fi
 
-# Recompiling psych is needed on macOS if a non-default Homebrew prefix or not using Homebrew (e.g. MacPorts)
-if [ "$TRUFFLERUBY_RECOMPILE_PSYCH" == "false" ]; then
-  echo "Skipping recompilation of the Psych C extension (TRUFFLERUBY_RECOMPILE_PSYCH=false)"
-elif [ "$TRUFFLERUBY_RECOMPILE_PSYCH" == "true" ]; then
-  echo "Recompiling the Psych C extension (TRUFFLERUBY_RECOMPILE_PSYCH=true)"
-  recompile psych
-else
-  echo "Recompiling the Psych C extension (against the installed libyaml)"
-  recompile psych
-fi
-
 echo "TruffleRuby was successfully installed in $root"

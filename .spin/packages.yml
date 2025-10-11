@@ -3,6 +3,5 @@
 - graphviz
 - libcapstone-dev
 - libssl-dev
-- libyaml-dev
 - libz-dev
 - python3

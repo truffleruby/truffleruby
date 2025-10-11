@@ -52,6 +52,8 @@ src/main/c/etc/constdefs.h
 src/main/c/spawn-helper/spawn-helper
 src/main/c/debug
 src/main/c/rbs
+src/main/c/libyaml
+src/main/c/psych/libyaml
 
 spec/truffle/fixtures/libtestnfi.so
 spec/truffle/fixtures/libtestnfi.dylib

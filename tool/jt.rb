@@ -897,6 +897,8 @@ module Commands
       sh 'tool/generate-options.rb'
     when 'core-symbols'
       sh 'tool/generate-core-symbols.rb'
+    when 'cexts'
+      mx 'build', '--only', 'org.truffleruby.cext'
     else
       build_standalone(*project, *options)
     end

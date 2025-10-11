@@ -123,7 +123,6 @@ class JT
 
       packages << distro.fetch('zlib')
       packages << distro.fetch('openssl')
-      packages << distro.fetch('yaml')
       packages << distro.fetch('cext')
       packages << distro.fetch('c++') if full_test
 
