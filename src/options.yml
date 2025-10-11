@@ -90,7 +90,7 @@ EXPERT:
     NATIVE_PLATFORM: [platform-native, boolean, ['env.isNativeAccessAllowed() && ', true], Enables native calls via Truffle NFI for internal functionality]
     NATIVE_INTERRUPT: [platform-native-interrupt, boolean, NATIVE_PLATFORM, Use the SIGVTALRM signal to interrupt native blocking calls]
     HANDLE_INTERRUPT: [platform-handle-interrupt, boolean, '!EMBEDDED', Handle the interrupt signal and raise an Interrupt exception]
-    SINGLE_THREADED: [single-threaded, boolean, ['!env.isCreateThreadAllowed() || ', EMBEDDED], Use only a single thread to be compatible with languages not supporting multithreading]
+    SINGLE_THREADED: [single-threaded, boolean, ['!env.isCreateThreadAllowed() || ', false], Use only a single thread to be compatible with languages not supporting multithreading]
     POLYGLOT_STDIO: [polyglot-stdio, boolean, EMBEDDED || !NATIVE_PLATFORM, Use standard IO streams from the Graal-SDK polyglot API configuration]
     HOST_INTEROP: [interop-host, boolean, ['env.isHostLookupAllowed() && ', true], Allow interoperability with the host language (Java)]
 

@@ -41,7 +41,7 @@ public final class OptionsCatalog {
     public static final OptionKey<Boolean> NATIVE_PLATFORM_KEY = new OptionKey<>(true);
     public static final OptionKey<Boolean> NATIVE_INTERRUPT_KEY = new OptionKey<>(NATIVE_PLATFORM_KEY.getDefaultValue());
     public static final OptionKey<Boolean> HANDLE_INTERRUPT_KEY = new OptionKey<>(!EMBEDDED_KEY.getDefaultValue());
-    public static final OptionKey<Boolean> SINGLE_THREADED_KEY = new OptionKey<>(EMBEDDED_KEY.getDefaultValue());
+    public static final OptionKey<Boolean> SINGLE_THREADED_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> POLYGLOT_STDIO_KEY = new OptionKey<>(EMBEDDED_KEY.getDefaultValue() || !NATIVE_PLATFORM_KEY.getDefaultValue());
     public static final OptionKey<Boolean> HOST_INTEROP_KEY = new OptionKey<>(true);
     public static final OptionKey<Boolean> TRACE_CALLS_KEY = new OptionKey<>(true);

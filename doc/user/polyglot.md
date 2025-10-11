@@ -234,9 +234,7 @@ The [JRuby migration guide](jruby-migration.md) includes some more examples.
 ## Threading and Interop
 
 Ruby is designed to be a multi-threaded language and much of the ecosystem expects threads to be available.
-This may be incompatible with other Truffle languages which do not support threading, so you can disable the creation of
-multiple threads with the option `--single-threaded`.
-This option is set by default unless the Ruby launcher is used, as part of the embedded configuration, described below.
+This may be incompatible with other Truffle languages which do not support threading like JavaScript, so you can disable the creation of multiple threads with the option `--single-threaded`.
 
 When this option is enabled, the `timeout` module will warn that the timeouts are being ignored, and signal handlers will warn that a signal has been caught but will not run the handler, as both of these features would require starting new threads.
 
@@ -244,7 +242,6 @@ When this option is enabled, the `timeout` module will warn that the timeouts ar
 
 When used outside of the Ruby launcher - such as from another language's launcher via the polyglot interface, embedded using the native polyglot library, or embedded in a Java application via the GraalVM SDK - TruffleRuby will be automatically configured to work more cooperatively within another application.
 This includes options such as not installing an interrupt signal handler, and using the I/O streams from the Graal SDK.
-It also turns on the single-threaded mode, as described above.
 
 It will also warn when you explicitly do things that may not work well when embedded, such as installing your own signal handlers.
 

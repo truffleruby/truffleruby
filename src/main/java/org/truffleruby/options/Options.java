@@ -59,7 +59,7 @@ public final class Options {
     public final boolean NATIVE_INTERRUPT;
     /** --platform-handle-interrupt=!EMBEDDED */
     public final boolean HANDLE_INTERRUPT;
-    /** --single-threaded=!env.isCreateThreadAllowed() || EMBEDDED */
+    /** --single-threaded=!env.isCreateThreadAllowed() || false */
     public final boolean SINGLE_THREADED;
     /** --polyglot-stdio=EMBEDDED || !NATIVE_PLATFORM */
     public final boolean POLYGLOT_STDIO;
@@ -228,7 +228,7 @@ public final class Options {
         NATIVE_PLATFORM = env.isNativeAccessAllowed() && (options.get(OptionsCatalog.NATIVE_PLATFORM_KEY));
         NATIVE_INTERRUPT = options.hasBeenSet(OptionsCatalog.NATIVE_INTERRUPT_KEY) ? options.get(OptionsCatalog.NATIVE_INTERRUPT_KEY) : NATIVE_PLATFORM;
         HANDLE_INTERRUPT = options.hasBeenSet(OptionsCatalog.HANDLE_INTERRUPT_KEY) ? options.get(OptionsCatalog.HANDLE_INTERRUPT_KEY) : !EMBEDDED;
-        SINGLE_THREADED = !env.isCreateThreadAllowed() || (options.hasBeenSet(OptionsCatalog.SINGLE_THREADED_KEY) ? options.get(OptionsCatalog.SINGLE_THREADED_KEY) : EMBEDDED);
+        SINGLE_THREADED = !env.isCreateThreadAllowed() || (options.get(OptionsCatalog.SINGLE_THREADED_KEY));
         POLYGLOT_STDIO = options.hasBeenSet(OptionsCatalog.POLYGLOT_STDIO_KEY) ? options.get(OptionsCatalog.POLYGLOT_STDIO_KEY) : EMBEDDED || !NATIVE_PLATFORM;
         HOST_INTEROP = env.isHostLookupAllowed() && (options.get(OptionsCatalog.HOST_INTEROP_KEY));
         TRACE_CALLS = options.get(OptionsCatalog.TRACE_CALLS_KEY);
