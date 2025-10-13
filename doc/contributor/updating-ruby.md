@@ -223,7 +223,3 @@ For a new major version:
 * Update the versions in the `ruby/spec on CRuby` job of `.github/workflows/ci.yml`.
 
 Use "Update versions" for a commit message.
-
-## Last step
-
-* Request the new MRI version on Jira, then update `ci/common.jsonnet` to use the corresponding MRI version for benchmarking.
