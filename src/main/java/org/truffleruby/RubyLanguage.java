@@ -155,7 +155,7 @@ import static org.truffleruby.language.RubyBaseNode.nil;
 
 @TruffleLanguage.Registration(
         name = "Ruby",
-        website = "https://www.graalvm.org/ruby/",
+        website = "https://github.com/truffleruby/truffleruby",
         contextPolicy = ContextPolicy.SHARED,
         id = TruffleRuby.LANGUAGE_ID,
         implementationName = TruffleRuby.FORMAL_NAME,
