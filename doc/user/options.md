@@ -72,17 +72,17 @@ Runtime options:
 Languages:
   [id]        [name]                  [website]
   llvm        LLVM                    https://www.graalvm.org/dev/reference-manual/llvm/
-  ruby        Ruby                    https://www.graalvm.org/ruby/
+  ruby        Ruby                    https://github.com/truffleruby/truffleruby
 
 Tools:
   [id]        [name]                  [website]
-  agentscript Agent Script
+  agentscript Agent Script            
   coverage    Code Coverage           https://www.graalvm.org/tools/code-coverage/
   cpusampler  CPU Sampler             https://www.graalvm.org/tools/profiling/
   cputracer   CPU Tracer              https://www.graalvm.org/tools/profiling/
   dap         Debug Protocol Server   https://www.graalvm.org/tools/dap/
-  heap        Heap Dump
-  heapmonitor Heap Allocation Monitor
+  heap        Heap Dump               
+  heapmonitor Heap Allocation Monitor 
   insight     Insight                 https://www.graalvm.org/tools/graalvm-insight/
   inspect     Chrome Inspector        https://www.graalvm.org/tools/chrome-debugger/
   lsp         Language Server         https://www.graalvm.org/tools/lsp/

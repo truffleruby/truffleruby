@@ -4,7 +4,7 @@ suite = {
     "version": "25.1.0",
     "release": False,
     "groupId": "org.graalvm.ruby",
-    "url": "https://www.graalvm.org/ruby/",
+    "url": "https://github.com/truffleruby/truffleruby",
     "developer": {
         "name": "TruffleRuby",
         "email": "truffleruby@truffleruby.com",

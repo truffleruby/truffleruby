@@ -344,7 +344,7 @@ describe "The launcher" do
     check_status_and_empty_stderr
     out.should =~ /Language options/i
     out.should =~ /\bRuby\b/
-    out.should.include?('https://www.graalvm.org/ruby/')
+    out.should.include?('https://github.com/truffleruby/truffleruby')
     out.should.include?("--ruby.load-paths=")
   end
 
