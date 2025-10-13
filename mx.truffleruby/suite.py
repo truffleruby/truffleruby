@@ -6,10 +6,10 @@ suite = {
     "groupId": "org.graalvm.ruby",
     "url": "https://www.graalvm.org/ruby/",
     "developer": {
-        "name": "GraalVM Development",
-        "email": "graalvm-dev@oss.oracle.com",
-        "organization": "Oracle Corporation",
-        "organizationUrl": "http://www.graalvm.org/",
+        "name": "TruffleRuby",
+        "email": "truffleruby@truffleruby.com",
+        "organization": "TruffleRuby",
+        "organizationUrl": "https://github.com/truffleruby/truffleruby",
     },
     "scm": {
         "url": "https://github.com/truffleruby/truffleruby",
