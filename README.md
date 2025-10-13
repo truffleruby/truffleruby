@@ -129,11 +129,8 @@ If you find any performance issue, please see [this guide](doc/user/reporting-pe
 
 ## Releases
 
-TruffleRuby is released at the same time as GraalVM.
+TruffleRuby is released on its own schedule (based on features, important bug fixes, etc) and does not follow the GraalVM release schedule.
 TruffleRuby continues to use the release numbering based on the calendar year, for example, 21.x, and 22.x., same as GraalVM prior to 2023.
-See the [release roadmap](https://www.graalvm.org/release-notes/version-roadmap/) and [the upcoming releases list](https://github.com/truffleruby/truffleruby/milestones?state=open) for the release dates and information about how long releases are supported.
-GraalVM Community Edition releases are supported at most one year.
-[Longer support](https://docs.oracle.com/en/graalvm/enterprise/22/docs/release-calendar/) is available for Oracle GraalVM.
 
 ## Migration from MRI
 
