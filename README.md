@@ -158,7 +158,7 @@ document for how to build and run TruffleRuby.
 ## Contact
 
 The best way to get in touch with us is to join the `#truffleruby` channel on
-[GraalVM Slack](https://www.graalvm.org/community/#community-support).
+[GraalVM Slack](https://www.graalvm.org/slack-invitation/).
 You can also mention or DM [@TruffleRuby](https://bsky.app/profile/truffleruby.bsky.social) on BlueSky.
 
 Please report security vulnerabilities via the process outlined in [SECURITY.md](SECURITY.md).

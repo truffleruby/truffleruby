@@ -11,7 +11,7 @@ You can find the most common issues described in a [How-To Guide](doc/contributo
 ## Slack
 
 You are welcome to join the channel `#truffleruby` of the
-[GraalVM Slack](https://www.graalvm.org/community/#community-support)
+[GraalVM Slack](https://www.graalvm.org/slack-invitation/)
 for any help related to contributing to TruffleRuby.
 
 ## Style
