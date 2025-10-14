@@ -635,7 +635,7 @@ module Kernel
         return nil unless Warning[category]
       end
 
-      prefix = if Primitive.undefined?(uplevel)
+      prefix = if Primitive.undefined?(uplevel) || Primitive.nil?(uplevel)
                  ''
                else
                  uplevel = Primitive.rb_to_int(uplevel)

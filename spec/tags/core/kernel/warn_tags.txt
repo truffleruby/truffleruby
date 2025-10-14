@@ -4,4 +4,3 @@ slow:Kernel#warn does not call Warning.warn if self is the Warning module
 slow:Kernel#warn avoids recursion if Warning#warn is redefined and calls super
 slow:Kernel#warn :uplevel keyword argument skips <internal: core library methods defined in Ruby
 fails:Kernel#warn :uplevel keyword argument skips <internal: core library methods defined in Ruby
-fails:Kernel#warn :uplevel keyword argument doesn't show the caller when the uplevel is `nil`
