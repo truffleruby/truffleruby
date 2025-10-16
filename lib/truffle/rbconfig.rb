@@ -116,18 +116,16 @@ module RbConfig
   # Make C extensions use the same libssl as the one used for the openssl C extension
   configure_args = ''
 
-  require 'truffle/openssl-prefix'
-  if openssl_prefix = ENV['OPENSSL_PREFIX']
-    configure_args << " '--with-openssl-dir=#{openssl_prefix}'"
+  openssl_prefix = "#{prefix}/src/main/c/libssl"
+  configure_args << " '--with-openssl-dir=#{openssl_prefix}'"
 
-    # The below should not be needed as it's redundant but is still necessary
-    # until grpc's extconf.rb is changed, as that does not use dir_config("openssl").
-    # See https://github.com/truffleruby/truffleruby/issues/3170#issuecomment-1649471551
-    # We change the same variables as MRI's --with-opt-dir configure option would.
-    cppflags << " -I#{openssl_prefix}/include"
-    ldflags << " -L#{openssl_prefix}/lib"
-    dldflags << " -L#{openssl_prefix}/lib"
-  end
+  # The below should not be needed as it's redundant but is still necessary
+  # until grpc's extconf.rb is changed, as that does not use dir_config("openssl").
+  # See https://github.com/truffleruby/truffleruby/issues/3170#issuecomment-1649471551
+  # We change the same variables as MRI's --with-opt-dir configure option would.
+  cppflags << " -I#{openssl_prefix}/include"
+  ldflags << " -L#{openssl_prefix}/lib"
+  dldflags << " -L#{openssl_prefix}/lib"
 
   # The configure_args change below does not work well because of timestamp issues with autotools and libyaml,
   # Specifically with that line, `gem install psych` gets errors like:

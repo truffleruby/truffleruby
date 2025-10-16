@@ -860,7 +860,6 @@ module Commands
 
         RUBY_BIN                                     The TruffleRuby executable to use (normally just bin/truffleruby)
         JAVA_HOME                                    Path to the JVMCI JDK used for building with mx
-        OPENSSL_PREFIX                               Where to find OpenSSL headers and libraries
         ECLIPSE_EXE                                  Where to find Eclipse
         SYSTEM_RUBY                                  The Ruby interpreter to run 'jt' itself, when using 'bin/jt'
         JT_JDK                                       The default JDK version to use: #{JDK_VERSIONS.join(' or ')}
@@ -925,7 +924,7 @@ module Commands
 
   def env
     puts 'Environment'
-    env_vars = %w[JAVA_HOME PATH RUBY_BIN OPENSSL_PREFIX TRUFFLERUBYOPT RUBYOPT]
+    env_vars = %w[JAVA_HOME PATH RUBY_BIN TRUFFLERUBYOPT RUBYOPT]
     column_size = env_vars.map(&:size).max
     env_vars.each do |e|
       puts format "%#{column_size}s: %s", e, ENV[e].inspect
@@ -948,11 +947,7 @@ module Commands
     shell['mx version']
     sh('mx', 'sversions', continue_on_failure: true)
     shell['git --no-pager show -s --format=%H']
-    if ENV['OPENSSL_PREFIX']
-      shell["#{ENV['OPENSSL_PREFIX']}/bin/openssl version"]
-    else
-      shell['openssl version']
-    end
+    shell['openssl version']
     shell['java -version']
   end
 

@@ -2,7 +2,8 @@
 
 New features:
 
-* TruffleRuby now ships with its own `libyaml` and no longer need a system `libyaml` to be installed (#3479, @eregon).
+* TruffleRuby now ships with its own `libyaml` and no longer needs a system `libyaml` (#3479, @eregon).
+* TruffleRuby now ships with its own `libssl` and no longer needs a system `libssl`. It still requires CA certificates from the system. (#3479, @eregon).
 
 Bug fixes:
 

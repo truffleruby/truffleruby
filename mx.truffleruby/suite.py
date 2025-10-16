@@ -98,6 +98,11 @@ suite = {
             "urls": ["https://github.com/yaml/libyaml/releases/download/0.2.5/yaml-0.2.5.tar.gz"],
             "digest": "sha512:dadd7d8e0d88b5ebab005e5d521d56d541580198aa497370966b98c904586e642a1cd4f3881094eb57624f218d50db77417bbfd0ffdce50340f011e35e8c4c02",
         },
+
+        "LIBSSL_3_5_4": {
+            "urls": ["https://github.com/openssl/openssl/releases/download/openssl-3.5.4/openssl-3.5.4.tar.gz"],
+            "digest": "sha256:967311f84955316969bdb1d8d4b983718ef42338639c621ec4c34fddef355e99",
+        },
     },
 
     "externalProjects": {
@@ -426,12 +431,14 @@ suite = {
                 "truffle:TRUFFLE_NFI_NATIVE", # trufflenfi.h
                 "TRUFFLERUBY-BOOTSTRAP-LAUNCHER",
                 "LIBYAML_LAYOUT_DIST",
+                "LIBSSL_LAYOUT_DIST",
             ],
             "buildEnv": {
                 "TRUFFLERUBY_BOOTSTRAP_LAUNCHER": "<path:TRUFFLERUBY-BOOTSTRAP-LAUNCHER>/miniruby",
                 "GRAALVM_TOOLCHAIN_CC": "<toolchainGetToolPath:native,CC>",
                 "TRUFFLE_NFI_NATIVE_INCLUDE": "<path:truffle:TRUFFLE_NFI_NATIVE>/include",
                 "LIBYAML_SRC": "<path:LIBYAML_LAYOUT_DIST>",
+                "LIBSSL_SRC": "<path:LIBSSL_LAYOUT_DIST>",
             },
             "output": ".",
             "results": [
@@ -450,6 +457,7 @@ suite = {
                 "src/main/c/zlib/<extsuffix:zlib>",
                 "src/main/c/debug/<extsuffix:debug>",
                 "src/main/c/rbs/<extsuffix:rbs_extension>",
+                "src/main/c/libssl",
             ],
             "license": [
                 "EPL-2.0",          # JRuby (we choose EPL out of EPL,GPL,LGPL)
@@ -872,6 +880,9 @@ suite = {
                 "lib/truffle/": [
                     "dependency:org.truffleruby.spawnhelper",
                 ],
+                "src/main/c/": [
+                    "dependency:org.truffleruby.cext/src/main/c/libssl",
+                ],
             },
             "license": [
                 "BSD-simplified",   # MRI
@@ -891,6 +902,23 @@ suite = {
                         "dependency": "LIBYAML_0_2_5",
                         "path": "yaml-0.2.5/*",
                         "exclude": ["yaml-0.2.5/doc"],
+                    },
+                ],
+            },
+            "maven": False,
+        },
+
+        "LIBSSL_LAYOUT_DIST": {
+            "description": "A layout dist with libssl sources, since packedResource libraries do not support excludes and extracting subpaths",
+            "type": "dir",
+            "platformDependent": False,
+            "platforms": "local",
+            "layout": {
+                "./": [
+                    {
+                        "source_type": "extracted-dependency",
+                        "dependency": "LIBSSL_3_5_4",
+                        "path": "openssl-3.5.4/*",
                     },
                 ],
             },
@@ -926,12 +954,6 @@ suite = {
                 # "src/main/c/libyaml/": [
                 #     "dependency:LIBYAML_LAYOUT_DIST/*",
                 # ],
-                "src/main/c/openssl/": [
-                    "file:src/main/c/openssl/extconf.rb",
-                    "file:src/main/c/openssl/*.c",
-                    "file:src/main/c/openssl/ossl*.h",
-                    "file:src/main/c/openssl/openssl_missing.h",
-                ],
             },
             "maven": False,
         },
