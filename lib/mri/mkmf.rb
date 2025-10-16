@@ -502,12 +502,12 @@ module MakeMakefile
   def log_src(src, heading="checked program was")
     src = src.split(/^/)
     fmt = "%#{src.size.to_s.size}d: %s"
-    Logging::message <<"EOM"
+    Logging::message <<~"EOM"
 #{heading}:
 /* begin */
 EOM
     src.each_with_index {|line, no| Logging::message fmt, no+1, line}
-    Logging::message <<"EOM"
+    Logging::message <<~"EOM"
 /* end */
 
 EOM
