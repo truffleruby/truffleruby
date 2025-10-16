@@ -279,6 +279,15 @@ suite = {
             "description": "Build libssl"
         },
 
+        "libyaml": {
+            "class": "LibYAMLProject",
+            "buildDependencies": [
+                "LIBYAML_LAYOUT_DIST",
+            ],
+            "results": ["libyaml"],
+            "description": "Build libyaml"
+        },
+
         "org.truffleruby.yarp.bindings": {
             "dir": "src/main/c/yarp_bindings",
             "native": "shared_lib",
@@ -439,14 +448,13 @@ suite = {
                 "sulong:SULONG_HOME", # polyglot.h
                 "truffle:TRUFFLE_NFI_NATIVE", # trufflenfi.h
                 "TRUFFLERUBY-BOOTSTRAP-LAUNCHER",
-                "LIBYAML_LAYOUT_DIST",
                 "libssl",
+                "libyaml",
             ],
             "buildEnv": {
                 "TRUFFLERUBY_BOOTSTRAP_LAUNCHER": "<path:TRUFFLERUBY-BOOTSTRAP-LAUNCHER>/miniruby",
                 "GRAALVM_TOOLCHAIN_CC": "<toolchainGetToolPath:native,CC>",
                 "TRUFFLE_NFI_NATIVE_INCLUDE": "<path:truffle:TRUFFLE_NFI_NATIVE>/include",
-                "LIBYAML_SRC": "<path:LIBYAML_LAYOUT_DIST>",
             },
             "output": ".",
             "results": [
@@ -806,6 +814,7 @@ suite = {
                 ],
                 "src/main/c/": [
                     "dependency:libssl/libssl",
+                    "dependency:libyaml/libyaml",
                 ],
             },
             "maven": False,
@@ -893,6 +902,7 @@ suite = {
                 ],
                 "src/main/c/": [
                     "dependency:libssl/libssl",
+                    "dependency:libyaml/libyaml",
                 ],
             },
             "license": [
@@ -901,6 +911,7 @@ suite = {
             "maven": False,
         },
 
+        # This must preserve the timestamps, see src/main/c/Makefile
         "LIBYAML_LAYOUT_DIST": {
             "description": "A layout dist with libyaml sources, since packedResource libraries do not support excludes and extracting subpaths",
             "type": "dir",
@@ -961,10 +972,6 @@ suite = {
                 "logo/png/": [
                     "file:logo/png/truffleruby_logo_horizontal_medium.png",
                 ],
-                # See the comment about --with-libyaml-source-dir in rbconfig.rb
-                # "src/main/c/libyaml/": [
-                #     "dependency:LIBYAML_LAYOUT_DIST/*",
-                # ],
             },
             "maven": False,
         },

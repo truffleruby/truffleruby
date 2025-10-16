@@ -127,17 +127,7 @@ module RbConfig
   ldflags << " -L#{openssl_prefix}/lib"
   dldflags << " -L#{openssl_prefix}/lib"
 
-  # The configure_args change below does not work well because of timestamp issues with autotools and libyaml,
-  # Specifically with that line, `gem install psych` gets errors like:
-  # src/main/c/libyaml/config/missing: line 81: aclocal-1.15: command not found
-  # WARNING: 'aclocal-1.15' is missing on your system.
-  #          You should only need it if you modified 'acinclude.m4' or
-  #          'configure.ac' or m4 files included by 'configure.ac'.
-  # A solution would be to `touch aclocal.m4 configure Makefile.in`
-  # but it seems pretty hard to do that for the standalone archive.
-  # See https://stackoverflow.com/a/33279062/388803
-  #
-  # configure_args << " '--with-libyaml-source-dir=#{prefix}/src/main/c/libyaml'"
+  configure_args << " '--with-libyaml-dir=#{prefix}/src/main/c/libyaml'"
 
   # Set extra flags needed for --building-core-cexts
   if Truffle::Boot.get_option 'building-core-cexts'

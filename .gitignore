@@ -52,8 +52,8 @@ src/main/c/etc/constdefs.h
 src/main/c/spawn-helper/spawn-helper
 src/main/c/debug
 src/main/c/rbs
+src/main/c/libyaml_build
 src/main/c/libyaml
-src/main/c/psych/libyaml
 src/main/c/libssl_build
 src/main/c/libssl
 

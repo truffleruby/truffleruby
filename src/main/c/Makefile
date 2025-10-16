@@ -50,7 +50,6 @@ clean_cexts:
 	$(Q) rm -f openssl/Makefile openssl/*.o openssl/openssl.$(DLEXT) openssl/extconf.h
 	$(Q) rm -f zlib/Makefile zlib/*.o zlib/zlib.$(DLEXT)
 	$(Q) rm -f psych/Makefile psych/*.o psych/psych.$(DLEXT)
-	$(Q) rm -rf libyaml psych/libyaml psych/libyaml.a
 	$(Q) rm -f ripper/Makefile ripper/*.o ripper/ripper.$(DLEXT)
 	$(Q) rm -f syslog/Makefile syslog/*.o syslog/syslog.$(DLEXT)
 	$(Q) rm -f nkf/Makefile nkf/*.o nkf/nkf.$(DLEXT)
@@ -155,10 +154,20 @@ rbconfig-sizeof/sizeof.$(DLEXT): rbconfig-sizeof/Makefile rbconfig-sizeof/sizes.
 	$(Q) cd rbconfig-sizeof && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
 
 # psych
+# NOTE: --with-libyaml-dir=TRUFFLERUBY_BOOTSTRAP_HOME/src/main/c/libyaml is automatically added from rbconfig.rb
+#
+# Using --with-libyaml-source-dir instead causes timestamp issues with autotools and libyaml.
+# Specifically on `gem install psych` we get errors like:
+# src/main/c/libyaml/config/missing: line 81: aclocal-1.15: command not found
+# WARNING: 'aclocal-1.15' is missing on your system.
+#          You should only need it if you modified 'acinclude.m4' or
+#          'configure.ac' or m4 files included by 'configure.ac'.
+# A workaround would be to `touch aclocal.m4 configure Makefile.in` (from https://stackoverflow.com/a/33279062/388803)
+# but it seems difficult and messy to do that for the standalone archive.
+#
+# So using --with-libyaml-dir is safer and is consistent with how libssl is handled.
 psych/Makefile: psych/extconf.rb $(EXTCONF_DEPS)
-	$(Q) rm -rf libyaml
-	$(Q) cp -pR $(LIBYAML_SRC) libyaml
-	$(Q) cd psych && $(RUBY) extconf.rb --with-libyaml-source-dir=$(CURDIR)/libyaml || $(IF_EXTCONF_FAIL)
+	$(Q) cd psych && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
 
 psych/psych.$(DLEXT): psych/Makefile psych/*.c psych/*.h
 	$(Q) cd psych && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)

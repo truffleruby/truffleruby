@@ -112,7 +112,6 @@ class TruffleRubyBootstrapLauncherProject(mx.Project):
     def getBuildTask(self, args):
         return TruffleRubyBootstrapLauncherBuildTask(self, args, 1)
 
-
 class TruffleRubyBootstrapLauncherBuildTask(mx.BuildTask):
     def __str__(self):
         return "Generating " + self.subject.name
@@ -186,6 +185,7 @@ class YARPNativeProject(mx.NativeProject):
             results=kwArgs.pop('results'),
             output=path, d=path, vpath=False, **kwArgs)
 
+
 class LibSSLProject(mx.NativeProject):
     def __init__(self, suite, name, deps, workingSets, output=None, **kwArgs):
         base = join(root, 'src/main/c')
@@ -215,6 +215,7 @@ class LibSSLBuildTask(mx.NativeBuildTask):
         install_dir = self.subject.install_dir
 
         self.clean()
+        # This must preserve the timestamps, see src/main/c/Makefile
         mx.copytree(libssl_sources, build_dir)
 
         # logic based on https://github.com/rbenv/ruby-build/blob/master/bin/ruby-build build_package_openssl()
@@ -236,6 +237,52 @@ class LibSSLBuildTask(mx.NativeBuildTask):
         super(LibSSLBuildTask, self).build() # make
 
         mx.run(['make', 'install_sw', 'install_ssldirs'], cwd=build_dir)
+
+    def clean(self, forBuild=False):
+        build_dir = self.subject.build_dir
+        install_dir = self.subject.install_dir
+        if exists(build_dir):
+            shutil.rmtree(build_dir)
+        if exists(install_dir):
+            shutil.rmtree(install_dir)
+
+
+class LibYAMLProject(mx.NativeProject):
+    def __init__(self, suite, name, deps, workingSets, output=None, **kwArgs):
+        base = join(root, 'src/main/c')
+        self.build_dir = join(base, 'libyaml_build')
+        self.install_dir = join(base, 'libyaml')
+        # d is the directory in which `make` will be called.
+        # output is used as a prefix of results.
+        super(LibYAMLProject, self).__init__(
+            suite, name, subDir=None, srcDirs=[], deps=deps, workingSets=workingSets,
+            results=kwArgs.pop('results'),
+            output=dirname(self.install_dir), d=self.build_dir, vpath=False, **kwArgs)
+
+    def getBuildTask(self, args):
+        return LibYAMLBuildTask(args, self)
+
+class LibYAMLBuildTask(mx.NativeBuildTask):
+    def needsBuild(self, newestInput):
+        libyaml = join(self.subject.install_dir, mx.add_lib_suffix('lib/libyaml'))
+        if exists(libyaml):
+            return False, f"{libyaml} is built"
+        else:
+            return (True, f"{libyaml} does not exist")
+
+    def build(self):
+        libyaml_sources = mx.distribution('LIBYAML_LAYOUT_DIST').get_output()
+        build_dir = self.subject.build_dir
+        install_dir = self.subject.install_dir
+
+        self.clean()
+        mx.copytree(libyaml_sources, build_dir)
+
+        mx.run(['./configure', f'--prefix={install_dir}', '--enable-shared'], cwd=build_dir)
+
+        super(LibYAMLBuildTask, self).build() # make
+
+        mx.run(['make', 'install'], cwd=build_dir)
 
     def clean(self, forBuild=False):
         build_dir = self.subject.build_dir

@@ -19,6 +19,7 @@ dir_config_given = ssl_dirs.any?
 
 _, ssl_ldir = ssl_dirs
 if defined?(::TruffleRuby)
+  # Keep in sync with psych/extconf.rb
   raise 'dir_config("openssl") should always be set on TruffleRuby' unless dir_config_given
   # openssl.so will end up in lib/mri/openssl.so
 
