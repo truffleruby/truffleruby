@@ -54,7 +54,7 @@ src/main/c/debug
 src/main/c/rbs
 src/main/c/libyaml
 src/main/c/psych/libyaml
-src/main/c/libssl_src
+src/main/c/libssl_build
 src/main/c/libssl
 
 spec/truffle/fixtures/libtestnfi.so

@@ -5,13 +5,9 @@ OS := $(shell uname)
 ifeq ($(OS),Darwin)
 SOEXT := dylib
 DLEXT := bundle
-LIBSSL_RPATH =
 else
 SOEXT := so
 DLEXT := so
-# This quoting is a bit wild, we need to escape $ in this and the nested Makefile with $$ twice, and avoid expansion twice from the shell,
-# so we need nested single quotes like: 'This is '\''nested'\'' single quotes'
-LIBSSL_RPATH = '-Wl,-rpath,'\''$$$$ORIGIN/../lib'\'''
 endif
 
 ifndef MX_HOME
@@ -51,7 +47,6 @@ clean_trampoline:
 
 clean_cexts:
 	$(Q) rm -f cext/Makefile cext/*.o $(LIBTRUFFLERUBY)
-	$(Q) rm -rf libssl_src libssl
 	$(Q) rm -f openssl/Makefile openssl/*.o openssl/openssl.$(DLEXT) openssl/extconf.h
 	$(Q) rm -f zlib/Makefile zlib/*.o zlib/zlib.$(DLEXT)
 	$(Q) rm -f psych/Makefile psych/*.o psych/psych.$(DLEXT)
@@ -83,21 +78,10 @@ cext/Makefile: cext/extconf.rb $(BASIC_EXTCONF_DEPS) $(TRAMPOLINE)
 $(LIBTRUFFLERUBY): cext/Makefile cext/*.c cext/*.h
 	$(Q) cd cext && $(MAKE)
 
-# libssl
-# logic based on https://github.com/rbenv/ruby-build/blob/master/bin/ruby-build build_package_openssl()
-libssl/lib/libssl.$(SOEXT):
-	echo $(LIBSSL_RPATH)
-	$(Q) rm -rf libssl_src
-	$(Q) cp -pR $(LIBSSL_SRC) libssl_src
-	cd libssl_src && ./Configure --prefix="$(CURDIR)/libssl" --openssldir="$(CURDIR)/libssl/ssl" --libdir="lib" zlib-dynamic no-ssl3 shared $(LIBSSL_RPATH)
-	cd libssl_src && $(MAKE)
-	cd libssl_src && $(MAKE) install_sw install_ssldirs
-
 # openssl
-# TODO try to get that --with automatically from rbconfig
-# NOTE: --with-openssl-dir=TRUFFLERUBY_BOOTSTRAP_HOME/src/main/c/libssl is automatically added from rbconfig.rb but that's empty because of build ordering issues
-openssl/Makefile: openssl/extconf.rb $(EXTCONF_DEPS) libssl/lib/libssl.$(SOEXT)
-	$(Q) cd openssl && $(RUBY) extconf.rb --with-openssl-dir=$(CURDIR)/libssl || $(IF_EXTCONF_FAIL)
+# NOTE: --with-openssl-dir=TRUFFLERUBY_BOOTSTRAP_HOME/src/main/c/libssl is automatically added from rbconfig.rb
+openssl/Makefile: openssl/extconf.rb $(EXTCONF_DEPS)
+	$(Q) cd openssl && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
 
 openssl/openssl.$(DLEXT): openssl/Makefile openssl/*.c openssl/*.h
 	$(Q) cd openssl && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)

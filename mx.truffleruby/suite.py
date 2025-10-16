@@ -270,6 +270,15 @@ suite = {
             "description": "YARP used as a dynamic library with all fields"
         },
 
+        "libssl": {
+            "class": "LibSSLProject",
+            "buildDependencies": [
+                "LIBSSL_LAYOUT_DIST",
+            ],
+            "results": ["libssl"],
+            "description": "Build libssl"
+        },
+
         "org.truffleruby.yarp.bindings": {
             "dir": "src/main/c/yarp_bindings",
             "native": "shared_lib",
@@ -431,14 +440,13 @@ suite = {
                 "truffle:TRUFFLE_NFI_NATIVE", # trufflenfi.h
                 "TRUFFLERUBY-BOOTSTRAP-LAUNCHER",
                 "LIBYAML_LAYOUT_DIST",
-                "LIBSSL_LAYOUT_DIST",
+                "libssl",
             ],
             "buildEnv": {
                 "TRUFFLERUBY_BOOTSTRAP_LAUNCHER": "<path:TRUFFLERUBY-BOOTSTRAP-LAUNCHER>/miniruby",
                 "GRAALVM_TOOLCHAIN_CC": "<toolchainGetToolPath:native,CC>",
                 "TRUFFLE_NFI_NATIVE_INCLUDE": "<path:truffle:TRUFFLE_NFI_NATIVE>/include",
                 "LIBYAML_SRC": "<path:LIBYAML_LAYOUT_DIST>",
-                "LIBSSL_SRC": "<path:LIBSSL_LAYOUT_DIST>",
             },
             "output": ".",
             "results": [
@@ -457,7 +465,6 @@ suite = {
                 "src/main/c/zlib/<extsuffix:zlib>",
                 "src/main/c/debug/<extsuffix:debug>",
                 "src/main/c/rbs/<extsuffix:rbs_extension>",
-                "src/main/c/libssl",
             ],
             "license": [
                 "EPL-2.0",          # JRuby (we choose EPL out of EPL,GPL,LGPL)
@@ -773,6 +780,7 @@ suite = {
             "maven": False,
         },
 
+        # A subset of TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_{AGNOSTIC,SPECIFIC}
         "TRUFFLERUBY_BOOTSTRAP_HOME": {
             "description": "TruffleRuby bootstrap home used by a minimal TruffleRuby to run extconf.rb of default & bundled gems C extensions",
             "native": True,
@@ -795,6 +803,9 @@ suite = {
                 ],
                 "lib/truffle/": [
                     "dependency:org.truffleruby.spawnhelper",
+                ],
+                "src/main/c/": [
+                    "dependency:libssl/libssl",
                 ],
             },
             "maven": False,
@@ -881,7 +892,7 @@ suite = {
                     "dependency:org.truffleruby.spawnhelper",
                 ],
                 "src/main/c/": [
-                    "dependency:org.truffleruby.cext/src/main/c/libssl",
+                    "dependency:libssl/libssl",
                 ],
             },
             "license": [
