@@ -695,6 +695,7 @@ suite = {
 
         "TRUFFLERUBY-BOOTSTRAP-LAUNCHER": {
             "native": True,
+            "defaultDereference": "never",
             "layout": {
                 "./": "dependency:org.truffleruby.bootstrap.launcher/*",
             },
@@ -764,6 +765,7 @@ suite = {
             "platformDependent": False,
             "hashEntry": "META-INF/resources/ruby/ruby-home/common/sha256",
             "fileListEntry": "META-INF/resources/ruby/ruby-home/common/file-list",
+            "defaultDereference": "never",
             "layout": {
                 "META-INF/resources/ruby/ruby-home/common/": "extracted-dependency:TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_AGNOSTIC",
             },
@@ -776,6 +778,7 @@ suite = {
             "platformDependent": True,
             "hashEntry": "META-INF/resources/ruby/ruby-home/<os>/<arch>/sha256",
             "fileListEntry": "META-INF/resources/ruby/ruby-home/<os>/<arch>/file-list",
+            "defaultDereference": "never",
             "layout": {
                 "META-INF/resources/ruby/ruby-home/<os>/<arch>/": "extracted-dependency:TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_SPECIFIC",
             },
@@ -793,6 +796,7 @@ suite = {
             "description": "TruffleRuby bootstrap home used by a minimal TruffleRuby to run extconf.rb of default & bundled gems C extensions",
             "native": True,
             "platformDependent": True,
+            "defaultDereference": "never",
             "layout": {
                 "lib/": [
                     "file:lib/json",
@@ -825,6 +829,7 @@ suite = {
             "fileListPurpose": "native-image-resources",
             "native": True,
             "platformDependent": False,
+            "defaultDereference": "never",
             "layout": {
                 "lib/": [
                     "file:lib/json",
@@ -857,6 +862,7 @@ suite = {
             "fileListPurpose": "native-image-resources",
             "native": True,
             "platformDependent": True,
+            "defaultDereference": "never",
             "layout": {
                 "lib/": [
                     "dependency:org.truffleruby.yarp.bindings",
@@ -917,6 +923,7 @@ suite = {
             "type": "dir",
             "platformDependent": False,
             "platforms": "local",
+            "defaultDereference": "never",
             "layout": {
                 "./": [
                     {
@@ -935,6 +942,7 @@ suite = {
             "type": "dir",
             "platformDependent": False,
             "platforms": "local",
+            "defaultDereference": "never",
             "layout": {
                 "./": [
                     {
@@ -952,6 +960,7 @@ suite = {
             "type": "dir",
             "platformDependent": False,
             "platforms": "local",
+            "defaultDereference": "never",
             "layout": {
                 "./": [
                     "file:CHANGELOG.md",
@@ -993,6 +1002,7 @@ suite = {
             "type": "dir",
             "platformDependent": True,
             "platforms": "local",
+            "defaultDereference": "never",
             "layout": {
                 "./": [
                     "extracted-dependency:TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_AGNOSTIC",
@@ -1035,6 +1045,7 @@ suite = {
             "type": "dir",
             "platformDependent": True,
             "platforms": "local",
+            "defaultDereference": "never",
             "layout": {
                 "./": [
                     "dependency:TRUFFLERUBY_STANDALONE_COMMON/*",
@@ -1048,6 +1059,7 @@ suite = {
             "type": "dir",
             "platformDependent": True,
             "platforms": "local",
+            "defaultDereference": "never",
             "layout": {
                 "./": [
                     "dependency:TRUFFLERUBY_STANDALONE_COMMON/*",
