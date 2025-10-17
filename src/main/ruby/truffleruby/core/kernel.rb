@@ -627,7 +627,7 @@ module Kernel
   end
   module_function :untrace_var
 
-  def warn(*messages, uplevel: undefined, category: nil)
+  def warn(*messages, uplevel: nil, category: nil)
     if !Primitive.nil?($VERBOSE) && !messages.empty?
       unless Primitive.nil?(category)
         category = Truffle::Type.rb_convert_type(category, Symbol, :to_sym)
@@ -635,7 +635,7 @@ module Kernel
         return nil unless Warning[category]
       end
 
-      prefix = if Primitive.undefined?(uplevel) || Primitive.nil?(uplevel)
+      prefix = if Primitive.nil?(uplevel)
                  ''
                else
                  uplevel = Primitive.rb_to_int(uplevel)
