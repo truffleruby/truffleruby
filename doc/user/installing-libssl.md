@@ -1,38 +1,33 @@
 # Installing `libssl`
 
-TruffleRuby provides the `openssl` gem but not the native `libssl` system library that the gem uses.
-TruffleRuby supports libssl versions 1.0.2, 1.1.0 and 3.0.0.
+Since TruffleRuby 26.0.0, TruffleRuby ships with its own `libssl`, and no longer needs a system `libssl`.
 
-If you experience `openssl`-related errors, it might help to recompile the `openssl` gem by running `lib/truffle/post_install_hook.sh`.
-This is done automatically by Ruby managers.
-
-To compile TruffleRuby against a non-system `libssl`, set `OPENSSL_PREFIX` while installing TruffleRuby:
-```bash
-export OPENSSL_PREFIX=/path/to/my/openssl-1.1.0
-```
+The only dependency that must be installed on the system is the CA certificates.
 
 ### Fedora-based: RHEL, Oracle Linux, etc
 
 ```bash
-sudo dnf install openssl-devel
+sudo dnf install ca-certificates
 ```
 
 ### Debian-based: Ubuntu, etc
 
 ```bash
-sudo apt-get install libssl-dev
+sudo apt-get install ca-certificates
 ```
 
 ### macOS
 
-On macOS the system version is too old.
+On macOS, the certificates from Apple cannot be used as-is because they are in a different format.
+Converting them to libssl format means taking a snapshot of the certificates, which can become problematic as those get outdated.
+So the best is to install a CA certificates package on macOS.
 
 #### Homebrew
 
-We recommend installing libssl via [Homebrew](https://brew.sh).
+We recommend installing `ca-certificates` via [Homebrew](https://brew.sh).
 
 ```bash
-brew install openssl
+brew install ca-certificates
 ```
 
 #### MacPorts
@@ -40,5 +35,5 @@ brew install openssl
 MacPorts should also work but is not actively tested.
 
 ```bash
-sudo port install openssl
+sudo port install curl-ca-bundle
 ```

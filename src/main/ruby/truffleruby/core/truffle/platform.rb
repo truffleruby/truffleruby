@@ -28,6 +28,10 @@ module Truffle::Platform
   SOEXT = IS_DARWIN ? 'dylib' : 'so'
   DLEXT = IS_DARWIN ? 'bundle' : 'so'
 
+  ARCH = Truffle::System.host_cpu
+  IS_AMD64 = ARCH == 'x86_64'
+  IS_AARCH64 = ARCH == 'aarch64' || ARCH == 'arm64'
+
   def self.linux?
     IS_LINUX
   end
@@ -46,5 +50,13 @@ module Truffle::Platform
 
   def self.has_lchmod?
     bsd? || darwin?
+  end
+
+  def self.amd64?
+    IS_AMD64
+  end
+
+  def self.aarch64?
+    IS_AARCH64
   end
 end

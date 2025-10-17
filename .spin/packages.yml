@@ -2,6 +2,6 @@
 - cmake
 - graphviz
 - libcapstone-dev
-- libssl-dev
+- ca-certificates
 - libz-dev
 - python3
