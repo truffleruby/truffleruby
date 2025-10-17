@@ -1133,19 +1133,5 @@ suite = {
             "allowsJavadocWarnings": True,
             "compress": True,
         },
-        "TRUFFLERUBY_POLYBENCH_BENCHMARKS": {
-            "description": "Distribution for TruffleRuby polybench benchmarks",
-            "layout": {
-                "./interpreter/": [
-                    "file:bench/polybench/interpreter/*.rb",
-                ],
-                "./interpreter/dependencies/": [
-                    "file:bench/polybench/interpreter/dependencies/*",
-                ],
-                "./warmup/": [
-                    "extracted-dependency:truffle:WARMUP_BENCHMARKS/*"
-                ],
-            },
-        },
     },
 }

@@ -19,7 +19,6 @@ from os.path import join
 
 import mx
 import mx_benchmark
-import mx_polybench
 
 # TODO IMPORTANT: you need RUBY_BENCHMARKS=true for this file to be imported by mx_truffleruby.py
 
@@ -745,45 +744,3 @@ mx_benchmark.add_bm_suite(ServerBenchmarkSuite())
 mx_benchmark.add_bm_suite(RubykonBenchmarkSuite())
 mx_benchmark.add_bm_suite(LiquidBenchmarkSuite())
 mx_benchmark.add_bm_suite(WarmupBenchmarkSuite())
-
-mx_polybench.register_polybench_language(
-    mx_suite=_suite,
-    language="ruby",
-    distributions=["TRUFFLERUBY", "TRUFFLERUBY-RESOURCES"],
-)
-
-
-def polybench_file_filter(file_path: str) -> bool:
-    parts = os.path.split(file_path)
-    # filter files in sub-folders (e.g., asciidoctor sources)
-    return parts[-1].endswith(".rb") and parts[0] in {"interpreter", "warmup"}
-
-
-def truffleruby_polybench_runner(polybench_run: mx_polybench.PolybenchRunFunction, tags) -> None:
-    fork_count_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "polybench-fork-counts.json")
-    if "gate" in tags:
-        polybench_run(["--jvm", "interpreter/*.rb", "--experimental-options", "--engine.Compilation=false", "-w", "1", "-i", "1"])
-        polybench_run(["--native", "interpreter/*.rb", "--experimental-options", "--engine.Compilation=false", "-w", "1", "-i", "1"])
-        polybench_run(
-            ["--native", "warmup/*.rb", "-w", "1", "-i", "1", "--metric=one-shot", "--mx-benchmark-args", "--fork-count-file", fork_count_file])
-    if "benchmark" in tags:
-        polybench_run(["--jvm", "interpreter/*.rb", "--experimental-options", "--engine.Compilation=false"])
-        polybench_run(["--native", "interpreter/*.rb", "--experimental-options", "--engine.Compilation=false"])
-        polybench_run(["--jvm", "interpreter/*.rb"])
-        polybench_run(["--native", "interpreter/*.rb"])
-        polybench_run(["--native", "warmup/*.rb", "--metric=one-shot", "--mx-benchmark-args", "--fork-count-file", fork_count_file])
-        polybench_run(
-            ["--jvm", "interpreter/rbinit.rb", "-w", "0", "-i", "0", "--metric=none", "--mx-benchmark-args", "--fork-count-file", fork_count_file])
-        polybench_run(
-            ["--native", "interpreter/rbinit.rb", "-w", "0", "-i", "0", "--metric=none", "--mx-benchmark-args", "--fork-count-file", fork_count_file])
-        polybench_run(["--jvm", "interpreter/*.rb", "--metric=metaspace-memory"])
-        polybench_run(["--jvm", "interpreter/*.rb", "--metric=application-memory"])
-        polybench_run(["--jvm", "interpreter/*.rb", "--metric=allocated-bytes", "-w", "40", "-i", "10", "--experimental-options", "--engine.Compilation=false"])
-        polybench_run(["--native", "interpreter/*.rb", "--metric=allocated-bytes", "-w", "40", "-i", "10", "--experimental-options", "--engine.Compilation=false"])
-        polybench_run(["--jvm", "interpreter/*.rb", "--metric=allocated-bytes", "-w", "40", "-i", "10"])
-        polybench_run(["--native", "interpreter/*.rb", "--metric=allocated-bytes", "-w", "40", "-i", "10"])
-
-
-mx_polybench.register_polybench_benchmark_suite(mx_suite=_suite, name="ruby", languages=["ruby"], benchmark_distribution="TRUFFLERUBY_POLYBENCH_BENCHMARKS",
-                                                benchmark_file_filter=polybench_file_filter, runner=truffleruby_polybench_runner,
-                                                tags={"gate", "benchmark"})

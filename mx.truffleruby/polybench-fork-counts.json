@@ -1,5 +1,0 @@
-{
-    "polybench:warmup/asciidoctor-convert.rb": 20,
-    "polybench:warmup/asciidoctor-load-file.rb": 20,
-    "polybench:interpreter/rbinit.rb": 5
-}
