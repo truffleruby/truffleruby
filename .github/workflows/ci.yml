@@ -23,8 +23,6 @@ jobs:
     name: lint
     runs-on: ubuntu-22.04-arm
     timeout-minutes: 30
-    env:
-      JT_JDK: '21'
     steps:
     - name: Clone TruffleRuby
       uses: actions/checkout@v4
@@ -36,6 +34,10 @@ jobs:
       run: echo "$PWD/bin" >> $GITHUB_PATH
 
     - uses: ./.github/actions/setup-jvmci-graal
+
+    - run: jt --jdk 21 install jvmci
+    - name: Set TOOLS_JAVA_HOME
+      run: echo "TOOLS_JAVA_HOME=$(jt --jdk 21 install jvmci)" >> $GITHUB_ENV
 
     - run: jt install eclipse
     - name: Install RuboCop
