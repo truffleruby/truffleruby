@@ -23,6 +23,7 @@ custom message (java.lang.RuntimeException)
 	from org.truffleruby.debug.TruffleDebugNodes$ThrowJavaExceptionNode.throwingMethod(TruffleDebugNodes.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodes$ThrowJavaExceptionNode.callingMethod(TruffleDebugNodes.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodes$ThrowJavaExceptionNode.throwJavaException(TruffleDebugNodes.java:LINE)
+	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionNodeFactory$ThrowJavaExceptionNodeGen.executeAndSpecialize(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionNodeFactory$ThrowJavaExceptionNodeGen.execute(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.language.RubyCoreMethodRootNode.execute(RubyCoreMethodRootNode.java:LINE)
 #{file}:10:in `throw_java_exception'
@@ -46,6 +47,7 @@ custom message (java.lang.RuntimeException)
 	from org.truffleruby.debug.TruffleDebugNodes$ThrowJavaExceptionNode.throwingMethod(TruffleDebugNodes.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodes$ThrowJavaExceptionNode.callingMethod(TruffleDebugNodes.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodes$ThrowJavaExceptionNode.throwJavaException(TruffleDebugNodes.java:LINE)
+	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionNodeFactory$ThrowJavaExceptionNodeGen.executeAndSpecialize(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionNodeFactory$ThrowJavaExceptionNodeGen.execute(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.language.RubyCoreMethodRootNode.execute(RubyCoreMethodRootNode.java:LINE)
 #{file}:10:in `throw_java_exception'
@@ -67,6 +69,7 @@ please report it to https://github.com/truffleruby/truffleruby/issues
 ```
 message (java.lang.RuntimeException)
 	from org.truffleruby.debug.TruffleDebugNodes$ThrowJavaExceptionWithCauseNode.throwJavaExceptionWithCause(TruffleDebugNodes.java:LINE)
+	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionWithCauseNodeFactory$ThrowJavaExceptionWithCauseNodeGen.executeAndSpecialize(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionWithCauseNodeFactory$ThrowJavaExceptionWithCauseNodeGen.execute(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.language.RubyCoreMethodRootNode.execute(RubyCoreMethodRootNode.java:LINE)
 #{file}:10:in `throw_java_exception_with_cause'
@@ -75,6 +78,7 @@ message (java.lang.RuntimeException)
 Caused by:
 cause 1 (java.lang.RuntimeException)
 	from org.truffleruby.debug.TruffleDebugNodes$ThrowJavaExceptionWithCauseNode.throwJavaExceptionWithCause(TruffleDebugNodes.java:LINE)
+	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionWithCauseNodeFactory$ThrowJavaExceptionWithCauseNodeGen.executeAndSpecialize(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionWithCauseNodeFactory$ThrowJavaExceptionWithCauseNodeGen.execute(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.language.RubyCoreMethodRootNode.execute(RubyCoreMethodRootNode.java:LINE)
 #{file}:10:in `throw_java_exception_with_cause'
@@ -83,6 +87,7 @@ cause 1 (java.lang.RuntimeException)
 Caused by:
 cause 2 (java.lang.RuntimeException)
 	from org.truffleruby.debug.TruffleDebugNodes$ThrowJavaExceptionWithCauseNode.throwJavaExceptionWithCause(TruffleDebugNodes.java:LINE)
+	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionWithCauseNodeFactory$ThrowJavaExceptionWithCauseNodeGen.executeAndSpecialize(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionWithCauseNodeFactory$ThrowJavaExceptionWithCauseNodeGen.execute(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.language.RubyCoreMethodRootNode.execute(RubyCoreMethodRootNode.java:LINE)
 #{file}:10:in `throw_java_exception_with_cause'

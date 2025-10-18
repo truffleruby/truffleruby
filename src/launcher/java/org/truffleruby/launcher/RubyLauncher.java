@@ -83,6 +83,12 @@ public class RubyLauncher extends AbstractLanguageLauncher {
     }
 
     @Override
+    protected String[] getDefaultLanguages() {
+        // Allow all languages in launcher without needing --polyglot, as in graal 25.1
+        return CommandLineOptions.EMPTY_STRING_ARRAY;
+    }
+
+    @Override
     protected String getMainClass() {
         return RubyLauncher.class.getName();
     }

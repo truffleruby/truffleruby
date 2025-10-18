@@ -82,6 +82,7 @@ IGV_JDK_VERSION = '21'
 DEFAULT_JDK_VERSION = 'latest'
 
 BOOTSTRAP_GRAALVM_VERSION = '25.0.0'
+MX_VERSION = 'master'
 
 # Not yet 'jdk.graal' as we test against 21 and 21 does not know 'jdk.graal'
 GRAAL_OPTION_PREFIX = 'graal'
@@ -236,10 +237,13 @@ module Utilities
     if which('mx')
       'mx'
     else
-      common_json = File.read(truffleruby_common_json)
-      regex = /"mx_version":\s*"([^"]+)"/
-      raise "mx version not found in #{truffleruby_common_json}" unless regex =~ common_json
-      mx_version = $1
+      mx_version = MX_VERSION
+      unless mx_version
+        common_json = File.read(truffleruby_common_json)
+        regex = /"mx_version":\s*"([^"]+)"/
+        raise "mx version not found in #{truffleruby_common_json}" unless regex =~ common_json
+        mx_version = $1
+      end
       mx_repo = find_or_clone_repo('https://github.com/graalvm/mx.git', mx_version)
       "#{mx_repo}/mx"
     end
