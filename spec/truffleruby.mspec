@@ -66,6 +66,10 @@ class MSpecScript
     "^spec/ruby/optional/capi/tracepoint_spec.rb",
   ]
 
+  set :thread_safety, [
+    "spec/ruby/optional/thread_safety",
+  ]
+
   set :truffle, [
     "spec/truffle",
     # Tested separately
@@ -122,7 +126,7 @@ class MSpecScript
   end
 
   # All specs except C API specs and TracePoint specs
-  set :files, get(:command_line) + get(:language) + get(:core) + get(:library) + get(:truffle) + get(:security)
+  set :files, get(:command_line) + get(:language) + get(:core) + get(:library) + get(:truffle) + get(:security) + get(:thread_safety)
 
   # All C API specs
   set :cext, get(:capi) + get(:truffle_capi)
