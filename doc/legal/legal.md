@@ -53,9 +53,6 @@ under the same 2-clause BSD licence as Ruby.
 RubyGems, in `lib/mri/rubygems` is available under the same custom licence as
 MRI, see `ruby-licence.txt`, or the MIT licence, see `mit.txt`.
 
-The C implementation of YAML, `src/main/c/psych/yaml` is available under the
-MIT licence, see `mit.txt`.
-
 ## JRuby
 
 TruffleRuby contains code from JRuby 9.4.4.0, including Java implementation
@@ -94,6 +91,18 @@ Some parts of the Ruby implementations of the standard library in `lib/truffle`
 are copyright 2013 Brian Shirai and are licensed under the 3-clause BSD license.
 In some cases this code is just code from MRI, and covered by their licence. In
 some cases we have modified this code.
+
+## OpenSSL
+
+TruffleRuby ships OpenSSL, version as described in [mx.truffleruby/suite.py](../../mx.truffleruby/suite.py).
+OpenSSL is copyright `The OpenSSL Project Authors` and is released under the Apache License 2.0 (see `apache-2.txt`).
+OpenSSL is used by the `openssl` C extension.
+
+## LibYAML
+
+TruffleRuby ships LibYAML, version as described in [mx.truffleruby/suite.py](../../mx.truffleruby/suite.py).
+LibYAML is copyright `Kirill Simonov` and `Ingy dot Net` and is released under the MIT licence, see `mit.txt`.
+LibYAML is used by the `psych` C extension.
 
 # Bundled gems
 
