@@ -32,6 +32,7 @@ import org.truffleruby.core.hash.FreezeHashKeyIfNeededNode;
 import org.truffleruby.core.hash.HashLiteralNode;
 import org.truffleruby.core.hash.HashingNodes;
 import org.truffleruby.core.hash.RubyHash;
+import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryWithHashCallback;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.objects.ObjectGraph;
@@ -51,6 +52,7 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.profiles.InlinedLoopConditionProfile;
+import org.truffleruby.language.objects.shared.SharedObjects;
 
 /** The Compact hash strategy from Hash Maps That Don't Hate You. See
  * https://blog.toit.io/hash-maps-that-dont-hate-you-1a96150b492a for more details (archived at
@@ -272,6 +274,11 @@ public final class CompactHashStore {
     }
 
     @ExportMessage
+    Object eachEntryHashed(RubyHash hash, EachEntryWithHashCallback callback, Object state) {
+        throw CompilerDirectives.shouldNotReachHere("not yet implemented");
+    }
+
+    @ExportMessage
     Object eachEntrySafe(RubyHash hash, EachEntryCallback callback, Object state,
             @CachedLibrary("this") HashStoreLibrary hashlib) {
         return hashlib.eachEntry(this, hash, callback, state);
@@ -290,7 +297,7 @@ public final class CompactHashStore {
 
         CompactHashStore copy = this.copy();
         dest.size = hash.size;
-        dest.store = copy;
+        dest.setStore(copy);
         dest.compareByIdentity = hash.compareByIdentity;
         dest.defaultBlock = hash.defaultBlock;
         dest.defaultValue = hash.defaultValue;
@@ -326,6 +333,8 @@ public final class CompactHashStore {
     @ExportMessage
     boolean verify(RubyHash hash) {
         assert hash.store == this;
+        assert !SharedObjects.isShared(hash);
+
         assert kvStoreInsertionPos >= 0;
         assert kvStoreInsertionPos <= kvStore.length;
         assert kvStoreInsertionPos % 2 == 0;

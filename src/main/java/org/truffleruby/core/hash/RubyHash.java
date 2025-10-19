@@ -9,16 +9,19 @@
  */
 package org.truffleruby.core.hash;
 
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.util.Set;
 
 import org.truffleruby.RubyContext;
 import org.truffleruby.collections.PEBiFunction;
 import org.truffleruby.core.hash.library.BucketsHashStore;
 import org.truffleruby.core.hash.library.CompactHashStore;
+import org.truffleruby.core.hash.library.ConcurrentHashStore;
+import org.truffleruby.core.hash.library.EmptyHashStore;
 import org.truffleruby.core.hash.library.HashStoreLibrary;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.interop.ForeignToRubyNode;
-import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyDynamicObject;
 import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.language.objects.IsFrozenNode;
@@ -41,11 +44,26 @@ import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
+import org.truffleruby.language.objects.shared.SharedObjects;
+
+import static org.truffleruby.language.RubyBaseNode.nil;
 
 @ExportLibrary(InteropLibrary.class)
 @ImportStatic(HashGuards.class)
 public final class RubyHash extends RubyDynamicObject implements ObjectGraphNode {
 
+    public static final VarHandle SIZE_HANDLE, COMPARE_BY_IDENTITY_HANDLE;
+    static {
+        try {
+            SIZE_HANDLE = MethodHandles.lookup().findVarHandle(RubyHash.class, "size", int.class);
+            COMPARE_BY_IDENTITY_HANDLE = MethodHandles.lookup().findVarHandle(RubyHash.class, "compareByIdentity",
+                    boolean.class);
+        } catch (ReflectiveOperationException e) {
+            throw new Error(e);
+        }
+    }
+
+    /** Do not write directly, use {@link #setStore(Object)} */
     public Object store;
     public int size;
     public Object defaultBlock;
@@ -61,16 +79,46 @@ public final class RubyHash extends RubyDynamicObject implements ObjectGraphNode
             int size,
             boolean ruby2_keywords) {
         super(rubyClass, shape);
-        this.store = store;
+        setStore(store);
         this.size = size;
-        this.defaultBlock = Nil.INSTANCE;
-        this.defaultValue = Nil.INSTANCE;
+        this.defaultBlock = nil;
+        this.defaultValue = nil;
         this.compareByIdentity = false;
         this.ruby2_keywords = ruby2_keywords;
 
         if (context.isPreInitializing()) {
             context.getPreInitializationManager().addPreInitHash(this);
         }
+    }
+
+    public void setStore(Object store) {
+        assert SharedObjects.isShared(this) == store instanceof ConcurrentHashStore : this + " = " + store;
+        assert !(this.store instanceof ConcurrentHashStore) : "once a RubyHash has a ConcurrentHashStore, its store should not change anymore.";
+        this.store = store;
+    }
+
+    public int getSizeVolatile() {
+        return (int) SIZE_HANDLE.getVolatile(this);
+    }
+
+    public void setSizeVolatile(int newSize) {
+        SIZE_HANDLE.setVolatile(this, newSize);
+    }
+
+    public int incrementAndGetSize() {
+        return (int) SIZE_HANDLE.getAndAdd(this, 1) + 1;
+    }
+
+    public int decrementSize() {
+        return (int) SIZE_HANDLE.getAndAdd(this, -1) - 1;
+    }
+
+    public boolean getCompareByIdentityVolatile() {
+        return (boolean) COMPARE_BY_IDENTITY_HANDLE.getVolatile(this);
+    }
+
+    public boolean compareAndSetCompareByIdentity(boolean old, boolean byIdentity) {
+        return COMPARE_BY_IDENTITY_HANDLE.compareAndSet(this, old, byIdentity);
     }
 
     // Not named isEmpty() has that's deprecated on DynamicObject
@@ -85,11 +133,14 @@ public final class RubyHash extends RubyDynamicObject implements ObjectGraphNode
 
     @TruffleBoundary
     public void getAdjacentObjects(Set<Object> reachable) {
-        if (store instanceof BucketsHashStore) {
-            ((BucketsHashStore) store).getAdjacentObjects(reachable);
-        } else if (store instanceof CompactHashStore) {
-            ((CompactHashStore) store).getAdjacentObjects(reachable);
+        if (store instanceof BucketsHashStore bucketsHashStore) {
+            bucketsHashStore.getAdjacentObjects(reachable);
+        } else if (store instanceof CompactHashStore compactHashStore) {
+            compactHashStore.getAdjacentObjects(reachable);
+        } else if (store instanceof ConcurrentHashStore concurrentHashStore) {
+            concurrentHashStore.getAdjacentObjects(reachable);
         } else {
+            assert store instanceof Object[] || store instanceof EmptyHashStore : store;
             ObjectGraph.addProperty(reachable, store);
         }
 

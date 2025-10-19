@@ -13,7 +13,7 @@ package org.truffleruby.core.hash;
  * buckets for a given index, and the chain of entries for the insertion order across the whole hash. */
 public final class Entry {
 
-    private int hashed;
+    private final int hashed;
     private final Object key;
     private Object value;
 
@@ -30,10 +30,6 @@ public final class Entry {
 
     public int getHashed() {
         return hashed;
-    }
-
-    public void setHashed(int hashed) {
-        this.hashed = hashed;
     }
 
     public Object getKey() {

@@ -16,6 +16,7 @@ import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.CoreMethod;
@@ -522,9 +523,16 @@ public abstract class HashNodes {
         }
 
         @Specialization(guards = "!hash.empty()", limit = "hashStrategyLimit()")
-        RubyArray shift(RubyHash hash,
-                @CachedLibrary("hash.store") HashStoreLibrary hashes) {
-            return hashes.shift(hash.store, hash);
+        static Object shift(RubyHash hash,
+                @Bind Node node,
+                @CachedLibrary("hash.store") HashStoreLibrary hashes,
+                @Cached InlinedBranchProfile emptyProfile) {
+            var array = hashes.shift(hash.store, hash);
+            if (array == null) {
+                emptyProfile.enter(node);
+                return nil;
+            }
+            return array;
         }
     }
 

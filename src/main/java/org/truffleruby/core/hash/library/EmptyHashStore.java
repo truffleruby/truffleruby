@@ -26,8 +26,10 @@ import org.truffleruby.core.hash.HashLiteralNode;
 import org.truffleruby.core.hash.HashOperations;
 import org.truffleruby.core.hash.RubyHash;
 import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryCallback;
+import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryWithHashCallback;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.objects.shared.PropagateSharingNode;
+import org.truffleruby.language.objects.shared.SharedObjects;
 
 @ExportLibrary(value = HashStoreLibrary.class)
 @GenerateUncached
@@ -47,7 +49,7 @@ public final class EmptyHashStore {
     protected boolean set(RubyHash hash, Object key, Object value, boolean byIdentity,
             @CachedLibrary(limit = "1") HashStoreLibrary packedHashStoreLibrary) {
         final Object[] packedStore = PackedHashStoreLibrary.createStore();
-        hash.store = packedStore;
+        hash.setStore(packedStore);
         return packedHashStoreLibrary.set(packedStore, hash, key, value, byIdentity);
     }
 
@@ -72,6 +74,11 @@ public final class EmptyHashStore {
     }
 
     @ExportMessage
+    protected Object eachEntryHashed(RubyHash hash, EachEntryWithHashCallback callback, Object state) {
+        return state;
+    }
+
+    @ExportMessage
     protected Object eachEntrySafe(RubyHash hash, EachEntryCallback callback, Object state) {
         return state;
     }
@@ -84,7 +91,7 @@ public final class EmptyHashStore {
             return;
         }
         propagateSharing.execute(node, dest, hash);
-        dest.store = EmptyHashStore.NULL_HASH_STORE;
+        dest.setStore(EmptyHashStore.NULL_HASH_STORE);
         dest.size = 0;
         dest.defaultBlock = hash.defaultBlock;
         dest.defaultValue = hash.defaultValue;
@@ -106,6 +113,8 @@ public final class EmptyHashStore {
     @ExportMessage
     public boolean verify(RubyHash hash) {
         assert hash.store == this;
+        assert !SharedObjects.isShared(hash);
+
         assert hash.store == NULL_HASH_STORE;
         assert hash.size == 0;
         return true;

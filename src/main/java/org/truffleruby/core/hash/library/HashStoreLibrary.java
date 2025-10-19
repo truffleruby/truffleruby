@@ -17,6 +17,7 @@ import org.truffleruby.core.hash.RubyHash;
 import org.truffleruby.core.kernel.KernelNodes.SameOrEqlNode;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.language.RubyBaseNode;
+import org.truffleruby.language.objects.shared.SharedObjects;
 import org.truffleruby.language.yield.CallBlockNode;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -54,6 +55,7 @@ public abstract class HashStoreLibrary extends Library {
 
     public static boolean verify(RubyHash hash) {
         final Object store = hash.store;
+        assert SharedObjects.isShared(hash) == store instanceof ConcurrentHashStore : hash;
         return getUncached(hash).verify(store, hash);
     }
 
@@ -70,7 +72,7 @@ public abstract class HashStoreLibrary extends Library {
     public abstract boolean set(Object store, RubyHash hash, Object key, Object value, boolean byIdentity);
 
     public void clear(Object store, RubyHash hash) {
-        hash.store = EmptyHashStore.NULL_HASH_STORE;
+        hash.setStore(EmptyHashStore.NULL_HASH_STORE);
         hash.size = 0;
     }
 
@@ -90,6 +92,11 @@ public abstract class HashStoreLibrary extends Library {
     @Abstract
     public abstract Object eachEntry(Object store, RubyHash hash, EachEntryCallback callback, Object state);
 
+    /** Same as {@link #eachEntry(Object, RubyHash, EachEntryCallback, Object)} but also yields the hashed value. */
+    @Abstract
+    public abstract Object eachEntryHashed(Object store, RubyHash hash, EachEntryWithHashCallback callback,
+            Object state);
+
     /** Same as {@link #eachEntry(Object, RubyHash, EachEntryCallback, Object)} but guaranteed to be safe to use if the
      * hash is modified during iteration. In particular, the guarantee is that the same entry won't be processed twice.
      * The callback object MUST be passed sequential increasing indices starting from 0 */
@@ -101,7 +108,7 @@ public abstract class HashStoreLibrary extends Library {
     public abstract void replace(Object store, RubyHash hash, RubyHash dest);
 
     /** Removes the first key-value pair in insertion order from the hash and returns it as the two-item array [key,
-     * value]. */
+     * value]. Can return null if the hash becomes empty concurrently. */
     @Abstract
     public abstract RubyArray shift(Object store, RubyHash hash);
 
@@ -112,11 +119,16 @@ public abstract class HashStoreLibrary extends Library {
 
     /** Returns true only if the store is in a valid state. To be used in assertions, and also uses assertions
      * internally. */
+    // TODO avoid direct usages and use HashStoreLibrary.verify() instead?
     @Abstract
     public abstract boolean verify(Object store, RubyHash hash);
 
     public interface EachEntryCallback {
         void accept(int index, Object key, Object value, Object state);
+    }
+
+    public interface EachEntryWithHashCallback {
+        void accept(int index, int hashed, Object key, Object value, Object state);
     }
 
     /** Call the block with a key-value entry. If the block has > 1 arity, passes the key and the value as arguments,

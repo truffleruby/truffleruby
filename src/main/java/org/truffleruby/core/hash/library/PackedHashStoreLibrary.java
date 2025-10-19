@@ -24,6 +24,7 @@ import org.truffleruby.core.hash.HashLiteralNode;
 import org.truffleruby.core.hash.HashingNodes;
 import org.truffleruby.core.hash.RubyHash;
 import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryCallback;
+import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryWithHashCallback;
 import org.truffleruby.core.hash.library.PackedHashStoreLibraryFactory.SmallHashLiteralNodeGen;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyNode;
@@ -151,7 +152,7 @@ public final class PackedHashStoreLibrary {
             BucketsHashStore.appendToLookupChain(buckets, entry, bucketIndex);
         }
 
-        hash.store = new BucketsHashStore(buckets, firstInSequence, lastInSequence);
+        hash.setStore(new BucketsHashStore(buckets, firstInSequence, lastInSequence));
         hash.size = size;
     }
 
@@ -160,7 +161,7 @@ public final class PackedHashStoreLibrary {
         for (int n = 0; n < MAX_ENTRIES; n++) {
             newStore.insertHashKeyValue(getHashed(store, n), getKey(store, n), getValue(store, n));
         }
-        hash.store = newStore;
+        hash.setStore(newStore);
         hash.size = MAX_ENTRIES;
     }
 
@@ -299,7 +300,7 @@ public final class PackedHashStoreLibrary {
         static Object eachEntry(Object[] store, RubyHash hash, EachEntryCallback callback, Object state,
                 @CachedLibrary("store") HashStoreLibrary hashStoreLibrary,
                 @Cached(value = "hash.size", allowUncached = true) int cachedSize,
-                @Cached LoopConditionProfile loopProfile) {
+                @Cached @Exclusive LoopConditionProfile loopProfile) {
 
             // Don't verify hash here, as `store != hash.store` when calling from `eachEntrySafe`.
             int i = 0;
@@ -316,9 +317,33 @@ public final class PackedHashStoreLibrary {
     }
 
     @ExportMessage
+    @ImportStatic(HashGuards.class)
+    static final class EachEntryHashed {
+
+        @Specialization(guards = "hash.size == cachedSize", limit = "packedHashLimit()")
+        @ExplodeLoop
+        static Object eachEntry(Object[] store, RubyHash hash, EachEntryWithHashCallback callback, Object state,
+                @CachedLibrary("store") HashStoreLibrary hashStoreLibrary,
+                @Cached(value = "hash.size", allowUncached = true) int cachedSize,
+                @Cached @Exclusive LoopConditionProfile loopProfile) {
+
+            // Don't verify hash here, as `store != hash.store` when calling from `eachEntrySafe`.
+            int i = 0;
+            try {
+                for (; loopProfile.inject(i < cachedSize); i++) {
+                    callback.accept(i, getHashed(store, i), getKey(store, i), getValue(store, i), state);
+                    TruffleSafepoint.poll(hashStoreLibrary);
+                }
+            } finally {
+                RubyBaseNode.profileAndReportLoopCount(hashStoreLibrary.getNode(), loopProfile, i);
+            }
+            return state;
+        }
+    }
+
+    @ExportMessage
     static Object eachEntrySafe(Object[] store, RubyHash hash, EachEntryCallback callback, Object state,
             @CachedLibrary("store") HashStoreLibrary self) {
-
         return self.eachEntry(copyStore(store), hash, callback, state);
     }
 
@@ -334,7 +359,7 @@ public final class PackedHashStoreLibrary {
 
         Object storeCopy = copyStore(store);
         int size = hash.size;
-        dest.store = storeCopy;
+        dest.setStore(storeCopy);
         dest.size = size;
         dest.defaultBlock = hash.defaultBlock;
         dest.defaultValue = hash.defaultValue;
@@ -394,6 +419,8 @@ public final class PackedHashStoreLibrary {
     @ExportMessage
     static boolean verify(Object[] store, RubyHash hash) {
         assert hash.store == store;
+        assert !SharedObjects.isShared(hash);
+
         final int size = hash.size;
         assert store.length == TOTAL_ELEMENTS : store.length;
 
