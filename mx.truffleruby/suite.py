@@ -97,11 +97,13 @@ suite = {
         "LIBYAML_0_2_5": {
             "urls": ["https://github.com/yaml/libyaml/releases/download/0.2.5/yaml-0.2.5.tar.gz"],
             "digest": "sha512:dadd7d8e0d88b5ebab005e5d521d56d541580198aa497370966b98c904586e642a1cd4f3881094eb57624f218d50db77417bbfd0ffdce50340f011e35e8c4c02",
+            "license": ["MIT"],
         },
 
         "LIBSSL_3_5_4": {
             "urls": ["https://github.com/openssl/openssl/releases/download/openssl-3.5.4/openssl-3.5.4.tar.gz"],
             "digest": "sha256:967311f84955316969bdb1d8d4b983718ef42338639c621ec4c34fddef355e99",
+            "license": ["Apache-2.0"],
         },
     },
 
