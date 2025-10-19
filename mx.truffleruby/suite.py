@@ -78,25 +78,25 @@ suite = {
                 "artifactId": "joni",
                 "version": "2.2.6"
             },
-            "digest": "sha512:b62204f42d976a3c69bb6df006c0ee0fb2c1babd3943e12672db02cb861ab0728f68d5b0e29866d4247d5e9f3e52bf90ea15b74eef43a5a0e344666b0121055a",
-            "sourceDigest": "sha512:9229253a37f8e5c5abe682f6889c65caaa17f85db6e40fa61d2d9f6f6d96bf4f2c11f80eb2a794739414ff6b60d4e5d471f1749952a89aea1bed1a415cf8acf8",
+            "digest": "sha256:fb33f60ab43e38653317bbf41a1fec89cbee270c48e53b0b56d1165c00de0e07",
+            "sourceDigest": "sha256:0b0a3266394f91f7c2132d32f9fdfa72043757f9836bfe1497f17c533151fc80",
             "license": ["MIT"],
         },
 
         "NETBEANS-LIB-PROFILER": {
             "moduleName": "org.netbeans.modules.org-netbeans-lib-profiler",
-            "digest": "sha512:1de81a0340c0266b41ba774600346ac977910663016a0afa22859cf1eb9d9e507de4f66e3f51d5bd9575b1d1f083765ecb9b30c4d43adb201f68b83257e8a17d",
-            "sourceDigest": "sha512:92c50b8832e3a9afc93f9eaacdfc79cdf2487a74a9f5cf93c54bed50e904ef70ac6504018558d7183f074132c37fe57b21bc1e662a71c74c4201b75cdc5f8947",
             "maven": {
               "groupId": "org.netbeans.modules",
               "artifactId": "org-netbeans-lib-profiler",
               "version": "RELEASE120-1",
             },
+            "digest": "sha256:ae707b3e3964e0425a6825a2334ad59abf7d1baefb5e2ae366af322a99249929",
+            "sourceDigest": "sha256:b7f8e9eb7bd75fe11ab57bb11b5e4112418e68302124aad3315f2c4900e8ccdf",
         },
 
         "LIBYAML_0_2_5": {
             "urls": ["https://github.com/yaml/libyaml/releases/download/0.2.5/yaml-0.2.5.tar.gz"],
-            "digest": "sha512:dadd7d8e0d88b5ebab005e5d521d56d541580198aa497370966b98c904586e642a1cd4f3881094eb57624f218d50db77417bbfd0ffdce50340f011e35e8c4c02",
+            "digest": "sha256:c642ae9b75fee120b2d96c712538bd2cf283228d2337df2cf2988e3c02678ef4",
             "license": ["MIT"],
         },
 
