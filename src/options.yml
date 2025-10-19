@@ -23,6 +23,7 @@ LANGUAGE_OPTIONS:
 - PACK_UNROLL_LIMIT
 - COVERAGE_GLOBAL
 - BIG_HASH_STRATEGY_IS_BUCKETS
+- CONCURRENT_HASH_ALWAYS
 # Inline cache sizes
 - DEFAULT_CACHE
 - METHOD_LOOKUP_CACHE
@@ -190,6 +191,7 @@ INTERNAL: # Options for debugging the TruffleRuby implementation
     LAZY_TRANSLATION_CORE: [lazy-translation-core, boolean, LAZY_CALLTARGETS, Lazily translation of core source files]
     CHAOS_DATA: [chaos-data, boolean, false, Randomize data representations to stress specialization code paths]
     INSTRUMENT_ALL_NODES: [instrument-all-nodes, boolean, false, 'Instrument all isInstrumentable() nodes, regardless of tags, to ensure instrumentation wrappers can be inserted']
+    CONCURRENT_HASH_ALWAYS: [concurrent-hash-always, boolean, false, 'Whether to use the concurrent Hash strategy for all Hash instances. Only useful for debugging.']
 
     # Options to help debugging the implementation performance
     BASICOPS_INLINE: [basic-ops-inline, boolean, true, Inline basic operations (like Fixnum operators) in the AST without a call]

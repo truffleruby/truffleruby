@@ -112,7 +112,8 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
     public boolean threadSafeExtension = false;
 
     // Last-used cache per thread for the threadState for LightweightLayoutLock's
-    private final WeakHashMap<LightweightLayoutLock, AtomicInteger> layoutLockStates = new WeakHashMap<>();
+    private final WeakHashMap<LightweightLayoutLock, AtomicInteger> layoutLockStates = newWeakHashMap();
+
     private LightweightLayoutLock lastLayoutLock = null;
     private AtomicInteger lastThreadState = null;
 
@@ -213,6 +214,11 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
         lastLayoutLock = lock;
         lastThreadState = threadState;
         return threadState;
+    }
+
+    @TruffleBoundary
+    private static WeakHashMap<LightweightLayoutLock, AtomicInteger> newWeakHashMap() {
+        return new WeakHashMap<>();
     }
 
 }

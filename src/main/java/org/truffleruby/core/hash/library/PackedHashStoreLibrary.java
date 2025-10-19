@@ -24,11 +24,11 @@ import org.truffleruby.core.hash.HashLiteralNode;
 import org.truffleruby.core.hash.HashingNodes;
 import org.truffleruby.core.hash.RubyHash;
 import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryCallback;
+import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryWithHashedCallback;
 import org.truffleruby.core.hash.library.PackedHashStoreLibraryFactory.SmallHashLiteralNodeGen;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.dispatch.DispatchNode;
-import org.truffleruby.language.objects.shared.PropagateSharingNode;
 import org.truffleruby.language.objects.shared.SharedObjects;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -66,12 +66,6 @@ public final class PackedHashStoreLibrary {
 
     public static Object[] createStore() {
         return new Object[TOTAL_ELEMENTS];
-    }
-
-    private static Object[] copyStore(Object[] store) {
-        final Object[] copied = createStore();
-        System.arraycopy(store, 0, copied, 0, TOTAL_ELEMENTS);
-        return copied;
     }
 
     private static int getHashed(Object[] store, int n) {
@@ -151,7 +145,7 @@ public final class PackedHashStoreLibrary {
             BucketsHashStore.appendToLookupChain(buckets, entry, bucketIndex);
         }
 
-        hash.store = new BucketsHashStore(buckets, firstInSequence, lastInSequence);
+        hash.setStore(new BucketsHashStore(buckets, firstInSequence, lastInSequence));
         hash.size = size;
     }
 
@@ -160,7 +154,7 @@ public final class PackedHashStoreLibrary {
         for (int n = 0; n < MAX_ENTRIES; n++) {
             newStore.insertHashKeyValue(getHashed(store, n), getKey(store, n), getValue(store, n));
         }
-        hash.store = newStore;
+        hash.setStore(newStore);
         hash.size = MAX_ENTRIES;
     }
 
@@ -183,13 +177,10 @@ public final class PackedHashStoreLibrary {
         static boolean setFirst(Object[] store, RubyHash hash, Object key, Object value, boolean byIdentity,
                 @Cached @Shared FreezeHashKeyIfNeededNode freezeHashKeyIfNeeded,
                 @Cached @Shared HashingNodes.ToHash hashNode,
-                @Cached @Shared PropagateSharingNode propagateSharingKey,
-                @Cached @Shared PropagateSharingNode propagateSharingValue,
                 @Bind Node node) {
+            assert verify(store, hash);
 
             final Object key2 = freezeHashKeyIfNeeded.executeFreezeIfNeeded(node, key, byIdentity);
-            propagateSharingKey.execute(node, hash, key2);
-            propagateSharingValue.execute(node, hash, value);
             setHashedKeyValue(store, 0, hashNode.execute(key2, byIdentity), key2, value);
             hash.size = 1;
             assert verify(store, hash);
@@ -200,19 +191,15 @@ public final class PackedHashStoreLibrary {
         static boolean set(Object[] store, RubyHash hash, Object key, Object value, boolean byIdentity,
                 @Cached @Shared FreezeHashKeyIfNeededNode freezeHashKeyIfNeeded,
                 @Cached @Shared HashingNodes.ToHash hashNode,
-                @Cached @Shared PropagateSharingNode propagateSharingKey,
-                @Cached @Shared PropagateSharingNode propagateSharingValue,
                 @Cached @Shared CompareHashKeysNode compareHashKeys,
                 @CachedLibrary(limit = "hashStrategyLimit()") HashStoreLibrary hashes,
                 @Cached InlinedConditionProfile withinCapacity,
                 @Bind Node node) {
-
             assert verify(store, hash);
+
             final int size = hash.size;
             final Object key2 = freezeHashKeyIfNeeded.executeFreezeIfNeeded(node, key, byIdentity);
             final int hashed = hashNode.execute(key2, byIdentity);
-            propagateSharingKey.execute(node, hash, key2);
-            propagateSharingValue.execute(node, hash, value);
 
             // written very carefully to allow PE
             for (int n = 0; n < MAX_ENTRIES; n++) {
@@ -234,14 +221,18 @@ public final class PackedHashStoreLibrary {
 
 
             assert size == MAX_ENTRIES;
-            if (RubyLanguage.get(node).options.BIG_HASH_STRATEGY_IS_BUCKETS) {
-                promoteToBuckets(hash, store, MAX_ENTRIES);
-            } else {
-                promoteToCompact(hash, store);
-            }
+            promote(store, hash, node);
 
             hashes.set(hash.store, hash, key2, value, byIdentity);
             return true;
+        }
+    }
+
+    private static void promote(Object[] store, RubyHash hash, Node node) {
+        if (RubyLanguage.get(node).options.BIG_HASH_STRATEGY_IS_BUCKETS) {
+            promoteToBuckets(hash, store, MAX_ENTRIES);
+        } else {
+            promoteToCompact(hash, store);
         }
     }
 
@@ -297,19 +288,45 @@ public final class PackedHashStoreLibrary {
         @Specialization(guards = "hash.size == cachedSize", limit = "packedHashLimit()")
         @ExplodeLoop
         static Object eachEntry(Object[] store, RubyHash hash, EachEntryCallback callback, Object state,
-                @CachedLibrary("store") HashStoreLibrary hashStoreLibrary,
+                @Bind Node node,
                 @Cached(value = "hash.size", allowUncached = true) int cachedSize,
-                @Cached LoopConditionProfile loopProfile) {
+                @Cached @Exclusive LoopConditionProfile loopProfile) {
 
             // Don't verify hash here, as `store != hash.store` when calling from `eachEntrySafe`.
             int i = 0;
             try {
                 for (; loopProfile.inject(i < cachedSize); i++) {
                     callback.accept(i, getKey(store, i), getValue(store, i), state);
-                    TruffleSafepoint.poll(hashStoreLibrary);
+                    TruffleSafepoint.poll(node);
                 }
             } finally {
-                RubyBaseNode.profileAndReportLoopCount(hashStoreLibrary.getNode(), loopProfile, i);
+                RubyBaseNode.profileAndReportLoopCount(node, loopProfile, i);
+            }
+            return state;
+        }
+    }
+
+    @ExportMessage
+    @ImportStatic(HashGuards.class)
+    static final class EachEntryHashed {
+
+        @Specialization(guards = "hash.size == cachedSize", limit = "packedHashLimit()")
+        @ExplodeLoop
+        static Object eachEntry(Object[] store, RubyHash hash, EachEntryWithHashedCallback callback, Object state,
+                @Bind Node node,
+                @Cached(value = "hash.size", allowUncached = true) int cachedSize,
+                @Cached @Exclusive LoopConditionProfile loopProfile) {
+            // NOTE: cannot assert verify(store, hash); here because this is called in onShareHook(),
+            // and the hash is already shared when that hook is called.
+
+            int i = 0;
+            try {
+                for (; loopProfile.inject(i < cachedSize); i++) {
+                    callback.accept(i, getHashed(store, i), getKey(store, i), getValue(store, i), state);
+                    TruffleSafepoint.poll(node);
+                }
+            } finally {
+                RubyBaseNode.profileAndReportLoopCount(node, loopProfile, i);
             }
             return state;
         }
@@ -318,34 +335,19 @@ public final class PackedHashStoreLibrary {
     @ExportMessage
     static Object eachEntrySafe(Object[] store, RubyHash hash, EachEntryCallback callback, Object state,
             @CachedLibrary("store") HashStoreLibrary self) {
-
         return self.eachEntry(copyStore(store), hash, callback, state);
     }
 
-    @ExportMessage
-    static void replace(Object[] store, RubyHash hash, RubyHash dest,
-            @Cached @Exclusive PropagateSharingNode propagateSharing,
-            @Bind Node node) {
-        if (hash == dest) {
-            return;
-        }
-
-        propagateSharing.execute(node, dest, hash);
-
-        Object storeCopy = copyStore(store);
-        int size = hash.size;
-        dest.store = storeCopy;
-        dest.size = size;
-        dest.defaultBlock = hash.defaultBlock;
-        dest.defaultValue = hash.defaultValue;
-        dest.compareByIdentity = hash.compareByIdentity;
-
-        assert verify(store, hash);
+    @ExportMessage(name = "copyStore")
+    static Object[] copyStore(Object[] store) {
+        final Object[] copied = createStore();
+        System.arraycopy(store, 0, copied, 0, TOTAL_ELEMENTS);
+        return copied;
     }
 
     @ExportMessage
     static RubyArray shift(Object[] store, RubyHash hash,
-            @CachedLibrary("store") HashStoreLibrary node) {
+            @Bind Node node) {
 
         assert verify(store, hash);
         final Object key = getKey(store, 0);
@@ -394,6 +396,8 @@ public final class PackedHashStoreLibrary {
     @ExportMessage
     static boolean verify(Object[] store, RubyHash hash) {
         assert hash.store == store;
+        assert !SharedObjects.isShared(hash);
+
         final int size = hash.size;
         assert store.length == TOTAL_ELEMENTS : store.length;
 
@@ -403,9 +407,9 @@ public final class PackedHashStoreLibrary {
 
         for (int n = 0; n < size; n++) {
             final Object key = getKey(store, n);
+            assert key != null;
             final Object value = getValue(store, n);
-            assert SharedObjects.assertPropagateSharing(hash, key) : "unshared key in shared Hash: " + key;
-            assert SharedObjects.assertPropagateSharing(hash, value) : "unshared value in shared Hash: " + value;
+            assert value != null;
         }
 
         return true;

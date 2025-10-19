@@ -322,6 +322,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     public final Shape frozenErrorShape = createShape(RubyFrozenError.class);
     public final Shape handleShape = createShape(RubyHandle.class);
     public final Shape hashShape = createShape(RubyHash.class);
+    public final Shape sharedHashShape = hashShape.makeSharedShape();
     public final Shape innerContextShape = createShape(RubyInnerContext.class);
     public final Shape ioShape = createShape(RubyIO.class);
     public final Shape matchDataShape = createShape(RubyMatchData.class);

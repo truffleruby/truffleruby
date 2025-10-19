@@ -57,6 +57,8 @@ public final class LanguageOptions {
     public final boolean CHAOS_DATA;
     /** --instrument-all-nodes=false */
     public final boolean INSTRUMENT_ALL_NODES;
+    /** --concurrent-hash-always=false */
+    public final boolean CONCURRENT_HASH_ALWAYS;
     /** --basic-ops-inline=true */
     public final boolean BASICOPS_INLINE;
     /** --profile-arguments=true */
@@ -146,6 +148,7 @@ public final class LanguageOptions {
         LAZY_TRANSLATION_CORE = options.hasBeenSet(OptionsCatalog.LAZY_TRANSLATION_CORE_KEY) ? options.get(OptionsCatalog.LAZY_TRANSLATION_CORE_KEY) : LAZY_CALLTARGETS;
         CHAOS_DATA = options.get(OptionsCatalog.CHAOS_DATA_KEY);
         INSTRUMENT_ALL_NODES = options.get(OptionsCatalog.INSTRUMENT_ALL_NODES_KEY);
+        CONCURRENT_HASH_ALWAYS = options.get(OptionsCatalog.CONCURRENT_HASH_ALWAYS_KEY);
         BASICOPS_INLINE = options.get(OptionsCatalog.BASICOPS_INLINE_KEY);
         PROFILE_ARGUMENTS = options.get(OptionsCatalog.PROFILE_ARGUMENTS_KEY);
         DEFAULT_CACHE = options.get(OptionsCatalog.DEFAULT_CACHE_KEY);
@@ -219,6 +222,8 @@ public final class LanguageOptions {
                 return CHAOS_DATA;
             case "ruby.instrument-all-nodes":
                 return INSTRUMENT_ALL_NODES;
+            case "ruby.concurrent-hash-always":
+                return CONCURRENT_HASH_ALWAYS;
             case "ruby.basic-ops-inline":
                 return BASICOPS_INLINE;
             case "ruby.profile-arguments":
@@ -312,6 +317,7 @@ public final class LanguageOptions {
                one.get(OptionsCatalog.LAZY_TRANSLATION_CORE_KEY).equals(two.get(OptionsCatalog.LAZY_TRANSLATION_CORE_KEY)) &&
                one.get(OptionsCatalog.CHAOS_DATA_KEY).equals(two.get(OptionsCatalog.CHAOS_DATA_KEY)) &&
                one.get(OptionsCatalog.INSTRUMENT_ALL_NODES_KEY).equals(two.get(OptionsCatalog.INSTRUMENT_ALL_NODES_KEY)) &&
+               one.get(OptionsCatalog.CONCURRENT_HASH_ALWAYS_KEY).equals(two.get(OptionsCatalog.CONCURRENT_HASH_ALWAYS_KEY)) &&
                one.get(OptionsCatalog.BASICOPS_INLINE_KEY).equals(two.get(OptionsCatalog.BASICOPS_INLINE_KEY)) &&
                one.get(OptionsCatalog.PROFILE_ARGUMENTS_KEY).equals(two.get(OptionsCatalog.PROFILE_ARGUMENTS_KEY)) &&
                one.get(OptionsCatalog.DEFAULT_CACHE_KEY).equals(two.get(OptionsCatalog.DEFAULT_CACHE_KEY)) &&
@@ -469,6 +475,13 @@ public final class LanguageOptions {
         newValue = newOptions.INSTRUMENT_ALL_NODES;
         if (!newValue.equals(oldValue)) {
             logger.fine("not reusing pre-initialized context: --instrument-all-nodes differs, was: " + oldValue + " and is now: " + newValue);
+            return false;
+        }
+
+        oldValue = oldOptions.CONCURRENT_HASH_ALWAYS;
+        newValue = newOptions.CONCURRENT_HASH_ALWAYS;
+        if (!newValue.equals(oldValue)) {
+            logger.fine("not reusing pre-initialized context: --concurrent-hash-always differs, was: " + oldValue + " and is now: " + newValue);
             return false;
         }
 

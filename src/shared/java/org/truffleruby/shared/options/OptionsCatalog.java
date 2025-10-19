@@ -110,6 +110,7 @@ public final class OptionsCatalog {
     public static final OptionKey<Boolean> LAZY_TRANSLATION_CORE_KEY = new OptionKey<>(LAZY_CALLTARGETS_KEY.getDefaultValue());
     public static final OptionKey<Boolean> CHAOS_DATA_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> INSTRUMENT_ALL_NODES_KEY = new OptionKey<>(false);
+    public static final OptionKey<Boolean> CONCURRENT_HASH_ALWAYS_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> BASICOPS_INLINE_KEY = new OptionKey<>(true);
     public static final OptionKey<Boolean> BASICOPS_LOG_REWRITE_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> PROFILE_ARGUMENTS_KEY = new OptionKey<>(true);
@@ -885,6 +886,14 @@ public final class OptionsCatalog {
             .usageSyntax("")
             .build();
 
+    public static final OptionDescriptor CONCURRENT_HASH_ALWAYS = OptionDescriptor
+            .newBuilder(CONCURRENT_HASH_ALWAYS_KEY, "ruby.concurrent-hash-always")
+            .help("Whether to use the concurrent Hash strategy for all Hash instances. Only useful for debugging.")
+            .category(OptionCategory.INTERNAL)
+            .stability(OptionStability.EXPERIMENTAL)
+            .usageSyntax("")
+            .build();
+
     public static final OptionDescriptor BASICOPS_INLINE = OptionDescriptor
             .newBuilder(BASICOPS_INLINE_KEY, "ruby.basic-ops-inline")
             .help("Inline basic operations (like Fixnum operators) in the AST without a call")
@@ -1499,6 +1508,8 @@ public final class OptionsCatalog {
                 return CHAOS_DATA;
             case "ruby.instrument-all-nodes":
                 return INSTRUMENT_ALL_NODES;
+            case "ruby.concurrent-hash-always":
+                return CONCURRENT_HASH_ALWAYS;
             case "ruby.basic-ops-inline":
                 return BASICOPS_INLINE;
             case "ruby.basic-ops-log-rewrite":
@@ -1704,6 +1715,7 @@ public final class OptionsCatalog {
             LAZY_TRANSLATION_CORE,
             CHAOS_DATA,
             INSTRUMENT_ALL_NODES,
+            CONCURRENT_HASH_ALWAYS,
             BASICOPS_INLINE,
             BASICOPS_LOG_REWRITE,
             PROFILE_ARGUMENTS,

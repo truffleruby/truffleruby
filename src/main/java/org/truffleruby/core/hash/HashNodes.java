@@ -16,6 +16,7 @@ import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.Shape;
+import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.CoreMethod;
@@ -28,6 +29,7 @@ import org.truffleruby.core.array.ArrayBuilderNode;
 import org.truffleruby.core.array.ArrayBuilderNode.BuilderState;
 import org.truffleruby.core.array.ArrayHelpers;
 import org.truffleruby.core.array.RubyArray;
+import org.truffleruby.core.hash.library.ConcurrentHashStore;
 import org.truffleruby.core.hash.library.EmptyHashStore;
 import org.truffleruby.core.hash.library.HashStoreLibrary;
 import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryCallback;
@@ -44,6 +46,7 @@ import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.annotations.Split;
 import org.truffleruby.language.objects.AllocationTracing;
+import org.truffleruby.language.objects.shared.IsSharedNode;
 import org.truffleruby.language.objects.shared.PropagateSharingNode;
 import org.truffleruby.language.yield.CallBlockNode;
 
@@ -279,8 +282,7 @@ public abstract class HashNodes {
         @Specialization(guards = "!isCompareByIdentity(hash)", limit = "hashStrategyLimit()")
         RubyHash compareByIdentity(RubyHash hash,
                 @CachedLibrary("hash.store") HashStoreLibrary hashes) {
-            hash.compareByIdentity = true;
-            hashes.rehash(hash.store, hash);
+            hashes.becomeCompareByIdentityAndRehash(hash.store, hash);
             return hash;
         }
 
@@ -424,9 +426,25 @@ public abstract class HashNodes {
         public abstract RubyHash execute(RubyHash self, RubyHash from);
 
         @Specialization(limit = "hashStrategyLimit()")
-        RubyHash replace(RubyHash self, RubyHash from,
-                @CachedLibrary("from.store") HashStoreLibrary hashes) {
-            hashes.replace(from.store, from, self);
+        static RubyHash replace(RubyHash self, RubyHash from,
+                @CachedLibrary("from.store") HashStoreLibrary fromLib,
+                @Cached IsSharedNode isSharedNode,
+                @Bind Node node) {
+            if (from == self) {
+                return self;
+            }
+
+            if (isSharedNode.execute(node, self)) {
+                // If self is shared, need to keep the same ConcurrentHashStore instance.
+                ConcurrentHashStore.getStore(self).replace(self, from);
+            } else {
+                // If self is not shared, we can simply self.store = from.copyStore().
+                self.setStore(fromLib.copyStore(from.store));
+                self.size = from.size;
+                self.copyFieldsExceptStoreAndSize(from);
+            }
+            assert HashStoreLibrary.verify(self);
+
             return self;
         }
 
@@ -522,9 +540,16 @@ public abstract class HashNodes {
         }
 
         @Specialization(guards = "!hash.empty()", limit = "hashStrategyLimit()")
-        RubyArray shift(RubyHash hash,
-                @CachedLibrary("hash.store") HashStoreLibrary hashes) {
-            return hashes.shift(hash.store, hash);
+        static Object shift(RubyHash hash,
+                @Bind Node node,
+                @CachedLibrary("hash.store") HashStoreLibrary hashes,
+                @Cached InlinedBranchProfile emptyProfile) {
+            var array = hashes.shift(hash.store, hash);
+            if (array == null) {
+                emptyProfile.enter(node);
+                return nil;
+            }
+            return array;
         }
     }
 

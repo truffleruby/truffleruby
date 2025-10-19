@@ -12,6 +12,7 @@ package org.truffleruby.core.hash;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.hash.library.BucketsHashStore;
 import org.truffleruby.core.hash.library.CompactHashStore;
+import org.truffleruby.core.hash.library.ConcurrentHashStore;
 import org.truffleruby.core.hash.library.EmptyHashStore;
 import org.truffleruby.core.hash.library.PackedHashStoreLibrary;
 import org.truffleruby.core.hash.library.PackedHashStoreLibraryFactory;
@@ -36,6 +37,10 @@ public abstract class HashLiteralNode extends RubyContextSourceNodeCustomExecute
     }
 
     public static HashLiteralNode create(RubyNode[] keyValues, RubyLanguage language) {
+        if (language.options.CONCURRENT_HASH_ALWAYS) {
+            return new ConcurrentHashStore.ConcurrentHashLiteralNode(keyValues, language);
+        }
+
         if (keyValues.length == 0) {
             return new EmptyHashStore.EmptyHashLiteralNode();
         } else if (keyValues.length <= PackedHashStoreLibrary.MAX_ENTRIES * 2) {

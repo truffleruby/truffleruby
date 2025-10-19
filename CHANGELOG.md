@@ -2,6 +2,7 @@
 
 New features:
 
+* `Hash` is now thread-safe on TruffleRuby, based on Benoit Daloze's PhD research (#3869, #3112, #2763, @eregon).
 * TruffleRuby now ships with its own `libyaml` and no longer needs a system `libyaml` (#3479, @eregon).
 * TruffleRuby now ships with its own `libssl` and no longer needs a system `libssl`. It still requires CA certificates from the system. (#3479, @eregon).
 

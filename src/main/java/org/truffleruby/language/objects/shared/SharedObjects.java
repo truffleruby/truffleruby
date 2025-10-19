@@ -18,6 +18,8 @@ import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.array.library.ArrayStoreLibrary;
 import org.truffleruby.core.array.library.SharedArrayStorage;
+import org.truffleruby.core.hash.RubyHash;
+import org.truffleruby.core.hash.library.ConcurrentHashStore;
 import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.thread.RubyThread;
@@ -126,24 +128,22 @@ public final class SharedObjects {
     }
 
     public static boolean assertPropagateSharing(RubyDynamicObject source, Object value) {
-        if (isShared(source) && value instanceof RubyDynamicObject) {
-            return isShared(value);
+        if (isShared(source) && value instanceof RubyDynamicObject object) {
+            return isShared(object);
         } else {
             return true;
         }
     }
 
     public static void writeBarrier(RubyLanguage language, Object value) {
-        if (language.options.SHARED_OBJECTS_ENABLED && value instanceof RubyDynamicObject && !isShared(value)) {
-            shareObject((RubyDynamicObject) value);
-            assert !(value instanceof RubyArray) || validateArray((RubyArray) value);
+        if (language.options.SHARED_OBJECTS_ENABLED && value instanceof RubyDynamicObject object && !isShared(object)) {
+            shareObject(object);
+            assert !(value instanceof RubyArray array) || validateArray(array);
         }
     }
 
     private static boolean validateArray(RubyArray value) {
-        Object storage = value.getStore();
-        assert storage instanceof SharedArrayStorage;
-        return ((SharedArrayStorage) storage).allElementsShared(value.size);
+        return ((SharedArrayStorage) value.getStore()).allElementsShared(value.size);
     }
 
     public static void propagate(RubyLanguage language, RubyDynamicObject source, Object value) {
@@ -166,6 +166,11 @@ public final class SharedObjects {
     }
 
     public static void onShareHook(RubyDynamicObject object) {
+        // The object Shape is already marked as shared before the hook is run,
+        // which is necessary to avoid infinite recursion if the object
+        // references itself directly or indirectly.
+        assert object.getShape().isShared();
+
         if (object instanceof RubyModule) {
             // We want to share ClassVariableStorage but not expose it to ObjectSpace.reachable_objects_from
             final ClassVariableStorage classVariables = ((RubyModule) object).fields.getClassVariables();
@@ -174,6 +179,8 @@ public final class SharedObjects {
             DynamicObjectLibrary.getUncached().markShared(classVariables);
         } else if (object instanceof RubyArray array) {
             array.setStore(ArrayStoreLibrary.getUncached().makeShared(array.getStore(), array.size));
+        } else if (object instanceof RubyHash hash) {
+            ConcurrentHashStore.convertFromOtherStrategy(hash);
         }
     }
 

@@ -30,8 +30,6 @@ import com.oracle.truffle.api.library.GenerateLibrary.Abstract;
 import com.oracle.truffle.api.library.GenerateLibrary.DefaultExport;
 import com.oracle.truffle.api.library.Library;
 import com.oracle.truffle.api.library.LibraryFactory;
-import com.oracle.truffle.api.nodes.EncapsulatingNodeReference;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 
 /** Library for accessing and manipulating the storage used for representing hashes. This includes reading, modifying,
@@ -54,7 +52,7 @@ public abstract class HashStoreLibrary extends Library {
 
     public static boolean verify(RubyHash hash) {
         final Object store = hash.store;
-        return getUncached(hash).verify(store, hash);
+        return FACTORY.getUncached(store).verify(store, hash);
     }
 
     /** Looks up the key in the hash and returns the associated value, or the result of calling {@code defaultNode} if
@@ -70,7 +68,7 @@ public abstract class HashStoreLibrary extends Library {
     public abstract boolean set(Object store, RubyHash hash, Object key, Object value, boolean byIdentity);
 
     public void clear(Object store, RubyHash hash) {
-        hash.store = EmptyHashStore.NULL_HASH_STORE;
+        hash.setStore(EmptyHashStore.NULL_HASH_STORE);
         hash.size = 0;
     }
 
@@ -90,18 +88,23 @@ public abstract class HashStoreLibrary extends Library {
     @Abstract
     public abstract Object eachEntry(Object store, RubyHash hash, EachEntryCallback callback, Object state);
 
+    /** Same as {@link #eachEntry(Object, RubyHash, EachEntryCallback, Object)} but also yields the hashed value. */
+    @Abstract
+    public abstract Object eachEntryHashed(Object store, RubyHash hash, EachEntryWithHashedCallback callback,
+            Object state);
+
     /** Same as {@link #eachEntry(Object, RubyHash, EachEntryCallback, Object)} but guaranteed to be safe to use if the
      * hash is modified during iteration. In particular, the guarantee is that the same entry won't be processed twice.
      * The callback object MUST be passed sequential increasing indices starting from 0 */
     @Abstract
     public abstract Object eachEntrySafe(Object store, RubyHash hash, EachEntryCallback callback, Object state);
 
-    /** Replaces the contents of {@code dest} with a copy of {@code hash}. */
+    /** Returns a copy of the store, useful for {@code Hash#replace}. */
     @Abstract
-    public abstract void replace(Object store, RubyHash hash, RubyHash dest);
+    public abstract Object copyStore(Object store);
 
     /** Removes the first key-value pair in insertion order from the hash and returns it as the two-item array [key,
-     * value]. */
+     * value]. Can return null if the hash becomes empty concurrently. */
     @Abstract
     public abstract RubyArray shift(Object store, RubyHash hash);
 
@@ -110,6 +113,11 @@ public abstract class HashStoreLibrary extends Library {
     @Abstract
     public abstract void rehash(Object store, RubyHash hash);
 
+    public void becomeCompareByIdentityAndRehash(Object store, RubyHash hash) {
+        hash.compareByIdentity = true;
+        rehash(store, hash);
+    }
+
     /** Returns true only if the store is in a valid state. To be used in assertions, and also uses assertions
      * internally. */
     @Abstract
@@ -117,6 +125,10 @@ public abstract class HashStoreLibrary extends Library {
 
     public interface EachEntryCallback {
         void accept(int index, Object key, Object value, Object state);
+    }
+
+    public interface EachEntryWithHashedCallback {
+        void accept(int index, int hashed, Object key, Object value, Object state);
     }
 
     /** Call the block with a key-value entry. If the block has > 1 arity, passes the key and the value as arguments,
@@ -142,16 +154,6 @@ public abstract class HashStoreLibrary extends Library {
             } else {
                 return yieldNode.yield(this, block, createArray(new Object[]{ key, value }));
             }
-        }
-    }
-
-    public final Node getNode() {
-        boolean adoptable = this.isAdoptable();
-        CompilerAsserts.partialEvaluationConstant(adoptable);
-        if (adoptable) {
-            return this;
-        } else {
-            return EncapsulatingNodeReference.getCurrent().get();
         }
     }
 }
