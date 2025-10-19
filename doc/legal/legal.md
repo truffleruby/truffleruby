@@ -75,7 +75,7 @@ licence as JRuby in the first place, so we have considered them part of JRuby.
 For historical information from JRuby, see `jruby-copying.txt`, but this will
 now be out of date.
 
-# Rubinius
+## Rubinius
 
 TruffleRuby contains code from Rubinius 2.11, including core library
 implementation in `src/main/ruby/truffleruby/core`. This is in some cases
@@ -104,71 +104,71 @@ TruffleRuby ships LibYAML, version as described in [mx.truffleruby/suite.py](../
 LibYAML is copyright `Kirill Simonov` and `Ingy dot Net` and is released under the MIT licence, see `mit.txt`.
 LibYAML is used by the `psych` C extension.
 
-# Bundled gems
+## Bundled gems
 
 This list is from [bundled_gems](bundled_gems) and `grep licenses lib/gems/specifications/*.gemspec`.
 Versions as used in MRI unless otherwise specified.
 
-#### debug
+### debug
 
 debug is under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
 
-#### matrix
+### matrix
 
 matrix is under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
 
-#### minitest
+### minitest
 
 minitest is copyright Ryan Davis and is available under an MIT licence (see `mit.txt`).
 
-#### net-ftp, net-imap, net-pop, net-smtp
+### net-ftp, net-imap, net-pop, net-smtp
 
 These 4 bundled gems are under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
 
-#### power_assert
+### power_assert
 
 power_assert is copyright Kazuki Tsujimoto and is available under the same licence as MRI (see `ruby-bsdl.txt`).
 
-#### prime
+### prime
 
 prime is under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
 
-#### racc
+### racc
 
 racc is under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
 
-#### rake
+### rake
 
 Rake is copyright Jim Weirich and is available under an MIT licence (see `mit.txt`).
 
-#### rbs
+### rbs
 
 rbs is copyright Soutaro Matsumoto and is available under the same licence as MRI (see `ruby-bsdl.txt`).
 
-#### rexml
+### rexml
 
 rexml is under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
 
-#### rss
+### rss
 
 rss is under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
 
-#### test-unit
+### test-unit
 
 test-unit is copyright Sutou Kouhei, Ryan Davis, and Nathaniel Talbott
 and is available under the same licence as MRI (see `ruby-bsdl.txt`).
 
-#### typeprof
+### typeprof
 
 typeprof is copyright Yusuke Endoh and is available under an MIT licence (see `mit.txt`).
 
-# Other gems
+## Other gems
 
-#### json
+### json
 
 The json gem is available under the same licence as MRI (see `ruby-bsdl.txt`).
 
-#### RDoc
+### RDoc
 
 It's part of the standard library, not a bundled gem. RDoc is copyright
 Dave Thomas and Eric Hodel and is available under the terms of the GPL 2 (see
@@ -176,28 +176,28 @@ Dave Thomas and Eric Hodel and is available under the terms of the GPL 2 (see
 other files in RDoc have different, but compatible, licences detailed in the
 files.
 
-#### FFI
+### FFI
 
 TruffleRuby includes parts of the FFI gem (version as described in [lib/truffle/ffi/version.rb](../../lib/truffle/ffi/version.rb)).
 The FFI gem is copyright  2008-2016, Ruby FFI project contributors, and covered by the three-clause BSD licence (see `ffi.txt`).
 
-#### Prism
+### Prism
 
 TruffleRuby uses the [Prism](https://github.com/ruby/prism) Ruby parser
 (version as described in [src/main/c/yarp/include/prism/version.h](../../src/main/c/yarp/include/prism/version.h)),
 copyright Shopify Inc. and is available under an MIT licence (see `src/main/c/yarp/LICENSE.md`).
 
-# Java dependencies
+## Java dependencies
 
 TruffleRuby has Java dependencies on these modules, which are then included in
 the distribution:
 
-#### JOni
+### JOni
 
 TruffleRuby uses JOni, version as described in [mx.truffleruby/suite.py](../../mx.truffleruby/suite.py).
 JOni is copyright its authors and is released under an MIT licence (see `mit.txt`).
 
-#### JCodings
+### JCodings
 
 TruffleRuby uses JCodings, version as described in [Truffle's suite.py](https://github.com/oracle/graal/blob/master/truffle/mx.truffle/suite.py) (select the correct branch/tag for finding the version used in a release).
 JCodings is copyright its authors and is released under an MIT licence (see `mit.txt`).
