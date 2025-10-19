@@ -329,7 +329,7 @@ suite = {
                 "sdk:COLLECTIONS",
                 "sdk:NATIVEIMAGE",
                 "sdk:POLYGLOT",
-                # Library distributions, keep in sync with truffle_jars in mx_truffleruby.py
+                # Library distributions
                 "truffle:TRUFFLE_JCODINGS",
                 "truffleruby:TRUFFLERUBY_JONI",
             ],
@@ -652,7 +652,7 @@ suite = {
                 "sdk:COLLECTIONS",
                 "sdk:NATIVEIMAGE",
                 "sdk:POLYGLOT",
-                # Library distributions, keep in sync with truffle_jars in mx_truffleruby.py
+                # Library distributions
                 "truffle:TRUFFLE_JCODINGS",
                 "truffleruby:TRUFFLERUBY_JONI",
                 # runtime-only dependencies
