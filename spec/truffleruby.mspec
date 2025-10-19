@@ -52,38 +52,13 @@ class MSpecScript
     "^spec/ruby/core/tracepoint",
   ]
 
-  # Specs that need Sulong and should be tested in the Sulong gate
-  library_cext_specs = %w[
-    spec/ruby/library/bigdecimal
-    spec/ruby/library/date
-    spec/ruby/library/etc
-    spec/ruby/library/openssl
-    spec/ruby/library/rbconfig/sizeof
-    spec/ruby/library/ripper
-    spec/ruby/library/syslog
-    spec/ruby/library/yaml
-    spec/ruby/library/zlib
-    spec/ruby/security/cve_2019_8321_spec.rb
-    spec/ruby/security/cve_2019_8322_spec.rb
-    spec/ruby/security/cve_2019_8323_spec.rb
-    spec/ruby/security/cve_2019_8325_spec.rb
-  ]
-
   set :security, [
     "spec/ruby/security",
-
-    # Tested separately as they need Sulong
-    *library_cext_specs.map { |path| "^#{path}" }
   ]
 
   set :library, [
     "spec/ruby/library",
-
-    # Tested separately as they need Sulong
-    *library_cext_specs.map { |path| "^#{path}" }
   ]
-
-  set :library_cext, library_cext_specs
 
   set :capi, [
     "spec/ruby/optional/capi",
@@ -93,7 +68,6 @@ class MSpecScript
 
   set :truffle, [
     "spec/truffle",
-
     # Tested separately
     "^spec/truffle/capi"
   ]
@@ -147,17 +121,18 @@ class MSpecScript
     excludes << 'aarch64'
   end
 
-  # All specs, excluding specs needing C-extensions support, and TracePoint specs.
+  # All specs except C API specs and TracePoint specs
   set :files, get(:command_line) + get(:language) + get(:core) + get(:library) + get(:truffle) + get(:security)
 
-  # Specs needing C-extensions support.
-  set :cext, get(:capi) + get(:truffle_capi) + get(:library_cext)
+  # All C API specs
+  set :cext, get(:capi) + get(:truffle_capi)
 
   # Run C API specs in C++ mode
   set :cxx, get(:capi)
 
-  # All specs, including specs needing C-extensions support.
+  # All specs.
   # :next specs are not included as they need to run in a separate process.
+  # :cxx specs are not included as they need to run in a separate process.
   # :tracepoint specs are not included as they need should run in a separate process.
   set :all, get(:files) + get(:cext)
 end
@@ -174,7 +149,9 @@ if MSpecScript.child_process?
 
     ::VersionGuard.send :remove_const, :FULL_RUBY_VERSION
     ::VersionGuard::FULL_RUBY_VERSION = SpecVersion.new(next_version)
-  elsif ARGV.include? ":cxx"
+  end
+
+  if ARGV.include? ":cxx"
     ENV["SPEC_CAPI_CXX"] = "true"
   end
 end
