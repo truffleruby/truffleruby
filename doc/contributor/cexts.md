@@ -8,7 +8,7 @@ Here is a list going from testing single functions to testing Bundler.
 ```bash
 jt test :capi
 jt test :truffle_capi
-jt test :library_cext
+jt test :library
 jt test mri --all-sulong
 jt test cexts
 jt test bundle
