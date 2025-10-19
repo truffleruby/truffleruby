@@ -300,18 +300,7 @@ public abstract class RequireNode extends RubyBaseNode {
                 RubyLanguage.LOGGER.info("unsatisfied link error " + linkError);
             }
 
-            final String message;
-
-            if (feature.equals("openssl.so")) {
-                message = String.format(
-                        "%s (%s)",
-                        "you may need to install the system OpenSSL library libssl - see https://github.com/truffleruby/truffleruby/blob/master/doc/user/installing-libssl.md",
-                        linkError);
-            } else {
-                message = linkError;
-            }
-
-            throw new RaiseException(getContext(), getContext().getCoreExceptions().loadError(message, this));
+            throw new RaiseException(getContext(), getContext().getCoreExceptions().loadError(linkError, this));
         }
 
         final Throwable linkerException = searchForException("LLVMLinkerException", e);

@@ -98,6 +98,11 @@ suite = {
             "urls": ["https://github.com/yaml/libyaml/releases/download/0.2.5/yaml-0.2.5.tar.gz"],
             "digest": "sha512:dadd7d8e0d88b5ebab005e5d521d56d541580198aa497370966b98c904586e642a1cd4f3881094eb57624f218d50db77417bbfd0ffdce50340f011e35e8c4c02",
         },
+
+        "LIBSSL_3_5_4": {
+            "urls": ["https://github.com/openssl/openssl/releases/download/openssl-3.5.4/openssl-3.5.4.tar.gz"],
+            "digest": "sha256:967311f84955316969bdb1d8d4b983718ef42338639c621ec4c34fddef355e99",
+        },
     },
 
     "externalProjects": {
@@ -265,6 +270,24 @@ suite = {
             "description": "YARP used as a dynamic library with all fields"
         },
 
+        "libssl": {
+            "class": "LibSSLProject",
+            "buildDependencies": [
+                "LIBSSL_LAYOUT_DIST",
+            ],
+            "results": ["libssl"],
+            "description": "Build libssl"
+        },
+
+        "libyaml": {
+            "class": "LibYAMLProject",
+            "buildDependencies": [
+                "LIBYAML_LAYOUT_DIST",
+            ],
+            "results": ["libyaml"],
+            "description": "Build libyaml"
+        },
+
         "org.truffleruby.yarp.bindings": {
             "dir": "src/main/c/yarp_bindings",
             "native": "shared_lib",
@@ -425,13 +448,13 @@ suite = {
                 "sulong:SULONG_HOME", # polyglot.h
                 "truffle:TRUFFLE_NFI_NATIVE", # trufflenfi.h
                 "TRUFFLERUBY-BOOTSTRAP-LAUNCHER",
-                "LIBYAML_LAYOUT_DIST",
+                "libssl",
+                "libyaml",
             ],
             "buildEnv": {
                 "TRUFFLERUBY_BOOTSTRAP_LAUNCHER": "<path:TRUFFLERUBY-BOOTSTRAP-LAUNCHER>/miniruby",
                 "GRAALVM_TOOLCHAIN_CC": "<toolchainGetToolPath:native,CC>",
                 "TRUFFLE_NFI_NATIVE_INCLUDE": "<path:truffle:TRUFFLE_NFI_NATIVE>/include",
-                "LIBYAML_SRC": "<path:LIBYAML_LAYOUT_DIST>",
             },
             "output": ".",
             "results": [
@@ -672,6 +695,7 @@ suite = {
 
         "TRUFFLERUBY-BOOTSTRAP-LAUNCHER": {
             "native": True,
+            "defaultDereference": "never",
             "layout": {
                 "./": "dependency:org.truffleruby.bootstrap.launcher/*",
             },
@@ -741,6 +765,7 @@ suite = {
             "platformDependent": False,
             "hashEntry": "META-INF/resources/ruby/ruby-home/common/sha256",
             "fileListEntry": "META-INF/resources/ruby/ruby-home/common/file-list",
+            "defaultDereference": "never",
             "layout": {
                 "META-INF/resources/ruby/ruby-home/common/": "extracted-dependency:TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_AGNOSTIC",
             },
@@ -753,6 +778,7 @@ suite = {
             "platformDependent": True,
             "hashEntry": "META-INF/resources/ruby/ruby-home/<os>/<arch>/sha256",
             "fileListEntry": "META-INF/resources/ruby/ruby-home/<os>/<arch>/file-list",
+            "defaultDereference": "never",
             "layout": {
                 "META-INF/resources/ruby/ruby-home/<os>/<arch>/": "extracted-dependency:TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_SPECIFIC",
             },
@@ -765,10 +791,12 @@ suite = {
             "maven": False,
         },
 
+        # A subset of TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_{AGNOSTIC,SPECIFIC}
         "TRUFFLERUBY_BOOTSTRAP_HOME": {
             "description": "TruffleRuby bootstrap home used by a minimal TruffleRuby to run extconf.rb of default & bundled gems C extensions",
             "native": True,
             "platformDependent": True,
+            "defaultDereference": "never",
             "layout": {
                 "lib/": [
                     "file:lib/json",
@@ -788,6 +816,10 @@ suite = {
                 "lib/truffle/": [
                     "dependency:org.truffleruby.spawnhelper",
                 ],
+                "src/main/c/": [
+                    "dependency:libssl/libssl",
+                    "dependency:libyaml/libyaml",
+                ],
             },
             "maven": False,
         },
@@ -797,6 +829,7 @@ suite = {
             "fileListPurpose": "native-image-resources",
             "native": True,
             "platformDependent": False,
+            "defaultDereference": "never",
             "layout": {
                 "lib/": [
                     "file:lib/json",
@@ -829,6 +862,7 @@ suite = {
             "fileListPurpose": "native-image-resources",
             "native": True,
             "platformDependent": True,
+            "defaultDereference": "never",
             "layout": {
                 "lib/": [
                     "dependency:org.truffleruby.yarp.bindings",
@@ -872,6 +906,10 @@ suite = {
                 "lib/truffle/": [
                     "dependency:org.truffleruby.spawnhelper",
                 ],
+                "src/main/c/": [
+                    "dependency:libssl/libssl",
+                    "dependency:libyaml/libyaml",
+                ],
             },
             "license": [
                 "BSD-simplified",   # MRI
@@ -879,11 +917,13 @@ suite = {
             "maven": False,
         },
 
+        # This must preserve the timestamps, see src/main/c/Makefile
         "LIBYAML_LAYOUT_DIST": {
             "description": "A layout dist with libyaml sources, since packedResource libraries do not support excludes and extracting subpaths",
             "type": "dir",
             "platformDependent": False,
             "platforms": "local",
+            "defaultDereference": "never",
             "layout": {
                 "./": [
                     {
@@ -897,11 +937,30 @@ suite = {
             "maven": False,
         },
 
+        "LIBSSL_LAYOUT_DIST": {
+            "description": "A layout dist with libssl sources, since packedResource libraries do not support excludes and extracting subpaths",
+            "type": "dir",
+            "platformDependent": False,
+            "platforms": "local",
+            "defaultDereference": "never",
+            "layout": {
+                "./": [
+                    {
+                        "source_type": "extracted-dependency",
+                        "dependency": "LIBSSL_3_5_4",
+                        "path": "openssl-3.5.4/*",
+                    },
+                ],
+            },
+            "maven": False,
+        },
+
         "TRUFFLERUBY_GRAALVM_SUPPORT_NO_NI_RESOURCES": {
             "description": "TruffleRuby support distribution, the contents is not included as native image resources.",
             "type": "dir",
             "platformDependent": False,
             "platforms": "local",
+            "defaultDereference": "never",
             "layout": {
                 "./": [
                     "file:CHANGELOG.md",
@@ -921,16 +980,6 @@ suite = {
                 ],
                 "logo/png/": [
                     "file:logo/png/truffleruby_logo_horizontal_medium.png",
-                ],
-                # See the comment about --with-libyaml-source-dir in rbconfig.rb
-                # "src/main/c/libyaml/": [
-                #     "dependency:LIBYAML_LAYOUT_DIST/*",
-                # ],
-                "src/main/c/openssl/": [
-                    "file:src/main/c/openssl/extconf.rb",
-                    "file:src/main/c/openssl/*.c",
-                    "file:src/main/c/openssl/ossl*.h",
-                    "file:src/main/c/openssl/openssl_missing.h",
                 ],
             },
             "maven": False,
@@ -953,6 +1002,7 @@ suite = {
             "type": "dir",
             "platformDependent": True,
             "platforms": "local",
+            "defaultDereference": "never",
             "layout": {
                 "./": [
                     "extracted-dependency:TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_AGNOSTIC",
@@ -995,6 +1045,7 @@ suite = {
             "type": "dir",
             "platformDependent": True,
             "platforms": "local",
+            "defaultDereference": "never",
             "layout": {
                 "./": [
                     "dependency:TRUFFLERUBY_STANDALONE_COMMON/*",
@@ -1008,6 +1059,7 @@ suite = {
             "type": "dir",
             "platformDependent": True,
             "platforms": "local",
+            "defaultDereference": "never",
             "layout": {
                 "./": [
                     "dependency:TRUFFLERUBY_STANDALONE_COMMON/*",

@@ -2,7 +2,7 @@ rpm: &rpm
   tar: tar gzip
   specs: which findutils
   zlib: zlib-devel
-  openssl: openssl-devel
+  openssl: ca-certificates
   cext: gcc make
   c++: gcc-c++
   set-locale:
@@ -13,7 +13,7 @@ deb: &deb
   tar:
   specs: netbase
   zlib: libz-dev
-  openssl: libssl-dev
+  openssl: ca-certificates
   cext: gcc make
   c++: g++
   set-locale:
