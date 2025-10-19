@@ -10,17 +10,21 @@
 package org.truffleruby.core.fiber;
 
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.cext.ValueWrapperManager;
+import org.truffleruby.collections.LightweightLayoutLock;
 import org.truffleruby.core.MarkingService;
 import org.truffleruby.core.array.ArrayHelpers;
 import org.truffleruby.core.array.RubyArray;
@@ -107,6 +111,11 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
     /** Always false when not inside a C ext Init_ function */
     public boolean threadSafeExtension = false;
 
+    // Last-used cache per thread for the threadState for LightweightLayoutLock's
+    private final WeakHashMap<LightweightLayoutLock, AtomicInteger> layoutLockStates = new WeakHashMap<>();
+    private LightweightLayoutLock lastLayoutLock = null;
+    private AtomicInteger lastThreadState = null;
+
     // To pass state between beforeEnter(), fiberMain() and afterLeave()
     FiberManager.FiberMessage firstMessage;
     RubyFiber returnFiber;
@@ -183,6 +192,27 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
         assert exception == nil || exception instanceof RubyException ||
                 exception instanceof AbstractTruffleException : "Unexpected exception object for $!: " + exception;
         this.lastException = exception;
+    }
+
+    public AtomicInteger getLayoutLockThreadState(LightweightLayoutLock lock, InlinedConditionProfile fastPathProfile,
+            Node node) {
+        if (fastPathProfile.profile(node, lock == lastLayoutLock)) {
+            return lastThreadState;
+        } else {
+            return getLayoutLockThreadStateSlowPath(lock);
+        }
+    }
+
+    @TruffleBoundary
+    private AtomicInteger getLayoutLockThreadStateSlowPath(LightweightLayoutLock lock) {
+        AtomicInteger threadState = layoutLockStates.get(lock);
+        if (threadState == null) {
+            threadState = lock.registerThread();
+            layoutLockStates.put(lock, threadState);
+        }
+        lastLayoutLock = lock;
+        lastThreadState = threadState;
+        return threadState;
     }
 
 }
