@@ -238,6 +238,15 @@ class LibSSLBuildTask(mx.NativeBuildTask):
 
         mx.run(['make', 'install_sw', 'install_ssldirs'], cwd=build_dir)
 
+        # Fix install_name on macOS to use rpath and not absolute paths.
+        # OpenSSL doesn't have a configuration option to do this more cleanly:
+        # https://github.com/openssl/openssl/issues/25760
+        if mx.is_darwin():
+            install_lib_dir = f"{install_dir}/lib"
+            mx.run(['install_name_tool', '-id', '@rpath/libcrypto.3.dylib', 'libcrypto.3.dylib'], cwd=install_lib_dir)
+            mx.run(['install_name_tool', '-id', '@rpath/libssl.3.dylib', 'libssl.3.dylib'], cwd=install_lib_dir)
+            mx.run(['install_name_tool', '-change', f'{install_lib_dir}/libcrypto.3.dylib', '@rpath/libcrypto.3.dylib', 'libssl.3.dylib'], cwd=install_lib_dir)
+
     def clean(self, forBuild=False):
         build_dir = self.subject.build_dir
         install_dir = self.subject.install_dir
@@ -283,6 +292,11 @@ class LibYAMLBuildTask(mx.NativeBuildTask):
         super(LibYAMLBuildTask, self).build() # make
 
         mx.run(['make', 'install'], cwd=build_dir)
+
+        # Fix install_name on macOS to use rpath and not absolute paths.
+        if mx.is_darwin():
+            install_lib_dir = f"{install_dir}/lib"
+            mx.run(['install_name_tool', '-id', '@rpath/libyaml.dylib', 'libyaml.dylib'], cwd=install_lib_dir)
 
     def clean(self, forBuild=False):
         build_dir = self.subject.build_dir
