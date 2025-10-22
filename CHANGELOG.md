@@ -13,6 +13,7 @@ Compatibility:
 * Fix extra warnings for `Kernel#sprintf` (#3938, @eregon).
 * Support using tailwindcss-ruby's native platform gems (@nirvdrum).
 * Fix a `TypeError` when calling `Kernel#warn` with explicit `uplevel: nil` (@earlopain).
+* Fix inspect output of symbols that contain non-ASCII letters (@earlopain).
 
 Performance:
 
