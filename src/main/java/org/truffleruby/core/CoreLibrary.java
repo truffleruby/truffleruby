@@ -672,7 +672,7 @@ public final class CoreLibrary {
         setConstant(objectClass, "RUBY_PATCHLEVEL", 0);
         setConstant(objectClass, "RUBY_REVISION", frozenUSASCIIString(TruffleRuby.LANGUAGE_REVISION));
         setConstant(objectClass, "RUBY_ENGINE", frozenUSASCIIString(TruffleRuby.ENGINE_ID));
-        setConstant(objectClass, "RUBY_ENGINE_VERSION", frozenUSASCIIString(TruffleRuby.getEngineVersion()));
+        setConstant(objectClass, "RUBY_ENGINE_VERSION", frozenUSASCIIString(TruffleRuby.getTruffleRubyVersion()));
         setConstant(objectClass, "RUBY_PLATFORM", frozenUSASCIIString(TruffleRuby.RUBY_PLATFORM));
         setConstant(
                 objectClass,

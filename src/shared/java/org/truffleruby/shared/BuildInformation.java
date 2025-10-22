@@ -14,6 +14,8 @@ import org.truffleruby.annotations.PopulateBuildInformation;
 @PopulateBuildInformation
 public interface BuildInformation {
 
+    String getTruffleRubyVersion();
+
     String getBuildName();
 
     String getShortRevision();

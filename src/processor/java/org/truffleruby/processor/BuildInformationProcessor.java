@@ -11,6 +11,7 @@ package org.truffleruby.processor;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -40,10 +41,15 @@ import org.truffleruby.annotations.PopulateBuildInformation;
 public class BuildInformationProcessor extends TruffleRubyProcessor {
 
     private static final String SUFFIX = "Impl";
+    private static final Pattern VERSION_PATTERN = Pattern.compile("""
+            "version":\\s*"([^"]+)\"""");
+    private static final Pattern RELEASE_PATTERN = Pattern.compile("""
+            "release":\\s*(True|False),""");
 
     private final Set<String> processed = new HashSet<>();
 
     private File trufflerubyHome;
+    private String trufflerubyVersion;
     private String buildName;
     private String shortRevision;
     private String fullRevision;
@@ -57,6 +63,7 @@ public class BuildInformationProcessor extends TruffleRubyProcessor {
         super.init(env);
         try {
             trufflerubyHome = findHome();
+            trufflerubyVersion = readTruffleRubyVersion();
             buildName = System.getenv("TRUFFLERUBY_BUILD_NAME");
             fullRevision = runCommand("git rev-parse HEAD")
                     .orElseThrow(() -> new Error("git rev-parse command failed"));
@@ -100,6 +107,43 @@ public class BuildInformationProcessor extends TruffleRubyProcessor {
             }
         }
         return source.getParentFile();
+    }
+
+    private String readTruffleRubyVersion() {
+        String suiteFile = new File(trufflerubyHome, "mx.truffleruby/suite.py").getPath();
+        String versionField = null;
+        Boolean isRelease = null;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(suiteFile, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Matcher m = VERSION_PATTERN.matcher(line);
+                if (m.find()) {
+                    versionField = m.group(1);
+                }
+
+                m = RELEASE_PATTERN.matcher(line);
+                if (m.find()) {
+                    isRelease = Boolean.parseBoolean(m.group(1));
+                }
+
+                if (versionField != null && isRelease != null) {
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            throw new Error(e);
+        }
+
+        if (versionField == null || isRelease == null) {
+            throw new Error("Could not find version and release in " + suiteFile);
+        }
+
+        if (isRelease) {
+            return versionField;
+        } else {
+            return versionField + "-dev";
+        }
     }
 
     private String findKernelMajorVersion() throws IOException, InterruptedException {
@@ -188,32 +232,17 @@ public class BuildInformationProcessor extends TruffleRubyProcessor {
                 if (e instanceof ExecutableElement) {
                     final String name = e.getSimpleName().toString();
 
-                    final Object value;
-                    switch (name) {
-                        case "getBuildName":
-                            value = buildName;
-                            break;
-                        case "getShortRevision":
-                            value = shortRevision;
-                            break;
-                        case "getFullRevision":
-                            value = fullRevision;
-                            break;
-                        case "isDirty":
-                            value = isDirty;
-                            break;
-                        case "getCopyrightYear":
-                            value = copyrightYear;
-                            break;
-                        case "getCompileDate":
-                            value = compileDate;
-                            break;
-                        case "getKernelMajorVersion":
-                            value = kernelMajorVersion;
-                            break;
-                        default:
-                            throw new UnsupportedOperationException(name + " method not understood");
-                    }
+                    final Object value = switch (name) {
+                        case "getTruffleRubyVersion" -> trufflerubyVersion;
+                        case "getBuildName" -> buildName;
+                        case "getShortRevision" -> shortRevision;
+                        case "getFullRevision" -> fullRevision;
+                        case "isDirty" -> isDirty;
+                        case "getCopyrightYear" -> copyrightYear;
+                        case "getCompileDate" -> compileDate;
+                        case "getKernelMajorVersion" -> kernelMajorVersion;
+                        default -> throw new UnsupportedOperationException(name + " method not understood");
+                    };
 
                     stream.println("    @Override");
                     stream.println("    public " + ((ExecutableElement) e).getReturnType() + " " + name + "() {");
