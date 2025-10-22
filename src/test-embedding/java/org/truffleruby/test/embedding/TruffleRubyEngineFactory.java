@@ -35,7 +35,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 
-import org.graalvm.home.Version;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Language;
@@ -60,7 +59,7 @@ public final class TruffleRubyEngineFactory implements ScriptEngineFactory {
 
     @Override
     public String getEngineVersion() {
-        return Version.getCurrent().toString();
+        return "RUBY_ENGINE_VERSION";
     }
 
     @Override
