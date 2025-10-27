@@ -79,14 +79,14 @@ public abstract class ForeignClassNode extends RubyBaseNode {
             @CachedLibrary("object") InteropLibrary interop,
             @Cached("getTraits(object, interop)") int cachedTraits) {
         assert RubyGuards.isForeignObject(object);
-        return classForTraits(node, cachedTraits);
+        return classForTraits(node, object, cachedTraits);
     }
 
     @Specialization(replaces = "cached", limit = "getInteropCacheLimit()")
     static RubyClass uncached(Node node, Object object,
             @CachedLibrary("object") InteropLibrary interop) {
         assert RubyGuards.isForeignObject(object);
-        return classForTraits(node, getTraits(object, interop));
+        return classForTraits(node, object, getTraits(object, interop));
     }
 
     protected static int getTraits(Object object, InteropLibrary interop) {
@@ -104,24 +104,26 @@ public abstract class ForeignClassNode extends RubyBaseNode {
                 (interop.isString(object) ? Trait.STRING.bit : 0);
     }
 
-    private static RubyClass classForTraits(Node node, int traits) {
-        RubyClass rubyClass = coreLibrary(node).polyglotForeignClasses[traits];
-        if (rubyClass == null) {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            rubyClass = resolvePolyglotForeignClass(node, traits);
-            coreLibrary(node).polyglotForeignClasses[traits] = rubyClass;
-        }
-        return rubyClass;
+    private static RubyClass classForTraits(Node node, Object object, int traits) {
+        return resolvePolyglotForeignClass(node, object, traits);
+//        RubyClass rubyClass = coreLibrary(node).polyglotForeignClasses[traits];
+//        if (rubyClass == null) {
+//            CompilerDirectives.transferToInterpreterAndInvalidate();
+//            rubyClass = resolvePolyglotForeignClass(node, object, traits);
+//            coreLibrary(node).polyglotForeignClasses[traits] = rubyClass;
+//        }
+//        return rubyClass;
     }
 
-    private static RubyClass resolvePolyglotForeignClass(Node node, int traits) {
-        final ArrayList<RubySymbol> traitsList = new ArrayList<>();
+    private static RubyClass resolvePolyglotForeignClass(Node node, Object object, int traits) {
+        final ArrayList<Object> args = new ArrayList<>();
+        args.add(object);
         for (Trait trait : Trait.VALUES) {
             if (trait.isSet(traits)) {
-                traitsList.add(getSymbol(node, trait.name));
+                args.add(getSymbol(node, trait.name));
             }
         }
-        final Object[] traitSymbols = traitsList.toArray();
+        final Object[] traitSymbols = args.toArray();
         return (RubyClass) DispatchNode.getUncached().call(coreLibrary(node).truffleInteropOperationsModule,
                 "resolve_polyglot_class", traitSymbols);
     }
