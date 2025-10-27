@@ -289,16 +289,16 @@ exception.
 When the spec is fixed the `untag` command will remove the tag and you can
 commit the fix and the removal of the tag.
 
-## Running specs for Ruby 3.3 features
+## Running specs for Ruby 3.4 features
 
-TruffleRuby currently targets Ruby 3.2. However, we welcome pull requests for
-Ruby 3.3 features as long as they don't conflict significantly with
-Ruby 3.2 semantics.
+TruffleRuby currently targets Ruby 3.3. However, we welcome pull requests for
+Ruby 3.4 features as long as they don't conflict significantly with
+Ruby 3.3 semantics.
 
-It is possible to run specs for Ruby 3.3 features by setting `PRETEND_RUBY_VERSION`:
+It is possible to run specs for Ruby 3.4 features by setting `PRETEND_RUBY_VERSION`:
 
 ```bash
-PRETEND_RUBY_VERSION=3.3.0 jt test spec/ruby/.../some_spec.rb
+PRETEND_RUBY_VERSION=3.4.0 jt test spec/ruby/.../some_spec.rb
 ```
 
 This also works for `jt tag`/`jt untag`.
@@ -308,7 +308,7 @@ the corresponding files list in `spec/truffleruby.next-specs` so that the specs
 are run in CI too.
 
 However this does not work for C-API specs,
-because those use `#ifdef RUBY_VERSION_IS_3_2` and that version cannot be faked.
+because those use `#ifdef RUBY_VERSION_IS_X_Y` and that version cannot be faked.
 
 ## How to fix a failing MRI test
 
