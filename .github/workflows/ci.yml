@@ -9,8 +9,10 @@ name: CI
 on:
   workflow_dispatch:
   pull_request:
+    paths-ignore: ['**.md']
   push:
     branches: [master]
+    paths-ignore: ['**.md']
 permissions:
   contents: read
 # This can be inconvenient when modifying CI, feel free to comment it out temporarily
