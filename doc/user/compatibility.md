@@ -27,12 +27,14 @@ TruffleRuby defines these constants for identification:
 
 In the C API, the preprocessor macro `TRUFFLERUBY` is defined, which can be checked with `#ifdef TRUFFLERUBY`.
 
-## Ruby 3.x Features
+## Ruby Features
 
-Most features of Ruby 3.2 and earlier are supported in TruffleRuby.
+Most features of Ruby 3.3 and earlier are supported in TruffleRuby.
 However, some features are not yet implemented.
 See the following issues for details:
 
+* [Ruby 3.4 features](https://github.com/truffleruby/truffleruby/issues/3883)
+* [Ruby 3.3 features](https://github.com/truffleruby/truffleruby/issues/3681)
 * [Ruby 3.2 features](https://github.com/truffleruby/truffleruby/issues/3039)
 * [Ruby 3.1 features](https://github.com/truffleruby/truffleruby/issues/2733)
 * [Ruby 3.0 features](https://github.com/truffleruby/truffleruby/issues/2453)
@@ -67,6 +69,12 @@ TruffleRuby provides its own backend implementation for the `ffi` gem, similar t
 This should be completely transparent and behave the same as on MRI.
 The implementation should be fairly complete and passes all the specs of the `ffi` gem except for some rarely-used corner cases.
 
+### Ractor
+
+`Ractor` is currently not implemented on TruffleRuby.
+Threads are run in parallel on TruffleRuby and Threads are far more compatible with gems than `Ractor`, so `Ractor` is not so useful on TruffleRuby.
+Nevertheless, to run a program relying on Ractor on TruffleRuby you can use the [ractor-shim gem](https://github.com/eregon/ractor-shim) and it will run those Ractors in parallel.
+
 ### Internal MRI functionality
 
 `RubyVM` is not intended for users and is not implemented.
@@ -77,7 +85,7 @@ The implementation should be fairly complete and passes all the specs of the `ff
 
 In MRI, threads are scheduled concurrently but not in parallel.
 In TruffleRuby threads are scheduled in parallel.
-As in JRuby and Rubinius, you are responsible for correctly synchronising access to your own shared mutable data structures, and TruffleRuby will be responsible for correctly synchronising the state of the interpreter.
+As in JRuby and Rubinius, you are responsible for correctly synchronizing access to your own shared mutable data structures, and TruffleRuby will be responsible for correctly synchronizing the state of the interpreter.
 
 ### Fibers do not have the same performance characteristics as in MRI
 
