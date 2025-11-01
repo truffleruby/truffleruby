@@ -1,4 +1,4 @@
-/* A Bison parser, made by Lrama 0.5.12.  */
+/* A Bison parser, made by Lrama 0.6.11.  */
 
 /* Bison interface for Yacc-like parsers in C
 
@@ -54,55 +54,55 @@ extern int yydebug;
     END_OF_INPUT = 0,              /* "end-of-input"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    keyword_class = 258,           /* "`class'"  */
-    keyword_module = 259,          /* "`module'"  */
-    keyword_def = 260,             /* "`def'"  */
-    keyword_undef = 261,           /* "`undef'"  */
-    keyword_begin = 262,           /* "`begin'"  */
-    keyword_rescue = 263,          /* "`rescue'"  */
-    keyword_ensure = 264,          /* "`ensure'"  */
-    keyword_end = 265,             /* "`end'"  */
-    keyword_if = 266,              /* "`if'"  */
-    keyword_unless = 267,          /* "`unless'"  */
-    keyword_then = 268,            /* "`then'"  */
-    keyword_elsif = 269,           /* "`elsif'"  */
-    keyword_else = 270,            /* "`else'"  */
-    keyword_case = 271,            /* "`case'"  */
-    keyword_when = 272,            /* "`when'"  */
-    keyword_while = 273,           /* "`while'"  */
-    keyword_until = 274,           /* "`until'"  */
-    keyword_for = 275,             /* "`for'"  */
-    keyword_break = 276,           /* "`break'"  */
-    keyword_next = 277,            /* "`next'"  */
-    keyword_redo = 278,            /* "`redo'"  */
-    keyword_retry = 279,           /* "`retry'"  */
-    keyword_in = 280,              /* "`in'"  */
-    keyword_do = 281,              /* "`do'"  */
-    keyword_do_cond = 282,         /* "`do' for condition"  */
-    keyword_do_block = 283,        /* "`do' for block"  */
-    keyword_do_LAMBDA = 284,       /* "`do' for lambda"  */
-    keyword_return = 285,          /* "`return'"  */
-    keyword_yield = 286,           /* "`yield'"  */
-    keyword_super = 287,           /* "`super'"  */
-    keyword_self = 288,            /* "`self'"  */
-    keyword_nil = 289,             /* "`nil'"  */
-    keyword_true = 290,            /* "`true'"  */
-    keyword_false = 291,           /* "`false'"  */
-    keyword_and = 292,             /* "`and'"  */
-    keyword_or = 293,              /* "`or'"  */
-    keyword_not = 294,             /* "`not'"  */
-    modifier_if = 295,             /* "`if' modifier"  */
-    modifier_unless = 296,         /* "`unless' modifier"  */
-    modifier_while = 297,          /* "`while' modifier"  */
-    modifier_until = 298,          /* "`until' modifier"  */
-    modifier_rescue = 299,         /* "`rescue' modifier"  */
-    keyword_alias = 300,           /* "`alias'"  */
-    keyword_defined = 301,         /* "`defined?'"  */
-    keyword_BEGIN = 302,           /* "`BEGIN'"  */
-    keyword_END = 303,             /* "`END'"  */
-    keyword__LINE__ = 304,         /* "`__LINE__'"  */
-    keyword__FILE__ = 305,         /* "`__FILE__'"  */
-    keyword__ENCODING__ = 306,     /* "`__ENCODING__'"  */
+    keyword_class = 258,           /* "'class'"  */
+    keyword_module = 259,          /* "'module'"  */
+    keyword_def = 260,             /* "'def'"  */
+    keyword_undef = 261,           /* "'undef'"  */
+    keyword_begin = 262,           /* "'begin'"  */
+    keyword_rescue = 263,          /* "'rescue'"  */
+    keyword_ensure = 264,          /* "'ensure'"  */
+    keyword_end = 265,             /* "'end'"  */
+    keyword_if = 266,              /* "'if'"  */
+    keyword_unless = 267,          /* "'unless'"  */
+    keyword_then = 268,            /* "'then'"  */
+    keyword_elsif = 269,           /* "'elsif'"  */
+    keyword_else = 270,            /* "'else'"  */
+    keyword_case = 271,            /* "'case'"  */
+    keyword_when = 272,            /* "'when'"  */
+    keyword_while = 273,           /* "'while'"  */
+    keyword_until = 274,           /* "'until'"  */
+    keyword_for = 275,             /* "'for'"  */
+    keyword_break = 276,           /* "'break'"  */
+    keyword_next = 277,            /* "'next'"  */
+    keyword_redo = 278,            /* "'redo'"  */
+    keyword_retry = 279,           /* "'retry'"  */
+    keyword_in = 280,              /* "'in'"  */
+    keyword_do = 281,              /* "'do'"  */
+    keyword_do_cond = 282,         /* "'do' for condition"  */
+    keyword_do_block = 283,        /* "'do' for block"  */
+    keyword_do_LAMBDA = 284,       /* "'do' for lambda"  */
+    keyword_return = 285,          /* "'return'"  */
+    keyword_yield = 286,           /* "'yield'"  */
+    keyword_super = 287,           /* "'super'"  */
+    keyword_self = 288,            /* "'self'"  */
+    keyword_nil = 289,             /* "'nil'"  */
+    keyword_true = 290,            /* "'true'"  */
+    keyword_false = 291,           /* "'false'"  */
+    keyword_and = 292,             /* "'and'"  */
+    keyword_or = 293,              /* "'or'"  */
+    keyword_not = 294,             /* "'not'"  */
+    modifier_if = 295,             /* "'if' modifier"  */
+    modifier_unless = 296,         /* "'unless' modifier"  */
+    modifier_while = 297,          /* "'while' modifier"  */
+    modifier_until = 298,          /* "'until' modifier"  */
+    modifier_rescue = 299,         /* "'rescue' modifier"  */
+    keyword_alias = 300,           /* "'alias'"  */
+    keyword_defined = 301,         /* "'defined?'"  */
+    keyword_BEGIN = 302,           /* "'BEGIN'"  */
+    keyword_END = 303,             /* "'END'"  */
+    keyword__LINE__ = 304,         /* "'__LINE__'"  */
+    keyword__FILE__ = 305,         /* "'__FILE__'"  */
+    keyword__ENCODING__ = 306,     /* "'__ENCODING__'"  */
     tIDENTIFIER = 307,             /* "local variable or method"  */
     tFID = 308,                    /* "method"  */
     tGVAR = 309,                   /* "global variable"  */
@@ -167,7 +167,7 @@ extern int yydebug;
     tQSYMBOLS_BEG = 345,           /* "verbatim symbol list"  */
     tSTRING_END = 346,             /* "terminator"  */
     tSTRING_DEND = 347,            /* "'}'"  */
-    tSTRING_DBEG = 348,            /* tSTRING_DBEG  */
+    tSTRING_DBEG = 348,            /* "'#{'"  */
     tSTRING_DVAR = 349,            /* tSTRING_DVAR  */
     tLAMBEG = 350,                 /* tLAMBEG  */
     tLABEL_END = 351,              /* tLABEL_END  */
@@ -190,9 +190,8 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 1962 "parse.y"
+#line 2665 "parse.y"
 
-    VALUE val;
     NODE *node;
     rb_node_fcall_t *node_fcall;
     rb_node_args_t *node_args;
@@ -206,11 +205,13 @@ union YYSTYPE
     ID id;
     int num;
     st_table *tbl;
+    st_table *labels;
     const struct vtable *vars;
     struct rb_strterm_struct *strterm;
     struct lex_context ctxt;
+    enum lex_state_e state;
 
-#line 214 "parse.h"
+#line 215 "parse.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

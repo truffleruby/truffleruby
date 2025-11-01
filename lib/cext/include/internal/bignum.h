@@ -136,13 +136,9 @@ static inline bool BIGNUM_POSITIVE_P(VALUE b);
 static inline bool BIGNUM_NEGATIVE_P(VALUE b);
 static inline void BIGNUM_SET_SIGN(VALUE b, bool sign);
 static inline void BIGNUM_NEGATE(VALUE b);
-#ifndef TRUFFLERUBY
 static inline size_t BIGNUM_LEN(VALUE b);
-#endif
 static inline BDIGIT *BIGNUM_DIGITS(VALUE b);
-#ifndef TRUFFLERUBY
 static inline int BIGNUM_LENINT(VALUE b);
-#endif
 static inline bool BIGNUM_EMBED_P(VALUE b);
 
 RUBY_SYMBOL_EXPORT_BEGIN
@@ -207,7 +203,6 @@ BIGNUM_NEGATE(VALUE b)
     FL_REVERSE_RAW(b, BIGNUM_SIGN_BIT);
 }
 
-#ifndef TRUFFLERUBY
 static inline size_t
 BIGNUM_LEN(VALUE b)
 {
@@ -227,7 +222,6 @@ BIGNUM_LENINT(VALUE b)
 {
     return rb_long2int(BIGNUM_LEN(b));
 }
-#endif
 
 /* LSB:BIGNUM_DIGITS(b)[0], MSB:BIGNUM_DIGITS(b)[BIGNUM_LEN(b)-1] */
 static inline BDIGIT *

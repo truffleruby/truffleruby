@@ -1,17 +1,9 @@
 #! /usr/bin/env ruby
 # -*- coding: us-ascii -*-
 
-if defined?(::TruffleRuby)
-  require 'rbconfig'
-  RUBY = RbConfig.ruby
-else
-  RUBY = './miniruby'
-end
-
 $testnum=0
 $ntest=0
 $failed = 0
-$tagged = 0
 class Progress
   def initialize
     @color = nil
@@ -133,12 +125,6 @@ def test_ok(cond,n=1)
   end
   STDOUT.flush
   STDERR.flush
-end
-
-def tagged
-  $testnum+=1
-  $ntest+=1
-  $tagged += 1
 end
 
 # make sure conditional operators work
@@ -712,16 +698,15 @@ end
 test_ok(tmp.eof? && !$bad)
 tmp.close
 
-tagged
-# sum=0
-# for i in 1..10
-#  sum += i
-#  i -= 1
-#  if i > 0
-#    redo
-#  end
-# end
-# test_ok(sum == 220)
+sum=0
+for i in 1..10
+  sum += i
+  i -= 1
+  if i > 0
+    redo
+  end
+end
+test_ok(sum == 220)
 
 # test interval
 $bad = false
@@ -894,7 +879,7 @@ $x.sort!{|a,b| b-a}		# reverse sort
 test_ok($x == [7,5,3,2,1])
 
 # split test
-$x = "The Book of Mormon"
+$x = +"The Book of Mormon"
 test_ok($x.split(//).reverse!.join == $x.reverse)
 test_ok($x.reverse == $x.reverse!)
 test_ok("1 byte string".split(//).reverse.join(":") == "g:n:i:r:t:s: :e:t:y:b: :1")
@@ -1294,12 +1279,11 @@ end
 
 test_ok(45 == exit_value_test{break 45})
 
-tagged
-# test_ok(55 == begin
-#               block_get{break 55}.call
-#             rescue LocalJumpError
-#               $!.exit_value
-#             end)
+test_ok(55 == begin
+              block_get{break 55}.call
+            rescue LocalJumpError
+              $!.exit_value
+            end)
 
 def block_call(&block)
   block.call
@@ -1659,7 +1643,7 @@ test_ok(/^(?:ab+)+/ =~ "ababb" && $& == "ababb")
 test_ok(/(\s+\d+){2}/ =~ " 1 2" && $& == " 1 2")
 test_ok(/(?:\s+\d+){2}/ =~ " 1 2" && $& == " 1 2")
 
-$x = <<END;
+$x = +<<END;
 ABCD
 ABCD
 END
@@ -1698,12 +1682,12 @@ test_ok(?a == ?a)
 test_ok(?\C-a == "\1")
 test_ok(?\M-a == "\341")
 test_ok(?\M-\C-a == "\201")
-test_ok("a".upcase![0] == ?A)
-test_ok("A".downcase![0] == ?a)
-test_ok("abc".tr!("a-z", "A-Z") == "ABC")
-test_ok("aabbcccc".tr_s!("a-z", "A-Z") == "ABC")
-test_ok("abcc".squeeze!("a-z") == "abc")
-test_ok("abcd".delete!("bc") == "ad")
+test_ok("a".dup.upcase![0] == ?A)
+test_ok("A".dup.downcase![0] == ?a)
+test_ok("abc".dup.tr!("a-z", "A-Z") == "ABC")
+test_ok("aabbcccc".dup.tr_s!("a-z", "A-Z") == "ABC")
+test_ok("abcc".dup.squeeze!("a-z") == "abc")
+test_ok("abcd".dup.delete!("bc") == "ad")
 
 $x = "abcdef"
 $y = [ ?a, ?b, ?c, ?d, ?e, ?f ]
@@ -1716,7 +1700,7 @@ $x.each_byte {|i|
 }
 test_ok(!$bad)
 
-s = "a string"
+s = +"a string"
 s[0..s.size]="another string"
 test_ok(s == "another string")
 
@@ -1980,22 +1964,22 @@ end
 unless /wasi/ =~ RUBY_PLATFORM
 test_check "system"
 test_ok(`echo foobar` == "foobar\n")
-test_ok(`#{RUBY} -e 'print "foobar"'` == 'foobar')
+test_ok(`./miniruby -e 'print "foobar"'` == 'foobar')
 
 script_tmp = "script_tmp.#{$$}"
 tmp = open(script_tmp, "w")
 tmp.print "print $zzz\n";
 tmp.close
 
-test_ok(`#{RUBY} -s #{script_tmp} -zzz` == 'true')
-test_ok(`#{RUBY} -s #{script_tmp} -zzz=555` == '555')
+test_ok(`./miniruby -s #{script_tmp} -zzz` == 'true')
+test_ok(`./miniruby -s #{script_tmp} -zzz=555` == '555')
 
 tmp = open(script_tmp, "w")
 tmp.print "#! /usr/local/bin/ruby -s\n";
 tmp.print "print $zzz\n";
 tmp.close
 
-tagged # test_ok(`#{RUBY} #{script_tmp} -zzz=678` == '678')
+test_ok(`./miniruby #{script_tmp} -zzz=678` == '678')
 
 tmp = open(script_tmp, "w")
 tmp.print "this is a leading junk\n";
@@ -2005,8 +1989,8 @@ tmp.print "__END__\n";
 tmp.print "this is a trailing junk\n";
 tmp.close
 
-test_ok(`#{RUBY} -x #{script_tmp}` == '')
-tagged # test_ok(`#{RUBY} -x #{script_tmp} -zzz=555` == '555')
+test_ok(`./miniruby -x #{script_tmp}` == '')
+test_ok(`./miniruby -x #{script_tmp} -zzz=555` == '555')
 
 tmp = open(script_tmp, "w")
 for i in 1..5
@@ -2014,7 +1998,7 @@ for i in 1..5
 end
 tmp.close
 
-`#{RUBY} -i.bak -pe '$_.sub!(/^[0-9]+$/){$&.to_i * 5}' #{script_tmp}`
+`./miniruby -i.bak -pe '$_.sub!(/^[0-9]+$/){$&.to_i * 5}' #{script_tmp}`
 done = true
 tmp = open(script_tmp, "r")
 while tmp.gets
@@ -2024,10 +2008,10 @@ while tmp.gets
   end
 end
 tmp.close
-tagged # test_ok(done)
+test_ok(done)
 
-File.unlink script_tmp or `/bin/rm -f "#{script_tmp}"` if File.exist?(script_tmp)
-File.unlink "#{script_tmp}.bak" or `/bin/rm -f "#{script_tmp}.bak"` if File.exist?("#{script_tmp}.bak")
+File.unlink script_tmp or `/bin/rm -f "#{script_tmp}"`
+File.unlink "#{script_tmp}.bak" or `/bin/rm -f "#{script_tmp}.bak"`
 end # not /wasi/ =~ RUBY_PLATFORM
 
 test_check "const"
@@ -2144,13 +2128,12 @@ test_check "variable"
 test_ok($$.instance_of?(Integer))
 
 # read-only variable
-tagged
-# begin
-#   $$ = 5
-#   test_ok false
-# rescue NameError
-#   test_ok true
-# end
+begin
+  $$ = 5
+  test_ok false
+rescue NameError
+  test_ok true
+end
 
 foobar = "foobar"
 $_ = foobar
@@ -2193,16 +2176,15 @@ test_ok(Gods.ruler2 == "Cronus")
 test_ok(Titans.ruler1 == "Cronus")
 test_ok(Titans.ruler2 == "Cronus")
 atlas = Titans.new
-tagged # test_ok(atlas.ruler0 == "Cronus")
+test_ok(atlas.ruler0 == "Cronus")
 test_ok(atlas.ruler3 == "Zeus")
-tagged
-# begin
-#   atlas.ruler4
-# rescue RuntimeError => e
-#   test_ok(e.message.include?("class variable @@rule of Olympians is overtaken by Gods"))
-# else
-#   test_ok(false)
-# end
+begin
+  atlas.ruler4
+rescue RuntimeError => e
+  test_ok(e.message.include?("class variable @@rule of Olympians is overtaken by Gods"))
+else
+  test_ok(false)
+end
 test_ok(atlas.ruler3 == "Zeus")
 
 test_check "trace"
@@ -2210,7 +2192,7 @@ $x = 1234
 $y = 0
 trace_var :$x, Proc.new{$y = $x}
 $x = 40414
-tagged # test_ok($y == $x)
+test_ok($y == $x)
 
 untrace_var :$x
 $x = 19660208
@@ -2218,7 +2200,7 @@ test_ok($y != $x)
 
 trace_var :$x, Proc.new{$x *= 2}
 $x = 5
-tagged # test_ok($x == 10)
+test_ok($x == 10)
 
 untrace_var :$x
 
@@ -2331,8 +2313,8 @@ if dosish
   test_ok(File.expand_path("/", "z:/sub") == "z:/")
   test_ok(File.expand_path("/dir", "z:/sub") == "z:/dir")
 end
-tagged # test_ok(File.expand_path(".", "//") == "//")
-tagged # test_ok(File.expand_path("sub", "//") == "//sub")
+test_ok(File.expand_path(".", "//") == "//")
+test_ok(File.expand_path("sub", "//") == "//sub")
 
 # test_check "Proc#binding"
 ObjectSpace.each_object(Proc){|o|
@@ -2379,7 +2361,7 @@ test_ok true   # reach here or dumps core
 
 PROGRESS.finish
 if $failed > 0
-  printf "not ok/test: %d, failed %d, tagged %d\n", $ntest, $failed, $tagged
+  printf "not ok/test: %d failed %d\n", $ntest, $failed
 else
   printf "end of test(test: %d)\n", $ntest
 end

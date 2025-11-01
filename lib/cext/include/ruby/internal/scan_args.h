@@ -75,7 +75,7 @@
  * Pass keywords if current method is called with keywords, useful for argument
  * delegation
  */
-#define RB_PASS_CALLED_KEYWORDS rb_keyword_given_p()
+#define RB_PASS_CALLED_KEYWORDS !!rb_keyword_given_p()
 
 /** @} */
 
@@ -188,8 +188,6 @@ void rb_scan_args_length_mismatch(const char*,int);
 RBIMPL_SYMBOL_EXPORT_END()
 
 /** @cond INTERNAL_MACRO */
-
-#ifndef TRUFFLERUBY
 
 /* If we could use constexpr the following macros could be inline functions
  * ... but sadly we cannot. */
@@ -532,6 +530,5 @@ rb_scan_args_set(int kw_flag, int argc, const VALUE *argv,
             ((VALUE*[]){__VA_ARGS__})),                       \
         (rb_scan_args_kw)(kw_flag, argc, argvp, fmt, __VA_ARGS__ /**/))
 #endif
-#endif // TRUFFLERUBY
 
 #endif /* RBIMPL_SCAN_ARGS_H */

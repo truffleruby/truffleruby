@@ -29,29 +29,27 @@ class Reline::ANSI < Reline::IO
     'H' => [:ed_move_to_beg, {}],
   }
 
-  if Reline::Terminfo.enabled?
-    Reline::Terminfo.setupterm(0, 2)
-  end
+  attr_writer :input, :output
 
   def initialize
     @input = STDIN
     @output = STDOUT
     @buf = []
+    @output_buffer = nil
     @old_winch_handler = nil
   end
 
   def encoding
+    @input.external_encoding || Encoding.default_external
+  rescue IOError
+    # STDIN.external_encoding raises IOError in Ruby <= 3.0 when STDIN is closed
     Encoding.default_external
   end
 
-  def set_default_key_bindings(config, allow_terminfo: true)
+  def set_default_key_bindings(config)
     set_bracketed_paste_key_bindings(config)
     set_default_key_bindings_ansi_cursor(config)
-    if allow_terminfo && Reline::Terminfo.enabled?
-      set_default_key_bindings_terminfo(config)
-    else
-      set_default_key_bindings_comprehensive_list(config)
-    end
+    set_default_key_bindings_comprehensive_list(config)
     {
       [27, 91, 90] => :completion_journey_up, # S-Tab
     }.each_pair do |key, func|
@@ -75,7 +73,10 @@ class Reline::ANSI < Reline::IO
 
   def set_default_key_bindings_ansi_cursor(config)
     ANSI_CURSOR_KEY_BINDINGS.each do |char, (default_func, modifiers)|
-      bindings = [["\e[#{char}", default_func]] # CSI + char
+      bindings = [
+        ["\e[#{char}", default_func], # CSI + char
+        ["\eO#{char}", default_func] # SS3 + char, application cursor key mode
+      ]
       if modifiers[:ctrl]
         # CSI + ctrl_key_modifier + char
         bindings << ["\e[1;5#{char}", modifiers[:ctrl]]
@@ -95,23 +96,6 @@ class Reline::ANSI < Reline::IO
     end
   end
 
-  def set_default_key_bindings_terminfo(config)
-    key_bindings = CAPNAME_KEY_BINDINGS.map do |capname, key_binding|
-      begin
-        key_code = Reline::Terminfo.tigetstr(capname)
-        [ key_code.bytes, key_binding ]
-      rescue Reline::Terminfo::TerminfoError
-        # capname is undefined
-      end
-    end.compact.to_h
-
-    key_bindings.each_pair do |key, func|
-      config.add_default_key_binding_by_keymap(:emacs, key, func)
-      config.add_default_key_binding_by_keymap(:vi_insert, key, func)
-      config.add_default_key_binding_by_keymap(:vi_command, key, func)
-    end
-  end
-
   def set_default_key_bindings_comprehensive_list(config)
     {
       # xterm
@@ -123,40 +107,14 @@ class Reline::ANSI < Reline::IO
       [27, 91, 49, 126] => :ed_move_to_beg, # Home
       [27, 91, 52, 126] => :ed_move_to_end, # End
 
-      # KDE
-      # Del is 0x08
-      [27, 71, 65] => :ed_prev_history,     # ↑
-      [27, 71, 66] => :ed_next_history,     # ↓
-      [27, 71, 67] => :ed_next_char,        # →
-      [27, 71, 68] => :ed_prev_char,        # ←
-
       # urxvt / exoterm
       [27, 91, 55, 126] => :ed_move_to_beg, # Home
       [27, 91, 56, 126] => :ed_move_to_end, # End
-
-      # GNOME
-      [27, 79, 72] => :ed_move_to_beg,      # Home
-      [27, 79, 70] => :ed_move_to_end,      # End
-      # Del is 0x08
-      # Arrow keys are the same of KDE
-
-      [27, 79, 65] => :ed_prev_history,     # ↑
-      [27, 79, 66] => :ed_next_history,     # ↓
-      [27, 79, 67] => :ed_next_char,        # →
-      [27, 79, 68] => :ed_prev_char,        # ←
     }.each_pair do |key, func|
       config.add_default_key_binding_by_keymap(:emacs, key, func)
       config.add_default_key_binding_by_keymap(:vi_insert, key, func)
       config.add_default_key_binding_by_keymap(:vi_command, key, func)
     end
-  end
-
-  def input=(val)
-    @input = val
-  end
-
-  def output=(val)
-    @output = val
   end
 
   def with_raw_input
@@ -245,52 +203,59 @@ class Reline::ANSI < Reline::IO
     self
   end
 
-  def cursor_pos
-    if both_tty?
-      res = +''
-      m = nil
-      @input.raw do |stdin|
-        @output << "\e[6n"
-        @output.flush
-        loop do
-          c = stdin.getc
-          next if c.nil?
-          res << c
-          m = res.match(/\e\[(?<row>\d+);(?<column>\d+)R/)
-          break if m
-        end
-        (m.pre_match + m.post_match).chars.reverse_each do |ch|
-          stdin.ungetc ch
+  private def cursor_pos_internal(timeout:)
+    match = nil
+    @input.raw do |stdin|
+      @output << "\e[6n"
+      @output.flush
+      timeout_at = Time.now + timeout
+      buf = +''
+      while (wait = timeout_at - Time.now) > 0 && stdin.wait_readable(wait)
+        buf << stdin.readpartial(1024)
+        if (match = buf.match(/\e\[(?<row>\d+);(?<column>\d+)R/))
+          buf = match.pre_match + match.post_match
+          break
         end
       end
-      column = m[:column].to_i - 1
-      row = m[:row].to_i - 1
-    else
-      begin
-        buf = @output.pread(@output.pos, 0)
-        row = buf.count("\n")
-        column = buf.rindex("\n") ? (buf.size - buf.rindex("\n")) - 1 : 0
-      rescue Errno::ESPIPE, IOError
-        # Just returns column 1 for ambiguous width because this I/O is not
-        # tty and can't seek.
-        row = 0
-        column = 1
+      buf.chars.reverse_each do |ch|
+        stdin.ungetc ch
       end
     end
-    Reline::CursorPos.new(column, row)
+    [match[:column].to_i - 1, match[:row].to_i - 1] if match
+  end
+
+  def cursor_pos
+    col, row = cursor_pos_internal(timeout: 0.5) if both_tty?
+    Reline::CursorPos.new(col || 0, row || 0)
   end
 
   def both_tty?
     @input.tty? && @output.tty?
   end
 
+  def write(string)
+    if @output_buffer
+      @output_buffer << string
+    else
+      @output.write(string)
+    end
+  end
+
+  def buffered_output
+    @output_buffer = +''
+    yield
+    @output.write(@output_buffer)
+  ensure
+    @output_buffer = nil
+  end
+
   def move_cursor_column(x)
-    @output.write "\e[#{x + 1}G"
+    write "\e[#{x + 1}G"
   end
 
   def move_cursor_up(x)
     if x > 0
-      @output.write "\e[#{x}A"
+      write "\e[#{x}A"
     elsif x < 0
       move_cursor_down(-x)
     end
@@ -298,38 +263,22 @@ class Reline::ANSI < Reline::IO
 
   def move_cursor_down(x)
     if x > 0
-      @output.write "\e[#{x}B"
+      write "\e[#{x}B"
     elsif x < 0
       move_cursor_up(-x)
     end
   end
 
   def hide_cursor
-    seq = "\e[?25l"
-    if Reline::Terminfo.enabled? && Reline::Terminfo.term_supported?
-      begin
-        seq = Reline::Terminfo.tigetstr('civis')
-      rescue Reline::Terminfo::TerminfoError
-        # civis is undefined
-      end
-    end
-    @output.write seq
+    write "\e[?25l"
   end
 
   def show_cursor
-    seq = "\e[?25h"
-    if Reline::Terminfo.enabled? && Reline::Terminfo.term_supported?
-      begin
-        seq = Reline::Terminfo.tigetstr('cnorm')
-      rescue Reline::Terminfo::TerminfoError
-        # cnorm is undefined
-      end
-    end
-    @output.write seq
+    write "\e[?25h"
   end
 
   def erase_after_cursor
-    @output.write "\e[K"
+    write "\e[K"
   end
 
   # This only works when the cursor is at the bottom of the scroll range
@@ -337,20 +286,24 @@ class Reline::ANSI < Reline::IO
   def scroll_down(x)
     return if x.zero?
     # We use `\n` instead of CSI + S because CSI + S would cause https://github.com/ruby/reline/issues/576
-    @output.write "\n" * x
+    write "\n" * x
   end
 
   def clear_screen
-    @output.write "\e[2J"
-    @output.write "\e[1;1H"
+    write "\e[2J"
+    write "\e[1;1H"
   end
 
   def set_winch_handler(&handler)
-    @old_winch_handler = Signal.trap('WINCH', &handler)
-    @old_cont_handler = Signal.trap('CONT') do
+    @old_winch_handler = Signal.trap('WINCH') do |arg|
+      handler.call
+      @old_winch_handler.call(arg) if @old_winch_handler.respond_to?(:call)
+    end
+    @old_cont_handler = Signal.trap('CONT') do |arg|
       @input.raw!(intr: true) if @input.tty?
       # Rerender the screen. Note that screen size might be changed while suspended.
       handler.call
+      @old_cont_handler.call(arg) if @old_cont_handler.respond_to?(:call)
     end
   rescue ArgumentError
     # Signal.trap may raise an ArgumentError if the platform doesn't support the signal.
@@ -358,14 +311,14 @@ class Reline::ANSI < Reline::IO
 
   def prep
     # Enable bracketed paste
-    @output.write "\e[?2004h" if Reline.core.config.enable_bracketed_paste && both_tty?
+    write "\e[?2004h" if Reline.core.config.enable_bracketed_paste && both_tty?
     retrieve_keybuffer
     nil
   end
 
   def deprep(otio)
     # Disable bracketed paste
-    @output.write "\e[?2004l" if Reline.core.config.enable_bracketed_paste && both_tty?
+    write "\e[?2004l" if Reline.core.config.enable_bracketed_paste && both_tty?
     Signal.trap('WINCH', @old_winch_handler) if @old_winch_handler
     Signal.trap('CONT', @old_cont_handler) if @old_cont_handler
   end

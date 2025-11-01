@@ -316,6 +316,7 @@ class TestClass < Test::Unit::TestCase
 
   def test_invalid_return_from_class_definition
     assert_syntax_error("class C; return; end", /Invalid return/)
+    assert_syntax_error("class << Object; return; end", /Invalid return/)
   end
 
   def test_invalid_yield_from_class_definition
@@ -720,9 +721,13 @@ class TestClass < Test::Unit::TestCase
 
     assert_separately([], "#{<<~"begin;"}\n#{<<~"end;"}")
     begin;
-      Date = (class C\u{1f5ff}; self; end).new
+      module Bug
+        module Class
+          TestClassDefinedInC = (class C\u{1f5ff}; self; end).new
+        end
+      end
       assert_raise_with_message(TypeError, /C\u{1f5ff}/) {
-        require 'date'
+        require '-test-/class'
       }
     end;
   end
@@ -789,15 +794,15 @@ class TestClass < Test::Unit::TestCase
       c.attached_object
     end
 
-    assert_raise_with_message(TypeError, /`NilClass' is not a singleton class/) do
+    assert_raise_with_message(TypeError, /'NilClass' is not a singleton class/) do
       nil.singleton_class.attached_object
     end
 
-    assert_raise_with_message(TypeError, /`FalseClass' is not a singleton class/) do
+    assert_raise_with_message(TypeError, /'FalseClass' is not a singleton class/) do
       false.singleton_class.attached_object
     end
 
-    assert_raise_with_message(TypeError, /`TrueClass' is not a singleton class/) do
+    assert_raise_with_message(TypeError, /'TrueClass' is not a singleton class/) do
       true.singleton_class.attached_object
     end
   end

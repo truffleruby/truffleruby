@@ -12,7 +12,5 @@ Init_yield(VALUE klass)
 {
     VALUE yield = rb_define_module_under(klass, "Yield");
 
-#ifndef TRUFFLERUBY // rb_yield_block undefined
     rb_define_method(yield, "yield_block", yield_block, -1);
-#endif
 }

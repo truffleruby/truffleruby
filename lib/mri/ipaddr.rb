@@ -40,7 +40,7 @@ require 'socket'
 #   p ipaddr3                   #=> #<IPAddr: IPv4:192.168.2.0/255.255.255.0>
 
 class IPAddr
-  VERSION = "1.2.6"
+  VERSION = "1.2.7"
 
   # 32 bit mask for IPv4
   IN4MASK = 0xffffffff
@@ -52,7 +52,7 @@ class IPAddr
   # Regexp _internally_ used for parsing IPv4 address.
   RE_IPV4ADDRLIKE = %r{
     \A
-    (\d+) \. (\d+) \. (\d+) \. (\d+)
+    \d+ \. \d+ \. \d+ \. \d+
     \z
   }x
 
@@ -110,8 +110,13 @@ class IPAddr
 
   # Convert a network byte ordered string form of an IP address into
   # human readable form.
+  # It expects the string to be encoded in Encoding::ASCII_8BIT (BINARY).
   def self.ntop(addr)
-    case addr.size
+    if addr.is_a?(String) && addr.encoding != Encoding::BINARY
+      raise InvalidAddressError, "invalid encoding (given #{addr.encoding}, expected BINARY)"
+    end
+
+    case addr.bytesize
     when 4
       addr.unpack('C4').join('.')
     when 16
@@ -222,6 +227,28 @@ class IPAddr
     return str
   end
 
+  # Returns a string containing the IP address representation with prefix.
+  def as_json(*)
+    if ipv4? && prefix == 32
+      to_s
+    elsif ipv6? && prefix == 128
+      to_s
+    else
+      cidr
+    end
+  end
+
+  # Returns a json string containing the IP address representation.
+  def to_json(*a)
+    %Q{"#{as_json(*a)}"}
+  end
+
+  # Returns a string containing the IP address representation in
+  # cidr notation
+  def cidr
+    "#{to_s}/#{prefix}"
+  end
+
   # Returns a network byte ordered string form of the IP address.
   def hton
     case @family
@@ -247,12 +274,17 @@ class IPAddr
   end
 
   # Returns true if the ipaddr is a loopback address.
+  # Loopback IPv4 addresses in the IPv4-mapped IPv6
+  # address range are also considered as loopback addresses.
   def loopback?
     case @family
     when Socket::AF_INET
-      @addr & 0xff000000 == 0x7f000000
+      @addr & 0xff000000 == 0x7f000000 # 127.0.0.1/8
     when Socket::AF_INET6
-      @addr == 1
+      @addr == 1 || # ::1
+        (@addr & 0xffff_0000_0000 == 0xffff_0000_0000 && (
+          @addr & 0xff000000 == 0x7f000000 # ::ffff:127.0.0.1/8
+        ))
     else
       raise AddressFamilyError, "unsupported address family"
     end
@@ -282,15 +314,19 @@ class IPAddr
   end
 
   # Returns true if the ipaddr is a link-local address.  IPv4
-  # addresses in 169.254.0.0/16 reserved by RFC 3927 and Link-Local
+  # addresses in 169.254.0.0/16 reserved by RFC 3927 and link-local
   # IPv6 Unicast Addresses in fe80::/10 reserved by RFC 4291 are
-  # considered link-local.
+  # considered link-local. Link-local IPv4 addresses in the
+  # IPv4-mapped IPv6 address range are also considered link-local.
   def link_local?
     case @family
     when Socket::AF_INET
       @addr & 0xffff0000 == 0xa9fe0000 # 169.254.0.0/16
     when Socket::AF_INET6
-      @addr & 0xffc0_0000_0000_0000_0000_0000_0000_0000 == 0xfe80_0000_0000_0000_0000_0000_0000_0000
+      @addr & 0xffc0_0000_0000_0000_0000_0000_0000_0000 == 0xfe80_0000_0000_0000_0000_0000_0000_0000 || # fe80::/10
+        (@addr & 0xffff_0000_0000 == 0xffff_0000_0000 && (
+          @addr & 0xffff0000 == 0xa9fe0000 # ::ffff:169.254.0.0/16
+        ))
     else
       raise AddressFamilyError, "unsupported address family"
     end
@@ -432,7 +468,7 @@ class IPAddr
     when Integer
       mask!(prefix)
     else
-      raise InvalidPrefixError, "prefix must be an integer: #{@addr}"
+      raise InvalidPrefixError, "prefix must be an integer"
     end
   end
 
@@ -455,6 +491,20 @@ class IPAddr
   # Returns the netmask in string format e.g. 255.255.0.0
   def netmask
     _to_string(@mask_addr)
+  end
+
+  # Returns the wildcard mask in string format e.g. 0.0.255.255
+  def wildcard_mask
+    case @family
+    when Socket::AF_INET
+      mask = IN4MASK ^ @mask_addr
+    when Socket::AF_INET6
+      mask = IN6MASK ^ @mask_addr
+    else
+      raise AddressFamilyError, "unsupported address family"
+    end
+
+    _to_string(mask)
   end
 
   # Returns the IPv6 zone identifier, if present.
@@ -506,11 +556,11 @@ class IPAddr
     case family[0] ? family[0] : @family
     when Socket::AF_INET
       if addr < 0 || addr > IN4MASK
-        raise InvalidAddressError, "invalid address: #{@addr}"
+        raise InvalidAddressError, "invalid address: #{addr}"
       end
     when Socket::AF_INET6
       if addr < 0 || addr > IN6MASK
-        raise InvalidAddressError, "invalid address: #{@addr}"
+        raise InvalidAddressError, "invalid address: #{addr}"
       end
     else
       raise AddressFamilyError, "unsupported address family"
@@ -537,12 +587,12 @@ class IPAddr
       else
         m = IPAddr.new(mask)
         if m.family != @family
-          raise InvalidPrefixError, "address family is not same: #{@addr}"
+          raise InvalidPrefixError, "address family is not same"
         end
         @mask_addr = m.to_i
         n = @mask_addr ^ m.instance_variable_get(:@mask_addr)
         unless ((n + 1) & n).zero?
-          raise InvalidPrefixError, "invalid mask #{mask}: #{@addr}"
+          raise InvalidPrefixError, "invalid mask #{mask}"
         end
         @addr &= @mask_addr
         return self
@@ -553,13 +603,13 @@ class IPAddr
     case @family
     when Socket::AF_INET
       if prefixlen < 0 || prefixlen > 32
-        raise InvalidPrefixError, "invalid length: #{@addr}"
+        raise InvalidPrefixError, "invalid length"
       end
       masklen = 32 - prefixlen
       @mask_addr = ((IN4MASK >> masklen) << masklen)
     when Socket::AF_INET6
       if prefixlen < 0 || prefixlen > 128
-        raise InvalidPrefixError, "invalid length: #{@addr}"
+        raise InvalidPrefixError, "invalid length"
       end
       masklen = 128 - prefixlen
       @mask_addr = ((IN6MASK >> masklen) << masklen)
@@ -655,12 +705,12 @@ class IPAddr
     when Array
       octets = addr
     else
-      m = RE_IPV4ADDRLIKE.match(addr) or return nil
-      octets = m.captures
+      RE_IPV4ADDRLIKE.match?(addr) or return nil
+      octets = addr.split('.')
     end
     octets.inject(0) { |i, s|
       (n = s.to_i) < 256 or raise InvalidAddressError, "invalid address: #{@addr}"
-      s.match(/\A0./) and raise InvalidAddressError, "zero-filled number in IPv4 address is ambiguous: #{@addr}"
+      (s != '0') && s.start_with?('0') and raise InvalidAddressError, "zero-filled number in IPv4 address is ambiguous: #{@addr}"
       i << 8 | n
     }
   end

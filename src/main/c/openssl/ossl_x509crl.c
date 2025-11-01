@@ -5,7 +5,7 @@
  */
 /*
  * This program is licensed under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 
@@ -27,8 +27,8 @@
 /*
  * Classes
  */
-VALUE cX509CRL;
-VALUE eX509CRLError;
+static VALUE cX509CRL;
+static VALUE eX509CRLError;
 
 static void
 ossl_x509crl_free(void *ptr)
@@ -350,7 +350,11 @@ ossl_x509crl_sign(VALUE self, VALUE key, VALUE digest)
 
     GetX509CRL(self, crl);
     pkey = GetPrivPKeyPtr(key); /* NO NEED TO DUP */
-    md = ossl_evp_get_digestbyname(digest);
+    if (NIL_P(digest)) {
+	md = NULL; /* needed for some key types, e.g. Ed25519 */
+    } else {
+	md = ossl_evp_get_digestbyname(digest);
+    }
     if (!X509_CRL_sign(crl, pkey, md)) {
 	ossl_raise(eX509CRLError, NULL);
     }

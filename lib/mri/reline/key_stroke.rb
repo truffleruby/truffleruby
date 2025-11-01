@@ -3,8 +3,11 @@ class Reline::KeyStroke
   CSI_PARAMETER_BYTES_RANGE = 0x30..0x3f
   CSI_INTERMEDIATE_BYTES_RANGE = (0x20..0x2f)
 
-  def initialize(config)
+  attr_accessor :encoding
+
+  def initialize(config, encoding)
     @config = config
+    @encoding = encoding
   end
 
   # Input exactly matches to a key sequence
@@ -19,11 +22,6 @@ class Reline::KeyStroke
   def match_status(input)
     matching = key_mapping.matching?(input)
     matched = key_mapping.get(input)
-
-    # FIXME: Workaround for single byte. remove this after MAPPING is merged into KeyActor.
-    matched ||= input.size == 1
-    matching ||= input == [ESC_BYTE]
-
     if matching && matched
       MATCHING_MATCHED
     elsif matching
@@ -32,10 +30,14 @@ class Reline::KeyStroke
       MATCHED
     elsif input[0] == ESC_BYTE
       match_unknown_escape_sequence(input, vi_mode: @config.editing_mode_is?(:vi_insert, :vi_command))
-    elsif input.size == 1
-      MATCHED
     else
-      UNMATCHED
+      s = input.pack('c*').force_encoding(@encoding)
+      if s.valid_encoding?
+        s.size == 1 ? MATCHED : UNMATCHED
+      else
+        # Invalid string is MATCHING (part of valid string) or MATCHED (invalid bytes to be ignored)
+        MATCHING_MATCHED
+      end
     end
   end
 
@@ -45,20 +47,28 @@ class Reline::KeyStroke
       bytes = input.take(i)
       status = match_status(bytes)
       matched_bytes = bytes if status == MATCHED || status == MATCHING_MATCHED
+      break if status == MATCHED || status == UNMATCHED
     end
     return [[], []] unless matched_bytes
 
     func = key_mapping.get(matched_bytes)
+    s = matched_bytes.pack('c*').force_encoding(@encoding)
     if func.is_a?(Array)
-      keys = func.map { |c| Reline::Key.new(c, c, false) }
+      # Perform simple macro expansion for single byte key bindings.
+      # Multibyte key bindings and recursive macro expansion are not supported yet.
+      marco = func.pack('c*').force_encoding(@encoding)
+      keys = marco.chars.map do |c|
+        f = key_mapping.get(c.bytes)
+        Reline::Key.new(c, f.is_a?(Symbol) ? f : :ed_insert, false)
+      end
     elsif func
-      keys = [Reline::Key.new(func, func, false)]
-    elsif matched_bytes.size == 1
-      keys = [Reline::Key.new(matched_bytes.first, matched_bytes.first, false)]
-    elsif matched_bytes.size == 2 && matched_bytes[0] == ESC_BYTE
-      keys = [Reline::Key.new(matched_bytes[1], matched_bytes[1] | 0b10000000, true)]
+      keys = [Reline::Key.new(s, func, false)]
     else
-      keys = []
+      if s.valid_encoding? && s.size == 1
+        keys = [Reline::Key.new(s, :ed_insert, false)]
+      else
+        keys = []
+      end
     end
 
     [keys, input.drop(matched_bytes.size)]
