@@ -95,6 +95,16 @@ class TestISeq < Test::Unit::TestCase
     assert_equal(42, ISeq.load_from_binary(iseq.to_binary).eval)
   end
 
+  def test_forwardable
+    iseq = compile(<<~EOF, __LINE__+1)
+      Class.new {
+        def bar(a, b); a + b; end
+        def foo(...); bar(...); end
+      }
+    EOF
+    assert_equal(42, ISeq.load_from_binary(iseq.to_binary).eval.new.foo(40, 2))
+  end
+
   def test_super_with_block
     iseq = compile(<<~EOF, __LINE__+1)
       def (Object.new).touch(*) # :nodoc:
@@ -157,12 +167,12 @@ class TestISeq < Test::Unit::TestCase
     y = nil.instance_eval do
       eval("proc {#{name} = []; proc {|x| #{name}}}").call
     end
-    assert_raise_with_message(Ractor::IsolationError, /`#{name}'/) do
+    assert_raise_with_message(Ractor::IsolationError, /'#{name}'/) do
       Ractor.make_shareable(y)
     end
     obj = Object.new
     def obj.foo(*) nil.instance_eval{ ->{super} } end
-    assert_raise_with_message(Ractor::IsolationError, /refer unshareable object \[\] from variable `\*'/) do
+    assert_raise_with_message(Ractor::IsolationError, /refer unshareable object \[\] from variable '\*'/) do
       Ractor.make_shareable(obj.foo)
     end
   end
@@ -176,7 +186,7 @@ class TestISeq < Test::Unit::TestCase
   end
 
   def test_disasm_encoding
-    src = "\u{3042} = 1; \u{3042}; \u{3043}"
+    src = +"\u{3042} = 1; \u{3042}; \u{3043}"
     asm = compile(src).disasm
     assert_equal(src.encoding, asm.encoding)
     assert_predicate(asm, :valid_encoding?)
@@ -287,6 +297,56 @@ class TestISeq < Test::Unit::TestCase
     assert_raise(TypeError, bug11159) {compile(1)}
   end
 
+  def test_invalid_source_no_memory_leak
+    # [Bug #21394]
+    assert_no_memory_leak(["-rtempfile"], "#{<<-"begin;"}", "#{<<-'end;'}", rss: true)
+      code = proc do |t|
+        RubyVM::InstructionSequence.new(nil)
+      rescue TypeError
+      else
+        raise "TypeError was not raised during RubyVM::InstructionSequence.new"
+      end
+
+      10.times(&code)
+    begin;
+      1_000_000.times(&code)
+    end;
+
+    # [Bug #21394]
+    # RubyVM::InstructionSequence.new calls rb_io_path, which dups the string
+    # and can leak memory if the dup raises
+    assert_no_memory_leak(["-rtempfile"], "#{<<-"begin;"}", "#{<<-'end;'}", rss: true)
+      MyError = Class.new(StandardError)
+      String.prepend(Module.new do
+        def initialize_dup(_)
+          if $raise_on_dup
+            raise MyError
+          else
+            super
+          end
+        end
+      end)
+
+      code = proc do |t|
+        Tempfile.create do |f|
+          $raise_on_dup = true
+          t.times do
+            RubyVM::InstructionSequence.new(f)
+          rescue MyError
+          else
+            raise "MyError was not raised during RubyVM::InstructionSequence.new"
+          end
+        ensure
+          $raise_on_dup = false
+        end
+      end
+
+      code.call(100)
+    begin;
+      code.call(1_000_000)
+    end;
+  end
+
   def test_frozen_string_literal_compile_option
     $f = 'f'
     line = __LINE__ + 2
@@ -355,11 +415,17 @@ class TestISeq < Test::Unit::TestCase
       end
     end
     assert_equal([m1, e1.message], [m2, e2.message], feature11951)
-    message = e1.message.each_line
-    message.with_index(1) do |line, i|
-      next if /^ / =~ line
-      assert_send([line, :start_with?, __FILE__],
-                  proc {message.map {|l, j| (i == j ? ">" : " ") + l}.join("")})
+
+    if e1.message.lines[0] == "#{__FILE__}:#{line}: syntax errors found\n"
+      # Prism lays out the error messages in line with the source, so the
+      # following assertions do not make sense in that context.
+    else
+      message = e1.message.each_line
+      message.with_index(1) do |line, i|
+        next if /^ / =~ line
+        assert_send([line, :start_with?, __FILE__],
+                    proc {message.map {|l, j| (i == j ? ">" : " ") + l}.join("")})
+      end
     end
   end
 
@@ -375,7 +441,7 @@ class TestISeq < Test::Unit::TestCase
       f.puts "end"
       f.close
       path = f.path
-      assert_in_out_err(%W[- #{path}], "#{<<-"begin;"}\n#{<<-"end;"}", /unexpected `end'/, [], success: true)
+      assert_in_out_err(%W[- #{path}], "#{<<-"begin;"}\n#{<<-"end;"}", /unexpected 'end'/, [], success: true)
       begin;
         path = ARGV[0]
         begin
@@ -471,7 +537,7 @@ class TestISeq < Test::Unit::TestCase
                   ["<class:C>@1",
                     ["bar@10", ["block in bar@11",
                             ["block (2 levels) in bar@12"]]],
-                    ["foo@2", ["ensure in foo@2"],
+                    ["foo@2", ["ensure in foo@7"],
                               ["rescue in foo@4"]]],
                   ["<class:D>@17"]]
 
@@ -504,7 +570,7 @@ class TestISeq < Test::Unit::TestCase
                                   [4, :line],
                                   [7, :line],
                                   [9, :return]]],
-                       [["ensure in foo@2", [[7, :line]]]],
+                       [["ensure in foo@7", [[7, :line]]]],
                        [["rescue in foo@4", [[5, :line],
                                              [5, :rescue]]]]]],
                    [["<class:D>@17", [[17, :class],
@@ -572,6 +638,23 @@ class TestISeq < Test::Unit::TestCase
       assert_nil(iseq2.script_lines)
     end
     iseq2
+  end
+
+  def test_to_binary_with_hidden_local_variables
+    assert_iseq_to_binary("for _foo in bar; end")
+
+    bin = RubyVM::InstructionSequence.compile(<<-RUBY).to_binary
+      Object.new.instance_eval do
+        a = []
+        def self.bar; [1] end
+        for foo in bar
+          a << (foo * 2)
+        end
+        a
+      end
+    RUBY
+    v = RubyVM::InstructionSequence.load_from_binary(bin).eval
+    assert_equal([2], v)
   end
 
   def test_to_binary_with_objects
@@ -693,18 +776,24 @@ class TestISeq < Test::Unit::TestCase
   end
 
   def test_iseq_of
-    [proc{},
-     method(:test_iseq_of),
-     RubyVM::InstructionSequence.compile("p 1", __FILE__)].each{|src|
+    [
+      proc{},
+      method(:test_iseq_of),
+      RubyVM::InstructionSequence.compile("p 1", __FILE__),
+      begin; raise "error"; rescue => error; error.backtrace_locations[0]; end
+    ].each{|src|
       iseq = RubyVM::InstructionSequence.of(src)
       assert_equal __FILE__, iseq.path
     }
   end
 
   def test_iseq_of_twice_for_same_code
-    [proc{},
-     method(:test_iseq_of_twice_for_same_code),
-     RubyVM::InstructionSequence.compile("p 1")].each{|src|
+    [
+      proc{},
+      method(:test_iseq_of_twice_for_same_code),
+      RubyVM::InstructionSequence.compile("p 1"),
+      begin; raise "error"; rescue => error; error.backtrace_locations[0]; end
+    ].each{|src|
       iseq1 = RubyVM::InstructionSequence.of(src)
       iseq2 = RubyVM::InstructionSequence.of(src)
 
@@ -816,6 +905,25 @@ class TestISeq < Test::Unit::TestCase
     end
   end
 
+  def test_serialize_anonymous_outer_variables
+    iseq = RubyVM::InstructionSequence.compile(<<~'RUBY')
+      obj = Object.new
+      def obj.test
+        [1].each do
+          raise "Oops"
+        rescue
+          return it
+        end
+      end
+      obj
+    RUBY
+
+    binary = iseq.to_binary # [Bug # 21370]
+    roundtripped_iseq = RubyVM::InstructionSequence.load_from_binary(binary)
+    object = roundtripped_iseq.eval
+    assert_equal 1, object.test
+  end
+
   def test_loading_kwargs_memory_leak
     assert_no_memory_leak([], "#{<<~"begin;"}", "#{<<~'end;'}", rss: true)
     a = RubyVM::InstructionSequence.compile("foo(bar: :baz)").to_binary
@@ -835,12 +943,55 @@ class TestISeq < Test::Unit::TestCase
 
   def test_compile_prism_with_file
     Tempfile.create(%w"test_iseq .rb") do |f|
-      f.puts "name = 'Prism'; puts 'hello"
+      f.puts "_name = 'Prism'; puts 'hello'"
       f.close
 
-      assert_nothing_raised(SyntaxError) {
-        RubyVM::InstructionSequence.compile_prism(f.path)
-      }
+      assert_nothing_raised(TypeError) do
+        RubyVM::InstructionSequence.compile_prism(f)
+      end
+    end
+  end
+
+  def block_using_method
+    yield
+  end
+
+  def block_unused_method
+  end
+
+  def test_unused_param
+    a = RubyVM::InstructionSequence.of(method(:block_using_method)).to_a
+
+    assert_equal true, a.dig(11, :use_block)
+
+    b = RubyVM::InstructionSequence.of(method(:block_unused_method)).to_a
+    assert_equal nil, b.dig(11, :use_block)
+  end
+
+  def test_compile_prism_with_invalid_object_type
+    assert_raise(TypeError) do
+      RubyVM::InstructionSequence.compile_prism(Object.new)
+    end
+  end
+
+  def test_load_from_binary_only_accepts_string_param
+    assert_raise(TypeError) do
+      var_0 = 0
+      RubyVM::InstructionSequence.load_from_binary(var_0)
+    end
+  end
+
+  def test_while_in_until_condition
+    assert_in_out_err(["--dump=i", "-e", "until while 1; end; end"]) do |stdout, stderr, status|
+      assert_include(stdout.shift, "== disasm:")
+      assert_include(stdout.pop, "leave")
+      assert_predicate(status, :success?)
+    end
+  end
+
+  def test_compile_empty_under_gc_stress
+    EnvUtil.under_gc_stress do
+      RubyVM::InstructionSequence.compile_file(File::NULL)
     end
   end
 end

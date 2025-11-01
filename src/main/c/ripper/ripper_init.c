@@ -1,14 +1,13 @@
 #include "ruby/ruby.h"
 #include "ruby/encoding.h"
 #include "internal.h"
-#include "internal/imemo.h" /* needed by ruby_parser.h */
+#include "rubyparser.h"
+#define YYSTYPE_IS_DECLARED
+#include "parse.h"
 #include "internal/parse.h"
 #include "internal/ruby_parser.h"
 #include "node.h"
-#include "rubyparser.h"
 #include "eventids1.h"
-#define YYSTYPE_IS_DECLARED
-#include "parse.h"
 #include "eventids2.h"
 #include "ripper_init.h"
 
@@ -17,15 +16,40 @@
 
 ID id_warn, id_warning, id_gets, id_assoc;
 
+enum lex_type {
+    lex_type_str,
+    lex_type_io,
+    lex_type_generic,
+};
+
 struct ripper {
     rb_parser_t *p;
+    enum lex_type type;
+    union {
+       struct lex_pointer_string ptr_str;
+       VALUE val;
+    } data;
 };
 
 static void
 ripper_parser_mark2(void *ptr)
 {
     struct ripper *r = (struct ripper*)ptr;
-    if (r->p) ripper_parser_mark(r->p);
+    if (r->p) {
+        ripper_parser_mark(r->p);
+
+        switch (r->type) {
+          case lex_type_str:
+            rb_gc_mark(r->data.ptr_str.str);
+            break;
+          case lex_type_io:
+            rb_gc_mark(r->data.val);
+            break;
+          case lex_type_generic:
+            rb_gc_mark(r->data.val);
+            break;
+        }
+    }
 }
 
 static void
@@ -53,37 +77,18 @@ static const rb_data_type_t parser_data_type = {
     0, 0, RUBY_TYPED_FREE_IMMEDIATELY
 };
 
-ID
-ripper_get_id(VALUE v)
+static rb_parser_string_t *
+ripper_lex_get_generic(struct parser_params *p, rb_parser_input_data input, int line_count)
 {
-    NODE *nd;
-    if (!RB_TYPE_P(v, T_NODE)) return 0;
-    nd = (NODE *)v;
-    if (!nd_type_p(nd, NODE_RIPPER)) return 0;
-    return RNODE_RIPPER(nd)->nd_vid;
-}
-
-VALUE
-ripper_get_value(VALUE v)
-{
-    NODE *nd;
-    if (UNDEF_P(v)) return Qnil;
-    if (!RB_TYPE_P(v, T_NODE)) return v;
-    nd = (NODE *)v;
-    if (!nd_type_p(nd, NODE_RIPPER)) return Qnil;
-    return RNODE_RIPPER(nd)->nd_rval;
-}
-
-static VALUE
-ripper_lex_get_generic(struct parser_params *p, VALUE src)
-{
+    VALUE src = (VALUE)input;
     VALUE line = rb_funcallv_public(src, id_gets, 0, 0);
-    if (!NIL_P(line) && !RB_TYPE_P(line, T_STRING)) {
+    if (NIL_P(line)) return 0;
+    if (!RB_TYPE_P(line, T_STRING)) {
         rb_raise(rb_eTypeError,
                  "gets returned %"PRIsVALUE" (expected String or nil)",
                  rb_obj_class(line));
     }
-    return line;
+    return rb_str_to_parser_string(p, line);
 }
 
 void
@@ -99,10 +104,19 @@ ripper_compile_error(struct parser_params *p, const char *fmt, ...)
     ripper_error(p);
 }
 
-static VALUE
-ripper_lex_io_get(struct parser_params *p, VALUE src)
+static rb_parser_string_t *
+ripper_lex_io_get(struct parser_params *p, rb_parser_input_data input, int line_count)
 {
-    return rb_io_gets(src);
+    VALUE src = (VALUE)input;
+    VALUE line = rb_io_gets(src);
+    if (NIL_P(line)) return 0;
+    return rb_str_to_parser_string(p, line);
+}
+
+static rb_parser_string_t *
+ripper_lex_get_str(struct parser_params *p, rb_parser_input_data input, int line_count)
+{
+    return rb_parser_lex_get_str(p, (struct lex_pointer_string *)input);
 }
 
 static VALUE
@@ -114,10 +128,8 @@ ripper_s_allocate(VALUE klass)
                                        &parser_data_type, r);
 
 #ifdef UNIVERSAL_PARSER
-    rb_parser_config_t *config;
-    config = rb_ruby_parser_config_new(ruby_xmalloc);
-    rb_parser_config_initialize(config);
-    r->p = rb_ruby_parser_allocate(config);
+    const rb_parser_config_t *config = rb_ruby_parser_config();
+    r->p = rb_ripper_parser_params_allocate(config);
 #else
     r->p = rb_ruby_ripper_parser_allocate();
 #endif
@@ -178,7 +190,7 @@ ripper_parser_encoding(VALUE vparser)
 {
     struct parser_params *p = ripper_parser_params(vparser, false);
 
-    return rb_ruby_parser_encoding(p);
+    return rb_enc_from_encoding(rb_ruby_parser_encoding(p));
 }
 
 /*
@@ -239,6 +251,18 @@ ripper_parser_set_debug_output(VALUE self, VALUE output)
     return output;
 }
 
+static int
+ripper_parser_dedent_string(struct parser_params *p, VALUE string, int width)
+{
+    int col;
+    rb_parser_string_t *str;
+    str = rb_str_to_parser_string(p, string);
+    col = rb_ruby_ripper_dedent_string(p, str, width);
+    rb_str_replace(string, rb_str_new_parser_string(str));
+    rb_parser_string_free(p, str);
+    return col;
+}
+
 #ifdef UNIVERSAL_PARSER
 struct dedent_string_arg {
     struct parser_params *p;
@@ -254,16 +278,16 @@ parser_dedent_string0(VALUE a)
 
     StringValue(arg->input);
     wid = NUM2UINT(arg->width);
-    col = rb_ruby_ripper_dedent_string(arg->p, arg->input, wid);
+    col = ripper_parser_dedent_string(arg->p, arg->input, wid);
     return INT2NUM(col);
 }
 
 static VALUE
-parser_config_free(VALUE a)
+parser_free(VALUE a)
 {
-    rb_parser_config_t *config = (void *)a;
+    struct parser_params *p = (void *)a;
 
-    rb_ruby_parser_config_free(config);
+    rb_ruby_parser_free(p);
     return Qnil;
 }
 #endif
@@ -282,17 +306,14 @@ static VALUE
 parser_dedent_string(VALUE self, VALUE input, VALUE width)
 {
     struct parser_params *p;
-    rb_parser_config_t *config;
     struct dedent_string_arg args;
 
-    config = rb_ruby_parser_config_new(ruby_xmalloc);
-    rb_parser_config_initialize(config);
-    p = rb_ruby_parser_new(config);
+    p = rb_parser_params_new();
 
     args.p = p;
     args.input = input;
     args.width = width;
-    return rb_ensure(parser_dedent_string0, (VALUE)&args, parser_config_free, (VALUE)config);
+    return rb_ensure(parser_dedent_string0, (VALUE)&args, parser_free, (VALUE)p);
 }
 #else
 static VALUE
@@ -302,7 +323,7 @@ parser_dedent_string(VALUE self, VALUE input, VALUE width)
 
     StringValue(input);
     wid = NUM2UINT(width);
-    col = rb_ruby_ripper_dedent_string(0, input, wid);
+    col = ripper_parser_dedent_string(0, input, wid);
     return INT2NUM(col);
 }
 #endif
@@ -320,26 +341,38 @@ parser_dedent_string(VALUE self, VALUE input, VALUE width)
 static VALUE
 ripper_initialize(int argc, VALUE *argv, VALUE self)
 {
+    struct ripper *r;
     struct parser_params *p;
     VALUE src, fname, lineno;
-    VALUE (*gets)(struct parser_params*,VALUE);
-    VALUE input, sourcefile_string;
+    rb_parser_lex_gets_func *gets;
+    VALUE sourcefile_string;
     const char *sourcefile;
     int sourceline;
+    rb_parser_input_data input;
 
     p = ripper_parser_params(self, false);
+    TypedData_Get_Struct(self, struct ripper, &parser_data_type, r);
     rb_scan_args(argc, argv, "12", &src, &fname, &lineno);
     if (RB_TYPE_P(src, T_FILE)) {
         gets = ripper_lex_io_get;
+        r->type = lex_type_io;
+        r->data.val = src;
+        input = (rb_parser_input_data)src;
     }
     else if (rb_respond_to(src, id_gets)) {
         gets = ripper_lex_get_generic;
+        r->type = lex_type_generic;
+        r->data.val = src;
+        input = (rb_parser_input_data)src;
     }
     else {
         StringValue(src);
-        gets = rb_ruby_ripper_lex_get_str;
+        gets = ripper_lex_get_str;
+        r->type = lex_type_str;
+        r->data.ptr_str.str = src;
+        r->data.ptr_str.ptr = 0;
+        input = (rb_parser_input_data)&r->data.ptr_str;
     }
-    input = src;
     if (NIL_P(fname)) {
         fname = STR_NEW2("(ripper)");
         OBJ_FREEZE(fname);
@@ -476,11 +509,13 @@ ripper_token(VALUE self)
 {
     struct parser_params *p = ripper_parser_params(self, true);
     long pos, len;
+    VALUE str;
 
     if (NIL_P(rb_ruby_parser_parsing_thread(p))) return Qnil;
     pos = rb_ruby_ripper_column(p);
     len = rb_ruby_ripper_token_len(p);
-    return rb_str_subseq(rb_ruby_ripper_lex_lastline(p), pos, len);
+    str = rb_str_new_parser_string(rb_ruby_ripper_lex_lastline(p));
+    return rb_str_subseq(str, pos, len);
 }
 
 #ifdef RIPPER_DEBUG
@@ -500,6 +535,37 @@ static VALUE
 ripper_raw_value(VALUE self, VALUE obj)
 {
     return ULONG2NUM(obj);
+}
+
+/* :nodoc: */
+static VALUE
+ripper_validate_object(VALUE self, VALUE x)
+{
+    if (x == Qfalse) return x;
+    if (x == Qtrue) return x;
+    if (NIL_P(x)) return x;
+    if (UNDEF_P(x))
+        rb_raise(rb_eArgError, "Qundef given");
+    if (FIXNUM_P(x)) return x;
+    if (SYMBOL_P(x)) return x;
+    switch (BUILTIN_TYPE(x)) {
+      case T_STRING:
+      case T_OBJECT:
+      case T_ARRAY:
+      case T_BIGNUM:
+      case T_FLOAT:
+      case T_COMPLEX:
+      case T_RATIONAL:
+        break;
+      default:
+        rb_raise(rb_eArgError, "wrong type of ruby object: %p (%s)",
+                 (void *)x, rb_obj_classname(x));
+    }
+    if (!RBASIC_CLASS(x)) {
+        rb_raise(rb_eArgError, "hidden ruby object: %p (%s)",
+                 (void *)x, rb_builtin_type_name(TYPE(x)));
+    }
+    return x;
 }
 #endif
 
@@ -529,17 +595,14 @@ static VALUE
 ripper_lex_state_name(VALUE self, VALUE state)
 {
     struct parser_params *p;
-    rb_parser_config_t *config;
     struct lex_state_name_arg args;
 
-    config = rb_ruby_parser_config_new(ruby_xmalloc);
-    rb_parser_config_initialize(config);
-    p = rb_ruby_parser_new(config);
+    p = rb_parser_params_new();
 
     args.p = p;
     args.state = state;
 
-    return rb_ensure(lex_state_name0, (VALUE)&args, parser_config_free, (VALUE)config);
+    return rb_ensure(lex_state_name0, (VALUE)&args, parser_free, (VALUE)p);
 }
 #else
 static VALUE
@@ -646,5 +709,4 @@ InitVM_ripper(void)
      */
     rb_define_global_const("SCRIPT_LINES__", Qnil);
 #endif
-
 }

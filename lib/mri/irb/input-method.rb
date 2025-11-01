@@ -67,7 +67,9 @@ module IRB
     #
     # See IO#gets for more information.
     def gets
-      puts if @stdout.tty? # workaround for debug compatibility test
+      # Workaround for debug compatibility test https://github.com/ruby/debug/pull/1100
+      puts if ENV['RUBY_DEBUG_TEST_UI']
+
       print @prompt
       line = @stdin.gets
       @line[@line_no += 1] = line
@@ -171,11 +173,13 @@ module IRB
   end
 
   class ReadlineInputMethod < StdioInputMethod
-    def self.initialize_readline
-      require "readline"
-    rescue LoadError
-    else
-      include ::Readline
+    class << self
+      def initialize_readline
+        require "readline"
+      rescue LoadError
+      else
+        include ::Readline
+      end
     end
 
     include HistorySavingAbility
@@ -263,18 +267,9 @@ module IRB
         @completion_params = [preposing, target, postposing, bind]
         @completor.completion_candidates(preposing, target, postposing, bind: bind)
       }
-      Reline.output_modifier_proc =
-        if IRB.conf[:USE_COLORIZE]
-          proc do |output, complete: |
-            next unless IRB::Color.colorable?
-            lvars = IRB.CurrentContext&.local_variables || []
-            IRB::Color.colorize_code(output, complete: complete, local_variables: lvars)
-          end
-        else
-          proc do |output|
-            Reline::Unicode.escape_for_print(output)
-          end
-        end
+      Reline.output_modifier_proc = proc do |input, complete:|
+        IRB.CurrentContext.colorize_input(input, complete: complete)
+      end
       Reline.dig_perfect_match_proc = ->(matched) { display_document(matched) }
       Reline.autocompletion = IRB.conf[:USE_AUTOCOMPLETE]
 
@@ -328,10 +323,11 @@ module IRB
       ->() {
         dialog.trap_key = nil
         alt_d = [
-          [Reline::Key.new(nil, 0xE4, true)], # Normal Alt+d.
           [27, 100], # Normal Alt+d when convert-meta isn't used.
-          [195, 164], # The "ä" that appears when Alt+d is pressed on xterm.
-          [226, 136, 130] # The "∂" that appears when Alt+d in pressed on iTerm2.
+          # When option/alt is not configured as a meta key in terminal emulator,
+          # option/alt + d will send a unicode character depend on OS keyboard setting.
+          [195, 164], # "ä" in somewhere (FIXME: environment information is unknown).
+          [226, 136, 130] # "∂" Alt+d on Mac keyboard.
         ]
 
         if just_cursor_moving and completion_journey_data.nil?
@@ -352,9 +348,15 @@ module IRB
           if show_easter_egg
             IRB.__send__(:easter_egg)
           else
+            # RDoc::RI::Driver#display_names uses pager command internally.
+            # Some pager command like `more` doesn't use alternate screen
+            # so we need to turn on and off alternate screen manually.
             begin
+              print "\e[?1049h"
               driver.display_names([name])
             rescue RDoc::RI::Driver::NotFoundError
+            ensure
+              print "\e[?1049l"
             end
           end
         end

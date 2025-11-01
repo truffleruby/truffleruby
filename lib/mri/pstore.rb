@@ -326,7 +326,7 @@ require "digest"
 #  end
 #
 class PStore
-  VERSION = "0.1.3"
+  VERSION = "0.1.4"
 
   RDWR_ACCESS = {mode: IO::RDWR | IO::CREAT | IO::BINARY, encoding: Encoding::ASCII_8BIT}.freeze
   RD_ACCESS = {mode: IO::RDONLY | IO::BINARY, encoding: Encoding::ASCII_8BIT}.freeze
@@ -437,7 +437,7 @@ class PStore
     in_transaction
     unless @table.key? key
       if default == PStore::Error
-        raise PStore::Error, format("undefined key `%s'", key)
+        raise PStore::Error, format("undefined key '%s'", key)
       else
         return default
       end

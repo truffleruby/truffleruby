@@ -7,7 +7,7 @@
 #
 # Example:
 #
-#  class TestRDocMarkupToNewTextFormat < RDoc::Markup::TextFormatterTestCase
+#  class RDocMarkupToNewTextFormatTest < RDoc::Markup::TextFormatterTestCase
 #
 #    add_visitor_tests
 #    add_text_tests
@@ -97,6 +97,23 @@ class RDoc::Markup::TextFormatterTestCase < RDoc::Markup::FormatterTestCase
         @to.accept_paragraph @RM::Paragraph.new(('words ' * 30).strip)
 
         accept_paragraph_wrap
+      end
+
+      ##
+      # Test case that calls <tt>@to.accept_table</tt>
+
+      def test_accept_table_align
+        header = ['AA', 'BB', 'CCCCC', 'DDDDD']
+        body = [
+          ['', 'bbb', 'c', ''],
+          ['aaaa', 'b', '', 'dd'],
+          ['a', '', 'cc', 'dd']
+        ]
+        aligns = [nil, :left, :right, :center]
+        @to.start_accepting
+        @to.accept_table header, body, aligns
+
+        accept_table_align
       end
 
       ##

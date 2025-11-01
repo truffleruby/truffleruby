@@ -7,8 +7,6 @@ rescue LoadError
 end
 
 class TestObjSpace < Test::Unit::TestCase
-  SOME_BASIC_OBJECT = BasicObject.new
-
   def test_memsize_of
     assert_equal(0, ObjectSpace.memsize_of(true))
     assert_equal(0, ObjectSpace.memsize_of(nil))
@@ -246,39 +244,38 @@ class TestObjSpace < Test::Unit::TestCase
 
   def test_trace_object_allocations_start_stop_clear
     ObjectSpace.trace_object_allocations_clear # clear object_table to get rid of erroneous detection for obj3
-    GC.disable # suppress potential object reuse. see [Bug #11271]
-    begin
-      ObjectSpace.trace_object_allocations_start
+    EnvUtil.without_gc do # suppress potential object reuse. see [Bug #11271]
       begin
         ObjectSpace.trace_object_allocations_start
         begin
           ObjectSpace.trace_object_allocations_start
-          obj0 = Object.new
+          begin
+            ObjectSpace.trace_object_allocations_start
+            obj0 = Object.new
+          ensure
+            ObjectSpace.trace_object_allocations_stop
+            obj1 = Object.new
+          end
         ensure
           ObjectSpace.trace_object_allocations_stop
-          obj1 = Object.new
+          obj2 = Object.new
         end
       ensure
         ObjectSpace.trace_object_allocations_stop
-        obj2 = Object.new
+        obj3 = Object.new
       end
-    ensure
-      ObjectSpace.trace_object_allocations_stop
-      obj3 = Object.new
+
+      assert_equal(__FILE__, ObjectSpace.allocation_sourcefile(obj0))
+      assert_equal(__FILE__, ObjectSpace.allocation_sourcefile(obj1))
+      assert_equal(__FILE__, ObjectSpace.allocation_sourcefile(obj2))
+      assert_equal(nil     , ObjectSpace.allocation_sourcefile(obj3)) # after tracing
+
+      ObjectSpace.trace_object_allocations_clear
+      assert_equal(nil, ObjectSpace.allocation_sourcefile(obj0))
+      assert_equal(nil, ObjectSpace.allocation_sourcefile(obj1))
+      assert_equal(nil, ObjectSpace.allocation_sourcefile(obj2))
+      assert_equal(nil, ObjectSpace.allocation_sourcefile(obj3))
     end
-
-    assert_equal(__FILE__, ObjectSpace.allocation_sourcefile(obj0))
-    assert_equal(__FILE__, ObjectSpace.allocation_sourcefile(obj1))
-    assert_equal(__FILE__, ObjectSpace.allocation_sourcefile(obj2))
-    assert_equal(nil     , ObjectSpace.allocation_sourcefile(obj3)) # after tracing
-
-    ObjectSpace.trace_object_allocations_clear
-    assert_equal(nil, ObjectSpace.allocation_sourcefile(obj0))
-    assert_equal(nil, ObjectSpace.allocation_sourcefile(obj1))
-    assert_equal(nil, ObjectSpace.allocation_sourcefile(obj2))
-    assert_equal(nil, ObjectSpace.allocation_sourcefile(obj3))
-  ensure
-    GC.enable
   end
 
   def test_trace_object_allocations_gc_stress
@@ -288,6 +285,47 @@ class TestObjSpace < Test::Unit::TestCase
       }
     end
     assert true # success
+  end
+
+  def test_trace_object_allocations_compaction
+    omit "compaction is not supported on this platform" unless GC.respond_to?(:compact)
+
+    assert_separately(%w(-robjspace), <<~RUBY)
+      ObjectSpace.trace_object_allocations do
+        objs = 100.times.map do
+          Object.new
+        end
+
+        assert_equal(__FILE__, ObjectSpace.allocation_sourcefile(objs[0]))
+
+        GC.verify_compaction_references(expand_heap: true, toward: :empty)
+
+        assert_equal(__FILE__, ObjectSpace.allocation_sourcefile(objs[0]))
+      end
+    RUBY
+  end
+
+  def test_trace_object_allocations_compaction_freed_pages
+    omit "compaction is not supported on this platform" unless GC.respond_to?(:compact)
+
+    assert_normal_exit(<<~RUBY)
+      require "objspace"
+
+      objs = []
+      ObjectSpace.trace_object_allocations do
+        1_000_000.times do
+          objs << Object.new
+        end
+      end
+
+      objs = nil
+
+      # Free pages that the objs were on
+      GC.start
+
+      # Run compaction and check that it doesn't crash
+      GC.compact
+    RUBY
   end
 
   def test_dump_flags
@@ -418,7 +456,7 @@ class TestObjSpace < Test::Unit::TestCase
     assert_equal('true', ObjectSpace.dump(true))
     assert_equal('false', ObjectSpace.dump(false))
     assert_equal('0', ObjectSpace.dump(0))
-    assert_equal('{"type":"SYMBOL", "value":"foo"}', ObjectSpace.dump(:foo))
+    assert_equal('{"type":"SYMBOL", "value":"test_dump_special_consts"}', ObjectSpace.dump(:test_dump_special_consts))
   end
 
   def test_dump_singleton_class
@@ -560,7 +598,7 @@ class TestObjSpace < Test::Unit::TestCase
         next if obj["type"] == "SHAPE"
 
         assert_not_nil obj["slot_size"]
-        assert_equal 0, obj["slot_size"] % GC::INTERNAL_CONSTANTS[:RVALUE_SIZE]
+        assert_equal 0, obj["slot_size"] % (GC::INTERNAL_CONSTANTS[:BASE_SLOT_SIZE] + GC::INTERNAL_CONSTANTS[:RVALUE_OVERHEAD])
       }
     end
   end
@@ -675,7 +713,7 @@ class TestObjSpace < Test::Unit::TestCase
     assert_equal("TEST2", entry_hash["value"], "value is wrong")
     assert_equal("UTF-8", entry_hash["encoding"], "encoding is wrong")
     assert_equal("-", entry_hash["file"], "file is wrong")
-    assert_equal(4, entry_hash["line"], "line is wrong")
+    assert_equal(5, entry_hash["line"], "line is wrong")
     assert_equal("dump_my_heap_please", entry_hash["method"], "method is wrong")
     assert_not_nil(entry_hash["generation"])
   end
@@ -684,6 +722,7 @@ class TestObjSpace < Test::Unit::TestCase
     opts = %w[--disable-gem --disable=frozen-string-literal -robjspace]
 
     assert_in_out_err(opts, "#{<<-"begin;"}#{<<-'end;'}") do |output, error|
+      # frozen_string_literal: false
       begin;
         def dump_my_heap_please
           ObjectSpace.trace_object_allocations_start
@@ -700,6 +739,7 @@ class TestObjSpace < Test::Unit::TestCase
 
     assert_in_out_err(%w[-robjspace], "#{<<-"begin;"}#{<<-'end;'}") do |(output), (error)|
       begin;
+        # frozen_string_literal: false
         def dump_my_heap_please
           ObjectSpace.trace_object_allocations_start
           GC.start
@@ -830,6 +870,7 @@ class TestObjSpace < Test::Unit::TestCase
   def test_objspace_trace
     assert_in_out_err(%w[-robjspace/trace], "#{<<-"begin;"}\n#{<<-'end;'}") do |out, err|
       begin;
+        # frozen_string_literal: false
         a = "foo"
         b = "b" + "a" + "r"
         c = 42
@@ -837,8 +878,8 @@ class TestObjSpace < Test::Unit::TestCase
       end;
       assert_equal ["objspace/trace is enabled"], err
       assert_equal 3, out.size
-      assert_equal '"foo" @ -:2', out[0]
-      assert_equal '"bar" @ -:3', out[1]
+      assert_equal '"foo" @ -:3', out[0]
+      assert_equal '"bar" @ -:4', out[1]
       assert_equal '42', out[2]
     end
   end

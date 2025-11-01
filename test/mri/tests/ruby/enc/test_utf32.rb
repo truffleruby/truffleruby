@@ -108,9 +108,9 @@ EOT
         }
       }
       [
-        # "a", # TruffleString: UTF-32 string byte length is not a multiple of 4
-        # "\x00a",
-        # "\x00\x00a",
+        "a",
+        "\x00a",
+        "\x00\x00a",
         "\x00\x00\xd8\x00",
         "\x00\x00\xdb\xff",
         "\x00\x00\xdc\x00",
@@ -142,9 +142,9 @@ EOT
         }
       }
       [
-        # "a", # TruffleString: UTF-32 string byte length is not a multiple of 4
-        # "a\x00",
-        # "a\x00\x00",
+        "a",
+        "a\x00",
+        "a\x00\x00",
         "\x00\xd8\x00\x00",
         "\xff\xdb\x00\x00",
         "\x00\xdc\x00\x00",

@@ -1247,7 +1247,7 @@ end
     end
 
     assert_raise(Gem::Ext::BuildError) do
-      installer.install
+      build_rake_in { installer.install }
     end
 
     assert_path_not_exist(File.join(installer.bin_dir, "executable.lock"))
@@ -1689,19 +1689,6 @@ end
         installer.install
       end
       assert_path_exist so
-    rescue StandardError
-      puts "-" * 78
-      puts File.read File.join(@gemhome, "gems", "a-2", "Makefile")
-      puts "-" * 78
-
-      path = File.join(@gemhome, "gems", "a-2", "gem_make.out")
-
-      if File.exist?(path)
-        puts File.read(path)
-        puts "-" * 78
-      end
-
-      raise
     end
   end
 
@@ -2627,6 +2614,7 @@ end
 
     yield
   ensure
-    RbConfig::CONFIG["LIBRUBY_RELATIVE"] = orig_libruby_relative
+    # RbConfig::CONFIG values are strings only, there should not be a nil.
+    RbConfig::CONFIG["LIBRUBY_RELATIVE"] = orig_libruby_relative if orig_libruby_relative
   end
 end

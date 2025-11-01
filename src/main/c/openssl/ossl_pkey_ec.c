@@ -41,11 +41,11 @@ static const rb_data_type_t ossl_ec_point_type;
 } while (0)
 
 VALUE cEC;
-VALUE eECError;
-VALUE cEC_GROUP;
-VALUE eEC_GROUP;
-VALUE cEC_POINT;
-VALUE eEC_POINT;
+static VALUE eECError;
+static VALUE cEC_GROUP;
+static VALUE eEC_GROUP;
+static VALUE cEC_POINT;
+static VALUE eEC_POINT;
 
 static ID s_GFp, s_GF2m;
 
@@ -174,7 +174,7 @@ static VALUE ossl_ec_key_initialize(int argc, VALUE *argv, VALUE self)
     type = EVP_PKEY_base_id(pkey);
     if (type != EVP_PKEY_EC) {
         EVP_PKEY_free(pkey);
-        rb_raise(eDSAError, "incorrect pkey type: %s", OBJ_nid2sn(type));
+        rb_raise(eECError, "incorrect pkey type: %s", OBJ_nid2sn(type));
     }
     RTYPEDDATA_DATA(self) = pkey;
     return self;

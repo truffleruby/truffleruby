@@ -13,6 +13,10 @@ module IRB
   # A class that wraps the current state of the irb session, including the
   # configuration of IRB.conf.
   class Context
+    KERNEL_PUBLIC_METHOD = ::Kernel.instance_method(:public_method)
+    KERNEL_METHOD = ::Kernel.instance_method(:method)
+
+    ASSIGN_OPERATORS_REGEXP = Regexp.union(%w[= += -= *= /= %= **= &= |= &&= ||= ^= <<= >>=])
     # Creates a new IRB context.
     #
     # The optional +input_method+ argument:
@@ -73,11 +77,12 @@ module IRB
 
       self.prompt_mode = IRB.conf[:PROMPT_MODE]
 
-      if IRB.conf[:SINGLE_IRB] or !defined?(IRB::JobManager)
-        @irb_name = IRB.conf[:IRB_NAME]
-      else
-        @irb_name = IRB.conf[:IRB_NAME]+"#"+IRB.JobManager.n_jobs.to_s
+      @irb_name = IRB.conf[:IRB_NAME]
+
+      unless IRB.conf[:SINGLE_IRB] or !defined?(IRB::JobManager)
+        @irb_name = @irb_name + "#" + IRB.JobManager.n_jobs.to_s
       end
+
       self.irb_path = "(" + @irb_name + ")"
 
       case input_method
@@ -147,25 +152,13 @@ module IRB
         @newline_before_multiline_output = true
       end
 
-      @user_aliases = IRB.conf[:COMMAND_ALIASES].dup
-      @command_aliases = @user_aliases.merge(KEYWORD_ALIASES)
+      @command_aliases = IRB.conf[:COMMAND_ALIASES].dup
     end
 
     private def term_interactive?
       return true if ENV['TEST_IRB_FORCE_INTERACTIVE']
       STDIN.tty? && ENV['TERM'] != 'dumb'
     end
-
-    # because all input will eventually be evaluated as Ruby code,
-    # command names that conflict with Ruby keywords need special workaround
-    # we can remove them once we implemented a better command system for IRB
-    KEYWORD_ALIASES = {
-      :break => :irb_break,
-      :catch => :irb_catch,
-      :next => :irb_next,
-    }.freeze
-
-    private_constant :KEYWORD_ALIASES
 
     def use_tracer=(val)
       require_relative "ext/tracer" if val
@@ -186,11 +179,17 @@ module IRB
 
     private def build_completor
       completor_type = IRB.conf[:COMPLETOR]
+
+      # Gem repl_type_completor is added to bundled gems in Ruby 3.4.
+      # Use :type as default completor only in Ruby 3.4 or later.
+      verbose = !!completor_type
+      completor_type ||= RUBY_VERSION >= '3.4' ? :type : :regexp
+
       case completor_type
       when :regexp
         return RegexpCompletor.new
       when :type
-        completor = build_type_completor
+        completor = build_type_completor(verbose: verbose)
         return completor if completor
       else
         warn "Invalid value for IRB.conf[:COMPLETOR]: #{completor_type}"
@@ -199,17 +198,17 @@ module IRB
       RegexpCompletor.new
     end
 
-    private def build_type_completor
+    private def build_type_completor(verbose:)
       if RUBY_ENGINE == 'truffleruby'
         # Avoid SyntaxError. truffleruby does not support endless method definition yet.
-        warn 'TypeCompletor is not supported on TruffleRuby yet'
+        warn 'TypeCompletor is not supported on TruffleRuby yet' if verbose
         return
       end
 
       begin
         require 'repl_type_completor'
       rescue LoadError => e
-        warn "TypeCompletor requires `gem repl_type_completor`: #{e.message}"
+        warn "TypeCompletor requires `gem repl_type_completor`: #{e.message}" if verbose
         return
       end
 
@@ -601,7 +600,6 @@ module IRB
         set_last_value(result)
       when Statement::Command
         statement.command_class.execute(self, statement.arg)
-        set_last_value(nil)
       end
 
       nil
@@ -633,6 +631,46 @@ module IRB
         result = workspace.evaluate(code, @eval_path, line_no)
       end
       result
+    end
+
+    def parse_command(code)
+      command_name, arg = code.strip.split(/\s+/, 2)
+      return unless code.lines.size == 1 && command_name
+
+      arg ||= ''
+      command = command_name.to_sym
+      # Command aliases are always command. example: $, @
+      if (alias_name = command_aliases[command])
+        return [alias_name, arg]
+      end
+
+      # Assignment-like expression is not a command
+      return if arg.start_with?(ASSIGN_OPERATORS_REGEXP) && !arg.start_with?(/==|=~/)
+
+      # Local variable have precedence over command
+      return if local_variables.include?(command)
+
+      # Check visibility
+      public_method = !!KERNEL_PUBLIC_METHOD.bind_call(main, command) rescue false
+      private_method = !public_method && !!KERNEL_METHOD.bind_call(main, command) rescue false
+      if Command.execute_as_command?(command, public_method: public_method, private_method: private_method)
+        [command, arg]
+      end
+    end
+
+    def colorize_input(input, complete:)
+      if IRB.conf[:USE_COLORIZE] && IRB::Color.colorable?
+        lvars = local_variables || []
+        if parse_command(input)
+          name, sep, arg = input.split(/(\s+)/, 2)
+          arg = IRB::Color.colorize_code(arg, complete: complete, local_variables: lvars)
+          "#{IRB::Color.colorize(name, [:BOLD])}\e[m#{sep}#{arg}"
+        else
+          IRB::Color.colorize_code(input, complete: complete, local_variables: lvars)
+        end
+      else
+        Reline::Unicode.escape_for_print(input)
+      end
     end
 
     def inspect_last_value # :nodoc:
@@ -668,6 +706,11 @@ module IRB
 
     def local_variables # :nodoc:
       workspace.binding.local_variables
+    end
+
+    def safe_method_call_on_main(method_name)
+      main_object = main
+      Object === main_object ? main_object.__send__(method_name) : Object.instance_method(method_name).bind_call(main_object)
     end
   end
 end

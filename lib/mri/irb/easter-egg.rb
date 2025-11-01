@@ -100,19 +100,21 @@ module IRB
 
     private def easter_egg_logo(type)
       @easter_egg_logos ||= File.read(File.join(__dir__, 'ruby_logo.aa'), encoding: 'UTF-8:UTF-8')
-        .split(/TYPE: ([A-Z]+)\n/)[1..]
+        .split(/TYPE: ([A-Z_]+)\n/)[1..]
         .each_slice(2)
         .to_h
       @easter_egg_logos[type.to_s.upcase]
     end
 
     private def easter_egg(type = nil)
+      print "\e[?1049h"
       type ||= [:logo, :dancing].sample
       case type
       when :logo
-        require "rdoc"
-        RDoc::RI::Driver.new.page do |io|
-          io.write easter_egg_logo(:large)
+        Pager.page do |io|
+          logo_type = STDOUT.external_encoding == Encoding::UTF_8 ? :unicode_large : :ascii_large
+          io.write easter_egg_logo(logo_type)
+          STDIN.raw { STDIN.getc } if io == STDOUT
         end
       when :dancing
         STDOUT.cooked do
@@ -123,7 +125,7 @@ module IRB
             canvas = Canvas.new(Reline.get_screen_size)
           end
           ruby_model = RubyModel.new
-          print "\e[?1049h"
+          print "\e[?25l" # hide cursor
           0.step do |i| # TODO (0..).each needs Ruby 2.6 or later
             buff = canvas.draw do
               ruby_model.render_frame(i) do |p1, p2|
@@ -137,10 +139,12 @@ module IRB
           end
         rescue Interrupt
         ensure
-          print "\e[0m\e[?1049l"
+          print "\e[?25h" # show cursor
           trap("SIGINT", prev_trap)
         end
       end
+    ensure
+      print "\e[0m\e[?1049l"
     end
   end
 end

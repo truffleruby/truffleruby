@@ -1,7 +1,7 @@
 # frozen_string_literal: false
 require 'test/unit'
-# require '-test-/rb_call_super_kw'
-# require '-test-/iter'
+require '-test-/rb_call_super_kw'
+require '-test-/iter'
 
 class TestKeywordArguments < Test::Unit::TestCase
   def f1(str: "foo", num: 424242)
@@ -180,6 +180,52 @@ class TestKeywordArguments < Test::Unit::TestCase
     assert_equal([[:opt, :opt], [:rest, :rest], [:key, :key]], method(:f8).parameters) # [Bug #7540] [ruby-core:50735]
     assert_equal([[:req, :r], [:opt, :o], [:rest, :args], [:req, :p], [:key, :k],
                   [:keyrest, :kw], [:block, :b]], method(:f9).parameters)
+  end
+
+  def test_keyword_with_anonymous_keyword_splat
+    def self.a(b: 1, **) [b, **] end
+    kw = {b: 2, c: 3}
+    assert_equal([2, {c: 3}], a(**kw))
+    assert_equal({b: 2, c: 3}, kw)
+  end
+
+  def test_keyword_splat_nil
+    # cfunc call
+    assert_equal(nil, p(**nil))
+
+    def self.a0(&); end
+    assert_equal(nil, a0(**nil))
+    assert_equal(nil, :a0.to_proc.call(self, **nil))
+    assert_equal(nil, a0(**nil, &:block))
+
+    def self.o(x=1); x end
+    assert_equal(1, o(**nil))
+    assert_equal(2, o(2, **nil))
+    assert_equal(1, o(*nil, **nil))
+    assert_equal(1, o(**nil, **nil))
+    assert_equal({a: 1}, o(a: 1, **nil))
+    assert_equal({a: 1}, o(**nil, a: 1))
+
+    # symproc call
+    assert_equal(1, :o.to_proc.call(self, **nil))
+
+    def self.s(*a); a end
+    assert_equal([], s(**nil))
+    assert_equal([1], s(1, **nil))
+    assert_equal([], s(*nil, **nil))
+
+    def self.kws(**a); a end
+    assert_equal({}, kws(**nil))
+    assert_equal({}, kws(*nil, **nil))
+
+    def self.skws(*a, **kw); [a, kw] end
+    assert_equal([[], {}], skws(**nil))
+    assert_equal([[1], {}], skws(1, **nil))
+    assert_equal([[], {}], skws(*nil, **nil))
+
+    assert_equal({}, {**nil})
+    assert_equal({a: 1}, {a: 1, **nil})
+    assert_equal({a: 1}, {**nil, a: 1})
   end
 
   def test_lambda
@@ -431,10 +477,10 @@ class TestKeywordArguments < Test::Unit::TestCase
 
     singleton_class.send(:attr_writer, :y)
     m = method(:y=)
-    # assert_equal_not_same(h, send(:y=, **h))
-    # assert_equal_not_same(h, public_send(:y=, **h))
-    # assert_equal_not_same(h, m.(**h))
-    # assert_equal_not_same(h, m.send(:call, **h))
+    assert_equal_not_same(h, send(:y=, **h))
+    assert_equal_not_same(h, public_send(:y=, **h))
+    assert_equal_not_same(h, m.(**h))
+    assert_equal_not_same(h, m.send(:call, **h))
 
     singleton_class.send(:remove_method, :yo)
     def self.method_missing(_, **kw) kw end
@@ -2378,6 +2424,21 @@ class TestKeywordArguments < Test::Unit::TestCase
     assert_raise(ArgumentError) { m.call(42, a: 1, **h2) }
   end
 
+  def test_ruby2_keywords_post_arg
+    def self.a(*c, **kw) [c, kw] end
+    def self.b(*a, b) a(*a, b) end
+    assert_warn(/Skipping set of ruby2_keywords flag for b \(method accepts keywords or post arguments or method does not accept argument splat\)/) do
+      assert_nil(singleton_class.send(:ruby2_keywords, :b))
+    end
+    assert_equal([[{foo: 1}, {bar: 1}], {}], b({foo: 1}, bar: 1))
+
+    b = ->(*a, b){a(*a, b)}
+    assert_warn(/Skipping set of ruby2_keywords flag for proc \(proc accepts keywords or post arguments or proc does not accept argument splat\)/) do
+      b.ruby2_keywords
+    end
+    assert_equal([[{foo: 1}, {bar: 1}], {}], b.({foo: 1}, bar: 1))
+  end
+
   def test_proc_ruby2_keywords
     h1 = {:a=>1}
     foo = ->(*args, &block){block.call(*args)}
@@ -2390,8 +2451,8 @@ class TestKeywordArguments < Test::Unit::TestCase
     assert_raise(ArgumentError) { foo.call(:a=>1, &->(arg, **kw){[arg, kw]}) }
     assert_equal(h1, foo.call(:a=>1, &->(arg){arg}))
 
-    [->(){}, ->(arg){}, ->(*args, **kw){}, ->(*args, k: 1){}, ->(*args, k: ){}].each do |pr|
-      assert_warn(/Skipping set of ruby2_keywords flag for proc \(proc accepts keywords or proc does not accept argument splat\)/) do
+    [->(){}, ->(arg){}, ->(*args, x){}, ->(*args, **kw){}, ->(*args, k: 1){}, ->(*args, k: ){}].each do |pr|
+      assert_warn(/Skipping set of ruby2_keywords flag for proc \(proc accepts keywords or post arguments or proc does not accept argument splat\)/) do
         pr.ruby2_keywords
       end
     end
@@ -2401,12 +2462,12 @@ class TestKeywordArguments < Test::Unit::TestCase
       yield(*args)
     end
     foo = o.method(:foo).to_proc
-    assert_warn(/Skipping set of ruby2_keywords flag for proc/) do
+    assert_warn(/Skipping set of ruby2_keywords flag for proc \(proc created from method\)/) do
       foo.ruby2_keywords
     end
 
     foo = :foo.to_proc
-    assert_warn(/Skipping set of ruby2_keywords flag for proc/) do
+    assert_warn(/Skipping set of ruby2_keywords flag for proc \(proc not defined in Ruby\)/) do
       foo.ruby2_keywords
     end
 
@@ -2744,25 +2805,42 @@ class TestKeywordArguments < Test::Unit::TestCase
     assert_equal(:opt, o.clear_last_opt(a: 1))
     assert_nothing_raised(ArgumentError) { o.clear_last_empty_method(a: 1) }
 
-    assert_warn(/Skipping set of ruby2_keywords flag for bar \(method accepts keywords or method does not accept argument splat\)/) do
+    assert_warn(/Skipping set of ruby2_keywords flag for bar \(method accepts keywords or post arguments or method does not accept argument splat\)/) do
       assert_nil(c.send(:ruby2_keywords, :bar))
+    end
+
+    c.class_eval do
+      def bar_post(*a, x) = nil
+      define_method(:bar_post_bmethod) { |*a, x| }
+    end
+    assert_warn(/Skipping set of ruby2_keywords flag for bar_post \(method accepts keywords or post arguments or method does not accept argument splat\)/) do
+      assert_nil(c.send(:ruby2_keywords, :bar_post))
+    end
+    assert_warn(/Skipping set of ruby2_keywords flag for bar_post_bmethod \(method accepts keywords or post arguments or method does not accept argument splat\)/) do
+      assert_nil(c.send(:ruby2_keywords, :bar_post_bmethod))
+    end
+
+    utf16_sym = "abcdef".encode("UTF-16LE").to_sym
+    c.send(:define_method, utf16_sym, c.instance_method(:itself))
+    assert_warn(/abcdef/) do
+      assert_nil(c.send(:ruby2_keywords, utf16_sym))
     end
 
     o = Object.new
     class << o
-      alias bar object_id
+      alias bar p
     end
-    assert_warn(/Skipping set of ruby2_keywords flag for bar/) do
+    assert_warn(/Skipping set of ruby2_keywords flag for bar \(method not defined in Ruby\)/) do
       assert_nil(o.singleton_class.send(:ruby2_keywords, :bar))
     end
     sc = Class.new(c)
     assert_warn(/Skipping set of ruby2_keywords flag for bar \(can only set in method defining module\)/) do
       sc.send(:ruby2_keywords, :bar)
     end
-    # m = Module.new
-    # assert_warn(/Skipping set of ruby2_keywords flag for system \(can only set in method defining module\)/) do
-    #   m.send(:ruby2_keywords, :system)
-    # end
+    m = Module.new
+    assert_warn(/Skipping set of ruby2_keywords flag for system \(can only set in method defining module\)/) do
+      m.send(:ruby2_keywords, :system)
+    end
 
     assert_raise(NameError) { c.send(:ruby2_keywords, "a5e36ccec4f5080a1d5e63f8") }
     assert_raise(NameError) { c.send(:ruby2_keywords, :quux) }
@@ -2771,8 +2849,53 @@ class TestKeywordArguments < Test::Unit::TestCase
     assert_raise(FrozenError) { c.send(:ruby2_keywords, :baz) }
   end
 
+  def test_anon_splat_ruby2_keywords
+    singleton_class.class_exec do
+      def bar(*a, **kw)
+        [a, kw]
+      end
+
+      ruby2_keywords def bar_anon(*)
+        bar(*)
+      end
+    end
+
+    a = [1, 2]
+    kw = {a: 1}
+    assert_equal([[1, 2], {a: 1}], bar_anon(*a, **kw))
+    assert_equal([1, 2], a)
+    assert_equal({a: 1}, kw)
+  end
+
+  def test_anon_splat_ruby2_keywords_bug_20388
+    extend(Module.new{def process(action, ...) 1 end})
+    extend(Module.new do
+      def process(action, *args)
+        args.freeze
+        super
+      end
+      ruby2_keywords :process
+    end)
+
+    assert_equal(1, process(:foo, bar: :baz))
+  end
+
+  def test_ruby2_keywords_bug_20679
+    c = Class.new do
+       def self.get(_, _, h, &block)
+         h[1]
+       end
+
+      ruby2_keywords def get(*args, &block)
+        self.class.get(*args, &block)
+      end
+    end
+
+    assert_equal 2, c.new.get(true, {}, 1 => 2)
+  end
+
   def test_top_ruby2_keywords
-    assert_in_out_err([], <<-INPUT, ["[1, 2, 3]", "{:k=>1}"], [])
+    assert_in_out_err([], <<-INPUT, ["[1, 2, 3]", "{k: 1}"], [])
       def bar(*a, **kw)
         p a, kw
       end
@@ -3944,6 +4067,20 @@ class TestKeywordArguments < Test::Unit::TestCase
       GC.start
       tap { prc.call }
     }, bug8964
+  end
+
+  def test_large_kwsplat_to_method_taking_kw_and_kwsplat
+    assert_separately(['-'], "#{<<~"begin;"}\n#{<<~'end;'}")
+    begin;
+      n = 100000
+      x = Fiber.new do
+        h = {kw: 2}
+        n.times{|i| h[i.to_s.to_sym] = i}
+        def self.f(kw: 1, **kws) kws.size end
+        f(**h)
+      end.resume
+      assert_equal(n, x)
+    end;
   end
 
   def test_dynamic_symbol_keyword

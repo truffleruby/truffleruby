@@ -1,10 +1,6 @@
 # frozen_string_literal: true
 
-if defined? ::TruffleRuby
-  require_relative "../../../tool/test/init"
-else
-  require_relative "../../../test/init"
-end
+require_relative "../../../test/init"
 
 module Test
   module Unit
@@ -131,7 +127,18 @@ module Test
               else
                 _report "ready"
               end
-            when /^quit$/
+            when /^quit (.+?)$/, "quit"
+              if $1 == "timeout"
+                err = ["", "!!! worker #{$$} killed due to timeout:"]
+                Thread.list.each do |th|
+                  err << "#{ th.inspect }:"
+                  th.backtrace.each do |s|
+                    err << "  #{ s }"
+                  end
+                end
+                err << ""
+                STDERR.puts err.join("\n")
+              end
               _report "bye"
               exit
             end
@@ -184,7 +191,7 @@ module Test
         else
           error = ProxyError.new(error)
         end
-        _report "record", Marshal.dump([suite.name, method, assertions, time, error])
+        _report "record", Marshal.dump([suite.name, method, assertions, time, error, suite.instance_method(method).source_location])
         super
       end
     end

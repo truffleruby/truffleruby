@@ -3,8 +3,11 @@ require 'io/wait'
 class Reline::Dumb < Reline::IO
   RESET_COLOR = '' # Do not send color reset sequence
 
+  attr_writer :output
+
   def initialize(encoding: nil)
     @input = STDIN
+    @output = STDOUT
     @buf = []
     @pasting = false
     @encoding = encoding
@@ -21,8 +24,11 @@ class Reline::Dumb < Reline::IO
     elsif RUBY_PLATFORM =~ /mswin|mingw/
       Encoding::UTF_8
     else
-      Encoding::default_external
+      @input.external_encoding || Encoding.default_external
     end
+  rescue IOError
+    # STDIN.external_encoding raises IOError in Ruby <= 3.0 when STDIN is closed
+    Encoding.default_external
   end
 
   def set_default_key_bindings(_)
@@ -33,6 +39,14 @@ class Reline::Dumb < Reline::IO
   end
 
   def with_raw_input
+    yield
+  end
+
+  def write(string)
+    @output.write(string)
+  end
+
+  def buffered_output
     yield
   end
 
@@ -60,7 +74,7 @@ class Reline::Dumb < Reline::IO
   end
 
   def cursor_pos
-    Reline::CursorPos.new(1, 1)
+    Reline::CursorPos.new(0, 0)
   end
 
   def hide_cursor

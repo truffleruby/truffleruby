@@ -90,12 +90,15 @@ class TestSymbol < Test::Unit::TestCase
   end
 
   def test_inspect_dollar
+    verbose_bak, $VERBOSE = $VERBOSE, nil
     # 4) :$- always treats next character literally:
     assert_raise(SyntaxError) {eval ':$-'}
     assert_raise(SyntaxError) {eval ":$-\n"}
     assert_raise(SyntaxError) {eval ":$- "}
     assert_raise(SyntaxError) {eval ":$-#"}
     assert_raise(SyntaxError) {eval ':$-('}
+  ensure
+    $VERBOSE = verbose_bak
   end
 
   def test_inspect_number
@@ -120,6 +123,7 @@ class TestSymbol < Test::Unit::TestCase
 
   def test_inspect_under_gc_compact_stress
     omit "compaction doesn't work well on s390x" if RUBY_PLATFORM =~ /s390x/ # https://github.com/ruby/ruby/pull/5077
+
     EnvUtil.under_gc_compact_stress do
       assert_inspect_evaled(':testing')
     end
@@ -551,7 +555,7 @@ class TestSymbol < Test::Unit::TestCase
 
   def test_symbol_fstr_memory_leak
     bug10686 = '[ruby-core:67268] [Bug #10686]'
-    assert_no_memory_leak([], "#{<<~"begin;"}\n#{<<~'else;'}", "#{<<~'end;'}", bug10686, limit: 1.9, rss: true, timeout: 20)
+    assert_no_memory_leak([], "#{<<~"begin;"}\n#{<<~'else;'}", "#{<<~'end;'}", bug10686, limit: 1.71, rss: true, timeout: 20)
     begin;
       n = 100_000
       n.times { |i| i.to_s.to_sym }

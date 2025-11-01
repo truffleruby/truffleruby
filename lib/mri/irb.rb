@@ -14,6 +14,7 @@ require_relative "irb/default_commands"
 
 require_relative "irb/ruby-lex"
 require_relative "irb/statement"
+require_relative "irb/history"
 require_relative "irb/input-method"
 require_relative "irb/locale"
 require_relative "irb/color"
@@ -74,7 +75,7 @@ require_relative "irb/pager"
 # 2.  Constructs the initial session context from [hash
 #     IRB.conf](rdoc-ref:IRB@Hash+IRB.conf) and from default values; the hash
 #     content may have been affected by [command-line
-#     options](rdoc-ref:IB@Command-Line+Options), and by direct assignments in
+#     options](rdoc-ref:IRB@Command-Line+Options), and by direct assignments in
 #     the configuration file.
 # 3.  Assigns the context to variable `conf`.
 # 4.  Assigns command-line arguments to variable `ARGV`.
@@ -220,11 +221,11 @@ require_relative "irb/pager"
 # *new_filepath*, which becomes the history file for the session.
 #
 # You can change the number of commands saved by adding to your configuration
-# file: `IRB.conf[:SAVE_HISTORY] = *n*`, wheHISTORY_FILEre *n* is one of:
+# file: `IRB.conf[:SAVE_HISTORY] = *n*`, where *n* is one of:
 #
-# *   Positive integer: the number of commands to be saved,
-# *   Zero: all commands are to be saved.
-# *   `nil`: no commands are to be saved,.
+# *   Positive integer: the number of commands to be saved.
+# *   Negative integer: all commands are to be saved.
+# *   Zero or `nil`: no commands are to be saved.
 #
 #
 # During the session, you can use methods `conf.save_history` or
@@ -878,42 +879,44 @@ require_relative "irb/pager"
 module IRB
 
   # An exception raised by IRB.irb_abort
-  class Abort < Exception;end
+  class Abort < Exception;end # :nodoc:
 
-  # The current IRB::Context of the session, see IRB.conf
-  #
-  #     irb
-  #     irb(main):001:0> IRB.CurrentContext.irb_name = "foo"
-  #     foo(main):002:0> IRB.conf[:MAIN_CONTEXT].irb_name #=> "foo"
-  def IRB.CurrentContext # :nodoc:
-    IRB.conf[:MAIN_CONTEXT]
-  end
-
-  # Initializes IRB and creates a new Irb.irb object at the `TOPLEVEL_BINDING`
-  def IRB.start(ap_path = nil)
-    STDOUT.sync = true
-    $0 = File::basename(ap_path, ".rb") if ap_path
-
-    IRB.setup(ap_path)
-
-    if @CONF[:SCRIPT]
-      irb = Irb.new(nil, @CONF[:SCRIPT])
-    else
-      irb = Irb.new
+  class << self
+    # The current IRB::Context of the session, see IRB.conf
+    #
+    #     irb
+    #     irb(main):001:0> IRB.CurrentContext.irb_name = "foo"
+    #     foo(main):002:0> IRB.conf[:MAIN_CONTEXT].irb_name #=> "foo"
+    def CurrentContext # :nodoc:
+      conf[:MAIN_CONTEXT]
     end
-    irb.run(@CONF)
-  end
 
-  # Quits irb
-  def IRB.irb_exit(*) # :nodoc:
-    throw :IRB_EXIT, false
-  end
+    # Initializes IRB and creates a new Irb.irb object at the `TOPLEVEL_BINDING`
+    def start(ap_path = nil)
+      STDOUT.sync = true
+      $0 = File::basename(ap_path, ".rb") if ap_path
 
-  # Aborts then interrupts irb.
-  #
-  # Will raise an Abort exception, or the given `exception`.
-  def IRB.irb_abort(irb, exception = Abort) # :nodoc:
-    irb.context.thread.raise exception, "abort then interrupt!"
+      setup(ap_path)
+
+      if @CONF[:SCRIPT]
+        irb = Irb.new(nil, @CONF[:SCRIPT])
+      else
+        irb = Irb.new
+      end
+      irb.run(@CONF)
+    end
+
+    # Quits irb
+    def irb_exit(*) # :nodoc:
+      throw :IRB_EXIT, false
+    end
+
+    # Aborts then interrupts irb.
+    #
+    # Will raise an Abort exception, or the given `exception`.
+    def irb_abort(irb, exception = Abort) # :nodoc:
+      irb.context.thread.raise exception, "abort then interrupt!"
+    end
   end
 
   class Irb
@@ -970,7 +973,7 @@ module IRB
       # debugger.
       input = nil
       forced_exit = catch(:IRB_EXIT) do
-        if IRB.conf[:SAVE_HISTORY] && context.io.support_history_saving?
+        if History.save_history? && context.io.support_history_saving?
           # Previous IRB session's history has been saved when `Irb#run` is exited We need
           # to make sure the saved history is not saved again by resetting the counter
           context.io.reset_history_counter
@@ -1001,9 +1004,10 @@ module IRB
       prev_context = conf[:MAIN_CONTEXT]
       conf[:MAIN_CONTEXT] = context
 
-      save_history = !in_nested_session && conf[:SAVE_HISTORY] && context.io.support_history_saving?
+      load_history = !in_nested_session && context.io.support_history_saving?
+      save_history = load_history && History.save_history?
 
-      if save_history
+      if load_history
         context.io.load_history
       end
 
@@ -1128,8 +1132,8 @@ module IRB
         return Statement::EmptyInput.new
       end
 
-      code.force_encoding(@context.io.encoding)
-      if (command, arg = parse_command(code))
+      code = code.dup.force_encoding(@context.io.encoding)
+      if (command, arg = @context.parse_command(code))
         command_class = Command.load_command(command)
         Statement::Command.new(code, command_class, arg)
       else
@@ -1138,27 +1142,8 @@ module IRB
       end
     end
 
-    def parse_command(code)
-      command_name, arg = code.strip.split(/\s+/, 2)
-      return unless code.lines.size == 1 && command_name
-
-      arg ||= ''
-      command = command_name.to_sym
-      # Command aliases are always command. example: $, @
-      if (alias_name = @context.command_aliases[command])
-        return [alias_name, arg]
-      end
-
-      # Check visibility
-      public_method = !!Kernel.instance_method(:public_method).bind_call(@context.main, command) rescue false
-      private_method = !public_method && !!Kernel.instance_method(:method).bind_call(@context.main, command) rescue false
-      if Command.execute_as_command?(command, public_method: public_method, private_method: private_method)
-        [command, arg]
-      end
-    end
-
     def command?(code)
-      !!parse_command(code)
+      !!@context.parse_command(code)
     end
 
     def configure_io
@@ -1484,10 +1469,10 @@ module IRB
         when "N"
           @context.irb_name
         when "m"
-          main_str = @context.main.to_s rescue "!#{$!.class}"
+          main_str = @context.safe_method_call_on_main(:to_s) rescue "!#{$!.class}"
           truncate_prompt_main(main_str)
         when "M"
-          main_str = @context.main.inspect rescue "!#{$!.class}"
+          main_str = @context.safe_method_call_on_main(:inspect) rescue "!#{$!.class}"
           truncate_prompt_main(main_str)
         when "l"
           ltype

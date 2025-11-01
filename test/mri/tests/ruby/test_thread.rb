@@ -3,7 +3,6 @@
 require 'test/unit'
 require "rbconfig/sizeof"
 require "timeout"
-require "fiddle"
 
 class TestThread < Test::Unit::TestCase
   class Thread < ::Thread
@@ -1446,13 +1445,16 @@ q.pop
   end
 
   def test_thread_native_thread_id_across_fork_on_linux
-    rtld_default = Fiddle.dlopen(nil)
-    omit "this test is only for Linux" unless rtld_default.sym_defined?('gettid')
-
-    gettid = Fiddle::Function.new(rtld_default['gettid'], [], Fiddle::TYPE_INT)
+    begin
+      require '-test-/thread/id'
+    rescue LoadError
+      omit "this test is only for Linux"
+    else
+      extend Bug::ThreadID
+    end
 
     parent_thread_id = Thread.main.native_thread_id
-    real_parent_thread_id = gettid.call
+    real_parent_thread_id = gettid
 
     assert_equal real_parent_thread_id, parent_thread_id
 
@@ -1464,7 +1466,7 @@ q.pop
       else
         # child
         puts Thread.main.native_thread_id
-        puts gettid.call
+        puts gettid
       end
     end
     child_thread_id = child_lines[0].chomp.to_i
@@ -1554,5 +1556,66 @@ q.pop
     assert_equal(true, t.pending_interrupt?)
     assert_equal(true, t.pending_interrupt?(Exception))
     assert_equal(false, t.pending_interrupt?(ArgumentError))
+  end
+
+  # [Bug #21342]
+  def test_unlock_locked_mutex_with_collected_fiber
+    bug21127 = '[ruby-core:120930] [Bug #21127]'
+    assert_separately([], "#{<<~"begin;"}\n#{<<~'end;'}")
+    begin;
+      5.times do
+        m = Mutex.new
+        Thread.new do
+          m.synchronize do
+          end
+        end.join
+        Fiber.new do
+          GC.start
+          m.lock
+        end.resume
+      end
+    end;
+  end
+
+  def test_unlock_locked_mutex_with_collected_fiber2
+    assert_separately([], "#{<<~"begin;"}\n#{<<~'end;'}")
+    begin;
+      MUTEXES = []
+      5.times do
+        m = Mutex.new
+        Fiber.new do
+          GC.start
+          m.lock
+        end.resume
+        MUTEXES << m
+      end
+      10.times do
+        MUTEXES.clear
+        GC.start
+      end
+    end;
+  end
+
+  def test_mutexes_locked_in_fiber_dont_have_aba_issue_with_new_fibers
+    assert_separately([], "#{<<~"begin;"}\n#{<<~'end;'}")
+    begin;
+      mutexes = 1000.times.map do
+        Mutex.new
+      end
+
+      mutexes.map do |m|
+        Fiber.new do
+          m.lock
+        end.resume
+      end
+
+      GC.start
+
+      1000.times.map do
+        Fiber.new do
+          raise "FAILED!" if mutexes.any?(&:owned?)
+        end.resume
+      end
+    end;
   end
 end

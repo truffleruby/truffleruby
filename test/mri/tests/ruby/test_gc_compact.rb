@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 require 'test/unit'
-require 'fiddle'
-require 'etc'
 
 if RUBY_PLATFORM =~ /s390x/
   warn "Currently, it is known that the compaction does not work well on s390x; contribution is welcome https://github.com/ruby/ruby/pull/5077"
@@ -10,8 +8,8 @@ end
 
 class TestGCCompact < Test::Unit::TestCase
   module CompactionSupportInspector
-    def supports_auto_compact?
-      GC::OPTS.include?("GC_COMPACTION_SUPPORTED")
+    def supports_compact?
+      GC.respond_to?(:compact)
     end
   end
 
@@ -19,7 +17,7 @@ class TestGCCompact < Test::Unit::TestCase
     include CompactionSupportInspector
 
     def setup
-      omit "autocompact not supported on this platform" unless supports_auto_compact?
+      omit "GC compaction not supported on this platform" unless supports_compact?
       super
     end
   end
@@ -85,7 +83,7 @@ class TestGCCompact < Test::Unit::TestCase
     include CompactionSupportInspector
 
     def assert_not_implemented(method, *args)
-      omit "autocompact is supported on this platform" if supports_auto_compact?
+      omit "autocompact is supported on this platform" if supports_compact?
 
       assert_raise(NotImplementedError) { GC.send(method, *args) }
       refute(GC.respond_to?(method), "GC.#{method} should be defined as rb_f_notimplement")
@@ -112,10 +110,6 @@ class TestGCCompact < Test::Unit::TestCase
     end
   end
 
-  def os_page_size
-    return true unless defined?(Etc::SC_PAGE_SIZE)
-  end
-
   def test_gc_compact_stats
     list = []
 
@@ -130,10 +124,6 @@ class TestGCCompact < Test::Unit::TestCase
     refute_predicate compact_stats[:moved], :empty?
   end
 
-  def memory_location(obj)
-    (Fiddle.dlwrap(obj) >> 1)
-  end
-
   def big_list(level = 10)
     if level > 0
       big_list(level - 1)
@@ -146,21 +136,6 @@ class TestGCCompact < Test::Unit::TestCase
     end
   end
 
-  # Find an object that's allocated in a slot that had a previous
-  # tenant, and that tenant moved and is still alive
-  def find_object_in_recycled_slot(addresses)
-    new_object = nil
-
-    100_000.times do
-      new_object = Object.new
-      if addresses.index memory_location(new_object)
-        break
-      end
-    end
-
-    new_object
-  end
-
   def test_complex_hash_keys
     list_of_objects = big_list
     hash = list_of_objects.hash
@@ -171,7 +146,7 @@ class TestGCCompact < Test::Unit::TestCase
   end
 
   def test_ast_compacts
-    assert_separately([], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10, signal: :SEGV)
+    assert_separately([], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10)
     begin;
       def walk_ast ast
         children = ast.children.grep(RubyVM::AbstractSyntaxTree::Node)
@@ -210,7 +185,7 @@ class TestGCCompact < Test::Unit::TestCase
   end
 
   def test_updating_references_for_heap_allocated_shared_arrays
-    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10, signal: :SEGV)
+    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10)
     begin;
       ary = []
       50.times { |i| ary << i }
@@ -234,7 +209,7 @@ class TestGCCompact < Test::Unit::TestCase
   def test_updating_references_for_embed_shared_arrays
     omit if GC::INTERNAL_CONSTANTS[:SIZE_POOL_COUNT] == 1
 
-    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10, signal: :SEGV)
+    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10)
     begin;
       ary = Array.new(50)
       50.times { |i| ary[i] = i }
@@ -258,7 +233,7 @@ class TestGCCompact < Test::Unit::TestCase
   end
 
   def test_updating_references_for_heap_allocated_frozen_shared_arrays
-    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10, signal: :SEGV)
+    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10)
     begin;
       ary = []
       50.times { |i| ary << i }
@@ -283,7 +258,7 @@ class TestGCCompact < Test::Unit::TestCase
   def test_updating_references_for_embed_frozen_shared_arrays
     omit if GC::INTERNAL_CONSTANTS[:SIZE_POOL_COUNT] == 1
 
-    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10, signal: :SEGV)
+    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10)
     begin;
       ary = Array.new(50)
       50.times { |i| ary[i] = i }
@@ -308,10 +283,10 @@ class TestGCCompact < Test::Unit::TestCase
     end;
   end
 
-  def test_moving_arrays_down_size_pools
+  def test_moving_arrays_down_heaps
     omit if GC::INTERNAL_CONSTANTS[:SIZE_POOL_COUNT] == 1
 
-    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10, signal: :SEGV)
+    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10)
     begin;
       ARY_COUNT = 50000
 
@@ -330,10 +305,10 @@ class TestGCCompact < Test::Unit::TestCase
     end;
   end
 
-  def test_moving_arrays_up_size_pools
+  def test_moving_arrays_up_heaps
     omit if GC::INTERNAL_CONSTANTS[:SIZE_POOL_COUNT] == 1
 
-    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10, signal: :SEGV)
+    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10)
     begin;
       ARY_COUNT = 50000
 
@@ -354,10 +329,10 @@ class TestGCCompact < Test::Unit::TestCase
     end;
   end
 
-  def test_moving_objects_between_size_pools
+  def test_moving_objects_between_heaps
     omit if GC::INTERNAL_CONSTANTS[:SIZE_POOL_COUNT] == 1
 
-    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 10, signal: :SEGV)
+    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 60)
     begin;
       class Foo
         def add_ivars
@@ -386,10 +361,10 @@ class TestGCCompact < Test::Unit::TestCase
     end;
   end
 
-  def test_moving_strings_up_size_pools
+  def test_moving_strings_up_heaps
     omit if GC::INTERNAL_CONSTANTS[:SIZE_POOL_COUNT] == 1
 
-    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 30, signal: :SEGV)
+    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 30)
     begin;
       STR_COUNT = 50000
 
@@ -397,7 +372,7 @@ class TestGCCompact < Test::Unit::TestCase
 
       Fiber.new {
         str = "a" * GC::INTERNAL_CONSTANTS[:BASE_SLOT_SIZE] * 4
-        $ary = STR_COUNT.times.map { "" << str }
+        $ary = STR_COUNT.times.map { +"" << str }
       }.resume
 
       stats = GC.verify_compaction_references(expand_heap: true, toward: :empty)
@@ -407,10 +382,10 @@ class TestGCCompact < Test::Unit::TestCase
     end;
   end
 
-  def test_moving_strings_down_size_pools
+  def test_moving_strings_down_heaps
     omit if GC::INTERNAL_CONSTANTS[:SIZE_POOL_COUNT] == 1
 
-    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 30, signal: :SEGV)
+    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 30)
     begin;
       STR_COUNT = 50000
 
@@ -427,12 +402,12 @@ class TestGCCompact < Test::Unit::TestCase
     end;
   end
 
-  def test_moving_hashes_down_size_pools
+  def test_moving_hashes_down_heaps
     omit if GC::INTERNAL_CONSTANTS[:SIZE_POOL_COUNT] == 1
     # AR and ST hashes are in the same size pool on 32 bit
     omit unless RbConfig::SIZEOF["uint64_t"] <= RbConfig::SIZEOF["void*"]
 
-    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 30, signal: :SEGV)
+    assert_separately(%w[-robjspace], "#{<<~"begin;"}\n#{<<~"end;"}", timeout: 30)
     begin;
       HASH_COUNT = 50000
 
@@ -450,7 +425,7 @@ class TestGCCompact < Test::Unit::TestCase
     end;
   end
 
-  def test_moving_objects_between_size_pools_keeps_shape_frozen_status
+  def test_moving_objects_between_heaps_keeps_shape_frozen_status
     # [Bug #19536]
     assert_separately([], "#{<<~"begin;"}\n#{<<~"end;"}")
     begin;

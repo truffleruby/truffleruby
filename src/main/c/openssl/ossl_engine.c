@@ -5,7 +5,7 @@
  */
 /*
  * This program is licensed under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 
@@ -37,12 +37,12 @@
  *
  * See also, https://www.openssl.org/docs/crypto/engine.html
  */
-VALUE cEngine;
+static VALUE cEngine;
 /* Document-class: OpenSSL::Engine::EngineError
  *
  * This is the generic exception for OpenSSL::Engine related errors
  */
-VALUE eEngineError;
+static VALUE eEngineError;
 
 /*
  * Private

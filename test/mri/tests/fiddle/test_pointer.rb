@@ -12,18 +12,17 @@ module Fiddle
 
     def test_can_read_write_memory
       # Allocate some memory
-      address = Fiddle.malloc(Fiddle::SIZEOF_VOIDP)
+      Fiddle::Pointer.malloc(Fiddle::SIZEOF_VOIDP, Fiddle::RUBY_FREE) do |pointer|
+        address = pointer.to_i
+        bytes_to_write = Fiddle::SIZEOF_VOIDP.times.to_a.pack("C*")
 
-      bytes_to_write = Fiddle::SIZEOF_VOIDP.times.to_a.pack("C*")
+        # Write to the memory
+        Fiddle::Pointer.write(address, bytes_to_write)
 
-      # Write to the memory
-      Fiddle::Pointer.write(address, bytes_to_write)
-
-      # Read the bytes out again
-      bytes = Fiddle::Pointer.read(address, Fiddle::SIZEOF_VOIDP)
-      assert_equal bytes_to_write, bytes
-    ensure
-      Fiddle.free address
+        # Read the bytes out again
+        bytes = Fiddle::Pointer.read(address, Fiddle::SIZEOF_VOIDP)
+        assert_equal bytes_to_write, bytes
+      end
     end
 
     def test_cptr_to_int
@@ -110,6 +109,10 @@ module Fiddle
     end
 
     def test_inspect
+      if ffi_backend?
+        omit("Fiddle::Pointer#inspect is incompatible with FFI backend")
+      end
+
       ptr = Pointer.new(0)
       inspect = ptr.inspect
       assert_match(/size=#{ptr.size}/, inspect)
@@ -125,6 +128,10 @@ module Fiddle
     end
 
     def test_to_ptr_io
+      if ffi_backend?
+        omit("Fiddle::Pointer.to_ptr(IO) isn't supported with FFI backend")
+      end
+
       Pointer.malloc(10, Fiddle::RUBY_FREE) do |buf|
         File.open(__FILE__, 'r') do |f|
           ptr = Pointer.to_ptr f
@@ -150,9 +157,15 @@ module Fiddle
       end
     end
 
-    def test_to_ptr_with_num
+    def test_to_ptr_with_int
       ptr = Pointer.new 0
       assert_equal ptr, Pointer[0]
+    end
+
+    MimicInteger = Struct.new(:to_int)
+    def test_to_ptr_with_to_int
+      ptr = Pointer.new 0
+      assert_equal ptr, Pointer[MimicInteger.new(0)]
     end
 
     def test_equals
@@ -172,6 +185,10 @@ module Fiddle
     end
 
     def test_ref_ptr
+      if ffi_backend?
+        omit("Fiddle.dlwrap([]) isn't supported with FFI backend")
+      end
+
       ary = [0,1,2,4,5]
       addr = Pointer.new(dlwrap(ary))
       assert_equal addr.to_i, addr.ref.ptr.to_i
@@ -180,6 +197,10 @@ module Fiddle
     end
 
     def test_to_value
+      if ffi_backend?
+        omit("Fiddle.dlwrap([]) isn't supported with FFI backend")
+      end
+
       ary = [0,1,2,4,5]
       addr = Pointer.new(dlwrap(ary))
       assert_equal ary, addr.to_value
@@ -287,21 +308,12 @@ module Fiddle
       assert_raise(DLError) {nullpo[0] = 1}
     end
 
-    def test_no_memory_leak
-      # https://github.com/ruby/fiddle/actions/runs/3202406059/jobs/5231356410
-      omit if RUBY_VERSION >= '3.2'
-
-      if respond_to?(:assert_nothing_leaked_memory)
-        n_tries = 100_000
-        assert_nothing_leaked_memory(SIZEOF_VOIDP * (n_tries / 100)) do
-          n_tries.times do
-            Fiddle::Pointer.allocate
-          end
-        end
-      else
-        # TruffleRuby - MRI was -rfiddle.so
-        assert_no_memory_leak(%w[-W0 -rfiddle], '', '100_000.times {Fiddle::Pointer.allocate}', rss: true)
-      end
+    def test_ractor_shareable
+      omit("Need Ractor") unless defined?(Ractor)
+      assert_ractor_shareable(Fiddle::NULL)
+      ary = [0, 1, 2, 4, 5]
+      addr = Pointer.new(dlwrap(ary))
+      assert_ractor_shareable(addr)
     end
   end
 end if defined?(Fiddle)

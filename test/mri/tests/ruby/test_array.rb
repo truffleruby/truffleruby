@@ -1114,6 +1114,33 @@ class TestArray < Test::Unit::TestCase
     assert_not_include(a, [1,2])
   end
 
+  def test_monkey_patch_include?
+    assert_separately([], "#{<<~"begin;"}\n#{<<~'end;'}", timeout: 30)
+    begin;
+      $-w = false
+      class Array
+        alias :old_include? :include?
+        def include? x
+          return true if x == :always
+          old_include?(x)
+        end
+      end
+      def test
+        a, c, always = :a, :c, :always
+        [
+          [:a, :b].include?(a),
+          [:a, :b].include?(c),
+          [:a, :b].include?(always),
+        ]
+      end
+      v = test
+      class Array
+        alias :include? :old_include?
+      end
+      assert_equal [true, false, true], v
+    end;
+  end
+
   def test_intersect?
     a = @cls[ 1, 2, 3]
     assert_send([a, :intersect?, [3]])
@@ -1213,6 +1240,17 @@ class TestArray < Test::Unit::TestCase
     a = @cls[ ]
     assert_equal(@cls[], a.map! { 99 })
     assert_equal(@cls[], a)
+  end
+
+  def test_pack_format_mutation
+    ary = [Object.new]
+    fmt = "c" * 0x20000
+    class << ary[0]; self end.send(:define_method, :to_int) {
+      fmt.replace ""
+      1
+    }
+    e = assert_raise(RuntimeError) { ary.pack(fmt) }
+    assert_equal "format string modified", e.message
   end
 
   def test_pack
@@ -3482,6 +3520,17 @@ class TestArray < Test::Unit::TestCase
     assert_typed_equal(e, v, Complex, msg)
   end
 
+  def test_shrink_shared_array
+    assert_normal_exit(<<~'RUBY', '[Feature #20589]')
+      array = []
+      # Make sure the array is allocated
+      10.times { |i| array << i }
+      # Simulate a C extension using OBJ_FREEZE
+      Object.instance_method(:freeze).bind_call(array)
+      array.dup
+    RUBY
+  end
+
   def test_sum
     assert_int_equal(0, [].sum)
     assert_int_equal(3, [3].sum)
@@ -3570,6 +3619,7 @@ class TestArray < Test::Unit::TestCase
     unless respond_to?(:callcc, true)
       EnvUtil.suppress_warning {require 'continuation'}
     end
+    omit 'requires callcc support' unless respond_to?(:callcc, true)
   end
 end
 

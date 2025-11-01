@@ -2,6 +2,8 @@
 
 module Bundler
   class LockfileParser
+    include GemHelpers
+
     class Position
       attr_reader :line, :column
       def initialize(line, column)
@@ -29,6 +31,7 @@ module Bundler
       :dependencies,
       :specs,
       :platforms,
+      :most_specific_locked_platform,
       :bundler_version,
       :ruby_version,
       :checksums,
@@ -136,7 +139,12 @@ module Bundler
         end
         @pos.advance!(line)
       end
-      @specs = @specs.values.sort_by!(&:full_name)
+      @most_specific_locked_platform = @platforms.min_by do |bundle_platform|
+        platform_specificity_match(bundle_platform, local_platform)
+      end
+      @specs = @specs.values.sort_by!(&:full_name).each do |spec|
+        spec.most_specific_locked_platform = @most_specific_locked_platform
+      end
     rescue ArgumentError => e
       Bundler.ui.debug(e)
       raise LockfileError, "Your lockfile is unreadable. Run `rm #{@lockfile_path}` " \
@@ -231,7 +239,6 @@ module Bundler
       spaces = $1
       return unless spaces.size == 2
       checksums = $6
-      return unless checksums
       name = $2
       version = $3
       platform = $4
@@ -241,10 +248,14 @@ module Bundler
       full_name = Gem::NameTuple.new(name, version, platform).full_name
       return unless spec = @specs[full_name]
 
-      checksums.split(",") do |lock_checksum|
-        column = line.index(lock_checksum) + 1
-        checksum = Checksum.from_lock(lock_checksum, "#{@lockfile_path}:#{@pos.line}:#{column}")
-        spec.source.checksum_store.register(spec, checksum)
+      if checksums
+        checksums.split(",") do |lock_checksum|
+          column = line.index(lock_checksum) + 1
+          checksum = Checksum.from_lock(lock_checksum, "#{@lockfile_path}:#{@pos.line}:#{column}")
+          spec.source.checksum_store.register(spec, checksum)
+        end
+      else
+        spec.source.checksum_store.register(spec, nil)
       end
     end
 

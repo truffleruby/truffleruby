@@ -839,7 +839,7 @@ TEXT
   # configure scripts and rakefiles or mkrf_conf files.
 
   def build_extensions
-    builder = Gem::Ext::Builder.new spec, build_args
+    builder = Gem::Ext::Builder.new spec, build_args, Gem.target_rbconfig
 
     builder.build_extensions
   end
@@ -985,7 +985,7 @@ TEXT
   end
 
   def rb_config
-    RbConfig::CONFIG
+    Gem.target_rbconfig
   end
 
   def ruby_install_name
@@ -998,18 +998,17 @@ TEXT
 
   def bash_prolog_script
     if load_relative_enabled?
-      script = +<<~EOS
-        bindir="${0%/*}"
-      EOS
-
-      script << %(exec "$bindir/#{ruby_install_name}" "-x" "$0" "$@"\n)
-
       <<~EOS
         #!/bin/sh
         # -*- ruby -*-
         _=_\\
         =begin
-        #{script.chomp}
+        bindir="${0%/*}"
+        ruby="$bindir/#{ruby_install_name}"
+        if [ ! -f "$ruby" ]; then
+          ruby="#{ruby_install_name}"
+        fi
+        exec "$ruby" "-x" "$0" "$@"
         =end
       EOS
     else

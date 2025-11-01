@@ -243,14 +243,14 @@ assert_equal '1', %q{
   end
   undef :"foo#{:bar}"
   1
-}, '[ruby-dev:32308]', tagged: true
+}, '[ruby-dev:32308]'
 assert_equal '1', %q{
   def foobar
     1
   end
   alias :"bar#{:baz}" :"foo#{:bar}"
   barbaz
-}, '[ruby-dev:32308]', tagged: true
+}, '[ruby-dev:32308]'
 
 # private
 assert_equal '1',       %q( class C
@@ -340,24 +340,6 @@ assert_equal '1',       %q( class C; def m() 7 end; private :m end
 assert_equal '1',       %q( class C; def m() 1 end; private :m end
                             C.new.send(:m) )
 
-# with block
-assert_equal '[[:ok1, :foo], [:ok2, :foo, :bar]]',
-%q{
-  class C
-    def [](a)
-      $ary << [yield, a]
-    end
-    def []=(a, b)
-      $ary << [yield, a, b]
-    end
-  end
-
-  $ary = []
-  C.new[:foo, &lambda{:ok1}]
-  C.new[:foo, &lambda{:ok2}] = :bar
-  $ary
-}, tagged: true
-
 # with
 assert_equal '[:ok1, [:ok2, 11]]', %q{
   class C
@@ -372,7 +354,7 @@ assert_equal '[:ok1, [:ok2, 11]]', %q{
   $ary = []
   C.new[]+=1
   $ary
-}, tagged: true
+}
 
 # splat and block arguments
 assert_equal %q{[[[:x, :y, :z], NilClass], [[1, :x, :y, :z], NilClass], [[1, 2, :x, :y, :z], NilClass], [[:obj], NilClass], [[1, :obj], NilClass], [[1, 2, :obj], NilClass], [[], Proc], [[1], Proc], [[1, 2], Proc], [[], Proc], [[1], Proc], [[1, 2], Proc], [[:x, :y, :z], Proc], [[1, :x, :y, :z], Proc], [[1, 2, :x, :y, :z], Proc]]}, %q{
@@ -404,7 +386,6 @@ $result
 
 # aset and splat
 assert_equal '4', %q{class Foo;def []=(a,b,c,d);end;end;Foo.new[1,*a=[2,3]]=4}
-assert_equal '4', %q{class Foo;def []=(a,b,c,d);end;end;def m(&blk)Foo.new[1,*a=[2,3],&blk]=4;end;m{}}, tagged: true
 
 # post test
 assert_equal %q{[1, 2, :o1, :o2, [], 3, 4, NilClass, nil, nil]}, %q{
@@ -676,17 +657,17 @@ tests.each{|setup, methods| setup = setup.dup; setup.strip!
 assert_equal %q{[:C0_m, [1, 2, :o1, :o2, 3, 4]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, p1, p2); super; end; end
-; C1.new.m(1,2,3,4)}, tagged: true
+; C1.new.m(1,2,3,4)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, :o2, 4, 5]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5)}, tagged: true
+; C1.new.m(1,2,3,4,5)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6)}, tagged: true
+; C1.new.m(1,2,3,4,5,6)}
 
 assert_equal %q{[:C0_m, [1, :o]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
@@ -717,27 +698,27 @@ class C1 < C0; def m a
 assert_equal %q{[:C0_m, [1, 2, 3, 4]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4)}, tagged: true
+; C1.new.m(1,2,3,4)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5)}, tagged: true
+; C1.new.m(1,2,3,4,5)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6)}, tagged: true
+; C1.new.m(1,2,3,4,5,6)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6, 7]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6,7)}, tagged: true
+; C1.new.m(1,2,3,4,5,6,7)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6, 7, 8]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6,7,8)}, tagged: true
+; C1.new.m(1,2,3,4,5,6,7,8)}
 
 assert_equal %q{[:C0_m, [1, :o]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
@@ -829,32 +810,32 @@ class C1 < C0; def m a, *r
 assert_equal %q{[:C0_m, [1, 2, :o1, :o2, 3, 4]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4)}, tagged: true
+; C1.new.m(1,2,3,4)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, :o2, 4, 5]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5)}, tagged: true
+; C1.new.m(1,2,3,4,5)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6)}, tagged: true
+; C1.new.m(1,2,3,4,5,6)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6, 7]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6,7)}, tagged: true
+; C1.new.m(1,2,3,4,5,6,7)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6, 7, 8]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6,7,8)}, tagged: true
+; C1.new.m(1,2,3,4,5,6,7,8)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6, 7, 8, 9]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6,7,8,9)}, tagged: true
+; C1.new.m(1,2,3,4,5,6,7,8,9)}
 
 assert_equal %q{[:C0_m, [1]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
@@ -907,7 +888,7 @@ assert_equal 'ok', %q{
     end
   }.call
   C.new.m
-}, '[ruby-core:11998]', tagged: true
+}, '[ruby-core:11998]'
 
 assert_equal 'ok', %q{
   class B
@@ -925,7 +906,7 @@ assert_equal 'ok', %q{
   rescue NameError
     :ok
   end
-}, '[ruby-dev:31816], [ruby-dev:31817]', tagged: true
+}, '[ruby-dev:31816], [ruby-dev:31817]'
 
 assert_normal_exit %q{
   begin
@@ -989,7 +970,7 @@ assert_equal '[false, false, false, false, true, true]', %q{
   D.new.foo
   D.new.bar{}
   [C.new.foo, C.new.foo{}, D.new.m1, D.new.m1{}, D.new.m2, D.new.m2{}]
-}, '[ruby-core:14813]', tagged: true
+}, '[ruby-core:14813]'
 
 assert_equal 'ok', %q{
   class Foo
@@ -1107,10 +1088,6 @@ assert_equal 'ok', %q{
     'ok'
   end
 }
-assert_equal 'ok', %q{
-  [0][0, &proc{}] += 21
-  'ok'
-}, '[ruby-core:30534]', tagged: true
 
 # should not cache when splat
 assert_equal 'ok', %q{
@@ -1189,7 +1166,7 @@ assert_equal 'DC', %q{
   end
   test2 o1, [], block
   $result.join
-}, tagged: true
+}
 
 assert_equal 'ok', %q{
   def foo
@@ -1199,3 +1176,246 @@ assert_equal 'ok', %q{
   foo
   foo
 }, '[Bug #20178]'
+
+assert_equal 'ok', %q{
+  def bar(x); x; end
+  def foo(...); bar(...); end
+  foo('ok')
+}
+
+assert_equal 'ok', %q{
+  def bar(x); x; end
+  def foo(z, ...); bar(...); end
+  foo(1, 'ok')
+}
+
+assert_equal 'ok', %q{
+  def bar(x, y); x; end
+  def foo(...); bar("ok", ...); end
+  foo(1)
+}
+
+assert_equal 'ok', %q{
+  def bar(x); x; end
+  def foo(...); 1.times { return bar(...) }; end
+  foo("ok")
+}
+
+assert_equal 'ok', %q{
+  def bar(x); x; end
+  def foo(...); x = nil; 1.times { x = bar(...) }; x; end
+  foo("ok")
+}
+
+assert_equal 'ok', %q{
+  def bar(x); yield; end
+  def foo(...); bar(...); end
+  foo(1) { "ok" }
+}
+
+assert_equal 'ok', %q{
+  def baz(x); x; end
+  def bar(...); baz(...); end
+  def foo(...); bar(...); end
+  foo("ok")
+}
+
+assert_equal '[1, 2, 3, 4]', %q{
+  def baz(a, b, c, d); [a, b, c, d]; end
+  def bar(...); baz(1, ...); end
+  def foo(...); bar(2, ...); end
+  foo(3, 4)
+}
+
+assert_equal 'ok', %q{
+  class Foo; def self.foo(x); x; end; end
+  class Bar < Foo; def self.foo(...); super; end; end
+  Bar.foo('ok')
+}
+
+assert_equal 'ok', %q{
+  class Foo; def self.foo(x); x; end; end
+  class Bar < Foo; def self.foo(...); super(...); end; end
+  Bar.foo('ok')
+}
+
+assert_equal 'ok', %q{
+  class Foo; def self.foo(x, y); x + y; end; end
+  class Bar < Foo; def self.foo(...); super("o", ...); end; end
+  Bar.foo('k')
+}
+
+assert_equal 'ok', %q{
+  def bar(a); a; end
+  def foo(...); lambda { bar(...) }; end
+  foo("ok").call
+}
+
+assert_equal 'ok', %q{
+  class Foo; def self.foo(x, y); x + y; end; end
+  class Bar < Foo; def self.y(&b); b; end; def self.foo(...); y { super("o", ...) }; end; end
+  Bar.foo('k').call
+}
+
+assert_equal 'ok', %q{
+  def baz(n); n; end
+  def foo(...); bar = baz(...); lambda { lambda { bar } }; end
+  foo("ok").call.call
+}
+
+assert_equal 'ok', %q{
+  class A; def self.foo(...); new(...); end; attr_reader :b; def initialize(a, b:"ng"); @a = a; @b = b; end end
+  A.foo(1).b
+  A.foo(1, b: "ok").b
+}
+
+assert_equal 'ok', %q{
+  class A; def initialize; @a = ["ok"]; end; def first(...); @a.first(...); end; end
+  def call x; x.first; end
+  def call1 x; x.first(1); end
+  call(A.new)
+  call1(A.new).first
+}
+
+assert_equal 'ok', %q{
+  class A; def foo; yield("o"); end; end
+  class B < A; def foo(...); super { |x| yield(x + "k") }; end; end
+  B.new.foo { |x| x }
+}
+
+assert_equal "[1, 2, 3, 4]", %q{
+  def foo(*b) = b
+
+  def forward(...)
+    splat = [1,2,3]
+    foo(*splat, ...)
+  end
+
+  forward(4)
+}
+
+assert_equal "[1, 2, 3, 4]", %q{
+class A
+  def foo(*b) = b
+end
+
+class B < A
+  def foo(...)
+    splat = [1,2,3]
+    super(*splat, ...)
+  end
+end
+
+B.new.foo(4)
+}
+
+assert_equal 'ok', %q{
+  class A; attr_reader :iv; def initialize(...) = @iv = "ok"; end
+  A.new("foo", bar: []).iv
+}
+
+assert_equal 'ok', %q{
+  def foo(a, b) = a + b
+  def bar(...) = foo(...)
+  bar(1, 2)
+  bar(1, 2)
+  begin
+    bar(1, 2, 3)
+    "ng"
+  rescue ArgumentError
+    "ok"
+  end
+}
+
+assert_equal 'ok', %q{
+  class C
+    def foo(...) = :ok
+    def bar(...) = __send__(:foo, ...)
+  end
+
+  C.new.bar
+}
+
+assert_equal 'ok', %q{
+  class C
+    def method_missing(...) = :ok
+    def foo(...) = xyzzy(...)
+  end
+
+  C.new.foo
+}
+
+assert_equal 'ok', %q{
+  class C
+    def initialize(a)
+    end
+  end
+
+  def foo(...)
+    C.new(...)
+    :ok
+  end
+
+  foo(*["bar"])
+  foo("baz")
+}
+
+assert_equal 'ok', %q{
+  class C
+    def foo(b:)
+      b
+    end
+  end
+
+  def foo(...)
+    C.new.send(...)
+  end
+
+  foo(:foo, b: :ok)
+  foo(*["foo"], b: :ok)
+}
+
+assert_equal 'ok', %q{
+  Thing = Struct.new(:value)
+
+  Obj = Thing.new("ok")
+
+  def delegate(...)
+    Obj.value(...)
+  end
+
+  def no_args
+    delegate
+  end
+
+  def splat_args(*args)
+    delegate(*args)
+  end
+
+  no_args
+  splat_args
+}
+
+assert_equal 'ok', %q{
+  class A
+    private
+    def foo = "ng"
+  end
+
+  class B
+    def initialize(o)
+      @o = o
+    end
+
+    def foo(...) = @o.foo(...)
+    def internal_foo = foo
+  end
+
+  b = B.new(A.new)
+
+  begin
+    b.internal_foo
+  rescue NoMethodError
+    "ok"
+  end
+}

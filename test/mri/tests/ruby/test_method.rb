@@ -961,6 +961,38 @@ class TestMethod < Test::Unit::TestCase
     assert_raise(NameError, bug14658) {o.singleton_method(:bar)}
   end
 
+  def test_singleton_method_included_or_prepended_bug_20620
+    m = Module.new do
+      extend self
+      def foo = :foo
+    end
+    assert_equal(:foo, m.singleton_method(:foo).call)
+    assert_raise(NameError) {m.singleton_method(:puts)}
+
+    sc = Class.new do
+      def t = :t
+    end
+    c = Class.new(sc) do
+      singleton_class.prepend(Module.new do
+        def bar = :bar
+      end)
+      extend(Module.new do
+        def quux = :quux
+      end)
+      def self.baz = :baz
+    end
+    assert_equal(:bar, c.singleton_method(:bar).call)
+    assert_equal(:baz, c.singleton_method(:baz).call)
+    assert_equal(:quux, c.singleton_method(:quux).call)
+
+    assert_raise(NameError) {c.singleton_method(:t)}
+
+    c2 = Class.new(c)
+    assert_raise(NameError) {c2.singleton_method(:bar)}
+    assert_raise(NameError) {c2.singleton_method(:baz)}
+    assert_raise(NameError) {c2.singleton_method(:quux)}
+  end
+
   Feature9783 = '[ruby-core:62212] [Feature #9783]'
 
   def assert_curry_three_args(m)
@@ -1407,6 +1439,46 @@ class TestMethod < Test::Unit::TestCase
     def foo
       a = b = c = a = b = c = 12345
     end
+
+    def binding_noarg
+      a = a = 12345
+      binding
+    end
+
+    def binding_one_arg(x)
+      a = a = 12345
+      binding
+    end
+
+    def binding_optargs(x, y=42)
+      a = a = 12345
+      binding
+    end
+
+    def binding_anyargs(*x)
+      a = a = 12345
+      binding
+    end
+
+    def binding_keywords(x: 42)
+      a = a = 12345
+      binding
+    end
+
+    def binding_anykeywords(**x)
+      a = a = 12345
+      binding
+    end
+
+    def binding_forwarding(...)
+      a = a = 12345
+      binding
+    end
+
+    def binding_forwarding1(x, ...)
+      a = a = 12345
+      binding
+    end
   end
 
   def test_to_proc_binding
@@ -1423,6 +1495,66 @@ class TestMethod < Test::Unit::TestCase
     assert_equal(123, b.local_variable_get(:foo), bug11012)
     assert_equal(456, b.local_variable_get(:bar), bug11012)
     assert_equal([:bar, :foo], b.local_variables.sort, bug11012)
+  end
+
+  def test_method_binding
+    c = C.new
+
+    b = c.binding_noarg
+    assert_equal(12345, b.local_variable_get(:a))
+
+    b = c.binding_one_arg(0)
+    assert_equal(12345, b.local_variable_get(:a))
+    assert_equal(0, b.local_variable_get(:x))
+
+    b = c.binding_anyargs()
+    assert_equal(12345, b.local_variable_get(:a))
+    assert_equal([], b.local_variable_get(:x))
+    b = c.binding_anyargs(0)
+    assert_equal(12345, b.local_variable_get(:a))
+    assert_equal([0], b.local_variable_get(:x))
+    b = c.binding_anyargs(0, 1)
+    assert_equal(12345, b.local_variable_get(:a))
+    assert_equal([0, 1], b.local_variable_get(:x))
+
+    b = c.binding_optargs(0)
+    assert_equal(12345, b.local_variable_get(:a))
+    assert_equal(0, b.local_variable_get(:x))
+    assert_equal(42, b.local_variable_get(:y))
+    b = c.binding_optargs(0, 1)
+    assert_equal(12345, b.local_variable_get(:a))
+    assert_equal(0, b.local_variable_get(:x))
+    assert_equal(1, b.local_variable_get(:y))
+
+    b = c.binding_keywords()
+    assert_equal(12345, b.local_variable_get(:a))
+    assert_equal(42, b.local_variable_get(:x))
+    b = c.binding_keywords(x: 102)
+    assert_equal(12345, b.local_variable_get(:a))
+    assert_equal(102, b.local_variable_get(:x))
+
+    b = c.binding_anykeywords()
+    assert_equal(12345, b.local_variable_get(:a))
+    assert_equal({}, b.local_variable_get(:x))
+    b = c.binding_anykeywords(foo: 999)
+    assert_equal(12345, b.local_variable_get(:a))
+    assert_equal({foo: 999}, b.local_variable_get(:x))
+
+    b = c.binding_forwarding()
+    assert_equal(12345, b.local_variable_get(:a))
+    b = c.binding_forwarding(0)
+    assert_equal(12345, b.local_variable_get(:a))
+    b = c.binding_forwarding(0, 1)
+    assert_equal(12345, b.local_variable_get(:a))
+    b = c.binding_forwarding(foo: 42)
+    assert_equal(12345, b.local_variable_get(:a))
+
+    b = c.binding_forwarding1(987)
+    assert_equal(12345, b.local_variable_get(:a))
+    assert_equal(987, b.local_variable_get(:x))
+    b = c.binding_forwarding1(987, 654)
+    assert_equal(12345, b.local_variable_get(:a))
+    assert_equal(987, b.local_variable_get(:x))
   end
 
   MethodInMethodClass_Setup = -> do
@@ -1475,12 +1607,12 @@ class TestMethod < Test::Unit::TestCase
         begin
           $f.call(1)
         rescue ArgumentError => e
-          assert_equal "main.rb:#{$line_lambda}:in `block in <main>'", e.backtrace.first
+          assert_equal "main.rb:#{$line_lambda}:in 'block in <main>'", e.backtrace.first
         end
         begin
           foo(1)
         rescue ArgumentError => e
-          assert_equal "main.rb:#{$line_method}:in `foo'", e.backtrace.first
+          assert_equal "main.rb:#{$line_method}:in 'foo'", e.backtrace.first
         end
       EOS
     END_OF_BODY
@@ -1639,9 +1771,118 @@ class TestMethod < Test::Unit::TestCase
 
   def test_kwarg_eval_memory_leak
     assert_no_memory_leak([], "", <<~RUBY, rss: true, limit: 1.2)
+      obj = Object.new
+      def obj.test(**kwargs) = nil
+
       100_000.times do
-        eval("Hash.new(foo: 123)")
+        eval("obj.test(foo: 123)")
       end
     RUBY
+  end
+
+  def test_super_with_splat
+    c = Class.new {
+      attr_reader :x
+
+      def initialize(*args)
+        @x, _ = args
+      end
+    }
+    b = Class.new(c) { def initialize(...) = super }
+    a = Class.new(b) { def initialize(*args) = super }
+    obj = a.new(1, 2, 3)
+    assert_equal 1, obj.x
+  end
+
+  def test_warn_unused_block
+    assert_in_out_err '-w', <<-'RUBY' do |_out, err, _status|
+      def foo = nil
+      foo{}          # warn
+      send(:foo){}   # don't warn because it uses send
+      b = Proc.new{}
+      foo(&b)        # warn
+    RUBY
+      errstr = err.join("\n")
+      assert_equal 2, err.size, errstr
+
+      assert_match(/-:2: warning/, errstr)
+      assert_match(/-:5: warning/, errstr)
+    end
+
+    assert_in_out_err '-w', <<-'RUBY' do |_out, err, _status|
+      def foo = nil
+      10.times{foo{}} # warn once
+    RUBY
+      assert_equal 1, err.size
+    end
+
+    assert_in_out_err '-w', <<-'RUBY' do |_out, err, _status|
+      def foo = nil; b = nil
+      foo(&b)       # no warning
+      1.object_id{} # no warning because it is written in C
+
+      class C
+        def initialize
+        end
+      end
+      C.new{} # no warning
+
+    RUBY
+      assert_equal 0, err.size
+    end
+
+    assert_in_out_err '-w', <<-'RUBY' do |_out, err, _status|
+      class C0
+        def f1 = nil
+        def f2 = nil
+        def f3 = nil
+        def f4 = nil
+        def f5 = nil
+        def f6 = nil
+      end
+
+      class C1 < C0
+        def f1 = super         # zsuper / use
+        def f2 = super()       # super  / use
+        def f3(&_) = super(&_) # super  / use
+        def f4 = super(&nil)   # super  / unuse
+        def f5 = super(){}     # super  / unuse
+        def f6 = super{}       # zsuper / unuse
+      end
+
+      C1.new.f1{} # no warning
+      C1.new.f2{} # no warning
+      C1.new.f3{} # no warning
+      C1.new.f4{} # warning
+      C1.new.f5{} # warning
+      C1.new.f6{} # warning
+    RUBY
+      assert_equal 3, err.size, err.join("\n")
+      assert_match(/-:22: warning.+f4/, err.join)
+      assert_match(/-:23: warning.+f5/, err.join)
+      assert_match(/-:24: warning.+f6/, err.join)
+    end
+
+    assert_in_out_err '-w', <<-'RUBY' do |_out, err, _status|
+      class C0
+        def f = yield
+      end
+
+      class C1 < C0
+        def f = nil
+      end
+
+      C1.new.f{} # do not warn on duck typing
+    RUBY
+      assert_equal 0, err.size, err.join("\n")
+    end
+
+    assert_in_out_err '-w', <<-'RUBY' do |_out, err, _status|
+      def foo(*, &block) = block
+      def bar(buz, ...) = foo(buz, ...)
+      bar(:test) {} # do not warn because of forwarding
+    RUBY
+      assert_equal 0, err.size, err.join("\n")
+    end
   end
 end

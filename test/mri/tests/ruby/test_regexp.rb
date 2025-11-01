@@ -559,16 +559,26 @@ class TestRegexp < Test::Unit::TestCase
     assert_raise(IndexError) { m.byteoffset(2) }
     assert_raise(IndexError) { m.begin(2) }
     assert_raise(IndexError) { m.end(2) }
+    assert_raise(IndexError) { m.bytebegin(2) }
+    assert_raise(IndexError) { m.byteend(2) }
 
     m = /(?<x>q..)?/.match("foobarbaz")
     assert_equal([nil, nil], m.byteoffset("x"))
     assert_equal(nil, m.begin("x"))
     assert_equal(nil, m.end("x"))
+    assert_equal(nil, m.bytebegin("x"))
+    assert_equal(nil, m.byteend("x"))
 
     m = /\A\u3042(.)(.)?(.)\z/.match("\u3042\u3043\u3044")
     assert_equal([3, 6], m.byteoffset(1))
+    assert_equal(3, m.bytebegin(1))
+    assert_equal(6, m.byteend(1))
     assert_equal([nil, nil], m.byteoffset(2))
+    assert_equal(nil, m.bytebegin(2))
+    assert_equal(nil, m.byteend(2))
     assert_equal([6, 9], m.byteoffset(3))
+    assert_equal(6, m.bytebegin(3))
+    assert_equal(9, m.byteend(3))
   end
 
   def test_match_to_s
@@ -718,7 +728,7 @@ class TestRegexp < Test::Unit::TestCase
       h = {}
       ObjectSpace.count_objects(h)
       prev_matches = h[:T_MATCH] || 0
-      md = /[A-Z]/.match('1') # no match
+      _md = /[A-Z]/.match('1') # no match
       ObjectSpace.count_objects(h)
       new_matches = h[:T_MATCH] || 0
       assert_equal prev_matches, new_matches, "Bug [#20104]"
@@ -939,10 +949,9 @@ class TestRegexp < Test::Unit::TestCase
     assert_equal("\u3042\\t", Regexp.quote("\u3042\t"))
     assert_equal("\\t\xff", Regexp.quote("\t" + [0xff].pack("C")))
 
-    # TruffleString: length of utf-16 string is not a multiple of 2
-    # bug13034 = '[ruby-core:78646] [Bug #13034]'
-    # str = "\x00".force_encoding("UTF-16BE")
-    # assert_equal(str, Regexp.quote(str), bug13034)
+    bug13034 = '[ruby-core:78646] [Bug #13034]'
+    str = "\x00".force_encoding("UTF-16BE")
+    assert_equal(str, Regexp.quote(str), bug13034)
   end
 
   def test_try_convert
@@ -1287,6 +1296,9 @@ class TestRegexp < Test::Unit::TestCase
     assert_match(/\A[[:space:]]+\z/, "\r\n\v\f\r\s\u0085")
     assert_match(/\A[[:ascii:]]+\z/, "\x00\x7F")
     assert_no_match(/[[:ascii:]]/, "\x80\xFF")
+
+    assert_match(/[[:word:]]/, "\u{200C}")
+    assert_match(/[[:word:]]/, "\u{200D}")
   end
 
   def test_cclass_R
@@ -1690,7 +1702,7 @@ class TestRegexp < Test::Unit::TestCase
     assert_separately([], "#{<<-"begin;"}\n#{<<-"end;"}")
     begin;
       begin
-        # require '-test-/regexp'
+        require '-test-/regexp'
       rescue LoadError
       else
         bug = '[ruby-core:79624] [Bug #13234]'
@@ -1784,7 +1796,7 @@ class TestRegexp < Test::Unit::TestCase
       end
       t = Time.now - t
 
-      assert_in_delta(timeout, t, timeout / 2)
+      assert_operator(timeout, :<=, [timeout * 1.5, 1].max)
     end;
   end
 
@@ -1829,14 +1841,11 @@ class TestRegexp < Test::Unit::TestCase
   end
 
   def test_bug_20453
-    assert_separately([], "#{<<-"begin;"}\n#{<<-'end;'}")
-    begin;
-      Regexp.timeout = 0.001
+    re = Regexp.new("^(a*)x$", timeout: 0.001)
 
-      assert_raise(Regexp::TimeoutError) do
-        /^(a*)x$/ =~ "a" * 1000000 + "x"
-      end
-    end;
+    assert_raise(Regexp::TimeoutError) do
+      re =~ "a" * 1000000 + "x"
+    end
   end
 
   def test_bug_20886
@@ -1873,7 +1882,7 @@ class TestRegexp < Test::Unit::TestCase
 
   def test_timeout_shorter_than_global
     omit "timeout test is too unstable on s390x" if RUBY_PLATFORM =~ /s390x/
-    per_instance_redos_test(10, 0.2, 0.2)
+    per_instance_redos_test(10, 0.5, 0.5)
   end
 
   def test_timeout_longer_than_global
@@ -1956,7 +1965,7 @@ class TestRegexp < Test::Unit::TestCase
   end
 
   def test_match_cache_positive_look_ahead
-    assert_separately([], "#{<<-"begin;"}\n#{<<-'end;'}")
+    assert_separately([], "#{<<-"begin;"}\n#{<<-'end;'}", timeout: 30)
       timeout = #{ EnvUtil.apply_timeout_scale(10).inspect }
     begin;
        Regexp.timeout = timeout
@@ -2064,11 +2073,11 @@ class TestRegexp < Test::Unit::TestCase
   end
 
   def test_bug_20098 # [Bug #20098]
-    assert /a((.|.)|bc){,4}z/.match? 'abcbcbcbcz'
-    assert /a(b+?c*){4,5}z/.match? 'abbbccbbbccbcbcz'
-    assert /a(b+?(.|.)){2,3}z/.match? 'abbbcbbbcbbbcz'
-    assert /a(b*?(.|.)[bc]){2,5}z/.match? 'abcbbbcbcccbcz'
-    assert /^(?:.+){2,4}?b|b/.match? "aaaabaa"
+    assert(/a((.|.)|bc){,4}z/.match? 'abcbcbcbcz')
+    assert(/a(b+?c*){4,5}z/.match? 'abbbccbbbccbcbcz')
+    assert(/a(b+?(.|.)){2,3}z/.match? 'abbbcbbbcbbbcz')
+    assert(/a(b*?(.|.)[bc]){2,5}z/.match? 'abcbbbcbcccbcz')
+    assert(/^(?:.+){2,4}?b|b/.match? "aaaabaa")
   end
 
   def test_bug_20207 # [Bug #20207]

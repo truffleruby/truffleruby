@@ -412,7 +412,7 @@ VALUE rb_utf8_str_new_static(const char *ptr, long len);
 
 /**
  * Identical to rb_interned_str(),  except it takes a Ruby's  string instead of
- * C's.  It can also be seen  as a routine identical to to rb_str_new_shared(),
+ * C's.  It can also be seen  as a routine identical to rb_str_new_shared(),
  * except it returns an infamous "f"string.
  *
  * @param[in]  str  An object of ::RString.
@@ -454,7 +454,7 @@ VALUE rb_interned_str(const char *ptr, long len);
 RBIMPL_ATTR_NONNULL(())
 /**
  * Identical to  rb_interned_str(), except it  assumes the passed pointer  is a
- * pointer to a C's  string.  It can also be seen as a  routine identical to to
+ * pointer to a C's  string.  It can also be seen as a  routine identical to
  * rb_str_to_interned_str(), except  it takes a  C's string instead  of Ruby's.
  * Or it can  also be seen as a routine  identical to rb_str_new_cstr(), except
  * it returns an infamous "f"string.
@@ -1482,8 +1482,6 @@ rbimpl_exc_new_cstr(VALUE exc, const char *str)
     return rb_exc_new(exc, str, len);
 }
 
-#ifndef TRUFFLERUBY
-
 /**
  * Allocates an instance of ::rb_cString.
  *
@@ -1674,8 +1672,6 @@ rbimpl_exc_new_cstr(VALUE exc, const char *str)
       rbimpl_exc_new_cstr    :                  \
       rb_exc_new_cstr) ((exc), (str)))
 
-#endif // TRUFFLERUBY
-
 #define rb_str_new2 rb_str_new_cstr                  /**< @old{rb_str_new_cstr} */
 #define rb_str_new3 rb_str_new_shared                /**< @old{rb_str_new_shared} */
 #define rb_str_new4 rb_str_new_frozen                /**< @old{rb_str_new_frozen} */
@@ -1690,10 +1686,10 @@ rbimpl_exc_new_cstr(VALUE exc, const char *str)
  * Length of a string literal.
  *
  * @param[in]  str  A C String literal.
- * @return     An integer  constant expression that represents  `str`'s length,
- *             in bytes, not including the terminating NUL character.
+ * @return     An  integer constant  expression that  represents the  number of
+ *             `str`'s elements, not including the terminating NUL character.
  */
-#define rb_strlen_lit(str) (sizeof(str "") - 1)
+#define rb_strlen_lit(str) ((sizeof(str "") / sizeof(str ""[0])) - 1)
 
 /**
  * Identical to rb_str_new_static(), except it cannot take string variables.

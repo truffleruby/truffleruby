@@ -36,8 +36,6 @@ RBIMPL_SYMBOL_EXPORT_BEGIN()
  */
 #define rb_defout rb_stdout
 
-#ifndef TRUFFLERUBY
-
 /* string.c */ /* ...why? moved in commit de7161526014b781468cea5d84411e23be */
 
 /**
@@ -93,8 +91,6 @@ RUBY_EXTERN VALUE rb_default_rs;
  *             deprecated.
  */
 RUBY_EXTERN VALUE rb_output_rs;
-
-#endif // TRUFFLERUBY
 
 /**
  * Writes the given string to the given IO.
@@ -389,7 +385,7 @@ VALUE rb_io_puts(int argc, const VALUE *argv, VALUE io);
  * @param[in]  fd     Target file descriptor.
  * @param[in]  flags  Flags, e.g. `O_CREAT|O_EXCL`
  * @param[in]  path   The path of the file that backs `fd`, for diagnostics.
- * @return     An allocated instance of ::rb_cIO.
+ * @return     An allocated instance of ::rb_cIO with the autoclose flag set.
  * @note       Leave `path` NULL if you don't know.
  */
 VALUE rb_io_fdopen(int fd, int flags, const char *path);

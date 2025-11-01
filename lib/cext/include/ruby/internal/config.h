@@ -19,8 +19,6 @@
  *             extension libraries.  They could be written in C++98.
  * @brief      Thin wrapper to ruby/config.h
  */
-// Must be first, as it defines feature test macros like _GNU_SOURCE,
-// which influences the definitions exposed by system header files.
 #include "ruby/config.h"
 
 #ifdef RUBY_EXTCONF_H
@@ -56,11 +54,6 @@
 #  define HAVE_VA_ARGS_MACRO
 # else
 #  /* NG, not known. */
-// Always define HAVE_VA_ARGS_MACRO on TruffleRuby, as it leads to cleaner macros and more optimizations:
-// clang++ on macOS Ventura has __cplusplus defined as 199711 but it supports newer standards like c++11
-#ifdef TRUFFLERUBY
-#define HAVE_VA_ARGS_MACRO
-#endif
 # endif
 #endif
 
@@ -154,9 +147,5 @@
 # undef RBIMPL_TEST2
 # undef RBIMPL_TEST3
 #endif /* HAVE_VA_ARGS_MACRO */
-
-#define TRUFFLERUBY
-// Loaded at the end of config.h, included from defines.h.
-#include <truffleruby/truffleruby-pre.h>
 
 #endif /* RBIMPL_CONFIG_H */
