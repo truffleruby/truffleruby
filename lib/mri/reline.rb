@@ -6,7 +6,6 @@ require 'reline/key_actor'
 require 'reline/key_stroke'
 require 'reline/line_editor'
 require 'reline/history'
-require 'reline/terminfo'
 require 'reline/io'
 require 'reline/face'
 require 'rbconfig'
@@ -18,10 +17,12 @@ module Reline
 
   class ConfigEncodingConversionError < StandardError; end
 
-  Key = Struct.new(:char, :combined_char, :with_meta) do
+  # EOF key: { char: nil, method_symbol: nil }
+  # Other key: { char: String, method_symbol: Symbol }
+  Key = Struct.new(:char, :method_symbol, :unused_boolean) do
     # For dialog_proc `key.match?(dialog.name)`
     def match?(sym)
-      combined_char.is_a?(Symbol) && combined_char == sym
+      method_symbol && method_symbol == sym
     end
   end
   CursorPos = Struct.new(:x, :y)
@@ -182,9 +183,7 @@ module Reline
     def output=(val)
       raise TypeError unless val.respond_to?(:write) or val.nil?
       @output = val
-      if io_gate.respond_to?(:output=)
-        io_gate.output = val
-      end
+      io_gate.output = val
     end
 
     def vi_editing_mode
@@ -308,7 +307,8 @@ module Reline
       otio = io_gate.prep
 
       may_req_ambiguous_char_width
-      line_editor.reset(prompt, encoding: encoding)
+      key_stroke.encoding = encoding
+      line_editor.reset(prompt)
       if multiline
         line_editor.multiline_on
         if block_given?
@@ -317,7 +317,6 @@ module Reline
       else
         line_editor.multiline_off
       end
-      line_editor.output = output
       line_editor.completion_proc = completion_proc
       line_editor.completion_append_character = completion_append_character
       line_editor.output_modifier_proc = output_modifier_proc
@@ -344,13 +343,14 @@ module Reline
           read_io(config.keyseq_timeout) { |inputs|
             line_editor.set_pasting_state(io_gate.in_pasting?)
             inputs.each do |key|
-              if key.char == :bracketed_paste_start
-                text = io_gate.read_bracketed_paste
-                line_editor.insert_multiline_text(text)
-                line_editor.scroll_into_view
-              else
-                line_editor.update(key)
+              case key.method_symbol
+              when :bracketed_paste_start
+                # io_gate is Reline::ANSI because the key :bracketed_paste_start is only assigned in Reline::ANSI
+                key = Reline::Key.new(io_gate.read_bracketed_paste, :insert_multiline_text)
+              when :quoted_insert, :ed_quoted_insert
+                key = Reline::Key.new(io_gate.read_single_char(config.keyseq_timeout), :insert_raw_char)
               end
+              line_editor.update(key)
             end
           }
           if line_editor.finished?
@@ -412,7 +412,7 @@ module Reline
     end
 
     private def may_req_ambiguous_char_width
-      @ambiguous_width = 2 if io_gate.dumb? || !STDIN.tty? || !STDOUT.tty?
+      @ambiguous_width = 1 if io_gate.dumb? || !STDIN.tty? || !STDOUT.tty?
       return if defined? @ambiguous_width
       io_gate.move_cursor_column(0)
       begin
@@ -421,7 +421,7 @@ module Reline
         # LANG=C
         @ambiguous_width = 1
       else
-        @ambiguous_width = io_gate.cursor_pos.x
+        @ambiguous_width = io_gate.cursor_pos.x == 2 ? 2 : 1
       end
       io_gate.move_cursor_column(0)
       io_gate.erase_after_cursor
@@ -486,8 +486,8 @@ module Reline
   def self.core
     @core ||= Core.new { |core|
       core.config = Reline::Config.new
-      core.key_stroke = Reline::KeyStroke.new(core.config)
-      core.line_editor = Reline::LineEditor.new(core.config, core.encoding)
+      core.key_stroke = Reline::KeyStroke.new(core.config, core.encoding)
+      core.line_editor = Reline::LineEditor.new(core.config)
 
       core.basic_word_break_characters = " \t\n`><=;|&{("
       core.completer_word_break_characters = " \t\n`><=;|&{("

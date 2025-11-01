@@ -76,10 +76,6 @@ assert_equal '[1, 2]', %q{
 }, '[ruby-dev:44005] [Ruby 1.9 - Bug #4950]'
 
 assert_equal 'ok', %q{
-  # This test is very unstable. It fails a Ractor assertion:
-  # Assertion Failed: ../src/thread_pthread.c:451:ractor_sched_set_locked:vm->ractor.sched.lock_owner == NULL
-  skip :ok # too unstable
-
   def now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
   Thread.new do
@@ -88,7 +84,7 @@ assert_equal 'ok', %q{
 
   10.times do
     pid = fork{ exit!(0) }
-    deadline = now + 1
+    deadline = now + 10
     until Process.waitpid(pid, Process::WNOHANG)
       if now > deadline
         Process.kill(:KILL, pid)

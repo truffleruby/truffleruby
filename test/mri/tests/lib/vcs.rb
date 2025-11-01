@@ -226,6 +226,7 @@ class VCS
 
   def after_export(dir)
     FileUtils.rm_rf(Dir.glob("#{dir}/.git*"))
+    FileUtils.rm_rf(Dir.glob("#{dir}/.mailmap"))
   end
 
   def revision_handler(rev)
@@ -680,7 +681,10 @@ class VCS
 
     def format_changelog(path, arg, base_url = nil)
       env = {'TZ' => 'JST-9', 'LANG' => 'C', 'LC_ALL' => 'C'}
-      cmd = %W"#{COMMAND} log --format=fuller --notes=commits --notes=log-fix --topo-order --no-merges"
+      cmd = %W[#{COMMAND} log
+        --format=fuller --notes=commits --notes=log-fix --topo-order --no-merges
+        --fixed-strings --invert-grep --grep=[ci\ skip] --grep=[skip\ ci]
+      ]
       date = "--date=iso-local"
       unless system(env, *cmd, date, "-1", chdir: @srcdir, out: NullDevice, exception: false)
         date = "--date=iso"
@@ -693,6 +697,9 @@ class VCS
         cmd_pipe(env, cmd, chdir: @srcdir) do |r|
           while s = r.gets("\ncommit ")
             h, s = s.split(/^$/, 2)
+
+            next if /^Author: *dependabot\[bot\]/ =~ h
+
             h.gsub!(/^(?:(?:Author|Commit)(?:Date)?|Date): /, '  \&')
             if s.sub!(/\nNotes \(log-fix\):\n((?: +.*\n)+)/, '')
               fix = $1

@@ -5,7 +5,7 @@
  */
 /*
  * This program is licensed under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 
@@ -41,8 +41,8 @@
  * Classes
  */
 VALUE cX509Ext;
-VALUE cX509ExtFactory;
-VALUE eX509ExtError;
+static VALUE cX509ExtFactory;
+static VALUE eX509ExtError;
 
 static void
 ossl_x509ext_free(void *ptr)

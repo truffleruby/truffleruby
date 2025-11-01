@@ -59,12 +59,7 @@
 #define RB_ULONG2NUM rb_ulong2num_inline  /**< @alias{rb_ulong2num_inline} */
 #define ULONG2NUM    RB_ULONG2NUM         /**< @old{RB_ULONG2NUM} */
 #define rb_fix_new   RB_INT2FIX           /**< @alias{RB_INT2FIX} */
-
-#ifdef TRUFFLERUBY
-#define rb_long2int  rb_long2int
-#else
 #define rb_long2int  rb_long2int_inline   /**< @alias{rb_long2int_inline} */
-#endif
 
 /** @cond INTERNAL_MACRO */
 #define RB_INT2FIX RB_INT2FIX
@@ -101,9 +96,6 @@ long rb_num2long(VALUE num);
  * @return     The passed value converted into C's `unsigned long`.
  */
 unsigned long rb_num2ulong(VALUE num);
-#ifdef TRUFFLERUBY
-int rb_long2int(long value);
-#endif
 RBIMPL_SYMBOL_EXPORT_END()
 
 RBIMPL_ATTR_CONST_UNLESS_DEBUG()
@@ -122,11 +114,11 @@ RB_INT2FIX(long i)
 
     /* :NOTE: VALUE can be wider than long.  As j being unsigned, 2j+1 is fully
      * defined. Also it can be compiled into a single LEA instruction. */
-    const unsigned long j = i;
+    const unsigned long j = RBIMPL_CAST((unsigned long)i);
     const unsigned long k = (j << 1) + RUBY_FIXNUM_FLAG;
-    const long          l = k;
+    const long          l = RBIMPL_CAST((long)k);
     const SIGNED_VALUE  m = l; /* Sign extend */
-    const VALUE         n = m;
+    const VALUE         n = RBIMPL_CAST((VALUE)m);
 
     RBIMPL_ASSERT_OR_ASSUME(RB_FIXNUM_P(n));
     return n;
@@ -139,7 +131,6 @@ RB_INT2FIX(long i)
  * @exception  rb_eRangeError  `n` is out of range of `int`.
  * @return     Identical value of type `int`
  */
-#ifndef TRUFFLERUBY
 static inline int
 rb_long2int_inline(long n)
 {
@@ -154,7 +145,6 @@ rb_long2int_inline(long n)
 
     return i;
 }
-#endif
 
 RBIMPL_ATTR_CONST_UNLESS_DEBUG()
 RBIMPL_ATTR_CONSTEXPR_UNLESS_DEBUG(CXX14)
@@ -176,7 +166,7 @@ rbimpl_fix2long_by_idiv(VALUE x)
     /* :NOTE: VALUE  can be wider  than long.  (x-1)/2 never  overflows because
      * RB_FIXNUM_P(x)  holds.   Also it  has  no  portability issue  like  y>>1
      * below. */
-    const SIGNED_VALUE y = x - RUBY_FIXNUM_FLAG;
+    const SIGNED_VALUE y = RBIMPL_CAST((SIGNED_VALUE)(x - RUBY_FIXNUM_FLAG));
     const SIGNED_VALUE z = y / 2;
     const long         w = RBIMPL_CAST((long)z);
 
@@ -203,7 +193,7 @@ rbimpl_fix2long_by_shift(VALUE x)
 
     /* :NOTE: VALUE can be wider than long.  If right shift is arithmetic, this
      * is noticeably faster than above. */
-    const SIGNED_VALUE y = x;
+    const SIGNED_VALUE y = RBIMPL_CAST((SIGNED_VALUE)x);
     const SIGNED_VALUE z = y >> 1;
     const long         w = RBIMPL_CAST((long)z);
 
@@ -262,7 +252,7 @@ static inline unsigned long
 rb_fix2ulong(VALUE x)
 {
     RBIMPL_ASSERT_OR_ASSUME(RB_FIXNUM_P(x));
-    return rb_fix2long(x);
+    return RBIMPL_CAST((unsigned long)rb_fix2long(x));
 }
 
 /**
@@ -333,7 +323,7 @@ static inline VALUE
 rb_ulong2num_inline(unsigned long v)
 {
     if (RB_POSFIXABLE(v))
-        return RB_LONG2FIX(v);
+        return RB_LONG2FIX(RBIMPL_CAST((long)v));
     else
         return rb_uint2big(v);
 }

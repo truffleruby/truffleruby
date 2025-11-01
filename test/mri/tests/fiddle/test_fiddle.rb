@@ -6,6 +6,10 @@ end
 
 class TestFiddle < Fiddle::TestCase
   def test_nil_true_etc
+    if ffi_backend?
+      omit("Fiddle::Q* aren't supported with FFI backend")
+    end
+
     assert_equal Fiddle::Qtrue, Fiddle.dlwrap(true)
     assert_equal Fiddle::Qfalse, Fiddle.dlwrap(false)
     assert_equal Fiddle::Qnil, Fiddle.dlwrap(nil)
@@ -23,16 +27,41 @@ class TestFiddle < Fiddle::TestCase
 
   def test_dlopen_linker_script_input_linux
     omit("This is only for Linux") unless RUBY_PLATFORM.match?("linux")
-    if Dir.glob("/usr/lib/*/libncurses.so").empty?
+    if Dir.glob("/usr/lib{,64}/**/libncurses.so").empty?
       omit("libncurses.so is needed")
     end
-    # libncurses.so uses INPUT() on Debian GNU/Linux
+    if ffi_backend?
+      omit("Fiddle::Handle#file_name doesn't exist in FFI backend")
+    end
+
+    # libncurses.so uses INPUT() on Debian GNU/Linux and Arch Linux:
+    #
+    # Debian GNU/Linux:
+    #
     # $ cat /usr/lib/x86_64-linux-gnu/libncurses.so
     # INPUT(libncurses.so.6 -ltinfo)
+    #
+    # Arch Linux:
+    # $ cat /usr/lib/libncurses.so
+    # INPUT(-lncursesw)
     handle = Fiddle.dlopen("libncurses.so")
     begin
-      assert_equal("libncurses.so",
-                   File.basename(handle.file_name, ".*"))
+      # /usr/lib/x86_64-linux-gnu/libncurses.so.6 ->
+      # libncurses.so.6
+      normalized_file_name = File.basename(handle.file_name)
+      # libncurses.so.6 ->
+      # libncurses.so
+      #
+      # libncursesw.so ->
+      # libncursesw.so
+      normalized_file_name = normalized_file_name.sub(/\.so(\.\d+)+\z/, ".so")
+      # libncurses.so ->
+      # libncurses.so
+      #
+      # libncursesw.so ->
+      # libncurses.so
+      normalized_file_name = normalized_file_name.sub(/ncursesw/, "ncurses")
+      assert_equal("libncurses.so", normalized_file_name)
     ensure
       handle.close
     end
@@ -40,6 +69,10 @@ class TestFiddle < Fiddle::TestCase
 
   def test_dlopen_linker_script_group_linux
     omit("This is only for Linux") unless RUBY_PLATFORM.match?("linux")
+    if ffi_backend?
+      omit("Fiddle::Handle#file_name doesn't exist in FFI backend")
+    end
+
     # libc.so uses GROUP() on Debian GNU/Linux
     # $ cat /usr/lib/x86_64-linux-gnu/libc.so
     # /* GNU ld script

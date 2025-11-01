@@ -16,7 +16,7 @@ rubygems_version: "1.0"
 name: keyedlist
 version: !ruby/object:Gem::Version
   version: 0.4.0
-date: 2004-03-28 15:37:49.828000 +02:00
+date: 1980-01-02 00:00:00 UTC
 platform:
 summary: A Hash which automatically computes keys.
 require_paths:
@@ -75,7 +75,7 @@ end
   def assert_date(date)
     assert_kind_of Time, date
     assert_equal [0, 0, 0], [date.hour, date.min, date.sec]
-    assert_operator (Gem::Specification::TODAY..Time.now), :cover?, date
+    assert_equal Time.at(Gem::DEFAULT_SOURCE_DATE_EPOCH).utc, date
   end
 
   def setup
@@ -564,7 +564,6 @@ end
   #         [B] ~> 1.0
   #
   # and should resolve using b-1.0
-  # TODO: move these to specification
 
   def test_self_activate_over
     a = util_spec "a", "1.0", "b" => ">= 1.0", "c" => "= 1.0"
@@ -651,6 +650,17 @@ end
     assert_raise Gem::LoadError do
       gem "b", "= 2.0"
     end
+  end
+
+  def test_self_activate_missing_deps_does_not_raise_nested_exceptions
+    a = util_spec "a", "1.0", "b" => ">= 1.0"
+    install_specs a
+
+    e = assert_raise Gem::MissingSpecError do
+      a.activate
+    end
+
+    refute e.cause
   end
 
   def test_self_all_equals
@@ -2492,7 +2502,31 @@ end
     assert_equal @a1, same_spec
   end
 
-  def test_to_yaml_platform_empty_string
+  def test_to_yaml_platform
+    yaml_str = @a1.to_yaml
+
+    assert_match(/^platform: ruby$/, yaml_str)
+    refute_match(/^original_platform: /, yaml_str)
+  end
+
+  def test_to_yaml_platform_no_specific_platform
+    a = Gem::Specification.new do |s|
+      s.name        = "a"
+      s.version     = "1.0"
+      s.author      = "A User"
+      s.email       = "example@example.com"
+      s.homepage    = "http://example.com"
+      s.summary     = "this is a summary"
+      s.description = "This is a test description"
+    end
+
+    yaml_str = a.to_yaml
+
+    assert_match(/^platform: ruby$/, yaml_str)
+    refute_match(/^original_platform: /, yaml_str)
+  end
+
+  def test_to_yaml_platform_original_platform_empty_string
     @a1.instance_variable_set :@original_platform, ""
 
     assert_match(/^platform: ruby$/, @a1.to_yaml)
@@ -2510,10 +2544,30 @@ end
     assert_equal "powerpc-darwin7.9.0", same_spec.original_platform
   end
 
-  def test_to_yaml_platform_nil
+  def test_to_yaml_platform_original_platform_nil
     @a1.instance_variable_set :@original_platform, nil
 
     assert_match(/^platform: ruby$/, @a1.to_yaml)
+  end
+
+  def test_to_yaml_no_autorequire
+    yaml_str = @a1.to_yaml
+
+    refute_match(/^autorequire:/, yaml_str)
+  end
+
+  def test_to_yaml_no_signing_key
+    @a1.signing_key = nil
+    yaml_str = @a1.to_yaml
+
+    refute_match(/^signing_key:/, yaml_str)
+  end
+
+  def test_to_yaml_no_post_install_message
+    @a1.post_install_message = nil
+    yaml_str = @a1.to_yaml
+
+    refute_match(/^post_install_message:/, yaml_str)
   end
 
   def test_validate
@@ -3005,9 +3059,7 @@ duplicate dependency on c (>= 1.2.3, development), (~> 1.2) use:
 
     set_orig specification
 
-    specification.define_singleton_method(:unresolved_deps) do
-      { b: Gem::Dependency.new("x","1") }
-    end
+    specification.instance_variable_set(:@unresolved_deps, { b: Gem::Dependency.new("x","1") })
 
     specification.define_singleton_method(:find_all_by_name) do |_dep_name|
       []
@@ -3025,6 +3077,7 @@ Please report a bug if this causes problems.
     end
     assert_empty actual_stdout
     assert_equal(expected, actual_stderr)
+    assert_empty specification.unresolved_deps
   end
 
   def test_unresolved_specs_with_versions
@@ -3032,9 +3085,7 @@ Please report a bug if this causes problems.
 
     set_orig specification
 
-    specification.define_singleton_method(:unresolved_deps) do
-      { b: Gem::Dependency.new("x","1") }
-    end
+    specification.instance_variable_set(:@unresolved_deps, { b: Gem::Dependency.new("x","1") })
 
     specification.define_singleton_method(:find_all_by_name) do |_dep_name|
       [
@@ -3058,6 +3109,7 @@ Please report a bug if this causes problems.
     end
     assert_empty actual_stdout
     assert_equal(expected, actual_stderr)
+    assert_empty specification.unresolved_deps
   end
 
   def test_unresolved_specs_with_duplicated_versions
@@ -3065,9 +3117,7 @@ Please report a bug if this causes problems.
 
     set_orig specification
 
-    specification.define_singleton_method(:unresolved_deps) do
-      { b: Gem::Dependency.new("x","1") }
-    end
+    specification.instance_variable_set(:@unresolved_deps, { b: Gem::Dependency.new("x","1") })
 
     specification.define_singleton_method(:find_all_by_name) do |_dep_name|
       [
@@ -3092,6 +3142,27 @@ Please report a bug if this causes problems.
     end
     assert_empty actual_stdout
     assert_equal(expected, actual_stderr)
+    assert_empty specification.unresolved_deps
+  end
+
+  def test_unresolved_specs_with_unrestricted_deps_on_default_gems
+    specification = Gem::Specification.clone
+
+    set_orig specification
+
+    spec = new_default_spec "stringio", "3.1.1"
+
+    specification.instance_variable_set(:@unresolved_deps, { stringio: Gem::Dependency.new("stringio", ">= 0") })
+
+    specification.define_singleton_method(:find_all_by_name) do |_dep_name|
+      [spec]
+    end
+
+    actual_stdout, actual_stderr = capture_output do
+      specification.reset
+    end
+    assert_empty actual_stdout
+    assert_empty actual_stderr
   end
 
   def test_duplicate_runtime_dependency
@@ -3104,8 +3175,9 @@ Please report a bug if this causes problems.
   end
 
   def set_orig(cls)
+    assert_empty cls.unresolved_deps
+
     s_cls = cls.singleton_class
-    s_cls.send :alias_method, :orig_unresolved_deps, :unresolved_deps
     s_cls.send :alias_method, :orig_find_all_by_name, :find_all_by_name
   end
 
@@ -3592,6 +3664,8 @@ Did you mean 'Ruby'?
   end
 
   def test__load_fixes_Date_objects
+    pend "Marshal.load of links and floats is broken on truffleruby, see https://github.com/oracle/truffleruby/issues/3747" if RUBY_ENGINE == "truffleruby"
+
     spec = util_spec "a", 1
     spec.instance_variable_set :@date, Date.today
 

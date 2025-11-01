@@ -45,7 +45,7 @@
 RBIMPL_SYMBOL_EXPORT_BEGIN()
 
 #define RUBY_REF_EDGE(s, p) offsetof(s, p)
-#define RUBY_REFS_LIST_PTR(l) (RUBY_DATA_FUNC)(l)
+#define RUBY_REFS_LIST_PTR(l) (RUBY_DATA_FUNC)(uintptr_t)(l)
 #define RUBY_REF_END SIZE_MAX
 #define RUBY_REFERENCES(t) static const size_t t[]
 #define RUBY_REFERENCES_START(t) RUBY_REFERENCES(t) = {
@@ -208,22 +208,6 @@ void rb_gc_mark_movable(VALUE obj);
  * @return     An object, which holds the current contents of former `obj`.
  */
 VALUE rb_gc_location(VALUE obj);
-
-/**
- * Asserts  that the  passed  object is  no longer  needed.   Such objects  are
- * reclaimed sooner or later so this  function is not mandatory.  But sometimes
- * you can know  from your application knowledge that an  object is surely dead
- * at some point.  Calling this as a hint can be a polite way.
- *
- * @param[out]  obj  Object, dead.
- * @pre         `obj` have never been passed to this function before.
- * @post        `obj` could be invalidated.
- * @warning     It  is a  failure  to pass  an object  multiple  times to  this
- *              function.
- * @deprecated  This is now a no-op function.
- */
-RBIMPL_ATTR_DEPRECATED(("this is now a no-op function"))
-void rb_gc_force_recycle(VALUE obj);
 
 /**
  * Triggers a GC process.  This was the only  GC entry point that we had at the
@@ -632,7 +616,6 @@ RBIMPL_SYMBOL_EXPORT_END()
     RBIMPL_CAST(rb_obj_written((VALUE)(old), (VALUE)(oldv), (VALUE)(young), __FILE__, __LINE__))
 /** @} */
 
-#ifndef TRUFFLERUBY
 #define OBJ_PROMOTED_RAW RB_OBJ_PROMOTED_RAW /**< @old{RB_OBJ_PROMOTED_RAW} */
 #define OBJ_PROMOTED     RB_OBJ_PROMOTED     /**< @old{RB_OBJ_PROMOTED} */
 #define OBJ_WB_UNPROTECT RB_OBJ_WB_UNPROTECT /**< @old{RB_OBJ_WB_UNPROTECT} */
@@ -773,7 +756,6 @@ rb_obj_wb_unprotect(
     rb_gc_writebarrier_unprotect(x);
     return x;
 }
-#endif // TRUFFLERUBY
 
 /**
  * @private
@@ -788,22 +770,6 @@ rb_obj_wb_unprotect(
  * @param[in]   line      C's `__LINE__` of the caller function.
  * @return      a
  */
-#ifdef TRUFFLERUBY
-static inline VALUE
-rb_obj_written(
-    VALUE a,
-    RBIMPL_ATTR_MAYBE_UNUSED()
-    VALUE oldv,
-    RBIMPL_ATTR_MAYBE_UNUSED()
-    VALUE b,
-    RBIMPL_ATTR_MAYBE_UNUSED()
-    const char *filename,
-    RBIMPL_ATTR_MAYBE_UNUSED()
-    int line)
-{
-    return a;
-}
-#else
 static inline VALUE
 rb_obj_written(
     VALUE a,
@@ -825,7 +791,6 @@ rb_obj_written(
 
     return a;
 }
-#endif // TRUFFLERUBY
 
 /**
  * @private
@@ -854,10 +819,11 @@ rb_obj_write(
 
     *slot = b;
 
-#ifndef TRUFFLERUBY
     rb_obj_written(a, RUBY_Qundef /* ignore `oldv' now */, b, filename, line);
-#endif
     return a;
 }
+
+RBIMPL_ATTR_DEPRECATED(("Will be removed soon"))
+static inline void rb_gc_force_recycle(VALUE obj){}
 
 #endif /* RBIMPL_GC_H */

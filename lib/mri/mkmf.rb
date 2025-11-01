@@ -7,47 +7,6 @@ require 'rbconfig'
 require 'fileutils'
 require 'shellwords'
 
-if defined?(::TruffleRuby)
-  # Set RbConfig::CONFIG['COMPILE_C'] and 'COMPILE_CXX' to call the preprocessor only when needed.
-  # This avoids the cost of an extra process just for patching C files when most C files don't need patching.
-  # 'COMPILE_C' and 'COMPILE_CXX' are not defined in rbconfig.rb in MRI, so it is OK to define them only here.
-  require 'truffle/cext_preprocessor'
-
-  # We use -I$(<D) (the directory portion of the prerequisite - i.e. the
-  # C or C++ file) to add the file's path as the first entry on the
-  # include path. This is to ensure that files from the source file's
-  # directory are included in preference to others on the include path,
-  # and is required because we are actually piping the file into the
-  # compiler which disables this standard behaviour of the C preprocessor.
-  begin
-    cext_dir = "#{RbConfig::CONFIG['libdir']}/cext"
-
-    with_conditional_preprocessing = proc do |command1, command2|
-      Truffle::CExt::Preprocessor.makefile_matcher(command1, command2)
-    end
-
-    for_file = proc do |compiler, flags|
-      "#{compiler} #{flags} $(CSRCFLAG)$<"
-    end
-
-    for_pipe = proc do |compiler, flags|
-      language_flag = '$(CXX)' == compiler ? '-xc++' : '-xc'
-      "#{RbConfig.ruby} #{cext_dir}/preprocess.rb $< #{flags} | #{compiler} -I$(<D) #{flags} #{language_flag} -"
-    end
-
-    c_flags = '$(INCFLAGS) $(CPPFLAGS) $(CFLAGS) $(COUTFLAG)$@ -c'
-    cxx_flags = '$(INCFLAGS) $(CPPFLAGS) $(CXXFLAGS) $(COUTFLAG)$@ -c'
-
-    RbConfig::MAKEFILE_CONFIG['COMPILE_C'] = with_conditional_preprocessing.call(
-        for_pipe.call('$(CC)', c_flags),
-        for_file.call('$(CC)', c_flags))
-
-    RbConfig::MAKEFILE_CONFIG['COMPILE_CXX'] = with_conditional_preprocessing.call(
-        for_pipe.call('$(CXX)', cxx_flags),
-        for_file.call('$(CXX)', cxx_flags))
-  end
-end
-
 class String # :nodoc:
   # Wraps a string in escaped quotes if it contains whitespace.
   def quote
@@ -85,6 +44,23 @@ end
 # correctly compile and link the C extension to Ruby and a third-party
 # library.
 module MakeMakefile
+
+  target_rbconfig = nil
+  ARGV.delete_if do |arg|
+    opt = arg.delete_prefix("--target-rbconfig=")
+    unless opt == arg
+      target_rbconfig = opt
+    end
+  end
+  if target_rbconfig
+    # Load the RbConfig for the target platform into this module.
+    # Cross-compiling needs the same version of Ruby.
+    Kernel.load target_rbconfig, self
+  else
+    # The RbConfig for the target platform where the built extension runs.
+    RbConfig = ::RbConfig
+  end
+
   #### defer until this module become global-state free.
   # def self.extended(obj)
   #   obj.init_mkmf
@@ -100,6 +76,9 @@ module MakeMakefile
   # The makefile configuration using the defaults from when Ruby was built.
 
   CONFIG = RbConfig::MAKEFILE_CONFIG
+
+  ##
+  # The saved original value of +LIB+ environment variable
   ORIG_LIBPATH = ENV['LIB']
 
   ##
@@ -252,44 +231,30 @@ module MakeMakefile
     map.inject(dir) {|d, (orig, new)| d.gsub(orig, new)}
   end
 
-  if defined?(::TruffleRuby)
-    $extmk = Truffle::Boot.get_option('building-core-cexts') || ENV.key?('MKMF_SET_EXTMK_TO_TRUE')
-    topdir = RbConfig::CONFIG['prefix'] # the TruffleRuby home
-    $hdrdir = RbConfig::CONFIG["rubyhdrdir"] # lib/cext/include
-    $arch_hdrdir = RbConfig::CONFIG["rubyarchhdrdir"] # lib/cext/include
-
-    unless File.exist?("#{$hdrdir}/ruby/ruby.h")
-      abort "mkmf.rb can't find header files for ruby at #{$hdrdir}/ruby/ruby.h"
+  topdir = File.dirname(File.dirname(__FILE__))
+  path = File.expand_path($0)
+  until (dir = File.dirname(path)) == path
+    if File.identical?(dir, topdir)
+      $extmk = true if %r"\A(?:ext|enc|tool|test)\z" =~ File.basename(path)
+      break
     end
-
-    if not $extmk
-      $topdir = $hdrdir # lib/cext/include
-      $top_srcdir = $hdrdir # lib/cext/include
-    else
-      $top_srcdir ||= topdir + "/lib/cext/include/stubs" # lib/cext/include/stubs
-      $topdir ||= RbConfig::CONFIG["topdir"] # lib/mri
-    end
+    path = dir
+  end
+  $extmk ||= false
+  if not $extmk and File.exist?(($hdrdir = RbConfig::CONFIG["rubyhdrdir"]) + "/ruby/ruby.h")
+    $topdir = $hdrdir
+    $top_srcdir = $hdrdir
+    $arch_hdrdir = RbConfig::CONFIG["rubyarchhdrdir"]
+  elsif File.exist?(($hdrdir = ($top_srcdir ||= topdir) + "/include")  + "/ruby.h")
+    $topdir ||= RbConfig::CONFIG["topdir"]
+    $arch_hdrdir = "$(extout)/include/$(arch)"
   else
-    topdir = File.dirname(File.dirname(__FILE__))
-    path = File.expand_path($0)
-    until (dir = File.dirname(path)) == path
-      if File.identical?(dir, topdir)
-        $extmk = true if %r"\A(?:ext|enc|tool|test)\z" =~ File.basename(path)
-        break
-      end
-      path = dir
-    end
-    $extmk ||= false
-    if not $extmk and File.exist?(($hdrdir = RbConfig::CONFIG["rubyhdrdir"]) + "/ruby/ruby.h")
-      $topdir = $hdrdir
-      $top_srcdir = $hdrdir
-      $arch_hdrdir = RbConfig::CONFIG["rubyarchhdrdir"]
-    elsif File.exist?(($hdrdir = ($top_srcdir ||= topdir) + "/include")  + "/ruby.h")
-      $topdir ||= RbConfig::CONFIG["topdir"]
-      $arch_hdrdir = "$(extout)/include/$(arch)"
-    else
-      abort "mkmf.rb can't find header files for ruby at #{$hdrdir}/ruby.h"
-    end
+    abort <<MESSAGE
+mkmf.rb can't find header files for ruby at #{$hdrdir}/ruby.h
+
+You might have to install separate package for the ruby development
+environment, ruby-dev or ruby-devel for example.
+MESSAGE
   end
 
   CONFTEST = "conftest".freeze
@@ -300,12 +265,16 @@ module MakeMakefile
   CSRCFLAG = CONFIG['CSRCFLAG']
   CPPOUTFILE = config_string('CPPOUTFILE') {|str| str.sub(/\bconftest\b/, CONFTEST)}
 
+  # :startdoc:
+
+  # Removes _files_.
   def rm_f(*files)
     opt = (Hash === files.last ? [files.pop] : [])
     FileUtils.rm_f(Dir[*files.flatten], *opt)
   end
   module_function :rm_f
 
+  # Removes _files_ recursively.
   def rm_rf(*files)
     opt = (Hash === files.last ? [files.pop] : [])
     FileUtils.rm_rf(Dir[*files.flatten], *opt)
@@ -319,6 +288,8 @@ module MakeMakefile
     Array === times or times = [times]
     t if times.all? {|n| n <= t}
   end
+
+  # :stopdoc:
 
   def split_libs(*strs)
     sep = $mswin ? /\s+/ : /\s+(?=-|\z)/
@@ -390,15 +361,6 @@ module MakeMakefile
       end
     end
 
-    if defined?(::TruffleRuby)
-      def self::read_log
-        return 'no log file' unless @logfile
-        log_close
-        return 'log file does not exist' unless File.exist?(@logfile)
-        "\nContents of #{@logfile}:\n#{File.binread(@logfile)}"
-      end
-    end
-
     def self::postpone
       tmplog = "mkmftmp#{@postpone += 1}.log"
       open do
@@ -454,6 +416,11 @@ module MakeMakefile
       env, *commands = commands if Hash === commands.first
       envs.merge!(env) if env
     end
+
+    # disable ASAN leak reporting - conftest programs almost always don't bother
+    # to free their memory.
+    envs['ASAN_OPTIONS'] = "detect_leaks=0" unless ENV.key?('ASAN_OPTIONS')
+
     return envs, expand[commands]
   end
 
@@ -461,11 +428,19 @@ module MakeMakefile
     envs.map {|e, v| "#{e}=#{v.quote}"}
   end
 
-  def xsystem command, opts = nil
+  # :startdoc:
+
+  # call-seq:
+  #   xsystem(command, werror: false)   -> true or false
+  #
+  # Executes _command_ with expanding variables, and returns the exit
+  # status like as Kernel#system.  If _werror_ is true and the error
+  # output is not empty, returns +false+.  The output will logged.
+  def xsystem(command, werror: false)
     env, command = expand_command(command)
     Logging::open do
       puts [env_quote(env), command.quote].join(' ')
-      if opts and opts[:werror]
+      if werror
         result = nil
         Logging.postpone do |log|
           output = IO.popen(env, command, &:read)
@@ -474,17 +449,12 @@ module MakeMakefile
         end
         result
       else
-        if defined?(::TruffleRuby)
-          result = system(env, *command)
-          puts "Process failed: #{$?.inspect}" unless result
-          result
-        else
-          system(env, *command)
-        end
+        system(env, *command)
       end
     end
   end
 
+  # Executes _command_ similarly to xsystem, but yields opened pipe.
   def xpopen command, *mode, &block
     env, commands = expand_command(command)
     command = [env_quote(env), command].join(' ')
@@ -499,24 +469,30 @@ module MakeMakefile
     end
   end
 
+  # Logs _src_
   def log_src(src, heading="checked program was")
     src = src.split(/^/)
     fmt = "%#{src.size.to_s.size}d: %s"
-    Logging::message <<~"EOM"
+    Logging::message <<"EOM"
 #{heading}:
 /* begin */
 EOM
     src.each_with_index {|line, no| Logging::message fmt, no+1, line}
-    Logging::message <<~"EOM"
+    Logging::message <<"EOM"
 /* end */
 
 EOM
   end
 
+  # Returns the language-dependent source file name for configuration
+  # checks.
   def conftest_source
     CONFTEST_C
   end
 
+  # Creats temporary source file from +COMMON_HEADERS+ and _src_.
+  # Yields the created source string and uses the returned string as
+  # the source code, if the block is given.
   def create_tmpsrc(src)
     src = "#{COMMON_HEADERS}\n#{src}"
     src = yield(src) if block_given?
@@ -537,6 +513,8 @@ EOM
     src
   end
 
+  # :stopdoc:
+
   def have_devel?
     unless defined? $have_devel
       $have_devel = true
@@ -545,24 +523,23 @@ EOM
     $have_devel
   end
 
-  def try_do(src, command, *opts, &b)
+  def try_do(src, command, **opts, &b)
     unless have_devel?
       raise <<MSG
 The compiler failed to generate an executable file.
 You have to install development tools first.
-#{Logging::read_log if defined?(::TruffleRuby)}
 MSG
     end
     begin
       src = create_tmpsrc(src, &b)
-      xsystem(command, *opts)
+      xsystem(command, **opts)
     ensure
       log_src(src)
     end
   end
 
   def link_config(ldflags, opt="", libpath=$DEFLIBPATH|$LIBPATH)
-    librubyarg = !defined?(::TruffleRuby) && $extmk ? $LIBRUBYARG_STATIC : "$(LIBRUBYARG)"
+    librubyarg = $extmk ? $LIBRUBYARG_STATIC : "$(LIBRUBYARG)"
     conf = RbConfig::CONFIG.merge('hdrdir' => $hdrdir.quote,
                                   'src' => "#{conftest_source}",
                                   'arch_hdrdir' => $arch_hdrdir.quote,
@@ -606,42 +583,42 @@ MSG
   end
 
   def libpathflag(libpath=$DEFLIBPATH|$LIBPATH)
+    libpathflags = nil
     libpath.map{|x|
       case x
       when "$(topdir)", /\A\./
         LIBPATHFLAG
       else
-        LIBPATHFLAG+RPATHFLAG
+        libpathflags ||= [LIBPATHFLAG, RPATHFLAG].grep(/\S/).join(" ")
       end % x.quote
-    }.join
+    }.join(" ")
+  end
+
+  def werror_flag(opt = nil)
+    config_string("WERRORFLAG") {|flag| opt = opt && !opt.empty? ? "#{opt} #{flag}" : flag}
+    opt
   end
 
   def with_werror(opt, opts = nil)
-    if opts
-      if opts[:werror] and config_string("WERRORFLAG") {|flag| opt = opt ? "#{opt} #{flag}" : flag}
-        (opts = opts.dup).delete(:werror)
-      end
-      yield(opt, opts)
-    else
-      yield(opt)
-    end
+    opt = werror_flag(opt) if opts and (opts = opts.dup).delete(:werror)
+    yield(opt, opts)
   end
 
-  def try_link0(src, opt="", *opts, &b) # :nodoc:
+  def try_link0(src, opt = "", ldflags: "", **opts, &b) # :nodoc:
     exe = CONFTEST+$EXEEXT
-    cmd = link_command("", opt)
+    cmd = link_command(ldflags, opt)
     if $universal
       require 'tmpdir'
       Dir.mktmpdir("mkmf_", oldtmpdir = ENV["TMPDIR"]) do |tmpdir|
         begin
           ENV["TMPDIR"] = tmpdir
-          try_do(src, cmd, *opts, &b)
+          try_do(src, cmd, **opts, &b)
         ensure
           ENV["TMPDIR"] = oldtmpdir
         end
       end
     else
-      try_do(src, cmd, *opts, &b)
+      try_do(src, cmd, **opts, &b)
     end and File.executable?(exe) or return nil
     exe
   ensure
@@ -650,31 +627,32 @@ MSG
 
   # Returns whether or not the +src+ can be compiled as a C source and linked
   # with its depending libraries successfully.  +opt+ is passed to the linker
-  # as options. Note that +$CFLAGS+ and +$LDFLAGS+ are also passed to the
-  # linker.
+  # as options. Note that <tt>$CFLAGS</tt> and <tt>$LDFLAGS</tt> are also
+  # passed to the linker.
   #
   # If a block given, it is called with the source before compilation. You can
   # modify the source in the block.
   #
   # [+src+] a String which contains a C source
   # [+opt+] a String which contains linker options
-  def try_link(src, opt="", *opts, &b)
-    exe = try_link0(src, opt, *opts, &b) or return false
+  def try_link(src, opt = "", **opts, &b)
+    exe = try_link0(src, opt, **opts, &b) or return false
     MakeMakefile.rm_f exe
     true
   end
 
   # Returns whether or not the +src+ can be compiled as a C source.  +opt+ is
-  # passed to the C compiler as options. Note that +$CFLAGS+ is also passed to
-  # the compiler.
+  # passed to the C compiler as options. Note that <tt>$CFLAGS</tt> is also
+  # passed to the compiler.
   #
   # If a block given, it is called with the source before compilation. You can
   # modify the source in the block.
   #
   # [+src+] a String which contains a C source
   # [+opt+] a String which contains compiler options
-  def try_compile(src, opt="", *opts, &b)
-    with_werror(opt, *opts) {|_opt, *| try_do(src, cc_command(_opt), *opts, &b)} and
+  def try_compile(src, opt = "", werror: nil, **opts, &b)
+    opt = werror_flag(opt) if werror
+    try_do(src, cc_command(opt), werror: werror, **opts, &b) and
       File.file?("#{CONFTEST}.#{$OBJEXT}")
   ensure
     MakeMakefile.rm_f "#{CONFTEST}*"
@@ -682,15 +660,15 @@ MSG
 
   # Returns whether or not the +src+ can be preprocessed with the C
   # preprocessor.  +opt+ is passed to the preprocessor as options. Note that
-  # +$CFLAGS+ is also passed to the preprocessor.
+  # <tt>$CFLAGS</tt> is also passed to the preprocessor.
   #
   # If a block given, it is called with the source before preprocessing. You
   # can modify the source in the block.
   #
   # [+src+] a String which contains a C source
   # [+opt+] a String which contains preprocessor options
-  def try_cpp(src, opt="", *opts, &b)
-    try_do(src, cpp_command(CPPOUTFILE, opt), *opts, &b) and
+  def try_cpp(src, opt = "", **opts, &b)
+    try_do(src, cpp_command(CPPOUTFILE, opt), **opts, &b) and
       File.file?("#{CONFTEST}.i")
   ensure
     MakeMakefile.rm_f "#{CONFTEST}*"
@@ -707,6 +685,14 @@ MSG
     end
   end
 
+  # :startdoc:
+
+  # Sets <tt>$CPPFLAGS</tt> to _flags_ and yields.  If the block returns a
+  # falsy value, <tt>$CPPFLAGS</tt> is reset to its previous value, remains
+  # set to _flags_ otherwise.
+  #
+  # [+flags+] a C preprocessor flag as a +String+
+  #
   def with_cppflags(flags)
     cppflags = $CPPFLAGS
     $CPPFLAGS = flags.dup
@@ -715,20 +701,29 @@ MSG
     $CPPFLAGS = cppflags unless ret
   end
 
-  def try_cppflags(flags, opts = {})
-    try_header(MAIN_DOES_NOTHING, flags, {:werror => true}.update(opts))
+  # :nodoc:
+  def try_cppflags(flags, werror: true, **opts)
+    try_header(MAIN_DOES_NOTHING, flags, werror: werror, **opts)
   end
 
-  def append_cppflags(flags, *opts)
+  # Check whether each given C preprocessor flag is acceptable and append it
+  # to <tt>$CPPFLAGS</tt> if so.
+  #
+  # [+flags+] a C preprocessor flag as a +String+ or an +Array+ of them
+  #
+  def append_cppflags(flags, **opts)
     Array(flags).each do |flag|
       if checking_for("whether #{flag} is accepted as CPPFLAGS") {
-           try_cppflags(flag, *opts)
+           try_cppflags(flag, **opts)
          }
         $CPPFLAGS << " " << flag
       end
     end
   end
 
+  # Sets <tt>$CFLAGS</tt> to _flags_ and yields.  If the block returns a falsy
+  # value, <tt>$CFLAGS</tt> is reset to its previous value, remains set to
+  # _flags_ otherwise.
   def with_cflags(flags)
     cflags = $CFLAGS
     $CFLAGS = flags.dup
@@ -737,10 +732,14 @@ MSG
     $CFLAGS = cflags unless ret
   end
 
-  def try_cflags(flags, opts = {})
-    try_compile(MAIN_DOES_NOTHING, flags, {:werror => true}.update(opts))
+  # :nodoc:
+  def try_cflags(flags, werror: true, **opts)
+    try_compile(MAIN_DOES_NOTHING, flags, werror: werror, **opts)
   end
 
+  # Sets <tt>$LDFLAGS</tt> to _flags_ and yields.  If the block returns a
+  # falsy value, <tt>$LDFLAGS</tt> is reset to its previous value, remains set
+  # to _flags_ otherwise.
   def with_ldflags(flags)
     ldflags = $LDFLAGS
     $LDFLAGS = flags.dup
@@ -749,20 +748,29 @@ MSG
     $LDFLAGS = ldflags unless ret
   end
 
-  def try_ldflags(flags, opts = {})
-    opts = {:werror => true}.update(opts) if $mswin
-    try_link(MAIN_DOES_NOTHING, flags, opts)
+  # :nodoc:
+  def try_ldflags(flags, werror: $mswin, **opts)
+    try_link(MAIN_DOES_NOTHING, "", ldflags: flags, werror: werror, **opts)
   end
 
-  def append_ldflags(flags, *opts)
+  # :startdoc:
+
+  # Check whether each given linker flag is acceptable and append it to
+  # <tt>$LDFLAGS</tt> if so.
+  #
+  # [+flags+] a linker flag as a +String+ or an +Array+ of them
+  #
+  def append_ldflags(flags, **opts)
     Array(flags).each do |flag|
       if checking_for("whether #{flag} is accepted as LDFLAGS") {
-           try_ldflags(flag, *opts)
+           try_ldflags(flag, **opts)
          }
         $LDFLAGS << " " << flag
       end
     end
   end
+
+  # :stopdoc:
 
   def try_static_assert(expr, headers = nil, opt = "", &b)
     headers = cpp_include(headers)
@@ -899,6 +907,8 @@ int t(void) { const volatile void *volatile p; p = &(&#{var})[0]; return !p; }
 SRC
   end
 
+  # :startdoc:
+
   # Returns whether or not the +src+ can be preprocessed with the C
   # preprocessor and matches with +pat+.
   #
@@ -937,6 +947,8 @@ SRC
     log_src(src)
   end
 
+  # :stopdoc:
+
   # This is used internally by the have_macro? method.
   def macro_defined?(macro, src, opt = "", &b)
     src = src.sub(/[^\n]\z/, "\\&\n")
@@ -956,8 +968,8 @@ SRC
   # * the linked file can be invoked as an executable
   # * and the executable exits successfully
   #
-  # +opt+ is passed to the linker as options. Note that +$CFLAGS+ and
-  # +$LDFLAGS+ are also passed to the linker.
+  # +opt+ is passed to the linker as options. Note that <tt>$CFLAGS</tt> and
+  # <tt>$LDFLAGS</tt> are also passed to the linker.
   #
   # If a block given, it is called with the source before compilation. You can
   # modify the source in the block.
@@ -1029,6 +1041,10 @@ SRC
     format(LIBARG, lib) + " " + libs
   end
 
+  # Prints messages to $stdout, if verbose mode.
+  #
+  # Internal use only.
+  #
   def message(*s)
     unless Logging.quiet and not $VERBOSE
       printf(*s)
@@ -1060,6 +1076,10 @@ SRC
     r
   end
 
+  # Build a message for checking.
+  #
+  # Internal use only.
+  #
   def checking_message(target, place = nil, opt = nil)
     [["in", place], ["with", opt]].inject("#{target}") do |msg, (pre, noun)|
       if noun
@@ -1084,10 +1104,10 @@ SRC
   #
   # [+flags+] a C compiler flag as a +String+ or an +Array+ of them
   #
-  def append_cflags(flags, *opts)
+  def append_cflags(flags, **opts)
     Array(flags).each do |flag|
       if checking_for("whether #{flag} is accepted as CFLAGS") {
-           try_cflags(flag, *opts)
+           try_cflags(flag, **opts)
          }
         $CFLAGS << " " << flag
       end
@@ -1321,6 +1341,7 @@ SRC
     end
   end
 
+  # :nodoc:
   # Returns whether or not the static type +type+ is defined.
   #
   # See also +have_type+
@@ -1378,6 +1399,7 @@ SRC
     end
   end
 
+  # :nodoc:
   # Returns whether or not the constant +const+ is defined.
   #
   # See also +have_const+
@@ -1537,7 +1559,7 @@ SRC
           u = "unsigned " if signed > 0
           prelude << "extern rbcv_typedef_ foo();"
           compat = UNIVERSAL_INTS.find {|t|
-            try_compile([prelude, "extern #{u}#{t} foo();"].join("\n"), opts, :werror=>true, &b)
+            try_compile([prelude, "extern #{u}#{t} foo();"].join("\n"), opts, werror: true, &b)
           }
         end
         if compat
@@ -1561,7 +1583,7 @@ SRC
   # Used internally by the what_type? method to determine if +type+ is a scalar
   # pointer.
   def scalar_ptr_type?(type, member = nil, headers = nil, &b)
-    try_compile(<<"SRC", &b)   # pointer
+    try_compile(<<"SRC", &b)
 #{cpp_include(headers)}
 /*top*/
 volatile #{type} conftestval;
@@ -1574,7 +1596,7 @@ SRC
   # Used internally by the what_type? method to determine if +type+ is a scalar
   # pointer.
   def scalar_type?(type, member = nil, headers = nil, &b)
-    try_compile(<<"SRC", &b)   # pointer
+    try_compile(<<"SRC", &b)
 #{cpp_include(headers)}
 /*top*/
 volatile #{type} conftestval;
@@ -1596,6 +1618,10 @@ SRC
     end
   end
 
+  # :startdoc:
+
+  # Returns a string represents the type of _type_, or _member_ of
+  # _type_ if _member_ is not +nil+.
   def what_type?(type, member = nil, headers = nil, &b)
     m = "#{type}"
     var = val = "*rbcv_var_"
@@ -1655,6 +1681,8 @@ SRC
     end
   end
 
+  # :nodoc:
+  #
   # This method is used internally by the find_executable method.
   #
   # Internal use only.
@@ -1692,8 +1720,6 @@ SRC
     end
     nil
   end
-
-  # :startdoc:
 
   # Searches for the executable +bin+ on +path+.  The default path is your
   # +PATH+ environment variable. If that isn't defined, it will resort to
@@ -1942,7 +1968,7 @@ SRC
       if pkgconfig = with_config("#{pkg}-config") and find_executable0(pkgconfig)
       # if and only if package specific config command is given
       elsif ($PKGCONFIG ||=
-             (pkgconfig = with_config("pkg-config") {config_string("PKG_CONFIG") || "pkg-config"}) &&
+             (pkgconfig = with_config("pkg-config") {config_string("PKG_CONFIG") || ENV["PKG_CONFIG"] || "pkg-config"}) &&
              find_executable0(pkgconfig) && pkgconfig) and
            xsystem([*envs, $PKGCONFIG, "--exists", pkg])
         # default to pkg-config command
@@ -1958,7 +1984,20 @@ SRC
           opts = Array(opts).map { |o| "--#{o}" }
           opts = xpopen([*envs, pkgconfig, *opts, *args], err:[:child, :out], &:read)
           Logging.open {puts opts.each_line.map{|s|"=> #{s.inspect}"}}
-          opts.strip if $?.success?
+          if $?.success?
+            opts = opts.strip
+            libarg, libpath = LIBARG, LIBPATHFLAG.strip
+            opts = opts.shellsplit.map { |s|
+              if s.start_with?('-l')
+                libarg % s[2..]
+              elsif s.start_with?('-L')
+                libpath % s[2..]
+              else
+                s
+              end
+            }.quote.join(" ")
+            opts
+          end
         }
       end
       orig_ldflags = $LDFLAGS
@@ -2140,7 +2179,9 @@ ARCH_FLAG = #{$ARCH_FLAG}
 DLDFLAGS = $(ldflags) $(dldflags) $(ARCH_FLAG)
 LDSHARED = #{CONFIG['LDSHARED']}
 LDSHAREDXX = #{config_string('LDSHAREDXX') || '$(LDSHARED)'}
+POSTLINK = #{config_string('POSTLINK', RbConfig::CONFIG)}
 AR = #{CONFIG['AR']}
+LD = #{CONFIG['LD']}
 EXEEXT = #{CONFIG['EXEEXT']}
 
 }
@@ -2279,14 +2320,7 @@ RULES
     unless suffixes.empty?
       depout.unshift(".SUFFIXES: ." + suffixes.uniq.join(" .") + "\n\n")
     end
-    if defined?(::TruffleRuby)
-      # Added dependency on Makefile as we should recompile if the Makefile was re-generated
-      if $extconf_h
-        depout.unshift("$(OBJS): Makefile $(RUBY_EXTCONF_H)\n\n")
-      else
-        depout.unshift("$(OBJS): Makefile\n\n")
-      end
-    else
+    if $extconf_h
       depout.unshift("$(OBJS): $(RUBY_EXTCONF_H)\n\n")
       depout.unshift("$(OBJS): $(hdrdir)/ruby/win32.h\n\n") if $mswin or $mingw
     end
@@ -2348,19 +2382,6 @@ RULES
   # +VPATH+ and added to the list of +INCFLAGS+.
   #
   def create_makefile(target, srcprefix = nil)
-    if defined?(::TruffleRuby) and Truffle::Boot.get_option('cexts-sulong') and ($LIBRUBYARG == nil or !Truffle::Boot.get_option('building-core-cexts'))
-      # $LIBRUBYARG was explicitly unset, the built library is not a C extension but used with FFI (e.g., sassc does).
-      # Since $LIBRUBYARG is unset we won't link to libgraalvm-llvm.so, which is expected.
-      # In the case the library uses C++ code, libc++.so/libc++abi.so will be linked and needs to be found by NFI.
-      # The toolchain does not pass -rpath automatically for libc++.so/libc++abi.so, so we do it.
-      #
-      # We also add this rpath for C++ extensions (which have $LIBRUBYARG != nil)
-      # so that libc++.so/libc++abi.so can be found.
-      libcxx_dir = ::Truffle::Boot.toolchain_paths(:LD_LIBRARY_PATH)
-      raise 'libcxx_dir should not be empty' if libcxx_dir.empty?
-      $DLDFLAGS << " -rpath #{libcxx_dir}"
-    end
-
     $target = target
     libpath = $DEFLIBPATH|$LIBPATH
     message "creating Makefile\n"
@@ -2468,7 +2489,7 @@ TARGET_ENTRY = #{EXPORT_PREFIX || ''}Init_$(TARGET_NAME)
 DLLIB = #{dllib}
 EXTSTATIC = #{$static || ""}
 STATIC_LIB = #{staticlib unless $static.nil?}
-#{!$extout && defined?($installed_list) ? "INSTALLED_LIST = #{$installed_list}\n" : ""}
+#{!$extout && defined?($installed_list) ? %[INSTALLED_LIST = #{$installed_list}\n] : ""}
 TIMESTAMP_DIR = #{$extout && $extmk ? '$(extout)/.timestamp' : '.'}
 " #"
     # TODO: fixme
@@ -2495,7 +2516,7 @@ TARGET_SO_DIR_TIMESTAMP = #{timestamp_file(sodir, target_prefix)}
     mfile.puts(conf)
     mfile.print "
 all:    #{$extout ? "install" : target ? "$(DLLIB)" : "Makefile"}
-static: #{$extmk && !$static ? "all" : "$(STATIC_LIB)#{$extout ? " install-rb" : ""}"}
+static: #{$extmk && !$static ? "all" : %[$(STATIC_LIB)#{$extout ? " install-rb" : ""}]}
 .PHONY: all install static install-so install-rb
 .PHONY: clean clean-so clean-static clean-rb
 " #"
@@ -2526,6 +2547,7 @@ static: #{$extmk && !$static ? "all" : "$(STATIC_LIB)#{$extout ? " install-rb" :
         mfile.puts dest
         mfile.print "clean-so::\n"
         mfile.print "\t-$(Q)$(RM) #{fseprepl[dest]} #{fseprepl[stamp]}\n"
+        mfile.print "\t-$(Q)$(RM_RF) #{fseprepl['$(CLEANLIBS)']}\n"
         mfile.print "\t-$(Q)$(RMDIRS) #{fseprepl[dir]}#{$ignore_error}\n"
       else
         mfile.print "#{f} #{stamp}\n"
@@ -2556,7 +2578,7 @@ static: #{$extmk && !$static ? "all" : "$(STATIC_LIB)#{$extout ? " install-rb" :
           dest = "#{dir}/#{File.basename(f)}"
           mfile.print("do-install-rb#{sfx}: #{dest}\n")
           mfile.print("#{dest}: #{f} #{timestamp_file(dir, target_prefix)}\n")
-          mfile.print("\t$(Q) $(#{$extout ? 'COPY' : 'INSTALL_DATA'}) #{f} $(@D)\n")
+          mfile.print("\t$(Q) $(#{$extout ? 'COPY' : 'INSTALL_DATA'}) #{f} $@\n")
           if defined?($installed_list) and !$extout
             mfile.print("\t@echo #{dest}>>$(INSTALLED_LIST)\n")
           end
@@ -2664,12 +2686,7 @@ site-install-rb: install-rb
     if File.exist?(depend)
       mfile.print("###\n", *depend_rules(File.read(depend)))
     else
-      if defined?(::TruffleRuby)
-        # Added dependency on Makefile as we should recompile if the Makefile was re-generated
-        mfile.print "$(OBJS): $(HDRS) $(ruby_headers) Makefile\n"
-      else
-        mfile.print "$(OBJS): $(HDRS) $(ruby_headers)\n"
-      end
+      mfile.print "$(OBJS): $(HDRS) $(ruby_headers)\n"
     end
 
     $makefile_created = true
@@ -2720,9 +2737,7 @@ site-install-rb: install-rb
     $LIBRUBYARG = ""
     $LIBRUBYARG_STATIC = config['LIBRUBYARG_STATIC']
     $LIBRUBYARG_SHARED = config['LIBRUBYARG_SHARED']
-    # TruffleRuby: no need to add libdir to rpath of C exts, since we do not link to libtruffleruby (GR-29448)
-    # That way, C extensions do not depend on a specific TruffleRuby build.
-    $DEFLIBPATH = defined?(::TruffleRuby) ? [] : [$extmk ? "$(topdir)" : "$(#{config["libdirname"] || "libdir"})"]
+    $DEFLIBPATH = [$extmk ? "$(topdir)" : "$(#{config["libdirname"] || "libdir"})"]
     $DEFLIBPATH.unshift(".")
     $LIBPATH = []
     $INSTALLFILES = []
@@ -2768,11 +2783,7 @@ MESSAGE
   def mkmf_failed(path)
     unless $makefile_created or File.exist?("Makefile")
       opts = $arg_config.collect {|t, n| "\t#{t}#{n ? "=#{n}" : ""}\n"}
-      if defined?(::TruffleRuby)
-        abort "*** #{path} failed ***\n" + FailedMessage + opts.join + Logging::read_log
-      else
-        abort "*** #{path} failed ***\n" + FailedMessage + opts.join
-      end
+      abort "*** #{path} failed ***\n" + FailedMessage + opts.join
     end
   end
 
@@ -2821,18 +2832,16 @@ MESSAGE
     RbConfig::CONFIG["topdir"] = curdir
   end
   $configure_args["--topdir"] ||= $curdir
-
-  if defined?(::TruffleRuby)
-    $ruby = arg_config("--ruby", RbConfig.ruby)
-  else
-    $ruby = arg_config("--ruby", File.join(RbConfig::CONFIG["bindir"], CONFIG["ruby_install_name"]))
-  end
+  $ruby = arg_config("--ruby", File.join(RbConfig::CONFIG["bindir"], CONFIG["ruby_install_name"]))
 
   RbConfig.expand(CONFIG["RUBY_SO_NAME"])
 
   # :startdoc:
 
   split = Shellwords.method(:shellwords).to_proc
+
+  ##
+  # The prefix added to exported symbols automatically
 
   EXPORT_PREFIX = config_string('EXPORT_PREFIX') {|s| s.strip}
 
@@ -2863,6 +2872,10 @@ MESSAGE
   # make compile rules
 
   COMPILE_RULES = config_string('COMPILE_RULES', &split) || %w[.%s.%s:]
+
+  ##
+  # Substitution in rules for NMake
+
   RULE_SUBST = config_string('RULE_SUBST')
 
   ##
@@ -2892,14 +2905,6 @@ MESSAGE
     "$(CC) #{OUTFLAG}#{CONFTEST}#{$EXEEXT} $(INCFLAGS) $(CPPFLAGS) " \
     "$(CFLAGS) $(src) $(LIBPATH) $(LDFLAGS) $(ARCH_FLAG) $(LOCAL_LIBS) $(LIBS)"
 
-  if defined?(::TruffleRuby)
-    # We need to link to libtrufflerubytrampoline for MakeMakefile#try_link to succeed.
-    # The created executable will link against libtrufflerubytrampoline and
-    # might be executed for #try_constant and #try_run so we also need -rpath.
-    libtrufflerubytrampoline_dir = File.dirname(RbConfig::CONFIG['libtrufflerubytrampoline'])
-    TRY_LINK << " -L#{libtrufflerubytrampoline_dir} -Wl,-rpath,#{libtrufflerubytrampoline_dir} -ltrufflerubytrampoline"
-  end
-
   ##
   # Command which will link a shared library
 
@@ -2915,7 +2920,11 @@ MESSAGE
   ##
   # Argument which will add a library path to the linker
 
-  LIBPATHFLAG = config_string('LIBPATHFLAG') || ' -L%s'
+  LIBPATHFLAG = config_string('LIBPATHFLAG') || '-L%s'
+
+  ##
+  # Argument which will add a runtime library path to the linker
+
   RPATHFLAG = config_string('RPATHFLAG') || ''
 
   ##
@@ -2927,6 +2936,10 @@ MESSAGE
   # A C main function which does no work
 
   MAIN_DOES_NOTHING = config_string('MAIN_DOES_NOTHING') || "int main(int argc, char **argv)\n{\n  return !!argv[argc];\n}"
+
+  ##
+  # The type names for convertible_int
+
   UNIVERSAL_INTS = config_string('UNIVERSAL_INTS') {|s| Shellwords.shellwords(s)} ||
     %w[int short long long\ long]
 
@@ -2957,17 +2970,31 @@ realclean: distclean
 
   @lang = Hash.new(self)
 
+  ##
+  # Retrieves the module for _name_ language.
   def self.[](name)
     @lang.fetch(name)
   end
 
+  ##
+  # Defines the module for _name_ language.
   def self.[]=(name, mod)
     @lang[name] = mod
   end
 
-  self["C++"] = Module.new do
+  ##
+  # The language that this module is for
+  LANGUAGE = -"C"
+
+  self[self::LANGUAGE] = self
+
+  cxx = Module.new do
+    # Module for C++
+
     include MakeMakefile
     extend self
+
+    # :stopdoc:
 
     CONFTEST_CXX = "#{CONFTEST}.#{config_string('CXX_EXT') || CXX_EXT[0]}"
 
@@ -2998,7 +3025,12 @@ realclean: distclean
       conf = link_config(ldflags, *opts)
       RbConfig::expand(TRY_LINK_CXX.dup, conf)
     end
+
+    # :startdoc:
   end
+
+  cxx::LANGUAGE = -"C++"
+  self[cxx::LANGUAGE] = cxx
 end
 
 # MakeMakefile::Global = #

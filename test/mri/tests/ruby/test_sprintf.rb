@@ -239,7 +239,7 @@ class TestSprintf < Test::Unit::TestCase
 
   def test_hash
     options = {:capture=>/\d+/}
-    assert_equal("with options {:capture=>/\\d+/}", sprintf("with options %p" % options))
+    assert_equal("with options #{options.inspect}", sprintf("with options %p" % options))
   end
 
   def test_inspect
@@ -270,8 +270,8 @@ class TestSprintf < Test::Unit::TestCase
     # Specifying the precision multiple times with negative star arguments:
     assert_raise(ArgumentError, "[ruby-core:11570]") {sprintf("%.*.*.*.*f", -1, -1, -1, 5, 1)}
 
-    # Null bytes after percent signs are removed:
-    assert_equal("%\0x hello", sprintf("%\0x hello"), "[ruby-core:11571]")
+    assert_raise(ArgumentError) {sprintf("%\0x hello")}
+    assert_raise(ArgumentError) {sprintf("%\nx hello")}
 
     assert_raise(ArgumentError, "[ruby-core:11573]") {sprintf("%.25555555555555555555555555555555555555s", "hello")}
 
@@ -283,10 +283,9 @@ class TestSprintf < Test::Unit::TestCase
     assert_raise_with_message(ArgumentError, /unnumbered\(1\) mixed with numbered/) { sprintf("%1$*d", 3) }
     assert_raise_with_message(ArgumentError, /unnumbered\(1\) mixed with numbered/) { sprintf("%1$.*d", 3) }
 
-    verbose, $VERBOSE = $VERBOSE, nil
-    assert_nothing_raised { sprintf("", 1) }
-  ensure
-    $VERBOSE = verbose
+    assert_warning(/too many arguments/) do
+      sprintf("", 1)
+    end
   end
 
   def test_float
@@ -345,20 +344,9 @@ class TestSprintf < Test::Unit::TestCase
   end
 
   def test_float_prec
-    # These four tests are intended to test the round half even
-    # behaviour. We have commented out two of these tests because the
-    # numbers used cannot be precisely represented in double precision
-    # floating point, and so the behaviour depends heavily on how you
-    # treat these cases. We format 5.015 to 5.01 because it is
-    # fractionally below 5.015, and we format 5.025 as 5.03 because it
-    # is fractionally above 5.025.
-
-    # MRI treats these cases differently, but it is unclear if this is
-    # by accident or design as they also format anything between
-    # 5.014999999999997 and 5.014999999999999 inclusive as 5.02,
     assert_equal("5.00", sprintf("%.2f",5.005))
-#    assert_equal("5.02", sprintf("%.2f",5.015))
-#    assert_equal("5.02", sprintf("%.2f",5.025))
+    assert_equal("5.02", sprintf("%.2f",5.015))
+    assert_equal("5.02", sprintf("%.2f",5.025))
     assert_equal("5.04", sprintf("%.2f",5.035))
     bug12889 = '[ruby-core:77864] [Bug #12889]'
     assert_equal("1234567892", sprintf("%.0f", 1234567891.99999))

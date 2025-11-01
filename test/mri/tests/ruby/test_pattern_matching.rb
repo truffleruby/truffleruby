@@ -197,11 +197,11 @@ class TestPatternMatching < Test::Unit::TestCase
       end
     end
 
-    # assert_syntax_error(%q{
-    #   case 0
-    #   in a | 0
-    #   end
-    # }, /illegal variable in alternative pattern/)
+    assert_syntax_error(%q{
+      case 0
+      in a | 0
+      end
+    }, /illegal variable in alternative pattern/)
   end
 
   def test_var_pattern
@@ -344,11 +344,19 @@ END
       case 0
       in a..b
       end
-    }, /unexpected|expected a delimiter after the patterns of an `in` clause/)
+    }, /unexpected/)
 
     assert_block do
       case 'abc'
       in /a/
+        true
+      end
+    end
+
+    assert_block do
+      a = "abc"
+      case 'abc'
+      in /#{a}/o
         true
       end
     end
@@ -1323,7 +1331,7 @@ END
     end
 
     assert_block do
-      case {}
+      case C.new({})
       in {}
         C.keys == nil
       end
@@ -1656,7 +1664,7 @@ END
       raise a # suppress "unused variable: a" warning
     end
 
-    assert_raise_with_message(NoMatchingPatternKeyError, "{:a=>0}: key not found: :aa") do
+    assert_raise_with_message(NoMatchingPatternKeyError, "{a: 0}: key not found: :aa") do
       {a: 0} => {aa:}
       raise aa # suppress "unused variable: aa" warning
     rescue NoMatchingPatternKeyError => e
@@ -1665,7 +1673,7 @@ END
       raise e
     end
 
-    assert_raise_with_message(NoMatchingPatternKeyError, "{:a=>{:b=>0}}: key not found: :bb") do
+    assert_raise_with_message(NoMatchingPatternKeyError, "{a: {b: 0}}: key not found: :bb") do
       {a: {b: 0}} => {a: {bb:}}
       raise bb # suppress "unused variable: bb" warning
     rescue NoMatchingPatternKeyError => e
@@ -1674,15 +1682,15 @@ END
       raise e
     end
 
-    assert_raise_with_message(NoMatchingPatternError, "{:a=>0}: 1 === 0 does not return true") do
+    assert_raise_with_message(NoMatchingPatternError, "{a: 0}: 1 === 0 does not return true") do
       {a: 0} => {a: 1}
     end
 
-    assert_raise_with_message(NoMatchingPatternError, "{:a=>0}: {:a=>0} is not empty") do
+    assert_raise_with_message(NoMatchingPatternError, "{a: 0}: {a: 0} is not empty") do
       {a: 0} => {}
     end
 
-    assert_raise_with_message(NoMatchingPatternError, "[{:a=>0}]: rest of {:a=>0} is not empty") do
+    assert_raise_with_message(NoMatchingPatternError, "[{a: 0}]: rest of {a: 0} is not empty") do
       [{a: 0}] => [{**nil}]
     end
   end

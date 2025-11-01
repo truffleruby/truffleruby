@@ -37,23 +37,8 @@ if yaml_source
   $cleanfiles << libyaml
   $LOCAL_LIBS.prepend("$(LIBYAML) ")
 else # default to pre-installed libyaml
-  if defined?(::TruffleRuby)
-    # Keep in sync with openssl/extconf.rb
-    _, ldir = dir_config('libyaml')
-    raise 'dir_config("libyaml") should always be set on TruffleRuby' unless ldir
-    # psych.so will end up in lib/mri/psych.so
-
-    # Use a path starting with '.' so we get only the -L and not the -Wl,-rpath, (see mkmf.rb libpathflag logic)
-    $LIBPATH.delete(ldir)
-    $LIBPATH << '../libyaml/lib'
-
-    # We want a relative rpath from from lib/mri/psych.so to src/main/c/libyaml/lib
-    origin_token = Truffle::Platform.linux? ? '$$ORIGIN' : '@loader_path'
-    $LIBS << (RbConfig::CONFIG['RPATHFLAG'] % "'#{origin_token}/../../src/main/c/libyaml/lib'")
-  else
-    pkg_config('yaml-0.1')
-    dir_config('libyaml')
-  end
+  pkg_config('yaml-0.1')
+  dir_config('libyaml')
   find_header('yaml.h') or abort "yaml.h not found"
   find_library('yaml', 'yaml_get_version') or abort "libyaml not found"
 end
