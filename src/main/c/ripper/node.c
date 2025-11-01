@@ -20,10 +20,7 @@
 #else
 
 #include "internal.h"
-#include "internal/compilers.h"
-#include "internal/gc.h"
 #include "internal/hash.h"
-#include "internal/static_assert.h"
 #include "internal/variable.h"
 #include "ruby/ruby.h"
 #include "vm_core.h"
@@ -308,12 +305,7 @@ rb_ast_t *
 rb_ast_new(void)
 {
     node_buffer_t *nb = rb_node_buffer_new();
-#ifdef TRUFFLERUBY
-    rb_ast_t *ast = xmalloc(sizeof(rb_ast_t));
-    ast->node_buffer = nb;
-#else
     rb_ast_t *ast = (rb_ast_t *)rb_imemo_new(imemo_ast, 0, 0, 0, (VALUE)nb);
-#endif
     return ast;
 }
 #endif

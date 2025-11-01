@@ -19,14 +19,13 @@ rescue LoadError
 end
 
 class Scheduler
-  # TruffleRuby: no IO::Buffer yet
-  # experimental = Warning[:experimental]
-  # begin
-  #   Warning[:experimental] = false
-  #   IO::Buffer.new(0)
-  # ensure
-  #   Warning[:experimental] = experimental
-  # end
+  experimental = Warning[:experimental]
+  begin
+    Warning[:experimental] = false
+    IO::Buffer.new(0)
+  ensure
+    Warning[:experimental] = experimental
+  end
 
   def initialize
     @readable = {}

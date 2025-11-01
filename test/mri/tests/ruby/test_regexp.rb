@@ -939,10 +939,9 @@ class TestRegexp < Test::Unit::TestCase
     assert_equal("\u3042\\t", Regexp.quote("\u3042\t"))
     assert_equal("\\t\xff", Regexp.quote("\t" + [0xff].pack("C")))
 
-    # TruffleString: length of utf-16 string is not a multiple of 2
-    # bug13034 = '[ruby-core:78646] [Bug #13034]'
-    # str = "\x00".force_encoding("UTF-16BE")
-    # assert_equal(str, Regexp.quote(str), bug13034)
+    bug13034 = '[ruby-core:78646] [Bug #13034]'
+    str = "\x00".force_encoding("UTF-16BE")
+    assert_equal(str, Regexp.quote(str), bug13034)
   end
 
   def test_try_convert
@@ -1690,7 +1689,7 @@ class TestRegexp < Test::Unit::TestCase
     assert_separately([], "#{<<-"begin;"}\n#{<<-"end;"}")
     begin;
       begin
-        # require '-test-/regexp'
+        require '-test-/regexp'
       rescue LoadError
       else
         bug = '[ruby-core:79624] [Bug #13234]'

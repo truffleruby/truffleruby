@@ -299,8 +299,7 @@ module Fiddle
           end
         end
       else
-        # TruffleRuby - MRI was -rfiddle.so
-        assert_no_memory_leak(%w[-W0 -rfiddle], '', '100_000.times {Fiddle::Pointer.allocate}', rss: true)
+        assert_no_memory_leak(%w[-W0 -rfiddle.so], '', '100_000.times {Fiddle::Pointer.allocate}', rss: true)
       end
     end
   end

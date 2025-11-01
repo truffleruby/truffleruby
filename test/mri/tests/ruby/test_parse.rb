@@ -378,10 +378,10 @@ class TestParse < Test::Unit::TestCase
 
   def assert_disallowed_variable(type, noname, invalid)
     noname.each do |name|
-      assert_syntax_error("proc{a = #{name} }", /(`|')#{Regexp.escape noname[0]}' without identifiers is not allowed as #{type} variable name|(`|')#{Regexp.escape noname[0]}' is not allowed as #{type} variable name/)
+      assert_syntax_error("proc{a = #{name} }", "`#{noname[0]}' without identifiers is not allowed as #{type} variable name")
     end
     invalid.each do |name|
-      assert_syntax_error("proc {a = #{name} }", /(`|')#{Regexp.escape name}' is not allowed as #{type} variable name|(`|')#{Regexp.escape noname[0]}' is not allowed as #{type} variable name/)
+      assert_syntax_error("proc {a = #{name} }", "`#{name}' is not allowed as #{type} variable name")
     end
   end
 

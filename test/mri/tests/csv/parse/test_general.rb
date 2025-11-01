@@ -324,25 +324,22 @@ line,5,jkl
 
   private
 
-
-  unless defined?(::TruffleRuby)
-    {
-      "YJIT"=>1,              # for --yjit-call-threshold=1
-      "MJIT"=>5, "RJIT"=>5,   # for --jit-wait
-    }.any? do |jit, timeout|
-      if (RubyVM.const_defined?(jit) and
-          jit = RubyVM.const_get(jit) and
-          jit.respond_to?(:enabled?) and
-          jit.enabled?)
-        PARSE_ERROR_TIMEOUT = timeout
-      end
+  {
+    "YJIT"=>1,              # for --yjit-call-threshold=1
+    "MJIT"=>5, "RJIT"=>5,   # for --jit-wait
+  }.any? do |jit, timeout|
+    if (RubyVM.const_defined?(jit) and
+        jit = RubyVM.const_get(jit) and
+        jit.respond_to?(:enabled?) and
+        jit.enabled?)
+      PARSE_ERROR_TIMEOUT = timeout
     end
   end
   PARSE_ERROR_TIMEOUT ||= 0.2
 
   def assert_parse_errors_out(data, timeout: PARSE_ERROR_TIMEOUT, **options)
     assert_raise(CSV::MalformedCSVError) do
-    EnvUtil.timeout(timeout) do
+      Timeout.timeout(timeout) do
         CSV.parse(data, **options)
         fail("Parse didn't error out")
       end

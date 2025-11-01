@@ -15,7 +15,7 @@ module Gem
     def initialize(dirs)
       @all = nil
       @stubs = nil
-      @stubs_by_name = TruffleRuby::ConcurrentMap.new
+      @stubs_by_name = {}
       @spec_with_requirable_file = {}
       @active_stub_with_requirable_file = {}
 
@@ -41,10 +41,7 @@ module Gem
         pattern = "*.gemspec"
         stubs = stubs_for_pattern(pattern, false)
 
-        stubs_by_name = TruffleRuby::ConcurrentMap.new
-        stubs.select {|s| Gem::Platform.match_spec? s }.group_by(&:name).each_pair { |k, v| stubs_by_name[k] = v }
-        @stubs_by_name = stubs_by_name
-
+        @stubs_by_name = stubs.select {|s| Gem::Platform.match_spec? s }.group_by(&:name)
         stubs
       end
     end
@@ -102,10 +99,7 @@ module Gem
     # Sets the specs known by the record to +specs+.
 
     def all=(specs)
-      stubs_by_name = TruffleRuby::ConcurrentMap.new
-      specs.group_by(&:name).each_pair { |k, v| stubs_by_name[k] = v }
-      @stubs_by_name = stubs_by_name
-
+      @stubs_by_name = specs.group_by(&:name)
       @all = @stubs = specs
     end
 

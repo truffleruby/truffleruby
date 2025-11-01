@@ -37,7 +37,7 @@ module Fiddle
 
       begin
         # NetBSD
-        # require '-test-/dln/empty'
+        require '-test-/dln/empty'
         refute_nil Fiddle::Handle.sym('Init_empty')
         assert_equal Fiddle::Handle.sym('Init_empty'), Fiddle::Handle['Init_empty']
         return
@@ -164,7 +164,7 @@ module Fiddle
         # interface, below, should be used, since getpid() is a function and not a
         # data object.)
         # --- FreeBSD 8.0 dlsym(3)
-        # require '-test-/dln/empty'
+        require '-test-/dln/empty'
         handle = Handle::NEXT
         refute_nil handle['Init_empty']
         return

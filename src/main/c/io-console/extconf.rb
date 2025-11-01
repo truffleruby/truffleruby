@@ -1,17 +1,9 @@
 # frozen_string_literal: false
 require 'mkmf'
 
-if defined?(::TruffleRuby)
-  # there is no original io-console.gemspec file committed (only a generated one)
-  # so there is no the `_VERSION` local variable with actual gem version
-  require "json"
-  versions_filename = File.expand_path("../../../../versions.json", __dir__)
-  version = JSON.load(File.read(versions_filename)).dig("gems", "default", "io-console")
-else
-  version = ["../../..", "."].find do |dir|
-    break File.read(File.join(__dir__, dir, "io-console.gemspec"))[/^_VERSION\s*=\s*"(.*?)"/, 1]
-  rescue
-  end
+version = ["../../..", "."].find do |dir|
+  break File.read(File.join(__dir__, dir, "io-console.gemspec"))[/^_VERSION\s*=\s*"(.*?)"/, 1]
+rescue
 end
 
 have_func("rb_io_path")

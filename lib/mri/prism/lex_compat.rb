@@ -1,8 +1,6 @@
 # frozen_string_literal: true
-# :markup: markdown
 
 require "delegate"
-require "ripper"
 
 module Prism
   # This class is responsible for lexing the source using prism and then
@@ -11,23 +9,6 @@ module Prism
   # generally lines up. However, there are a few cases that require special
   # handling.
   class LexCompat # :nodoc:
-    # A result class specialized for holding tokens produced by the lexer.
-    class Result < Prism::Result
-      # The list of tokens that were produced by the lexer.
-      attr_reader :value
-
-      # Create a new lex compat result object with the given values.
-      def initialize(value, comments, magic_comments, data_loc, errors, warnings, source)
-        @value = value
-        super(comments, magic_comments, data_loc, errors, warnings, source)
-      end
-
-      # Implement the hash pattern matching interface for Result.
-      def deconstruct_keys(keys)
-        super.merge!(value: value)
-      end
-    end
-
     # This is a mapping of prism token types to Ripper token types. This is a
     # many-to-one mapping because we split up our token types, whereas Ripper
     # tends to group them.
@@ -203,8 +184,6 @@ module Prism
     # However, we add a couple of convenience methods onto them to make them a
     # little easier to work with. We delegate all other methods to the array.
     class Token < SimpleDelegator
-      # @dynamic initialize, each, []
-
       # The location of the token in the source.
       def location
         self[0]
@@ -261,10 +240,10 @@ module Prism
       def ==(other) # :nodoc:
         return false unless self[0...-1] == other[0...-1]
 
-        if self[3] == Ripper::EXPR_ARG | Ripper::EXPR_LABELED
-          other[3] & Ripper::EXPR_ARG | Ripper::EXPR_LABELED != 0
+        if self[4] == Ripper::EXPR_ARG | Ripper::EXPR_LABELED
+          other[4] & Ripper::EXPR_ARG | Ripper::EXPR_LABELED > 0
         else
-          self[3] == other[3]
+          self[4] == other[4]
         end
       end
     end
@@ -328,7 +307,7 @@ module Prism
         def to_a
           embexpr_balance = 0
 
-          tokens.each_with_object([]) do |token, results| #$ Array[Token]
+          tokens.each_with_object([]) do |token, results|
             case token.event
             when :on_embexpr_beg
               embexpr_balance += 1
@@ -429,7 +408,7 @@ module Prism
           # If every line in the heredoc is blank, we still need to split up the
           # string content token into multiple tokens.
           if dedent.nil?
-            results = [] #: Array[Token]
+            results = []
             embexpr_balance = 0
 
             tokens.each do |token|
@@ -464,7 +443,7 @@ module Prism
           # If the minimum common whitespace is 0, then we need to concatenate
           # string nodes together that are immediately adjacent.
           if dedent == 0
-            results = [] #: Array[Token]
+            results = []
             embexpr_balance = 0
 
             index = 0
@@ -482,7 +461,7 @@ module Prism
                 embexpr_balance -= 1
               when :on_tstring_content
                 if embexpr_balance == 0
-                  while index < max_index && tokens[index].event == :on_tstring_content && !token.value.match?(/\\\r?\n\z/)
+                  while index < max_index && tokens[index].event == :on_tstring_content
                     token.value << tokens[index].value
                     index += 1
                   end
@@ -497,7 +476,7 @@ module Prism
           # insert on_ignored_sp tokens for the amount of dedent that we need to
           # perform. We also need to remove the dedent from the beginning of
           # each line of plain string content tokens.
-          results = [] #: Array[Token]
+          results = []
           dedent_next = true
           embexpr_balance = 0
 
@@ -546,7 +525,7 @@ module Prism
                   # dedent from the beginning of the line.
                   if (dedent > 0) && (dedent_next || index > 0)
                     deleting = 0
-                    deleted_chars = [] #: Array[String]
+                    deleted_chars = []
 
                     # Gather up all of the characters that we're going to
                     # delete, stopping when you hit a character that would put
@@ -623,15 +602,15 @@ module Prism
     end
 
     def result
-      tokens = [] #: Array[LexCompat::Token]
+      tokens = []
 
       state = :default
-      heredoc_stack = [[]] #: Array[Array[Heredoc::PlainHeredoc | Heredoc::DashHeredoc | Heredoc::DedentingHeredoc]]
+      heredoc_stack = [[]]
 
       result = Prism.lex(source, **options)
       result_value = result.value
-      previous_state = nil #: Ripper::Lexer::State?
-      last_heredoc_end = nil #: Integer?
+      previous_state = nil
+      last_heredoc_end = nil
 
       # In previous versions of Ruby, Ripper wouldn't flush the bom before the
       # first token, so we had to have a hack in place to account for that. This
@@ -862,7 +841,7 @@ module Prism
       # We sort by location to compare against Ripper's output
       tokens.sort_by!(&:location)
 
-      Result.new(tokens, result.comments, result.magic_comments, result.data_loc, result.errors, result.warnings, Source.for(source))
+      ParseResult.new(tokens, result.comments, result.magic_comments, result.data_loc, result.errors, result.warnings, [])
     end
   end
 
@@ -878,10 +857,10 @@ module Prism
     end
 
     def result
-      previous = [] #: [[Integer, Integer], Symbol, String, untyped] | []
-      results = [] #: Array[[[Integer, Integer], Symbol, String, untyped]]
+      previous = []
+      results = []
 
-      lex(source).each do |token|
+      Ripper.lex(source, raise_errors: true).each do |token|
         case token[1]
         when :on_sp
           # skip
@@ -906,21 +885,6 @@ module Prism
       end
 
       results
-    end
-
-    private
-
-    if Ripper.method(:lex).parameters.assoc(:keyrest)
-      def lex(source)
-        Ripper.lex(source, raise_errors: true)
-      end
-    else
-      def lex(source)
-        ripper = Ripper::Lexer.new(source)
-        ripper.lex.tap do |result|
-          raise SyntaxError, ripper.errors.map(&:message).join(' ;') if ripper.errors.any?
-        end
-      end
     end
   end
 

@@ -220,11 +220,11 @@ module WEBrick
     # Stops the server from accepting new connections.
 
     def stop
-      alarm_shutdown_pipe {|f| f.write_nonblock("\0")}
-
       if @status == :Running
         @status = :Shutdown
       end
+
+      alarm_shutdown_pipe {|f| f.write_nonblock("\0")}
     end
 
     ##

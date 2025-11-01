@@ -854,7 +854,7 @@ uninitialized constant ErrorHighlightTest::NotDefined
     end
   end
 
-  if ErrorHighlight.const_get(:Spotter).const_defined?(:OPT_GETCONSTANT_PATH)
+  if ErrorHighlight.const_get(:Spotter).const_get(:OPT_GETCONSTANT_PATH)
     def test_COLON2_5
       # Unfortunately, we cannot identify which `NotDefined` caused the NameError
       assert_error_message(NameError, <<~END) do

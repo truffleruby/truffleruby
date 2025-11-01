@@ -21,7 +21,6 @@ class Gem::Platform
   end
 
   def self.match(platform)
-    warn 'Gem::Platform.match should not be used on TruffleRuby, use match_spec? instead', uplevel: 1
     match_platforms?(platform, Gem.platforms)
   end
 

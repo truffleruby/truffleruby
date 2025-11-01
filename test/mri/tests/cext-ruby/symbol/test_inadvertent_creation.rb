@@ -1,6 +1,5 @@
 # frozen_string_literal: false
 require 'test/unit'
-require "c/symbol" # TruffleRuby: to compile the native extension automatically (is required in noninterned_name.rb)
 require_relative 'noninterned_name'
 
 module Test_Symbol

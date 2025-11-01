@@ -42,11 +42,7 @@
  *
  * :FIXME: Should we deprecate it?
  */
-// We cannot support RB_NEWOBJ/NEWOBJ and OBJSETUP in TruffleRuby. They rely on being able to create an object
-// without an associated class and updating state that is tied directly to MRI's object layout.
-#ifndef TRUFFLERUBY
 #define RB_NEWOBJ(obj,type) type *(obj) = RBIMPL_CAST((type *)rb_newobj())
-#endif
 
 /**
  * Identical  to #RB_NEWOBJ,  except it  also accepts  the allocating  object's
@@ -61,13 +57,9 @@
  */
 #define RB_NEWOBJ_OF(obj,type,klass,flags) type *(obj) = RBIMPL_CAST((type *)rb_newobj_of(klass, flags))
 
-#ifndef TRUFFLERUBY
 #define NEWOBJ     RB_NEWOBJ      /**< @old{RB_NEWOBJ} */
-#endif
 #define NEWOBJ_OF  RB_NEWOBJ_OF   /**< @old{RB_NEWOBJ_OF} */
-#ifndef TRUFFLERUBY
 #define OBJSETUP   rb_obj_setup   /**< @old{rb_obj_setup} */
-#endif
 #define CLONESETUP rb_clone_setup /**< @old{rb_clone_setup} */
 #define DUPSETUP   rb_dup_setup   /**< @old{rb_dup_setup} */
 
@@ -166,8 +158,6 @@ void rb_singleton_class_attached(VALUE klass, VALUE obj);
 void rb_copy_generic_ivar(VALUE clone, VALUE obj);
 RBIMPL_SYMBOL_EXPORT_END()
 
-#ifndef TRUFFLERUBY
-
 RBIMPL_ATTR_DEPRECATED(("This is no longer how Object#clone works."))
 /**
  * @deprecated  Not sure exactly  when but at some time,  the implementation of
@@ -205,7 +195,5 @@ rb_dup_setup(VALUE dup, VALUE obj)
     (void)obj;
     return;
 }
-
-#endif // TRUFFLERUBY
 
 #endif /* RBIMPL_NEWOBJ_H */

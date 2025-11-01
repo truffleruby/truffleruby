@@ -89,7 +89,7 @@ class TestModule < Test::Unit::TestCase
 
   OtherSetup = -> do
     remove_const :Other if defined? ::TestModule::Other
-    Other = Module.new do
+    module Other
       def other
       end
     end

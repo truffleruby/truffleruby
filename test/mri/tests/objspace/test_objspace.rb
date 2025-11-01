@@ -7,8 +7,6 @@ rescue LoadError
 end
 
 class TestObjSpace < Test::Unit::TestCase
-  SOME_BASIC_OBJECT = BasicObject.new
-
   def test_memsize_of
     assert_equal(0, ObjectSpace.memsize_of(true))
     assert_equal(0, ObjectSpace.memsize_of(nil))

@@ -251,8 +251,6 @@ RBIMPL_SYMBOL_EXPORT_END()
         } \
     } while (0)
 
-#ifndef TRUFFLERUBY
-
 /** @alias{rb_check_frozen} */
 static inline void
 rb_check_frozen_inline(VALUE obj)
@@ -264,8 +262,6 @@ rb_check_frozen_inline(VALUE obj)
 
 /** @alias{rb_check_frozen} */
 #define rb_check_frozen rb_check_frozen_inline
-
-#endif // TRUFFLERUBY
 
 /**
  * Ensures that the  passed integer is in  the passed range.  When  you can use

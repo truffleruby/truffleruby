@@ -53,7 +53,6 @@ class OpenSSL::TestPKey < OpenSSL::PKeyTestCase
       }
     }
     assert_not_empty cb_called
-    assert_nil $!
   end
 
   def test_s_generate_key

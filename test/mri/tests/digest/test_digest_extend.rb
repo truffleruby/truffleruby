@@ -8,7 +8,7 @@ class TestDigestExtend < Test::Unit::TestCase
 
   TEST_DIGEST = %w[SHA1024 SHA512 SHA384 SHA256 SHA1].find do |n|
     break Digest.const_get(n)
-  rescue LoadError, NameError
+  rescue LoadError
   end
 
   class MyDigest < Digest::Class

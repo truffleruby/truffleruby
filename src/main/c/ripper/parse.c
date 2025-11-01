@@ -128,21 +128,7 @@
 #include "ruby/st.h"
 #include "ruby/util.h"
 #include "ruby/ractor.h"
-#ifdef TRUFFLERUBY
-#include <truffleruby/internal/symbol.h>
-#else
 #include "symbol.h"
-#endif
-
-/* The following gc.h's declarations are used here - ruby_sized_xfree, and SIZED_REALLOC_N */
-#ifdef TRUFFLERUBY
-#include "internal/gc.h"
-#endif
-
-/* TruffleRuby Parse is compiled as part of ripper so we undefine RIPPER.  */
-#ifdef TRUFFLERUBY
-#undef RIPPER
-#endif
 
 #ifndef RIPPER
 static void
@@ -23657,12 +23643,6 @@ const_decl_path(struct parser_params *p, NODE *dest)
     }
     return n;
 }
-
-#ifdef TRUFFLERUBY
-#define rb_mRubyVMFrozenCore Qnil
-#else
-extern VALUE rb_mRubyVMFrozenCore;
-#endif
 
 static NODE *
 make_shareable_node(struct parser_params *p, NODE *value, bool copy, const YYLTYPE *loc)

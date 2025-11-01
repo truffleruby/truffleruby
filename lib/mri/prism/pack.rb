@@ -1,8 +1,5 @@
 # frozen_string_literal: true
-# :markup: markdown
-# typed: ignore
 
-#
 module Prism
   # A parser for the pack template language.
   module Pack
@@ -151,8 +148,6 @@ module Prism
             end
           when LENGTH_MAX
             base + ", as many as possible"
-          else
-            raise
           end
         when UTF8
           "UTF-8 character"
@@ -219,7 +214,6 @@ module Prism
           else
             source = directive.source
           end
-          # @type var source_width: Integer
           "  #{source.ljust(source_width)}  #{directive.describe}"
         end
 

@@ -597,17 +597,9 @@ module URI
       if @opaque
         raise InvalidURIError,
           "can not set host with registry or opaque"
-      else
-        if defined?(::TruffleRuby)
-          bad = !parser.regexp[:HOST].match?(v)
-        else
-          bad = parser.regexp[:HOST] !~ v
-        end
-        
-        if bad
-          raise InvalidComponentError,
-            "bad component(expected host component): #{v}"
-        end
+      elsif parser.regexp[:HOST] !~ v
+        raise InvalidComponentError,
+          "bad component(expected host component): #{v}"
       end
 
       return true
@@ -1141,16 +1133,17 @@ module URI
       base.fragment=(nil)
 
       # RFC2396, Section 5.2, 4)
-      if authority
-        base.set_userinfo(rel.userinfo)
-        base.set_host(rel.host)
-        base.set_port(rel.port || base.default_port)
-        base.set_path(rel.path)
-      elsif base.path && rel.path
-        base.set_path(merge_path(base.path, rel.path))
+      if !authority
+        base.set_path(merge_path(base.path, rel.path)) if base.path && rel.path
+      else
+        # RFC2396, Section 5.2, 4)
+        base.set_path(rel.path) if rel.path
       end
 
       # RFC2396, Section 5.2, 7)
+      base.set_userinfo(rel.userinfo) if rel.userinfo
+      base.set_host(rel.host)         if rel.host
+      base.set_port(rel.port)         if rel.port
       base.query = rel.query       if rel.query
       base.fragment=(rel.fragment) if rel.fragment
 

@@ -128,13 +128,7 @@
 #include "ruby/st.h"
 #include "ruby/util.h"
 #include "ruby/ractor.h"
-#ifdef TRUFFLERUBY
-#include <truffleruby/internal/symbol.h>
-#else
 #include "symbol.h"
-#endif
-
-#include "internal/gc.h"
 
 #ifndef RIPPER
 static void
@@ -21039,11 +21033,7 @@ formal_argument(struct parser_params *p, VALUE lhs)
 #undef ERR
     }
     shadowing_lvar(p, id);
-#ifdef TRUFFLERUBY
-    return id;
-#else
     return lhs;
-#endif
 }
 
 static int
@@ -24856,12 +24846,8 @@ check_literal_when(struct parser_params *p, NODE *arg, const YYLTYPE *loc)
 static int
 id_is_var(struct parser_params *p, ID id)
 {
-#ifdef TRUFFLERUBY
-	switch (id_type(id)) {
-#else
     if (is_notop_id(id)) {
         switch (id & ID_SCOPE_MASK) {
-#endif
           case ID_GLOBAL: case ID_INSTANCE: case ID_CONST: case ID_CLASS:
             return 1;
           case ID_LOCAL:
@@ -24872,9 +24858,7 @@ id_is_var(struct parser_params *p, ID id)
             /* method call without arguments */
             return 0;
         }
-#ifndef TRUFFLERUBY
     }
-#endif
     compile_error(p, "identifier %"PRIsVALUE" is not valid to get", rb_id2str(id));
     return 0;
 }
@@ -25416,12 +25400,6 @@ const_decl_path(struct parser_params *p, NODE *dest)
     }
     return n;
 }
-
-#ifdef TRUFFLERUBY
-#define rb_mRubyVMFrozenCore Qnil
-#else
-extern VALUE rb_mRubyVMFrozenCore;
-#endif
 
 static NODE *
 make_shareable_node(struct parser_params *p, NODE *value, bool copy, const YYLTYPE *loc)
@@ -27377,9 +27355,7 @@ rb_ruby_parser_mark(void *ptr)
     rb_gc_mark(p->debug_buffer);
     rb_gc_mark(p->debug_output);
 #ifdef YYMALLOC
-#ifndef TRUFFLERUBY
     rb_gc_mark((VALUE)p->heap);
-#endif
 #endif
 }
 
@@ -27390,17 +27366,6 @@ rb_ruby_parser_free(void *ptr)
     struct local_vars *local, *prev;
 #ifdef UNIVERSAL_PARSER
     rb_parser_config_t *config = p->config;
-#endif
-
-#ifdef TRUFFLERUBY
-    rb_imemo_tmpbuf_t *heap = p->heap;
-
-    while (heap != NULL) {
-        if (heap->ptr != NULL) {
-            xfree(ptr);
-        }
-        heap = heap->next;
-    }
 #endif
 
     if (p->tokenbuf) {

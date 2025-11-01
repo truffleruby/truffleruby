@@ -38,7 +38,7 @@ class TestDebug < Test::Unit::TestCase
     }
     assert_operator(0, :<, count[:self], msg)
     assert_operator(0, :<, count[:bind], msg)
-    # assert_operator(0, :<, count[:iseq], msg)
+    assert_operator(0, :<, count[:iseq], msg)
     assert_operator(0, :<, count[:class], msg)
   end
 

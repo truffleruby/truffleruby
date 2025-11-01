@@ -4,7 +4,7 @@
 #include "internal.h"
 #include "internal/imemo.h"
 #include "rubyparser.h"
-#include "internal/vm.h"
+#include "vm.h"
 
 RUBY_SYMBOL_EXPORT_BEGIN
 #ifdef UNIVERSAL_PARSER

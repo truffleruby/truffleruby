@@ -2,7 +2,7 @@
 require 'rubygems'
 require 'fileutils'
 require 'tmpdir'
-require 'rdoc/rubygems_hook'
+require_relative '../../lib/rdoc/rubygems_hook'
 require 'test/unit'
 
 class TestRDocRubygemsHook < Test::Unit::TestCase

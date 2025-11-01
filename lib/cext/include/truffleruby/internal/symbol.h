@@ -15,18 +15,12 @@
 #include "ruby/encoding.h"
 
 #define DYNAMIC_ID_P(id) (!(id&ID_STATIC_SYM)&&id>tLAST_OP_ID)
-#ifdef TRUFFLERUBY
-#define STATIC_ID2SYM(id)  rb_id2sym(id)
-#else
 #define STATIC_ID2SYM(id)  (((VALUE)(id)<<RUBY_SPECIAL_SHIFT)|SYMBOL_FLAG)
-#endif
 
 #ifdef HAVE_BUILTIN___BUILTIN_CONSTANT_P
-#ifndef TRUFFLERUBY
 #define rb_id2sym(id) \
     RB_GNUC_EXTENSION_BLOCK(__builtin_constant_p(id) && !DYNAMIC_ID_P(id) ? \
                             STATIC_ID2SYM(id) : rb_id2sym(id))
-#endif
 #endif
 
 struct RSymbol {
@@ -47,11 +41,6 @@ struct RSymbol {
 #define is_class_id(id) (id_type(id)==ID_CLASS)
 #define is_junk_id(id) (id_type(id)==ID_JUNK)
 
-#ifdef TRUFFLERUBY
-RBIMPL_SYMBOL_EXPORT_BEGIN()
-int id_type(ID id);
-RBIMPL_SYMBOL_EXPORT_END()
-#else
 static inline int
 id_type(ID id)
 {
@@ -62,7 +51,6 @@ id_type(ID id)
         return -1;
     }
 }
-#endif
 
 typedef uint32_t rb_id_serial_t;
 static const uint32_t RB_ID_SERIAL_MAX = /* 256M on LP32 */
@@ -113,28 +101,6 @@ sym_type(VALUE sym)
 #define is_junk_sym(sym) (sym_type(sym)==ID_JUNK)
 
 RUBY_FUNC_EXPORTED const uint_least32_t ruby_global_name_punct_bits[(0x7e - 0x20 + 31) / 32];
-
-#ifdef TRUFFLERUBY
-// We need to define ruby_global_name_punct_bits to link it correctly
-// since it is included in libtruffleruby via symbol.c
-#ifndef RIPPER
-#define BIT(c, idx) (((c) / 32 - 1 == idx) ? (1U << ((c) % 32)) : 0)
-#define SPECIAL_PUNCT(idx) ( \
-	BIT('~', idx) | BIT('*', idx) | BIT('$', idx) | BIT('?', idx) | \
-	BIT('!', idx) | BIT('@', idx) | BIT('/', idx) | BIT('\\', idx) | \
-	BIT(';', idx) | BIT(',', idx) | BIT('.', idx) | BIT('=', idx) | \
-	BIT(':', idx) | BIT('<', idx) | BIT('>', idx) | BIT('\"', idx) | \
-	BIT('&', idx) | BIT('`', idx) | BIT('\'', idx) | BIT('+', idx) | \
-	BIT('0', idx))
-const unsigned int ruby_global_name_punct_bits[] = {
-    SPECIAL_PUNCT(0),
-    SPECIAL_PUNCT(1),
-    SPECIAL_PUNCT(2),
-};
-#undef BIT
-#undef SPECIAL_PUNCT
-#endif
-#endif
 
 static inline int
 is_global_name_punct(const int c)

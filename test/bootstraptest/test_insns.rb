@@ -279,7 +279,7 @@ tests = [
     x = once(128); x = once(7); x = once(16);
     x =~ "true" && $~
   },
-  [ 'once', <<-'},', {tagged: true}],         # {
+  [ 'once', <<-'},', ],         # {
     # inter-thread lockup situation
     def once n
       return Thread.start n do |m|

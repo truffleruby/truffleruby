@@ -1457,7 +1457,7 @@ class TestM17N < Test::Unit::TestCase
     assert_regexp_usascii_literal('/\u1234/', Encoding::UTF_8)
     assert_regexp_usascii_literal('/\u1234#{ }/', Encoding::UTF_8)
     assert_regexp_usascii_literal('/\u1234#{"a"}/', Encoding::UTF_8)
-    # assert_regexp_usascii_literal('/\u1234#{%q"\x80"}/', nil, SyntaxError) # edge case failing since Prism translator
+    assert_regexp_usascii_literal('/\u1234#{%q"\x80"}/', nil, SyntaxError)
     assert_regexp_usascii_literal('/\u1234#{"\x80"}/', nil, SyntaxError)
     assert_regexp_usascii_literal('/\u1234\x80/', nil, SyntaxError)
     assert_regexp_usascii_literal('/\u1234#{ }\x80/', nil, RegexpError)
@@ -1467,7 +1467,6 @@ class TestM17N < Test::Unit::TestCase
     assert_equal("", "\x81\x40".force_encoding("GBK").chop)
   end
 
-  # GR-39354
   def test_euc_tw
     assert_equal("a", "a\x8e\xa2\xa1\xa1".force_encoding("euc-tw").chop)
   end

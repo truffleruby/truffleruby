@@ -982,11 +982,10 @@ dependencies: []
     save_gemspec("a-1", "1", dir_standard_specs) {|s| s.name = "a" }
     save_gemspec("b-1", "1", dir_standard_specs) {|s| s.name = "b" }
 
-    # TruffleRuby: TruffleRuby::ConcurrentMap doesn't have a #length method, so use #size instead
     assert_equal ["a-1"], Gem::Specification.stubs_for("a").map(&:full_name)
-    assert_equal 1, specification_record.instance_variable_get(:@stubs_by_name).size
+    assert_equal 1, specification_record.instance_variable_get(:@stubs_by_name).length
     assert_equal ["b-1"], Gem::Specification.stubs_for("b").map(&:full_name)
-    assert_equal 2, specification_record.instance_variable_get(:@stubs_by_name).size
+    assert_equal 2, specification_record.instance_variable_get(:@stubs_by_name).length
 
     assert_equal(
       Gem::Specification.stubs_for("a").map(&:object_id),

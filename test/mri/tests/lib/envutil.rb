@@ -14,10 +14,6 @@ end
 
 module EnvUtil
   def rubybin
-    if defined?(::TruffleRuby) # always be correct and do not search some random files on disk
-      return RbConfig.ruby
-    end
-
     if ruby = ENV["RUBY"]
       ruby
     elsif defined?(RbConfig.ruby)
@@ -59,11 +55,6 @@ module EnvUtil
       @original_warning = defined?(Warning.[]) ? %i[deprecated experimental].to_h {|i| [i, Warning[i]]} : nil
     end
   end
-
-  # TruffleRuby: startup can take longer, especially on highly loaded CI machines.
-  # Note that EnvUtil.invoke_ruby has a timeout of 10 seconds * the scale.
-  # We use 60 * 10 = 600s which is the same as the timeout for ruby/spec in jt.rb.
-  self.timeout_scale = 60 if defined?(::TruffleRuby)
 
   def apply_timeout_scale(t)
     if scale = EnvUtil.timeout_scale
@@ -195,7 +186,7 @@ module EnvUtil
       stderr = stderr_filter.call(stderr) if stderr_filter
       if timeout_error
         bt = caller_locations
-        msg = "execution of #{bt.shift.label} expired (took longer than #{timeout} seconds)"
+        msg = "execution of #{bt.shift.label} expired timeout (#{timeout} sec)"
         msg = failure_description(status, terminated, msg, [stdout, stderr].join("\n"))
         raise timeout_error, msg, bt.map(&:to_s)
       end

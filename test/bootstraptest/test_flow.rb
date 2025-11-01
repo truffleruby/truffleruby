@@ -268,7 +268,7 @@ assert_equal %q{4}, %q{
        end
      end; 3)
     )
-}, tagged: true
+}
 assert_equal %q{34}, %q{
   def m a, b
     a+b
@@ -283,7 +283,7 @@ assert_equal %q{[1, 2, 3, 6, 7]}, %q{$a = []; begin; ; $a << 1
     end; $a << 5
   }; $a << 6
 ; $a << 7
-; rescue Exception; $a << 99; end; $a}, tagged: true
+; rescue Exception; $a << 99; end; $a}
 assert_equal %q{[1, 2, 3, 4, 8, 9]}, %q{$a = []; begin; ; $a << 1
   3.times{; $a << 2
     class A; $a << 3
@@ -293,7 +293,7 @@ assert_equal %q{[1, 2, 3, 4, 8, 9]}, %q{$a = []; begin; ; $a << 1
     end; $a << 7
   }; $a << 8
 ; $a << 9
-; rescue Exception; $a << 99; end; $a}, tagged: true
+; rescue Exception; $a << 99; end; $a}
 assert_equal %q{[1, 2, 3, 2, 3, 2, 3, 6, 7]}, %q{$a = []; begin; ; $a << 1
   3.times{; $a << 2
     class C; $a << 3
@@ -301,7 +301,7 @@ assert_equal %q{[1, 2, 3, 2, 3, 2, 3, 6, 7]}, %q{$a = []; begin; ; $a << 1
     end; $a << 5
   }; $a << 6
 ; $a << 7
-; rescue Exception; $a << 99; end; $a}, tagged: true
+; rescue Exception; $a << 99; end; $a}
 assert_equal %q{[1, 2, 3, 4, 2, 3, 4, 2, 3, 4, 8, 9]}, %q{$a = []; begin; ; $a << 1
   3.times{; $a << 2
     class C; $a << 3
@@ -311,7 +311,7 @@ assert_equal %q{[1, 2, 3, 4, 2, 3, 4, 2, 3, 4, 8, 9]}, %q{$a = []; begin; ; $a <
     end; $a << 7
   }; $a << 8
 ; $a << 9
-; rescue Exception; $a << 99; end; $a}, tagged: true
+; rescue Exception; $a << 99; end; $a}
 assert_equal %q{[1, 2, 3, 6, 7]}, %q{$a = []; begin; ; $a << 1
   while true; $a << 2
     class C; $a << 3
@@ -319,7 +319,7 @@ assert_equal %q{[1, 2, 3, 6, 7]}, %q{$a = []; begin; ; $a << 1
     end; $a << 5
   end; $a << 6
 ; $a << 7
-; rescue Exception; $a << 99; end; $a}, tagged: true
+; rescue Exception; $a << 99; end; $a}
 assert_equal %q{[1, 2, 3, 4, 8, 9]}, %q{$a = []; begin; ; $a << 1
   while true; $a << 2
     class C; $a << 3
@@ -329,7 +329,7 @@ assert_equal %q{[1, 2, 3, 4, 8, 9]}, %q{$a = []; begin; ; $a << 1
     end; $a << 7
   end; $a << 8
 ; $a << 9
-; rescue Exception; $a << 99; end; $a}, tagged: true
+; rescue Exception; $a << 99; end; $a}
 assert_equal %q{[1, 2, 3, 4, 5, 3, 4, 5, 3, 4, 5, 8, 9]}, %q{$a = []; begin; ; $a << 1
   i=0; $a << 2
   while i<3; $a << 3
@@ -339,7 +339,7 @@ assert_equal %q{[1, 2, 3, 4, 5, 3, 4, 5, 3, 4, 5, 8, 9]}, %q{$a = []; begin; ; $
     end; $a << 7
   end; $a << 8
 ; $a << 9
-; rescue Exception; $a << 99; end; $a}, tagged: true
+; rescue Exception; $a << 99; end; $a}
 assert_equal %q{1}, %q{
   1.times{
     while true
@@ -352,7 +352,7 @@ assert_equal %q{1}, %q{
       end
     end
   }
-}, tagged: true
+}
 assert_equal %q{[1, 2, 3, 5, 2, 3, 5, 7, 8]}, %q{$a = []; begin;  ; $a << 1
   [1,2].each do; $a << 2
     begin; $a << 3

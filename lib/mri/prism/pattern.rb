@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-# :markup: markdown
 
 module Prism
   # A pattern is an object that wraps a Ruby pattern matching expression. The
@@ -70,14 +69,7 @@ module Prism
     # nodes.
     def compile
       result = Prism.parse("case nil\nin #{query}\nend")
-
-      case_match_node = result.value.statements.body.last
-      raise CompilationError, case_match_node.inspect unless case_match_node.is_a?(CaseMatchNode)
-
-      in_node = case_match_node.conditions.last
-      raise CompilationError, in_node.inspect unless in_node.is_a?(InNode)
-
-      compile_node(in_node.pattern)
+      compile_node(result.value.statements.body.last.conditions.last.pattern)
     end
 
     # Scan the given node and all of its children for nodes that match the
@@ -85,13 +77,13 @@ module Prism
     # matches the pattern. If no block is given, an enumerator will be returned
     # that will yield each node that matches the pattern.
     def scan(root)
-      return to_enum(:scan, root) unless block_given?
+      return to_enum(__method__, root) unless block_given?
 
       @compiled ||= compile
       queue = [root]
 
       while (node = queue.shift)
-        yield node if @compiled.call(node) # steep:ignore
+        yield node if @compiled.call(node)
         queue.concat(node.compact_child_nodes)
       end
     end
@@ -150,10 +142,7 @@ module Prism
       parent = node.parent
 
       if parent.is_a?(ConstantReadNode) && parent.slice == "Prism"
-        name = node.name
-        raise CompilationError, node.inspect if name.nil?
-
-        compile_constant_name(node, name)
+        compile_node(node.child)
       else
         compile_error(node)
       end
@@ -162,17 +151,14 @@ module Prism
     # in ConstantReadNode
     # in String
     def compile_constant_read_node(node)
-      compile_constant_name(node, node.name)
-    end
+      value = node.slice
 
-    # Compile a name associated with a constant.
-    def compile_constant_name(node, name)
-      if Prism.const_defined?(name, false)
-        clazz = Prism.const_get(name)
+      if Prism.const_defined?(value, false)
+        clazz = Prism.const_get(value)
 
         ->(other) { clazz === other }
-      elsif Object.const_defined?(name, false)
-        clazz = Object.const_get(name)
+      elsif Object.const_defined?(value, false)
+        clazz = Object.const_get(value)
 
         ->(other) { clazz === other }
       else
@@ -188,12 +174,7 @@ module Prism
 
       preprocessed =
         node.elements.to_h do |element|
-          key = element.key
-          if key.is_a?(SymbolNode)
-            [key.unescaped.to_sym, compile_node(element.value)]
-          else
-            raise CompilationError, element.inspect
-          end
+          [element.key.unescaped.to_sym, compile_node(element.value)]
         end
 
       compiled_keywords = ->(other) do

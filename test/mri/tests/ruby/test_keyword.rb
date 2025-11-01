@@ -1,7 +1,7 @@
 # frozen_string_literal: false
 require 'test/unit'
-# require '-test-/rb_call_super_kw'
-# require '-test-/iter'
+require '-test-/rb_call_super_kw'
+require '-test-/iter'
 
 class TestKeywordArguments < Test::Unit::TestCase
   def f1(str: "foo", num: 424242)
@@ -431,10 +431,10 @@ class TestKeywordArguments < Test::Unit::TestCase
 
     singleton_class.send(:attr_writer, :y)
     m = method(:y=)
-    # assert_equal_not_same(h, send(:y=, **h))
-    # assert_equal_not_same(h, public_send(:y=, **h))
-    # assert_equal_not_same(h, m.(**h))
-    # assert_equal_not_same(h, m.send(:call, **h))
+    assert_equal_not_same(h, send(:y=, **h))
+    assert_equal_not_same(h, public_send(:y=, **h))
+    assert_equal_not_same(h, m.(**h))
+    assert_equal_not_same(h, m.send(:call, **h))
 
     singleton_class.send(:remove_method, :yo)
     def self.method_missing(_, **kw) kw end
@@ -2401,12 +2401,12 @@ class TestKeywordArguments < Test::Unit::TestCase
       yield(*args)
     end
     foo = o.method(:foo).to_proc
-    assert_warn(/Skipping set of ruby2_keywords flag for proc/) do
+    assert_warn(/Skipping set of ruby2_keywords flag for proc \(proc created from method\)/) do
       foo.ruby2_keywords
     end
 
     foo = :foo.to_proc
-    assert_warn(/Skipping set of ruby2_keywords flag for proc/) do
+    assert_warn(/Skipping set of ruby2_keywords flag for proc \(proc not defined in Ruby\)/) do
       foo.ruby2_keywords
     end
 
@@ -2750,19 +2750,19 @@ class TestKeywordArguments < Test::Unit::TestCase
 
     o = Object.new
     class << o
-      alias bar object_id
+      alias bar p
     end
-    assert_warn(/Skipping set of ruby2_keywords flag for bar/) do
+    assert_warn(/Skipping set of ruby2_keywords flag for bar \(method not defined in Ruby\)/) do
       assert_nil(o.singleton_class.send(:ruby2_keywords, :bar))
     end
     sc = Class.new(c)
     assert_warn(/Skipping set of ruby2_keywords flag for bar \(can only set in method defining module\)/) do
       sc.send(:ruby2_keywords, :bar)
     end
-    # m = Module.new
-    # assert_warn(/Skipping set of ruby2_keywords flag for system \(can only set in method defining module\)/) do
-    #   m.send(:ruby2_keywords, :system)
-    # end
+    m = Module.new
+    assert_warn(/Skipping set of ruby2_keywords flag for system \(can only set in method defining module\)/) do
+      m.send(:ruby2_keywords, :system)
+    end
 
     assert_raise(NameError) { c.send(:ruby2_keywords, "a5e36ccec4f5080a1d5e63f8") }
     assert_raise(NameError) { c.send(:ruby2_keywords, :quux) }

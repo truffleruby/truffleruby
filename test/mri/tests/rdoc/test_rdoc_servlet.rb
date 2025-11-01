@@ -1,20 +1,9 @@
 # frozen_string_literal: true
-
-# TruffleRuby: require tsort explicitly to fix #test_documentation_page_page
-# and #test_documentation_page_page_with_nesting tests
-require 'tsort'
-
 require_relative 'helper'
 begin
   require 'webrick'
 rescue LoadError
 end
-
-# Load those eagerly, otherwise require 'json' inside fails due to `Gem::Specification.all = [@spec]`, also on CRuby
-_load_eagerly = [
-  RDoc::Servlet,
-  RDoc::Generator::JsonIndex
-]
 
 class TestRDocServlet < RDoc::TestCase
 

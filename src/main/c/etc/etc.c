@@ -1117,10 +1117,6 @@ Init_etc(void)
 #ifdef HAVE_RB_EXT_RACTOR_SAFE
     RB_EXT_RACTOR_SAFE(true);
 #endif
-#ifdef TRUFFLERUBY
-    // Actually not Ractor-safe: https://bugs.ruby-lang.org/issues/21115
-    RB_EXT_RACTOR_SAFE(false);
-#endif
     mEtc = rb_define_module("Etc");
     rb_define_const(mEtc, "VERSION", rb_str_new_cstr(RUBY_ETC_VERSION));
     init_constants(mEtc);

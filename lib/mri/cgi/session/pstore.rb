@@ -11,10 +11,7 @@
 # cgi/session.rb for more details on session storage managers.
 
 require_relative '../session'
-begin
-  require 'pstore'
-rescue LoadError
-end
+require 'pstore'
 
 class CGI
   class Session
@@ -85,7 +82,7 @@ class CGI
         File::unlink path
       end
 
-    end if defined?(::PStore)
+    end
   end
 end
 # :enddoc:

@@ -1338,7 +1338,7 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
       e.full_message
     end
     assert_all?(message.lines) do |m|
-     /\e\[\d[;\d]*m[^\e]*\n/ !~ m
+      /\e\[\d[;\d]*m[^\e]*\n/ !~ m
     end
 
     e = RuntimeError.new("testerror")

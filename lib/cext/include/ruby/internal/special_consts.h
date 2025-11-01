@@ -31,12 +31,6 @@
 #include "ruby/internal/stdbool.h"
 #include "ruby/internal/value.h"
 
-#ifdef TRUFFLERUBY
-RBIMPL_SYMBOL_EXPORT_BEGIN()
-bool rb_tr_special_const_symbol_p(VALUE object);
-RBIMPL_SYMBOL_EXPORT_END()
-#endif
-
 /**
  * @private
  * @warning  Do not touch this macro.
@@ -197,7 +191,6 @@ RB_UNDEF_P(VALUE obj)
     return obj == RUBY_Qundef;
 }
 
-#ifndef TRUFFLERUBY
 RBIMPL_ATTR_CONST()
 RBIMPL_ATTR_CONSTEXPR(CXX14)
 RBIMPL_ATTR_ARTIFICIAL()
@@ -237,7 +230,6 @@ RB_NIL_OR_UNDEF_P(VALUE obj)
     const VALUE common_bits = RUBY_Qundef & RUBY_Qnil;
     return (obj & mask) == common_bits;
 }
-#endif
 
 RBIMPL_ATTR_CONST()
 RBIMPL_ATTR_CONSTEXPR(CXX11)
@@ -293,11 +285,7 @@ RBIMPL_ATTR_ARTIFICIAL()
  *             once had Fixnum/Bignum back in the old days.
  */
 static inline bool
-#ifdef TRUFFLERUBY
-RB_FLONUM_P(RB_UNUSED_VAR(VALUE obj))
-#else
 RB_FLONUM_P(VALUE obj)
-#endif
 {
 #if USE_FLONUM
     return (obj & RUBY_FLONUM_MASK) == RUBY_FLONUM_FLAG;
@@ -338,11 +326,7 @@ RBIMPL_ATTR_ARTIFICIAL()
 static inline bool
 RB_SPECIAL_CONST_P(VALUE obj)
 {
-#ifdef TRUFFLERUBY
-    return RB_IMMEDIATE_P(obj) || obj == RUBY_Qfalse || rb_tr_special_const_symbol_p(obj);
-#else
     return RB_IMMEDIATE_P(obj) || obj == RUBY_Qfalse;
-#endif
 }
 
 RBIMPL_ATTR_CONST()

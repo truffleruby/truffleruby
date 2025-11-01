@@ -40,7 +40,7 @@ assert_finish 5, %q{
     w << "ab"
   }
   r.gets("abab")
-}, '', tagged: true
+}
 
 assert_equal 'ok', %q{
   require 'tmpdir'

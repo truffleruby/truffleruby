@@ -6,9 +6,7 @@ when 'ext'
   $:.unshift File.join(__dir__, '../ext'), File.join(__dir__, '../lib')
   require 'json/ext'
 else
-  unless defined?(::TruffleRuby) # different directory layout
-    $:.unshift File.join(__dir__, '../ext'), File.join(__dir__, '../lib')
-  end
+  $:.unshift File.join(__dir__, '../ext'), File.join(__dir__, '../lib')
   require 'json'
 end
 

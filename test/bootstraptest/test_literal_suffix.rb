@@ -41,14 +41,14 @@ assert_equal '0+6/5i',          '1.2ri'
 assert_equal 'Complex',         '1.2ri.class'
 assert_equal '0+10.0i',         '1e1i'
 assert_equal 'Complex',         '1e1i.class'
-assert_equal '1',               '1if true', tagged: true
-assert_equal '1',               '1rescue nil', tagged: true
+assert_equal '1',               '1if true'
+assert_equal '1',               '1rescue nil'
 assert_equal '10000000000000000001/10000000000000000000',
-             '1.0000000000000000001r', tagged: true
+             '1.0000000000000000001r'
 
 assert_equal 'syntax error, unexpected local variable or method, expecting end-of-input',
-             %q{begin eval('1ir', nil, '', 0); rescue SyntaxError => e; e.message[/\A:(?:\d+:)? (.*)/, 1] end}, tagged: true
+             %q{begin eval('1ir', nil, '', 0); rescue SyntaxError => e; e.message[/\A:(?:\d+:)? (.*)/, 1] end}
 assert_equal 'syntax error, unexpected local variable or method, expecting end-of-input',
-             %q{begin eval('1.2ir', nil, '', 0); rescue SyntaxError => e; e.message[/\A:(?:\d+:)? (.*)/, 1] end}, tagged: true
+             %q{begin eval('1.2ir', nil, '', 0); rescue SyntaxError => e; e.message[/\A:(?:\d+:)? (.*)/, 1] end}
 assert_equal 'syntax error, unexpected local variable or method, expecting end-of-input',
-             %q{begin eval('1e1r', nil, '', 0); rescue SyntaxError => e; e.message[/\A:(?:\d+:)? (.*)/, 1] end}, tagged: true
+             %q{begin eval('1e1r', nil, '', 0); rescue SyntaxError => e; e.message[/\A:(?:\d+:)? (.*)/, 1] end}

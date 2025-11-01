@@ -157,12 +157,6 @@ typedef uint128_t DSIZE_T;
  * @param  v  A variable of ::VALUE type.
  * @post   `v` is still alive.
  */
-#ifdef TRUFFLERUBY
-RBIMPL_SYMBOL_EXPORT_BEGIN()
-VALUE rb_tr_gc_guard(VALUE value);
-RBIMPL_SYMBOL_EXPORT_END()
-#define RB_GC_GUARD(v) rb_tr_gc_guard(v)
-#else
 #ifdef __GNUC__
 #define RB_GC_GUARD(v) \
     (*__extension__ ({ \
@@ -175,7 +169,6 @@ RBIMPL_SYMBOL_EXPORT_END()
 #else
 #define HAVE_RB_GC_GUARDED_PTR_VAL 1
 #define RB_GC_GUARD(v) (*rb_gc_guarded_ptr_val(&(v),(v)))
-#endif
 #endif
 
 /* Casts needed because void* is NOT compatible with others in C++. */

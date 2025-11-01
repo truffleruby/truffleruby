@@ -137,17 +137,17 @@ module TestIRB
       end
 
       def test_complete_require_relative
-        candidates = Dir.chdir(__dir__ + "/../../../../") do
-          IRB::RegexpCompletor.new.completion_candidates("require_relative ", "'lib/mri/irb", "", bind: binding)
+        candidates = Dir.chdir(__dir__ + "/../..") do
+          IRB::RegexpCompletor.new.completion_candidates("require_relative ", "'lib/irb", "", bind: binding)
         end
-        %w['lib/mri/irb/init 'lib/mri/irb/ruby-lex].each do |word|
+        %w['lib/irb/init 'lib/irb/ruby-lex].each do |word|
           assert_include candidates, word
         end
         # Test cache
-        candidates = Dir.chdir(__dir__ + "/../../../../") do
-          IRB::RegexpCompletor.new.completion_candidates("require_relative ", "'lib/mri/irb", "", bind: binding)
+        candidates = Dir.chdir(__dir__ + "/../..") do
+          IRB::RegexpCompletor.new.completion_candidates("require_relative ", "'lib/irb", "", bind: binding)
         end
-        %w['lib/mri/irb/init 'lib/mri/irb/ruby-lex].each do |word|
+        %w['lib/irb/init 'lib/irb/ruby-lex].each do |word|
           assert_include candidates, word
         end
       end
