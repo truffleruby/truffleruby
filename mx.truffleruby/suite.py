@@ -1,7 +1,7 @@
 suite = {
     "mxversion": "7.68.4",
     "name": "truffleruby",
-    "version": "33.0.0",
+    "version": "34.0.0",
     "release": False,
     "url": "https://github.com/truffleruby/truffleruby",
     "developer": {
