@@ -248,11 +248,6 @@ void rb_ext_ractor_safe(bool flag);
  */
 #define HAVE_RB_EXT_RACTOR_SAFE 1
 
-#ifdef TRUFFLERUBY
-void rb_ext_thread_safe(bool flag);
-#define RB_EXT_THREAD_SAFE(f) rb_ext_thread_safe(f)
-#define HAVE_RB_EXT_THREAD_SAFE 1
-#endif
 /** @} */
 
 RBIMPL_SYMBOL_EXPORT_END()

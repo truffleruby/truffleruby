@@ -88,10 +88,6 @@ VALUE rb_ary_new(void);
  */
 VALUE rb_ary_new_capa(long capa);
 
-#ifdef TRUFFLERUBY
-VALUE rb_tr_ary_new_from_args_va_list(long n, va_list args);
-#endif
-
 /**
  * Constructs an array from the passed objects.
  *
@@ -99,17 +95,7 @@ VALUE rb_tr_ary_new_from_args_va_list(long n, va_list args);
  * @param[in]  ...  Arbitrary ruby objects, filled into the returning array.
  * @return     An array of size `n`, whose contents are the passed objects.
  */
-#ifdef TRUFFLERUBY
-static inline VALUE rb_ary_new_from_args(long n, ...) {
-    va_list args;
-    va_start(args, n);
-    VALUE array = rb_tr_ary_new_from_args_va_list(n, args);
-    va_end(args);
-    return array;
-}
-#else
 VALUE rb_ary_new_from_args(long n, ...);
-#endif
 
 /**
  * Identical to rb_ary_new_from_args(), except how objects are passed.
@@ -158,7 +144,13 @@ void rb_ary_free(VALUE ary);
  */
 void rb_ary_modify(VALUE ary);
 
-/** @alias{rb_obj_freeze} */
+/**
+ * Freeze an array, preventing further modifications. The underlying  buffer may
+ * be shrunk before freezing to conserve memory.
+ *
+ * @param[out]  obj  Object assumed to be an array to freeze.
+ * @see         RB_OBJ_FREEZE()
+ */
 VALUE rb_ary_freeze(VALUE obj);
 
 RBIMPL_ATTR_PURE()

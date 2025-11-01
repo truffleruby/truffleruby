@@ -195,10 +195,6 @@ VALUE rb_enc_str_buf_cat(VALUE str, const char *ptr, long len, rb_encoding *enc)
  */
 VALUE rb_enc_uint_chr(unsigned int code, rb_encoding *enc);
 
-VALUE rb_external_str_with_enc(VALUE string, rb_encoding *eenc);
-rb_encoding *get_encoding(VALUE string);
-#define STR_ENC_GET(string) get_encoding(string)
-
 /**
  * Identical  to   rb_external_str_new(),  except  it  additionally   takes  an
  * encoding.  However the  whole point of rb_external_str_new() is  to encode a
@@ -311,13 +307,13 @@ RBIMPL_ATTR_NONNULL(())
 /**
  * Looks for the passed string in the passed buffer.
  *
- * @param[in]  x          Buffer that potentially includes `y`.
+ * @param[in]  x          Query string.
  * @param[in]  m          Number of bytes of `x`.
- * @param[in]  y          Query string.
+ * @param[in]  y          Buffer that potentially includes `x`.
  * @param[in]  n          Number of bytes of `y`.
  * @param[in]  enc        Encoding of both `x` and `y`.
  * @retval     -1         Not found.
- * @retval     otherwise  Found index in `x`.
+ * @retval     otherwise  Found index in `y`.
  * @note       This API can match at a non-character-boundary.
  */
 long rb_memsearch(const void *x, long m, const void *y, long n, rb_encoding *enc);

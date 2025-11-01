@@ -153,6 +153,26 @@ class OpenSSL::TestPKCS7 < OpenSSL::TestCase
     assert_equal(data, p7.decrypt(@rsa1024, @ee2_cert))
 
     assert_equal(data, p7.decrypt(@rsa1024))
+
+    # Default cipher has been removed in v3.3
+    assert_raise_with_message(ArgumentError, /RC2-40-CBC/) {
+      OpenSSL::PKCS7.encrypt(certs, data)
+    }
+  end
+
+  def test_empty_signed_data_ruby_bug_19974
+    data = "-----BEGIN PKCS7-----\nMAsGCSqGSIb3DQEHAg==\n-----END PKCS7-----\n"
+    assert_raise(ArgumentError) { OpenSSL::PKCS7.new(data) }
+
+    data = <<END
+MIME-Version: 1.0
+Content-Disposition: attachment; filename="smime.p7m"
+Content-Type: application/x-pkcs7-mime; smime-type=signed-data; name="smime.p7m"
+Content-Transfer-Encoding: base64
+
+#{data}
+END
+    assert_raise(OpenSSL::PKCS7::PKCS7Error) { OpenSSL::PKCS7.read_smime(data) }
   end
 
   def test_graceful_parsing_failure #[ruby-core:43250]
@@ -210,6 +230,12 @@ END
 
     smime = OpenSSL::PKCS7.write_smime(p7, nil, 0)
     assert_equal(p7.to_der, OpenSSL::PKCS7.read_smime(smime).to_der)
+  end
+
+  def test_to_text
+    p7 = OpenSSL::PKCS7.new
+    p7.type = "signed"
+    assert_match(/signed/, p7.to_text)
   end
 
   def test_degenerate_pkcs7

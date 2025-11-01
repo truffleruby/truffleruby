@@ -741,6 +741,17 @@ class Complex_Test < Test::Unit::TestCase
     assert_equal('(1+2i)', c.inspect)
   end
 
+  def test_inspect_to_s_frozen_bug_20337
+    assert_separately([], <<~'RUBY')
+      class Numeric
+        def inspect = super.freeze
+      end
+      c = Complex(Numeric.new, 1)
+      assert_match(/\A\(#<Numeric:/, c.inspect)
+      assert_match(/\A#<Numeric:/, c.to_s)
+    RUBY
+  end
+
   def test_marshal
     c = Complex(1,2)
 
@@ -1052,6 +1063,29 @@ class Complex_Test < Test::Unit::TestCase
     assert_equal(Rational(3), Rational(Complex(3)))
     assert_raise(RangeError){Complex(3,2).to_r}
     assert_raise(RangeError){Rational(Complex(3,2))}
+  end
+
+  def test_to_r_with_float
+    assert_equal(Rational(3), Complex(3, 0.0).to_r)
+    assert_raise(RangeError){Complex(3, 1.0).to_r}
+  end
+
+  def test_to_r_with_numeric_obj
+    c = Class.new(Numeric)
+
+    num = 0
+    c.define_method(:to_s) { num.to_s }
+    c.define_method(:==) { num == it }
+    c.define_method(:<)  { num <  it }
+
+    o = c.new
+    assert_equal(Rational(3), Complex(3, o).to_r)
+
+    num = 1
+    assert_raise(RangeError){Complex(3, o).to_r}
+
+    c.define_method(:to_r) { 0r }
+    assert_equal(Rational(3), Complex(3, o).to_r)
   end
 
   def test_to_c

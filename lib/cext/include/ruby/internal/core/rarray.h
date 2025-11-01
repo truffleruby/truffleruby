@@ -80,6 +80,8 @@
  * here is at least incomplete.
  */
 enum ruby_rarray_flags {
+    /* RUBY_FL_USER0 is for ELTS_SHARED */
+
     /**
      * This flag  has something to do  with memory footprint.  If  the array is
      * "small"  enough, ruby  tries to  be creative  to abuse  padding bits  of
@@ -98,8 +100,6 @@ enum ruby_rarray_flags {
      * store array elements.  It was a bad idea to expose this to them.
      */
     RARRAY_EMBED_FLAG      = RUBY_FL_USER1,
-
-    /* RUBY_FL_USER2 is for ELTS_SHARED */
 
     /**
      * When an array employs embedded strategy (see ::RARRAY_EMBED_FLAG), these
@@ -212,17 +212,8 @@ VALUE *rb_ary_ptr_use_start(VALUE ary);
  */
 void rb_ary_ptr_use_end(VALUE a);
 
-#ifdef TRUFFLERUBY
-long rb_array_len(VALUE a);
-int RARRAY_LENINT(VALUE ary);
-VALUE *RARRAY_PTR_IMPL(VALUE array);
-void rb_ary_store(VALUE, long, VALUE);
-VALUE rb_tr_rarray_aref(VALUE array, long index);
-#endif
-
 RBIMPL_SYMBOL_EXPORT_END()
 
-#ifndef TRUFFLERUBY
 RBIMPL_ATTR_PURE_UNLESS_DEBUG()
 RBIMPL_ATTR_ARTIFICIAL()
 /**
@@ -272,9 +263,7 @@ rb_array_len(VALUE a)
         return RARRAY(a)->as.heap.len;
     }
 }
-#endif
 
-#ifndef TRUFFLERUBY
 RBIMPL_ATTR_ARTIFICIAL()
 /**
  * Identical to rb_array_len(), except it differs for the return type.
@@ -293,7 +282,6 @@ RARRAY_LENINT(VALUE ary)
 {
     return rb_long2int(RARRAY_LEN(ary));
 }
-#endif
 
 RBIMPL_ATTR_PURE_UNLESS_DEBUG()
 /**
@@ -310,16 +298,12 @@ rb_array_const_ptr(VALUE a)
 {
     RBIMPL_ASSERT_TYPE(a, RUBY_T_ARRAY);
 
-#ifdef TRUFFLERUBY
-    return FIX_CONST_VALUE_PTR(RARRAY_PTR_IMPL(a));
-#else
     if (RB_FL_ANY_RAW(a, RARRAY_EMBED_FLAG)) {
         return FIX_CONST_VALUE_PTR(RARRAY(a)->as.ary);
     }
     else {
         return FIX_CONST_VALUE_PTR(RARRAY(a)->as.heap.ptr);
     }
-#endif
 }
 
 /**
@@ -383,12 +367,8 @@ RARRAY_PTR(VALUE ary)
 {
     RBIMPL_ASSERT_TYPE(ary, RUBY_T_ARRAY);
 
-#ifdef TRUFFLERUBY
-    return RARRAY_PTR_IMPL(ary);
-#else
     VALUE tmp = RB_OBJ_WB_UNPROTECT_FOR(ARRAY, ary);
     return RBIMPL_CAST((VALUE *)RARRAY_CONST_PTR(tmp));
-#endif
 }
 
 /**
@@ -405,12 +385,8 @@ RARRAY_PTR(VALUE ary)
 static inline void
 RARRAY_ASET(VALUE ary, long i, VALUE v)
 {
-#ifdef TRUFFLERUBY
-    rb_ary_store(ary, i, v);
-#else
     RARRAY_PTR_USE(ary, ptr,
         RB_OBJ_WRITE(ary, &ptr[i], v));
-#endif
 }
 
 /**
@@ -424,10 +400,6 @@ RARRAY_ASET(VALUE ary, long i, VALUE v)
  * remains as  it is due to  that.  If we could  warn such usages we  can set a
  * transition path, but currently no way is found to do so.
  */
-#ifdef TRUFFLERUBY
-#define RARRAY_AREF rb_tr_rarray_aref
-#else
 #define RARRAY_AREF(a, i) RARRAY_CONST_PTR(a)[i]
-#endif
 
 #endif /* RBIMPL_RARRAY_H */

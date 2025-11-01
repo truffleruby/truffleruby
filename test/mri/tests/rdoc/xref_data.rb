@@ -74,6 +74,12 @@ class C6
   def priv4() end
   public def pub5() end
   def priv5() end
+  def self.s_pub1() end
+  class << self
+    def s_pub2() end
+    private
+    def s_priv1() end
+  end
 
   protected
   private def priv6() end
@@ -82,6 +88,12 @@ class C6
   def prot5() end
   public def pub6() end
   def prot6() end
+  def self.s_pub3() end
+  class << self
+    def s_pub4() end
+    protected
+    def s_prot1() end
+  end
 end
 
 class C7
@@ -98,6 +110,7 @@ end
 
 class C8
   class << self
+    # This is C8.singleton_class::S1. C8::S1 does not exist.
     class S1
     end
   end

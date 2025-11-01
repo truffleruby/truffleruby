@@ -15,11 +15,16 @@ class OpenSSL::TestSSL < OpenSSL::SSLTestCase
     end
   end
 
+  def test_ctx_setup
+    ctx = OpenSSL::SSL::SSLContext.new
+    assert_equal true, ctx.setup
+    assert_predicate ctx, :frozen?
+    assert_equal nil, ctx.setup
+  end
+
   def test_ctx_options
     ctx = OpenSSL::SSL::SSLContext.new
 
-    assert (OpenSSL::SSL::OP_ALL & ctx.options) == OpenSSL::SSL::OP_ALL,
-           "OP_ALL is set by default"
     ctx.options = 4
     assert_equal 4, ctx.options & 4
     if ctx.options != 4
@@ -31,6 +36,31 @@ class OpenSSL::TestSSL < OpenSSL::SSLTestCase
     assert_equal true, ctx.setup
     assert_predicate ctx, :frozen?
     assert_equal nil, ctx.setup
+  end
+
+  def test_ctx_options_config
+    omit "LibreSSL does not support OPENSSL_CONF" if libressl?
+    omit "OpenSSL < 1.1.1 does not support system_default" if openssl? && !openssl?(1, 1, 1)
+
+    Tempfile.create("openssl.cnf") { |f|
+      f.puts(<<~EOF)
+        openssl_conf = default_conf
+        [default_conf]
+        ssl_conf = ssl_sect
+        [ssl_sect]
+        system_default = ssl_default_sect
+        [ssl_default_sect]
+        Options = -SessionTicket
+      EOF
+      f.close
+
+      assert_separately([{ "OPENSSL_CONF" => f.path }, "-ropenssl"], <<~"end;")
+        ctx = OpenSSL::SSL::SSLContext.new
+        assert_equal OpenSSL::SSL::OP_NO_TICKET, ctx.options & OpenSSL::SSL::OP_NO_TICKET
+        ctx.set_params
+        assert_equal OpenSSL::SSL::OP_NO_TICKET, ctx.options & OpenSSL::SSL::OP_NO_TICKET
+      end;
+    }
   end
 
   def test_ssl_with_server_cert
@@ -117,6 +147,30 @@ class OpenSSL::TestSSL < OpenSSL::SSLTestCase
     }
   end
 
+  def test_socket_close_write
+    server_proc = proc do |ctx, ssl|
+      message = ssl.read
+      ssl.write(message)
+      ssl.close_write
+    ensure
+      ssl.close
+    end
+
+    start_server(server_proc: server_proc) do |port|
+      ctx = OpenSSL::SSL::SSLContext.new
+      ssl = OpenSSL::SSL::SSLSocket.open("127.0.0.1", port, context: ctx)
+      ssl.sync_close = true
+      ssl.connect
+
+      message = "abc"*1024
+      ssl.write message
+      ssl.close_write
+      assert_equal message, ssl.read
+    ensure
+      ssl&.close
+    end
+  end
+
   def test_add_certificate
     ctx_proc = -> ctx {
       # Unset values set by start_server
@@ -193,6 +247,24 @@ class OpenSSL::TestSSL < OpenSSL::SSLTestCase
     }
   end
 
+  def test_read_with_timeout
+    omit "does not support timeout" unless IO.method_defined?(:timeout)
+
+    start_server do |port|
+      server_connect(port) do |ssl|
+        str = +("x" * 100 + "\n")
+        ssl.syswrite(str)
+        assert_equal(str, ssl.sysread(str.bytesize))
+
+        ssl.timeout = 1
+        assert_raise(IO::TimeoutError) {ssl.read(1)}
+
+        ssl.syswrite(str)
+        assert_equal(str, ssl.sysread(str.bytesize))
+      end
+    end
+  end
+
   def test_getbyte
     start_server { |port|
       server_connect(port) { |ssl|
@@ -200,6 +272,19 @@ class OpenSSL::TestSSL < OpenSSL::SSLTestCase
         ssl.syswrite(str)
         newstr = str.bytesize.times.map { |i|
           ssl.getbyte
+        }.pack("C*")
+        assert_equal(str, newstr)
+      }
+    }
+  end
+
+  def test_readbyte
+    start_server { |port|
+      server_connect(port) { |ssl|
+        str = +("x" * 100 + "\n")
+        ssl.syswrite(str)
+        newstr = str.bytesize.times.map { |i|
+          ssl.readbyte
         }.pack("C*")
         assert_equal(str, newstr)
       }
@@ -673,7 +758,7 @@ class OpenSSL::TestSSL < OpenSSL::SSLTestCase
     assert_equal(true,  OpenSSL::SSL.verify_wildcard("xn--qdk4b9b", "xn--qdk4b9b"))
   end
 
-  # Comments in this test is excerpted from http://tools.ietf.org/html/rfc6125#page-27
+  # Comments in this test is excerpted from https://www.rfc-editor.org/rfc/rfc6125#page-27
   def test_post_connection_check_wildcard_san
     # case-insensitive ASCII comparison
     # RFC 6125, section 6.4.1

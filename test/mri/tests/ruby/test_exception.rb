@@ -416,7 +416,7 @@ class TestException < Test::Unit::TestCase
 
     assert_in_out_err([], "$@ = 1", [], /\$! not set \(ArgumentError\)$/)
 
-    assert_in_out_err([], <<-INPUT, [], /backtrace must be Array of String \(TypeError\)$/)
+    assert_in_out_err([], <<-INPUT, [], /backtrace must be an Array of String or an Array of Thread::Backtrace::Location \(TypeError\)$/)
       begin
         raise
       rescue
@@ -508,6 +508,16 @@ end.join
 
     assert_raise(TypeError) { e.set_backtrace(1) }
     assert_raise(TypeError) { e.set_backtrace([1]) }
+
+    error = assert_raise(TypeError) do
+      e.set_backtrace(caller_locations(1, 1) + ["foo"])
+    end
+    assert_include error.message, "backtrace must be an Array of String or an Array of Thread::Backtrace::Location"
+
+    error = assert_raise(TypeError) do
+      e.set_backtrace(["foo"] + caller_locations(1, 1))
+    end
+    assert_include error.message, "backtrace must be an Array of String or an Array of Thread::Backtrace::Location"
   end
 
   def test_exit_success_p
@@ -538,6 +548,14 @@ end.join
 
   def test_errno
     assert_equal(Encoding.find("locale"), Errno::EINVAL.new.message.encoding)
+  end
+
+  def test_errno_constants
+    assert_equal [:NOERROR], Errno.constants.grep_v(/\AE/)
+    all_assertions_foreach("should be a subclass of SystemCallError", *Errno.constants) do |c|
+      e = Errno.const_get(c)
+      assert_operator e, :<, SystemCallError, proc {e.ancestors.inspect}
+    end
   end
 
   def test_too_many_args_in_eval
@@ -801,7 +819,7 @@ end.join
   def test_cause_at_end
     errs = [
       /-: unexpected return\n/,
-      /.*undefined local variable or method `n'.*\n/,
+      /.*undefined local variable or method 'n'.*\n/,
     ]
     assert_in_out_err([], <<-'end;', [], errs)
       END{n}; END{return}
@@ -1037,7 +1055,7 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
   end
 
   def test_message_of_name_error
-    assert_raise_with_message(NameError, /\Aundefined method `foo' for module `#<Module:.*>'$/) do
+    assert_raise_with_message(NameError, /\Aundefined method 'foo' for module '#<Module:.*>'$/) do
       Module.new do
         module_function :foo
       end
@@ -1046,8 +1064,7 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
 
   def capture_warning_warn(category: false)
     verbose = $VERBOSE
-    deprecated = Warning[:deprecated]
-    experimental = Warning[:experimental]
+    categories = Warning.categories.to_h {|cat| [cat, Warning[cat]]}
     warning = []
 
     ::Warning.class_eval do
@@ -1066,15 +1083,13 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
     end
 
     $VERBOSE = true
-    Warning[:deprecated] = true
-    Warning[:experimental] = true
+    Warning.categories.each {|cat| Warning[cat] = true}
     yield
 
     return warning
   ensure
     $VERBOSE = verbose
-    Warning[:deprecated] = deprecated
-    Warning[:experimental] = experimental
+    categories.each {|cat, flag| Warning[cat] = flag}
 
     ::Warning.class_eval do
       remove_method :warn
@@ -1085,7 +1100,7 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
 
   def test_warning_warn
     warning = capture_warning_warn {$asdfasdsda_test_warning_warn}
-    assert_match(/global variable `\$asdfasdsda_test_warning_warn' not initialized/, warning[0])
+    assert_match(/global variable '\$asdfasdsda_test_warning_warn' not initialized/, warning[0])
 
     assert_equal(["a\nz\n"], capture_warning_warn {warn "a\n", "z"})
     assert_equal([],         capture_warning_warn {warn})
@@ -1093,19 +1108,13 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
   end
 
   def test_warn_deprecated_backwards_compatibility_category
-    omit "no method to test"
+    (message, category), = capture_warning_warn(category: true) do
+      $; = "www"
+      $; = nil
+    end
 
-    warning = capture_warning_warn { }
-
-    assert_match(/deprecated/, warning[0])
-  end
-
-  def test_warn_deprecated_category
-    omit "no method to test"
-
-    warning = capture_warning_warn(category: true) { }
-
-    assert_equal :deprecated, warning[0][1]
+    assert_include message, 'deprecated'
+    assert_equal :deprecated, category
   end
 
   def test_kernel_warn_uplevel
@@ -1119,11 +1128,11 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
     assert_raise(ArgumentError) {warn("test warning", uplevel: -1)}
     assert_in_out_err(["-e", "warn 'ok', uplevel: 1"], '', [], /warning:/)
     warning = capture_warning_warn {warn("test warning", {uplevel: 0})}
-    assert_match(/test warning.*{:uplevel=>0}/m, warning[0])
+    assert_match(/test warning.*{uplevel: 0}/m, warning[0])
     warning = capture_warning_warn {warn("test warning", **{uplevel: 0})}
     assert_equal("#{__FILE__}:#{__LINE__-1}: warning: test warning\n", warning[0])
     warning = capture_warning_warn {warn("test warning", {uplevel: 0}, **{})}
-    assert_equal("test warning\n{:uplevel=>0}\n", warning[0])
+    assert_equal("test warning\n{uplevel: 0}\n", warning[0])
     assert_raise(ArgumentError) {warn("test warning", foo: 1)}
   end
 
@@ -1161,7 +1170,7 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
   end
 
   def test_warning_warn_super
-    assert_in_out_err(%[-W0], "#{<<~"{#"}\n#{<<~'};'}", [], /global variable `\$asdfiasdofa_test_warning_warn_super' not initialized/)
+    assert_in_out_err(%[-W0], "#{<<~"{#"}\n#{<<~'};'}", [], /global variable '\$asdfiasdofa_test_warning_warn_super' not initialized/)
     {#
       module Warning
         def warn(message)
@@ -1177,48 +1186,24 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
   def test_warning_category
     assert_raise(TypeError) {Warning[nil]}
     assert_raise(ArgumentError) {Warning[:XXXX]}
-    assert_include([true, false], Warning[:deprecated])
-    assert_include([true, false], Warning[:experimental])
-  end
 
-  def test_warning_category_deprecated
-    warning = EnvUtil.verbose_warning do
-      deprecated = Warning[:deprecated]
-      Warning[:deprecated] = true
-      Warning.warn "deprecated feature", category: :deprecated
-    ensure
-      Warning[:deprecated] = deprecated
-    end
-    assert_equal "deprecated feature", warning
+    all_assertions_foreach("categories", *Warning.categories) do |cat|
+      value = Warning[cat]
+      assert_include([true, false], value)
 
-    warning = EnvUtil.verbose_warning do
-      deprecated = Warning[:deprecated]
-      Warning[:deprecated] = false
-      Warning.warn "deprecated feature", category: :deprecated
+      enabled = EnvUtil.verbose_warning do
+        Warning[cat] = true
+        Warning.warn "#{cat} feature", category: cat
+      end
+      disabled = EnvUtil.verbose_warning do
+        Warning[cat] = false
+        Warning.warn "#{cat} feature", category: cat
+      end
     ensure
-      Warning[:deprecated] = deprecated
+      Warning[cat] = value
+      assert_equal "#{cat} feature", enabled
+      assert_empty disabled
     end
-    assert_empty warning
-  end
-
-  def test_warning_category_experimental
-    warning = EnvUtil.verbose_warning do
-      experimental = Warning[:experimental]
-      Warning[:experimental] = true
-      Warning.warn "experimental feature", category: :experimental
-    ensure
-      Warning[:experimental] = experimental
-    end
-    assert_equal "experimental feature", warning
-
-    warning = EnvUtil.verbose_warning do
-      experimental = Warning[:experimental]
-      Warning[:experimental] = false
-      Warning.warn "experimental feature", category: :experimental
-    ensure
-      Warning[:experimental] = experimental
-    end
-    assert_empty warning
   end
 
   def test_undef_Warning_warn
@@ -1338,7 +1323,7 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
       e.full_message
     end
     assert_all?(message.lines) do |m|
-     /\e\[\d[;\d]*m[^\e]*\n/ !~ m
+      /\e\[\d[;\d]*m[^\e]*\n/ !~ m
     end
 
     e = RuntimeError.new("testerror")
@@ -1413,11 +1398,7 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
   end
 
   def test_marshal_circular_cause
-    begin
-      raise RuntimeError, "err", [], cause: Exception.new
-    rescue => e
-    end
-    dump = Marshal.dump(e).sub(/o:\x0EException\x08;.0;.0;.0/, "@\x05")
+    dump = "\x04\bo:\x11RuntimeError\b:\tmesgI\"\berr\x06:\x06ET:\abt[\x00:\ncause@\x05"
     assert_raise_with_message(ArgumentError, /circular cause/, ->{dump.inspect}) do
       e = Marshal.load(dump)
       assert_same(e, e.cause)
@@ -1435,7 +1416,7 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
       end
 
       bug14670 = '[ruby-dev:50522] [Bug #14670]'
-      assert_raise_with_message(NoMethodError, /`foo'/, bug14670) do
+      assert_raise_with_message(NoMethodError, /'foo'/, bug14670) do
         Object.new.foo
       end
     end;
@@ -1457,6 +1438,15 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
     e = RuntimeError.new
     assert_equal("RuntimeError (RuntimeError)", e.detailed_message)
     assert_equal("\e[1mRuntimeError (\e[1;4mRuntimeError\e[m\e[1m)\e[m", e.detailed_message(highlight: true))
+  end
+
+  def test_detailed_message_under_gc_compact_stress
+    omit "compaction doesn't work well on s390x" if RUBY_PLATFORM =~ /s390x/ # https://github.com/ruby/ruby/pull/5077
+    EnvUtil.under_gc_compact_stress do
+      e = RuntimeError.new("foo\nbar\nbaz")
+      assert_equal("foo (RuntimeError)\nbar\nbaz", e.detailed_message)
+      assert_equal("\e[1mfoo (\e[1;4mRuntimeError\e[m\e[1m)\e[m\n\e[1mbar\e[m\n\e[1mbaz\e[m", e.detailed_message(highlight: true))
+    end
   end
 
   def test_full_message_with_custom_detailed_message
@@ -1508,7 +1498,7 @@ $stderr = $stdout; raise "\x82\xa0"') do |outs, errs, status|
         assert_not_empty(stderr.grep(pattern))
         error, = stderr.grep(/unexpected end-of-input/)
         assert_not_nil(error)
-        assert_match(/<.*unexpected end-of-input.*>/, error)
+        assert_match(/<.*unexpected end-of-input.*>|\^ unexpected end-of-input,/, error)
       end
     end
   end

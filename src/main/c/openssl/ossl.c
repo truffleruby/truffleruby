@@ -5,7 +5,7 @@
  */
 /*
  * This program is licensed under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 #include <stdarg.h> /* for ossl_raise */
@@ -355,7 +355,7 @@ ossl_clear_error(void)
  * Any errors you see here are probably due to a bug in Ruby's OpenSSL
  * implementation.
  */
-VALUE
+static VALUE
 ossl_get_errors(VALUE _)
 {
     VALUE ary;
@@ -1150,24 +1150,22 @@ Init_openssl(void)
     /*
      * Init components
      */
+    Init_ossl_asn1();
     Init_ossl_bn();
     Init_ossl_cipher();
     Init_ossl_config();
     Init_ossl_digest();
+    Init_ossl_engine();
     Init_ossl_hmac();
+    Init_ossl_kdf();
     Init_ossl_ns_spki();
+    Init_ossl_ocsp();
     Init_ossl_pkcs12();
     Init_ossl_pkcs7();
     Init_ossl_pkey();
+    Init_ossl_provider();
     Init_ossl_rand();
     Init_ossl_ssl();
-#ifndef OPENSSL_NO_TS
     Init_ossl_ts();
-#endif
     Init_ossl_x509();
-    Init_ossl_ocsp();
-    Init_ossl_engine();
-    Init_ossl_provider();
-    Init_ossl_asn1();
-    Init_ossl_kdf();
 }

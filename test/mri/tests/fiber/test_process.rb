@@ -3,13 +3,15 @@ require 'test/unit'
 require_relative 'scheduler'
 
 class TestFiberProcess < Test::Unit::TestCase
+  TRUE_CMD = RUBY_PLATFORM =~ /mswin|mingw/ ? "exit 0" : "true"
+
   def test_process_wait
     Thread.new do
       scheduler = Scheduler.new
       Fiber.set_scheduler scheduler
 
       Fiber.schedule do
-        pid = Process.spawn("true")
+        pid = Process.spawn(TRUE_CMD)
         Process.wait(pid)
 
         # TODO test that scheduler was invoked.
@@ -25,7 +27,7 @@ class TestFiberProcess < Test::Unit::TestCase
       Fiber.set_scheduler scheduler
 
       Fiber.schedule do
-        system("true")
+        system(TRUE_CMD)
 
         # TODO test that scheduler was invoked (currently it's not).
 
@@ -49,7 +51,7 @@ class TestFiberProcess < Test::Unit::TestCase
 
       Fiber.schedule do
         assert_raise TypeError do
-          system("true")
+          system(TRUE_CMD)
         end
       end
     end.join
@@ -57,12 +59,14 @@ class TestFiberProcess < Test::Unit::TestCase
 
   def test_fork
     omit 'fork not supported' unless Process.respond_to?(:fork)
+
+    pid = Process.fork{}
+
     Thread.new do
       scheduler = Scheduler.new
       Fiber.set_scheduler scheduler
 
       Fiber.schedule do
-        pid = Process.fork {}
         Process.wait(pid)
 
         assert_predicate $?, :success?
