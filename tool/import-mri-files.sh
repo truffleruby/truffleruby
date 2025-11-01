@@ -45,13 +45,11 @@ cp ../ruby/missing/strlcpy.c src/main/c/cext
 cp ../ruby/missing/strlcpy.c src/main/c/cext-trampoline
 
 # Copy Ruby files in ext/, sorted alphabetically
-cp -R ../ruby/ext/bigdecimal/lib/bigdecimal lib/mri
 mkdir lib/mri/digest
 cp ../ruby/ext/date/lib/date.rb lib/mri
 cp -R ../ruby/ext/digest/sha2/lib/* lib/mri/digest
 cp -R ../ruby/ext/fiddle/lib/fiddle lib/mri
 cp -R ../ruby/ext/fiddle/lib/fiddle.rb lib/mri
-cp ../ruby/ext/nkf/lib/*.rb lib/mri
 cp ../ruby/ext/monitor/lib/*.rb lib/mri
 mkdir lib/mri/objspace
 cp -R ../ruby/ext/objspace/lib/objspace lib/mri
@@ -63,22 +61,16 @@ cp -R ../ruby/ext/psych/lib/psych lib/mri
 cp ../ruby/ext/ripper/lib/ripper.rb lib/mri
 cp -R ../ruby/ext/ripper/lib/ripper lib/mri
 cp ../ruby/ext/socket/lib/socket.rb lib/truffle/socket/mri.rb
-cp -R ../ruby/ext/syslog/lib/syslog lib/mri
 
 # Copy C extensions in ext/, sorted alphabetically
-rm -r src/main/c/{bigdecimal,date,etc,io-console,nkf,openssl,psych,rbconfig-sizeof,ripper,syslog,zlib}
-mkdir src/main/c/{bigdecimal,date,etc,io-console,nkf,openssl,psych,rbconfig-sizeof,ripper,syslog,zlib}
-cp ../ruby/ext/bigdecimal/*.{c,gemspec,h,rb} src/main/c/bigdecimal
-cp -R ../ruby/ext/bigdecimal/missing src/main/c/bigdecimal
+rm -r src/main/c/{date,etc,io-console,openssl,psych,rbconfig-sizeof,ripper,zlib}
+mkdir src/main/c/{date,etc,io-console,openssl,psych,rbconfig-sizeof,ripper,zlib}
 cp ../ruby/ext/date/*.{c,gemspec,h,rb} src/main/c/date
 cp ../ruby/ext/etc/*.{c,rb} src/main/c/etc
 cp ../ruby/ext/io/console/*.{c,rb} src/main/c/io-console
-cp ../ruby/ext/nkf/*.{c,rb} src/main/c/nkf
-cp -R ../ruby/ext/nkf/nkf-utf8 src/main/c/nkf
 cp ../ruby/ext/openssl/*.{c,h,rb} src/main/c/openssl
 cp ../ruby/ext/psych/*.{c,h,rb} src/main/c/psych
 cp ../ruby/ext/rbconfig/sizeof/*.{c,rb} src/main/c/rbconfig-sizeof
-cp ../ruby/ext/syslog/*.{c,rb} src/main/c/syslog
 cp ../ruby/ext/zlib/*.{c,rb} src/main/c/zlib
 
 # Ripper
