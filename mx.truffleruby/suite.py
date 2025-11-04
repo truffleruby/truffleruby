@@ -7,7 +7,7 @@ suite = {
     "url": "https://github.com/truffleruby/truffleruby",
     "developer": {
         "name": "TruffleRuby",
-        "email": "truffleruby@truffleruby.com",
+        "email": "truffleruby@truffleruby.dev",
         "organization": "TruffleRuby",
         "organizationUrl": "https://github.com/truffleruby/truffleruby",
     },
