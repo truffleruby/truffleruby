@@ -342,7 +342,7 @@ class StringScanner
   end
 
   def unscan
-    raise ScanError unless @match
+    raise Error unless @match
     @pos = @prev_pos
     @prev_pos = nil
     @match = nil
