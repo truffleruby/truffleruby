@@ -81,3 +81,7 @@ VALUE rb_tr_data_define_va_list(VALUE super, va_list args) {
   }
   return RUBY_CEXT_INVOKE("rb_data_define_no_splat", super, ary);
 }
+
+VALUE rb_struct_initialize(VALUE self, VALUE values) {
+  return RUBY_CEXT_INVOKE("rb_struct_initialize", self, values);
+}

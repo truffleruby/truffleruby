@@ -14,6 +14,7 @@ Compatibility:
 * Support using tailwindcss-ruby's native platform gems (@nirvdrum).
 * Fix a `TypeError` when calling `Kernel#warn` with explicit `uplevel: nil` (@earlopain).
 * Fix inspect output of symbols that contain non-ASCII letters (@earlopain).
+* Implement `rb_struct_initialize()` for both `Struct` and `Data` (#3997, @eregon).
 
 Performance:
 

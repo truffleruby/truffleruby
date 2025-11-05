@@ -1991,6 +1991,27 @@ module Truffle::CExt
     klass.new(*args)
   end
 
+  def rb_struct_initialize(struct_or_data, values)
+    unless Primitive.is_a?(struct_or_data, Struct) || Primitive.is_a?(struct_or_data, Data)
+      raise ArgumentError, 'the first argument must be a Struct or Data instance'
+    end
+    raise ArgumentError, 'expected values to be an Array' unless Primitive.is_a?(values, Array)
+    Primitive.check_frozen(struct_or_data)
+
+    members = Primitive.class(struct_or_data).members
+    raise ArgumentError, 'struct size differs' if values.size > members.size
+
+    members.zip(values) do |member, value|
+      Primitive.object_hidden_var_set struct_or_data, member, value
+    end
+
+    if Primitive.is_a?(struct_or_data, Data)
+      struct_or_data.freeze
+    end
+
+    nil
+  end
+
   def rb_data_define_no_splat(klass, attrs)
     klass ||= Data
     Truffle::Type.rb_check_type(klass, Class)
