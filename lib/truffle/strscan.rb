@@ -38,13 +38,13 @@
 # GNU Lesser General Public License version 2.1.
 
 
-class ScanError < StandardError
-end
-
 class StringScanner
 
   Id = 'None$Id'.freeze
   Version = '3.1.3'.freeze
+
+  class Error < StandardError
+  end
 
   attr_reader :pos
   alias_method :pointer, :pos
@@ -342,7 +342,7 @@ class StringScanner
   end
 
   def unscan
-    raise ScanError unless @match
+    raise Error unless @match
     @pos = @prev_pos
     @prev_pos = nil
     @match = nil
@@ -434,4 +434,11 @@ class StringScanner
     @string.byteslice(@prev_pos, width)
   end
 
+end
+
+unless defined?(::ScanError)
+  class Object
+    ScanError = StringScanner::Error
+    deprecate_constant :ScanError
+  end
 end
