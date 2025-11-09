@@ -118,10 +118,11 @@ describe "Hash.[]" do
   end
 
   ruby_version_is '3.3' do
-    it "does not retain compare_by_identity_flag" do
-      hash = {}.compare_by_identity
+    it "does not retain compare_by_identity flag" do
+      hash = { a: 1 }.compare_by_identity
       Hash[hash].compare_by_identity?.should == false
-      hash[:a] = 1
+
+      hash = {}.compare_by_identity
       Hash[hash].compare_by_identity?.should == false
     end
   end

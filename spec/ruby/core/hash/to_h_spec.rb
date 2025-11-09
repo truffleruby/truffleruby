@@ -30,6 +30,11 @@ describe "Hash#to_h" do
       @h.to_h.default_proc.should == prc
       @h[42].should == 84
     end
+
+    it "retains compare_by_identity flag" do
+      @h.compare_by_identity
+      @h.to_h.compare_by_identity?.should == true
+    end
   end
 
   context "with block" do
@@ -77,6 +82,12 @@ describe "Hash#to_h" do
       -> do
         { a: 1 }.to_h { |k| x }
       end.should raise_error(TypeError, /wrong element type MockObject/)
+    end
+
+    it "does not retain compare_by_identity flag" do
+      h = { a: 9, c: 4 }.compare_by_identity
+      h2 = h.to_h { |k, v| [k.to_s, v*v]}
+      h2.compare_by_identity?.should == false
     end
   end
 end

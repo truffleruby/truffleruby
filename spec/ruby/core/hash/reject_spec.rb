@@ -44,6 +44,12 @@ describe "Hash#reject" do
     reject_pairs.should == reject_bang_pairs
   end
 
+  it "retains compare_by_identity flag" do
+    h = { a: 9, c: 4 }.compare_by_identity
+    h2 = h.reject { |k, _| k == :a }
+    h2.compare_by_identity?.should == true
+  end
+
   it_behaves_like :hash_iteration_no_block, :reject
   it_behaves_like :enumeratorized_with_origin_size, :reject, { 1 => 2, 3 => 4, 5 => 6 }
 end

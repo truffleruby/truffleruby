@@ -76,7 +76,7 @@ class Hash
     if args.size == 1
       obj = args.first
       if hash = Truffle::Type.rb_check_convert_type(obj, Hash, :to_hash)
-        new_hash = allocate.replace(hash)
+        new_hash = allocate.merge!(hash)
         new_hash.default = nil
         return new_hash
       elsif associate_array = Truffle::Type.rb_check_convert_type(obj, Array, :to_ary)
@@ -316,6 +316,7 @@ class Hash
     return to_enum(:select) { size } unless block_given?
 
     selected = Hash.allocate
+    selected.compare_by_identity if compare_by_identity?
 
     each_pair do |key,value|
       if yield(key, value)
@@ -346,6 +347,7 @@ class Hash
 
   def slice(*keys)
     res = {}
+    res.compare_by_identity if compare_by_identity?
     keys.each do |k|
       v = Primitive.hash_get_or_undefined(self, k)
       res[k] = v unless Primitive.undefined?(v)
@@ -529,6 +531,7 @@ class Hash
     return to_enum(:transform_values) { size } unless block_given?
 
     h = {}
+    h.compare_by_identity if compare_by_identity?
     each_pair do |key, value|
       h[key] = yield(value)
     end

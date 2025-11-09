@@ -54,6 +54,12 @@ describe "Hash#transform_keys" do
   it "allows a combination of hash and block argument" do
     @hash.transform_keys({ a: :A }, &:to_s).should == { A: 1, 'b' => 2, 'c' => 3 }
   end
+
+  it "does not retain compare_by_identity flag" do
+    h = { a: 9, c: 4 }.compare_by_identity
+    h2 = h.transform_keys(&:succ)
+    h2.compare_by_identity?.should == false
+  end
 end
 
 describe "Hash#transform_keys!" do

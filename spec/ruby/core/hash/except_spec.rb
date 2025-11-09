@@ -29,4 +29,10 @@ describe "Hash#except" do
     r.class.should == Hash
     r.default.should == nil
   end
+
+  it "retains compare_by_identity flag" do
+    h = { a: 9, c: 4 }.compare_by_identity
+    h2 = h.except(:a)
+    h2.compare_by_identity?.should == true
+  end
 end

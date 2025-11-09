@@ -1,2 +1,1 @@
 fails:Hash.[] raises for elements that are not arrays
-fails:Hash.[] does not retain compare_by_identity_flag

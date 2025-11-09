@@ -40,6 +40,12 @@ describe :hash_select, shared: true do
     @empty.send(@method).should be_an_instance_of(Enumerator)
   end
 
+  it "retains compare_by_identity flag" do
+    h = { a: 9, c: 4 }.compare_by_identity
+    h2 = h.send(@method) { |k, _| k == :a }
+    h2.compare_by_identity?.should == true
+  end
+
   it_should_behave_like :hash_iteration_no_block
 
   before :each do
