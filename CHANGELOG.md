@@ -16,6 +16,7 @@ Compatibility:
 * Fix inspect output of symbols that contain non-ASCII letters (@earlopain).
 * Implement `rb_struct_initialize()` for both `Struct` and `Data` (#3997, @eregon).
 * Fix `Hash#{select,slice,transform_values}` and `Hash.[]` methods and retain `compare_by_identity` flag (@andrykonchin).
+* Fix `Hash#reject` and do not retain `default` and `default_proc` values (@andrykonchin).
 
 Performance:
 

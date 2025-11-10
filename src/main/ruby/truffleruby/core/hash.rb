@@ -174,7 +174,10 @@ class Hash
   end
 
   def compact
-    reject { |_k, v| Primitive.nil? v }
+    rejected = reject { |_k, v| Primitive.nil? v }
+    rejected.default = default if default
+    rejected.default_proc = default_proc if default_proc
+    rejected
   end
 
   def compact!
@@ -453,6 +456,8 @@ class Hash
   def reject(&block)
     return to_enum(:reject) { size } unless block_given?
     copy = dup
+    copy.default = nil
+    copy.default_proc = nil
     copy.delete_if(&block)
     copy
   end

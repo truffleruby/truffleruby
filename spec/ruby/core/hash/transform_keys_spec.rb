@@ -55,6 +55,21 @@ describe "Hash#transform_keys" do
     @hash.transform_keys({ a: :A }, &:to_s).should == { A: 1, 'b' => 2, 'c' => 3 }
   end
 
+  it "does not retain the default value" do
+    h = Hash.new(1)
+    h.transform_keys(&:succ).default.should be_nil
+    h[:a] = 1
+    h.transform_keys(&:succ).default.should be_nil
+  end
+
+  it "does not retain the default_proc" do
+    pr = proc { |h, k| h[k] = [] }
+    h = Hash.new(&pr)
+    h.transform_values(&:succ).default_proc.should be_nil
+    h[:a] = 1
+    h.transform_values(&:succ).default_proc.should be_nil
+  end
+
   it "does not retain compare_by_identity flag" do
     h = { a: 9, c: 4 }.compare_by_identity
     h2 = h.transform_keys(&:succ)

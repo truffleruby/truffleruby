@@ -19,13 +19,13 @@ describe "Hash#to_h" do
       @h[:foo].should == :bar
     end
 
-    it "copies the default" do
+    it "retains the default" do
       @h.default = 42
       @h.to_h.default.should == 42
       @h[:hello].should == 42
     end
 
-    it "copies the default_proc" do
+    it "retains the default_proc" do
       @h.default_proc = prc = Proc.new{ |h, k| h[k] = 2 * k }
       @h.to_h.default_proc.should == prc
       @h[42].should == 84
@@ -82,6 +82,19 @@ describe "Hash#to_h" do
       -> do
         { a: 1 }.to_h { |k| x }
       end.should raise_error(TypeError, /wrong element type MockObject/)
+    end
+
+    it "does not retain the default value" do
+      h = Hash.new(1)
+      h2 = h.to_h { |k, v| [k.to_s, v*v]}
+      h2.default.should be_nil
+    end
+
+    it "does not retain the default_proc" do
+      pr = proc { |h, k| h[k] = [] }
+      h = Hash.new(&pr)
+      h2 = h.to_h { |k, v| [k.to_s, v*v]}
+      h2.default_proc.should be_nil
     end
 
     it "does not retain compare_by_identity flag" do

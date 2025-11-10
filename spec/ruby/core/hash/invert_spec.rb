@@ -25,6 +25,21 @@ describe "Hash#invert" do
     HashSpecs::MyHash[].invert.class.should == Hash
   end
 
+  it "does not retain the default value" do
+    h = Hash.new(1)
+    h.invert.default.should be_nil
+    h[:a] = 1
+    h.invert.default.should be_nil
+  end
+
+  it "does not retain the default_proc" do
+    pr = proc { |h, k| h[k] = [] }
+    h = Hash.new(&pr)
+    h.invert.default_proc.should be_nil
+    h[:a] = 1
+    h.invert.default_proc.should be_nil
+  end
+
   it "does not retain compare_by_identity flag" do
     h = { a: 9, c: 4 }.compare_by_identity
     h2 = h.invert

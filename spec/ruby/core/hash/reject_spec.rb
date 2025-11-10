@@ -44,6 +44,21 @@ describe "Hash#reject" do
     reject_pairs.should == reject_bang_pairs
   end
 
+  it "does not retain the default value" do
+    h = Hash.new(1)
+    h.reject { false }.default.should be_nil
+    h[:a] = 1
+    h.reject { false }.default.should be_nil
+  end
+
+  it "does not retain the default_proc" do
+    pr = proc { |h, k| h[k] = [] }
+    h = Hash.new(&pr)
+    h.reject { false }.default_proc.should be_nil
+    h[:a] = 1
+    h.reject { false }.default_proc.should be_nil
+  end
+
   it "retains compare_by_identity flag" do
     h = { a: 9, c: 4 }.compare_by_identity
     h2 = h.reject { |k, _| k == :a }

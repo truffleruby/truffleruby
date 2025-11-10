@@ -23,6 +23,35 @@ describe "Hash#replace" do
     h.should == { 1 => 2 }
   end
 
+  it "does not retain the default value" do
+    hash = Hash.new(1)
+    hash.replace(b: 2).default.should be_nil
+  end
+
+  it "transfers the default value of an argument" do
+    hash = Hash.new(1)
+    { a: 1 }.replace(hash).default.should == 1
+  end
+
+  it "does not retain the default_proc" do
+    pr = proc { |h, k| h[k] = [] }
+    hash = Hash.new(&pr)
+    hash.replace(b: 2).default_proc.should be_nil
+  end
+
+  it "transfers the default_proc of an argument" do
+    pr = proc { |h, k| h[k] = [] }
+    hash = Hash.new(&pr)
+    { a: 1 }.replace(hash).default_proc.should == pr
+  end
+
+  it "does not call the default_proc of an argument" do
+    hash_a = Hash.new { |h, k| k * 5 }
+    hash_b = Hash.new(-> { raise "Should not invoke lambda" })
+    hash_a.replace(hash_b)
+    hash_a.default.should == hash_b.default
+  end
+
   it "transfers compare_by_identity flag of an argument" do
     h = { a: 1, c: 3 }
     h2 = { b: 2, d: 4 }.compare_by_identity
@@ -34,23 +63,6 @@ describe "Hash#replace" do
     h = { a: 1, c: 3 }.compare_by_identity
     h.replace(b: 2, d: 4)
     h.compare_by_identity?.should == false
-  end
-
-  it "does not transfer default values" do
-    hash_a = {}
-    hash_b = Hash.new(5)
-    hash_a.replace(hash_b)
-    hash_a.default.should == 5
-
-    hash_a = {}
-    hash_b = Hash.new { |h, k| k * 2 }
-    hash_a.replace(hash_b)
-    hash_a.default(5).should == 10
-
-    hash_a = Hash.new { |h, k| k * 5 }
-    hash_b = Hash.new(-> { raise "Should not invoke lambda" })
-    hash_a.replace(hash_b)
-    hash_a.default.should == hash_b.default
   end
 
   it "raises a FrozenError if called on a frozen instance that would not be modified" do
