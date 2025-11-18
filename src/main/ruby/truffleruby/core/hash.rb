@@ -175,7 +175,7 @@ class Hash
 
   def compact
     rejected = reject { |_k, v| Primitive.nil? v }
-    rejected.default = default if default
+    rejected.default = default unless Primitive.nil?(default)
     rejected.default_proc = default_proc if default_proc
     rejected
   end
