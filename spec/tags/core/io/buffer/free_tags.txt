@@ -1,0 +1,10 @@
+fails:IO::Buffer#free can be called repeatedly without an error
+fails:IO::Buffer#free is disallowed while locked, raising IO::Buffer::LockedError
+fails:IO::Buffer#free with a buffer created with .new frees internal memory and nullifies the buffer
+fails:IO::Buffer#free with a buffer created with .new frees mapped memory and nullifies the buffer
+fails:IO::Buffer#free with a file-backed buffer created with .map frees mapped memory and nullifies the buffer
+fails:IO::Buffer#free with a String-backed buffer created with .for without a block disassociates the buffer from the string and nullifies the buffer
+fails:IO::Buffer#free with a String-backed buffer created with .for with a block disassociates the buffer from the string and nullifies the buffer
+fails:IO::Buffer#free with a String-backed buffer created with .string disassociates the buffer from the string and nullifies the buffer
+fails:IO::Buffer#free with a slice of a buffer nullifies the slice, not touching the buffer
+fails:IO::Buffer#free with a slice of a buffer nullifies buffer, invalidating the slice

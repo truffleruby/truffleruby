@@ -1,1 +1,2 @@
 fails:Regexps with encoding modifiers uses BINARY when is not initialized
+fails:Regexps with encoding modifiers warns when using /n with a match string with non-ASCII characters and an encoding other than ASCII-8BIT

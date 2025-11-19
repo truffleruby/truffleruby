@@ -6,3 +6,5 @@ fails:Kernel.Float for hexadecimal literals does not accept embedded _ if the nu
 fails:Kernel.Float for hexadecimal literals does not accept _ before, after or inside the 0x prefix
 fails:Kernel#Float for hexadecimal literals does not accept embedded _ if the number contains a-f
 fails:Kernel#Float for hexadecimal literals does not accept _ before, after or inside the 0x prefix
+fails:Kernel.Float for hexadecimal literals interprets negative hex value
+fails:Kernel#Float for hexadecimal literals interprets negative hex value

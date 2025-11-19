@@ -1,0 +1,7 @@
+fails:Comparable#clamp with endless range returns minimum value of the range parameters if less than it
+fails:Comparable#clamp with endless range always returns self if greater than minimum value of the range parameters
+fails:Comparable#clamp with endless range works with exclusive range
+fails:Comparable#clamp with beginless range returns maximum value of the range parameters if greater than it
+fails:Comparable#clamp with beginless range always returns self if less than maximum value of the range parameters
+fails:Comparable#clamp with beginless-and-endless range always returns self
+fails:Comparable#clamp with beginless-and-endless range works with exclusive range

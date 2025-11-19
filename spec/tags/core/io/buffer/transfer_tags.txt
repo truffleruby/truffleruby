@@ -1,0 +1,10 @@
+fails:IO::Buffer#transfer allows multiple transfers
+fails:IO::Buffer#transfer is disallowed while locked, raising IO::Buffer::LockedError
+fails:IO::Buffer#transfer with a buffer created with .new transfers internal memory to a new buffer, nullifying the original
+fails:IO::Buffer#transfer with a buffer created with .new transfers mapped memory to a new buffer, nullifying the original
+fails:IO::Buffer#transfer with a file-backed buffer created with .map transfers mapped memory to a new buffer, nullifying the original
+fails:IO::Buffer#transfer with a String-backed buffer created with .for without a block transfers memory to a new buffer, nullifying the original
+fails:IO::Buffer#transfer with a String-backed buffer created with .for with a block transfers memory to a new buffer, breaking the transaction by nullifying the original
+fails:IO::Buffer#transfer with a String-backed buffer created with .string transfers memory to a new buffer, breaking the transaction by nullifying the original
+fails:IO::Buffer#transfer with a slice of a buffer transfers source to a new slice, not touching the buffer
+fails:IO::Buffer#transfer with a slice of a buffer nullifies buffer, invalidating the slice
