@@ -14,3 +14,4 @@ slow:Net::FTP#puttextfile when opening the data port fails raises a Net::FTPPerm
 slow:Net::FTP#puttextfile when opening the data port fails raises a Net::FTPPermError when the response code is 501
 slow:Net::FTP#puttextfile when opening the data port fails raises a Net::FTPTempError when the response code is 421
 slow:Net::FTP#puttextfile when opening the data port fails raises a Net::FTPPermError when the response code is 530
+slow:Net::FTP#puttextfile returns the response

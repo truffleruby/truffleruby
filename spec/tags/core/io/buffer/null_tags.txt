@@ -1,0 +1,13 @@
+fails:IO::Buffer#null? is false for a buffer with size > 0
+fails:IO::Buffer#null? is false for a slice with length > 0
+fails:IO::Buffer#null? is false for a file-mapped buffer
+fails:IO::Buffer#null? is false for a non-empty String-backed buffer created with .for
+fails:IO::Buffer#null? is false for a non-empty String-backed buffer created with .string
+fails:IO::Buffer#null? is true for a 0-sized buffer
+fails:IO::Buffer#null? is true for a slice of a 0-sized buffer
+fails:IO::Buffer#null? is true for a freed buffer
+fails:IO::Buffer#null? is true for a buffer resized to 0
+fails:IO::Buffer#null? is true for a buffer whose memory was transferred
+fails:IO::Buffer#null? is false for a 0-length String-backed buffer created with .for
+fails:IO::Buffer#null? is false for a 0-length String-backed buffer created with .string
+fails:IO::Buffer#null? is false for a 0-length slice of a buffer with size > 0

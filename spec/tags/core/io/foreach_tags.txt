@@ -3,3 +3,4 @@ fails:IO.foreach sets $_ to nil
 fails:IO.foreach when passed name, object when the object is a String accepts non-ASCII data as separator
 fails:IO.foreach when passed name, object when the object is an Integer uses the object as a limit if it is an Integer
 fails:IO.foreach when the filename starts with | warns about deprecation given a path with a pipe
+fails:IO.foreach warns about deprecation given a path with a pipe

@@ -1,0 +1,7 @@
+fails:IO::Buffer#locked disallows reentrant locking, raising IO::Buffer::LockedError
+fails:IO::Buffer#locked does not propagate to buffer's slices
+fails:IO::Buffer#locked does not propagate backwards from buffer's slices
+fails:IO::Buffer#locked when buffer is locked allows reading and writing operations on the buffer
+fails:IO::Buffer#locked when buffer is locked disallows operations changing buffer itself, raising IO::Buffer::LockedError
+fails:IO::Buffer#locked? is false by default
+fails:IO::Buffer#locked? is true only inside of #locked block
