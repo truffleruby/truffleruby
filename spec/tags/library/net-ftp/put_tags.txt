@@ -37,3 +37,4 @@ slow:Net::FTP#put (text mode) when opening the data port fails raises a Net::FTP
 slow:Net::FTP#put (text mode) when opening the data port fails raises a Net::FTPPermError when the response code is 501
 slow:Net::FTP#put (text mode) when opening the data port fails raises a Net::FTPTempError when the response code is 421
 slow:Net::FTP#put (text mode) when opening the data port fails raises a Net::FTPPermError when the response code is 530
+slow:Net::FTP#put (text mode) returns the response
