@@ -40,6 +40,39 @@ describe 'Comparable#clamp' do
     c.clamp(one, two).should equal(two)
   end
 
+  context 'max is nil' do
+    it 'returns min if less than it' do
+      one = ComparableSpecs::WithOnlyCompareDefined.new(1)
+      c = ComparableSpecs::Weird.new(0)
+      c.clamp(one, nil).should equal(one)
+    end
+
+    it 'always returns self if greater than min' do
+      one = ComparableSpecs::WithOnlyCompareDefined.new(1)
+      c = ComparableSpecs::Weird.new(2)
+      c.clamp(one, nil).should equal(c)
+    end
+  end
+
+  context 'min is nil' do
+    it 'returns max if greater than it' do
+      one = ComparableSpecs::WithOnlyCompareDefined.new(1)
+      c = ComparableSpecs::Weird.new(2)
+      c.clamp(nil, one).should equal(one)
+    end
+
+    it 'always returns self if less than max' do
+      one = ComparableSpecs::WithOnlyCompareDefined.new(1)
+      c = ComparableSpecs::Weird.new(0)
+      c.clamp(nil, one).should equal(c)
+    end
+  end
+
+  it 'always returns self when min is nil and max is nil' do
+    c = ComparableSpecs::Weird.new(1)
+    c.clamp(nil, nil).should equal(c)
+  end
+
   it 'returns self if within the given range parameters' do
     one = ComparableSpecs::WithOnlyCompareDefined.new(1)
     two = ComparableSpecs::WithOnlyCompareDefined.new(2)

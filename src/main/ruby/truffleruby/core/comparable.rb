@@ -83,9 +83,13 @@ module Comparable
     if Primitive.undefined?(max)
       range = min
       raise TypeError, "wrong argument type #{Primitive.class(range)} (expected Range)" unless Primitive.is_a?(range, Range)
-      raise ArgumentError, 'cannot clamp with an exclusive range' if range.exclude_end?
+      raise ArgumentError, 'cannot clamp with an exclusive range' if range.exclude_end? && !Primitive.nil?(range.end)
       min, max = range.begin, range.end
     end
+
+    return self if Primitive.nil?(min) && Primitive.nil?(max)
+    return self <= max ? self : max if Primitive.nil?(min)
+    return self >= min ? self : min if Primitive.nil?(max)
 
     comp = min <=> max
     raise ArgumentError, 'min argument must be smaller than max argument' if Primitive.nil?(comp) or comp > 0
