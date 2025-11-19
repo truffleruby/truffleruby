@@ -130,7 +130,21 @@ If you find any performance issue, please see [this guide](doc/user/reporting-pe
 ## Releases
 
 TruffleRuby is released on its own schedule (based on features, important bug fixes, etc) and does not follow the GraalVM release schedule.
-TruffleRuby continues to use the release numbering based on the calendar year, for example, 21.x, and 22.x., same as GraalVM prior to 2023.
+The TruffleRuby version is based on the CRuby version but the first two components of the version are merged together,
+so e.g. TruffleRuby 34.5.0 has a `RUBY_VERSION` of 3.4.5.
+The last component is simply increased for every release with the same `RUBY_VERSION`.
+The last release which used GraalVM/Truffle versioning is 25.0.0.
+
+### Compatibility Table
+
+TruffleRuby is compatible with the GraalVM versions in the following table.
+The Truffle version is fixed and is a dependency of the truffleruby Maven artifact, so it cannot be chosen.
+It is however relevant when doing interop with other Truffle languages, as they must use the same version of Truffle.
+
+| TruffleRuby version | Truffle version | GraalVM versions |
+| --- | --- | --- |
+| 33.7.0 | 25.0.1 | 21.0, 25.0 |
+| 25.0.0 | 25.0.0 | 21.0, 25.0 |
 
 ## Migration from MRI
 
