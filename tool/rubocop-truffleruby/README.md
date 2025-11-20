@@ -2,7 +2,7 @@
 
 There are some TruffleRuby specific Rubocop copes (a Ruby linter policies) in a `./cop` directory.
 
-They are taken from a `rubocop-truffleruby` gem (https://github.com/andrykonchin/rubocop-truffleruby) and should be synchronized every time the gem is updated.
+They are taken from a `rubocop-truffleruby` gem (https://github.com/truffleruby/rubocop-truffleruby) and should be synchronized every time the gem is updated.
 
 Use `tool/import-rubocop-truffleruby.sh` Shell script to update them automatically:
 
