@@ -8,7 +8,7 @@ set -e
 SOURCE_DIR="../rubocop-truffleruby"
 SOURCE_PATH="lib/rubocop/cop/truffleruby"
 TARGET_DIR="tool/rubocop-truffleruby"
-GIT_REPO_URL="git@github.com:andrykonchin/rubocop-truffleruby.git"
+GIT_REPO_URL="git@github.com:truffleruby/rubocop-truffleruby.git"
 
 if [ ! -d "$SOURCE_DIR" ]; then
   mkdir -p $SOURCE_DIR
