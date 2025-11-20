@@ -155,6 +155,20 @@ module RbConfig
 
   major, minor, teeny = RUBY_VERSION.split('.')
 
+  # org.graalvm.version is currently incorrectly set by the launcher in case of a bootstrap GraalVM with a different version than Truffle.
+  # So we use java.vendor.version when it's set instead.
+  if java_vendor_version = Truffle::System.get_java_property('java.vendor.version')
+    # java.vendor.version seems the most reliable property as it looks like "Oracle GraalVM 25.0.1+8.1" or "GraalVM CE 25+37.1".
+    graalvm_version = java_vendor_version[/\d+(\.\d+)*/]
+    graalvm_version = "#{graalvm_version}.0.0" if graalvm_version.match?(/\A\d+\z/)
+  else
+    graalvm_version = Truffle::System.get_java_property('org.graalvm.version')
+  end
+
+  # Not quite correct, but there is no public API to get the Truffle version currently.
+  # Also this is not available when embedded.
+  truffle_version = Truffle::System.get_java_property('org.graalvm.version')
+
   # Sorted alphabetically using sort(1)
   CONFIG = {
     'AR'                => ar,
@@ -180,12 +194,15 @@ module RbConfig
     'exeext'            => '',
     'EXEEXT'            => '',
     'EXTOUT'            => '.ext',
+    'graalvm_version'   => graalvm_version,
     'host_alias'        => '',
     'host_cpu'          => host_cpu,
     'host'              => host,
     'host_os'           => host_os_full,
     'includedir'        => includedir,
     'INSTALL'           => '/usr/bin/install -c',
+    'java_specification_version' => Truffle::System.get_java_property('java.specification.version'),
+    'java_version'      => Truffle::System.get_java_property('java.version'),
     'LDFLAGS'           => ldflags,
     'libdirname'        => 'libdir',
     'LIBEXT'            => 'a',
@@ -233,6 +250,7 @@ module RbConfig
     'target_cpu'        => host_cpu,
     'target_os'         => host_os,
     'TEENY'             => teeny,
+    'truffle_version'   => truffle_version,
     'UNICODE_VERSION'   => Primitive.encoding_unicode_version,
     'UNICODE_EMOJI_VERSION' => Primitive.encoding_unicode_emoji_version,
     'warnflags'         => warnflags,

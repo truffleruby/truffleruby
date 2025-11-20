@@ -75,6 +75,22 @@ describe "Identifying features such as" do
     RbConfig::CONFIG['RUBY_BASE_NAME'].should == 'ruby'
   end
 
+  it "RbConfig::CONFIG['java_version'] reports the Java version" do
+    RbConfig::CONFIG['java_version'].should =~ /\A\d+/
+  end
+
+  it "RbConfig::CONFIG['java_specification_version'] reports the Java feature version" do
+    RbConfig::CONFIG['java_specification_version'].should =~ /\A\d+\z/
+  end
+
+  it "RbConfig::CONFIG['graalvm_version'] reports the GraalVM version" do
+    RbConfig::CONFIG['graalvm_version'].should =~ /\A\d+\.\d+\.\d+\z/
+  end
+
+  it "RbConfig::CONFIG['truffle_version'] reports the Truffle version" do
+    RbConfig::CONFIG['truffle_version'].should =~ /\A\d+\.\d+\.\d+\z/
+  end
+
   it 'TruffleRuby.revision matches /\A\h+\z/' do
     TruffleRuby.revision.should =~ /\A\h+\z/
   end
