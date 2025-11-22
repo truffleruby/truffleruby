@@ -372,7 +372,7 @@ def ruby_run_ruby(args):
 
 def ruby_run_ruby_from_classpath(args):
     """run TruffleRuby from the classpath"""
-    dists = ['RUBY_COMMUNITY', 'TRUFFLERUBY-LAUNCHER']
+    dists = ['RUBY_POM', 'TRUFFLERUBY-LAUNCHER']
     if '--skip-build' in args:
         args.remove('--skip-build')
     else:

@@ -1,7 +1,8 @@
-# 26.0.0
+# 33.7.0
 
 New features:
 
+* The TruffleRuby version changed from being based on the GraalVM version to being based on the CRuby version. For CRuby release `A.B.C` we have TruffleRuby releases `AB.C.D`. See [the README](README.md#releases) for more details (#4020, @eregon).
 * TruffleRuby now ships with its own `libyaml` and no longer needs a system `libyaml` (#3479, @eregon).
 * TruffleRuby now ships with its own `libssl` and no longer needs a system `libssl`. It still requires CA certificates from the system. (#3479, @eregon).
 
