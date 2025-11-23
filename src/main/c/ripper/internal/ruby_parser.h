@@ -8,7 +8,7 @@
 #include "internal/parse.h"
 #include "internal/rational.h"
 #include "rubyparser.h"
-#include "vm.h"
+#include "internal/vm.h"
 
 struct lex_pointer_string {
     VALUE str;

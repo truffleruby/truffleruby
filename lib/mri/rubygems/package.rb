@@ -7,6 +7,9 @@
 
 # rubocop:enable Style/AsciiComments
 
+if defined?(::TruffleRuby)
+  require_relative "../rubygems"
+end
 require_relative "security"
 require_relative "user_interaction"
 

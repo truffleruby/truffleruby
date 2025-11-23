@@ -125,6 +125,8 @@
 #include "ruby/ractor.h"
 #include "symbol.h"
 
+#include "internal/gc.h"
+
 #ifndef RIPPER
 static VALUE
 syntax_error_new(void)

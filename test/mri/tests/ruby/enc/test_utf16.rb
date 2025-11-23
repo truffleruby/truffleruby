@@ -71,15 +71,15 @@ EOT
         }
       }
       [
-        "\x00",
-        "\xd7",
+        # "\x00", # TruffleString: UTF-16 string byte length is not a multiple of 2
+        # "\xd7",
         "\xd8\x00",
         "\xd8\x00\xd8\x00",
         "\xdc\x00",
         "\xdc\x00\xd8\x00",
         "\xdc\x00\xdc\x00",
-        "\xe0",
-        "\xff",
+        # "\xe0",
+        # "\xff",
       ].each {|s|
         s.force_encoding("utf-16be")
         a.for(s) {
@@ -105,15 +105,15 @@ EOT
         }
       }
       [
-        "\x00",
-        "\xd7",
+        # "\x00", # TruffleString: UTF-16 string byte length is not a multiple of 2
+        # "\xd7",
         "\x00\xd8",
         "\x00\xd8\x00\xd8",
         "\x00\xdc",
         "\x00\xdc\x00\xd8",
         "\x00\xdc\x00\xdc",
-        "\xe0",
-        "\xff",
+        # "\xe0",
+        # "\xff",
       ].each {|s|
         s.force_encoding("utf-16le")
         a.for(s) {
@@ -151,8 +151,11 @@ EOT
   end
 
   def test_end_with
-    s1 = "ab".force_encoding("utf-16be")
-    s2 = "b".force_encoding("utf-16be")
+    # TruffleString: UTF-16 string byte length is not a multiple of 2
+    # s1 = "ab".force_encoding("utf-16be")
+    # s2 = "b".force_encoding("utf-16be")
+    s1 = "\xd8\x00\xdc\x00".force_encoding("utf-16be")
+    s2 = "\xdc\x00".force_encoding("utf-16be")
     assert_equal(false, s1.end_with?(s2), "#{encdump s1}.end_with?(#{encdump s2})")
   end
 

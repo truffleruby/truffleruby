@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
-require 'objspace.so'
+unless defined?(::TruffleRuby)
+  require 'objspace.so'
+end
 
 module ObjectSpace
   class << self
     private :_dump
     private :_dump_all
-    private :_dump_shapes
+    private :_dump_shapes unless defined?(::TruffleRuby)
   end
 
   module_function

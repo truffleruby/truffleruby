@@ -1,4 +1,8 @@
+if defined?(::TruffleRuby) # different directory layout
+  $LOAD_PATH.unshift File.join(__dir__, '../ext'), File.join(__dir__, '../lib')
+else
 $LOAD_PATH.unshift(File.expand_path('../../../ext', __FILE__), File.expand_path('../../../lib', __FILE__))
+end
 
 require 'json'
 require 'test/unit'

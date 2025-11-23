@@ -3,7 +3,9 @@
 if RUBY_ENGINE == 'ruby'
   require 'fiddle.so'
 else
-  require 'fiddle/ffi_backend'
+  # TODO (nirvdrum 2025-11-23) Can we upstream our changes? There's already support for alternative Rubies.
+  require 'truffle/fiddle_backend'
+  # require 'fiddle/ffi_backend'
 end
 require 'fiddle/closure'
 require 'fiddle/function'

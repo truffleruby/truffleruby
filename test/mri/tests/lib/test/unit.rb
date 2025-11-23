@@ -17,7 +17,7 @@ end
 
 require_relative '../envutil'
 require_relative '../colorize'
-require_relative '../leakchecker'
+# require_relative '../leakchecker' # TruffleRuby: LeakChecker removed to avoid interferences
 require_relative '../test/unit/testcase'
 require 'optparse'
 
@@ -1649,7 +1649,7 @@ module Test
         end
         all_test_methods = @order.sort_by_name(all_test_methods)
 
-        leakchecker = LeakChecker.new
+        # leakchecker = LeakChecker.new # TruffleRuby: LeakChecker removed to avoid interferences
         if ENV["LEAK_CHECKER_TRACE_OBJECT_ALLOCATION"]
           require "objspace"
           trace = true
@@ -1676,7 +1676,7 @@ module Test
           puts if @verbose
           $stdout.flush
 
-          leakchecker.check("#{inst.class}\##{inst.__name__}")
+          # leakchecker.check("#{inst.class}\##{inst.__name__}") # TruffleRuby: LeakChecker removed to avoid interferences
 
           _end_method(inst)
 
@@ -1688,6 +1688,15 @@ module Test
       def _start_method(inst)
       end
       def _end_method(inst)
+        if defined?(::TruffleRuby)
+          unless ENV['HOME']
+            abort "#{inst.class}\##{inst.__name__} unset HOME"
+          end
+
+          if $stdout.external_encoding
+            abort "#{inst.class}\##{inst.__name__} set $stdout.external_encoding to #{$stdout.external_encoding}"
+          end
+        end
       end
 
       ##

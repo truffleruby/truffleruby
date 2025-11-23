@@ -125,6 +125,8 @@
 #include "ruby/ractor.h"
 #include "symbol.h"
 
+#include "internal/gc.h"
+
 #ifndef RIPPER
 static VALUE
 syntax_error_new(void)
@@ -19694,7 +19696,6 @@ flush_string_content(struct parser_params *p, rb_encoding *enc, size_t back)
 
 /* this can be shared with ripper, since it's independent from struct
  * parser_params. */
-#ifndef RIPPER
 #define BIT(c, idx) (((c) / 32 - 1 == idx) ? (1U << ((c) % 32)) : 0)
 #define SPECIAL_PUNCT(idx) ( \
         BIT('~', idx) | BIT('*', idx) | BIT('$', idx) | BIT('?', idx) | \
@@ -19710,7 +19711,6 @@ const uint_least32_t ruby_global_name_punct_bits[] = {
 };
 #undef BIT
 #undef SPECIAL_PUNCT
-#endif
 
 static enum yytokentype
 parser_peek_variable_name(struct parser_params *p)

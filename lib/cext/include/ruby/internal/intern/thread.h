@@ -196,7 +196,14 @@ VALUE rb_thread_create(VALUE (*f)(void *g), void *g);
  * @param[in]  time           Duration.
  * @exception  rb_eInterrupt  Interrupted.
  */
+#ifdef TRUFFLERUBY
+void rb_tr_thread_wait_for(struct timeval* time);
+static inline void rb_thread_wait_for(struct timeval time) {
+    rb_tr_thread_wait_for(&time);
+}
+#else
 void rb_thread_wait_for(struct timeval time);
+#endif
 
 /**
  * Obtains the "current" thread.

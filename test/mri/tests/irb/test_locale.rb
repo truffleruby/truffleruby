@@ -108,11 +108,11 @@ module TestIRB
     def test_find
       jp_local = IRB::Locale.new("ja_JP.UTF-8")
       path = jp_local.find("irb/error.rb")
-      assert_include(path, "/lib/irb/lc/ja/error.rb")
+      assert_include(path, "/lib/mri/irb/lc/ja/error.rb")
 
       en_local = IRB::Locale.new("en_US.UTF-8")
       path = en_local.find("irb/error.rb")
-      assert_include(path, "/lib/irb/lc/error.rb")
+      assert_include(path, "/lib/mri/irb/lc/error.rb")
     end
   end
 end

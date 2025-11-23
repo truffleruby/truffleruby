@@ -29,6 +29,10 @@ RBIMPL_SYMBOL_EXPORT_BEGIN()
 
 /* struct.c */
 
+#ifdef TRUFFLERUBY
+VALUE rb_tr_struct_new_va_list(VALUE klass, va_list args);
+#endif
+
 /**
  * Creates an instance of the given struct.
  *
@@ -39,7 +43,21 @@ RBIMPL_SYMBOL_EXPORT_BEGIN()
  * @note       Number of variadic arguments must much that of the passed klass'
  *             fields.
  */
+#ifdef TRUFFLERUBY
+static inline VALUE rb_struct_new(VALUE klass, ...) {
+    va_list args;
+    va_start(args, klass);
+    VALUE result = rb_tr_struct_new_va_list(klass, args);
+    va_end(args);
+    return result;
+}
+#else
 VALUE rb_struct_new(VALUE klass, ...);
+#endif
+
+#ifdef TRUFFLERUBY
+VALUE rb_tr_struct_define_va_list(const char *name, va_list args);
+#endif
 
 /**
  * Defines a struct class.
@@ -62,7 +80,21 @@ VALUE rb_struct_new(VALUE klass, ...);
  * Not  seriously  checked but  it  seems  this  function  does not  share  its
  * implementation with how `Struct.new` is implemented...?
  */
+#ifdef TRUFFLERUBY
+static inline VALUE rb_struct_define(const char *name, ...) {
+    va_list args;
+    va_start(args, name);
+    VALUE result = rb_tr_struct_define_va_list(name, args);
+    va_end(args);
+    return result;
+}
+#else
 VALUE rb_struct_define(const char *name, ...);
+#endif
+
+#ifdef TRUFFLERUBY
+VALUE rb_tr_struct_define_under_va_list(VALUE space, const char *name, va_list args);
+#endif
 
 RBIMPL_ATTR_NONNULL((2))
 /**
@@ -83,7 +115,17 @@ RBIMPL_ATTR_NONNULL((2))
  * @note        The GC does not collect nor move classes returned by this
  *              function. They are immortal.
  */
+#ifdef TRUFFLERUBY
+static inline VALUE rb_struct_define_under(VALUE space, const char *name, ...) {
+    va_list args;
+    va_start(args, name);
+    VALUE result = rb_tr_struct_define_under_va_list(space, name, args);
+    va_end(args);
+    return result;
+}
+#else
 VALUE rb_struct_define_under(VALUE space, const char *name, ...);
+#endif
 
 /**
  * Identical to  rb_struct_new(), except it  takes the  field values as  a Ruby
@@ -204,6 +246,10 @@ RBIMPL_ATTR_NONNULL((2))
  */
 VALUE rb_struct_define_without_accessor_under(VALUE outer, const char *class_name, VALUE super, rb_alloc_func_t alloc, ...);
 
+#ifdef TRUFFLERUBY
+VALUE rb_tr_data_define_va_list(VALUE super, va_list args);
+#endif
+
 /**
  * Defines an anonymous data class.
  *
@@ -218,7 +264,17 @@ VALUE rb_struct_define_without_accessor_under(VALUE outer, const char *class_nam
  * @note       The GC does not collect nor move classes returned by this
  *             function. They are immortal.
  */
+#ifdef TRUFFLERUBY
+static inline VALUE rb_data_define(VALUE super, ...) {
+    va_list args;
+    va_start(args, super);
+    VALUE result = rb_tr_data_define_va_list(super == 0 ? Qnil : super, args);
+    va_end(args);
+    return result;
+}
+#else
 VALUE rb_data_define(VALUE super, ...);
+#endif
 
 RBIMPL_SYMBOL_EXPORT_END()
 

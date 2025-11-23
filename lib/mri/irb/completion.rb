@@ -44,7 +44,7 @@ module IRB
     end
 
     GEM_PATHS =
-      if defined?(Gem::Specification)
+      if !defined?(::TruffleRuby) and defined?(Gem::Specification)
         Gem::Specification.latest_specs(true).map { |s|
           s.require_paths.map { |p|
             if File.absolute_path?(p)

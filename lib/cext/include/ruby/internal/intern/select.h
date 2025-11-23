@@ -38,9 +38,11 @@
 # /** Does nothing (defined for compatibility). */
 # define rb_fd_resize(n, f) ((void)(f))
 #else
+#ifndef TRUFFLERUBY // Don't define an incorrect rb_fdset_t if NFDBITS is not set
 # include "ruby/internal/intern/select/posix.h"
 # /** Does nothing (defined for compatibility). */
 # define rb_fd_resize(n, f) ((void)(f))
+#endif
 #endif
 
 RBIMPL_SYMBOL_EXPORT_BEGIN()
@@ -79,7 +81,9 @@ struct timeval;
  * the reason for  this limitation in detail, you might  find this thread super
  * interesting: https://lkml.org/lkml/2004/10/6/117
  */
+#if defined(TRUFFLERUBY) && defined(NFDBITS) && defined(HAVE_RB_FD_INIT) // Don't define an incorrect rb_fdset_t if NFDBITS is not set
 int rb_thread_fd_select(int nfds, rb_fdset_t *rfds, rb_fdset_t *wfds, rb_fdset_t *efds, struct timeval *timeout);
+#endif
 
 RBIMPL_SYMBOL_EXPORT_END()
 

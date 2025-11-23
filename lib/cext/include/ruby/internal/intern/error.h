@@ -248,6 +248,8 @@ RBIMPL_SYMBOL_EXPORT_END()
  */
 #define rb_check_frozen_internal rb_check_frozen
 
+#ifndef TRUFFLERUBY
+
 /** @alias{rb_check_frozen} */
 static inline void
 rb_check_frozen_inline(VALUE obj)
@@ -266,6 +268,8 @@ rb_check_frozen_inline(VALUE obj)
 /* rb_check_frozen() is available as a symbol, but have
  * the inline version take priority for native consumers. */
 #define rb_check_frozen rb_check_frozen_inline
+
+#endif // TRUFFLERUBY
 
 /**
  * Ensures that the  passed integer is in  the passed range.  When  you can use

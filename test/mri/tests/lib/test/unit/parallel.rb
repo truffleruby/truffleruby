@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "../../../test/init"
+if defined? ::TruffleRuby
+  require_relative "../../../tool/test/init"
+else
+  require_relative "../../../test/init"
+end
 
 module Test
   module Unit

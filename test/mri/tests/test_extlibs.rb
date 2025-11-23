@@ -5,21 +5,33 @@ require "shellwords"
 class TestExtLibs < Test::Unit::TestCase
   @extdir = $".grep(/\/rbconfig\.rb\z/) {break "#$`/ext"}
 
-  def self.check_existence(ext, add_msg = nil)
-    return if @excluded.any? {|i| File.fnmatch?(i, ext, File::FNM_CASEFOLD)}
-    add_msg = ".  #{add_msg}" if add_msg
-    log = "#{@extdir}/#{ext}/mkmf.log"
-    define_method("test_existence_of_#{ext}") do
-      assert_separately([], <<-"end;", ignore_stderr: true) # do
-        log = #{log.dump}
-        msg = proc {
-          "extension library `#{ext}' is not found#{add_msg}\n" <<
-            (File.exist?(log) ? File.binread(log) : "\#{log} not found")
-        }
-        assert_nothing_raised(msg) do
-          require "#{ext}"
+  if defined?(::TruffleRuby)
+    def self.check_existence(ext, add_msg = nil)
+      return if @excluded.any? {|i| File.fnmatch?(i, ext, File::FNM_CASEFOLD)}
+
+      define_method("test_existence_of_#{ext}") do
+        assert_nothing_raised("extension library `#{ext}' is not found#{add_msg}") do
+          require ext
         end
-      end;
+      end
+    end
+  else
+    def self.check_existence(ext, add_msg = nil)
+      return if @excluded.any? {|i| File.fnmatch?(i, ext, File::FNM_CASEFOLD)}
+      add_msg = ".  #{add_msg}" if add_msg
+      log = "#{@extdir}/#{ext}/mkmf.log"
+      define_method("test_existence_of_#{ext}") do
+        assert_separately([], <<-"end;", ignore_stderr: true) # do
+          log = #{log.dump}
+          msg = proc {
+            "extension library `#{ext}' is not found#{add_msg}\n" <<
+              (File.exist?(log) ? File.binread(log) : "\#{log} not found")
+          }
+          assert_nothing_raised(msg) do
+            require "#{ext}"
+          end
+        end;
+      end
     end
   end
 

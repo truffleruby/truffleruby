@@ -105,6 +105,10 @@ VALUE rb_time_timespec_new(const struct timespec *ts, int offset);
  */
 VALUE rb_time_num_new(VALUE timev, VALUE off);
 
+#ifdef TRUFFLERUBY
+void rb_tr_time_interval(VALUE num, struct timeval *result);
+#endif
+
 /**
  * Creates  a  "time  interval".   This   basically  converts  an  instance  of
  * ::rb_cNumeric  into  a struct  `timeval`,  but  for instance  negative  time
@@ -115,7 +119,19 @@ VALUE rb_time_num_new(VALUE timev, VALUE off);
  * @exception  rb_eRangeError  `num` is out of range of `timeval::tv_sec`.
  * @return     A struct that represents the identical time to `num`.
  */
+#ifdef TRUFFLERUBY
+static inline struct timeval rb_time_interval(VALUE num) {
+    struct timeval result;
+    rb_tr_time_interval(num, &result);
+    return result;
+}
+#else
 struct timeval rb_time_interval(VALUE num);
+#endif
+
+#ifdef TRUFFLERUBY
+void rb_tr_time_timeval(VALUE time, struct timeval *result);
+#endif
 
 /**
  * Converts an  instance of rb_cTime  to a  struct timeval that  represents the
@@ -127,6 +143,10 @@ struct timeval rb_time_interval(VALUE num);
  * @return     A struct that represents the identical time to `num`.
  */
 struct timeval rb_time_timeval(VALUE time);
+
+#ifdef TRUFFLERUBY
+void rb_tr_time_timespec(VALUE time, struct timespec *result);
+#endif
 
 /**
  * Identical to rb_time_timeval(), except for return type.

@@ -37,8 +37,22 @@ if yaml_source
   $cleanfiles << libyaml
   $LOCAL_LIBS.prepend("$(LIBYAML) ")
 else # default to pre-installed libyaml
-  pkg_config('yaml-0.1')
-  dir_config('libyaml')
+  if defined?(::TruffleRuby)
+    # Statically-link libyaml, and do not export any of its symbols.
+    # That way, if some other extension/library loads libyaml there won't be any conflict.
+    # Keep in sync with openssl/extconf.rb
+    repository = Truffle::System.get_java_property 'truffleruby.repository'
+    dir_config('libyaml', "#{repository}/src/main/c/libyaml")
+    if Truffle::Platform.linux?
+      # -Wl,--exclude-libs,ALL also works but let's be consistent with the approach on macOS
+      LINK_SO << " '-Wl,--version-script=#{__dir__}/exports.map'"
+    else
+      LINK_SO << " '-Wl,-exported_symbols_list,#{__dir__}/exports.txt' -Wl,-dead_strip"
+    end
+  else
+    pkg_config('yaml-0.1')
+    dir_config('libyaml')
+  end
   find_header('yaml.h') or abort "yaml.h not found"
   find_library('yaml', 'yaml_get_version') or abort "libyaml not found"
 end
