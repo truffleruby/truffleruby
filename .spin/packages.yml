@@ -1,7 +1,0 @@
----
-- cmake
-- graphviz
-- libcapstone-dev
-- ca-certificates
-- libz-dev
-- python3
