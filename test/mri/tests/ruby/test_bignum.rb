@@ -1,7 +1,7 @@
 # frozen_string_literal: false
 require 'test/unit'
 begin
-  require '-test-/integer'
+  # require '-test-/integer'
 rescue LoadError
 else
 

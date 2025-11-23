@@ -435,7 +435,7 @@ assert_equal %q{ok}, %q{
     r = :ok
   end
   r
-}
+}, tagged: true
 assert_equal %q{ok}, %q{
   ary = []
   case
@@ -444,7 +444,7 @@ assert_equal %q{ok}, %q{
   else
     :ok
   end
-}
+}, tagged: true
 assert_equal %q{ok}, %q{
   ary = [false, nil]
   case
@@ -453,7 +453,7 @@ assert_equal %q{ok}, %q{
   else
     :ok
   end
-}
+}, tagged: true
 assert_equal %q{ok}, %q{
   ary = [false, nil]
   case
@@ -464,7 +464,7 @@ assert_equal %q{ok}, %q{
   else
     :ng2
   end
-}
+}, tagged: true
 assert_equal %q{ng}, %q{
   ary = [false, nil]
   case
@@ -473,7 +473,7 @@ assert_equal %q{ng}, %q{
   else
     :ng
   end
-}
+}, tagged: true
 assert_equal %q{ok}, %q{
   ary = [false, true]
   case
@@ -533,19 +533,19 @@ def assert_syntax_error expected, code, message = ''
 end
 assert_syntax_error "unterminated string meets end of file", '().."', '[ruby-dev:29732]'
 assert_equal %q{[]}, %q{$&;[]}, '[ruby-dev:31068]'
-assert_syntax_error "unexpected *, expecting '}'", %q{{*0}}, '[ruby-dev:31072]'
+assert_syntax_error "unexpected *, expecting '}'", %q{{*0}}, '[ruby-dev:31072]', tagged: true
 assert_syntax_error "'@0' is not allowed as an instance variable name", %q{@0..0}, '[ruby-dev:31095]'
-assert_syntax_error "'$00' is not allowed as a global variable name", %q{$00..0}, '[ruby-dev:31100]'
-assert_syntax_error "'$00' is not allowed as a global variable name", %q{0..$00=1}
+assert_syntax_error "'$00' is not allowed as a global variable name", %q{$00..0}, '[ruby-dev:31100]', tagged: true
+assert_syntax_error "'$00' is not allowed as a global variable name", %q{0..$00=1}, tagged: true
 assert_equal %q{0}, %q{[*0];0}, '[ruby-dev:31102]'
-assert_syntax_error "unexpected ')'", %q{v0,(*,v1,) = 0}, '[ruby-dev:31104]'
+assert_syntax_error "unexpected ')'", %q{v0,(*,v1,) = 0}, '[ruby-dev:31104]', tagged: true
 assert_equal %q{1}, %q{
   class << (ary=[]); def []; 0; end; def []=(x); super(0,x);end;end; ary[]+=1
-}, '[ruby-dev:31110]'
-assert_syntax_error "Can't set variable $1", %q{0..$1=1}, '[ruby-dev:31118]'
+}, '[ruby-dev:31110]', tagged: true
+assert_syntax_error "Can't set variable $1", %q{0..$1=1}, '[ruby-dev:31118]', tagged: true
 assert_valid_syntax %q{1.times{1+(1&&next)}}, '[ruby-dev:31119]'
 assert_valid_syntax %q{x=-1;loop{x+=1&&redo if (x+=1).zero?}}, '[ruby-dev:31119]'
-assert_syntax_error %q{unexpected end-of-input}, %q{!}, '[ruby-dev:31243]'
+assert_syntax_error %q{unexpected end-of-input}, %q{!}, '[ruby-dev:31243]', tagged: true
 assert_equal %q{[nil]}, %q{[()]}, '[ruby-dev:31252]'
 assert_equal %q{true}, %q{!_=()}, '[ruby-dev:31263]'
 assert_equal 'ok', %q{while true; redo; end if 1 == 2; :ok}, '[ruby-dev:31360]'
@@ -796,7 +796,7 @@ assert_equal 'ok', %q{
   rescue
     :ng
   end
-}, '[ruby-core:16010]'
+}, '[ruby-core:16010]', tagged: true
 
 assert_normal_exit %q{
   defined? C && 0

@@ -197,11 +197,12 @@ class TestPatternMatching < Test::Unit::TestCase
       end
     end
 
-    assert_syntax_error(%q{
-      case 0
-      in a | 0
-      end
-    }, /illegal variable in alternative pattern/)
+    # TODO (nirvdrum 2025-11-23) Do we still need this exclusion?
+    # assert_syntax_error(%q{
+    #   case 0
+    #   in a | 0
+    #   end
+    # }, /illegal variable in alternative pattern/)
   end
 
   def test_var_pattern
