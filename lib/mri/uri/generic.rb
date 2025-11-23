@@ -603,9 +603,18 @@ module URI
       if @opaque
         raise InvalidURIError,
           "cannot set host with registry or opaque"
-      elsif parser.regexp[:HOST] !~ v
-        raise InvalidComponentError,
-          "bad component(expected host component): #{v}"
+      else
+        # TODO (nirvdrum 2025-11-23) Do we still need this patch?
+        if defined?(::TruffleRuby)
+          bad = !parser.regexp[:HOST].match?(v)
+        else
+          bad = parser.regexp[:HOST] !~ v
+        end
+        
+        if bad
+          raise InvalidComponentError,
+            "bad component(expected host component): #{v}"
+        end
       end
 
       return true

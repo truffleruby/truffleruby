@@ -63,6 +63,11 @@ module EnvUtil
     end
   end
 
+  # TruffleRuby: startup can take longer, especially on highly loaded CI machines.
+  # Note that EnvUtil.invoke_ruby has a timeout of 10 seconds * the scale.
+  # We use 60 * 10 = 600s which is the same as the timeout for ruby/spec in jt.rb.
+  self.timeout_scale = 60 if defined?(::TruffleRuby)
+
   def apply_timeout_scale(t)
     if scale = EnvUtil.timeout_scale
       t * scale
@@ -166,9 +171,11 @@ module EnvUtil
 
     args = [args] if args.kind_of?(String)
     # use the same parser as current ruby
-    if args.none? { |arg| arg.start_with?("--parser=") }
-      current_parser = RUBY_DESCRIPTION =~ /prism/i ? "prism" : "parse.y"
-      args = ["--parser=#{current_parser}"] + args
+    unless defined?(::TruffleRuby)
+      if args.none? { |arg| arg.start_with?("--parser=") }
+        current_parser = RUBY_DESCRIPTION =~ /prism/i ? "prism" : "parse.y"
+        args = ["--parser=#{current_parser}"] + args
+      end
     end
     pid = spawn(child_env, *precommand, rubybin, *args, opt)
     in_c.close

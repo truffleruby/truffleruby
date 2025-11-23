@@ -30,6 +30,13 @@
 #include "ruby/internal/value.h"
 
 RBIMPL_SYMBOL_EXPORT_BEGIN()
+#ifdef TRUFFLERUBY
+// We need to declare rb_enc_vsprintf() before rb_enc_sprintf()
+RBIMPL_ATTR_NONNULL((2))
+RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 2, 0)
+VALUE rb_enc_vsprintf(rb_encoding *enc, const char *fmt, va_list ap);
+#endif
+
 RBIMPL_ATTR_NONNULL((2))
 RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 2, 3)
 /**
@@ -42,7 +49,17 @@ RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 2, 3)
  * @param[in]  ...  Variadic number of contents to format.
  * @return     A rendered new instance of ::rb_cString, of `enc` encoding.
  */
+#ifdef TRUFFLERUBY
+static inline VALUE rb_enc_sprintf(rb_encoding *enc, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    VALUE result = rb_enc_vsprintf(enc, fmt, args);
+    va_end(args);
+    return result;
+}
+#else
 VALUE rb_enc_sprintf(rb_encoding *enc, const char *fmt, ...);
+#endif
 
 RBIMPL_ATTR_NONNULL((2))
 RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 2, 0)
@@ -71,7 +88,17 @@ RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 3, 4)
  * @exception  exc  The specified exception.
  * @note       It never returns.
  */
+#ifdef TRUFFLERUBY
+static inline void rb_enc_raise(rb_encoding *enc, VALUE exc, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    VALUE mesg = rb_enc_vsprintf(enc, fmt, args);
+    va_end(args);
+    rb_exc_raise(rb_exc_new_str(exc, mesg));
+}
+#else
 void rb_enc_raise(rb_encoding *enc, VALUE exc, const char *fmt, ...);
+#endif
 
 RBIMPL_SYMBOL_EXPORT_END()
 

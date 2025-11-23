@@ -2,8 +2,14 @@
 # frozen_string_literal: true
 
 require_relative 'helper'
-require_relative '../../lib/rdoc/markup/block_quote'
-require_relative '../../lib/rdoc/markdown'
+
+if defined?(::TruffleRuby)
+  require 'rdoc/markup/block_quote'
+  require 'rdoc/markdown'
+else
+  require_relative '../../lib/rdoc/markup/block_quote'
+  require_relative '../../lib/rdoc/markdown'
+end
 
 class RDocMarkdownTest < RDoc::TestCase
 

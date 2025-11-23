@@ -2,7 +2,11 @@
 require 'rubygems'
 require 'fileutils'
 require 'tmpdir'
-require_relative '../../lib/rdoc/rubygems_hook'
+if defined?(::TruffleRuby)
+  require 'rdoc/rubygems_hook'
+else
+  require_relative '../../lib/rdoc/rubygems_hook'
+end
 require 'test/unit'
 
 class RDocRubyGemsHookTest < Test::Unit::TestCase
