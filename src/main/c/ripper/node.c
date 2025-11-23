@@ -10,12 +10,25 @@
 **********************************************************************/
 
 #ifdef UNIVERSAL_PARSER
+
 #include <stddef.h>
 #include "node.h"
 #include "rubyparser.h"
-#endif
+#include "internal/parse.h"
+#define T_NODE 0x1b
 
+#else
+
+#include "internal.h"
+#include "internal/compilers.h"
+#include "internal/gc.h"
+#include "internal/hash.h"
+#include "internal/static_assert.h"
 #include "internal/variable.h"
+#include "ruby/ruby.h"
+#include "vm_core.h"
+
+#endif
 
 #define NODE_BUF_DEFAULT_SIZE (sizeof(struct RNode) * 16)
 
