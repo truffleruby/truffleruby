@@ -7,7 +7,7 @@ keep_other = 15
 
 threads = lines.slice_before(/^"/).select { |thread_stacktrace|
   thread_stacktrace[0].start_with?('"') and
-  thread_stacktrace[1] == "\n"
+  thread_stacktrace[1] =~ /^\s*java\.lang\.Thread\.State:/
 }.map { |thread_stacktrace|
   name = thread_stacktrace[0]
   keep = case name
@@ -18,6 +18,7 @@ threads = lines.slice_before(/^"/).select { |thread_stacktrace|
   end
   stacktrace = thread_stacktrace[2, (name.start_with?('"main"') ? keep_for_main : keep)]
   stacktrace = stacktrace.map { |line| line.sub(/SP 0x\h+ IP 0x\h+\s+/, '') }
+  stacktrace = stacktrace.map { |line| line.sub(/(parking to wait for\s*)<0x\h+>/, '\1<ADDRESS>') }
   [name, stacktrace]
 }
 
