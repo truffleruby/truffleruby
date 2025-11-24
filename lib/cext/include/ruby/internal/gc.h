@@ -824,6 +824,6 @@ rb_obj_write(
 }
 
 RBIMPL_ATTR_DEPRECATED(("Will be removed soon"))
-static inline void rb_gc_force_recycle(VALUE obj){}
+static inline void rb_gc_force_recycle(VALUE _obj){ (void)_obj; }
 
 #endif /* RBIMPL_GC_H */
