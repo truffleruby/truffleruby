@@ -136,7 +136,7 @@ cp -R ../ruby/ext/digest/digest.h lib/cext/include/ruby
 rm -rf lib/cext/include/ccan
 cp -R ../ruby/ccan lib/cext/include
 
-internal_headers=({bignum,bits,compile,compilers,complex,error,fixnum,imemo,numeric,rational,re,static_assert,util}.h)
+internal_headers=({bignum,bits,compile,compilers,complex,error,fixnum,imemo,numeric,rational,re,st,static_assert,util}.h)
 rm -f "${internal_headers[@]/#/lib/cext/include/internal/}"
 cp -R "${internal_headers[@]/#/../ruby/internal/}" lib/cext/include/internal
 
