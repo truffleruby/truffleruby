@@ -15,7 +15,9 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import com.oracle.truffle.api.TruffleSafepoint;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import org.truffleruby.core.array.ArrayGuards;
 import org.truffleruby.core.array.ArrayUtils;
@@ -138,16 +140,17 @@ public final class LongArrayStore {
 
         @Specialization(guards = "!isLongStore(destStore)", limit = "storageStrategyLimit()")
         static void copyContents(long[] srcStore, int srcStart, Object destStore, int destStart, int length,
+                @Bind Node node,
                 @Cached LoopConditionProfile loopProfile,
                 @CachedLibrary("destStore") ArrayStoreLibrary destStores) {
             int i = 0;
             try {
                 for (; loopProfile.inject(i < length); i++) {
                     destStores.write(destStore, destStart + i, srcStore[srcStart + i]);
-                    TruffleSafepoint.poll(destStores);
+                    TruffleSafepoint.poll(node);
                 }
             } finally {
-                RubyBaseNode.profileAndReportLoopCount(destStores.getNode(), loopProfile, i);
+                RubyBaseNode.profileAndReportLoopCount(node, loopProfile, i);
             }
         }
 

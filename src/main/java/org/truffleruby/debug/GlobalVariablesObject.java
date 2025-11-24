@@ -10,14 +10,15 @@
 package org.truffleruby.debug;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.string.RubyString;
@@ -52,7 +53,7 @@ public final class GlobalVariablesObject implements TruffleObject {
     @ExportMessage
     @TruffleBoundary
     protected Object readMember(String member,
-            @CachedLibrary("this") InteropLibrary node,
+            @Bind Node node,
             @Cached @Exclusive DispatchNode evalNode) throws UnknownIdentifierException {
         if (!isMemberReadable(member)) {
             throw UnknownIdentifierException.create(member);
@@ -68,7 +69,7 @@ public final class GlobalVariablesObject implements TruffleObject {
     @ExportMessage
     @TruffleBoundary
     protected void writeMember(String member, Object value,
-            @CachedLibrary("this") InteropLibrary node,
+            @Bind Node node,
             @Cached @Exclusive DispatchNode evalNode,
             @Cached @Exclusive DispatchNode callNode) throws UnknownIdentifierException {
         if (!isValidGlobalVariableName(member)) {
@@ -88,7 +89,7 @@ public final class GlobalVariablesObject implements TruffleObject {
     @ExportMessage(name = "hasMemberWriteSideEffects")
     @TruffleBoundary
     protected boolean hasMemberSideEffects(String member,
-            @CachedLibrary("this") InteropLibrary node) {
+            @Bind Node node) {
         if (isMemberReadable(member)) {
             final RubyLanguage language = RubyLanguage.get(node);
             final RubyContext context = RubyContext.get(node);

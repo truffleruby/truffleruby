@@ -10,13 +10,14 @@
 package org.truffleruby.interop;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.library.Message;
 import com.oracle.truffle.api.library.ReflectionLibrary;
+import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.RubyContext;
 import org.truffleruby.language.control.RaiseException;
 
@@ -35,7 +36,7 @@ public final class BoxedValue implements TruffleObject {
     @TruffleBoundary
     @ExportMessage
     protected Object send(Message message, Object[] args,
-            @CachedLibrary("this") ReflectionLibrary node) throws Exception {
+            @Bind Node node) throws Exception {
         if (message == READ_MEMBER || message == INVOKE_MEMBER) {
             RubyContext context = RubyContext.get(node);
             throw new RaiseException(context, context.getCoreExceptions().unsupportedMessageError(

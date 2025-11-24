@@ -70,7 +70,7 @@ public final class RubyScope implements TruffleObject {
 
     @ExportMessage
     Object getScopeParent(
-            @CachedLibrary("this") InteropLibrary node) throws UnsupportedMessageException {
+            @Bind Node node) throws UnsupportedMessageException {
         final MaterializedFrame parentFrame = RubyArguments.getDeclarationFrame(frame);
         if (parentFrame != null) {
             // Do no set the node for parent scopes, as we don't know it and

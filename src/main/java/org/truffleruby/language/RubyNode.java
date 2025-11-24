@@ -9,11 +9,11 @@
  */
 package org.truffleruby.language;
 
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.interop.NodeLibrary;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.source.Source;
@@ -268,7 +268,7 @@ public abstract class RubyNode extends RubyBaseNodeWithExecute implements Instru
 
     @ExportMessage
     final Object getScope(Frame frame, boolean nodeEnter,
-            @CachedLibrary("this") NodeLibrary node) throws UnsupportedMessageException {
+            @Bind Node node) throws UnsupportedMessageException {
         if (hasScope(frame)) {
             return new RubyScope(RubyContext.get(node), RubyLanguage.get(node), frame.materialize(), this);
         } else {
@@ -296,7 +296,7 @@ public abstract class RubyNode extends RubyBaseNodeWithExecute implements Instru
 
     @ExportMessage
     Object getRootInstance(Frame frame,
-            @CachedLibrary("this") NodeLibrary node) throws UnsupportedMessageException {
+            @Bind Node node) throws UnsupportedMessageException {
         if (frame == null) {
             throw UnsupportedMessageException.create();
         }

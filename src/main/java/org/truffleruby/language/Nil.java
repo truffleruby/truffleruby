@@ -9,7 +9,8 @@
  */
 package org.truffleruby.language;
 
-import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.RubyContext;
 import org.truffleruby.cext.ValueWrapper;
 import org.truffleruby.core.klass.RubyClass;
@@ -52,7 +53,7 @@ public final class Nil extends ImmutableRubyObjectNotCopyable implements Truffle
 
     @ExportMessage
     public RubyClass getMetaObject(
-            @CachedLibrary("this") InteropLibrary node) {
+            @Bind Node node) {
         return RubyContext.get(node).getCoreLibrary().nilClass;
     }
 

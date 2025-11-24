@@ -192,6 +192,7 @@ public final class SharedArrayStorage implements ObjectGraphNode {
 
         @Specialization(guards = "differentStores(srcStore, destStore)", limit = "storageStrategyLimit()")
         static void copyContents(SharedArrayStorage srcStore, int srcStart, Object destStore, int destStart, int length,
+                @Bind Node node,
                 @Cached @Exclusive LoopConditionProfile loopProfile,
                 @CachedLibrary("srcStore.storage") ArrayStoreLibrary srcStores,
                 @CachedLibrary("destStore") ArrayStoreLibrary destStores) {
@@ -199,10 +200,10 @@ public final class SharedArrayStorage implements ObjectGraphNode {
             try {
                 for (; loopProfile.inject(i < length); i++) {
                     destStores.write(destStore, destStart + i, srcStore.read(srcStart + i, srcStores));
-                    TruffleSafepoint.poll(destStores);
+                    TruffleSafepoint.poll(node);
                 }
             } finally {
-                RubyBaseNode.profileAndReportLoopCount(destStores.getNode(), loopProfile, i);
+                RubyBaseNode.profileAndReportLoopCount(node, loopProfile, i);
             }
         }
 

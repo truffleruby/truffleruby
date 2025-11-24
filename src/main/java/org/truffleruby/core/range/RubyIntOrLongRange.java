@@ -9,6 +9,8 @@
  */
 package org.truffleruby.core.range;
 
+import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.RubyContext;
 import org.truffleruby.language.ImmutableRubyObjectCopyable;
 import org.truffleruby.language.dispatch.DispatchNode;
@@ -16,7 +18,6 @@ import org.truffleruby.language.dispatch.DispatchNode;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 
@@ -37,7 +38,7 @@ public abstract class RubyIntOrLongRange extends ImmutableRubyObjectCopyable {
 
     @ExportMessage
     public Object getIterator(
-            @CachedLibrary("this") InteropLibrary node,
+            @Bind Node node,
             @Cached @Exclusive DispatchNode dispatchNode) {
         final RubyContext context = RubyContext.get(node);
         return dispatchNode.call(context.getCoreLibrary().truffleInteropOperationsModule, "get_iterator", this);

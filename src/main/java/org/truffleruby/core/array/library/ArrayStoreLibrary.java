@@ -17,8 +17,6 @@ import com.oracle.truffle.api.library.Library;
 import com.oracle.truffle.api.library.LibraryFactory;
 import com.oracle.truffle.api.library.GenerateLibrary.Abstract;
 import com.oracle.truffle.api.library.GenerateLibrary.DefaultExport;
-import com.oracle.truffle.api.nodes.EncapsulatingNodeReference;
-import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.SuppressFBWarnings;
 
@@ -273,16 +271,6 @@ public abstract class ArrayStoreLibrary extends Library {
         /** Return whether the allocated storage is good for sharing across threads. */
         public boolean isShared() {
             return false;
-        }
-    }
-
-    public final Node getNode() {
-        boolean adoptable = this.isAdoptable();
-        CompilerAsserts.partialEvaluationConstant(adoptable);
-        if (adoptable) {
-            return this;
-        } else {
-            return EncapsulatingNodeReference.getCurrent().get();
         }
     }
 }

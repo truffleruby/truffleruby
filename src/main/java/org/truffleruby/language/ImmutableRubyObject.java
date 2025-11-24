@@ -11,7 +11,6 @@ package org.truffleruby.language;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Bind;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.api.utilities.TriState;
@@ -109,7 +108,7 @@ public abstract class ImmutableRubyObject implements TruffleObject {
 
     @ExportMessage
     public Object getMembers(boolean internal,
-            @CachedLibrary("this") InteropLibrary node,
+            @Bind Node node,
             @Cached @Exclusive DispatchNode dispatchNode) {
         return dispatchNode.call(
                 RubyContext.get(node).getCoreLibrary().truffleInteropModule,
