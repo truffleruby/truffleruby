@@ -10,11 +10,12 @@
 package org.truffleruby.core.numeric;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.RubyContext;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.language.ImmutableRubyObjectNotCopyable;
@@ -61,7 +62,7 @@ public final class RubyBignum extends ImmutableRubyObjectNotCopyable {
 
     @ExportMessage
     public RubyClass getMetaObject(
-            @CachedLibrary("this") InteropLibrary node) {
+            @Bind Node node) {
         return RubyContext.get(node).getCoreLibrary().integerClass;
     }
     // endregion

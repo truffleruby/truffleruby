@@ -13,7 +13,9 @@ import java.util.Set;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleSafepoint;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import org.truffleruby.core.array.ArrayGuards;
 import org.truffleruby.core.array.library.ArrayStoreLibrary.ArrayAllocator;
@@ -109,7 +111,7 @@ public final class DelegatedArrayStorage implements ObjectGraphNode {
 
     @ExportMessage(limit = "storageStrategyLimit()")
     protected void copyContents(int srcStart, Object destStore, int destStart, int length,
-            @CachedLibrary("this") ArrayStoreLibrary node,
+            @Bind Node node,
             @Cached LoopConditionProfile loopProfile,
             @CachedLibrary("this.storage") ArrayStoreLibrary srcStores,
             @CachedLibrary("destStore") ArrayStoreLibrary destStores) {
@@ -117,10 +119,10 @@ public final class DelegatedArrayStorage implements ObjectGraphNode {
         try {
             for (; loopProfile.inject(i < length); i++) {
                 destStores.write(destStore, i + destStart, srcStores.read(storage, srcStart + offset + i));
-                TruffleSafepoint.poll(destStores);
+                TruffleSafepoint.poll(node);
             }
         } finally {
-            RubyBaseNode.profileAndReportLoopCount(node.getNode(), loopProfile, i);
+            RubyBaseNode.profileAndReportLoopCount(node, loopProfile, i);
         }
     }
 

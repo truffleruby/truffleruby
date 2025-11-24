@@ -12,10 +12,10 @@ package org.truffleruby.core.exception;
 import java.util.Set;
 
 import com.oracle.truffle.api.TruffleStackTraceElement;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.interop.ExceptionType;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.Node;
@@ -96,7 +96,7 @@ public class RubyException extends RubyDynamicObject implements ObjectGraphNode 
 
     @ExportMessage
     public RuntimeException throwException(
-            @CachedLibrary("this") InteropLibrary node) {
+            @Bind Node node) {
         throw VMRaiseExceptionNode.reRaiseException(RubyContext.get(node), this);
     }
 

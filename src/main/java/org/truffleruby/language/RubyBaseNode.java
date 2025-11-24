@@ -67,8 +67,8 @@ public abstract class RubyBaseNode extends Node {
         return value == null ? nil : value;
     }
 
-    /** Variants for {@link com.oracle.truffle.api.library.Library}. The node argument should typically be
-     * {@code node.getNode()} with {@code @CachedLibrary("this") ArrayStoreLibrary node} */
+    /** Variants for {@link com.oracle.truffle.api.library.Library}. The node argument should typically be {@code node}
+     * with {@code @Bind Node node} */
     public static void profileAndReportLoopCount(Node node, LoopConditionProfile loopProfile, int count) {
         // Checkstyle: stop
         loopProfile.profileCounted(count);
@@ -115,6 +115,7 @@ public abstract class RubyBaseNode extends Node {
         // Checkstyle: resume
     }
 
+    /** This is very rarely necessary, use {@code @Bind Node node} instead, which always returns an adopted Node. */
     protected static Node getAdoptedNode(Node node) {
         boolean adoptable = node != null && node.isAdoptable();
         CompilerAsserts.partialEvaluationConstant(adoptable);
@@ -124,7 +125,6 @@ public abstract class RubyBaseNode extends Node {
             return EncapsulatingNodeReference.getCurrent().get();
         }
     }
-
 
     protected final RubyLanguage getLanguage() {
         return getLanguage(this);

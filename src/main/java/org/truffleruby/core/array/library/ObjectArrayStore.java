@@ -95,7 +95,6 @@ public final class ObjectArrayStore {
 
         @Specialization
         static void shareElements(Object[] store, int start, int end,
-                @CachedLibrary("store") ArrayStoreLibrary arrayStoreLibrary,
                 @Cached @Exclusive LoopConditionProfile loopProfile,
                 @Cached WriteBarrierNode writeBarrierNode,
                 @Bind Node node) {
@@ -105,7 +104,7 @@ public final class ObjectArrayStore {
                     writeBarrierNode.execute(node, store[i]);
                 }
             } finally {
-                RubyBaseNode.profileAndReportLoopCount(arrayStoreLibrary, loopProfile, i);
+                RubyBaseNode.profileAndReportLoopCount(node, loopProfile, i);
             }
         }
     }
@@ -121,16 +120,17 @@ public final class ObjectArrayStore {
 
         @Specialization(guards = "!isObjectStore(destStore)", limit = "storageStrategyLimit()")
         static void copyContents(Object[] srcStore, int srcStart, Object destStore, int destStart, int length,
+                @Bind Node node,
                 @Cached @Exclusive LoopConditionProfile loopProfile,
                 @CachedLibrary("destStore") ArrayStoreLibrary destStores) {
             int i = 0;
             try {
                 for (; loopProfile.inject(i < length); i++) {
                     destStores.write(destStore, destStart + i, srcStore[srcStart + i]);
-                    TruffleSafepoint.poll(destStores);
+                    TruffleSafepoint.poll(node);
                 }
             } finally {
-                RubyBaseNode.profileAndReportLoopCount(destStores.getNode(), loopProfile, i);
+                RubyBaseNode.profileAndReportLoopCount(node, loopProfile, i);
             }
         }
 
@@ -141,14 +141,14 @@ public final class ObjectArrayStore {
 
     @ExportMessage
     static void clear(Object[] store, int start, int length,
-            @CachedLibrary("store") ArrayStoreLibrary node,
+            @Bind Node node,
             @Cached @Exclusive LoopConditionProfile profile) {
         ArrayUtils.fill(store, start, start + length, null, node, profile);
     }
 
     @ExportMessage
     static void fill(Object[] store, int start, int length, Object value,
-            @CachedLibrary("store") ArrayStoreLibrary node,
+            @Bind Node node,
             @Cached @Exclusive LoopConditionProfile profile) {
         ArrayUtils.fill(store, start, start + length, value, node, profile);
     }

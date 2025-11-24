@@ -128,7 +128,7 @@ public final class NativeArrayStorage implements ObjectGraphNode {
 
     @ExportMessage
     protected NativeArrayStorage expand(int newCapacity,
-            @CachedLibrary("this") ArrayStoreLibrary node) {
+            @Bind Node node) {
         final int capacity = this.length;
         Pointer newPointer = Pointer.malloc(RubyContext.get(node), capacity);
         newPointer.writeBytes(0, pointer, 0, capacity);
@@ -172,13 +172,14 @@ public final class NativeArrayStorage implements ObjectGraphNode {
                     writeBarrierNode.execute(node, arrayStoreLibrary.read(store, i));
                 }
             } finally {
-                RubyBaseNode.profileAndReportLoopCount(arrayStoreLibrary, loopProfile, i);
+                RubyBaseNode.profileAndReportLoopCount(node, loopProfile, i);
             }
         }
     }
 
     @ExportMessage(limit = "storageStrategyLimit()")
     protected void copyContents(int srcStart, Object destStore, int destStart, int length,
+            @Bind Node node,
             @CachedLibrary("this") ArrayStoreLibrary srcStores,
             @Cached @Exclusive LoopConditionProfile loopProfile,
             @CachedLibrary("destStore") ArrayStoreLibrary destStores) {
@@ -186,10 +187,10 @@ public final class NativeArrayStorage implements ObjectGraphNode {
         try {
             for (; loopProfile.inject(i < length); i++) {
                 destStores.write(destStore, destStart + i, srcStores.read(this, srcStart + i));
-                TruffleSafepoint.poll(destStores);
+                TruffleSafepoint.poll(node);
             }
         } finally {
-            RubyBaseNode.profileAndReportLoopCount(srcStores.getNode(), loopProfile, i);
+            RubyBaseNode.profileAndReportLoopCount(node, loopProfile, i);
         }
     }
 

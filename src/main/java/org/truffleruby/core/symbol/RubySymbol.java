@@ -11,7 +11,8 @@ package org.truffleruby.core.symbol;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -122,7 +123,7 @@ public final class RubySymbol extends ImmutableRubyObjectNotCopyable implements 
 
     @ExportMessage
     public RubyClass getMetaObject(
-            @CachedLibrary("this") InteropLibrary node) {
+            @Bind Node node) {
         return RubyContext.get(node).getCoreLibrary().symbolClass;
     }
 

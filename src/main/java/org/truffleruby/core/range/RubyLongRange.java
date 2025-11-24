@@ -10,10 +10,11 @@
 package org.truffleruby.core.range;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.RubyContext;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.string.StringUtils;
@@ -54,7 +55,7 @@ public final class RubyLongRange extends RubyIntOrLongRange {
 
     @ExportMessage
     public RubyClass getMetaObject(
-            @CachedLibrary("this") InteropLibrary node) {
+            @Bind Node node) {
         return RubyContext.get(node).getCoreLibrary().rangeClass;
     }
     // endregion

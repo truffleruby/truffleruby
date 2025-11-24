@@ -439,7 +439,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
     // region Iterable Messages
     @ExportMessage
     public boolean hasIterator(
-            @CachedLibrary("this") InteropLibrary node,
+            @Bind Node node,
             @Cached @Exclusive IsANode isANode) {
         return isANode.executeIsA(this, RubyContext.get(node).getCoreLibrary().enumerableModule);
     }
@@ -447,7 +447,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
     @ExportMessage
     public Object getIterator(
             @CachedLibrary("this") InteropLibrary interopLibrary,
-            @CachedLibrary("this") InteropLibrary node,
+            @Bind Node node,
             @Cached @Exclusive DispatchNode dispatchNode) throws UnsupportedMessageException {
         if (!interopLibrary.hasIterator(this)) {
             throw UnsupportedMessageException.create();
@@ -458,7 +458,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
 
     @ExportMessage
     public boolean isIterator(
-            @CachedLibrary("this") InteropLibrary node,
+            @Bind Node node,
             @Cached @Exclusive IsANode isANode) {
         return isANode.executeIsA(this, RubyContext.get(node).getCoreLibrary().enumeratorClass);
     }
@@ -481,7 +481,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
     @ExportMessage
     public Object getIteratorNextElement(
             @CachedLibrary("this") InteropLibrary interopLibrary,
-            @CachedLibrary("this") InteropLibrary node,
+            @Bind Node node,
             @Cached @Exclusive DispatchNode dispatchNode,
             @Cached @Exclusive IsANode isANode,
             @Cached @Exclusive ConditionProfile stopIterationProfile)
@@ -556,7 +556,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
 
     @ExportMessage
     public Object getMembers(boolean internal,
-            @CachedLibrary("this") InteropLibrary node,
+            @Bind Node node,
             @Cached @Exclusive DispatchNode dispatchNode) {
         return dispatchNode.call(
                 RubyContext.get(node).getCoreLibrary().truffleInteropModule,

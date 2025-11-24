@@ -9,11 +9,12 @@
  */
 package org.truffleruby.core.encoding;
 
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.shadowed.org.jcodings.Encoding;
 import org.graalvm.shadowed.org.jcodings.specific.ASCIIEncoding;
@@ -119,7 +120,7 @@ public final class RubyEncoding extends ImmutableRubyObjectNotCopyable
 
     @ExportMessage
     protected RubyClass getMetaObject(
-            @CachedLibrary("this") InteropLibrary node) {
+            @Bind Node node) {
         return RubyContext.get(node).getCoreLibrary().encodingClass;
     }
     // endregion
