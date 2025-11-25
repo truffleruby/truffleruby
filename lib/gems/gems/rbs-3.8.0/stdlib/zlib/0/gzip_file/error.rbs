@@ -1,0 +1,23 @@
+%a{annotate:rdoc:skip}
+module Zlib
+  %a{annotate:rdoc:skip}
+  class GzipFile
+    # <!-- rdoc-file=ext/zlib/zlib.c -->
+    # Base class of errors that occur when processing GZIP files.
+    #
+    class Error < Zlib::Error
+      # <!-- rdoc-file=ext/zlib/zlib.c -->
+      # input gzipped string
+      #
+      def input: () -> String
+
+      # <!--
+      #   rdoc-file=ext/zlib/zlib.c
+      #   - inspect()
+      # -->
+      # Constructs a String of the GzipFile Error
+      #
+      def inspect: () -> String
+    end
+  end
+end

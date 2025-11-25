@@ -1,0 +1,13 @@
+%a{annotate:rdoc:skip}
+module Zlib
+  # <!-- rdoc-file=ext/zlib/zlib.c -->
+  # Subclass of Zlib::Error
+  #
+  # When zlib returns a Z_NEED_DICT if a preset dictionary is needed at this
+  # point.
+  #
+  # Used by Zlib::Inflate.inflate and `Zlib.inflate`
+  #
+  class NeedDict < Zlib::Error
+  end
+end

@@ -1,0 +1,12 @@
+%a{annotate:rdoc:skip}
+module Zlib
+  %a{annotate:rdoc:skip}
+  class GzipFile
+    # <!-- rdoc-file=ext/zlib/zlib.c -->
+    # Raised when the CRC checksum recorded in gzip file footer is not equivalent to
+    # the CRC checksum of the actual uncompressed data.
+    #
+    class CRCError < Zlib::GzipFile::Error
+    end
+  end
+end

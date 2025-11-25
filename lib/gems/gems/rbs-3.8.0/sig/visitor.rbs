@@ -1,0 +1,47 @@
+module RBS
+  module AST
+    class Visitor
+      def visit_all: (Enumerable[(Members::Base | Declarations::Base)] nodes) -> void
+
+      def visit: ((Members::Base | Declarations::Base) node) -> void
+
+      def visit_declaration_global: (Declarations::Global node) -> void
+
+      def visit_declaration_class: (Declarations::Class node) -> void
+
+      def visit_declaration_module: (Declarations::Module node) -> void
+
+      def visit_declaration_constant: (Declarations::Constant node) -> void
+
+      def visit_declaration_type_alias: (Declarations::TypeAlias node) -> void
+
+      def visit_declaration_interface: (Declarations::Interface node) -> void
+
+      def visit_member_alias: (Members::Alias node) -> void
+
+      def visit_member_class_instance_variable: (Members::ClassInstanceVariable node) -> void
+
+      def visit_member_class_variable: (Members::ClassVariable node) -> void
+
+      def visit_member_instance_variable: (Members::InstanceVariable node) -> void
+
+      def visit_member_private: (Members::Private node) -> void
+
+      def visit_member_public: (Members::Public node) -> void
+
+      def visit_member_method_definition: (Members::MethodDefinition node) -> void
+
+      def visit_member_attr_reader: (Members::AttrReader node) -> void
+
+      def visit_member_attr_writer: (Members::AttrWriter node) -> void
+
+      def visit_member_attr_accessor: (Members::AttrAccessor node) -> void
+
+      def visit_member_include: (Members::Include node) -> void
+
+      def visit_member_prepend: (Members::Prepend node) -> void
+
+      def visit_member_extend: (Members::Extend node) -> void
+    end
+  end
+end
