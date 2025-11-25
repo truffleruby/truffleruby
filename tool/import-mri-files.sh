@@ -74,8 +74,12 @@ cp ../ruby/ext/rbconfig/sizeof/*.{c,rb} src/main/c/rbconfig-sizeof
 cp ../ruby/ext/zlib/*.{c,rb} src/main/c/zlib
 
 # Ripper
+mkdir tmp-ripper
+mv src/main/c/ripper/parser_st.h tmp-ripper/
+mv src/main/c/ripper/vm_core.h tmp-ripper/
 rm -rf src/main/c/ripper
 mkdir -p src/main/c/ripper
+mv tmp-ripper/* src/main/c/ripper/
 cp "$RUBY_BUILD_DIR"/{id.h,symbol.h} lib/cext/include/truffleruby/internal
 cp "$RUBY_BUILD_DIR"/{node.c,parse.c,lex.c} src/main/c/ripper
 cp "$RUBY_BUILD_DIR"/ext/ripper/*.{c,rb} src/main/c/ripper
