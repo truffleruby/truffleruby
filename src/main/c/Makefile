@@ -32,6 +32,8 @@ EXTCONF_DEPS := $(BASIC_EXTCONF_DEPS) | $(LIBTRUFFLERUBY)
 
 DEBUG_GEM_EXT := $(ROOT)/lib/gems/gems/debug-1.11.0/ext/debug
 RBS_GEM_EXT := $(ROOT)/lib/gems/gems/rbs-3.8.0/ext/rbs_extension
+RBS_GEM_SRC := $(ROOT)/lib/gems/gems/rbs-3.8.0/src
+RBS_GEM_INC := $(ROOT)/lib/gems/gems/rbs-3.8.0/include
 
 IF_EXTCONF_FAIL := ( echo "`pwd`/extconf.rb failed:" 1>&2 && cat mkmf.log && false )
 
@@ -184,9 +186,11 @@ debug/debug.$(DLEXT): debug/Makefile
 	$(Q) cd debug && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
 
 # rbs bundled gem
-rbs/extconf.rb: $(RBS_GEM_EXT)/extconf.rb $(RBS_GEM_EXT)/*.c $(RBS_GEM_EXT)/*.h
-	$(Q) mkdir -p rbs
-	$(Q) cd rbs && cp $^ .
+rbs/extconf.rb: $(RBS_GEM_EXT)/extconf.rb $(RBS_GEM_EXT)/*.c $(RBS_GEM_EXT)/*.h $(RBS_GEM_SRC)/*.c $(RBS_GEM_INC)/rbs.h $(RBS_GEM_INC)/rbs/*.h
+	$(Q) mkdir -p rbs/include/rbs
+	$(Q) cd rbs && cp $(RBS_GEM_EXT)/extconf.rb $(RBS_GEM_EXT)/*.c $(RBS_GEM_EXT)/*.h $(RBS_GEM_SRC)/*.c .
+	$(Q) cp $(RBS_GEM_INC)/rbs.h rbs/include/
+	$(Q) cp $(RBS_GEM_INC)/rbs/*.h rbs/include/rbs/
 
 rbs/Makefile: rbs/extconf.rb $(EXTCONF_DEPS)
 	$(Q) cd rbs && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
