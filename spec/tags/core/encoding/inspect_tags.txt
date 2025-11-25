@@ -1,0 +1,1 @@
+fails:Encoding#inspect returns #<Encoding:name> for a non-dummy encoding named 'name'

@@ -1,0 +1,1 @@
+fails:An ensure block inside 'do end' block does not introduce extra backtrace entries
