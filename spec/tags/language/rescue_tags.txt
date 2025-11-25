@@ -1,1 +1,2 @@
 fails(cause not set):The rescue keyword suppresses exception from block when raises one from rescue expression
+fails:The rescue keyword does not introduce extra backtrace entries

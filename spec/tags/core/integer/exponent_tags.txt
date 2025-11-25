@@ -1,1 +1,3 @@
 fails:Integer#** bignum switch to a Float when the values is too big
+fails:Integer#** fixnum raises an ArgumentError when the number is too big
+fails:Integer#** bignum does not switch to a Float when the values is too big

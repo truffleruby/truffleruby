@@ -1,3 +1,6 @@
 fails:UnboundMethod#clone returns a copy of the UnboundMethod
 fails:UnboundMethod#clone returns a copy of self
 fails:UnboundMethod#clone preserves frozen status
+slow:UnboundMethod#clone copies the finalizer
+fails:UnboundMethod#clone copies instance variables
+fails:UnboundMethod#clone copies the finalizer

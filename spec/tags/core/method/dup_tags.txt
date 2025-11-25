@@ -1,0 +1,5 @@
+slow:Method#dup copies the finalizer
+fails:Method#dup returns a copy of self
+fails:Method#dup copies instance variables
+fails:Method#dup copies the finalizer
+fails:Method#dup resets frozen status

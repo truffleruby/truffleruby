@@ -1,1 +1,2 @@
 slow:require "objspace/trace" shows object allocation sites
+fails:require "objspace/trace" shows object allocation sites

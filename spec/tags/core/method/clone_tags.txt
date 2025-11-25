@@ -1,3 +1,6 @@
 fails:Method#clone returns a copy of the method
 fails:Method#clone returns a copy of self
 fails:Method#clone preserves frozen status
+slow:Method#clone copies the finalizer
+fails:Method#clone copies instance variables
+fails:Method#clone copies the finalizer

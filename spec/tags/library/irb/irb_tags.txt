@@ -1,1 +1,2 @@
 slow:Binding#irb creates an IRB session with the binding in scope
+fails:Binding#irb creates an IRB session with the binding in scope
