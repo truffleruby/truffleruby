@@ -239,7 +239,6 @@ jobs:
     name: run MRI tests on native
     needs: [build_native]
     runs-on: ubuntu-22.04-arm
-    timeout-minutes: 30
     steps:
     - name: Clone TruffleRuby
       uses: actions/checkout@v4
@@ -255,7 +254,7 @@ jobs:
       with:
         archive: truffleruby-native
 
-    - run: jt test mri --fast --no-sulong -- --jobs=4 --longest=10
+    - run: tr-timeout 30 jt test mri --fast --no-sulong -- --jobs=4 --longest=10
 
   ruby_spec_cruby: # ~3min
     name: ruby/spec on CRuby
