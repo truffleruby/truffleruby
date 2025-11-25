@@ -1,6 +1,15 @@
 require 'mkmf'
-require_relative '../../lib/debug/version'
-File.write("debug_version.h", "#define RUBY_DEBUG_VERSION \"#{DEBUGGER__::VERSION}\"\n")
+if defined?(::TruffleRuby)
+  # hardcode the version here to avoid depending on version.rb which is not copied to src/main/c/debug
+  require "json"
+  filename = File.expand_path("../../../../versions.json", __dir__)
+  version = JSON.load(File.read(filename)).dig("gems", "bundled", "debug")
+
+  File.write("debug_version.h", "#define RUBY_DEBUG_VERSION \"#{version}\"\n")
+else
+  require_relative '../../lib/debug/version'
+  File.write("debug_version.h", "#define RUBY_DEBUG_VERSION \"#{DEBUGGER__::VERSION}\"\n")
+end
 $distcleanfiles << "debug_version.h"
 
 if defined? RubyVM
