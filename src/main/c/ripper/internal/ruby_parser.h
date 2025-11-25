@@ -8,7 +8,11 @@
 #include "internal/parse.h"
 #include "internal/rational.h"
 #include "rubyparser.h"
+#ifdef TRUFFLERUBY
 #include "internal/vm.h"
+#else
+#include "vm.h"
+#endif
 
 struct lex_pointer_string {
     VALUE str;

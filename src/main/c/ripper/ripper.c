@@ -123,9 +123,15 @@
 #include "ruby/st.h"
 #include "ruby/util.h"
 #include "ruby/ractor.h"
+#ifdef TRUFFLERUBY
+#include <truffleruby/internal/symbol.h>
+#else
 #include "symbol.h"
+#endif
 
+#ifdef TRUFFLERUBY
 #include "internal/gc.h"
+#endif
 
 #ifndef RIPPER
 static VALUE
@@ -19696,6 +19702,7 @@ flush_string_content(struct parser_params *p, rb_encoding *enc, size_t back)
 
 /* this can be shared with ripper, since it's independent from struct
  * parser_params. */
+#ifndef RIPPER
 #define BIT(c, idx) (((c) / 32 - 1 == idx) ? (1U << ((c) % 32)) : 0)
 #define SPECIAL_PUNCT(idx) ( \
         BIT('~', idx) | BIT('*', idx) | BIT('$', idx) | BIT('?', idx) | \
@@ -19711,6 +19718,7 @@ const uint_least32_t ruby_global_name_punct_bits[] = {
 };
 #undef BIT
 #undef SPECIAL_PUNCT
+#endif
 
 static enum yytokentype
 parser_peek_variable_name(struct parser_params *p)
