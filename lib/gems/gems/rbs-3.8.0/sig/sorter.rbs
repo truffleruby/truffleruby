@@ -1,0 +1,41 @@
+module RBS
+  class Sorter
+    include RBS::AST
+
+    type member = AST::Declarations::Class::member
+                | AST::Declarations::Module::member
+                | AST::Declarations::Interface::member
+
+    attr_reader path: Pathname
+
+    attr_reader stdout: IO
+
+    def initialize: (Pathname path, ?stdout: IO) -> void
+
+    def run: () -> void
+
+    type partitioned = {
+      type_alias_decls: Array[AST::Declarations::TypeAlias],
+      constant_decls: Array[AST::Declarations::Constant],
+      class_decls: Array[AST::Declarations::Class | AST::Declarations::Module | AST::Declarations::Interface],
+      mixin_includes: Array[AST::Members::Include],
+      mixin_prepends: Array[AST::Members::Prepend],
+      mixin_extends: Array[AST::Members::Extend],
+      class_variables: Array[AST::Members::ClassVariable],
+      class_instance_variables: Array[AST::Members::ClassInstanceVariable],
+      instance_variables: Array[AST::Members::InstanceVariable],
+      singleton_attributes: Array[AST::Members::AttrAccessor | AST::Members::AttrWriter | AST::Members::AttrReader],
+      instance_attributes: Array[AST::Members::AttrAccessor | AST::Members::AttrWriter | AST::Members::AttrReader],
+      module_functions: Array[AST::Members::MethodDefinition],
+      singleton_new_methods: Array[AST::Members::MethodDefinition],
+      public_singleton_methods: Array[AST::Members::MethodDefinition | AST::Members::Alias],
+      private_singleton_methods: Array[AST::Members::MethodDefinition],
+      instance_initialize_methods: Array[AST::Members::MethodDefinition],
+      public_instance_methods: Array[AST::Members::MethodDefinition | AST::Members::Alias],
+      private_instance_methods: Array[AST::Members::MethodDefinition],
+      other_decls: Array[member]
+    }
+
+    def sort_decl: (member decl) -> member
+  end
+end

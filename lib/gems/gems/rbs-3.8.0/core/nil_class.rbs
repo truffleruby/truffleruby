@@ -1,0 +1,209 @@
+# <!-- rdoc-file=object.c -->
+# The class of the singleton object `nil`.
+#
+# Several of its methods act as operators:
+#
+# *   #&
+# *   #|
+# *   #===
+# *   #=~
+# *   #^
+#
+# Others act as converters, carrying the concept of *nullity* to other classes:
+#
+# *   #rationalize
+# *   #to_a
+# *   #to_c
+# *   #to_h
+# *   #to_r
+# *   #to_s
+#
+# While `nil` doesn't have an explicitly defined #to_hash method, it can be used
+# in `**` unpacking, not adding any keyword arguments.
+#
+# Another method provides inspection:
+#
+# *   #inspect
+#
+# Finally, there is this query method:
+#
+# *   #nil?
+#
+class NilClass
+  def !: () -> true
+
+  # <!--
+  #   rdoc-file=object.c
+  #   - false & object -> false
+  #   - nil & object   -> false
+  # -->
+  # Returns `false`:
+  #
+  #     false & true       # => false
+  #     false & Object.new # => false
+  #
+  # Argument `object` is evaluated:
+  #
+  #     false & raise # Raises RuntimeError.
+  #
+  def &: (untyped obj) -> false
+
+  # <!--
+  #   rdoc-file=object.c
+  #   - true === other -> true or false
+  #   - false === other -> true or false
+  #   - nil === other -> true or false
+  # -->
+  # Returns `true` or `false`.
+  #
+  # Like Object#==, if `object` is an instance of Object (and not an instance of
+  # one of its many subclasses).
+  #
+  # This method is commonly overridden by those subclasses, to provide meaningful
+  # semantics in `case` statements.
+  #
+  def ===: (nil) -> true
+         | (untyped obj) -> bool
+
+  # <!--
+  #   rdoc-file=object.c
+  #   - nil =~ object -> nil
+  # -->
+  # Returns `nil`.
+  #
+  # This method makes it useful to write:
+  #
+  #     while gets =~ /re/
+  #       # ...
+  #     end
+  #
+  def =~: (untyped obj) -> nil
+
+  # <!--
+  #   rdoc-file=object.c
+  #   - false ^ object -> true or false
+  #   - nil ^ object   -> true or false
+  # -->
+  # Returns `false` if `object` is `nil` or `false`, `true` otherwise:
+  #
+  #     nil ^ nil        # => false
+  #     nil ^ false      # => false
+  #     nil ^ Object.new # => true
+  #
+  def ^: (false | nil) -> false
+       | (untyped obj) -> bool
+
+  # <!--
+  #   rdoc-file=object.c
+  #   - inspect -> 'nil'
+  # -->
+  # Returns string `'nil'`:
+  #
+  #     nil.inspect # => "nil"
+  #
+  def inspect: () -> "nil"
+
+  # <!--
+  #   rdoc-file=object.c
+  #   - nil.nil?  -> true
+  # -->
+  # Returns `true`. For all other objects, method `nil?` returns `false`.
+  #
+  def nil?: () -> true
+
+  # <!--
+  #   rdoc-file=rational.c
+  #   - rationalize(eps = nil)  ->  (0/1)
+  # -->
+  # Returns zero as a Rational:
+  #
+  #     nil.rationalize # => (0/1)
+  #
+  # Argument `eps` is ignored.
+  #
+  def rationalize: (?untyped eps) -> Rational
+
+  # <!--
+  #   rdoc-file=object.c
+  #   - to_a -> []
+  # -->
+  # Returns an empty Array.
+  #
+  #     nil.to_a # => []
+  #
+  def to_a: () -> []
+
+  # <!--
+  #   rdoc-file=complex.c
+  #   - to_c -> (0+0i)
+  # -->
+  # Returns zero as a Complex:
+  #
+  #     nil.to_c # => (0+0i)
+  #
+  def to_c: () -> Complex
+
+  # <!--
+  #   rdoc-file=nilclass.rb
+  #   - nil.to_f    -> 0.0
+  # -->
+  # Always returns zero.
+  #
+  #     nil.to_f   #=> 0.0
+  #
+  def to_f: () -> Float
+
+  # <!--
+  #   rdoc-file=object.c
+  #   - to_h -> {}
+  # -->
+  # Returns an empty Hash.
+  #
+  #     nil.to_h   #=> {}
+  #
+  def to_h: () -> {}
+
+  # <!--
+  #   rdoc-file=nilclass.rb
+  #   - nil.to_i -> 0
+  # -->
+  # Always returns zero.
+  #
+  #     nil.to_i   #=> 0
+  #
+  def to_i: () -> 0
+
+  # <!--
+  #   rdoc-file=rational.c
+  #   - to_r  ->  (0/1)
+  # -->
+  # Returns zero as a Rational:
+  #
+  #     nil.to_r # => (0/1)
+  #
+  def to_r: () -> Rational
+
+  # <!--
+  #   rdoc-file=object.c
+  #   - to_s -> ''
+  # -->
+  # Returns an empty String:
+  #
+  #     nil.to_s # => ""
+  #
+  def to_s: () -> ""
+
+  # <!--
+  #   rdoc-file=object.c
+  #   - false | object -> true or false
+  #   - nil   | object -> true or false
+  # -->
+  # Returns `false` if `object` is `nil` or `false`, `true` otherwise:
+  #
+  #     nil | nil        # => false
+  #     nil | false      # => false
+  #     nil | Object.new # => true
+  #
+  def |: (nil | false) -> false
+       | (untyped obj) -> bool
+end

@@ -9,14 +9,14 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Marc-Andre Lafortune".freeze]
   s.bindir = "exe".freeze
-  s.date = "2025-01-15"
+  s.date = "2025-10-08"
   s.description = "An implementation of Matrix and Vector classes.".freeze
   s.email = ["ruby-core@marc-andre.ca".freeze]
   s.homepage = "https://github.com/ruby/matrix".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.5.0".freeze)
-  s.rubygems_version = "3.5.22".freeze
+  s.rubygems_version = "3.6.9".freeze
   s.summary = "An implementation of Matrix and Vector classes.".freeze
 
-  s.installed_by_version = "3.5.22".freeze
+  s.installed_by_version = "3.6.9".freeze
 end

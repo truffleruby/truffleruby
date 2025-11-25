@@ -1,0 +1,156 @@
+%a{annotate:rdoc:skip}
+module Zlib
+  # <!-- rdoc-file=ext/zlib/zlib.c -->
+  # Zlib::GzipFile is an abstract class for handling a gzip formatted compressed
+  # file. The operations are defined in the subclasses, Zlib::GzipReader for
+  # reading, and Zlib::GzipWriter for writing.
+  #
+  # GzipReader should be used by associating an IO, or IO-like, object.
+  #
+  # ## Method Catalogue
+  #
+  # *   ::wrap
+  # *   ::open (Zlib::GzipReader::open and Zlib::GzipWriter::open)
+  # *   #close
+  # *   #closed?
+  # *   #comment
+  # *   comment= (Zlib::GzipWriter#comment=)
+  # *   #crc
+  # *   eof? (Zlib::GzipReader#eof?)
+  # *   #finish
+  # *   #level
+  # *   lineno (Zlib::GzipReader#lineno)
+  # *   lineno= (Zlib::GzipReader#lineno=)
+  # *   #mtime
+  # *   mtime= (Zlib::GzipWriter#mtime=)
+  # *   #orig_name
+  # *   orig_name (Zlib::GzipWriter#orig_name=)
+  # *   #os_code
+  # *   path (when the underlying IO supports #path)
+  # *   #sync
+  # *   #sync=
+  # *   #to_io
+  #
+  # (due to internal structure, documentation may appear under Zlib::GzipReader or
+  # Zlib::GzipWriter)
+  #
+  class GzipFile
+    # <!--
+    #   rdoc-file=ext/zlib/zlib.c
+    #   - Zlib::GzipReader.wrap(io, ...) { |gz| ... }
+    #   - Zlib::GzipWriter.wrap(io, ...) { |gz| ... }
+    # -->
+    # Creates a GzipReader or GzipWriter associated with `io`, passing in any
+    # necessary extra options, and executes the block with the newly created object
+    # just like File.open.
+    #
+    # The GzipFile object will be closed automatically after executing the block. If
+    # you want to keep the associated IO object open, you may call
+    # Zlib::GzipFile#finish method in the block.
+    #
+    def self.wrap: (IO io, *untyped) { (instance gz) -> void } -> void
+
+    # <!--
+    #   rdoc-file=ext/zlib/zlib.c
+    #   - close()
+    # -->
+    # Closes the GzipFile object. This method calls close method of the associated
+    # IO object. Returns the associated IO object.
+    #
+    def close: () -> void
+
+    # <!--
+    #   rdoc-file=ext/zlib/zlib.c
+    #   - closed?()
+    # -->
+    # Same as IO#closed?
+    #
+    def closed?: () -> void
+
+    # <!--
+    #   rdoc-file=ext/zlib/zlib.c
+    #   - comment()
+    # -->
+    # Returns comments recorded in the gzip file header, or nil if the comments is
+    # not present.
+    #
+    def comment: () -> String?
+
+    # <!--
+    #   rdoc-file=ext/zlib/zlib.c
+    #   - crc()
+    # -->
+    # Returns CRC value of the uncompressed data.
+    #
+    def crc: () -> Integer
+
+    # <!--
+    #   rdoc-file=ext/zlib/zlib.c
+    #   - finish()
+    # -->
+    # Closes the GzipFile object. Unlike Zlib::GzipFile#close, this method never
+    # calls the close method of the associated IO object. Returns the associated IO
+    # object.
+    #
+    def finish: () -> IO
+
+    # <!--
+    #   rdoc-file=ext/zlib/zlib.c
+    #   - level()
+    # -->
+    # Returns compression level.
+    #
+    def level: () -> Integer
+
+    # <!--
+    #   rdoc-file=ext/zlib/zlib.c
+    #   - mtime()
+    # -->
+    # Returns last modification time recorded in the gzip file header.
+    #
+    def mtime: () -> Time
+
+    # <!--
+    #   rdoc-file=ext/zlib/zlib.c
+    #   - orig_name()
+    # -->
+    # Returns original filename recorded in the gzip file header, or `nil` if
+    # original filename is not present.
+    #
+    def orig_name: () -> String?
+
+    # <!--
+    #   rdoc-file=ext/zlib/zlib.c
+    #   - os_code()
+    # -->
+    # Returns OS code number recorded in the gzip file header.
+    #
+    def os_code: () -> Integer
+
+    # <!--
+    #   rdoc-file=ext/zlib/zlib.c
+    #   - sync()
+    # -->
+    # Same as IO#sync
+    #
+    def sync: () -> bool
+
+    # <!--
+    #   rdoc-file=ext/zlib/zlib.c
+    #   - sync = flag
+    # -->
+    # Same as IO.  If flag is `true`, the associated IO object must respond to the
+    # `flush` method.  While `sync` mode is `true`, the compression ratio decreases
+    # sharply.
+    #
+    def sync=: (boolish) -> untyped
+
+    # <!--
+    #   rdoc-file=ext/zlib/zlib.c
+    #   - to_io()
+    # -->
+    # Same as IO.
+    #
+    def to_io: () -> IO
+  end
+end

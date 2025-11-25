@@ -1,0 +1,19 @@
+module ReplTypeCompletor
+  VERSION: String
+
+  class Result
+    def completion_candidates: () -> Array[String]
+    def doc_namespace: (String) -> String?
+  end
+
+  def self.analyze: (String, binding: Binding, ?filename: String?) -> Result?
+
+  def self.rbs_load_error: () -> Exception?
+  def self.last_completion_error: () -> Exception?
+
+  def self.rbs_load_started?: () -> bool
+  def self.rbs_loaded?: () -> bool
+  def self.load_rbs: () -> void
+  def self.preload_rbs: () -> void
+  def self.info: () -> String
+end

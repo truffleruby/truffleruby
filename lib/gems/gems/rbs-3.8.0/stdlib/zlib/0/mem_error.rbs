@@ -1,0 +1,10 @@
+%a{annotate:rdoc:skip}
+module Zlib
+  # <!-- rdoc-file=ext/zlib/zlib.c -->
+  # Subclass of Zlib::Error
+  #
+  # When zlib returns a Z_MEM_ERROR, usually if there was not enough memory.
+  #
+  class MemError < Zlib::Error
+  end
+end

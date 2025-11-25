@@ -1,0 +1,27 @@
+#include "rbs_extension.h"
+
+#ifdef RB_PASS_KEYWORDS
+  // Ruby 2.7 or later
+  #define CLASS_NEW_INSTANCE(klass, argc, argv)\
+          rb_class_new_instance_kw(argc, argv, klass, RB_PASS_KEYWORDS)
+#else
+  // Ruby 2.6
+  #define CLASS_NEW_INSTANCE(receiver, argc, argv)\
+          rb_class_new_instance(argc, argv, receiver)
+#endif
+
+<%- nodes.each do |node| -%>
+VALUE <%= node.c_function_name %>(<%= node.fields.map { |field| "#{field.c_type} #{field.name}" }.join(", ") %>) {
+  VALUE _init_kwargs = rb_hash_new();
+  <%- node.fields.each do |field| -%>
+  rb_hash_aset(_init_kwargs, ID2SYM(rb_intern("<%= field.name %>")), <%= field.name %>);
+  <%- end -%>
+
+  return CLASS_NEW_INSTANCE(
+    <%= node.c_constant_name %>,
+    1,
+    &_init_kwargs
+  );
+}
+
+<%- end -%>

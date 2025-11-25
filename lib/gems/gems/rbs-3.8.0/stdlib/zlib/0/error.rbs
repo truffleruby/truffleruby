@@ -1,0 +1,20 @@
+%a{annotate:rdoc:skip}
+module Zlib
+  # <!-- rdoc-file=ext/zlib/zlib.c -->
+  # The superclass for all exceptions raised by Ruby/zlib.
+  #
+  # The following exceptions are defined as subclasses of Zlib::Error. These
+  # exceptions are raised when zlib library functions return with an error status.
+  #
+  # *   Zlib::StreamEnd
+  # *   Zlib::NeedDict
+  # *   Zlib::DataError
+  # *   Zlib::StreamError
+  # *   Zlib::MemError
+  # *   Zlib::BufError
+  # *   Zlib::VersionError
+  # *   Zlib::InProgressError
+  #
+  class Error < StandardError
+  end
+end

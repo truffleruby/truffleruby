@@ -1,0 +1,11 @@
+%a{annotate:rdoc:skip}
+module Zlib
+  # <!-- rdoc-file=ext/zlib/zlib.c -->
+  # Subclass of Zlib::Error
+  #
+  # When zlib returns a Z_VERSION_ERROR, usually if the zlib library version is
+  # incompatible with the version assumed by the caller.
+  #
+  class VersionError < Zlib::Error
+  end
+end

@@ -1,6 +1,0 @@
-module RBS
-  module FileFinder
-    def self?.each_file: (Pathname path, immediate: boolish, skip_hidden: boolish) { (Pathname) -> void } -> void
-                        | (Pathname path, immediate: boolish, skip_hidden: boolish) -> Enumerator[Pathname, void]
-  end
-end
