@@ -1,1 +1,3 @@
 fails:Hash.new emits a deprecation warning if keyword arguments are passed
+fails:Hash.new accepts a capacity: argument
+fails:Hash.new raises an error if unknown keyword arguments are passed

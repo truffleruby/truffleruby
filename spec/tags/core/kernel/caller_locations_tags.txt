@@ -1,0 +1,1 @@
+fails:Kernel#caller_locations includes core library methods defined in Ruby
