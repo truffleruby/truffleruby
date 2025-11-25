@@ -123,9 +123,21 @@
 #include "ruby/st.h"
 #include "ruby/util.h"
 #include "ruby/ractor.h"
+#ifdef TRUFFLERUBY
+#include <truffleruby/internal/symbol.h>
+#else
 #include "symbol.h"
+#endif
 
+/* The following gc.h's declarations are used here - ruby_sized_xfree, and SIZED_REALLOC_N */
+#ifdef TRUFFLERUBY
 #include "internal/gc.h"
+#endif
+
+/* TruffleRuby Parse is compiled as part of ripper so we undefine RIPPER.  */
+#ifdef TRUFFLERUBY
+#undef RIPPER
+#endif
 
 #ifndef RIPPER
 static VALUE
