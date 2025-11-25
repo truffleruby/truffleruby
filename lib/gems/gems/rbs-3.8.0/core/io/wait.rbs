@@ -1,0 +1,70 @@
+%a{annotate:rdoc:skip}
+class IO
+  # <!--
+  #   rdoc-file=ext/io/wait/wait.c
+  #   - io.nread -> int
+  # -->
+  # Returns number of bytes that can be read without blocking. Returns zero if no
+  # information available.
+  #
+  # You must require 'io/wait' to use this method.
+  #
+  def nread: () -> Integer
+
+  # <!--
+  #   rdoc-file=ext/io/wait/wait.c
+  #   - io.ready? -> truthy or falsy
+  # -->
+  # Returns a truthy value if input available without blocking, or a falsy value.
+  #
+  # You must require 'io/wait' to use this method.
+  #
+  def ready?: () -> boolish
+
+  # <!--
+  #   rdoc-file=ext/io/wait/wait.c
+  #   - io.wait(events, timeout) -> event mask, false or nil
+  #   - io.wait(timeout = nil, mode = :read) -> self, true, or false
+  # -->
+  # Waits until the IO becomes ready for the specified events and returns the
+  # subset of events that become ready, or a falsy value when times out.
+  #
+  # The events can be a bit mask of `IO::READABLE`, `IO::WRITABLE` or
+  # `IO::PRIORITY`.
+  #
+  # Returns a truthy value immediately when buffered data is available.
+  #
+  # Optional parameter `mode` is one of `:read`, `:write`, or `:read_write`.
+  #
+  # You must require 'io/wait' to use this method.
+  #
+  def wait: (Integer events, ?Time::_Timeout timeout) -> (Integer | false | nil)
+          | (?Time::_Timeout? timeout, *wait_mode mode) -> (self | true | false)
+
+  type wait_mode = :read | :r | :readable | :write | :w | :writable | :read_write | :rw | :readable_writable
+
+  # <!--
+  #   rdoc-file=ext/io/wait/wait.c
+  #   - io.wait_readable          -> truthy or falsy
+  #   - io.wait_readable(timeout) -> truthy or falsy
+  # -->
+  # Waits until IO is readable and returns a truthy value, or a falsy value when
+  # times out.  Returns a truthy value immediately when buffered data is
+  # available.
+  #
+  # You must require 'io/wait' to use this method.
+  #
+  def wait_readable: (?Time::_Timeout? timeout) -> boolish
+
+  # <!--
+  #   rdoc-file=ext/io/wait/wait.c
+  #   - io.wait_writable          -> truthy or falsy
+  #   - io.wait_writable(timeout) -> truthy or falsy
+  # -->
+  # Waits until IO is writable and returns a truthy value or a falsy value when
+  # times out.
+  #
+  # You must require 'io/wait' to use this method.
+  #
+  def wait_writable: (?Time::_Timeout? timeout) -> boolish
+end

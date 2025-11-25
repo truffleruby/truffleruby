@@ -1,0 +1,277 @@
+# A type that's convertible to a `Complex`.
+#
+interface _ToC
+  # Convert `self` to a `Complex`.
+  #
+  def to_c: () -> Complex
+end
+
+# A type that's convertible to a `Rational`.
+#
+interface _ToR
+  # Convert `self` to a `Complex`.
+  #
+  def to_r: () -> Rational
+end
+
+# A type that's convertible to a `Float`.
+#
+interface _ToF
+  # Convert `self` to a `Float`.
+  #
+  def to_f: () -> Float
+end
+
+# A type that's convertible to an `Integer`.
+#
+interface _ToI
+  # Convert `self` to an `Integer`.
+  #
+  def to_i: () -> Integer
+end
+
+# A type that's implicitly convertible to an `Integer`.
+#
+# Implicit `.to_int` conversions are usable all over Ruby's stdlib, such as `Kernel#exit`,
+# `File#chmod`, and `Array#take`. Virtually anywhere that accepts an `Integer` will also accept
+# something that defines `.to_int`.
+#
+# Interestingly, types that define `.to_int` aren't immediately converted in math operations on
+# `Integers` (eg `1 + defines_to_int`): Instead, `.coerce` must be defined on the right-hand-side
+# value.
+#
+interface _ToInt
+  # Converts `self` to an `Integer`.
+  #
+  def to_int: () -> Integer
+end
+
+# A type that's convertible to a `String`.
+#
+interface _ToS
+  # Converts `self` to a `String`.
+  #
+  def to_s: () -> String
+end
+
+# A type that's implicitly convertible to a `String`.
+#
+# Implicit `.to_str` conversions are usable all over Ruby's stdlib, such as `Kernel#abort`,
+# `String#+`, and `Object#send`. Virtually anywhere that accepts a `String` will also accept
+# something that defines `.to_Str`.
+#
+# Types that define `.to_str` are also usable wherever paths are expected (See the `path` type
+# alias).
+#
+interface _ToStr
+  # Converts `self` to a `String`.
+  #
+  def to_str: () -> String
+end
+
+# A type that's explicitly convertible to a `String`.
+#
+# Interestingly enough, most methods that accept `Symbol` in the standard library _do not_ accept
+# an object that defines `.to_sym` (unlike `String` and `.to_str`).
+#
+# There are only two places that `Symbol | _ToSym`, and they're quite obscure:
+# - `Kernel#warn`'s `category:` optional parameter. (Oddly enough, not for  `Warning.warn`, though.)
+# - `TracePoint#trace`'s `event`s parameter.
+# Additionally, the `rb_iseq_load` C function, only accessible through `Fiddle`, uses `.to_sym`
+# internally.
+#
+interface _ToSym
+  # Converts `self` to a `Symbol`.
+  #
+  def to_sym: () -> Symbol
+end
+
+# A type that's convertible to a `Hash`.
+#
+interface _ToH[K, V]
+  # Converts `self` to a `Hash`.
+  #
+  def to_h: () -> Hash[K, V]
+end
+
+# A type that's implicitly convertible to a `Hash`.
+#
+# Implicit `.to_hash` conversions are usable infrequently in Ruby's stdlib, such as `Io#popen`,
+# `Kernel#sprintf`, and `Enumerable#tally`. It's also used with the `**` "splatsplat" operator.
+#
+interface _ToHash[K, V]
+  # Converts `self` to a `Hash`.
+  #
+  def to_hash: () -> Hash[K, V]
+end
+
+# A type that's convertible to an `Array`.
+#
+interface _ToA[T]
+  # Converts `self` to an `Array`.
+  #
+  def to_a: () -> Array[T]
+end
+
+# A type that's implicitly convertible to an `Array`.
+#
+# Implicit `.to_ary` conversions are usable semi-frequently in Ruby's stdlib, such as `Dir#glob`,
+# `Regex#union`, and `Class#private`. It's also used with the `*` "splat" operator.
+#
+interface _ToAry[T]
+  # Converts `self` to an `Array`.
+  #
+  def to_ary: () -> Array[T]
+end
+
+# A type that's convertible to a `Proc`.
+#
+# This is implicitly called when the `&` "block-passing" operator is used, in addition to a handful
+# of other places, such as `Hash#default_proc=`.
+#
+interface _ToProc
+  # Converts `self` to a `Proc.`
+  #
+  def to_proc: () -> Proc
+end
+
+# A type that's convertible to a `String` that contains a filepath.
+#
+# Implicit `.to_path` conversions are usable throughout Ruby's stdlib, whenever a file path is
+# expected, such as `Dir#mkdir`, `File#open`, and `UNIXSocket#read`. These functions, however, also
+# accept types that define `.to_str`. See the `path` type alias.
+#
+interface _ToPath
+  # Converts `self` to a `String` containing a filepath.
+  #
+  def to_path: () -> String
+end
+
+# A type that's convertible to an `IO`.
+#
+# Implicit `.to_io` conversions are usuable infrequently in Ruby's stdlib, such as `IO#reopen`,
+# `File.exist?`, and `Kernel#select`.
+#
+interface _ToIO
+  # Converts `self` to an `IO` object.
+  #
+  def to_io: () -> IO
+end
+
+# A type that defines the `.inspect` method.
+#
+# Since `Object` defines `.inspect`, nearly every object in Ruby has it defined: Only those that
+# derive from `BasicObject`, or `undef inspect` won't have it. It's used in a few locations,
+# such as `Kernel#p` and `Array#join`.
+#
+interface _Inspect
+  # Returns a debugging representation of `self`.
+  #
+  def inspect: () -> String
+end
+
+interface _Each[out E, out R = void]
+  def each: () { (E) -> void } -> R
+end
+
+interface _EachEntry[out E]
+  def each_entry: () { (E) -> void } -> self
+end
+
+interface _Reader
+  def read: (?int? length, ?string outbuf) -> String?
+end
+
+interface _ReaderPartial
+  def readpartial: (int maxlen, ?string outbuf) -> String
+end
+
+interface _Writer
+  # Writes the +data+ string. Returns the number of bytes written
+  #
+  def write: (*_ToS data) -> Integer
+end
+
+interface _Rewindable
+  # Positions the stream to the beginning of input, resetting `lineno` to zero.
+  #
+  def rewind: () -> Integer
+end
+
+# A type that's usable like a `Range[T]`.
+#
+# Implicit `_Range` usage is usable frequently in ruby's stdlib, such as `Comparable#clamp`,
+# `String#[]`, and `Kernel#rand`.
+#
+interface _Range[T]
+  # The beginning value, `nil` if there is no beginning.
+  def begin: () -> T?
+
+  # The ending value, `nil` if there is no ending.
+  def end: () -> T?
+
+  # Whether or not to include the end in the range.
+  def exclude_end?: () -> bool
+end
+
+interface _Exception
+  def exception: () -> Exception
+               | (String arg0) -> Exception
+end
+
+# Represents an `Integer`, or a type convertible to it (via `.to_int`).
+#
+type int = Integer | _ToInt
+
+# Represents a `Float`, or a type convertible to it (via `.to_f`).
+#
+type float = Float | _ToF
+
+# Represents a `Range[T]`, or a type that acts like it (via `.begin`, `.end`, and `.exclude_end?`).
+#
+type range[T] = Range[T] | _Range[T]
+
+# Represents a `String`, or a type convertible to it (via `.to_str`).
+#
+type string = String | _ToStr
+
+# Represents an `Array[T]`, or a type convertible to it (via `.to_ary`).
+#
+type array[T] = Array[T] | _ToAry[T]
+
+# Represents a `Hash[K, V]`, or a type convertible to it (via `.to_hash`).
+#
+type hash[K, V] = Hash[K, V] | _ToHash[K, V]
+
+# Represents an `IO`, or a type convertible to it (via `.to_io`).
+#
+type io = IO | _ToIO
+
+# A filesystem path: Either something that defines `.to_path`, or a `String` (or a type that is
+# convertible to a string via `.to_str`).
+#
+# If a type defines both `.to_path` and `.to_str`, the `.to_path` function is called.
+#
+type path = string | _ToPath
+
+# An `Encoding`, or a `String` (or type that defines `.to_str`) that represents it.
+#
+type encoding = Encoding | string
+
+# A real number, ie not a `Complex`.
+#
+type real = Integer | Float | Rational
+
+# Represents a `Symbol` or a `string`.
+#
+# A lot of builtin functions accept either a Symbol, a String, or something which has `.to_str`
+# defined.
+#
+type interned = Symbol | string
+
+# `boolish` is a type for documentation.
+# It means the value of this type is only for testing a condition.
+# Unlike `bool` type, it doesn't require the value is one of `true` or `false`.
+# Any Ruby object can have `boolish` type.
+#
+type boolish = top

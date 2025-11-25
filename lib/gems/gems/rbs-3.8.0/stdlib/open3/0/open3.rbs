@@ -1,0 +1,147 @@
+# <!-- rdoc-file=lib/open3.rb -->
+# Module Open3 supports creating child processes with access to their $stdin,
+# $stdout, and $stderr streams.
+#
+# ## What's Here
+#
+# Each of these methods executes a given command in a new process or subshell,
+# or multiple commands in new processes and/or subshells:
+#
+# *   Each of these methods executes a single command in a process or subshell,
+#     accepts a string for input to $stdin, and returns string output from
+#     $stdout, $stderr, or both:
+#
+#     *   Open3.capture2: Executes the command; returns the string from $stdout.
+#     *   Open3.capture2e: Executes the command; returns the string from merged
+#         $stdout and $stderr.
+#     *   Open3.capture3: Executes the command; returns strings from $stdout and
+#         $stderr.
+#
+# *   Each of these methods executes a single command in a process or subshell,
+#     and returns pipes for $stdin, $stdout, and/or $stderr:
+#
+#     *   Open3.popen2: Executes the command; returns pipes for $stdin and
+#         $stdout.
+#     *   Open3.popen2e: Executes the command; returns pipes for $stdin and
+#         merged $stdout and $stderr.
+#     *   Open3.popen3: Executes the command; returns pipes for $stdin, $stdout,
+#         and $stderr.
+#
+# *   Each of these methods executes one or more commands in processes and/or
+#     subshells, returns pipes for the first $stdin, the last $stdout, or both:
+#
+#     *   Open3.pipeline_r: Returns a pipe for the last $stdout.
+#     *   Open3.pipeline_rw: Returns pipes for the first $stdin and the last
+#         $stdout.
+#     *   Open3.pipeline_w: Returns a pipe for the first $stdin.
+#     *   Open3.pipeline_start: Does not wait for processes to complete.
+#     *   Open3.pipeline: Waits for processes to complete.
+#
+# Each of the methods above accepts:
+#
+# *   An optional hash of environment variable names and values; see [Execution
+#     Environment](rdoc-ref:Process@Execution+Environment).
+# *   A required string argument that is a `command_line` or `exe_path`; see
+#     [Argument command_line or
+#     exe_path](rdoc-ref:Process@Argument+command_line+or+exe_path).
+# *   An optional hash of execution options; see [Execution
+#     Options](rdoc-ref:Process@Execution+Options).
+#
+module Open3
+  # <!--
+  #   rdoc-file=lib/open3.rb
+  #   - Open3.capture2e([env, ] command_line, options = {}) -> [stdout_and_stderr_s, status]
+  #   - Open3.capture2e([env, ] exe_path, *args, options = {}) -> [stdout_and_stderr_s, status]
+  # -->
+  # Basically a wrapper for Open3.popen3 that:
+  #
+  # *   Creates a child process, by calling Open3.popen3 with the given arguments
+  #     (except for certain entries in hash `options`; see below).
+  # *   Returns as string `stdout_and_stderr_s` the merged standard output and
+  #     standard error of the child process.
+  # *   Returns as `status` a `Process::Status` object that represents the exit
+  #     status of the child process.
+  #
+  # Returns the array `[stdout_and_stderr_s, status]`:
+  #
+  #     stdout_and_stderr_s, status = Open3.capture2e('echo "Foo"')
+  #     # => ["Foo\n", #<Process::Status: pid 2371692 exit 0>]
+  #
+  # Like Process.spawn, this method has potential security vulnerabilities if
+  # called with untrusted input; see [Command
+  # Injection](rdoc-ref:command_injection.rdoc@Command+Injection).
+  #
+  # Unlike Process.spawn, this method waits for the child process to exit before
+  # returning, so the caller need not do so.
+  #
+  # If the first argument is a hash, it becomes leading argument `env` in the call
+  # to Open3.popen3; see [Execution
+  # Environment](rdoc-ref:Process@Execution+Environment).
+  #
+  # If the last argument is a hash, it becomes trailing argument `options` in the
+  # call to Open3.popen3; see [Execution
+  # Options](rdoc-ref:Process@Execution+Options).
+  #
+  # The hash `options` is given; two options have local effect in method
+  # Open3.capture2e:
+  #
+  # *   If entry `options[:stdin_data]` exists, the entry is removed and its
+  #     string value is sent to the command's standard input:
+  #
+  #         Open3.capture2e('tee', stdin_data: 'Foo')
+  #         # => ["Foo", #<Process::Status: pid 2371732 exit 0>]
+  #
+  # *   If entry `options[:binmode]` exists, the entry is removed and the internal
+  #     streams are set to binary mode.
+  #
+  # The single required argument is one of the following:
+  #
+  # *   `command_line` if it is a string, and if it begins with a shell reserved
+  #     word or special built-in, or if it contains one or more metacharacters.
+  # *   `exe_path` otherwise.
+  #
+  # **Argument `command_line`**
+  #
+  # String argument `command_line` is a command line to be passed to a shell; it
+  # must begin with a shell reserved word, begin with a special built-in, or
+  # contain meta characters:
+  #
+  #     Open3.capture2e('if true; then echo "Foo"; fi') # Shell reserved word.
+  #     # => ["Foo\n", #<Process::Status: pid 2371740 exit 0>]
+  #     Open3.capture2e('echo')                         # Built-in.
+  #     # => ["\n", #<Process::Status: pid 2371774 exit 0>]
+  #     Open3.capture2e('date > date.tmp')              # Contains meta character.
+  #     # => ["", #<Process::Status: pid 2371812 exit 0>]
+  #
+  # The command line may also contain arguments and options for the command:
+  #
+  #     Open3.capture2e('echo "Foo"')
+  #     # => ["Foo\n", #<Process::Status: pid 2326183 exit 0>]
+  #
+  # **Argument `exe_path`**
+  #
+  # Argument `exe_path` is one of the following:
+  #
+  # *   The string path to an executable to be called.
+  # *   A 2-element array containing the path to an executable and the string to
+  #     be used as the name of the executing process.
+  #
+  # Example:
+  #
+  #     Open3.capture2e('/usr/bin/date')
+  #     # => ["Sat Sep 30 09:01:46 AM CDT 2023\n", #<Process::Status: pid 2371820 exit 0>]
+  #
+  # Ruby invokes the executable directly, with no shell and no shell expansion:
+  #
+  #     Open3.capture2e('doesnt_exist') # Raises Errno::ENOENT
+  #
+  # If one or more `args` is given, each is an argument or option to be passed to
+  # the executable:
+  #
+  #     Open3.capture2e('echo', 'C #')
+  #     # => ["C #\n", #<Process::Status: pid 2371856 exit 0>]
+  #     Open3.capture2e('echo', 'hello', 'world')
+  #     # => ["hello world\n", #<Process::Status: pid 2371894 exit 0>]
+  #
+  def self.capture2e: (*String, ?stdin_data: String, ?binmode: boolish) -> [String, Process::Status]
+end
