@@ -1,0 +1,414 @@
+%a{annotate:rdoc:skip}
+class IO
+  class ConsoleMode
+    def echo=: (bool) -> bool
+    def raw: (?min: int, ?time: int, ?intr: bool) -> self
+    def raw!: (?min: int, ?time: int, ?intr: bool) -> self
+  end
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - IO.console      -> #<File:/dev/tty>
+  #   - IO.console(sym, *args)
+  # -->
+  # Returns an File instance opened console.
+  #
+  # If `sym` is given, it will be sent to the opened console with `args` and the
+  # result will be returned instead of the console IO itself.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def self.console: () -> File?
+                  | (:close) -> nil
+                  | (Symbol sym, *untyped args) -> untyped
+
+  # <!--
+  #   rdoc-file=ext/io/console/lib/console/size.rb
+  #   - console_size()
+  # -->
+  #
+  def self.console_size: () -> [ Integer, Integer ]
+
+  # <!--
+  #   rdoc-file=ext/io/console/lib/console/size.rb
+  #   - default_console_size()
+  # -->
+  # fallback to console window size
+  #
+  def self.default_console_size: () -> [ Integer, Integer ]
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.beep
+  # -->
+  # Beeps on the output console.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def beep: () -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.check_winsize_changed { ... }   -> io
+  # -->
+  # Yields while console input events are queued.
+  #
+  # This method is Windows only.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def check_winsize_changed: () { () -> void } -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.clear_screen            -> io
+  # -->
+  # Clears the entire screen and moves the cursor top-left corner.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def clear_screen: () -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.console_mode       -> mode
+  # -->
+  # Returns a data represents the current console mode.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def console_mode: () -> IO::ConsoleMode
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.console_mode = mode
+  # -->
+  # Sets the console mode to `mode`.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def console_mode=: (IO::ConsoleMode mode) -> IO::ConsoleMode
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.cooked {|io| }
+  # -->
+  # Yields `self` within cooked mode.
+  #
+  #     STDIN.cooked(&:gets)
+  #
+  # will read and return a line with echo back and line editing.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def cooked: [T] () { (self) -> T } -> T
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.cooked!
+  # -->
+  # Enables cooked mode.
+  #
+  # If the terminal mode needs to be back, use io.cooked { ... }.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def cooked!: () -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.cursor -> [row, column]
+  # -->
+  # Returns the current cursor position as a two-element array of integers (row,
+  # column)
+  #
+  #     io.cursor # => [3, 5]
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def cursor: () -> [ Integer, Integer ]
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.cursor = [line, column]         -> io
+  # -->
+  # Same as `io.goto(line, column)`
+  #
+  # See IO#goto.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def cursor=: ([ Integer, Integer ]) -> [ Integer, Integer ]
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.cursor_down(n)          -> io
+  # -->
+  # Moves the cursor down `n` lines.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def cursor_down: (int) -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.cursor_left(n)          -> io
+  # -->
+  # Moves the cursor left `n` columns.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def cursor_left: (int) -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.cursor_right(n)         -> io
+  # -->
+  # Moves the cursor right `n` columns.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def cursor_right: (int) -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.cursor_up(n)            -> io
+  # -->
+  # Moves the cursor up `n` lines.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def cursor_up: (int) -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.echo = flag
+  # -->
+  # Enables/disables echo back. On some platforms, all combinations of this flags
+  # and raw/cooked mode may not be valid.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def echo=: (bool flag) -> bool
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.echo?       -> true or false
+  # -->
+  # Returns `true` if echo back is enabled.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def echo?: () -> bool
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.erase_line(mode)        -> io
+  # -->
+  # Erases the line at the cursor corresponding to `mode`. `mode` may be either:
+  # 0: after cursor 1: before and cursor 2: entire line
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def erase_line: (0 | 1 | 2 | nil) -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.erase_screen(mode)      -> io
+  # -->
+  # Erases the screen at the cursor corresponding to `mode`. `mode` may be either:
+  # 0: after cursor 1: before and cursor 2: entire screen
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def erase_screen: (0 | 1 | 2 | 3 | nil) -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.getch(min: nil, time: nil, intr: nil) -> char
+  # -->
+  # Reads and returns a character in raw mode.
+  #
+  # See IO#raw for details on the parameters.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def getch: (?min: int, ?time: int, ?intr: bool) -> String
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.getpass(prompt=nil)       -> string
+  # -->
+  # Reads and returns a line without echo back. Prints `prompt` unless it is
+  # `nil`.
+  #
+  # The newline character that terminates the read line is removed from the
+  # returned string, see String#chomp!.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  #     require 'io/console'
+  #     IO::console.getpass("Enter password:")
+  #     Enter password:
+  #     # => "mypassword"
+  #
+  def getpass: (?String) -> String
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.goto(line, column)      -> io
+  # -->
+  # Set the cursor position at `line` and `column`.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def goto: (int, int) -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.goto_column(column)     -> io
+  # -->
+  # Set the cursor position at `column` in the same line of the current position.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def goto_column: (int) -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.iflush
+  # -->
+  # Flushes input buffer in kernel.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def iflush: () -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.ioflush
+  # -->
+  # Flushes input and output buffers in kernel.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def ioflush: () -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.noecho {|io| }
+  # -->
+  # Yields `self` with disabling echo back.
+  #
+  #     STDIN.noecho(&:gets)
+  #
+  # will read and return a line without echo back.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def noecho: [T] () { (self) -> T } -> T
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.oflush
+  # -->
+  # Flushes output buffer in kernel.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def oflush: () -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.pressed?(key)   -> bool
+  # -->
+  # Returns `true` if `key` is pressed.  `key` may be a virtual key code or its
+  # name (String or Symbol) with out "VK_" prefix.
+  #
+  # This method is Windows only.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def pressed?: (Integer | interned) -> bool
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.raw(min: nil, time: nil, intr: nil) {|io| }
+  # -->
+  # Yields `self` within raw mode, and returns the result of the block.
+  #
+  #     STDIN.raw(&:gets)
+  #
+  # will read and return a line without echo back and line editing.
+  #
+  # The parameter `min` specifies the minimum number of bytes that should be
+  # received when a read operation is performed. (default: 1)
+  #
+  # The parameter `time` specifies the timeout in *seconds* with a precision of
+  # 1/10 of a second. (default: 0)
+  #
+  # If the parameter `intr` is `true`, enables break, interrupt, quit, and suspend
+  # special characters.
+  #
+  # Refer to the manual page of termios for further details.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def raw: [T] (?min: int, ?time: int, ?intr: bool) { (self) -> T } -> T
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.raw!(min: nil, time: nil, intr: nil) -> io
+  # -->
+  # Enables raw mode, and returns `io`.
+  #
+  # If the terminal mode needs to be back, use `io.raw { ... }`.
+  #
+  # See IO#raw for details on the parameters.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def raw!: (?min: int, ?time: int, ?intr: bool) -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.scroll_backward(n)      -> io
+  # -->
+  # Scrolls the entire scrolls backward `n` lines.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def scroll_backward: (int) -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.scroll_forward(n)       -> io
+  # -->
+  # Scrolls the entire scrolls forward `n` lines.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def scroll_forward: (int) -> self
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.winsize     -> [rows, columns]
+  # -->
+  # Returns console size.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def winsize: () -> [ Integer, Integer ]
+
+  # <!--
+  #   rdoc-file=ext/io/console/console.c
+  #   - io.winsize = [rows, columns]
+  # -->
+  # Tries to set console size.  The effect depends on the platform and the running
+  # environment.
+  #
+  # You must require 'io/console' to use this method.
+  #
+  def winsize=: ([ Integer, Integer ]) -> [ Integer, Integer ]
+              | ([ Integer, Integer, Integer, Integer ]) -> [ Integer, Integer, Integer, Integer ]
+end

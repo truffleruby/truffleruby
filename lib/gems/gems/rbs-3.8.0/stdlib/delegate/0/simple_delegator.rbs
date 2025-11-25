@@ -1,0 +1,96 @@
+# <!-- rdoc-file=lib/delegate.rb -->
+# A concrete implementation of Delegator, this class provides the means to
+# delegate all supported method calls to the object passed into the constructor
+# and even to change the object being delegated to at a later time with
+# #__setobj__.
+#
+#     class User
+#       def born_on
+#         Date.new(1989, 9, 10)
+#       end
+#     end
+#
+#     require 'delegate'
+#
+#     class UserDecorator < SimpleDelegator
+#       def birth_year
+#         born_on.year
+#       end
+#     end
+#
+#     decorated_user = UserDecorator.new(User.new)
+#     decorated_user.birth_year  #=> 1989
+#     decorated_user.__getobj__  #=> #<User: ...>
+#
+# A SimpleDelegator instance can take advantage of the fact that SimpleDelegator
+# is a subclass of `Delegator` to call `super` to have methods called on the
+# object being delegated to.
+#
+#     class SuperArray < SimpleDelegator
+#       def [](*args)
+#         super + 1
+#       end
+#     end
+#
+#     SuperArray.new([1])[0]  #=> 2
+#
+# Here's a simple example that takes advantage of the fact that
+# SimpleDelegator's delegation object can be changed at any time.
+#
+#     class Stats
+#       def initialize
+#         @source = SimpleDelegator.new([])
+#       end
+#
+#       def stats(records)
+#         @source.__setobj__(records)
+#
+#         "Elements:  #{@source.size}\n" +
+#         " Non-Nil:  #{@source.compact.size}\n" +
+#         "  Unique:  #{@source.uniq.size}\n"
+#       end
+#     end
+#
+#     s = Stats.new
+#     puts s.stats(%w{James Edward Gray II})
+#     puts
+#     puts s.stats([1, 2, 3, nil, 4, 5, 1, 2])
+#
+# Prints:
+#
+#     Elements:  4
+#      Non-Nil:  4
+#       Unique:  4
+#
+#     Elements:  8
+#      Non-Nil:  7
+#       Unique:  6
+#
+class SimpleDelegator < Delegator
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - __getobj__() { || ... }
+  # -->
+  # Returns the current object method calls are being delegated to.
+  #
+  def __getobj__: () -> untyped
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - __setobj__(obj)
+  # -->
+  # Changes the delegate object to *obj*.
+  #
+  # It's important to note that this does **not** cause SimpleDelegator's methods
+  # to change.  Because of this, you probably only want to change delegation to
+  # objects of the same type as the original delegate.
+  #
+  # Here's an example of changing the delegation object.
+  #
+  #     names = SimpleDelegator.new(%w{James Edward Gray II})
+  #     puts names[1]    # => Edward
+  #     names.__setobj__(%w{Gavin Sinclair})
+  #     puts names[1]    # => Sinclair
+  #
+  def __setobj__: (untyped obj) -> untyped
+end

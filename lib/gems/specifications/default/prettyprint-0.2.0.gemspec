@@ -10,13 +10,13 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Tanaka Akira".freeze]
   s.bindir = "exe".freeze
-  s.date = "2025-01-15"
+  s.date = "2025-10-08"
   s.description = "Implements a pretty printing algorithm for readable structure.".freeze
   s.email = ["akr@fsij.org".freeze]
   s.files = ["prettyprint.rb".freeze]
   s.homepage = "https://github.com/ruby/prettyprint".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.3.0".freeze)
-  s.rubygems_version = "3.5.22".freeze
+  s.rubygems_version = "3.6.9".freeze
   s.summary = "Implements a pretty printing algorithm for readable structure.".freeze
 end
