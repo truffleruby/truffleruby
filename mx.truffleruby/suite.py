@@ -874,13 +874,13 @@ suite = {
                     "dependency:org.truffleruby.cext/src/main/c/cext-trampoline/<lib:trufflerubytrampoline>",
                 ],
                 # Create the complete files to let RubyGems know the gems are fully built and can be activated
-                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/debug-1.9.2/gem.build_complete": "string:",
-                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/racc-1.7.3/gem.build_complete": "string:", # actually we do not build the C extension because the pure-Ruby fallback is enough
-                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/rbs-3.4.0/gem.build_complete": "string:",
-                "lib/gems/gems/debug-1.9.2/lib/debug/": [
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/debug-1.11.0/gem.build_complete": "string:",
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/racc-1.8.1/gem.build_complete": "string:", # actually we do not build the C extension because the pure-Ruby fallback is enough
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/rbs-3.8.0/gem.build_complete": "string:",
+                "lib/gems/gems/debug-1.11.0/lib/debug/": [
                     "dependency:org.truffleruby.cext/src/main/c/debug/<extsuffix:debug>",
                 ],
-                "lib/gems/gems/rbs-3.4.0/lib/": [
+                "lib/gems/gems/rbs-3.8.0/lib/": [
                     "dependency:org.truffleruby.cext/src/main/c/rbs/<extsuffix:rbs_extension>",
                 ],
                 "lib/mri/": [
