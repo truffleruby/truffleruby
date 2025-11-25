@@ -1,0 +1,1 @@
+slow:Binding#dup copies the finalizer

@@ -1,0 +1,1 @@
+slow:Method#dup copies the finalizer

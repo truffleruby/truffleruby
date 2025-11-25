@@ -1,0 +1,1 @@
+slow:Proc#dup copies the finalizer
