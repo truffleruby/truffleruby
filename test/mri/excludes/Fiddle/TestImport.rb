@@ -1,5 +1,4 @@
 exclude :test_gettimeofday, "NotImplementedError: NotImplementedError"
-exclude :test_io, "NotImplementedError: #<IO:fd 8> to pointer"
 exclude :test_malloc, "NotImplementedError: NotImplementedError"
 exclude :test_nested_struct_alignment_is_not_its_size, "NotImplementedError: NotImplementedError"
 exclude :test_sizeof, "NotImplementedError: NotImplementedError"

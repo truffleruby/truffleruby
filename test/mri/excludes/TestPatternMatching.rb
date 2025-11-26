@@ -1,5 +1,7 @@
 exclude :test_deconstruct_cache, "TypeError: deconstruct must return Array"
-exclude :test_invalid_syntax, "/b/b/e/main/test/mri/tests/ruby/test_pattern_matching.rb:1273:in `test_invalid_syntax'."
+exclude :test_deconstruct_keys, "Failed assertion, no message given."
+exclude :test_invalid_syntax, "/b/b/e/main/test/mri/tests/ruby/test_pattern_matching.rb:1282:in `test_invalid_syntax'."
+exclude :test_literal_value_pattern, "/b/b/e/main/test/mri/tests/ruby/test_pattern_matching.rb:344:in `test_literal_value_pattern'."
 exclude :test_single_pattern_error_alternative_pattern, "Expected Exception(NoMatchingPatternError) was raised, but the message doesn't match. <\"0: 2 === 0 does not return true\"> expected but was <\"0\">."
 exclude :test_single_pattern_error_array_pattern, "Expected Exception(NoMatchingPatternError) was raised, but the message doesn't match. <\"[]: Hash === [] does not return true\"> expected but was <\"[]\">."
 exclude :test_single_pattern_error_as_pattern, "Expected Exception(NoMatchingPatternError) was raised, but the message doesn't match. <\"[0]: 1 === 0 does not return true\"> expected but was <\"[0]\">."

@@ -1,4 +1,3 @@
-exclude :test_callcc, "Expected Exception(RuntimeError) was raised, but the message doesn't match. Expected /reentered/ to match \"Continuations are unsupported on TruffleRuby\"."
 exclude :test_cycle, "ArgumentError: wrong number of arguments (given 1, expected 2)"
 exclude :test_detect, "ArgumentError: wrong number of arguments (given 1, expected 2)"
 exclude :test_drop_while, "ArgumentError: wrong number of arguments (given 1, expected 2)"
@@ -18,5 +17,6 @@ exclude :test_partition, "ArgumentError: wrong number of arguments (given 1, exp
 exclude :test_reject, "ArgumentError: wrong number of arguments (given 1, expected 2)"
 exclude :test_select, "ArgumentError: wrong number of arguments (given 1, expected 2)"
 exclude :test_sort_by, "ArgumentError: wrong number of arguments (given 1, expected 2)"
+exclude :test_sum, "NameError: uninitialized constant TestEnumerable::SimpleDelegator"
 exclude :test_take_while, "ArgumentError: wrong number of arguments (given 1, expected 2)"
 exclude :test_zip, "ArgumentError: wrong number of arguments (given 1, expected 2)"
