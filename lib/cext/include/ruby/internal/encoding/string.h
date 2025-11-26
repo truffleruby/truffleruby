@@ -105,6 +105,8 @@ VALUE rb_enc_str_new_static(const char *ptr, long len, rb_encoding *enc);
  */
 VALUE rb_enc_interned_str(const char *ptr, long len, rb_encoding *enc);
 
+VALUE rb_enc_literal_str(const char *ptr, long len, rb_encoding *enc);
+
 RBIMPL_ATTR_NONNULL((1))
 /**
  * Identical to rb_enc_str_new_cstr(),  except it returns a  "f"string.  It can
