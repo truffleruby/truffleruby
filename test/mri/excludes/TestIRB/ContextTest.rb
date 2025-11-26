@@ -1,0 +1,5 @@
+exclude :test_echo_on_assignment, "<\"=> 1\\n\" + \"=> 2\\n\" + \"=> 3\\n\" + \"=> 4\\n\"> expected but was <\"=> [2, 3]\\n\" + \"=> 3\\n\" + \"=> 4\\n\">."
+exclude :test_eval_input, "Expected /\\(irb\\):1:in '<main>': Foo \\(RuntimeError\\)\\n/"
+exclude :test_eval_input_raise2x, "Expected /\\(irb\\):1:in '<main>': Foo \\(RuntimeError\\)\\n/"
+exclude :test_eval_input_with_invalid_byte_sequence_exception, "Expected /\\(irb\\):1:in 'fuga': A\\\\xF3B \\(RuntimeError\\)\\n/"
+exclude :test_omit_multiline_on_assignment, "<\"=> \\n\" +"

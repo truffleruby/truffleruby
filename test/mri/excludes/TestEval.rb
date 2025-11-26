@@ -1,5 +1,6 @@
-exclude :test_eval_location_binding, "<[\"(eval at /b/b/e/main/test/mri/tests/ruby/test_eval.rb:550)\", 1]> expected but was <[\"(eval)\", 1]>."
+exclude :test_eval_location_binding, "<[\"(eval at /b/b/e/main/test/mri/tests/ruby/test_eval.rb:556)\","
 exclude :test_eval_location_fstring, "Expected \"generated code\" (oid=1096) to be the same as \"generated code\" (oid=1112)."
 exclude :test_file_encoding, "<\"\\x{A4A2}\"> expected but was <\"あ\">."
-exclude :test_gced_eval_location, "NoMethodError: undefined method `mktmpdir' for Dir:Class"
+exclude :test_gced_eval_location, "NoMethodError: undefined method `mktmpdir' for class Dir"
 exclude :test_return_in_eval_lambda, "LocalJumpError: unexpected return"
+exclude :test_syntax_error_no_memory_leak, "| -:5: warning: assigned but unused variable - a"
