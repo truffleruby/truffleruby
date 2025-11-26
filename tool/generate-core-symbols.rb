@@ -42,8 +42,10 @@ import org.truffleruby.core.string.TStringConstants;
 // @formatter:off
 public final class CoreSymbols {
 
-    public static final long STATIC_SYMBOL_ID = 0x1;
+    // *_SYMBOL_ID values taken from CRuby's `ruby_id_types` enum from template/id.h.tmpl.
+    public static final long STATIC_SYMBOL_ID  = 0x1;
     private static final long GLOBAL_SYMBOL_ID = (0x03 << 1);
+    private static final long CONST_SYMBOL_ID  = (0x05 << 1);
 
     public static final int STATIC_SYMBOLS_SIZE = <STATIC_SYMBOLS_SIZE>;
 
@@ -212,6 +214,10 @@ footer = <<JAVA
 
     private static long toGlobal(long id) {
         return id << 4 | STATIC_SYMBOL_ID | GLOBAL_SYMBOL_ID;
+    }
+
+    private static long toConst(long id) {
+        return id << 4 | STATIC_SYMBOL_ID | CONST_SYMBOL_ID;
     }
 
     public static boolean isStaticSymbol(long value) {
