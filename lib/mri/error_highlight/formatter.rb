@@ -37,13 +37,13 @@ module ErrorHighlight
     end
 
     def self.max_snippet_width
-      return if Ractor.current[:__error_highlight_max_snippet_width__] == :disabled
+      return if Thread.current[:__error_highlight_max_snippet_width__] == :disabled
 
-      Ractor.current[:__error_highlight_max_snippet_width__] ||= terminal_width
+      Thread.current[:__error_highlight_max_snippet_width__] ||= terminal_width
     end
 
     def self.max_snippet_width=(width)
-      return Ractor.current[:__error_highlight_max_snippet_width__] = :disabled if width.nil?
+      return Thread.current[:__error_highlight_max_snippet_width__] = :disabled if width.nil?
 
       width = width.to_i
 
@@ -52,7 +52,7 @@ module ErrorHighlight
         width = MIN_SNIPPET_WIDTH
       end
 
-      Ractor.current[:__error_highlight_max_snippet_width__] = width
+      Thread.current[:__error_highlight_max_snippet_width__] = width
     end
 
     def self.terminal_width
@@ -65,10 +65,10 @@ module ErrorHighlight
   end
 
   def self.formatter
-    Ractor.current[:__error_highlight_formatter__] || DefaultFormatter
+    Thread.current[:__error_highlight_formatter__] || DefaultFormatter
   end
 
   def self.formatter=(formatter)
-    Ractor.current[:__error_highlight_formatter__] = formatter
+    Thread.current[:__error_highlight_formatter__] = formatter
   end
 end
