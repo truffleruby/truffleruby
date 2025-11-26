@@ -5,10 +5,11 @@ require 'mkmf'
 require 'rbconfig'
 
 def main
-  # TruffleRuby compiles additional objects required for ripper (node.o).
-  # Note: parse.o is NOT included because ripper.c contains all necessary code
-  # and including both causes duplicate symbol errors for Ruby 3.4.7+
-  $objs = %w(eventids1.o eventids2.o ripper.o ripper_init.o node.o)
+  $objs = %w(eventids1.o eventids2.o ripper.o ripper_init.o)
+  if defined?(::TruffleRuby)
+    # TruffleRuby compiles additional objects required for ripper (parse.o node.o ruby_parser.o).
+    $objs.concat %w[parse.o node.o ruby_parser.o]
+  end
   $distcleanfiles.concat %w(ripper.y ripper.c eventids1.c eventids1.h eventids2table.c ripper_init.c)
   $cleanfiles.concat %w(ripper.E ripper.output y.output .eventids2-check)
   $defs << '-DRIPPER'

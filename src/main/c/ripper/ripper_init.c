@@ -10,6 +10,10 @@
 #include "eventids1.h"
 #include "eventids2.h"
 #include "ripper_init.h"
+#ifdef TRUFFLERUBY
+// Unclear how this gets included on CRuby, but anyway this is needed for rb_enc_literal_str()
+#include "internal/string.h"
+#endif
 
 #define STR_NEW2(ptr) rb_enc_str_new((ptr),strlen(ptr),rb_ruby_parser_enc(p))
 #define RIPPER_VERSION "0.1.0"

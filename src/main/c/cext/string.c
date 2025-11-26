@@ -433,8 +433,7 @@ long rb_str_coderange_scan_restartable(const char *s, const char *e, rb_encoding
 }
 
 VALUE rb_enc_interned_str_cstr(const char *ptr, rb_encoding *enc) {
-  VALUE str = rb_enc_str_new_cstr(ptr, enc ? enc : rb_ascii8bit_encoding());
-  return rb_str_to_interned_str(str);
+  return rb_enc_interned_str(ptr, strlen(ptr), enc);
 }
 
 VALUE rb_enc_interned_str(const char *ptr, long len, rb_encoding *enc) {

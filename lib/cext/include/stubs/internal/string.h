@@ -94,4 +94,9 @@ is_ascii_string(VALUE str)
     return rb_enc_str_coderange(str) == ENC_CODERANGE_7BIT;
 }
 
+// For Ripper
+static inline VALUE rb_enc_literal_str(const char *ptr, long len, rb_encoding *enc) {
+    return rb_enc_interned_str(ptr, len, enc);
+}
+
 #endif /* INTERNAL_STRING_H */
