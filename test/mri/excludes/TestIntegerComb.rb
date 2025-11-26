@@ -1,6 +1,6 @@
 exclude :test_divmod, "<0> expected but was <-6277101735386680763835789423207666416102355444464034512898>."
 exclude :test_pack_utf8, "RangeError expected but nothing was raised."
-exclude :test_pow, "(-6277101735386680763835789423207666416102355444464034512898) ** 0."
+exclude :test_pow, "Bignum in long range : 1 (java.lang.AssertionError) from org.truffleruby.core.numeric.RubyBignum.<init>(RubyBignum.java:35)"
 exclude :test_printf_b, "sprintf('%b', -18446744073709551615) = \"..100000001\"."
 exclude :test_printf_o, "sprintf('%o', -1073741825) = \"..727777777777\"."
 exclude :test_remainder, "-6277101735386680763835789423207666416102355444464034512898.remainder(-6277101735386680763835789423207666416102355444464034512898)."

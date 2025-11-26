@@ -1,3 +1,4 @@
+exclude :test_CALL_arg_7, "NameError: uninitialized constant ErrorHighlight::RubyVM"
 exclude :test_args_ATTRASGN_1, "NameError: uninitialized constant ErrorHighlight::RubyVM"
 exclude :test_args_ATTRASGN_2, "NameError: uninitialized constant ErrorHighlight::RubyVM"
 exclude :test_args_ATTRASGN_3, "NameError: uninitialized constant ErrorHighlight::RubyVM"
@@ -10,6 +11,5 @@ exclude :test_args_OP_ASGN1_aref_1, "NameError: uninitialized constant ErrorHigh
 exclude :test_args_OP_ASGN1_aref_2, "NameError: uninitialized constant ErrorHighlight::RubyVM"
 exclude :test_args_OP_ASGN1_op, "NameError: uninitialized constant ErrorHighlight::RubyVM"
 exclude :test_args_OP_ASGN2, "NameError: uninitialized constant ErrorHighlight::RubyVM"
-exclude :test_custom_formatter, "NameError: uninitialized constant ErrorHighlight::Ractor"
 exclude :test_spot_with_backtrace_location, "NameError: uninitialized constant ErrorHighlight::RubyVM"
 exclude :test_spot_with_node, "NameError: uninitialized constant ErrorHighlightTest::RubyVM"

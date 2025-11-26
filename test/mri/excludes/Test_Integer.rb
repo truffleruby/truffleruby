@@ -1,1 +1,1 @@
-exclude :test_fixnum_range, "NoMethodError: undefined method `assert_bignum' for #<Test_Integer:0x3f8>"
+exclude :test_fixnum_range, "NoMethodError: undefined method `assert_bignum' for an instance of Test_Integer"
