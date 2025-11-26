@@ -236,9 +236,13 @@ jobs:
     - run: jt test fast :truffle # ~10s
 
   test_native_mri_tests: # ~6min
-    name: run MRI tests on native
+    name: run MRI tests on native ${{ matrix.run_id }}
     needs: [build_native]
     runs-on: ubuntu-22.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        run_id: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     steps:
     - name: Clone TruffleRuby
       uses: actions/checkout@v4
