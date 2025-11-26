@@ -117,6 +117,30 @@ ripper_lex_io_get(struct parser_params *p, rb_parser_input_data input, int line_
     return rb_str_to_parser_string(p, line);
 }
 
+#ifdef TRUFFLERUBY
+// Taken from internal/ruby_parser.c. We can't use that entire file, so we extract the one function that we need.
+rb_parser_string_t *
+rb_parser_lex_get_str(struct parser_params *p, struct lex_pointer_string *ptr_str)
+{
+    char *beg, *end, *start;
+    long len;
+    VALUE s = ptr_str->str;
+
+    beg = RSTRING_PTR(s);
+    len = RSTRING_LEN(s);
+    start = beg;
+    if (ptr_str->ptr) {
+        if (len == ptr_str->ptr) return 0;
+        beg += ptr_str->ptr;
+        len -= ptr_str->ptr;
+    }
+    end = memchr(beg, '\n', len);
+    if (end) len = ++end - beg;
+    ptr_str->ptr += len;
+    return rb_str_to_parser_string(p, rb_str_subseq(s, beg - start, len));
+}
+#endif
+
 static rb_parser_string_t *
 ripper_lex_get_str(struct parser_params *p, rb_parser_input_data input, int line_count)
 {
