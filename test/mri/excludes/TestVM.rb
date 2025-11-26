@@ -1,1 +1,1 @@
-exclude :test_at_exit, "| <internal:core> core/kernel.rb:269:in `require': cannot load such file -- c/vm/at_exit (LoadError)"
+exclude :test_at_exit, "| ERROR: truffleruby: invalid option --parser=parse.y  (Use --help for usage instructions.)"
