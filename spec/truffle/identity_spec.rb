@@ -20,8 +20,13 @@ describe "Identifying features such as" do
     RUBY_VERSION.should =~ /\A\d+\.\d+\.\d+\z/
   end
 
-  it 'RUBY_ENGINE_VERSION matches /\A\d+(\.\d+)*(-(preview|rc)\d+|-dev-\h+)?\z/' do
-    RUBY_ENGINE_VERSION.should =~ /\A\d+(\.\d+)*(-(preview|rc)\d+|-dev-\h+)?\z/
+  it 'RUBY_ENGINE_VERSION matches /\A\d\d\.\d+.\d+(-dev-\h+)?\z/' do
+    RUBY_ENGINE_VERSION.should =~ /\A\d\d\.\d+.\d+(-dev-\h+)?\z/
+  end
+
+  it 'RUBY_ENGINE_VERSION starts with the first 2 components of RUBY_VERSION concatenated' do
+    a, b, * = RUBY_VERSION.split('.')
+    RUBY_ENGINE_VERSION.should.start_with?("#{a}#{b}.")
   end
 
   it "RUBY_ENGINE_VERSION can be parsed as a Gem::Version" do
@@ -37,7 +42,7 @@ describe "Identifying features such as" do
   end
 
   guard -> { !TruffleRuby.native? } do
-    it "RUBY_DESCRIPTION indicates which VM TruffleRuby runs on and which edition" do
+    it "RUBY_DESCRIPTION indicates TruffleRuby runs on JVM and which edition" do
       RUBY_DESCRIPTION.should =~ /\b(Interpreted|GraalVM CE|Oracle GraalVM) JVM\b/
       RUBY_DESCRIPTION.should_not include("Native")
       RUBY_DESCRIPTION.should_not include("native")
@@ -69,6 +74,12 @@ describe "Identifying features such as" do
 
   it "RbConfig::CONFIG['ruby_version'] is the ABI version and starts with RUBY_VERSION and has at least an extra component" do
     RbConfig::CONFIG['ruby_version'].should =~ /\A#{Regexp.escape RUBY_VERSION}\.\d+(\.\d+)*\z/
+  end
+
+  it "the ABI version is always different than RUBY_VERSION and RUBY_ENGINE_VERSION" do
+    RbConfig::CONFIG['ruby_version'].should_not == RUBY_VERSION
+    RbConfig::CONFIG['ruby_version'].should_not == RUBY_ENGINE_VERSION
+    RUBY_VERSION.should_not == RUBY_ENGINE_VERSION # See lib/cext/include/truffleruby/truffleruby-abi-version.h
   end
 
   it "RbConfig::CONFIG['RUBY_BASE_NAME'] is 'ruby'" do
