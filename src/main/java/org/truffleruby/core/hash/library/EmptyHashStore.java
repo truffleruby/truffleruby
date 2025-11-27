@@ -11,23 +11,21 @@ package org.truffleruby.core.hash.library;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.dsl.Bind;
-import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
-import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.collections.PEBiFunction;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.hash.HashLiteralNode;
 import org.truffleruby.core.hash.HashOperations;
 import org.truffleruby.core.hash.RubyHash;
 import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryCallback;
+import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryWithHashedCallback;
 import org.truffleruby.language.RubyNode;
-import org.truffleruby.language.objects.shared.PropagateSharingNode;
+import org.truffleruby.language.objects.shared.SharedObjects;
 
 @ExportLibrary(value = HashStoreLibrary.class)
 @GenerateUncached
@@ -47,7 +45,7 @@ public final class EmptyHashStore {
     protected boolean set(RubyHash hash, Object key, Object value, boolean byIdentity,
             @CachedLibrary(limit = "1") HashStoreLibrary packedHashStoreLibrary) {
         final Object[] packedStore = PackedHashStoreLibrary.createStore();
-        hash.store = packedStore;
+        hash.setStore(packedStore);
         return packedHashStoreLibrary.set(packedStore, hash, key, value, byIdentity);
     }
 
@@ -72,24 +70,18 @@ public final class EmptyHashStore {
     }
 
     @ExportMessage
+    protected Object eachEntryHashed(RubyHash hash, EachEntryWithHashedCallback callback, Object state) {
+        return state;
+    }
+
+    @ExportMessage
     protected Object eachEntrySafe(RubyHash hash, EachEntryCallback callback, Object state) {
         return state;
     }
 
     @ExportMessage
-    protected void replace(RubyHash hash, RubyHash dest,
-            @Cached PropagateSharingNode propagateSharing,
-            @Bind Node node) {
-        if (hash == dest) {
-            return;
-        }
-        propagateSharing.execute(node, dest, hash);
-        dest.store = EmptyHashStore.NULL_HASH_STORE;
-        dest.size = 0;
-        dest.defaultBlock = hash.defaultBlock;
-        dest.defaultValue = hash.defaultValue;
-        dest.compareByIdentity = hash.compareByIdentity;
-        assert verify(hash);
+    protected Object copyStore() {
+        return EmptyHashStore.NULL_HASH_STORE;
     }
 
     @ExportMessage
@@ -106,6 +98,8 @@ public final class EmptyHashStore {
     @ExportMessage
     public boolean verify(RubyHash hash) {
         assert hash.store == this;
+        assert !SharedObjects.isShared(hash);
+
         assert hash.store == NULL_HASH_STORE;
         assert hash.size == 0;
         return true;

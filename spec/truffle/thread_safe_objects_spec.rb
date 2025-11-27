@@ -240,7 +240,7 @@ describe "Sharing is correctly propagated for" do
     it "literal" do
       initial = Object.new
       hsh = { initial => Object.new }
-      shared?(hsh).should == false
+      shared?(hsh).should == Truffle::Boot.get_option("concurrent-hash-always")
 
       @share = hsh
       shared?(hsh).should == true
@@ -307,7 +307,9 @@ describe "Sharing is correctly propagated for" do
 
       new_hash = {}
       hsh.replace(new_hash)
-      shared?(new_hash).should == true
+      # new_hash is not shared, but any object it contains should be.
+      shared?(new_hash).should == Truffle::Boot.get_option("concurrent-hash-always")
+      check_all_shared(new_hash)
     end
 
     it "#initialize_copy" do

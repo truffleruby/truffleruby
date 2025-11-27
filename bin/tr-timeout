@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+
+require 'timeout'
+
+abort "Usage: #{$0} DURATION_IN_MINUTES COMMAND ARGS" if ARGV.size < 2
+duration, *command = ARGV
+
+timeout = Float(duration) * 60
+
+PREFIX = '[TIMEOUT]'
+PID = spawn(*command)
+
+def wait_and_exit(timeout, allow_success = false)
+  _, status = Timeout.timeout(timeout) {
+    Process.waitpid2(PID)
+  }
+
+  if code = status.exitstatus
+    if code == 0 && !allow_success
+      STDERR.puts "#{PREFIX} Process exited with 0 but still took longer than the timeout, exiting with 125"
+      exit 125
+    else
+      STDERR.puts "#{PREFIX} Process exited with #{code}" unless allow_success
+      exit code
+    end
+  else
+    STDERR.puts "#{PREFIX} Process exited with: #{status.inspect}"
+    exit 124
+  end
+end
+
+def send_signal(signal, pid)
+  begin
+    Process.kill signal, pid
+  rescue Errno::ESRCH
+    # Process already terminated
+  end
+end
+
+begin
+  wait_and_exit(timeout, true)
+rescue Timeout::Error
+  STDERR.puts "\n\n#{PREFIX} Process pid=#{PID}\n$ #{command.join(' ')}\ntook longer than #{duration} minutes"
+
+  STDERR.puts "\n#{PREFIX} Listing all processes:"
+  ps = `ps x`
+  STDERR.puts ps
+  processes = ps.lines[1..-1].map { |line|
+    pid, _, _, time, command_line = line.split(' ', 5)
+    [Integer(pid), time, command_line]
+  }.select { |pid, time, command_line|
+    pid != Process.pid && (
+      command_line.include?('bin/truffleruby') ||
+      command_line.match?(/\/(mxbuild|truffleruby).*\/bin\/ruby(\s|$)/) ||
+      command_line.include?('test/mri/tests/lib/test/unit/parallel.rb')
+    )
+  }
+  STDERR.puts "\n#{PREFIX} Identified TruffleRuby processes:"
+  STDERR.puts processes.map { |pid, time, command_line| "#{pid} #{time} #{command_line}" }
+
+  processes.each do |pid, time, command_line|
+    STDERR.puts "\n#{PREFIX} #{'=' * 70}"
+    STDERR.puts "#{PREFIX} Printing stacktraces & backtraces for #{pid} #{time} #{command_line}"
+    STDERR.puts "#{PREFIX} Sending SIGQUIT to #{pid} to get Java stacktraces:"
+    send_signal :SIGQUIT, pid
+    sleep 5
+
+    STDERR.puts "\n#{PREFIX} Sending SIGALRM to #{pid} to get Ruby backtraces:"
+    send_signal :SIGALRM, pid
+    sleep 5
+  end
+
+  STDERR.puts "\n#{PREFIX} Sending SIGINT to #{PID} to try to terminate the main process in 5 seconds:"
+  send_signal :SIGINT, PID
+  begin
+    wait_and_exit(5)
+  rescue Timeout::Error
+    STDERR.puts "\n#{PREFIX} Sending SIGKILL to #{PID} to force terminate the main process:"
+    send_signal :SIGKILL, PID
+    wait_and_exit(0)
+  end
+end

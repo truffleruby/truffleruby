@@ -76,9 +76,9 @@ describe "Parsing" do
     index = index.to_i
     main_script = !!main_script
 
-    # multiple-context mode, enabled JIT or changed default inline cache size affects Truffle AST.
-    # So just don't run the pursing specs at all in such jobs on CI.
-    guard -> { Primitive.vm_single_context? && !TruffleRuby.jit? && Truffle::Boot.get_option("default-cache") != 0 } do
+    # multi-context mode, JIT and changed default inline cache size affect the produced Truffle AST.
+    # So just don't run the parsing specs at all in such jobs on CI.
+    guard -> { Primitive.vm_single_context? && !TruffleRuby.jit? && Truffle::Boot.get_option("default-cache") != 0 && !Truffle::Boot.get_option("concurrent-hash-always") } do
       it "a #{subject} (#{description}) case is parsed correctly" do
         # p "a #{subject} (#{description.strip}) case is parsed correctly"
 

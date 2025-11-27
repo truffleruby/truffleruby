@@ -32,10 +32,10 @@ import org.truffleruby.core.hash.FreezeHashKeyIfNeededNode;
 import org.truffleruby.core.hash.HashLiteralNode;
 import org.truffleruby.core.hash.HashingNodes;
 import org.truffleruby.core.hash.RubyHash;
+import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryWithHashedCallback;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.objects.ObjectGraph;
-import org.truffleruby.language.objects.shared.PropagateSharingNode;
 
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
@@ -51,6 +51,7 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.profiles.InlinedLoopConditionProfile;
+import org.truffleruby.language.objects.shared.SharedObjects;
 
 /** The Compact hash strategy from Hash Maps That Don't Hate You. See
  * https://blog.toit.io/hash-maps-that-dont-hate-you-1a96150b492a for more details (archived at
@@ -182,17 +183,13 @@ public final class CompactHashStore {
             @Cached @Shared HashingNodes.ToHash hashFunction,
             @Cached @Shared GetIndexPosForKeyNode getIndexPosForKeyNode,
             @Cached FreezeHashKeyIfNeededNode freezeKey,
-            @Cached @Exclusive PropagateSharingNode propagateSharingForKey,
-            @Cached @Exclusive PropagateSharingNode propagateSharingForVal,
             @Cached SetKvAtNode setKv,
             @Bind Node node) {
+        assert verify(hash);
         var frozenKey = freezeKey.executeFreezeIfNeeded(node, key, byIdentity);
         int keyHash = hashFunction.execute(frozenKey, byIdentity);
         int indexPos = getIndexPosForKeyNode.execute(node, frozenKey, keyHash, byIdentity, index, kvStore, true);
         int keyPos = indexPosToKeyPos(index, indexPos); // can be < 0 if inserting new key
-
-        propagateSharingForKey.execute(node, hash, frozenKey);
-        propagateSharingForVal.execute(node, hash, value);
 
         return setKv.execute(node, hash, this, indexPos, keyPos, keyHash, frozenKey, value);
     }
@@ -272,28 +269,22 @@ public final class CompactHashStore {
     }
 
     @ExportMessage
-    Object eachEntrySafe(RubyHash hash, EachEntryCallback callback, Object state,
-            @CachedLibrary("this") HashStoreLibrary hashlib) {
-        return hashlib.eachEntry(this, hash, callback, state);
+    Object eachEntryHashed(RubyHash hash, EachEntryWithHashedCallback callback, Object state) {
+        // NOTE: cannot assert verify(hash); here because this is called in onShareHook(),
+        // and the hash is already shared when that hook is called.
+
+        throw CompilerDirectives.shouldNotReachHere("not yet implemented");
     }
 
     @ExportMessage
-    void replace(RubyHash hash, RubyHash dest,
-            @Cached @Exclusive PropagateSharingNode propagateSharing,
-            @Cached @Exclusive InlinedConditionProfile noReplaceNeeded,
-            @Bind Node node) {
-        if (noReplaceNeeded.profile(node, hash == dest)) {
-            return;
-        }
+    Object eachEntrySafe(RubyHash hash, EachEntryCallback callback, Object state,
+            @CachedLibrary("this") HashStoreLibrary self) {
+        return self.eachEntry(this, hash, callback, state);
+    }
 
-        propagateSharing.execute(node, dest, hash);
-
-        CompactHashStore copy = this.copy();
-        dest.size = hash.size;
-        dest.store = copy;
-        dest.compareByIdentity = hash.compareByIdentity;
-        dest.defaultBlock = hash.defaultBlock;
-        dest.defaultValue = hash.defaultValue;
+    @ExportMessage
+    protected Object copyStore() {
+        return this.copy();
     }
 
     @TruffleBoundary
@@ -301,7 +292,7 @@ public final class CompactHashStore {
     void rehash(RubyHash hash,
             @Cached @Exclusive InlinedConditionProfile slotUsed,
             @Cached @Exclusive InlinedLoopConditionProfile loopProfile,
-            @CachedLibrary("this") HashStoreLibrary hashlib,
+            @CachedLibrary("this") HashStoreLibrary self,
             @Bind Node node) {
         Object[] oldKvStore = this.kvStore;
         int oldKvStoreInsertionPos = this.kvStoreInsertionPos;
@@ -315,7 +306,7 @@ public final class CompactHashStore {
         try {
             for (; loopProfile.inject(node, i < oldKvStoreInsertionPos); i += 2) {
                 if (slotUsed.profile(node, oldKvStore[i] != null)) {
-                    hashlib.set(this, hash, oldKvStore[i], oldKvStore[i + 1], hash.compareByIdentity);
+                    self.set(this, hash, oldKvStore[i], oldKvStore[i + 1], hash.compareByIdentity);
                 }
             }
         } finally {
@@ -326,6 +317,8 @@ public final class CompactHashStore {
     @ExportMessage
     boolean verify(RubyHash hash) {
         assert hash.store == this;
+        assert !SharedObjects.isShared(hash);
+
         assert kvStoreInsertionPos >= 0;
         assert kvStoreInsertionPos <= kvStore.length;
         assert kvStoreInsertionPos % 2 == 0;

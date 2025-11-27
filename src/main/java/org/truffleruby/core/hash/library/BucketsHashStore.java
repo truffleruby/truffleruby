@@ -40,11 +40,11 @@ import org.truffleruby.core.hash.HashLookupResult;
 import org.truffleruby.core.hash.HashingNodes;
 import org.truffleruby.core.hash.RubyHash;
 import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryCallback;
+import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryWithHashedCallback;
 import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.objects.ObjectGraph;
-import org.truffleruby.language.objects.shared.PropagateSharingNode;
 import org.truffleruby.language.objects.shared.SharedObjects;
 
 import java.util.Set;
@@ -105,6 +105,8 @@ public final class BucketsHashStore {
             1073741824 + 85
     };
 
+    public static final int INITIAL_CAPACITY = CAPACITIES[0];
+
     private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
     private static final int MAX_ENTRIES = (int) (MAX_ARRAY_SIZE * LOAD_FACTOR);
 
@@ -112,7 +114,7 @@ public final class BucketsHashStore {
     // region Utilities
 
     @TruffleBoundary
-    static int growthCapacityGreaterThan(int size) {
+    public static int growthCapacityGreaterThan(int size) {
         int buckets = 0;
         for (int capacity : CAPACITIES) {
             if (capacity > size) {
@@ -153,7 +155,7 @@ public final class BucketsHashStore {
             entry = entry.getNextInSequence();
         }
 
-        hash.store = new BucketsHashStore(newEntries, firstInSequence, lastInSequence);
+        hash.setStore(new BucketsHashStore(newEntries, firstInSequence, lastInSequence));
     }
 
     public void getAdjacentObjects(Set<Object> reachable) {
@@ -233,10 +235,8 @@ public final class BucketsHashStore {
     }
 
     @ExportMessage
-    protected boolean set(RubyHash hash, Object key, Object value, boolean byIdentity,
+    protected boolean set(RubyHash hash, Object originalKey, Object value, boolean byIdentity,
             @Cached FreezeHashKeyIfNeededNode freezeHashKeyIfNeeded,
-            @Cached @Exclusive PropagateSharingNode propagateSharingKey,
-            @Cached @Exclusive PropagateSharingNode propagateSharingValue,
             @Cached @Shared LookupEntryNode lookup,
             @Cached @Exclusive InlinedConditionProfile missing,
             @Cached @Exclusive InlinedConditionProfile bucketCollision,
@@ -245,17 +245,14 @@ public final class BucketsHashStore {
             @Bind Node node) {
         assert verify(hash);
 
-        final Object key2 = freezeHashKeyIfNeeded.executeFreezeIfNeeded(node, key, byIdentity);
-
-        propagateSharingKey.execute(node, hash, key2);
-        propagateSharingValue.execute(node, hash, value);
+        final Object key = freezeHashKeyIfNeeded.executeFreezeIfNeeded(node, originalKey, byIdentity);
 
         final Entry[] entries = this.entries;
-        final HashLookupResult result = lookup.execute(hash, entries, key2);
+        final HashLookupResult result = lookup.execute(hash, entries, key);
         final Entry entry = result.getEntry();
 
         if (missing.profile(node, entry == null)) {
-            final Entry newEntry = new Entry(result.getHashed(), key2, value);
+            final Entry newEntry = new Entry(result.getHashed(), key, value);
 
             if (bucketCollision.profile(node, result.getPreviousEntry() == null)) {
                 entries[result.getIndex()] = newEntry;
@@ -352,8 +349,8 @@ public final class BucketsHashStore {
 
     @ExportMessage
     protected Object eachEntry(RubyHash hash, EachEntryCallback callback, Object state,
-            @CachedLibrary("this") HashStoreLibrary hashStoreLibrary,
-            @Cached LoopConditionProfile loopProfile) {
+            @Bind Node node,
+            @Cached @Exclusive LoopConditionProfile loopProfile) {
         assert verify(hash);
 
         int i = 0;
@@ -362,10 +359,31 @@ public final class BucketsHashStore {
             while (loopProfile.inject(entry != null)) {
                 callback.accept(i++, entry.getKey(), entry.getValue(), state);
                 entry = entry.getNextInSequence();
-                TruffleSafepoint.poll(hashStoreLibrary);
+                TruffleSafepoint.poll(node);
             }
         } finally {
-            RubyBaseNode.profileAndReportLoopCount(hashStoreLibrary.getNode(), loopProfile, i);
+            RubyBaseNode.profileAndReportLoopCount(node, loopProfile, i);
+        }
+        return state;
+    }
+
+    @ExportMessage
+    protected Object eachEntryHashed(RubyHash hash, EachEntryWithHashedCallback callback, Object state,
+            @Bind Node node,
+            @Cached @Exclusive LoopConditionProfile loopProfile) {
+        // NOTE: cannot assert verify(hash); here because this is called in onShareHook(),
+        // and the hash is already shared when that hook is called.
+
+        int i = 0;
+        Entry entry = this.firstInSequence;
+        try {
+            while (loopProfile.inject(entry != null)) {
+                callback.accept(i++, entry.getHashed(), entry.getKey(), entry.getValue(), state);
+                entry = entry.getNextInSequence();
+                TruffleSafepoint.poll(node);
+            }
+        } finally {
+            RubyBaseNode.profileAndReportLoopCount(node, loopProfile, i);
         }
         return state;
     }
@@ -376,19 +394,8 @@ public final class BucketsHashStore {
         return self.eachEntry(this, hash, callback, state);
     }
 
-    @TruffleBoundary
     @ExportMessage
-    protected void replace(RubyHash hash, RubyHash dest,
-            @Cached @Exclusive PropagateSharingNode propagateSharing,
-            @Bind Node node) {
-        if (hash == dest) {
-            return;
-        }
-
-        propagateSharing.execute(node, dest, hash);
-        assert verify(hash);
-
-        final Entry[] entries = ((BucketsHashStore) hash.store).entries;
+    protected Object copyStore() {
         final Entry[] newEntries = new Entry[entries.length];
 
         Entry firstInSequence = null;
@@ -411,18 +418,12 @@ public final class BucketsHashStore {
             entry = entry.getNextInSequence();
         }
 
-        dest.store = new BucketsHashStore(newEntries, firstInSequence, lastInSequence);
-        dest.size = hash.size;
-        dest.defaultBlock = hash.defaultBlock;
-        dest.defaultValue = hash.defaultValue;
-        dest.compareByIdentity = hash.compareByIdentity;
-        assert verify(hash);
+        return new BucketsHashStore(newEntries, firstInSequence, lastInSequence);
     }
 
     @ExportMessage
     protected RubyArray shift(RubyHash hash,
-            @CachedLibrary("this") HashStoreLibrary node) {
-
+            @Bind Node node) {
         assert verify(hash);
 
         final Entry[] entries = this.entries;
@@ -464,17 +465,17 @@ public final class BucketsHashStore {
 
     @ExportMessage
     protected void rehash(RubyHash hash,
-            @CachedLibrary("this") HashStoreLibrary hashStoreLibrary) {
+            @CachedLibrary("this") HashStoreLibrary self) {
         assert verify(hash);
         final Entry[] newEntries = new Entry[entries.length];
 
         Entry entry = this.firstInSequence;
         BucketsHashStore newStore = new BucketsHashStore(newEntries, null, null);
-        hash.store = newStore;
+        hash.setStore(newStore);
         hash.size = 0;
 
         while (entry != null) {
-            hashStoreLibrary.set(newStore, hash, entry.getKey(), entry.getValue(), hash.compareByIdentity);
+            self.set(newStore, hash, entry.getKey(), entry.getValue(), hash.compareByIdentity);
             entry = entry.getNextInSequence();
         }
 
@@ -485,6 +486,7 @@ public final class BucketsHashStore {
     @ExportMessage
     public boolean verify(RubyHash hash) {
         assert hash.store == this;
+        assert !SharedObjects.isShared(hash);
 
         final Entry[] entries = this.entries;
         final int size = hash.size;
@@ -497,12 +499,8 @@ public final class BucketsHashStore {
         int foundSizeBuckets = 0;
         for (Entry entry : entries) {
             while (entry != null) {
-                assert SharedObjects.assertPropagateSharing(
-                        hash,
-                        entry.getKey()) : "unshared key in shared Hash: " + entry.getKey();
-                assert SharedObjects.assertPropagateSharing(
-                        hash,
-                        entry.getValue()) : "unshared value in shared Hash: " + entry.getValue();
+                assert entry.getKey() != null;
+                assert entry.getValue() != null;
                 foundSizeBuckets++;
                 if (entry == firstInSequence) {
                     assert foundFirst == null;

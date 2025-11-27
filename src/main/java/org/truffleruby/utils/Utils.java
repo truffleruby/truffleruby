@@ -12,6 +12,8 @@ package org.truffleruby.utils;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.util.Objects;
 
 /** General purpose utility functions that do not fit in other utility classes. */
@@ -29,6 +31,14 @@ public final class Utils {
     @TruffleBoundary
     public static UnsupportedOperationException unsupportedOperation(Object... msgParts) {
         return new UnsupportedOperationException(concat(msgParts));
+    }
+
+    public static VarHandle getVarHandle(MethodHandles.Lookup lookup, Class<?> klass, String name, Class<?> type) {
+        try {
+            return lookup.findVarHandle(klass, name, type);
+        } catch (ReflectiveOperationException e) {
+            throw new Error(e);
+        }
     }
 
     /** Performs {@link Objects#equals(Object, Object)} behind a {@link TruffleBoundary} so as to avoid performance
