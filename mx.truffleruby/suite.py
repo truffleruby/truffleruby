@@ -1092,6 +1092,20 @@ suite = {
             },
         },
 
+        "TRUFFLERUBY_NATIVE_STANDALONE_RELEASE_ARCHIVE": {
+            "class": "TruffleRubyReleaseArchive",
+            "standalone_dist": "TRUFFLERUBY_NATIVE_STANDALONE",
+            "community_dir_name": "truffleruby-community-<version>-<graalvm_os>-<arch>",
+            "enterprise_dir_name": "truffleruby-<version>-<graalvm_os>-<arch>",
+        },
+
+        "TRUFFLERUBY_JVM_STANDALONE_RELEASE_ARCHIVE": {
+            "class": "TruffleRubyReleaseArchive",
+            "standalone_dist": "TRUFFLERUBY_JVM_STANDALONE",
+            "community_dir_name": "truffleruby-community-jvm-<version>-<graalvm_os>-<arch>",
+            "enterprise_dir_name": "truffleruby-jvm-<version>-<graalvm_os>-<arch>",
+        },
+
         "TRUFFLERUBY-TEST-EMBEDDING": {
             "testDistribution": True,
             "dependencies": [

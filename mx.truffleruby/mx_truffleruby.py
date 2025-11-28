@@ -19,6 +19,7 @@ import mx
 import mx_util
 import mx_gate
 import mx_sdk
+import mx_sdk_vm_impl
 import mx_sdk_vm_ng
 import mx_subst
 import mx_spotbugs
@@ -305,6 +306,50 @@ class LibYAMLBuildTask(mx.NativeBuildTask):
             shutil.rmtree(build_dir)
         if exists(install_dir):
             shutil.rmtree(install_dir)
+
+
+# Like mx_sdk_vm_ng.DeliverableStandaloneArchive but simplified and customized
+class TruffleRubyReleaseArchive(mx.LayoutTARDistribution):
+    def __init__(self, suite, name=None, deps=None, excludedLibs=None, platformDependent=True, theLicense=None, defaultBuild=True, **kw_args):
+        # required
+        standalone_dir_dist = kw_args.pop('standalone_dist')
+        community_dir_name = kw_args.pop('community_dir_name')
+        enterprise_dir_name = kw_args.pop('enterprise_dir_name')
+
+        path_substitutions = mx_subst.SubstitutionEngine(mx_subst.path_substitutions)
+        path_substitutions.register_no_arg('version', _suite.release_version)
+        path_substitutions.register_no_arg('graalvm_os', mx_sdk_vm_impl.get_graalvm_os())
+
+        dir_name = path_substitutions.substitute(enterprise_dir_name if mx_sdk_vm_ng.is_enterprise() else community_dir_name)
+        archive_name = dir_name
+        path = f"release/{archive_name}.tar.gz"
+
+        layout = {
+            f'{dir_name}/': {
+                "source_type": "dependency",
+                "dependency": standalone_dir_dist,
+                "path": "*",
+                "dereference": "never",
+            }
+        }
+        self.standalone_dir_dist = standalone_dir_dist
+
+        assert theLicense is None, "the 'license' attribute is ignored for TruffleRubyReleaseArchive"
+        theLicense = ['GFTC' if mx_sdk_vm_ng.is_enterprise() else 'UPL']
+
+        super().__init__(suite, name=name, path=path, deps=[], layout=layout, theLicense=theLicense, platformDependent=True, defaultBuild=False)
+        self.buildDependencies.append(standalone_dir_dist)
+        self.reset_user_group = True
+
+    def compress_locally(self):
+        return True
+
+    def resolveDeps(self):
+        super().resolveDeps()
+        resolved = [self.standalone_dir_dist]
+        self._resolveDepsHelper(resolved)
+        self.standalone_dir_dist = resolved[0]
+
 
 # Functions called from suite.py
 
