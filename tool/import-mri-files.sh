@@ -155,5 +155,5 @@ cp -R "${internal_headers[@]/#/"$RUBY_SOURCE_DIR/internal/"}" lib/cext/include/i
 rm -f lib/cext/include/ruby_assert.h && cp "$RUBY_SOURCE_DIR/ruby_assert.h" lib/cext/include/ruby_assert.h
 
 # defs/
-cp "$RUBY_SOURCE_DIR/defs/known_errors.def" tool
+awk '{print $1}' "$RUBY_SOURCE_DIR/defs/known_errors.def" > tool/known_errors.def
 cp "$RUBY_SOURCE_DIR/defs/id.def" tool
