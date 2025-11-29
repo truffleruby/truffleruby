@@ -3,7 +3,6 @@ suite = {
     "name": "truffleruby",
     "version": "33.0.0",
     "release": False,
-    "groupId": "org.graalvm.ruby",
     "url": "https://github.com/truffleruby/truffleruby",
     "developer": {
         "name": "TruffleRuby",
@@ -482,7 +481,7 @@ suite = {
             ],
         },
 
-        "org.graalvm.shadowed.org.joni": {
+        "dev.truffleruby.shadowed.org.joni": {
             # Shadowed JONI library (org.jruby.joni:joni)
             "dir": "src/shadowed/joni",
             "sourceDirs": ["java"],
@@ -497,7 +496,7 @@ suite = {
             "class": "ShadedLibraryProject",
             "shade": {
                 "packages": {
-                    "org.joni": "org.graalvm.shadowed.org.joni",
+                    "org.joni": "dev.truffleruby.shadowed.org.joni",
                     "org.jcodings": "org.graalvm.shadowed.org.jcodings",
                 },
                 "exclude": [
@@ -569,19 +568,20 @@ suite = {
 
         "TRUFFLERUBY-ANNOTATIONS": {
             "moduleInfo": {
-                "name": "org.graalvm.ruby.annotations",
+                "name": "dev.truffleruby.annotations",
                 "exports": [
-                    "org.truffleruby.annotations to org.graalvm.ruby",
+                    "org.truffleruby.annotations to dev.truffleruby.runtime",
                 ],
             },
             "useModulePath": True,
             "dependencies": [
                 "org.truffleruby.annotations"
             ],
-            "description": "TruffleRuby Annotations",
+            "description": "Internal.",
             "license": ["EPL-2.0"],
             "maven": {
-                "artifactId": "ruby-annotations",
+                "groupId": "dev.truffleruby.internal",
+                "artifactId": "annotations",
                 "tag": ["default", "public"],
             },
             "noMavenJavadoc": True,
@@ -592,11 +592,11 @@ suite = {
         # This code is loaded twice in different classloaders, therefore any created instances should not be passed around.
         "TRUFFLERUBY-SHARED": {
             "moduleInfo": {
-                "name": "org.graalvm.ruby.shared",
+                "name": "dev.truffleruby.shared",
                 "exports": [
-                    "org.truffleruby.shared to org.graalvm.ruby, org.graalvm.ruby.launcher",
-                    "org.truffleruby.shared.options to org.graalvm.ruby, org.graalvm.ruby.launcher",
-                    "org.truffleruby.signal to org.graalvm.ruby, org.graalvm.ruby.launcher",
+                    "org.truffleruby.shared to dev.truffleruby.runtime, dev.truffleruby.launcher",
+                    "org.truffleruby.shared.options to dev.truffleruby.runtime, dev.truffleruby.launcher",
+                    "org.truffleruby.signal to dev.truffleruby.runtime, dev.truffleruby.launcher",
                 ],
             },
             "useModulePath": True,
@@ -609,10 +609,11 @@ suite = {
                 "sdk:NATIVEIMAGE",
                 "sdk:POLYGLOT",
             ],
-            "description": "TruffleRuby Shared constants and predicates",
+            "description": "Internal.",
             "license": ["EPL-2.0"],
             "maven": {
-                "artifactId": "ruby-shared",
+                "groupId": "dev.truffleruby.internal",
+                "artifactId": "shared",
                 "tag": ["default", "public"],
             },
             "noMavenJavadoc": True,
@@ -633,7 +634,7 @@ suite = {
 
         "TRUFFLERUBY": {
             "moduleInfo": {
-                "name": "org.graalvm.ruby",
+                "name": "dev.truffleruby.runtime",
             },
             "useModulePath": True,
             "dependencies": [
@@ -660,7 +661,7 @@ suite = {
                 "truffle:TRUFFLE_NFI_PANAMA",
                 "sulong:SULONG_NATIVE",
             ],
-            "description": "TruffleRuby, a high-performance embeddable Ruby implementation. This artifact includes the core language runtime without standard libraries. It is not recommended to depend on this artifact directly. Instead, use \'org.graalvm.polyglot:ruby\' to ensure all dependencies are pulled in correctly.", # pylint: disable=line-too-long
+            "description": "Internal.",
             "license": [
                 "EPL-2.0",          # JRuby (we choose EPL out of EPL,GPL,LGPL)
                 "BSD-new",          # Rubinius
@@ -668,7 +669,8 @@ suite = {
                 "MIT",              # Joni, JCodings
             ],
             "maven": {
-                "artifactId": "ruby-language",
+                "groupId": "dev.truffleruby.internal",
+                "artifactId": "runtime",
                 "tag": ["default", "public"],
             },
             "noMavenJavadoc": True,
@@ -682,9 +684,10 @@ suite = {
                 "truffle:TRUFFLE_RUNTIME",
                 "sulong:LLVM_NATIVE_POM",
             ],
-            "description": "TruffleRuby (GraalVM Ruby)",
+            "description": "TruffleRuby, a high-performance embeddable Ruby implementation",
             "maven": {
-                "artifactId": "ruby",
+                "groupId": "dev.truffleruby",
+                "artifactId": "truffleruby",
                 "tag": ["default", "public"],
             },
             "license": [
@@ -708,7 +711,7 @@ suite = {
 
         "TRUFFLERUBY-LAUNCHER": {
             "moduleInfo": {
-                "name": "org.graalvm.ruby.launcher",
+                "name": "dev.truffleruby.launcher",
                 "exports": [
                     "org.truffleruby.launcher to org.graalvm.launcher",
                 ],
@@ -731,10 +734,10 @@ suite = {
         },
 
         "TRUFFLERUBY-RESOURCES": {
-            "description": "TruffleRuby runtime resources",
+            "description": "TruffleRuby runtime resources.",
             "platformDependent": True,
             "moduleInfo": {
-                "name": "org.graalvm.ruby.resources",
+                "name": "dev.truffleruby.resources",
             },
             "useModulePath": True,
             "dependencies": [
@@ -756,7 +759,8 @@ suite = {
             ],
             "compress": True,
             "maven": {
-                "artifactId": "ruby-resources",
+                "groupId": "dev.truffleruby.internal",
+                "artifactId": "resources",
                 "tag": ["default", "public"],
             },
         },
@@ -1162,9 +1166,10 @@ suite = {
                 "TRUFFLERUBY",
                 "TRUFFLERUBY-RESOURCES",
             ],
-            "description": "Truffle TCK provider for Ruby language.",
+            "description": "Truffle TCK provider for TruffleRuby.",
             "license": ["EPL-2.0"],
             "maven": {
+                "groupId": "dev.truffleruby.internal",
                 "artifactId": "ruby-truffle-tck",
                 "tag": ["default", "public"],
             },
@@ -1174,19 +1179,19 @@ suite = {
         "TRUFFLERUBY_JONI": {
             # JONI library shadowed for TruffleRuby.
             "moduleInfo": {
-                "name": "org.graalvm.shadowed.joni",
+                "name": "dev.truffleruby.shadowed.joni",
                 "requires": [
                     "org.graalvm.shadowed.jcodings",
                 ],
                 "exports": [
-                    "org.graalvm.shadowed.org.joni to org.graalvm.ruby",
-                    "org.graalvm.shadowed.org.joni.constants to org.graalvm.ruby",
-                    "org.graalvm.shadowed.org.joni.exception to org.graalvm.ruby",
+                    "dev.truffleruby.shadowed.org.joni to dev.truffleruby.runtime",
+                    "dev.truffleruby.shadowed.org.joni.constants to dev.truffleruby.runtime",
+                    "dev.truffleruby.shadowed.org.joni.exception to dev.truffleruby.runtime",
                 ],
             },
             "javaCompliance": "17+",
             "dependencies": [
-                "org.graalvm.shadowed.org.joni",
+                "dev.truffleruby.shadowed.org.joni",
             ],
             "distDependencies": [
                 "truffle:TRUFFLE_JCODINGS",
@@ -1194,7 +1199,7 @@ suite = {
             "description": "JOni module shadowed for TruffleRuby.",
             "license": ["MIT"],
             "maven": {
-                "groupId": "org.graalvm.shadowed",
+                "groupId": "dev.truffleruby.shadowed",
                 "artifactId": "joni",
                 "tag": ["default", "public"],
             },

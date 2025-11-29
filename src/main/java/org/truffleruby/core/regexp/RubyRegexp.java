@@ -19,7 +19,7 @@ import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.Node;
 
 import com.oracle.truffle.api.strings.TruffleString;
-import org.graalvm.shadowed.org.joni.Regex;
+import dev.truffleruby.shadowed.org.joni.Regex;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.encoding.Encodings;

@@ -34,7 +34,7 @@ package org.truffleruby.parser;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import org.graalvm.shadowed.org.joni.WarnCallback;
+import dev.truffleruby.shadowed.org.joni.WarnCallback;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.string.RubyString;
