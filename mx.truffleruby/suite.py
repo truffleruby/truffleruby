@@ -54,18 +54,6 @@ suite = {
         },
     },
 
-    "repositories": {
-        "truffleruby-binary-snapshots": {
-            "url": "https://curio.ssw.jku.at/nexus/content/repositories/snapshots",
-            "licenses": [
-                "EPL-2.0",          # JRuby (we choose EPL out of EPL,GPL,LGPL)
-                "BSD-simplified",   # MRI
-                "BSD-new",          # Rubinius, FFI
-                "MIT",              # JCodings, minitest, did_you_mean, rake
-            ]
-        },
-    },
-
     "libraries": {
 
         # ------------- Libraries -------------
