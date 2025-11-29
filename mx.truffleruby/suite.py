@@ -1177,12 +1177,7 @@ suite = {
             ],
             "description": "Truffle TCK provider for TruffleRuby.",
             "license": ["EPL-2.0"],
-            "maven": {
-                "groupId": "dev.truffleruby.internal",
-                "artifactId": "ruby-truffle-tck",
-                "tag": ["default", "public"],
-            },
-            "noMavenJavadoc": True,
+            "maven": False,
         },
 
         "TRUFFLERUBY_JONI": {
