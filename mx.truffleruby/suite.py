@@ -424,7 +424,12 @@ suite = {
         "org.truffleruby.tck": {
             "dir": "src/tck",
             "sourceDirs": ["java", "ruby"],
-            "dependencies": ["truffle:TRUFFLE_TCK"],
+            "dependencies": [
+                # Distributions
+                "sdk:POLYGLOT_TCK",
+                # Libraries
+                "mx:JUNIT",
+            ],
             "javaCompliance": "17+",
             "checkstyle": "org.truffleruby",
             "license": ["EPL-2.0"],
@@ -1161,10 +1166,14 @@ suite = {
         "TRUFFLERUBY-TCK": {
             "dependencies": ["org.truffleruby.tck"],
             "distDependencies": [
-                "truffle:TRUFFLE_TCK",
+                "sdk:POLYGLOT_TCK",
                 # runtime-only dependencies
                 "TRUFFLERUBY",
                 "TRUFFLERUBY-RESOURCES",
+            ],
+            "exclude": [
+                "mx:HAMCREST",
+                "mx:JUNIT",
             ],
             "description": "Truffle TCK provider for TruffleRuby.",
             "license": ["EPL-2.0"],
