@@ -22,7 +22,10 @@ describe "Truffle::GemUtil::DEFAULT_GEMS" do
     hash = hash.to_h { |prefix, names| [prefix, names == [prefix] ? true : names] }
 
     # To copy-paste to gem_util.rb conveniently:
-    # hash.each_pair { |k,v| puts "#{k.inspect} => #{v},".tr('"', "'") }
+    #puts "\n\n"
+    #puts '*' * 80
+    #hash.each_pair { |k,v| puts "#{k.inspect} => #{v},".tr('"', "'") }
+    #puts '*' * 80
 
     Truffle::GemUtil::DEFAULT_GEMS.should == hash
   end
