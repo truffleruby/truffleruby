@@ -688,6 +688,8 @@ suite = {
                 "BSD-new",          # Rubinius
                 "BSD-simplified",   # MRI
                 "MIT",              # Joni, JCodings
+                "UPL",              # TRegex, Truffle, SDK
+                "ICU",              # TRUFFLE_ICU4J, dependency of TRegex
             ],
         },
 
