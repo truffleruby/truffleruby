@@ -30,56 +30,60 @@ describe "Hash thread safety" do
     }
   end
 
-  it "supports concurrent #[]= and #delete and iteration" do
-    n_threads = ThreadSafetySpecs.processors
+  # can't add a new key into hash during iteration (RuntimeError) on CRuby.
+  # Yet it's good to test this for implementations that support it.
+  guard_not -> { PlatformGuard.standard? } do
+    it "supports concurrent #[]= and #delete and iteration" do
+      n_threads = ThreadSafetySpecs.processors
 
-    n = 1_000
-    operations = n * n_threads / 2
+      n = 1_000
+      operations = n * n_threads / 2
 
-    h = {}
-    barrier1 = ThreadSafetySpecs::Barrier.new(n_threads + 2)
-    barrier2 = ThreadSafetySpecs::Barrier.new(n_threads + 1)
+      h = {}
+      barrier1 = ThreadSafetySpecs::Barrier.new(n_threads + 2)
+      barrier2 = ThreadSafetySpecs::Barrier.new(n_threads + 1)
 
-    threads = n_threads.times.map { |t|
-      Thread.new {
+      threads = n_threads.times.map { |t|
+        Thread.new {
+          barrier1.wait
+          base = t * n
+          n.times do |j|
+            h[base+j] = t
+          end
+
+          barrier2.wait
+          n.times do |j|
+            # delete only even keys
+            h.delete(base+j).should == t if (base+j).even?
+          end
+        }
+      }
+
+      read = true
+      reader = Thread.new {
         barrier1.wait
-        base = t * n
-        n.times do |j|
-          h[base+j] = t
-        end
-
-        barrier2.wait
-        n.times do |j|
-          # delete only even keys
-          h.delete(base+j).should == t if (base+j).even?
+        while read
+          h.each_pair { |k,v|
+            k.should.is_a?(Integer)
+            v.should.is_a?(Integer)
+            (k / n).should == v
+          }
         end
       }
-    }
 
-    read = true
-    reader = Thread.new {
       barrier1.wait
-      while read
-        h.each_pair { |k,v|
-          k.should.is_a?(Integer)
-          v.should.is_a?(Integer)
-          (k / n).should == v
-        }
-      end
-    }
+      barrier2.wait
+      threads.each(&:join)
+      read = false
+      reader.join
 
-    barrier1.wait
-    barrier2.wait
-    threads.each(&:join)
-    read = false
-    reader.join
-
-    # odd keys are left
-    h.size.should == operations
-    h.each_pair { |key, value|
-      key.should.odd?
-      (key / n).should == value
-    }
+      # odd keys are left
+      h.size.should == operations
+      h.each_pair { |key, value|
+        key.should.odd?
+        (key / n).should == value
+      }
+    end
   end
 
   it "supports concurrent #[]= and #[]" do
