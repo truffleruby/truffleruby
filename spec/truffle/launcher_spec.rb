@@ -12,7 +12,9 @@ require 'benchmark'
 require 'json'
 
 describe "The launcher" do
-  gem_versions = JSON.parse(File.read(File.expand_path('../../../versions.json', __FILE__))).fetch('gems')
+  versions = JSON.parse(File.read(File.expand_path('../../../versions.json', __FILE__)))
+  @rubygems_version = versions.fetch('rubygems')
+  gem_versions = versions.fetch('gems')
   @default_gems = gem_versions.fetch('default')
   @bundled_gems = gem_versions.fetch('bundled')
 
@@ -21,8 +23,8 @@ describe "The launcher" do
     bundle: escape["Bundler version #{@default_gems['bundler']}"],
     bundler: escape["Bundler version #{@default_gems['bundler']}"],
     erb: escape[@default_gems['erb']],
-    gem: escape[@default_gems['gem']],
-    irb: escape["irb #{@default_gems['irb']} (2024-05-05)"],
+    gem: escape[@rubygems_version],
+    irb: escape["irb #{@default_gems['irb']} (2024-12-18)"],
     racc: escape["racc version #{@bundled_gems['racc']}"],
     rake: escape["rake, version #{@bundled_gems['rake']}"],
     rbs: escape["rbs #{@bundled_gems['rbs']}"],

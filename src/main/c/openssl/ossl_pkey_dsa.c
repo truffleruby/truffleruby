@@ -5,7 +5,7 @@
  */
 /*
  * This program is licensed under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 
@@ -41,7 +41,7 @@ DSA_PRIVATE(VALUE obj, OSSL_3_const DSA *dsa)
  * Classes
  */
 VALUE cDSA;
-VALUE eDSAError;
+static VALUE eDSAError;
 
 /*
  * Private

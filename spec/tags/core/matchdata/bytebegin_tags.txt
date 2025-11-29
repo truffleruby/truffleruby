@@ -1,0 +1,18 @@
+fails:MatchData#bytebegin when passed an integer argument returns the byte-based offset of the start of the nth element
+fails:MatchData#bytebegin when passed an integer argument returns nil when the nth match isn't found
+fails:MatchData#bytebegin when passed an integer argument returns the byte-based offset for multi-byte strings
+fails:MatchData#bytebegin when passed an integer argument returns the byte-based offset for multi-byte strings with unicode regexp
+fails:MatchData#bytebegin when passed an integer argument tries to convert the passed argument to an Integer using #to_int
+fails:MatchData#bytebegin when passed an integer argument raises IndexError if index is out of bounds
+fails:MatchData#bytebegin when passed a String argument return the byte-based offset of the start of the named capture
+fails:MatchData#bytebegin when passed a String argument returns the byte-based offset for multi byte strings
+fails:MatchData#bytebegin when passed a String argument returns the byte-based offset for multi byte strings with unicode regexp
+fails:MatchData#bytebegin when passed a String argument returns the byte-based offset for the farthest match when multiple named captures use the same name
+fails:MatchData#bytebegin when passed a String argument returns the byte-based offset for multi-byte names
+fails:MatchData#bytebegin when passed a String argument raises IndexError if there is no group with the provided name
+fails:MatchData#bytebegin when passed a Symbol argument return the byte-based offset of the start of the named capture
+fails:MatchData#bytebegin when passed a Symbol argument returns the byte-based offset for multi byte strings
+fails:MatchData#bytebegin when passed a Symbol argument returns the byte-based offset for multi byte strings with unicode regexp
+fails:MatchData#bytebegin when passed a Symbol argument returns the byte-based offset for the farthest match when multiple named captures use the same name
+fails:MatchData#bytebegin when passed a Symbol argument returns the byte-based offset for multi-byte names
+fails:MatchData#bytebegin when passed a Symbol argument raises IndexError if there is no group with the provided name

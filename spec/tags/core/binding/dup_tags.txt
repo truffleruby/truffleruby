@@ -1,0 +1,3 @@
+slow:Binding#dup copies the finalizer
+fails:Binding#dup copies instance variables
+fails:Binding#dup copies the finalizer

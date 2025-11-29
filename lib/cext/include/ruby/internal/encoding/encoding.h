@@ -28,6 +28,7 @@
 #include "ruby/internal/attr/pure.h"
 #include "ruby/internal/attr/returns_nonnull.h"
 #include "ruby/internal/dllexport.h"
+#include "ruby/internal/encoding/coderange.h"
 #include "ruby/internal/value.h"
 #include "ruby/internal/core/rbasic.h"
 #include "ruby/internal/fl_type.h"
@@ -87,7 +88,7 @@ RB_ENCODING_SET_INLINED(VALUE obj, int encindex)
 static inline void
 RB_ENCODING_SET_INLINED(VALUE obj, int encindex)
 {
-    VALUE f = /* upcast */ encindex;
+    VALUE f = /* upcast */ RBIMPL_CAST((VALUE)encindex);
 
     f <<= RUBY_ENCODING_SHIFT;
     RB_FL_UNSET_RAW(obj, RUBY_ENCODING_MASK);

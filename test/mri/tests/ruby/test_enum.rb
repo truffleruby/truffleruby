@@ -2,7 +2,6 @@
 require 'test/unit'
 EnvUtil.suppress_warning {require 'continuation'}
 require 'stringio'
-require 'delegate'
 
 class TestEnumerable < Test::Unit::TestCase
   def setup
@@ -844,6 +843,8 @@ class TestEnumerable < Test::Unit::TestCase
   end
 
   def test_callcc
+    omit 'requires callcc support' unless respond_to?(:callcc)
+
     assert_raise(RuntimeError) do
       c = nil
       @obj.sort_by {|x| callcc {|c2| c ||= c2 }; x }
@@ -1346,5 +1347,13 @@ class TestEnumerable < Test::Unit::TestCase
     svars = []
     klass.new.grep(/(b.)/) { svars << $1 }
     assert_equal(["ba", "ba"], svars)
+  end
+
+  def test_all_fast
+    data = { "key" => { "key2" => 1 } }
+    kk = vv = nil
+    data.all? { |(k, v)| kk, vv = k, v }
+    assert_equal(kk, "key")
+    assert_equal(vv, { "key2" => 1 })
   end
 end

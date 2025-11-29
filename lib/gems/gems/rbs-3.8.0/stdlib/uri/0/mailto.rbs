@@ -1,0 +1,92 @@
+%a{annotate:rdoc:skip}
+module URI
+  # <!-- rdoc-file=lib/uri/mailto.rb -->
+  # RFC6068, the mailto URL scheme.
+  #
+  class MailTo < Generic
+    EMAIL_REGEXP: Regexp
+
+    # <!--
+    #   rdoc-file=lib/uri/mailto.rb
+    #   - build(args)
+    # -->
+    # ## Description
+    #
+    # Creates a new URI::MailTo object from components, with syntax checking.
+    #
+    # Components can be provided as an Array or Hash. If an Array is used, the
+    # components must be supplied as `[to, headers]`.
+    #
+    # If a Hash is used, the keys are the component names preceded by colons.
+    #
+    # The headers can be supplied as a pre-encoded string, such as
+    # `"subject=subscribe&cc=address"`, or as an Array of Arrays like `[['subject',
+    # 'subscribe'], ['cc', 'address']]`.
+    #
+    # Examples:
+    #
+    #     require 'uri'
+    #
+    #     m1 = URI::MailTo.build(['joe@example.com', 'subject=Ruby'])
+    #     m1.to_s  # => "mailto:joe@example.com?subject=Ruby"
+    #
+    #     m2 = URI::MailTo.build(['john@example.com', [['Subject', 'Ruby'], ['Cc', 'jack@example.com']]])
+    #     m2.to_s  # => "mailto:john@example.com?Subject=Ruby&Cc=jack@example.com"
+    #
+    #     m3 = URI::MailTo.build({:to => 'listman@example.com', :headers => [['subject', 'subscribe']]})
+    #     m3.to_s  # => "mailto:listman@example.com?subject=subscribe"
+    #
+    def self.build: (Array[String]) -> instance
+                  | ([String, Array[Array[String]]]) -> instance
+                  | (Hash[Symbol, String | Array[Array[String]]]) -> instance
+
+    # <!-- rdoc-file=lib/uri/mailto.rb -->
+    # E-mail headers set by the URL, as an Array of Arrays.
+    #
+    def headers: () -> Array[[String, String]]
+
+    # <!--
+    #   rdoc-file=lib/uri/mailto.rb
+    #   - headers=(v)
+    # -->
+    # Setter for headers `v`.
+    #
+    def headers=: (String) -> String
+
+    # <!-- rdoc-file=lib/uri/mailto.rb -->
+    # The primary e-mail address of the URL, as a String.
+    #
+    def to: () -> String
+
+    # <!--
+    #   rdoc-file=lib/uri/mailto.rb
+    #   - to=(v)
+    # -->
+    # Setter for to `v`.
+    #
+    def to=: (String) -> String
+
+    # <!--
+    #   rdoc-file=lib/uri/mailto.rb
+    #   - to_mailtext()
+    # -->
+    # Returns the RFC822 e-mail text equivalent of the URL, as a String.
+    #
+    # Example:
+    #
+    #     require 'uri'
+    #
+    #     uri = URI.parse("mailto:ruby-list@ruby-lang.org?Subject=subscribe&cc=myaddr")
+    #     uri.to_mailtext
+    #     # => "To: ruby-list@ruby-lang.org\nSubject: subscribe\nCc: myaddr\n\n\n"
+    #
+    def to_mailtext: () -> String
+
+    # <!--
+    #   rdoc-file=lib/uri/mailto.rb
+    #   - to_rfc822text()
+    # -->
+    #
+    def to_rfc822text: () -> String
+  end
+end

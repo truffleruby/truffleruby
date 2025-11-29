@@ -1,0 +1,7 @@
+exclude :test_assignable_in_regexp, "assert_separately failed with error message"
+exclude :test_new, "assert_separately failed with error message"
+exclude :test_no_memory_leak, "| ERROR: truffleruby: invalid option --parser=parse.y  (Use --help for usage instructions.)"
+exclude :test_regexp_enc_error, "assert_separately failed with error message"
+exclude :test_sexp_no_memory_leak, "| ERROR: truffleruby: invalid option --parser=parse.y  (Use --help for usage instructions.)"
+exclude :test_yydebug_ident, "ArgumentError: unhandled rb_sprintf arg type 26"
+exclude :test_yydebug_string, "ArgumentError: unhandled rb_sprintf arg type 26"

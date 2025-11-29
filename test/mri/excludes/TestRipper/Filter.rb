@@ -1,0 +1,6 @@
+exclude :test_filter_column, "undefined symbol: rb_str_new_mutable_parser_string"
+exclude :test_filter_filename, "undefined symbol: rb_str_new_mutable_parser_string"
+exclude :test_filter_filename_unset, "undefined symbol: rb_str_new_mutable_parser_string"
+exclude :test_filter_lineno, "undefined symbol: rb_str_new_mutable_parser_string"
+exclude :test_filter_lineno_set, "undefined symbol: rb_str_new_mutable_parser_string"
+exclude :test_filter_state, "undefined symbol: rb_str_new_mutable_parser_string"

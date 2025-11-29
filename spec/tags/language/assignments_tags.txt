@@ -1,2 +1,6 @@
 fails:Assignments using += using a #[] splatted argument calls #to_a only once
 fails:Assignments using += using a #[] given keyword arguments supports keyword arguments in index assignments
+fails:Assignments using = given block argument raises SyntaxError
+fails:Assignments using = given keyword arguments raises SyntaxError when given keyword arguments in index assignments
+fails:Assignments using += using a #[] given block argument raises SyntaxError
+fails:Assignments using += using a #[] given keyword arguments raises SyntaxError when given keyword arguments in index assignments

@@ -1,0 +1,277 @@
+module RBS
+  class Environment
+    type module_decl = AST::Declarations::Class | AST::Declarations::Module
+
+    interface _ModuleOrClass
+      def name: () -> TypeName
+
+      def type_params: () -> Array[AST::TypeParam]
+    end
+
+    interface _NamedDecl
+      def name: () -> TypeName
+    end
+
+    module ContextUtil
+      def calculate_context: (Array[_NamedDecl]) -> Resolver::context
+    end
+
+    # Name of object, it's (multiple) declarations with the outer module declarations
+    #
+    class MultiEntry[M < _ModuleOrClass]
+      class D[M < _ModuleOrClass]
+        attr_reader decl: M
+        attr_reader outer: Array[module_decl]
+
+        def initialize: (decl: M, outer: Array[module_decl]) -> void
+
+        include ContextUtil
+
+        @context: Resolver::context
+
+        def context: () -> Resolver::context
+      end
+
+      attr_reader name: TypeName
+      attr_reader decls: Array[D[M]]
+
+      @primary: D[M]?
+
+      def initialize: (name: TypeName) -> void
+
+      def insert: (decl: M, outer: Array[module_decl]) -> void
+
+      def validate_type_params: () -> void
+
+      def compatible_params?: (Array[AST::TypeParam], Array[AST::TypeParam]) -> boolish
+
+      def type_params: () -> Array[AST::TypeParam]
+
+      def primary: () -> D[M]
+    end
+
+    class ModuleEntry < MultiEntry[AST::Declarations::Module]
+      def self_types: () -> Array[AST::Declarations::Module::Self]
+    end
+
+    class ClassEntry < MultiEntry[AST::Declarations::Class]
+    end
+
+    # Name of object, it's (single) declaration, and the outer module declarations
+    #
+    class SingleEntry[N, D]
+      attr_reader name: N
+      attr_reader decl: D
+      attr_reader outer: Array[module_decl]
+
+      def initialize: (name: N, decl: D, outer: Array[module_decl]) -> void
+
+      include ContextUtil
+
+      @context: Resolver::context
+
+      def context: () -> Resolver::context
+    end
+
+    class ModuleAliasEntry < SingleEntry[TypeName, AST::Declarations::ModuleAlias]
+    end
+
+    class ClassAliasEntry < SingleEntry[TypeName, AST::Declarations::ClassAlias]
+    end
+
+    class InterfaceEntry < SingleEntry[TypeName, AST::Declarations::Interface]
+    end
+
+    class TypeAliasEntry < SingleEntry[TypeName, AST::Declarations::TypeAlias]
+    end
+
+    class ConstantEntry < SingleEntry[TypeName, AST::Declarations::Constant]
+    end
+
+    class GlobalEntry < SingleEntry[Symbol, AST::Declarations::Global]
+    end
+
+    # Top level declarations
+    attr_reader declarations: Array[AST::Declarations::t]
+
+    # Class declarations
+    attr_reader class_decls: Hash[TypeName, ModuleEntry | ClassEntry]
+
+    attr_reader class_alias_decls: Hash[TypeName, ModuleAliasEntry | ClassAliasEntry]
+
+    # Interface declarations
+    attr_reader interface_decls: Hash[TypeName, InterfaceEntry]
+
+    # Type alias declarations
+    attr_reader type_alias_decls: Hash[TypeName, TypeAliasEntry]
+
+    # Constant declarations
+    attr_reader constant_decls: Hash[TypeName, ConstantEntry]
+
+    # Global declarations
+    attr_reader global_decls: Hash[Symbol, GlobalEntry]
+
+    # A hash from Buffer to it's contents
+    #
+    attr_reader signatures: Hash[Buffer, [Array[AST::Directives::t], Array[AST::Declarations::t]]]
+
+    def initialize: () -> void
+
+    def initialize_copy: (Environment) -> void
+
+    # Construct an environment from EnvironmentLoader
+    #
+    def self.from_loader: (EnvironmentLoader) -> Environment
+
+    def add_signature: (buffer: Buffer, directives: Array[AST::Directives::t], decls: Array[AST::Declarations::t]) -> void
+
+    # Insert a toplevel declaration into the environment
+    #
+    def <<: (AST::Declarations::t decl) -> self
+
+    # Insert a declaration into the environment
+    #
+    private def insert_decl: (AST::Declarations::t, outer: Array[module_decl], namespace: Namespace) -> void
+
+    # Resolve all type names in the environment to absolute type names.
+    # Relative type name will be left if absolute type name cannot be found.
+    #
+    # When `only` is given, it skips other _top-level_ declarations not included in the collection.
+    # This helps running resolution faster in the case of _partial updates_.
+    #
+    def resolve_type_names: (?only: Set[AST::Declarations::t]?) -> Environment
+
+    def inspect: () -> String
+
+    def buffers: () -> Array[Buffer]
+
+    # Remove declarations and directives that are loaded from `buffers`
+    #
+    def unload: (Set[Buffer] buffers) -> Environment
+
+    # Returns true if an interface with the type name is defined
+    #
+    def interface_name?: (TypeName) -> bool
+
+    # Returns true if a type alias with the type name is defined
+    #
+    def type_alias_name?: (TypeName) -> bool
+
+    # Returns true if a module or class with the type name is defined
+    #
+    def module_name?: (TypeName) -> bool
+
+    # Returns true if the type name is defined
+    #
+    def type_name?: (TypeName) -> bool
+
+    # Returns if a constant of the name is defined
+    #
+    def constant_name?: (TypeName) -> bool
+
+    # Returns true if the type name is defined by constant declaration
+    #
+    def constant_decl?: (TypeName) -> bool
+
+    # Returns true if the type name is defined by class declaration
+    #
+    def class_decl?: (TypeName) -> bool
+
+    # Returns true if the type name is defined by module declaration
+    #
+    def module_decl?: (TypeName) -> bool
+
+    # Returns true if the type name is a module alias
+    #
+    def module_alias?: (TypeName) -> bool
+
+    # Returns true if the type name is a class alias
+    def class_alias?: (TypeName) -> bool
+
+    def class_entry: (TypeName) -> (ClassEntry | ClassAliasEntry | nil)
+
+    # Returns ClassEntry if the class definition is found, normalized in case of alias
+    #
+    def normalized_class_entry: (TypeName) -> ClassEntry?
+
+    def module_entry: (TypeName) -> (ModuleEntry | ModuleAliasEntry | nil)
+
+    # Returns ModuleEntry if the module definition is found, normalized in case of alias
+    #
+    def normalized_module_entry: (TypeName) -> ModuleEntry?
+
+    def constant_entry: (TypeName) -> (ClassEntry | ClassAliasEntry | ModuleEntry | ModuleAliasEntry | ConstantEntry | nil)
+
+    def module_class_entry: (TypeName) -> (ClassEntry | ClassAliasEntry | ModuleEntry | ModuleAliasEntry | nil)
+
+    def normalized_module_class_entry: (TypeName) -> (ClassEntry | ModuleEntry | nil)
+
+    @normalize_module_name_cache: Hash[TypeName, TypeName | false | nil]
+
+    # Returns the original module name that is defined with `module` declaration
+    #
+    # * Calls `#absolute!` for relative module names
+    # * Returns `nil` if the rhs name cannot be found
+    # * Returns `false` if the name is cyclic
+    #
+    def normalize_module_name?: (TypeName) -> (TypeName | nil | false)
+
+    # Returns the original module name that is defined with `module` declaration
+    #
+    # * Raises an error if given type name is not module
+    # * Calls `#absolute!` for relative module names
+    # * Returns the name itself if the name cannot be normalized to a class/module
+    #
+    def normalize_module_name: (TypeName) -> TypeName
+
+    # Returns a normalized module/class name or a type name with a normalized namespace
+    #
+    # * Calls `#absolute!` for relative module names
+    # * Returns `nil` if the typename cannot be found
+    # * Returns `false` if the name is cyclic
+    #
+    def normalize_type_name?: (TypeName) -> (TypeName | nil | false)
+
+    # Normalize the type name or raises an error
+    #
+    def normalize_type_name!: (TypeName) -> TypeName
+
+    # Returns a normalized module/class name or a type name with a normalized namespace
+    #
+    # * Calls `#absolute!` for relative module names
+    # * Returns the typename itself if the name cannot be normalized
+    #
+    def normalize_type_name: (TypeName) -> TypeName
+
+    # Returns `true` if given type name is normalized
+    #
+    def normalized_type_name?: (TypeName) -> bool
+
+    # Returns the given type name if it's normalized, or raises
+    #
+    def normalized_type_name!: (TypeName) -> TypeName
+
+    # Runs generics type params validation over each class definitions
+    def validate_type_params: () -> void
+
+    private
+
+    # Returns a context for inside given decls
+    #
+    def resolver_context: (*module_decl) -> Resolver::context
+
+    def append_context: (Resolver::context, module_decl) -> Resolver::context
+
+    def resolve_declaration: (Resolver::TypeNameResolver resolver, UseMap map, AST::Declarations::t decl, outer: Array[module_decl], prefix: Namespace) -> AST::Declarations::t
+
+    def resolve_member: (Resolver::TypeNameResolver, UseMap map, AST::Members::t, context: Resolver::context) -> AST::Members::t
+
+    def resolve_method_type: (Resolver::TypeNameResolver, UseMap map, RBS::MethodType, context: Resolver::context) -> RBS::MethodType
+
+    def resolve_type_params: (Resolver::TypeNameResolver resolver, UseMap map, Array[AST::TypeParam], context: Resolver::context) ->  Array[AST::TypeParam]
+
+    def absolute_type: (Resolver::TypeNameResolver, UseMap map, Types::t, context: Resolver::context) -> Types::t
+
+    def absolute_type_name: (Resolver::TypeNameResolver, UseMap map, TypeName, context: Resolver::context) -> TypeName
+  end
+end

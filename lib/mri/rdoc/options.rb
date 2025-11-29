@@ -105,6 +105,7 @@ class RDoc::Options
     generator_name
     generator_options
     generators
+    locale
     op_dir
     page_dir
     option_parser
@@ -232,9 +233,9 @@ class RDoc::Options
   attr_accessor :main_page
 
   ##
-  # The default markup format.  The default is 'rdoc'.  'markdown', 'tomdoc'
-  # and 'rd' are also built-in.
-
+  # The markup format.
+  # One of: +rdoc+ (the default), +markdown+, +rd+, +tomdoc+.
+  # See {Markup Formats}[rdoc-ref:RDoc::Markup@Markup+Formats].
   attr_accessor :markup
 
   ##
@@ -325,6 +326,12 @@ class RDoc::Options
   attr_accessor :verbosity
 
   ##
+  # Warn if rdoc-ref links can't be resolved
+  # Default is +false+
+
+  attr_accessor :warn_missing_rdoc_ref
+
+  ##
   # URL of web cvs frontend
 
   attr_accessor :webcvs
@@ -343,17 +350,49 @@ class RDoc::Options
   # Indicates if files of test suites should be skipped
   attr_accessor :skip_tests
 
-  def initialize loaded_options = nil # :nodoc:
+  ##
+  # Embed mixin methods, attributes, and constants into class documentation. Set via
+  # +--[no-]embed-mixins+ (Default is +false+.)
+  attr_accessor :embed_mixins
+
+  ##
+  # Exclude the default patterns as well if true.
+  attr_reader :apply_default_exclude
+
+  ##
+  # Words to be ignored in autolink cross-references
+  attr_accessor :autolink_excluded_words
+
+  ##
+  # The prefix to use for class and module page paths
+
+  attr_accessor :class_module_path_prefix
+
+  ##
+  # The prefix to use for file page paths
+
+  attr_accessor :file_path_prefix
+
+  ##
+  # The preferred root URL for the documentation
+
+  attr_accessor :canonical_root
+
+  def initialize(loaded_options = nil) # :nodoc:
     init_ivars
     override loaded_options if loaded_options
   end
 
+  DEFAULT_EXCLUDE = %w[
+    ~\z \.orig\z \.rej\z \.bak\z
+    \.gemspec\z
+  ]
+
   def init_ivars # :nodoc:
+    @autolink_excluded_words = []
     @dry_run = false
-    @exclude = %w[
-      ~\z \.orig\z \.rej\z \.bak\z
-      \.gemspec\z
-    ]
+    @embed_mixins = false
+    @exclude = []
     @files = nil
     @force_output = false
     @force_update = true
@@ -386,20 +425,26 @@ class RDoc::Options
     @update_output_dir = true
     @verbosity = 1
     @visibility = :protected
+    @warn_missing_rdoc_ref = true
     @webcvs = nil
     @write_options = false
     @encoding = Encoding::UTF_8
     @charset = @encoding.name
     @skip_tests = true
+    @apply_default_exclude = true
+    @class_module_path_prefix = nil
+    @file_path_prefix = nil
+    @canonical_root = nil
   end
 
-  def init_with map # :nodoc:
+  def init_with(map) # :nodoc:
     init_ivars
 
     encoding = map['encoding']
     @encoding = encoding ? Encoding.find(encoding) : encoding
 
     @charset        = map['charset']
+    @embed_mixins   = map['embed_mixins']
     @exclude        = map['exclude']
     @generator_name = map['generator_name']
     @hyperlink_all  = map['hyperlink_all']
@@ -416,21 +461,25 @@ class RDoc::Options
     @visibility     = map['visibility']
     @webcvs         = map['webcvs']
 
+    @apply_default_exclude   = map['apply_default_exclude']
+    @autolink_excluded_words = map['autolink_excluded_words']
+
     @rdoc_include = sanitize_path map['rdoc_include']
     @static_path  = sanitize_path map['static_path']
   end
 
-  def yaml_initialize tag, map # :nodoc:
+  def yaml_initialize(tag, map) # :nodoc:
     init_with map
   end
 
-  def override map # :nodoc:
+  def override(map) # :nodoc:
     if map.has_key?('encoding')
       encoding = map['encoding']
       @encoding = encoding ? Encoding.find(encoding) : encoding
     end
 
     @charset        = map['charset']        if map.has_key?('charset')
+    @embed_mixins   = map['embed_mixins']   if map.has_key?('embed_mixins')
     @exclude        = map['exclude']        if map.has_key?('exclude')
     @generator_name = map['generator_name'] if map.has_key?('generator_name')
     @hyperlink_all  = map['hyperlink_all']  if map.has_key?('hyperlink_all')
@@ -447,6 +496,11 @@ class RDoc::Options
     @title          = map['title']          if map.has_key?('title')
     @visibility     = map['visibility']     if map.has_key?('visibility')
     @webcvs         = map['webcvs']         if map.has_key?('webcvs')
+    @autolink_excluded_words = map['autolink_excluded_words'] if map.has_key?('autolink_excluded_words')
+    @apply_default_exclude = map['apply_default_exclude'] if map.has_key?('apply_default_exclude')
+    @canonical_root = map['canonical_root'] if map.has_key?('canonical_root')
+
+    @warn_missing_rdoc_ref = map['warn_missing_rdoc_ref'] if map.has_key?('warn_missing_rdoc_ref')
 
     if map.has_key?('rdoc_include')
       @rdoc_include = sanitize_path map['rdoc_include']
@@ -456,14 +510,15 @@ class RDoc::Options
     end
   end
 
-  def == other # :nodoc:
+  def ==(other) # :nodoc:
     self.class === other and
       @encoding       == other.encoding       and
+      @embed_mixins   == other.embed_mixins   and
       @generator_name == other.generator_name and
       @hyperlink_all  == other.hyperlink_all  and
       @line_numbers   == other.line_numbers   and
       @locale         == other.locale         and
-      @locale_dir     == other.locale_dir and
+      @locale_dir     == other.locale_dir     and
       @main_page      == other.main_page      and
       @markup         == other.markup         and
       @op_dir         == other.op_dir         and
@@ -474,7 +529,9 @@ class RDoc::Options
       @template       == other.template       and
       @title          == other.title          and
       @visibility     == other.visibility     and
-      @webcvs         == other.webcvs
+      @webcvs         == other.webcvs         and
+      @apply_default_exclude == other.apply_default_exclude and
+      @autolink_excluded_words == other.autolink_excluded_words
   end
 
   ##
@@ -545,10 +602,12 @@ class RDoc::Options
     if @exclude.nil? or Regexp === @exclude then
       # done, #finish is being re-run
       @exclude
-    elsif @exclude.empty? then
+    elsif !@apply_default_exclude and @exclude.empty? then
       nil
     else
-      Regexp.new(@exclude.join("|"))
+      exclude = @exclude
+      exclude |= DEFAULT_EXCLUDE if @apply_default_exclude
+      Regexp.new(exclude.join("|"))
     end
   end
 
@@ -643,7 +702,7 @@ class RDoc::Options
   ##
   # Parses command line options.
 
-  def parse argv
+  def parse(argv)
     ignore_invalid = true
 
     argv.insert(0, *ENV['RDOCOPT'].split) if ENV['RDOCOPT']
@@ -682,7 +741,7 @@ Usage: #{opt.program_name} [options] [names...]
 
       EOF
 
-      parsers = Hash.new { |h,parser| h[parser] = [] }
+      parsers = Hash.new { |h, parser| h[parser] = [] }
 
       RDoc::Parser.parsers.each do |regexp, parser|
         parsers[parser.name.sub('RDoc::Parser::', '')] << regexp.source
@@ -782,6 +841,11 @@ Usage: #{opt.program_name} [options] [names...]
         @exclude << value
       end
 
+      opt.on("--[no-]apply-default-exclude",
+             "Use default PATTERN to exclude.") do |value|
+        @apply_default_exclude = value
+      end
+
       opt.separator nil
 
       opt.on("--no-skipping-tests", nil,
@@ -837,6 +901,14 @@ Usage: #{opt.program_name} [options] [names...]
              "One of 'public', 'protected' (the default),",
              "'private' or 'nodoc' (show everything)") do |value|
         @visibility = value
+      end
+
+      opt.separator nil
+
+      opt.on("--[no-]embed-mixins",
+             "Embed mixin methods, attributes, and constants",
+             "into class documentation. (default false)") do |value|
+        @embed_mixins = value
       end
 
       opt.separator nil
@@ -941,6 +1013,13 @@ Usage: #{opt.program_name} [options] [names...]
              "Use --encoding instead of --charset if",
              "available.") do |value|
         @charset = value
+      end
+
+      opt.separator nil
+
+      opt.on("--autolink-excluded-words=WORDS", Array,
+             "Words to be ignored in autolink cross-references") do |value|
+        @autolink_excluded_words.concat value
       end
 
       opt.separator nil
@@ -1086,6 +1165,13 @@ Usage: #{opt.program_name} [options] [names...]
 
       opt.separator nil
 
+      opt.on("--warn-missing-rdoc-ref",
+             "Warn if rdoc-ref links can't be resolved") do |value|
+        @warn_missing_rdoc_ref = value
+      end
+
+      opt.separator nil
+
       opt.on("--[no-]ignore-invalid",
              "Ignore invalid options and continue",
              "(default true).") do |value|
@@ -1195,14 +1281,14 @@ Usage: #{opt.program_name} [options] [names...]
   ##
   # Set quietness to +bool+
 
-  def quiet= bool
+  def quiet=(bool)
     @verbosity = bool ? 0 : 1
   end
 
   ##
   # Removes directories from +path+ that are outside the current directory
 
-  def sanitize_path path
+  def sanitize_path(path)
     require 'pathname'
     dot = Pathname.new('.').expand_path
 
@@ -1229,7 +1315,7 @@ Usage: #{opt.program_name} [options] [names...]
   # the options instance.  This allows generators to add custom options or set
   # default options.
 
-  def setup_generator generator_name = @generator_name
+  def setup_generator(generator_name = @generator_name)
     @generator = @generators[generator_name]
 
     unless @generator then
@@ -1251,7 +1337,7 @@ Usage: #{opt.program_name} [options] [names...]
   ##
   # Finds the template dir for +template+
 
-  def template_dir_for template
+  def template_dir_for(template)
     template_path = File.join 'rdoc', 'generator', 'template', template
 
     $LOAD_PATH.map do |path|
@@ -1268,7 +1354,7 @@ Usage: #{opt.program_name} [options] [names...]
   # When +:all+ is passed, visibility is set to +:private+, similarly to
   # RDOCOPT="--all", see #visibility for more information.
 
-  def visibility= visibility
+  def visibility=(visibility)
     case visibility
     when :all
       @visibility = :private
@@ -1280,7 +1366,7 @@ Usage: #{opt.program_name} [options] [names...]
   ##
   # Displays a warning using Kernel#warn if we're being verbose
 
-  def warn message
+  def warn(message)
     super message if @verbosity > 1
   end
 

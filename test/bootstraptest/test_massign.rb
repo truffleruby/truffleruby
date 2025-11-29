@@ -11,7 +11,7 @@ assert_equal '[1, 2]', %q{
   trace_var(:$b){|v| ans << v}
   $a, $b = 1, 2
   ans
-}, tagged: true
+}
 
 assert_equal 'ok', %q{
   r = :ok

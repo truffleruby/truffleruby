@@ -5,12 +5,12 @@
  * All rights reserved.
  *
  * This program is licensed under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 
-VALUE mRandom;
-VALUE eRandomError;
+static VALUE mRandom;
+static VALUE eRandomError;
 
 /*
  *  call-seq:

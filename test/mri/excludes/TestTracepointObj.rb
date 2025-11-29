@@ -1,5 +1,5 @@
-exclude :test_after_gc_start_hook_with_GC_stress, "| <internal:core> core/kernel.rb:269:in `require': cannot load such file -- c/tracepoint (LoadError)"
-exclude :test_teardown_with_active_GC_end_hook, "ArgumentError: unknown event 0x4000000"
+exclude :test_after_gc_start_hook_with_GC_stress, "| ERROR: truffleruby: invalid option --parser=parse.y  (Use --help for usage instructions.)"
+exclude :test_teardown_with_active_GC_end_hook, "assert_separately failed with error message"
 exclude :test_tracepoint_specify_normal_and_internal_events, "[TypeError] exception expected, not #<ArgumentError: unknown event: call>."
 exclude :test_tracks_objspace_count, "RuntimeError: GC was enabled, but is disabled after the test."
 exclude :test_tracks_objspace_events, "ArgumentError: unknown event 0x1c00000"

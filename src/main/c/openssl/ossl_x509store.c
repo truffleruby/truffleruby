@@ -5,7 +5,7 @@
  */
 /*
  * This program is licensed under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 
@@ -108,9 +108,9 @@ ossl_verify_cb_call(VALUE proc, int ok, X509_STORE_CTX *ctx)
 /*
  * Classes
  */
-VALUE cX509Store;
-VALUE cX509StoreContext;
-VALUE eX509StoreError;
+static VALUE cX509Store;
+static VALUE cX509StoreContext;
+static VALUE eX509StoreError;
 
 static void
 ossl_x509store_mark(void *ptr)
@@ -223,7 +223,6 @@ ossl_x509store_initialize(int argc, VALUE *argv, VALUE self)
     rb_iv_set(self, "@error", Qnil);
     rb_iv_set(self, "@error_string", Qnil);
     rb_iv_set(self, "@chain", Qnil);
-    rb_iv_set(self, "@time", Qnil);
 
     return self;
 }
@@ -329,7 +328,16 @@ ossl_x509store_set_trust(VALUE self, VALUE trust)
 static VALUE
 ossl_x509store_set_time(VALUE self, VALUE time)
 {
-    rb_iv_set(self, "@time", time);
+    X509_STORE *store;
+    X509_VERIFY_PARAM *param;
+
+    GetX509Store(self, store);
+#ifdef HAVE_X509_STORE_GET0_PARAM
+    param = X509_STORE_get0_param(store);
+#else
+    param = store->param;
+#endif
+    X509_VERIFY_PARAM_set_time(param, NUM2LONG(rb_Integer(time)));
     return time;
 }
 
@@ -564,7 +572,6 @@ ossl_x509stctx_new(X509_STORE_CTX *ctx)
 static VALUE ossl_x509stctx_set_flags(VALUE, VALUE);
 static VALUE ossl_x509stctx_set_purpose(VALUE, VALUE);
 static VALUE ossl_x509stctx_set_trust(VALUE, VALUE);
-static VALUE ossl_x509stctx_set_time(VALUE, VALUE);
 
 /*
  * call-seq:
@@ -575,7 +582,7 @@ static VALUE ossl_x509stctx_set_time(VALUE, VALUE);
 static VALUE
 ossl_x509stctx_initialize(int argc, VALUE *argv, VALUE self)
 {
-    VALUE store, cert, chain, t;
+    VALUE store, cert, chain;
     X509_STORE_CTX *ctx;
     X509_STORE *x509st;
     X509 *x509 = NULL;
@@ -599,8 +606,6 @@ ossl_x509stctx_initialize(int argc, VALUE *argv, VALUE self)
         sk_X509_pop_free(x509s, X509_free);
         ossl_raise(eX509StoreError, "X509_STORE_CTX_init");
     }
-    if (!NIL_P(t = rb_iv_get(store, "@time")))
-	ossl_x509stctx_set_time(self, t);
     rb_iv_set(self, "@verify_callback", rb_iv_get(store, "@verify_callback"));
     rb_iv_set(self, "@cert", cert);
 
@@ -631,7 +636,7 @@ ossl_x509stctx_verify(VALUE self)
         ossl_clear_error();
         return Qfalse;
       default:
-        ossl_raise(eX509CertError, "X509_verify_cert");
+        ossl_raise(eX509StoreError, "X509_verify_cert");
     }
 }
 

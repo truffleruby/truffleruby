@@ -15,6 +15,7 @@
 #include <internal/numeric.h>
 #include <internal/rational.h>
 #include <internal/re.h>
+#include <internal/st.h>
 #include <internal/static_assert.h>
 #include <internal/util.h>
 

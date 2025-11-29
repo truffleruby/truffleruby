@@ -9,7 +9,7 @@ class RDoc::Markup::ToMarkdown < RDoc::Markup::ToRdoc
   ##
   # Creates a new formatter that will output Markdown format text
 
-  def initialize markup = nil
+  def initialize(markup = nil)
     super
 
     @headings[1] = ['# ',      '']
@@ -37,28 +37,28 @@ class RDoc::Markup::ToMarkdown < RDoc::Markup::ToRdoc
   ##
   # Adds a newline to the output
 
-  def handle_regexp_HARD_BREAK target
+  def handle_regexp_HARD_BREAK(target)
     "  \n"
   end
 
   ##
   # Finishes consumption of `list`
 
-  def accept_list_end list
-    @res << "\n"
-
+  def accept_list_end(list)
     super
   end
 
   ##
   # Finishes consumption of `list_item`
 
-  def accept_list_item_end list_item
+  def accept_list_item_end(list_item)
     width = case @list_type.last
             when :BULLET then
               4
             when :NOTE, :LABEL then
               use_prefix
+
+              @res << "\n"
 
               4
             else
@@ -72,7 +72,7 @@ class RDoc::Markup::ToMarkdown < RDoc::Markup::ToRdoc
   ##
   # Prepares the visitor for consuming `list_item`
 
-  def accept_list_item_start list_item
+  def accept_list_item_start(list_item)
     type = @list_type.last
 
     case type
@@ -81,11 +81,11 @@ class RDoc::Markup::ToMarkdown < RDoc::Markup::ToRdoc
         attributes(label).strip
       end.join "\n"
 
-      bullets << "\n:"
+      bullets << "\n" unless bullets.empty?
 
       @prefix = ' ' * @indent
       @indent += 4
-      @prefix << bullets + (' ' * (@indent - 1))
+      @prefix << bullets << ":" << (' ' * (@indent - 1))
     else
       bullet = type == :BULLET ? '*' : @list_index.last.to_s + '.'
       @prefix = (' ' * @indent) + bullet.ljust(4)
@@ -97,7 +97,7 @@ class RDoc::Markup::ToMarkdown < RDoc::Markup::ToRdoc
   ##
   # Prepares the visitor for consuming `list`
 
-  def accept_list_start list
+  def accept_list_start(list)
     case list.type
     when :BULLET, :LABEL, :NOTE then
       @list_index << nil
@@ -114,7 +114,7 @@ class RDoc::Markup::ToMarkdown < RDoc::Markup::ToRdoc
   ##
   # Adds `rule` to the output
 
-  def accept_rule rule
+  def accept_rule(rule)
     use_prefix or @res << ' ' * @indent
     @res << '-' * 3
     @res << "\n"
@@ -123,7 +123,7 @@ class RDoc::Markup::ToMarkdown < RDoc::Markup::ToRdoc
   ##
   # Outputs `verbatim` indented 4 columns
 
-  def accept_verbatim verbatim
+  def accept_verbatim(verbatim)
     indent = ' ' * (@indent + 4)
 
     verbatim.parts.each do |part|
@@ -137,7 +137,7 @@ class RDoc::Markup::ToMarkdown < RDoc::Markup::ToRdoc
   ##
   # Creates a Markdown-style URL from +url+ with +text+.
 
-  def gen_url url, text
+  def gen_url(url, text)
     scheme, url, = parse_url url
 
     "[#{text.sub(%r{^#{scheme}:/*}i, '')}](#{url})"
@@ -146,7 +146,7 @@ class RDoc::Markup::ToMarkdown < RDoc::Markup::ToRdoc
   ##
   # Handles <tt>rdoc-</tt> type links for footnotes.
 
-  def handle_rdoc_link url
+  def handle_rdoc_link(url)
     case url
     when /^rdoc-ref:/ then
       $'
@@ -166,7 +166,7 @@ class RDoc::Markup::ToMarkdown < RDoc::Markup::ToRdoc
   ##
   # Converts the RDoc markup tidylink into a Markdown.style link.
 
-  def handle_regexp_TIDYLINK target
+  def handle_regexp_TIDYLINK(target)
     text = target.text
 
     return text unless text =~ /\{(.*?)\}\[(.*?)\]/ or text =~ /(\S+)\[(.*?)\]/
@@ -184,7 +184,7 @@ class RDoc::Markup::ToMarkdown < RDoc::Markup::ToRdoc
   ##
   # Converts the rdoc-...: links into a Markdown.style links.
 
-  def handle_regexp_RDOCLINK target
+  def handle_regexp_RDOCLINK(target)
     handle_rdoc_link target.text
   end
 

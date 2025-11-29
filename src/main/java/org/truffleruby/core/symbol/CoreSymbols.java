@@ -23,10 +23,12 @@ import org.truffleruby.core.string.TStringConstants;
 // @formatter:off
 public final class CoreSymbols {
 
-    public static final long STATIC_SYMBOL_ID = 0x1;
+    // *_SYMBOL_ID values taken from CRuby's `ruby_id_types` enum from template/id.h.tmpl.
+    public static final long STATIC_SYMBOL_ID  = 0x1;
     private static final long GLOBAL_SYMBOL_ID = (0x03 << 1);
+    private static final long CONST_SYMBOL_ID  = (0x05 << 1);
 
-    public static final int STATIC_SYMBOLS_SIZE = 242;
+    public static final int STATIC_SYMBOLS_SIZE = 247;
 
     public final List<RubySymbol> CORE_SYMBOLS = new ArrayList<>();
     public final RubySymbol[] STATIC_SYMBOLS = new RubySymbol[STATIC_SYMBOLS_SIZE];
@@ -115,99 +117,104 @@ public final class CoreSymbols {
     public final RubySymbol ANDDOT = createRubySymbol("&.", 150);
 
     public final RubySymbol NILP = createRubySymbol("nil?", 151);
-    public final RubySymbol NULL = createRubySymbol("", 152);
-    public final RubySymbol EMPTYP = createRubySymbol("empty?", 153);
-    public final RubySymbol EQLP = createRubySymbol("eql?", 154);
-    public final RubySymbol RESPOND_TO = createRubySymbol("respond_to?", 155);
-    public final RubySymbol RESPOND_TO_MISSING = createRubySymbol("respond_to_missing?", 156);
-    public final RubySymbol IFUNC = createRubySymbol("<IFUNC>", 157);
-    public final RubySymbol CFUNC = createRubySymbol("<CFUNC>", 158);
-    public final RubySymbol CORE_SET_METHOD_ALIAS = createRubySymbol("core#set_method_alias", 159);
-    public final RubySymbol CORE_SET_VARIABLE_ALIAS = createRubySymbol("core#set_variable_alias", 160);
-    public final RubySymbol CORE_UNDEF_METHOD = createRubySymbol("core#undef_method", 161);
-    public final RubySymbol CORE_DEFINE_METHOD = createRubySymbol("core#define_method", 162);
-    public final RubySymbol CORE_DEFINE_SINGLETON_METHOD = createRubySymbol("core#define_singleton_method", 163);
-    public final RubySymbol CORE_SET_POSTEXE = createRubySymbol("core#set_postexe", 164);
-    public final RubySymbol CORE_HASH_MERGE_PTR = createRubySymbol("core#hash_merge_ptr", 165);
-    public final RubySymbol CORE_HASH_MERGE_KWD = createRubySymbol("core#hash_merge_kwd", 166);
-    public final RubySymbol CORE_RAISE = createRubySymbol("core#raise", 167);
-    public final RubySymbol CORE_SPRINTF = createRubySymbol("core#sprintf", 168);
+    public final RubySymbol INCLUDEP = createRubySymbol("include?", 152);
+    public final RubySymbol NULL = createRubySymbol("", 153);
+    public final RubySymbol EMPTYP = createRubySymbol("empty?", 154);
+    public final RubySymbol EQLP = createRubySymbol("eql?", 155);
+    public final RubySymbol RESPOND_TO = createRubySymbol("respond_to?", 156);
+    public final RubySymbol RESPOND_TO_MISSING = createRubySymbol("respond_to_missing?", 157);
+    public final RubySymbol IFUNC = createRubySymbol("<IFUNC>", 158);
+    public final RubySymbol CFUNC = createRubySymbol("<CFUNC>", 159);
+    public final RubySymbol CORE_SET_METHOD_ALIAS = createRubySymbol("core#set_method_alias", 160);
+    public final RubySymbol CORE_SET_VARIABLE_ALIAS = createRubySymbol("core#set_variable_alias", 161);
+    public final RubySymbol CORE_UNDEF_METHOD = createRubySymbol("core#undef_method", 162);
+    public final RubySymbol CORE_DEFINE_METHOD = createRubySymbol("core#define_method", 163);
+    public final RubySymbol CORE_DEFINE_SINGLETON_METHOD = createRubySymbol("core#define_singleton_method", 164);
+    public final RubySymbol CORE_SET_POSTEXE = createRubySymbol("core#set_postexe", 165);
+    public final RubySymbol CORE_HASH_MERGE_PTR = createRubySymbol("core#hash_merge_ptr", 166);
+    public final RubySymbol CORE_HASH_MERGE_KWD = createRubySymbol("core#hash_merge_kwd", 167);
+    public final RubySymbol CORE_RAISE = createRubySymbol("core#raise", 168);
+    public final RubySymbol CORE_SPRINTF = createRubySymbol("core#sprintf", 169);
     // Skipped preserved token: `_debug_created_info`
 
-    public static final int LAST_OP_ID = 169;
+    public static final int LAST_OP_ID = 170;
 
-    public final RubySymbol MAX = createRubySymbol("max", toLocal(170));
-    public final RubySymbol MIN = createRubySymbol("min", toLocal(171));
-    public final RubySymbol HASH = createRubySymbol("hash", toLocal(172));
-    public final RubySymbol FREEZE = createRubySymbol("freeze", toLocal(173));
-    public final RubySymbol INSPECT = createRubySymbol("inspect", toLocal(174));
-    public final RubySymbol INTERN = createRubySymbol("intern", toLocal(175));
-    public final RubySymbol OBJECT_ID = createRubySymbol("object_id", toLocal(176));
-    public final RubySymbol CONST_ADDED = createRubySymbol("const_added", toLocal(177));
-    public final RubySymbol CONST_MISSING = createRubySymbol("const_missing", toLocal(178));
-    public final RubySymbol METHODMISSING = createRubySymbol("method_missing", toLocal(179));
-    public final RubySymbol METHOD_ADDED = createRubySymbol("method_added", toLocal(180));
-    public final RubySymbol SINGLETON_METHOD_ADDED = createRubySymbol("singleton_method_added", toLocal(181));
-    public final RubySymbol METHOD_REMOVED = createRubySymbol("method_removed", toLocal(182));
-    public final RubySymbol SINGLETON_METHOD_REMOVED = createRubySymbol("singleton_method_removed", toLocal(183));
-    public final RubySymbol METHOD_UNDEFINED = createRubySymbol("method_undefined", toLocal(184));
-    public final RubySymbol SINGLETON_METHOD_UNDEFINED = createRubySymbol("singleton_method_undefined", toLocal(185));
-    public final RubySymbol LENGTH = createRubySymbol("length", toLocal(186));
-    public final RubySymbol SIZE = createRubySymbol("size", toLocal(187));
-    public final RubySymbol GETS = createRubySymbol("gets", toLocal(188));
-    public final RubySymbol SUCC = createRubySymbol("succ", toLocal(189));
-    public final RubySymbol EACH = createRubySymbol("each", toLocal(190));
-    public final RubySymbol PROC = createRubySymbol("proc", toLocal(191));
-    public final RubySymbol LAMBDA = createRubySymbol("lambda", toLocal(192));
-    public final RubySymbol SEND = createRubySymbol("send", toLocal(193));
-    public final RubySymbol __SEND__ = createRubySymbol("__send__", toLocal(194));
-    public final RubySymbol __RECURSIVE_KEY__ = createRubySymbol("__recursive_key__", toLocal(195));
-    public final RubySymbol INITIALIZE = createRubySymbol("initialize", toLocal(196));
-    public final RubySymbol INITIALIZE_COPY = createRubySymbol("initialize_copy", toLocal(197));
-    public final RubySymbol INITIALIZE_CLONE = createRubySymbol("initialize_clone", toLocal(198));
-    public final RubySymbol INITIALIZE_DUP = createRubySymbol("initialize_dup", toLocal(199));
-    public final RubySymbol TO_INT = createRubySymbol("to_int", toLocal(200));
-    public final RubySymbol TO_ARY = createRubySymbol("to_ary", toLocal(201));
-    public final RubySymbol TO_STR = createRubySymbol("to_str", toLocal(202));
-    public final RubySymbol TO_SYM = createRubySymbol("to_sym", toLocal(203));
-    public final RubySymbol TO_HASH = createRubySymbol("to_hash", toLocal(204));
-    public final RubySymbol TO_PROC = createRubySymbol("to_proc", toLocal(205));
-    public final RubySymbol TO_IO = createRubySymbol("to_io", toLocal(206));
-    public final RubySymbol TO_A = createRubySymbol("to_a", toLocal(207));
-    public final RubySymbol TO_S = createRubySymbol("to_s", toLocal(208));
-    public final RubySymbol TO_I = createRubySymbol("to_i", toLocal(209));
-    public final RubySymbol TO_F = createRubySymbol("to_f", toLocal(210));
-    public final RubySymbol TO_R = createRubySymbol("to_r", toLocal(211));
-    public final RubySymbol BT = createRubySymbol("bt", toLocal(212));
-    public final RubySymbol BT_LOCATIONS = createRubySymbol("bt_locations", toLocal(213));
-    public final RubySymbol CALL = createRubySymbol("call", toLocal(214));
-    public final RubySymbol MESG = createRubySymbol("mesg", toLocal(215));
-    public final RubySymbol EXCEPTION = createRubySymbol("exception", toLocal(216));
-    public final RubySymbol LOCALS = createRubySymbol("locals", toLocal(217));
-    public final RubySymbol NOT = createRubySymbol("not", toLocal(218));
-    public final RubySymbol AND = createRubySymbol("and", toLocal(219));
-    public final RubySymbol OR = createRubySymbol("or", toLocal(220));
-    public final RubySymbol DIV = createRubySymbol("div", toLocal(221));
-    public final RubySymbol DIVMOD = createRubySymbol("divmod", toLocal(222));
-    public final RubySymbol FDIV = createRubySymbol("fdiv", toLocal(223));
-    public final RubySymbol QUO = createRubySymbol("quo", toLocal(224));
-    public final RubySymbol NAME = createRubySymbol("name", toLocal(225));
-    public final RubySymbol NIL = createRubySymbol("nil", toLocal(226));
-    public final RubySymbol PATH = createRubySymbol("path", toLocal(227));
-    public final RubySymbol USCORE = createRubySymbol("_", toLocal(228));
-    public final RubySymbol NUMPARAM_1 = createRubySymbol("_1", toLocal(229));
-    public final RubySymbol NUMPARAM_2 = createRubySymbol("_2", toLocal(230));
-    public final RubySymbol NUMPARAM_3 = createRubySymbol("_3", toLocal(231));
-    public final RubySymbol NUMPARAM_4 = createRubySymbol("_4", toLocal(232));
-    public final RubySymbol NUMPARAM_5 = createRubySymbol("_5", toLocal(233));
-    public final RubySymbol NUMPARAM_6 = createRubySymbol("_6", toLocal(234));
-    public final RubySymbol NUMPARAM_7 = createRubySymbol("_7", toLocal(235));
-    public final RubySymbol NUMPARAM_8 = createRubySymbol("_8", toLocal(236));
-    public final RubySymbol NUMPARAM_9 = createRubySymbol("_9", toLocal(237));
-    public final RubySymbol DEFAULT = createRubySymbol("default", toLocal(238));
-    public final RubySymbol LASTLINE = createRubySymbol("$_", toGlobal(239));
-    public final RubySymbol BACKREF = createRubySymbol("$~", toGlobal(240));
-    public final RubySymbol ERROR_INFO = createRubySymbol("$!", toGlobal(241));
+    public final RubySymbol MAX = createRubySymbol("max", toLocal(171));
+    public final RubySymbol MIN = createRubySymbol("min", toLocal(172));
+    public final RubySymbol HASH = createRubySymbol("hash", toLocal(173));
+    public final RubySymbol FREEZE = createRubySymbol("freeze", toLocal(174));
+    public final RubySymbol INSPECT = createRubySymbol("inspect", toLocal(175));
+    public final RubySymbol INTERN = createRubySymbol("intern", toLocal(176));
+    public final RubySymbol OBJECT_ID = createRubySymbol("object_id", toLocal(177));
+    public final RubySymbol __ID__ = createRubySymbol("__id__", toLocal(178));
+    public final RubySymbol CONST_ADDED = createRubySymbol("const_added", toLocal(179));
+    public final RubySymbol CONST_MISSING = createRubySymbol("const_missing", toLocal(180));
+    public final RubySymbol METHODMISSING = createRubySymbol("method_missing", toLocal(181));
+    public final RubySymbol METHOD_ADDED = createRubySymbol("method_added", toLocal(182));
+    public final RubySymbol SINGLETON_METHOD_ADDED = createRubySymbol("singleton_method_added", toLocal(183));
+    public final RubySymbol METHOD_REMOVED = createRubySymbol("method_removed", toLocal(184));
+    public final RubySymbol SINGLETON_METHOD_REMOVED = createRubySymbol("singleton_method_removed", toLocal(185));
+    public final RubySymbol METHOD_UNDEFINED = createRubySymbol("method_undefined", toLocal(186));
+    public final RubySymbol SINGLETON_METHOD_UNDEFINED = createRubySymbol("singleton_method_undefined", toLocal(187));
+    public final RubySymbol LENGTH = createRubySymbol("length", toLocal(188));
+    public final RubySymbol SIZE = createRubySymbol("size", toLocal(189));
+    public final RubySymbol GETS = createRubySymbol("gets", toLocal(190));
+    public final RubySymbol SUCC = createRubySymbol("succ", toLocal(191));
+    public final RubySymbol EACH = createRubySymbol("each", toLocal(192));
+    public final RubySymbol PROC = createRubySymbol("proc", toLocal(193));
+    public final RubySymbol LAMBDA = createRubySymbol("lambda", toLocal(194));
+    public final RubySymbol SEND = createRubySymbol("send", toLocal(195));
+    public final RubySymbol __SEND__ = createRubySymbol("__send__", toLocal(196));
+    public final RubySymbol __RECURSIVE_KEY__ = createRubySymbol("__recursive_key__", toLocal(197));
+    public final RubySymbol INITIALIZE = createRubySymbol("initialize", toLocal(198));
+    public final RubySymbol INITIALIZE_COPY = createRubySymbol("initialize_copy", toLocal(199));
+    public final RubySymbol INITIALIZE_CLONE = createRubySymbol("initialize_clone", toLocal(200));
+    public final RubySymbol INITIALIZE_DUP = createRubySymbol("initialize_dup", toLocal(201));
+    public final RubySymbol TO_INT = createRubySymbol("to_int", toLocal(202));
+    public final RubySymbol TO_ARY = createRubySymbol("to_ary", toLocal(203));
+    public final RubySymbol TO_STR = createRubySymbol("to_str", toLocal(204));
+    public final RubySymbol TO_SYM = createRubySymbol("to_sym", toLocal(205));
+    public final RubySymbol TO_HASH = createRubySymbol("to_hash", toLocal(206));
+    public final RubySymbol TO_PROC = createRubySymbol("to_proc", toLocal(207));
+    public final RubySymbol TO_IO = createRubySymbol("to_io", toLocal(208));
+    public final RubySymbol TO_A = createRubySymbol("to_a", toLocal(209));
+    public final RubySymbol TO_S = createRubySymbol("to_s", toLocal(210));
+    public final RubySymbol TO_I = createRubySymbol("to_i", toLocal(211));
+    public final RubySymbol TO_F = createRubySymbol("to_f", toLocal(212));
+    public final RubySymbol TO_R = createRubySymbol("to_r", toLocal(213));
+    public final RubySymbol BT = createRubySymbol("bt", toLocal(214));
+    public final RubySymbol BT_LOCATIONS = createRubySymbol("bt_locations", toLocal(215));
+    public final RubySymbol CALL = createRubySymbol("call", toLocal(216));
+    public final RubySymbol MESG = createRubySymbol("mesg", toLocal(217));
+    public final RubySymbol EXCEPTION = createRubySymbol("exception", toLocal(218));
+    public final RubySymbol LOCALS = createRubySymbol("locals", toLocal(219));
+    public final RubySymbol NOT = createRubySymbol("not", toLocal(220));
+    public final RubySymbol AND = createRubySymbol("and", toLocal(221));
+    public final RubySymbol OR = createRubySymbol("or", toLocal(222));
+    public final RubySymbol DIV = createRubySymbol("div", toLocal(223));
+    public final RubySymbol DIVMOD = createRubySymbol("divmod", toLocal(224));
+    public final RubySymbol FDIV = createRubySymbol("fdiv", toLocal(225));
+    public final RubySymbol QUO = createRubySymbol("quo", toLocal(226));
+    public final RubySymbol NAME = createRubySymbol("name", toLocal(227));
+    public final RubySymbol NIL = createRubySymbol("nil", toLocal(228));
+    public final RubySymbol PATH = createRubySymbol("path", toLocal(229));
+    public final RubySymbol PACK = createRubySymbol("pack", toLocal(230));
+    public final RubySymbol BUFFER = createRubySymbol("buffer", toLocal(231));
+    public final RubySymbol USCORE = createRubySymbol("_", toLocal(232));
+    public final RubySymbol NUMPARAM_1 = createRubySymbol("_1", toLocal(233));
+    public final RubySymbol NUMPARAM_2 = createRubySymbol("_2", toLocal(234));
+    public final RubySymbol NUMPARAM_3 = createRubySymbol("_3", toLocal(235));
+    public final RubySymbol NUMPARAM_4 = createRubySymbol("_4", toLocal(236));
+    public final RubySymbol NUMPARAM_5 = createRubySymbol("_5", toLocal(237));
+    public final RubySymbol NUMPARAM_6 = createRubySymbol("_6", toLocal(238));
+    public final RubySymbol NUMPARAM_7 = createRubySymbol("_7", toLocal(239));
+    public final RubySymbol NUMPARAM_8 = createRubySymbol("_8", toLocal(240));
+    public final RubySymbol NUMPARAM_9 = createRubySymbol("_9", toLocal(241));
+    public final RubySymbol DEFAULT = createRubySymbol("default", toLocal(242));
+    public final RubySymbol LASTLINE = createRubySymbol("$_", toGlobal(243));
+    public final RubySymbol BACKREF = createRubySymbol("$~", toGlobal(244));
+    public final RubySymbol ERROR_INFO = createRubySymbol("$!", toGlobal(245));
+    public final RubySymbol RUBY = createRubySymbol("Ruby", toConst(246));
 
     public RubySymbol createRubySymbol(String string, long id) {
         TruffleString tstring = TStringConstants.lookupUSASCIITString(string);
@@ -246,6 +253,10 @@ public final class CoreSymbols {
 
     private static long toGlobal(long id) {
         return id << 4 | STATIC_SYMBOL_ID | GLOBAL_SYMBOL_ID;
+    }
+
+    private static long toConst(long id) {
+        return id << 4 | STATIC_SYMBOL_ID | CONST_SYMBOL_ID;
     }
 
     public static boolean isStaticSymbol(long value) {

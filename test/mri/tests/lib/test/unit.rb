@@ -37,6 +37,26 @@ module Test
 
     class PendedError < AssertionFailedError; end
 
+    class << self
+      ##
+      # Extract the location where the last assertion method was
+      # called.  Returns "<empty>" if _e_ does not have backtrace, or
+      # an empty string if no assertion method location was found.
+
+      def location e
+        last_before_assertion = nil
+
+        return '<empty>' unless e&.backtrace # SystemStackError can return nil.
+
+        e.backtrace.reverse_each do |s|
+          break if s =~ /:in \W(?:.*\#)?(?:assert|refute|flunk|pass|fail|raise|must|wont)/
+          last_before_assertion = s
+        end
+        return "" unless last_before_assertion
+        /:in / =~ last_before_assertion ? $` : last_before_assertion
+      end
+    end
+
     module Order
       class NoSort
         def initialize(seed)
@@ -262,7 +282,7 @@ module Test
             options[:parallel] ||= 256 # number of tokens to acquire first
           end
         end
-        @worker_timeout = EnvUtil.apply_timeout_scale(options[:worker_timeout] || 180)
+        @worker_timeout = EnvUtil.apply_timeout_scale(options[:worker_timeout] || 1200)
         super
       end
 
@@ -386,16 +406,18 @@ module Test
         rescue IOError
         end
 
-        def quit
+        def quit(reason = :normal)
           return if @io.closed?
           @quit_called = true
-          @io.puts "quit"
+          @io.puts "quit #{reason}"
         rescue Errno::EPIPE => e
           warn "#{@pid}:#{@status.to_s.ljust(7)}:#{@file}: #{e.message}"
         end
 
         def kill
-          Process.kill(:KILL, @pid)
+          signal = RUBY_PLATFORM =~ /mswin|mingw/ ? :KILL : :SEGV
+          Process.kill(signal, @pid)
+          warn "worker #{to_s} does not respond; #{signal} is sent"
         rescue Errno::ESRCH
         end
 
@@ -513,15 +535,15 @@ module Test
         @workers.reject! do |worker|
           next unless cond&.call(worker)
           begin
-            Timeout.timeout(1) do
-              worker.quit
+            Timeout.timeout(5) do
+              worker.quit(cond ? :timeout : :normal)
             end
           rescue Errno::EPIPE
           rescue Timeout::Error
           end
           closed&.push worker
           begin
-            Timeout.timeout(0.2) do
+            Timeout.timeout(1) do
               worker.close
             end
           rescue Timeout::Error
@@ -534,7 +556,7 @@ module Test
         return if (closed ||= @workers).empty?
         pids = closed.map(&:pid)
         begin
-          Timeout.timeout(0.2 * closed.size) do
+          Timeout.timeout(1 * closed.size) do
             Process.waitall
           end
         rescue Timeout::Error
@@ -716,7 +738,15 @@ module Test
             del_status_line or puts
             error, suites = suites.partition {|r| r[:error]}
             unless suites.empty?
-              puts "\n""Retrying..."
+              puts "\n"
+              @failed_output.puts "Failed tests:"
+              suites.each {|r|
+                r[:report].each {|c, m, e|
+                  @failed_output.puts "#{c}##{m}: #{e&.class}: #{e&.message&.slice(/\A.*/)}"
+                }
+              }
+              @failed_output.puts "\n"
+              puts "Retrying..."
               @verbose = options[:verbose]
               suites.map! {|r| ::Object.const_get(r[:testcase])}
               _run_suites(suites, type)
@@ -842,7 +872,7 @@ module Test
         end
       end
 
-      def record(suite, method, assertions, time, error)
+      def record(suite, method, assertions, time, error, source_location = nil)
         if @options.values_at(:longest, :most_asserted).any?
           @tops ||= {}
           rec = [suite.name, method, assertions, time, error]
@@ -1353,6 +1383,95 @@ module Test
       end
     end
 
+    module LaunchableOption
+      module Nothing
+        private
+        def setup_options(opts, options)
+          super
+          opts.define_tail 'Launchable options:'
+          # This is expected to be called by Test::Unit::Worker.
+          opts.on_tail '--launchable-test-reports=PATH', String, 'Do nothing'
+        end
+      end
+
+      def record(suite, method, assertions, time, error, source_location = nil)
+        if writer = @options[:launchable_test_reports]
+          if loc = (source_location || suite.instance_method(method).source_location)
+            path, lineno = loc
+            # Launchable JSON schema is defined at
+            # https://github.com/search?q=repo%3Alaunchableinc%2Fcli+https%3A%2F%2Flaunchableinc.com%2Fschema%2FRecordTestInput&type=code.
+            e = case error
+                when nil
+                  status = 'TEST_PASSED'
+                  nil
+                when Test::Unit::PendedError
+                  status = 'TEST_SKIPPED'
+                  "Skipped:\n#{suite.name}##{method} [#{location error}]:\n#{error.message}\n"
+                when Test::Unit::AssertionFailedError
+                  status = 'TEST_FAILED'
+                  "Failure:\n#{suite.name}##{method} [#{location error}]:\n#{error.message}\n"
+                when Timeout::Error
+                  status = 'TEST_FAILED'
+                  "Timeout:\n#{suite.name}##{method}\n"
+                else
+                  status = 'TEST_FAILED'
+                  bt = Test::filter_backtrace(error.backtrace).join "\n    "
+                  "Error:\n#{suite.name}##{method}:\n#{error.class}: #{error.message.b}\n    #{bt}\n"
+                end
+            repo_path = File.expand_path("#{__dir__}/../../../")
+            relative_path = path.delete_prefix("#{repo_path}/")
+            # The test path is a URL-encoded representation.
+            # https://github.com/launchableinc/cli/blob/v1.81.0/launchable/testpath.py#L18
+            test_path = {file: relative_path, class: suite.name, testcase: method}.map{|key, val|
+              "#{encode_test_path_component(key)}=#{encode_test_path_component(val)}"
+            }.join('#')
+          end
+        end
+        super
+      ensure
+        if writer && test_path && status
+          # Occasionally, the file writing operation may be paused, especially when `--repeat-count` is specified.
+          # In such cases, we proceed to execute the operation here.
+          writer.write_object(
+            {
+              testPath: test_path,
+              status: status,
+              duration: time,
+              createdAt: Time.now.to_s,
+              stderr: e,
+              stdout: nil,
+              data: {
+                lineNumber: lineno
+              }
+            }
+          )
+        end
+      end
+
+      private
+      def setup_options(opts, options)
+        super
+        opts.on_tail '--launchable-test-reports=PATH', String, 'Report test results in Launchable JSON format' do |path|
+          require_relative '../launchable'
+          options[:launchable_test_reports] = writer = Launchable::JsonStreamWriter.new(path)
+          writer.write_array('testCases')
+          main_pid = Process.pid
+          at_exit {
+            # This block is executed when the fork block in a test is completed.
+            # Therefore, we need to verify whether all tests have been completed.
+            stack = caller
+            if stack.size == 0 && main_pid == Process.pid && $!.is_a?(SystemExit)
+              writer.close
+            end
+          }
+        end
+
+        def encode_test_path_component component
+          component.to_s.gsub('%', '%25').gsub('=', '%3D').gsub('#', '%23').gsub('&', '%26')
+        end
+      end
+    end
+
     class Runner # :nodoc: all
 
       attr_accessor :report, :failures, :errors, :skips # :nodoc:
@@ -1557,9 +1676,7 @@ module Test
           puts if @verbose
           $stdout.flush
 
-          unless defined?(RubyVM::RJIT) && RubyVM::RJIT.enabled? # compiler process is wrongly considered as leak
-            # leakchecker.check("#{inst.class}\##{inst.__name__}") # TruffleRuby: LeakChecker removed to avoid interferences
-          end
+          # leakchecker.check("#{inst.class}\##{inst.__name__}") # TruffleRuby: LeakChecker removed to avoid interferences
 
           _end_method(inst)
 
@@ -1599,19 +1716,11 @@ module Test
       # failure or error in teardown, it will be sent again with the
       # error or failure.
 
-      def record suite, method, assertions, time, error
+      def record suite, method, assertions, time, error, source_location = nil
       end
 
       def location e # :nodoc:
-        last_before_assertion = ""
-
-        return '<empty>' unless e.backtrace # SystemStackError can return nil.
-
-        e.backtrace.reverse_each do |s|
-          break if s =~ /in .(assert|refute|flunk|pass|fail|raise|must|wont)/
-          last_before_assertion = s
-        end
-        last_before_assertion.sub(/:in .*$/, '')
+        Test::Unit.location e
       end
 
       ##
@@ -1690,6 +1799,7 @@ module Test
       prepend Test::Unit::ExcludesOption
       prepend Test::Unit::TimeoutOption
       prepend Test::Unit::RunCount
+      prepend Test::Unit::LaunchableOption::Nothing
 
       ##
       # Begins the full test run. Delegates to +runner+'s #_run method.
@@ -1746,6 +1856,7 @@ module Test
     class AutoRunner # :nodoc: all
       class Runner < Test::Unit::Runner
         include Test::Unit::RequireFiles
+        include Test::Unit::LaunchableOption
       end
 
       attr_accessor :to_run, :options

@@ -27,7 +27,7 @@ class RDoc::Markup::PreProcess
   # with the result RDoc::Comment (or text String) and the code object for the
   # comment (if any).
 
-  def self.post_process &block
+  def self.post_process(&block)
     @post_processors << block
   end
 
@@ -50,7 +50,7 @@ class RDoc::Markup::PreProcess
   #     # replace text, etc.
   #   end
 
-  def self.register directive, &block
+  def self.register(directive, &block)
     @registered[directive] = block
   end
 
@@ -96,16 +96,19 @@ class RDoc::Markup::PreProcess
   # directive's parameter is set as metadata on the +code_object+.  See
   # RDoc::CodeObject#metadata for details.
 
-  def handle text, code_object = nil, &block
+  def handle(text, code_object = nil, &block)
+    first_line = 1
     if RDoc::Comment === text then
       comment = text
       text = text.text
+      first_line = comment.line || 1
     end
 
     # regexp helper (square brackets for optional)
     # $1      $2  $3        $4      $5
     # [prefix][\]:directive:[spaces][param]newline
-    text = text.gsub(/^([ \t]*(?:#|\/?\*)?[ \t]*)(\\?):(\w+):([ \t]*)(.+)?(\r?\n|$)/) do
+    text = text.lines.map.with_index(first_line) do |line, num|
+      next line unless line =~ /\A([ \t]*(?:#|\/?\*)?[ \t]*)(\\?):([\w-]+):([ \t]*)(.+)?(\r?\n|$)/
       # skip something like ':toto::'
       next $& if $4.empty? and $5 and $5[0, 1] == ':'
 
@@ -120,8 +123,8 @@ class RDoc::Markup::PreProcess
         next "#{$1.strip}\n"
       end
 
-      handle_directive $1, $3, $5, code_object, text.encoding, &block
-    end
+      handle_directive $1, $3, $5, code_object, text.encoding, num, &block
+    end.join
 
     if comment then
       comment.text = text
@@ -147,8 +150,8 @@ class RDoc::Markup::PreProcess
   #--
   # When 1.8.7 support is ditched prefix can be defaulted to ''
 
-  def handle_directive prefix, directive, param, code_object = nil,
-                       encoding = nil
+  def handle_directive(prefix, directive, param, code_object = nil,
+                       encoding = nil, line = nil)
     blankline = "#{prefix.strip}\n"
     directive = directive.downcase
 
@@ -184,6 +187,14 @@ class RDoc::Markup::PreProcess
       include_file filename, prefix, encoding
     when 'main' then
       @options.main_page = param if @options.respond_to? :main_page
+      warn <<~MSG
+        The :main: directive is deprecated and will be removed in RDoc 7.
+
+        You can use these options to specify the initial page displayed instead:
+        - `--main=#{param}` via the command line
+        - `rdoc.main = "#{param}"` if you use `RDoc::Task`
+        - `main_page: #{param}` in your `.rdoc_options` file
+      MSG
 
       blankline
     when 'nodoc' then
@@ -214,17 +225,26 @@ class RDoc::Markup::PreProcess
     when 'title' then
       @options.default_title = param if @options.respond_to? :default_title=
 
+      warn <<~MSG
+        The :title: directive is deprecated and will be removed in RDoc 7.
+
+        You can use these options to specify the title displayed instead:
+        - `--title=#{param}` via the command line
+        - `rdoc.title = "#{param}"` if you use `RDoc::Task`
+        - `title: #{param}` in your `.rdoc_options` file
+      MSG
+
       blankline
     when 'yield', 'yields' then
       return blankline unless code_object
       # remove parameter &block
       code_object.params = code_object.params.sub(/,?\s*&\w+/, '') if code_object.params
 
-      code_object.block_params = param
+      code_object.block_params = param || ''
 
       blankline
     else
-      result = yield directive, param if block_given?
+      result = yield directive, param, line if block_given?
 
       case result
       when nil then
@@ -259,7 +279,7 @@ class RDoc::Markup::PreProcess
   # TODO shift left the whole file content in that case
   # TODO comment stop/start #-- and #++ in included file must be processed here
 
-  def include_file name, indent, encoding
+  def include_file(name, indent, encoding)
     full_name = find_include_file name
 
     unless full_name then

@@ -196,9 +196,7 @@ Update all of these:
 * Reset `truffleruby-abi-version.h` to `$RUBY_VERSION.1` and `lib/cext/ABI_check.txt` to `1` if `RUBY_VERSION` was updated.
   * use `$TRUFFLERUBY_VERSION.1` in `truffleruby-abi-version.h` instead when on a release branch.
 * Update `versions.json`
-  * with bundled gem versions provided by `cat ../ruby/gems/bundled_gems | sort` (ensure the target Ruby version is checked out in the `../ruby` directory),
-  * default gem versions provided by `ls -l lib/gems/specifications/default`
-  * and `gem` gem version provided by `grep 'VERSION =' lib/mri/rubygems.rb`
+  * run `RUBY_VERSION=$VERSION tool/update-gem-versions-list.rb`
 * Also update version numbers for `debug`, `racc`, and `rbs` in `src/main/c/Makefile`, `mx.truffleruby/suite.py` and `lib/gems/gems/debug-*/ext/debug/extconf.rb`.
 * Copy and paste `-h` and `--help` output to `RubyLauncher` (instructions are in the end of the file `src/launcher/java/org/truffleruby/launcher/RubyLauncher.java`)
 * This is a good time to get `jt build` working.
@@ -210,6 +208,7 @@ Update all of these:
   * run `jt purge spec/truffle/methods_spec.rb` to remove tags for implemented methods
 * Build TruffleRuby (`jt build`).
 * Run `jt test gems default-bundled-gems` and commit generated `Gemfile` and `Gemfile.lock` files
+  * Do not include the `BUNDLED WITH` section from the `Gemfile.lock` -- it will cause the linter to fail
 * Get `jt test spec/truffle/rubygems/default_gems_list_spec.rb` to pass
 * Grep for the old Ruby version with `git grep -F x.y.z`
 * Grep for the old Bundler version with `git grep -F x.y.z`

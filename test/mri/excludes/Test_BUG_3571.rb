@@ -1,1 +1,1 @@
-exclude :test_block_call_id, "| <internal:core> core/kernel.rb:269:in `require': cannot load such file -- c/bug_3571 (LoadError)"
+exclude :test_block_call_id, "| ERROR: truffleruby: invalid option --parser=parse.y  (Use --help for usage instructions.)"
