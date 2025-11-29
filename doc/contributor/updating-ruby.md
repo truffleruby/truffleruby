@@ -208,6 +208,7 @@ Update all of these:
   * run `jt purge spec/truffle/methods_spec.rb` to remove tags for implemented methods
 * Build TruffleRuby (`jt build`).
 * Run `jt test gems default-bundled-gems` and commit generated `Gemfile` and `Gemfile.lock` files
+  * Do not include the `BUNDLED WITH` section from the `Gemfile.lock` -- it will cause the linter to fail
 * Get `jt test spec/truffle/rubygems/default_gems_list_spec.rb` to pass
 * Grep for the old Ruby version with `git grep -F x.y.z`
 * Grep for the old Bundler version with `git grep -F x.y.z`
