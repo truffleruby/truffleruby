@@ -248,7 +248,6 @@ public final class DarwinAArch64NativeConfiguration extends DefaultNativeConfigu
         configuration.config("platform.errno.EIO", 5);
         configuration.config("platform.errno.EISCONN", 56);
         configuration.config("platform.errno.EISDIR", 21);
-        configuration.config("platform.errno.ELAST", 106);
         configuration.config("platform.errno.ELOOP", 62);
         configuration.config("platform.errno.EMFILE", 24);
         configuration.config("platform.errno.EMLINK", 31);
@@ -317,6 +316,7 @@ public final class DarwinAArch64NativeConfiguration extends DefaultNativeConfigu
         configuration.config("platform.errno.EUSERS", 68);
         configuration.config("platform.errno.EWOULDBLOCK", 35);
         configuration.config("platform.errno.EXDEV", 18);
+        configuration.config("platform.errno.ELAST", 106);
         configuration.config("platform.limits.NSIG", 32);
         configuration.config("platform.langinfo.CODESET", 0);
         configuration.config("platform.file.FNM_CASEFOLD", 16);
