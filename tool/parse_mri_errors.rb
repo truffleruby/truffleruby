@@ -59,7 +59,6 @@ def exclude_test!(class_name, test_method, error_display)
   #     'test_magic_comment_#  \t\v encoding  \t\v :  \t\v ascii  \t\v'
   #   unescaped (with #undump):
   #     "test_magic_comment_#  \t\v encoding  \t\v :  \t\v ascii  \t\v"
-  name_dumped = test_method
   name_undumped = ('"'+test_method+'"').undump
   prefix = "exclude #{name_undumped.to_sym.inspect}," # don't strip a method name as far as some test names are defined with #define_method and contain terminating whitespaces
 
@@ -88,19 +87,22 @@ end
 
 module Patterns
   # A pattern for a method name is a bit complicated and isn't as simple as `\w+`.
-  # By convention a method can be terminated with '?' or '!' character. Moreover
+  # By convention a method can be terminated with '?' or '!' character. Moreover,
   # dynamically defined methods can terminate with any non-space character/characters,
   # e.g. with '>>', '==' or '[]'.
+  # Additionally, some test methods embed not-alphanumeric characters, e.g., 'test_parse_files:test/bootstraptest'
+  # contains both a ':' and a '/' as part of the test method name.
   #
   # Examples:
   # - TestBignum_BigZero#test_zero?
   # - TestRDocCrossReference#"test_resolve_method:!" (generated with `define_method`)
   # - Prism::MagicCommentTest#"test_magic_comment_#  \t\v encoding  \t\v :  \t\v ascii  \t\v"
+  # - TestRipper::Generic#test_parse_files:test/bootstraptest
   #
   # In case a method name contains characters that don't allowed by a parser a method in the output is wrapped with "".
   # So the pattern should look like `#"?\w+[^"\n]*"?`
 
-  METHOD_NAME = /\w+[?!]?|"\w+[^"\n]*?"/
+  METHOD_NAME = /\w+[?!]?(?:[:]\S+)?|"\w+[^"\n]*?"/
 
   # Sample:
   #
@@ -130,19 +132,19 @@ module Patterns
   # Extracts: ['TestNum2int', 'test_num2ll', 'SIGSEGV', 'V  [libjvm.dylib+0x9be9b8]  Unsafe_GetDouble(JNIEnv_*, _jobject*, _jobject*, long)+0x13c']
   JVM_CRASH = /^\[\s*\d+\/\d+\] ((?:\w+::)*\w+)#(#{METHOD_NAME})\s*#\n# A fatal error has been detected.*?(?:\n#)+\s+(SIG\w+).*?Problematic frame:\n#\s+(.+?)\n/m
 
-  # Sample: [19/21] TestSH#test_strftimetest/mri/tests/runner.rb: TestSH#test_strftime: symbol lookup error: /home/nirvdrum/dev/workspaces/truffleruby-ws/truffleruby/mxbuild/truffleruby-jvm-ce/lib/mri/date_core.so: undefined symbol: rb_str_format
+  # Sample: [19/21] TestSH#test_strftimetest/mri/tests/runner.rb: TestSH#test_strftime: symbol lookup error: /b/b/e/main/mxbuild/truffleruby-jvm-ce/lib/mri/date_core.so: undefined symbol: rb_str_format
   # Extracts: ['TestSH', 'test_strftimetest', 'rb_str_format']
   #
-  # Sample: [1/3] TestBignum_Big2str#test_big2str_generictest/mri/tests/runner.rb: TestBignum_Big2str#test_big2str_generic: symbol lookup error: /home/nirvdrum/dev/workspaces/truffleruby-ws/truffleruby/.ext/c/bignum.so: undefined symbol: rb_big2str_generic
+  # Sample: [1/3] TestBignum_Big2str#test_big2str_generictest/mri/tests/runner.rb: TestBignum_Big2str#test_big2str_generic: symbol lookup error: /b/b/e/main/.ext/c/bignum.so: undefined symbol: rb_big2str_generic
   # Extracts: ['TestBignum_Big2str', 'test_big2str', 'rb_big2str_generic']
   #
   # Sample: test/mri/tests/runner.rb: TestRDocParserRuby#test_read_directive_one_liner: symbol lookup error: /b/b/e/main/mxbuild/truffleruby-native/lib/mri/ripper.so: undefined symbol: rb_parser_st_locale_insensitive_strncasecmp
   # Extracts: ['TestRDocParserRuby', 'test_read_directive_one_liner', 'rb_parser_st_locale_insensitive_strncasecmp']
   MISSING_SYMBOL = / ((?:\w+::)*\w+)#(#{METHOD_NAME}): symbol lookup error.*? undefined symbol: (\w+)/
 
-  # Sample:  [1/4] TestThreadInstrumentation#test_join/home/nirvdrum/dev/workspaces/truffleruby-ws/truffleruby/mxbuild/truffleruby-jvm-ce/bin/ruby: symbol lookup error: /home/nirvdrum/dev/workspaces/truffleruby-ws/truffleruby/.ext/c/thread/instrumentation.so: undefined symbol: rb_internal_thread_add_event_hook
+  # Sample: [1/4] TestThreadInstrumentation#test_join/b/b/e/main/mxbuild/truffleruby-jvm-ce/bin/ruby: symbol lookup error: /b/b/e/main/.ext/c/thread/instrumentation.so: undefined symbol: rb_internal_thread_add_event_hook
   # Extracts: ['TestThreadInstrumentation', 'test_join', 'rb_internal_thread_add_event_hook']
-  SYMBOL_LOOKUP_ERROR = / ((?:\w+::)*\w+)#(#{METHOD_NAME})(?:\/.*?)?: symbol lookup error.*? undefined symbol: (\w+)/
+  SYMBOL_LOOKUP_ERROR = /\s*((?:\w+::)*\w+)#(#{METHOD_NAME}).*?: symbol lookup error.*? undefined symbol: (\w+)/m
 
   # Sample: [ 35/123] TestFileExhaustive#test_expand_path_hfsdyld[32447]: missing symbol called
   # Extracts: ['TestFileExhaustive', 'test_expand_path_hfs', 'missing symbol called']
@@ -343,6 +345,11 @@ please report it to https://github.com/truffleruby/truffleruby/issues
   actual = Patterns::TEST_EXECUTION_TIME.match(output).captures
   assert(actual == expected, '[TEST_EXECUTION_TIME] when method name contains whitespaces captures it properly')
 
+  output = '[1/3] TestRipper::Generic#test_parse_files:test/bootstraptest = 6.17 s'
+  expected = ['TestRipper::Generic', 'test_parse_files:test/bootstraptest', '6.17']
+  actual = Patterns::TEST_EXECUTION_TIME.match(output).captures
+  assert(actual == expected, '[TEST_EXECUTION_TIME] when method name contains colon-separated path captures it properly')
+
   # TEST_FAILURE
 
   output = <<-OUTPUT
@@ -383,6 +390,19 @@ Finished tests in 0.592768s, 42.1750 tests/s, 705.1663 assertions/s.
   expected = ['Failure', 'Test_SPrintf', 'test_format_integer(% #-020.d)', "rb_sprintf(\"% #-020.d\", 2147483647).\n<[\" 2147483647         \", \"% #-020.d\"]> expected but was\n<[\" 0000000002147483647\", \"% #-020.d\"]>."]
   actual = Patterns::TEST_FAILURE.match(output).captures
   assert(actual == expected, '[TEST_FAILURE] when failure and method name contains whitespaces - captures it properly')
+
+  output = <<-OUTPUT
+  1) Failure:
+TestRipper::Generic#test_parse_files:test/bootstraptest [/b/b/e/main/test/mri/tests/ripper/test_files_test_1.rb:6]:
+assert_separately failed with error message
+pid 3583645 exit 127
+
+Finished tests in 6.698635s, 0.1493 tests/s, 0.4479 assertions/s.
+1 tests, 3 assertions, 1 failures, 0 errors, 0 skips
+  OUTPUT
+  expected = ['Failure', 'TestRipper::Generic', 'test_parse_files:test/bootstraptest', "assert_separately failed with error message\npid 3583645 exit 127"]
+  actual = Patterns::TEST_FAILURE.match(output).captures
+  assert(actual == expected, '[TEST_FAILURE] when method name contains colon-separated path - captures it properly')
 
   # TODO: add example for TIMEOUT:
 end
