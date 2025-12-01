@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "TruffleRuby Version (e.g, \"21.1.0\")"
+        description: "TruffleRuby Version"
         required: true
 
 jobs:

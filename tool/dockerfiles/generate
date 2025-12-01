@@ -1,4 +1,4 @@
-#! /usr/bin/env ruby
+#!/usr/bin/env ruby
 
 base_images = {
   nil => "buildpack-deps:buster",

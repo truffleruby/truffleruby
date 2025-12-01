@@ -5,8 +5,8 @@ This directory contains [Dockerfiles](https://docs.docker.com/engine/reference/b
 
 These images are built and published to this repository's package registry by the Github Actions CI pipelines defined at:
 
-- .github/workflows/docker-nightly.yml
-- .github/workflows/docker-stable.yml
+- `.github/workflows/docker-nightly.yml`
+- `.github/workflows/docker-stable.yml`
 
 Note that the "stable" images required a build argument to specify `TRUFFLERUBY_VERSION` which should be a version string like "21.1.0".
 
