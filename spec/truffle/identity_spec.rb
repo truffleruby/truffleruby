@@ -41,6 +41,10 @@ describe "Identifying features such as" do
     RUBY_RELEASE_DATE.should =~ /\A\d{4}-\d{2}-\d{2}\z/
   end
 
+  it "RUBY_DESCRIPTION matches the expected format" do
+    RUBY_DESCRIPTION.should =~ /\Atruffleruby \d\d\.\d+.\d+(-dev-\h+\*?)? \(\d{4}-\d{2}-\d{2}\), like ruby #{Regexp.escape RUBY_VERSION}, (Interpreted|GraalVM CE|Oracle GraalVM) (Native|JVM) \[#{Regexp.escape RUBY_PLATFORM}\]\z/
+  end
+
   guard -> { !TruffleRuby.native? } do
     it "RUBY_DESCRIPTION indicates TruffleRuby runs on JVM and which edition" do
       RUBY_DESCRIPTION.should =~ /\b(Interpreted|GraalVM CE|Oracle GraalVM) JVM\b/

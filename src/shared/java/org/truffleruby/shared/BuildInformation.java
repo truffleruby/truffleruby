@@ -24,9 +24,9 @@ public interface BuildInformation {
 
     boolean isDirty();
 
-    int getCopyrightYear();
+    String getCommitDate();
 
-    String getCompileDate();
+    int getCopyrightYear();
 
     String getKernelMajorVersion();
 

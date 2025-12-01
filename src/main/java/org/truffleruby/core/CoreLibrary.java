@@ -677,7 +677,7 @@ public final class CoreLibrary {
         setConstant(
                 objectClass,
                 "RUBY_RELEASE_DATE",
-                frozenUSASCIIString(BuildInformationImpl.INSTANCE.getCompileDate()));
+                frozenUSASCIIString(BuildInformationImpl.INSTANCE.getCommitDate()));
         setConstant(
                 objectClass,
                 "RUBY_DESCRIPTION",

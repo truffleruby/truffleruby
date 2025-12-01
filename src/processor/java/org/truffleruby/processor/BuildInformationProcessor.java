@@ -54,7 +54,7 @@ public class BuildInformationProcessor extends TruffleRubyProcessor {
     private String shortRevision;
     private String fullRevision;
     private boolean isDirty;
-    private String compileDate;
+    private String commitDate;
     private int copyrightYear;
     private String kernelMajorVersion;
 
@@ -69,9 +69,9 @@ public class BuildInformationProcessor extends TruffleRubyProcessor {
                     .orElseThrow(() -> new Error("git rev-parse command failed"));
             shortRevision = fullRevision.substring(0, 8);
             isDirty = runCommand("git diff --quiet").isEmpty();
-            compileDate = runCommand("git log -1 --date=short --pretty=format:%cd")
+            commitDate = runCommand("git log -1 --date=short --pretty=format:%cd")
                     .orElseThrow(() -> new Error("git log command failed"));
-            copyrightYear = Integer.parseInt(compileDate.split("\\-")[0]);
+            copyrightYear = Integer.parseInt(commitDate.split("\\-")[0]);
             kernelMajorVersion = findKernelMajorVersion();
         } catch (Throwable e) {
             throw new Error(e);
@@ -239,7 +239,7 @@ public class BuildInformationProcessor extends TruffleRubyProcessor {
                         case "getFullRevision" -> fullRevision;
                         case "isDirty" -> isDirty;
                         case "getCopyrightYear" -> copyrightYear;
-                        case "getCompileDate" -> compileDate;
+                        case "getCommitDate" -> commitDate;
                         case "getKernelMajorVersion" -> kernelMajorVersion;
                         default -> throw new UnsupportedOperationException(name + " method not understood");
                     };
