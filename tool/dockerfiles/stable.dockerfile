@@ -5,9 +5,13 @@ ENV LANG C.UTF-8
 ARG TRUFFLERUBY_VERSION
 
 RUN set -eux ;\
-    wget -q https://github.com/truffleruby/truffleruby/releases/download/graal-$TRUFFLERUBY_VERSION/truffleruby-$TRUFFLERUBY_VERSION-linux-amd64.tar.gz ;\
-    tar -xzf truffleruby-$TRUFFLERUBY_VERSION-linux-amd64.tar.gz -C /usr/local --strip-components=1 ;\
-    rm truffleruby-$TRUFFLERUBY_VERSION-linux-amd64.tar.gz ;\
+    case "$(uname -m)" in \
+      x86_64) arch="amd64" ;; \
+      aarch64) arch="aarch64" ;; \
+    esac; \
+    wget -q https://github.com/truffleruby/truffleruby/releases/download/graal-$TRUFFLERUBY_VERSION/truffleruby-$TRUFFLERUBY_VERSION-linux-$arch.tar.gz ;\
+    tar -xzf truffleruby-$TRUFFLERUBY_VERSION-linux-$arch.tar.gz -C /usr/local --strip-components=1 ;\
+    rm truffleruby-$TRUFFLERUBY_VERSION-linux-$arch.tar.gz ;\
     /usr/local/lib/truffle/post_install_hook.sh ;\
     ruby --version ;\
     gem --version ;\

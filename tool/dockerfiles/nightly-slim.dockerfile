@@ -14,9 +14,13 @@ RUN set -eux ;\
     rm -rf /var/lib/apt/lists/*
 
 RUN set -eux ;\
-    wget -q https://github.com/ruby/truffleruby-dev-builder/releases/latest/download/truffleruby-head-ubuntu-22.04-x64.tar.gz ;\
-    tar -xzf truffleruby-head-ubuntu-22.04-x64.tar.gz -C /usr/local --strip-components=1 ;\
-    rm truffleruby-head-ubuntu-22.04-x64.tar.gz ;\
+    case "$(uname -m)" in \
+      x86_64) arch="x64" ;; \
+      aarch64) arch="arm64" ;; \
+    esac; \
+    wget -q https://github.com/ruby/truffleruby-dev-builder/releases/latest/download/truffleruby-head-ubuntu-22.04-$arch.tar.gz ;\
+    tar -xzf truffleruby-head-ubuntu-22.04-$arch.tar.gz -C /usr/local --strip-components=1 ;\
+    rm truffleruby-head-ubuntu-22.04-$arch.tar.gz ;\
     /usr/local/lib/truffle/post_install_hook.sh ;\
     ruby --version ;\
     gem --version ;\
