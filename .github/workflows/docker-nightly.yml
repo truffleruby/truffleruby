@@ -1,6 +1,6 @@
 name: docker-nightly
 concurrency:
-  group: "${{github.workflow}}-${{github.ref}}"
+  group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: true
 on:
   workflow_dispatch:
@@ -9,31 +9,39 @@ on:
 
 jobs:
   nightly:
+    if: github.repository == 'truffleruby/truffleruby'
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     steps:
-      - uses: docker/setup-buildx-action@v1
-      - uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{github.repository_owner}}
-          password: ${{secrets.GITHUB_TOKEN}}
-      - uses: docker/build-push-action@v2
-        with:
-          file: tool/dockerfiles/nightly.dockerfile
-          tags: ghcr.io/${{github.repository}}:nightly
-          push: true
+    - uses: docker/setup-buildx-action@v3
+    - uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: truffleruby
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - uses: docker/build-push-action@v6
+      with:
+        file: tool/dockerfiles/nightly.dockerfile
+        tags: ghcr.io/truffleruby/truffleruby:nightly
+        push: true
 
   nightly-slim:
+    if: github.repository == 'truffleruby/truffleruby'
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-latest
     steps:
-      - uses: docker/setup-buildx-action@v1
-      - uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{github.repository_owner}}
-          password: ${{secrets.GITHUB_TOKEN}}
-      - uses: docker/build-push-action@v2
-        with:
-          file: tool/dockerfiles/nightly-slim.dockerfile
-          tags: ghcr.io/${{github.repository}}:nightly-slim
-          push: true
+    - uses: docker/setup-buildx-action@v3
+    - uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: truffleruby
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - uses: docker/build-push-action@v6
+      with:
+        file: tool/dockerfiles/nightly-slim.dockerfile
+        tags: ghcr.io/truffleruby/truffleruby:nightly-slim
+        push: true

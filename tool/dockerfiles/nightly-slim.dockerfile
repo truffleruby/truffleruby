@@ -1,24 +1,22 @@
-FROM debian:buster-slim
+FROM debian:stable-slim
 
 ENV LANG C.UTF-8
 
 RUN set -eux ;\
     apt-get update ;\
     apt-get install -y --no-install-recommends \
-		ca-certificates \
-            gcc \
-		libssl-dev \
+            make gcc g++ \
+            ca-certificates \
             libz-dev \
-            make \
             tar \
             wget \
     ; \
     rm -rf /var/lib/apt/lists/*
 
 RUN set -eux ;\
-    wget -q https://github.com/ruby/truffleruby-dev-builder/releases/latest/download/truffleruby-head-ubuntu-20.04.tar.gz ;\
-    tar -xzf truffleruby-head-ubuntu-20.04.tar.gz -C /usr/local --strip-components=1 ;\
-    rm truffleruby-head-ubuntu-20.04.tar.gz ;\
+    wget -q https://github.com/ruby/truffleruby-dev-builder/releases/latest/download/truffleruby-head-ubuntu-22.04-x64.tar.gz ;\
+    tar -xzf truffleruby-head-ubuntu-22.04-x64.tar.gz -C /usr/local --strip-components=1 ;\
+    rm truffleruby-head-ubuntu-22.04-x64.tar.gz ;\
     /usr/local/lib/truffle/post_install_hook.sh ;\
     ruby --version ;\
     gem --version ;\
