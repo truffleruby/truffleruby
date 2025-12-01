@@ -1,65 +1,81 @@
 #!/usr/bin/env ruby
 
+class String
+  def indent(n)
+    prefix = " " * n
+    self.lines.map { |line| prefix + line }.join
+  end
+end
+
 base_images = {
   nil => "buildpack-deps:stable",
   "slim" => "debian:stable-slim",
 }
 
-common_pre_install = <<~EOF
-  ENV LANG C.UTF-8
-EOF
-
-# See https://github.com/truffleruby/truffleruby/blob/master/README.md#dependencies
-base_image_pre_install = {
-  "slim" => <<~EOF,
-    RUN set -eux ;\\
-        apt-get update ;\\
-        apt-get install -y --no-install-recommends \\
-                make gcc g++ \\
-                ca-certificates \\
-                libz-dev \\
-                tar \\
-                wget \\
-        ; \\
-        rm -rf /var/lib/apt/lists/*
-  EOF
-}
-
-common_post_install = <<~EOF
+envs = <<~EOF
+  ENV LANG=C.UTF-8
   # don't create ".bundle" in all our apps
-  ENV GEM_HOME /usr/local/bundle
+  ENV GEM_HOME=/usr/local/bundle
   ENV BUNDLE_SILENCE_ROOT_WARNING=1 \\
       BUNDLE_APP_CONFIG="$GEM_HOME"
-  ENV PATH $GEM_HOME/bin:$PATH
-
-  # adjust permissions of a few directories for running "gem install" as an arbitrary user
-  RUN mkdir -p "$GEM_HOME" && chmod 777 "$GEM_HOME"
-
-  CMD [ "irb" ]
+  ENV PATH=$GEM_HOME/bin:$PATH
 EOF
 
-install_commands = {
-  "stable" => <<~EOF,
-    ARG TRUFFLERUBY_VERSION
+run = -> truffle_flavor, image_base {
+  docker = ""
+  if truffle_flavor == "stable"
+    docker << "ARG TRUFFLERUBY_VERSION\n\n"
+  end
 
-    RUN set -eux ;\\
-        wget -q https://github.com/truffleruby/truffleruby/releases/download/graal-$TRUFFLERUBY_VERSION/truffleruby-$TRUFFLERUBY_VERSION-linux-amd64.tar.gz ;\\
-        tar -xzf truffleruby-$TRUFFLERUBY_VERSION-linux-amd64.tar.gz -C /usr/local --strip-components=1 ;\\
-        rm truffleruby-$TRUFFLERUBY_VERSION-linux-amd64.tar.gz ;\\
-        /usr/local/lib/truffle/post_install_hook.sh ;\\
-        ruby --version ;\\
-        gem --version ;\\
-        bundle --version
+  docker << "RUN set -eux ;\\\n"
+
+  if image_base == "slim"
+    # See https://github.com/truffleruby/truffleruby/blob/master/README.md#dependencies
+    docker << <<~EOF.indent(4)
+      apt-get update ;\\
+      apt-get install -y --no-install-recommends \\
+              make gcc g++ \\
+              ca-certificates \\
+              libz-dev \\
+              tar \\
+              wget \\
+      ; \\
+      rm -rf /var/lib/apt/lists/* ;\\
+    EOF
+  end
+
+  case truffle_flavor
+  when "stable"
+    docker << <<~EOF.indent(4)
+      case "$(uname -m)" in \\
+        x86_64) arch="amd64" ;; \\
+        aarch64) arch="aarch64" ;; \\
+      esac; \\
+      wget -q https://github.com/truffleruby/truffleruby/releases/download/graal-$TRUFFLERUBY_VERSION/truffleruby-$TRUFFLERUBY_VERSION-linux-$arch.tar.gz ;\\
+      tar -xzf truffleruby-$TRUFFLERUBY_VERSION-linux-$arch.tar.gz -C /usr/local --strip-components=1 ;\\
+      rm truffleruby-$TRUFFLERUBY_VERSION-linux-$arch.tar.gz ;\\
+    EOF
+  when "nightly"
+    docker << <<~EOF.indent(4)
+      case "$(uname -m)" in \\
+        x86_64) arch="x64" ;; \\
+        aarch64) arch="arm64" ;; \\
+      esac; \\
+      wget -q https://github.com/ruby/truffleruby-dev-builder/releases/latest/download/truffleruby-head-ubuntu-22.04-$arch.tar.gz ;\\
+      tar -xzf truffleruby-head-ubuntu-22.04-$arch.tar.gz -C /usr/local --strip-components=1 ;\\
+      rm truffleruby-head-ubuntu-22.04-$arch.tar.gz ;\\
+    EOF
+  end
+
+  docker << <<~EOF.indent(4)
+    /usr/local/lib/truffle/post_install_hook.sh ;\\
+    ruby --version ;\\
+    gem --version ;\\
+    bundle --version ;\\
   EOF
-  "nightly" => <<~EOF,
-    RUN set -eux ;\\
-        wget -q https://github.com/ruby/truffleruby-dev-builder/releases/latest/download/truffleruby-head-ubuntu-22.04-x64.tar.gz ;\\
-        tar -xzf truffleruby-head-ubuntu-22.04-x64.tar.gz -C /usr/local --strip-components=1 ;\\
-        rm truffleruby-head-ubuntu-22.04-x64.tar.gz ;\\
-        /usr/local/lib/truffle/post_install_hook.sh ;\\
-        ruby --version ;\\
-        gem --version ;\\
-        bundle --version
+  # adjust permissions of a few directories for running "gem install" as an arbitrary user
+  docker << <<~EOF.indent(4)
+    mkdir -p "$GEM_HOME" && chmod 777 "$GEM_HOME"
   EOF
 }
 
@@ -77,10 +93,9 @@ end
 
     File.open(dockerfile_path, "w") do |dockerfile|
       write_section dockerfile, "FROM #{base_images[image_base]}"
-      write_section dockerfile, common_pre_install
-      write_section dockerfile, base_image_pre_install[image_base]
-      write_section dockerfile, install_commands[truffle_flavor]
-      write_section dockerfile, common_post_install, blank_line: false
+      write_section dockerfile, envs
+      write_section dockerfile, run[truffle_flavor, image_base]
+      write_section dockerfile, 'CMD [ "irb" ]', blank_line: false
     end
   end
 end
