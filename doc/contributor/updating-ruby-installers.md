@@ -81,9 +81,9 @@ Almost everything is automatic as soon as the `rbenv/ruby-build` PR is merged.
 Either wait up to 1 day or manually trigger [this workflow](https://github.com/ruby/ruby-builder/actions/workflows/check-new-releases.yml).
 Just need to merge the automatic setup-ruby PR and create a release.
 
-## flavorjones/truffleruby images
+## Docker images
 
-Ping Mike to run the [docker-stable](https://github.com/flavorjones/truffleruby/actions/workflows/docker-stable.yml) workflow.
+Run the [docker-stable](https://github.com/truffleruby/truffleruby/actions/workflows/docker-stable.yml) workflow with the new release.
 
 ## Conclusion
 
