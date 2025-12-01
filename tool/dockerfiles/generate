@@ -9,16 +9,15 @@ common_pre_install = <<~EOF
   ENV LANG C.UTF-8
 EOF
 
+# See https://github.com/truffleruby/truffleruby/blob/master/README.md#dependencies
 base_image_pre_install = {
   "slim" => <<~EOF,
     RUN set -eux ;\\
         apt-get update ;\\
         apt-get install -y --no-install-recommends \\
-		ca-certificates \\
-                gcc \\
-		libssl-dev \\
+                make gcc g++ \\
+                ca-certificates \\
                 libz-dev \\
-                make \\
                 tar \\
                 wget \\
         ; \\

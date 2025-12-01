@@ -5,11 +5,9 @@ ENV LANG C.UTF-8
 RUN set -eux ;\
     apt-get update ;\
     apt-get install -y --no-install-recommends \
-		ca-certificates \
-            gcc \
-		libssl-dev \
+            make gcc g++ \
+            ca-certificates \
             libz-dev \
-            make \
             tar \
             wget \
     ; \
