@@ -16,12 +16,12 @@ jobs:
     - uses: docker/login-action@v1
       with:
         registry: ghcr.io
-        username: ${{ github.repository_owner }}
+        username: truffleruby
         password: ${{ secrets.GITHUB_TOKEN }}
     - uses: docker/build-push-action@v2
       with:
         file: tool/dockerfiles/nightly.dockerfile
-        tags: ghcr.io/${{ github.repository }}:nightly
+        tags: ghcr.io/truffleruby/truffleruby:nightly
         push: true
 
   nightly-slim:
@@ -32,10 +32,10 @@ jobs:
     - uses: docker/login-action@v1
       with:
         registry: ghcr.io
-        username: ${{ github.repository_owner }}
+        username: truffleruby
         password: ${{ secrets.GITHUB_TOKEN }}
     - uses: docker/build-push-action@v2
       with:
         file: tool/dockerfiles/nightly-slim.dockerfile
-        tags: ghcr.io/${{ github.repository }}:nightly-slim
+        tags: ghcr.io/truffleruby/truffleruby:nightly-slim
         push: true
