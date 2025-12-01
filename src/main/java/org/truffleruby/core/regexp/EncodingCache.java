@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import org.graalvm.shadowed.org.joni.Regex;
+import dev.truffleruby.shadowed.org.joni.Regex;
 import org.truffleruby.collections.ConcurrentOperations;
 import org.truffleruby.core.encoding.RubyEncoding;
 

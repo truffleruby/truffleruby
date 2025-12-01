@@ -39,12 +39,12 @@ import com.oracle.truffle.api.profiles.InlinedLoopConditionProfile;
 import com.oracle.truffle.api.strings.AbstractTruffleString;
 import com.oracle.truffle.api.strings.TruffleString;
 import com.oracle.truffle.api.strings.TruffleString.AsTruffleStringNode;
-import org.graalvm.shadowed.org.joni.Matcher;
-import org.graalvm.shadowed.org.joni.MultiRegion;
-import org.graalvm.shadowed.org.joni.Option;
-import org.graalvm.shadowed.org.joni.Regex;
-import org.graalvm.shadowed.org.joni.Region;
-import org.graalvm.shadowed.org.joni.SingleRegion;
+import dev.truffleruby.shadowed.org.joni.Matcher;
+import dev.truffleruby.shadowed.org.joni.MultiRegion;
+import dev.truffleruby.shadowed.org.joni.Option;
+import dev.truffleruby.shadowed.org.joni.Regex;
+import dev.truffleruby.shadowed.org.joni.Region;
+import dev.truffleruby.shadowed.org.joni.SingleRegion;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.CoreMethod;
@@ -1030,7 +1030,7 @@ public abstract class TruffleRegexpNodes {
             }
         }
 
-        /** Is equivalent to {@link org.graalvm.shadowed.org.joni.Matcher#getEagerRegion()} but returns MultiRegion
+        /** Is equivalent to {@link dev.truffleruby.shadowed.org.joni.Matcher#getEagerRegion()} but returns MultiRegion
          * instead of abstract Region class */
         private MultiRegion getMatcherEagerRegion(Matcher matcher) {
             Region eagerRegion = matcher.getEagerRegion();

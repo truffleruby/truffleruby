@@ -11,6 +11,7 @@ from __future__ import print_function
 import os
 import shlex
 from os.path import join, exists, basename, dirname
+import pathlib
 import re
 import shutil
 import sys
@@ -37,6 +38,7 @@ if 'RUBY_BENCHMARKS' in os.environ:
 
 _suite = mx.suite('truffleruby')
 root = _suite.dir
+local_maven_repo = join(root, 'maven-repo')
 
 def add_ext_suffix(name):
     """
@@ -174,7 +176,7 @@ class TruffleRubyBootstrapLauncherBuildTask(mx.BuildTask):
         if trufflerubyopt and '--cexts-sulong' in trufflerubyopt:
             ruby_options.append('--cexts-sulong')
 
-        command = [jdk.java] + jvm_args + ['-m', 'org.graalvm.ruby.launcher/' + main_class] + ruby_options + ['"$@"']
+        command = [jdk.java] + jvm_args + ['-m', 'dev.truffleruby.launcher/' + main_class] + ruby_options + ['"$@"']
         return "#!/usr/bin/env bash\n" + "exec " + " ".join(command) + "\n"
 
 
@@ -470,13 +472,32 @@ def verify_ci(args):
     """Verify CI configuration"""
     mx.verify_ci(args, mx.suite('truffle'), _suite, ['common.json', 'ci/common.jsonnet'])
 
+# Similar to mx_sdk.maven_deploy_public but that forces the version to be the SDK version for all artifacts
 def ruby_maven_deploy_public(args):
-    mx.command_function('build')([])
-    licenses = ['EPL-2.0', 'PSF-License', 'GPLv2-CPE', 'ICU,GPLv2', 'BSD-simplified', 'BSD-new', 'UPL', 'MIT']
-    mx_sdk.maven_deploy_public(args, licenses=licenses, deploy_snapshots=False)
+    mx.command_function('build')(['--dependencies', 'RUBY_POM'])
+
+    path = local_maven_repo
+    mx.rmtree(path, ignore_errors=True)
+    os.mkdir(path)
+
+    licenses = [license.name for license in mx.distribution('RUBY_POM').theLicense]
+    deploy_args = [
+        '--tags=public',
+        '--all-suites',
+        '--all-distribution-types',
+        '--validate=full',
+        '--licenses', ','.join(licenses),
+        "--suppress-javadoc",
+        'local',
+        pathlib.Path(path).as_uri(),
+    ]
+
+    mx.log(f'mx maven-deploy {" ".join(deploy_args)}')
+    mx.maven_deploy(deploy_args)
+    mx.log(f'Deployed Maven artifacts to {path}')
 
 def ruby_maven_deploy_public_repo_dir(args):
-    print(mx_sdk.maven_deploy_public_repo_dir())
+    print(local_maven_repo)
 
 mx.update_commands(_suite, {
     'ruby': [ruby_run_ruby, ''],

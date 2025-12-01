@@ -9,7 +9,7 @@
  */
 package org.truffleruby.core.regexp;
 
-import org.graalvm.shadowed.org.joni.WarnCallback;
+import dev.truffleruby.shadowed.org.joni.WarnCallback;
 import org.truffleruby.parser.RubyWarnings;
 
 public final class RegexWarnCallback implements WarnCallback {

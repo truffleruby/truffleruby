@@ -138,7 +138,7 @@ The last release which used GraalVM/Truffle versioning is 25.0.0.
 ### Compatibility Table
 
 TruffleRuby is compatible with the GraalVM versions in the following table.
-The Truffle version is fixed and is a dependency of the `truffleruby` Maven artifact, so it cannot be chosen.
+The Truffle version is fixed and is a dependency of the `dev.truffleruby:truffleruby` Maven artifact, so it cannot be chosen.
 It is, however, relevant when doing interop with other Truffle languages, as they must use the same version of Truffle.
 
 | TruffleRuby version | Truffle version | GraalVM versions |

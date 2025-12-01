@@ -26,6 +26,7 @@ Performance:
 
 Changes:
 
+* Maven coordinates to embed TruffleRuby have changed from `org.graalvm.polyglot:ruby`/`org.graalvm.ruby:ruby` to `dev.truffleruby:truffleruby` (#4034, @eregon).
 * The `--single-threaded` option now defaults to false also when embedding TruffleRuby (#3958, @eregon).
 
 Memory Footprint:
