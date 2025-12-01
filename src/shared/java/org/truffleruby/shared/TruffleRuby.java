@@ -39,11 +39,12 @@ public final class TruffleRuby {
         }
 
         return String.format(
-                "%s%s %s%s, like ruby %s, %s %s [%s]",
+                "%s%s %s%s (%s), like ruby %s, %s %s [%s]",
                 ENGINE_ID,
                 nameExtra,
                 getTruffleRubyVersion(),
                 BuildInformationImpl.INSTANCE.isDirty() ? "*" : "",
+                BuildInformationImpl.INSTANCE.getCommitDate(),
                 LANGUAGE_VERSION,
                 implementationName,
                 ImageInfo.inImageCode() ? "Native" : "JVM",
