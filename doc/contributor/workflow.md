@@ -230,30 +230,12 @@ We have flags in `jt` to set some options, such as `--trace` for
 
 ## Running with Polyglot
 
-Under [mx.truffleruby](../../mx.truffleruby), there are build configurations to build a GraalVM with TruffleRuby and
-other Truffle languages, such as `jvm-js` and `jvm-py`.
-One can of course also make their own env file.
+To use other Truffle languages from TruffleRuby you can [use `truffleruby-polyglot-get` to install other languages](../user/polyglot.md#installing-other-languages).
 
-Let's look at the example of building with [graaljs](https://github.com/graalvm/graaljs) to be able to evaluate JavaScript code from TruffleRuby.
-
-Building is as simple as cloning the repository and using the right env file:
-```bash
-cd truffleruby-ws/truffleruby
-git clone https://github.com/graalvm/graaljs.git ../graaljs
-jt build --env jvm-js
-```
-
-Similar for building with [graalpython](https://github.com/graalvm/graalpython):
-```
-cd truffleruby-ws/truffleruby
-git clone https://github.com/graalvm/graalpython.git ../graalpython
-jt build --env jvm-py
-```
-
-Then, run TruffleRuby and evaluate some JavaScript:
+Then, to run TruffleRuby and evaluate some JavaScript:
 
 ```bash
-$ jt --use jvm-js ruby
+$ jt ruby
 > Polyglot.eval('js', 'var a = 1; a + 1')
 => 2
 ```

@@ -40,8 +40,7 @@ truffleruby-community-VERSION-PLATFORM.tar.gz
 ```
 
 Development builds are [also available](https://github.com/ruby/truffleruby-dev-builder/releases/latest).
-More platforms for dev builds are [available here](https://github.com/graalvm/graalvm-ce-dev-builds/releases/latest) but those builds tend to be slightly older.
-The Native Standalones are the files `truffleruby-community-dev-PLATFORM.tar.gz`.
+The Native Standalones are the files ` truffleruby-head-PLATFORM.tar.gz`.
 
 ### JVM Standalone
 
@@ -54,8 +53,8 @@ truffleruby-jvm-VERSION-PLATFORM.tar.gz
 truffleruby-community-jvm-VERSION-PLATFORM.tar.gz
 ```
 
-Development builds are [also available](https://github.com/graalvm/graalvm-ce-dev-builds/releases/latest).
-The JVM Standalones are the files `truffleruby-community-jvm-dev-PLATFORM.tar.gz`.
+Development builds are [also available](https://github.com/ruby/truffleruby-dev-builder/releases/latest).
+The JVM Standalones are the files ` truffleruby+graalvm-head-PLATFORM.tar.gz`.
 
 ## After Downloading
 
