@@ -21,7 +21,7 @@ There are two base images being used:
 
 ### Y U NO Alpine?
 
-As of 2020-10-01, the standalone TruffleRuby image isn't compatible with `musl` (meaning it isn't compatible with Alpine). You can read more about that in https://github.com/oracle/truffleruby/issues/1449.
+As of 2020-10-01, the standalone TruffleRuby image isn't compatible with `musl` (meaning it isn't compatible with Alpine). You can read more about that in https://github.com/truffleruby/truffleruby/issues/1449.
 
 
 ### Other Base Images
