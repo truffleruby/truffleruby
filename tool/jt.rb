@@ -2350,10 +2350,10 @@ module Commands
     if linux?
       eclipse_exe = 'eclipse/eclipse'
       if aarch64?
-        eclipse_url = 'https://github.com/eregon/eclipse-mirror/releases/download/eclipse-SDK-4.26/eclipse-4.26.0-linux-aarch64.tar.gz'
+        eclipse_url = 'https://github.com/truffleruby/eclipse-mirror/releases/download/eclipse-SDK-4.26/eclipse-4.26.0-linux-aarch64.tar.gz'
         sha256 = '6cbf7ef69206739f1f11e2883b78ecb9b0a6254400bce51ce5c0c5c2cd550a43'
       elsif amd64?
-        eclipse_url = 'https://github.com/eregon/eclipse-mirror/releases/download/eclipse-SDK-4.26/eclipse-4.26.0-linux-amd64.tar.gz'
+        eclipse_url = 'https://github.com/truffleruby/eclipse-mirror/releases/download/eclipse-SDK-4.26/eclipse-4.26.0-linux-amd64.tar.gz'
         sha256 = '5a71af895af325de533e175289983a023167183ebdcc4cb7d8b3b01420d5b8c0'
       else
         raise 'Only AARCH64 and AMD64 are supported for Eclipse on Linux'
@@ -2361,10 +2361,10 @@ module Commands
     elsif darwin?
       eclipse_exe = 'Eclipse.app/Contents/MacOS/eclipse'
       if aarch64?
-        eclipse_url = 'https://github.com/eregon/eclipse-mirror/releases/download/eclipse-SDK-4.26/eclipse-4.26.0-darwin-aarch64.dmg'
+        eclipse_url = 'https://github.com/truffleruby/eclipse-mirror/releases/download/eclipse-SDK-4.26/eclipse-4.26.0-darwin-aarch64.dmg'
         sha256 = 'fcabac1b5a7c49ac674bd0f6273f5a93007261d3f7a0296473be9295d9424e00'
       elsif amd64?
-        eclipse_url = 'https://github.com/eregon/eclipse-mirror/releases/download/eclipse-SDK-4.26/eclipse-4.26.0-darwin-amd64.dmg'
+        eclipse_url = 'https://github.com/truffleruby/eclipse-mirror/releases/download/eclipse-SDK-4.26/eclipse-4.26.0-darwin-amd64.dmg'
         sha256 = '9f26d17e3633085aaac2b97212205492134ae4e5497cadb9957c2bb6c4b63a59'
       else
         raise 'Only AARCH64 and AMD64 are supported for Eclipse on macOS'
