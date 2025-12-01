@@ -6,7 +6,7 @@ base_images = {
 }
 
 common_pre_install = <<~EOF
-  ENV LANG C.UTF-8
+  ENV LANG=C.UTF-8
 EOF
 
 # See https://github.com/truffleruby/truffleruby/blob/master/README.md#dependencies
@@ -27,10 +27,10 @@ base_image_pre_install = {
 
 common_post_install = <<~EOF
   # don't create ".bundle" in all our apps
-  ENV GEM_HOME /usr/local/bundle
+  ENV GEM_HOME=/usr/local/bundle
   ENV BUNDLE_SILENCE_ROOT_WARNING=1 \\
       BUNDLE_APP_CONFIG="$GEM_HOME"
-  ENV PATH $GEM_HOME/bin:$PATH
+  ENV PATH=$GEM_HOME/bin:$PATH
 
   # adjust permissions of a few directories for running "gem install" as an arbitrary user
   RUN mkdir -p "$GEM_HOME" && chmod 777 "$GEM_HOME"
