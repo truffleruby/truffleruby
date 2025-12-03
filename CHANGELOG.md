@@ -20,6 +20,7 @@ Compatibility:
 * Fix `Hash#{select,slice,transform_values}` and `Hash.[]` methods and retain `compare_by_identity` flag (@andrykonchin).
 * Fix `Hash#reject` and do not retain `default` and `default_proc` values (@andrykonchin).
 * Fix `Comparable#clamp` when the given an infinite interval (#3945, @andrykonchin).
+* Implement `MatchData#bytebegin` and `MatchData#byteend` for Ruby 3.4 (#3883, @Schwad).
 
 Performance:
 
