@@ -21,6 +21,7 @@ Compatibility:
 * Fix `Hash#reject` and do not retain `default` and `default_proc` values (@andrykonchin).
 * Fix `Comparable#clamp` when the given an infinite interval (#3945, @andrykonchin).
 * `File.path` now checks for `\0` and encoding (#4047, @nobu).
+* Implement `MatchData#bytebegin` and `MatchData#byteend` for Ruby 3.4 (#3883, @Schwad).
 
 Performance:
 
