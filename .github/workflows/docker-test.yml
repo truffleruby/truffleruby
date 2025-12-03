@@ -1,0 +1,28 @@
+name: docker-test
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * *" # At 05:00. # https://crontab.guru/#0_5_*_*_*
+  push: # TODO
+
+# TODO merge with daily.yml?
+jobs:
+  docker-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [ol8]
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+    - uses: ./.github/actions/setup-jvmci-graal
+
+    # - run: jt build --env jvm-ee -- --dep TRUFFLERUBY_JVM_STANDALONE_RELEASE_ARCHIVE
+    # - run: jt docker test --filter ol8 --standalone release/truffleruby-jvm-*.tar.gz --test "${{ github.ref_name }}"
+    - run: wget https://github.com/ruby/truffleruby-dev-builder/releases/download/v20251202.210324/truffleruby-head-linux-x64.tar.gz
+    - run: jt docker test --filter ol8 --standalone truffleruby-head-linux-x64.tar.gz --test "${{ github.ref_name }}"
