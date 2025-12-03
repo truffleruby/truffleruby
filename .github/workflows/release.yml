@@ -1,0 +1,45 @@
+name: docker-test
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * *" # At 05:00. # https://crontab.guru/#0_5_*_*_*
+
+jobs:
+  build_with_old_glibc:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+
+    - run: jt build_release_archives_with_old_glibc
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: truffleruby-release-archives
+        path: ${{ github.workspace }}/truffleruby-*.tar.gz
+
+  docker-test:
+    needs: [build_with_old_glibc]
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [ol8, ol9, fedora37, fedora38, ubuntu1804, ubuntu2004, ubuntu2204, debian10, debian11, debian12]
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: truffleruby-release-archives
+
+    - run: jt docker test --filter ${{ matrix.image }} --standalone "$(jt native_standalone_release_archive)" --test "${{ github.ref_name }}"
+    - run: jt docker test --filter ${{ matrix.image }} --standalone "$(jt jvm_standalone_release_archive)" --test "${{ github.ref_name }}"
