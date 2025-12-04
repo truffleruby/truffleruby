@@ -9,7 +9,6 @@
  */
 package org.truffleruby.language.exceptions;
 
-import com.oracle.truffle.api.interop.InteropLibrary;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.cast.BooleanCastNode;
@@ -23,6 +22,8 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.BranchProfile;
 
 @GenerateWrapper
@@ -47,14 +48,16 @@ public abstract class RescueNode extends RubyContextSourceNode {
         this.canOmitBacktrace = false;
     }
 
-    public abstract boolean canHandle(VirtualFrame frame, Object exceptionObject, BooleanCastNode booleanCastNode);
+    public abstract boolean canHandle(Node inliningContext, VirtualFrame frame, Object exceptionObject,
+            BooleanCastNode booleanCastNode);
 
     @Override
     public Object execute(VirtualFrame frame) {
         return rescueBody.execute(frame);
     }
 
-    protected boolean matches(Object exceptionObject, Object handlingClass, BooleanCastNode booleanCastNode) {
+    protected boolean matches(Node inliningContext, Object exceptionObject, Object handlingClass,
+            BooleanCastNode booleanCastNode) {
         if (!(handlingClass instanceof RubyModule)) {
             if (interopLibrary == null) {
                 CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -73,7 +76,7 @@ public abstract class RescueNode extends RubyContextSourceNode {
         }
 
         final Object matches = callTripleEqualsNode.call(handlingClass, "===", exceptionObject);
-        return booleanCastNode.execute(this, matches);
+        return booleanCastNode.execute(inliningContext, matches);
     }
 
     @Override

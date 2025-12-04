@@ -9,8 +9,6 @@
  */
 package org.truffleruby.language.exceptions;
 
-import com.oracle.truffle.api.TruffleSafepoint;
-import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.array.RubyArray;
@@ -20,7 +18,10 @@ import org.truffleruby.core.cast.SplatCastNode;
 import org.truffleruby.core.cast.SplatCastNodeGen;
 import org.truffleruby.language.RubyNode;
 
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.LoopConditionProfile;
 
 public final class RescueSplatNode extends RescueNode {
 
@@ -44,13 +45,15 @@ public final class RescueSplatNode extends RescueNode {
     }
 
     @Override
-    public boolean canHandle(VirtualFrame frame, Object exceptionObject, BooleanCastNode booleanCastNode) {
+    public boolean canHandle(Node inliningContext, VirtualFrame frame, Object exceptionObject,
+            BooleanCastNode booleanCastNode) {
         final RubyArray handlingClasses = (RubyArray) splatCastNode.execute(frame);
 
         int i = 0;
         try {
             for (; loopProfile.inject(i < handlingClasses.size); ++i) {
-                if (matches(exceptionObject, stores.read(handlingClasses.getStore(), i), booleanCastNode)) {
+                if (matches(inliningContext, exceptionObject, stores.read(handlingClasses.getStore(), i),
+                        booleanCastNode)) {
                     return true;
                 }
                 TruffleSafepoint.poll(this);

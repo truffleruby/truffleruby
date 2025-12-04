@@ -9,14 +9,6 @@
  */
 package org.truffleruby.language.exceptions;
 
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.exception.AbstractTruffleException;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.TruffleSafepoint;
-import com.oracle.truffle.api.profiles.InlinedBranchProfile;
-import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import org.truffleruby.core.cast.BooleanCastNode;
 import org.truffleruby.core.exception.ExceptionOperations;
 import org.truffleruby.core.fiber.RubyFiber;
@@ -24,14 +16,23 @@ import org.truffleruby.language.RubyContextSourceNode;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.control.KillException;
 import org.truffleruby.language.control.RetryException;
+import org.truffleruby.language.methods.TranslateExceptionNode;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.TruffleStackTrace;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.ExplodeLoop.LoopExplosionKind;
-import org.truffleruby.language.methods.TranslateExceptionNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.InlinedBranchProfile;
+import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 
 public abstract class TryNode extends RubyContextSourceNode {
 
@@ -70,7 +71,7 @@ public abstract class TryNode extends RubyContextSourceNode {
             } catch (AbstractTruffleException exception) {
                 guestExceptionProfile.enter(this);
                 try {
-                    return handleException(frame, exception, raiseExceptionProfile, booleanCastNode);
+                    return handleException(this, frame, exception, raiseExceptionProfile, booleanCastNode);
                 } catch (RetryException e) {
                     retryProfile.enter(this);
                     TruffleSafepoint.poll(this);
@@ -93,12 +94,12 @@ public abstract class TryNode extends RubyContextSourceNode {
     }
 
     @ExplodeLoop(kind = LoopExplosionKind.FULL_UNROLL_UNTIL_RETURN)
-    private Object handleException(VirtualFrame frame, AbstractTruffleException exception,
+    private Object handleException(Node inliningContext, VirtualFrame frame, AbstractTruffleException exception,
             InlinedConditionProfile raiseExceptionProfile, BooleanCastNode booleanCastNode) {
         final Object exceptionObject = ExceptionOperations.getExceptionObject(this, exception, raiseExceptionProfile);
 
         for (RescueNode rescue : rescueParts) {
-            if (rescue.canHandle(frame, exceptionObject, booleanCastNode)) {
+            if (rescue.canHandle(inliningContext, frame, exceptionObject, booleanCastNode)) {
                 if (getContext().getOptions().BACKTRACE_ON_RESCUE) {
                     printBacktraceOnRescue(rescue, exception);
                 }

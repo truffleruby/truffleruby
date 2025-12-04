@@ -16,6 +16,7 @@ import org.truffleruby.language.RubyNode;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
 
 public final class RescueClassesNode extends RescueNode {
 
@@ -28,10 +29,11 @@ public final class RescueClassesNode extends RescueNode {
 
     @ExplodeLoop
     @Override
-    public boolean canHandle(VirtualFrame frame, Object exceptionObject, BooleanCastNode booleanCastNode) {
+    public boolean canHandle(Node inliningContext, VirtualFrame frame, Object exceptionObject,
+            BooleanCastNode booleanCastNode) {
         for (RubyNode handlingClassNode : handlingClassNodes) {
             final Object handlingClass = handlingClassNode.execute(frame);
-            if (matches(exceptionObject, handlingClass, booleanCastNode)) {
+            if (matches(inliningContext, exceptionObject, handlingClass, booleanCastNode)) {
                 return true;
             }
         }
