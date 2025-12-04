@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [ol8]
+        image: [ol8, ol9, fedora37, fedora38, ubuntu1804, ubuntu2004, ubuntu2204, debian10, debian11, debian12]
     runs-on: ubuntu-22.04
     steps:
     - name: Clone TruffleRuby
@@ -25,4 +25,4 @@ jobs:
     # - run: jt build --env jvm-ee -- --dep TRUFFLERUBY_JVM_STANDALONE_RELEASE_ARCHIVE
     # - run: jt docker test --filter ol8 --standalone release/truffleruby-jvm-*.tar.gz --test "${{ github.ref_name }}"
     - run: wget https://github.com/ruby/truffleruby-dev-builder/releases/download/v20251202.210324/truffleruby-head-linux-x64.tar.gz
-    - run: jt docker test --filter ol8 --standalone truffleruby-head-linux-x64.tar.gz --test "${{ github.ref_name }}"
+    - run: jt docker test --filter ${{ matrix.image }} --standalone truffleruby-head-linux-x64.tar.gz --test "${{ github.ref_name }}"
