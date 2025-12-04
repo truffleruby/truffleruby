@@ -15,6 +15,7 @@ import org.truffleruby.core.cast.BooleanCastNode;
 import org.truffleruby.language.RubyNode;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
 
 public final class RescueStandardErrorNode extends RescueNode {
 
@@ -23,8 +24,9 @@ public final class RescueStandardErrorNode extends RescueNode {
     }
 
     @Override
-    public boolean canHandle(VirtualFrame frame, Object exceptionObject, BooleanCastNode booleanCastNode) {
-        return matches(exceptionObject, coreLibrary().standardErrorClass, booleanCastNode);
+    public boolean canHandle(Node inliningContext, VirtualFrame frame, Object exceptionObject,
+            BooleanCastNode booleanCastNode) {
+        return matches(inliningContext, exceptionObject, coreLibrary().standardErrorClass, booleanCastNode);
     }
 
     @Override
