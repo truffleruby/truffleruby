@@ -141,6 +141,18 @@ describe "Kernel.Rational" do
         Rational(:sym, exception: false).should == nil
         Rational("abc", exception: false).should == nil
       end
+
+      it "swallows an exception raised in #to_r" do
+        obj = Object.new
+        def obj.to_r; raise; end
+        Rational(obj, exception: false).should == nil
+      end
+
+      it "swallows an exception raised in #to_int" do
+        obj = Object.new
+        def obj.to_int; raise; end
+        Rational(obj, exception: false).should == nil
+      end
     end
 
     describe "and [non-Numeric, Numeric]" do
@@ -148,12 +160,36 @@ describe "Kernel.Rational" do
         Rational(:sym, 1, exception: false).should == nil
         Rational("abc", 1, exception: false).should == nil
       end
+
+      it "swallows an exception raised in #to_r" do
+        obj = Object.new
+        def obj.to_r; raise; end
+        Rational(obj, 1, exception: false).should == nil
+      end
+
+      it "swallows an exception raised in #to_int" do
+        obj = Object.new
+        def obj.to_int; raise; end
+        Rational(obj, 1, exception: false).should == nil
+      end
     end
 
     describe "and [anything, non-Numeric]" do
       it "swallows an error" do
         Rational(:sym, :sym, exception: false).should == nil
         Rational("abc", :sym, exception: false).should == nil
+      end
+
+      it "swallows an exception raised in #to_r" do
+        obj = Object.new
+        def obj.to_r; raise; end
+        Rational(obj, obj, exception: false).should == nil
+      end
+
+      it "swallows an exception raised in #to_int" do
+        obj = Object.new
+        def obj.to_int; raise; end
+        Rational(obj, obj, exception: false).should == nil
       end
     end
 

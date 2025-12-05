@@ -2965,7 +2965,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         final RubyNode numeratorNode = translateNumericValue(node.numerator);
         final RubyNode denominatorNode = translateNumericValue(node.denominator);
 
-        RubyNode[] arguments = new RubyNode[]{ numeratorNode, denominatorNode };
+        RubyNode[] arguments = new RubyNode[]{ numeratorNode, denominatorNode, new BooleanLiteralNode(true) };
         RubyNode rubyNode = createCallNode(rationalModuleNode, "convert", arguments);
         return assignPositionAndFlags(node, rubyNode);
     }

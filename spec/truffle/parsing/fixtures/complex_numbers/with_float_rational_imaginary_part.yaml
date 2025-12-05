@@ -61,6 +61,12 @@ ast: |
                                   sourceCharIndex = -1
                                   sourceLength = 0
                                   value = 50
+                          BooleanLiteralNode
+                              attributes:
+                                  flags = 0
+                                  sourceCharIndex = -1
+                                  sourceLength = 0
+                                  value = true
                       ]
                       receiver =
                           ReadConstantNode
