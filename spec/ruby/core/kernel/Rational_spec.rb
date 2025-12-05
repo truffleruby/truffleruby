@@ -85,17 +85,46 @@ describe "Kernel.Rational" do
     end
   end
 
+  context "when passed neither a Numeric nor a String" do
+    it "converts to Rational with #to_r method" do
+      obj = Object.new
+      def obj.to_r; 1/2r; end
+
+      Rational(obj).should == 1/2r
+    end
+
+    it "tries to convert to Integer with #to_int method if it does not respond to #to_r" do
+      obj = Object.new
+      def obj.to_int; 1; end
+
+      Rational(obj).should == 1r
+    end
+
+    it "raises TypeError if it neither responds to #to_r nor #to_int method" do
+      -> { Rational([]) }.should raise_error(TypeError, "can't convert Array into Rational")
+      -> { Rational({}) }.should raise_error(TypeError, "can't convert Hash into Rational")
+      -> { Rational(nil) }.should raise_error(TypeError, "can't convert nil into Rational")
+    end
+
+    it "raises TypeError if #to_r does not return Rational" do
+      obj = Object.new
+      def obj.to_r; []; end
+
+      -> { Rational(obj) }.should raise_error(TypeError, "can't convert Object to Rational (Object#to_r gives Array)")
+    end
+  end
+
   it "raises a ZeroDivisionError if the second argument is 0" do
     -> { Rational(1, 0) }.should raise_error(ZeroDivisionError, "divided by 0")
     -> { Rational(1, 0.0) }.should raise_error(ZeroDivisionError, "divided by 0")
   end
 
   it "raises a TypeError if the first argument is nil" do
-    -> { Rational(nil) }.should raise_error(TypeError)
+    -> { Rational(nil) }.should raise_error(TypeError, "can't convert nil into Rational")
   end
 
   it "raises a TypeError if the second argument is nil" do
-    -> { Rational(1, nil) }.should raise_error(TypeError)
+    -> { Rational(1, nil) }.should raise_error(TypeError, "can't convert nil into Rational")
   end
 
   it "raises a TypeError if the first argument is a Symbol" do
