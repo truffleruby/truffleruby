@@ -331,7 +331,7 @@ class Rational < Numeric
 
   def self.convert(num, den)
     if Primitive.nil?(num) || Primitive.nil?(den)
-      raise TypeError, 'cannot convert nil into Rational'
+      raise TypeError, "can't convert nil into Rational"
     end
 
     if Primitive.is_a?(num, Integer) && Primitive.is_a?(den, Integer)
@@ -345,6 +345,11 @@ class Rational < Numeric
       num = String::Rationalizer.new(num).strict_convert
     when Float, Complex
       num = num.to_r
+    else
+      if !Primitive.respond_to?(num, :to_r, false)
+        integer = Truffle::Type.rb_check_to_integer(num, :to_int)
+        num = integer if integer
+      end
     end
 
     case den
@@ -352,15 +357,37 @@ class Rational < Numeric
       # nothing
     when Float, String, Complex
       den = den.to_r
+    else
+      if !Primitive.respond_to?(den, :to_r, false)
+        integer = Truffle::Type.rb_check_to_integer(den, :to_int)
+        den = integer if integer
+      end
     end
 
-    if Primitive.equal?(den, 1) && !(Primitive.is_a?(num, Integer))
-      return Truffle::Type.coerce_to(num, Rational, :to_r)
-    elsif Primitive.is_a?(num, Numeric) && Primitive.is_a?(den, Numeric) &&
-        !(Primitive.is_a?(num, Integer) && Primitive.is_a?(den, Integer))
-      return num / den
+    if Primitive.is_a?(num, Rational) && Primitive.equal?(den, 1)
+      return num
     end
 
+    if !Primitive.is_a?(num, Integer) && Primitive.equal?(den, 1) # that's den either isn't given or equals 1
+      return Truffle::Type.rb_convert_type(num, Rational, :to_r)
+    else
+      if !Primitive.is_a?(num, Numeric)
+        num = Truffle::Type.rb_convert_type(num, Rational, :to_r)
+      end
+
+      if !Primitive.is_a?(den, Numeric)
+        den = Truffle::Type.rb_convert_type(den, Rational, :to_r)
+      end
+
+      if Primitive.is_a?(num, Numeric) && Primitive.is_a?(den, Numeric) &&
+          !(Primitive.is_a?(num, Integer) && Primitive.is_a?(den, Integer))
+        rational = Truffle::Type.rb_check_convert_type(num, Rational, :to_r)
+        num = rational if rational
+        return num / den
+      end
+    end
+
+    # num and dun are supposed to be Rational or Integer here
     reduce(num, den)
   end
   private_class_method :convert
