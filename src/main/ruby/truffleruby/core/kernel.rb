@@ -147,8 +147,8 @@ module Kernel
   end
   module_function :Integer
 
-  def Rational(a, b = 1)
-    Rational.__send__ :convert, a, b
+  def Rational(a, b = 1, exception: true)
+    Rational.__send__ :convert, a, b, exception
   end
   module_function :Rational
 

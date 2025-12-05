@@ -1,5 +1,0 @@
-fails:Kernel.Rational when passed exception: false and [non-Numeric] swallows an error
-fails:Kernel.Rational when passed exception: false and [non-Numeric, Numeric] swallows an error
-fails:Kernel.Rational when passed exception: false and [anything, non-Numeric] swallows an error
-fails:Kernel.Rational when passed exception: false and non-Numeric String arguments swallows an error
-fails:Kernel.Rational when passed exception: false and nil arguments swallows an error

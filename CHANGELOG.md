@@ -25,6 +25,7 @@ Compatibility:
 * Implement `MatchData#bytebegin` and `MatchData#byteend` for Ruby 3.4 (#3883, @Schwad).
 * Define `Data#initialize` to help deserializing Data instances (@eregon).
 * Fix `Rational()` and arguments type conversion (#3969, @andrykonchin).
+* Support `Rational()` with `exception` keyword argument (#3969, @andrykonchin).
 
 Performance:
 
