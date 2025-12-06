@@ -35,7 +35,6 @@ describe "RubyGems" do
       'debug', # not available
     ]
     default_gems[default_gems.index('english')] = 'English'
-    default_gems[default_gems.index('rinda')] = 'rinda/rinda'
 
     code = <<-RUBY
     #{default_gems.inspect}.each do |name|

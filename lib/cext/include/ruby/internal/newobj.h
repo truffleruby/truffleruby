@@ -93,7 +93,6 @@ VALUE rb_newobj_of(VALUE klass, VALUE flags);
 /**
  * Fills common fields in the object.
  *
- * @note           Prefer rb_newobj_of() to this function.
  * @param[in,out]  obj    A Ruby object to be set up.
  * @param[in]      klass  `obj` will belong to this class.
  * @param[in]      type   One of ::ruby_value_type.

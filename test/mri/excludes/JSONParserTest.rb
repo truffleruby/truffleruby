@@ -1,0 +1,5 @@
+exclude :test_error_message_encoding, "[JSON::ParserError] exception expected, not #<NameError: uninitialized constant JSON::Ext>."
+exclude :test_nesting, "[JSON::NestingError] exception expected, not #<SystemStackError: stack level too deep"
+exclude :test_parse_arrays_with_allow_trailing_comma, "JSON::ParserError: expected next element in array at ''!"
+exclude :test_parse_comments, "JSON::ParserError: expected ',' or '}' in object at '/* multi line"
+exclude :test_parse_object_with_allow_trailing_comma, "JSON::ParserError: expected next name, value pair in object at ''!"

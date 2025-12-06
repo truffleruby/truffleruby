@@ -3,13 +3,7 @@
 
 # A parser for TomDoc based on TomDoc 1.0.0-rc1 (02adef9b5a)
 #
-# The TomDoc specification can be found at:
-#
-# http://tomdoc.org
-#
-# The latest version of the TomDoc specification can be found at:
-#
-# https://github.com/mojombo/tomdoc/blob/master/tomdoc.md
+# The TomDoc specification can be found at http://tomdoc.org.
 #
 # To choose TomDoc as your only default format see RDoc::Options@Saved+Options
 # for instructions on setting up a <code>.rdoc_options</code> file to store
@@ -81,7 +75,7 @@ class RDoc::TomDoc < RDoc::Markup::Parser
   #
   # Returns an RDoc::Markup::Document representing the TomDoc format.
 
-  def self.parse text
+  def self.parse(text)
     parser = new
 
     parser.tokenize text
@@ -97,7 +91,7 @@ class RDoc::TomDoc < RDoc::Markup::Parser
   #
   # Returns a String containing the signature and nil if not
 
-  def self.signature comment
+  def self.signature(comment)
     return unless comment.tomdoc?
 
     document = comment.parse
@@ -140,7 +134,7 @@ class RDoc::TomDoc < RDoc::Markup::Parser
   #
   # Returns an RDoc::Markup::Heading
 
-  def build_heading level
+  def build_heading(level)
     heading = super
 
     @section = heading.text
@@ -156,7 +150,7 @@ class RDoc::TomDoc < RDoc::Markup::Parser
   #
   # Returns an RDoc::Markup::Verbatim
 
-  def build_verbatim margin
+  def build_verbatim(margin)
     verbatim = super
 
     verbatim.format = :ruby if @section == 'Examples'
@@ -170,7 +164,7 @@ class RDoc::TomDoc < RDoc::Markup::Parser
   #
   # Returns an RDoc::Markup::Paragraph.
 
-  def build_paragraph margin
+  def build_paragraph(margin)
     p :paragraph_start => margin if @debug
 
     paragraph = RDoc::Markup::Paragraph.new
@@ -210,7 +204,7 @@ class RDoc::TomDoc < RDoc::Markup::Parser
   ##
   # Detects a section change to "Returns" and adds a heading
 
-  def parse_text parent, indent # :nodoc:
+  def parse_text(parent, indent) # :nodoc:
     paragraph = build_paragraph indent
 
     if false == @seen_returns and 'Returns' == @section then
@@ -228,7 +222,7 @@ class RDoc::TomDoc < RDoc::Markup::Parser
   #
   # Returns self.
 
-  def tokenize text
+  def tokenize(text)
     text = text.sub(/\A(Public|Internal|Deprecated):\s+/, '')
 
     setup_scanner text

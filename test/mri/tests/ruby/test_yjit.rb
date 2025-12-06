@@ -332,10 +332,10 @@ class TestYJIT < Test::Unit::TestCase
   end
 
   def test_compile_opt_aset
-    assert_compiles('[1,2,3][2] = 4', insns: %i[opt_aset])
-    assert_compiles('{}[:foo] = :bar', insns: %i[opt_aset])
-    assert_compiles('[1,2,3][0..-1] = []', insns: %i[opt_aset])
-    assert_compiles('"foo"[3] = "d"', insns: %i[opt_aset])
+    assert_compiles('[1,2,3][2] = 4', insns: %i[opt_aset], frozen_string_literal: false)
+    assert_compiles('{}[:foo] = :bar', insns: %i[opt_aset], frozen_string_literal: false)
+    assert_compiles('[1,2,3][0..-1] = []', insns: %i[opt_aset], frozen_string_literal: false)
+    assert_compiles('"foo"[3] = "d"', insns: %i[opt_aset], frozen_string_literal: false)
   end
 
   def test_compile_attr_set
@@ -1150,6 +1150,8 @@ class TestYJIT < Test::Unit::TestCase
   end
 
   def test_code_gc_with_auto_compact
+    omit "compaction is not supported on this platform" unless GC.respond_to?(:compact)
+
     assert_compiles((code_gc_helpers + <<~'RUBY'), exits: :any, result: :ok, mem_size: 1, code_gc: true)
       # Test ISEQ moves in the middle of code GC
       GC.auto_compact = true
@@ -1278,6 +1280,8 @@ class TestYJIT < Test::Unit::TestCase
   end
 
   def test_gc_compact_cyclic_branch
+    omit "compaction is not supported on this platform" unless GC.respond_to?(:compact)
+
     assert_compiles(<<~'RUBY', result: 2)
       def foo
         i = 0
@@ -1470,7 +1474,7 @@ class TestYJIT < Test::Unit::TestCase
   end
 
   def test_str_concat_encoding_mismatch
-    assert_compiles(<<~'RUBY', result: "incompatible character encodings: ASCII-8BIT and EUC-JP")
+    assert_compiles(<<~'RUBY', result: "incompatible character encodings: BINARY (ASCII-8BIT) and EUC-JP")
       def bar(a, b)
         a << b
       rescue => e
@@ -1483,8 +1487,8 @@ class TestYJIT < Test::Unit::TestCase
       end
 
       h = Hash.new { nil }
-      foo("\x80".b, "\xA1A1".force_encoding("EUC-JP"), h)
-      foo("\x80".b, "\xA1A1".force_encoding("EUC-JP"), h)
+      foo("\x80".b, "\xA1A1".dup.force_encoding("EUC-JP"), h)
+      foo("\x80".b, "\xA1A1".dup.force_encoding("EUC-JP"), h)
     RUBY
   end
 
@@ -1501,7 +1505,7 @@ class TestYJIT < Test::Unit::TestCase
   end
 
   def test_opt_aref_with
-    assert_compiles(<<~RUBY, insns: %i[opt_aref_with], result: "bar")
+    assert_compiles(<<~RUBY, insns: %i[opt_aref_with], result: "bar", frozen_string_literal: false)
       h = {"foo" => "bar"}
 
       h["foo"]
@@ -1524,6 +1528,226 @@ class TestYJIT < Test::Unit::TestCase
 
   def test_disable_stats
     assert_in_out_err(%w[--yjit-stats --yjit-disable])
+  end
+
+  def test_odd_calls_to_attr_reader
+    # Use of delegate from ActiveSupport use these kind of calls to getter methods.
+    assert_compiles(<<~RUBY, result: [1, 1, 1], no_send_fallbacks: true)
+      class One
+        attr_reader :one
+        def initialize
+          @one = 1
+        end
+      end
+
+      def calls(obj, empty, &)
+        [obj.one(*empty), obj.one(&), obj.one(*empty, &)]
+      end
+
+      calls(One.new, [])
+    RUBY
+  end
+
+  def test_kwrest
+    assert_compiles(<<~RUBY, result: true, no_send_fallbacks: true)
+      def req_rest(r1:, **kwrest) = [r1, kwrest]
+      def opt_rest(r1: 1.succ, **kwrest) = [r1, kwrest]
+      def kwrest(**kwrest) = kwrest
+
+      def calls
+        [
+          [1, {}] == req_rest(r1: 1),
+          [1, {:r2=>2, :r3=>3}] == req_rest(r1: 1, r2: 2, r3: 3),
+          [1, {:r2=>2, :r3=>3}] == req_rest(r2: 2, r1:1, r3: 3),
+          [1, {:r2=>2, :r3=>3}] == req_rest(r2: 2, r3: 3, r1: 1),
+
+          [2, {}] == opt_rest,
+          [2, { r2: 2, r3: 3 }] == opt_rest(r2: 2, r3: 3),
+          [0, { r2: 2, r3: 3 }] == opt_rest(r1: 0, r3: 3, r2: 2),
+          [0, { r2: 2, r3: 3 }] == opt_rest(r2: 2, r1: 0, r3: 3),
+          [1, { r2: 2, r3: 3 }] == opt_rest(r2: 2, r3: 3, r1: 1),
+
+          {} == kwrest,
+          { r0: 88, r1: 99 } == kwrest(r0: 88, r1: 99),
+        ]
+      end
+
+      calls.all?
+    RUBY
+  end
+
+  def test_send_polymorphic_method_name
+    assert_compiles(<<~'RUBY', result: %i[ok ok], no_send_fallbacks: true)
+      mid = "dynamic_mid_#{rand(100..200)}"
+      mid_dsym = mid.to_sym
+
+      define_method(mid) { :ok }
+
+      define_method(:send_site) { send(_1) }
+
+      [send_site(mid), send_site(mid_dsym)]
+    RUBY
+  end
+
+  def test_kw_splat_nil
+    assert_compiles(<<~'RUBY', result: %i[ok ok], no_send_fallbacks: true)
+      def id(x) = x
+      def kw_fw(arg, **) = id(arg, **)
+      def use = [kw_fw(:ok), :ok.itself(**nil)]
+
+      use
+    RUBY
+  end
+
+  def test_empty_splat
+    assert_compiles(<<~'RUBY', result: :ok, no_send_fallbacks: true)
+      def foo = :ok
+      def use(empty) = foo(*empty)
+
+      use([])
+    RUBY
+  end
+
+  def test_byteslice_sp_invalidation
+    assert_compiles(<<~'RUBY', result: 'ok', no_send_fallbacks: true)
+      "okng".itself.byteslice(0, 2)
+    RUBY
+  end
+
+  def test_leaf_builtin
+    assert_compiles(code_gc_helpers + <<~'RUBY', exits: :any, result: 1)
+      before = RubyVM::YJIT.runtime_stats[:num_send_iseq_leaf]
+      return 1 if before.nil?
+
+      def entry = self.class
+      entry
+
+      after = RubyVM::YJIT.runtime_stats[:num_send_iseq_leaf]
+      after - before
+    RUBY
+  end
+
+  def test_runtime_stats_types
+    assert_compiles(<<~'RUBY', exits: :any, result: true)
+      def test = :ok
+      3.times { test }
+
+      stats = RubyVM::YJIT.runtime_stats
+      return true unless stats[:all_stats]
+
+      [
+        stats[:object_shape_count].is_a?(Integer),
+        stats[:ratio_in_yjit].is_a?(Float),
+      ].all?
+    RUBY
+  end
+
+  def test_runtime_stats_key_arg
+    assert_compiles(<<~'RUBY', exits: :any, result: true)
+      def test = :ok
+      3.times { test }
+
+      # Collect single stat.
+      stat = RubyVM::YJIT.runtime_stats(:ratio_in_yjit)
+
+      # Ensure this invocation had stats.
+      return true unless RubyVM::YJIT.runtime_stats[:all_stats]
+
+      stat > 0.0
+    RUBY
+  end
+
+  def test_runtime_stats_arg_error
+    assert_compiles(<<~'RUBY', exits: :any, result: true)
+      begin
+        RubyVM::YJIT.runtime_stats(Object.new)
+        :no_error
+      rescue TypeError => e
+        e.message == "non-symbol given"
+      end
+    RUBY
+  end
+
+  def test_runtime_stats_unknown_key
+    assert_compiles(<<~'RUBY', exits: :any, result: true)
+      def test = :ok
+      3.times { test }
+
+      RubyVM::YJIT.runtime_stats(:some_key_unlikely_to_exist).nil?
+    RUBY
+  end
+
+  def test_yjit_option_uses_array_each_in_ruby
+    assert_separately(["--yjit"], <<~'RUBY')
+      # Array#each should be implemented in Ruby for YJIT
+      assert_equal "<internal:array>", Array.instance_method(:each).source_location.first
+
+      # The backtrace, however, should not be `from <internal:array>:XX:in 'Array#each'`
+      begin
+        [nil].each { raise }
+      rescue => e
+        assert_equal "-:11:in 'Array#each'", e.backtrace[1]
+      end
+    RUBY
+  end
+
+  def test_yjit_enable_replaces_array_each
+    assert_separately([*("--disable=yjit" if RubyVM::YJIT.enabled?)], <<~'RUBY')
+      # Array#each should be implemented in C for the interpreter
+      assert_nil Array.instance_method(:each).source_location
+
+      # The backtrace should not be `from <internal:array>:XX:in 'Array#each'`
+      begin
+        [nil].each { raise }
+      rescue => e
+        assert_equal "-:11:in 'Array#each'", e.backtrace[1]
+      end
+
+      RubyVM::YJIT.enable
+
+      # Array#each should be implemented in Ruby for YJIT
+      assert_equal "<internal:array>", Array.instance_method(:each).source_location.first
+
+      # However, the backtrace should still not be `from <internal:array>:XX:in 'Array#each'`
+      begin
+        [nil].each { raise }
+      rescue => e
+        assert_equal "-:23:in 'Array#each'", e.backtrace[1]
+      end
+    RUBY
+  end
+
+  def test_yjit_enable_preserves_array_each_monkey_patch
+    assert_separately([*("--disable=yjit" if RubyVM::YJIT.enabled?)], <<~'RUBY')
+      # Array#each should be implemented in C initially
+      assert_nil Array.instance_method(:each).source_location
+
+      # Override Array#each
+      $called = false
+      Array.prepend(Module.new {
+        def each
+          $called = true
+          super
+        end
+      })
+
+      RubyVM::YJIT.enable
+
+      # The monkey-patch should still be alive
+      [].each {}
+      assert_true $called
+
+      # YJIT should not replace Array#each with the "<internal:array>" one
+      assert_equal "-", Array.instance_method(:each).source_location.first
+    RUBY
+  end
+
+  def test_yield_kwargs
+    assert_compiles(<<~RUBY, result: 3, no_send_fallbacks: true)
+      def req2kws = yield a: 1, b: 2
+
+      req2kws { |a:, b:| a + b }
+    RUBY
   end
 
   private
@@ -1549,7 +1773,17 @@ class TestYJIT < Test::Unit::TestCase
   end
 
   ANY = Object.new
-  def assert_compiles(test_script, insns: [], call_threshold: 1, stdout: nil, exits: {}, result: ANY, frozen_string_literal: nil, mem_size: nil, code_gc: false)
+  def assert_compiles(
+    test_script, insns: [],
+    call_threshold: 1,
+    stdout: nil,
+    exits: {},
+    result: ANY,
+    frozen_string_literal: nil,
+    mem_size: nil,
+    code_gc: false,
+    no_send_fallbacks: false
+  )
     reset_stats = <<~RUBY
       RubyVM::YJIT.runtime_stats
       RubyVM::YJIT.reset_stats!
@@ -1574,7 +1808,7 @@ class TestYJIT < Test::Unit::TestCase
     RUBY
 
     script = <<~RUBY
-      #{"# frozen_string_literal: true" if frozen_string_literal}
+      #{"# frozen_string_literal: " + frozen_string_literal.to_s unless frozen_string_literal.nil?}
       _test_proc = -> {
         #{test_script}
       }
@@ -1620,6 +1854,10 @@ class TestYJIT < Test::Unit::TestCase
           #{stats_reasons}
         EOM
       end
+    end
+
+    if no_send_fallbacks
+      assert_equal(0, runtime_stats[:num_send_dynamic], "Expected no use of fallback implementation")
     end
 
     # Only available when --enable-yjit=dev

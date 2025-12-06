@@ -1,6 +1,7 @@
 exclude :test_binary, "<\"..11\"> expected but was <\" ..1\">."
 exclude :test_char, "ArgumentError: %c requires a character"
 exclude :test_integer, "<\"18446744073709551616\"> expected but was <\"9223372036854775807\">."
+exclude :test_invalid, "ArgumentError expected but nothing was raised."
 exclude :test_named_default, "KeyError: key not found: :location"
 exclude :test_named_typed, "Expected Exception(ArgumentError) was raised, but the message doesn't match. <\"named{key2} after numbered\"> expected but was <\"namedkey2 after numbered\">."
 exclude :test_named_typed_enc, "Expected Exception(ArgumentError) was raised, but the message doesn't match. <\"named{〒} after numbered\"> expected but was <\"named￣ﾀﾒ after numbered\">."

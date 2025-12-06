@@ -239,7 +239,7 @@ module Gem
   # Enables automatic installation into user directory
 
   def self.default_user_install # :nodoc:
-    if !ENV.key?("GEM_HOME") && (File.exist?(Gem.dir) && !File.writable?(Gem.dir))
+    if !ENV.key?("GEM_HOME") && File.exist?(Gem.dir) && !File.writable?(Gem.dir)
       Gem.ui.say "Defaulting to user installation because default installation directory (#{Gem.dir}) is not writable."
       return true
     end
@@ -251,7 +251,7 @@ module Gem
   # Install extensions into lib as well as into the extension directory.
 
   def self.install_extension_in_lib # :nodoc:
-    true
+    Gem.configuration.install_extension_in_lib
   end
 
   ##

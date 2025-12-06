@@ -1,0 +1,11 @@
+fails:chilled String chilled string literals #+@ returns a different instance
+fails:chilled String chilled string literals #clone preserves chilled status
+fails:chilled String chilled string literals mutation emits a warning
+fails:chilled String chilled string literals mutation emits a warning for concatenated strings
+fails:chilled String chilled string literals mutation emits a warning on singleton_class creation
+fails:chilled String chilled string literals mutation emits a warning on instance variable assignment
+fails:chilled String chilled strings returned by Symbol#to_s #+@ returns a different instance
+fails:chilled String chilled strings returned by Symbol#to_s #clone preserves chilled status
+fails:chilled String chilled strings returned by Symbol#to_s mutation emits a warning
+fails:chilled String chilled strings returned by Symbol#to_s mutation emits a warning on singleton_class creation
+fails:chilled String chilled strings returned by Symbol#to_s mutation emits a warning on instance variable assignment

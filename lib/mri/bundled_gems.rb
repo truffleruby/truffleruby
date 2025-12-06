@@ -1,12 +1,7 @@
 # -*- frozen-string-literal: true -*-
 
-# :stopdoc:
-
-module Gem::BUNDLED_GEMS
+module Gem::BUNDLED_GEMS # :nodoc:
   SINCE = {
-    "rexml" => "3.0.0",
-    "rss" => "3.0.0",
-    "webrick" => "3.0.0",
     "matrix" => "3.1.0",
     "net-ftp" => "3.1.0",
     "net-imap" => "3.1.0",
@@ -26,6 +21,16 @@ module Gem::BUNDLED_GEMS
     "resolv-replace" => "3.4.0",
     "rinda" => "3.4.0",
     "syslog" => "3.4.0",
+    "ostruct" => "3.5.0",
+    "pstore" => "3.5.0",
+    "rdoc" => "3.5.0",
+    "win32ole" => "3.5.0",
+    "fiddle" => "3.5.0",
+    "logger" => "3.5.0",
+    "benchmark" => "3.5.0",
+    "irb" => "3.5.0",
+    "reline" => "3.5.0",
+    # "readline" => "3.5.0", # This is wrapper for reline. We don't warn for this.
   }.freeze
 
   SINCE_FAST_PATH = SINCE.transform_keys { |g| g.sub(/\A.*\-/, "") }.freeze
@@ -40,13 +45,20 @@ module Gem::BUNDLED_GEMS
     "drb" => true,
     "rinda" => true,
     "syslog" => true,
+    "fiddle" => true,
   }.freeze
 
   WARNED = {}                   # unfrozen
 
   conf = ::RbConfig::CONFIG
-  LIBDIR = (conf["rubylibdir"] + "/").freeze
-  ARCHDIR = (conf["rubyarchdir"] + "/").freeze
+  if ENV["TEST_BUNDLED_GEMS_FAKE_RBCONFIG"]
+    LIBDIR = (File.expand_path(File.join(__dir__, "..", "lib")) + "/").freeze
+    rubyarchdir = $LOAD_PATH.find{|path| path.include?(".ext/common") }
+    ARCHDIR = (File.expand_path(rubyarchdir) + "/").freeze
+  else
+    LIBDIR = (conf["rubylibdir"] + "/").freeze
+    ARCHDIR = (conf["rubyarchdir"] + "/").freeze
+  end
   dlext = [conf["DLEXT"], "so"].uniq
   DLEXT = /\.#{Regexp.union(dlext)}\z/
   LIBEXT = /\.#{Regexp.union("rb", *dlext)}\z/
@@ -60,8 +72,9 @@ module Gem::BUNDLED_GEMS
       kernel_class.send(:alias_method, :no_warning_require, :require)
       kernel_class.send(:define_method, :require) do |name|
         if message = ::Gem::BUNDLED_GEMS.warning?(name, specs: spec_names)
-          if ::Gem::BUNDLED_GEMS.uplevel > 0
-            Kernel.warn message, uplevel: ::Gem::BUNDLED_GEMS.uplevel
+          uplevel = ::Gem::BUNDLED_GEMS.uplevel
+          if uplevel > 0
+            Kernel.warn message, uplevel: uplevel
           else
             Kernel.warn message
           end
@@ -78,25 +91,22 @@ module Gem::BUNDLED_GEMS
 
   def self.uplevel
     frame_count = 0
-    frames_to_skip = 3
+    require_labels = ["replace_require", "require"]
     uplevel = 0
     require_found = false
     Thread.each_caller_location do |cl|
       frame_count += 1
-      if frames_to_skip >= 1
-        frames_to_skip -= 1
-        next
-      end
-      uplevel += 1
+
       if require_found
-        if cl.base_label != "require"
+        unless require_labels.include?(cl.base_label)
           return uplevel
         end
       else
-        if cl.base_label == "require"
+        if require_labels.include?(cl.base_label)
           require_found = true
         end
       end
+      uplevel += 1
       # Don't show script name when bundle exec and call ruby script directly.
       if cl.path.end_with?("bundle")
         frame_count = 0
@@ -110,7 +120,7 @@ module Gem::BUNDLED_GEMS
     if !path
       return
     elsif path.start_with?(ARCHDIR)
-      n = path.delete_prefix(ARCHDIR).sub(DLEXT, "")
+      n = path.delete_prefix(ARCHDIR).sub(DLEXT, "").chomp(".rb")
     elsif path.start_with?(LIBDIR)
       n = path.delete_prefix(LIBDIR).chomp(".rb")
     else
@@ -123,33 +133,33 @@ module Gem::BUNDLED_GEMS
     # name can be a feature name or a file path with String or Pathname
     feature = File.path(name)
 
+    # irb already has reline as a dependency on gemspec, so we don't want to warn about it.
+    # We should update this with a more general solution when we have another case.
+    # ex: Gem.loaded_specs[called_gem].dependencies.any? {|d| d.name == feature }
+    return false if feature.start_with?("reline") && caller_locations(2, 1)[0].to_s.include?("irb")
+
     # The actual checks needed to properly identify the gem being required
     # are costly (see [Bug #20641]), so we first do a much cheaper check
     # to exclude the vast majority of candidates.
     if feature.include?("/")
-      # If requiring $LIBDIR/mutex_m.rb, we check SINCE_FAST_PATH["mutex_m"]
-      # We'll fail to warn requires for files that are not the entry point
-      # of the gem, e.g. require "logger/formatter.rb" won't warn.
-      # But that's acceptable because this warning is best effort,
-      # and in the overwhelming majority of cases logger.rb will end
-      # up required.
-      return unless SINCE_FAST_PATH[File.basename(feature, ".*")]
+      # bootsnap expands `require "csv"` to `require "#{LIBDIR}/csv.rb"`,
+      # and `require "syslog"` to `require "#{ARCHDIR}/syslog.so"`.
+      name = feature.delete_prefix(ARCHDIR).delete_prefix(LIBDIR).sub(LIBEXT, "")
+      segments = name.split("/")
+      name = segments.first
+      if !SINCE[name]
+        name = segments[0..1].join("-")
+        return unless SINCE[name]
+      end
     else
-      return unless SINCE_FAST_PATH[feature]
+      name = feature.sub(LIBEXT, "")
+      return unless SINCE_FAST_PATH[name]
     end
 
-    # bootsnap expands `require "csv"` to `require "#{LIBDIR}/csv.rb"`,
-    # and `require "syslog"` to `require "#{ARCHDIR}/syslog.so"`.
-    name = feature.delete_prefix(ARCHDIR)
-    name.delete_prefix!(LIBDIR)
-    name.tr!("/", "-")
-    name.sub!(LIBEXT, "")
     return if specs.include?(name)
     _t, path = $:.resolve_feature_path(feature)
     if gem = find_gem(path)
       return if specs.include?(gem)
-      caller = caller_locations(3, 3)&.find {|c| c&.absolute_path}
-      return if find_gem(caller&.absolute_path)
     elsif SINCE[name] && !path
       gem = true
     else
@@ -162,8 +172,6 @@ module Gem::BUNDLED_GEMS
       gem = name
       "#{feature} was loaded from the standard library, but"
     elsif gem
-      return if WARNED[gem]
-      WARNED[gem] = true
       "#{feature} is found in #{gem}, which"
     else
       return
@@ -228,7 +236,7 @@ end
 # for RubyGems without Bundler environment.
 # If loading library is not part of the default gems and the bundled gems, warn it.
 class LoadError
-  def message
+  def message # :nodoc:
     return super unless path
 
     name = path.tr("/", "-")
@@ -238,5 +246,3 @@ class LoadError
     super
   end
 end
-
-# :startdoc:

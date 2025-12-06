@@ -22,11 +22,8 @@
 #   3: obj = "str"
 #   4:
 #   5: p obj  #=> "str" @ test.rb:3
-if defined?(::TruffleRuby)
-  require 'objspace'
-else
-  require 'objspace.so'
-end
+
+require 'objspace.so'
 
 module Kernel
   remove_method :p

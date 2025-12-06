@@ -1,0 +1,66 @@
+module RBS
+  module Collection
+    class Config
+      class LockfileGenerator
+        # Name of stdlibs that was rbs-bundled stdlib but is now a gem.
+        #
+        ALUMNI_STDLIBS: Hash[String, String]
+
+        class GemfileLockMismatchError < StandardError
+          @expected: Pathname
+
+          @actual: Pathname
+
+          def initialize: (expected: Pathname, actual: Pathname) -> void
+
+          def message: () -> String
+        end
+
+        attr_reader config: Config
+
+        attr_reader lockfile: Lockfile
+        attr_reader existing_lockfile: Lockfile?
+
+        attr_reader definition: Bundler::Definition
+
+        # A hash table to look up a spec from name of the gem
+        attr_reader gem_hash: Hash[String, Bundler::LazySpecification]
+
+        # A hash table to look up a gem entry in collection config from the name of the gem
+        attr_reader gem_entries: Hash[String, gem_entry?]
+
+        def self.generate: (config: Config, definition: Bundler::Definition, ?with_lockfile: boolish) -> Lockfile
+
+        def initialize: (config: Config, definition: Bundler::Definition, with_lockfile: boolish) -> void
+
+        def generate: () -> void
+
+        private
+
+        # Ensure if current `gemfile_lock_path` is the same with the path saved in `lock`
+        #
+        def validate_gemfile_lock_path!: (lock: Lockfile?, gemfile_lock_path: Pathname) -> void
+
+        # Inserts a entry to lockfile of a gem and its dependencies, if not included in `ignored_gems:`
+        #
+        # * If `skip:` is true, it skips adding the gem, but adds it's dependencies.
+        #
+        def assign_gem: (name: String, version: String?, ?skip: bool) -> void
+
+        # Assign a gem from stdlib to lockfile
+        #
+        # `from_gem` is a String when the stdlib is assigned through the `dependencies:` in `manifest.yaml` of a gem.
+        #
+        def assign_stdlib: (name: String, ?from_gem: String) -> void
+
+        # Find a source of a gem from ones registered in `config.sources`
+        #
+        # Returns `nil` if no source contains the definition of the gem.
+        #
+        def find_source: (name: String) -> Sources::t?
+
+        def find_best_version: (version: String?, versions: Array[String]) -> Gem::Version
+      end
+    end
+  end
+end

@@ -1,0 +1,7 @@
+exclude :test_bad_ssl_version, "NoMethodError: undefined method `mktmpdir' for class Dir"
+exclude :test_proxy_cacert_dir, "NoMethodError: undefined method `mktmpdir' for class Dir"
+exclude :test_proxy_cacert_file, "NoMethodError: undefined method `mktmpdir' for class Dir"
+exclude :test_ssl_min_version, "NoMethodError: undefined method `mktmpdir' for class Dir"
+exclude :test_validation_failure, "NoMethodError: undefined method `mktmpdir' for class Dir"
+exclude :test_validation_noverify, "NoMethodError: undefined method `mktmpdir' for class Dir"
+exclude :test_validation_success, "NoMethodError: undefined method `mktmpdir' for class Dir"

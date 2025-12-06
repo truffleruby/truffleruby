@@ -69,7 +69,7 @@ class RDoc::RDoc
   ##
   # The current documentation store
 
-  attr_reader :store
+  attr_accessor :store
 
   ##
   # Add +klass+ that can generate output after parsing
@@ -89,7 +89,7 @@ class RDoc::RDoc
   ##
   # Sets the active RDoc::RDoc instance
 
-  def self.current= rdoc
+  def self.current=(rdoc)
     @current = rdoc
   end
 
@@ -118,7 +118,7 @@ class RDoc::RDoc
   # Gathers a set of parseable files from the files and directories listed in
   # +files+.
 
-  def gather_files files
+  def gather_files(files)
     files = [@options.root.to_s] if files.empty?
 
     file_list = normalized_file_list files, true, @options.exclude
@@ -209,15 +209,6 @@ option)
   end
 
   ##
-  # Sets the current documentation tree to +store+ and sets the store's rdoc
-  # driver to this instance.
-
-  def store= store
-    @store = store
-    @store.rdoc = self
-  end
-
-  ##
   # Update the flag file in an output directory.
 
   def update_output_dir(op_dir, time, last = {})
@@ -246,7 +237,7 @@ option)
   # representing candidates for documentation. It may also contain comments
   # (starting with '#')
 
-  def parse_dot_doc_file in_dir, filename
+  def parse_dot_doc_file(in_dir, filename)
     # read and strip comments
     patterns = File.read(filename).gsub(/#.*/, '')
 
@@ -320,7 +311,7 @@ option)
   # files. However we may well contain subdirectories which must be tested
   # for .document files.
 
-  def list_files_in_directory dir
+  def list_files_in_directory(dir)
     files = Dir.glob File.join(dir, "*")
 
     normalized_file_list files, false, @options.exclude
@@ -329,7 +320,7 @@ option)
   ##
   # Parses +filename+ and returns an RDoc::TopLevel
 
-  def parse_file filename
+  def parse_file(filename)
     encoding = @options.encoding
     filename = filename.encode encoding
 
@@ -356,7 +347,7 @@ option)
 
     top_level = @store.add_file filename, relative_name: relative_path.to_s
 
-    parser = RDoc::Parser.for top_level, filename, content, @options, @stats
+    parser = RDoc::Parser.for top_level, content, @options, @stats
 
     return unless parser
 
@@ -395,18 +386,18 @@ The internal error was:
     $stderr.puts e.backtrace.join("\n\t") if $DEBUG_RDOC
 
     raise e
-    nil
   end
 
   ##
   # Parse each file on the command line, recursively entering directories.
 
-  def parse_files files
+  def parse_files(files)
     file_list = gather_files files
     @stats = RDoc::Stats.new @store, file_list.length, @options.verbosity
 
     return [] if file_list.empty?
 
+    # This workaround can be removed after the :main: directive is removed
     original_options = @options.dup
     @stats.begin_adding
 
@@ -414,6 +405,8 @@ The internal error was:
       @current = filename
       parse_file filename
     end.compact
+
+    @store.resolve_c_superclasses
 
     @stats.done_adding
     @options = original_options
@@ -425,7 +418,7 @@ The internal error was:
   # Removes file extensions known to be unparseable from +files+ and TAGS
   # files for emacs and vim.
 
-  def remove_unparseable files
+  def remove_unparseable(files)
     files.reject do |file, *|
       file =~ /\.(?:class|eps|erb|scpt\.txt|svg|ttf|yml)$/i or
         (file =~ /tags$/i and
@@ -447,9 +440,7 @@ The internal error was:
   # By default, output will be stored in a directory called "doc" below the
   # current directory, so make sure you're somewhere writable before invoking.
 
-  def document options
-    self.store = RDoc::Store.new
-
+  def document(options)
     if RDoc::Options === options then
       @options = options
     else
@@ -457,6 +448,8 @@ The internal error was:
       @options.parse options
     end
     @options.finish
+
+    @store = RDoc::Store.new(@options)
 
     if @options.pipe then
       handle_pipe
@@ -466,12 +459,6 @@ The internal error was:
     unless @options.coverage_report then
       @last_modified = setup_output_dir @options.op_dir, @options.force_update
     end
-
-    @store.encoding = @options.encoding
-    @store.dry_run  = @options.dry_run
-    @store.main     = @options.main_page
-    @store.title    = @options.title
-    @store.path     = @options.op_dir
 
     @start_time = Time.now
 
@@ -520,6 +507,7 @@ The internal error was:
       Dir.chdir @options.op_dir do
         unless @options.quiet then
           $stderr.puts "\nGenerating #{@generator.class.name.sub(/^.*::/, '')} format into #{Dir.pwd}..."
+          $stderr.puts "\nYou can visit the home page at: \e]8;;file://#{Dir.pwd}/index.html\e\\file://#{Dir.pwd}/index.html\e]8;;\e\\"
         end
 
         @generator.generate
@@ -544,7 +532,7 @@ end
 begin
   require 'rubygems'
 
-  rdoc_extensions = Gem.find_files 'rdoc/discover'
+  rdoc_extensions = Gem.find_latest_files 'rdoc/discover'
 
   rdoc_extensions.each do |extension|
     begin

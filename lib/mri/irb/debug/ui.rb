@@ -45,9 +45,7 @@ module IRB
             $stdout.puts line.chomp
           }
         when String
-          str.each_line{|line|
-            $stdout.puts line.chomp
-          }
+          Pager.page_content(str, retain_content: true)
         when nil
           $stdout.puts
         end
@@ -56,7 +54,7 @@ module IRB
       def readline _
         setup_interrupt do
           tc = DEBUGGER__::SESSION.instance_variable_get(:@tc)
-          cmd = @irb.debug_readline(tc.current_frame.binding || TOPLEVEL_BINDING)
+          cmd = @irb.debug_readline(tc.current_frame.eval_binding || TOPLEVEL_BINDING)
 
           case cmd
           when nil # when user types C-d

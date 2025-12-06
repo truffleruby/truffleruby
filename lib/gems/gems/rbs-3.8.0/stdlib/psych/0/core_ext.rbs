@@ -1,0 +1,12 @@
+%a{annotate:rdoc:skip}
+class Object
+  # <!--
+  #   rdoc-file=ext/psych/lib/psych/core_ext.rb
+  #   - to_yaml(options = {})
+  # -->
+  # Convert an object to YAML.  See Psych.dump for more information on the
+  # available `options`.
+  #
+  def to_yaml: (?indentation: Integer, ?line_width: Integer, ?canonical: bool, ?header: bool) -> String
+             | [IO] (IO, ?indentation: Integer, ?line_width: Integer, ?canonical: bool, ?header: bool) -> IO
+end

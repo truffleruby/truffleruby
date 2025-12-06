@@ -159,16 +159,50 @@ class TestProc < Test::Unit::TestCase
     assert_equal(*m_nest{}, "[ruby-core:84583] Feature #14627")
   end
 
-  def test_hash
+  def test_hash_equal
+    # iseq backed proc
+    p1 = proc {}
+    p2 = p1.dup
+
+    assert_equal p1.hash, p2.hash
+
+    # ifunc backed proc
+    p1 = {}.to_proc
+    p2 = p1.dup
+
+    assert_equal p1.hash, p2.hash
+
+    # symbol backed proc
+    p1 = :hello.to_proc
+    p2 = :hello.to_proc
+
+    assert_equal p1.hash, p2.hash
+  end
+
+  def test_hash_uniqueness
     def self.capture(&block)
       block
     end
 
-   procs = Array.new(1000){capture{:foo }}
-   assert_operator(procs.map(&:hash).uniq.size, :>=, 500)
+    procs = Array.new(1000){capture{:foo }}
+    assert_operator(procs.map(&:hash).uniq.size, :>=, 500)
+
+    # iseq backed proc
+    unique_hashes = 1000.times.map { proc {}.hash }.uniq
+    assert_operator(unique_hashes.size, :>=, 500)
+
+    # ifunc backed proc
+    unique_hashes = 1000.times.map { {}.to_proc.hash }.uniq
+    assert_operator(unique_hashes.size, :>=, 500)
+
+    # symbol backed proc
+    unique_hashes = 1000.times.map { |i| :"test#{i}".to_proc.hash }.uniq
+    assert_operator(unique_hashes.size, :>=, 500)
   end
 
   def test_hash_does_not_change_after_compaction
+    omit "compaction is not supported on this platform" unless GC.respond_to?(:compact)
+
     # [Bug #20853]
     [
       "proc {}", # iseq backed proc
@@ -225,18 +259,24 @@ class TestProc < Test::Unit::TestCase
   end
 
   def test_block_given_method
+    verbose_bak, $VERBOSE = $VERBOSE, nil
     m = method(:m_block_given?)
     assert(!m.call, "without block")
     assert(m.call {}, "with block")
     assert(!m.call, "without block second")
+  ensure
+    $VERBOSE = verbose_bak
   end
 
   def test_block_given_method_to_proc
+    verbose_bak, $VERBOSE = $VERBOSE, nil
     bug8341 = '[Bug #8341]'
     m = method(:m_block_given?).to_proc
     assert(!m.call, "#{bug8341} without block")
     assert(m.call {}, "#{bug8341} with block")
     assert(!m.call, "#{bug8341} without block second")
+  ensure
+    $VERBOSE = verbose_bak
   end
 
   def test_block_persist_between_calls
@@ -389,6 +429,7 @@ class TestProc < Test::Unit::TestCase
   end
 
   def test_dup_clone
+    # iseq backed proc
     b = proc {|x| x + "bar" }
     class << b; attr_accessor :foo; end
 
@@ -401,6 +442,24 @@ class TestProc < Test::Unit::TestCase
     assert_equal("foobar", bc.call("foo"))
     bc.foo = :foo
     assert_equal(:foo, bc.foo)
+
+    # ifunc backed proc
+    b = {foo: "bar"}.to_proc
+
+    bd = b.dup
+    assert_equal("bar", bd.call(:foo))
+
+    bc = b.clone
+    assert_equal("bar", bc.call(:foo))
+
+    # symbol backed proc
+    b = :to_s.to_proc
+
+    bd = b.dup
+    assert_equal("testing", bd.call(:testing))
+
+    bc = b.clone
+    assert_equal("testing", bc.call(:testing))
   end
 
   def test_dup_subclass
@@ -1876,4 +1935,3 @@ class TestProcKeywords < Test::Unit::TestCase
     assert_raise(ArgumentError) { (f >> g).call(**{})[:a] }
   end
 end
-

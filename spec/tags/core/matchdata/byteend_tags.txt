@@ -1,0 +1,15 @@
+fails:MatchData#byteend when passed an integer argument returns the byte-based offset of the end of the nth element
+fails:MatchData#byteend when passed an integer argument returns nil when the nth match isn't found
+fails:MatchData#byteend when passed an integer argument returns the byte-based offset for multi-byte strings
+fails:MatchData#byteend when passed an integer argument returns the byte-based offset for multi-byte strings with unicode regexp
+fails:MatchData#byteend when passed an integer argument tries to convert the passed argument to an Integer using #to_int
+fails:MatchData#byteend when passed a String argument return the byte-based offset of the start of the named capture
+fails:MatchData#byteend when passed a String argument returns the byte-based offset for multi byte strings
+fails:MatchData#byteend when passed a String argument returns the byte-based offset for multi byte strings with unicode regexp
+fails:MatchData#byteend when passed a String argument returns the byte-based offset for the farthest match when multiple named captures use the same name
+fails:MatchData#byteend when passed a String argument returns the byte-based offset for multi-byte names
+fails:MatchData#byteend when passed a Symbol argument return the byte-based offset of the start of the named capture
+fails:MatchData#byteend when passed a Symbol argument returns the byte-based offset for multi byte strings
+fails:MatchData#byteend when passed a Symbol argument returns the byte-based offset for multi byte strings with unicode regexp
+fails:MatchData#byteend when passed a Symbol argument returns the byte-based offset for the farthest match when multiple named captures use the same name
+fails:MatchData#byteend when passed a Symbol argument returns the byte-based offset for multi-byte names
