@@ -7,7 +7,26 @@ on:
 
 # TODO merge with daily.yml?
 jobs:
+  build_with_old_glibc:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+
+    - run: jt build_release_archives_with_old_glibc
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: truffleruby-jvm
+        path: ${{ github.workspace }}/truffleruby-*.tar.gz
+        include-hidden-files: true
+
   docker-test:
+    needs: [build_with_old_glibc]
     strategy:
       fail-fast: false
       matrix:
@@ -20,9 +39,11 @@ jobs:
       uses: ruby/setup-ruby@v1
     - name: Setup jt
       run: echo "$PWD/bin" >> $GITHUB_PATH
-    # - uses: ./.github/actions/setup-jvmci-graal
 
     # - run: wget https://github.com/ruby/truffleruby-dev-builder/releases/download/v20251202.210324/truffleruby-head-linux-x64.tar.gz
-    - run: jt build_release_archives_with_old_glibc
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: truffleruby-*.tar.gz
+
     - run: jt docker test --filter ${{ matrix.image }} --standalone "$(jt native_standalone_release_archive)" --test "${{ github.ref_name }}"
     - run: jt docker test --filter ${{ matrix.image }} --standalone "$(jt jvm_standalone_release_archive)" --test "${{ github.ref_name }}"
