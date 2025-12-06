@@ -1,3 +1,5 @@
+# TODO: rename to build-release-archives-and-test ?
+# TODO: also build release archives for macOS in this workflow?
 name: docker-test
 on:
   workflow_dispatch:
