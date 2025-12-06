@@ -62,11 +62,6 @@ ubuntu2204:
   install: RUN apt-get update && apt-get install -y
   <<: *deb
 
-debian10:
-  base: debian:10 # buster
-  install: RUN apt-get update && apt-get install -y
-  <<: *deb
-
 debian11:
   base: debian:11 # bullseye
   install: RUN apt-get update && apt-get install -y
@@ -74,5 +69,10 @@ debian11:
 
 debian12:
   base: debian:12 # bookworm
+  install: RUN apt-get update && apt-get install -y
+  <<: *deb
+
+debian13:
+  base: debian:13 # trixie
   install: RUN apt-get update && apt-get install -y
   <<: *deb
