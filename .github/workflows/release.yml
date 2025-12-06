@@ -6,7 +6,11 @@ on:
 
 jobs:
   build_with_old_glibc:
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, aarch64]
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
     steps:
     - name: Clone TruffleRuby
       uses: actions/checkout@v4
@@ -19,7 +23,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: truffleruby-release-archives
+        name: truffleruby-release-archives-linux-${{ matrix.arch }}
         path: ${{ github.workspace }}/truffleruby-*.tar.gz
 
   docker-test:
@@ -27,8 +31,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        arch: [amd64, aarch64]
         image: [ol8, ol9, fedora37, fedora38, ubuntu1804, ubuntu2004, ubuntu2204, debian10, debian11, debian12]
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
     steps:
     - name: Clone TruffleRuby
       uses: actions/checkout@v4
@@ -39,7 +44,7 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: truffleruby-release-archives
+        name: truffleruby-release-archives-linux-${{ matrix.arch }}
 
     - run: jt docker test --filter ${{ matrix.image }} --standalone "$(jt native_standalone_release_archive)" --test "${{ github.ref_name }}"
     - run: jt docker test --filter ${{ matrix.image }} --standalone "$(jt jvm_standalone_release_archive)" --test "${{ github.ref_name }}"
