@@ -2336,7 +2336,8 @@ module Commands
     dir = "#{JDKS_CACHE_DIR}/graalvm-#{version}"
     archive = "#{dir}.tar.gz"
     unless File.file?(archive)
-      sh 'wget', '-O', "#{JDKS_CACHE_DIR}/graalvm-#{version}.tar.gz", url
+      verbosity = STDOUT.tty? ? [] : ['--no-verbose']
+      sh 'wget', *verbosity, '-O', "#{JDKS_CACHE_DIR}/graalvm-#{version}.tar.gz", url
     end
     unless File.directory?(dir)
       Dir.mkdir(dir)
