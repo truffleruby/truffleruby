@@ -20,9 +20,9 @@ jobs:
       uses: ruby/setup-ruby@v1
     - name: Setup jt
       run: echo "$PWD/bin" >> $GITHUB_PATH
-    - uses: ./.github/actions/setup-jvmci-graal
+    # - uses: ./.github/actions/setup-jvmci-graal
 
-    # - run: jt build --env jvm-ee -- --dep TRUFFLERUBY_JVM_STANDALONE_RELEASE_ARCHIVE
-    # - run: jt docker test --filter ol8 --standalone release/truffleruby-jvm-*.tar.gz --test "${{ github.ref_name }}"
-    - run: wget https://github.com/ruby/truffleruby-dev-builder/releases/download/v20251202.210324/truffleruby-head-linux-x64.tar.gz
-    - run: jt docker test --filter ${{ matrix.image }} --standalone truffleruby-head-linux-x64.tar.gz --test "${{ github.ref_name }}"
+    # - run: wget https://github.com/ruby/truffleruby-dev-builder/releases/download/v20251202.210324/truffleruby-head-linux-x64.tar.gz
+    - run: jt build_release_archives_with_old_glibc
+    - run: jt docker test --filter ${{ matrix.image }} --standalone "$(jt native_standalone_release_archive)" --test "${{ github.ref_name }}"
+    - run: jt docker test --filter ${{ matrix.image }} --standalone "$(jt jvm_standalone_release_archive)" --test "${{ github.ref_name }}"
