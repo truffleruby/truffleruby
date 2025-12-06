@@ -2561,8 +2561,8 @@ module Commands
 
     sh 'docker', 'create', '--name', 'trcopycontainer', 'truffleruby-with-old-glibc'
     begin
-      sh 'docker', 'cp', "trcopycontainer:/truffleruby-ws/truffleruby/release/#{native_standalone_release_archive_basename}", '.'
-      sh 'docker', 'cp', "trcopycontainer:/truffleruby-ws/truffleruby/release/#{jvm_standalone_release_archive_basename}", '.'
+      sh 'docker', 'cp', "trcopycontainer:/release/#{native_standalone_release_archive_basename}", '.'
+      sh 'docker', 'cp', "trcopycontainer:/release/#{jvm_standalone_release_archive_basename}", '.'
     ensure
       sh 'docker', 'rm', 'trcopycontainer'
     end
