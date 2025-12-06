@@ -342,6 +342,10 @@ class Rational < Numeric
       return reduce(num, den)
     end
 
+    if Primitive.is_a?(num, Complex) && num.imag == 0
+      num = num.real
+    end
+
     case num
     when Integer
       # nothing
@@ -352,7 +356,7 @@ class Rational < Numeric
         num = String::Rationalizer.new(num).convert(nil)
         return nil if Primitive.nil?(num)
       end
-    when Float, Complex
+    when Float
       num = num.to_r
     else
       if !Primitive.respond_to?(num, :to_r, false)
@@ -362,6 +366,10 @@ class Rational < Numeric
         rescue Exception # rubocop:disable Lint/RescueException, Lint/SuppressedException
         end
       end
+    end
+
+    if Primitive.is_a?(den, Complex) && den.imag == 0
+      den = den.real
     end
 
     case den
@@ -374,7 +382,7 @@ class Rational < Numeric
         den = String::Rationalizer.new(den).convert(nil)
         return nil if Primitive.nil?(den)
       end
-    when Float, Complex
+    when Float
       den = den.to_r
     else
       if !Primitive.respond_to?(den, :to_r, false)

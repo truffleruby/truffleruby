@@ -20,7 +20,7 @@ Compatibility:
 * Fix `Hash#{select,slice,transform_values}` and `Hash.[]` methods and retain `compare_by_identity` flag (@andrykonchin).
 * Fix `Hash#reject` and do not retain `default` and `default_proc` values (@andrykonchin).
 * Fix `Comparable#clamp` when the given an infinite interval (#3945, @andrykonchin).
-* Fix `Rational()` and arguments type conversion (#3969, @andrykonchin).
+* Fix `Rational()` and arguments type conversion (#3969, #3954, @andrykonchin).
 * Support `Rational()` with `exception` keyword argument (#3969, @andrykonchin).
 
 Performance:
