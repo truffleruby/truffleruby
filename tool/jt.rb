@@ -185,6 +185,26 @@ module Utilities
     end
   end
 
+  def get_truffleruby_version
+    suite = File.read("#{TRUFFLERUBY_DIR}/mx.truffleruby/suite.py")
+    version = suite[/"version":\s*"([^"]+)\"/, 1]
+    is_release = suite[/"release":\s*(True|False),/, 1]
+    raise unless version && is_release
+    if is_release == 'True'
+      version
+    else
+      "#{version}-dev"
+    end
+  end
+
+  def jvm_standalone_release_archive_basename
+    "truffleruby-jvm-#{get_truffleruby_version}-#{mx_os}-#{mx_arch}.tar.gz"
+  end
+
+  def native_standalone_release_archive_basename
+    "truffleruby-#{get_truffleruby_version}-#{mx_os}-#{mx_arch}.tar.gz"
+  end
+
   def ee?
     @mx_env.include?('ee') || @ruby_name.include?('ee')
   end
@@ -362,6 +382,10 @@ module Utilities
       sh 'git', 'checkout', commit, chdir: path if commit
     end
     path
+  end
+
+  def git_commit
+    @git_commit ||= `GIT_DIR="#{TRUFFLERUBY_DIR}/.git" git rev-parse HEAD`.strip
   end
 
   def git_branch
@@ -871,6 +895,18 @@ module Commands
 
   def truffle_version
     puts get_truffle_version
+  end
+
+  def truffleruby_version
+    puts get_truffleruby_version
+  end
+
+  def jvm_standalone_release_archive
+    puts jvm_standalone_release_archive_basename
+  end
+
+  def native_standalone_release_archive
+    puts native_standalone_release_archive_basename
   end
 
   def mx(*args)
@@ -2516,6 +2552,19 @@ module Commands
       link_path = "#{rubies_dir}/#{name}"
       File.delete link_path if File.symlink? link_path or File.exist? link_path
       File.symlink dest, link_path
+    end
+  end
+
+  def build_release_archives_with_old_glibc
+    dir = "#{TRUFFLERUBY_DIR}/tool/build-with-old-glibc"
+    sh 'docker', 'build', '--tag=truffleruby-with-old-glibc', '--build-arg', "GIT_COMMIT=#{git_commit}", '.', chdir: dir
+
+    sh 'docker', 'create', '--name', 'trcopycontainer', 'truffleruby-with-old-glibc'
+    begin
+      sh 'docker', 'cp', "trcopycontainer:/truffleruby-ws/truffleruby/release/#{native_standalone_release_archive_basename}", '.'
+      sh 'docker', 'cp', "trcopycontainer:/truffleruby-ws/truffleruby/release/#{jvm_standalone_release_archive_basename}", '.'
+    ensure
+      sh 'docker', 'rm', 'trcopycontainer'
     end
   end
 
