@@ -23,13 +23,6 @@ deb: &deb
     - RUN locale-gen
     - ENV LANG=en_US.UTF-8
 
-# Too old g++
-#ol7:
-#  base: oraclelinux:7-slim
-#  install: RUN yum install -y
-#  locale:
-#  <<: *rpm
-
 ol8:
   base: oraclelinux:8-slim
   install: RUN microdnf install -y

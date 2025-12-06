@@ -98,7 +98,6 @@ test/truffle/gems/default-bundled-gems/.bundle/config
 /mri_tests.txt
 /test/truffle/integration/gem-testing
 /tool/docker
-/tool/llvm-ol7/*.tar.gz
 
 # Benchmarking
 /bench-results.json
