@@ -76,12 +76,24 @@ describe "Kernel.Rational" do
   end
 
   describe "when passed a Complex" do
-    it "returns a Rational from the real part if the imaginary part is 0" do
-      Rational(Complex(1, 0)).should == Rational(1)
+    context "[Complex]" do
+      it "returns a Rational from the real part if the imaginary part is 0" do
+        Rational(Complex(1, 0)).should == Rational(1)
+      end
+
+      it "raises a RangeError if the imaginary part is not 0" do
+        -> { Rational(Complex(1, 2)) }.should raise_error(RangeError, "can't convert 1+2i into Rational")
+      end
     end
 
-    it "raises a RangeError if the imaginary part is not 0" do
-      -> { Rational(Complex(1, 2)) }.should raise_error(RangeError)
+    context "[Numeric, Complex]" do
+      it "uses the real part if the imaginary part is 0" do
+        Rational(1, Complex(2, 0)).should == Rational(1, 2)
+      end
+
+      it "divides a numerator by the Complex denominator if the imaginary part is not 0" do
+        Rational(1, Complex(2, 1)).should == Complex(2/5r, -1/5r)
+      end
     end
   end
 
