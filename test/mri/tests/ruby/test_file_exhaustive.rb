@@ -190,12 +190,32 @@ class TestFileExhaustive < Test::Unit::TestCase
     [regular_file, utf8_file].each do |file|
       assert_equal(file, File.open(file) {|f| f.path})
       assert_equal(file, File.path(file))
-      o = Object.new
-      class << o; self; end.class_eval do
-        define_method(:to_path) { file }
-      end
+      o = Struct.new(:to_path).new(file)
+      assert_equal(file, File.path(o))
+      o = Struct.new(:to_str).new(file)
       assert_equal(file, File.path(o))
     end
+
+    conv_error = ->(method, msg = "converting with #{method}") {
+      test = ->(&new) do
+        o = new.(42)
+        assert_raise(TypeError, msg) {File.path(o)}
+
+        o = new.("abc".encode(Encoding::UTF_32BE))
+        assert_raise(Encoding::CompatibilityError, msg) {File.path(o)}
+
+        ["\0", "a\0", "a\0c"].each do |path|
+          o = new.(path)
+          assert_raise(ArgumentError, msg) {File.path(o)}
+        end
+      end
+
+      test.call(&:itself)
+      test.call(&Struct.new(method).method(:new))
+    }
+
+    conv_error[:to_path]
+    conv_error[:to_str]
   end
 
   def assert_integer(n)

@@ -826,9 +826,7 @@ class File < IO
   end
 
   def self.path(obj)
-    return obj.to_path if obj.respond_to? :to_path
-
-    StringValue(obj)
+    Truffle::Type.coerce_to_path(obj)
   end
 
   ##
