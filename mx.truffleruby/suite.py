@@ -817,10 +817,6 @@ suite = {
                 "lib/truffle/": [
                     "dependency:org.truffleruby.spawnhelper",
                 ],
-                "src/main/c/": [
-                    "dependency:libssl/libssl",
-                    "dependency:libyaml/libyaml",
-                ],
             },
             "maven": False,
         },
@@ -906,10 +902,6 @@ suite = {
                 ],
                 "lib/truffle/": [
                     "dependency:org.truffleruby.spawnhelper",
-                ],
-                "src/main/c/": [
-                    "dependency:libssl/libssl",
-                    "dependency:libyaml/libyaml",
                 ],
             },
             "license": [

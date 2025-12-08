@@ -13,24 +13,24 @@
 
 require "mkmf"
 
-ssl_dirs = nil
-ssl_dirs = dir_config("openssl")
+if defined?(::TruffleRuby)
+  # Statically-link libssl & libcrypto, and do not export any of their symbols.
+  # That way, if some other extension/library loads libssl there won't be any conflict.
+  # Keep in sync with psych/extconf.rb
+  repository = Truffle::System.get_java_property 'truffleruby.repository'
+  ssl_dirs = dir_config("openssl", "#{repository}/src/main/c/libssl")
+  if Truffle::Platform.linux?
+    # -Wl,--exclude-libs,ALL also works but let's be consistent with the approach on macOS
+    LINK_SO << " '-Wl,--version-script=#{__dir__}/exports.map'"
+  else
+    LINK_SO << " '-Wl,-exported_symbols_list,#{__dir__}/exports.txt' -Wl,-dead_strip"
+  end
+else
+  ssl_dirs = dir_config("openssl")
+end
 dir_config_given = ssl_dirs.any?
 
 _, ssl_ldir = ssl_dirs
-if defined?(::TruffleRuby)
-  # Keep in sync with psych/extconf.rb
-  raise 'dir_config("openssl") should always be set on TruffleRuby' unless dir_config_given
-  # openssl.so will end up in lib/mri/openssl.so
-
-  # Use a path starting with '.' so we get only the -L and not the -Wl,-rpath, (see mkmf.rb libpathflag logic)
-  $LIBPATH.delete(ssl_ldir)
-  $LIBPATH << '../libssl/lib'
-
-  # We want a relative rpath from from lib/mri/openssl.so to src/main/c/libssl/lib
-  origin_token = Truffle::Platform.linux? ? '$$ORIGIN' : '@loader_path'
-  $LIBS << (RbConfig::CONFIG['RPATHFLAG'] % "'#{origin_token}/../../src/main/c/libssl/lib'")
-end
 if ssl_ldir&.split(File::PATH_SEPARATOR)&.none? { |dir| File.directory?(dir) }
   # According to the `mkmf.rb#dir_config`, the `--with-openssl-dir=<dir>` uses
   # the value of the `File.basename(RbConfig::MAKEFILE_CONFIG["libdir"])` as a

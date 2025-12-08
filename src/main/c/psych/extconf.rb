@@ -38,18 +38,17 @@ if yaml_source
   $LOCAL_LIBS.prepend("$(LIBYAML) ")
 else # default to pre-installed libyaml
   if defined?(::TruffleRuby)
+    # Statically-link libyaml, and do not export any of its symbols.
+    # That way, if some other extension/library loads libyaml there won't be any conflict.
     # Keep in sync with openssl/extconf.rb
-    _, ldir = dir_config('libyaml')
-    raise 'dir_config("libyaml") should always be set on TruffleRuby' unless ldir
-    # psych.so will end up in lib/mri/psych.so
-
-    # Use a path starting with '.' so we get only the -L and not the -Wl,-rpath, (see mkmf.rb libpathflag logic)
-    $LIBPATH.delete(ldir)
-    $LIBPATH << '../libyaml/lib'
-
-    # We want a relative rpath from from lib/mri/psych.so to src/main/c/libyaml/lib
-    origin_token = Truffle::Platform.linux? ? '$$ORIGIN' : '@loader_path'
-    $LIBS << (RbConfig::CONFIG['RPATHFLAG'] % "'#{origin_token}/../../src/main/c/libyaml/lib'")
+    repository = Truffle::System.get_java_property 'truffleruby.repository'
+    dir_config('libyaml', "#{repository}/src/main/c/libyaml")
+    if Truffle::Platform.linux?
+      # -Wl,--exclude-libs,ALL also works but let's be consistent with the approach on macOS
+      LINK_SO << " '-Wl,--version-script=#{__dir__}/exports.map'"
+    else
+      LINK_SO << " '-Wl,-exported_symbols_list,#{__dir__}/exports.txt' -Wl,-dead_strip"
+    end
   else
     pkg_config('yaml-0.1')
     dir_config('libyaml')

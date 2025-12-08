@@ -206,7 +206,7 @@ class LibSSLProject(mx.NativeProject):
 
 class LibSSLBuildTask(mx.NativeBuildTask):
     def needsBuild(self, newestInput):
-        libssl = join(self.subject.install_dir, mx.add_lib_suffix('lib/libssl'))
+        libssl = join(self.subject.install_dir, 'lib/libssl.a')
         if exists(libssl):
             return False, f"{libssl} is built"
         else:
@@ -222,33 +222,22 @@ class LibSSLBuildTask(mx.NativeBuildTask):
         mx.copytree(libssl_sources, build_dir)
 
         # logic based on https://github.com/rbenv/ruby-build/blob/master/bin/ruby-build build_package_openssl()
-
-        # This quoting is a bit complicated, we need to escape $ in the Makefile with $$, and avoid expansion from the shell
-        rpath = ["-Wl,-rpath,'$$ORIGIN/../lib'"] if mx.is_linux() else []
+        # and https://github.com/Homebrew/homebrew-core/blob/main/Formula/p/portable-openssl.rb
 
         mx.run([
             './Configure',
             f'--prefix={install_dir}',
             f'--openssldir={install_dir}/ssl',
             '--libdir=lib',
-            'zlib-dynamic',
             'no-ssl3',
-            'shared',
-            *rpath,
+            'no-shared',
+            'no-dso',
+            '-fPIC',
         ], cwd=build_dir)
 
         super(LibSSLBuildTask, self).build() # make
 
         mx.run(['make', 'install_sw', 'install_ssldirs'], cwd=build_dir)
-
-        # Fix install_name on macOS to use rpath and not absolute paths.
-        # OpenSSL doesn't have a configuration option to do this more cleanly:
-        # https://github.com/openssl/openssl/issues/25760
-        if mx.is_darwin():
-            install_lib_dir = f"{install_dir}/lib"
-            mx.run(['install_name_tool', '-id', '@rpath/libcrypto.3.dylib', 'libcrypto.3.dylib'], cwd=install_lib_dir)
-            mx.run(['install_name_tool', '-id', '@rpath/libssl.3.dylib', 'libssl.3.dylib'], cwd=install_lib_dir)
-            mx.run(['install_name_tool', '-change', f'{install_lib_dir}/libcrypto.3.dylib', '@rpath/libcrypto.3.dylib', 'libssl.3.dylib'], cwd=install_lib_dir)
 
     def clean(self, forBuild=False):
         build_dir = self.subject.build_dir
@@ -276,7 +265,7 @@ class LibYAMLProject(mx.NativeProject):
 
 class LibYAMLBuildTask(mx.NativeBuildTask):
     def needsBuild(self, newestInput):
-        libyaml = join(self.subject.install_dir, mx.add_lib_suffix('lib/libyaml'))
+        libyaml = join(self.subject.install_dir, 'lib/libyaml.a')
         if exists(libyaml):
             return False, f"{libyaml} is built"
         else:
@@ -290,16 +279,11 @@ class LibYAMLBuildTask(mx.NativeBuildTask):
         self.clean()
         mx.copytree(libyaml_sources, build_dir)
 
-        mx.run(['./configure', f'--prefix={install_dir}', '--enable-shared'], cwd=build_dir)
+        mx.run(['./configure', f'--prefix={install_dir}', '--disable-shared', '--enable-static'], cwd=build_dir)
 
         super(LibYAMLBuildTask, self).build() # make
 
         mx.run(['make', 'install'], cwd=build_dir)
-
-        # Fix install_name on macOS to use rpath and not absolute paths.
-        if mx.is_darwin():
-            install_lib_dir = f"{install_dir}/lib"
-            mx.run(['install_name_tool', '-id', '@rpath/libyaml.dylib', 'libyaml.dylib'], cwd=install_lib_dir)
 
     def clean(self, forBuild=False):
         build_dir = self.subject.build_dir
