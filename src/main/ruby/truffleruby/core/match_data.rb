@@ -45,6 +45,16 @@ class MatchData
     [Primitive.match_data_byte_begin(self, backref), Primitive.match_data_byte_end(self, backref)]
   end
 
+  def bytebegin(idx)
+    backref = backref_from_arg(idx)
+    Primitive.match_data_byte_begin(self, backref)
+  end
+
+  def byteend(idx)
+    backref = backref_from_arg(idx)
+    Primitive.match_data_byte_end(self, backref)
+  end
+
   def offset(idx)
     [self.begin(idx), self.end(idx)]
   end

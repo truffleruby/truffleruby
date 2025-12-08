@@ -8,3 +8,6 @@
 
 # Use spec/ruby/core/nil/nil_spec.rb as a dummy file to avoid being empty (what causes mspec to error)
 spec/ruby/core/nil/nil_spec.rb
+
+spec/ruby/core/matchdata/bytebegin_spec.rb
+spec/ruby/core/matchdata/byteend_spec.rb
