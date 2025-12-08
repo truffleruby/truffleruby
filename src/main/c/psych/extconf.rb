@@ -38,7 +38,6 @@ if yaml_source
   $LOCAL_LIBS.prepend("$(LIBYAML) ")
 else # default to pre-installed libyaml
   if defined?(::TruffleRuby)
-    # Keep in sync with openssl/extconf.rb
     _, ldir = dir_config('libyaml')
     raise 'dir_config("libyaml") should always be set on TruffleRuby' unless ldir
     # psych.so will end up in lib/mri/psych.so

@@ -818,7 +818,6 @@ suite = {
                     "dependency:org.truffleruby.spawnhelper",
                 ],
                 "src/main/c/": [
-                    "dependency:libssl/libssl",
                     "dependency:libyaml/libyaml",
                 ],
             },
@@ -908,7 +907,6 @@ suite = {
                     "dependency:org.truffleruby.spawnhelper",
                 ],
                 "src/main/c/": [
-                    "dependency:libssl/libssl",
                     "dependency:libyaml/libyaml",
                 ],
             },
