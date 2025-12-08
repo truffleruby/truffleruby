@@ -113,8 +113,7 @@ module RbConfig
   cext_dir = "#{prefix}/lib/cext"
   soext = Truffle::Platform::SOEXT
 
-  # Make C extensions use the same libyaml as the one used for the psych C extension
-  configure_args = "'--with-libyaml-dir=#{prefix}/src/main/c/libyaml'"
+  configure_args = ''
 
   # Set extra flags needed for --building-core-cexts
   if Truffle::Boot.get_option 'building-core-cexts'

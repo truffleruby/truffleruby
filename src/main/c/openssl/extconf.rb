@@ -16,6 +16,7 @@ require "mkmf"
 if defined?(::TruffleRuby)
   # Statically-link libssl & libcrypto, and do not export any of their symbols.
   # That way, if some other extension/library loads libssl there won't be any conflict.
+  # Keep in sync with psych/extconf.rb
   repository = Truffle::System.get_java_property 'truffleruby.repository'
   ssl_dirs = dir_config("openssl", "#{repository}/src/main/c/libssl")
   if Truffle::Platform.linux?

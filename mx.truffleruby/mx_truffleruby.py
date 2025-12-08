@@ -265,7 +265,7 @@ class LibYAMLProject(mx.NativeProject):
 
 class LibYAMLBuildTask(mx.NativeBuildTask):
     def needsBuild(self, newestInput):
-        libyaml = join(self.subject.install_dir, mx.add_lib_suffix('lib/libyaml'))
+        libyaml = join(self.subject.install_dir, 'lib/libyaml.a')
         if exists(libyaml):
             return False, f"{libyaml} is built"
         else:
@@ -279,16 +279,11 @@ class LibYAMLBuildTask(mx.NativeBuildTask):
         self.clean()
         mx.copytree(libyaml_sources, build_dir)
 
-        mx.run(['./configure', f'--prefix={install_dir}', '--enable-shared'], cwd=build_dir)
+        mx.run(['./configure', f'--prefix={install_dir}', '--disable-shared', '--enable-static'], cwd=build_dir)
 
         super(LibYAMLBuildTask, self).build() # make
 
         mx.run(['make', 'install'], cwd=build_dir)
-
-        # Fix install_name on macOS to use rpath and not absolute paths.
-        if mx.is_darwin():
-            install_lib_dir = f"{install_dir}/lib"
-            mx.run(['install_name_tool', '-id', '@rpath/libyaml.dylib', 'libyaml.dylib'], cwd=install_lib_dir)
 
     def clean(self, forBuild=False):
         build_dir = self.subject.build_dir
