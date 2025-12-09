@@ -48,9 +48,7 @@ find lib/mri -name '.document' -delete
 
 # *.c
 cp "$RUBY_SOURCE_DIR/st.c" src/main/c/cext
-cp "$RUBY_SOURCE_DIR/st.c" src/main/c/cext-trampoline
 cp "$RUBY_SOURCE_DIR/missing/strlcpy.c" src/main/c/cext
-cp "$RUBY_SOURCE_DIR/missing/strlcpy.c" src/main/c/cext-trampoline
 
 # Copy Ruby files in ext/, sorted alphabetically
 mkdir lib/mri/digest
