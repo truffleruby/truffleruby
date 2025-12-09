@@ -79,7 +79,7 @@ class JT
     private def dockerfile(*args, docker_dir: default_docker_dir)
       config = docker_config
 
-      distro_name = 'ol7'
+      distro_name = 'ol8'
       install_method = nil
       rebuild_openssl = true
       basic_test = false

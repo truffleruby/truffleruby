@@ -1,0 +1,53 @@
+# TODO: rename to build-release-archives-and-test ?
+# TODO: also build release archives for macOS in this workflow?
+name: docker-test
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * *" # At 05:00. # https://crontab.guru/#0_5_*_*_*
+  push:
+
+jobs:
+  build_with_old_glibc:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, aarch64]
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+
+    - run: jt build_release_archives_with_old_glibc
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: truffleruby-release-archives-linux-${{ matrix.arch }}
+        path: ${{ github.workspace }}/truffleruby-*.tar.gz
+
+  docker-test:
+    needs: [build_with_old_glibc]
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, aarch64]
+        image: [ol8, ol9, fedora37, fedora38, ubuntu1804, ubuntu2004, ubuntu2204, debian10, debian11, debian12]
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: truffleruby-release-archives-linux-${{ matrix.arch }}
+
+    - run: jt docker test --filter ${{ matrix.image }} --standalone "$(jt native_standalone_release_archive)" --test "${{ github.ref_name }}"
+    - run: jt docker test --filter ${{ matrix.image }} --standalone "$(jt jvm_standalone_release_archive)" --test "${{ github.ref_name }}"
