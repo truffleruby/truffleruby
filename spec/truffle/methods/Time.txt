@@ -21,6 +21,7 @@ hash
 hour
 inspect
 isdst
+iso8601
 localtime
 mday
 min
@@ -50,6 +51,7 @@ utc?
 utc_offset
 wday
 wednesday?
+xmlschema
 yday
 year
 zone
