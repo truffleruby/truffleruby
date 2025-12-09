@@ -148,6 +148,7 @@ copy `ruby/json`'s `lib` directory into `lib/json`:
 rm -rf lib/json
 mkdir lib/json
 cp -R ../../json/lib lib/json
+rm -f lib/json/lib/json/ext/.keep
 
 rm -rf src/main/c/json
 mkdir src/main/c/json
