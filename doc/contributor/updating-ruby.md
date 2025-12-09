@@ -214,6 +214,7 @@ Update all of these:
 * Update method lists (see `spec/truffle/methods_spec.rb`)
   * run `jt -u ruby test spec/truffle/methods_spec.rb` to add new methods
   * run `jt purge spec/truffle/methods_spec.rb` to remove tags for implemented methods
+  * run `jt tag spec/truffle/methods_spec.rb` to add tags for missing methods
 * Build TruffleRuby (`jt build`).
 * Run `jt test gems default-bundled-gems` and commit generated `Gemfile` and `Gemfile.lock` files
   * Do not include the `BUNDLED WITH` section from the `Gemfile.lock` -- it will cause the linter to fail

@@ -102,3 +102,14 @@ fails:Public methods on String should include dup
 fails:Public methods on UnboundMethod should include dup
 fails:Public methods on StringIO should include pread
 fails:Public methods on Digest::Base.singleton_class should not include inherited
+fails:Public methods on Array should include fetch_values
+fails:Public methods on Array should include freeze
+fails:Public methods on GC.singleton_class should include config
+fails:Public methods on Hash should include freeze
+fails:Public methods on SizedQueue should not include freeze
+fails:Public methods on String should include append_as_bytes
+fails:Public methods on Time should include iso8601
+fails:Public methods on Time should include xmlschema
+fails:Public methods on BasicSocket should include read_nonblock
+fails:Public methods on BasicSocket should include write_nonblock
+fails:Public methods on Pathname.singleton_class should include mktmpdir
