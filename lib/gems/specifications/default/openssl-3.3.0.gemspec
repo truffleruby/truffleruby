@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.email = ["ruby-core@ruby-lang.org".freeze]
   s.extensions = ["ext/openssl/extconf.rb".freeze]
   s.extra_rdoc_files = ["CONTRIBUTING.md".freeze, "NEWS.md".freeze, "README.ja.md".freeze, "README.md".freeze]
-  s.files = ["CONTRIBUTING.md".freeze, "NEWS.md".freeze, "README.ja.md".freeze, "README.md".freeze, "ext/openssl/extconf.rb".freeze, "openssl.#{Truffle::Platform::DLEXT}".freeze, "openssl.rb".freeze, "openssl/asn1.rb".freeze, "openssl/bn.rb".freeze, "openssl/buffering.rb".freeze, "openssl/cipher.rb".freeze, "openssl/digest.rb".freeze, "openssl/hmac.rb".freeze, "openssl/marshal.rb".freeze, "openssl/pkcs5.rb".freeze, "openssl/pkey.rb".freeze, "openssl/ssl.rb".freeze, "openssl/version.rb".freeze, "openssl/x509.rb".freeze]
+  s.files = ["CONTRIBUTING.md".freeze, "NEWS.md".freeze, "README.ja.md".freeze, "README.md".freeze, "ext/openssl/extconf.rb".freeze, "openssl.rb".freeze, "openssl.#{Truffle::Platform::DLEXT}".freeze, "openssl/asn1.rb".freeze, "openssl/bn.rb".freeze, "openssl/buffering.rb".freeze, "openssl/cipher.rb".freeze, "openssl/digest.rb".freeze, "openssl/hmac.rb".freeze, "openssl/marshal.rb".freeze, "openssl/pkcs5.rb".freeze, "openssl/pkey.rb".freeze, "openssl/ssl.rb".freeze, "openssl/version.rb".freeze, "openssl/x509.rb".freeze]
   s.homepage = "https://github.com/ruby/openssl".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.rdoc_options = ["--main".freeze, "README.md".freeze]

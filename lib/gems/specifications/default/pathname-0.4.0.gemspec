@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   s.description = "Representation of the name of a file or directory on the filesystem".freeze
   s.email = ["akr@fsij.org".freeze]
   s.extensions = ["ext/pathname/extconf.rb".freeze]
-  s.files = ["ext/pathname/extconf.rb".freeze, "pathname.#{Truffle::Platform::DLEXT}".freeze, "pathname.rb".freeze]
+  s.files = ["ext/pathname/extconf.rb".freeze, "pathname.rb".freeze, "pathname.#{Truffle::Platform::DLEXT}".freeze]
   s.homepage = "https://github.com/ruby/pathname".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.7.0".freeze)

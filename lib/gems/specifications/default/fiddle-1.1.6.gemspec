@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.description = "A libffi wrapper for Ruby.".freeze
   s.email = ["aaron@tenderlovemaking.com".freeze, "hsbt@ruby-lang.org".freeze]
   s.extensions = ["ext/fiddle/extconf.rb".freeze]
-  s.files = ["ext/fiddle/extconf.rb".freeze, "fiddle.#{Truffle::Platform::DLEXT}".freeze, "fiddle.rb".freeze, "fiddle/closure.rb".freeze, "fiddle/cparser.rb".freeze, "fiddle/ffi_backend.rb".freeze, "fiddle/function.rb".freeze, "fiddle/import.rb".freeze, "fiddle/pack.rb".freeze, "fiddle/struct.rb".freeze, "fiddle/types.rb".freeze, "fiddle/value.rb".freeze, "fiddle/version.rb".freeze]
+  s.files = ["ext/fiddle/extconf.rb".freeze, "fiddle.rb".freeze, "fiddle.#{Truffle::Platform::DLEXT}".freeze, "fiddle/closure.rb".freeze, "fiddle/cparser.rb".freeze, "fiddle/ffi_backend.rb".freeze, "fiddle/function.rb".freeze, "fiddle/import.rb".freeze, "fiddle/pack.rb".freeze, "fiddle/struct.rb".freeze, "fiddle/types.rb".freeze, "fiddle/value.rb".freeze, "fiddle/version.rb".freeze]
   s.homepage = "https://github.com/ruby/fiddle".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.5.0".freeze)
