@@ -44,12 +44,7 @@ class Gem::ConfigFile
   DEFAULT_BULK_THRESHOLD = 1000
   DEFAULT_VERBOSITY = true
   DEFAULT_UPDATE_SOURCES = true
-  if defined?(::TruffleRuby)
-    # GR-18264: Gem::Specification._all does not seem thread safe and raises "nil spec! included in"
-    DEFAULT_CONCURRENT_DOWNLOADS = 1
-  else
-    DEFAULT_CONCURRENT_DOWNLOADS = 8
-  end
+  DEFAULT_CONCURRENT_DOWNLOADS = 8
   DEFAULT_CERT_EXPIRATION_LENGTH_DAYS = 365
   DEFAULT_IPV4_FALLBACK_ENABLED = false
   # TODO: Use false as default value for this option in RubyGems 4.0
