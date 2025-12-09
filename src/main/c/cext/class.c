@@ -133,11 +133,6 @@ VALUE rb_module_new(void) {
   return RUBY_CEXT_INVOKE("rb_module_new");
 }
 
-VALUE rb_newobj_of(VALUE klass, VALUE flags) {
-  // ignore flags for now
-  return RUBY_CEXT_INVOKE("rb_newobj_of", klass);
-}
-
 void rb_extend_object(VALUE object, VALUE module) {
   RUBY_INVOKE(module, "extend_object", object);
 }
