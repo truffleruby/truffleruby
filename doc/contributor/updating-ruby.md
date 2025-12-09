@@ -172,9 +172,9 @@ cp -R lib/ruby/gems/*.0/gems $TRUFFLERUBY/lib/gems
 cp -R lib/ruby/gems/*.0/specifications $TRUFFLERUBY/lib/gems
 
 cd $TRUFFLERUBY
-rm -f lib/gems/gems/**/*.{o,a,so,bundle} lib/gems/gems/**/{Makefile,extconf.h,mkmf.log} lib/gems/gems/**/*.mk
+rm -f lib/gems/gems/**/*.{o,a,so,bundle}(N) lib/gems/gems/**/{Makefile,extconf.h,mkmf.log} lib/gems/gems/**/*.mk
 rm -rf lib/gems/gems/typeprof-* lib/gems/specifications/typeprof-*.gemspec
-rm lib/gems/gems/rbs-*/Gemfile.lock
+rm -f lib/gems/gems/rbs-*/Gemfile.lock(N)
 ruby tool/patch-default-gemspecs.rb
 ```
 
@@ -205,8 +205,8 @@ Update all of these:
   * use `$TRUFFLERUBY_VERSION.1` in `truffleruby-abi-version.h` instead when on a release branch.
 * Update `versions.json`
   * run `RUBY_SOURCE_DIR=../ruby-$VERSION tool/update-gem-versions-list.rb`
-* Also update version numbers for `debug`, `racc`, and `rbs` in `src/main/c/Makefile`, `mx.truffleruby/suite.py` and `lib/gems/gems/debug-*/ext/debug/extconf.rb`.
-* Copy and paste `-h` and `--help` output to `RubyLauncher` (instructions are in the end of the file `src/launcher/java/org/truffleruby/launcher/RubyLauncher.java`)
+* Also update version numbers for bundled gems like `debug` in `src/main/c/Makefile`, `mx.truffleruby/suite.py` and `lib/gems/gems/debug-*/ext/debug/extconf.rb`.
+* Copy and paste the `-h` and `--help` output from CRuby to `RubyLauncher` (instructions are in the end of the file `src/launcher/java/org/truffleruby/launcher/RubyLauncher.java`)
 * This is a good time to get `jt build` working.
 * Copy and paste the TruffleRuby `--help` output to `doc/user/options.md` (e.g., with `jt ruby --help | xsel -b`)
 * Update `doc/user/compatibility.md` and `README.md`
