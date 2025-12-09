@@ -1,7 +1,7 @@
 # Compatibility
 
 TruffleRuby aims to be fully compatible with the standard implementation of
-Ruby, MRI, version 3.3.7, [including C extensions](#c-extension-compatibility).
+Ruby, MRI, version 3.4.7, [including C extensions](#c-extension-compatibility).
 TruffleRuby is still in development, so it is not 100% compatible yet.
 
 TruffleRuby can run Rails and is compatible with many gems, including C extensions.
@@ -29,7 +29,7 @@ In the C API, the preprocessor macro `TRUFFLERUBY` is defined, which can be chec
 
 ## Ruby Features
 
-Most features of Ruby 3.3 and earlier are supported in TruffleRuby.
+Most features of Ruby 3.4 and earlier are supported in TruffleRuby.
 However, some features are not yet implemented.
 See the following issues for details:
 
