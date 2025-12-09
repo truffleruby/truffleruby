@@ -145,8 +145,14 @@ Look in `../ruby/ext/json/lib/json/version.rb` to see the version of `flori/json
 compare to `lib/json/lib/json/version.rb` and if different then
 copy `flori/json`'s `lib` directory into `lib/json`:
 ```
-rm -rf lib/json/lib
+rm -rf lib/json
+mkdir lib/json
 cp -R ../../json/lib lib/json
+
+rm -rf src/main/c/json
+mkdir src/main/c/json
+cp -R ../../json/ext/json/ext/{fbuffer,parser} src/main/c/json
+rm -f src/main/c/json/parser/depend
 ```
 
 Also reapply our changes to json files, by looking with `git log -p lib/json`.
