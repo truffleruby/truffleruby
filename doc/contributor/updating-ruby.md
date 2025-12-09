@@ -221,15 +221,13 @@ Update all of these:
 * Get `jt test spec/truffle/rubygems/default_gems_list_spec.rb` to pass
 * Add a new section with all the subsections for the new TruffleRuby version in `CHANGELOG.md` and add an entry like `* Updated to Ruby $VERSION`.
 * Grep for the old Ruby version with `git grep -F x.y.z`
+* Grep for the old Ruby version with `git grep -F x.y doc`
 * Grep for the old Bundler version with `git grep -F x.y.z`
 * If `tool/id.def` or `lib/cext/include/truffleruby/internal/id.h` has changed, then run `jt build core-symbols` and check for correctness.
-* Upload the [CRuby source archive](https://www.ruby-lang.org/en/downloads/) of that version to the CI for `tool/generate-config-header.sh` (ask Benoit).
-* Update `config_*.h` files by running the gate and copying the output, or trigger the `ruby-generate-native-config-*` CI jobs.
+* Update `config_*.h` files by running the CI and also the [daily darwin-amd64 workflow](https://github.com/truffleruby/truffleruby/actions/workflows/daily.yml) and copying the output.
 
 For a new major version:
 * Update `TargetRubyVersion` in `.rubocop.yml`
 * Update `spec/truffleruby.next-specs` and remove `/spec/truffleruby.next-specs merge=union` in `.gitattributes`
 * Update the docs for next version specs in [workflow.md](workflow.md).
 * Update the versions in the `ruby/spec on CRuby` job of `.github/workflows/ci.yml`.
-
-Use "Update versions" for a commit message.
