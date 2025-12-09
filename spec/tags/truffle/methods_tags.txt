@@ -102,3 +102,5 @@ fails:Public methods on String should include dup
 fails:Public methods on UnboundMethod should include dup
 fails:Public methods on StringIO should include pread
 fails:Public methods on Digest::Base.singleton_class should not include inherited
+fails:Public methods on MatchData should not include bytebegin
+fails:Public methods on MatchData should not include byteend
