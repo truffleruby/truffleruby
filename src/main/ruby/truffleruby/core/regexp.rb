@@ -210,6 +210,7 @@ class Regexp
 
     result.begin(0) if result
   end
+  Primitive.always_split self, :=~
 
   def match(str, pos = 0)
     result = Truffle::RegexpOperations.match(self, str, pos)
@@ -221,10 +222,12 @@ class Regexp
       result
     end
   end
+  Primitive.always_split self, :match
 
   def match?(str, pos = 0)
     Truffle::RegexpOperations.match?(self, str, pos)
   end
+  Primitive.always_split self, :match?
 
   def ===(other)
     if Primitive.is_a?(other, Symbol)
@@ -245,6 +248,7 @@ class Regexp
       false
     end
   end
+  Primitive.always_split self, :===
 
   def eql?(other)
     return false unless Primitive.is_a?(other, Regexp)
@@ -277,6 +281,7 @@ class Regexp
     res = match(line)
     res ? res.begin(0) : nil
   end
+  Primitive.always_split self, :~
 
   def casefold?
     (options & IGNORECASE) > 0 ? true : false

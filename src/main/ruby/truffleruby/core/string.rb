@@ -158,6 +158,7 @@ class String
       pattern =~ self
     end
   end
+  Primitive.always_split self, :=~
 
   def chomp(separator = $/)
     str = Primitive.dup_as_string_instance(self)
