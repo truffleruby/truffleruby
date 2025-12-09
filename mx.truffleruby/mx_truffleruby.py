@@ -279,7 +279,9 @@ class LibYAMLBuildTask(mx.NativeBuildTask):
         self.clean()
         mx.copytree(libyaml_sources, build_dir)
 
-        mx.run(['./configure', f'--prefix={install_dir}', '--disable-shared', '--enable-static'], cwd=build_dir)
+        env = os.environ.copy()
+        env['CFLAGS'] = '-fPIC'
+        mx.run(['./configure', f'--prefix={install_dir}', '--disable-shared', '--enable-static'], env=env, cwd=build_dir)
 
         super(LibYAMLBuildTask, self).build() # make
 

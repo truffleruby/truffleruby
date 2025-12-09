@@ -19,6 +19,9 @@ if defined?(::TruffleRuby)
   # Keep in sync with psych/extconf.rb
   repository = Truffle::System.get_java_property 'truffleruby.repository'
   ssl_dirs = dir_config("openssl", "#{repository}/src/main/c/libssl")
+  # Since we link statically we have to set the dependencies here
+  $CFLAGS << " -pthread"
+  $LDFLAGS << " -pthread"
   if Truffle::Platform.linux?
     # -Wl,--exclude-libs,ALL also works but let's be consistent with the approach on macOS
     LINK_SO << " '-Wl,--version-script=#{__dir__}/exports.map'"
