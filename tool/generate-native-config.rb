@@ -578,7 +578,7 @@ end
 
 constants 'errno' do |cg|
   cg.include 'errno.h'
-  errnos = File.readlines("#{__dir__}/known_errors.def").map(&:chomp)
+  errnos = File.readlines("#{__dir__}/known_errors.def").map { |line| line.chomp.split(' ', 2).first }
   cg.consts errnos
 end
 
