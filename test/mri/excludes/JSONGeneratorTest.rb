@@ -1,7 +1,0 @@
-exclude :test_allow_nan, "NoMethodError: undefined method `invalid_object' for an instance of JSON::GeneratorError"
-exclude :test_custom_object_as_keys, "[TypeError] exception expected, not #<RuntimeError: Shouldn't be called>."
-exclude :test_depth, "[JSON::NestingError] exception expected, not #<SystemStackError: stack level too deep"
-exclude :test_dump_strict, "JSON::GeneratorError: Array not allowed in JSON"
-exclude :test_falsy_state, "NoMethodError: undefined method `empty?' for nil"
-exclude :test_generate_pretty, "<\"{}\"> expected but was <\"{\\n\" + \"}\">."
-exclude :test_invalid_encoding_string, "JSON::GeneratorError expected but nothing was raised."
