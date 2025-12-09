@@ -8,8 +8,9 @@ if defined?(::TruffleRuby)
 
   File.write("debug_version.h", "#define RUBY_DEBUG_VERSION \"#{version}\"\n")
 else
-  require_relative '../../lib/debug/version'
-  File.write("debug_version.h", "#define RUBY_DEBUG_VERSION \"#{DEBUGGER__::VERSION}\"\n")
+# original code, not indented to make diff nicer and re-applying patches easier
+require_relative '../../lib/debug/version'
+File.write("debug_version.h", "#define RUBY_DEBUG_VERSION \"#{DEBUGGER__::VERSION}\"\n")
 end
 $distcleanfiles << "debug_version.h"
 
