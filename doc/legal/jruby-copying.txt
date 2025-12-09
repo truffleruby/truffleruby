@@ -79,7 +79,7 @@ below. Also see LICENSE.RUBY for most files found in lib/ruby/stdlib.
    library. This includes all files under lib/ruby/stdlib/racc.
    See LICENSE.RUBY.
 
- json-generator and json-parser (https://github.com/flori/json) native
+ json-generator and json-parser (https://github.com/ruby/json) native
    extenstions under the same license terms as the Ruby standard library.
    See LICENSE.RUBY
 

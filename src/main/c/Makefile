@@ -40,7 +40,8 @@ IF_EXTCONF_FAIL := ( echo "`pwd`/extconf.rb failed:" 1>&2 && cat mkmf.log && fal
 all: $(TRAMPOLINE) $(LIBTRUFFLERUBY) openssl/openssl.$(DLEXT) zlib/zlib.$(DLEXT) \
 			psych/psych.$(DLEXT) ripper/ripper.$(DLEXT) syslog/syslog.$(DLEXT) nkf/nkf.$(DLEXT) \
 			bigdecimal/bigdecimal.$(DLEXT) date/date_core.$(DLEXT) io-console/console.$(DLEXT) etc/etc.$(DLEXT) \
-			rbconfig-sizeof/sizeof.$(DLEXT) debug/debug.$(DLEXT) rbs/rbs_extension.$(DLEXT)
+			rbconfig-sizeof/sizeof.$(DLEXT) json/parser/parser.$(DLEXT) \
+			debug/debug.$(DLEXT) rbs/rbs_extension.$(DLEXT)
 
 clean: clean_cexts clean_trampoline
 
@@ -60,6 +61,7 @@ clean_cexts:
 	$(Q) rm -f io-console/Makefile io-console/*.o io-console/console.$(DLEXT)
 	$(Q) rm -f etc/Makefile etc/*.o etc/etc.$(DLEXT) etc/constdefs.h
 	$(Q) rm -f rbconfig-sizeof/Makefile rbconfig-sizeof/*.o rbconfig-sizeof/sizeof.$(DLEXT)
+	$(Q) rm -f json/parser/Makefile json/parser/*.o json/parser/parser.$(DLEXT)
 	$(Q) rm -f debug/Makefile debug/*.o debug/debug.$(DLEXT)
 	$(Q) rm -f rbs/Makefile rbs/*.o rbs/rbs_extension.$(DLEXT)
 
@@ -153,6 +155,13 @@ rbconfig-sizeof/Makefile: rbconfig-sizeof/extconf.rb $(EXTCONF_DEPS)
 
 rbconfig-sizeof/sizeof.$(DLEXT): rbconfig-sizeof/Makefile rbconfig-sizeof/sizes.c
 	$(Q) cd rbconfig-sizeof && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
+
+# json
+json/parser/Makefile: json/parser/extconf.rb $(EXTCONF_DEPS)
+	$(Q) cd json/parser && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
+
+json/parser/parser.$(DLEXT): json/parser/Makefile json/parser/*.c json/fbuffer/*.h
+	$(Q) cd json/parser && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
 
 # psych
 # NOTE: using --with-libyaml-source-dir causes timestamp issues with autotools and libyaml.
