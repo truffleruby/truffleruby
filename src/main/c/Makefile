@@ -80,7 +80,6 @@ $(LIBTRUFFLERUBY): cext/Makefile cext/*.c cext/*.h
 	$(Q) cd cext && $(MAKE)
 
 # openssl
-# NOTE: --with-openssl-dir=TRUFFLERUBY_BOOTSTRAP_HOME/src/main/c/libssl is automatically added from rbconfig.rb
 openssl/Makefile: openssl/extconf.rb $(EXTCONF_DEPS)
 	$(Q) cd openssl && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
 
@@ -156,9 +155,7 @@ rbconfig-sizeof/sizeof.$(DLEXT): rbconfig-sizeof/Makefile rbconfig-sizeof/sizes.
 	$(Q) cd rbconfig-sizeof && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
 
 # psych
-# NOTE: --with-libyaml-dir=TRUFFLERUBY_BOOTSTRAP_HOME/src/main/c/libyaml is automatically added from rbconfig.rb
-#
-# Using --with-libyaml-source-dir instead causes timestamp issues with autotools and libyaml.
+# NOTE: using --with-libyaml-source-dir causes timestamp issues with autotools and libyaml.
 # Specifically on `gem install psych` we get errors like:
 # src/main/c/libyaml/config/missing: line 81: aclocal-1.15: command not found
 # WARNING: 'aclocal-1.15' is missing on your system.
@@ -167,7 +164,7 @@ rbconfig-sizeof/sizeof.$(DLEXT): rbconfig-sizeof/Makefile rbconfig-sizeof/sizes.
 # A workaround would be to `touch aclocal.m4 configure Makefile.in` (from https://stackoverflow.com/a/33279062/388803)
 # but it seems difficult and messy to do that for the standalone archive.
 #
-# So using --with-libyaml-dir is safer and is consistent with how libssl is handled.
+# So building libyaml ourselves is safer and is consistent with how libssl is handled.
 psych/Makefile: psych/extconf.rb $(EXTCONF_DEPS)
 	$(Q) cd psych && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
 
