@@ -3,56 +3,64 @@
 TruffleRuby has the same command-line interface as our compatible MRI version.
 
 ```shell
-Usage: truffleruby [switches] [--] [programfile] [arguments]
-  -0[octal]       specify record separator (\0, if no argument)
-                  (-00 for paragraph mode, -0777 for slurp mode)
-  -a              autosplit mode with -n or -p (splits $_ into $F)
-  -c              check syntax only
-  -Cdirectory     cd to directory before executing your script
-  -d, --debug     set debugging flags (set $DEBUG to true)
-  -e 'command'    one line of script. Several -e's allowed. Omit [programfile]
+Usage: truffleruby [options] [--] [filepath] [arguments]
+  -0[octal]       Set input record separator ($/):
+                  -0 for \0; -00 for paragraph mode; -0777 for slurp mode.
+  -a              Split each input line ($_) into fields ($F).
+  -c              Check syntax (no execution).
+  -Cdirpath       Execute program in specified directory.
+  -d, --debug     Set debugging flag ($DEBUG) to true.
+  -e 'code'       Execute given Ruby code; multiple -e allowed.
   -Eex[:in], --encoding=ex[:in]
-                  specify the default external and internal character encodings
-  -Fpattern       split() pattern for autosplit (-a)
-  -i[extension]   edit ARGV files in place (make backup if extension supplied)
-  -Idirectory     specify $LOAD_PATH directory (may be used more than once)
-  -l              enable line ending processing
-  -n              assume 'while gets(); ... end' loop around your script
-  -p              assume loop like -n but print line also like sed
-  -rlibrary       require the library before executing your script
-  -s              enable some switch parsing for switches after script name
-  -S              look for the script using PATH environment variable
-  -v              print the version number, then turn on verbose mode
-  -w              turn warnings on for your script
+                  Set default external and internal encodings.
+  -Fpattern       Set input field separator ($;); used with -a.
+  -i[extension]   Set ARGF in-place mode;
+                  create backup files with given extension.
+  -Idirpath       Add specified directory to load paths ($LOAD_PATH);
+                  multiple -I allowed.
+  -l              Set output record separator ($\) to $/;
+                  used for line-oriented output.
+  -n              Run program in gets loop.
+  -p              Like -n, with printing added.
+  -rlibrary       Require the given library.
+  -s              Define global variables using switches following program path.
+  -S              Search directories found in the PATH environment variable.
+  -v              Print version; set $VERBOSE to true.
+  -w              Synonym for -W1.
   -W[level=2|:category]
-                  set warning level; 0=silence, 1=medium, 2=verbose
-  -x[directory]   strip off text before #!ruby line and perhaps cd to directory
-  --copyright     print the copyright
-  --enable={rubyopt|...}[,...]
-  --disable={rubyopt|...}[,...]
-                  enable or disable features. see below for available features
-  --external-encoding=encoding
-  --internal-encoding=encoding
-                  specify the default external or internal character encoding
+                  Set warning flag ($-W):
+                  0 for silent; 1 for moderate; 2 for verbose.
+  -x[dirpath]     Execute Ruby code starting from a #!ruby line.
   --backtrace-limit=num
-                  limit the maximum length of backtrace
-  --verbose       turn on verbose mode and disable script from stdin
-  --version       print the version number, then exit
-  --help          show this message, -h for short message
+                  Set backtrace limit.
+  --copyright     Print Ruby copyright.
+  --disable=features
+                  Disable features; see list below.
+  --enable=features
+                  Enable features; see list below.
+  --external-encoding=encoding
+                  Set default external encoding.
+  --help          Print long help message; use -h for short message.
+  --internal-encoding=encoding
+                  Set default internal encoding.
+  --verbose       Set $VERBOSE to true; ignore input from $stdin.
+  --version       Print Ruby version.
 
 Features:
-  gems            rubygems (only for debugging, default: enabled)
-  error_highlight error_highlight (default: enabled)
-  did_you_mean    did_you_mean (default: enabled)
-  syntax_suggest  syntax_suggest (default: enabled)
-  rubyopt         RUBYOPT environment variable (default: enabled)
+  gems            Rubygems (only for debugging, default: enabled).
+  error_highlight error_highlight (default: enabled).
+  did_you_mean    did_you_mean (default: enabled).
+  syntax_suggest  syntax_suggest (default: enabled).
+  rubyopt         RUBYOPT environment variable (default: enabled).
   frozen-string-literal
-                  freeze all string literals (default: disabled)
+                  Freeze all string literals (default: disabled).
 
 Warning categories:
-  deprecated      deprecated features
-  experimental    experimental features
-  performance     performance issues
+  deprecated      Deprecated features.
+  experimental    Experimental features.
+  performance     Performance issues.
+  strict_unused_block
+                  Warning unused block strictly
 
 Runtime options:
   --native                                     Ensure to run in Native mode.
