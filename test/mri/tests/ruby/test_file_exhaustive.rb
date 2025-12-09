@@ -3,7 +3,7 @@ require "test/unit"
 require "fileutils"
 require "tmpdir"
 require "socket"
-require '-test-/file' unless defined?(::TruffleRuby)
+# require '-test-/file'
 
 class TestFileExhaustive < Test::Unit::TestCase
   DRIVE = Dir.pwd[%r'\A(?:[a-z]:|//[^/]+/[^/]+)'i]

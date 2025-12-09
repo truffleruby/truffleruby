@@ -134,6 +134,8 @@ git grep -E -- "^\\s*require '-test-/"
 git grep -E -- '^\s*require "-test-/'
 ```
 
+Or regexp-search for `^\s*require ['"]-test-` in your editor.
+
 And comment any `require` found in files under `test/mri/tests`
 but not for files under `test/mri/tests/cext-ruby`.
 

@@ -1,5 +1,5 @@
 require 'test/unit'
-require '-test-/integer.so' unless defined?(::TruffleRuby)
+# require '-test-/integer.so'
 
 module Test::Unit::Assertions
   def assert_fixnum(v, msg=nil)
