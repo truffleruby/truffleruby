@@ -1,7 +1,7 @@
 # frozen_string_literal: false
 require 'test/unit'
 require 'tmpdir'
-require '-test-/file' unless defined?(::TruffleRuby)
+# require '-test-/file'
 
 class TestDir_M17N < Test::Unit::TestCase
   def with_tmpdir

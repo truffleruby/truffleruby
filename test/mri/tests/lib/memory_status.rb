@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 begin
-  require '-test-/memory_status.so'
+  # require '-test-/memory_status.so'
 rescue LoadError
 end
 

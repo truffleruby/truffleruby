@@ -77,7 +77,7 @@ module Test
       require_relative 'envutil'
       require 'pp'
       begin
-        require '-test-/asan'
+        # require '-test-/asan'
       rescue LoadError
       end
 
