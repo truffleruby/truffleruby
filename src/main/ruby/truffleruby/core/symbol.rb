@@ -82,7 +82,6 @@ class Symbol
   def length
     to_s.length
   end
-
   alias_method :size, :length
 
   def match(*args, &block)
@@ -104,6 +103,7 @@ class Symbol
       pattern =~ str
     end
   end
+  Primitive.always_split self, :=~
 
   def match?(pattern, pos = 0)
     pattern = Truffle::Type.coerce_to_regexp(pattern) unless Primitive.is_a?(pattern, Regexp)
