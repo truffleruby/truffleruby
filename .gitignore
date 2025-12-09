@@ -35,6 +35,9 @@ bench/psd.rb/psd_native/**/*.so
 bench/psd.rb/psd_native/**/*.bundle
 bench/psd.rb/psd_native/ext/psd_native/Makefile
 
+lib/json/**/*.so
+lib/json/**/*.bundle
+
 src/main/c/**/*.o
 src/main/c/**/*.so
 src/main/c/**/*.a
