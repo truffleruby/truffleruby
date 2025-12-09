@@ -305,6 +305,16 @@ class Socket < BasicSocket
     class << self
       alias_method :sockaddr_un, :pack_sockaddr_un
     end
+
+    def self.tcp_fast_fallback
+      @tcp_fast_fallback
+    end
+
+    def self.tcp_fast_fallback=(value)
+      @tcp_fast_fallback = value
+    end
+
+    tcp_fast_fallback = ENV['RUBY_TCP_NO_FAST_FALLBACK'] == '0'
   end
 
   def initialize(family, socket_type, protocol = 0)
