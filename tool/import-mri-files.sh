@@ -69,8 +69,8 @@ cp -R "$RUBY_SOURCE_DIR/ext/ripper/lib/ripper" lib/mri
 cp "$RUBY_SOURCE_DIR/ext/socket/lib/socket.rb" lib/truffle/socket/mri.rb
 
 # Copy C extensions in ext/, sorted alphabetically
-rm -r src/main/c/{date,etc,io-console,openssl,psych,rbconfig-sizeof,ripper,zlib}
-mkdir src/main/c/{date,etc,io-console,openssl,psych,rbconfig-sizeof,ripper,zlib}
+rm -r src/main/c/{date,etc,io-console,openssl,psych,rbconfig-sizeof,zlib}
+mkdir src/main/c/{date,etc,io-console,openssl,psych,rbconfig-sizeof,zlib}
 cp "$RUBY_SOURCE_DIR/ext/date"/*.{c,gemspec,h,rb} src/main/c/date
 cp "$RUBY_SOURCE_DIR/ext/etc"/*.{c,rb} src/main/c/etc
 cp "$RUBY_SOURCE_DIR/ext/io/console"/*.{c,rb} src/main/c/io-console
@@ -80,12 +80,8 @@ cp "$RUBY_SOURCE_DIR/ext/rbconfig/sizeof"/*.{c,rb} src/main/c/rbconfig-sizeof
 cp "$RUBY_SOURCE_DIR/ext/zlib"/*.{c,rb} src/main/c/zlib
 
 # Ripper
-mkdir tmp-ripper
-mv src/main/c/ripper/parser_st.h tmp-ripper/
-mv src/main/c/ripper/vm_core.h tmp-ripper/
 rm -rf src/main/c/ripper
 mkdir -p src/main/c/ripper
-mv tmp-ripper/* src/main/c/ripper/
 cp "$RUBY_BUILD_DIR"/{id.h,symbol.h} lib/cext/include/truffleruby/internal
 cp "$RUBY_BUILD_DIR"/{node.c,parse.c,lex.c} src/main/c/ripper
 cp "$RUBY_BUILD_DIR/ext/ripper"/*.{c,rb} src/main/c/ripper
@@ -96,6 +92,8 @@ cp "$RUBY_SOURCE_DIR/rubyparser.h" src/main/c/ripper
 mkdir src/main/c/ripper/internal
 cp "$RUBY_SOURCE_DIR/internal/ruby_parser.h" src/main/c/ripper/internal
 cp "$RUBY_SOURCE_DIR/internal/parse.h" src/main/c/ripper/internal
+git checkout -- src/main/c/ripper/parser_st.h
+git checkout -- src/main/c/ripper/vm_core.h
 
 # test/
 rm -rf test/mri/tests
