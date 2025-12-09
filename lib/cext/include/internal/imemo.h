@@ -166,17 +166,18 @@ void rb_cc_table_free(VALUE klass);
 void rb_imemo_free(VALUE obj);
 
 RUBY_SYMBOL_EXPORT_BEGIN
+#ifndef TRUFFLERUBY
 #if IMEMO_DEBUG
 VALUE rb_imemo_new_debug(enum imemo_type type, VALUE v0, const char *file, int line);
 #define rb_imemo_new(type, v1, v2, v3, v0) rb_imemo_new_debug(type, v1, v2, v3, v0, __FILE__, __LINE__)
 #else
 VALUE rb_imemo_new(enum imemo_type type, VALUE v0);
 #endif
+#endif
 const char *rb_imemo_name(enum imemo_type type);
 RUBY_SYMBOL_EXPORT_END
 
 #ifndef TRUFFLERUBY
-// TODO (nirvdrum 2025-11-23): Does `MEMO_NEW` need to be undefined on TruffleRuby?
 static inline struct MEMO *
 MEMO_NEW(VALUE a, VALUE b, VALUE c)
 {
