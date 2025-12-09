@@ -459,6 +459,7 @@ suite = {
                 "src/main/c/date/<extsuffix:date_core>",
                 "src/main/c/etc/<extsuffix:etc>",
                 "src/main/c/io-console/<extsuffix:console>",
+                "src/main/c/json/parser/<extsuffix:parser>",
                 "src/main/c/nkf/<extsuffix:nkf>",
                 "src/main/c/openssl/<extsuffix:openssl>",
                 "src/main/c/psych/<extsuffix:psych>",
@@ -873,7 +874,7 @@ suite = {
                     "dependency:org.truffleruby.cext/src/main/c/cext/<lib:truffleruby>",
                     "dependency:org.truffleruby.cext/src/main/c/cext-trampoline/<lib:trufflerubytrampoline>",
                 ],
-                # Create the complete files to let RubyGems know the gems are fully built and can be activated
+                # Create the complete files for bundled gems to let RubyGems know the gems are fully built and can be activated
                 "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/bigdecimal-3.1.8/gem.build_complete": "string:",
                 "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/debug-1.11.0/gem.build_complete": "string:",
                 "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/nkf-0.2.0/gem.build_complete": "string:",
@@ -899,6 +900,9 @@ suite = {
                 ],
                 "lib/mri/io/": [
                     "dependency:org.truffleruby.cext/src/main/c/io-console/<extsuffix:console>",
+                ],
+                "lib/mri/json/ext/": [
+                    "dependency:org.truffleruby.cext/src/main/c/json/parser/<extsuffix:parser>",
                 ],
                 "lib/mri/rbconfig/": [
                     "dependency:org.truffleruby.cext/src/main/c/rbconfig-sizeof/<extsuffix:sizeof>",

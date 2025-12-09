@@ -46,6 +46,7 @@ src/main/c/**/*.dylib
 src/main/c/**/extconf.h
 src/main/c/**/mkmf.log
 src/main/c/*/Makefile
+src/main/c/json/parser/Makefile
 !src/main/c/prism-gem/Makefile
 !src/main/c/spawn-helper/Makefile
 !src/main/c/truffleposix/Makefile

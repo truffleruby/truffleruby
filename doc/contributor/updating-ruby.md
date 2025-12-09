@@ -141,9 +141,9 @@ but not for files under `test/mri/tests/cext-ruby`.
 
 ## Update libraries from third-party repos
 
-Look in `../ruby/ext/json/lib/json/version.rb` to see the version of `flori/json` being used,
+Look in `../ruby/ext/json/lib/json/version.rb` to see the version of `ruby/json` being used,
 compare to `lib/json/lib/json/version.rb` and if different then
-copy `flori/json`'s `lib` directory into `lib/json`:
+copy `ruby/json`'s `lib` directory into `lib/json`:
 ```
 rm -rf lib/json
 mkdir lib/json
