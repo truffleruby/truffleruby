@@ -1,8 +1,0 @@
-exclude :test_disable_close, "NotImplementedError: NotImplementedError"
-exclude :test_enable_close, "NotImplementedError: NotImplementedError"
-exclude :test_handle_close, "NotImplementedError: NotImplementedError"
-exclude :test_handle_close_twice, "NotImplementedError: NotImplementedError"
-exclude :test_static_sym_unknown, "[Fiddle::DLError] exception expected, not #<NotImplementedError: NotImplementedError>."
-exclude :test_sym, "NoMethodError: undefined method `sym_defined?' for an instance of Fiddle::Handle"
-exclude :test_sym_closed_handle, "NotImplementedError: NotImplementedError"
-exclude :test_sym_unknown, "[Fiddle::DLError] exception expected, not #<NameError: Unknown identifier: fooo>."
