@@ -1,4 +1,2 @@
 slow:Net::FTP#retrlines sends the passed command over the socket
 slow:Net::FTP#retrlines yields each received line to the passed block
-fails:Net::FTP#retrlines sends the passed command over the socket
-fails:Net::FTP#retrlines yields each received line to the passed block
