@@ -151,7 +151,7 @@ class String
     when Regexp
       match_data = Primitive.regexp_search(pattern, self, 0)
       Primitive.regexp_last_match_set(Primitive.caller_special_variables, match_data)
-      return match_data.begin(0) if match_data
+      match_data.begin(0) if match_data
     when String
       raise TypeError, 'type mismatch: String given'
     else

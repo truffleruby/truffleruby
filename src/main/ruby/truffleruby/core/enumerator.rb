@@ -271,7 +271,7 @@ class Enumerator
     end
 
     def inspect
-      return "#<#{Primitive.class(self).name}: ...>" if Truffle::ThreadOperations.detect_recursion(self) do
+      "#<#{Primitive.class(self).name}: ...>" if Truffle::ThreadOperations.detect_recursion(self) do
         return "#<#{Primitive.class(self).name}: #{@enums || "uninitialized"}>"
       end
     end
@@ -859,7 +859,7 @@ class Enumerator::Chain < Enumerator
   end
 
   def inspect
-    return "#<#{Primitive.class(self).name}: ...>" if Truffle::ThreadOperations.detect_recursion(self) do
+    "#<#{Primitive.class(self).name}: ...>" if Truffle::ThreadOperations.detect_recursion(self) do
       return "#<#{Primitive.class(self).name}: #{@enums || "uninitialized"}>"
     end
   end
