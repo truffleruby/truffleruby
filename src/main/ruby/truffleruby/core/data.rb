@@ -25,7 +25,26 @@ module Truffle
 end
 
 class Data
-  # The entire API of Data is this single class method
+  # Defined to help deserialize Data instances, see https://github.com/ruby/psych/pull/765
+  # Keep in sync with #initialize below
+  def initialize(**kwargs)
+    members_hash = Primitive.class(self)::CLASS_MEMBERS_HASH
+    kwargs.each do |member, value|
+      member = member.to_sym
+      if members_hash.include?(member)
+        Primitive.object_hidden_var_set(self, member, value)
+      else
+        raise ArgumentError, Truffle::DataOperations.unknown_keywords_message(kwargs.keys, self)
+      end
+    end
+
+    if kwargs.size < members_hash.size
+      raise ArgumentError, Truffle::DataOperations.missing_keywords_message(kwargs.keys, self)
+    end
+    Primitive.freeze(self)
+  end
+
+  # The entire public API of Data is this single class method
   def self.define(*class_members, &block)
     members_hash = {}
     class_members.each do |m|
@@ -98,6 +117,7 @@ class Data
       ORIGINAL_NEW = klass.method(:new)
       private_constant :ORIGINAL_NEW
 
+      # Keep in sync with #initialize above
       def initialize(**kwargs)
         members_hash = Primitive.class(self)::CLASS_MEMBERS_HASH
         kwargs.each do |member, value|
