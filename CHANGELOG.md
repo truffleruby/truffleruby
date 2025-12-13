@@ -9,6 +9,7 @@ New features:
 
 Bug fixes:
 
+* Fix `Integer#%` when called with a bignum argument (#3931, @andrykonchin).
 
 Compatibility:
 
