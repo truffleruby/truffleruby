@@ -578,19 +578,17 @@ public abstract class IntegerNodes {
             return mod;
         }
 
-        @TruffleBoundary
         @Specialization
-        Object mod(long a, RubyBignum b) {
+        Object mod(long a, RubyBignum b,
+                @Cached @Shared FixnumOrBignumNode fixnumOrBignumNode) {
             // TODO(CS): why are we getting this case?
 
-            long mod = BigInteger.valueOf(a).mod(b.value).longValue();
-
-            if (mod < 0 && b.value.compareTo(BigInteger.ZERO) > 0 ||
-                    mod > 0 && b.value.compareTo(BigInteger.ZERO) < 0) {
-                return createBignum(BigInteger.valueOf(mod).add(b.value));
+            if (a < 0 != b.value.signum() < 0) {
+                adjustProfile.enter();
+                return fixnumOrBignumNode.execute(this, BigIntegerOps.add(b.value, a));
             }
 
-            return mod;
+            return a;
         }
 
         @TruffleBoundary
