@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Kouhei Sutou".freeze]
-  s.date = "2025-01-15"
+  s.date = "2025-10-08"
   s.description = "Family of libraries that support various formats of XML \"feeds\".".freeze
   s.email = ["kou@cozmixng.org".freeze]
   s.homepage = "https://github.com/ruby/rss".freeze
@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.4.20".freeze
   s.summary = "Family of libraries that support various formats of XML \"feeds\".".freeze
 
-  s.installed_by_version = "3.5.22".freeze
+  s.installed_by_version = "3.6.9".freeze
 
   s.specification_version = 4
 

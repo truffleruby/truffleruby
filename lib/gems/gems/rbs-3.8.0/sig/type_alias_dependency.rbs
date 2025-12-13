@@ -1,0 +1,53 @@
+module RBS
+  # TypeAliasDependency calculates the dependencies between type aliases
+  #
+  # The dependencies are normalized automatically.
+  #
+  class TypeAliasDependency
+    attr_reader env: Environment
+
+    # A hash table from type alias name to it's direct dependencies
+    #
+    # The source type name and dependencies are normalized.
+    #
+    attr_reader direct_dependencies: Hash[TypeName, Set[TypeName]]
+
+    # A hash table from type alias name to a hash name with keys of transitive dependencies
+    #
+    # The source type name and dependencies are normalized.
+    #
+    attr_reader dependencies: Hash[TypeName, Hash[TypeName, bool]]
+
+    def initialize: (env: Environment) -> void
+
+    # Returns `true` if given type alias is circular
+    #
+    # Normalized given type name automatically.
+    #
+    def circular_definition?: (TypeName alias_name) -> bool
+
+    # Returns the set of direct dependencies from the given type name
+    #
+    # Given type name will be normalized automatically.
+    # Returns normalized type names.
+    #
+    def direct_dependencies_of: (TypeName) -> Set[TypeName]
+
+    # Returns the set of dependencies from the given type name
+    #
+    # Given type name will be normalized automatically.
+    # Returns normalized type names.
+    #
+    def dependencies_of: (TypeName) -> Set[TypeName]
+
+    def build_dependencies: () -> void
+
+    def transitive_closure: () -> void
+
+    private
+
+    def direct_dependency: (Types::t `type`, ?Set[TypeName] result) -> Set[TypeName]
+
+    def dependency: (TypeName start, TypeName vertex, ?boolish nested) -> void
+  end
+end

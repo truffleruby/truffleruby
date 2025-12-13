@@ -211,22 +211,12 @@ assert_equal '[:a, :b, :c, :d, :e, :f, :g]', %q{
   Ractor.make_shareable(closure).call
 }
 
-# Now autoload in non-main Ractor is not supported
-assert_equal 'ok', %q{
-  autoload :Foo, 'foo.rb'
-  r = Ractor.new do
-    p Foo
-  rescue Ractor::UnsafeError
-    :ok
-  end
-  r.take
-}
-
 ###
 ###
 # Ractor still has several memory corruption so skip huge number of tests
 if ENV['GITHUB_WORKFLOW'] &&
-   ENV['GITHUB_WORKFLOW'] == 'Compilations'
+   (ENV['GITHUB_WORKFLOW'] == 'Compilations' ||
+   ENV['GITHUB_WORKFLOW'] == 'ModGC')
    # ignore the follow
 else
 
@@ -571,7 +561,7 @@ assert_equal '[RuntimeError, "ok", true]', %q{
 }
 
 # threads in a ractor will killed
-assert_equal '{:ok=>3}', %q{
+assert_equal '{ok: 3}', %q{
   Ractor.new Ractor.current do |main|
     q = Thread::Queue.new
     Thread.new do
@@ -601,7 +591,7 @@ assert_equal '{:ok=>3}', %q{
   end
 
   3.times.map{Ractor.receive}.tally
-}
+} unless yjit_enabled? # `[BUG] Bus Error at 0x000000010b7002d0` in jit_exec()
 
 # unshareable object are copied
 assert_equal 'false', %q{
@@ -628,7 +618,7 @@ assert_equal "allocator undefined for Thread", %q{
 }
 
 # send shareable and unshareable objects
-assert_equal "ok", %q{
+assert_equal "ok", <<~'RUBY', frozen_string_literal: false
   echo_ractor = Ractor.new do
     loop do
       v = Ractor.receive
@@ -695,10 +685,10 @@ assert_equal "ok", %q{
   else
     results.inspect
   end
-}
+RUBY
 
 # frozen Objects are shareable
-assert_equal [false, true, false].inspect, %q{
+assert_equal [false, true, false].inspect, <<~'RUBY', frozen_string_literal: false
   class C
     def initialize freeze
       @a = 1
@@ -721,11 +711,11 @@ assert_equal [false, true, false].inspect, %q{
   results << check(C.new(true))         # false
   results << check(C.new(true).freeze)  # true
   results << check(C.new(false).freeze) # false
-}
+RUBY
 
 # move example2: String
 # touching moved object causes an error
-assert_equal 'hello world', %q{
+assert_equal 'hello world', <<~'RUBY', frozen_string_literal: false
   # move
   r = Ractor.new do
     obj = Ractor.receive
@@ -743,7 +733,7 @@ assert_equal 'hello world', %q{
   else
     raise 'unreachable'
   end
-}
+RUBY
 
 # move example2: Array
 assert_equal '[0, 1]', %q{
@@ -760,6 +750,17 @@ assert_equal '[0, 1]', %q{
   rescue Ractor::MovedError
     a2.inspect
   end
+}
+
+# unshareable frozen objects should still be frozen in new ractor after move
+assert_equal 'true', %q{
+r = Ractor.new do
+  obj = receive
+  { frozen: obj.frozen? }
+end
+obj = [Object.new].freeze
+r.send(obj, move: true)
+r.take[:frozen]
 }
 
 # move with yield
@@ -946,7 +947,7 @@ assert_equal 'ArgumentError', %q{
 }
 
 # ivar in shareable-objects are not allowed to access from non-main Ractor
-assert_equal "can not get unshareable values from instance variables of classes/modules from non-main Ractors", %q{
+assert_equal "can not get unshareable values from instance variables of classes/modules from non-main Ractors", <<~'RUBY', frozen_string_literal: false
   class C
     @iv = 'str'
   end
@@ -957,13 +958,12 @@ assert_equal "can not get unshareable values from instance variables of classes/
     end
   end
 
-
   begin
     r.take
   rescue Ractor::RemoteError => e
     e.cause.message
   end
-}
+RUBY
 
 # ivar in shareable-objects are not allowed to access from non-main Ractor
 assert_equal 'can not access instance variables of shareable objects from non-main Ractors', %q{
@@ -1087,6 +1087,41 @@ assert_equal '333', %q{
   a + b + c + d + e + f
 }
 
+assert_equal '["instance-variable", "instance-variable", nil]', %q{
+  class C
+    @iv1 = ""
+    @iv2 = 42
+    def self.iv1 = defined?(@iv1) # "instance-variable"
+    def self.iv2 = defined?(@iv2) # "instance-variable"
+    def self.iv3 = defined?(@iv3) # nil
+  end
+
+  Ractor.new{
+    [C.iv1, C.iv2, C.iv3]
+  }.take
+}
+
+# moved objects have their shape properly set to original object's shape
+assert_equal '1234', %q{
+class Obj
+  attr_accessor :a, :b, :c, :d
+  def initialize
+    @a = 1
+    @b = 2
+    @c = 3
+  end
+end
+r = Ractor.new do
+  obj = receive
+  obj.d = 4
+  [obj.a, obj.b, obj.c, obj.d]
+end
+obj = Obj.new
+r.send(obj, move: true)
+values = r.take
+values.join
+}
+
 # cvar in shareable-objects are not allowed to access from non-main Ractor
 assert_equal 'can not access class variables from non-main Ractors', %q{
   class C
@@ -1129,7 +1164,7 @@ assert_equal 'can not access class variables from non-main Ractors', %q{
 }
 
 # Getting non-shareable objects via constants by other Ractors is not allowed
-assert_equal 'can not access non-shareable objects in constant C::CONST by non-main Ractor.', %q{
+assert_equal 'can not access non-shareable objects in constant C::CONST by non-main Ractor.', <<~'RUBY', frozen_string_literal: false
   class C
     CONST = 'str'
   end
@@ -1141,10 +1176,10 @@ assert_equal 'can not access non-shareable objects in constant C::CONST by non-m
   rescue Ractor::RemoteError => e
     e.cause.message
   end
-}
+  RUBY
 
 # Constant cache should care about non-sharable constants
-assert_equal "can not access non-shareable objects in constant Object::STR by non-main Ractor.", %q{
+assert_equal "can not access non-shareable objects in constant Object::STR by non-main Ractor.", <<~'RUBY', frozen_string_literal: false
   STR = "hello"
   def str; STR; end
   s = str() # fill const cache
@@ -1153,10 +1188,10 @@ assert_equal "can not access non-shareable objects in constant Object::STR by no
   rescue Ractor::RemoteError => e
     e.cause.message
   end
-}
+RUBY
 
 # Setting non-shareable objects into constants by other Ractors is not allowed
-assert_equal 'can not set constants with non-shareable objects by non-main Ractors', %q{
+assert_equal 'can not set constants with non-shareable objects by non-main Ractors', <<~'RUBY', frozen_string_literal: false
   class C
   end
   r = Ractor.new do
@@ -1167,7 +1202,7 @@ assert_equal 'can not set constants with non-shareable objects by non-main Racto
   rescue Ractor::RemoteError => e
     e.cause.message
   end
-}
+RUBY
 
 # define_method is not allowed
 assert_equal "defined with an un-shareable Proc in a different Ractor", %q{
@@ -1220,7 +1255,7 @@ assert_equal '0', %q{
 }
 
 # ObjectSpace._id2ref can not handle unshareable objects with Ractors
-assert_equal 'ok', %q{
+assert_equal 'ok', <<~'RUBY', frozen_string_literal: false
   s = 'hello'
 
   Ractor.new s.object_id do |id ;s|
@@ -1230,10 +1265,10 @@ assert_equal 'ok', %q{
       :ok
     end
   end.take
-}
+RUBY
 
 # Ractor.make_shareable(obj)
-assert_equal 'true', %q{
+assert_equal 'true', <<~'RUBY', frozen_string_literal: false
   class C
     def initialize
       @a = 'foo'
@@ -1304,7 +1339,7 @@ assert_equal 'true', %q{
   }
 
   Ractor.shareable?(a)
-}
+RUBY
 
 # Ractor.make_shareable(obj) doesn't freeze shareable objects
 assert_equal 'true', %q{
@@ -1404,11 +1439,11 @@ assert_equal '[false, false, true, true]', %q{
 assert_equal '[6, 10]', %q{
   rs = []
   TracePoint.new(:line){|tp| rs << tp.lineno if tp.path == __FILE__}.enable do
-    Ractor.new{ # line 4
+    Ractor.new{ # line 5
       a = 1
       b = 2
     }.take
-    c = 3       # line 8
+    c = 3       # line 9
   end
   rs
 }
@@ -1446,6 +1481,25 @@ assert_equal '[:ok, :ok]', %q{
   end
 }
 
+# Ractor.select is interruptible
+assert_normal_exit %q{
+  trap(:INT) do
+    exit
+  end
+
+  r = Ractor.new do
+    loop do
+      sleep 1
+    end
+  end
+
+  Thread.new do
+    sleep 0.5
+    Process.kill(:INT, Process.pid)
+  end
+  Ractor.select(r)
+}
+
 # Ractor-local storage
 assert_equal '[nil, "b", "a"]', %q{
   ans = []
@@ -1458,6 +1512,21 @@ assert_equal '[nil, "b", "a"]', %q{
   ans << r.take
   ans << r.take
   ans << Ractor.current[:key]
+}
+
+assert_equal '1', %q{
+  N = 1_000
+  Ractor.new{
+    a = []
+    1_000.times.map{|i|
+      Thread.new(i){|i|
+        Thread.pass if i < N
+        a << Ractor.store_if_absent(:i){ i }
+        a << Ractor.current[:i]
+      }
+    }.each(&:join)
+    a.uniq.size
+  }.take
 }
 
 ###
@@ -1482,7 +1551,7 @@ assert_equal "#{n}#{n}", %Q{
   2.times.map{
     Ractor.new do
       #{n}.times do
-        obj = ''
+        obj = +''
         obj.instance_variable_set("@a", 1)
         obj.instance_variable_set("@b", 1)
         obj.instance_variable_set("@c", 1)
@@ -1532,7 +1601,7 @@ assert_equal "ok", %q{
 
   1_000.times { idle_worker, tmp_reporter = Ractor.select(*workers) }
   "ok"
-} unless ENV['RUN_OPTS'] =~ /rjit/ || ENV.key?('CI') # flaky
+} if false # too flaky
 
 assert_equal "ok", %q{
   def foo(*); ->{ super }; end
@@ -1641,7 +1710,7 @@ assert_match /\Atest_ractor\.rb:1:\s+warning:\s+Ractor is experimental/, %q{
   Warning[:experimental] = $VERBOSE = true
   STDERR.reopen(STDOUT)
   eval("Ractor.new{}.take", nil, "test_ractor.rb", 1)
-}
+}, frozen_string_literal: false
 
 # check moved object
 assert_equal 'ok', %q{
@@ -1729,7 +1798,6 @@ assert_equal '30', %q{
 } if defined? Ractor::Selector
 
 # Selector#wait can support dynamic addition
-yjit_enabled = ENV.key?('RUBY_YJIT_ENABLE') || ENV.fetch('RUN_OPTS', '').include?('yjit') || BT.ruby.include?('yjit')
 assert_equal '600', %q{
   skip 600 unless defined? Ractor::Selector
 
@@ -1758,7 +1826,7 @@ assert_equal '600', %q{
   end
 
   h.sum{|k, v| v}
-} unless yjit_enabled # http://ci.rvm.jp/results/trunk-yjit@ruby-sp2-docker/4466770
+} unless yjit_enabled? # http://ci.rvm.jp/results/trunk-yjit@ruby-sp2-docker/4466770
 
 # Selector should be GCed (free'ed) without trouble
 assert_equal 'ok', %q{
@@ -1773,3 +1841,113 @@ assert_equal 'ok', %q{
 }
 
 end # if !ENV['GITHUB_WORKFLOW']
+
+# Chilled strings are not shareable
+assert_equal 'false', %q{
+  Ractor.shareable?("chilled")
+}
+
+# Chilled strings can be made shareable
+assert_equal 'true', %q{
+  shareable = Ractor.make_shareable("chilled")
+  shareable == "chilled" && Ractor.shareable?(shareable)
+}
+
+# require in Ractor
+assert_equal 'true', %q{
+  Module.new do
+    def require feature
+      return Ractor._require(feature) unless Ractor.main?
+      super
+    end
+    Object.prepend self
+    set_temporary_name 'Ractor#require'
+  end
+
+  Ractor.new{
+    begin
+      require 'benchmark'
+      Benchmark.measure{}
+    rescue SystemStackError
+      # prism parser with -O0 build consumes a lot of machine stack
+      Data.define(:real).new(1)
+    end
+  }.take.real > 0
+}
+
+# require_relative in Ractor
+assert_equal 'true', %q{
+  dummyfile = File.join(__dir__, "dummy#{rand}.rb")
+  return true if File.exist?(dummyfile)
+
+  begin
+    File.write dummyfile, ''
+  rescue Exception
+    # skip on any errors
+    return true
+  end
+
+  begin
+    Ractor.new dummyfile do |f|
+      require_relative File.basename(f)
+    end.take
+  ensure
+    File.unlink dummyfile
+  end
+}
+
+# require_relative in Ractor
+assert_equal 'LoadError', %q{
+  dummyfile = File.join(__dir__, "not_existed_dummy#{rand}.rb")
+  return true if File.exist?(dummyfile)
+
+  Ractor.new dummyfile do |f|
+    begin
+      require_relative File.basename(f)
+    rescue LoadError => e
+      e.class
+    end
+  end.take
+}
+
+# autolaod in Ractor
+assert_equal 'true', %q{
+  autoload :Benchmark, 'benchmark'
+
+  r = Ractor.new do
+    begin
+      Benchmark.measure{}
+    rescue SystemStackError
+      # prism parser with -O0 build consumes a lot of machine stack
+      Data.define(:real).new(1)
+    end
+  end
+  r.take.real > 0
+}
+
+# failed in autolaod in Ractor
+assert_equal 'LoadError', %q{
+  dummyfile = File.join(__dir__, "not_existed_dummy#{rand}.rb")
+  autoload :Benchmark, dummyfile
+
+  r = Ractor.new do
+    begin
+      Benchmark.measure{}
+    rescue LoadError => e
+      e.class
+    end
+  end
+  r.take
+}
+
+# Using Symbol#to_proc inside ractors
+# [Bug #21354]
+assert_equal 'ok', %q{
+  :inspect.to_proc
+  Ractor.new do
+    # It should not use this cached proc, it should create a new one. If it used
+    # the cached proc, we would get a ractor_confirm_belonging error here.
+    :inspect.to_proc
+  end.take
+  'ok'
+}

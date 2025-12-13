@@ -377,7 +377,7 @@ ruby_fl_type {
      * 3rd parties.  It must be an implementation detail that they should never
      * know.  Might better be hidden.
      */
-    RUBY_ELTS_SHARED  = RUBY_FL_USER2,
+    RUBY_ELTS_SHARED  = RUBY_FL_USER0,
 
     /**
      * This flag has something to do with an object's class.  There are kind of
@@ -402,7 +402,7 @@ ruby_fl_type {
      * 3rd parties.  It must be an implementation detail that they should never
      * know.  Might better be hidden.
      */
-    RUBY_FL_SINGLETON = RUBY_FL_USER0,
+    RUBY_FL_SINGLETON = RUBY_FL_USER1,
 };
 
 enum {
@@ -951,6 +951,20 @@ RB_OBJ_FROZEN(VALUE obj)
 #endif
 }
 
+RUBY_SYMBOL_EXPORT_BEGIN
+#ifndef TRUFFLERUBY
+/**
+ * Prevents further modifications to the given object.  ::rb_eFrozenError shall
+ * be raised if modification is attempted.
+ *
+ * @param[out]  x               Object in question.
+ * @exception   rb_eNoMemError  Failed   to   allocate memory  for  the  frozen
+ *                              representation of the object.
+ */
+void rb_obj_freeze_inline(VALUE obj);
+#endif
+RUBY_SYMBOL_EXPORT_END
+
 RBIMPL_ATTR_ARTIFICIAL()
 /**
  * This is an  implementation detail of RB_OBJ_FREEZE().  3rd  parties need not
@@ -964,14 +978,8 @@ RB_OBJ_FREEZE_RAW(VALUE obj)
 #ifdef TRUFFLERUBY
     rb_obj_freeze(obj);
 #else
-    RB_FL_SET_RAW(obj, RUBY_FL_FREEZE);
+    rb_obj_freeze_inline(obj);
 #endif
 }
-
-RUBY_SYMBOL_EXPORT_BEGIN
-#ifndef TRUFFLERUBY
-void rb_obj_freeze_inline(VALUE obj);
-#endif
-RUBY_SYMBOL_EXPORT_END
 
 #endif /* RBIMPL_FL_TYPE_H */

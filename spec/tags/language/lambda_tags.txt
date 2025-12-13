@@ -1,0 +1,1 @@
+fails:A lambda literal -> () { } assigns variables from parameters with circular optional argument reference is nil if using the argument in its default value

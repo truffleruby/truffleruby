@@ -16,11 +16,12 @@ Gem::Specification.new do |s|
   s.license          = 'Apache-2.0'
   s.test_files       = Dir['spec/algebrick_test.rb']
 
-  s.add_development_dependency 'minitest', '~> 5.10'
+  s.add_development_dependency 'minitest', '~> 5.11.3'
   s.add_development_dependency 'minitest-reporters', '1.3.0'
   s.add_development_dependency 'yard', '~> 0.9'
   s.add_development_dependency 'kramdown', '~> 1.13'
   s.add_development_dependency 'rake', '~> 13.0'
+  s.add_development_dependency 'mutex_m', '~> 0.3.0'
 
   # lock under 1.9 which has refinements
   s.add_development_dependency 'ruby-progressbar', '~> 1.8.3'

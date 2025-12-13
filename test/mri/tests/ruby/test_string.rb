@@ -9,9 +9,6 @@ class TestString < Test::Unit::TestCase
 
   def initialize(*args)
     @cls = String
-    @aref_re_nth = true
-    @aref_re_silent = false
-    @aref_slicebang_silent = true
     super
   end
 
@@ -153,14 +150,12 @@ CODE
     assert_equal(nil,      S("FooBar")[S("xyzzy")])
     assert_equal(nil,      S("FooBar")[S("plugh")])
 
-    if @aref_re_nth
-      assert_equal(S("Foo"), S("FooBar")[/([A-Z]..)([A-Z]..)/, 1])
-      assert_equal(S("Bar"), S("FooBar")[/([A-Z]..)([A-Z]..)/, 2])
-      assert_equal(nil,      S("FooBar")[/([A-Z]..)([A-Z]..)/, 3])
-      assert_equal(S("Bar"), S("FooBar")[/([A-Z]..)([A-Z]..)/, -1])
-      assert_equal(S("Foo"), S("FooBar")[/([A-Z]..)([A-Z]..)/, -2])
-      assert_equal(nil,      S("FooBar")[/([A-Z]..)([A-Z]..)/, -3])
-    end
+    assert_equal(S("Foo"), S("FooBar")[/([A-Z]..)([A-Z]..)/, 1])
+    assert_equal(S("Bar"), S("FooBar")[/([A-Z]..)([A-Z]..)/, 2])
+    assert_equal(nil,      S("FooBar")[/([A-Z]..)([A-Z]..)/, 3])
+    assert_equal(S("Bar"), S("FooBar")[/([A-Z]..)([A-Z]..)/, -1])
+    assert_equal(S("Foo"), S("FooBar")[/([A-Z]..)([A-Z]..)/, -2])
+    assert_equal(nil,      S("FooBar")[/([A-Z]..)([A-Z]..)/, -3])
 
     o = Object.new
     def o.to_int; 2; end
@@ -215,24 +210,18 @@ CODE
     assert_equal(S("BarBar"), s)
     s[/..r$/] = S("Foo")
     assert_equal(S("BarFoo"), s)
-    if @aref_re_silent
-      s[/xyzzy/] = S("None")
-      assert_equal(S("BarFoo"), s)
-    else
-      assert_raise(IndexError) { s[/xyzzy/] = S("None") }
-    end
-    if @aref_re_nth
-      s[/([A-Z]..)([A-Z]..)/, 1] = S("Foo")
-      assert_equal(S("FooFoo"), s)
-      s[/([A-Z]..)([A-Z]..)/, 2] = S("Bar")
-      assert_equal(S("FooBar"), s)
-      assert_raise(IndexError) { s[/([A-Z]..)([A-Z]..)/, 3] = "None" }
-      s[/([A-Z]..)([A-Z]..)/, -1] = S("Foo")
-      assert_equal(S("FooFoo"), s)
-      s[/([A-Z]..)([A-Z]..)/, -2] = S("Bar")
-      assert_equal(S("BarFoo"), s)
-      assert_raise(IndexError) { s[/([A-Z]..)([A-Z]..)/, -3] = "None" }
-    end
+    assert_raise(IndexError) { s[/xyzzy/] = S("None") }
+
+    s[/([A-Z]..)([A-Z]..)/, 1] = S("Foo")
+    assert_equal(S("FooFoo"), s)
+    s[/([A-Z]..)([A-Z]..)/, 2] = S("Bar")
+    assert_equal(S("FooBar"), s)
+    assert_raise(IndexError) { s[/([A-Z]..)([A-Z]..)/, 3] = "None" }
+    s[/([A-Z]..)([A-Z]..)/, -1] = S("Foo")
+    assert_equal(S("FooFoo"), s)
+    s[/([A-Z]..)([A-Z]..)/, -2] = S("Bar")
+    assert_equal(S("BarFoo"), s)
+    assert_raise(IndexError) { s[/([A-Z]..)([A-Z]..)/, -3] = "None" }
 
     s = S("FooBar")
     s[S("Foo")] = S("Bar")
@@ -682,8 +671,8 @@ CODE
     assert_equal(Encoding::UTF_8, "#{s}x".encoding)
   end
 
-  def test_string_interpolations_across_size_pools_get_embedded
-    omit if GC::INTERNAL_CONSTANTS[:SIZE_POOL_COUNT] == 1
+  def test_string_interpolations_across_heaps_get_embedded
+    omit if GC::INTERNAL_CONSTANTS[:HEAP_COUNT] == 1
 
     require 'objspace'
     base_slot_size = GC::INTERNAL_CONSTANTS[:BASE_SLOT_SIZE]
@@ -1137,6 +1126,11 @@ CODE
         str.grapheme_clusters
       end
     end;
+  end
+
+  def test_byteslice_grapheme_clusters
+    string = "안녕"
+    assert_equal(["안"], string.byteslice(0,4).grapheme_clusters)
   end
 
   def test_each_line
@@ -1748,20 +1742,11 @@ CODE
     assert_equal(S("FooBa"), a)
 
     a = S("FooBar")
-    if @aref_slicebang_silent
-      assert_nil( a.slice!(6) )
-      assert_nil( a.slice!(6r) )
-    else
-      assert_raise(IndexError) { a.slice!(6) }
-      assert_raise(IndexError) { a.slice!(6r) }
-    end
+    assert_nil( a.slice!(6) )
+    assert_nil( a.slice!(6r) )
     assert_equal(S("FooBar"), a)
 
-    if @aref_slicebang_silent
-      assert_nil( a.slice!(-7) )
-    else
-      assert_raise(IndexError) { a.slice!(-7) }
-    end
+    assert_nil( a.slice!(-7) )
     assert_equal(S("FooBar"), a)
 
     a = S("FooBar")
@@ -1773,17 +1758,9 @@ CODE
     assert_equal(S("Foo"), a)
 
     a=S("FooBar")
-    if @aref_slicebang_silent
     assert_nil(a.slice!(7,2))      # Maybe should be six?
-    else
-    assert_raise(IndexError) {a.slice!(7,2)}     # Maybe should be six?
-    end
     assert_equal(S("FooBar"), a)
-    if @aref_slicebang_silent
     assert_nil(a.slice!(-7,10))
-    else
-    assert_raise(IndexError) {a.slice!(-7,10)}
-    end
     assert_equal(S("FooBar"), a)
 
     a=S("FooBar")
@@ -1795,17 +1772,9 @@ CODE
     assert_equal(S("Foo"), a)
 
     a=S("FooBar")
-    if @aref_slicebang_silent
     assert_equal(S(""), a.slice!(6..2))
-    else
-    assert_raise(RangeError) {a.slice!(6..2)}
-    end
     assert_equal(S("FooBar"), a)
-    if @aref_slicebang_silent
     assert_nil(a.slice!(-10..-7))
-    else
-    assert_raise(RangeError) {a.slice!(-10..-7)}
-    end
     assert_equal(S("FooBar"), a)
 
     a=S("FooBar")
@@ -1817,17 +1786,9 @@ CODE
     assert_equal(S("Foo"), a)
 
     a=S("FooBar")
-    if @aref_slicebang_silent
-      assert_nil(a.slice!(/xyzzy/))
-    else
-      assert_raise(IndexError) {a.slice!(/xyzzy/)}
-    end
+    assert_nil(a.slice!(/xyzzy/))
     assert_equal(S("FooBar"), a)
-    if @aref_slicebang_silent
-      assert_nil(a.slice!(/plugh/))
-    else
-      assert_raise(IndexError) {a.slice!(/plugh/)}
-    end
+    assert_nil(a.slice!(/plugh/))
     assert_equal(S("FooBar"), a)
 
     a=S("FooBar")
@@ -1908,6 +1869,13 @@ CODE
 
     result = []; S("aaa,bbb,ccc,ddd").split(/,/) {|s| result << s.gsub(/./, "A")}
     assert_equal(["AAA"]*4, result)
+
+    s = S("abc ") * 20
+    assert_raise(RuntimeError) {
+      10.times do
+        s.split {s.prepend("xxx" * 100)}
+      end
+    }
   ensure
     EnvUtil.suppress_warning {$; = fs}
   end
@@ -3420,7 +3388,11 @@ CODE
     assert_same(str, +str)
     assert_not_same(str, -str)
 
-    str = "bar".freeze
+    require 'objspace'
+
+    str = "test_uplus_minus_str".freeze
+    assert_includes ObjectSpace.dump(str), '"fstring":true'
+
     assert_predicate(str, :frozen?)
     assert_not_predicate(+str, :frozen?)
     assert_predicate(-str, :frozen?)
@@ -3428,8 +3400,8 @@ CODE
     assert_not_same(str, +str)
     assert_same(str, -str)
 
-    bar = %w(b a r).join('')
-    assert_same(str, -bar, "uminus deduplicates [Feature #13077]")
+    bar = -%w(test uplus minus str).join('_')
+    assert_same(str, bar, "uminus deduplicates [Feature #13077] str: #{ObjectSpace.dump(str)} bar: #{ObjectSpace.dump(bar)}")
   end
 
   def test_uminus_frozen
@@ -3672,6 +3644,104 @@ CODE
     assert_bytesplice_raise(ArgumentError, S("hello"), 0, 5, "bye", 0)
     assert_bytesplice_raise(ArgumentError, S("hello"), 0, 5, "bye", 0..-1)
     assert_bytesplice_raise(ArgumentError, S("hello"), 0..-1, "bye", 0, 3)
+  end
+
+  def test_append_bytes_into_binary
+    buf = S("".b)
+    assert_equal Encoding::BINARY, buf.encoding
+
+    buf.append_as_bytes(S("hello"))
+    assert_equal "hello".b, buf
+    assert_equal Encoding::BINARY, buf.encoding
+
+    buf.append_as_bytes(S("こんにちは"))
+    assert_equal S("helloこんにちは".b), buf
+    assert_equal Encoding::BINARY, buf.encoding
+  end
+
+  def test_append_bytes_into_utf8
+    buf = S("")
+    assert_equal Encoding::UTF_8, buf.encoding
+
+    buf.append_as_bytes(S("hello"))
+    assert_equal S("hello"), buf
+    assert_equal Encoding::UTF_8, buf.encoding
+    assert_predicate buf, :ascii_only?
+    assert_predicate buf, :valid_encoding?
+
+    buf.append_as_bytes(S("こんにちは"))
+    assert_equal S("helloこんにちは"), buf
+    assert_equal Encoding::UTF_8, buf.encoding
+    refute_predicate buf, :ascii_only?
+    assert_predicate buf, :valid_encoding?
+
+    buf.append_as_bytes(S("\xE2\x82".b))
+    assert_equal S("helloこんにちは\xE2\x82"), buf
+    assert_equal Encoding::UTF_8, buf.encoding
+    refute_predicate buf, :valid_encoding?
+
+    buf.append_as_bytes(S("\xAC".b))
+    assert_equal S("helloこんにちは€"), buf
+    assert_equal Encoding::UTF_8, buf.encoding
+    assert_predicate buf, :valid_encoding?
+  end
+
+  def test_append_bytes_into_utf32
+    buf = S("abc".encode(Encoding::UTF_32LE))
+    assert_equal Encoding::UTF_32LE, buf.encoding
+
+    buf.append_as_bytes("def")
+    assert_equal Encoding::UTF_32LE, buf.encoding
+    refute_predicate buf, :valid_encoding?
+  end
+
+  def test_chilled_string
+    chilled_string = eval('"chilled"')
+
+    assert_not_predicate chilled_string, :frozen?
+
+    assert_not_predicate chilled_string.dup, :frozen?
+    assert_not_predicate chilled_string.clone, :frozen?
+
+    # @+ treat the original string as frozen
+    assert_not_predicate(+chilled_string, :frozen?)
+    assert_not_same chilled_string, +chilled_string
+
+    # @- treat the original string as mutable
+    assert_predicate(-chilled_string, :frozen?)
+    assert_not_same chilled_string, -chilled_string
+  end
+
+  def test_chilled_string_setivar
+    deprecated = Warning[:deprecated]
+    Warning[:deprecated] = false
+
+    String.class_eval <<~RUBY, __FILE__, __LINE__ + 1
+      def setivar!
+        @ivar = 42
+        @ivar
+      end
+    RUBY
+    chilled_string = eval('"chilled"')
+    begin
+      assert_equal 42, chilled_string.setivar!
+    ensure
+      String.undef_method(:setivar!)
+    end
+  ensure
+    Warning[:deprecated] = deprecated
+  end
+
+  def test_chilled_string_substring
+    deprecated = Warning[:deprecated]
+    Warning[:deprecated] = false
+    chilled_string = eval('"a chilled string."')
+    substring = chilled_string[0..-1]
+    assert_equal("a chilled string.", substring)
+    chilled_string[0..-1] = "This string is defrosted."
+    assert_equal("a chilled string.", substring)
+  ensure
+    Warning[:deprecated] = deprecated
   end
 
   private

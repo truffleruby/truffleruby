@@ -36,7 +36,7 @@ module Psych
 
         unless @domain_types.empty? || !target.tag
           key = target.tag.sub(/^[!\/]*/, '').sub(/(,\d+)\//, '\1:')
-          key = "tag:#{key}" unless key =~ /^(?:tag:|x-private)/
+          key = "tag:#{key}" unless key.match?(/^(?:tag:|x-private)/)
 
           if @domain_types.key? key
             value, block = @domain_types[key]
@@ -79,7 +79,6 @@ module Psych
           class_loader.big_decimal._load o.value
         when "!ruby/object:DateTime"
           class_loader.date_time
-          require 'date' unless defined? DateTime
           t = @ss.parse_time(o.value)
           DateTime.civil(*t.to_a[0, 6].reverse, Rational(t.utc_offset, 86400)) +
             (t.subsec/86400)

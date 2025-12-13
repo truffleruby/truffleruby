@@ -1505,10 +1505,6 @@ module Truffle::CExt
     eval(str)
   end
 
-  def rb_newobj_of(ruby_class)
-    ruby_class.__send__(:__layout_allocate__)
-  end
-
   def rb_define_alloc_func(ruby_class, function)
     use_cext_lock = Primitive.use_cext_lock?
     ruby_class.singleton_class.define_method(:__allocate__) do

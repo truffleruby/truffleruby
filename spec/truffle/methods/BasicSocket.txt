@@ -8,6 +8,7 @@ getpeername
 getsockname
 getsockopt
 local_address
+read_nonblock
 recv
 recv_nonblock
 recvmsg
@@ -18,3 +19,4 @@ sendmsg
 sendmsg_nonblock
 setsockopt
 shutdown
+write_nonblock

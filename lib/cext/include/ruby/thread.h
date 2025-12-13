@@ -59,6 +59,19 @@
  */
 #define RB_NOGVL_UBF_ASYNC_SAFE  (0x2)
 
+/**
+ * Passing  this  flag   to  rb_nogvl()  indicates  that  the   passed function
+ * is safe to offload to a background thread or work pool. In other words, the
+ * function is safe to run using a fiber scheduler's `blocking_operation_wait`.
+ * hook.
+ *
+ * If your function depends on thread-local storage, or thread-specific data
+ * operations/data structures, you should not set this flag, as
+ * these operations may behave differently (or fail) when run in a different
+ * thread/context (e.g. unlocking a mutex).
+ */
+#define RB_NOGVL_OFFLOAD_SAFE  (0x4)
+
 /** @} */
 
 RBIMPL_SYMBOL_EXPORT_BEGIN()
@@ -189,6 +202,19 @@ void *rb_nogvl(void *(*func)(void *), void *data1,
  * @deprecated  It seems even in the old days it made no sense...?
  */
 #define RUBY_CALL_WO_GVL_FLAG_SKIP_CHECK_INTS_
+
+/**
+ * Declare the current Ruby thread should acquire a dedicated
+ * native thread on M:N thread scheduler.
+ *
+ * If a C extension (or a library which the extension relies on) should
+ * keep to run on a native thread (e.g. using thread-local-storage),
+ * this function allocates a dedicated native thread for the thread.
+ *
+ * @return `false` if the thread already running on a dedicated native
+ *         thread. Otherwise `true`.
+ */
+bool rb_thread_lock_native_thread(void);
 
 /**
  * Triggered when a new thread is started.

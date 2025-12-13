@@ -5,7 +5,7 @@
  */
 /*
  * This program is licenced under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 
@@ -161,8 +161,11 @@ get_asn1obj(ASN1_OBJECT *obj)
         ret = rb_str_new2(OBJ_nid2sn(nid));
     else{
         if (!(out = BIO_new(BIO_s_mem())))
-            ossl_raise(eX509AttrError, NULL);
-        i2a_ASN1_OBJECT(out, obj);
+            ossl_raise(eTimestampError, "BIO_new(BIO_s_mem())");
+        if (i2a_ASN1_OBJECT(out, obj) <= 0) {
+            BIO_free(out);
+            ossl_raise(eTimestampError, "i2a_ASN1_OBJECT");
+        }
         ret = ossl_membio2str(out);
     }
 
@@ -504,6 +507,25 @@ ossl_ts_req_to_der(VALUE self)
 }
 
 static VALUE
+ossl_ts_req_to_text(VALUE self)
+{
+    TS_REQ *req;
+    BIO *out;
+
+    GetTSRequest(self, req);
+
+    out = BIO_new(BIO_s_mem());
+    if (!out) ossl_raise(eTimestampError, NULL);
+
+    if (!TS_REQ_print_bio(out, req)) {
+        BIO_free(out);
+        ossl_raise(eTimestampError, NULL);
+    }
+
+    return ossl_membio2str(out);
+}
+
+static VALUE
 ossl_ts_resp_alloc(VALUE klass)
 {
     TS_RESP *resp;
@@ -672,21 +694,12 @@ static VALUE
 ossl_ts_resp_get_token(VALUE self)
 {
     TS_RESP *resp;
-    PKCS7 *p7, *copy;
-    VALUE obj;
+    PKCS7 *p7;
 
     GetTSResponse(self, resp);
     if (!(p7 = TS_RESP_get_token(resp)))
         return Qnil;
-
-    obj = NewPKCS7(cPKCS7);
-
-    if (!(copy = PKCS7_dup(p7)))
-        ossl_raise(eTimestampError, NULL);
-
-    SetPKCS7(obj, copy);
-
-    return obj;
+    return ossl_pkcs7_new(p7);
 }
 
 /*
@@ -755,6 +768,25 @@ ossl_ts_resp_to_der(VALUE self)
 
     GetTSResponse(self, resp);
     return asn1_to_der((void *)resp, (int (*)(void *, unsigned char **))i2d_TS_RESP);
+}
+
+static VALUE
+ossl_ts_resp_to_text(VALUE self)
+{
+    TS_RESP *resp;
+    BIO *out;
+
+    GetTSResponse(self, resp);
+
+    out = BIO_new(BIO_s_mem());
+    if (!out) ossl_raise(eTimestampError, NULL);
+
+    if (!TS_RESP_print_bio(out, resp)) {
+        BIO_free(out);
+        ossl_raise(eTimestampError, NULL);
+    }
+
+    return ossl_membio2str(out);
 }
 
 /*
@@ -1073,6 +1105,25 @@ ossl_ts_token_info_to_der(VALUE self)
     return asn1_to_der((void *)info, (int (*)(void *, unsigned char **))i2d_TS_TST_INFO);
 }
 
+static VALUE
+ossl_ts_token_info_to_text(VALUE self)
+{
+    TS_TST_INFO *info;
+    BIO *out;
+
+    GetTSTokenInfo(self, info);
+
+    out = BIO_new(BIO_s_mem());
+    if (!out) ossl_raise(eTimestampError, NULL);
+
+    if (!TS_TST_INFO_print_bio(out, info)) {
+        BIO_free(out);
+        ossl_raise(eTimestampError, NULL);
+    }
+
+    return ossl_membio2str(out);
+}
+
 static ASN1_INTEGER *
 ossl_tsfac_serial_cb(struct TS_resp_ctx *ctx, void *data)
 {
@@ -1356,6 +1407,7 @@ Init_ossl_ts(void)
     rb_define_method(cTimestampResponse, "token_info", ossl_ts_resp_get_token_info, 0);
     rb_define_method(cTimestampResponse, "tsa_certificate", ossl_ts_resp_get_tsa_certificate, 0);
     rb_define_method(cTimestampResponse, "to_der", ossl_ts_resp_to_der, 0);
+    rb_define_method(cTimestampResponse, "to_text", ossl_ts_resp_to_text, 0);
     rb_define_method(cTimestampResponse, "verify", ossl_ts_resp_verify, -1);
 
     /* Document-class: OpenSSL::Timestamp::TokenInfo
@@ -1374,6 +1426,7 @@ Init_ossl_ts(void)
     rb_define_method(cTimestampTokenInfo, "ordering", ossl_ts_token_info_get_ordering, 0);
     rb_define_method(cTimestampTokenInfo, "nonce", ossl_ts_token_info_get_nonce, 0);
     rb_define_method(cTimestampTokenInfo, "to_der", ossl_ts_token_info_to_der, 0);
+    rb_define_method(cTimestampTokenInfo, "to_text", ossl_ts_token_info_to_text, 0);
 
     /* Document-class: OpenSSL::Timestamp::Request
      * Allows to create timestamp requests or parse existing ones. A Request is
@@ -1399,6 +1452,7 @@ Init_ossl_ts(void)
     rb_define_method(cTimestampRequest, "cert_requested=", ossl_ts_req_set_cert_requested, 1);
     rb_define_method(cTimestampRequest, "cert_requested?", ossl_ts_req_get_cert_requested, 0);
     rb_define_method(cTimestampRequest, "to_der", ossl_ts_req_to_der, 0);
+    rb_define_method(cTimestampRequest, "to_text", ossl_ts_req_to_text, 0);
 
     /*
      * Indicates a successful response. Equal to +0+.
@@ -1535,5 +1589,9 @@ Init_ossl_ts(void)
     rb_attr(cTimestampFactory, rb_intern_const("additional_certs"), 1, 1, 0);
     rb_define_method(cTimestampFactory, "create_timestamp", ossl_tsfac_create_ts, 3);
 }
-
+#else /* OPENSSL_NO_TS */
+void
+Init_ossl_ts(void)
+{
+}
 #endif

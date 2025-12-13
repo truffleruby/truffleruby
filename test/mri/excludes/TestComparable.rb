@@ -1,2 +1,2 @@
-exclude :test_clamp, "ArgumentError: min argument must be smaller than max argument"
-exclude :test_clamp_with_range, "ArgumentError: min argument must be smaller than max argument"
+exclude :test_clamp, "Expected Exception(ArgumentError) was raised, but the message doesn't match. <\"min argument must be less than or equal to max argument\"> expected but was <\"min argument must be smaller than max argument\">."
+exclude :test_clamp_with_range, "Expected Exception(ArgumentError) was raised, but the message doesn't match. <\"min argument must be less than or equal to max argument\"> expected but was <\"min argument must be smaller than max argument\">."

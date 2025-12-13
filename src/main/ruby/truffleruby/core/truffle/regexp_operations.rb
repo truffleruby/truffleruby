@@ -30,6 +30,7 @@ module Truffle
 
       Primitive.regexp_search(re, str, pos)
     end
+    Primitive.always_split singleton_class, :match
 
     # MRI: rb_reg_match_p
     def self.match?(re, str, pos = 0)
@@ -50,6 +51,7 @@ module Truffle
 
       Primitive.regexp_search(re, str, pos)
     end
+    Primitive.always_split singleton_class, :match_from
 
     Truffle::Boot.delay do
       COMPARE_ENGINES = Truffle::Boot.get_option('compare-regex-engines')

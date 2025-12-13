@@ -16,8 +16,14 @@ module TestIRB
 
     class CommandCompletionTest < CompletionTest
       def test_command_completion
-        assert_include(IRB::RegexpCompletor.new.completion_candidates('', 'show_s', '', bind: binding), 'show_source')
-        assert_not_include(IRB::RegexpCompletor.new.completion_candidates(';', 'show_s', '', bind: binding), 'show_source')
+        completor = IRB::RegexpCompletor.new
+        binding.eval("some_var = 1")
+        # completion for help command's argument should only include command names
+        assert_include(completor.completion_candidates('help ', 's', '', bind: binding), 'show_source')
+        assert_not_include(completor.completion_candidates('help ', 's', '', bind: binding), 'some_var')
+
+        assert_include(completor.completion_candidates('', 'show_s', '', bind: binding), 'show_source')
+        assert_not_include(completor.completion_candidates(';', 'show_s', '', bind: binding), 'show_source')
       end
     end
 
@@ -137,17 +143,17 @@ module TestIRB
       end
 
       def test_complete_require_relative
-        candidates = Dir.chdir(__dir__ + "/../../../../") do
-          IRB::RegexpCompletor.new.completion_candidates("require_relative ", "'lib/mri/irb", "", bind: binding)
+        candidates = Dir.chdir(__dir__ + "/../..") do
+          IRB::RegexpCompletor.new.completion_candidates("require_relative ", "'lib/irb", "", bind: binding)
         end
-        %w['lib/mri/irb/init 'lib/mri/irb/ruby-lex].each do |word|
+        %w['lib/irb/init 'lib/irb/ruby-lex].each do |word|
           assert_include candidates, word
         end
         # Test cache
-        candidates = Dir.chdir(__dir__ + "/../../../../") do
-          IRB::RegexpCompletor.new.completion_candidates("require_relative ", "'lib/mri/irb", "", bind: binding)
+        candidates = Dir.chdir(__dir__ + "/../..") do
+          IRB::RegexpCompletor.new.completion_candidates("require_relative ", "'lib/irb", "", bind: binding)
         end
-        %w['lib/mri/irb/init 'lib/mri/irb/ruby-lex].each do |word|
+        %w['lib/irb/init 'lib/irb/ruby-lex].each do |word|
           assert_include candidates, word
         end
       end

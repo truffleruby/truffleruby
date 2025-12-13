@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require 'date'
+
 require_relative 'psych/versions'
 case RUBY_ENGINE
 when 'jruby'
@@ -84,7 +86,7 @@ require_relative 'psych/class_loader'
 #   Psych.safe_load_file("data.yml", permitted_classes: [Date])
 #   Psych.load_file("trusted_database.yml")
 #
-# ==== Exception handling
+# ==== \Exception handling
 #
 #   begin
 #     # The second argument changes only the exception contents
@@ -148,7 +150,7 @@ require_relative 'psych/class_loader'
 #   # Returns Psych::Nodes::Document
 #   Psych.parse_file('database.yml')
 #
-# ==== Exception handling
+# ==== \Exception handling
 #
 #   begin
 #     # The second argument changes only the exception contents
@@ -340,7 +342,7 @@ module Psych
   # provided, the object contained in the first document will be returned.
   # +filename+ will be used in the exception message if any exception
   # is raised while parsing.  If +yaml+ is empty, it returns
-  # the specified +fallback+ return value, which defaults to +false+.
+  # the specified +fallback+ return value, which defaults to +nil+.
   #
   # Raises a Psych::SyntaxError when a YAML syntax error is detected.
   #
@@ -479,6 +481,7 @@ module Psych
   #
   #                           Default: <tt>2</tt>.
   # [<tt>:line_width</tt>]    Max character to wrap line at.
+  #                           For unlimited line width use <tt>-1</tt>.
   #
   #                           Default: <tt>0</tt> (meaning "wrap at 81").
   # [<tt>:canonical</tt>]     Write "canonical" YAML form (very verbose, yet
@@ -488,6 +491,10 @@ module Psych
   # [<tt>:header</tt>]        Write <tt>%YAML [version]</tt> at the beginning of document.
   #
   #                           Default: <tt>false</tt>.
+  #
+  # [<tt>:stringify_names</tt>] Dump symbol keys in Hash objects as string.
+  #
+  #                             Default: <tt>false</tt>.
   #
   # Example:
   #
@@ -502,6 +509,9 @@ module Psych
   #
   #   # Dump an array to an IO with indentation set
   #   Psych.dump(['a', ['b']], StringIO.new, indentation: 3)
+  #
+  #   # Dump hash with symbol keys as string
+  #   Psych.dump({a: "b"}, stringify_names: true) # => "---\na: b\n"
   def self.dump o, io = nil, options = {}
     if Hash === io
       options = io
@@ -552,6 +562,7 @@ module Psych
   #
   #                           Default: <tt>2</tt>.
   # [<tt>:line_width</tt>]    Max character to wrap line at.
+  #                           For unlimited line width use <tt>-1</tt>.
   #
   #                           Default: <tt>0</tt> (meaning "wrap at 81").
   # [<tt>:canonical</tt>]     Write "canonical" YAML form (very verbose, yet
@@ -561,6 +572,10 @@ module Psych
   # [<tt>:header</tt>]        Write <tt>%YAML [version]</tt> at the beginning of document.
   #
   #                           Default: <tt>false</tt>.
+  #
+  # [<tt>:stringify_names</tt>] Dump symbol keys in Hash objects as string.
+  #
+  #                             Default: <tt>false</tt>.
   #
   # Example:
   #
@@ -575,6 +590,9 @@ module Psych
   #
   #   # Dump an array to an IO with indentation set
   #   Psych.safe_dump(['a', ['b']], StringIO.new, indentation: 3)
+  #
+  #   # Dump hash with symbol keys as string
+  #   Psych.dump({a: "b"}, stringify_names: true) # => "---\na: b\n"
   def self.safe_dump o, io = nil, options = {}
     if Hash === io
       options = io
@@ -653,7 +671,7 @@ module Psych
   ###
   # Safely loads the document contained in +filename+.  Returns the yaml contained in
   # +filename+ as a Ruby object, or if the file is empty, it returns
-  # the specified +fallback+ return value, which defaults to +false+.
+  # the specified +fallback+ return value, which defaults to +nil+.
   # See safe_load for options.
   def self.safe_load_file filename, **kwargs
     File.open(filename, 'r:bom|utf-8') { |f|
@@ -664,7 +682,7 @@ module Psych
   ###
   # Loads the document contained in +filename+.  Returns the yaml contained in
   # +filename+ as a Ruby object, or if the file is empty, it returns
-  # the specified +fallback+ return value, which defaults to +false+.
+  # the specified +fallback+ return value, which defaults to +nil+.
   # See load for options.
   def self.load_file filename, **kwargs
     File.open(filename, 'r:bom|utf-8') { |f|

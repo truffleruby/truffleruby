@@ -1,0 +1,20 @@
+#ifndef RBS__CONSTANTS_H
+#define RBS__CONSTANTS_H
+
+extern VALUE RBS;
+
+extern VALUE RBS_AST;
+extern VALUE RBS_AST_Declarations;
+extern VALUE RBS_AST_Directives;
+extern VALUE RBS_AST_Members;
+extern VALUE RBS_Types;
+extern VALUE RBS_Types_Bases;
+extern VALUE RBS_ParsingError;
+
+<%- nodes.each do |node| -%>
+extern VALUE <%= node.c_constant_name %>;
+<%- end -%>
+
+void rbs__init_constants();
+
+#endif

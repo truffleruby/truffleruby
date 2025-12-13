@@ -1,0 +1,7 @@
+fails:String#append_bytes doesn't allow to mutate frozen strings
+fails:String#append_bytes allows creating broken strings
+fails:String#append_bytes never changes the receiver encoding
+fails:String#append_bytes accepts variadic String or Integer arguments
+fails:String#append_bytes truncates integers to the least significant byte
+fails:String#append_bytes wraps negative integers
+fails:String#append_bytes only accepts strings or integers, and doesn't attempt to cast with #to_str or #to_int

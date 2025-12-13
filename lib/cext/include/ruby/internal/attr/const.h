@@ -23,7 +23,6 @@
 #include "ruby/internal/compiler_since.h"
 #include "ruby/internal/has/attribute.h"
 #include "ruby/internal/has/declspec_attribute.h"
-#include "ruby/assert.h"
 
 /** Wraps (or simulates) `__attribute__((const))` */
 #if RBIMPL_HAS_ATTRIBUTE(const)

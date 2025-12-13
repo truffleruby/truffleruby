@@ -85,7 +85,7 @@ class TestNoMethodError < Test::Unit::TestCase
     bug3237 = '[ruby-core:29948]'
     str = "\u2600"
     id = :"\u2604"
-    msg = "undefined method `#{id}' for an instance of String"
+    msg = "undefined method '#{id}' for an instance of String"
     assert_raise_with_message(NoMethodError, Regexp.compile(Regexp.quote(msg)), bug3237) do
       str.__send__(id)
     end
@@ -105,5 +105,33 @@ class TestNoMethodError < Test::Unit::TestCase
     end
 
     assert_match(/undefined method.+this_method_does_not_exist.+for.+Module/, err.to_s)
+  end
+
+  def test_send_forward_raises
+    t = EnvUtil.labeled_class("Test") do
+      def foo(...)
+        forward(...)
+      end
+    end
+    obj = t.new
+    assert_raise(NoMethodError) do
+      obj.foo
+    end
+  end
+
+  # [Bug #21535]
+  def test_send_forward_raises_when_called_through_vcall
+    t = EnvUtil.labeled_class("Test") do
+      def foo(...)
+        forward(...)
+      end
+      def foo_indirect
+        foo # vcall
+      end
+    end
+    obj = t.new
+    assert_raise(NoMethodError) do
+      obj.foo_indirect
+    end
   end
 end

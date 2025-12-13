@@ -36,6 +36,7 @@ each_index
 empty?
 eql?
 fetch
+fetch_values
 fill
 filter
 filter!
@@ -43,6 +44,7 @@ find_index
 first
 flatten
 flatten!
+freeze
 hash
 include?
 index

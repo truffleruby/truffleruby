@@ -5,7 +5,7 @@
  */
 /*
  * This program is licensed under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 
@@ -27,9 +27,9 @@
 /*
  * Classes
  */
-VALUE mNetscape;
-VALUE cSPKI;
-VALUE eSPKIError;
+static VALUE mNetscape;
+static VALUE cSPKI;
+static VALUE eSPKIError;
 
 /*
  * Public functions
@@ -115,11 +115,11 @@ ossl_spki_to_der(VALUE self)
 
     GetSPKI(self, spki);
     if ((len = i2d_NETSCAPE_SPKI(spki, NULL)) <= 0)
-        ossl_raise(eX509CertError, NULL);
+        ossl_raise(eSPKIError, "i2d_NETSCAPE_SPKI");
     str = rb_str_new(0, len);
     p = (unsigned char *)RSTRING_PTR(str);
     if (i2d_NETSCAPE_SPKI(spki, &p) <= 0)
-        ossl_raise(eX509CertError, NULL);
+        ossl_raise(eSPKIError, "i2d_NETSCAPE_SPKI");
     ossl_str_adjust(str, p);
 
     return str;
@@ -365,8 +365,8 @@ ossl_spki_verify(VALUE self, VALUE key)
  *
  * OpenSSL::Netscape is a namespace for SPKI (Simple Public Key
  * Infrastructure) which implements Signed Public Key and Challenge.
- * See {RFC 2692}[http://tools.ietf.org/html/rfc2692] and {RFC
- * 2693}[http://tools.ietf.org/html/rfc2692] for details.
+ * See {RFC 2692}[https://www.rfc-editor.org/rfc/rfc2692] and {RFC
+ * 2693}[https://www.rfc-editor.org/rfc/rfc2692] for details.
  */
 
 /* Document-class: OpenSSL::Netscape::SPKIError
