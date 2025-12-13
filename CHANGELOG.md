@@ -8,6 +8,7 @@ New features:
 * TruffleRuby now ships with its own `libssl` and no longer needs a system `libssl`. It still requires CA certificates from the system. (#3479, @eregon).
 
 Bug fixes:
+* Fix `Integer#%` when called with a bignum argument (#3931, @andrykonchin).
 
 
 Compatibility:

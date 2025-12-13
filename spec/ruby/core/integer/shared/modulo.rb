@@ -18,6 +18,11 @@ describe :integer_modulo, shared: true do
 
       1.send(@method, 2.0).should == 1.0
       200.send(@method, bignum_value).should == 200
+
+      4.send(@method, bignum_value(10)).should == 4
+      4.send(@method, -bignum_value(10)).should == -18446744073709551622
+      -4.send(@method, bignum_value(10)).should == 18446744073709551622
+      -4.send(@method, -bignum_value(10)).should == -4
     end
 
     it "raises a ZeroDivisionError when the given argument is 0" do
