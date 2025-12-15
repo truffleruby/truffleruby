@@ -57,6 +57,7 @@ class JT
         args.shift
         filter = args.shift
         distros = distros.select { |distro| distro.include?(filter) }
+        abort "--filter #{filter} selected no distributions" if distros.empty?
       end
 
       distros.each do |distro|

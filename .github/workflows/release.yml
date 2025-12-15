@@ -32,7 +32,8 @@ jobs:
       fail-fast: false
       matrix:
         arch: [amd64, aarch64]
-        image: [ol8, ol9, fedora37, fedora38, ubuntu1804, ubuntu2004, ubuntu2204, debian10, debian11, debian12]
+        # Keep this list in sync with tool/docker-configs.yaml
+        image: [ol8, ol9, ol10, fedora37, fedora38, ubuntu1804, ubuntu2004, ubuntu2204, debian11, debian12, debian13]
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
     steps:
     - name: Clone TruffleRuby
@@ -46,5 +47,5 @@ jobs:
       with:
         name: truffleruby-release-archives-linux-${{ matrix.arch }}
 
-    - run: jt docker test --filter ${{ matrix.image }} --standalone "$(jt native_standalone_release_archive)" --test "${{ github.ref_name }}"
-    - run: jt docker test --filter ${{ matrix.image }} --standalone "$(jt jvm_standalone_release_archive)" --test "${{ github.ref_name }}"
+    - run: jt docker test --${{ matrix.image }} --standalone "$(jt native_standalone_release_archive)" --test "${{ github.ref_name }}"
+    - run: jt docker test --${{ matrix.image }} --standalone "$(jt jvm_standalone_release_archive)" --test "${{ github.ref_name }}"

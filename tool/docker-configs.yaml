@@ -23,6 +23,8 @@ deb: &deb
     - RUN locale-gen
     - ENV LANG=en_US.UTF-8
 
+# Keep this list in sync with the docker-test.yml workflow
+
 ol8:
   base: oraclelinux:8-slim
   install: RUN microdnf install -y
@@ -31,6 +33,12 @@ ol8:
 
 ol9:
   base: oraclelinux:9-slim
+  install: RUN microdnf install -y
+  locale: glibc-langpack-en
+  <<: *rpm
+
+ol10:
+  base: oraclelinux:10-slim
   install: RUN microdnf install -y
   locale: glibc-langpack-en
   <<: *rpm
