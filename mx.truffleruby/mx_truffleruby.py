@@ -473,7 +473,6 @@ def ruby_maven_deploy_public(args):
         '--all-distribution-types',
         '--validate=full',
         '--licenses', ','.join(licenses),
-        '--suppress-javadoc',
         'local',
         pathlib.Path(path).as_uri(),
     ]
