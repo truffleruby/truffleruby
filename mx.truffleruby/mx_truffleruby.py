@@ -470,11 +470,10 @@ def ruby_maven_deploy_public(args):
     licenses = [license.name for license in mx.distribution('RUBY_POM').theLicense]
     deploy_args = [
         '--tags=public',
-        '--all-suites',
         '--all-distribution-types',
         '--validate=full',
         '--licenses', ','.join(licenses),
-        "--suppress-javadoc",
+        '--suppress-javadoc',
         'local',
         pathlib.Path(path).as_uri(),
     ]
