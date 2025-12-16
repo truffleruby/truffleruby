@@ -1043,7 +1043,12 @@ suite = {
                 "./": [
                     "dependency:TRUFFLERUBY_STANDALONE_COMMON/*",
                     # Only for the Native standalone, the JVM standalone already contains those under jvm/
-                    "dependency:copy_gftc_and_lium/*",
+                    {
+                        "source_type": "dependency",
+                        "dependency": "copy_gftc_and_lium",
+                        "path": "*",
+                        "optional": True, # OK if no files
+                    },
                 ],
                 "lib/": "dependency:librubyvm",
             },
