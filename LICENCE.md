@@ -7,6 +7,17 @@ available to you under the terms of any one of the following three licenses:
 * GNU General Public License version 2, or
 * GNU Lesser General Public License version 2.1.
 
+## Other Licenses
+
+See [3rd_party_licenses.txt](3rd_party_licenses.txt) for 3rd-party licenses.
+See [doc/legal/legal.md](doc/legal/legal.md) for more details on 3rd-party licenses.
+
+If this is a JVM standalone distribution of TruffleRuby, marked by the presence of a `jvm/` folder, see license-related files under the `jvm/` directory.
+
+If this distribution contains a file `GRAALVM-GFTC.txt` and a file `lib/librubyvm.so` or `lib/librubyvm.dylib`,
+then the Native Image in that second file is licensed under the GraalVM Free Terms and Conditions, described in `GRAALVM-GFTC.txt`.
+In that case, see also GraalVM's 3rd-party licenses in `license-information-user-manual.zip`.
+
 ## Eclipse Public License version 2.0
 
 ```
