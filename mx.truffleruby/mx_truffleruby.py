@@ -29,9 +29,14 @@ import mx_unittest
 
 # re-export custom mx project classes, so they can be used from suite.py
 from mx_sdk_shaded import ShadedLibraryProject # pylint: disable=unused-import
-from mx_sdk_vm_ng import StandaloneLicenses, ThinLauncherProject, LanguageLibraryProject, DynamicPOMDistribution  # pylint: disable=unused-import
+from mx_sdk_vm_ng import ThinLauncherProject, LanguageLibraryProject, DynamicPOMDistribution  # pylint: disable=unused-import
 
 jdk = mx.get_jdk(mx.JavaCompliance('17+'), 'building TruffleRuby which requires JDK 17 or newer')
+
+external_bootstrap_graalvm = mx.get_env('BOOTSTRAP_GRAALVM')
+if external_bootstrap_graalvm and mx.is_darwin():
+    if not exists(f"{external_bootstrap_graalvm}/release") and exists(f"{external_bootstrap_graalvm}/Contents/Home"):
+        external_bootstrap_graalvm = f"{external_bootstrap_graalvm}/Contents/Home"
 
 if 'RUBY_BENCHMARKS' in os.environ:
     import mx_truffleruby_benchmark  # pylint: disable=unused-import
@@ -337,6 +342,61 @@ class TruffleRubyReleaseArchive(mx.LayoutTARDistribution):
         resolved = [self.standalone_dir_dist]
         self._resolveDepsHelper(resolved)
         self.standalone_dir_dist = resolved[0]
+
+
+# Some logic from mx_sdk_vm_ng.StandaloneLicenses
+class CopyGFTCandLIUM(mx.Project):
+    def __init__(self, suite, name, deps, workingSets, theLicense=None, **kw_args):
+        super().__init__(suite, name, subDir=None, srcDirs=[], deps=deps, workingSets=workingSets, d=suite.dir, theLicense=theLicense, **kw_args)
+
+    def getBuildTask(self, args):
+        return CopyGFTCandLIUMBuildTask(self, args, 1)
+
+    def getArchivableResults(self, use_relpath=True, single=False):
+        if single:
+            raise ValueError('single not supported')
+
+        if mx_sdk_vm_ng.is_enterprise():
+            # Copy the license from the bootstrap Oracle GraalVM
+            yield join(external_bootstrap_graalvm, 'LICENSE.txt'), 'GRAALVM-GFTC.txt'
+            yield join(external_bootstrap_graalvm, 'license-information-user-manual.zip'), 'license-information-user-manual.zip'
+
+class CopyGFTCandLIUMBuildTask(mx.BuildTask):
+    subject: CopyGFTCandLIUM
+    def __str__(self):
+        return 'Building {}'.format(self.subject.name)
+
+    def newestOutput(self):
+        return mx.TimeStampFile.newest(file for file, _ in self.subject.getArchivableResults())
+
+    def needsBuild(self, newestInput):
+        witness_file = self.witness_file()
+        if exists(witness_file):
+            with open(witness_file, 'r') as f:
+                contents = f.read()
+        else:
+            contents = None
+        if contents != self.witness_contents():
+            return True, f"{contents} => {self.witness_contents()}"
+        return False, 'Files are already on disk'
+
+    def witness_file(self):
+        return join(self.subject.get_output_root(), 'witness')
+
+    def witness_contents(self):
+        if mx_sdk_vm_ng.is_enterprise():
+            return external_bootstrap_graalvm
+        else:
+            return 'ce'
+
+    def build(self):
+        witness_file = self.witness_file()
+        mx_util.ensure_dirname_exists(witness_file)
+        with open(witness_file, 'w') as f:
+            f.write(self.witness_contents())
+
+    def clean(self, forBuild=False):
+        mx.rmtree(self.witness_file(), ignore_errors=True)
 
 
 # Functions called from suite.py

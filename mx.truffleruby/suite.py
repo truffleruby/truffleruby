@@ -506,10 +506,8 @@ suite = {
             "jacoco": "exclude",
         },
 
-        "truffleruby_licenses": {
-            "class": "StandaloneLicenses",
-            "community_license_file": "LICENCE.md",
-            "community_3rd_party_license_file": "3rd_party_licenses.txt",
+        "copy_gftc_and_lium": {
+            "class": "CopyGFTCandLIUM",
         },
 
         "truffleruby_thin_launcher": {
@@ -959,6 +957,8 @@ suite = {
                 "./": [
                     "file:CHANGELOG.md",
                     "file:README.md",
+                    "file:LICENCE.md",
+                    "file:3rd_party_licenses.txt",
                     "file:mx.truffleruby/native-image.properties",
                 ],
                 "bin/": [
@@ -1002,7 +1002,6 @@ suite = {
                     "extracted-dependency:TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_AGNOSTIC",
                     "extracted-dependency:TRUFFLERUBY_GRAALVM_SUPPORT_PLATFORM_SPECIFIC",
                     "dependency:TRUFFLERUBY_GRAALVM_SUPPORT_NO_NI_RESOURCES/*",
-                    "dependency:truffleruby_licenses/*",
                 ],
                 "bin/ruby": "dependency:truffleruby_thin_launcher",
                 "bin/truffleruby": "dependency:truffleruby_thin_launcher",
@@ -1043,6 +1042,8 @@ suite = {
             "layout": {
                 "./": [
                     "dependency:TRUFFLERUBY_STANDALONE_COMMON/*",
+                    # Only for the Native standalone, the JVM standalone already contains those under jvm/
+                    "dependency:copy_gftc_and_lium/*",
                 ],
                 "lib/": "dependency:librubyvm",
             },
