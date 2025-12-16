@@ -76,8 +76,8 @@ describe "Identifying features such as" do
     RbConfig::CONFIG['RUBY_INSTALL_NAME'].should == 'truffleruby'
   end
 
-  it "RbConfig::CONFIG['ruby_version'] is the ABI version and starts with RUBY_VERSION and has at least an extra component" do
-    RbConfig::CONFIG['ruby_version'].should =~ /\A#{Regexp.escape RUBY_VERSION}\.\d+(\.\d+)*\z/
+  it "RbConfig::CONFIG['ruby_version'] is the ABI version and starts with either the RUBY_VERSION or TruffleRuby version and has an extra component" do
+    RbConfig::CONFIG['ruby_version'].should =~ /\A(#{Regexp.escape RUBY_VERSION}|#{Regexp.escape RUBY_ENGINE_VERSION})\.\d+\z/
   end
 
   it "the ABI version is always different than RUBY_VERSION and RUBY_ENGINE_VERSION" do
