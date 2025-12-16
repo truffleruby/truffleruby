@@ -118,6 +118,15 @@ describe "Kernel.Rational" do
       -> { Rational(nil) }.should raise_error(TypeError, "can't convert nil into Rational")
     end
 
+    it "swallows exception raised in #to_int method" do
+      object = Object.new
+      def object.to_int() raise NoMethodError; end
+
+      -> { Rational(object) }.should raise_error(TypeError)
+      -> { Rational(object, 1) }.should raise_error(TypeError)
+      -> { Rational(1, object) }.should raise_error(TypeError)
+    end
+
     it "raises TypeError if #to_r does not return Rational" do
       obj = Object.new
       def obj.to_r; []; end

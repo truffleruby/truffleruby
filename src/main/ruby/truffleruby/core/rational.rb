@@ -342,10 +342,6 @@ class Rational < Numeric
       return reduce(num, den)
     end
 
-    if Primitive.is_a?(num, Complex) && num.imag == 0
-      num = num.real
-    end
-
     case num
     when Integer
       # nothing
@@ -363,13 +359,10 @@ class Rational < Numeric
         begin
           integer = Truffle::Type.rb_check_to_integer(num, :to_int)
           num = integer if integer
-        rescue Exception # rubocop:disable Lint/RescueException, Lint/SuppressedException
+        rescue Exception # rubocop:disable Lint/RescueException
+          return nil unless exception
         end
       end
-    end
-
-    if Primitive.is_a?(den, Complex) && den.imag == 0
-      den = den.real
     end
 
     case den
@@ -389,47 +382,36 @@ class Rational < Numeric
         begin
           integer = Truffle::Type.rb_check_to_integer(den, :to_int)
           den = integer if integer
-        rescue Exception # rubocop:disable Lint/RescueException, Lint/SuppressedException
+        rescue Exception # rubocop:disable Lint/RescueException
+          return nil unless exception
         end
       end
     end
 
-    if Primitive.is_a?(num, Rational) && Primitive.equal?(den, 1)
-      return num
-    end
-
-    if !Primitive.is_a?(num, Integer) && Primitive.equal?(den, 1) # that's den either isn't given or equals 1
-      if exception
+    if !Primitive.is_a?(num, Integer) && Primitive.equal?(den, 1)
+      # den isn't given or is 1
+      begin
         return Truffle::Type.rb_convert_type(num, Rational, :to_r)
-      else
-        begin
-          return Truffle::Type.rb_convert_type(num, Rational, :to_r)
-        rescue Exception # rubocop:disable Lint/RescueException
-          return nil
-        end
+      rescue Exception # rubocop:disable Lint/RescueException
+        raise if exception
+        return nil
       end
     else
       if !Primitive.is_a?(num, Numeric)
-        if exception
+        begin
           num = Truffle::Type.rb_convert_type(num, Rational, :to_r)
-        else
-          begin
-            num = Truffle::Type.rb_convert_type(num, Rational, :to_r)
-          rescue Exception # rubocop:disable Lint/RescueException
-            return nil
-          end
+        rescue Exception # rubocop:disable Lint/RescueException
+          raise if exception
+          return nil
         end
       end
 
       if !Primitive.is_a?(den, Numeric)
-        if exception
+        begin
           den = Truffle::Type.rb_convert_type(den, Rational, :to_r)
-        else
-          begin
-            den = Truffle::Type.rb_convert_type(den, Rational, :to_r)
-          rescue Exception # rubocop:disable Lint/RescueException
-            return nil
-          end
+        rescue Exception # rubocop:disable Lint/RescueException
+          raise if exception
+          return nil
         end
       end
 
@@ -441,7 +423,7 @@ class Rational < Numeric
       end
     end
 
-    # num and dun are supposed to be Rational or Integer here
+    # num and den are supposed to be Rational or Integer here
     reduce(num, den)
   end
   private_class_method :convert

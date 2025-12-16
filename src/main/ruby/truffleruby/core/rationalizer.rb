@@ -45,7 +45,7 @@ class String
       @value = value
     end
 
-    def internal_convert
+    private def internal_convert
       if m = PATTERN.match(@value)
         si = m[1]
         nu = m[2]
