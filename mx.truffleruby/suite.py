@@ -758,6 +758,7 @@ suite = {
                 "artifactId": "resources",
                 "tag": ["default", "public"],
             },
+            "noMavenJavadoc": True,
         },
 
         "TRUFFLERUBY_RESOURCES_PLATFORM_AGNOSTIC": {

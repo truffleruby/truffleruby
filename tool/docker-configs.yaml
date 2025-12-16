@@ -23,12 +23,7 @@ deb: &deb
     - RUN locale-gen
     - ENV LANG=en_US.UTF-8
 
-# Too old g++
-#ol7:
-#  base: oraclelinux:7-slim
-#  install: RUN yum install -y
-#  locale:
-#  <<: *rpm
+# Keep this list in sync with the docker-test.yml workflow
 
 ol8:
   base: oraclelinux:8-slim
@@ -38,6 +33,12 @@ ol8:
 
 ol9:
   base: oraclelinux:9-slim
+  install: RUN microdnf install -y
+  locale: glibc-langpack-en
+  <<: *rpm
+
+ol10:
+  base: oraclelinux:10-slim
   install: RUN microdnf install -y
   locale: glibc-langpack-en
   <<: *rpm
@@ -69,11 +70,6 @@ ubuntu2204:
   install: RUN apt-get update && apt-get install -y
   <<: *deb
 
-debian10:
-  base: debian:10 # buster
-  install: RUN apt-get update && apt-get install -y
-  <<: *deb
-
 debian11:
   base: debian:11 # bullseye
   install: RUN apt-get update && apt-get install -y
@@ -81,5 +77,10 @@ debian11:
 
 debian12:
   base: debian:12 # bookworm
+  install: RUN apt-get update && apt-get install -y
+  <<: *deb
+
+debian13:
+  base: debian:13 # trixie
   install: RUN apt-get update && apt-get install -y
   <<: *deb

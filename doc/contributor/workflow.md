@@ -10,8 +10,11 @@ they might need to add `export SDKROOT=$(xcrun --show-sdk-path)` to their shell 
 Additionally, you will need:
 
 * Ruby >= 2.3 (we stick at this version as it is available all the way back to for example Ubuntu 16.04)
-* [CMake](https://cmake.org/), for building Sulong (GraalVM's LLVM support)
-  CMake can be installed via the usual methods: `dnf`, `apt-get`, `brew`, ...)
+* Python >= 3.8 for `mx`
+* [CMake](https://cmake.org/), for building Sulong (GraalVM's LLVM support): `dnf/apt-get/brew install cmake`
+* Perl >= 5.10 and the Perl core library, for building OpenSSL: `dnf install perl-core`/`apt-get install perl`
+* `git`
+* `wget`
 
 ## Workspace directory
 

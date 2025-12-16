@@ -37,6 +37,13 @@ JDKS_CACHE_DIR = File.expand_path('~/.mx/jdks')
 CACHE_EXTRA_DIR = File.expand_path('~/.mx/cache/truffleruby')
 FileUtils.mkdir_p(CACHE_EXTRA_DIR)
 
+ALL_PLATFORMS = %w[
+  linux-amd64
+  linux-aarch64
+  darwin-amd64
+  darwin-aarch64
+]
+
 JDEBUG = '--vm.agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=y'
 METRICS_REPS = Integer(ENV['TRUFFLERUBY_METRICS_REPS'] || 10)
 DEFAULT_PROFILE_OPTIONS = %w[--cpusampler --cpusampler.Output=flamegraph]
@@ -183,6 +190,26 @@ module Utilities
     else
       raise ArgumentError, from: from
     end
+  end
+
+  def get_truffleruby_version
+    suite = File.read("#{TRUFFLERUBY_DIR}/mx.truffleruby/suite.py")
+    version = suite[/"version":\s*"([^"]+)\"/, 1]
+    is_release = suite[/"release":\s*(True|False),/, 1]
+    raise unless version && is_release
+    if is_release == 'True'
+      version
+    else
+      "#{version}-dev"
+    end
+  end
+
+  def jvm_standalone_release_archive_path
+    "release/truffleruby-jvm-#{get_truffleruby_version}-#{mx_platform}.tar.gz"
+  end
+
+  def native_standalone_release_archive_path
+    "release/truffleruby-#{get_truffleruby_version}-#{mx_platform}.tar.gz"
   end
 
   def ee?
@@ -362,6 +389,10 @@ module Utilities
       sh 'git', 'checkout', commit, chdir: path if commit
     end
     path
+  end
+
+  def git_commit
+    @git_commit ||= `GIT_DIR="#{TRUFFLERUBY_DIR}/.git" git rev-parse HEAD`.strip
   end
 
   def git_branch
@@ -673,6 +704,10 @@ module Utilities
     end
   end
 
+  def mx_platform
+    "#{mx_os}-#{mx_arch}"
+  end
+
   def run_mspec(env_vars, command = 'run', *args)
     # Pass spec/truffleruby.mspec explicitly because we also want to use it when
     # running specs on CRuby so that it finds that specs are under spec/ruby.
@@ -871,6 +906,18 @@ module Commands
 
   def truffle_version
     puts get_truffle_version
+  end
+
+  def truffleruby_version
+    puts get_truffleruby_version
+  end
+
+  def jvm_standalone_release_archive
+    puts jvm_standalone_release_archive_path
+  end
+
+  def native_standalone_release_archive
+    puts native_standalone_release_archive_path
   end
 
   def mx(*args)
@@ -1159,7 +1206,9 @@ module Commands
   end
 
   private def jt(*args)
-    sh RbConfig.ruby, 'tool/jt.rb', *args
+    measure(args.join(' ')) do
+      sh RbConfig.ruby, 'tool/jt.rb', *args
+    end
   end
 
   private def test_basictest(*args)
@@ -1458,7 +1507,7 @@ module Commands
     in_truffleruby_repo_root!
     raise "#{test_name} not in ALL_CEXTS_TESTS" unless ALL_CEXTS_TESTS.include?(test_name)
 
-    time_test("jt test cexts #{test_name}") do
+    measure("jt test cexts #{test_name}") do
       case test_name
       when 'tools'
         # Test tools
@@ -1546,21 +1595,21 @@ module Commands
 
     STDERR.puts
     candidates.each do |test_script|
-      time_test("jt test #{File.basename(tests_path)} #{File.basename(test_script, '.sh')}") do
+      measure("jt test #{File.basename(tests_path)} #{File.basename(test_script, '.sh')}") do
         yield test_script
       end
     end
   end
 
-  private def time_test(test_name)
-    STDERR.puts "[jt] Running #{test_name} ..."
+  private def measure(command)
+    STDERR.puts "[jt] Running #{command} ..."
     start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
     begin
       yield
     ensure
       finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       duration = finish - start
-      STDERR.puts "[jt] #{test_name} took #{'%.1f' % duration}s\n\n\n"
+      STDERR.puts "[jt] #{command} took #{'%.1f' % duration}s\n\n\n"
     end
   end
 
@@ -2336,7 +2385,8 @@ module Commands
     dir = "#{JDKS_CACHE_DIR}/graalvm-#{version}"
     archive = "#{dir}.tar.gz"
     unless File.file?(archive)
-      sh 'wget', '-O', "#{JDKS_CACHE_DIR}/graalvm-#{version}.tar.gz", url
+      verbosity = STDOUT.tty? ? [] : ['--no-verbose']
+      sh 'wget', *verbosity, '-O', "#{JDKS_CACHE_DIR}/graalvm-#{version}.tar.gz", url
     end
     unless File.directory?(dir)
       Dir.mkdir(dir)
@@ -2488,7 +2538,7 @@ module Commands
     mx(os_env, *mx_args, 'build', *mx_build_options, primary_suite: TRUFFLERUBY_DIR)
 
     standalone_dist = env.include?('native') ? 'TRUFFLERUBY_NATIVE_STANDALONE' : 'TRUFFLERUBY_JVM_STANDALONE'
-    build_dir = "#{TRUFFLERUBY_DIR}/mxbuild/#{mx_os}-#{mx_arch}/#{standalone_dist}"
+    build_dir = "#{TRUFFLERUBY_DIR}/mxbuild/#{mx_platform}/#{standalone_dist}"
 
     # Copy to mxbuild/$name. We need to copy and not symlink because e.g. CE/EE use the same standalone_dist (GR-53433)
     dest = "#{TRUFFLERUBY_DIR}/mxbuild/#{name}"
@@ -2515,6 +2565,82 @@ module Commands
       link_path = "#{rubies_dir}/#{name}"
       File.delete link_path if File.symlink? link_path or File.exist? link_path
       File.symlink dest, link_path
+    end
+  end
+
+  def build_release_archives
+    if darwin?
+      ENV['MACOSX_DEPLOYMENT_TARGET'] = '11.0'
+    end
+
+    jt(*%w[build --env jvm-ee -- --dep TRUFFLERUBY_JVM_STANDALONE_RELEASE_ARCHIVE])
+    jt(*%w[build --env native-ee -- --dep TRUFFLERUBY_NATIVE_STANDALONE_RELEASE_ARCHIVE])
+    jt(*%w[build_platform_dependent_archive])
+  end
+
+  def build_release_archives_with_old_glibc
+    build_in_docker_with_old_glibc('build_release_archives')
+  end
+
+  def build_platform_dependent_archive
+    mx 'build', '--dep', 'RUBY_POM'
+
+    FileUtils.mkdir_p('release')
+    archive = "release/platform-dependent-layouts-#{mx_platform}.tar.gz"
+    mx 'archive-pd-layouts', archive
+    sh 'tar', 'tvf', archive
+  end
+
+  private def platform_dependent_archives
+    # Expect all platforms except the current one since it will be rebuilt anyway
+    (ALL_PLATFORMS - [mx_platform]).map do |platform|
+      archive = "release/platform-dependent-layouts-#{platform}.tar.gz"
+      raise "Missing #{archive}" unless File.exist?(archive)
+      archive
+    end
+  end
+
+  def build_maven_bundle
+    in_truffleruby_repo_root!
+
+    platform_dependent_archives.each do |archive|
+      mx 'restore-pd-layouts', archive
+    end
+
+    mx("--multi-platform-layout-directories=#{ALL_PLATFORMS.join(',')}", 'ruby_maven_deploy_public')
+
+    sh(*%w[tar czf maven-bundle.tar.gz --owner=0 --group=0 maven-repo])
+    FileUtils.mkdir_p('release')
+    FileUtils.mv 'maven-bundle.tar.gz', 'release/maven-bundle.tar.gz'
+  end
+
+  def build_maven_bundle_with_old_glibc
+    build_in_docker_with_old_glibc('build_maven_bundle', platform_dependent_archives)
+  end
+
+  def build_in_docker_with_old_glibc(command, files_to_copy_in = [])
+    in_truffleruby_repo_root!
+
+    dir = "#{TRUFFLERUBY_DIR}/tool/build-with-old-glibc"
+    release_dir = "#{dir}/release"
+    FileUtils.rm_rf(release_dir)
+    FileUtils.mkdir_p(release_dir)
+    FileUtils.touch("#{dir}/release/let_globbing_work")
+    files_to_copy_in.each do |file|
+      FileUtils.cp file, release_dir
+    end
+
+    sh 'docker', 'build',
+      '--tag=truffleruby-with-old-glibc',
+      '--build-arg', "GIT_COMMIT=#{git_commit}",
+      '--build-arg', "JT_COMMAND=#{command}",
+      '.', chdir: dir
+
+    sh 'docker', 'create', '--name', 'trcopycontainer', 'truffleruby-with-old-glibc'
+    begin
+      sh 'docker', 'cp', 'trcopycontainer:/release', '.'
+    ensure
+      sh 'docker', 'rm', 'trcopycontainer'
     end
   end
 

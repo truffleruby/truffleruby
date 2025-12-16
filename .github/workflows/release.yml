@@ -1,0 +1,111 @@
+name: Build & test release
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * *" # At 05:00. # https://crontab.guru/#0_5_*_*_*
+
+jobs:
+  build_linux:
+    name: Build linux-${{ matrix.arch }} with old glibc
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, aarch64]
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+
+    - run: jt build_release_archives_with_old_glibc
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: truffleruby-release-archives-linux-${{ matrix.arch }}
+        path: ${{ github.workspace }}/release/*.tar.gz
+
+  build_darwin:
+    name: Build darwin-${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, aarch64]
+    runs-on: ${{ matrix.arch == 'amd64' && 'macos-15-intel' || 'macos-14' }}
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+    - uses: ./.github/actions/setup-jvmci-graal
+
+    - run: jt build_release_archives
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: truffleruby-release-archives-darwin-${{ matrix.arch }}
+        path: ${{ github.workspace }}/release/*.tar.gz
+
+  docker-test:
+    needs: [build_linux]
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, aarch64]
+        # Keep this list in sync with tool/docker-configs.yaml
+        image: [ol8, ol9, ol10, fedora37, fedora38, ubuntu1804, ubuntu2004, ubuntu2204, debian11, debian12, debian13]
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: truffleruby-release-archives-linux-${{ matrix.arch }}
+        path: release
+
+    - run: jt docker test --${{ matrix.image }} --standalone "$(jt native_standalone_release_archive)" --test "${{ github.ref_name }}"
+    - run: jt docker test --${{ matrix.image }} --standalone "$(jt jvm_standalone_release_archive)" --test "${{ github.ref_name }}"
+
+  build_maven_bundle:
+    name: Maven Bundle
+    needs: [build_linux, build_darwin]
+    runs-on: ubuntu-22.04-arm
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v4
+    - name: Setup system Ruby
+      uses: ruby/setup-ruby@v1
+    - name: Setup jt
+      run: echo "$PWD/bin" >> $GITHUB_PATH
+    - uses: ./.github/actions/setup-jvmci-graal
+
+    - run: mkdir -p release
+    - uses: actions/download-artifact@v4
+      with:
+        name: truffleruby-release-archives-linux-amd64
+        path: release
+    # No truffleruby-release-archives-linux-aarch64 since it will be rebuilt anyway
+    - uses: actions/download-artifact@v4
+      with:
+        name: truffleruby-release-archives-darwin-amd64
+        path: release
+    - uses: actions/download-artifact@v4
+      with:
+        name: truffleruby-release-archives-darwin-aarch64
+        path: release
+
+    - run: jt build_maven_bundle_with_old_glibc
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: maven-bundle
+        path: ${{ github.workspace }}/release/maven-bundle.tar.gz

@@ -57,6 +57,7 @@ class JT
         args.shift
         filter = args.shift
         distros = distros.select { |distro| distro.include?(filter) }
+        abort "--filter #{filter} selected no distributions" if distros.empty?
       end
 
       distros.each do |distro|
@@ -79,7 +80,7 @@ class JT
     private def dockerfile(*args, docker_dir: default_docker_dir)
       config = docker_config
 
-      distro_name = 'ol7'
+      distro_name = 'ol8'
       install_method = nil
       rebuild_openssl = true
       basic_test = false

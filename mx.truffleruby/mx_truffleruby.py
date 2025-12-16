@@ -10,7 +10,7 @@ from __future__ import print_function
 
 import os
 import shlex
-from os.path import join, exists, basename, dirname
+from os.path import join, exists, basename, dirname, isdir
 import pathlib
 import re
 import shutil
@@ -463,17 +463,16 @@ def ruby_maven_deploy_public(args):
     mx.command_function('build')(['--dependencies', 'RUBY_POM'])
 
     path = local_maven_repo
-    mx.rmtree(path, ignore_errors=True)
+    if isdir(path):
+        mx.rmtree(path)
     os.mkdir(path)
 
     licenses = [license.name for license in mx.distribution('RUBY_POM').theLicense]
     deploy_args = [
         '--tags=public',
-        '--all-suites',
         '--all-distribution-types',
         '--validate=full',
         '--licenses', ','.join(licenses),
-        "--suppress-javadoc",
         'local',
         pathlib.Path(path).as_uri(),
     ]
