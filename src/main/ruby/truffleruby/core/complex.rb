@@ -256,7 +256,7 @@ class Complex < Numeric
   end
 
   def to_r
-    raise RangeError, "can't' convert #{self} into Rational" unless !Primitive.is_a?(imag, Float) && imag == 0
+    raise RangeError, "can't convert #{self} into Rational" unless !Primitive.is_a?(imag, Float) && imag == 0
     real.to_r
   end
 

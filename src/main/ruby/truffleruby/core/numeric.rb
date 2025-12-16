@@ -268,7 +268,7 @@ class Numeric
   end
 
   def quo(other)
-    Rational.__send__(:convert, self, 1) / other
+    Rational.__send__(:convert, self, 1, true) / other
   end
 
   def modulo(other)
