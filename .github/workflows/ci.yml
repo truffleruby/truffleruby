@@ -109,7 +109,6 @@ jobs:
 
     - uses: ./build/.github/actions/setup-jvmci-graal
 
-    - run: free -m
     - name: Build TruffleRuby
       run: jt build --env native
 

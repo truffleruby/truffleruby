@@ -2498,6 +2498,14 @@ module Commands
     mx('sforceimports', java_home: :none, primary_suite: TRUFFLERUBY_DIR)
   end
 
+  def show_available_memory
+    if linux?
+      STDERR.puts `free -m`
+    elsif darwin?
+      STDERR.puts `memory_pressure`.lines.grep(/The system has|System-wide memory free percentage/)
+    end
+  end
+
   private def build_standalone(*options)
     if options.delete('--new-hash')
       build_information_path = "#{TRUFFLERUBY_DIR}/src/shared/java/org/truffleruby/shared/BuildInformation.java"
@@ -2530,6 +2538,11 @@ module Commands
 
     if options.delete('--sforceimports') || sforceimports?(mx_base_args)
       sforceimports
+    end
+
+    if ENV['CI']
+      STDERR.puts 'Memory available before starting the build:'
+      show_available_memory
     end
 
     mx_options, mx_build_options = args_split(options)
