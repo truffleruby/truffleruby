@@ -2545,6 +2545,13 @@ module Commands
       show_available_memory
     end
 
+    if ENV['GITHUB_ACTIONS'] and darwin? and aarch64?
+      # There is only 7GB of RAM on darwin-arm64 on GitHub Actions:
+      # https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+      # So we need to tell the Native Image Driver to use everything to have enough memory to build the image
+      options = ['--extra-image-builder-argument=rubyvm:-J-XX:MaxRAMPercentage=100', *options]
+    end
+
     mx_options, mx_build_options = args_split(options)
     mx_args = mx_base_args + mx_options
 
