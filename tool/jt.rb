@@ -2629,7 +2629,7 @@ module Commands
 
     mx("--multi-platform-layout-directories=#{ALL_PLATFORMS.join(',')}", 'ruby_maven_deploy_public')
 
-    sh(*%W[tar czf release/maven-bundle.tar.gz --owner=0 --group=0 -C maven-repo], *Dir.children('maven-repo'))
+    sh(*%W[tar czf ../release/maven-bundle.tar.gz --owner=0 --group=0], *Dir.children('maven-repo'), chdir: 'maven-repo')
   end
 
   def build_maven_bundle_with_old_glibc
