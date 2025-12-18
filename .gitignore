@@ -132,3 +132,8 @@ doc/user/README.md
 # Jacoco
 jacoco.exec
 /coverage/
+
+# release
+/maven-repo/
+/release/
+/tool/build-with-old-glibc/release/
