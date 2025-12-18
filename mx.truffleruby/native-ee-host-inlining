@@ -1,3 +1,4 @@
+# Identical to native-host-inlining, but the env name implies Oracle GraalVM
 DYNAMIC_IMPORTS=/tools
 BUILD_TARGETS=TRUFFLERUBY_NATIVE_STANDALONE
 NATIVE_IMAGES=lib:rubyvm

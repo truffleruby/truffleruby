@@ -1,2 +1,3 @@
-DYNAMIC_IMPORTS=/tools,/compiler
+# Identical to jvm-ee, but the env name implies GraalVM Community
+DYNAMIC_IMPORTS=/tools
 BUILD_TARGETS=TRUFFLERUBY_JVM_STANDALONE

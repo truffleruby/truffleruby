@@ -345,24 +345,31 @@ class TruffleRubyReleaseArchive(mx.LayoutTARDistribution):
 
 
 # Some logic from mx_sdk_vm_ng.StandaloneLicenses
-class CopyGFTCandLIUM(mx.Project):
+class CopyGraalVMLicenses(mx.Project):
     def __init__(self, suite, name, deps, workingSets, theLicense=None, **kw_args):
         super().__init__(suite, name, subDir=None, srcDirs=[], deps=deps, workingSets=workingSets, d=suite.dir, theLicense=theLicense, **kw_args)
 
     def getBuildTask(self, args):
-        return CopyGFTCandLIUMBuildTask(self, args, 1)
+        return CopyGraalVMLicensesBuildTask(self, args, 1)
 
     def getArchivableResults(self, use_relpath=True, single=False):
         if single:
             raise ValueError('single not supported')
 
-        if mx_sdk_vm_ng.is_enterprise():
-            # Copy the license from the bootstrap Oracle GraalVM
-            yield join(external_bootstrap_graalvm, 'LICENSE.txt'), 'GRAALVM-GFTC.txt'
-            yield join(external_bootstrap_graalvm, 'license-information-user-manual.zip'), 'license-information-user-manual.zip'
+        # There is no BOOTSTRAP_GRAALVM for e.g. `jt mx build`
+        if external_bootstrap_graalvm:
+            # Copy the licenses from the bootstrap Oracle GraalVM
+            if mx_sdk_vm_ng.is_enterprise():
+                yield join(external_bootstrap_graalvm, 'LICENSE.txt'), 'GRAALVM_LICENSE.txt'
+                yield join(external_bootstrap_graalvm, 'license-information-user-manual.zip'), 'GRAALVM_license-information-user-manual.zip'
+            else:
+                yield join(external_bootstrap_graalvm, 'LICENSE.txt'), 'GRAALVM_CE_LICENSE.txt'
+                # There is a symlink LICENSE_NATIVEIMAGE.txt -> lib/svm/LICENSE_NATIVEIMAGE.txt, we need to copy the real file
+                yield join(external_bootstrap_graalvm, 'lib/svm/LICENSE_NATIVEIMAGE.txt'), 'GRAALVM_CE_LICENSE_NATIVEIMAGE.txt'
+                yield join(external_bootstrap_graalvm, 'THIRD_PARTY_LICENSE.txt'), 'GRAALVM_CE_THIRD_PARTY_LICENSE.txt'
 
-class CopyGFTCandLIUMBuildTask(mx.BuildTask):
-    subject: CopyGFTCandLIUM
+class CopyGraalVMLicensesBuildTask(mx.BuildTask):
+    subject: CopyGraalVMLicenses
     def __str__(self):
         return 'Building {}'.format(self.subject.name)
 
@@ -384,10 +391,10 @@ class CopyGFTCandLIUMBuildTask(mx.BuildTask):
         return join(self.subject.get_output_root(), 'witness')
 
     def witness_contents(self):
-        if mx_sdk_vm_ng.is_enterprise():
+        if external_bootstrap_graalvm:
             return external_bootstrap_graalvm
         else:
-            return 'ce'
+            return 'no BOOTSTRAP_GRAALVM'
 
     def build(self):
         witness_file = self.witness_file()

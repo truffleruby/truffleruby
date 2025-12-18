@@ -1,6 +1,6 @@
-DYNAMIC_IMPORTS=/tools,/compiler,/substratevm
+# Identical to native-ee, but the env name implies GraalVM Community
+DYNAMIC_IMPORTS=/tools
 BUILD_TARGETS=TRUFFLERUBY_NATIVE_STANDALONE
-COMPONENTS=SubstrateVM,Truffle SVM Macro
 NATIVE_IMAGES=lib:rubyvm
 EXTRA_IMAGE_BUILDER_ARGUMENTS=rubyvm:-H:+UnlockExperimentalVMOptions rubyvm:-H:BuildOutputJSONFile=native-image-build-rubyvm.json rubyvm:-H:-UnlockExperimentalVMOptions
 GENERATE_DEBUGINFO=false

@@ -2381,12 +2381,17 @@ module Commands
     archive_version = version.sub(/\.0\.0$/, '')
     os = { 'linux' => 'linux', 'darwin' => 'macos' }.fetch(mx_os)
     arch = { 'amd64' => 'x64', 'aarch64' => 'aarch64' }.fetch(mx_arch)
-    url = "https://download.oracle.com/graalvm/#{major}/archive/graalvm-jdk-#{archive_version}_#{os}-#{arch}_bin.tar.gz"
-    dir = "#{JDKS_CACHE_DIR}/graalvm-#{version}"
+    if ee?
+      url = "https://download.oracle.com/graalvm/#{major}/archive/graalvm-jdk-#{archive_version}_#{os}-#{arch}_bin.tar.gz"
+      dir = "#{JDKS_CACHE_DIR}/graalvm-#{version}"
+    else
+      url = "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-#{version}/graalvm-community-jdk-#{version}_#{os}-#{arch}_bin.tar.gz"
+      dir = "#{JDKS_CACHE_DIR}/graalvm-community-#{version}"
+    end
     archive = "#{dir}.tar.gz"
     unless File.file?(archive)
       verbosity = STDOUT.tty? ? [] : ['--no-verbose']
-      sh 'wget', *verbosity, '-O', "#{JDKS_CACHE_DIR}/graalvm-#{version}.tar.gz", url
+      sh 'wget', *verbosity, '-O', archive, url
     end
     unless File.directory?(dir)
       Dir.mkdir(dir)
@@ -2531,10 +2536,9 @@ module Commands
     name = "truffleruby-#{@ruby_name}"
     mx_base_args = ['--env', env]
 
-    os_env = {}
-    if ee?
-      os_env['BOOTSTRAP_GRAALVM'] = install_graalvm
-    end
+    os_env = {
+      'BOOTSTRAP_GRAALVM' => install_graalvm
+    }
 
     if options.delete('--sforceimports') || sforceimports?(mx_base_args)
       sforceimports

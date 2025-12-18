@@ -1,2 +1,3 @@
+# Identical to jvm-ce, but the env name implies Oracle GraalVM
 DYNAMIC_IMPORTS=/tools
 BUILD_TARGETS=TRUFFLERUBY_JVM_STANDALONE

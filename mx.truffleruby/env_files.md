@@ -1,8 +1,7 @@
 Here is how the various env files relate to each other:
 * `jvm`: standalone with all tools
-  * `jvm-ce`: + GraalVM Community Compiler
-    * `jvm-ce-libgraal`: + libgraal
-    * `native`: + librubyvm + `Truffle SVM Macro`
+  * `jvm-ce`: + GraalVM Community Compiler + libgraal
+    * `native`: + librubyvm
       * `native-host-inlining`: + `TruffleHostInliningPrintExplored`
       * `native-profiling`: + `-H:-DeleteLocalSymbols`
   * `jvm-ee`: + Oracle GraalVM Compiler + libgraal
