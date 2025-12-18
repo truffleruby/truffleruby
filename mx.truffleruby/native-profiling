@@ -1,6 +1,5 @@
-DYNAMIC_IMPORTS=/tools,/compiler,/substratevm
+DYNAMIC_IMPORTS=/tools
 BUILD_TARGETS=TRUFFLERUBY_NATIVE_STANDALONE
-COMPONENTS=SubstrateVM,Truffle SVM Macro
 NATIVE_IMAGES=lib:rubyvm
 EXTRA_IMAGE_BUILDER_ARGUMENTS=rubyvm:-H:+UnlockExperimentalVMOptions rubyvm:-H:BuildOutputJSONFile=native-image-build-rubyvm.json rubyvm:-H:-DeleteLocalSymbols rubyvm:-H:-UnlockExperimentalVMOptions
 GENERATE_DEBUGINFO=false
