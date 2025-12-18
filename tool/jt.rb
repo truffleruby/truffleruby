@@ -2636,6 +2636,22 @@ module Commands
     build_in_docker_with_old_glibc('build_maven_bundle', platform_dependent_archives)
   end
 
+  def sign_maven_bundle(maven_bundle_tar_gz)
+    raise unless File.file?(maven_bundle_tar_gz)
+    maven_bundle_tar_gz = File.expand_path(maven_bundle_tar_gz)
+    dir = File.dirname(maven_bundle_tar_gz)
+    signed_dir = "#{dir}/maven-bundle-signed"
+    FileUtils.rm_rf(signed_dir)
+    FileUtils.mkdir_p(signed_dir)
+    sh 'tar', 'xf', maven_bundle_tar_gz, chdir: signed_dir
+    Dir.chdir(signed_dir) do
+      Dir['**/*.{pom,jar}'].sort.each do |file|
+        sh 'gpg', '-ab', file
+      end
+    end
+    sh(*%W[tar czf ../maven-bundle-signed.tar.gz --owner=0 --group=0], *Dir.children(signed_dir), chdir: signed_dir)
+  end
+
   def build_in_docker_with_old_glibc(command, files_to_copy_in = [])
     in_truffleruby_repo_root!
 
