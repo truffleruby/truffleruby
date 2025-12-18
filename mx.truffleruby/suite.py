@@ -506,8 +506,8 @@ suite = {
             "jacoco": "exclude",
         },
 
-        "copy_gftc_and_lium": {
-            "class": "CopyGFTCandLIUM",
+        "copy_graalvm_licenses": {
+            "class": "CopyGraalVMLicenses",
         },
 
         "truffleruby_thin_launcher": {
@@ -959,6 +959,12 @@ suite = {
                     "file:README.md",
                     "file:LICENCE.md",
                     "file:3rd_party_licenses.txt",
+                    {
+                        "source_type": "dependency",
+                        "dependency": "copy_graalvm_licenses",
+                        "path": "*",
+                        "optional": True, # OK if no files (when no BOOTSTRAP_GRAALVM)
+                    },
                     "file:mx.truffleruby/native-image.properties",
                 ],
                 "bin/": [
@@ -1042,13 +1048,6 @@ suite = {
             "layout": {
                 "./": [
                     "dependency:TRUFFLERUBY_STANDALONE_COMMON/*",
-                    # Only for the Native standalone, the JVM standalone already contains those under jvm/
-                    {
-                        "source_type": "dependency",
-                        "dependency": "copy_gftc_and_lium",
-                        "path": "*",
-                        "optional": True, # OK if no files
-                    },
                 ],
                 "lib/": "dependency:librubyvm",
             },
@@ -1067,6 +1066,10 @@ suite = {
                 "jvm/": {
                     "source_type": "dependency",
                     "dependency": "sdk:STANDALONE_JAVA_HOME",
+                    # Use "root" to hard-copy the LICENSE_NATIVEIMAGE.txt symlink
+                    # to lib/svm/LICENSE_NATIVEIMAGE.txt at the root of GraalVM CE.
+                    # Otherwise the symlink would be broken due to the exclude of lib/svm.
+                    "dereference": "root",
                     "path": "*",
                     "exclude": [
                         # Native Image-related

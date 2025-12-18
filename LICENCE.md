@@ -12,11 +12,16 @@ available to you under the terms of any one of the following three licenses:
 See [3rd_party_licenses.txt](3rd_party_licenses.txt) for 3rd-party licenses.
 See [doc/legal/legal.md](doc/legal/legal.md) for more details on 3rd-party licenses.
 
-If this is a JVM standalone distribution of TruffleRuby, marked by the presence of a `jvm/` folder, see license-related files under the `jvm/` directory.
+See the various `GRAALVM_*` files in the same folder as this file which describe the [GraalVM distribution](https://www.graalvm.org/) license.
 
-If this distribution contains a file `GRAALVM-GFTC.txt` and a file `lib/librubyvm.so` or `lib/librubyvm.dylib`,
-then the Native Image in that second file is licensed under the GraalVM Free Terms and Conditions, described in `GRAALVM-GFTC.txt`.
-In that case, see also GraalVM's 3rd-party licenses in `license-information-user-manual.zip`.
+For a JVM standalone distribution of TruffleRuby, marked by the presence of a `jvm/` folder,
+the GraalVM distribution is included under `jvm/` (you can also see GraalVM distribution license files there).
+Some unnecessary parts of the GraalVM distribution are excluded in order to reduce the distribution size.
+
+For a Native standalone distribution of TruffleRuby, marked by the presence of either `lib/librubyvm.so` or `lib/librubyvm.dylib`,
+GraalVM Native Image is used to produce that file, which we refer to as `librubyvm` from now on.
+Specifically, if there is a file `GRAALVM_LICENSE.txt`, then `librubyvm` is licensed under the GraalVM Free Terms and Conditions, described in `GRAALVM_LICENSE.txt`.
+In a Native standalone distribution of TruffleRuby, the GraalVM distribution is not used for any other purpose than producing `librubyvm`, and no parts of the GraalVM distribution are included in the distribution, except as part of `librubyvm`.
 
 ## Eclipse Public License version 2.0
 
