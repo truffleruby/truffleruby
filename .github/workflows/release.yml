@@ -1,12 +1,35 @@
 name: Build & test release
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "TruffleRuby version to create draft GitHub release (e.g., 33.0.0) [optional]"
+        required: false
   schedule:
     - cron: "0 5 * * *" # At 05:00. # https://crontab.guru/#0_5_*_*_*
 
 jobs:
+  create_draft_release:
+    name: "Create draft release if version is set"
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+    - name: Check the draft release does not exist already
+      run: |
+        if gh release view "${{ inputs.version }}"; then
+          echo "There is already a draft release for version ${{ inputs.version }}, delete it"
+          exit 1
+        fi
+      if: inputs.version != ''
+    - name: Create draft release
+      run: gh release create --draft --target "${{ github.sha }}" --title "TruffleRuby ${{ inputs.version }}" "graal-${{ inputs.version }}"
+      if: inputs.version != ''
+
   build_linux:
     name: Build linux-${{ matrix.arch }} with old glibc
+    needs: [create_draft_release]
     strategy:
       fail-fast: false
       matrix:
@@ -26,9 +49,16 @@ jobs:
       with:
         name: truffleruby-release-archives-linux-${{ matrix.arch }}
         path: ${{ github.workspace }}/release/*.tar.gz
+    - name: Upload asset to draft release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+      run: gh release upload "graal-${{ inputs.version }}" release/truffleruby-*.tar.gz
+      if: inputs.version != ''
 
   build_darwin:
     name: Build darwin-${{ matrix.arch }}
+    needs: [create_draft_release]
     strategy:
       fail-fast: false
       matrix:
@@ -49,6 +79,12 @@ jobs:
       with:
         name: truffleruby-release-archives-darwin-${{ matrix.arch }}
         path: ${{ github.workspace }}/release/*.tar.gz
+    - name: Upload asset to draft release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        GH_REPO: ${{ github.repository }}
+      run: gh release upload "graal-${{ inputs.version }}" release/truffleruby-*.tar.gz
+      if: inputs.version != ''
 
   docker-test:
     needs: [build_linux]

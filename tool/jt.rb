@@ -2498,6 +2498,14 @@ module Commands
     mx('sforceimports', java_home: :none, primary_suite: TRUFFLERUBY_DIR)
   end
 
+  def show_available_memory
+    if linux?
+      STDERR.puts `free -m`
+    elsif darwin?
+      STDERR.puts `memory_pressure`.lines.grep(/The system has|System-wide memory free percentage/)
+    end
+  end
+
   private def build_standalone(*options)
     if options.delete('--new-hash')
       build_information_path = "#{TRUFFLERUBY_DIR}/src/shared/java/org/truffleruby/shared/BuildInformation.java"
@@ -2530,6 +2538,18 @@ module Commands
 
     if options.delete('--sforceimports') || sforceimports?(mx_base_args)
       sforceimports
+    end
+
+    if ENV['CI']
+      STDERR.puts 'Memory available before starting the build:'
+      show_available_memory
+    end
+
+    if ENV['GITHUB_ACTIONS'] and darwin? and aarch64?
+      # There is only 7GB of RAM on darwin-arm64 on GitHub Actions:
+      # https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+      # So we need to tell the Native Image Driver to use everything to have enough memory to build the image
+      options = ['--extra-image-builder-argument=rubyvm:-J-XX:MaxRAMPercentage=100', *options]
     end
 
     mx_options, mx_build_options = args_split(options)
@@ -2609,13 +2629,27 @@ module Commands
 
     mx("--multi-platform-layout-directories=#{ALL_PLATFORMS.join(',')}", 'ruby_maven_deploy_public')
 
-    sh(*%w[tar czf maven-bundle.tar.gz --owner=0 --group=0 maven-repo])
-    FileUtils.mkdir_p('release')
-    FileUtils.mv 'maven-bundle.tar.gz', 'release/maven-bundle.tar.gz'
+    sh(*%W[tar czf ../release/maven-bundle.tar.gz --owner=0 --group=0], *Dir.children('maven-repo'), chdir: 'maven-repo')
   end
 
   def build_maven_bundle_with_old_glibc
     build_in_docker_with_old_glibc('build_maven_bundle', platform_dependent_archives)
+  end
+
+  def sign_maven_bundle(maven_bundle_tar_gz)
+    raise unless File.file?(maven_bundle_tar_gz)
+    maven_bundle_tar_gz = File.expand_path(maven_bundle_tar_gz)
+    dir = File.dirname(maven_bundle_tar_gz)
+    signed_dir = "#{dir}/maven-bundle-signed"
+    FileUtils.rm_rf(signed_dir)
+    FileUtils.mkdir_p(signed_dir)
+    sh 'tar', 'xf', maven_bundle_tar_gz, chdir: signed_dir
+    Dir.chdir(signed_dir) do
+      Dir['**/*.{pom,jar}'].sort.each do |file|
+        sh 'gpg', '-ab', file
+      end
+    end
+    sh(*%W[tar czf ../maven-bundle-signed.tar.gz --owner=0 --group=0], *Dir.children(signed_dir), chdir: signed_dir)
   end
 
   def build_in_docker_with_old_glibc(command, files_to_copy_in = [])

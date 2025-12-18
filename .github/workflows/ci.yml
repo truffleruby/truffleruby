@@ -11,7 +11,7 @@ on:
   pull_request:
     paths-ignore: ['**.md']
   push:
-    branches: [master]
+    branches: [master, 'release/**']
     paths-ignore: ['**.md']
 permissions:
   contents: read
@@ -109,7 +109,6 @@ jobs:
 
     - uses: ./build/.github/actions/setup-jvmci-graal
 
-    - run: free -m
     - name: Build TruffleRuby
       run: jt build --env native
 
