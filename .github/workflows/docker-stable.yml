@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "TruffleRuby Version"
+        description: "TruffleRuby version (e.g., 33.0.0)"
         required: true
 
 jobs:
@@ -28,10 +28,10 @@ jobs:
       with:
         file: tool/dockerfiles/stable${{ matrix.suffix }}.dockerfile
         build-args: |
-          TRUFFLERUBY_VERSION=${{ github.event.inputs.version }}
+          TRUFFLERUBY_VERSION=${{ inputs.version }}
         tags: |
           ghcr.io/truffleruby/truffleruby:stable${{ matrix.suffix }}
           ghcr.io/truffleruby/truffleruby:latest${{ matrix.suffix }}
-          ghcr.io/truffleruby/truffleruby:${{ github.event.inputs.version }}${{ matrix.suffix }}
+          ghcr.io/truffleruby/truffleruby:${{ inputs.version }}${{ matrix.suffix }}
         platforms: linux/amd64,linux/arm64
         push: true
