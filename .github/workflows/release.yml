@@ -20,7 +20,7 @@ jobs:
     steps:
     - name: Check the draft release does not exist already
       run: |
-        if gh release view "${{ inputs.version }}"; then
+        if gh release view "graal-${{ inputs.version }}"; then
           echo "There is already a draft release for version ${{ inputs.version }}, delete it"
           exit 1
         fi
