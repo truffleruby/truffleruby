@@ -2597,6 +2597,9 @@ module Commands
       ENV['MACOSX_DEPLOYMENT_TARGET'] = '11.0'
     end
 
+    # Build both CE standalones, then both EE standalones to avoid extra rebuilds of layout distributions
+    jt(*%w[build --env jvm-ce -- --dep TRUFFLERUBY_JVM_STANDALONE_RELEASE_ARCHIVE])
+    jt(*%w[build --env native -- --dep TRUFFLERUBY_NATIVE_STANDALONE_RELEASE_ARCHIVE])
     jt(*%w[build --env jvm-ee -- --dep TRUFFLERUBY_JVM_STANDALONE_RELEASE_ARCHIVE])
     jt(*%w[build --env native-ee -- --dep TRUFFLERUBY_NATIVE_STANDALONE_RELEASE_ARCHIVE])
     jt(*%w[build_platform_dependent_archive])
