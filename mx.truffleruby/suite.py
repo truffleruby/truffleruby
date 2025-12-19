@@ -264,6 +264,7 @@ suite = {
             "buildDependencies": [
                 "LIBSSL_LAYOUT_DIST",
             ],
+            "makeTarget": "--quiet", # too noisy by default, ~4000 lines of output
             "results": ["libssl"],
             "description": "Build libssl"
         },
