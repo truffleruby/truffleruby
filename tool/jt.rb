@@ -2549,6 +2549,7 @@ module Commands
       show_available_memory
     end
 
+
     if ENV['GITHUB_ACTIONS'] and darwin? and aarch64?
       # There is only 7GB of RAM on darwin-arm64 on GitHub Actions:
       # https://docs.github.com/en/actions/reference/runners/github-hosted-runners
