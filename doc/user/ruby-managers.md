@@ -125,9 +125,9 @@ ruby-install truffleruby-graalvm
 Please use `ruby-build` (which also works with `chruby`) if you want to install dev builds:
 
 ```bash
-ruby-build truffleruby-dev ~/.rubies/truffleruby-dev
+ruby-build -d truffleruby-dev ~/.rubies
 OR
-ruby-build truffleruby+graalvm-dev ~/.rubies/truffleruby+graalvm-dev
+ruby-build -d truffleruby+graalvm-dev ~/.rubies
 ```
 
 There are also instructions on the [chruby wiki](https://github.com/postmodern/chruby/wiki/TruffleRuby) if you prefer to install TruffleRuby manually.

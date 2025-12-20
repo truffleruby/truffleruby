@@ -13,23 +13,25 @@ TruffleRuby comes in two distributions:
 
 You can install either of those:
 
-* Via your [Ruby manager/installer](doc/user/ruby-managers.md) (RVM, rbenv, chruby, asdf, ruby-build, ruby-install).  
+* Via your [Ruby manager/installer](doc/user/ruby-managers.md) (RVM, rbenv, chruby, asdf, mise, ruby-build, ruby-install).  
   We recommend trying TruffleRuby dev builds which contain the latest fixes and improvements (replace `VERSION` by `dev`).
 
 Native Standalone:
 ```bash
 RVM:    $ rvm install truffleruby # or truffleruby-head
 rbenv:  $ rbenv install truffleruby-VERSION
-asdf:   $ asdf install ruby truffleruby-VERSION
 chruby: $ ruby-install truffleruby
-        $ ruby-build truffleruby-VERSION ~/.rubies/truffleruby-VERSION
+        $ ruby-build -d truffleruby-VERSION ~/.rubies
+asdf:   $ asdf install ruby truffleruby-VERSION
+mise:   $ mise install ruby@truffleruby-VERSION
 ```
 JVM Standalone:
 ```bash
 rbenv:  $ rbenv install truffleruby+graalvm-VERSION
-asdf:   $ asdf install ruby truffleruby+graalvm-VERSION
 chruby: $ ruby-install truffleruby-graalvm
-        $ ruby-build truffleruby+graalvm-VERSION ~/.rubies/truffleruby+graalvm-VERSION
+        $ ruby-build -d truffleruby+graalvm-VERSION ~/.rubies
+asdf:   $ asdf install ruby truffleruby+graalvm-VERSION
+mise:   $ mise install ruby@truffleruby+graalvm-VERSION
 ```
 
 * In CI with GitHub Actions, see [Testing TruffleRuby in CI](doc/user/testing-truffleruby-in-ci.md) for more details and other CIs.
