@@ -45,8 +45,8 @@ script/update-truffleruby-graalvm $VERSION ../ruby-versions/pkg
 
 Make sure it works with:
 ```bash
-bin/ruby-build truffleruby-$VERSION ~/.rubies/truffleruby-$VERSION
-bin/ruby-build truffleruby+graalvm-$VERSION ~/.rubies/truffleruby+graalvm-$VERSION
+bin/ruby-build -d truffleruby-$VERSION ~/.rubies
+bin/ruby-build -d truffleruby+graalvm-$VERSION ~/.rubies
 ```
 
 `rbenv` users which installed `ruby-build` using Homebrew need a new release of
