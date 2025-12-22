@@ -1,7 +1,9 @@
+// START: TruffleRuby
 #include <ruby.h>
 
 RBIMPL_WARNING_IGNORED(-Wunused-function)
 RBIMPL_WARNING_IGNORED(-Wattributes)
+// END: TruffleRuby
 
 /* This is a public domain general purpose hash table package
    originally written by Peter Moore @ UCB.
@@ -108,13 +110,17 @@ RBIMPL_WARNING_IGNORED(-Wattributes)
 #ifdef NOT_RUBY
 #include "regint.h"
 #include "st.h"
+#include <assert.h>
 #elif defined RUBY_EXPORT
 #include "internal.h"
 #include "internal/bits.h"
 #include "internal/hash.h"
 #include "internal/sanitizers.h"
+#include "internal/st.h"
+#include "ruby_assert.h"
 #endif
 
+// Needed here for TruffleRuby.
 #include "internal/bits.h"
 
 #include <stdio.h>
@@ -122,7 +128,6 @@ RBIMPL_WARNING_IGNORED(-Wattributes)
 #include <stdlib.h>
 #endif
 #include <string.h>
-#include <assert.h>
 
 #ifdef __GNUC__
 #define PREFETCH(addr, write_p) __builtin_prefetch(addr, write_p)
@@ -320,15 +325,20 @@ static const struct st_features features[] = {
 #define RESERVED_HASH_VAL (~(st_hash_t) 0)
 #define RESERVED_HASH_SUBSTITUTION_VAL ((st_hash_t) 0)
 
+static inline st_hash_t
+normalize_hash_value(st_hash_t hash)
+{
+    /* RESERVED_HASH_VAL is used for a deleted entry.  Map it into
+       another value.  Such mapping should be extremely rare.  */
+    return hash == RESERVED_HASH_VAL ? RESERVED_HASH_SUBSTITUTION_VAL : hash;
+}
+
 /* Return hash value of KEY for table TAB.  */
 static inline st_hash_t
 do_hash(st_data_t key, st_table *tab)
 {
     st_hash_t hash = (st_hash_t)(tab->type->hash)(key);
-
-    /* RESERVED_HASH_VAL is used for a deleted entry.  Map it into
-       another value.  Such mapping should be extremely rare.  */
-    return hash == RESERVED_HASH_VAL ? RESERVED_HASH_SUBSTITUTION_VAL : hash;
+    return normalize_hash_value(hash);
 }
 
 /* Power of 2 defining the minimal number of allocated entries.  */
@@ -724,7 +734,9 @@ count_collision(const struct st_hash_type *type)
 #error "REBUILD_THRESHOLD should be >= 2"
 #endif
 
-static void rebuild_table_with(st_table *new_tab, st_table *tab);
+static void rebuild_table_with(st_table *const new_tab, st_table *const tab);
+static void rebuild_move_table(st_table *const new_tab, st_table *const tab);
+static void rebuild_cleanup(st_table *const tab);
 
 /* Rebuild table TAB.  Rebuilding removes all deleted bins and entries
    and can change size of the table entries and bins arrays.
@@ -750,11 +762,13 @@ rebuild_table(st_table *tab)
         new_tab = st_init_table_with_size(tab->type,
                                           2 * tab->num_entries - 1);
         rebuild_table_with(new_tab, tab);
+        rebuild_move_table(new_tab, tab);
     }
+    rebuild_cleanup(tab);
 }
 
 static void
-rebuild_table_with(st_table *new_tab, st_table *tab)
+rebuild_table_with(st_table *const new_tab, st_table *const tab)
 {
     st_index_t i, ni;
     unsigned int size_ind;
@@ -786,16 +800,26 @@ rebuild_table_with(st_table *new_tab, st_table *tab)
         new_tab->num_entries++;
         ni++;
     }
-    if (new_tab != tab) {
-        tab->entry_power = new_tab->entry_power;
-        tab->bin_power = new_tab->bin_power;
-        tab->size_ind = new_tab->size_ind;
-        free(tab->bins);
-        tab->bins = new_tab->bins;
-        free(tab->entries);
-        tab->entries = new_tab->entries;
-        free(new_tab);
-    }
+
+    assert(new_tab->num_entries == tab->num_entries);
+}
+
+static void
+rebuild_move_table(st_table *const new_tab, st_table *const tab)
+{
+    tab->entry_power = new_tab->entry_power;
+    tab->bin_power = new_tab->bin_power;
+    tab->size_ind = new_tab->size_ind;
+    free(tab->bins);
+    tab->bins = new_tab->bins;
+    free(tab->entries);
+    tab->entries = new_tab->entries;
+    free(new_tab);
+}
+
+static void
+rebuild_cleanup(st_table *const tab)
+{
     tab->entries_start = 0;
     tab->entries_bound = tab->num_entries;
     tab->rebuilds_num++;
@@ -1167,6 +1191,8 @@ st_add_direct_with_hash(st_table *tab,
     st_index_t ind;
     st_index_t bin_ind;
 
+    assert(hash != RESERVED_HASH_VAL);
+
     rebuild_table_if_necessary(tab);
     ind = tab->entries_bound++;
     entry = &tab->entries[ind];
@@ -1184,7 +1210,7 @@ void
 rb_st_add_direct_with_hash(st_table *tab,
                            st_data_t key, st_data_t value, st_hash_t hash)
 {
-    st_add_direct_with_hash(tab, key, value, hash);
+    st_add_direct_with_hash(tab, key, value, normalize_hash_value(hash));
 }
 
 /* Insert (KEY, VALUE) into table TAB.  The table should not have
@@ -1478,7 +1504,16 @@ st_update(st_table *tab, st_data_t key,
         value = entry->record;
     }
     old_key = key;
+
+    unsigned int rebuilds_num = tab->rebuilds_num;
+
     retval = (*func)(&key, &value, arg, existing);
+
+    // We need to make sure that the callback didn't cause a table rebuild
+    // Ideally we would make sure no operations happened
+    assert(rebuilds_num == tab->rebuilds_num);
+    (void)rebuilds_num;
+
     switch (retval) {
       case ST_CONTINUE:
         if (! existing) {
@@ -2325,6 +2360,8 @@ rb_st_compact_table(st_table *tab)
         /* Compaction: */
         st_table *new_tab = st_init_table_with_size(tab->type, 2 * num);
         rebuild_table_with(new_tab, tab);
+        rebuild_move_table(new_tab, tab);
+        rebuild_cleanup(tab);
     }
 }
 

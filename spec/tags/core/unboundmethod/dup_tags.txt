@@ -1,0 +1,5 @@
+slow:UnboundMethod#dup copies the finalizer
+fails:UnboundMethod#dup returns a copy of self
+fails:UnboundMethod#dup copies instance variables
+fails:UnboundMethod#dup copies the finalizer
+fails:UnboundMethod#dup resets frozen status

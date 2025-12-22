@@ -3,7 +3,7 @@ require 'test/unit'
 
 module TestRipper; end
 class TestRipper::Generic < Test::Unit::TestCase
-  # Changed from MRI to reflect the different relative path of the test suite.
+  # TruffleRuby: Changed from MRI to reflect the different relative path of the test suite.
   SRCDIR = File.expand_path("../../../../..", __FILE__)
 
   def assert_parse_files(dir, pattern = "**/*.rb", exclude: nil, gc_stress: GC.stress, test_ratio: nil)

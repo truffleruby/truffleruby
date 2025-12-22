@@ -19,6 +19,7 @@
  *             extension libraries.  They could be written in C++98.
  * @brief      Thin wrapper to ruby/config.h
  */
+// TruffleRuby note:
 // Must be first, as it defines feature test macros like _GNU_SOURCE,
 // which influences the definitions exposed by system header files.
 #include "ruby/config.h"

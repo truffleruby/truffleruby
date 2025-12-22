@@ -1,0 +1,35 @@
+module RBS
+  class Environment
+    # ```rb
+    # map = UseMap.build(environment)
+    #
+    # map.resolve?(TypeName.parse("TN"))   # => nil or resolved type name
+    # ```
+    #
+    class UseMap
+      class Table
+        attr_reader known_types: Set[TypeName]
+
+        attr_reader children: Hash[Namespace, Set[TypeName]]
+
+        def initialize: () -> void
+
+        def compute_children: () -> self
+      end
+
+      attr_reader use_dirs: Array[AST::Directives::Use]
+
+      @map: Hash[Symbol, TypeName]
+
+      @table: Table
+
+      def initialize: (table: Table) -> void
+
+      def resolve?: (TypeName) -> TypeName?
+
+      def resolve: (TypeName) -> TypeName
+
+      def build_map: (AST::Directives::Use::clause) -> self
+    end
+  end
+end

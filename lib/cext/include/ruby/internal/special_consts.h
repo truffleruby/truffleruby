@@ -162,7 +162,7 @@ RB_TEST(VALUE obj)
      *
      *  RTEST(v) can be 0 if and only if (v == Qfalse || v == Qnil).
      */
-    return obj & ~RUBY_Qnil;
+    return obj & RBIMPL_CAST((VALUE)~RUBY_Qnil);
 }
 
 RBIMPL_ATTR_CONST()
@@ -233,7 +233,7 @@ RB_NIL_OR_UNDEF_P(VALUE obj)
      *
      *  NIL_OR_UNDEF_P(v) can be true only when v is Qundef or Qnil.
      */
-    const VALUE mask = ~(RUBY_Qundef ^ RUBY_Qnil);
+    const VALUE mask = RBIMPL_CAST((VALUE)~(RUBY_Qundef ^ RUBY_Qnil));
     const VALUE common_bits = RUBY_Qundef & RUBY_Qnil;
     return (obj & mask) == common_bits;
 }
@@ -339,9 +339,9 @@ static inline bool
 RB_SPECIAL_CONST_P(VALUE obj)
 {
 #ifdef TRUFFLERUBY
-    return RB_IMMEDIATE_P(obj) || obj == RUBY_Qfalse || rb_tr_special_const_symbol_p(obj);
+    return (obj == RUBY_Qfalse) || RB_IMMEDIATE_P(obj) || rb_tr_special_const_symbol_p(obj);
 #else
-    return RB_IMMEDIATE_P(obj) || obj == RUBY_Qfalse;
+    return (obj == RUBY_Qfalse) || RB_IMMEDIATE_P(obj);
 #endif
 }
 
@@ -362,7 +362,7 @@ RBIMPL_ATTR_CONSTEXPR(CXX11)
 static inline VALUE
 rb_special_const_p(VALUE obj)
 {
-    return RB_SPECIAL_CONST_P(obj) * RUBY_Qtrue;
+    return (unsigned int)RB_SPECIAL_CONST_P(obj) * RUBY_Qtrue;
 }
 
 /**

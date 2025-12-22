@@ -10,6 +10,7 @@
 =~
 []
 []=
+append_as_bytes
 ascii_only?
 b
 byteindex

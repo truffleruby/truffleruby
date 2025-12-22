@@ -21,7 +21,7 @@ class RDoc::Markup::Formatter
   ##
   # Converts a target url to one that is relative to a given path
 
-  def self.gen_relative_url path, target
+  def self.gen_relative_url(path, target)
     from        = File.dirname path
     to, to_file = File.split target
 
@@ -45,7 +45,7 @@ class RDoc::Markup::Formatter
   ##
   # Creates a new Formatter
 
-  def initialize options, markup = nil
+  def initialize(options, markup = nil)
     @options = options
 
     @markup = markup || RDoc::Markup.new
@@ -66,7 +66,7 @@ class RDoc::Markup::Formatter
   ##
   # Adds +document+ to the output
 
-  def accept_document document
+  def accept_document(document)
     document.parts.each do |item|
       case item
       when RDoc::Markup::Document then # HACK
@@ -117,7 +117,7 @@ class RDoc::Markup::Formatter
   ##
   # Marks up +content+
 
-  def convert content
+  def convert(content)
     @markup.convert content, self
   end
 
@@ -147,7 +147,7 @@ class RDoc::Markup::Formatter
   ##
   # Converts added regexp handlings. See RDoc::Markup#add_regexp_handling
 
-  def convert_regexp_handling target
+  def convert_regexp_handling(target)
     return target.text if in_tt?
 
     handled = false
@@ -173,7 +173,7 @@ class RDoc::Markup::Formatter
   ##
   # Converts a string to be fancier if desired
 
-  def convert_string string
+  def convert_string(string)
     string
   end
 
@@ -195,32 +195,39 @@ class RDoc::Markup::Formatter
     @in_tt > 0
   end
 
+  def tt_tag?(attr_mask, reverse = false)
+    each_attr_tag(attr_mask, reverse) do |tag|
+      return true if tt? tag
+    end
+    false
+  end
+
   ##
   # Turns on tags for +item+ on +res+
 
-  def on_tags res, item
-    attr_mask = item.turn_on
-    return if attr_mask.zero?
-
-    @attr_tags.each do |tag|
-      if attr_mask & tag.bit != 0 then
-        res << annotate(tag.on)
-        @in_tt += 1 if tt? tag
-      end
+  def on_tags(res, item)
+    each_attr_tag(item.turn_on) do |tag|
+      res << annotate(tag.on)
+      @in_tt += 1 if tt? tag
     end
   end
 
   ##
   # Turns off tags for +item+ on +res+
 
-  def off_tags res, item
-    attr_mask = item.turn_off
+  def off_tags(res, item)
+    each_attr_tag(item.turn_off, true) do |tag|
+      @in_tt -= 1 if tt? tag
+      res << annotate(tag.off)
+    end
+  end
+
+  def each_attr_tag(attr_mask, reverse = false)
     return if attr_mask.zero?
 
-    @attr_tags.reverse_each do |tag|
+    @attr_tags.public_send(reverse ? :reverse_each : :each) do |tag|
       if attr_mask & tag.bit != 0 then
-        @in_tt -= 1 if tt? tag
-        res << annotate(tag.off)
+        yield tag
       end
     end
   end
@@ -228,7 +235,7 @@ class RDoc::Markup::Formatter
   ##
   # Extracts and a scheme, url and an anchor id from +url+ and returns them.
 
-  def parse_url url
+  def parse_url(url)
     case url
     when /^rdoc-label:([^:]*)(?::(.*))?/ then
       scheme = 'link'
@@ -258,7 +265,7 @@ class RDoc::Markup::Formatter
   ##
   # Is +tag+ a tt tag?
 
-  def tt? tag
+  def tt?(tag)
     tag.bit == @tt_bit
   end
 

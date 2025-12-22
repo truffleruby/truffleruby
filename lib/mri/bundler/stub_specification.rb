@@ -9,6 +9,10 @@ module Bundler
       spec
     end
 
+    def insecurely_materialized?
+      false
+    end
+
     attr_reader :checksum
     attr_accessor :stub, :ignored
 
@@ -110,6 +114,10 @@ module Bundler
 
     def raw_require_paths
       stub.raw_require_paths
+    end
+
+    def inspect
+      "#<#{self.class} @name=\"#{name}\" (#{full_name.delete_prefix("#{name}-")})>"
     end
 
     private

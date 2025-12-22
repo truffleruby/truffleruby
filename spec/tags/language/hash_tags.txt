@@ -1,3 +1,4 @@
 fails:The ** operator makes a caller-side copy when calling a method taking a positional Hash
 fails:The ** operator makes a copy when calling a method taking a positional Hash
 fails:Hash literal does not expand nil using ** into {} and raises TypeError
+fails:Hash literal expands nil using ** into {}

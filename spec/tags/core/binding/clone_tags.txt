@@ -1,1 +1,4 @@
 fails:Binding#clone preserves frozen status
+slow:Binding#clone copies the finalizer
+fails:Binding#clone copies instance variables
+fails:Binding#clone copies the finalizer

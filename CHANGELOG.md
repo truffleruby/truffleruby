@@ -1,3 +1,24 @@
+# 34.0.0
+
+New features:
+
+* Updated to Ruby 3.4.7 (#3883, @nirvdrum, @eregon, @andrykonchin).
+
+Bug fixes:
+
+
+Compatibility:
+
+
+Performance:
+
+
+Changes:
+
+
+Memory Footprint:
+
+
 # 33.0.0
 
 New features:

@@ -1,0 +1,7 @@
+exclude :test_auto_activation_of_specific_gemdeps_file, "Gem::GemNotFoundException: can't find gem bundler (= 2.6.9) with executable bundle"
+exclude :test_auto_activation_of_used_gemdeps_file, "Gem::GemNotFoundException: can't find gem bundler (= 2.6.9) with executable bundle"
+exclude :test_self_find_files_with_gemfile, "Gem::GemNotFoundException: can't find gem bundler (= 2.6.9) with executable bundle"
+exclude :test_self_use_gemdeps, "Gem::GemNotFoundException: can't find gem bundler (= 2.6.9) with executable bundle"
+exclude :test_use_gemdeps, "Gem::GemNotFoundException: can't find gem bundler (= 2.6.9) with executable bundle"
+exclude :test_use_gemdeps_automatic, "Gem::GemNotFoundException: can't find gem bundler (= 2.6.9) with executable bundle"
+exclude :test_use_gemdeps_specific, "Gem::GemNotFoundException: can't find gem bundler (= 2.6.9) with executable bundle"

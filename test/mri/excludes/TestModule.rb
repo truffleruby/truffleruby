@@ -33,5 +33,6 @@ exclude :test_private_constant_in_module, "<#<Module:0x1f58>> expected but was <
 exclude :test_private_constant_with_no_args, "needs investigation"
 exclude :test_private_top_methods, ":include should be private."
 exclude :test_protected_singleton_method, "NoMethodError expected but nothing was raised."
-exclude :test_redefinition_mismatch, "Expected \"A is not a module\" to include \"/b/b/e/main/test/mri/tests/ruby/test_module.rb:3188: previous definition\"."
+exclude :test_redefinition_mismatch, "Expected \"A is not a module\" to include \"/b/b/e/main/test/mri/tests/ruby/test_module.rb:3212: previous definition\"."
+exclude :test_set_temporary_name, "Expected /\\A#<Module:0x\\h+>::N\\z/ to match nil."
 exclude :test_undef, "needs investigation"

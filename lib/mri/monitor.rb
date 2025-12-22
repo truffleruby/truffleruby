@@ -164,7 +164,7 @@ module MonitorMixin
     end
   end
 
-  def self.extend_object(obj)
+  def self.extend_object(obj) # :nodoc:
     super(obj)
     obj.__send__(:mon_initialize)
   end
@@ -211,8 +211,8 @@ module MonitorMixin
   # section automatically when the block exits.  See example under
   # +MonitorMixin+.
   #
-  def mon_synchronize(&block)
-    Primitive.monitor_synchronize(@mon_mutex, block)
+  def mon_synchronize(&b)
+    Primitive.monitor_synchronize(@mon_mutex, b)
   end
   Primitive.always_split self, :mon_synchronize
   alias synchronize mon_synchronize
@@ -259,6 +259,8 @@ end
 #
 class Monitor
   include MonitorMixin
+
+  # for compatibility
   alias try_enter try_mon_enter
   alias enter mon_enter
   alias exit mon_exit

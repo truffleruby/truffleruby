@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative "../shellwords"
-
 # This class is used by rubygems to build Rust extensions. It is a thin-wrapper
 # over the `cargo rustc` command which takes care of building Rust code in a way
 # that Ruby can use.
@@ -16,9 +14,14 @@ class Gem::Ext::CargoBuilder < Gem::Ext::Builder
     @profile = :release
   end
 
-  def build(extension, dest_path, results, args = [], lib_dir = nil, cargo_dir = Dir.pwd)
+  def build(extension, dest_path, results, args = [], lib_dir = nil, cargo_dir = Dir.pwd,
+    target_rbconfig=Gem.target_rbconfig)
     require "tempfile"
     require "fileutils"
+
+    if target_rbconfig.path
+      warn "--target-rbconfig is not yet supported for Rust extensions. Ignoring"
+    end
 
     # Where's the Cargo.toml of the crate we're building
     cargo_toml = File.join(cargo_dir, "Cargo.toml")
@@ -47,7 +50,6 @@ class Gem::Ext::CargoBuilder < Gem::Ext::Builder
 
       nesting = extension_nesting(extension)
 
-      # TODO: remove in RubyGems 4
       if Gem.install_extension_in_lib && lib_dir
         nested_lib_dir = File.join(lib_dir, nesting)
         FileUtils.mkdir_p nested_lib_dir
@@ -155,7 +157,7 @@ class Gem::Ext::CargoBuilder < Gem::Ext::Builder
   # We want to use the same linker that Ruby uses, so that the linker flags from
   # mkmf work properly.
   def linker_args
-    cc_flag = Shellwords.split(makefile_config("CC"))
+    cc_flag = self.class.shellsplit(makefile_config("CC"))
     linker = cc_flag.shift
     link_args = cc_flag.flat_map {|a| ["-C", "link-arg=#{a}"] }
 
@@ -174,7 +176,7 @@ class Gem::Ext::CargoBuilder < Gem::Ext::Builder
 
   def libruby_args(dest_dir)
     libs = makefile_config(ruby_static? ? "LIBRUBYARG_STATIC" : "LIBRUBYARG_SHARED")
-    raw_libs = Shellwords.split(libs)
+    raw_libs = self.class.shellsplit(libs)
     raw_libs.flat_map {|l| ldflag_to_link_modifier(l) }
   end
 
@@ -248,8 +250,7 @@ EOF
 
   def rustc_dynamic_linker_flags(dest_dir, crate_name)
     split_flags("DLDFLAGS").
-      map {|arg| maybe_resolve_ldflag_variable(arg, dest_dir, crate_name) }.
-      compact.
+      filter_map {|arg| maybe_resolve_ldflag_variable(arg, dest_dir, crate_name) }.
       flat_map {|arg| ldflag_to_link_modifier(arg) }
   end
 
@@ -258,7 +259,7 @@ EOF
   end
 
   def split_flags(var)
-    Shellwords.split(RbConfig::CONFIG.fetch(var, ""))
+    self.class.shellsplit(RbConfig::CONFIG.fetch(var, ""))
   end
 
   def ldflag_to_link_modifier(arg)

@@ -112,11 +112,16 @@ sym_type(VALUE sym)
 #define is_class_sym(sym) (sym_type(sym)==ID_CLASS)
 #define is_junk_sym(sym) (sym_type(sym)==ID_JUNK)
 
-RUBY_FUNC_EXPORTED const uint_least32_t ruby_global_name_punct_bits[(0x7e - 0x20 + 31) / 32];
+#ifndef RIPPER
+RUBY_FUNC_EXPORTED
+#else
+RUBY_EXTERN
+#endif
+const uint_least32_t ruby_global_name_punct_bits[(0x7e - 0x20 + 31) / 32];
 
 #ifdef TRUFFLERUBY
-// We need to define ruby_global_name_punct_bits to link it correctly
-// since it is included in libtruffleruby via symbol.c
+// We define ruby_global_name_punct_bits here to link it correctly
+// since is_global_name_punct() is used by symbol.c, part of libtruffleruby.
 #ifndef RIPPER
 #define BIT(c, idx) (((c) / 32 - 1 == idx) ? (1U << ((c) % 32)) : 0)
 #define SPECIAL_PUNCT(idx) ( \
@@ -126,7 +131,7 @@ RUBY_FUNC_EXPORTED const uint_least32_t ruby_global_name_punct_bits[(0x7e - 0x20
 	BIT(':', idx) | BIT('<', idx) | BIT('>', idx) | BIT('\"', idx) | \
 	BIT('&', idx) | BIT('`', idx) | BIT('\'', idx) | BIT('+', idx) | \
 	BIT('0', idx))
-const unsigned int ruby_global_name_punct_bits[] = {
+const uint_least32_t ruby_global_name_punct_bits[] = {
     SPECIAL_PUNCT(0),
     SPECIAL_PUNCT(1),
     SPECIAL_PUNCT(2),

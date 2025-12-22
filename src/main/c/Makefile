@@ -30,15 +30,18 @@ BASIC_EXTCONF_DEPS := $(BASIC_DEPS) $(RBCONFIG) $(MKMF)
 # However, if libtruffleruby is recompiled, there is no need to rebuild C extensions, so it's a order-only-prerequisite.
 EXTCONF_DEPS := $(BASIC_EXTCONF_DEPS) | $(LIBTRUFFLERUBY)
 
-DEBUG_GEM_EXT := $(ROOT)/lib/gems/gems/debug-1.9.2/ext/debug
-RBS_GEM_EXT := $(ROOT)/lib/gems/gems/rbs-3.4.0/ext/rbs_extension
+DEBUG_GEM_EXT := $(ROOT)/lib/gems/gems/debug-1.11.0/ext/debug
+RBS_GEM_EXT := $(ROOT)/lib/gems/gems/rbs-3.8.0/ext/rbs_extension
+RBS_GEM_SRC := $(ROOT)/lib/gems/gems/rbs-3.8.0/src
+RBS_GEM_INC := $(ROOT)/lib/gems/gems/rbs-3.8.0/include
 
 IF_EXTCONF_FAIL := ( echo "`pwd`/extconf.rb failed:" 1>&2 && cat mkmf.log && false )
 
 all: $(TRAMPOLINE) $(LIBTRUFFLERUBY) openssl/openssl.$(DLEXT) zlib/zlib.$(DLEXT) \
 			psych/psych.$(DLEXT) ripper/ripper.$(DLEXT) syslog/syslog.$(DLEXT) nkf/nkf.$(DLEXT) \
 			bigdecimal/bigdecimal.$(DLEXT) date/date_core.$(DLEXT) io-console/console.$(DLEXT) etc/etc.$(DLEXT) \
-			rbconfig-sizeof/sizeof.$(DLEXT) debug/debug.$(DLEXT) rbs/rbs_extension.$(DLEXT)
+			rbconfig-sizeof/sizeof.$(DLEXT) json/parser/parser.$(DLEXT) \
+			debug/debug.$(DLEXT) rbs/rbs_extension.$(DLEXT)
 
 clean: clean_cexts clean_trampoline
 
@@ -58,6 +61,7 @@ clean_cexts:
 	$(Q) rm -f io-console/Makefile io-console/*.o io-console/console.$(DLEXT)
 	$(Q) rm -f etc/Makefile etc/*.o etc/etc.$(DLEXT) etc/constdefs.h
 	$(Q) rm -f rbconfig-sizeof/Makefile rbconfig-sizeof/*.o rbconfig-sizeof/sizeof.$(DLEXT)
+	$(Q) rm -f json/parser/Makefile json/parser/*.o json/parser/parser.$(DLEXT)
 	$(Q) rm -f debug/Makefile debug/*.o debug/debug.$(DLEXT)
 	$(Q) rm -f rbs/Makefile rbs/*.o rbs/rbs_extension.$(DLEXT)
 
@@ -78,7 +82,6 @@ $(LIBTRUFFLERUBY): cext/Makefile cext/*.c cext/*.h
 	$(Q) cd cext && $(MAKE)
 
 # openssl
-# NOTE: --with-openssl-dir=TRUFFLERUBY_BOOTSTRAP_HOME/src/main/c/libssl is automatically added from rbconfig.rb
 openssl/Makefile: openssl/extconf.rb $(EXTCONF_DEPS)
 	$(Q) cd openssl && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
 
@@ -153,10 +156,15 @@ rbconfig-sizeof/Makefile: rbconfig-sizeof/extconf.rb $(EXTCONF_DEPS)
 rbconfig-sizeof/sizeof.$(DLEXT): rbconfig-sizeof/Makefile rbconfig-sizeof/sizes.c
 	$(Q) cd rbconfig-sizeof && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
 
+# json
+json/parser/Makefile: json/parser/extconf.rb $(EXTCONF_DEPS)
+	$(Q) cd json/parser && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
+
+json/parser/parser.$(DLEXT): json/parser/Makefile json/parser/*.c json/fbuffer/*.h
+	$(Q) cd json/parser && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
+
 # psych
-# NOTE: --with-libyaml-dir=TRUFFLERUBY_BOOTSTRAP_HOME/src/main/c/libyaml is automatically added from rbconfig.rb
-#
-# Using --with-libyaml-source-dir instead causes timestamp issues with autotools and libyaml.
+# NOTE: using --with-libyaml-source-dir causes timestamp issues with autotools and libyaml.
 # Specifically on `gem install psych` we get errors like:
 # src/main/c/libyaml/config/missing: line 81: aclocal-1.15: command not found
 # WARNING: 'aclocal-1.15' is missing on your system.
@@ -165,7 +173,7 @@ rbconfig-sizeof/sizeof.$(DLEXT): rbconfig-sizeof/Makefile rbconfig-sizeof/sizes.
 # A workaround would be to `touch aclocal.m4 configure Makefile.in` (from https://stackoverflow.com/a/33279062/388803)
 # but it seems difficult and messy to do that for the standalone archive.
 #
-# So using --with-libyaml-dir is safer and is consistent with how libssl is handled.
+# So building libyaml ourselves is safer and is consistent with how libssl is handled.
 psych/Makefile: psych/extconf.rb $(EXTCONF_DEPS)
 	$(Q) cd psych && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
 
@@ -184,9 +192,11 @@ debug/debug.$(DLEXT): debug/Makefile
 	$(Q) cd debug && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
 
 # rbs bundled gem
-rbs/extconf.rb: $(RBS_GEM_EXT)/extconf.rb $(RBS_GEM_EXT)/*.c $(RBS_GEM_EXT)/*.h
-	$(Q) mkdir -p rbs
-	$(Q) cd rbs && cp $^ .
+rbs/extconf.rb: $(RBS_GEM_EXT)/extconf.rb $(RBS_GEM_EXT)/*.c $(RBS_GEM_EXT)/*.h $(RBS_GEM_SRC)/*.c $(RBS_GEM_INC)/rbs.h $(RBS_GEM_INC)/rbs/*.h
+	$(Q) mkdir -p rbs/include/rbs
+	$(Q) cd rbs && cp $(RBS_GEM_EXT)/extconf.rb $(RBS_GEM_EXT)/*.c $(RBS_GEM_EXT)/*.h $(RBS_GEM_SRC)/*.c .
+	$(Q) cp $(RBS_GEM_INC)/rbs.h rbs/include/
+	$(Q) cp $(RBS_GEM_INC)/rbs/*.h rbs/include/rbs/
 
 rbs/Makefile: rbs/extconf.rb $(EXTCONF_DEPS)
 	$(Q) cd rbs && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)

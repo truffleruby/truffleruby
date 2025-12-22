@@ -1,6 +1,7 @@
 auto_compact
 auto_compact=
 compact
+config
 count
 disable
 enable

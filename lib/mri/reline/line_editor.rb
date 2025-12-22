@@ -13,7 +13,6 @@ class Reline::LineEditor
   attr_accessor :prompt_proc
   attr_accessor :auto_indent_proc
   attr_accessor :dig_perfect_match_proc
-  attr_writer :output
 
   VI_MOTIONS = %i{
     ed_prev_char
@@ -36,7 +35,6 @@ class Reline::LineEditor
 
   module CompletionState
     NORMAL = :normal
-    COMPLETION = :completion
     MENU = :menu
     MENU_WITH_PERFECT_MATCH = :menu_with_perfect_match
     PERFECT_MATCH = :perfect_match
@@ -72,15 +70,19 @@ class Reline::LineEditor
 
   MINIMUM_SCROLLBAR_HEIGHT = 1
 
-  def initialize(config, encoding)
+  def initialize(config)
     @config = config
     @completion_append_character = ''
     @screen_size = [0, 0] # Should be initialized with actual winsize in LineEditor#reset
-    reset_variables(encoding: encoding)
+    reset_variables
   end
 
   def io_gate
     Reline::IOGate
+  end
+
+  def encoding
+    io_gate.encoding
   end
 
   def set_pasting_state(in_pasting)
@@ -136,9 +138,9 @@ class Reline::LineEditor
     end
   end
 
-  def reset(prompt = '', encoding:)
+  def reset(prompt = '')
     @screen_size = Reline::IOGate.get_screen_size
-    reset_variables(prompt, encoding: encoding)
+    reset_variables(prompt)
     @rendered_screen.base_y = Reline::IOGate.cursor_pos.y
     if ENV.key?('RELINE_ALT_SCROLLBAR')
       @full_block = '::'
@@ -150,7 +152,7 @@ class Reline::LineEditor
       @upper_half_block = '▀'
       @lower_half_block = '▄'
       @block_elem_width = 1
-    elsif @encoding == Encoding::UTF_8
+    elsif encoding == Encoding::UTF_8
       @full_block = '█'
       @upper_half_block = '▀'
       @lower_half_block = '▄'
@@ -219,10 +221,9 @@ class Reline::LineEditor
     @eof
   end
 
-  def reset_variables(prompt = '', encoding:)
+  def reset_variables(prompt = '')
     @prompt = prompt.gsub("\n", "\\n")
     @mark_pointer = nil
-    @encoding = encoding
     @is_multiline = false
     @finished = false
     @history_pointer = nil
@@ -239,7 +240,7 @@ class Reline::LineEditor
     @searching_prompt = nil
     @just_cursor_moving = false
     @eof = false
-    @continuous_insertion_buffer = String.new(encoding: @encoding)
+    @continuous_insertion_buffer = String.new(encoding: encoding)
     @scroll_partial_screen = 0
     @drop_terminate_spaces = false
     @in_pasting = false
@@ -251,7 +252,7 @@ class Reline::LineEditor
     @rendered_screen = RenderedScreen.new(base_y: 0, lines: [], cursor_y: 0)
     @input_lines = [[[""], 0, 0]]
     @input_lines_position = 0
-    @undoing = false
+    @restoring = false
     @prev_action_state = NullActionState
     @next_action_state = NullActionState
     reset_line
@@ -259,11 +260,10 @@ class Reline::LineEditor
 
   def reset_line
     @byte_pointer = 0
-    @buffer_of_lines = [String.new(encoding: @encoding)]
+    @buffer_of_lines = [String.new(encoding: encoding)]
     @line_index = 0
     @cache.clear
     @line_backup_in_history = nil
-    @multibyte_buffer = String.new(encoding: 'ASCII-8BIT')
   end
 
   def multiline_on
@@ -275,7 +275,7 @@ class Reline::LineEditor
   end
 
   private def insert_new_line(cursor_line, next_line)
-    @buffer_of_lines.insert(@line_index + 1, String.new(next_line, encoding: @encoding))
+    @buffer_of_lines.insert(@line_index + 1, String.new(next_line, encoding: encoding))
     @buffer_of_lines[@line_index] = cursor_line
     @line_index += 1
     @byte_pointer = 0
@@ -297,8 +297,8 @@ class Reline::LineEditor
     end
   end
 
-  private def split_by_width(str, max_width, offset: 0)
-    Reline::Unicode.split_by_width(str, max_width, @encoding, offset: offset)
+  private def split_line_by_width(str, max_width, offset: 0)
+    Reline::Unicode.split_line_by_width(str, max_width, encoding, offset: offset)
   end
 
   def current_byte_pointer_cursor
@@ -388,8 +388,8 @@ class Reline::LineEditor
         if (cached = cached_wraps[[prompt, line]])
           next cached
         end
-        *wrapped_prompts, code_line_prompt = split_by_width(prompt, width).first.compact
-        wrapped_lines = split_by_width(line, width, offset: calculate_width(code_line_prompt, true)).first.compact
+        *wrapped_prompts, code_line_prompt = split_line_by_width(prompt, width)
+        wrapped_lines = split_line_by_width(line, width, offset: calculate_width(code_line_prompt, true))
         wrapped_prompts.map { |p| [p, ''] } + [[code_line_prompt, wrapped_lines.first]] + wrapped_lines.drop(1).map { |c| ['', c] }
       end
     end
@@ -413,7 +413,7 @@ class Reline::LineEditor
         # do nothing
       elsif level == :blank
         Reline::IOGate.move_cursor_column base_x
-        @output.write "#{Reline::IOGate.reset_color_sequence}#{' ' * width}"
+        Reline::IOGate.write "#{Reline::IOGate.reset_color_sequence}#{' ' * width}"
       else
         x, w, content = new_items[level]
         cover_begin = base_x != 0 && new_levels[base_x - 1] == level
@@ -423,7 +423,7 @@ class Reline::LineEditor
           content, pos = Reline::Unicode.take_mbchar_range(content, base_x - x, width, cover_begin: cover_begin, cover_end: cover_end, padding: true)
         end
         Reline::IOGate.move_cursor_column x + pos
-        @output.write "#{Reline::IOGate.reset_color_sequence}#{content}#{Reline::IOGate.reset_color_sequence}"
+        Reline::IOGate.write "#{Reline::IOGate.reset_color_sequence}#{content}#{Reline::IOGate.reset_color_sequence}"
       end
       base_x += width
     end
@@ -436,8 +436,8 @@ class Reline::LineEditor
   # Calculate cursor position in word wrapped content.
   def wrapped_cursor_position
     prompt_width = calculate_width(prompt_list[@line_index], true)
-    line_before_cursor = whole_lines[@line_index].byteslice(0, @byte_pointer)
-    wrapped_line_before_cursor = split_by_width(' ' * prompt_width + line_before_cursor, screen_width).first.compact
+    line_before_cursor = Reline::Unicode.escape_for_print(whole_lines[@line_index].byteslice(0, @byte_pointer))
+    wrapped_line_before_cursor = split_line_by_width(' ' * prompt_width + line_before_cursor, screen_width)
     wrapped_cursor_y = wrapped_prompt_and_input_lines[0...@line_index].sum(&:size) + wrapped_line_before_cursor.size - 1
     wrapped_cursor_x = calculate_width(wrapped_line_before_cursor.last)
     [wrapped_cursor_x, wrapped_cursor_y]
@@ -459,18 +459,23 @@ class Reline::LineEditor
   end
 
   def render_finished
-    render_differential([], 0, 0)
-    lines = @buffer_of_lines.size.times.map do |i|
-      line = prompt_list[i] + modified_lines[i]
-      wrapped_lines, = split_by_width(line, screen_width)
-      wrapped_lines.last.empty? ? "#{line} " : line
+    Reline::IOGate.buffered_output do
+      render_differential([], 0, 0)
+      lines = @buffer_of_lines.size.times.map do |i|
+        line = Reline::Unicode.strip_non_printing_start_end(prompt_list[i]) + modified_lines[i]
+        wrapped_lines = split_line_by_width(line, screen_width)
+        wrapped_lines.last.empty? ? "#{line} " : line
+      end
+      Reline::IOGate.write lines.map { |l| "#{l}\r\n" }.join
     end
-    @output.puts lines.map { |l| "#{l}\r\n" }.join
   end
 
   def print_nomultiline_prompt
+    Reline::IOGate.disable_auto_linewrap(true) if Reline::IOGate.win?
     # Readline's test `TestRelineAsReadline#test_readline` requires first output to be prompt, not cursor reset escape sequence.
-    @output.write @prompt if @prompt && !@is_multiline
+    Reline::IOGate.write Reline::Unicode.strip_non_printing_start_end(@prompt) if @prompt && !@is_multiline
+  ensure
+    Reline::IOGate.disable_auto_linewrap(false) if Reline::IOGate.win?
   end
 
   def render
@@ -499,13 +504,16 @@ class Reline::LineEditor
       end
     end
 
-    render_differential new_lines, wrapped_cursor_x, wrapped_cursor_y - screen_scroll_top
+    Reline::IOGate.buffered_output do
+      render_differential new_lines, wrapped_cursor_x, wrapped_cursor_y - screen_scroll_top
+    end
   end
 
   # Reflects lines to be rendered and new cursor position to the screen
   # by calculating the difference from the previous render.
 
   private def render_differential(new_lines, new_cursor_x, new_cursor_y)
+    Reline::IOGate.disable_auto_linewrap(true) if Reline::IOGate.win?
     rendered_lines = @rendered_screen.lines
     cursor_y = @rendered_screen.cursor_y
     if new_lines != rendered_lines
@@ -536,6 +544,8 @@ class Reline::LineEditor
     Reline::IOGate.move_cursor_column new_cursor_x
     Reline::IOGate.move_cursor_down new_cursor_y - cursor_y
     @rendered_screen.cursor_y = new_cursor_y
+  ensure
+    Reline::IOGate.disable_auto_linewrap(false) if Reline::IOGate.win?
   end
 
   private def clear_rendered_screen_cache
@@ -570,8 +580,9 @@ class Reline::LineEditor
       @context
     end
 
-    def retrieve_completion_block(set_completion_quote_character = false)
-      @line_editor.retrieve_completion_block(set_completion_quote_character)
+    def retrieve_completion_block(_unused = false)
+      preposing, target, postposing, _quote = @line_editor.retrieve_completion_block
+      [preposing, target, postposing]
     end
 
     def call_completion_proc_with_checking_args(pre, target, post)
@@ -791,98 +802,73 @@ class Reline::LineEditor
     @config.editing_mode
   end
 
-  private def menu(_target, list)
+  private def menu(list)
     @menu_info = MenuInfo.new(list)
   end
 
-  private def complete_internal_proc(list, is_menu)
-    preposing, target, postposing = retrieve_completion_block
-    list = list.select { |i|
-      if i and not Encoding.compatible?(target.encoding, i.encoding)
-        raise Encoding::CompatibilityError, "#{target.encoding.name} is not compatible with #{i.encoding.name}"
-      end
-      if @config.completion_ignore_case
-        i&.downcase&.start_with?(target.downcase)
-      else
-        i&.start_with?(target)
-      end
-    }.uniq
-    if is_menu
-      menu(target, list)
-      return nil
-    end
-    completed = list.inject { |memo, item|
-      begin
-        memo_mbchars = memo.unicode_normalize.grapheme_clusters
-        item_mbchars = item.unicode_normalize.grapheme_clusters
-      rescue Encoding::CompatibilityError
-        memo_mbchars = memo.grapheme_clusters
-        item_mbchars = item.grapheme_clusters
-      end
-      size = [memo_mbchars.size, item_mbchars.size].min
-      result = +''
-      size.times do |i|
-        if @config.completion_ignore_case
-          if memo_mbchars[i].casecmp?(item_mbchars[i])
-            result << memo_mbchars[i]
-          else
-            break
-          end
-        else
-          if memo_mbchars[i] == item_mbchars[i]
-            result << memo_mbchars[i]
-          else
-            break
-          end
+  private def filter_normalize_candidates(target, list)
+    target = target.downcase if @config.completion_ignore_case
+    list.select do |item|
+      next unless item
+      unless Encoding.compatible?(target.encoding, item.encoding)
+        # Workaround for Readline test
+        if defined?(::Readline) && ::Readline == ::Reline
+          raise Encoding::CompatibilityError, "incompatible character encodings: #{target.encoding} and #{item.encoding}"
         end
       end
-      result
-    }
-    [target, preposing, completed, postposing]
+
+      if @config.completion_ignore_case
+        item.downcase.start_with?(target)
+      else
+        item.start_with?(target)
+      end
+    end.map do |item|
+      item.unicode_normalize
+    rescue Encoding::CompatibilityError
+      item
+    end.uniq
   end
 
-  private def perform_completion(list, just_show_list)
+  private def perform_completion(preposing, target, postposing, quote, list)
+    candidates = filter_normalize_candidates(target, list)
+
     case @completion_state
-    when CompletionState::NORMAL
-      @completion_state = CompletionState::COMPLETION
     when CompletionState::PERFECT_MATCH
-      @dig_perfect_match_proc&.(@perfect_matched)
-    end
-    if just_show_list
-      is_menu = true
-    elsif @completion_state == CompletionState::MENU
-      is_menu = true
-    elsif @completion_state == CompletionState::MENU_WITH_PERFECT_MATCH
-      is_menu = true
-    else
-      is_menu = false
-    end
-    result = complete_internal_proc(list, is_menu)
-    if @completion_state == CompletionState::MENU_WITH_PERFECT_MATCH
+      if @dig_perfect_match_proc
+        @dig_perfect_match_proc.call(@perfect_matched)
+        return
+      end
+    when CompletionState::MENU
+      menu(candidates)
+      return
+    when CompletionState::MENU_WITH_PERFECT_MATCH
+      menu(candidates)
       @completion_state = CompletionState::PERFECT_MATCH
+      return
     end
-    return if result.nil?
-    target, preposing, completed, postposing = result
-    return if completed.nil?
-    if target <= completed and (@completion_state == CompletionState::COMPLETION)
-      if list.include?(completed)
-        if list.one?
-          @completion_state = CompletionState::PERFECT_MATCH
-        else
-          @completion_state = CompletionState::MENU_WITH_PERFECT_MATCH
-          perform_completion(list, true) if @config.show_all_if_ambiguous
-        end
-        @perfect_matched = completed
+
+    completed = Reline::Unicode.common_prefix(candidates, ignore_case: @config.completion_ignore_case)
+    return if completed.empty?
+
+    append_character = ''
+    if candidates.include?(completed)
+      if candidates.one?
+        append_character = quote || completion_append_character.to_s
+        @completion_state = CompletionState::PERFECT_MATCH
+      elsif @config.show_all_if_ambiguous
+        menu(candidates)
+        @completion_state = CompletionState::PERFECT_MATCH
       else
-        @completion_state = CompletionState::MENU
-        perform_completion(list, true) if @config.show_all_if_ambiguous
+        @completion_state = CompletionState::MENU_WITH_PERFECT_MATCH
       end
-      if not just_show_list and target < completed
-        @buffer_of_lines[@line_index] = (preposing + completed + completion_append_character.to_s + postposing).split("\n")[@line_index] || String.new(encoding: @encoding)
-        line_to_pointer = (preposing + completed + completion_append_character.to_s).split("\n")[@line_index] || String.new(encoding: @encoding)
-        @byte_pointer = line_to_pointer.bytesize
-      end
+      @perfect_matched = completed
+    else
+      @completion_state = CompletionState::MENU
+      menu(candidates) if @config.show_all_if_ambiguous
     end
+    @buffer_of_lines[@line_index] = (preposing + completed + append_character + postposing).split("\n")[@line_index] || String.new(encoding: encoding)
+    line_to_pointer = (preposing + completed + append_character).split("\n")[@line_index] || String.new(encoding: encoding)
+    @byte_pointer = line_to_pointer.bytesize
   end
 
   def dialog_proc_scope_completion_journey_data
@@ -911,8 +897,8 @@ class Reline::LineEditor
   end
 
   private def retrieve_completion_journey_state
-    preposing, target, postposing = retrieve_completion_block
-    list = call_completion_proc
+    preposing, target, postposing, quote = retrieve_completion_block
+    list = call_completion_proc(preposing, target, postposing, quote)
     return unless list.is_a?(Array)
 
     candidates = list.select{ |item| item.start_with?(target) }
@@ -987,10 +973,18 @@ class Reline::LineEditor
     @drop_terminate_spaces = false
   end
 
+  ARGUMENT_DIGIT_METHODS = %i[ed_digit vi_zero ed_argument_digit]
+  VI_WAITING_ACCEPT_METHODS = %i[vi_change_meta vi_delete_meta vi_yank ed_insert ed_argument_digit]
+
   private def process_key(key, method_symbol)
-    if key.is_a?(Symbol)
-      cleanup_waiting
-    elsif @waiting_proc
+    if @waiting_proc
+      cleanup_waiting unless key.size == 1
+    end
+    if @vi_waiting_operator
+      cleanup_waiting unless VI_WAITING_ACCEPT_METHODS.include?(method_symbol) || VI_MOTIONS.include?(method_symbol)
+    end
+
+    if @waiting_proc
       old_byte_pointer = @byte_pointer
       @waiting_proc.call(key)
       if @vi_waiting_operator
@@ -1004,23 +998,14 @@ class Reline::LineEditor
       return
     end
 
+    # Reject multibyte input (converted to ed_insert) in vi_command mode
+    return if method_symbol == :ed_insert && @config.editing_mode_is?(:vi_command)
+
     if method_symbol and respond_to?(method_symbol, true)
       method_obj = method(method_symbol)
     end
-    if method_symbol and key.is_a?(Symbol)
-      if @vi_arg and argumentable?(method_obj)
-        run_for_operators(key, method_symbol) do |with_operator|
-          wrap_method_call(method_symbol, method_obj, key, with_operator)
-        end
-      else
-        wrap_method_call(method_symbol, method_obj, key) if method_obj
-      end
-      @kill_ring.process
-      if @vi_arg
-        @vi_arg = nil
-      end
-    elsif @vi_arg
-      if key.chr =~ /[0-9]/
+    if @vi_arg
+      if ARGUMENT_DIGIT_METHODS.include?(method_symbol)
         ed_argument_digit(key)
       else
         if argumentable?(method_obj)
@@ -1029,13 +1014,9 @@ class Reline::LineEditor
           end
         elsif method_obj
           wrap_method_call(method_symbol, method_obj, key)
-        else
-          ed_insert(key) unless @config.editing_mode_is?(:vi_command)
         end
         @kill_ring.process
-        if @vi_arg
-          @vi_arg = nil
-        end
+        @vi_arg = nil
       end
     elsif method_obj
       if method_symbol == :ed_argument_digit
@@ -1046,30 +1027,6 @@ class Reline::LineEditor
         end
       end
       @kill_ring.process
-    else
-      ed_insert(key) unless @config.editing_mode_is?(:vi_command)
-    end
-  end
-
-  private def normal_char(key)
-    @multibyte_buffer << key.combined_char
-    if @multibyte_buffer.size > 1
-      if @multibyte_buffer.dup.force_encoding(@encoding).valid_encoding?
-        process_key(@multibyte_buffer.dup.force_encoding(@encoding), nil)
-        @multibyte_buffer.clear
-      else
-        # invalid
-        return
-      end
-    else # single byte
-      return if key.char >= 128 # maybe, first byte of multi byte
-      method_symbol = @config.editing_mode.get_method(key.combined_char)
-      process_key(key.combined_char, method_symbol)
-      @multibyte_buffer.clear
-    end
-    if @config.editing_mode_is?(:vi_command) and @byte_pointer > 0 and @byte_pointer == current_line.bytesize
-      byte_size = Reline::Unicode.get_prev_mbchar_size(@buffer_of_lines[@line_index], @byte_pointer)
-      @byte_pointer -= byte_size
     end
   end
 
@@ -1086,23 +1043,23 @@ class Reline::LineEditor
   def input_key(key)
     save_old_buffer
     @config.reset_oneshot_key_bindings
-    @dialogs.each do |dialog|
-      if key.char.instance_of?(Symbol) and key.char == dialog.name
-        return
-      end
-    end
     if key.char.nil?
       process_insert(force: true)
       @eof = buffer_empty?
       finish
       return
     end
+    @dialogs.each do |dialog|
+      if key.method_symbol == dialog.name
+        return
+      end
+    end
     @completion_occurs = false
 
-    if key.char.is_a?(Symbol)
-      process_key(key.char, key.char)
-    else
-      normal_char(key)
+    process_key(key.char, key.method_symbol)
+    if @config.editing_mode_is?(:vi_command) and @byte_pointer > 0 and @byte_pointer == current_line.bytesize
+      byte_size = Reline::Unicode.get_prev_mbchar_size(@buffer_of_lines[@line_index], @byte_pointer)
+      @byte_pointer -= byte_size
     end
 
     @prev_action_state, @next_action_state = @next_action_state, NullActionState
@@ -1112,8 +1069,8 @@ class Reline::LineEditor
       @completion_journey_state = nil
     end
 
-    push_input_lines unless @undoing
-    @undoing = false
+    push_input_lines unless @restoring
+    @restoring = false
 
     if @in_pasting
       clear_dialogs
@@ -1162,9 +1119,8 @@ class Reline::LineEditor
     end
   end
 
-  def call_completion_proc
-    result = retrieve_completion_block(true)
-    pre, target, post = result
+  def call_completion_proc(pre, target, post, quote)
+    Reline.core.instance_variable_set(:@completion_quote_character, quote)
     result = call_completion_proc_with_checking_args(pre, target, post)
     Reline.core.instance_variable_set(:@completion_quote_character, nil)
     result
@@ -1228,84 +1184,32 @@ class Reline::LineEditor
     process_auto_indent
   end
 
-  def set_current_lines(lines, byte_pointer = nil, line_index = 0)
-    cursor = current_byte_pointer_cursor
-    @buffer_of_lines = lines
-    @line_index = line_index
-    if byte_pointer
-      @byte_pointer = byte_pointer
-    else
-      calculate_nearest_cursor(cursor)
-    end
-    process_auto_indent
-  end
-
-  def retrieve_completion_block(set_completion_quote_character = false)
-    if Reline.completer_word_break_characters.empty?
-      word_break_regexp = nil
-    else
-      word_break_regexp = /\A[#{Regexp.escape(Reline.completer_word_break_characters)}]/
-    end
-    if Reline.completer_quote_characters.empty?
-      quote_characters_regexp = nil
-    else
-      quote_characters_regexp = /\A[#{Regexp.escape(Reline.completer_quote_characters)}]/
-    end
-    before = current_line.byteslice(0, @byte_pointer)
-    rest = nil
-    break_pointer = nil
+  def retrieve_completion_block
+    quote_characters = Reline.completer_quote_characters
+    before = current_line.byteslice(0, @byte_pointer).grapheme_clusters
     quote = nil
-    closing_quote = nil
-    escaped_quote = nil
-    i = 0
-    while i < @byte_pointer do
-      slice = current_line.byteslice(i, @byte_pointer - i)
-      unless slice.valid_encoding?
-        i += 1
-        next
-      end
-      if quote and slice.start_with?(closing_quote)
-        quote = nil
-        i += 1
-        rest = nil
-      elsif quote and slice.start_with?(escaped_quote)
-        # skip
-        i += 2
-      elsif quote_characters_regexp and slice =~ quote_characters_regexp # find new "
-        rest = $'
-        quote = $&
-        closing_quote = /(?!\\)#{Regexp.escape(quote)}/
-        escaped_quote = /\\#{Regexp.escape(quote)}/
-        i += 1
-        break_pointer = i - 1
-      elsif word_break_regexp and not quote and slice =~ word_break_regexp
-        rest = $'
-        i += 1
-        before = current_line.byteslice(i, @byte_pointer - i)
-        break_pointer = i
-      else
-        i += 1
-      end
-    end
-    postposing = current_line.byteslice(@byte_pointer, current_line.bytesize - @byte_pointer)
-    if rest
-      preposing = current_line.byteslice(0, break_pointer)
-      target = rest
-      if set_completion_quote_character and quote
-        Reline.core.instance_variable_set(:@completion_quote_character, quote)
-        if postposing !~ /(?!\\)#{Regexp.escape(quote)}/ # closing quote
-          insert_text(quote)
+    # Calcualte closing quote when cursor is at the end of the line
+    if current_line.bytesize == @byte_pointer && !quote_characters.empty?
+      escaped = false
+      before.each do |c|
+        if escaped
+          escaped = false
+          next
+        elsif c == '\\'
+          escaped = true
+        elsif quote
+          quote = nil if c == quote
+        elsif quote_characters.include?(c)
+          quote = c
         end
       end
-    else
-      preposing = ''
-      if break_pointer
-        preposing = current_line.byteslice(0, break_pointer)
-      else
-        preposing = ''
-      end
-      target = before
     end
+
+    word_break_characters = quote_characters + Reline.completer_word_break_characters
+    break_index = before.rindex { |c| word_break_characters.include?(c) || quote_characters.include?(c) } || -1
+    preposing = before.take(break_index + 1).join
+    target = before.drop(break_index + 1).join
+    postposing = current_line.byteslice(@byte_pointer, current_line.bytesize - @byte_pointer)
     lines = whole_lines
     if @line_index > 0
       preposing = lines[0..(@line_index - 1)].join("\n") + "\n" + preposing
@@ -1313,7 +1217,7 @@ class Reline::LineEditor
     if (lines.size - 1) > @line_index
       postposing = postposing + "\n" + lines[(@line_index + 1)..-1].join("\n")
     end
-    [preposing.encode(@encoding), target.encode(@encoding), postposing.encode(@encoding)]
+    [preposing.encode(encoding), target.encode(encoding), postposing.encode(encoding), quote&.encode(encoding)]
   end
 
   def confirm_multiline_termination
@@ -1322,15 +1226,13 @@ class Reline::LineEditor
   end
 
   def insert_multiline_text(text)
-    save_old_buffer
     pre = @buffer_of_lines[@line_index].byteslice(0, @byte_pointer)
     post = @buffer_of_lines[@line_index].byteslice(@byte_pointer..)
-    lines = (pre + text.gsub(/\r\n?/, "\n") + post).split("\n", -1)
+    lines = (pre + Reline::Unicode.safe_encode(text, encoding).gsub(/\r\n?/, "\n") + post).split("\n", -1)
     lines << '' if lines.empty?
     @buffer_of_lines[@line_index, 1] = lines
     @line_index += lines.size - 1
     @byte_pointer = @buffer_of_lines[@line_index].bytesize - post.bytesize
-    push_input_lines
   end
 
   def insert_text(text)
@@ -1370,7 +1272,7 @@ class Reline::LineEditor
       last += current_line.bytesize if last < 0
       first += current_line.bytesize if first < 0
       range = range.exclude_end? ? first...last : first..last
-      line = current_line.bytes.reject.with_index{ |c, i| range.include?(i) }.map{ |c| c.chr(Encoding::ASCII_8BIT) }.join.force_encoding(@encoding)
+      line = current_line.bytes.reject.with_index{ |c, i| range.include?(i) }.map{ |c| c.chr(Encoding::ASCII_8BIT) }.join.force_encoding(encoding)
       set_current_line(line)
     else
       set_current_line(current_line.byteslice(0, start))
@@ -1444,10 +1346,11 @@ class Reline::LineEditor
       @completion_occurs = move_completed_list(:down)
     else
       @completion_journey_state = nil
-      result = call_completion_proc
+      pre, target, post, quote = retrieve_completion_block
+      result = call_completion_proc(pre, target, post, quote)
       if result.is_a?(Array)
         @completion_occurs = true
-        perform_completion(result, false)
+        perform_completion(pre, target, post, quote, result)
       end
     end
   end
@@ -1495,21 +1398,11 @@ class Reline::LineEditor
   #            digit or if the existing argument is already greater than a
   #            million.
   # GNU Readline:: +self-insert+ (a, b, A, 1, !, …) Insert yourself.
-  private def ed_insert(key)
-    if key.instance_of?(String)
-      begin
-        key.encode(Encoding::UTF_8)
-      rescue Encoding::UndefinedConversionError
-        return
-      end
-      str = key
-    else
-      begin
-        key.chr.encode(Encoding::UTF_8)
-      rescue Encoding::UndefinedConversionError
-        return
-      end
-      str = key.chr
+  private def ed_insert(str)
+    begin
+      str.encode(Encoding::UTF_8)
+    rescue Encoding::UndefinedConversionError
+      return
     end
     if @in_pasting
       @continuous_insertion_buffer << str
@@ -1523,21 +1416,16 @@ class Reline::LineEditor
   alias_method :ed_digit, :ed_insert
   alias_method :self_insert, :ed_insert
 
-  private def ed_quoted_insert(str, arg: 1)
-    @waiting_proc = proc { |key|
-      arg.times do
-        if key == "\C-j".ord or key == "\C-m".ord
-          key_newline(key)
-        elsif key == 0
-          # Ignore NUL.
-        else
-          ed_insert(key)
-        end
+  private def insert_raw_char(str, arg: 1)
+    arg.times do
+      if str == "\C-j" or str == "\C-m"
+        key_newline(str)
+      elsif str != "\0"
+        # Ignore NUL.
+        ed_insert(str)
       end
-      @waiting_proc = nil
-    }
+    end
   end
-  alias_method :quoted_insert, :ed_quoted_insert
 
   private def ed_next_char(key, arg: 1)
     byte_size = Reline::Unicode.get_next_mbchar_size(current_line, @byte_pointer)
@@ -1566,7 +1454,7 @@ class Reline::LineEditor
   alias_method :backward_char, :ed_prev_char
 
   private def vi_first_print(key)
-    @byte_pointer, = Reline::Unicode.vi_first_print(current_line)
+    @byte_pointer = Reline::Unicode.vi_first_print(current_line)
   end
 
   private def ed_move_to_beg(key)
@@ -1581,27 +1469,22 @@ class Reline::LineEditor
   alias_method :end_of_line, :ed_move_to_end
 
   private def generate_searcher(search_key)
-    search_word = String.new(encoding: @encoding)
-    multibyte_buf = String.new(encoding: 'ASCII-8BIT')
+    search_word = String.new(encoding: encoding)
     hit_pointer = nil
     lambda do |key|
       search_again = false
       case key
-      when "\C-h".ord, "\C-?".ord
+      when "\C-h", "\C-?"
         grapheme_clusters = search_word.grapheme_clusters
         if grapheme_clusters.size > 0
           grapheme_clusters.pop
           search_word = grapheme_clusters.join
         end
-      when "\C-r".ord, "\C-s".ord
+      when "\C-r", "\C-s"
         search_again = true if search_key == key
         search_key = key
       else
-        multibyte_buf << key
-        if multibyte_buf.dup.force_encoding(@encoding).valid_encoding?
-          search_word << multibyte_buf.dup.force_encoding(@encoding)
-          multibyte_buf.clear
-        end
+        search_word << key
       end
       hit = nil
       if not search_word.empty? and @line_backup_in_history&.include?(search_word)
@@ -1614,10 +1497,10 @@ class Reline::LineEditor
           end
           if @history_pointer
             case search_key
-            when "\C-r".ord
+            when "\C-r"
               history_pointer_base = 0
               history = Reline::HISTORY[0..(@history_pointer - 1)]
-            when "\C-s".ord
+            when "\C-s"
               history_pointer_base = @history_pointer + 1
               history = Reline::HISTORY[(@history_pointer + 1)..-1]
             end
@@ -1627,10 +1510,10 @@ class Reline::LineEditor
           end
         elsif @history_pointer
           case search_key
-          when "\C-r".ord
+          when "\C-r"
             history_pointer_base = 0
             history = Reline::HISTORY[0..@history_pointer]
-          when "\C-s".ord
+          when "\C-s"
             history_pointer_base = @history_pointer
             history = Reline::HISTORY[@history_pointer..-1]
           end
@@ -1639,11 +1522,11 @@ class Reline::LineEditor
           history = Reline::HISTORY
         end
         case search_key
-        when "\C-r".ord
+        when "\C-r"
           hit_index = history.rindex { |item|
             item.include?(search_word)
           }
-        when "\C-s".ord
+        when "\C-s"
           hit_index = history.index { |item|
             item.include?(search_word)
           }
@@ -1654,9 +1537,9 @@ class Reline::LineEditor
         end
       end
       case search_key
-      when "\C-r".ord
+      when "\C-r"
         prompt_name = 'reverse-i-search'
-      when "\C-s".ord
+      when "\C-s"
         prompt_name = 'i-search'
       end
       prompt_name = "failed #{prompt_name}" unless hit
@@ -1665,57 +1548,28 @@ class Reline::LineEditor
   end
 
   private def incremental_search_history(key)
-    unless @history_pointer
-      @line_backup_in_history = whole_buffer
-    end
+    backup = @buffer_of_lines.dup, @line_index, @byte_pointer, @history_pointer, @line_backup_in_history
     searcher = generate_searcher(key)
     @searching_prompt = "(reverse-i-search)`': "
-    termination_keys = ["\C-j".ord]
-    termination_keys.concat(@config.isearch_terminators&.chars&.map(&:ord)) if @config.isearch_terminators
+    termination_keys = ["\C-j"]
+    termination_keys.concat(@config.isearch_terminators.chars) if @config.isearch_terminators
     @waiting_proc = ->(k) {
-      case k
-      when *termination_keys
-        if @history_pointer
-          buffer = Reline::HISTORY[@history_pointer]
-        else
-          buffer = @line_backup_in_history
-        end
-        @buffer_of_lines = buffer.split("\n")
-        @buffer_of_lines = [String.new(encoding: @encoding)] if @buffer_of_lines.empty?
-        @line_index = @buffer_of_lines.size - 1
+      if k == "\C-g"
+        # cancel search and restore buffer
+        @buffer_of_lines, @line_index, @byte_pointer, @history_pointer, @line_backup_in_history = backup
         @searching_prompt = nil
         @waiting_proc = nil
-        @byte_pointer = 0
-      when "\C-g".ord
-        @buffer_of_lines = @line_backup_in_history.split("\n")
-        @buffer_of_lines = [String.new(encoding: @encoding)] if @buffer_of_lines.empty?
-        @line_index = @buffer_of_lines.size - 1
-        move_history(nil, line: :end, cursor: :end, save_buffer: false)
-        @searching_prompt = nil
-        @waiting_proc = nil
-        @byte_pointer = 0
+      elsif !termination_keys.include?(k) && (k.match?(/[[:print:]]/) || k == "\C-h" || k == "\C-?" || k == "\C-r" || k == "\C-s")
+        search_word, prompt_name, hit_pointer = searcher.call(k)
+        Reline.last_incremental_search = search_word
+        @searching_prompt = "(%s)`%s'" % [prompt_name, search_word]
+        @searching_prompt += ': ' unless @is_multiline
+        move_history(hit_pointer, line: :end, cursor: :end) if hit_pointer
       else
-        chr = k.is_a?(String) ? k : k.chr(Encoding::ASCII_8BIT)
-        if chr.match?(/[[:print:]]/) or k == "\C-h".ord or k == "\C-?".ord or k == "\C-r".ord or k == "\C-s".ord
-          search_word, prompt_name, hit_pointer = searcher.call(k)
-          Reline.last_incremental_search = search_word
-          @searching_prompt = "(%s)`%s'" % [prompt_name, search_word]
-          @searching_prompt += ': ' unless @is_multiline
-          move_history(hit_pointer, line: :end, cursor: :end, save_buffer: false) if hit_pointer
-        else
-          if @history_pointer
-            line = Reline::HISTORY[@history_pointer]
-          else
-            line = @line_backup_in_history
-          end
-          @line_backup_in_history = whole_buffer
-          @buffer_of_lines = line.split("\n")
-          @buffer_of_lines = [String.new(encoding: @encoding)] if @buffer_of_lines.empty?
-          @line_index = @buffer_of_lines.size - 1
-          @searching_prompt = nil
-          @waiting_proc = nil
-          @byte_pointer = 0
-        end
+        # terminaton_keys and other keys will terminalte
+        move_history(@history_pointer, line: :end, cursor: :start)
+        @searching_prompt = nil
+        @waiting_proc = nil
       end
     }
   end
@@ -1770,14 +1624,14 @@ class Reline::LineEditor
   end
   alias_method :history_search_forward, :ed_search_next_history
 
-  private def move_history(history_pointer, line:, cursor:, save_buffer: true)
+  private def move_history(history_pointer, line:, cursor:)
     history_pointer ||= Reline::HISTORY.size
     return if history_pointer < 0 || history_pointer > Reline::HISTORY.size
     old_history_pointer = @history_pointer || Reline::HISTORY.size
     if old_history_pointer == Reline::HISTORY.size
-      @line_backup_in_history = save_buffer ? whole_buffer : ''
+      @line_backup_in_history = whole_buffer
     else
-      Reline::HISTORY[old_history_pointer] = whole_buffer if save_buffer
+      Reline::HISTORY[old_history_pointer] = whole_buffer
     end
     if history_pointer == Reline::HISTORY.size
       buf = @line_backup_in_history
@@ -1787,7 +1641,7 @@ class Reline::LineEditor
       @history_pointer = history_pointer
     end
     @buffer_of_lines = buf.split("\n")
-    @buffer_of_lines = [String.new(encoding: @encoding)] if @buffer_of_lines.empty?
+    @buffer_of_lines = [String.new(encoding: encoding)] if @buffer_of_lines.empty?
     @line_index = line == :start ? 0 : line == :end ? @buffer_of_lines.size - 1 : line
     @byte_pointer = cursor == :start ? 0 : cursor == :end ? current_line.bytesize : cursor
   end
@@ -1921,7 +1775,7 @@ class Reline::LineEditor
   alias_method :kill_whole_line, :em_kill_line
 
   private def em_delete(key)
-    if buffer_empty? and key == "\C-d".ord
+    if buffer_empty? and key == "\C-d"
       @eof = true
       finish
     elsif @byte_pointer < current_line.bytesize
@@ -1939,9 +1793,11 @@ class Reline::LineEditor
     if current_line.empty? or @byte_pointer < current_line.bytesize
       em_delete(key)
     elsif !@config.autocompletion # show completed list
-      result = call_completion_proc
+      pre, target, post, quote = retrieve_completion_block
+      result = call_completion_proc(pre, target, post, quote)
       if result.is_a?(Array)
-        perform_completion(result, true)
+        candidates = filter_normalize_candidates(target, result)
+        menu(candidates)
       end
     end
   end
@@ -1973,7 +1829,7 @@ class Reline::LineEditor
 
   private def em_next_word(key)
     if current_line.bytesize > @byte_pointer
-      byte_size, _ = Reline::Unicode.em_forward_word(current_line, @byte_pointer)
+      byte_size = Reline::Unicode.em_forward_word(current_line, @byte_pointer)
       @byte_pointer += byte_size
     end
   end
@@ -1981,7 +1837,7 @@ class Reline::LineEditor
 
   private def ed_prev_word(key)
     if @byte_pointer > 0
-      byte_size, _ = Reline::Unicode.em_backward_word(current_line, @byte_pointer)
+      byte_size = Reline::Unicode.em_backward_word(current_line, @byte_pointer)
       @byte_pointer -= byte_size
     end
   end
@@ -1989,7 +1845,7 @@ class Reline::LineEditor
 
   private def em_delete_next_word(key)
     if current_line.bytesize > @byte_pointer
-      byte_size, _ = Reline::Unicode.em_forward_word(current_line, @byte_pointer)
+      byte_size = Reline::Unicode.em_forward_word(current_line, @byte_pointer)
       line, word = byteslice!(current_line, @byte_pointer, byte_size)
       set_current_line(line)
       @kill_ring.append(word)
@@ -1999,7 +1855,7 @@ class Reline::LineEditor
 
   private def ed_delete_prev_word(key)
     if @byte_pointer > 0
-      byte_size, _ = Reline::Unicode.em_backward_word(current_line, @byte_pointer)
+      byte_size = Reline::Unicode.em_backward_word(current_line, @byte_pointer)
       line, word = byteslice!(current_line, @byte_pointer - byte_size, byte_size)
       set_current_line(line, @byte_pointer - byte_size)
       @kill_ring.append(word, true)
@@ -2039,7 +1895,7 @@ class Reline::LineEditor
 
   private def em_capitol_case(key)
     if current_line.bytesize > @byte_pointer
-      byte_size, _, new_str = Reline::Unicode.em_forward_word_with_capitalization(current_line, @byte_pointer)
+      byte_size, new_str = Reline::Unicode.em_forward_word_with_capitalization(current_line, @byte_pointer)
       before = current_line.byteslice(0, @byte_pointer)
       after = current_line.byteslice((@byte_pointer + byte_size)..-1)
       set_current_line(before + new_str + after, @byte_pointer + new_str.bytesize)
@@ -2049,7 +1905,7 @@ class Reline::LineEditor
 
   private def em_lower_case(key)
     if current_line.bytesize > @byte_pointer
-      byte_size, = Reline::Unicode.em_forward_word(current_line, @byte_pointer)
+      byte_size = Reline::Unicode.em_forward_word(current_line, @byte_pointer)
       part = current_line.byteslice(@byte_pointer, byte_size).grapheme_clusters.map { |mbchar|
         mbchar =~ /[A-Z]/ ? mbchar.downcase : mbchar
       }.join
@@ -2062,7 +1918,7 @@ class Reline::LineEditor
 
   private def em_upper_case(key)
     if current_line.bytesize > @byte_pointer
-      byte_size, = Reline::Unicode.em_forward_word(current_line, @byte_pointer)
+      byte_size = Reline::Unicode.em_forward_word(current_line, @byte_pointer)
       part = current_line.byteslice(@byte_pointer, byte_size).grapheme_clusters.map { |mbchar|
         mbchar =~ /[a-z]/ ? mbchar.upcase : mbchar
       }.join
@@ -2075,7 +1931,7 @@ class Reline::LineEditor
 
   private def em_kill_region(key)
     if @byte_pointer > 0
-      byte_size, _ = Reline::Unicode.em_big_backward_word(current_line, @byte_pointer)
+      byte_size = Reline::Unicode.em_big_backward_word(current_line, @byte_pointer)
       line, deleted = byteslice!(current_line, @byte_pointer - byte_size, byte_size)
       set_current_line(line, @byte_pointer - byte_size)
       @kill_ring.append(deleted, true)
@@ -2106,7 +1962,7 @@ class Reline::LineEditor
 
   private def vi_next_word(key, arg: 1)
     if current_line.bytesize > @byte_pointer
-      byte_size, _ = Reline::Unicode.vi_forward_word(current_line, @byte_pointer, @drop_terminate_spaces)
+      byte_size = Reline::Unicode.vi_forward_word(current_line, @byte_pointer, @drop_terminate_spaces)
       @byte_pointer += byte_size
     end
     arg -= 1
@@ -2115,7 +1971,7 @@ class Reline::LineEditor
 
   private def vi_prev_word(key, arg: 1)
     if @byte_pointer > 0
-      byte_size, _ = Reline::Unicode.vi_backward_word(current_line, @byte_pointer)
+      byte_size = Reline::Unicode.vi_backward_word(current_line, @byte_pointer)
       @byte_pointer -= byte_size
     end
     arg -= 1
@@ -2124,7 +1980,7 @@ class Reline::LineEditor
 
   private def vi_end_word(key, arg: 1, inclusive: false)
     if current_line.bytesize > @byte_pointer
-      byte_size, _ = Reline::Unicode.vi_forward_end_word(current_line, @byte_pointer)
+      byte_size = Reline::Unicode.vi_forward_end_word(current_line, @byte_pointer)
       @byte_pointer += byte_size
     end
     arg -= 1
@@ -2139,7 +1995,7 @@ class Reline::LineEditor
 
   private def vi_next_big_word(key, arg: 1)
     if current_line.bytesize > @byte_pointer
-      byte_size, _ = Reline::Unicode.vi_big_forward_word(current_line, @byte_pointer)
+      byte_size = Reline::Unicode.vi_big_forward_word(current_line, @byte_pointer)
       @byte_pointer += byte_size
     end
     arg -= 1
@@ -2148,7 +2004,7 @@ class Reline::LineEditor
 
   private def vi_prev_big_word(key, arg: 1)
     if @byte_pointer > 0
-      byte_size, _ = Reline::Unicode.vi_big_backward_word(current_line, @byte_pointer)
+      byte_size = Reline::Unicode.vi_big_backward_word(current_line, @byte_pointer)
       @byte_pointer -= byte_size
     end
     arg -= 1
@@ -2157,7 +2013,7 @@ class Reline::LineEditor
 
   private def vi_end_big_word(key, arg: 1, inclusive: false)
     if current_line.bytesize > @byte_pointer
-      byte_size, _ = Reline::Unicode.vi_big_forward_end_word(current_line, @byte_pointer)
+      byte_size = Reline::Unicode.vi_big_forward_end_word(current_line, @byte_pointer)
       @byte_pointer += byte_size
     end
     arg -= 1
@@ -2312,7 +2168,7 @@ class Reline::LineEditor
     }
     system("#{ENV['EDITOR']} #{path}")
     @buffer_of_lines = File.read(path).split("\n")
-    @buffer_of_lines = [String.new(encoding: @encoding)] if @buffer_of_lines.empty?
+    @buffer_of_lines = [String.new(encoding: encoding)] if @buffer_of_lines.empty?
     @line_index = 0
     finish
   end
@@ -2337,20 +2193,9 @@ class Reline::LineEditor
   end
 
   private def ed_argument_digit(key)
-    if @vi_arg.nil?
-      if key.chr.to_i.zero?
-        if key.anybits?(0b10000000)
-          unescaped_key = key ^ 0b10000000
-          unless unescaped_key.chr.to_i.zero?
-            @vi_arg = unescaped_key.chr.to_i
-          end
-        end
-      else
-        @vi_arg = key.chr.to_i
-      end
-    else
-      @vi_arg = @vi_arg * 10 + key.chr.to_i
-    end
+    # key is expected to be `ESC digit` or `digit`
+    num = key[/\d/].to_i
+    @vi_arg = (@vi_arg || 0) * 10 + num
   end
 
   private def vi_to_column(key, arg: 0)
@@ -2369,7 +2214,7 @@ class Reline::LineEditor
         before = current_line.byteslice(0, @byte_pointer)
         remaining_point = @byte_pointer + byte_size
         after = current_line.byteslice(remaining_point, current_line.bytesize - remaining_point)
-        set_current_line(before + k.chr + after)
+        set_current_line(before + k + after)
         @waiting_proc = nil
       elsif arg > 1
         byte_size = 0
@@ -2379,7 +2224,7 @@ class Reline::LineEditor
         before = current_line.byteslice(0, @byte_pointer)
         remaining_point = @byte_pointer + byte_size
         after = current_line.byteslice(remaining_point, current_line.bytesize - remaining_point)
-        replaced = k.chr * arg
+        replaced = k * arg
         set_current_line(before + replaced + after, @byte_pointer + replaced.bytesize)
         @waiting_proc = nil
       end
@@ -2395,11 +2240,6 @@ class Reline::LineEditor
   end
 
   private def search_next_char(key, arg, need_prev_char: false, inclusive: false)
-    if key.instance_of?(String)
-      inputed_char = key
-    else
-      inputed_char = key.chr
-    end
     prev_total = nil
     total = nil
     found = false
@@ -2410,7 +2250,7 @@ class Reline::LineEditor
         width = Reline::Unicode.get_mbchar_width(mbchar)
         total = [mbchar.bytesize, width]
       else
-        if inputed_char == mbchar
+        if key == mbchar
           arg -= 1
           if arg.zero?
             found = true
@@ -2447,11 +2287,6 @@ class Reline::LineEditor
   end
 
   private def search_prev_char(key, arg, need_next_char = false)
-    if key.instance_of?(String)
-      inputed_char = key
-    else
-      inputed_char = key.chr
-    end
     prev_total = nil
     total = nil
     found = false
@@ -2462,7 +2297,7 @@ class Reline::LineEditor
         width = Reline::Unicode.get_mbchar_width(mbchar)
         total = [mbchar.bytesize, width]
       else
-        if inputed_char == mbchar
+        if key == mbchar
           arg -= 1
           if arg.zero?
             found = true
@@ -2514,24 +2349,23 @@ class Reline::LineEditor
     @config.editing_mode = :vi_insert
   end
 
+  private def move_undo_redo(direction)
+    @restoring = true
+    return unless (0..@input_lines.size - 1).cover?(@input_lines_position + direction)
+
+    @input_lines_position += direction
+    buffer_of_lines, byte_pointer, line_index = @input_lines[@input_lines_position]
+    @buffer_of_lines = buffer_of_lines.dup
+    @line_index = line_index
+    @byte_pointer = byte_pointer
+  end
+
   private def undo(_key)
-    @undoing = true
-
-    return if @input_lines_position <= 0
-
-    @input_lines_position -= 1
-    target_lines, target_cursor_x, target_cursor_y = @input_lines[@input_lines_position]
-    set_current_lines(target_lines.dup, target_cursor_x, target_cursor_y)
+    move_undo_redo(-1)
   end
 
   private def redo(_key)
-    @undoing = true
-
-    return if @input_lines_position >= @input_lines.size - 1
-
-    @input_lines_position += 1
-    target_lines, target_cursor_x, target_cursor_y = @input_lines[@input_lines_position]
-    set_current_lines(target_lines.dup, target_cursor_x, target_cursor_y)
+    move_undo_redo(+1)
   end
 
   private def prev_action_state_value(type)

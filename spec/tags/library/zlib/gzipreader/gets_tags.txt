@@ -1,2 +1,1 @@
 fails:GzipReader#gets with "" separator reads paragraphs skipping newlines
-fails:Zlib::GzipReader#gets with "" separator reads paragraphs skipping newlines
