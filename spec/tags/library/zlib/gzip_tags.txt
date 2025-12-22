@@ -1,1 +1,0 @@
-fails:Zlib.gzip gzips the given string

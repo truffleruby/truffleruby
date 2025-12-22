@@ -1,4 +1,0 @@
-fails:Base64#strict_decode64 raises ArgumentError when the given string contains CR
-fails:Base64#strict_decode64 raises ArgumentError when the given string contains LF
-fails:Base64#strict_decode64 raises ArgumentError when the given string has wrong padding
-fails:Base64#strict_decode64 raises ArgumentError when the given string contains an invalid character

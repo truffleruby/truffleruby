@@ -1,1 +1,0 @@
-fails:Syslog.inspect includes the ident, options, facility and mask

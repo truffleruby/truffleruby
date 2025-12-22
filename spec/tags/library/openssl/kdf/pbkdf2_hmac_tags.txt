@@ -1,4 +1,3 @@
-fails:OpenSSL::KDF.pbkdf2_hmac raises a TypeError when hash is neither a String nor an OpenSSL::Digest
 fails:OpenSSL::KDF.pbkdf2_hmac raises a TypeError when hash is neither a String nor an OpenSSL::Digest, it does not try to call #to_str
 fails:OpenSSL::KDF.pbkdf2_hmac treats salt as a required keyword
 fails:OpenSSL::KDF.pbkdf2_hmac treats iterations as a required keyword

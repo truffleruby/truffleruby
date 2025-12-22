@@ -1,1 +1,0 @@
-fails:Object#to_yaml returns the YAML representation of a Error object
