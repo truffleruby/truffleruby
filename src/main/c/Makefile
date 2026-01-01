@@ -164,16 +164,6 @@ json/parser/parser.$(DLEXT): json/parser/Makefile json/parser/*.c json/fbuffer/*
 	$(Q) cd json/parser && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
 
 # psych
-# NOTE: using --with-libyaml-source-dir causes timestamp issues with autotools and libyaml.
-# Specifically on `gem install psych` we get errors like:
-# src/main/c/libyaml/config/missing: line 81: aclocal-1.15: command not found
-# WARNING: 'aclocal-1.15' is missing on your system.
-#          You should only need it if you modified 'acinclude.m4' or
-#          'configure.ac' or m4 files included by 'configure.ac'.
-# A workaround would be to `touch aclocal.m4 configure Makefile.in` (from https://stackoverflow.com/a/33279062/388803)
-# but it seems difficult and messy to do that for the standalone archive.
-#
-# So building libyaml ourselves is safer and is consistent with how libssl is handled.
 psych/Makefile: psych/extconf.rb $(EXTCONF_DEPS)
 	$(Q) cd psych && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
 
