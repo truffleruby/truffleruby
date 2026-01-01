@@ -67,10 +67,6 @@ int rb_filesystem_encindex(void) {
   return polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_filesystem_encindex"));
 }
 
-rb_encoding* get_encoding(VALUE string) {
-  return rb_to_encoding(RUBY_INVOKE(string, "encoding"));
-}
-
 unsigned int rb_enc_codepoint_len(const char *p, const char *e, int *len_p, rb_encoding *encoding) {
   int len = e - p;
   if (len <= 0) {

@@ -219,14 +219,7 @@ VALUE rb_str_conv_enc_opts(VALUE str, rb_encoding *from, rb_encoding *to, int ec
   return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_str_conv_enc_opts", rb_tr_unwrap(str), rb_tr_unwrap(rb_enc_from_encoding(from)), rb_tr_unwrap(rb_enc_from_encoding(to)), ecflags, rb_tr_unwrap(ecopts)));
 }
 
-VALUE rb_external_str_new_with_enc(const char *ptr, long len, rb_encoding *eenc) {
-  VALUE str;
-  str = rb_enc_str_new(ptr, len, eenc);
-  str = rb_external_str_with_enc(str, eenc);
-  return str;
-}
-
-VALUE rb_external_str_with_enc(VALUE str, rb_encoding *eenc) {
+static VALUE rb_external_str_with_enc(VALUE str, rb_encoding *eenc) {
   if (polyglot_as_boolean(RUBY_INVOKE_NO_WRAP(rb_enc_from_encoding(eenc), "==", rb_enc_from_encoding(rb_usascii_encoding()))) &&
     rb_enc_str_coderange(str) != ENC_CODERANGE_7BIT) {
     rb_enc_associate_index(str, rb_ascii8bit_encindex());
@@ -234,6 +227,13 @@ VALUE rb_external_str_with_enc(VALUE str, rb_encoding *eenc) {
   }
   rb_enc_associate(str, eenc);
   return rb_str_conv_enc(str, eenc, rb_default_internal_encoding());
+}
+
+VALUE rb_external_str_new_with_enc(const char *ptr, long len, rb_encoding *eenc) {
+  VALUE str;
+  str = rb_enc_str_new(ptr, len, eenc);
+  str = rb_external_str_with_enc(str, eenc);
+  return str;
 }
 
 VALUE rb_external_str_new(const char *string, long len) {
@@ -260,16 +260,20 @@ VALUE rb_filesystem_str_new_cstr(const char *string) {
   return rb_external_str_new_with_enc(string, strlen(string), rb_filesystem_encoding());
 }
 
+static rb_encoding* get_encoding(VALUE string) {
+  return rb_to_encoding(RUBY_INVOKE(string, "encoding"));
+}
+
 VALUE rb_str_export(VALUE string) {
-  return rb_str_conv_enc(string, STR_ENC_GET(string), rb_default_external_encoding());
+  return rb_str_conv_enc(string, get_encoding(string), rb_default_external_encoding());
 }
 
 VALUE rb_str_export_locale(VALUE string) {
-  return rb_str_conv_enc(string, STR_ENC_GET(string), rb_locale_encoding());
+  return rb_str_conv_enc(string, get_encoding(string), rb_locale_encoding());
 }
 
 VALUE rb_str_export_to_enc(VALUE string, rb_encoding *enc) {
-  return rb_str_conv_enc(string, STR_ENC_GET(string), enc);
+  return rb_str_conv_enc(string, get_encoding(string), enc);
 }
 
 VALUE rb_str_intern(VALUE string) {
