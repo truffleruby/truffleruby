@@ -54,8 +54,11 @@ src/main/c/json/parser/Makefile
 src/main/c/cext-trampoline/trampoline.c
 src/main/c/etc/constdefs.h
 src/main/c/spawn-helper/spawn-helper
+src/main/c/bigdecimal
 src/main/c/debug
+src/main/c/nkf
 src/main/c/rbs
+src/main/c/syslog
 src/main/c/libyaml_build
 src/main/c/libyaml
 src/main/c/libssl_build

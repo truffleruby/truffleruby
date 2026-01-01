@@ -30,15 +30,18 @@ BASIC_EXTCONF_DEPS := $(BASIC_DEPS) $(RBCONFIG) $(MKMF)
 # However, if libtruffleruby is recompiled, there is no need to rebuild C extensions, so it's a order-only-prerequisite.
 EXTCONF_DEPS := $(BASIC_EXTCONF_DEPS) | $(LIBTRUFFLERUBY)
 
+BIGDECIMAL_GEM_EXT := $(ROOT)/lib/gems/gems/bigdecimal-3.1.8/ext/bigdecimal
 DEBUG_GEM_EXT := $(ROOT)/lib/gems/gems/debug-1.11.0/ext/debug
+NKF_GEM_EXT := $(ROOT)/lib/gems/gems/nkf-0.2.0/ext/nkf
 RBS_GEM_EXT := $(ROOT)/lib/gems/gems/rbs-3.8.0/ext/rbs_extension
 RBS_GEM_SRC := $(ROOT)/lib/gems/gems/rbs-3.8.0/src
 RBS_GEM_INC := $(ROOT)/lib/gems/gems/rbs-3.8.0/include
+SYSLOG_GEM_EXT := $(ROOT)/lib/gems/gems/syslog-0.2.0/ext/syslog
 
 IF_EXTCONF_FAIL := ( echo "`pwd`/extconf.rb failed:" 1>&2 && cat mkmf.log && false )
 
 all: $(TRAMPOLINE) $(LIBTRUFFLERUBY) openssl/openssl.$(DLEXT) zlib/zlib.$(DLEXT) \
-			psych/psych.$(DLEXT) ripper/ripper.$(DLEXT) syslog/syslog.$(DLEXT) nkf/nkf.$(DLEXT) \
+			psych/psych.$(DLEXT) ripper/ripper.$(DLEXT) syslog/syslog_ext.$(DLEXT) nkf/nkf.$(DLEXT) \
 			bigdecimal/bigdecimal.$(DLEXT) date/date_core.$(DLEXT) io-console/console.$(DLEXT) etc/etc.$(DLEXT) \
 			rbconfig-sizeof/sizeof.$(DLEXT) json/parser/parser.$(DLEXT) \
 			debug/debug.$(DLEXT) rbs/rbs_extension.$(DLEXT)
@@ -54,16 +57,17 @@ clean_cexts:
 	$(Q) rm -f zlib/Makefile zlib/*.o zlib/zlib.$(DLEXT)
 	$(Q) rm -f psych/Makefile psych/*.o psych/psych.$(DLEXT)
 	$(Q) rm -f ripper/Makefile ripper/*.o ripper/ripper.$(DLEXT)
-	$(Q) rm -f syslog/Makefile syslog/*.o syslog/syslog.$(DLEXT)
-	$(Q) rm -f nkf/Makefile nkf/*.o nkf/nkf.$(DLEXT)
-	$(Q) rm -f bigdecimal/Makefile bigdecimal/*.o bigdecimal/bigdecimal.$(DLEXT)
 	$(Q) rm -f date/Makefile date/*.o date/date_core.$(DLEXT)
 	$(Q) rm -f io-console/Makefile io-console/*.o io-console/console.$(DLEXT)
 	$(Q) rm -f etc/Makefile etc/*.o etc/etc.$(DLEXT) etc/constdefs.h
 	$(Q) rm -f rbconfig-sizeof/Makefile rbconfig-sizeof/*.o rbconfig-sizeof/sizeof.$(DLEXT)
 	$(Q) rm -f json/parser/Makefile json/parser/*.o json/parser/parser.$(DLEXT)
-	$(Q) rm -f debug/Makefile debug/*.o debug/debug.$(DLEXT)
-	$(Q) rm -f rbs/Makefile rbs/*.o rbs/rbs_extension.$(DLEXT)
+	$(Q) echo Cleaning bundled gems
+	$(Q) rm -rf bigdecimal
+	$(Q) rm -rf debug
+	$(Q) rm -rf nkf
+	$(Q) rm -rf rbs
+	$(Q) rm -rf syslog
 
 # cext-trampoline
 # Remove cext/wrappers.c explicitly, as it was a generated file and so `git pull` does not remove it
@@ -101,27 +105,6 @@ ripper/Makefile: ripper/extconf.rb $(EXTCONF_DEPS)
 
 ripper/ripper.$(DLEXT): ripper/Makefile ripper/*.c ripper/*.h
 	$(Q) cd ripper && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
-
-# syslog
-syslog/Makefile: syslog/extconf.rb $(EXTCONF_DEPS)
-	$(Q) cd syslog && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
-
-syslog/syslog.$(DLEXT): syslog/Makefile syslog/syslog.c
-	$(Q) cd syslog && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
-
-# nkf
-nkf/Makefile: nkf/extconf.rb $(EXTCONF_DEPS)
-	$(Q) cd nkf && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
-
-nkf/nkf.$(DLEXT): nkf/Makefile nkf/nkf.c nkf/nkf-utf8/*.c nkf/nkf-utf8/*.h
-	$(Q) cd nkf && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
-
-# bigdecimal
-bigdecimal/Makefile: bigdecimal/extconf.rb $(EXTCONF_DEPS)
-	$(Q) cd bigdecimal && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
-
-bigdecimal/bigdecimal.$(DLEXT): bigdecimal/Makefile bigdecimal/bigdecimal.c
-	$(Q) cd bigdecimal && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
 
 # date
 date/Makefile: date/extconf.rb $(EXTCONF_DEPS)
@@ -170,6 +153,19 @@ psych/Makefile: psych/extconf.rb $(EXTCONF_DEPS)
 psych/psych.$(DLEXT): psych/Makefile psych/*.c psych/*.h
 	$(Q) cd psych && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
 
+# Bundled gems: the approach is to copy files from the gem into src/main/c/$GEM first, and then proceed like for a default gem. The order is alphabetic.
+
+# bigdecimal bundled gem
+bigdecimal/extconf.rb: $(BIGDECIMAL_GEM_EXT)/extconf.rb $(BIGDECIMAL_GEM_EXT)/*.c $(BIGDECIMAL_GEM_EXT)/*.h $(BIGDECIMAL_GEM_EXT)/missing
+	$(Q) mkdir -p bigdecimal
+	$(Q) cd bigdecimal && cp -R $^ .
+
+bigdecimal/Makefile: bigdecimal/extconf.rb $(EXTCONF_DEPS)
+	$(Q) cd bigdecimal && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
+
+bigdecimal/bigdecimal.$(DLEXT): bigdecimal/Makefile
+	$(Q) cd bigdecimal && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
+
 # debug bundled gem
 debug/extconf.rb: $(DEBUG_GEM_EXT)/extconf.rb $(DEBUG_GEM_EXT)/*.c
 	$(Q) mkdir -p debug
@@ -180,6 +176,17 @@ debug/Makefile: debug/extconf.rb $(EXTCONF_DEPS)
 
 debug/debug.$(DLEXT): debug/Makefile
 	$(Q) cd debug && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
+
+# nkf bundled gem
+nkf/extconf.rb: $(NKF_GEM_EXT)/extconf.rb $(NKF_GEM_EXT)/*.c $(NKF_GEM_EXT)/nkf-utf8
+	$(Q) mkdir -p nkf
+	$(Q) cd nkf && cp -R $^ .
+
+nkf/Makefile: nkf/extconf.rb $(EXTCONF_DEPS)
+	$(Q) cd nkf && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
+
+nkf/nkf.$(DLEXT): nkf/Makefile
+	$(Q) cd nkf && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
 
 # rbs bundled gem
 rbs/extconf.rb: $(RBS_GEM_EXT)/extconf.rb $(RBS_GEM_EXT)/*.c $(RBS_GEM_EXT)/*.h $(RBS_GEM_SRC)/*.c $(RBS_GEM_INC)/rbs.h $(RBS_GEM_INC)/rbs/*.h
@@ -194,3 +201,13 @@ rbs/Makefile: rbs/extconf.rb $(EXTCONF_DEPS)
 rbs/rbs_extension.$(DLEXT): rbs/Makefile
 	$(Q) cd rbs && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
 
+# syslog bundled gem
+syslog/extconf.rb: $(SYSLOG_GEM_EXT)/extconf.rb $(SYSLOG_GEM_EXT)/*.c
+	$(Q) mkdir -p syslog
+	$(Q) cd syslog && cp $^ .
+
+syslog/Makefile: syslog/extconf.rb $(EXTCONF_DEPS)
+	$(Q) cd syslog && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
+
+syslog/syslog_ext.$(DLEXT): syslog/Makefile
+	$(Q) cd syslog && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
