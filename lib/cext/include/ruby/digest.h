@@ -73,11 +73,6 @@ rb_id_metadata(void)
 # define DIGEST_USE_RB_EXT_RESOLVE_SYMBOL 1
 #endif
 
-// TODO (nirvdrum 2025-11-25) TruffleRuby doesn't provide `rb_ext_resolve_symbol` yet.
-#ifdef TRUFFLERUBY
-#undef DIGEST_USE_RB_EXT_RESOLVE_SYMBOL
-#endif
-
 static inline VALUE
 rb_digest_make_metadata(const rb_digest_metadata_t *meta)
 {
