@@ -175,6 +175,7 @@ cd $TRUFFLERUBY
 rm -f lib/gems/gems/**/*.{o,a,so,bundle}(N) lib/gems/gems/**/{Makefile,extconf.h,mkmf.log} lib/gems/gems/**/*.mk
 rm -rf lib/gems/gems/typeprof-* lib/gems/specifications/typeprof-*.gemspec
 rm -f lib/gems/gems/rbs-*/Gemfile.lock(N)
+git checkout -- lib/gems/specifications/default/prism-*.gemspec
 ruby tool/patch-default-gemspecs.rb
 ```
 
