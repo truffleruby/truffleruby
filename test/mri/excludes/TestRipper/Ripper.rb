@@ -1,4 +1,4 @@
-exclude :test_assignable_in_regexp, "undefined symbol: rb_node_regx_string_val"
+exclude :test_assignable_in_regexp, "pid 299333 killed by SIGABRT (signal 6)"
 exclude :test_invalid_multibyte_character_in_regexp, "undefined symbol: rb_reg_check_preprocess"
 exclude :test_no_memory_leak, "slow: 38.31s on truffleruby 34.0.0-dev-0b9bf975, like ruby 3.4.7, GraalVM CE JVM [x86_64-linux] with AMD Ryzen 7 9800X3D 8-Core Processor: ( 16 vCPUs)"
 exclude :test_yydebug_ident, "ArgumentError: unhandled rb_sprintf arg type 26"
