@@ -189,11 +189,9 @@ nkf/nkf.$(DLEXT): nkf/Makefile
 	$(Q) cd nkf && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
 
 # rbs bundled gem
-rbs/extconf.rb: $(RBS_GEM_EXT)/extconf.rb $(RBS_GEM_EXT)/*.c $(RBS_GEM_EXT)/*.h $(RBS_GEM_SRC)/*.c $(RBS_GEM_INC)/rbs.h $(RBS_GEM_INC)/rbs/*.h
-	$(Q) mkdir -p rbs/include/rbs
-	$(Q) cd rbs && cp $(RBS_GEM_EXT)/extconf.rb $(RBS_GEM_EXT)/*.c $(RBS_GEM_EXT)/*.h $(RBS_GEM_SRC)/*.c .
-	$(Q) cp $(RBS_GEM_INC)/rbs.h rbs/include/
-	$(Q) cp $(RBS_GEM_INC)/rbs/*.h rbs/include/rbs/
+rbs/extconf.rb: $(RBS_GEM_EXT)/extconf.rb $(RBS_GEM_EXT)/*.c $(RBS_GEM_EXT)/*.h $(RBS_GEM_SRC)/*.c $(RBS_GEM_INC)
+	$(Q) mkdir -p rbs
+	$(Q) cd rbs && cp -R $^ .
 
 rbs/Makefile: rbs/extconf.rb $(EXTCONF_DEPS)
 	$(Q) cd rbs && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
