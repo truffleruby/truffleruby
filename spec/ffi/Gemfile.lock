@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    bigdecimal (4.0.1)
     diff-lcs (1.5.0)
     rspec (3.12.0)
       rspec-core (~> 3.12.0)
@@ -20,4 +21,5 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  bigdecimal
   rspec (~> 3.0)
