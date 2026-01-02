@@ -886,21 +886,29 @@ suite = {
                 "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/racc-<gem_version:racc>/gem.build_complete": "string:", # actually we do not build the C extension because the pure-Ruby fallback is enough
                 "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/rbs-<gem_version:rbs>/gem.build_complete": "string:",
                 "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/syslog-<gem_version:syslog>/gem.build_complete": "string:",
+                # Copy the extensions of bundled gems to the right place
+                "lib/gems/gems/bigdecimal-<gem_version:bigdecimal>/lib/": [
+                    "dependency:org.truffleruby.cext/src/main/c/bigdecimal/<extsuffix:bigdecimal>",
+                ],
                 "lib/gems/gems/debug-<gem_version:debug>/lib/debug/": [
                     "dependency:org.truffleruby.cext/src/main/c/debug/<extsuffix:debug>",
+                ],
+                "lib/gems/gems/nkf-<gem_version:nkf>/lib/": [
+                    "dependency:org.truffleruby.cext/src/main/c/nkf/<extsuffix:nkf>",
                 ],
                 "lib/gems/gems/rbs-<gem_version:rbs>/lib/": [
                     "dependency:org.truffleruby.cext/src/main/c/rbs/<extsuffix:rbs_extension>",
                 ],
+                "lib/gems/gems/syslog-<gem_version:syslog>/lib/": [
+                    "dependency:org.truffleruby.cext/src/main/c/syslog/<extsuffix:syslog_ext>",
+                ],
+                # Copy the extensions of default gems to the right place
                 "lib/mri/": [
-                    "dependency:org.truffleruby.cext/src/main/c/bigdecimal/<extsuffix:bigdecimal>",
                     "dependency:org.truffleruby.cext/src/main/c/date/<extsuffix:date_core>",
                     "dependency:org.truffleruby.cext/src/main/c/etc/<extsuffix:etc>",
-                    "dependency:org.truffleruby.cext/src/main/c/nkf/<extsuffix:nkf>",
                     "dependency:org.truffleruby.cext/src/main/c/openssl/<extsuffix:openssl>",
                     "dependency:org.truffleruby.cext/src/main/c/psych/<extsuffix:psych>",
                     "dependency:org.truffleruby.cext/src/main/c/ripper/<extsuffix:ripper>",
-                    "dependency:org.truffleruby.cext/src/main/c/syslog/<extsuffix:syslog_ext>",
                     "dependency:org.truffleruby.cext/src/main/c/zlib/<extsuffix:zlib>",
                 ],
                 "lib/mri/io/": [
