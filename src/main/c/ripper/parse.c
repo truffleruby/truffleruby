@@ -26203,9 +26203,13 @@ reg_fragment_error(struct parser_params* p, VALUE err)
 int
 rb_parser_reg_fragment_check(struct parser_params* p, rb_parser_string_t *str, int options, rb_parser_reg_fragment_error_func error)
 {
+#ifndef TRUFFLERUBY
     VALUE err, str2;
+#endif
     reg_fragment_setenc(p, str, options);
     /* TODO */
+#ifndef TRUFFLERUBY
+// TruffleRuby: rb_reg_check_preprocess() not implemented
     str2 = rb_str_new_parser_string(str);
     err = rb_reg_check_preprocess(str2);
     if (err != Qnil) {
@@ -26213,6 +26217,7 @@ rb_parser_reg_fragment_check(struct parser_params* p, rb_parser_string_t *str, i
         error(p, err);
         return 0;
     }
+#endif
     return 1;
 }
 #endif
