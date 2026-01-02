@@ -993,7 +993,7 @@ module Commands
     case options
     when ['cexts']
       clean(*options)
-      build
+      build(*options)
     else
       clean
       build(*options)
