@@ -30,13 +30,13 @@ BASIC_EXTCONF_DEPS := $(BASIC_DEPS) $(RBCONFIG) $(MKMF)
 # However, if libtruffleruby is recompiled, there is no need to rebuild C extensions, so it's a order-only-prerequisite.
 EXTCONF_DEPS := $(BASIC_EXTCONF_DEPS) | $(LIBTRUFFLERUBY)
 
-BIGDECIMAL_GEM_EXT := $(ROOT)/lib/gems/gems/bigdecimal-3.1.8/ext/bigdecimal
-DEBUG_GEM_EXT := $(ROOT)/lib/gems/gems/debug-1.11.0/ext/debug
-NKF_GEM_EXT := $(ROOT)/lib/gems/gems/nkf-0.2.0/ext/nkf
-RBS_GEM_EXT := $(ROOT)/lib/gems/gems/rbs-3.8.0/ext/rbs_extension
-RBS_GEM_SRC := $(ROOT)/lib/gems/gems/rbs-3.8.0/src
-RBS_GEM_INC := $(ROOT)/lib/gems/gems/rbs-3.8.0/include
-SYSLOG_GEM_EXT := $(ROOT)/lib/gems/gems/syslog-0.2.0/ext/syslog
+BIGDECIMAL_GEM_EXT := $(ROOT)/lib/gems/gems/bigdecimal-$(BIGDECIMAL_VERSION)/ext/bigdecimal
+DEBUG_GEM_EXT := $(ROOT)/lib/gems/gems/debug-$(DEBUG_VERSION)/ext/debug
+NKF_GEM_EXT := $(ROOT)/lib/gems/gems/nkf-$(NKF_VERSION)/ext/nkf
+RBS_GEM_EXT := $(ROOT)/lib/gems/gems/rbs-$(RBS_VERSION)/ext/rbs_extension
+RBS_GEM_SRC := $(ROOT)/lib/gems/gems/rbs-$(RBS_VERSION)/src
+RBS_GEM_INC := $(ROOT)/lib/gems/gems/rbs-$(RBS_VERSION)/include
+SYSLOG_GEM_EXT := $(ROOT)/lib/gems/gems/syslog-$(SYSLOG_VERSION)/ext/syslog
 
 IF_EXTCONF_FAIL := ( echo "`pwd`/extconf.rb failed:" 1>&2 && cat mkmf.log && false )
 

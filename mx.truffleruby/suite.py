@@ -450,6 +450,11 @@ suite = {
                 "TRUFFLERUBY_BOOTSTRAP_LAUNCHER": "<path:TRUFFLERUBY-BOOTSTRAP-LAUNCHER>/miniruby",
                 "GRAALVM_TOOLCHAIN_CC": "<toolchainGetToolPath:native,CC>",
                 "TRUFFLE_NFI_NATIVE_INCLUDE": "<path:truffle:TRUFFLE_NFI_NATIVE>/include",
+                "BIGDECIMAL_VERSION": "<gem_version:bigdecimal>",
+                "DEBUG_VERSION": "<gem_version:debug>",
+                "NKF_VERSION": "<gem_version:nkf>",
+                "RBS_VERSION": "<gem_version:rbs>",
+                "SYSLOG_VERSION": "<gem_version:syslog>",
             },
             "output": ".",
             "results": [
@@ -875,16 +880,16 @@ suite = {
                     "dependency:org.truffleruby.cext/src/main/c/cext-trampoline/<lib:trufflerubytrampoline>",
                 ],
                 # Create the complete files for bundled gems to let RubyGems know the gems are fully built and can be activated
-                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/bigdecimal-3.1.8/gem.build_complete": "string:",
-                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/debug-1.11.0/gem.build_complete": "string:",
-                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/nkf-0.2.0/gem.build_complete": "string:",
-                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/racc-1.8.1/gem.build_complete": "string:", # actually we do not build the C extension because the pure-Ruby fallback is enough
-                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/rbs-3.8.0/gem.build_complete": "string:",
-                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/syslog-0.2.0/gem.build_complete": "string:",
-                "lib/gems/gems/debug-1.11.0/lib/debug/": [
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/bigdecimal-<gem_version:bigdecimal>/gem.build_complete": "string:",
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/debug-<gem_version:debug>/gem.build_complete": "string:",
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/nkf-<gem_version:nkf>/gem.build_complete": "string:",
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/racc-<gem_version:racc>/gem.build_complete": "string:", # actually we do not build the C extension because the pure-Ruby fallback is enough
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/rbs-<gem_version:rbs>/gem.build_complete": "string:",
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/syslog-<gem_version:syslog>/gem.build_complete": "string:",
+                "lib/gems/gems/debug-<gem_version:debug>/lib/debug/": [
                     "dependency:org.truffleruby.cext/src/main/c/debug/<extsuffix:debug>",
                 ],
-                "lib/gems/gems/rbs-3.8.0/lib/": [
+                "lib/gems/gems/rbs-<gem_version:rbs>/lib/": [
                     "dependency:org.truffleruby.cext/src/main/c/rbs/<extsuffix:rbs_extension>",
                 ],
                 "lib/mri/": [

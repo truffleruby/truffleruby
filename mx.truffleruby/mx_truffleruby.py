@@ -8,11 +8,12 @@
 
 from __future__ import print_function
 
+import json
 import os
-import shlex
 from os.path import join, exists, basename, dirname, isdir
 import pathlib
 import re
+import shlex
 import shutil
 import sys
 
@@ -80,6 +81,18 @@ def get_truffleruby_abi_version():
     return m.group(1)
 
 mx_subst.results_substitutions.register_no_arg('truffleruby_abi_version', get_truffleruby_abi_version)
+
+versions = None
+
+def get_gem_version(gem_name):
+    global versions
+    if not versions:
+        with open(join(root, 'versions.json'), "r") as f:
+            versions = json.load(f)
+
+    return versions['gems']['default'].get(gem_name) or versions['gems']['bundled'][gem_name]
+
+mx_subst.results_substitutions.register_with_arg('gem_version', get_gem_version)
 
 class TruffleRubyUnittestConfig(mx_unittest.MxUnittestConfig):
     def __init__(self):

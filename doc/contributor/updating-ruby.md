@@ -206,7 +206,7 @@ Update all of these:
   * use `$TRUFFLERUBY_VERSION.1` in `truffleruby-abi-version.h` instead when on a release branch.
 * Update `versions.json`
   * run `RUBY_SOURCE_DIR=../ruby-$VERSION tool/update-gem-versions-list.rb`
-* Also update version numbers for bundled gems like `debug` in `src/main/c/Makefile`, `mx.truffleruby/suite.py` and `lib/gems/gems/debug-*/ext/debug/extconf.rb`.
+* Also update version numbers for bundled gems like `debug` in `lib/gems/gems/debug-*/ext/debug/extconf.rb`.
 * Copy and paste the `-h` and `--help` output from CRuby to `RubyLauncher` (instructions are in the end of the file `src/launcher/java/org/truffleruby/launcher/RubyLauncher.java`)
 * This is a good time to get `jt build` working.
 * Copy and paste the TruffleRuby `--help` output to `doc/user/options.md` (e.g., with `jt ruby --help | xsel -b`)
