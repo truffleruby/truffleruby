@@ -45,8 +45,6 @@ cext-ruby/bignum/test_pack.rb
 cext-ruby/bignum/test_str2big.rb
 cext-ruby/float/test_nextafter.rb
 cext-ruby/iseq_load/test_iseq_load.rb
-cext-ruby/iter/test_iter_break.rb
-cext-ruby/iter/test_yield_block.rb
 cext-ruby/num2int/test_num2int.rb # terminates with segfault on CI
 cext-ruby/popen_deadlock/test_popen_deadlock.rb
 cext-ruby/postponed_job/test_postponed_job.rb
