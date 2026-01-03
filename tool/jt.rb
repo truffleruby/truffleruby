@@ -2548,8 +2548,10 @@ module Commands
     if ENV['GITHUB_ACTIONS'] and darwin? and aarch64?
       # There is only 7GB of RAM on darwin-arm64 on GitHub Actions:
       # https://docs.github.com/en/actions/reference/runners/github-hosted-runners
-      # So we need to tell the Native Image Driver to use everything to have enough memory to build the image
-      options = ['--extra-image-builder-argument=rubyvm:-J-XX:MaxRAMPercentage=100', *options]
+      # We tried various combinations of CPUs and Xmx in https://github.com/truffleruby/truffleruby/pull/4067,
+      # and the most consistent is Xmx7g 1CPU (median time ~1h31min),
+      # and is also the second fastest after Xmx8g 1CPU (median time ~1h26min).
+      options = ['--extra-image-builder-argument=rubyvm:-J-Xmx7g', '--extra-image-builder-argument=rubyvm:--parallelism=1', *options]
     end
 
     mx_options, mx_build_options = args_split(options)
