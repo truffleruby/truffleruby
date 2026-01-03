@@ -13,6 +13,8 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 import org.prism.Nodes;
+import org.prism.Nodes.Node;
+import org.prism.Nodes.ParametersNode;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.Split;
 import org.truffleruby.core.IsNilNode;
@@ -56,9 +58,12 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
         this.acceptsBlockParameter = acceptsBlockParameter;
     }
 
-    public RubyNode compileBlockNode(Nodes.Node body, Nodes.ParametersNode parameters, String[] locals,
+    public RubyNode compileBlockNode(Node body, ParametersNode parameters, Node parametersNode, String[] locals,
             boolean isStabbyLambda, SourceSection sourceSection) {
         declareLocalVariables(locals);
+        if (parametersNode instanceof Nodes.ItParametersNode) {
+            environment.declareVar(IT_PARAMETER_NAME);
+        }
 
         final RubyNode loadArguments = new YARPLoadArgumentsTranslator(
                 environment,
