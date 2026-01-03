@@ -261,7 +261,7 @@ public final class BacktraceFormatter {
         var callNode = element.getLocation();
         var rootNode = element.getTarget().getRootNode();
         var sourceSection = callNode == null ? rootNode.getSourceSection() : callNode.getEncapsulatingSourceSection();
-        var methodName = Backtrace.labelFor(element);
+        var moduleAndMethod = Backtrace.labelFor(element);
 
         if (rootNode instanceof RubyRootNode) { // A Ruby frame
             final SourceSection reportedSourceSection;
@@ -290,8 +290,8 @@ public final class BacktraceFormatter {
             }
         }
 
-        builder.append(":in `");
-        builder.append(methodName);
+        builder.append(":in '");
+        builder.append(moduleAndMethod);
         builder.append("'");
 
         if (!flags.contains(FormattingFlags.OMIT_EXCEPTION) && exception != null && n == 0) {
@@ -303,8 +303,8 @@ public final class BacktraceFormatter {
     }
 
     /** Like {@link StackTraceElement#toString()} but without any classloader/module info. Not formatted in Ruby order
-     * (file:line:in `method') to keep a Java feel to it and be closer to {@link Throwable#printStackTrace()}. Using an
-     * explicit StringBuilder to avoid using too much stack space for this (matters for StackOverflowError) */
+     * (file:line:in 'Module#method') to keep a Java feel to it and be closer to {@link Throwable#printStackTrace()}.
+     * Using an explicit StringBuilder to avoid using too much stack space for this (matters for StackOverflowError) */
     public static String formatStackTraceElement(StackTraceElement element) {
         StringBuilder builder = new StringBuilder();
         builder.append(element.getClassName()).append(".").append(element.getMethodName());

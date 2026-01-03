@@ -91,7 +91,7 @@ public final class CoreExceptions {
             if (RubyStringLibrary.isRubyStringUncached(message)) {
                 message = StringOperations.getJavaString(message);
             }
-            final String output = "Exception `" + exceptionClass + "'" + from + " - " + message + "\n";
+            final String output = "Exception '" + exceptionClass + "'" + from + " - " + message + "\n";
             if (context.getCoreLibrary().isLoaded()) {
                 RubyString outputString = StringOperations.createUTF8String(context, language, output);
                 Object stderr = context.getCoreLibrary().getStderr();
@@ -554,7 +554,7 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyException typeErrorNotASingletonClass(Node currentNode, RubyClass rubyClass) {
         String className = rubyClass.fields.getName();
-        return typeError(StringUtils.format("`%s' is not a singleton class", className), currentNode, null);
+        return typeError(StringUtils.format("'%s' is not a singleton class", className), currentNode, null);
     }
 
     @TruffleBoundary
@@ -760,7 +760,7 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyNameError nameErrorInstanceNameNotAllowable(String name, Object receiver, Node currentNode) {
         return nameError(
-                StringUtils.format("`%s' is not allowable as an instance variable name", name),
+                StringUtils.format("'%s' is not allowable as an instance variable name", name),
                 receiver,
                 name,
                 currentNode);
@@ -775,7 +775,7 @@ public final class CoreExceptions {
     public RubyNameError nameErrorUndefinedMethod(String name, RubyModule module, Node currentNode) {
         return nameError(
                 StringUtils.format(
-                        "undefined method `%s' for %s `%s'",
+                        "undefined method '%s' for %s '%s'",
                         name,
                         module instanceof RubyClass ? "class" : "module",
                         module.fields.getName()),
@@ -788,7 +788,7 @@ public final class CoreExceptions {
     public RubyNameError nameErrorUndefinedSingletonMethod(String name, Object receiver, Node currentNode) {
         String className = LogicalClassNode.getUncached().execute(receiver).fields.getName();
         return nameError(
-                StringUtils.format("undefined singleton method `%s' for %s", name, className),
+                StringUtils.format("undefined singleton method '%s' for %s", name, className),
                 receiver,
                 name,
                 currentNode);
@@ -797,7 +797,7 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyNameError nameErrorMethodNotDefinedIn(RubyModule module, String name, Node currentNode) {
         return nameError(
-                StringUtils.format("method `%s' not defined in %s", name, module.fields.getName()),
+                StringUtils.format("method '%s' not defined in %s", name, module.fields.getName()),
                 module,
                 name,
                 currentNode);
@@ -806,7 +806,7 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyNameError nameErrorPrivateMethod(String name, RubyModule module, Node currentNode) {
         return nameError(
-                StringUtils.format("method `%s' for %s is private", name, module.fields.getName()),
+                StringUtils.format("method '%s' for %s is private", name, module.fields.getName()),
                 module,
                 name,
                 currentNode);
@@ -815,7 +815,7 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyNameError nameErrorLocalVariableNotDefined(String name, RubyBinding binding, Node currentNode) {
         return nameError(
-                StringUtils.format("local variable `%s' not defined for %s", name, binding.toString()),
+                StringUtils.format("local variable '%s' not defined for %s", name, binding.toString()),
                 binding,
                 name,
                 currentNode);
@@ -824,7 +824,7 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyNameError nameErrorClassVariableNotDefined(String name, RubyModule module, Node currentNode) {
         return nameError(StringUtils.format(
-                "class variable `%s' not defined for %s",
+                "class variable '%s' not defined for %s",
                 name,
                 module.fields.getName()), module, name, currentNode);
     }
@@ -864,7 +864,7 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyNameError nameErrorFromMethodMissing(ExceptionFormatter formatter, Object receiver, String name,
             Node currentNode) {
-        // omit = 1 to skip over the call to `method_missing'. MRI does not show this is the backtrace.
+        // omit = 1 to skip over the call to 'method_missing'. MRI does not show this in the backtrace.
         final Backtrace backtrace = context.getCallStack().getBacktrace(currentNode, 1);
         final Object cause = FiberGetExceptionNode.getLastException(language);
 
@@ -891,7 +891,7 @@ public final class CoreExceptions {
             Object[] args, Node currentNode) {
         final RubyArray argsArray = createArray(context, language, args);
 
-        // omit = 1 to skip over the call to `method_missing'. MRI does not show this is the backtrace.
+        // omit = 1 to skip over the call to 'method_missing'. MRI does not show this is the backtrace.
         final Backtrace backtrace = context.getCallStack().getBacktrace(currentNode, 1);
         final Object cause = FiberGetExceptionNode.getLastException(language);
 
@@ -1102,7 +1102,7 @@ public final class CoreExceptions {
             throw CompilerDirectives.shouldNotReachHere("long fitting in int");
         }
 
-        return rangeError(StringUtils.format("integer %d too %s to convert to `int'", value, direction), currentNode);
+        return rangeError(StringUtils.format("integer %d too %s to convert to 'int'", value, direction), currentNode);
     }
 
     @TruffleBoundary

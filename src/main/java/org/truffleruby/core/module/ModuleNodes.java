@@ -508,13 +508,15 @@ public abstract class ModuleNodes {
             final String ivar = "@" + name;
             final String accessorName = accessor == READER ? name : name + "=";
 
+            String parseName = SharedMethodInfo.moduleAndMethodNameIfModuleIsFullyNamed(module, accessorName);
+
             final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
                     sourceSection,
                     LexicalScope.IGNORE,
                     arity,
                     accessorName,
                     0,
-                    SharedMethodInfo.moduleAndMethodName(module, accessorName),
+                    parseName,
                     ivar, // notes
                     null);
 

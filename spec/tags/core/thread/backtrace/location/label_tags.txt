@@ -1,1 +1,3 @@
 slow:Thread::Backtrace::Location#label sets the location label for a top-level block differently depending on it being in the main file or a required file
+fails:Thread::Backtrace::Location#label is Module#method for a method defined via module_exec
+fails:Thread::Backtrace::Location#label is Module.method for a singleton method defined via def Const.method

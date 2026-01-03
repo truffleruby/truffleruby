@@ -384,7 +384,7 @@ For instance `java.util.concurrent.ExecutorService` has both `submit(Runnable)` 
 Calling submit without specifying which one shows the possible overloads:
 ```
 $ ruby -e 'Java.type("java.util.concurrent.Executors").newFixedThreadPool(1).submit {}'
--e:1:in `main': Multiple applicable overloads found for method name submit (candidates: [
+-e:1:in '<main>': Multiple applicable overloads found for method name submit (candidates: [
   Method[public java.util.concurrent.Future java.util.concurrent.AbstractExecutorService.submit(java.util.concurrent.Callable)],
   Method[public java.util.concurrent.Future java.util.concurrent.AbstractExecutorService.submit(java.lang.Runnable)]],
   arguments: [RubyProc@4893b344 (RubyProc)]) (TypeError)

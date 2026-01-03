@@ -1,5 +1,5 @@
-/send.rb:18:in `m2': message (RuntimeError)
-	from /send.rb:14:in `m1'
-	from /send.rb:22:in `block in <main>'
-	from /backtraces.rb:17:in `check'
-	from /send.rb:21:in `<main>'
+/send.rb:18:in 'Object#m2': message (RuntimeError)
+	from /send.rb:14:in 'Object#m1'
+	from /send.rb:22:in 'block in <main>'
+	from /backtraces.rb:17:in 'Object#check'
+	from /send.rb:21:in '<main>'

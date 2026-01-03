@@ -17,7 +17,6 @@ import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.core.support.DetailedInspectingSupport;
 import org.truffleruby.language.LexicalScope;
-import org.truffleruby.language.RubyDynamicObject;
 import org.truffleruby.language.RubyGuards;
 import org.truffleruby.language.backtrace.BacktraceFormatter;
 import org.truffleruby.parser.ArgumentDescriptor;
@@ -39,10 +38,10 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
     private final LexicalScope staticLexicalScope;
     private final Arity arity;
     /** The original name of the method. Does not change when aliased. Looks like "block in foo" or "block (2 levels) in
-     * foo" for blocks. This is the name shown in backtraces: "from FILE:LINE:in `NAME'". */
+     * foo" for blocks. */
     private final String originalName;
     /** The "static" name of this method at parse time, such as "M::C#foo", "M::C.foo", "<module:Inner>", "block (2
-     * levels) in M::C.foo" or "block (2 levels) in <module:Inner>". This name is used for tools. */
+     * levels) in M::C.foo" or "block (2 levels) in <module:Inner>". This name is used for tools and backtraces. */
     private final String parseName;
     private final int blockDepth;
     /** Extra information. If blockDepth > 0 then it is the name of the method containing this block. */
@@ -77,7 +76,7 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
                 proc.arity,
                 methodName,
                 0, // no longer a block
-                moduleAndMethodName(declaringModule, methodName),
+                moduleAndMethodNameIfModuleIsFullyNamed(declaringModule, methodName),
                 null,
                 proc.argumentDescriptors);
     }
@@ -89,7 +88,7 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
                 arity.consumingFirstRequired(),
                 methodName,
                 blockDepth,
-                moduleAndMethodName(declaringModule, methodName),
+                moduleAndMethodNameIfModuleIsFullyNamed(declaringModule, methodName),
                 notes,
                 ArgumentDescriptor.ANY_UNNAMED);
     }
@@ -170,13 +169,34 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         return module.fields.getName() + "::" + constantName;
     }
 
+    /** Consider using {@link #moduleAndMethodNameIfModuleIsFullyNamed} instead */
     public static String moduleAndMethodName(RubyModule module, String methodName) {
         assert module != null && methodName != null;
         if (RubyGuards.isMetaClass(module)) {
-            final RubyDynamicObject attached = ((RubyClass) module).attached;
-            return ((RubyModule) attached).getName() + "." + methodName;
+            final RubyModule attached = (RubyModule) ((RubyClass) module).attached;
+            return attached.getName() + "." + methodName;
         } else {
             return module.getName() + "#" + methodName;
+        }
+    }
+
+    /** Returns "Module#method" if Module is fully named and "method" otherwise. This is the expected behavior for Ruby
+     * backtraces. */
+    public static String moduleAndMethodNameIfModuleIsFullyNamed(RubyModule module, String methodName) {
+        assert module != null && methodName != null;
+        if (RubyGuards.isMetaClass(module)) {
+            final RubyModule attached = (RubyModule) ((RubyClass) module).attached;
+            if (attached.fields.hasFullName()) {
+                return attached.getName() + "." + methodName;
+            } else {
+                return methodName;
+            }
+        } else {
+            if (module.fields.hasFullName()) {
+                return module.getName() + "#" + methodName;
+            } else {
+                return methodName;
+            }
         }
     }
 

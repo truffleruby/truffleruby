@@ -961,7 +961,7 @@ class IO
   #  f.readlines
   # produces:
   #
-  #  prog.rb:3:in `readlines': not opened for reading (IOError)
+  #  prog.rb:3:in 'readlines': not opened for reading (IOError)
   #   from prog.rb:3
   def close_read
     if @mode & FMODE_WRITABLE != 0
@@ -980,8 +980,8 @@ class IO
   #  f.print "nowhere"
   # produces:
   #
-  #  prog.rb:3:in `write': not opened for writing (IOError)
-  #   from prog.rb:3:in `print'
+  #  prog.rb:3:in 'write': not opened for writing (IOError)
+  #   from prog.rb:3:in 'print'
   #   from prog.rb:3
   def close_write
     if @mode & FMODE_READABLE != 0

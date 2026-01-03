@@ -522,15 +522,14 @@ module Kernel
     self
   end
 
-  def yield_self
+  def then
     if block_given?
       yield self
     else
       [self].to_enum { 1 }
     end
   end
-
-  alias_method :then, :yield_self
+  alias_method :yield_self, :then
 
   def test(cmd, file1, file2 = nil)
     case cmd

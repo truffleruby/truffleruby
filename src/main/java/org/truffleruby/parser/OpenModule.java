@@ -20,11 +20,11 @@ public enum OpenModule {
         this.prefix = prefix;
     }
 
-    public String format(String moduleName) {
+    public String format(String moduleBasename) {
         if (this == SINGLETON_CLASS) {
             return "<singleton class>";
         } else {
-            return prefix + moduleName + ">";
+            return prefix + moduleBasename + ">";
         }
     }
 

@@ -17,11 +17,11 @@ M::C.sclass_method
 Object#top_method
 main.sdef_method_of_main
 main.sclass_method_of_main
-#unknown_def_singleton_method
-<singleton class>#unknown_sdef_singleton_method
-<singleton class>#string_class_method
+unknown_def_singleton_method
+unknown_sdef_singleton_method
+String.string_class_method
 Integer#+
-Kernel#yield_self
+Kernel#then
 OUT
   end
 end

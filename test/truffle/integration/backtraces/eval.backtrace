@@ -1,9 +1,9 @@
-(eval):1:in `m3': message (RuntimeError)
-	from /eval.rb:22:in `m3'
-	from a_m3_calling_source.rb:42:in `m2'
-	from /eval.rb:18:in `m2'
-	from (eval):1:in `m1'
-	from /eval.rb:14:in `m1'
-	from /eval.rb:26:in `block in <main>'
-	from /backtraces.rb:17:in `check'
-	from /eval.rb:25:in `<main>'
+(eval):1:in 'm3': message (RuntimeError)
+	from /eval.rb:22:in 'Object#m3'
+	from a_m3_calling_source.rb:42:in 'm2'
+	from /eval.rb:18:in 'Object#m2'
+	from (eval):1:in 'm1'
+	from /eval.rb:14:in 'Object#m1'
+	from /eval.rb:26:in 'block in <main>'
+	from /backtraces.rb:17:in 'Object#check'
+	from /eval.rb:25:in '<main>'

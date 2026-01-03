@@ -84,7 +84,7 @@ module Truffle
     end
 
     def self.show_exception_for_debug(exc, uplevel)
-      STDERR.puts "Exception: `#{Primitive.class(exc)}' at #{caller(uplevel + 1, 1)[0]} - #{exc.message}\n"
+      STDERR.puts "Exception: '#{Primitive.class(exc)}' at #{caller(uplevel + 1, 1)[0]} - #{exc.message}\n"
     end
 
     def self.class_name(receiver)
@@ -363,23 +363,23 @@ module Truffle
     end
 
     NO_METHOD_ERROR = Proc.new do |exception|
-      format("undefined method `%s' for %s", exception.name, receiver_string(exception.receiver))
+      format("undefined method '%s' for %s", exception.name, receiver_string(exception.receiver))
     end
 
     NO_LOCAL_VARIABLE_OR_METHOD_ERROR = Proc.new do |exception|
-      format("undefined local variable or method `%s' for %s", exception.name, receiver_string(exception.receiver))
+      format("undefined local variable or method '%s' for %s", exception.name, receiver_string(exception.receiver))
     end
 
     PRIVATE_METHOD_ERROR = Proc.new do |exception|
-      format("private method `%s' called for %s", exception.name, receiver_string(exception.receiver))
+      format("private method '%s' called for %s", exception.name, receiver_string(exception.receiver))
     end
 
     PROTECTED_METHOD_ERROR = Proc.new do |exception|
-      format("protected method `%s' called for %s", exception.name, receiver_string(exception.receiver))
+      format("protected method '%s' called for %s", exception.name, receiver_string(exception.receiver))
     end
 
     SUPER_METHOD_ERROR = Proc.new do |exception|
-      format("super: no superclass method `%s'", exception.name)
+      format("super: no superclass method '%s'", exception.name)
     end
 
     def self.format_errno_error_message(errno_description, errno, extra_message, location)

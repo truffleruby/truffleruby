@@ -71,14 +71,14 @@ ast: |
                                           flags = 1
                                           isDefSingleton = false
                                           name = "foo"
-                                          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = foo, blockDepth = 0, parseName = #foo, notes = null, argumentDescriptors = [])
+                                          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = foo, blockDepth = 0, parseName = foo, notes = null, argumentDescriptors = [])
                                           sourceCharIndex = 16
                                           sourceLength = 13
                                       call targets:
                                           RubyMethodRootNode
                                               attributes:
                                                   arityForCheck = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}
-                                                  callTarget = #foo
+                                                  callTarget = foo
                                                   checkArityProfile = false
                                                   frameDescriptor = FrameDescriptor@...{#0:(self), #1:%$~_, #2:%method_block_arg}
                                                   instrumentationBits = 0
@@ -90,7 +90,7 @@ ast: |
                                                   polyglotRef = org.truffleruby.RubyLanguage@...
                                                   retryProfile = false
                                                   returnID = org.truffleruby.language.control.ReturnID@...
-                                                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = foo, blockDepth = 0, parseName = #foo, notes = null, argumentDescriptors = [])
+                                                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = foo, blockDepth = 0, parseName = foo, notes = null, argumentDescriptors = [])
                                                   sourceSection = SourceSection(source=<parse_ast> [2:3 - 3:5], index=16, length=13, characters=def foo\n  end)
                                                   split = HEURISTIC
                                               children:

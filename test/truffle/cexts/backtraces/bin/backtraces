@@ -7,7 +7,7 @@ SRC_DIR = File.expand_path("../../../../../..", __FILE__)
 def puts_backtrace(backtrace)
   puts backtrace.gsub(Truffle::Boot.ruby_home, '').gsub(TEST_DIR, '').gsub(SRC_DIR, '')
                 .gsub(%r{(/cext\.rb|/cext_ruby\.rb|/c/cext/\w+\.c|/qsort\.c|<internal:core> .+\.rb):(\d+:)?}, '\1:n:')
-                .gsub(%r{.+/qsort\.c:n:in `(?!qsort)\w+'\n}, '')
+                .gsub(%r{.+/qsort\.c:n:in '(?!qsort)\w+'\n}, '')
 end
 
 puts "Test error in Ruby => C ext support => Ruby"

@@ -39,7 +39,7 @@ describe "Polyglot::ForeignException" do
       raise @foreign
     }.should raise_error(Polyglot::ForeignException) { |e|
       full_message = e.full_message(highlight: false, order: :top).lines
-      full_message[0].should == "#{__FILE__}:#{__LINE__-3}:in `Kernel#raise': exception message (Polyglot::ForeignException)\n"
+      full_message[0].should == "#{__FILE__}:#{__LINE__-3}:in 'Kernel#raise': exception message (Polyglot::ForeignException)\n"
     }
   end
 
@@ -51,10 +51,10 @@ describe "Polyglot::ForeignException" do
       }.should raise_error(Polyglot::ForeignException) { |e|
         full_message = e.full_message(highlight: false, order: :top).gsub(/:\d+:/, ':LINE:')
         full_message.should.start_with?(<<~EXCEPTION)
-        NumberFormatException.java:LINE:in `forInputString': For input string: "abc" (Polyglot::ForeignException: java.lang.NumberFormatException)
-        \tfrom Integer.java:LINE:in `parseInt'
-        \tfrom Integer.java:LINE:in `parseInt'
-        \tfrom #{__FILE__ }:LINE:in `block (4 levels) in <top (required)>'
+        NumberFormatException.java:LINE:in 'forInputString': For input string: "abc" (Polyglot::ForeignException: java.lang.NumberFormatException)
+        \tfrom Integer.java:LINE:in 'parseInt'
+        \tfrom Integer.java:LINE:in 'parseInt'
+        \tfrom #{__FILE__ }:LINE:in 'block (4 levels) in <top (required)>'
         EXCEPTION
       }
     end
@@ -124,12 +124,12 @@ describe "Polyglot::ForeignException" do
   describe "when reaching the top-level" do
     it "is printed like a Ruby exception" do
       out = ruby_exe('raise Truffle::Debug.foreign_exception "main"', args: "2>&1", exit_status: 1, escape: false)
-      out.should == "-e:1:in `Kernel#raise': main (Polyglot::ForeignException)\n" \
-        "\tfrom -e:1:in `<main>'\n"
+      out.should == "-e:1:in 'Kernel#raise': main (Polyglot::ForeignException)\n" \
+        "\tfrom -e:1:in '<main>'\n"
 
       out = ruby_exe('at_exit { raise Truffle::Debug.foreign_exception "at exit" }', args: "2>&1", exit_status: 1, escape: false)
-      out.should == "-e:1:in `Kernel#raise': at exit (Polyglot::ForeignException)\n" \
-        "\tfrom -e:1:in `block in <main>'\n"
+      out.should == "-e:1:in 'Kernel#raise': at exit (Polyglot::ForeignException)\n" \
+        "\tfrom -e:1:in 'block in <main>'\n"
     end
   end
 end

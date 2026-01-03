@@ -9,131 +9,133 @@
 require_relative '../ruby/spec_helper'
 
 # This spec can also run on CRuby, for comparison
+cruby = RUBY_ENGINE == "ruby"
+
 describe "Always-inlined core methods" do
   describe "are part of the backtrace if the error happens inside that core method" do
     it "for #public_send" do
       -> {
         public_send()
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'public_send' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Kernel#public_send' }
       -> {
         public_send(Object.new)
-      }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'public_send' }
+      }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'Kernel#public_send' }
     end
 
     it "for #respond_to?" do
       -> {
         respond_to?()
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'respond_to?' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Kernel#respond_to?' }
       -> {
         respond_to?(Object.new)
-      }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'respond_to?' }
+      }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'Kernel#respond_to?' }
     end
 
     it "for #block_given?" do
       -> {
         block_given?(:wrong)
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'block_given?' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Kernel#block_given?' }
       -> {
         iterator?(:wrong)
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'iterator?' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Kernel#iterator?' }
     end
 
     it "for #binding" do
       -> {
         binding(:wrong)
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'binding' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Kernel#binding' }
     end
 
     it "for #local_variables" do
       -> {
         local_variables(:wrong)
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'local_variables' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Kernel#local_variables' }
     end
 
     it "for Class#new" do
       singleton_class = Object.new.singleton_class
       -> {
         singleton_class.new
-      }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'new' }
+      }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'Class#new' }
     end
 
     it "for BasicObject#initialize" do
       -> {
         Object.new(:wrong)
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'initialize' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'BasicObject#initialize' }
     end
 
     it "for Kernel#dup" do
       -> {
         1.dup(:wrong)
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'dup' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == (cruby ? 'dup' : 'Kernel#dup') }
     end
 
     it "for Kernel#initialize_dup" do
       -> {
         initialize_dup()
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'initialize_dup' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Kernel#initialize_dup' }
     end
 
     it "for Kernel#initialize_copy" do
       -> {
         initialize_copy()
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'initialize_copy' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Kernel#initialize_copy' }
     end
 
     it "for Symbol#to_proc" do
       -> {
         :a.to_proc(:wrong)
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'to_proc' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Symbol#to_proc' }
     end
 
     it "for BasicObject#instance_eval" do
       -> {
         BasicObject.new.instance_eval
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'instance_eval' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'BasicObject#instance_eval' }
     end
 
     it "for Module#class_eval" do
       -> {
         Module.new.class_eval
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'class_eval' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Module#class_eval' }
     end
 
     it "for Module#module_eval" do
       -> {
         Module.new.module_eval
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'module_eval' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Module#module_eval' }
     end
 
     it "for Module#define_method" do
       -> {
         Module.new.define_method(:wrong)
-      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'define_method' }
+      }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Module#define_method' }
     end
 
     it "for Module#instance_method" do
       -> {
         Module.new.instance_method([])
-      }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'instance_method' }
+      }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'Module#instance_method' }
     end
 
-    guard -> { RUBY_ENGINE != "ruby" } do
+    guard -> { !cruby } do
       it "for #send" do
         -> {
           send()
-        }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == '__send__' }
+        }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'BasicObject#__send__' }
         -> {
           send(Object.new)
-        }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == '__send__' }
+        }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'BasicObject#__send__' }
       end
 
       it "for #__send__" do
         -> {
           __send__()
-        }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == '__send__' }
+        }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'BasicObject#__send__' }
         -> {
           __send__(Object.new)
-        }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == '__send__' }
+        }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'BasicObject#__send__' }
       end
 
       it "for a generated attr_reader" do
@@ -168,7 +170,7 @@ describe "Always-inlined core methods" do
         -> {
           module_function.bind_call(self)
         }.should raise_error(TypeError, 'module_function must be called for modules') { |e|
-          e.backtrace_locations[0].label.should == 'module_function'
+          e.backtrace_locations[0].label.should == 'Module#module_function'
         }
       end
     end
@@ -176,19 +178,19 @@ describe "Always-inlined core methods" do
     it "for main.using" do
       -> do
         eval('using "foo"', TOPLEVEL_BINDING)
-      end.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'using' }
+      end.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == (cruby ? 'using' : 'main.using') }
     end
   end
 
   describe "are not part of the backtrace if the error happens in a different method" do
     it "for #public_send" do
       -> {
-        public_send(:yield_self) { raise "foo" }
+        public_send(:then) { raise "foo" }
       }.should raise_error(RuntimeError, "foo") { |e|
         e.backtrace_locations[0].label.should.start_with?('block (5 levels)')
-        e.backtrace_locations[1].label.should == 'yield_self'
-        if RUBY_ENGINE == 'ruby'
-          e.backtrace_locations[2].label.should == 'public_send'
+        e.backtrace_locations[1].label.should == 'Kernel#then'
+        if cruby
+          e.backtrace_locations[2].label.should == 'Kernel#public_send'
         else
           e.backtrace_locations[2].label.should.start_with?('block (4 levels)')
         end
@@ -197,20 +199,20 @@ describe "Always-inlined core methods" do
 
     it "for #send" do
       -> {
-        send(:yield_self) { raise "foo" }
+        send(:then) { raise "foo" }
       }.should raise_error(RuntimeError, "foo") { |e|
         e.backtrace_locations[0].label.should.start_with?('block (5 levels)')
-        e.backtrace_locations[1].label.should == 'yield_self'
+        e.backtrace_locations[1].label.should == 'Kernel#then'
         e.backtrace_locations[2].label.should.start_with?('block (4 levels)')
       }
     end
 
     it "for #__send__" do
       -> {
-        __send__(:yield_self) { raise "foo" }
+        __send__(:then) { raise "foo" }
       }.should raise_error(RuntimeError, "foo") { |e|
         e.backtrace_locations[0].label.should.start_with?('block (5 levels)')
-        e.backtrace_locations[1].label.should == 'yield_self'
+        e.backtrace_locations[1].label.should == 'Kernel#then'
         e.backtrace_locations[2].label.should.start_with?('block (4 levels)')
       }
     end
@@ -233,23 +235,39 @@ describe "Always-inlined core methods" do
       -> {
         eval(Object.new)
       }.should raise_error(TypeError) { |e|
-        e.backtrace_locations[0].label.should == 'convert_type'
+        if cruby
+          e.backtrace_locations[0].label.should == 'Kernel#eval'
+        else
+          e.backtrace_locations[0].label.should == 'Truffle::Type.convert_type'
+        end
       }
     end
 
     it "for Module#class_eval with Object" do
       -> {
         Module.new.class_eval(Object.new)
-      }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'convert_type' }
+      }.should raise_error(TypeError) { |e|
+        if cruby
+          e.backtrace_locations[0].label.should == 'Module#class_eval'
+        else
+          e.backtrace_locations[0].label.should == 'Truffle::Type.convert_type'
+        end
+      }
     end
 
     it "for Module#module_eval with Object" do
       -> {
         Module.new.module_eval(Object.new)
-      }.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'convert_type' }
+      }.should raise_error(TypeError) { |e|
+        if cruby
+          e.backtrace_locations[0].label.should == 'Module#module_eval'
+        else
+          e.backtrace_locations[0].label.should == 'Truffle::Type.convert_type'
+        end
+      }
     end
 
-    guard -> { RUBY_ENGINE != "ruby" } do
+    guard -> { !cruby } do
       it "for #respond_to?" do
         obj = Object.new
         def obj.respond_to_missing?(name, priv)
@@ -283,7 +301,7 @@ describe "Always-inlined core methods" do
         -> {
           Object.new(:wrong)
         }.should raise_error(ArgumentError) { |e|
-          e.backtrace_locations[0].label.should == 'initialize'
+          e.backtrace_locations[0].label.should == 'BasicObject#initialize'
           e.backtrace_locations[1].label.should != 'new'
           e.backtrace_locations[1].label.should.start_with?('block (5 levels)')
         }
