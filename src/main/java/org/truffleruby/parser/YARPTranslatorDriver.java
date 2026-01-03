@@ -353,7 +353,7 @@ public final class YARPTranslatorDriver {
         final byte[] filepath = sourcePath.getBytes(Encodings.FILESYSTEM_CHARSET);
         int line = rubySource.getLineOffset() + 1;
         byte[] encoding = StringOperations.encodeAsciiBytes(rubySource.getEncoding().toString()); // encoding name is supposed to contain only ASCII characters
-        var version = ParsingOptions.SyntaxVersion.V3_3;
+        var version = ParsingOptions.SyntaxVersion.V3_4;
         // Allow Prism to handle encoding magic comments.
         // Magic comments are already detected and rubySource's encoding takes them into account,
         // but encodingLocked is intended for a niche use-case and is supposed to be false in all other cases.
