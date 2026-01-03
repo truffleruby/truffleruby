@@ -28,6 +28,17 @@ class PPTest < Test::Unit::TestCase
     end
     assert_equal(%(""\n), PP.pp(o, "".dup))
   end
+
+  def test_range
+    assert_equal("0..1\n", PP.pp(0..1, "".dup))
+    assert_equal("0...1\n", PP.pp(0...1, "".dup))
+    assert_equal("0...\n", PP.pp(0..., "".dup))
+    assert_equal("...1\n", PP.pp(...1, "".dup))
+    assert_equal("..false\n", PP.pp(..false, "".dup))
+    assert_equal("false..\n", PP.pp(false.., "".dup))
+    assert_equal("false..false\n", PP.pp(false..false, "".dup))
+    assert_equal("nil..nil\n", PP.pp(nil..nil, "".dup))
+  end
 end
 
 class HasInspect
@@ -118,6 +129,11 @@ class PPInspectTest < Test::Unit::TestCase
     result = PP.pp(a, ''.dup)
     assert_equal("#{a.inspect}\n", result)
   end
+
+  def test_basic_object
+    a = BasicObject.new
+    assert_match(/\A#<BasicObject:0x[\da-f]+>\n\z/, PP.pp(a, ''.dup))
+  end
 end
 
 class PPCycleTest < Test::Unit::TestCase
@@ -131,7 +147,6 @@ class PPCycleTest < Test::Unit::TestCase
   def test_hash
     a = {}
     a[0] = a
-    assert_equal("{0=>{...}}\n", PP.pp(a, ''.dup))
     assert_equal("#{a.inspect}\n", PP.pp(a, ''.dup))
   end
 
@@ -140,14 +155,35 @@ class PPCycleTest < Test::Unit::TestCase
     a = S.new(1,2)
     a.b = a
     assert_equal("#<struct Struct::S a=1, b=#<struct Struct::S:...>>\n", PP.pp(a, ''.dup))
-    assert_equal("#{a.inspect}\n", PP.pp(a, ''.dup))
+    assert_equal("#{a.inspect}\n", PP.pp(a, ''.dup)) unless RUBY_ENGINE == "truffleruby"
   end
 
-  D = Data.define(:aaa, :bbb)
-  def test_data
-    a = D.new("aaa", "bbb")
-    assert_equal("#<data PPTestModule::PPCycleTest::D\n aaa=\"aaa\",\n bbb=\"bbb\">\n", PP.pp(a, ''.dup, 20))
-    assert_equal("#{a.inspect}\n", PP.pp(a, ''.dup))
+  if defined?(Data.define)
+    D = Data.define(:aaa, :bbb)
+    def test_data
+      a = D.new("aaa", "bbb")
+      assert_equal("#<data PPTestModule::PPCycleTest::D\n aaa=\"aaa\",\n bbb=\"bbb\">\n", PP.pp(a, ''.dup, 20))
+      assert_equal("#{a.inspect}\n", PP.pp(a, ''.dup))
+
+      b = Data.define(:a).new(42)
+      assert_equal("#{b.inspect}\n", PP.pp(b, ''.dup))
+    end
+
+    D2 = Data.define(:aaa, :bbb) do
+      private :aaa
+    end
+    def test_data_private_member
+      a = D2.new("aaa", "bbb")
+      assert_equal("#<data PPTestModule::PPCycleTest::D2\n aaa=\"aaa\",\n bbb=\"bbb\">\n", PP.pp(a, ''.dup, 20))
+    end
+
+    D3 = Data.define(:aaa, :bbb) do
+      remove_method :aaa
+    end
+    def test_data_removed_member
+      a = D3.new("aaa", "bbb")
+      assert_equal("#<data PPTestModule::PPCycleTest::D3\n bbb=\"bbb\">\n", PP.pp(a, ''.dup, 20))
+    end
   end
 
   def test_object
@@ -162,7 +198,7 @@ class PPCycleTest < Test::Unit::TestCase
   end
 
   def test_withinspect
-    omit if RUBY_ENGINE == "jruby"
+    omit if RUBY_ENGINE == "jruby" or RUBY_ENGINE == "truffleruby"
     a = []
     a << HasInspect.new(a)
     assert_equal("[<inspect:[...]>]\n", PP.pp(a, ''.dup))
@@ -182,8 +218,24 @@ end
 
 class PPSingleLineTest < Test::Unit::TestCase
   def test_hash
-    assert_equal("{1=>1}", PP.singleline_pp({ 1 => 1}, ''.dup)) # [ruby-core:02699]
+    assert_equal({1 => 1}.inspect, PP.singleline_pp({1 => 1}, ''.dup)) # [ruby-core:02699]
     assert_equal("[1#{', 1'*99}]", PP.singleline_pp([1]*100, ''.dup))
+  end
+
+  def test_hash_symbol_colon_key
+    omit if RUBY_VERSION < "3.4."
+    no_quote = "{a: 1, a!: 1, a?: 1}"
+    unicode_quote = "{\u{3042}: 1}"
+    quote0 = '{"": 1}'
+    quote1 = '{"0": 1, "!": 1, "%": 1, "&": 1, "*": 1, "+": 1, "-": 1, "/": 1, "<": 1, ">": 1, "^": 1, "`": 1, "|": 1, "~": 1}'
+    quote2 = '{"@a": 1, "$a": 1, "+@": 1, "a=": 1, "[]": 1}'
+    quote3 = '{"a\"b": 1, "@@a": 1, "<=>": 1, "===": 1, "[]=": 1}'
+    assert_equal(no_quote, PP.singleline_pp(eval(no_quote), ''.dup))
+    assert_equal({ "\u3042": 1 }.inspect, PP.singleline_pp(eval(unicode_quote), ''.dup))
+    assert_equal(quote0, PP.singleline_pp(eval(quote0), ''.dup))
+    assert_equal(quote1, PP.singleline_pp(eval(quote1), ''.dup))
+    assert_equal(quote2, PP.singleline_pp(eval(quote2), ''.dup))
+    assert_equal(quote3, PP.singleline_pp(eval(quote3), ''.dup))
   end
 
   def test_hash_in_array
@@ -226,9 +278,36 @@ if defined?(RubyVM)
     AST = RubyVM::AbstractSyntaxTree
     def test_lasgn_literal
       ast = AST.parse("_=1")
-      expected = "(SCOPE@1:0-1:3 tbl: [:_] args: nil body: (LASGN@1:0-1:3 :_ (LIT@1:2-1:3 1)))"
+      integer = RUBY_VERSION >= "3.4." ? "INTEGER" : "LIT"
+      expected = "(SCOPE@1:0-1:3 tbl: [:_] args: nil body: (LASGN@1:0-1:3 :_ (#{integer}@1:2-1:3 1)))"
       assert_equal(expected, PP.singleline_pp(ast, ''.dup), ast)
     end
+  end
+end
+
+class PPInheritedTest < Test::Unit::TestCase
+  class PPSymbolHash < PP
+    def pp_hash_pair(k, v)
+      case k
+      when Symbol
+        text k.inspect.delete_prefix(":").tr('"', "'")
+        text ":"
+        group(1) {
+          breakable
+          pp v
+        }
+      else
+        super
+      end
+    end
+  end
+
+  def test_hash_override
+    obj = {k: 1, "": :null, "0": :zero, 100 => :ten}
+    sep = RUBY_VERSION >= "3.4." ? " => " : "=>"
+    assert_equal <<~EXPECT, PPSymbolHash.pp(obj, "".dup)
+    {k: 1, '': :null, '0': :zero, 100#{sep}:ten}
+    EXPECT
   end
 end
 

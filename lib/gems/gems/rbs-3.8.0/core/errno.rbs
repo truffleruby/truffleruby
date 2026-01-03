@@ -1,0 +1,673 @@
+# <!-- rdoc-file=error.c -->
+# When an operating system encounters an error, it typically reports the error
+# as an integer error code:
+#
+#     $ ls nosuch.txt
+#     ls: cannot access 'nosuch.txt': No such file or directory
+#     $ echo $? # Code for last error.
+#     2
+#
+# When the Ruby interpreter interacts with the operating system and receives
+# such an error code (e.g., `2`), it maps the code to a particular Ruby
+# exception class (e.g., `Errno::ENOENT`):
+#
+#     File.open('nosuch.txt')
+#     # => No such file or directory @ rb_sysopen - nosuch.txt (Errno::ENOENT)
+#
+# Each such class is:
+#
+# *   A nested class in this module, `Errno`.
+# *   A subclass of class SystemCallError.
+# *   Associated with an error code.
+#
+# Thus:
+#
+#     Errno::ENOENT.superclass # => SystemCallError
+#     Errno::ENOENT::Errno     # => 2
+#
+# The names of nested classes are returned by method `Errno.constants`:
+#
+#     Errno.constants.size         # => 158
+#     Errno.constants.sort.take(5) # => [:E2BIG, :EACCES, :EADDRINUSE, :EADDRNOTAVAIL, :EADV]
+#
+# As seen above, the error code associated with each class is available as the
+# value of a constant; the value for a particular class may vary among operating
+# systems. If the class is not needed for the particular operating system, the
+# value is zero:
+#
+#     Errno::ENOENT::Errno      # => 2
+#     Errno::ENOTCAPABLE::Errno # => 0
+#
+module Errno
+  class NOERROR < SystemCallError
+    Errno: 0
+  end
+
+  class E2BIG < SystemCallError
+    Errno: Integer
+  end
+
+  class EACCES < SystemCallError
+    Errno: Integer
+  end
+
+  class EADDRINUSE < SystemCallError
+    Errno: Integer
+  end
+
+  class EADDRNOTAVAIL < SystemCallError
+    Errno: Integer
+  end
+
+  class EADV < SystemCallError
+    Errno: Integer
+  end
+
+  class EAFNOSUPPORT < SystemCallError
+    Errno: Integer
+  end
+
+  class EAGAIN < SystemCallError
+    Errno: Integer
+  end
+
+  class EALREADY < SystemCallError
+    Errno: Integer
+  end
+
+  class EAUTH < SystemCallError
+    Errno: Integer
+  end
+
+  class EBADARCH < SystemCallError
+    Errno: Integer
+  end
+
+  class EBADE < SystemCallError
+    Errno: Integer
+  end
+
+  class EBADEXEC < SystemCallError
+    Errno: Integer
+  end
+
+  class EBADF < SystemCallError
+    Errno: Integer
+  end
+
+  class EBADFD < SystemCallError
+    Errno: Integer
+  end
+
+  class EBADMACHO < SystemCallError
+    Errno: Integer
+  end
+
+  class EBADMSG < SystemCallError
+    Errno: Integer
+  end
+
+  class EBADR < SystemCallError
+    Errno: Integer
+  end
+
+  class EBADRPC < SystemCallError
+    Errno: Integer
+  end
+
+  class EBADRQC < SystemCallError
+    Errno: Integer
+  end
+
+  class EBADSLT < SystemCallError
+    Errno: Integer
+  end
+
+  class EBFONT < SystemCallError
+    Errno: Integer
+  end
+
+  class EBUSY < SystemCallError
+    Errno: Integer
+  end
+
+  class ECANCELED < SystemCallError
+    Errno: Integer
+  end
+
+  class ECAPMODE < SystemCallError
+    Errno: Integer
+  end
+
+  class ECHILD < SystemCallError
+    Errno: Integer
+  end
+
+  class ECHRNG < SystemCallError
+    Errno: Integer
+  end
+
+  class ECOMM < SystemCallError
+    Errno: Integer
+  end
+
+  class ECONNABORTED < SystemCallError
+    Errno: Integer
+  end
+
+  class ECONNREFUSED < SystemCallError
+    Errno: Integer
+  end
+
+  class ECONNRESET < SystemCallError
+    Errno: Integer
+  end
+
+  class EDEADLK < SystemCallError
+    Errno: Integer
+  end
+
+  class EDEADLOCK < SystemCallError
+    Errno: Integer
+  end
+
+  class EDESTADDRREQ < SystemCallError
+    Errno: Integer
+  end
+
+  class EDEVERR < SystemCallError
+    Errno: Integer
+  end
+
+  class EDOM < SystemCallError
+    Errno: Integer
+  end
+
+  class EDOOFUS < SystemCallError
+    Errno: Integer
+  end
+
+  class EDOTDOT < SystemCallError
+    Errno: Integer
+  end
+
+  class EDQUOT < SystemCallError
+    Errno: Integer
+  end
+
+  class EEXIST < SystemCallError
+    Errno: Integer
+  end
+
+  class EFAULT < SystemCallError
+    Errno: Integer
+  end
+
+  class EFBIG < SystemCallError
+    Errno: Integer
+  end
+
+  class EFTYPE < SystemCallError
+    Errno: Integer
+  end
+
+  class EHOSTDOWN < SystemCallError
+    Errno: Integer
+  end
+
+  class EHOSTUNREACH < SystemCallError
+    Errno: Integer
+  end
+
+  class EHWPOISON < SystemCallError
+    Errno: Integer
+  end
+
+  class EIDRM < SystemCallError
+    Errno: Integer
+  end
+
+  class EILSEQ < SystemCallError
+    Errno: Integer
+  end
+
+  class EINPROGRESS < SystemCallError
+    Errno: Integer
+  end
+
+  class EINTR < SystemCallError
+    Errno: Integer
+  end
+
+  class EINVAL < SystemCallError
+    Errno: Integer
+  end
+
+  class EIO < SystemCallError
+    Errno: Integer
+  end
+
+  class EIPSEC < SystemCallError
+    Errno: Integer
+  end
+
+  class EISCONN < SystemCallError
+    Errno: Integer
+  end
+
+  class EISDIR < SystemCallError
+    Errno: Integer
+  end
+
+  class EISNAM < SystemCallError
+    Errno: Integer
+  end
+
+  class EKEYEXPIRED < SystemCallError
+    Errno: Integer
+  end
+
+  class EKEYREJECTED < SystemCallError
+    Errno: Integer
+  end
+
+  class EKEYREVOKED < SystemCallError
+    Errno: Integer
+  end
+
+  class EL2HLT < SystemCallError
+    Errno: Integer
+  end
+
+  class EL2NSYNC < SystemCallError
+    Errno: Integer
+  end
+
+  class EL3HLT < SystemCallError
+    Errno: Integer
+  end
+
+  class EL3RST < SystemCallError
+    Errno: Integer
+  end
+
+  class ELAST < SystemCallError
+    Errno: Integer
+  end
+
+  class ELIBACC < SystemCallError
+    Errno: Integer
+  end
+
+  class ELIBBAD < SystemCallError
+    Errno: Integer
+  end
+
+  class ELIBEXEC < SystemCallError
+    Errno: Integer
+  end
+
+  class ELIBMAX < SystemCallError
+    Errno: Integer
+  end
+
+  class ELIBSCN < SystemCallError
+    Errno: Integer
+  end
+
+  class ELNRNG < SystemCallError
+    Errno: Integer
+  end
+
+  class ELOOP < SystemCallError
+    Errno: Integer
+  end
+
+  class EMEDIUMTYPE < SystemCallError
+    Errno: Integer
+  end
+
+  class EMFILE < SystemCallError
+    Errno: Integer
+  end
+
+  class EMLINK < SystemCallError
+    Errno: Integer
+  end
+
+  class EMSGSIZE < SystemCallError
+    Errno: Integer
+  end
+
+  class EMULTIHOP < SystemCallError
+    Errno: Integer
+  end
+
+  class ENAMETOOLONG < SystemCallError
+    Errno: Integer
+  end
+
+  class ENAVAIL < SystemCallError
+    Errno: Integer
+  end
+
+  class ENEEDAUTH < SystemCallError
+    Errno: Integer
+  end
+
+  class ENETDOWN < SystemCallError
+    Errno: Integer
+  end
+
+  class ENETRESET < SystemCallError
+    Errno: Integer
+  end
+
+  class ENETUNREACH < SystemCallError
+    Errno: Integer
+  end
+
+  class ENFILE < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOANO < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOATTR < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOBUFS < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOCSI < SystemCallError
+    Errno: Integer
+  end
+
+  class ENODATA < SystemCallError
+    Errno: Integer
+  end
+
+  class ENODEV < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOENT < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOEXEC < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOKEY < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOLCK < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOLINK < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOMEDIUM < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOMEM < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOMSG < SystemCallError
+    Errno: Integer
+  end
+
+  class ENONET < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOPKG < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOPOLICY < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOPROTOOPT < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOSPC < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOSR < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOSTR < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOSYS < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOTBLK < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOTCAPABLE < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOTCONN < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOTDIR < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOTEMPTY < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOTNAM < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOTRECOVERABLE < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOTSOCK < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOTSUP < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOTTY < SystemCallError
+    Errno: Integer
+  end
+
+  class ENOTUNIQ < SystemCallError
+    Errno: Integer
+  end
+
+  class ENXIO < SystemCallError
+    Errno: Integer
+  end
+
+  class EOPNOTSUPP < SystemCallError
+    Errno: Integer
+  end
+
+  class EOVERFLOW < SystemCallError
+    Errno: Integer
+  end
+
+  class EOWNERDEAD < SystemCallError
+    Errno: Integer
+  end
+
+  class EPERM < SystemCallError
+    Errno: Integer
+  end
+
+  class EPFNOSUPPORT < SystemCallError
+    Errno: Integer
+  end
+
+  class EPIPE < SystemCallError
+    Errno: Integer
+  end
+
+  class EPROCLIM < SystemCallError
+    Errno: Integer
+  end
+
+  class EPROCUNAVAIL < SystemCallError
+    Errno: Integer
+  end
+
+  class EPROGMISMATCH < SystemCallError
+    Errno: Integer
+  end
+
+  class EPROGUNAVAIL < SystemCallError
+    Errno: Integer
+  end
+
+  class EPROTO < SystemCallError
+    Errno: Integer
+  end
+
+  class EPROTONOSUPPORT < SystemCallError
+    Errno: Integer
+  end
+
+  class EPROTOTYPE < SystemCallError
+    Errno: Integer
+  end
+
+  class EPWROFF < SystemCallError
+    Errno: Integer
+  end
+
+  class EQFULL < SystemCallError
+    Errno: Integer
+  end
+
+  class ERANGE < SystemCallError
+    Errno: Integer
+  end
+
+  class EREMCHG < SystemCallError
+    Errno: Integer
+  end
+
+  class EREMOTE < SystemCallError
+    Errno: Integer
+  end
+
+  class EREMOTEIO < SystemCallError
+    Errno: Integer
+  end
+
+  class ERESTART < SystemCallError
+    Errno: Integer
+  end
+
+  class ERFKILL < SystemCallError
+    Errno: Integer
+  end
+
+  class EROFS < SystemCallError
+    Errno: Integer
+  end
+
+  class ERPCMISMATCH < SystemCallError
+    Errno: Integer
+  end
+
+  class ESHLIBVERS < SystemCallError
+    Errno: Integer
+  end
+
+  class ESHUTDOWN < SystemCallError
+    Errno: Integer
+  end
+
+  class ESOCKTNOSUPPORT < SystemCallError
+    Errno: Integer
+  end
+
+  class ESPIPE < SystemCallError
+    Errno: Integer
+  end
+
+  class ESRCH < SystemCallError
+    Errno: Integer
+  end
+
+  class ESRMNT < SystemCallError
+    Errno: Integer
+  end
+
+  class ESTALE < SystemCallError
+    Errno: Integer
+  end
+
+  class ESTRPIPE < SystemCallError
+    Errno: Integer
+  end
+
+  class ETIME < SystemCallError
+    Errno: Integer
+  end
+
+  class ETIMEDOUT < SystemCallError
+    Errno: Integer
+  end
+
+  class ETOOMANYREFS < SystemCallError
+    Errno: Integer
+  end
+
+  class ETXTBSY < SystemCallError
+    Errno: Integer
+  end
+
+  class EUCLEAN < SystemCallError
+    Errno: Integer
+  end
+
+  class EUNATCH < SystemCallError
+    Errno: Integer
+  end
+
+  class EUSERS < SystemCallError
+    Errno: Integer
+  end
+
+  class EWOULDBLOCK < SystemCallError
+    Errno: Integer
+  end
+
+  class EXDEV < SystemCallError
+    Errno: Integer
+  end
+
+  class EXFULL < SystemCallError
+    Errno: Integer
+  end
+end

@@ -1,0 +1,87 @@
+# <!-- rdoc-file=error.c -->
+# The Warning module contains a single method named #warn, and the module
+# extends itself, making Warning.warn available. Warning.warn is called for all
+# warnings issued by Ruby. By default, warnings are printed to $stderr.
+#
+# Changing the behavior of Warning.warn is useful to customize how warnings are
+# handled by Ruby, for instance by filtering some warnings, and/or outputting
+# warnings somewhere other than `$stderr`.
+#
+# If you want to change the behavior of Warning.warn you should use
+# `Warning.extend(MyNewModuleWithWarnMethod)` and you can use `super` to get the
+# default behavior of printing the warning to `$stderr`.
+#
+# Example:
+#     module MyWarningFilter
+#       def warn(message, category: nil, **kwargs)
+#         if /some warning I want to ignore/.match?(message)
+#           # ignore
+#         else
+#           super
+#         end
+#       end
+#     end
+#     Warning.extend MyWarningFilter
+#
+# You should never redefine Warning#warn (the instance method), as that will
+# then no longer provide a way to use the default behavior.
+#
+# The [warning](https://rubygems.org/gems/warning) gem provides convenient ways
+# to customize Warning.warn.
+#
+module Warning
+  # The types of categories the `Warning` module understands.
+  #
+  type category = :deprecated | :experimental | :performance
+
+  # <!--
+  #   rdoc-file=error.c
+  #   - Warning[category]  -> true or false
+  # -->
+  # Returns the flag to show the warning messages for `category`. Supported
+  # categories are:
+  #
+  # `:deprecated`
+  # :   deprecation warnings
+  #     *   assignment of non-nil value to `$,` and `$;`
+  #     *   keyword arguments
+  #     etc.
+  #
+  #
+  # `:experimental`
+  # :   experimental features
+  #
+  #
+  # `:performance`
+  # :   performance hints
+  #     *   Shape variation limit
+  #
+  def self.[]: (category) -> bool
+
+  # <!--
+  #   rdoc-file=error.c
+  #   - Warning[category] = flag -> flag
+  # -->
+  # Sets the warning flags for `category`. See Warning.[] for the categories.
+  #
+  def self.[]=: [T] (category, T flag) -> T
+
+  # <!--
+  #   rdoc-file=error.c
+  #   - categories  -> array
+  # -->
+  # Returns a list of the supported category symbols.
+  #
+  def self.categories: () -> Array[Symbol]
+
+  # <!--
+  #   rdoc-file=error.c
+  #   - warn(msg, category: nil)  -> nil
+  # -->
+  # Writes warning message `msg` to $stderr. This method is called by Ruby for all
+  # emitted warnings. A `category` may be included with the warning.
+  #
+  # See the documentation of the Warning module for how to customize this.
+  #
+  def self?.warn: (String message, ?category: category?) -> nil
+end

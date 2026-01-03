@@ -6,7 +6,7 @@ struct ripper_parser_ids ripper_parser_ids;
 void
 ripper_init_eventids1(void)
 {
-#define set_id1(name) ripper_id_##name = rb_intern_const("on_"#name)
+#define set_id1(name) RIPPER_ID(name) = rb_intern_const("on_"#name)
     set_id1(BEGIN);
     set_id1(END);
     set_id1(alias);

@@ -7,7 +7,10 @@
 
 /* included via method.h */
 #include "internal.h"
+#include "internal/gc.h"            // Needed for rb_xmalloc_mul_add.
+#include "internal/static_assert.h" // Needed for STATIC_ASSERT.
 
 const char *ruby_node_name(int node);
 
 #endif
+

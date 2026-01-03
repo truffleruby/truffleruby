@@ -28,7 +28,9 @@ class Scheduler
   #   Warning[:experimental] = experimental
   # end
 
-  def initialize
+  def initialize(fiber = Fiber.current)
+    @fiber = fiber
+
     @readable = {}
     @writable = {}
     @waiting = {}
@@ -45,6 +47,10 @@ class Scheduler
   attr :readable
   attr :writable
   attr :waiting
+
+  def transfer
+    @fiber.transfer
+  end
 
   def next_timeout
     _fiber, timeout = @waiting.min_by{|key, value| value}
@@ -89,7 +95,7 @@ class Scheduler
       end
 
       selected.each do |fiber, events|
-        fiber.resume(events)
+        fiber.transfer(events)
       end
 
       if @waiting.any?
@@ -99,7 +105,7 @@ class Scheduler
         waiting.each do |fiber, timeout|
           if fiber.alive?
             if timeout <= time
-              fiber.resume
+              fiber.transfer
             else
               @waiting[fiber] = timeout
             end
@@ -115,7 +121,7 @@ class Scheduler
         end
 
         ready.each do |fiber|
-          fiber.resume
+          fiber.transfer
         end
       end
     end
@@ -218,7 +224,7 @@ class Scheduler
       @waiting[fiber] = current_time + duration
     end
 
-    Fiber.yield
+    @fiber.transfer
   ensure
     @waiting.delete(fiber) if duration
     @readable.delete(io) if readable
@@ -255,7 +261,7 @@ class Scheduler
     if timeout
       @waiting[fiber] = current_time + timeout
       begin
-        Fiber.yield
+        @fiber.transfer
       ensure
         # Remove from @waiting in the case #unblock was called before the timeout expired:
         @waiting.delete(fiber)
@@ -263,7 +269,7 @@ class Scheduler
     else
       @blocking[fiber] = true
       begin
-        Fiber.yield
+        @fiber.transfer
       ensure
         @blocking.delete(fiber)
       end
@@ -291,7 +297,7 @@ class Scheduler
   def fiber(&block)
     fiber = Fiber.new(blocking: false, &block)
 
-    fiber.resume
+    fiber.transfer
 
     return fiber
   end
@@ -303,6 +309,16 @@ class Scheduler
     Thread.new do
       Addrinfo.getaddrinfo(hostname, nil).map(&:ip_address).uniq
     end.value
+  end
+
+  def blocking_operation_wait(work)
+    thread = Thread.new(&work)
+
+    thread.join
+
+    thread = nil
+  ensure
+    thread&.kill
   end
 end
 
@@ -316,8 +332,7 @@ class IOBufferScheduler < Scheduler
     io.nonblock = true
 
     while true
-      maximum_size = buffer.size - offset
-      result = blocking{buffer.read(io, maximum_size, offset)}
+      result = blocking{buffer.read(io, 0, offset)}
 
       if result > 0
         total += result
@@ -344,8 +359,7 @@ class IOBufferScheduler < Scheduler
     io.nonblock = true
 
     while true
-      maximum_size = buffer.size - offset
-      result = blocking{buffer.write(io, maximum_size, offset)}
+      result = blocking{buffer.write(io, 0, offset)}
 
       if result > 0
         total += result
@@ -372,8 +386,7 @@ class IOBufferScheduler < Scheduler
     io.nonblock = true
 
     while true
-      maximum_size = buffer.size - offset
-      result = blocking{buffer.pread(io, from, maximum_size, offset)}
+      result = blocking{buffer.pread(io, from, 0, offset)}
 
       if result > 0
         total += result
@@ -401,8 +414,7 @@ class IOBufferScheduler < Scheduler
     io.nonblock = true
 
     while true
-      maximum_size = buffer.size - offset
-      result = blocking{buffer.pwrite(io, from, maximum_size, offset)}
+      result = blocking{buffer.pwrite(io, from, 0, offset)}
 
       if result > 0
         total += result

@@ -1601,7 +1601,7 @@ whole suit pass successfully as well:
 If the new feature breaks existing behavior and some specs fail - disable them temporary (until TruffleRuby
 is switched to the next CRuby version completely) with tagging as failed (use `jt tag <path-to-spec-file>`)
 
-Look for additional details in [The "Running specs for Ruby 3.3 features" section of the Contributor Workflow document](workflow.md#running-specs-for-ruby-33-features).
+Look for additional details in [The "Running specs for the next Ruby version" section of the Contributor Workflow document](workflow.md#running-specs-for-ruby-40-features).
 
 ## How to use jt CLI tool
 

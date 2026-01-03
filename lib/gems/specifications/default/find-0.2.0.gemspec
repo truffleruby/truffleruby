@@ -9,14 +9,13 @@ Gem::Specification.new do |s|
   s.metadata = { "homepage_uri" => "https://github.com/ruby/find", "source_code_uri" => "https://github.com/ruby/find" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Kazuki Tsujimoto".freeze]
-  s.bindir = "exe".freeze
-  s.date = "2025-01-15"
+  s.date = "2025-10-08"
   s.description = "This module supports top-down traversal of a set of file paths.".freeze
   s.email = ["kazuki@callcc.net".freeze]
   s.files = ["find.rb".freeze]
   s.homepage = "https://github.com/ruby/find".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.3.0".freeze)
-  s.rubygems_version = "3.5.22".freeze
+  s.rubygems_version = "3.6.9".freeze
   s.summary = "This module supports top-down traversal of a set of file paths.".freeze
 end

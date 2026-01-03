@@ -1,6 +1,0 @@
-fails:Socket.gethostbyaddr using an IPv6 address without an explicit address family returns an Array
-fails:Socket.gethostbyaddr using an IPv6 address without an explicit address family the returned Array includes the hostname as the first value
-fails:Socket.gethostbyaddr using an IPv6 address without an explicit address family the returned Array includes the aliases as the 2nd value
-fails:Socket.gethostbyaddr using an IPv6 address without an explicit address family the returned Array includes the address type as the 3rd value
-fails:Socket.gethostbyaddr using an IPv6 address without an explicit address family the returned Array includes all address strings as the remaining values
-fails:Socket.gethostbyaddr using an IPv6 address with an explicit address family returns an Array when using a Symbol as the address family

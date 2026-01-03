@@ -7,7 +7,7 @@
  */
 /*
  * This program is licensed under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 
@@ -35,7 +35,7 @@
 
 VALUE mSSL;
 static VALUE eSSLError;
-VALUE cSSLContext;
+static VALUE cSSLContext;
 VALUE cSSLSocket;
 
 static VALUE eSSLErrorWaitReadable;
@@ -55,7 +55,6 @@ static ID id_i_cert_store, id_i_ca_file, id_i_ca_path, id_i_verify_mode,
 	  id_i_verify_hostname, id_i_keylog_cb;
 static ID id_i_io, id_i_context, id_i_hostname;
 
-static int ossl_ssl_ex_vcb_idx;
 static int ossl_ssl_ex_ptr_idx;
 static int ossl_sslctx_ex_ptr_idx;
 
@@ -327,9 +326,9 @@ ossl_ssl_verify_callback(int preverify_ok, X509_STORE_CTX *ctx)
     int status;
 
     ssl = X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
-    cb = (VALUE)SSL_get_ex_data(ssl, ossl_ssl_ex_vcb_idx);
     ssl_obj = (VALUE)SSL_get_ex_data(ssl, ossl_ssl_ex_ptr_idx);
     sslctx_obj = rb_attr_get(ssl_obj, id_i_context);
+    cb = rb_attr_get(sslctx_obj, id_i_verify_callback);
     verify_hostname = rb_attr_get(sslctx_obj, id_i_verify_hostname);
 
     if (preverify_ok && RTEST(verify_hostname) && !SSL_is_server(ssl) &&
@@ -558,52 +557,42 @@ ossl_sslctx_add_extra_chain_cert_i(RB_BLOCK_CALL_FUNC_ARGLIST(i, arg))
 static VALUE ossl_sslctx_setup(VALUE self);
 
 static VALUE
-ossl_call_servername_cb(VALUE ary)
+ossl_call_servername_cb(VALUE arg)
 {
-    VALUE ssl_obj, sslctx_obj, cb, ret_obj;
+    SSL *ssl = (void *)arg;
+    const char *servername = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
+    if (!servername)
+        return Qnil;
 
-    Check_Type(ary, T_ARRAY);
-    ssl_obj = rb_ary_entry(ary, 0);
+    VALUE ssl_obj = (VALUE)SSL_get_ex_data(ssl, ossl_ssl_ex_ptr_idx);
+    VALUE sslctx_obj = rb_attr_get(ssl_obj, id_i_context);
+    VALUE cb = rb_attr_get(sslctx_obj, id_i_servername_cb);
+    VALUE ary = rb_assoc_new(ssl_obj, rb_str_new_cstr(servername));
 
-    sslctx_obj = rb_attr_get(ssl_obj, id_i_context);
-    cb = rb_attr_get(sslctx_obj, id_i_servername_cb);
-    if (NIL_P(cb)) return Qnil;
-
-    ret_obj = rb_funcallv(cb, id_call, 1, &ary);
+    VALUE ret_obj = rb_funcallv(cb, id_call, 1, &ary);
     if (rb_obj_is_kind_of(ret_obj, cSSLContext)) {
-        SSL *ssl;
         SSL_CTX *ctx2;
-
         ossl_sslctx_setup(ret_obj);
-        GetSSL(ssl_obj, ssl);
         GetSSLCTX(ret_obj, ctx2);
-        SSL_set_SSL_CTX(ssl, ctx2);
+        if (!SSL_set_SSL_CTX(ssl, ctx2))
+            ossl_raise(eSSLError, "SSL_set_SSL_CTX");
         rb_ivar_set(ssl_obj, id_i_context, ret_obj);
     } else if (!NIL_P(ret_obj)) {
 	ossl_raise(rb_eArgError, "servername_cb must return an "
 		   "OpenSSL::SSL::SSLContext object or nil");
     }
 
-    return ret_obj;
+    return Qnil;
 }
 
 static int
 ssl_servername_cb(SSL *ssl, int *ad, void *arg)
 {
-    VALUE ary, ssl_obj;
-    int state = 0;
-    const char *servername = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
+    int state;
 
-    if (!servername)
-        return SSL_TLSEXT_ERR_OK;
-
-    ssl_obj = (VALUE)SSL_get_ex_data(ssl, ossl_ssl_ex_ptr_idx);
-    ary = rb_ary_new2(2);
-    rb_ary_push(ary, ssl_obj);
-    rb_ary_push(ary, rb_str_new2(servername));
-
-    rb_protect(ossl_call_servername_cb, ary, &state);
+    rb_protect(ossl_call_servername_cb, (VALUE)ssl, &state);
     if (state) {
+        VALUE ssl_obj = (VALUE)SSL_get_ex_data(ssl, ossl_ssl_ex_ptr_idx);
         rb_ivar_set(ssl_obj, ID_callback_state, INT2NUM(state));
         return SSL_TLSEXT_ERR_ALERT_FATAL;
     }
@@ -757,7 +746,10 @@ ssl_info_cb(const SSL *ssl, int where, int val)
 }
 
 /*
- * Gets various OpenSSL options.
+ * call-seq:
+ *    ctx.options -> integer
+ *
+ * Gets various \OpenSSL options.
  */
 static VALUE
 ossl_sslctx_get_options(VALUE self)
@@ -772,7 +764,17 @@ ossl_sslctx_get_options(VALUE self)
 }
 
 /*
- * Sets various OpenSSL options.
+ * call-seq:
+ *    ctx.options = integer
+ *
+ * Sets various \OpenSSL options. The options are a bit field and can be
+ * combined with the bitwise OR operator (<tt>|</tt>). Available options are
+ * defined as constants in OpenSSL::SSL that begin with +OP_+.
+ *
+ * For backwards compatibility, passing +nil+ has the same effect as passing
+ * OpenSSL::SSL::OP_ALL.
+ *
+ * See also man page SSL_CTX_set_options(3).
  */
 static VALUE
 ossl_sslctx_set_options(VALUE self, VALUE options)
@@ -1553,11 +1555,6 @@ ossl_ssl_mark(void *ptr)
 {
     SSL *ssl = ptr;
     rb_gc_mark((VALUE)SSL_get_ex_data(ssl, ossl_ssl_ex_ptr_idx));
-
-    // Note: this reference is stored as @verify_callback so we don't need to mark it.
-    // However we do need to ensure GC compaction won't move it, hence why
-    // we call rb_gc_mark here.
-    rb_gc_mark((VALUE)SSL_get_ex_data(ssl, ossl_ssl_ex_vcb_idx));
 }
 
 static void
@@ -1622,7 +1619,7 @@ peeraddr_ip_str(VALUE self)
 static VALUE
 ossl_ssl_initialize(int argc, VALUE *argv, VALUE self)
 {
-    VALUE io, v_ctx, verify_cb;
+    VALUE io, v_ctx;
     SSL *ssl;
     SSL_CTX *ctx;
 
@@ -1649,10 +1646,6 @@ ossl_ssl_initialize(int argc, VALUE *argv, VALUE self)
 
     SSL_set_ex_data(ssl, ossl_ssl_ex_ptr_idx, (void *)self);
     SSL_set_info_callback(ssl, ssl_info_cb);
-    verify_cb = rb_attr_get(v_ctx, id_i_verify_callback);
-    // We don't need to trigger a write barrier because it's already
-    // an instance variable of this object.
-    SSL_set_ex_data(ssl, ossl_ssl_ex_vcb_idx, (void *)verify_cb);
 
     rb_call_super(0, NULL);
 
@@ -1725,11 +1718,20 @@ no_exception_p(VALUE opts)
 #define RUBY_IO_TIMEOUT_DEFAULT Qnil
 #endif
 
+#ifdef HAVE_RB_IO_TIMEOUT
+#define IO_TIMEOUT_ERROR rb_eIOTimeoutError
+#else
+#define IO_TIMEOUT_ERROR rb_eIOError
+#endif
+
+
 static void
 io_wait_writable(VALUE io)
 {
 #ifdef HAVE_RB_IO_MAYBE_WAIT
-    rb_io_maybe_wait_writable(errno, io, RUBY_IO_TIMEOUT_DEFAULT);
+    if (!rb_io_maybe_wait_writable(errno, io, RUBY_IO_TIMEOUT_DEFAULT)) {
+        rb_raise(IO_TIMEOUT_ERROR, "Timed out while waiting to become writable!");
+    }
 #else
     rb_io_t *fptr;
     GetOpenFile(io, fptr);
@@ -1741,7 +1743,9 @@ static void
 io_wait_readable(VALUE io)
 {
 #ifdef HAVE_RB_IO_MAYBE_WAIT
-    rb_io_maybe_wait_readable(errno, io, RUBY_IO_TIMEOUT_DEFAULT);
+    if (!rb_io_maybe_wait_readable(errno, io, RUBY_IO_TIMEOUT_DEFAULT)) {
+        rb_raise(IO_TIMEOUT_ERROR, "Timed out while waiting to become readable!");
+    }
 #else
     rb_io_t *fptr;
     GetOpenFile(io, fptr);
@@ -1925,7 +1929,7 @@ ossl_ssl_read_internal(int argc, VALUE *argv, VALUE self, int nonblock)
 {
     SSL *ssl;
     int ilen;
-    VALUE len, str;
+    VALUE len, str, cb_state;
     VALUE opts = Qnil;
 
     if (nonblock) {
@@ -1947,15 +1951,25 @@ ossl_ssl_read_internal(int argc, VALUE *argv, VALUE self, int nonblock)
 	else
 	    rb_str_modify_expand(str, ilen - RSTRING_LEN(str));
     }
-    rb_str_set_len(str, 0);
-    if (ilen == 0)
-	return str;
+
+    if (ilen == 0) {
+        rb_str_set_len(str, 0);
+        return str;
+    }
 
     VALUE io = rb_attr_get(self, id_i_io);
 
     rb_str_locktmp(str);
     for (;;) {
         int nread = SSL_read(ssl, RSTRING_PTR(str), ilen);
+
+        cb_state = rb_attr_get(self, ID_callback_state);
+        if (!NIL_P(cb_state)) {
+            rb_ivar_set(self, ID_callback_state, Qnil);
+            ossl_clear_error();
+            rb_jump_tag(NUM2INT(cb_state));
+        }
+
         switch (ssl_get_error(ssl, nread)) {
           case SSL_ERROR_NONE:
             rb_str_unlocktmp(str);
@@ -2045,7 +2059,7 @@ ossl_ssl_write_internal(VALUE self, VALUE str, VALUE opts)
     SSL *ssl;
     rb_io_t *fptr;
     int num, nonblock = opts != Qfalse;
-    VALUE tmp;
+    VALUE tmp, cb_state;
 
     GetSSL(self, ssl);
     if (!ssl_started(ssl))
@@ -2062,6 +2076,14 @@ ossl_ssl_write_internal(VALUE self, VALUE str, VALUE opts)
 
     for (;;) {
         int nwritten = SSL_write(ssl, RSTRING_PTR(tmp), num);
+
+        cb_state = rb_attr_get(self, ID_callback_state);
+        if (!NIL_P(cb_state)) {
+            rb_ivar_set(self, ID_callback_state, Qnil);
+            ossl_clear_error();
+            rb_jump_tag(NUM2INT(cb_state));
+        }
+
         switch (ssl_get_error(ssl, nwritten)) {
           case SSL_ERROR_NONE:
             return INT2NUM(nwritten);
@@ -2590,9 +2612,6 @@ Init_ossl_ssl(void)
     id_call = rb_intern_const("call");
     ID_callback_state = rb_intern_const("callback_state");
 
-    ossl_ssl_ex_vcb_idx = SSL_get_ex_new_index(0, (void *)"ossl_ssl_ex_vcb_idx", 0, 0, 0);
-    if (ossl_ssl_ex_vcb_idx < 0)
-	ossl_raise(rb_eRuntimeError, "SSL_get_ex_new_index");
     ossl_ssl_ex_ptr_idx = SSL_get_ex_new_index(0, (void *)"ossl_ssl_ex_ptr_idx", 0, 0, 0);
     if (ossl_ssl_ex_ptr_idx < 0)
 	ossl_raise(rb_eRuntimeError, "SSL_get_ex_new_index");

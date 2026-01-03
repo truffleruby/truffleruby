@@ -18,6 +18,11 @@ class TestRipper::Sexp < Test::Unit::TestCase
     assert_nil Ripper.sexp("/*")
     assert_nil Ripper.sexp("/*/")
     assert_nil Ripper.sexp("/+/")
+    assert_nil Ripper.sexp("m(&nil) {}"), '[Bug #10436]'
+    assert_nil Ripper.sexp("/(?<a>)/ =~ ''; x = a **a, **a if false"), '[Bug #18988]'
+    assert_nil Ripper.sexp("return + return"), '[Bug #20055]'
+    assert_nil Ripper.sexp("1 in [a, a]"), '[Bug #20055]'
+    assert_nil Ripper.sexp("1 + (1 => [a, a])"), '[Bug #20055]'
   end
 
   def test_regexp_content
@@ -32,6 +37,14 @@ class TestRipper::Sexp < Test::Unit::TestCase
 
     sexp = Ripper.sexp('/(?<n>a(b|\g<n>))/')
     assert_equal '(?<n>a(b|\g<n>))', search_sexp(:@tstring_content, search_sexp(:regexp_literal, sexp))[1]
+  end
+
+  def test_regexp_named_capture
+    sexp = Ripper.sexp("/(?<a>)/ =~ ''; x = a **a, a if false")
+    assert_not_nil sexp, '[Bug #18988]'
+
+    sexp = Ripper.sexp("/(?<a>)/ =~ ''; a %(exit)")
+    assert_equal 'exit', search_sexp(:@ident, search_sexp(:paren, sexp))[1], '[Bug #18988]'
   end
 
   def test_heredoc_content
@@ -108,6 +121,21 @@ eot
       [[:@label, "sym:", [1, 41]], [:symbol_literal, [:symbol, [:@ident, "sym", [1, 47]]]]]
     };
     assert_equal(exp, named)
+  end
+
+  def test_command
+    sexp = Ripper.sexp("a::C {}")
+    assert_equal(
+      [:program,
+        [
+          [:method_add_block,
+            [:command_call,
+              [:vcall, [:@ident, "a", [1, 0]]],
+              [:@op, "::", [1, 1]],
+              [:@const, "C", [1, 3]],
+              nil],
+          [:brace_block, nil, [[:void_stmt]]]]]],
+      sexp)
   end
 
   def search_sexp(sym, sexp)

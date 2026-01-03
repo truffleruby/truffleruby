@@ -268,7 +268,11 @@ class TestMarshal < Test::Unit::TestCase
   classISO8859_1.name
   ClassISO8859_1 = classISO8859_1
 
-  def test_class_nonascii
+  moduleUTF8 = const_set("C\u{30af 30e9 30b9}", Module.new)
+  moduleUTF8.name
+  ModuleUTF8 = moduleUTF8
+
+  def test_nonascii_class_instance
     a = ClassUTF8.new
     assert_instance_of(ClassUTF8, Marshal.load(Marshal.dump(a)), '[ruby-core:24790]')
 
@@ -299,6 +303,12 @@ class TestMarshal < Test::Unit::TestCase
       assert_equal(a.instance_variables, b.instance_variables, bug1932)
       assert_equal(b, b.instance_variable_get(a.instance_variables[0]), bug1932)
     end
+  end
+
+  def test_nonascii_class_module
+    assert_same(ClassUTF8, Marshal.load(Marshal.dump(ClassUTF8)))
+    assert_same(ClassISO8859_1, Marshal.load(Marshal.dump(ClassISO8859_1)))
+    assert_same(ModuleUTF8, Marshal.load(Marshal.dump(ModuleUTF8)))
   end
 
   def test_regexp2
@@ -570,13 +580,19 @@ class TestMarshal < Test::Unit::TestCase
   def test_class_ivar
     assert_raise(TypeError) {Marshal.load("\x04\x08Ic\x1bTestMarshal::TestClass\x06:\x0e@ivar_bug\"\x08bug")}
     assert_raise(TypeError) {Marshal.load("\x04\x08IM\x1bTestMarshal::TestClass\x06:\x0e@ivar_bug\"\x08bug")}
-    assert_not_operator(TestClass, :instance_variable_defined?, :@bug)
+    assert_not_operator(TestClass, :instance_variable_defined?, :@ivar_bug)
+
+    assert_raise(TypeError) {Marshal.load("\x04\x08[\x07c\x1bTestMarshal::TestClassI@\x06\x06:\x0e@ivar_bug\"\x08bug")}
+    assert_not_operator(TestClass, :instance_variable_defined?, :@ivar_bug)
   end
 
   def test_module_ivar
     assert_raise(TypeError) {Marshal.load("\x04\x08Im\x1cTestMarshal::TestModule\x06:\x0e@ivar_bug\"\x08bug")}
     assert_raise(TypeError) {Marshal.load("\x04\x08IM\x1cTestMarshal::TestModule\x06:\x0e@ivar_bug\"\x08bug")}
-    assert_not_operator(TestModule, :instance_variable_defined?, :@bug)
+    assert_not_operator(TestModule, :instance_variable_defined?, :@ivar_bug)
+
+    assert_raise(TypeError) {Marshal.load("\x04\x08[\x07m\x1cTestMarshal::TestModuleI@\x06\x06:\x0e@ivar_bug\"\x08bug")}
+    assert_not_operator(TestModule, :instance_variable_defined?, :@ivar_bug)
   end
 
   class TestForRespondToFalse
@@ -609,6 +625,8 @@ class TestMarshal < Test::Unit::TestCase
 
   def test_continuation
     EnvUtil.suppress_warning {require "continuation"}
+    omit 'requires callcc support' unless respond_to?(:callcc)
+
     c = Bug9523.new
     assert_raise_with_message(RuntimeError, /Marshal\.dump reentered at marshal_dump/) do
       Marshal.dump(c)
@@ -665,6 +683,15 @@ class TestMarshal < Test::Unit::TestCase
     # cleanup
     self.class.class_eval do
       remove_const name
+    end
+  end
+
+  def test_recursive_userdef
+    t = Time.utc(0)
+    str = "b".b
+    t.instance_eval {@v = t}
+    assert_raise_with_message(RuntimeError, /recursive\b.*\b_dump/) do
+      Marshal.dump(t)
     end
   end
 

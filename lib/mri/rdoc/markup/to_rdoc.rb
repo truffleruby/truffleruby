@@ -3,6 +3,16 @@
 # Outputs RDoc markup as RDoc markup! (mostly)
 
 class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
+  DEFAULT_HEADINGS = {
+      1 => ['= ',      ''],
+      2 => ['== ',     ''],
+      3 => ['=== ',    ''],
+      4 => ['==== ',   ''],
+      5 => ['===== ',  ''],
+      6 => ['====== ', '']
+  }
+  DEFAULT_HEADINGS.default = []
+  DEFAULT_HEADINGS.freeze
 
   ##
   # Current indent amount for output in characters
@@ -42,23 +52,14 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Creates a new formatter that will output (mostly) \RDoc markup
 
-  def initialize markup = nil
+  def initialize(markup = nil)
     super nil, markup
 
     @markup.add_regexp_handling(/\\\S/, :SUPPRESSED_CROSSREF)
     @width = 78
     init_tags
 
-    @headings = {}
-    @headings.default = []
-
-    @headings[1] = ['= ',      '']
-    @headings[2] = ['== ',     '']
-    @headings[3] = ['=== ',    '']
-    @headings[4] = ['==== ',   '']
-    @headings[5] = ['===== ',  '']
-    @headings[6] = ['====== ', '']
-
+    @headings = DEFAULT_HEADINGS.dup
     @hard_break = "\n"
   end
 
@@ -74,14 +75,14 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Adds +blank_line+ to the output
 
-  def accept_blank_line blank_line
+  def accept_blank_line(blank_line)
     @res << "\n"
   end
 
   ##
   # Adds +paragraph+ to the output
 
-  def accept_block_quote block_quote
+  def accept_block_quote(block_quote)
     @indent += 2
 
     block_quote.parts.each do |part|
@@ -96,7 +97,7 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Adds +heading+ to the output
 
-  def accept_heading heading
+  def accept_heading(heading)
     use_prefix or @res << ' ' * @indent
     @res << @headings[heading.level][0]
     @res << attributes(heading.text)
@@ -107,7 +108,7 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Finishes consumption of +list+
 
-  def accept_list_end list
+  def accept_list_end(list)
     @list_index.pop
     @list_type.pop
     @list_width.pop
@@ -116,7 +117,7 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Finishes consumption of +list_item+
 
-  def accept_list_item_end list_item
+  def accept_list_item_end(list_item)
     width = case @list_type.last
             when :BULLET then
               2
@@ -140,16 +141,24 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Prepares the visitor for consuming +list_item+
 
-  def accept_list_item_start list_item
+  def accept_list_item_start(list_item)
     type = @list_type.last
 
     case type
     when :NOTE, :LABEL then
-      bullets = Array(list_item.label).map do |label|
+      stripped_labels = Array(list_item.label).map do |label|
         attributes(label).strip
-      end.join "\n"
+      end
 
-      bullets << ":\n" unless bullets.empty?
+      bullets = case type
+      when :NOTE
+        stripped_labels.map { |b| "#{b}::" }
+      when :LABEL
+        stripped_labels.map { |b| "[#{b}]" }
+      end
+
+      bullets = bullets.join("\n")
+      bullets << "\n" unless stripped_labels.empty?
 
       @prefix = ' ' * @indent
       @indent += 2
@@ -165,7 +174,7 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Prepares the visitor for consuming +list+
 
-  def accept_list_start list
+  def accept_list_start(list)
     case list.type
     when :BULLET then
       @list_index << nil
@@ -192,7 +201,7 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Adds +paragraph+ to the output
 
-  def accept_paragraph paragraph
+  def accept_paragraph(paragraph)
     text = paragraph.text @hard_break
     wrap attributes text
   end
@@ -200,7 +209,7 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Adds +paragraph+ to the output
 
-  def accept_indented_paragraph paragraph
+  def accept_indented_paragraph(paragraph)
     @indent += paragraph.indent
     text = paragraph.text @hard_break
     wrap attributes text
@@ -210,14 +219,14 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Adds +raw+ to the output
 
-  def accept_raw raw
+  def accept_raw(raw)
     @res << raw.parts.join("\n")
   end
 
   ##
   # Adds +rule+ to the output
 
-  def accept_rule rule
+  def accept_rule(rule)
     use_prefix or @res << ' ' * @indent
     @res << '-' * (@width - @indent)
     @res << "\n"
@@ -226,7 +235,7 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Outputs +verbatim+ indented 2 columns
 
-  def accept_verbatim verbatim
+  def accept_verbatim(verbatim)
     indent = ' ' * (@indent + 2)
 
     verbatim.parts.each do |part|
@@ -240,13 +249,13 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Adds +table+ to the output
 
-  def accept_table header, body, aligns
-    widths = header.zip(body) do |h, b|
-      [h.size, b.size].max
+  def accept_table(header, body, aligns)
+    widths = header.zip(*body).map do |cols|
+      cols.map(&:size).max
     end
     aligns = aligns.map do |a|
       case a
-      when nil
+      when nil, :center
         :center
       when :left
         :ljust
@@ -254,12 +263,12 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
         :rjust
       end
     end
-    @res << header.zip(widths, aligns) do |h, w, a|
+    @res << header.zip(widths, aligns).map do |h, w, a|
       h.__send__(a, w)
     end.join("|").rstrip << "\n"
     @res << widths.map {|w| "-" * w }.join("|") << "\n"
     body.each do |row|
-      @res << row.zip(widths, aligns) do |t, w, a|
+      @res << row.zip(widths, aligns).map do |t, w, a|
         t.__send__(a, w)
       end.join("|").rstrip << "\n"
     end
@@ -268,7 +277,7 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Applies attribute-specific markup to +text+ using RDoc::AttributeManager
 
-  def attributes text
+  def attributes(text)
     flow = @am.flow text.dup
     convert_flow flow
   end
@@ -283,7 +292,7 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Removes preceding \\ from the suppressed crossref +target+
 
-  def handle_regexp_SUPPRESSED_CROSSREF target
+  def handle_regexp_SUPPRESSED_CROSSREF(target)
     text = target.text
     text = text.sub('\\', '') unless in_tt?
     text
@@ -292,7 +301,7 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Adds a newline to the output
 
-  def handle_regexp_HARD_BREAK target
+  def handle_regexp_HARD_BREAK(target)
     "\n"
   end
 
@@ -323,7 +332,7 @@ class RDoc::Markup::ToRdoc < RDoc::Markup::Formatter
   ##
   # Wraps +text+ to #width
 
-  def wrap text
+  def wrap(text)
     return unless text && !text.empty?
 
     text_len = @width - @indent

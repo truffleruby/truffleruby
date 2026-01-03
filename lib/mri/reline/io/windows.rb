@@ -1,6 +1,9 @@
 require 'fiddle/import'
 
 class Reline::Windows < Reline::IO
+
+  attr_writer :output
+
   def initialize
     @input_buf = []
     @output_buf = []
@@ -52,7 +55,6 @@ class Reline::Windows < Reline::IO
       [224, 83] => :key_delete,      # Del
       [224, 71] => :ed_move_to_beg,  # Home
       [224, 79] => :ed_move_to_end,  # End
-      [  0, 41] => :ed_unassigned,   # input method on/off
       [  0, 72] => :ed_prev_history, # ↑
       [  0, 80] => :ed_next_history, # ↓
       [  0, 77] => :ed_next_char,    # →
@@ -157,6 +159,7 @@ class Reline::Windows < Reline::IO
   STD_OUTPUT_HANDLE = -11
   FILE_TYPE_PIPE = 0x0003
   FILE_NAME_INFO = 2
+  ENABLE_WRAP_AT_EOL_OUTPUT = 2
   ENABLE_VIRTUAL_TERMINAL_PROCESSING = 4
 
   # Calling Win32API with console handle is reported to fail after executing some external command.
@@ -170,7 +173,7 @@ class Reline::Windows < Reline::IO
   end
 
   private def getconsolemode
-    mode = "\000\000\000\000"
+    mode = +"\0\0\0\0"
     call_with_console_handle(@GetConsoleMode, mode)
     mode.unpack1('L')
   end
@@ -252,7 +255,7 @@ class Reline::Windows < Reline::IO
 
     key = KeyEventRecord.new(virtual_key_code, char_code, control_key_state)
 
-    match = KEY_MAP.find { |args,| key.matches?(**args) }
+    match = KEY_MAP.find { |args,| key.match?(**args) }
     unless match.nil?
       @output_buf.concat(match.last)
       return
@@ -307,6 +310,14 @@ class Reline::Windows < Reline::IO
     yield
   end
 
+  def write(string)
+    @output.write(string)
+  end
+
+  def buffered_output
+    yield
+  end
+
   def getc(_timeout_second)
     check_input_event
     @output_buf.shift
@@ -344,35 +355,38 @@ class Reline::Windows < Reline::IO
     # [18,2] dwMaximumWindowSize.X
     # [20,2] dwMaximumWindowSize.Y
     csbi = 0.chr * 22
-    return if call_with_console_handle(@GetConsoleScreenBufferInfo, csbi) == 0
-    csbi
+    if call_with_console_handle(@GetConsoleScreenBufferInfo, csbi) != 0
+      # returns [width, height, x, y, attributes, left, top, right, bottom]
+      csbi.unpack("s9")
+    else
+      return nil
+    end
   end
 
+  ALTERNATIVE_CSBI = [80, 24, 0, 0, 7, 0, 0, 79, 23].freeze
+
   def get_screen_size
-    unless csbi = get_console_screen_buffer_info
-      return [1, 1]
-    end
-    csbi[0, 4].unpack('SS').reverse
+    width, _, _, _, _, _, top, _, bottom = get_console_screen_buffer_info || ALTERNATIVE_CSBI
+    [bottom - top + 1, width]
   end
 
   def cursor_pos
-    unless csbi = get_console_screen_buffer_info
-      return Reline::CursorPos.new(0, 0)
-    end
-    x = csbi[4, 2].unpack1('s')
-    y = csbi[6, 2].unpack1('s')
-    Reline::CursorPos.new(x, y)
+    _, _, x, y, _, _, top, = get_console_screen_buffer_info || ALTERNATIVE_CSBI
+    Reline::CursorPos.new(x, y - top)
   end
 
   def move_cursor_column(val)
-    call_with_console_handle(@SetConsoleCursorPosition, cursor_pos.y * 65536 + val)
+    _, _, _, y, = get_console_screen_buffer_info
+    call_with_console_handle(@SetConsoleCursorPosition, y * 65536 + val) if y
   end
 
   def move_cursor_up(val)
     if val > 0
-      y = cursor_pos.y - val
+      _, _, x, y, _, _, top, = get_console_screen_buffer_info
+      return unless y
+      y = (y - top) - val
       y = 0 if y < 0
-      call_with_console_handle(@SetConsoleCursorPosition, y * 65536 + cursor_pos.x)
+      call_with_console_handle(@SetConsoleCursorPosition, (y + top) * 65536 + x)
     elsif val < 0
       move_cursor_down(-val)
     end
@@ -380,58 +394,39 @@ class Reline::Windows < Reline::IO
 
   def move_cursor_down(val)
     if val > 0
-      return unless csbi = get_console_screen_buffer_info
-      screen_height = get_screen_size.first
-      y = cursor_pos.y + val
-      y = screen_height - 1 if y > (screen_height - 1)
-      call_with_console_handle(@SetConsoleCursorPosition, (cursor_pos.y + val) * 65536 + cursor_pos.x)
+      _, _, x, y, _, _, top, _, bottom = get_console_screen_buffer_info
+      return unless y
+      screen_height = bottom - top
+      y = (y - top) + val
+      y = screen_height if y > screen_height
+      call_with_console_handle(@SetConsoleCursorPosition, (y + top) * 65536 + x)
     elsif val < 0
       move_cursor_up(-val)
     end
   end
 
   def erase_after_cursor
-    return unless csbi = get_console_screen_buffer_info
-    attributes = csbi[8, 2].unpack1('S')
-    cursor = csbi[4, 4].unpack1('L')
+    width, _, x, y, attributes, = get_console_screen_buffer_info
+    return unless x
     written = 0.chr * 4
-    call_with_console_handle(@FillConsoleOutputCharacter, 0x20, get_screen_size.last - cursor_pos.x, cursor, written)
-    call_with_console_handle(@FillConsoleOutputAttribute, attributes, get_screen_size.last - cursor_pos.x, cursor, written)
+    call_with_console_handle(@FillConsoleOutputCharacter, 0x20, width - x, y * 65536 + x, written)
+    call_with_console_handle(@FillConsoleOutputAttribute, attributes, width - x, y * 65536 + x, written)
   end
 
-  def scroll_down(val)
-    return if val < 0
-    return unless csbi = get_console_screen_buffer_info
-    buffer_width, buffer_lines, x, y, attributes, window_left, window_top, window_bottom = csbi.unpack('ssssSssx2s')
-    screen_height = window_bottom - window_top + 1
-    val = screen_height if val > screen_height
-
-    if @legacy_console || window_left != 0
-      # unless ENABLE_VIRTUAL_TERMINAL,
-      # if srWindow.Left != 0 then it's conhost.exe hosted console
-      # and puts "\n" causes horizontal scroll. its glitch.
-      # FYI irb write from culumn 1, so this gives no gain.
-      scroll_rectangle = [0, val, buffer_width, buffer_lines - val].pack('s4')
-      destination_origin = 0 # y * 65536 + x
-      fill = [' '.ord, attributes].pack('SS')
-      call_with_console_handle(@ScrollConsoleScreenBuffer, scroll_rectangle, nil, destination_origin, fill)
-    else
-      origin_x = x + 1
-      origin_y = y - window_top + 1
-      @output.write [
-        (origin_y != screen_height) ? "\e[#{screen_height};H" : nil,
-        "\n" * val,
-        (origin_y != screen_height or !x.zero?) ? "\e[#{origin_y};#{origin_x}H" : nil
-      ].join
-    end
+  # This only works when the cursor is at the bottom of the scroll range
+  # For more details, see https://github.com/ruby/reline/pull/577#issuecomment-1646679623
+  def scroll_down(x)
+    return if x.zero?
+    # We use `\n` instead of CSI + S because CSI + S would cause https://github.com/ruby/reline/issues/576
+    @output.write "\n" * x
   end
 
   def clear_screen
     if @legacy_console
-      return unless csbi = get_console_screen_buffer_info
-      buffer_width, _buffer_lines, attributes, window_top, window_bottom = csbi.unpack('ss@8S@12sx2s')
-      fill_length = buffer_width * (window_bottom - window_top + 1)
-      screen_topleft = window_top * 65536
+      width, _, _, _, attributes, _, top, _, bottom = get_console_screen_buffer_info
+      return unless width
+      fill_length = width * (bottom - top + 1)
+      screen_topleft = top * 65536
       written = 0.chr * 4
       call_with_console_handle(@FillConsoleOutputCharacter, 0x20, fill_length, screen_topleft, written)
       call_with_console_handle(@FillConsoleOutputAttribute, attributes, fill_length, screen_topleft, written)
@@ -472,6 +467,28 @@ class Reline::Windows < Reline::IO
     # do nothing
   end
 
+  def disable_auto_linewrap(setting = true, &block)
+    mode = getconsolemode
+    if 0 == (mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+      if block
+        begin
+          setconsolemode(mode & ~ENABLE_WRAP_AT_EOL_OUTPUT)
+          block.call
+        ensure
+          setconsolemode(mode | ENABLE_WRAP_AT_EOL_OUTPUT)
+        end
+      else
+        if setting
+          setconsolemode(mode & ~ENABLE_WRAP_AT_EOL_OUTPUT)
+        else
+          setconsolemode(mode | ENABLE_WRAP_AT_EOL_OUTPUT)
+        end
+      end
+    else
+      block.call if block
+    end
+  end
+
   class KeyEventRecord
 
     attr_reader :virtual_key_code, :char_code, :control_key_state, :control_keys
@@ -501,7 +518,7 @@ class Reline::Windows < Reline::IO
     # Verifies if the arguments match with this key event.
     # Nil arguments are ignored, but at least one must be passed as non-nil.
     # To verify that no control keys were pressed, pass an empty array: `control_keys: []`.
-    def matches?(control_keys: nil, virtual_key_code: nil, char_code: nil)
+    def match?(control_keys: nil, virtual_key_code: nil, char_code: nil)
       raise ArgumentError, 'No argument was passed to match key event' if control_keys.nil? && virtual_key_code.nil? && char_code.nil?
 
       (control_keys.nil? || [*control_keys].sort == @control_keys) &&

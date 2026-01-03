@@ -211,7 +211,10 @@ void *rb_ext_resolve_symbol(const char *feature, const char *symbol);
  * #endif
  * ```
  */
+#ifndef TRUFFLERUBY
+// TruffleRuby does not implement rb_ext_resolve_symbol() yet (since there seems to be no need so far)
 #define HAVE_RB_EXT_RESOLVE_SYMBOL 1
+#endif
 
 /**
  * @name extension configuration

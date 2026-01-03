@@ -133,5 +133,5 @@ module ObjectSpace
     ret = _dump_shapes(out, since)
     return nil if output == :stdout
     ret
-  end unless defined?(::TruffleRuby)
+  end
 end

@@ -1,4 +1,4 @@
-/*    $OpenBSD: strlcpy.c,v 1.12 2015/01/15 03:54:12 millert Exp $    */
+/* $OpenBSD: strlcpy.c,v 1.12 2015/01/15 03:54:12 millert Exp $ */
 
 /*
  * Copyright (c) 1998, 2015 Todd C. Miller <Todd.Miller@courtesan.com>
@@ -20,7 +20,9 @@
 #include <sys/types.h>
 #include <string.h>
 
-#ifndef HAVE_STRLCPY
+/* Undefine any macro version (e.g., from macOS _FORTIFY_SOURCE) */
+#undef strlcpy
+
 /*
  * Copy string src to buffer dst of size dsize.  At most dsize-1
  * chars will be copied.  Always NUL terminates (unless dsize == 0).
@@ -41,11 +43,10 @@ size_t strlcpy(char *dst, const char *src, size_t dsize) {
     /* Not enough room in dst, add NUL and traverse rest of src. */
     if (nleft == 0) {
         if (dsize != 0)
-            *dst = '\0';        /* NUL-terminate dst */
+            *dst = '\0';    /* NUL-terminate dst */
         while (*src++)
             ;
     }
 
-    return(src - osrc - 1);    /* count does not include NUL */
+    return(src - osrc - 1); /* count does not include NUL */
 }
-#endif

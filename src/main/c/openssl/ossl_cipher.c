@@ -5,7 +5,7 @@
  */
 /*
  * This program is licensed under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 
@@ -30,8 +30,8 @@
 /*
  * Classes
  */
-VALUE cCipher;
-VALUE eCipherError;
+static VALUE cCipher;
+static VALUE eCipherError;
 static ID id_auth_tag_len, id_key_set;
 
 static VALUE ossl_cipher_alloc(VALUE klass);
@@ -386,22 +386,37 @@ ossl_cipher_update(int argc, VALUE *argv, VALUE self)
     in = (unsigned char *)RSTRING_PTR(data);
     in_len = RSTRING_LEN(data);
     GetCipher(self, ctx);
-    out_len = in_len+EVP_CIPHER_CTX_block_size(ctx);
-    if (out_len <= 0) {
+
+    /*
+     * As of OpenSSL 3.2, there is no reliable way to determine the required
+     * output buffer size for arbitrary cipher modes.
+     * https://github.com/openssl/openssl/issues/22628
+     *
+     * in_len+block_size is usually sufficient, but AES key wrap with padding
+     * ciphers require in_len+15 even though they have a block size of 8 bytes.
+     *
+     * Using EVP_MAX_BLOCK_LENGTH (32) as a safe upper bound for ciphers
+     * currently implemented in OpenSSL, but this can change in the future.
+     */
+    if (in_len > LONG_MAX - EVP_MAX_BLOCK_LENGTH) {
 	ossl_raise(rb_eRangeError,
 		   "data too big to make output buffer: %ld bytes", in_len);
     }
+    out_len = in_len + EVP_MAX_BLOCK_LENGTH;
 
     if (NIL_P(str)) {
         str = rb_str_new(0, out_len);
     } else {
         StringValue(str);
-        rb_str_resize(str, out_len);
+        if ((long)rb_str_capacity(str) >= out_len)
+            rb_str_modify(str);
+        else
+            rb_str_modify_expand(str, out_len - RSTRING_LEN(str));
     }
 
     if (!ossl_cipher_update_long(ctx, (unsigned char *)RSTRING_PTR(str), &out_len, in, in_len))
 	ossl_raise(eCipherError, NULL);
-    assert(out_len < RSTRING_LEN(str));
+    assert(out_len <= RSTRING_LEN(str));
     rb_str_set_len(str, out_len);
 
     return str;
@@ -442,8 +457,8 @@ ossl_cipher_final(VALUE self)
  *  call-seq:
  *     cipher.name -> string
  *
- *  Returns the name of the cipher which may differ slightly from the original
- *  name provided.
+ *  Returns the short name of the cipher which may differ slightly from the
+ *  original name provided.
  */
 static VALUE
 ossl_cipher_name(VALUE self)

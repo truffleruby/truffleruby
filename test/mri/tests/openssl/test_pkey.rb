@@ -38,6 +38,12 @@ class OpenSSL::TestPKey < OpenSSL::PKeyTestCase
     assert_raise(OpenSSL::PKey::PKeyError) {
       OpenSSL::PKey.generate_parameters("EC", "invalid" => "option")
     }
+  end
+
+  def test_s_generate_parameters_with_block
+    # DSA kengen is not FIPS-approved.
+    # https://github.com/openssl/openssl/commit/49a35f0#diff-605396c063194975af8ce31399d42690ab18186b422fb5012101cc9132660fe1R611-R614
+    omit_on_fips
 
     # Parameter generation callback is called
     if openssl?(3, 0, 0, 0) && !openssl?(3, 0, 0, 6)
@@ -53,7 +59,6 @@ class OpenSSL::TestPKey < OpenSSL::PKeyTestCase
       }
     }
     assert_not_empty cb_called
-    assert_nil $!
   end
 
   def test_s_generate_key
@@ -85,6 +90,8 @@ class OpenSSL::TestPKey < OpenSSL::PKeyTestCase
   def test_ed25519
     # Ed25519 is not FIPS-approved.
     omit_on_fips
+    # See EVP_PKEY_sign in Changelog for 3.7.0: https://github.com/libressl/portable/blob/master/ChangeLog
+    omit "Ed25519 not supported" unless openssl?(1, 1, 1) || libressl?(3, 7, 0)
 
     # Test vector from RFC 8032 Section 7.1 TEST 2
     priv_pem = <<~EOF
@@ -97,15 +104,8 @@ class OpenSSL::TestPKey < OpenSSL::PKeyTestCase
     MCowBQYDK2VwAyEAPUAXw+hDiVqStwqnTRt+vJyYLM8uxJaMwM1V8Sr0Zgw=
     -----END PUBLIC KEY-----
     EOF
-    begin
-      priv = OpenSSL::PKey.read(priv_pem)
-      pub = OpenSSL::PKey.read(pub_pem)
-    rescue OpenSSL::PKey::PKeyError => e
-      # OpenSSL < 1.1.1
-      pend "Ed25519 is not implemented" unless openssl?(1, 1, 1)
-
-      raise e
-    end
+    priv = OpenSSL::PKey.read(priv_pem)
+    pub = OpenSSL::PKey.read(pub_pem)
     assert_instance_of OpenSSL::PKey::PKey, priv
     assert_instance_of OpenSSL::PKey::PKey, pub
     assert_equal priv_pem, priv.private_to_pem
@@ -143,32 +143,6 @@ class OpenSSL::TestPKey < OpenSSL::PKeyTestCase
 
     # Ed25519 pkey type does not support key derivation
     assert_raise(OpenSSL::PKey::PKeyError) { priv.derive(pub) }
-  end
-
-  def test_ed25519_not_approved_on_fips
-    omit_on_non_fips
-    # Ed25519 is technically allowed in the OpenSSL 3.0 code as a kind of bug.
-    # So, we need to omit OpenSSL 3.0.
-    #
-    # See OpenSSL providers/fips/fipsprov.c PROV_NAMES_ED25519 entries with
-    # FIPS_DEFAULT_PROPERTIES on openssl-3.0 branch and
-    # FIPS_UNAPPROVED_PROPERTIES on openssl-3.1 branch.
-    #
-    # See also
-    # https://github.com/openssl/openssl/issues/20758#issuecomment-1639658102
-    # for details.
-    unless openssl?(3, 1, 0, 0)
-      omit 'Ed25519 is allowed in the OpenSSL 3.0 FIPS code as a kind of bug'
-    end
-
-    priv_pem = <<~EOF
-    -----BEGIN PRIVATE KEY-----
-    MC4CAQAwBQYDK2VwBCIEIEzNCJso/5banbbDRuwRTg9bijGfNaumJNqM9u1PuKb7
-    -----END PRIVATE KEY-----
-    EOF
-    assert_raise(OpenSSL::PKey::PKeyError) do
-      OpenSSL::PKey.read(priv_pem)
-    end
   end
 
   def test_x25519

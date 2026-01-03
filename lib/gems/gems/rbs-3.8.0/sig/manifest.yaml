@@ -1,0 +1,7 @@
+dependencies:
+  - name: logger
+  - name: pathname
+  - name: json
+  - name: optparse
+  - name: tsort
+  - name: rdoc

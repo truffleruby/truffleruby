@@ -34,7 +34,7 @@ describe "Always-inlined core methods" do
         block_given?(:wrong)
       }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'block_given?' }
       -> {
-        iterator?(:wrong) # rubocop:disable Lint/DeprecatedClassMethods
+        iterator?(:wrong)
       }.should raise_error(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'iterator?' }
     end
 

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-if defined?(::TruffleRuby)
-  require 'truffle/fiddle_backend'
-else
+if RUBY_ENGINE == 'ruby'
   require 'fiddle.so'
+else
+  require 'fiddle/ffi_backend'
 end
 require 'fiddle/closure'
 require 'fiddle/function'
@@ -14,36 +14,63 @@ module Fiddle
     # Returns the last win32 +Error+ of the current executing +Thread+ or nil
     # if none
     def self.win32_last_error
-      Thread.current[:__FIDDLE_WIN32_LAST_ERROR__]
+      if RUBY_ENGINE == 'jruby'
+        errno = FFI.errno
+        errno == 0 ? nil : errno
+      else
+        Thread.current[:__FIDDLE_WIN32_LAST_ERROR__]
+      end
     end
 
     # Sets the last win32 +Error+ of the current executing +Thread+ to +error+
     def self.win32_last_error= error
-      Thread.current[:__FIDDLE_WIN32_LAST_ERROR__] = error
+      if RUBY_ENGINE == 'jruby'
+        FFI.errno = error || 0
+      else
+        Thread.current[:__FIDDLE_WIN32_LAST_ERROR__] = error
+      end
     end
 
     # Returns the last win32 socket +Error+ of the current executing
     # +Thread+ or nil if none
     def self.win32_last_socket_error
-      Thread.current[:__FIDDLE_WIN32_LAST_SOCKET_ERROR__]
+      if RUBY_ENGINE == 'jruby'
+        errno = FFI.errno
+        errno == 0 ? nil : errno
+      else
+        Thread.current[:__FIDDLE_WIN32_LAST_SOCKET_ERROR__]
+      end
     end
 
     # Sets the last win32 socket +Error+ of the current executing
     # +Thread+ to +error+
     def self.win32_last_socket_error= error
-      Thread.current[:__FIDDLE_WIN32_LAST_SOCKET_ERROR__] = error
+      if RUBY_ENGINE == 'jruby'
+        FFI.errno = error || 0
+      else
+        Thread.current[:__FIDDLE_WIN32_LAST_SOCKET_ERROR__] = error
+      end
     end
   end
 
   # Returns the last +Error+ of the current executing +Thread+ or nil if none
   def self.last_error
-    Thread.current[:__FIDDLE_LAST_ERROR__]
+    if RUBY_ENGINE == 'jruby'
+      errno = FFI.errno
+      errno == 0 ? nil : errno
+    else
+      Thread.current[:__FIDDLE_LAST_ERROR__]
+    end
   end
 
   # Sets the last +Error+ of the current executing +Thread+ to +error+
   def self.last_error= error
-    Thread.current[:__DL2_LAST_ERROR__] = error
-    Thread.current[:__FIDDLE_LAST_ERROR__] = error
+    if RUBY_ENGINE == 'jruby'
+      FFI.errno = error || 0
+    else
+      Thread.current[:__DL2_LAST_ERROR__] = error
+      Thread.current[:__FIDDLE_LAST_ERROR__] = error
+    end
   end
 
   # call-seq: dlopen(library) => Fiddle::Handle
@@ -84,7 +111,11 @@ module Fiddle
           case line
           when /\A\s*(?:INPUT|GROUP)\s*\(\s*([^\s,\)]+)/
             # TODO: Should we support multiple files?
-            return dlopen($1)
+            first_input = $1
+            if first_input.start_with?("-l")
+              first_input = "lib#{first_input[2..-1]}.so"
+            end
+            return dlopen(first_input)
           end
         end
       end

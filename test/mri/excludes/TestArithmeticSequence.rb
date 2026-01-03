@@ -1,5 +1,5 @@
 exclude :test_allocate, "TypeError expected but nothing was raised."
-exclude :test_complex, "NoMethodError: undefined method `<' for (0+1i):Complex"
-exclude :test_first, "NoMethodError: undefined method `step' for nil:NilClass"
+exclude :test_complex, "NoMethodError: undefined method `<' for an instance of Complex"
+exclude :test_first, "NoMethodError: undefined method `step' for nil"
 exclude :test_new, "[NoMethodError] exception expected, not #<ArgumentError: wrong number of arguments (given 0, expected 6)>."
 exclude :test_num_step_inspect, "<\"(1.step(10, by: 2))\"> expected but was <\"(1.step(10, 2))\">."

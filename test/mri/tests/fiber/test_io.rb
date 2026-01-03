@@ -153,12 +153,13 @@ class TestFiberIO < Test::Unit::TestCase
       Fiber.set_scheduler scheduler
 
       Fiber.schedule do
-        message = i.read(20)
+        # We add 1 here, to force the read to block (testing that specific code path).
+        message = i.read(MESSAGE.bytesize + 1)
         i.close
       end
 
       Fiber.schedule do
-        o.write("Hello World")
+        o.write(MESSAGE)
         o.close
       end
     end
@@ -246,8 +247,6 @@ class TestFiberIO < Test::Unit::TestCase
       i.nonblock = true
       o.nonblock = true
     end
-
-    message = nil
 
     reading_thread = Thread.new do
       Thread.current.report_on_exception = false

@@ -11,6 +11,7 @@ class TestTracepointObj < Test::Unit::TestCase
 
   def test_tracks_objspace_events
     result = EnvUtil.suppress_warning {eval(<<-EOS, nil, __FILE__, __LINE__+1)}
+    # frozen_string_literal: false
     Bug.tracepoint_track_objspace_events {
       99
       'abc'
@@ -65,15 +66,15 @@ class TestTracepointObj < Test::Unit::TestCase
         count = 0
         hook = proc {count += 1}
         def run(hook)
-        stress, GC.stress = GC.stress, false
-        Bug.after_gc_start_hook = hook
-        begin
-          GC.stress = true
-          3.times {Object.new}
-        ensure
-          GC.stress = stress
-          Bug.after_gc_start_hook = nil
-        end
+          stress, GC.stress = GC.stress, false
+          Bug.after_gc_start_hook = hook
+          begin
+            GC.stress = true
+            3.times {Object.new}
+          ensure
+            GC.stress = stress
+            Bug.after_gc_start_hook = nil
+          end
         end
         run(hook)
         puts count

@@ -1,0 +1,8 @@
+fails:Array#fetch_values tries to convert the passed argument to an Integer using #to_int
+fails:Array#fetch_values does not support a Range object as argument
+fails:Array#fetch_values raises a TypeError when the passed argument can't be coerced to Integer
+fails:Array#fetch_values with matched indexes returns the values for indexes
+fails:Array#fetch_values with matched indexes returns the values for indexes ordered in the order of the requested indexes
+fails:Array#fetch_values with unmatched indexes raises a index error if no block is provided
+fails:Array#fetch_values with unmatched indexes returns the default value from block
+fails:Array#fetch_values without keys returns an empty Array

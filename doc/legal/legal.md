@@ -18,11 +18,11 @@ See `epl-2.0.txt`, `gpl-2.txt`, `lgpl-2.1.txt`.
 ## MRI
 
 The standard implementation of Ruby is MRI. TruffleRuby contains code from MRI
-version 3.3.7, including:
+version 3.4.7, including:
 
 * the standard library in `lib/mri`, 
 * Ruby C extension API in `lib/cext/include` and `src/main/c/cext`, 
-* C extensions in `src/main/c/{bigdecimal,date,etc,io-console,nkf,openssl,psych,rbconfig-sizeof,ripper,syslog,zlib}`
+* C extensions in `src/main/c/{bigdecimal,date,debug,etc,io-console,json,nkf,openssl,psych,rbconfig-sizeof,rbs,ripper,syslog,zlib}`
 
 MRI is copyright Yukihiro Matsumoto. It is made available under the terms of the
 2-clause BSD licence `ruby-bsdl.txt`, or a custom licence `ruby-licence.txt`.
@@ -109,58 +109,23 @@ LibYAML is used by the `psych` C extension.
 This list is from [bundled_gems](bundled_gems) and `grep licenses lib/gems/specifications/*.gemspec`.
 Versions as used in MRI unless otherwise specified.
 
-### debug
+<!--
+Script to get the data:
+Dir["lib/gems/specifications/*.gemspec"].sort.map { |f| [File.basename(f)[/^(.+?)-\d/, 1], eval(File.read(f)[/licenses = (.+)/, 1]) - %w[Ruby]] }.group_by(&:last).to_h { |k,v| [k, v.map(&:first).join(", ")] }
+-->
 
-debug is under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
+### abbrev, base64, bigdecimal, csv, debug, drb, getoptlong, matrix, mutex_m, net-ftp, net-imap, net-pop, net-smtp, nkf, observer, power_assert, prime, racc, rbs, resolv-replace, rexml, rinda, rss, syslog
 
-### matrix
+These gems are available under the 2-clause BSD licence (see `ruby-bsdl.txt`).
 
-matrix is under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
+### minitest, rake, repl_type_completor
 
-### minitest
-
-minitest is copyright Ryan Davis and is available under an MIT licence (see `mit.txt`).
-
-### net-ftp, net-imap, net-pop, net-smtp
-
-These 4 bundled gems are under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
-
-### power_assert
-
-power_assert is copyright Kazuki Tsujimoto and is available under the same licence as MRI (see `ruby-bsdl.txt`).
-
-### prime
-
-prime is under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
-
-### racc
-
-racc is under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
-
-### rake
-
-Rake is copyright Jim Weirich and is available under an MIT licence (see `mit.txt`).
-
-### rbs
-
-rbs is copyright Soutaro Matsumoto and is available under the same licence as MRI (see `ruby-bsdl.txt`).
-
-### rexml
-
-rexml is under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
-
-### rss
-
-rss is under the same copyright and licence as MRI (see `ruby-bsdl.txt`).
+These gems are available under an MIT licence (see `mit.txt`).
 
 ### test-unit
 
 test-unit is copyright Sutou Kouhei, Ryan Davis, and Nathaniel Talbott
-and is available under the same licence as MRI (see `ruby-bsdl.txt`).
-
-### typeprof
-
-typeprof is copyright Yusuke Endoh and is available under an MIT licence (see `mit.txt`).
+and is available under the 2-clause BSD licence (see `ruby-bsdl.txt`).
 
 ## Other gems
 

@@ -5,7 +5,7 @@
  */
 /*
  * This program is licensed under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 
@@ -19,8 +19,8 @@
 /*
  * Classes
  */
-VALUE cDigest;
-VALUE eDigestError;
+static VALUE cDigest;
+static VALUE eDigestError;
 
 static VALUE ossl_digest_alloc(VALUE klass);
 
@@ -96,14 +96,15 @@ ossl_digest_alloc(VALUE klass)
     return TypedData_Wrap_Struct(klass, &ossl_digest_type, 0);
 }
 
-VALUE ossl_digest_update(VALUE, VALUE);
+static VALUE ossl_digest_update(VALUE, VALUE);
 
 /*
  *  call-seq:
  *     Digest.new(string [, data]) -> Digest
  *
  * Creates a Digest instance based on _string_, which is either the ln
- * (long name) or sn (short name) of a supported digest algorithm.
+ * (long name) or sn (short name) of a supported digest algorithm. A list of
+ * supported algorithms can be obtained by calling OpenSSL::Digest.digests.
  *
  * If _data_ (a String) is given, it is used as the initial input to the
  * Digest instance, i.e.
@@ -162,6 +163,32 @@ ossl_digest_copy(VALUE self, VALUE other)
     return self;
 }
 
+static void
+add_digest_name_to_ary(const OBJ_NAME *name, void *arg)
+{
+    VALUE ary = (VALUE)arg;
+    rb_ary_push(ary, rb_str_new2(name->name));
+}
+
+/*
+ *  call-seq:
+ *     OpenSSL::Digest.digests -> array[string...]
+ *
+ *  Returns the names of all available digests in an array.
+ */
+static VALUE
+ossl_s_digests(VALUE self)
+{
+    VALUE ary;
+
+    ary = rb_ary_new();
+    OBJ_NAME_do_all_sorted(OBJ_NAME_TYPE_MD_METH,
+                    add_digest_name_to_ary,
+                    (void*)ary);
+
+    return ary;
+}
+
 /*
  *  call-seq:
  *     digest.reset -> self
@@ -198,7 +225,7 @@ ossl_digest_reset(VALUE self)
  *   result = digest.digest
  *
  */
-VALUE
+static VALUE
 ossl_digest_update(VALUE self, VALUE data)
 {
     EVP_MD_CTX *ctx;
@@ -218,23 +245,13 @@ ossl_digest_update(VALUE self, VALUE data)
  *
  */
 static VALUE
-ossl_digest_finish(int argc, VALUE *argv, VALUE self)
+ossl_digest_finish(VALUE self)
 {
     EVP_MD_CTX *ctx;
     VALUE str;
-    int out_len;
 
     GetDigest(self, ctx);
-    rb_scan_args(argc, argv, "01", &str);
-    out_len = EVP_MD_CTX_size(ctx);
-
-    if (NIL_P(str)) {
-        str = rb_str_new(NULL, out_len);
-    } else {
-        StringValue(str);
-        rb_str_resize(str, out_len);
-    }
-
+    str = rb_str_new(NULL, EVP_MD_CTX_size(ctx));
     if (!EVP_DigestFinal_ex(ctx, (unsigned char *)RSTRING_PTR(str), NULL))
 	ossl_raise(eDigestError, "EVP_DigestFinal_ex");
 
@@ -245,7 +262,8 @@ ossl_digest_finish(int argc, VALUE *argv, VALUE self)
  *  call-seq:
  *      digest.name -> string
  *
- * Returns the sn of this Digest algorithm.
+ * Returns the short name of this Digest algorithm which may differ slightly
+ * from the original name provided.
  *
  * === Example
  *   digest = OpenSSL::Digest.new('SHA512')
@@ -412,12 +430,13 @@ Init_ossl_digest(void)
 
     rb_define_alloc_func(cDigest, ossl_digest_alloc);
 
+    rb_define_module_function(cDigest, "digests", ossl_s_digests, 0);
     rb_define_method(cDigest, "initialize", ossl_digest_initialize, -1);
     rb_define_method(cDigest, "initialize_copy", ossl_digest_copy, 1);
     rb_define_method(cDigest, "reset", ossl_digest_reset, 0);
     rb_define_method(cDigest, "update", ossl_digest_update, 1);
     rb_define_alias(cDigest, "<<", "update");
-    rb_define_private_method(cDigest, "finish", ossl_digest_finish, -1);
+    rb_define_private_method(cDigest, "finish", ossl_digest_finish, 0);
     rb_define_method(cDigest, "digest_length", ossl_digest_size, 0);
     rb_define_method(cDigest, "block_length", ossl_digest_block_length, 0);
 

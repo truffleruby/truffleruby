@@ -10,7 +10,7 @@ class RDoc::Markup::ToBs < RDoc::Markup::ToRdoc
   ##
   # Returns a new ToBs that is ready for hot backspace action!
 
-  def initialize markup = nil
+  def initialize(markup = nil)
     super
 
     @in_b  = false
@@ -24,13 +24,13 @@ class RDoc::Markup::ToBs < RDoc::Markup::ToRdoc
   def init_tags
     add_tag :BOLD, '+b', '-b'
     add_tag :EM,   '+_', '-_'
-    add_tag :TT,   ''  , ''   # we need in_tt information maintained
+    add_tag :TT,   '', ''   # we need in_tt information maintained
   end
 
   ##
   # Makes heading text bold.
 
-  def accept_heading heading
+  def accept_heading(heading)
     use_prefix or @res << ' ' * @indent
     @res << @headings[heading.level][0]
     @in_b = true
@@ -41,9 +41,34 @@ class RDoc::Markup::ToBs < RDoc::Markup::ToRdoc
   end
 
   ##
+  # Prepares the visitor for consuming +list_item+
+
+  def accept_list_item_start(list_item)
+    type = @list_type.last
+
+    case type
+    when :NOTE, :LABEL then
+      bullets = Array(list_item.label).map do |label|
+        attributes(label).strip
+      end.join "\n"
+
+      bullets << ":\n" unless bullets.empty?
+
+      @prefix = ' ' * @indent
+      @indent += 2
+      @prefix << bullets + (' ' * @indent)
+    else
+      bullet = type == :BULLET ? '*' :  @list_index.last.to_s + '.'
+      @prefix = (' ' * @indent) + bullet.ljust(bullet.length + 1)
+      width = bullet.length + 1
+      @indent += width
+    end
+  end
+
+  ##
   # Turns on or off regexp handling for +convert_string+
 
-  def annotate tag
+  def annotate(tag)
     case tag
     when '+b' then @in_b = true
     when '-b' then @in_b = false
@@ -56,14 +81,14 @@ class RDoc::Markup::ToBs < RDoc::Markup::ToRdoc
   ##
   # Calls convert_string on the result of convert_regexp_handling
 
-  def convert_regexp_handling target
+  def convert_regexp_handling(target)
     convert_string super
   end
 
   ##
   # Adds bold or underline mixed with backspaces
 
-  def convert_string string
+  def convert_string(string)
     return string unless @in_b or @in_em
     chars = if @in_b then
               string.chars.map do |char| "#{char}\b#{char}" end

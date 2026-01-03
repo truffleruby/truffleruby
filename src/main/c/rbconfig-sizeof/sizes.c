@@ -8,15 +8,30 @@
 # include <wctype.h>
 #endif
 
+
+/*
+ * Document-const: SIZEOF
+ *
+ * A Hash with the byte size of \C types available to the compiler
+ * used to build Ruby. To access this constant, first run
+ * <code>require 'rbconfig/sizeof'</code>.
+ *
+ *    require 'rbconfig/sizeof'
+ *    RUBY_PLATFORM                                  # => "x64-mingw-ucrt"
+ *    RbConfig::SIZEOF.fetch_values('long', 'void*') # => [4, 8]
+ *
+ */
+
 extern void Init_limits(void);
 void
 Init_sizeof(void)
 {
     VALUE s = rb_hash_new();
-    rb_define_const(rb_define_module("RbConfig"), "SIZEOF", s);
+    VALUE mRbConfig = rb_define_module("RbConfig");
+    rb_define_const(mRbConfig, "SIZEOF", s);
 
-#define DEFINE(type, size) rb_hash_aset(s, rb_str_new_cstr(#type), INT2FIX(SIZEOF_##size))
-#define DEFINE_SIZE(type) rb_hash_aset(s, rb_str_new_cstr(#type), INT2FIX(sizeof(type)))
+#define DEFINE(type, size) rb_hash_aset(s, rb_usascii_str_new_lit(#type), INT2FIX(SIZEOF_##size))
+#define DEFINE_SIZE(type) rb_hash_aset(s, rb_usascii_str_new_lit(#type), INT2FIX(sizeof(type)))
 
 #if defined(SIZEOF_INT) && SIZEOF_INT != 0
     DEFINE(int, INT);

@@ -1,0 +1,166 @@
+# <!-- rdoc-file=ext/nkf/lib/kconv.rb -->
+# Kanji Converter for Ruby.
+#
+module Kconv
+  # <!-- rdoc-file=ext/nkf/lib/kconv.rb -->
+  # ASCII
+  #
+  ASCII: Encoding
+
+  # <!-- rdoc-file=ext/nkf/lib/kconv.rb -->
+  # Auto-Detect
+  #
+  AUTO: nil
+
+  # <!-- rdoc-file=ext/nkf/lib/kconv.rb -->
+  # BINARY
+  #
+  BINARY: Encoding
+
+  # <!-- rdoc-file=ext/nkf/lib/kconv.rb -->
+  # EUC-JP
+  #
+  EUC: Encoding
+
+  # <!-- rdoc-file=ext/nkf/lib/kconv.rb -->
+  # ISO-2022-JP
+  #
+  JIS: Encoding
+
+  # <!-- rdoc-file=ext/nkf/lib/kconv.rb -->
+  # NOCONV
+  #
+  NOCONV: nil
+
+  # <!-- rdoc-file=ext/nkf/lib/kconv.rb -->
+  # Shift_JIS
+  #
+  SJIS: Encoding
+
+  # <!-- rdoc-file=ext/nkf/lib/kconv.rb -->
+  # UNKNOWN
+  #
+  UNKNOWN: nil
+
+  # <!-- rdoc-file=ext/nkf/lib/kconv.rb -->
+  # UTF-16
+  #
+  UTF16: Encoding
+
+  # <!-- rdoc-file=ext/nkf/lib/kconv.rb -->
+  # UTF-32
+  #
+  UTF32: Encoding
+
+  # <!-- rdoc-file=ext/nkf/lib/kconv.rb -->
+  # UTF-8
+  #
+  UTF8: Encoding
+
+  # <!--
+  #   rdoc-file=ext/nkf/lib/kconv.rb
+  #   - Kconv.guess(str)   => encoding
+  # -->
+  # Guess input encoding by NKF.guess
+  #
+  def self.guess: (String str) -> Encoding
+
+  # <!--
+  #   rdoc-file=ext/nkf/lib/kconv.rb
+  #   - Kconv.iseuc(str)   => true or false
+  # -->
+  # Returns whether input encoding is EUC-JP or not.
+  #
+  # **Note** don't expect this return value is MatchData.
+  #
+  def self.iseuc: (String str) -> bool
+
+  # <!--
+  #   rdoc-file=ext/nkf/lib/kconv.rb
+  #   - Kconv.isjis(str)   => true or false
+  # -->
+  # Returns whether input encoding is ISO-2022-JP or not.
+  #
+  def self.isjis: (String str) -> bool
+
+  # <!--
+  #   rdoc-file=ext/nkf/lib/kconv.rb
+  #   - Kconv.issjis(str)   => true or false
+  # -->
+  # Returns whether input encoding is Shift_JIS or not.
+  #
+  def self.issjis: (String str) -> bool
+
+  # <!--
+  #   rdoc-file=ext/nkf/lib/kconv.rb
+  #   - Kconv.isutf8(str)   => true or false
+  # -->
+  # Returns whether input encoding is UTF-8 or not.
+  #
+  def self.isutf8: (String str) -> bool
+
+  # <!--
+  #   rdoc-file=ext/nkf/lib/kconv.rb
+  #   - Kconv.kconv(str, to_enc, from_enc=nil)
+  # -->
+  # Convert `str` to `to_enc`. `to_enc` and `from_enc` are given as constants of
+  # Kconv or Encoding objects.
+  #
+  def self.kconv: (String str, Encoding? out_code, ?Encoding? in_code) -> String
+
+  # <!--
+  #   rdoc-file=ext/nkf/lib/kconv.rb
+  #   - Kconv.toeuc(str)   => string
+  # -->
+  # Convert `str` to EUC-JP
+  #
+  def self.toeuc: (String str) -> String
+
+  # <!--
+  #   rdoc-file=ext/nkf/lib/kconv.rb
+  #   - Kconv.tojis(str)   => string
+  # -->
+  # Convert `str` to ISO-2022-JP
+  #
+  def self.tojis: (String str) -> String
+
+  # <!--
+  #   rdoc-file=ext/nkf/lib/kconv.rb
+  #   - Kconv.tolocale   => string
+  # -->
+  # Convert `self` to locale encoding
+  #
+  def self.tolocale: (String str) -> String
+
+  # <!--
+  #   rdoc-file=ext/nkf/lib/kconv.rb
+  #   - Kconv.tosjis(str)   => string
+  # -->
+  # Convert `str` to Shift_JIS
+  #
+  def self.tosjis: (String str) -> String
+
+  # <!--
+  #   rdoc-file=ext/nkf/lib/kconv.rb
+  #   - Kconv.toutf16(str)   => string
+  # -->
+  # Convert `str` to UTF-16
+  #
+  def self.toutf16: (String str) -> String
+
+  # <!--
+  #   rdoc-file=ext/nkf/lib/kconv.rb
+  #   - Kconv.toutf32(str)   => string
+  # -->
+  # Convert `str` to UTF-32
+  #
+  def self.toutf32: (String str) -> String
+
+  # <!--
+  #   rdoc-file=ext/nkf/lib/kconv.rb
+  #   - Kconv.toutf8(str)   => string
+  # -->
+  # Convert `str` to UTF-8
+  #
+  def self.toutf8: (String str) -> String
+end

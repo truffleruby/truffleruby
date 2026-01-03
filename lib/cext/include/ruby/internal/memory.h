@@ -40,7 +40,12 @@
 
 #if defined(_MSC_VER) && defined(_WIN64)
 # include <intrin.h>
+# if defined(_M_AMD64)
 # pragma intrinsic(_umul128)
+# endif
+# if defined(_M_ARM64)
+# pragma intrinsic(__umulh)
+# endif
 #endif
 
 #include "ruby/internal/attr/alloc_size.h"
@@ -56,6 +61,7 @@
 #include "ruby/internal/has/builtin.h"
 #include "ruby/internal/stdalign.h"
 #include "ruby/internal/stdbool.h"
+#include "ruby/internal/stdckdint.h"
 #include "ruby/internal/xmalloc.h"
 #include "ruby/backward/2/limits.h"
 #include "ruby/backward/2/long_long.h"
@@ -574,7 +580,10 @@ rbimpl_size_mul_overflow(size_t x, size_t y)
 {
     struct rbimpl_size_mul_overflow_tag ret = { false,  0, };
 
-#if RBIMPL_HAS_BUILTIN(__builtin_mul_overflow)
+#if defined(ckd_mul)
+    ret.left = ckd_mul(&ret.right, x, y);
+
+#elif RBIMPL_HAS_BUILTIN(__builtin_mul_overflow)
     ret.left = __builtin_mul_overflow(x, y, &ret.right);
 
 #elif defined(DSIZE_T)
@@ -584,11 +593,15 @@ rbimpl_size_mul_overflow(size_t x, size_t y)
     ret.left  = dz > SIZE_MAX;
     ret.right = RBIMPL_CAST((size_t)dz);
 
-#elif defined(_MSC_VER) && defined(_WIN64)
+#elif defined(_MSC_VER) && defined(_M_AMD64)
     unsigned __int64 dp = 0;
     unsigned __int64 dz = _umul128(x, y, &dp);
     ret.left  = RBIMPL_CAST((bool)dp);
     ret.right = RBIMPL_CAST((size_t)dz);
+
+#elif defined(_MSC_VER) && defined(_M_ARM64)
+    ret.left  = __umulh(x, y) != 0;
+    ret.right = x * y;
 
 #else
     /* https://wiki.sei.cmu.edu/confluence/display/c/INT30-C.+Ensure+that+unsigned+integer+operations+do+not+wrap */
@@ -646,7 +659,7 @@ rbimpl_size_mul_or_raise(size_t x, size_t y)
 static inline void *
 rb_alloc_tmp_buffer2(volatile VALUE *store, long count, size_t elsize)
 {
-    const size_t total_size = rbimpl_size_mul_or_raise(count, elsize);
+    const size_t total_size = rbimpl_size_mul_or_raise(RBIMPL_CAST((size_t)count), elsize);
     const size_t cnt = (total_size + sizeof(VALUE) - 1) / sizeof(VALUE);
     return rb_alloc_tmp_buffer_with_count(store, total_size, cnt);
 }

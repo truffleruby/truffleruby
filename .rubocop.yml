@@ -6,7 +6,7 @@ require:
   - ./tool/rubocop-truffleruby/cop/replace_with_primitive_true_and_false_predicates.rb
 
 AllCops:
-  TargetRubyVersion: 3.2
+  TargetRubyVersion: 3.4
   DisabledByDefault: true
   DisplayCopNames: true
   ExtraDetails: true

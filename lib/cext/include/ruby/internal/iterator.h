@@ -282,7 +282,6 @@ void rb_need_block(void);
 #ifndef __cplusplus
 RBIMPL_ATTR_DEPRECATED(("by: rb_block_call since 1.9"))
 #endif
-
 /**
  * Old way to iterate a block.
  *

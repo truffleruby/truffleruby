@@ -119,7 +119,7 @@ See the [contributor workflow](doc/contributor/workflow.md) document if you wish
 We recommend that people trying TruffleRuby on their gems and applications [get in touch with us](#contact) for any help they might need.
 
 TruffleRuby runs Rails and is compatible with many gems, including C extensions.
-TruffleRuby is not 100% compatible with MRI 3.3 yet. Please [report](https://github.com/truffleruby/truffleruby/issues) any compatibility issues you might find.
+TruffleRuby is not 100% compatible with MRI 3.4 yet. Please [report](https://github.com/truffleruby/truffleruby/issues) any compatibility issues you might find.
 TruffleRuby [passes around 97% of ruby/spec](https://eregon.me/rubyspec-stats/),
 more than any other alternative Ruby implementation.
 

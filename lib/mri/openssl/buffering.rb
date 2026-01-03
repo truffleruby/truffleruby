@@ -8,7 +8,7 @@
 #
 #= Licence
 #  This program is licensed under the same licence as Ruby.
-#  (See the file 'LICENCE'.)
+#  (See the file 'COPYING'.)
 #++
 
 ##
@@ -105,6 +105,12 @@ module OpenSSL::Buffering
   # Get the next 8bit byte from `ssl`.  Returns `nil` on EOF
   def getbyte
     read(1)&.ord
+  end
+
+  # Get the next 8bit byte. Raises EOFError on EOF
+  def readbyte
+    raise EOFError if eof?
+    getbyte
   end
 
   ##
@@ -229,7 +235,7 @@ module OpenSSL::Buffering
   #
   # Unlike IO#gets the separator must be provided if a limit is provided.
 
-  def gets(eol=$/, limit=nil)
+  def gets(eol=$/, limit=nil, chomp: false)
     idx = @rbuffer.index(eol)
     until @eof
       break if idx
@@ -244,7 +250,11 @@ module OpenSSL::Buffering
     if size && limit && limit >= 0
       size = [size, limit].min
     end
-    consume_rbuff(size)
+    line = consume_rbuff(size)
+    if chomp && line
+      line.chomp!(eol)
+    end
+    line
   end
 
   ##
@@ -345,13 +355,18 @@ module OpenSSL::Buffering
     @wbuffer << s
     @wbuffer.force_encoding(Encoding::BINARY)
     @sync ||= false
-    if @sync or @wbuffer.size > BLOCK_SIZE
-      until @wbuffer.empty?
-        begin
-          nwrote = syswrite(@wbuffer)
-        rescue Errno::EAGAIN
-          retry
+    buffer_size = @wbuffer.size
+    if @sync or buffer_size > BLOCK_SIZE
+      nwrote = 0
+      begin
+        while nwrote < buffer_size do
+          begin
+            nwrote += syswrite(@wbuffer[nwrote, buffer_size - nwrote])
+          rescue Errno::EAGAIN
+            retry
+          end
         end
+      ensure
         @wbuffer[0, nwrote] = ""
       end
     end

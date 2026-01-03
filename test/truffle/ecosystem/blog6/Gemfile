@@ -17,7 +17,7 @@ group :mysql do
 end
 
 # Use sqlite3 as the database for Active Record
-gem 'sqlite3'
+gem 'sqlite3', '~> 1.4'
 # Use Puma as the app server
 gem 'puma', '~> 3.11'
 # Use SCSS for stylesheets
@@ -50,3 +50,8 @@ gem 'asciidoctor'
 
 # Use a more recent mail gem to have the correct dependencies
 gem 'mail', '>= 2.8.0.rc1'
+
+gem 'bigdecimal'
+gem 'drb'
+gem 'mutex_m'
+

@@ -1,3 +1,0 @@
-dependencies:
-  - name: tempfile
-  - name: uri

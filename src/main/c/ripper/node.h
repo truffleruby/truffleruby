@@ -15,8 +15,7 @@
 #include "rubyparser.h"
 #include "ruby/backward/2/attributes.h"
 
-typedef void (*bug_report_func)(const char *fmt, ...);
-
+typedef void (*bug_report_func)(const char *fmt, ...) RUBYPARSER_ATTRIBUTE_FORMAT(1, 2);
 typedef struct node_buffer_elem_struct {
     struct node_buffer_elem_struct *next;
     long len; /* Length of nodes */
@@ -32,43 +31,30 @@ typedef struct {
 } node_buffer_list_t;
 
 struct node_buffer_struct {
-    node_buffer_list_t unmarkable;
-    node_buffer_list_t markable;
+    node_buffer_list_t buffer_list;
     struct rb_ast_local_table_link *local_tables;
-    VALUE mark_hash;
     // - id (sequence number)
     // - token_type
     // - text of token
     // - location info
     // Array, whose entry is array
-    VALUE tokens;
-#ifdef UNIVERSAL_PARSER
-    rb_parser_config_t *config;
-#endif
+    rb_parser_ary_t *tokens;
 };
 
 RUBY_SYMBOL_EXPORT_BEGIN
 
 #ifdef UNIVERSAL_PARSER
-rb_ast_t *rb_ast_new(rb_parser_config_t *config);
+rb_ast_t *rb_ast_new(const rb_parser_config_t *config);
 #else
 rb_ast_t *rb_ast_new(void);
 #endif
 size_t rb_ast_memsize(const rb_ast_t*);
 void rb_ast_dispose(rb_ast_t*);
-VALUE rb_ast_tokens(rb_ast_t *ast);
-#if RUBY_DEBUG
-void rb_ast_node_type_change(NODE *n, enum node_type type);
-#endif
 const char *ruby_node_name(int node);
 void rb_node_init(NODE *n, enum node_type type);
 
-void rb_ast_mark(rb_ast_t*);
 void rb_ast_update_references(rb_ast_t*);
 void rb_ast_free(rb_ast_t*);
-void rb_ast_add_mark_object(rb_ast_t*, VALUE);
-void rb_ast_delete_mark_object(rb_ast_t*, VALUE);
-void rb_ast_set_tokens(rb_ast_t*, VALUE);
 NODE *rb_ast_newnode(rb_ast_t*, enum node_type type, size_t size, size_t alignment);
 void rb_ast_delete_node(rb_ast_t*, NODE *n);
 rb_ast_id_table_t *rb_ast_new_local_table(rb_ast_t*, int);
@@ -79,10 +65,6 @@ VALUE rb_parser_dump_tree(const NODE *node, int comment);
 const struct kwtable *rb_reserved_word(const char *, unsigned int);
 
 struct parser_params;
-void *rb_parser_malloc(struct parser_params *, size_t);
-void *rb_parser_realloc(struct parser_params *, void *, size_t);
-void *rb_parser_calloc(struct parser_params *, size_t, size_t);
-void rb_parser_free(struct parser_params *, void *);
 PRINTF_ARGS(void rb_parser_printf(struct parser_params *parser, const char *fmt, ...), 2, 3);
 VALUE rb_node_set_type(NODE *n, enum node_type t);
 
@@ -103,6 +85,7 @@ RUBY_SYMBOL_EXPORT_END
 #define NODE_SPECIAL_EXCESSIVE_COMMA   ((ID)1)
 #define NODE_SPECIAL_NO_REST_KEYWORD   ((NODE *)-1)
 
+#define nd_code_loc(n) (&RNODE(n)->nd_loc)
 #define nd_first_column(n) ((int)(RNODE(n)->nd_loc.beg_pos.column))
 #define nd_set_first_column(n, v) (RNODE(n)->nd_loc.beg_pos.column = (v))
 #define nd_first_lineno(n) ((int)(RNODE(n)->nd_loc.beg_pos.lineno))

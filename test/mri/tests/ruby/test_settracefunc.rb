@@ -1,5 +1,6 @@
 # frozen_string_literal: false
 require 'test/unit'
+EnvUtil.suppress_warning {require 'continuation'}
 
 class TestSetTraceFunc < Test::Unit::TestCase
   def setup
@@ -247,7 +248,9 @@ class TestSetTraceFunc < Test::Unit::TestCase
                  events.shift)
     assert_equal(["line", 5, :meth_return, self.class],
                  events.shift)
-    assert_equal(["return", 7, :meth_return, self.class],
+    assert_equal(["line", 6, :meth_return, self.class],
+                 events.shift)
+    assert_equal(["return", 6, :meth_return, self.class],
                  events.shift)
     assert_equal(["line", 10, :test_return, self.class],
                  events.shift)
@@ -286,7 +289,7 @@ class TestSetTraceFunc < Test::Unit::TestCase
                  events.shift)
     assert_equal(["line", 6, :meth_return2, self.class],
                  events.shift)
-    assert_equal(["return", 7, :meth_return2, self.class],
+    assert_equal(["return", 6, :meth_return2, self.class],
                  events.shift)
     assert_equal(["line", 9, :test_return2, self.class],
                  events.shift)
@@ -469,6 +472,9 @@ class TestSetTraceFunc < Test::Unit::TestCase
     bug3921 = '[ruby-dev:42350]'
     ok = false
     func = lambda{|e, f, l, i, b, k|
+      # In parallel testing, unexpected events like IO operations may be traced,
+      # so we filter out events here.
+      next unless f == __FILE__
       set_trace_func(nil)
       ok = eval("self", b)
     }
@@ -520,7 +526,7 @@ class TestSetTraceFunc < Test::Unit::TestCase
     1: trace = TracePoint.trace(*trace_events){|tp| next if !target_thread?
     2:   events << [tp.event, tp.lineno, tp.path, _defined_class.(tp), tp.method_id, tp.self, tp.binding&.eval("_local_var"), _get_data.(tp)] if tp.path == 'xyzzy'
     3: }
-    4: [1].each{|;_local_var| _local_var = :inner
+    4: [1].reverse_each{|;_local_var| _local_var = :inner
     5:   tap{}
     6: }
     7: class XYZZY
@@ -547,10 +553,10 @@ class TestSetTraceFunc < Test::Unit::TestCase
     answer_events = [
      #
      [:line,     4, 'xyzzy', self.class,  method,           self,        :outer, :nothing],
-     [:c_call,   4, 'xyzzy', Array,       :each,            [1],         nil,    :nothing],
+     [:c_call,   4, 'xyzzy', Array,       :reverse_each,    [1],         nil,    :nothing],
      [:line,     4, 'xyzzy', self.class,  method,           self,        nil,    :nothing],
      [:line,     5, 'xyzzy', self.class,  method,           self,        :inner, :nothing],
-     [:c_return, 4, "xyzzy", Array,       :each,            [1],         nil, [1]],
+     [:c_return, 4, "xyzzy", Array,       :reverse_each,    [1],         nil, [1]],
      [:line,     7, 'xyzzy', self.class,  method,           self,        :outer, :nothing],
      [:c_call,   7, "xyzzy", Module,      :const_added,     TestSetTraceFunc, nil, :nothing],
      [:c_return, 7, "xyzzy", Module,      :const_added,     TestSetTraceFunc, nil, nil],
@@ -668,7 +674,7 @@ CODE
     1: set_trace_func(lambda{|event, file, line, id, binding, klass|
     2:   events << [event, line, file, klass, id, binding&.eval('self'), binding&.eval("_local_var")] if file == 'xyzzy'
     3: })
-    4: [1].map{|;_local_var| _local_var = :inner
+    4: [1].map!{|;_local_var| _local_var = :inner
     5:   tap{}
     6: }
     7: class XYZZY
@@ -1072,7 +1078,7 @@ CODE
         /return/ =~ tp.event ? tp.return_value : nil
       ]
     }.enable{
-      [1].map{
+      [1].map!{
         3
       }
       method_for_test_tracepoint_block{
@@ -1082,10 +1088,10 @@ CODE
     # pp events
     # expected_events =
     [[:b_call, :test_tracepoint_block, TestSetTraceFunc, TestSetTraceFunc, nil],
-     [:c_call, :map, Array, Array, nil],
+     [:c_call, :map!, Array, Array, nil],
      [:b_call, :test_tracepoint_block, TestSetTraceFunc, TestSetTraceFunc, nil],
      [:b_return, :test_tracepoint_block, TestSetTraceFunc, TestSetTraceFunc, 3],
-     [:c_return, :map, Array, Array, [3]],
+     [:c_return, :map!, Array, Array, [3]],
      [:call, :method_for_test_tracepoint_block, TestSetTraceFunc, TestSetTraceFunc, nil],
      [:b_call, :test_tracepoint_block, TestSetTraceFunc, TestSetTraceFunc, nil],
      [:b_return, :test_tracepoint_block, TestSetTraceFunc, TestSetTraceFunc, 4],
@@ -1139,9 +1145,9 @@ CODE
       when :line
         assert_match(/ in /, str)
       when :call, :c_call
-        assert_match(/call \`/, str) # #<TracePoint:c_call `inherited' ../trunk/test.rb:11>
+        assert_match(/call \'/, str) # #<TracePoint:c_call 'inherited' ../trunk/test.rb:11>
       when :return, :c_return
-        assert_match(/return \`/, str) # #<TracePoint:return `m' ../trunk/test.rb:3>
+        assert_match(/return \'/, str) # #<TracePoint:return 'm' ../trunk/test.rb:3>
       when /thread/
         assert_match(/\#<Thread:/, str) # #<TracePoint:thread_end of #<Thread:0x87076c0>>
       else
@@ -1274,15 +1280,17 @@ CODE
       end
     }
     assert_normal_exit src % %q{obj.zip({}) {}}, bug7774
-    assert_normal_exit src % %q{
-      require 'continuation'
-      begin
-        c = nil
-        obj.sort_by {|x| callcc {|c2| c ||= c2 }; x }
-        c.call
-      rescue RuntimeError
-      end
-    }, bug7774
+    if respond_to?(:callcc)
+      assert_normal_exit src % %q{
+        require 'continuation'
+        begin
+          c = nil
+          obj.sort_by {|x| callcc {|c2| c ||= c2 }; x }
+          c.call
+        rescue RuntimeError
+        end
+      }, bug7774
+    end
 
     # TracePoint
     tp_b = nil
@@ -1384,11 +1392,13 @@ CODE
 
   def test_a_call
     events = []
+    log = []
     TracePoint.new(:a_call){|tp|
       next if !target_thread?
       events << tp.event
+      log << "| event:#{ tp.event } method_id:#{ tp.method_id } #{ tp.path }:#{ tp.lineno }"
     }.enable{
-      [1].map{
+      [1].map!{
         3
       }
       method_for_test_tracepoint_block{
@@ -1401,16 +1411,18 @@ CODE
       :b_call,
       :call,
       :b_call,
-    ], events)
+    ], events, "TracePoint log:\n#{ log.join("\n") }\n")
   end
 
   def test_a_return
     events = []
+    log = []
     TracePoint.new(:a_return){|tp|
       next if !target_thread?
       events << tp.event
+      log << "| event:#{ tp.event } method_id:#{ tp.method_id } #{ tp.path }:#{ tp.lineno }"
     }.enable{
-      [1].map{
+      [1].map!{
         3
       }
       method_for_test_tracepoint_block{
@@ -1423,7 +1435,7 @@ CODE
       :b_return,
       :return,
       :b_return
-    ], events)
+    ], events, "TracePoint log:\n#{ log.join("\n") }\n")
   end
 
   def test_const_missing
@@ -2311,7 +2323,7 @@ CODE
     _c = a + b
   end
 
-  def check_with_events *trace_events
+  def check_with_events(trace_point_events, expected_events = trace_point_events)
     all_events = [[:call, :method_for_enable_target1],
                   [:line, :method_for_enable_target1],
                   [:line, :method_for_enable_target1],
@@ -2333,7 +2345,7 @@ CODE
                   [:return, :method_for_enable_target1],
                  ]
     events = []
-    TracePoint.new(*trace_events) do |tp|
+    TracePoint.new(*trace_point_events) do |tp|
       next unless target_thread?
       events << [tp.event, tp.method_id]
     end.enable(target: method(:method_for_enable_target1)) do
@@ -2341,15 +2353,22 @@ CODE
       method_for_enable_target2
       method_for_enable_target1
     end
-    assert_equal all_events.find_all{|(ev)| trace_events.include? ev}, events
+
+    assert_equal all_events.keep_if { |(ev)| expected_events.include? ev }, events
   end
 
   def test_tracepoint_enable_target
-    check_with_events :line
-    check_with_events :call, :return
-    check_with_events :line, :call, :return
-    check_with_events :call, :return, :b_call, :b_return
-    check_with_events :line, :call, :return, :b_call, :b_return
+    check_with_events([:line])
+    check_with_events([:call, :return])
+    check_with_events([:line, :call, :return])
+    check_with_events([:call, :return, :b_call, :b_return])
+    check_with_events([:line, :call, :return, :b_call, :b_return])
+
+    # No arguments passed into TracePoint.new enables all ISEQ_TRACE_EVENTS
+    check_with_events([], [:line, :class, :end, :call, :return, :c_call, :c_return, :b_call, :b_return, :rescue])
+
+    # Raise event should be ignored
+    check_with_events([:line, :raise])
   end
 
   def test_tracepoint_nested_enabled_with_target

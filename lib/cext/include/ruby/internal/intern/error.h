@@ -237,6 +237,8 @@ RBIMPL_ATTR_NORETURN()
  */
 void rb_error_arity(int argc, int min, int max);
 
+void rb_str_modify(VALUE str);
+
 RBIMPL_SYMBOL_EXPORT_END()
 
 /**
@@ -244,12 +246,7 @@ RBIMPL_SYMBOL_EXPORT_END()
  *
  * Does anyone use this?  Remain not deleted for compatibility.
  */
-#define rb_check_frozen_internal(obj) do { \
-        VALUE frozen_obj = (obj); \
-        if (RB_UNLIKELY(RB_OBJ_FROZEN(frozen_obj))) { \
-            rb_error_frozen_object(frozen_obj); \
-        } \
-    } while (0)
+#define rb_check_frozen_internal rb_check_frozen
 
 #ifndef TRUFFLERUBY
 
@@ -260,9 +257,16 @@ rb_check_frozen_inline(VALUE obj)
     if (RB_UNLIKELY(RB_OBJ_FROZEN(obj))) {
         rb_error_frozen_object(obj);
     }
+
+    /* ref: internal CHILLED_STRING_P()
+       This is an implementation detail subject to change. */
+    if (RB_UNLIKELY(RB_TYPE_P(obj, T_STRING) && FL_TEST_RAW(obj, RUBY_FL_USER2 | RUBY_FL_USER3))) { // STR_CHILLED
+        rb_str_modify(obj);
+    }
 }
 
-/** @alias{rb_check_frozen} */
+/* rb_check_frozen() is available as a symbol, but have
+ * the inline version take priority for native consumers. */
 #define rb_check_frozen rb_check_frozen_inline
 
 #endif // TRUFFLERUBY

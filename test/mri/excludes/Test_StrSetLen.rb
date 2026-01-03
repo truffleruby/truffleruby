@@ -3,3 +3,4 @@ exclude :test_coderange_after_append, "RangeError: cannot convert endless range 
 exclude :test_coderange_after_trunc, "RangeError: cannot convert endless range to an array"
 exclude :test_non_shared, "RangeError: cannot convert endless range to an array"
 exclude :test_shared, "RangeError: cannot convert endless range to an array"
+exclude :test_valid_encoding_after_resized, "RangeError: cannot convert endless range to an array"

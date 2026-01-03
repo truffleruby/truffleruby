@@ -1,0 +1,1 @@
+fails:Kernel#raise allows Exception, message, and backtrace_locations parameters

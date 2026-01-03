@@ -59,3 +59,5 @@ ripper_init_eventids2_table(VALUE self)
     rb_hash_aset(h, intern_sym("words_beg"), INT2FIX(1));
     rb_hash_aset(h, intern_sym("words_sep"), INT2FIX(1));
 }
+
+#define RIPPER_EVENTIDS2_TABLE_SIZE 51

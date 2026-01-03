@@ -1,2 +1,0 @@
-fails:Addrinfo.getaddrinfo sets a custom protocol family of the Addrinfo instances
-fails:Addrinfo.getaddrinfo sets a corresponding address family based on a custom protocol family

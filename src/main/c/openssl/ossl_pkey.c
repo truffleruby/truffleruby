@@ -5,7 +5,7 @@
  */
 /*
  * This program is licensed under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 
@@ -346,7 +346,7 @@ static void
 pkey_blocking_gen_stop(void *ptr)
 {
     struct pkey_blocking_generate_arg *arg = ptr;
-    arg->interrupted = -1;
+    arg->interrupted = 1;
 }
 
 static void *

@@ -3,3 +3,4 @@ fails:C-API IO function rb_io_maybe_wait_readable raises an IOError if the IO is
 fails:C-API IO function rb_io_maybe_wait raises an IOError if the IO is not initialized
 fails:C-API IO function rb_io_open_descriptor sets the specified timeout
 fails:C-API IO function rb_io_open_descriptor ignores the IO open options
+fails:C-API IO function rb_io_maybe_wait returns nil if there is no error condition

@@ -1,5 +1,0 @@
-class Minitest::Unit
-  def self.autorun: () -> untyped
-  def self.after_tests: () ?{ () -> untyped } -> untyped
-  VERSION: String
-end

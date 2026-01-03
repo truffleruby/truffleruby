@@ -1,3 +1,6 @@
 source 'https://rubygems.org'
 
 gem 'rspec', '~> 3.0'
+
+# Became a bundled gem in 3.4 so we need to declare it
+gem 'bigdecimal'

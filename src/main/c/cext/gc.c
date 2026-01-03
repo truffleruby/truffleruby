@@ -65,10 +65,6 @@ void rb_gc(void) {
   RUBY_CEXT_INVOKE_NO_WRAP("rb_gc");
 }
 
-void rb_gc_force_recycle(VALUE obj) {
-  /* no-op */
-}
-
 VALUE rb_gc_latest_gc_info(VALUE key) {
   return RUBY_CEXT_INVOKE("rb_gc_latest_gc_info", key);
 }

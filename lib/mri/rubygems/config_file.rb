@@ -44,14 +44,11 @@ class Gem::ConfigFile
   DEFAULT_BULK_THRESHOLD = 1000
   DEFAULT_VERBOSITY = true
   DEFAULT_UPDATE_SOURCES = true
-  if defined?(::TruffleRuby)
-    # GR-18264: Gem::Specification._all does not seem thread safe and raises "nil spec! included in"
-    DEFAULT_CONCURRENT_DOWNLOADS = 1
-  else
-    DEFAULT_CONCURRENT_DOWNLOADS = 8
-  end
+  DEFAULT_CONCURRENT_DOWNLOADS = 8
   DEFAULT_CERT_EXPIRATION_LENGTH_DAYS = 365
   DEFAULT_IPV4_FALLBACK_ENABLED = false
+  # TODO: Use false as default value for this option in RubyGems 4.0
+  DEFAULT_INSTALL_EXTENSION_IN_LIB = true
 
   ##
   # For Ruby packagers to set configuration defaults.  Set in
@@ -148,6 +145,11 @@ class Gem::ConfigFile
   attr_accessor :cert_expiration_length_days
 
   ##
+  # Install extensions into lib as well as into the extension directory.
+
+  attr_accessor :install_extension_in_lib
+
+  ##
   # == Experimental ==
   # Fallback to IPv4 when IPv6 is not reachable or slow (default: false)
 
@@ -188,6 +190,7 @@ class Gem::ConfigFile
     @update_sources = DEFAULT_UPDATE_SOURCES
     @concurrent_downloads = DEFAULT_CONCURRENT_DOWNLOADS
     @cert_expiration_length_days = DEFAULT_CERT_EXPIRATION_LENGTH_DAYS
+    @install_extension_in_lib = DEFAULT_INSTALL_EXTENSION_IN_LIB
     @ipv4_fallback_enabled = ENV["IPV4_FALLBACK_ENABLED"] == "true" || DEFAULT_IPV4_FALLBACK_ENABLED
 
     operating_system_config = Marshal.load Marshal.dump(OPERATING_SYSTEM_DEFAULTS)
@@ -225,6 +228,7 @@ class Gem::ConfigFile
     @update_sources              = @hash[:update_sources]              if @hash.key? :update_sources
     # TODO: We should handle concurrent_downloads same as other options
     @cert_expiration_length_days = @hash[:cert_expiration_length_days] if @hash.key? :cert_expiration_length_days
+    @install_extension_in_lib    = @hash[:install_extension_in_lib]    if @hash.key? :install_extension_in_lib
     @ipv4_fallback_enabled       = @hash[:ipv4_fallback_enabled]       if @hash.key? :ipv4_fallback_enabled
 
     @home                        = @hash[:gemhome]                     if @hash.key? :gemhome
@@ -480,6 +484,9 @@ if you believe they were disclosed to a third party.
 
     yaml_hash[:concurrent_downloads] =
       @hash.fetch(:concurrent_downloads, DEFAULT_CONCURRENT_DOWNLOADS)
+
+    yaml_hash[:install_extension_in_lib] =
+      @hash.fetch(:install_extension_in_lib, DEFAULT_INSTALL_EXTENSION_IN_LIB)
 
     yaml_hash[:ssl_verify_mode] =
       @hash[:ssl_verify_mode] if @hash.key? :ssl_verify_mode

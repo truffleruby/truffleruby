@@ -5,7 +5,7 @@
  */
 /*
  * This program is licensed under the same licence as Ruby.
- * (See the file 'LICENCE'.)
+ * (See the file 'COPYING'.)
  */
 #include "ossl.h"
 
@@ -42,7 +42,7 @@ RSA_PRIVATE(VALUE obj, OSSL_3_const RSA *rsa)
  * Classes
  */
 VALUE cRSA;
-VALUE eRSAError;
+static VALUE eRSAError;
 
 /*
  * Private

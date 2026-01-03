@@ -104,6 +104,22 @@ class TestTmpdir < Test::Unit::TestCase
     end
   end
 
+  def test_mktmpdir_not_empty_parent
+    assert_raise(ArgumentError) do
+      Dir.mktmpdir("foo", "")
+    end
+
+    path = Struct.new(:to_path).new("")
+    assert_raise(ArgumentError) do
+      Dir.mktmpdir("foo", path)
+    end
+
+    Dir.mktmpdir do |d|
+      path = Struct.new(:to_path).new(d)
+      assert_operator(Dir.mktmpdir("prefix-", path), :start_with?, d + "/prefix-")
+    end
+  end
+
   def assert_mktmpdir_traversal
     Dir.mktmpdir do |target|
       target = target.chomp('/') + '/'

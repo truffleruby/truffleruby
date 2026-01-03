@@ -7,7 +7,7 @@
 
 = Licence
   This program is licensed under the same licence as Ruby.
-  (See the file 'LICENCE'.)
+  (See the file 'COPYING'.)
 =end
 
 require "openssl/buffering"
@@ -22,7 +22,6 @@ module OpenSSL
   module SSL
     class SSLContext
       DEFAULT_PARAMS = { # :nodoc:
-        :min_version => OpenSSL::SSL::TLS1_VERSION,
         :verify_mode => OpenSSL::SSL::VERIFY_PEER,
         :verify_hostname => true,
         :options => -> {
@@ -55,6 +54,7 @@ ssbzSibBsu/6iGtCOGEoXJf//////////wIBAg==
       if !(OpenSSL::OPENSSL_VERSION.start_with?("OpenSSL") &&
            OpenSSL::OPENSSL_VERSION_NUMBER >= 0x10100000)
         DEFAULT_PARAMS.merge!(
+          min_version: OpenSSL::SSL::TLS1_VERSION,
           ciphers: %w{
             ECDHE-ECDSA-AES128-GCM-SHA256
             ECDHE-RSA-AES128-GCM-SHA256
@@ -125,7 +125,6 @@ ssbzSibBsu/6iGtCOGEoXJf//////////wIBAg==
       # that this form is deprecated. New applications should use #min_version=
       # and #max_version= as necessary.
       def initialize(version = nil)
-        self.options |= OpenSSL::SSL::OP_ALL
         self.ssl_version = version if version
         self.verify_mode = OpenSSL::SSL::VERIFY_NONE
         self.verify_hostname = false
@@ -145,7 +144,7 @@ ssbzSibBsu/6iGtCOGEoXJf//////////wIBAg==
       # used.
       def set_params(params={})
         params = DEFAULT_PARAMS.merge(params)
-        self.options = params.delete(:options) # set before min_version/max_version
+        self.options |= params.delete(:options) # set before min_version/max_version
         params.each{|name, value| self.__send__("#{name}=", value) }
         if self.verify_mode != OpenSSL::SSL::VERIFY_NONE
           unless self.ca_file or self.ca_path or self.cert_store
@@ -252,6 +251,14 @@ ssbzSibBsu/6iGtCOGEoXJf//////////wIBAg==
         to_io.peeraddr
       end
 
+      def local_address
+        to_io.local_address
+      end
+
+      def remote_address
+        to_io.remote_address
+      end
+
       def setsockopt(level, optname, optval)
         to_io.setsockopt(level, optname, optval)
       end
@@ -270,6 +277,36 @@ ssbzSibBsu/6iGtCOGEoXJf//////////wIBAg==
 
       def do_not_reverse_lookup=(flag)
         to_io.do_not_reverse_lookup = flag
+      end
+
+      def close_on_exec=(value)
+        to_io.close_on_exec = value
+      end
+
+      def close_on_exec?
+        to_io.close_on_exec?
+      end
+
+      def wait(*args)
+        to_io.wait(*args)
+      end
+
+      def wait_readable(*args)
+        to_io.wait_readable(*args)
+      end
+
+      def wait_writable(*args)
+        to_io.wait_writable(*args)
+      end
+
+      if IO.method_defined?(:timeout)
+        def timeout
+          to_io.timeout
+        end
+
+        def timeout=(value)
+          to_io.timeout=(value)
+        end
       end
     end
 
@@ -419,6 +456,32 @@ ssbzSibBsu/6iGtCOGEoXJf//////////wIBAg==
         SSL::Session.new(self)
       rescue SSL::Session::SessionError
         nil
+      end
+
+      # Close the stream for reading.
+      # This method is ignored by OpenSSL as there is no reasonable way to
+      # implement it, but exists for compatibility with IO.
+      def close_read
+        # Unsupported and ignored.
+        # Just don't read any more.
+      end
+
+      # Closes the stream for writing. The behavior of this method depends on
+      # the version of OpenSSL and the TLS protocol in use.
+      #
+      # - Sends a 'close_notify' alert to the peer.
+      # - Does not wait for the peer's 'close_notify' alert in response.
+      #
+      # In TLS 1.2 and earlier:
+      # - On receipt of a 'close_notify' alert, responds with a 'close_notify'
+      #   alert of its own and close down the connection immediately,
+      #   discarding any pending writes.
+      #
+      # Therefore, on TLS 1.2, this method will cause the connection to be
+      # completely shut down. On TLS 1.3, the connection will remain open for
+      # reading only.
+      def close_write
+        stop
       end
 
       private

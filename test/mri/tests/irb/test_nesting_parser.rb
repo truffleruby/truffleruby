@@ -59,6 +59,7 @@ module TestIRB
           def f() = 1
           %(); %w[]; %q(); %r{}; %i[]
           "#{1}"; ''; /#{1}/; `#{1}`
+          p(``); p ``; p x: ``; p 1, ``;
           :sym; :"sym"; :+; :`; :if
           [1, 2, 3]
           { x: 1, y: 2 }
@@ -319,9 +320,6 @@ module TestIRB
     end
 
     def test_case_in
-      if Gem::Version.new(RUBY_VERSION) < Gem::Version.new('2.7.0')
-        pend 'This test requires ruby version that supports case-in syntax'
-      end
       code = <<~EOS
         case 1
         in 1

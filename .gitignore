@@ -35,6 +35,9 @@ bench/psd.rb/psd_native/**/*.so
 bench/psd.rb/psd_native/**/*.bundle
 bench/psd.rb/psd_native/ext/psd_native/Makefile
 
+lib/json/**/*.so
+lib/json/**/*.bundle
+
 src/main/c/**/*.o
 src/main/c/**/*.so
 src/main/c/**/*.a
@@ -43,6 +46,7 @@ src/main/c/**/*.dylib
 src/main/c/**/extconf.h
 src/main/c/**/mkmf.log
 src/main/c/*/Makefile
+src/main/c/json/parser/Makefile
 !src/main/c/prism-gem/Makefile
 !src/main/c/spawn-helper/Makefile
 !src/main/c/truffleposix/Makefile
@@ -50,8 +54,11 @@ src/main/c/*/Makefile
 src/main/c/cext-trampoline/trampoline.c
 src/main/c/etc/constdefs.h
 src/main/c/spawn-helper/spawn-helper
+src/main/c/bigdecimal
 src/main/c/debug
+src/main/c/nkf
 src/main/c/rbs
+src/main/c/syslog
 src/main/c/libyaml_build
 src/main/c/libyaml
 src/main/c/libssl_build

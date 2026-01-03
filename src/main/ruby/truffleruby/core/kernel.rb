@@ -186,6 +186,7 @@ module Kernel
     Primitive.regexp_last_match_set(Primitive.caller_special_variables, $~)
     r
   end
+  Primitive.always_split self, :!~
 
   def itself
     self

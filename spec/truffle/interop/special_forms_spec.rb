@@ -49,7 +49,7 @@ describe "Interop special forms" do
 
   proxy = -> obj {
     logger = TruffleInteropSpecs::Logger.new
-    return Truffle::Interop.proxy_foreign_object(obj, logger), obj, logger
+    [Truffle::Interop.proxy_foreign_object(obj, logger), obj, logger]
   }
 
   # TODO (pitr-ch 23-Mar-2020): test what method has a precedence, special or the invokable-member on the foreign object

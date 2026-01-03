@@ -89,7 +89,7 @@ class TestModule < Test::Unit::TestCase
 
   OtherSetup = -> do
     remove_const :Other if defined? ::TestModule::Other
-    Other = Module.new do
+    module Other
       def other
       end
     end
@@ -1488,8 +1488,8 @@ class TestModule < Test::Unit::TestCase
       class << o; self; end.instance_eval { undef_method(:foo) }
     end
 
-    %w(object_id __send__ initialize).each do |n|
-      assert_in_out_err([], <<-INPUT, [], %r"warning: undefining `#{n}' may cause serious problems$")
+    %w(object_id __id__ __send__ initialize).each do |n|
+      assert_in_out_err([], <<-INPUT, [], %r"warning: undefining '#{n}' may cause serious problems$")
         $VERBOSE = false
         Class.new.instance_eval { undef_method(:#{n}) }
       INPUT
@@ -2160,9 +2160,8 @@ class TestModule < Test::Unit::TestCase
       Warning[:deprecated] = false
       Class.new(c)::FOO
     end
-    assert_warn('') do
-      Warning[:deprecated] = false
-      c.class_eval "FOO"
+    assert_warn(/deprecated/) do
+      c.class_eval {remove_const "FOO"}
     end
   end
 
@@ -3175,6 +3174,19 @@ class TestModule < Test::Unit::TestCase
     end;
   end
 
+  def test_define_method_changes_visibility_with_existing_method_bug_19749
+    c = Class.new do
+      def a; end
+      private def b; end
+
+      define_method(:b, instance_method(:b))
+      private
+      define_method(:a, instance_method(:a))
+    end
+    assert_equal([:b], c.public_instance_methods(false))
+    assert_equal([:a], c.private_instance_methods(false))
+  end
+
   def test_define_method_with_unbound_method
     # Passing an UnboundMethod to define_method succeeds if it is from an ancestor
     assert_nothing_raised do
@@ -3353,6 +3365,53 @@ class TestModule < Test::Unit::TestCase
     CODE
   end
 
+  def test_set_temporary_name
+    m = Module.new
+    assert_nil m.name
+
+    m.const_set(:N, Module.new)
+
+    assert_match(/\A#<Module:0x\h+>::N\z/, m::N.name)
+    m::N.set_temporary_name(name = "fake_name_under_M")
+    name.upcase!
+    assert_equal("fake_name_under_M", m::N.name)
+    assert_raise(FrozenError) {m::N.name.upcase!}
+    m::N.set_temporary_name(nil)
+    assert_nil(m::N.name)
+
+    m::N.const_set(:O, Module.new)
+    m.const_set(:Recursive, m)
+    m::N.const_set(:Recursive, m)
+    m.const_set(:A, 42)
+
+    m.set_temporary_name(name = "fake_name")
+    name.upcase!
+    assert_equal("fake_name", m.name)
+    assert_raise(FrozenError) {m.name.upcase!}
+    assert_equal("fake_name::N", m::N.name)
+    assert_equal("fake_name::N::O", m::N::O.name)
+
+    m.set_temporary_name(nil)
+    assert_nil m.name
+    assert_nil m::N.name
+    assert_nil m::N::O.name
+
+    assert_raise_with_message(ArgumentError, "empty class/module name") do
+      m.set_temporary_name("")
+    end
+    %w[A A::B ::A ::A::B].each do |name|
+      assert_raise_with_message(ArgumentError, /must not be a constant path/) do
+        m.set_temporary_name(name)
+      end
+    end
+
+    [Object, User, AClass].each do |mod|
+      assert_raise_with_message(RuntimeError, /permanent name/) do
+        mod.set_temporary_name("fake_name")
+      end
+    end
+  end
+
   private
 
   def assert_top_method_is_private(method)
@@ -3360,7 +3419,7 @@ class TestModule < Test::Unit::TestCase
       methods = singleton_class.private_instance_methods(false)
       assert_include(methods, :#{method}, ":#{method} should be private")
 
-      assert_raise_with_message(NoMethodError, /^private method `#{method}' called for /) {
+      assert_raise_with_message(NoMethodError, /^private method '#{method}' called for /) {
         recv = self
         recv.#{method}
       }

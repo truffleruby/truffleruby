@@ -1,2 +1,0 @@
-exclude :test_openssl_legacy_provider, "OpenSSL::Provider::ProviderError: Failed to load legacy provider: (null) (name=legacy); DUE to OpenSSL 3.5 most likely, will be fixed with https://github.com/ruby/openssl/commit/7223da7730bb04b41f76786900100685fb3fb918"
-exclude :test_openssl_provider_names, "OpenSSL::Provider::ProviderError: Failed to load legacy provider: (null) (name=legacy); DUE to OpenSSL 3.5 most likely, will be fixed with https://github.com/ruby/openssl/commit/7223da7730bb04b41f76786900100685fb3fb918"

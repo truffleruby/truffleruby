@@ -10,15 +10,15 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Yukihiro Matsumoto".freeze]
   s.bindir = "exe".freeze
-  s.date = "2025-01-15"
+  s.date = "2025-10-08"
   s.description = "Ruby client library for POP3.".freeze
   s.email = ["matz@ruby-lang.org".freeze]
   s.homepage = "https://github.com/ruby/net-pop".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
-  s.rubygems_version = "3.5.22".freeze
+  s.rubygems_version = "3.6.9".freeze
   s.summary = "Ruby client library for POP3.".freeze
 
-  s.installed_by_version = "3.5.22".freeze
+  s.installed_by_version = "3.6.9".freeze
 
   s.specification_version = 4
 

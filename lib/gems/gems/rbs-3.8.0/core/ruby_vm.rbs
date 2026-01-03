@@ -1,0 +1,765 @@
+# <!-- rdoc-file=vm.c -->
+# The RubyVM module only exists on MRI. `RubyVM` is not defined in other Ruby
+# implementations such as JRuby and TruffleRuby.
+#
+# The RubyVM module provides some access to MRI internals. This module is for
+# very limited purposes, such as debugging, prototyping, and research.  Normal
+# users must not use it. This module is not portable between Ruby
+# implementations.
+#
+class RubyVM < Object
+end
+
+# <!-- rdoc-file=vm.c -->
+# ::RubyVM::DEFAULT_PARAMS This constant exposes the VM's default parameters.
+# Note that changing these values does not affect VM execution. Specification is
+# not stable and you should not depend on this value. Of course, this constant
+# is MRI specific.
+#
+RubyVM::DEFAULT_PARAMS: Hash[Symbol, Integer]
+
+# <!-- rdoc-file=vm.c -->
+# ::RubyVM::INSTRUCTION_NAMES A list of bytecode instruction names in MRI. This
+# constant is MRI specific.
+#
+RubyVM::INSTRUCTION_NAMES: Array[String]
+
+# <!-- rdoc-file=vm.c -->
+# ::RubyVM::OPTS An Array of VM build options. This constant is MRI specific.
+#
+RubyVM::OPTS: Array[String]
+
+# <!-- rdoc-file=iseq.c -->
+# The InstructionSequence class represents a compiled sequence of instructions
+# for the Virtual Machine used in MRI. Not all implementations of Ruby may
+# implement this class, and for the implementations that implement it, the
+# methods defined and behavior of the methods can change in any version.
+#
+# With it, you can get a handle to the instructions that make up a method or a
+# proc, compile strings of Ruby code down to VM instructions, and disassemble
+# instruction sequences to strings for easy inspection. It is mostly useful if
+# you want to learn how YARV works, but it also lets you control various
+# settings for the Ruby iseq compiler.
+#
+# You can find the source for the VM instructions in `insns.def` in the Ruby
+# source.
+#
+# The instruction sequence results will almost certainly change as Ruby changes,
+# so example output in this documentation may be different from what you see.
+#
+# Of course, this class is MRI specific.
+#
+class RubyVM::InstructionSequence < Object
+  # <!--
+  #   rdoc-file=iseq.c
+  #   - absolute_path()
+  # -->
+  # Returns the absolute path of this instruction sequence.
+  #
+  # `nil` if the iseq was evaluated from a string.
+  #
+  # For example, using ::compile_file:
+  #
+  #     # /tmp/method.rb
+  #     def hello
+  #       puts "hello, world"
+  #     end
+  #
+  #     # in irb
+  #     > iseq = RubyVM::InstructionSequence.compile_file('/tmp/method.rb')
+  #     > iseq.absolute_path #=> /tmp/method.rb
+  #
+  def absolute_path: () -> String?
+
+  # <!--
+  #   rdoc-file=iseq.c
+  #   - base_label()
+  # -->
+  # Returns the base label of this instruction sequence.
+  #
+  # For example, using irb:
+  #
+  #     iseq = RubyVM::InstructionSequence.compile('num = 1 + 2')
+  #     #=> <RubyVM::InstructionSequence:<compiled>@<compiled>>
+  #     iseq.base_label
+  #     #=> "<compiled>"
+  #
+  # Using ::compile_file:
+  #
+  #     # /tmp/method.rb
+  #     def hello
+  #       puts "hello, world"
+  #     end
+  #
+  #     # in irb
+  #     > iseq = RubyVM::InstructionSequence.compile_file('/tmp/method.rb')
+  #     > iseq.base_label #=> <main>
+  #
+  def base_label: () -> String
+
+  # <!--
+  #   rdoc-file=iseq.c
+  #   - iseq.disasm -> str
+  #   - iseq.disassemble -> str
+  # -->
+  # Returns the instruction sequence as a `String` in human readable form.
+  #
+  #     puts RubyVM::InstructionSequence.compile('1 + 2').disasm
+  #
+  # Produces:
+  #
+  #     == disasm: <RubyVM::InstructionSequence:<compiled>@<compiled>>==========
+  #     0000 trace            1                                               (   1)
+  #     0002 putobject        1
+  #     0004 putobject        2
+  #     0006 opt_plus         <ic:1>
+  #     0008 leave
+  #
+  def disasm: () -> String
+
+  # <!-- rdoc-file=iseq.c -->
+  # Returns the instruction sequence as a `String` in human readable form.
+  #
+  #     puts RubyVM::InstructionSequence.compile('1 + 2').disasm
+  #
+  # Produces:
+  #
+  #     == disasm: <RubyVM::InstructionSequence:<compiled>@<compiled>>==========
+  #     0000 trace            1                                               (   1)
+  #     0002 putobject        1
+  #     0004 putobject        2
+  #     0006 opt_plus         <ic:1>
+  #     0008 leave
+  #
+  def disassemble: () -> String
+
+  # <!--
+  #   rdoc-file=iseq.c
+  #   - iseq.each_child{|child_iseq| ...} -> iseq
+  # -->
+  # Iterate all direct child instruction sequences. Iteration order is
+  # implementation/version defined so that people should not rely on the order.
+  #
+  def each_child: () -> RubyVM::InstructionSequence
+
+  # <!--
+  #   rdoc-file=iseq.c
+  #   - iseq.eval -> obj
+  # -->
+  # Evaluates the instruction sequence and returns the result.
+  #
+  #     RubyVM::InstructionSequence.compile("1 + 2").eval #=> 3
+  #
+  def eval: () -> untyped
+
+  # <!--
+  #   rdoc-file=iseq.c
+  #   - first_lineno()
+  # -->
+  # Returns the number of the first source line where the instruction sequence was
+  # loaded from.
+  #
+  # For example, using irb:
+  #
+  #     iseq = RubyVM::InstructionSequence.compile('num = 1 + 2')
+  #     #=> <RubyVM::InstructionSequence:<compiled>@<compiled>>
+  #     iseq.first_lineno
+  #     #=> 1
+  #
+  def first_lineno: () -> Integer
+
+  # <!--
+  #   rdoc-file=iseq.c
+  #   - inspect()
+  # -->
+  # Returns a human-readable string representation of this instruction sequence,
+  # including the #label and #path.
+  #
+  def inspect: () -> String
+
+  # <!--
+  #   rdoc-file=iseq.c
+  #   - label()
+  # -->
+  # Returns the label of this instruction sequence.
+  #
+  # `<main>` if it's at the top level, `<compiled>` if it was evaluated from a
+  # string.
+  #
+  # For example, using irb:
+  #
+  #     iseq = RubyVM::InstructionSequence.compile('num = 1 + 2')
+  #     #=> <RubyVM::InstructionSequence:<compiled>@<compiled>>
+  #     iseq.label
+  #     #=> "<compiled>"
+  #
+  # Using ::compile_file:
+  #
+  #     # /tmp/method.rb
+  #     def hello
+  #       puts "hello, world"
+  #     end
+  #
+  #     # in irb
+  #     > iseq = RubyVM::InstructionSequence.compile_file('/tmp/method.rb')
+  #     > iseq.label #=> <main>
+  #
+  def label: () -> String
+
+  # <!--
+  #   rdoc-file=iseq.c
+  #   - path()
+  # -->
+  # Returns the path of this instruction sequence.
+  #
+  # `<compiled>` if the iseq was evaluated from a string.
+  #
+  # For example, using irb:
+  #
+  #     iseq = RubyVM::InstructionSequence.compile('num = 1 + 2')
+  #     #=> <RubyVM::InstructionSequence:<compiled>@<compiled>>
+  #     iseq.path
+  #     #=> "<compiled>"
+  #
+  # Using ::compile_file:
+  #
+  #     # /tmp/method.rb
+  #     def hello
+  #       puts "hello, world"
+  #     end
+  #
+  #     # in irb
+  #     > iseq = RubyVM::InstructionSequence.compile_file('/tmp/method.rb')
+  #     > iseq.path #=> /tmp/method.rb
+  #
+  def path: () -> String
+
+  # <!--
+  #   rdoc-file=iseq.c
+  #   - iseq.script_lines -> array or nil
+  # -->
+  # It returns recorded script lines if it is available. The script lines are not
+  # limited to the iseq range, but are entire lines of the source file.
+  #
+  # Note that this is an API for ruby internal use, debugging, and research. Do
+  # not use this for any other purpose. The compatibility is not guaranteed.
+  #
+  def script_lines: () -> Array[String]?
+
+  # <!--
+  #   rdoc-file=iseq.c
+  #   - iseq.to_a -> ary
+  # -->
+  # Returns an Array with 14 elements representing the instruction sequence with
+  # the following data:
+  #
+  # magic
+  # :   A string identifying the data format. **Always
+  #     `YARVInstructionSequence/SimpleDataFormat`.**
+  #
+  #
+  # major_version
+  # :   The major version of the instruction sequence.
+  #
+  #
+  # minor_version
+  # :   The minor version of the instruction sequence.
+  #
+  #
+  # format_type
+  # :   A number identifying the data format. **Always 1**.
+  #
+  #
+  # misc
+  # :   A hash containing:
+  #
+  #     `:arg_size`
+  # :       the total number of arguments taken by the method or the block (0 if
+  #         *iseq* doesn't represent a method or block)
+  #
+  #     `:local_size`
+  # :       the number of local variables + 1
+  #
+  #     `:stack_max`
+  # :       used in calculating the stack depth at which a SystemStackError is
+  #         thrown.
+  #
+  #
+  #
+  # #label
+  # :   The name of the context (block, method, class, module, etc.) that this
+  #     instruction sequence belongs to.
+  #
+  #     `<main>` if it's at the top level, `<compiled>` if it was evaluated from a
+  #     string.
+  #
+  #
+  # #path
+  # :   The relative path to the Ruby file where the instruction sequence was
+  #     loaded from.
+  #
+  #     `<compiled>` if the iseq was evaluated from a string.
+  #
+  #
+  # #absolute_path
+  # :   The absolute path to the Ruby file where the instruction sequence was
+  #     loaded from.
+  #
+  #     `nil` if the iseq was evaluated from a string.
+  #
+  #
+  # #first_lineno
+  # :   The number of the first source line where the instruction sequence was
+  #     loaded from.
+  #
+  #
+  # type
+  # :   The type of the instruction sequence.
+  #
+  #     Valid values are `:top`, `:method`, `:block`, `:class`, `:rescue`,
+  #     `:ensure`, `:eval`, `:main`, and `plain`.
+  #
+  #
+  # locals
+  # :   An array containing the names of all arguments and local variables as
+  #     symbols.
+  #
+  #
+  # params
+  # :   An Hash object containing parameter information.
+  #
+  #     More info about these values can be found in `vm_core.h`.
+  #
+  #
+  # catch_table
+  # :   A list of exceptions and control flow operators (rescue, next, redo,
+  #     break, etc.).
+  #
+  #
+  # bytecode
+  # :   An array of arrays containing the instruction names and operands that make
+  #     up the body of the instruction sequence.
+  #
+  #
+  # Note that this format is MRI specific and version dependent.
+  #
+  def to_a: () -> Array[untyped]
+
+  # <!--
+  #   rdoc-file=iseq.c
+  #   - iseq.to_binary(extra_data = nil) -> binary str
+  # -->
+  # Returns serialized iseq binary format data as a String object. A corresponding
+  # iseq object is created by RubyVM::InstructionSequence.load_from_binary()
+  # method.
+  #
+  # String extra_data will be saved with binary data. You can access this data
+  # with RubyVM::InstructionSequence.load_from_binary_extra_data(binary).
+  #
+  # Note that the translated binary data is not portable. You can not move this
+  # binary data to another machine. You can not use the binary data which is
+  # created by another version/another architecture of Ruby.
+  #
+  def to_binary: () -> String
+
+  # <!--
+  #   rdoc-file=iseq.c
+  #   - iseq.trace_points -> ary
+  # -->
+  # Return trace points in the instruction sequence. Return an array of [line,
+  # event_symbol] pair.
+  #
+  def trace_points: () -> Array[untyped]
+end
+
+# <!-- rdoc-file=ast.rb -->
+# AbstractSyntaxTree provides methods to parse Ruby code into abstract syntax
+# trees. The nodes in the tree are instances of
+# RubyVM::AbstractSyntaxTree::Node.
+#
+# This module is MRI specific as it exposes implementation details of the MRI
+# abstract syntax tree.
+#
+# This module is experimental and its API is not stable, therefore it might
+# change without notice. As examples, the order of children nodes is not
+# guaranteed, the number of children nodes might change, there is no way to
+# access children nodes by name, etc.
+#
+# If you are looking for a stable API or an API working under multiple Ruby
+# implementations, consider using the *prism* gem, which is the official Ruby
+# API to parse Ruby code.
+#
+module RubyVM::AbstractSyntaxTree
+  # <!--
+  #   rdoc-file=ast.rb
+  #   - RubyVM::AbstractSyntaxTree.parse(string, keep_script_lines: RubyVM.keep_script_lines, error_tolerant: false, keep_tokens: false) -> RubyVM::AbstractSyntaxTree::Node
+  # -->
+  # Parses the given *string* into an abstract syntax tree, returning the root
+  # node of that tree.
+  #
+  #     RubyVM::AbstractSyntaxTree.parse("x = 1 + 2")
+  #     # => #<RubyVM::AbstractSyntaxTree::Node:SCOPE@1:0-1:9>
+  #
+  # If `keep_script_lines: true` option is provided, the text of the parsed source
+  # is associated with nodes and is available via Node#script_lines.
+  #
+  # If `keep_tokens: true` option is provided, Node#tokens are populated.
+  #
+  # SyntaxError is raised if the given *string* is invalid syntax. To overwrite
+  # this behavior, `error_tolerant: true` can be provided. In this case, the
+  # parser will produce a tree where expressions with syntax errors would be
+  # represented by Node with `type=:ERROR`.
+  #
+  #     root = RubyVM::AbstractSyntaxTree.parse("x = 1; p(x; y=2")
+  #     # <internal:ast>:33:in `parse': syntax error, unexpected ';', expecting ')' (SyntaxError)
+  #     # x = 1; p(x; y=2
+  #     #           ^
+  #
+  #     root = RubyVM::AbstractSyntaxTree.parse("x = 1; p(x; y=2", error_tolerant: true)
+  #     # (SCOPE@1:0-1:15
+  #     #  tbl: [:x, :y]
+  #     #  args: nil
+  #     #  body: (BLOCK@1:0-1:15 (LASGN@1:0-1:5 :x (LIT@1:4-1:5 1)) (ERROR@1:7-1:11) (LASGN@1:12-1:15 :y (LIT@1:14-1:15 2))))
+  #     root.children.last.children
+  #     # [(LASGN@1:0-1:5 :x (LIT@1:4-1:5 1)),
+  #     #  (ERROR@1:7-1:11),
+  #     #  (LASGN@1:12-1:15 :y (LIT@1:14-1:15 2))]
+  #
+  # Note that parsing continues even after the errored expression.
+  #
+  def self.parse: (String string, ?keep_script_lines: bool, ?error_tolerant: bool, ?keep_tokens: bool) -> Node
+
+  # <!--
+  #   rdoc-file=ast.rb
+  #   - RubyVM::AbstractSyntaxTree.parse_file(pathname, keep_script_lines: RubyVM.keep_script_lines, error_tolerant: false, keep_tokens: false) -> RubyVM::AbstractSyntaxTree::Node
+  # -->
+  # Reads the file from *pathname*, then parses it like ::parse, returning the
+  # root node of the abstract syntax tree.
+  #
+  # SyntaxError is raised if *pathname*'s contents are not valid Ruby syntax.
+  #
+  #     RubyVM::AbstractSyntaxTree.parse_file("my-app/app.rb")
+  #     # => #<RubyVM::AbstractSyntaxTree::Node:SCOPE@1:0-31:3>
+  #
+  # See ::parse for explanation of keyword argument meaning and usage.
+  #
+  def self.parse_file: (String | ::_ToPath string, ?keep_script_lines: bool, ?error_tolerant: bool, ?keep_tokens: bool) -> Node
+
+  # <!--
+  #   rdoc-file=ast.rb
+  #   - RubyVM::AbstractSyntaxTree.of(proc, keep_script_lines: RubyVM.keep_script_lines, error_tolerant: false, keep_tokens: false)   -> RubyVM::AbstractSyntaxTree::Node
+  #   - RubyVM::AbstractSyntaxTree.of(method, keep_script_lines: RubyVM.keep_script_lines, error_tolerant: false, keep_tokens: false) -> RubyVM::AbstractSyntaxTree::Node
+  # -->
+  # Returns AST nodes of the given *proc* or *method*.
+  #
+  #     RubyVM::AbstractSyntaxTree.of(proc {1 + 2})
+  #     # => #<RubyVM::AbstractSyntaxTree::Node:SCOPE@1:35-1:42>
+  #
+  #     def hello
+  #       puts "hello, world"
+  #     end
+  #
+  #     RubyVM::AbstractSyntaxTree.of(method(:hello))
+  #     # => #<RubyVM::AbstractSyntaxTree::Node:SCOPE@1:0-3:3>
+  #
+  # See ::parse for explanation of keyword argument meaning and usage.
+  #
+  def self.of: (Proc | Method | UnboundMethod body, ?keep_script_lines: bool, ?error_tolerant: bool, ?keep_tokens: bool) -> Node?
+
+  # <!--
+  #   rdoc-file=ast.rb
+  #   - RubyVM::AbstractSyntaxTree.node_id_for_backtrace_location(backtrace_location)   -> integer
+  # -->
+  # Returns the node id for the given backtrace location.
+  #
+  #     begin
+  #       raise
+  #     rescue =>  e
+  #       loc = e.backtrace_locations.first
+  #       RubyVM::AbstractSyntaxTree.node_id_for_backtrace_location(loc)
+  #     end # => 0
+  #
+  def self.node_id_for_backtrace_location: (Thread::Backtrace::Location backtrace_location) -> Integer
+
+  # <!-- rdoc-file=ast.rb -->
+  # RubyVM::AbstractSyntaxTree::Node instances are created by parse methods in
+  # RubyVM::AbstractSyntaxTree.
+  #
+  # This class is MRI specific.
+  #
+  class Node
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - node.type -> symbol
+    # -->
+    # Returns the type of this node as a symbol.
+    #
+    #     root = RubyVM::AbstractSyntaxTree.parse("x = 1 + 2")
+    #     root.type # => :SCOPE
+    #     lasgn = root.children[2]
+    #     lasgn.type # => :LASGN
+    #     call = lasgn.children[1]
+    #     call.type # => :OPCALL
+    #
+    def type: () -> Symbol
+
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - node.first_lineno -> integer
+    # -->
+    # The line number in the source code where this AST's text began.
+    #
+    def first_lineno: () -> Integer
+
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - node.first_column -> integer
+    # -->
+    # The column number in the source code where this AST's text began.
+    #
+    def first_column: () -> Integer
+
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - node.last_lineno -> integer
+    # -->
+    # The line number in the source code where this AST's text ended.
+    #
+    def last_lineno: () -> Integer
+
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - node.last_column -> integer
+    # -->
+    # The column number in the source code where this AST's text ended.
+    #
+    def last_column: () -> Integer
+
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - node.locations -> array
+    # -->
+    # Returns location objects associated with the AST node. The returned array
+    # contains RubyVM::AbstractSyntaxTree::Location.
+    #
+    def locations: () -> Array[Location]
+
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - node.tokens -> array
+    # -->
+    # Returns tokens corresponding to the location of the node. Returns `nil` if
+    # `keep_tokens` is not enabled when #parse method is called.
+    #
+    #     root = RubyVM::AbstractSyntaxTree.parse("x = 1 + 2", keep_tokens: true)
+    #     root.tokens # => [[0, :tIDENTIFIER, "x", [1, 0, 1, 1]], [1, :tSP, " ", [1, 1, 1, 2]], ...]
+    #     root.tokens.map{_1[2]}.join # => "x = 1 + 2"
+    #
+    # Token is an array of:
+    #
+    # *   id
+    # *   token type
+    # *   source code text
+    # *   location [ first_lineno, first_column, last_lineno, last_column ]
+    #
+    def tokens: () -> Array[[Integer, Symbol, String, [Integer, Integer, Integer, Integer]]]?
+
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - node.all_tokens -> array
+    # -->
+    # Returns all tokens for the input script regardless the receiver node. Returns
+    # `nil` if `keep_tokens` is not enabled when #parse method is called.
+    #
+    #     root = RubyVM::AbstractSyntaxTree.parse("x = 1 + 2", keep_tokens: true)
+    #     root.all_tokens # => [[0, :tIDENTIFIER, "x", [1, 0, 1, 1]], [1, :tSP, " ", [1, 1, 1, 2]], ...]
+    #     root.children[-1].all_tokens # => [[0, :tIDENTIFIER, "x", [1, 0, 1, 1]], [1, :tSP, " ", [1, 1, 1, 2]], ...]
+    #
+    def all_tokens: () -> Array[[Integer, Symbol, String, [Integer, Integer, Integer, Integer]]]?
+
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - node.children -> array
+    # -->
+    # Returns AST nodes under this one.  Each kind of node has different children,
+    # depending on what kind of node it is.
+    #
+    # The returned array may contain other nodes or `nil`.
+    #
+    def children: () -> Array[untyped]
+  end
+
+  # <!-- rdoc-file=ast.rb -->
+  # RubyVM::AbstractSyntaxTree::Location instances are created by
+  # RubyVM::AbstractSyntaxTree::Node#locations.
+  #
+  # This class is MRI specific.
+  #
+  class Location
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - location.first_column -> integer
+    # -->
+    # The column number in the source code where this AST's text began.
+    #
+    def first_column: () -> Integer
+
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - location.first_lineno -> integer
+    # -->
+    # The line number in the source code where this AST's text began.
+    #
+    def first_lineno: () -> Integer
+
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - location.inspect -> string
+    # -->
+    # Returns debugging information about this location as a string.
+    #
+    def inspect: () -> String
+
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - location.last_lineno -> integer
+    # -->
+    # The line number in the source code where this AST's text ended.
+    #
+    def last_lineno: () -> Integer
+
+    # <!--
+    #   rdoc-file=ast.rb
+    #   - location.last_column -> integer
+    # -->
+    # The column number in the source code where this AST's text ended.
+    #
+    def last_column: () -> Integer
+  end
+end
+
+# <!-- rdoc-file=yjit.rb -->
+# This module allows for introspection of YJIT, CRuby's just-in-time compiler.
+# Everything in the module is highly implementation specific and the API might
+# be less stable compared to the standard library.
+# This module may not exist if YJIT does not support the particular platform
+# for which CRuby is built.
+#
+module RubyVM::YJIT
+  # <!--
+  #   rdoc-file=yjit.rb
+  #   - code_gc()
+  # -->
+  # Discard existing compiled code to reclaim memory
+  # and allow for recompilations in the future.
+  #
+  def self.code_gc: () -> void
+
+  # <!--
+  #   rdoc-file=yjit.rb
+  #   - dump_exit_locations(filename)
+  # -->
+  # Marshal dumps exit locations to the given filename.
+  # Usage:
+  # If `--yjit-exit-locations` is passed, a file named
+  # "yjit_exit_locations.dump" will automatically be generated.
+  # If you want to collect traces manually, call `dump_exit_locations`
+  # directly.
+  # Note that calling this in a script will generate stats after the
+  # dump is created, so the stats data may include exits from the
+  # dump itself.
+  # In a script call:
+  #     at_exit do
+  #       RubyVM::YJIT.dump_exit_locations("my_file.dump")
+  #     end
+  #
+  # Then run the file with the following options:
+  #     ruby --yjit --yjit-trace-exits test.rb
+  #
+  # Once the code is done running, use Stackprof to read the dump file.
+  # See Stackprof documentation for options.
+  #
+  def self.dump_exit_locations: (untyped filename) -> void
+
+  # <!--
+  #   rdoc-file=yjit.rb
+  #   - enable(stats: false, log: false)
+  # -->
+  # Enable YJIT compilation. `stats` option decides whether to enable YJIT stats
+  # or not. `compilation_log` decides
+  # whether to enable YJIT compilation logging or not.
+  # `stats`:
+  # * `false`: Don't enable stats.
+  # * `true`: Enable stats. Print stats at exit.
+  # * `:quiet`: Enable stats. Do not print stats at exit.
+  # `log`:
+  # * `false`: Don't enable the log.
+  # * `true`: Enable the log. Print log at exit.
+  # * `:quiet`: Enable the log. Do not print log at exit.
+  #
+  def self.enable: (?stats: false | true | :quiet) -> void
+
+  # <!--
+  #   rdoc-file=yjit.rb
+  #   - enabled?()
+  # -->
+  # Check if YJIT is enabled.
+  #
+  def self.enabled?: () -> bool
+
+  # <!--
+  #   rdoc-file=yjit.rb
+  #   - format_number(pad, number)
+  # -->
+  # Format large numbers with comma separators for readability
+  #
+  def self.format_number: (untyped pad, untyped number) -> untyped
+
+  # <!--
+  #   rdoc-file=yjit.rb
+  #   - format_number_pct(pad, number, total)
+  # -->
+  # Format a number along with a percentage over a total value
+  #
+  def self.format_number_pct: (untyped pad, untyped number, untyped total) -> untyped
+
+  # <!--
+  #   rdoc-file=yjit.rb
+  #   - reset_stats!()
+  # -->
+  # Discard statistics collected for `--yjit-stats`.
+  #
+  def self.reset_stats!: () -> void
+
+  # <!--
+  #   rdoc-file=yjit.rb
+  #   - runtime_stats(key = nil)
+  # -->
+  # Return a hash for statistics generated for the `--yjit-stats` command line
+  # option.
+  # Return `nil` when option is not passed or unavailable.
+  # If a symbol argument is provided, return only the value for the named stat.
+  # If any other type is provided, raises TypeError.
+  #
+  def self.runtime_stats: (?context: bool) -> Hash[untyped, untyped]?
+
+  # <!--
+  #   rdoc-file=yjit.rb
+  #   - stats_enabled?()
+  # -->
+  # Check if `--yjit-stats` is used.
+  #
+  def self.stats_enabled?: () -> bool
+
+  # <!--
+  #   rdoc-file=yjit.rb
+  #   - stats_string()
+  # -->
+  # Format and print out counters as a String. This returns a non-empty
+  # content only when `--yjit-stats` is enabled.
+  #
+  def self.stats_string: () -> String
+end
+
+module RubyVM::RJIT
+end

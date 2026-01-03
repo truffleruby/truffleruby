@@ -1,0 +1,3 @@
+slow:Proc#dup copies the finalizer
+fails:Proc#dup copies instance variables
+fails:Proc#dup copies the finalizer

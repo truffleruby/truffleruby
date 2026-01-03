@@ -1,7 +1,7 @@
 suite = {
     "mxversion": "7.68.4",
     "name": "truffleruby",
-    "version": "33.0.0",
+    "version": "34.0.0",
     "release": False,
     "url": "https://github.com/truffleruby/truffleruby",
     "developer": {
@@ -450,6 +450,11 @@ suite = {
                 "TRUFFLERUBY_BOOTSTRAP_LAUNCHER": "<path:TRUFFLERUBY-BOOTSTRAP-LAUNCHER>/miniruby",
                 "GRAALVM_TOOLCHAIN_CC": "<toolchainGetToolPath:native,CC>",
                 "TRUFFLE_NFI_NATIVE_INCLUDE": "<path:truffle:TRUFFLE_NFI_NATIVE>/include",
+                "BIGDECIMAL_VERSION": "<gem_version:bigdecimal>",
+                "DEBUG_VERSION": "<gem_version:debug>",
+                "NKF_VERSION": "<gem_version:nkf>",
+                "RBS_VERSION": "<gem_version:rbs>",
+                "SYSLOG_VERSION": "<gem_version:syslog>",
             },
             "output": ".",
             "results": [
@@ -459,12 +464,13 @@ suite = {
                 "src/main/c/date/<extsuffix:date_core>",
                 "src/main/c/etc/<extsuffix:etc>",
                 "src/main/c/io-console/<extsuffix:console>",
+                "src/main/c/json/parser/<extsuffix:parser>",
                 "src/main/c/nkf/<extsuffix:nkf>",
                 "src/main/c/openssl/<extsuffix:openssl>",
                 "src/main/c/psych/<extsuffix:psych>",
                 "src/main/c/rbconfig-sizeof/<extsuffix:sizeof>",
                 "src/main/c/ripper/<extsuffix:ripper>",
-                "src/main/c/syslog/<extsuffix:syslog>",
+                "src/main/c/syslog/<extsuffix:syslog_ext>",
                 "src/main/c/zlib/<extsuffix:zlib>",
                 "src/main/c/debug/<extsuffix:debug>",
                 "src/main/c/rbs/<extsuffix:rbs_extension>",
@@ -873,29 +879,43 @@ suite = {
                     "dependency:org.truffleruby.cext/src/main/c/cext/<lib:truffleruby>",
                     "dependency:org.truffleruby.cext/src/main/c/cext-trampoline/<lib:trufflerubytrampoline>",
                 ],
-                # Create the complete files to let RubyGems know the gems are fully built and can be activated
-                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/debug-1.9.2/gem.build_complete": "string:",
-                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/racc-1.7.3/gem.build_complete": "string:", # actually we do not build the C extension because the pure-Ruby fallback is enough
-                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/rbs-3.4.0/gem.build_complete": "string:",
-                "lib/gems/gems/debug-1.9.2/lib/debug/": [
+                # Create the complete files for bundled gems to let RubyGems know the gems are fully built and can be activated
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/bigdecimal-<gem_version:bigdecimal>/gem.build_complete": "string:",
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/debug-<gem_version:debug>/gem.build_complete": "string:",
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/nkf-<gem_version:nkf>/gem.build_complete": "string:",
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/racc-<gem_version:racc>/gem.build_complete": "string:", # actually we do not build the C extension because the pure-Ruby fallback is enough
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/rbs-<gem_version:rbs>/gem.build_complete": "string:",
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/syslog-<gem_version:syslog>/gem.build_complete": "string:",
+                # Copy the extensions of bundled gems to the right place
+                "lib/gems/gems/bigdecimal-<gem_version:bigdecimal>/lib/": [
+                    "dependency:org.truffleruby.cext/src/main/c/bigdecimal/<extsuffix:bigdecimal>",
+                ],
+                "lib/gems/gems/debug-<gem_version:debug>/lib/debug/": [
                     "dependency:org.truffleruby.cext/src/main/c/debug/<extsuffix:debug>",
                 ],
-                "lib/gems/gems/rbs-3.4.0/lib/": [
+                "lib/gems/gems/nkf-<gem_version:nkf>/lib/": [
+                    "dependency:org.truffleruby.cext/src/main/c/nkf/<extsuffix:nkf>",
+                ],
+                "lib/gems/gems/rbs-<gem_version:rbs>/lib/": [
                     "dependency:org.truffleruby.cext/src/main/c/rbs/<extsuffix:rbs_extension>",
                 ],
+                "lib/gems/gems/syslog-<gem_version:syslog>/lib/": [
+                    "dependency:org.truffleruby.cext/src/main/c/syslog/<extsuffix:syslog_ext>",
+                ],
+                # Copy the extensions of default gems to the right place
                 "lib/mri/": [
-                    "dependency:org.truffleruby.cext/src/main/c/bigdecimal/<extsuffix:bigdecimal>",
                     "dependency:org.truffleruby.cext/src/main/c/date/<extsuffix:date_core>",
                     "dependency:org.truffleruby.cext/src/main/c/etc/<extsuffix:etc>",
-                    "dependency:org.truffleruby.cext/src/main/c/nkf/<extsuffix:nkf>",
                     "dependency:org.truffleruby.cext/src/main/c/openssl/<extsuffix:openssl>",
                     "dependency:org.truffleruby.cext/src/main/c/psych/<extsuffix:psych>",
                     "dependency:org.truffleruby.cext/src/main/c/ripper/<extsuffix:ripper>",
-                    "dependency:org.truffleruby.cext/src/main/c/syslog/<extsuffix:syslog>",
                     "dependency:org.truffleruby.cext/src/main/c/zlib/<extsuffix:zlib>",
                 ],
                 "lib/mri/io/": [
                     "dependency:org.truffleruby.cext/src/main/c/io-console/<extsuffix:console>",
+                ],
+                "lib/mri/json/ext/": [
+                    "dependency:org.truffleruby.cext/src/main/c/json/parser/<extsuffix:parser>",
                 ],
                 "lib/mri/rbconfig/": [
                     "dependency:org.truffleruby.cext/src/main/c/rbconfig-sizeof/<extsuffix:sizeof>",

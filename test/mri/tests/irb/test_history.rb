@@ -10,22 +10,20 @@ return if RUBY_PLATFORM.match?(/solaris|mswin|mingw/i)
 module TestIRB
   class HistoryTest < TestCase
     def setup
+      @conf_backup = IRB.conf.dup
       @original_verbose, $VERBOSE = $VERBOSE, nil
       @tmpdir = Dir.mktmpdir("test_irb_history_")
-      @backup_home = ENV["HOME"]
-      @backup_xdg_config_home = ENV.delete("XDG_CONFIG_HOME")
-      @backup_irbrc = ENV.delete("IRBRC")
-      @backup_default_external = Encoding.default_external
-      ENV["HOME"] = @tmpdir
+      setup_envs(home: @tmpdir)
+      IRB.conf[:LC_MESSAGES] = IRB::Locale.new
+      save_encodings
       IRB.instance_variable_set(:@existing_rc_name_generators, nil)
     end
 
     def teardown
+      IRB.conf.replace(@conf_backup)
       IRB.instance_variable_set(:@existing_rc_name_generators, nil)
-      ENV["HOME"] = @backup_home
-      ENV["XDG_CONFIG_HOME"] = @backup_xdg_config_home
-      ENV["IRBRC"] = @backup_irbrc
-      Encoding.default_external = @backup_default_external
+      teardown_envs
+      restore_encodings
       $VERBOSE = @original_verbose
       FileUtils.rm_rf(@tmpdir)
     end
@@ -42,6 +40,21 @@ module TestIRB
       HISTORY = Readline::HISTORY
 
       include IRB::HistorySavingAbility
+    end
+
+    def test_history_dont_save
+      omit "Skip Editline" if /EditLine/n.match(Readline::VERSION)
+      IRB.conf[:SAVE_HISTORY] = nil
+      assert_history(<<~EXPECTED_HISTORY, <<~INITIAL_HISTORY, <<~INPUT)
+        1
+        2
+      EXPECTED_HISTORY
+        1
+        2
+      INITIAL_HISTORY
+        3
+        exit
+      INPUT
     end
 
     def test_history_save_1
@@ -136,7 +149,6 @@ module TestIRB
     end
 
     def test_history_concurrent_use_not_present
-      IRB.conf[:LC_MESSAGES] = IRB::Locale.new
       IRB.conf[:SAVE_HISTORY] = 1
       io = TestInputMethodWithRelineHistory.new
       io.class::HISTORY.clear
@@ -153,9 +165,9 @@ module TestIRB
 
     def test_history_different_encodings
       IRB.conf[:SAVE_HISTORY] = 2
-      Encoding.default_external = Encoding::US_ASCII
-      locale = IRB::Locale.new("C")
-      assert_history(<<~EXPECTED_HISTORY.encode(Encoding::US_ASCII), <<~INITIAL_HISTORY.encode(Encoding::UTF_8), <<~INPUT, locale: locale)
+      IRB.conf[:LC_MESSAGES] = IRB::Locale.new("en_US.ASCII")
+      IRB.__send__(:set_encoding, Encoding::US_ASCII.name, override: false)
+      assert_history(<<~EXPECTED_HISTORY.encode(Encoding::US_ASCII), <<~INITIAL_HISTORY.encode(Encoding::UTF_8), <<~INPUT)
         ????
         exit
       EXPECTED_HISTORY
@@ -171,7 +183,7 @@ module TestIRB
       IRB.conf[:HISTORY_FILE] = "fake/fake/fake/history_file"
       io = TestInputMethodWithRelineHistory.new
 
-      assert_warn(/history file does not exist/) do
+      assert_warn(/ensure the folder exists/i) do
         io.save_history
       end
 
@@ -224,8 +236,7 @@ module TestIRB
       end
     end
 
-    def assert_history(expected_history, initial_irb_history, input, input_method = TestInputMethodWithRelineHistory, locale: IRB::Locale.new)
-      IRB.conf[:LC_MESSAGES] = locale
+    def assert_history(expected_history, initial_irb_history, input, input_method = TestInputMethodWithRelineHistory)
       actual_history = nil
       history_file = IRB.rc_file("_history")
       ENV["HOME"] = @tmpdir
@@ -475,6 +486,36 @@ module TestIRB
         'outer session again'
         exit
       HISTORY
+    end
+
+    def test_direct_debug_session_loads_history
+      @envs['RUBY_DEBUG_IRB_CONSOLE'] = "1"
+      write_history <<~HISTORY
+        old_history_1
+        old_history_2
+        old_history_3
+      HISTORY
+
+      write_ruby <<~'RUBY'
+        require 'debug'
+        debugger
+        binding.irb # needed to satisfy run_ruby_file
+      RUBY
+
+      output = run_ruby_file do
+        type "history"
+        type "puts 'foo'"
+        type "history"
+        type "exit!"
+      end
+
+      assert_include(output, "irb:rdbg(main):002") # assert that we're in an irb:rdbg session
+      assert_include(output, "5: history")
+      assert_include(output, "4: puts 'foo'")
+      assert_include(output, "3: history")
+      assert_include(output, "2: old_history_3")
+      assert_include(output, "1: old_history_2")
+      assert_include(output, "0: old_history_1")
     end
 
     private

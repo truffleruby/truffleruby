@@ -106,19 +106,10 @@ MRI_TEST_MODULES = {
         help: 'include only openssl tests',
         include: openssl = ['openssl/test_*.rb'],
     },
-    '--syslog' => {
-        help: 'include only syslog tests',
-        include: syslog = [
-            'test_syslog.rb',
-            'syslog/test_syslog_logger.rb'
-        ]
-    },
     '--cexts' => {
         help: 'run all MRI tests testing C extensions',
-        include: cexts = openssl + syslog + [
+        include: cexts = openssl + [
             'etc/test_etc.rb',
-            'nkf/test_kconv.rb',
-            'nkf/test_nkf.rb',
             'zlib/test_zlib.rb',
         ]
     },
@@ -1002,7 +993,7 @@ module Commands
     case options
     when ['cexts']
       clean(*options)
-      build
+      build(*options)
     else
       clean
       build(*options)
@@ -1148,7 +1139,12 @@ module Commands
       run_ruby(env, '-rmkmf', "#{ext_dir}/extconf.rb") # -rmkmf is required for C ext tests
       if File.exist?('Makefile')
         sh('make')
-        FileUtils::Verbose.cp("#{name}.#{DLEXT}", target) if target
+        ext_file = "#{name}.#{DLEXT}"
+        if File.exist?(ext_file)
+          FileUtils::Verbose.cp(ext_file, target) if target
+        else
+          STDERR.puts "Extension #{ext_file} not found in #{ext_dir}, skipping copy (likely a dummy Makefile)."
+        end
       else
         STDERR.puts "Makefile not found in #{ext_dir}, skipping make."
       end

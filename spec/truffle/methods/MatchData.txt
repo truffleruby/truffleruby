@@ -1,6 +1,8 @@
 ==
 []
 begin
+bytebegin
+byteend
 byteoffset
 captures
 deconstruct

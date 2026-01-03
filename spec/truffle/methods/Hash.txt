@@ -32,6 +32,7 @@ fetch_values
 filter
 filter!
 flatten
+freeze
 has_key?
 has_value?
 hash
