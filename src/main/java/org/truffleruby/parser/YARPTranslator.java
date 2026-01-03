@@ -14,6 +14,7 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.shadowed.org.jcodings.specific.EUCJPEncoding;
 import org.graalvm.shadowed.org.jcodings.specific.Windows_31JEncoding;
+import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.Split;
@@ -186,7 +187,7 @@ public class YARPTranslator extends YARPBaseTranslator {
     private boolean translatingForStatement = false;
 
     /** names of numbered parameters in procs */
-    private static final String[] numberedParameterNames = {
+    private static final String[] NUMBERED_PARAMETER_NAMES = {
             null,
             "_1",
             "_2",
@@ -198,6 +199,8 @@ public class YARPTranslator extends YARPBaseTranslator {
             "_8",
             "_9"
     };
+
+    static final String IT_PARAMETER_NAME = Layouts.TEMP_PREFIX + "it";
 
     /** all the encountered BEGIN {} blocks; they will be added finally at the beginning of the program AST */
     private final ArrayList<RubyNode> beginBlocks = new ArrayList<>();
@@ -488,18 +491,23 @@ public class YARPTranslator extends YARPBaseTranslator {
             // NOTE: we ignore BlockParametersNode#locals, it is fully redundant with BlockNode#locals/LambdaNode#locals
             parameters = blockParameters.parameters != null ? blockParameters.parameters : ZERO_PARAMETERS_NODE;
         } else if (parametersNode instanceof Nodes.NumberedParametersNode numberedParameters) {
-            // build Nodes.BlockParametersNode with required parameters _1, _2, etc
+            // build Nodes.ParametersNode with required parameters _1, _2, etc
             final int maximum = numberedParameters.maximum;
             final var requireds = new Nodes.RequiredParameterNode[maximum];
 
             for (int i = 1; i <= maximum; i++) {
-                String name = numberedParameterNames[i];
+                String name = NUMBERED_PARAMETER_NAMES[i];
                 requireds[i - 1] = new Nodes.RequiredParameterNode(0, 0, NO_FLAGS, name);
             }
 
             parameters = new Nodes.ParametersNode(0, 0, requireds, EMPTY_OPTIONAL_PARAMETER_NODE_ARRAY, null,
-                    EMPTY_NODE_ARRAY,
-                    EMPTY_NODE_ARRAY, null, null);
+                    EMPTY_NODE_ARRAY, EMPTY_NODE_ARRAY, null, null);
+        } else if (parametersNode instanceof Nodes.ItParametersNode) {
+            var requireds = new Nodes.RequiredParameterNode[]{
+                    new Nodes.RequiredParameterNode(0, 0, NO_FLAGS, IT_PARAMETER_NAME)
+            };
+            parameters = new Nodes.ParametersNode(0, 0, requireds, EMPTY_OPTIONAL_PARAMETER_NODE_ARRAY, null,
+                    EMPTY_NODE_ARRAY, EMPTY_NODE_ARRAY, null, null);
         } else if (parametersNode == null) {
             parameters = ZERO_PARAMETERS_NODE;
         } else {
@@ -551,6 +559,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         final RubyNode rubyNode = methodCompiler.compileBlockNode(
                 body,
                 parameters,
+                parametersNode,
                 locals,
                 isStabbyLambda,
                 getSourceSection(node));
@@ -2564,12 +2573,12 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     @Override
     public RubyNode visitItLocalVariableReadNode(Nodes.ItLocalVariableReadNode node) {
-        throw CompilerDirectives.shouldNotReachHere("ItLocalVariableReadNode is only from Ruby 3.4");
+        return assignPositionAndFlags(node, environment.findLocalVarNode(IT_PARAMETER_NAME));
     }
 
     @Override
     public RubyNode visitItParametersNode(Nodes.ItParametersNode node) {
-        throw CompilerDirectives.shouldNotReachHere("ItParametersNode is only from Ruby 3.4");
+        throw CompilerDirectives.shouldNotReachHere("handled in translateBlockAndLambda");
     }
 
     @Override

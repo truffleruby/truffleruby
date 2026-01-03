@@ -201,6 +201,7 @@ Also update the list of `provided_executables` in `mx_truffleruby.py` if some la
 Update all of these:
 
 * Update `.ruby-version`, `TruffleRuby.LANGUAGE_VERSION`
+* Update the `SyntaxVersion` in `YARPTranslatorDriver`
 * Given a Ruby version `A.B.C`, update the TruffleRuby version in `mx.truffleruby/suite.py` to `AB.0.0`.
 * Reset `truffleruby-abi-version.h` to `$RUBY_VERSION.1` and `lib/cext/ABI_check.txt` to `1` if `RUBY_VERSION` was updated.
   * use `$TRUFFLERUBY_VERSION.1` in `truffleruby-abi-version.h` instead when on a release branch.
