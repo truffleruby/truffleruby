@@ -1,1 +1,0 @@
-fails:Warning.categories returns the list of possible warning categories

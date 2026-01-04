@@ -34,6 +34,10 @@ module Warning
     nil
   end
 
+  def self.categories
+    %i[deprecated experimental performance]
+  end
+
   def self.[](category)
     Truffle::Type.rb_check_type(category, Symbol)
 
