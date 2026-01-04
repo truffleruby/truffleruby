@@ -283,3 +283,9 @@ jobs:
         ruby-version: 3.4
         bundler: none
     - run: jt -u ruby mspec -fdot --timeout 30 spec/ruby
+
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '4.0'
+        bundler: none
+    - run: jt -u ruby mspec -fdot --timeout 30 spec/ruby
