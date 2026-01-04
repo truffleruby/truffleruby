@@ -1,1 +1,2 @@
 fails:StringIO#readpartial raises ArgumentError if the negative argument is provided
+fails:StringIO#readpartial reads after ungetc with multibyte characters in the buffer

@@ -1,3 +1,6 @@
 slow:Kernel#sleep accepts a Float
 slow:Kernel#sleep accepts a Rational
 fails:Kernel#sleep accepts a nil duration
+fails:Kernel#sleep Kernel.sleep with Fiber scheduler calls the scheduler without arguments when no duration is given
+fails:Kernel#sleep Kernel.sleep with Fiber scheduler calls the scheduler with the given duration
+fails:Kernel#sleep Kernel.sleep with Fiber scheduler does not call the scheduler if the fiber is blocking

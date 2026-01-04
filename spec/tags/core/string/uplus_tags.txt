@@ -1,2 +1,3 @@
 slow:String#+@ returns mutable copy despite freeze-magic-comment in file
 slow:String#+@ if file has "frozen_string_literal: true" magic comment returns mutable copy of a literal
+fails:String#+@ if file has no frozen_string_literal magic comment returns mutable copy of a literal

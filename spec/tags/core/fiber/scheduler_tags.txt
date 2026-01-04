@@ -1,0 +1,5 @@
+fails:Fiber.scheduler validates the scheduler for required methods
+fails:Fiber.scheduler can set and get the scheduler
+fails:Fiber.scheduler returns the scheduler after setting it
+fails:Fiber.scheduler can remove the scheduler
+fails:Fiber.scheduler can assign a nil scheduler multiple times

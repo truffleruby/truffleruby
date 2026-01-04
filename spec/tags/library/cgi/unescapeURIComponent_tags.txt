@@ -1,0 +1,2 @@
+fails:CGI.unescapeURIComponent raises a TypeError with nil
+fails:CGI.unescapeURIComponent uses implicit type conversion to String
