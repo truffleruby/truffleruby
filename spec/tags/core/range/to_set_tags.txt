@@ -1,0 +1,1 @@
+slow:Enumerable#to_set does not need explicit `require 'set'`

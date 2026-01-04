@@ -1,1 +1,2 @@
 fails:UNIXSocket#recvfrom using a UNIX socket constructed using UNIXSocket.for_fd returns an Array containing the data and address information
+fails:UNIXSocket#recvfrom when called on a client's socket returns an array containing server's address as second element

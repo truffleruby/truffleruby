@@ -1,0 +1,1 @@
+fails:Proc#parameters handles the usage of `it` as a parameter

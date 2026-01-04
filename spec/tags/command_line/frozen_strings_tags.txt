@@ -10,3 +10,4 @@ slow:With neither --enable-frozen-string-literal nor --disable-frozen-string-lit
 slow:With neither --enable-frozen-string-literal nor --disable-frozen-string-literal flag set if file has frozen_string_literal:false comment produce different mutable strings each time
 slow:The --debug flag produces debugging info on mutating chilled string
 fails:The --debug flag produces debugging info on mutating chilled string
+fails:With neither --enable-frozen-string-literal nor --disable-frozen-string-literal flag set if file has no frozen_string_literal comment complain about modification of produced mutable strings
