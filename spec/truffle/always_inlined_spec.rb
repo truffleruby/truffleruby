@@ -178,7 +178,7 @@ describe "Always-inlined core methods" do
     it "for main.using" do
       -> do
         eval('using "foo"', TOPLEVEL_BINDING)
-      end.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == (cruby ? 'using' : 'main.using') }
+      end.should raise_error(TypeError) { |e| e.backtrace_locations[0].label.should == 'using' }
     end
   end
 

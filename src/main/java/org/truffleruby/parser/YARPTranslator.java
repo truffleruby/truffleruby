@@ -221,10 +221,10 @@ public class YARPTranslator extends YARPBaseTranslator {
         var body = node.accept(this);
         var frameDescriptor = TranslatorEnvironment.newFrameDescriptorBuilderForMethod().build();
         var sourceSection = CoreLibrary.JAVA_CORE_SOURCE_SECTION;
-        var sharedMethodInfo = new SharedMethodInfo(sourceSection, null, Arity.NO_ARGUMENTS, "<main>", 0, "<main>",
+        var sharedMethodInfo = new SharedMethodInfo(sourceSection, null, Arity.MODULE_BODY, "<main>", 0, "<main>",
                 null, null);
         return new RubyTopLevelRootNode(language, sourceSection, frameDescriptor, sharedMethodInfo, body,
-                Split.HEURISTIC, null, Arity.NO_ARGUMENTS);
+                Split.HEURISTIC, null, Arity.MODULE_BODY);
     }
 
     @Override
@@ -3568,7 +3568,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
                 getSourceSection(moduleNode),
                 newLexicalScope,
-                Arity.NO_ARGUMENTS,
+                Arity.MODULE_BODY,
                 methodName,
                 0,
                 methodName,

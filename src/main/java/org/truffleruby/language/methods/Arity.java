@@ -26,6 +26,9 @@ public final class Arity {
     public static final Arity ONE_REQUIRED = new Arity(1, 0, false);
     public static final Arity ANY_ARGUMENTS = new Arity(0, 0, true);
 
+    // Same as NO_ARGUMENTS but used as a marker for module body methods
+    public static final Arity MODULE_BODY = new Arity(0, 0, false);
+
     private final int preRequired;
     private final int optional;
     private final boolean hasRest;

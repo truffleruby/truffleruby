@@ -56,8 +56,6 @@ import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.encoding.TStringUtils;
 import org.truffleruby.core.hash.RubyHash;
-import org.truffleruby.core.method.RubyMethod;
-import org.truffleruby.core.method.RubyUnboundMethod;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.string.StringOperations;
@@ -79,7 +77,6 @@ import org.truffleruby.language.backtrace.BacktraceFormatter;
 import org.truffleruby.language.library.RubyStringLibrary;
 import org.truffleruby.language.loader.ByteBasedCharSequence;
 import org.truffleruby.language.methods.DeclarationContext;
-import org.truffleruby.language.methods.InternalMethod;
 import org.truffleruby.annotations.Split;
 import org.truffleruby.language.objects.AllocationTracing;
 import org.truffleruby.language.objects.shared.IsSharedNode;
@@ -1354,26 +1351,30 @@ public abstract class TruffleDebugNodes {
         }
     }
 
-    @CoreMethod(names = "parse_name_of_method", onSingleton = true, required = 1)
-    public abstract static class ParseNameOfMethodNode extends CoreMethodArrayArgumentsNode {
-
-        @Child private TruffleString.FromJavaStringNode fromJavaStringNode = TruffleString.FromJavaStringNode.create();
-
+    @CoreMethod(names = "parse_name", onSingleton = true, required = 1)
+    public abstract static class ParseNameNode extends CoreMethodArrayArgumentsNode {
+        @TruffleBoundary
         @Specialization
-        RubyString parseName(RubyMethod method) {
-            return parseName(method.method);
-        }
-
-        @Specialization
-        RubyString parseName(RubyUnboundMethod method) {
-            return parseName(method.method);
-        }
-
-        protected RubyString parseName(InternalMethod method) {
-            String parseName = method.getSharedMethodInfo().getParseName();
+        RubyString parseName(Object executable,
+                @Cached ToCallTargetNode toCallTargetNode,
+                @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
+            var rootNode = RubyRootNode.of(toCallTargetNode.execute(this, executable));
+            String parseName = rootNode.getSharedMethodInfo().getParseName();
             return createString(fromJavaStringNode, parseName, Encodings.UTF_8);
         }
+    }
 
+    @CoreMethod(names = "runtime_name", onSingleton = true, required = 1)
+    public abstract static class RuntimeNameNode extends CoreMethodArrayArgumentsNode {
+        @TruffleBoundary
+        @Specialization
+        RubyString runtimeName(Object executable,
+                @Cached ToCallTargetNode toCallTargetNode,
+                @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
+            var rootNode = RubyRootNode.of(toCallTargetNode.execute(this, executable));
+            String runtimeName = rootNode.getSharedMethodInfo().getRuntimeName();
+            return createString(fromJavaStringNode, runtimeName, Encodings.UTF_8);
+        }
     }
 
     /** Creates a Truffle thread which is not {@link ThreadManager#isRubyManagedThread(java.lang.Thread)}}. */
@@ -1381,7 +1382,7 @@ public abstract class TruffleDebugNodes {
     public abstract static class CreatePolyglotThread extends CoreMethodArrayArgumentsNode {
         @TruffleBoundary
         @Specialization
-        Object parseName(Object hostRunnable) {
+        Object createPolyglotThread(Object hostRunnable) {
             Runnable runnable = (Runnable) getContext().getEnv().asHostObject(hostRunnable);
             final Thread thread = getContext().getEnv().newTruffleThreadBuilder(runnable).build();
             return getContext().getEnv().asGuestValue(thread);

@@ -41,13 +41,18 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
      * foo" for blocks. */
     private final String originalName;
     /** The "static" name of this method at parse time, such as "M::C#foo", "M::C.foo", "<module:Inner>", "block (2
-     * levels) in M::C.foo" or "block (2 levels) in <module:Inner>". This name is used for tools and backtraces. */
+     * levels) in M::C.foo" or "block (2 levels) in <module:Inner>". */
     private final String parseName;
+    /** The runtime name, derived from the Module#name of the declaring module owning this method. When multiple modules
+     * with different names report owning this method, this falls back to the parseName instead. Used for tools and
+     * backtraces. */
+    private String runtimeName = null;
+    private String descriptiveNameAndSource = null;
+
     private final int blockDepth;
     /** Extra information. If blockDepth > 0 then it is the name of the method containing this block. */
     private final String notes;
     private final ArgumentDescriptor[] argumentDescriptors;
-    private String descriptiveNameAndSource;
 
     public SharedMethodInfo(
             SourceSection sourceSection,
@@ -76,19 +81,20 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
                 proc.arity,
                 methodName,
                 0, // no longer a block
-                moduleAndMethodNameIfModuleIsFullyNamed(declaringModule, methodName),
+                moduleAndMethodNameIfModuleIsFullyNamed(declaringModule, methodName, proc.arity),
                 null,
                 proc.argumentDescriptors);
     }
 
     public SharedMethodInfo convertMethodMissingToMethod(RubyModule declaringModule, String methodName) {
+        var effectiveArity = arity.consumingFirstRequired();
         return new SharedMethodInfo(
                 sourceSection,
                 staticLexicalScope,
-                arity.consumingFirstRequired(),
+                effectiveArity,
                 methodName,
                 blockDepth,
-                moduleAndMethodNameIfModuleIsFullyNamed(declaringModule, methodName),
+                moduleAndMethodNameIfModuleIsFullyNamed(declaringModule, methodName, effectiveArity),
                 notes,
                 ArgumentDescriptor.ANY_UNNAMED);
     }
@@ -124,8 +130,9 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
 
     @TruffleBoundary
     public boolean isModuleBody() {
-        boolean isModuleBody = isModuleBody(getOriginalName());
+        boolean isModuleBody = arity == Arity.MODULE_BODY;
         assert !(isModuleBody && isBlock()) : this;
+        assert isModuleBody == isModuleBody(getOriginalName());
         return isModuleBody;
     }
 
@@ -163,6 +170,27 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         return parseName;
     }
 
+    public String getRuntimeName() {
+        if (runtimeName != null) {
+            return runtimeName;
+        } else {
+            return parseName;
+        }
+    }
+
+    @TruffleBoundary
+    public void setupRuntimeName(RubyModule module) {
+        final String computedName = moduleAndMethodNameIfModuleIsFullyNamed(module, getMethodName(), arity);
+        if (this.runtimeName == null) {
+            this.runtimeName = computedName;
+        } else if (computedName.equals(this.runtimeName)) {
+            // OK
+        } else {
+            // Different module names, just use the parse name then
+            this.runtimeName = parseName;
+        }
+    }
+
     /** See also {@link org.truffleruby.core.module.ModuleOperations#constantName}. Version without context which
      * returns "Object::A" for top-level constant A. */
     public static String moduleAndConstantName(RubyModule module, String constantName) {
@@ -182,8 +210,13 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
 
     /** Returns "Module#method" if Module is fully named and "method" otherwise. This is the expected behavior for Ruby
      * backtraces. */
-    public static String moduleAndMethodNameIfModuleIsFullyNamed(RubyModule module, String methodName) {
+    public static String moduleAndMethodNameIfModuleIsFullyNamed(RubyModule module, String methodName, Arity arity) {
         assert module != null && methodName != null;
+
+        if (arity == Arity.MODULE_BODY) {
+            return methodName;
+        }
+
         if (RubyGuards.isMetaClass(module)) {
             final RubyModule attached = (RubyModule) ((RubyClass) module).attached;
             if (attached.fields.hasFullName()) {

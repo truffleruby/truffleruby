@@ -195,7 +195,7 @@ public final class YARPTranslatorDriver {
         final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
                 sourceSection,
                 language.singleContext ? staticLexicalScope : null,
-                Arity.NO_ARGUMENTS,
+                parserContext.isTopLevel() ? Arity.MODULE_BODY : Arity.NO_ARGUMENTS,
                 methodName,
                 0,
                 methodName,

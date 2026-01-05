@@ -176,6 +176,8 @@ public final class InternalMethod implements ObjectGraphNode {
         this.callTarget = callTarget;
         this.callTargetSupplier = callTargetSupplier;
 
+        sharedMethodInfo.setupRuntimeName(declaringModule);
+
         /* If the call target supplier has already been run, then don't wait until the first time the InternalMethod is
          * asked for the call target, because this would be a deoptimization in getCallTarget(). */
         if (callTarget == null && callTargetSupplier != null) {
