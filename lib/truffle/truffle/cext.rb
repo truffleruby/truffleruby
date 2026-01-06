@@ -1377,6 +1377,10 @@ module Truffle::CExt
     sym.name
   end
 
+  def rb_id_attrset(sym)
+    :"#{sym}="
+  end
+
   def rb_const_defined?(mod, name)
     Primitive.module_const_defined? mod, name, true, false
   end

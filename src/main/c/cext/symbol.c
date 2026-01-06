@@ -73,6 +73,11 @@ VALUE rb_id2str(ID id) {
   return RUBY_CEXT_INVOKE("rb_id2str", ID2SYM(id));
 }
 
+ID rb_id_attrset(ID id) {
+  VALUE sym = ID2SYM(id);
+  return SYM2ID(RUBY_CEXT_INVOKE("rb_id_attrset", ID2SYM(id)));
+}
+
 int rb_is_class_id(ID id) {
   return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("rb_is_class_id", ID2SYM(id)));
 }
