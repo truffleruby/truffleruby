@@ -221,7 +221,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         var body = node.accept(this);
         var frameDescriptor = TranslatorEnvironment.newFrameDescriptorBuilderForMethod().build();
         var sourceSection = CoreLibrary.JAVA_CORE_SOURCE_SECTION;
-        var sharedMethodInfo = new SharedMethodInfo(sourceSection, null, Arity.MODULE_BODY, "<main>", 0, "<main>",
+        var sharedMethodInfo = SharedMethodInfo.forMethod(sourceSection, null, Arity.MODULE_BODY, "<main>", "<main>",
                 null, null);
         return new RubyTopLevelRootNode(language, sourceSection, frameDescriptor, sharedMethodInfo, body,
                 Split.HEURISTIC, null, Arity.MODULE_BODY);
@@ -521,14 +521,19 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         // "block (2 levels) in M::C.foo"
         String parseName = SharedMethodInfo.getBlockName(blockDepth, methodParent.getSharedMethodInfo().getParseName());
-        final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
+        SharedMethodInfo methodSharedMethodInfo = environment.isBlock()
+                ? environment.getSharedMethodInfo().getMethodSharedMethodInfo()
+                : environment.getSharedMethodInfo();
+
+        final SharedMethodInfo sharedMethodInfo = SharedMethodInfo.forBlock(
                 getSourceSection(node),
                 environment.getStaticLexicalScopeOrNull(),
                 arity,
                 methodName,
-                blockDepth,
                 parseName,
                 null,
+                blockDepth,
+                methodSharedMethodInfo,
                 argumentDescriptors);
 
         // "stabby lambda" is a common name for the `->() {}` lambda syntax
@@ -1548,12 +1553,11 @@ public class YARPTranslator extends YARPBaseTranslator {
         final ArgumentDescriptor[] argumentDescriptors = parametersNodeToArgumentDescriptors(parameters);
         final String parseName = modulePathAndMethodName(node.name, node.receiver);
 
-        final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
+        final SharedMethodInfo sharedMethodInfo = SharedMethodInfo.forMethod(
                 getSourceSection(node),
                 environment.getStaticLexicalScopeOrNull(),
                 arity,
                 node.name,
-                0,
                 parseName,
                 null,
                 argumentDescriptors);
@@ -3563,12 +3567,11 @@ public class YARPTranslator extends YARPBaseTranslator {
                 ? null
                 : new LexicalScope(environment.getStaticLexicalScope());
 
-        final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
+        final SharedMethodInfo sharedMethodInfo = SharedMethodInfo.forMethod(
                 getSourceSection(moduleNode),
                 newLexicalScope,
                 Arity.MODULE_BODY,
                 methodName,
-                0,
                 methodName,
                 null,
                 null);

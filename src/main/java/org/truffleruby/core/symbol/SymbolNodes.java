@@ -216,12 +216,11 @@ public abstract class SymbolNodes {
                 Map<RubyModule, RubyModule[]> refinements) {
             final SourceSection sourceSection = CoreLibrary.UNAVAILABLE_SOURCE_SECTION;
 
-            final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
+            final SharedMethodInfo sharedMethodInfo = SharedMethodInfo.forMethod(
                     sourceSection,
                     LexicalScope.IGNORE,
                     Arity.SYMBOL_TO_PROC_ARITY,
                     symbol.getString(),
-                    0,
                     "&:" + symbol.getString(),
                     "Symbol#to_proc",
                     ArgumentDescriptor.AT_LEAST_ONE_UNNAMED);

@@ -510,12 +510,11 @@ public abstract class ModuleNodes {
 
             String parseName = SharedMethodInfo.moduleAndMethodNameIfModuleIsFullyNamed(module, accessorName, arity);
 
-            final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
+            final SharedMethodInfo sharedMethodInfo = SharedMethodInfo.forMethod(
                     sourceSection,
                     LexicalScope.IGNORE,
                     arity,
                     accessorName,
-                    0,
                     parseName,
                     ivar, // notes
                     null);

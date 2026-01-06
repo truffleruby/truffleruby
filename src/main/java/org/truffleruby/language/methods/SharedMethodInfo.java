@@ -50,36 +50,67 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
     private String descriptiveNameAndSource = null;
 
     private final int blockDepth;
+    /** The SharedMethodInfo corresponding to the surrounding method: null for methods, non-null for blocks */
+    private final SharedMethodInfo methodSharedMethodInfo;
     /** Extra information. If blockDepth > 0 then it is the name of the method containing this block. */
     private final String notes;
     private final ArgumentDescriptor[] argumentDescriptors;
 
-    public SharedMethodInfo(
+    public static SharedMethodInfo forMethod(
             SourceSection sourceSection,
             LexicalScope staticLexicalScope,
             Arity arity,
             String methodName,
-            int blockDepth,
             String parseName,
             String notes,
             ArgumentDescriptor[] argumentDescriptors) {
+        return new SharedMethodInfo(sourceSection, staticLexicalScope, arity, methodName, parseName, notes, 0, null,
+                argumentDescriptors);
+    }
+
+    public static SharedMethodInfo forBlock(
+            SourceSection sourceSection,
+            LexicalScope staticLexicalScope,
+            Arity arity,
+            String methodName,
+            String parseName,
+            String notes,
+            int blockDepth,
+            SharedMethodInfo methodSharedMethodInfo,
+            ArgumentDescriptor[] argumentDescriptors) {
+        return new SharedMethodInfo(sourceSection, staticLexicalScope, arity, methodName, parseName, notes, blockDepth,
+                methodSharedMethodInfo, argumentDescriptors);
+    }
+
+    private SharedMethodInfo(
+            SourceSection sourceSection,
+            LexicalScope staticLexicalScope,
+            Arity arity,
+            String methodName,
+            String parseName,
+            String notes,
+            int blockDepth,
+            SharedMethodInfo methodSharedMethodInfo,
+            ArgumentDescriptor[] argumentDescriptors) {
+        assert (methodSharedMethodInfo == null) == (blockDepth == 0);
         this.sourceSection = sourceSection;
         this.staticLexicalScope = staticLexicalScope;
         this.arity = arity;
         this.methodName = methodName;
-        this.blockDepth = blockDepth;
         this.parseName = parseName;
         this.notes = notes;
+        this.blockDepth = blockDepth;
+        this.methodSharedMethodInfo = methodSharedMethodInfo;
         this.argumentDescriptors = argumentDescriptors;
     }
 
     public SharedMethodInfo forDefineMethod(RubyModule declaringModule, String methodName, RubyProc proc) {
-        return new SharedMethodInfo(
+        // no longer a block
+        return forMethod(
                 sourceSection,
                 staticLexicalScope,
                 proc.arity,
                 methodName,
-                0, // no longer a block
                 moduleAndMethodNameIfModuleIsFullyNamed(declaringModule, methodName, proc.arity),
                 null,
                 proc.argumentDescriptors);
@@ -87,12 +118,11 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
 
     public SharedMethodInfo convertMethodMissingToMethod(RubyModule declaringModule, String methodName) {
         var effectiveArity = arity.consumingFirstRequired();
-        return new SharedMethodInfo(
+        return forMethod(
                 sourceSection,
                 staticLexicalScope,
                 effectiveArity,
                 methodName,
-                blockDepth,
                 moduleAndMethodNameIfModuleIsFullyNamed(declaringModule, methodName, effectiveArity),
                 notes,
                 ArgumentDescriptor.ANY_UNNAMED);
@@ -166,7 +196,17 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         if (runtimeName != null) {
             return runtimeName;
         } else {
-            return parseName;
+            if (isBlock()) {
+                if (methodSharedMethodInfo.runtimeName != null) {
+                    runtimeName = getBlockName(blockDepth, methodSharedMethodInfo.runtimeName);
+                    return runtimeName;
+                } else {
+                    // The method does not have a runtime name yet, so in that case parseName is correct
+                    return parseName;
+                }
+            } else {
+                return parseName;
+            }
         }
     }
 
@@ -262,6 +302,14 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         }
 
         return descriptiveNameAndSource;
+    }
+
+    public int getBlockDepth() {
+        return blockDepth;
+    }
+
+    public SharedMethodInfo getMethodSharedMethodInfo() {
+        return methodSharedMethodInfo;
     }
 
     private boolean hasNotes() {
