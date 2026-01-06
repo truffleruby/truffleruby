@@ -211,7 +211,7 @@ public final class YARPTranslatorDriver {
                 true,
                 isModuleBody,
                 sharedMethodInfo,
-                sharedMethodInfo.getMethodNameForNotBlock(),
+                sharedMethodInfo.getMethodName(),
                 blockDepth,
                 null,
                 null,

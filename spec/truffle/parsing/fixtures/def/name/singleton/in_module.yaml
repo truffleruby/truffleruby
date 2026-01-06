@@ -15,7 +15,7 @@ ast: |
   RunModuleDefinitionNode
       attributes:
           flags = 1
-          moduleBodyDefinition = ModuleBodyDefinition(name = <module:A>, sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = <module:A>, blockDepth = 0, parseName = <module:A>, notes = null, argumentDescriptors = null), callTarget = <module:A>, staticLexicalScope =  :: null :: Object, dynamicLexicalScopes = null)
+          moduleBodyDefinition = ModuleBodyDefinition(name = <module:A>, sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = <module:A>, blockDepth = 0, parseName = <module:A>, notes = null, argumentDescriptors = null), callTarget = <module:A>, staticLexicalScope =  :: null :: Object, dynamicLexicalScopes = null)
           sourceCharIndex = 0
           sourceLength = 46
       children:
@@ -45,7 +45,7 @@ ast: |
                   lock = java.util.concurrent.locks.ReentrantLock@...[Unlocked]
                   polyglotRef = org.truffleruby.RubyLanguage@...
                   returnID = MODULE_BODY
-                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = <module:A>, blockDepth = 0, parseName = <module:A>, notes = null, argumentDescriptors = null)
+                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = <module:A>, blockDepth = 0, parseName = <module:A>, notes = null, argumentDescriptors = null)
                   sourceSection = SourceSection(source=<parse_ast> [1:1 - 5:3], index=0, length=46, characters=module A\n  bar = "bar"\n  def bar.foo\n  end\nend)
                   split = NEVER
               children:
@@ -112,7 +112,7 @@ ast: |
                                                                   flags = 1
                                                                   isDefSingleton = true
                                                                   name = "foo"
-                                                                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = foo, blockDepth = 0, parseName = foo, notes = null, argumentDescriptors = [])
+                                                                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = foo, blockDepth = 0, parseName = foo, notes = null, argumentDescriptors = [])
                                                                   sourceCharIndex = 25
                                                                   sourceLength = 17
                                                               children:
@@ -147,7 +147,7 @@ ast: |
                                                                           polyglotRef = org.truffleruby.RubyLanguage@...
                                                                           retryProfile = false
                                                                           returnID = org.truffleruby.language.control.ReturnID@...
-                                                                          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = foo, blockDepth = 0, parseName = foo, notes = null, argumentDescriptors = [])
+                                                                          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = foo, blockDepth = 0, parseName = foo, notes = null, argumentDescriptors = [])
                                                                           sourceSection = SourceSection(source=<parse_ast> [3:3 - 4:5], index=25, length=17, characters=def bar.foo\n  end)
                                                                           split = HEURISTIC
                                                                       children:

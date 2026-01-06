@@ -158,7 +158,7 @@ public final class InternalMethod implements ObjectGraphNode {
             CachedLazyCallTargetSupplier callTargetSupplier) {
         assert declaringModule != null;
         assert lexicalScope != null;
-        assert !sharedMethodInfo.isBlock() : sharedMethodInfo;
+        assert sharedMethodInfo.isMethod() : sharedMethodInfo;
         assert callTarget == null || RubyRootNode.of(callTarget).getSharedMethodInfo() == sharedMethodInfo;
         this.sharedMethodInfo = sharedMethodInfo;
         this.lexicalScope = lexicalScope;
@@ -202,7 +202,7 @@ public final class InternalMethod implements ObjectGraphNode {
     }
 
     public String getOriginalName() {
-        return sharedMethodInfo.getOriginalName();
+        return sharedMethodInfo.getMethodName();
     }
 
     public Visibility getVisibility() {

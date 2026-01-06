@@ -37,9 +37,9 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
     /** LexicalScope if it can be determined statically at parse time, otherwise null */
     private final LexicalScope staticLexicalScope;
     private final Arity arity;
-    /** The original name of the method. Does not change when aliased. Looks like "block in foo" or "block (2 levels) in
-     * foo" for blocks. */
-    private final String originalName;
+    /** The original name of the method (of the surrounding method if this is a block). Does not change when aliased.
+     * Looks like "foo". */
+    private final String methodName;
     /** The "static" name of this method at parse time, such as "M::C#foo", "M::C.foo", "<module:Inner>", "block (2
      * levels) in M::C.foo" or "block (2 levels) in <module:Inner>". */
     private final String parseName;
@@ -58,16 +58,15 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
             SourceSection sourceSection,
             LexicalScope staticLexicalScope,
             Arity arity,
-            String originalName,
+            String methodName,
             int blockDepth,
             String parseName,
             String notes,
             ArgumentDescriptor[] argumentDescriptors) {
-        assert blockDepth == 0 || originalName.startsWith("block ") : originalName;
         this.sourceSection = sourceSection;
         this.staticLexicalScope = staticLexicalScope;
         this.arity = arity;
-        this.originalName = originalName;
+        this.methodName = methodName;
         this.blockDepth = blockDepth;
         this.parseName = parseName;
         this.notes = notes;
@@ -124,6 +123,10 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         return argumentDescriptors == null ? arity.toUnnamedArgumentDescriptors() : argumentDescriptors;
     }
 
+    public boolean isMethod() {
+        return blockDepth == 0;
+    }
+
     public boolean isBlock() {
         return blockDepth > 0;
     }
@@ -132,7 +135,7 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
     public boolean isModuleBody() {
         boolean isModuleBody = arity == Arity.MODULE_BODY;
         assert !(isModuleBody && isBlock()) : this;
-        assert isModuleBody == isModuleBody(getOriginalName());
+        assert isModuleBody == (isMethod() && isModuleBody(getMethodName()));
         return isModuleBody;
     }
 
@@ -150,20 +153,9 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         }
     }
 
-    /** See {@link #originalName} */
-    public String getOriginalName() {
-        return originalName;
-    }
-
     /** Returns the method name on its own. Can start with "<" like "<module:Inner>" for module bodies. */
     public String getMethodName() {
-        return blockDepth == 0 ? originalName : notes;
-    }
-
-    /** More efficient than {@link #getMethodName()} when we know blockDepth == 0 */
-    public String getMethodNameForNotBlock() {
-        assert blockDepth == 0;
-        return originalName;
+        return methodName;
     }
 
     public String getParseName() {
@@ -273,7 +265,7 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
     }
 
     private boolean hasNotes() {
-        return notes != null && blockDepth == 0;
+        return notes != null && isMethod();
     }
 
     public String getNotes() {
@@ -292,8 +284,8 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
 
         // skip sourceSection as far as it contains not accurate location details (provided by JRuby parser)
         return StringUtils.format(
-                "SharedMethodInfo(staticLexicalScope = %s, arity = %s, originName = %s, blockDepth = %s, parseName = %s, notes = %s, argumentDescriptors = %s)",
-                staticLexicalScope, arity, originalName, blockDepth, parseName, notes, string);
+                "SharedMethodInfo(staticLexicalScope = %s, arity = %s, methodName = %s, blockDepth = %s, parseName = %s, notes = %s, argumentDescriptors = %s)",
+                staticLexicalScope, arity, methodName, blockDepth, parseName, notes, string);
     }
 
 }

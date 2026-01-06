@@ -22,7 +22,7 @@ ast: |
           polyglotRef = org.truffleruby.RubyLanguage@...
           retryProfile = false
           returnID = org.truffleruby.language.control.ReturnID@...
-          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = <main>, blockDepth = 0, parseName = <main>, notes = null, argumentDescriptors = null)
+          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = <main>, blockDepth = 0, parseName = <main>, notes = null, argumentDescriptors = null)
           sourceSection = SourceSection(source=<parse_ast> [1:1 - 1:5], index=0, length=5, characters=a = 1)
           split = HEURISTIC
       children:

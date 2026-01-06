@@ -519,18 +519,16 @@ public class YARPTranslator extends YARPBaseTranslator {
         final Arity arity = createArity(parameters);
         final ArgumentDescriptor[] argumentDescriptors = parametersNodeToArgumentDescriptors(parameters);
 
-        // "block in foo"
-        String originalName = SharedMethodInfo.getBlockName(blockDepth, methodName);
         // "block (2 levels) in M::C.foo"
         String parseName = SharedMethodInfo.getBlockName(blockDepth, methodParent.getSharedMethodInfo().getParseName());
         final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
                 getSourceSection(node),
                 environment.getStaticLexicalScopeOrNull(),
                 arity,
-                originalName,
+                methodName,
                 blockDepth,
                 parseName,
-                methodName,
+                null,
                 argumentDescriptors);
 
         // "stabby lambda" is a common name for the `->() {}` lambda syntax
@@ -3627,7 +3625,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                 environment.getReturnID());
 
         return new ModuleBodyDefinition(
-                environment.getSharedMethodInfo().getOriginalName(),
+                environment.getSharedMethodInfo().getMethodName(),
                 environment.getSharedMethodInfo(),
                 rootNode.getCallTarget(),
                 environment.getStaticLexicalScopeOrNull());

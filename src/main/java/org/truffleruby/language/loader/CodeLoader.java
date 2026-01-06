@@ -127,7 +127,7 @@ public final class CodeLoader {
                 sharedMethodInfo,
                 lexicalScope,
                 declarationContext,
-                sharedMethodInfo.getMethodNameForNotBlock(),
+                sharedMethodInfo.getMethodName(),
                 declaringModule,
                 Visibility.PUBLIC,
                 callTarget);
