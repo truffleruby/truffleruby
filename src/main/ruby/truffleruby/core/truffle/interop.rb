@@ -68,7 +68,7 @@ module Truffle
 
       def to_s
         label = @label || '<unknown>'
-        "#{@source_location}:in `#{label}'"
+        "#{@source_location}:in '#{label}'"
       end
 
       def inspect

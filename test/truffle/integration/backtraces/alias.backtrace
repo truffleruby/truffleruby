@@ -1,5 +1,5 @@
-/alias.rb:19:in `block (2 levels) in <main>': message (RuntimeError)
-	from /alias.rb:12:in `definition_name'
-	from /alias.rb:18:in `block in <main>'
-	from /backtraces.rb:17:in `check'
-	from /alias.rb:17:in `<main>'
+/alias.rb:19:in 'block (2 levels) in <main>': message (RuntimeError)
+	from /alias.rb:12:in 'Object#definition_name'
+	from /alias.rb:18:in 'block in <main>'
+	from /backtraces.rb:17:in 'Object#check'
+	from /alias.rb:17:in '<main>'

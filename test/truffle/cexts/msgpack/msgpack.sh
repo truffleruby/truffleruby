@@ -8,7 +8,7 @@ export PATH="$ruby_home/bin:$PATH"
 cd "test/truffle/cexts/msgpack" || exit 1
 
 rm -rf msgpack-ruby
-git clone --branch v1.2.6 https://github.com/msgpack/msgpack-ruby.git msgpack-ruby
+git clone --branch v1.8.0 https://github.com/msgpack/msgpack-ruby.git msgpack-ruby
 
 cd msgpack-ruby || exit 1
 export BUNDLE_PATH=vendor/bundle

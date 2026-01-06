@@ -48,7 +48,7 @@ public abstract class ToLongNode extends RubyBaseNode {
     static long coerceRubyBignum(Node node, RubyBignum value) {
         throw new RaiseException(
                 getContext(node),
-                coreExceptions(node).rangeError("bignum too big to convert into `long'", node));
+                coreExceptions(node).rangeError("bignum too big to convert into 'long'", node));
     }
 
     @Specialization

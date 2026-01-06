@@ -69,7 +69,7 @@ public final class RubyParsingRequestNode extends RubyBaseRootNode implements In
                 sharedMethodInfo,
                 context.getRootLexicalScope(), // This is a top-level parse, so the lexical scope is always the root one
                 DeclarationContext.topLevel(context),
-                sharedMethodInfo.getMethodNameForNotBlock(),
+                sharedMethodInfo.getMethodName(),
                 context.getCoreLibrary().objectClass,
                 Visibility.PUBLIC,
                 callTarget);

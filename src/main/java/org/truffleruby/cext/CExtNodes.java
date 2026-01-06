@@ -1072,7 +1072,7 @@ public abstract class CExtNodes {
                 WarningNode warningNode = lazyWarningNode.get(this);
                 if (warningNode.shouldWarn()) {
                     warningNode.warningMessage(getContext(this).getCallStack().getTopMostUserSourceSection(),
-                            StringUtils.format("global variable `%s' not initialized", name));
+                            StringUtils.format("global variable '%s' not initialized", name));
                 }
                 return nil;
             }

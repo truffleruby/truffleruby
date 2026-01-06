@@ -309,12 +309,11 @@ public final class CoreMethodNodeManager {
             parseName = moduleName + "#" + name;
         }
 
-        return new SharedMethodInfo(
+        return SharedMethodInfo.forMethod(
                 CoreLibrary.JAVA_CORE_SOURCE_SECTION,
                 LexicalScope.IGNORE,
                 arity,
                 name,
-                0,
                 parseName,
                 "builtin",
                 null);

@@ -107,14 +107,15 @@ public final class TranslatorEnvironment {
             BreakID breakID,
             FrameDescriptor descriptor,
             String modulePath) {
+        assert blockDepth == sharedMethodInfo.getBlockDepth();
+
         this.parent = parent;
 
         if (descriptor == null) {
             if (blockDepth > 0) {
                 BlockDescriptorInfo descriptorInfo = Objects.requireNonNull(parent.descriptorInfoForChildren);
                 this.frameDescriptorBuilder = newFrameDescriptorBuilderForBlock(descriptorInfo);
-                this.descriptorInfoForChildren = new BlockDescriptorInfo(
-                        descriptorInfo.getSpecialVariableAssumption());
+                this.descriptorInfoForChildren = new BlockDescriptorInfo(descriptorInfo.getSpecialVariableAssumption());
             } else {
                 var specialVariableAssumption = createSpecialVariableAssumption();
                 this.frameDescriptorBuilder = newFrameDescriptorBuilderForMethod(specialVariableAssumption);

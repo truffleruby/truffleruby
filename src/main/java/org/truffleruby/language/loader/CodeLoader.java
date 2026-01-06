@@ -22,7 +22,6 @@ import org.truffleruby.language.arguments.NoKeywordArgumentsDescriptor;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.methods.DeclarationContext;
 import org.truffleruby.language.methods.InternalMethod;
-import org.truffleruby.language.methods.SharedMethodInfo;
 import org.truffleruby.parser.ParserContext;
 import org.truffleruby.parser.ParsingParameters;
 import org.truffleruby.parser.RubySource;
@@ -107,30 +106,31 @@ public final class CodeLoader {
     public Object[] prepareArgs(RootCallTarget callTarget, ParserContext parserContext,
             DeclarationContext declarationContext, MaterializedFrame parentFrame, Object self,
             LexicalScope lexicalScope, Object[] arguments) {
-        final RubyRootNode rootNode = RubyRootNode.of(callTarget);
-        final InternalMethod parentMethod = parentFrame == null ? null : RubyArguments.getMethod(parentFrame);
+        YARPTranslatorDriver.checkParserContextAndParentFrame(parserContext, parentFrame);
 
-        final RubyModule declaringModule;
-        if ((parserContext == ParserContext.EVAL || parserContext == ParserContext.INSTANCE_EVAL) &&
-                parentFrame != null) {
-            declaringModule = parentMethod.getDeclaringModule();
-        } else if (parserContext == ParserContext.MODULE) {
-            declaringModule = (RubyModule) self;
+        final InternalMethod method;
+        if (parentFrame != null) {
+            var parentMethod = RubyArguments.getMethod(parentFrame);
+            method = parentMethod.withLexicalScope(lexicalScope).withDeclarationContext(declarationContext);
         } else {
-            declaringModule = context.getCoreLibrary().objectClass;
+            final RubyModule declaringModule;
+            if (parserContext == ParserContext.MODULE) {
+                declaringModule = (RubyModule) self;
+            } else {
+                declaringModule = context.getCoreLibrary().objectClass;
+            }
+            var rootNode = RubyRootNode.of(callTarget);
+
+            method = new InternalMethod(
+                    context,
+                    rootNode.getSharedMethodInfo(),
+                    lexicalScope,
+                    declarationContext,
+                    rootNode.getSharedMethodInfo().getMethodName(),
+                    declaringModule,
+                    Visibility.PUBLIC,
+                    callTarget);
         }
-
-        final SharedMethodInfo sharedMethodInfo = rootNode.getSharedMethodInfo();
-
-        final InternalMethod method = new InternalMethod(
-                context,
-                sharedMethodInfo,
-                lexicalScope,
-                declarationContext,
-                sharedMethodInfo.getMethodNameForNotBlock(),
-                declaringModule,
-                Visibility.PUBLIC,
-                callTarget);
 
         return RubyArguments.pack(
                 parentFrame,

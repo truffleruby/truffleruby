@@ -110,7 +110,7 @@ module Truffle
         if v && !Primitive.is_a?(v, String)
           raise TypeError, "value of #{name} must be String"
         end
-        warn "`#{name}' is deprecated", uplevel: 1 if !Primitive.nil?(v) && Warning[:deprecated]
+        warn "'#{name}' is deprecated", uplevel: 1 if !Primitive.nil?(v) && Warning[:deprecated]
         Primitive.global_variable_set :$,, v
       })
 
@@ -190,7 +190,7 @@ module Truffle
       :"$;",
       -> { Primitive.global_variable_get :"$;" },
       -> _, v {
-        warn "`$;' is deprecated", uplevel: 1 if !Primitive.nil?(v) && Warning[:deprecated]
+        warn "'$;' is deprecated", uplevel: 1 if !Primitive.nil?(v) && Warning[:deprecated]
         Primitive.global_variable_set :"$;", v
       })
 

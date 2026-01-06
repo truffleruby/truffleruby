@@ -248,7 +248,7 @@ class Dir
           if !ptr.null?
             home = ptr.read_string.force_encoding(Encoding.filesystem)
             Truffle::POSIX.truffleposix_free ptr
-            raise ArgumentError, "couldn't find home for uid `#{Process.uid}'" if home.empty?
+            raise ArgumentError, "couldn't find home for uid '#{Process.uid}'" if home.empty?
             home
           else
             Errno.handle

@@ -9,14 +9,25 @@
 def check(file)
   dir = 'test/truffle/integration/backtraces'
 
-  expected = File.open("#{dir}/#{file}") do |f|
-    f.each_line.map(&:chomp)
-  end
+  expected = File.readlines("#{dir}/#{file}", chomp: true)
+
+  overwrite = ENV['OVERWRITE_EXPECTED_BACKTRACES'] == 'true'
 
   begin
     yield
   rescue Exception => exception
     actual = exception.full_message(order: :top, highlight: false).lines.map(&:chomp)
+  end
+
+  actual = actual.map { |line|
+    line.sub(File.expand_path(dir), '')
+        .sub(dir, '')
+        .sub(/(from <internal.+):(\d+):/, '\1:LINE:')
+  }
+
+  if overwrite
+    File.write("#{dir}/#{file}", actual.join("\n") + "\n")
+    return
   end
 
   while actual.size < expected.size
@@ -28,12 +39,6 @@ def check(file)
   end
 
   success = true
-
-  actual = actual.map { |line|
-    line.sub(File.expand_path(dir), '')
-        .sub(dir, '')
-        .sub(/(from <internal.+):(\d+):/, '\1:LINE:')
-  }
 
   print = []
   expected.zip(actual).each do |e, a|

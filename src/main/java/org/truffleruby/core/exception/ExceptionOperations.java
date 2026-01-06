@@ -37,11 +37,11 @@ public abstract class ExceptionOperations {
 
     public enum ExceptionFormatter {
         // These patterns must all have 2 %s, for the method name and for the receiver string.
-        SUPER_METHOD_ERROR("super: no superclass method `%s' for %s"),
-        PROTECTED_METHOD_ERROR("protected method `%s' called for %s"),
-        PRIVATE_METHOD_ERROR("private method `%s' called for %s"),
-        NO_METHOD_ERROR("undefined method `%s' for %s"),
-        NO_LOCAL_VARIABLE_OR_METHOD_ERROR("undefined local variable or method `%s' for %s");
+        SUPER_METHOD_ERROR("super: no superclass method '%s' for %s"),
+        PROTECTED_METHOD_ERROR("protected method '%s' called for %s"),
+        PRIVATE_METHOD_ERROR("private method '%s' called for %s"),
+        NO_METHOD_ERROR("undefined method '%s' for %s"),
+        NO_LOCAL_VARIABLE_OR_METHOD_ERROR("undefined local variable or method '%s' for %s");
 
         private final String fallbackFormat;
 

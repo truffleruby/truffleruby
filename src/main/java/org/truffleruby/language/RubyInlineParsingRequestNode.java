@@ -11,12 +11,10 @@ package org.truffleruby.language;
 
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
-import org.truffleruby.annotations.Visibility;
 import org.truffleruby.language.arguments.NoKeywordArgumentsDescriptor;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.methods.DeclarationContext;
 import org.truffleruby.language.methods.InternalMethod;
-import org.truffleruby.language.methods.SharedMethodInfo;
 import org.truffleruby.parser.ParserContext;
 import org.truffleruby.parser.RubySource;
 
@@ -29,6 +27,8 @@ import com.oracle.truffle.api.nodes.ExecutableNode;
 import com.oracle.truffle.api.source.Source;
 import org.truffleruby.parser.YARPTranslatorDriver;
 
+import static org.truffleruby.language.RubyBaseNode.nil;
+
 public final class RubyInlineParsingRequestNode extends ExecutableNode {
 
     private final RubyContext context;
@@ -40,9 +40,10 @@ public final class RubyInlineParsingRequestNode extends ExecutableNode {
             RubyLanguage language,
             RubyContext context,
             Source source,
-            MaterializedFrame currentFrame) {
+            MaterializedFrame parentFrame) {
         super(language);
         this.context = context;
+        var parentMethod = RubyArguments.getMethod(parentFrame);
 
         final RubySource rubySource = new RubySource(source, language.getSourcePath(source), null, true, 0);
 
@@ -52,34 +53,27 @@ public final class RubyInlineParsingRequestNode extends ExecutableNode {
                 rubySource,
                 ParserContext.INLINE,
                 null,
-                currentFrame,
-                RubyArguments.getMethod(currentFrame).getLexicalScope(),
+                parentFrame,
+                parentMethod.getLexicalScope(),
                 null);
 
         callNode = insert(Truffle.getRuntime().createDirectCallNode(callTarget));
         callNode.forceInlining();
 
-        final SharedMethodInfo sharedMethodInfo = RubyRootNode.of(callTarget).getSharedMethodInfo();
-        this.method = new InternalMethod(
-                context,
-                sharedMethodInfo,
-                sharedMethodInfo.getStaticLexicalScope(),
-                DeclarationContext.topLevel(context),
-                sharedMethodInfo.getMethodNameForNotBlock(),
-                context.getCoreLibrary().objectClass,
-                Visibility.PUBLIC,
-                callTarget);
+        Object[] frameArguments = context.getCodeLoader().prepareArgs(callTarget, ParserContext.INLINE,
+                DeclarationContext.topLevel(context), parentFrame, nil, parentMethod.getLexicalScope(),
+                RubyBaseNode.EMPTY_ARGUMENTS);
+        this.method = RubyArguments.getMethod(frameArguments);
     }
 
     @Override
     public Object execute(VirtualFrame frame) {
         assert RubyLanguage.getCurrentContext() == context;
 
-        // We run the Ruby code as if it was written in a block
         final Object[] arguments = RubyArguments.pack(
                 frame.materialize(),
                 null,
-                method,
+                this.method,
                 null,
                 RubyArguments.getSelf(frame),
                 RubyArguments.getBlock(frame),

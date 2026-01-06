@@ -473,7 +473,7 @@ public abstract class ModuleOperations {
 
     @TruffleBoundary
     public static MethodLookupResult lookupSuperMethod(InternalMethod currentMethod, RubyModule objectMetaClass) {
-        var name = currentMethod.getSharedMethodInfo().getMethodNameForNotBlock(); // use the original name
+        var name = currentMethod.getSharedMethodInfo().getMethodName(); // use the original name
 
         var foundDeclaringModule = new Memo<>(false);
         var declaringModule = currentMethod.getDeclaringModule();

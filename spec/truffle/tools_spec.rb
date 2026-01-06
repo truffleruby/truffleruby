@@ -43,7 +43,7 @@ describe "Tools" do
       code = 'Process.kill :SIGALRM, Process.pid; sleep 1'
       out = ruby_exe(code, args: "2>&1")
       out.should.include?("All Thread and Fiber backtraces:")
-      out.should.include?(":in `show_backtraces'")
+      out.should.include?(":in 'Truffle::Debug.show_backtraces'")
     end
   end
 

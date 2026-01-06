@@ -150,7 +150,7 @@ require Primitive.get_original_require(__FILE__)
 # END OF TERMS AND CONDITIONS
 
 # Adapt code from the thread_safe gem intended to support thread-safe collections in Rubinius. TruffleRuby doesn't
-# honor `allocate' authored in Ruby like Rubinius does, so this code has been updated to use `initialize' instead.
+# honor 'allocate' authored in Ruby like Rubinius does, so this code has been updated to use 'initialize' instead.
 module ThreadSafe
   require 'monitor'
 

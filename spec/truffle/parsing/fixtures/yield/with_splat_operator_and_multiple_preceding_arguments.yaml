@@ -31,7 +31,7 @@ ast: |
           flags = 1
           isDefSingleton = false
           name = "a"
-          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = a, blockDepth = 0, parseName = Object#a, notes = null, argumentDescriptors = [])
+          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = a, blockDepth = 0, parseName = Object#a, notes = null, argumentDescriptors = [])
           sourceCharIndex = 0
           sourceLength = 32
       call targets:
@@ -50,7 +50,7 @@ ast: |
                   polyglotRef = org.truffleruby.RubyLanguage@...
                   retryProfile = false
                   returnID = org.truffleruby.language.control.ReturnID@...
-                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = a, blockDepth = 0, parseName = Object#a, notes = null, argumentDescriptors = [])
+                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = a, blockDepth = 0, parseName = Object#a, notes = null, argumentDescriptors = [])
                   sourceSection = SourceSection(source=<parse_ast> [1:1 - 3:3], index=0, length=32, characters=def a\n  yield foo, bar, *baz\nend)
                   split = HEURISTIC
               children:

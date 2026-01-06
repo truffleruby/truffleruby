@@ -1,4 +1,4 @@
-/inlined_method.rb:13:in `meth_with_inlined_plus': undefined method `+' for nil (NoMethodError)
-	from /inlined_method.rb:17:in `block in <main>'
-	from /backtraces.rb:17:in `check'
-	from /inlined_method.rb:16:in `<main>'
+/inlined_method.rb:13:in 'Object#meth_with_inlined_plus': undefined method '+' for nil (NoMethodError)
+	from /inlined_method.rb:17:in 'block in <main>'
+	from /backtraces.rb:17:in 'Object#check'
+	from /inlined_method.rb:16:in '<main>'

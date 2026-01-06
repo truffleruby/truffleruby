@@ -18,7 +18,7 @@ ast: |
           flags = 1
           isDefSingleton = false
           name = "foo"
-          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 3, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = foo, blockDepth = 0, parseName = Object#foo, notes = null, argumentDescriptors = [ArgumentDescriptor(name = a, type = req), ArgumentDescriptor(name = null, type = anonreq), ArgumentDescriptor(name = e, type = req)])
+          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 3, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = foo, blockDepth = 0, parseName = Object#foo, notes = null, argumentDescriptors = [ArgumentDescriptor(name = a, type = req), ArgumentDescriptor(name = null, type = anonreq), ArgumentDescriptor(name = e, type = req)])
           sourceCharIndex = 0
           sourceLength = 29
       call targets:
@@ -37,7 +37,7 @@ ast: |
                   polyglotRef = org.truffleruby.RubyLanguage@...
                   retryProfile = false
                   returnID = org.truffleruby.language.control.ReturnID@...
-                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 3, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = foo, blockDepth = 0, parseName = Object#foo, notes = null, argumentDescriptors = [ArgumentDescriptor(name = a, type = req), ArgumentDescriptor(name = null, type = anonreq), ArgumentDescriptor(name = e, type = req)])
+                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 3, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = foo, blockDepth = 0, parseName = Object#foo, notes = null, argumentDescriptors = [ArgumentDescriptor(name = a, type = req), ArgumentDescriptor(name = null, type = anonreq), ArgumentDescriptor(name = e, type = req)])
                   sourceSection = SourceSection(source=<parse_ast> [1:1 - 2:3], index=0, length=29, characters=def foo(a, (b, *c, d), e)\nend)
                   split = HEURISTIC
               children:

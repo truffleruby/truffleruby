@@ -201,13 +201,13 @@ module Truffle
 
     def self.check_uint(val)
       unless Primitive.integer_fits_into_uint?(val)
-        raise RangeError, "integer #{val} too #{val < 0 ? 'small' : 'big'} to convert to `uint'"
+        raise RangeError, "integer #{val} too #{val < 0 ? 'small' : 'big'} to convert to 'uint'"
       end
     end
 
     def self.check_ulong(val)
       unless Primitive.integer_fits_into_ulong?(val)
-        raise RangeError, "integer #{val} too #{val < 0 ? 'small' : 'big'} to convert to `ulong'"
+        raise RangeError, "integer #{val} too #{val < 0 ? 'small' : 'big'} to convert to 'ulong'"
       end
     end
 

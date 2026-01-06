@@ -158,7 +158,7 @@ public final class InternalMethod implements ObjectGraphNode {
             CachedLazyCallTargetSupplier callTargetSupplier) {
         assert declaringModule != null;
         assert lexicalScope != null;
-        assert !sharedMethodInfo.isBlock() : sharedMethodInfo;
+        assert sharedMethodInfo.isMethod() : sharedMethodInfo;
         assert callTarget == null || RubyRootNode.of(callTarget).getSharedMethodInfo() == sharedMethodInfo;
         this.sharedMethodInfo = sharedMethodInfo;
         this.lexicalScope = lexicalScope;
@@ -175,6 +175,8 @@ public final class InternalMethod implements ObjectGraphNode {
         this.proc = proc;
         this.callTarget = callTarget;
         this.callTargetSupplier = callTargetSupplier;
+
+        sharedMethodInfo.setupRuntimeName(declaringModule);
 
         /* If the call target supplier has already been run, then don't wait until the first time the InternalMethod is
          * asked for the call target, because this would be a deoptimization in getCallTarget(). */
@@ -200,7 +202,7 @@ public final class InternalMethod implements ObjectGraphNode {
     }
 
     public String getOriginalName() {
-        return sharedMethodInfo.getOriginalName();
+        return sharedMethodInfo.getMethodName();
     }
 
     public Visibility getVisibility() {
@@ -372,6 +374,29 @@ public final class InternalMethod implements ObjectGraphNode {
                     sharedMethodInfo,
                     lexicalScope,
                     newDeclarationContext,
+                    name,
+                    declaringModule,
+                    owner,
+                    visibility,
+                    undefined,
+                    unimplemented,
+                    builtIn,
+                    alwaysInlinedNodeFactory,
+                    activeRefinements,
+                    proc,
+                    callTarget,
+                    callTargetSupplier);
+        }
+    }
+
+    public InternalMethod withLexicalScope(LexicalScope newLexicalScope) {
+        if (newLexicalScope == lexicalScope) {
+            return this;
+        } else {
+            return new InternalMethod(
+                    sharedMethodInfo,
+                    newLexicalScope,
+                    declarationContext,
                     name,
                     declaringModule,
                     owner,

@@ -355,13 +355,13 @@ please report it to https://github.com/truffleruby/truffleruby/issues
   output = <<-OUTPUT
   1) Error:
 TestFiberBacktrace#test_backtrace:
-NoMethodError: undefined method `backtrace' for #<Fiber:0x3c8 root (created)>
-    /b/b/e/main/test/mri/tests/fiber/test_backtrace.rb:7:in `test_backtrace'
+NoMethodError: undefined method 'backtrace' for #<Fiber:0x3c8 root (created)>
+    /b/b/e/main/test/mri/tests/fiber/test_backtrace.rb:7:in 'test_backtrace'
 
 Finished tests in 0.116441s, 25.7641 tests/s, 25.7641 assertions/s.
 3 tests, 3 assertions, 0 failures, 3 errors, 0 skips
   OUTPUT
-  expected = ['Error', 'TestFiberBacktrace', 'test_backtrace', "NoMethodError: undefined method `backtrace' for #<Fiber:0x3c8 root (created)>\n    /b/b/e/main/test/mri/tests/fiber/test_backtrace.rb:7:in `test_backtrace'"]
+  expected = ['Error', 'TestFiberBacktrace', 'test_backtrace', "NoMethodError: undefined method 'backtrace' for #<Fiber:0x3c8 root (created)>\n    /b/b/e/main/test/mri/tests/fiber/test_backtrace.rb:7:in 'test_backtrace'"]
   actual = Patterns::TEST_FAILURE.match(output).captures
   assert(actual == expected, '[TEST_FAILURE] when error - captures failure type, test class, test method name and error message')
 

@@ -98,6 +98,14 @@ public final class YARPTranslatorDriver {
         this.language = context.getLanguageSlow();
     }
 
+    public static void checkParserContextAndParentFrame(ParserContext parserContext, MaterializedFrame parentFrame) {
+        if (parserContext.isTopLevel() != (parentFrame == null)) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw CompilerDirectives.shouldNotReachHere(
+                    "A frame should be given iff the context is not toplevel: " + parserContext + " " + parentFrame);
+        }
+    }
+
     public RootCallTarget parse(RubySource rubySource, ParserContext parserContext, String[] argumentNames,
             MaterializedFrame parentFrame, LexicalScope staticLexicalScope, Node currentNode) {
         return parse(rubySource, parserContext, argumentNames, parentFrame, staticLexicalScope, currentNode, null);
@@ -109,11 +117,7 @@ public final class YARPTranslatorDriver {
         this.parseEnvironment = new ParseEnvironment(language, rubySource, parserContext, currentNode);
 
         assert rubySource.isEval() == parserContext.isEval();
-
-        if (parserContext.isTopLevel() != (parentFrame == null)) {
-            throw CompilerDirectives.shouldNotReachHere(
-                    "A frame should be given iff the context is not toplevel: " + parserContext + " " + parentFrame);
-        }
+        checkParserContextAndParentFrame(parserContext, parentFrame);
 
         if (!rubySource.getEncoding().isAsciiCompatible) {
             throw new RaiseException(context, context.getCoreExceptions()
@@ -192,18 +196,32 @@ public final class YARPTranslatorDriver {
                 ? null
                 : staticLexicalScope.getLiveModule().getName();
         final String methodName = getMethodName(parserContext, parentFrame);
-        final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
-                sourceSection,
-                language.singleContext ? staticLexicalScope : null,
-                Arity.NO_ARGUMENTS,
-                methodName,
-                0,
-                methodName,
-                null,
-                null);
-
         final boolean topLevel = parserContext.isTopLevel();
         final boolean isModuleBody = topLevel;
+
+        final SharedMethodInfo sharedMethodInfo;
+        if (blockDepth == 0) {
+            sharedMethodInfo = SharedMethodInfo.forMethod(
+                    sourceSection,
+                    language.singleContext ? staticLexicalScope : null,
+                    isModuleBody ? Arity.MODULE_BODY : Arity.NO_ARGUMENTS,
+                    methodName,
+                    methodName,
+                    null,
+                    null);
+        } else {
+            sharedMethodInfo = SharedMethodInfo.forBlock(
+                    sourceSection,
+                    language.singleContext ? staticLexicalScope : null,
+                    Arity.NO_ARGUMENTS,
+                    methodName,
+                    methodName,
+                    null,
+                    blockDepth,
+                    parentEnvironment.getSharedMethodInfo(),
+                    null);
+        }
+
         final TranslatorEnvironment environment = new TranslatorEnvironment(
                 parentEnvironment,
                 parseEnvironment,
@@ -211,7 +229,7 @@ public final class YARPTranslatorDriver {
                 true,
                 isModuleBody,
                 sharedMethodInfo,
-                sharedMethodInfo.getMethodNameForNotBlock(),
+                sharedMethodInfo.getMethodName(),
                 blockDepth,
                 null,
                 null,
@@ -505,22 +523,38 @@ public final class YARPTranslatorDriver {
         if (frame == null) {
             return null;
         } else {
-            final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
-                    CoreLibrary.JAVA_CORE_SOURCE_SECTION,
-                    language.singleContext ? context.getRootLexicalScope() : null,
-                    Arity.NO_ARGUMENTS,
-                    "<unused>",
-                    0,
-                    "<unused>",
-                    "external",
-                    null);
-            final MaterializedFrame parent = RubyArguments.getDeclarationFrame(frame);
+            MaterializedFrame parent = RubyArguments.getDeclarationFrame(frame);
             assert (blockDepth == 0) == (parent == null);
+            TranslatorEnvironment parentEnvironment = environmentForFrame(context, parent, blockDepth - 1);
+
+            final SharedMethodInfo sharedMethodInfo;
+            if (blockDepth == 0) {
+                sharedMethodInfo = SharedMethodInfo.forMethod(
+                        CoreLibrary.JAVA_CORE_SOURCE_SECTION,
+                        language.singleContext ? context.getRootLexicalScope() : null,
+                        Arity.NO_ARGUMENTS,
+                        "<unused>",
+                        "<unused>",
+                        "external",
+                        null);
+            } else {
+                sharedMethodInfo = SharedMethodInfo.forBlock(
+                        CoreLibrary.JAVA_CORE_SOURCE_SECTION,
+                        language.singleContext ? context.getRootLexicalScope() : null,
+                        Arity.NO_ARGUMENTS,
+                        "<unused>",
+                        "<unused>",
+                        "external",
+                        blockDepth,
+                        parentEnvironment.getSharedMethodInfo(),
+                        null);
+            }
+
             boolean isModuleBody = blockDepth == 0 &&
                     RubyArguments.getMethod(frame).getSharedMethodInfo().isModuleBody();
 
             return new TranslatorEnvironment(
-                    environmentForFrame(context, parent, blockDepth - 1),
+                    parentEnvironment,
                     parseEnvironment,
                     parseEnvironment.allocateReturnID(),
                     true,

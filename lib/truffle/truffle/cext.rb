@@ -1377,6 +1377,10 @@ module Truffle::CExt
     sym.name
   end
 
+  def rb_id_attrset(sym)
+    :"#{sym}="
+  end
+
   def rb_const_defined?(mod, name)
     Primitive.module_const_defined? mod, name, true, false
   end
@@ -1392,7 +1396,7 @@ module Truffle::CExt
   def rb_define_class_under(mod, name, superclass)
     # nil is TypeError (checked below), false is ArgumentError
     if Primitive.false?(superclass)
-      raise ArgumentError, "no super class for `#{name}'"
+      raise ArgumentError, "no super class for '#{name}'"
     end
 
     if Primitive.module_const_defined?(mod, name, false, false)

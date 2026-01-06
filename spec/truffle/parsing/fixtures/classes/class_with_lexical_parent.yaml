@@ -11,7 +11,7 @@ ast: |
   RunModuleDefinitionNode
       attributes:
           flags = 1
-          moduleBodyDefinition = ModuleBodyDefinition(name = <class:Bar>, sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = <class:Bar>, blockDepth = 0, parseName = <class:Bar>, notes = null, argumentDescriptors = null), callTarget = <class:Bar>, staticLexicalScope =  :: null :: Object, dynamicLexicalScopes = null)
+          moduleBodyDefinition = ModuleBodyDefinition(name = <class:Bar>, sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = <class:Bar>, blockDepth = 0, parseName = <class:Bar>, notes = null, argumentDescriptors = null), callTarget = <class:Bar>, staticLexicalScope =  :: null :: Object, dynamicLexicalScopes = null)
           sourceCharIndex = 0
           sourceLength = 18
       children:
@@ -50,7 +50,7 @@ ast: |
                   lock = java.util.concurrent.locks.ReentrantLock@...[Unlocked]
                   polyglotRef = org.truffleruby.RubyLanguage@...
                   returnID = MODULE_BODY
-                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = <class:Bar>, blockDepth = 0, parseName = <class:Bar>, notes = null, argumentDescriptors = null)
+                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = <class:Bar>, blockDepth = 0, parseName = <class:Bar>, notes = null, argumentDescriptors = null)
                   sourceSection = SourceSection(source=<parse_ast> [1:1 - 2:3], index=0, length=18, characters=class Foo::Bar\nend)
                   split = NEVER
               children:

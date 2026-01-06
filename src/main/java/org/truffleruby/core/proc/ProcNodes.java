@@ -29,7 +29,6 @@ import org.truffleruby.core.binding.RubyBinding;
 import org.truffleruby.core.inlined.AlwaysInlinedMethodNode;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.method.UnboundMethodNodes.MethodRuby2KeywordsNode;
-import org.truffleruby.core.symbol.SymbolNodes;
 import org.truffleruby.language.Nil;
 import org.truffleruby.annotations.Visibility;
 import org.truffleruby.language.arguments.ArgumentDescriptorUtils;
@@ -264,8 +263,8 @@ public abstract class ProcNodes {
 
         @Specialization
         Object symbolToProcSymbol(RubyProc proc) {
-            if (proc.arity == SymbolNodes.ToProcNode.ARITY) {
-                return getSymbol(proc.getSharedMethodInfo().getOriginalName());
+            if (proc.arity == Arity.SYMBOL_TO_PROC_ARITY) {
+                return getSymbol(proc.getSharedMethodInfo().getMethodName());
             } else {
                 return nil;
             }

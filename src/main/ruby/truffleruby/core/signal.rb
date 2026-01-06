@@ -72,7 +72,7 @@ module Signal
       end
 
       unless number = Names[signal]
-        raise ArgumentError, "unsupported signal `SIG#{signal}'"
+        raise ArgumentError, "unsupported signal 'SIG#{signal}'"
       end
     else
       number = Primitive.rb_to_int signal

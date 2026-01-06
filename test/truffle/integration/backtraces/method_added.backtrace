@@ -1,7 +1,7 @@
-/fixtures/method_added.rb:3:in `method_added': foo (RuntimeError)
-	from /fixtures/method_added.rb:6:in `<module:TestMethodAdded>'
-	from /fixtures/method_added.rb:1:in `<top (required)>'
-	from <internal:core> core/kernel.rb:LINE:in `require'
-	from /method_added.rb:12:in `block in <main>'
-	from /backtraces.rb:17:in `check'
-	from /method_added.rb:11:in `<main>'
+/fixtures/method_added.rb:3:in 'TestMethodAdded.method_added': foo (RuntimeError)
+	from /fixtures/method_added.rb:6:in '<module:TestMethodAdded>'
+	from /fixtures/method_added.rb:1:in '<top (required)>'
+	from <internal:core> core/kernel.rb:LINE:in 'Kernel#require'
+	from /method_added.rb:12:in 'block in <main>'
+	from /backtraces.rb:17:in 'Object#check'
+	from /method_added.rb:11:in '<main>'

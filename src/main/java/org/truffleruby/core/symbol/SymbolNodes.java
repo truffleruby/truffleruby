@@ -131,8 +131,6 @@ public abstract class SymbolNodes {
     @ImportStatic(DeclarationContext.class)
     public abstract static class ToProcNode extends AlwaysInlinedMethodNode {
 
-        public static final Arity ARITY = new Arity(1, 0, true);
-
         public static ToProcNode create() {
             return SymbolNodesFactory.ToProcNodeFactory.create();
         }
@@ -218,12 +216,11 @@ public abstract class SymbolNodes {
                 Map<RubyModule, RubyModule[]> refinements) {
             final SourceSection sourceSection = CoreLibrary.UNAVAILABLE_SOURCE_SECTION;
 
-            final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
+            final SharedMethodInfo sharedMethodInfo = SharedMethodInfo.forMethod(
                     sourceSection,
                     LexicalScope.IGNORE,
-                    ARITY,
+                    Arity.SYMBOL_TO_PROC_ARITY,
                     symbol.getString(),
-                    0,
                     "&:" + symbol.getString(),
                     "Symbol#to_proc",
                     ArgumentDescriptor.AT_LEAST_ONE_UNNAMED);
@@ -239,7 +236,7 @@ public abstract class SymbolNodes {
                     Split.HEURISTIC,
                     ReturnID.INVALID,
                     BreakID.INVALID,
-                    ARITY);
+                    Arity.SYMBOL_TO_PROC_ARITY);
 
             return rootNode.getCallTarget();
         }

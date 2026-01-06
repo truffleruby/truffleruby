@@ -1,46 +1,46 @@
 Test error in Ruby => C ext support => Ruby
-/bin/backtraces:17:in `callback': Ruby callback error (RuntimeError)
-	from /lib/truffle/truffle/cext.rb:n:in `rb_funcallv'
-	from /src/main/c/cext/call.c:n:in `rb_funcallv'
-	from <internal:core> core/truffle/polyglot.rb:n:in `execute'
-	from <internal:core> core/truffle/polyglot.rb:n:in `call'
-	from /bin/backtraces:21:in `ruby_call'
-	from /bin/backtraces:25:in `top'
-	from /bin/backtraces:29:in `<main>'
+/bin/backtraces:17:in 'Object#callback': Ruby callback error (RuntimeError)
+	from /lib/truffle/truffle/cext.rb:n:in 'Truffle::CExt#rb_funcallv'
+	from /src/main/c/cext/call.c:n:in 'rb_funcallv'
+	from <internal:core> core/truffle/polyglot.rb:n:in 'Truffle::Interop.execute'
+	from <internal:core> core/truffle/polyglot.rb:n:in 'Polyglot::ExecutableTrait#call'
+	from /bin/backtraces:21:in 'Object#ruby_call'
+	from /bin/backtraces:25:in 'Object#top'
+	from /bin/backtraces:29:in '<main>'
 
 Test with an internal error from rb_mutex_lock()
-/lib/truffle/truffle/cext.rb:n:in `lock': deadlock; recursive locking (ThreadError)
-	from /lib/truffle/truffle/cext.rb:n:in `rb_mutex_lock'
-	from /src/main/c/cext/mutex.c:n:in `rb_mutex_lock'
-	from <internal:core> core/truffle/polyglot.rb:n:in `execute'
-	from <internal:core> core/truffle/polyglot.rb:n:in `call'
-	from /bin/backtraces:43:in `double_lock'
-	from /bin/backtraces:47:in `<main>'
+/lib/truffle/truffle/cext.rb:n:in 'Mutex#lock': deadlock; recursive locking (ThreadError)
+	from /lib/truffle/truffle/cext.rb:n:in 'Truffle::CExt#rb_mutex_lock'
+	from /src/main/c/cext/mutex.c:n:in 'rb_mutex_lock'
+	from <internal:core> core/truffle/polyglot.rb:n:in 'Truffle::Interop.execute'
+	from <internal:core> core/truffle/polyglot.rb:n:in 'Polyglot::ExecutableTrait#call'
+	from /bin/backtraces:43:in 'Object#double_lock'
+	from /bin/backtraces:47:in '<main>'
 
 Test error in Ruby => C ext => Ruby => C ext Proc => Ruby
-/bin/backtraces:57:in `block in bar': error (RuntimeError)
-	from /lib/truffle/truffle/cext.rb:n:in `rb_funcallv'
-	from /src/main/c/cext/call.c:n:in `rb_funcallv'
-	from /lib/truffle/truffle/cext.rb:n:in `block in rb_proc_new'
-	from /bin/backtraces:57:in `bar'
-	from /lib/truffle/truffle/cext.rb:n:in `rb_funcallv'
-	from /src/main/c/cext/call.c:n:in `rb_funcallv'
-	from /lib/truffle/truffle/cext_ruby.rb:n:in `foo'
-	from /bin/backtraces:62:in `<main>'
+/bin/backtraces:57:in 'block in Bar#bar': error (RuntimeError)
+	from /lib/truffle/truffle/cext.rb:n:in 'Truffle::CExt#rb_funcallv'
+	from /src/main/c/cext/call.c:n:in 'rb_funcallv'
+	from /lib/truffle/truffle/cext.rb:n:in 'block in Truffle::CExt#rb_proc_new'
+	from /bin/backtraces:57:in 'Bar#bar'
+	from /lib/truffle/truffle/cext.rb:n:in 'Truffle::CExt#rb_funcallv'
+	from /src/main/c/cext/call.c:n:in 'rb_funcallv'
+	from /lib/truffle/truffle/cext_ruby.rb:n:in 'Backtraces#foo'
+	from /bin/backtraces:62:in '<main>'
 
 Test error in the callback to the Sulong-instrinsified qsort()
 [1, 2, 3, 4]
-/bin/backtraces:74:in `block in <main>': error from Ruby called from instrinsified qsort() (RuntimeError)
-	from /lib/truffle/truffle/cext.rb:n:in `rb_funcallv'
-	from /src/main/c/cext/call.c:n:in `rb_funcallv'
-	from /lib/truffle/truffle/cext_ruby.rb:n:in `qsort'
-	from /bin/backtraces:73:in `<main>'
+/bin/backtraces:74:in 'block in <main>': error from Ruby called from instrinsified qsort() (RuntimeError)
+	from /lib/truffle/truffle/cext.rb:n:in 'Truffle::CExt#rb_funcallv'
+	from /src/main/c/cext/call.c:n:in 'rb_funcallv'
+	from /lib/truffle/truffle/cext_ruby.rb:n:in 'Backtraces#qsort'
+	from /bin/backtraces:73:in '<main>'
 
 Test error in callback from a native function
 42
-/bin/backtraces:86:in `error_helper': error from Ruby called from Sulong called from native callback (RuntimeError)
-	from /bin/backtraces:91:in `block in <main>'
-	from /lib/truffle/truffle/cext.rb:n:in `rb_funcallv'
-	from /src/main/c/cext/call.c:n:in `rb_funcallv'
-	from /lib/truffle/truffle/cext_ruby.rb:n:in `native_callback'
-	from /bin/backtraces:90:in `<main>'
+/bin/backtraces:86:in 'Object#error_helper': error from Ruby called from Sulong called from native callback (RuntimeError)
+	from /bin/backtraces:91:in 'block in <main>'
+	from /lib/truffle/truffle/cext.rb:n:in 'Truffle::CExt#rb_funcallv'
+	from /src/main/c/cext/call.c:n:in 'rb_funcallv'
+	from /lib/truffle/truffle/cext_ruby.rb:n:in 'Backtraces#native_callback'
+	from /bin/backtraces:90:in '<main>'

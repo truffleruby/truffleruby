@@ -14,6 +14,8 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.shadowed.org.jcodings.specific.EUCJPEncoding;
 import org.graalvm.shadowed.org.jcodings.specific.Windows_31JEncoding;
+import org.prism.Nodes.ConstantReadNode;
+import org.prism.Nodes.Node;
 import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -219,10 +221,10 @@ public class YARPTranslator extends YARPBaseTranslator {
         var body = node.accept(this);
         var frameDescriptor = TranslatorEnvironment.newFrameDescriptorBuilderForMethod().build();
         var sourceSection = CoreLibrary.JAVA_CORE_SOURCE_SECTION;
-        var sharedMethodInfo = new SharedMethodInfo(sourceSection, null, Arity.NO_ARGUMENTS, "<main>", 0, "<main>",
+        var sharedMethodInfo = SharedMethodInfo.forMethod(sourceSection, null, Arity.MODULE_BODY, "<main>", "<main>",
                 null, null);
         return new RubyTopLevelRootNode(language, sourceSection, frameDescriptor, sharedMethodInfo, body,
-                Split.HEURISTIC, null, Arity.NO_ARGUMENTS);
+                Split.HEURISTIC, null, Arity.MODULE_BODY);
     }
 
     @Override
@@ -517,18 +519,21 @@ public class YARPTranslator extends YARPBaseTranslator {
         final Arity arity = createArity(parameters);
         final ArgumentDescriptor[] argumentDescriptors = parametersNodeToArgumentDescriptors(parameters);
 
-        // "block in foo"
-        String originalName = SharedMethodInfo.getBlockName(blockDepth, methodName);
         // "block (2 levels) in M::C.foo"
         String parseName = SharedMethodInfo.getBlockName(blockDepth, methodParent.getSharedMethodInfo().getParseName());
-        final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
+        SharedMethodInfo methodSharedMethodInfo = environment.isBlock()
+                ? environment.getSharedMethodInfo().getMethodSharedMethodInfo()
+                : environment.getSharedMethodInfo();
+
+        final SharedMethodInfo sharedMethodInfo = SharedMethodInfo.forBlock(
                 getSourceSection(node),
                 environment.getStaticLexicalScopeOrNull(),
                 arity,
-                originalName,
-                blockDepth,
-                parseName,
                 methodName,
+                parseName,
+                null,
+                blockDepth,
+                methodSharedMethodInfo,
                 argumentDescriptors);
 
         // "stabby lambda" is a common name for the `->() {}` lambda syntax
@@ -1172,6 +1177,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         final RubyNode rubyNode = openModule(
                 node,
                 defineOrGetClass,
+                appendConstantPathToModulePath(node.constant_path),
                 node.name,
                 node.locals,
                 node.body,
@@ -1545,16 +1551,13 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         final Arity arity = createArity(parameters);
         final ArgumentDescriptor[] argumentDescriptors = parametersNodeToArgumentDescriptors(parameters);
-        final boolean isReceiverSelf = node.receiver instanceof Nodes.SelfNode;
+        final String parseName = modulePathAndMethodName(node.name, node.receiver);
 
-        final String parseName = modulePathAndMethodName(node.name, node.receiver != null, isReceiverSelf);
-
-        final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
+        final SharedMethodInfo sharedMethodInfo = SharedMethodInfo.forMethod(
                 getSourceSection(node),
                 environment.getStaticLexicalScopeOrNull(),
                 arity,
                 node.name,
-                0,
                 parseName,
                 null,
                 argumentDescriptors);
@@ -2793,6 +2796,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         final RubyNode rubyNode = openModule(
                 node,
                 defineModuleNode,
+                appendConstantPathToModulePath(node.constant_path),
                 node.name,
                 node.locals,
                 node.body,
@@ -3166,7 +3170,8 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         boolean dynamicConstantLookup = environment.isDynamicConstantLookup();
 
-        String modulePath = "<singleton class>";
+        final String moduleBasename = "<singleton class>";
+        String modulePath = moduleBasename;
         if (!dynamicConstantLookup) {
             if (environment.isModuleBody() && node.expression instanceof Nodes.SelfNode) {
                 // Common case of class << self in a module body, the constant lookup scope is still static.
@@ -3174,7 +3179,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                     // Special pattern recognized by #modulePathAndMethodName:
                     modulePath = "main::<singleton class>";
                 } else {
-                    modulePath = TranslatorEnvironment.composeModulePath(environment.modulePath, "<singleton class>");
+                    modulePath = TranslatorEnvironment.composeModulePath(environment.modulePath, moduleBasename);
                 }
             } else if (environment.isTopLevelScope()) {
                 // At the top-level of a file, opening the singleton class of an expression executed only once
@@ -3192,6 +3197,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                 node,
                 singletonClassNode,
                 modulePath,
+                moduleBasename,
                 node.locals,
                 node.body,
                 OpenModule.SINGLETON_CLASS,
@@ -3505,22 +3511,31 @@ public class YARPTranslator extends YARPBaseTranslator {
         return rubyNode;
     }
 
-    private String modulePathAndMethodName(String methodName, boolean onSingleton, boolean isReceiverSelf) {
+    private String modulePathAndMethodName(String methodName, Nodes.Node receiver) {
+        boolean onSingleton = receiver != null;
+
         String modulePath = environment.modulePath;
         if (modulePath == null) {
             if (onSingleton) {
-                if (environment.isTopLevelObjectScope() && isReceiverSelf) {
+                if (environment.isTopLevelObjectScope() && receiver instanceof Nodes.SelfNode) { // def self.foo at top-level
                     modulePath = "main";
+                } else if (environment.isTopLevelObjectScope() &&
+                        receiver instanceof Nodes.ConstantReadNode constantReadNode) { // def String.foo at top-level
+                    modulePath = constantReadNode.name;
                 } else {
-                    modulePath = "<singleton class>"; // method of an unknown singleton class
-                    onSingleton = false;
+                    return methodName; // method of an unknown singleton class
                 }
             } else {
                 if (environment.isTopLevelObjectScope()) {
                     modulePath = "Object";
                 } else {
-                    modulePath = ""; // instance method of an unknown module
+                    return methodName; // instance method of an unknown module
                 }
+            }
+        } else {
+            if (onSingleton && !(receiver instanceof Nodes.SelfNode)) {
+                // It's not defined in modulePath but potentially some other module
+                return methodName;
             }
         }
 
@@ -3544,31 +3559,22 @@ public class YARPTranslator extends YARPBaseTranslator {
     }
 
     /** Translates a module or class body to create a new module or class or "reopen" an existing one. */
-    private RubyNode openModule(Nodes.Node moduleNode, RubyNode defineOrGetNode, String moduleName,
-            String[] locals, Nodes.Node bodyNode, OpenModule type, boolean dynamicConstantLookup) {
-        final String methodName = type.format(moduleName);
+    private RubyNode openModule(Node moduleNode, RubyNode defineOrGetNode, String modulePath, String moduleBasename,
+            String[] locals, Node bodyNode, OpenModule type, boolean dynamicConstantLookup) {
+        final String methodName = type.format(moduleBasename);
 
         final LexicalScope newLexicalScope = dynamicConstantLookup
                 ? null
                 : new LexicalScope(environment.getStaticLexicalScope());
 
-        final SharedMethodInfo sharedMethodInfo = new SharedMethodInfo(
+        final SharedMethodInfo sharedMethodInfo = SharedMethodInfo.forMethod(
                 getSourceSection(moduleNode),
                 newLexicalScope,
-                Arity.NO_ARGUMENTS,
+                Arity.MODULE_BODY,
                 methodName,
-                0,
                 methodName,
                 null,
                 null);
-
-        final String modulePath;
-
-        if (type == OpenModule.SINGLETON_CLASS) {
-            modulePath = moduleName;
-        } else {
-            modulePath = TranslatorEnvironment.composeModulePath(environment.modulePath, moduleName);
-        }
 
         final TranslatorEnvironment newEnvironment = new TranslatorEnvironment(
                 environment,
@@ -3622,10 +3628,53 @@ public class YARPTranslator extends YARPBaseTranslator {
                 environment.getReturnID());
 
         return new ModuleBodyDefinition(
-                environment.getSharedMethodInfo().getOriginalName(),
+                environment.getSharedMethodInfo().getMethodName(),
                 environment.getSharedMethodInfo(),
                 rootNode.getCallTarget(),
                 environment.getStaticLexicalScopeOrNull());
+    }
+
+    private String appendConstantPathToModulePath(Nodes.Node node) {
+        if (node instanceof Nodes.ConstantReadNode constantReadNode) {
+            return TranslatorEnvironment.composeModulePath(environment.modulePath, constantReadNode.name);
+        } else if (node instanceof Nodes.ConstantPathNode pathNode) {
+            if (pathNode.parent == null) { // ::A
+                return pathNode.name;
+            }
+
+            ArrayDeque<String> parts = new ArrayDeque<>();
+            parts.addFirst(pathNode.name);
+            Nodes.Node parent = pathNode.parent;
+            boolean isAbsolute = false;
+
+            while (true) {
+                if (parent == null) {
+                    isAbsolute = true;
+                    break;
+                }
+
+                if (parent instanceof ConstantReadNode readNode) {
+                    parts.addFirst(readNode.name);
+                    break;
+                }
+
+                if (parent instanceof Nodes.ConstantPathNode parentPath) {
+                    parts.addFirst(parentPath.name);
+                    parent = parentPath.parent;
+                } else {
+                    return null; // not representable as a module path, e.g. `module expr::Foo`
+                }
+            }
+
+            String constantPath = String.join("::", parts);
+            if (isAbsolute) {
+                return constantPath;
+            } else {
+                return TranslatorEnvironment.composeModulePath(environment.modulePath, constantPath);
+            }
+        } else {
+            throw CompilerDirectives.shouldNotReachHere(node.getClass().getName());
+        }
     }
 
     /** Translates a prefix of a constant's path (e.g. A::B for A::B::C) */

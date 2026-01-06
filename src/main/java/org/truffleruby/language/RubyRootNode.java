@@ -115,12 +115,12 @@ public class RubyRootNode extends RubyBaseRootNode {
 
     @Override
     public String getName() {
-        return sharedMethodInfo.getParseName();
+        return sharedMethodInfo.getRuntimeName();
     }
 
     @Override
     public String toString() {
-        return sharedMethodInfo.getParseName();
+        return getName();
     }
 
     public SharedMethodInfo getSharedMethodInfo() {

@@ -1,1 +1,2 @@
 slow:The parse-time name of methods gives an accurate description
+slow:The RootNode#getName() of methods gives an accurate description

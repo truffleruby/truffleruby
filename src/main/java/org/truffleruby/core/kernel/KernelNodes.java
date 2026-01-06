@@ -1198,7 +1198,7 @@ public abstract class KernelNodes {
         RubySymbol methodName() {
             // the "original/definition name" of the method.
             InternalMethod internalMethod = getContext().getCallStack().getCallingMethod();
-            return getSymbol(internalMethod.getSharedMethodInfo().getMethodNameForNotBlock());
+            return getSymbol(internalMethod.getSharedMethodInfo().getMethodName());
         }
 
     }

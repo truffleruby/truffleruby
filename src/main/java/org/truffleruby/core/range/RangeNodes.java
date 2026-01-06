@@ -328,7 +328,7 @@ public abstract class RangeNodes {
                 overflow.enter();
                 throw new RaiseException(
                         getContext(),
-                        coreExceptions().rangeError("long too big to convert into `int'", this));
+                        coreExceptions().rangeError("long too big to convert into 'int'", this));
             }
 
             if (emptyProfile.profile(length < 0)) {
@@ -604,7 +604,7 @@ public abstract class RangeNodes {
                 overflow.enter();
                 throw new RaiseException(
                         getContext(),
-                        coreExceptions().rangeError("long too big to convert into `int'", this));
+                        coreExceptions().rangeError("long too big to convert into 'int'", this));
             }
 
             return new int[]{ begin, length };

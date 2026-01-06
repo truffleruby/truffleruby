@@ -61,7 +61,7 @@ module Readline
   end
 
   def self.completion_proc=(proc)
-    raise ArgumentError, "argument must respond to `call'" unless proc.respond_to?(:call)
+    raise ArgumentError, "argument must respond to 'call'" unless proc.respond_to?(:call)
 
     Primitive.readline_set_completion_proc -> buffer {
       result = proc.call(buffer)

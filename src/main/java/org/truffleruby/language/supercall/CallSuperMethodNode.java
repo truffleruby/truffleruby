@@ -52,7 +52,7 @@ public final class CallSuperMethodNode extends SpecialVariablesSendingNode {
             Object block) {
 
         if (missingProfile.profile(superMethod == null)) {
-            final String name = RubyArguments.getMethod(frame).getSharedMethodInfo().getMethodNameForNotBlock(); // use the original name
+            final String name = RubyArguments.getMethod(frame).getSharedMethodInfo().getMethodName(); // use the original name
             final Object[] methodMissingArguments = ArrayUtils.unshift(arguments, getSymbol(name));
             return callMethodMissing(self, block, descriptor, methodMissingArguments);
         }

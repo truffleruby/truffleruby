@@ -16,7 +16,7 @@ ast: |
           callTargets = ProcCallTargets(callTargetForProc = block in <top (required)>, callTargetForLambda = null, altCallTargetCompiler = ...$$Lambda$.../0x...@...)
           flags = 0
           frameOnStackMarkerSlot = 2
-          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = block in <top (required)>, blockDepth = 1, parseName = block in <top (required)>, notes = <top (required)>, argumentDescriptors = [])
+          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = <top (required)>, blockDepth = 1, parseName = block in <top (required)>, notes = null, argumentDescriptors = [])
           sourceCharIndex = 5
           sourceLength = 16
           type = PROC
@@ -32,7 +32,7 @@ ast: |
                   redoProfile = false
                   retryProfile = false
                   returnID = org.truffleruby.language.control.ReturnID@...
-                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = block in <top (required)>, blockDepth = 1, parseName = block in <top (required)>, notes = <top (required)>, argumentDescriptors = [])
+                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = <top (required)>, blockDepth = 1, parseName = block in <top (required)>, notes = null, argumentDescriptors = [])
                   sourceSection = SourceSection(source=<parse_ast> [1:6 - 3:3], index=5, length=16, characters=do\n  proc {}\nend)
                   split = HEURISTIC
               children:
@@ -105,7 +105,7 @@ ast: |
                                                                               callTargets = ProcCallTargets(callTargetForProc = block (2 levels) in <top (required)>, callTargetForLambda = null, altCallTargetCompiler = ...$$Lambda$.../0x...@...)
                                                                               flags = 0
                                                                               frameOnStackMarkerSlot = 1
-                                                                              sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = block (2 levels) in <top (required)>, blockDepth = 2, parseName = block (2 levels) in <top (required)>, notes = <top (required)>, argumentDescriptors = [])
+                                                                              sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = <top (required)>, blockDepth = 2, parseName = block (2 levels) in <top (required)>, notes = null, argumentDescriptors = [])
                                                                               sourceCharIndex = 15
                                                                               sourceLength = 2
                                                                               type = PROC
@@ -121,7 +121,7 @@ ast: |
                                                                                       redoProfile = false
                                                                                       retryProfile = false
                                                                                       returnID = org.truffleruby.language.control.ReturnID@...
-                                                                                      sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, originName = block (2 levels) in <top (required)>, blockDepth = 2, parseName = block (2 levels) in <top (required)>, notes = <top (required)>, argumentDescriptors = [])
+                                                                                      sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = <top (required)>, blockDepth = 2, parseName = block (2 levels) in <top (required)>, notes = null, argumentDescriptors = [])
                                                                                       sourceSection = SourceSection(source=<parse_ast> [2:8 - 2:9], index=15, length=2, characters={})
                                                                                       split = HEURISTIC
                                                                                   children:
