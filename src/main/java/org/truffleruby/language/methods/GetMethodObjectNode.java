@@ -15,9 +15,9 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.Frame;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
+import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.Split;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.cast.BooleanCastNode;
@@ -99,7 +99,7 @@ public abstract class GetMethodObjectNode extends RubyBaseNode {
         final RubyRootNode newRootNode = new RubyRootNode(
                 getLanguage(),
                 info.getSourceSection(),
-                new FrameDescriptor(nil),
+                RubyLanguage.newEmptyDeclarationFrameDescriptor(),
                 info,
                 newBody,
                 Split.HEURISTIC,

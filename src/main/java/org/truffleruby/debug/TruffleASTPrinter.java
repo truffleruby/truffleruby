@@ -41,7 +41,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.nodes.RootNode;
-import org.truffleruby.parser.BlockDescriptorInfo;
+import org.truffleruby.parser.FrameDescriptorInfo;
 
 public abstract class TruffleASTPrinter {
 
@@ -187,7 +187,7 @@ public abstract class TruffleASTPrinter {
 
         if (frameDepth > 0) {
             // local variable might be declared in some outer scope
-            declarationFrameDescriptor = BlockDescriptorInfo.getDeclarationFrameDescriptor(frameDescriptor, frameDepth);
+            declarationFrameDescriptor = FrameDescriptorInfo.getDeclarationFrameDescriptor(frameDescriptor, frameDepth);
         } else {
             declarationFrameDescriptor = frameDescriptor;
         }
