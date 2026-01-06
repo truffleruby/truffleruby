@@ -25,7 +25,7 @@ module Launchy::Detect
       return Windows.new if host_os_family.windows?
 
       if ruby_engine.jruby? || ruby_engine.truffleruby? then
-        # This is a bit misnamed now. But the point is the Jruby runner class avoids using `fork'.
+        # This is a bit misnamed now. But the point is the Jruby runner class avoids using 'fork'.
         return Jruby.new
       end
 

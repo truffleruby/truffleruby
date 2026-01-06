@@ -861,7 +861,7 @@ module Marshal
 
       unless Primitive.respond_to? obj, :_load_data, false
         raise TypeError,
-              "class #{name} needs to have instance method `_load_data'"
+              "class #{name} needs to have instance method '_load_data'"
       end
 
       obj._load_data construct
@@ -1075,7 +1075,7 @@ module Marshal
       extend_object obj if @modules
 
       unless Primitive.respond_to? obj, :marshal_load, true
-        raise TypeError, "instance of #{klass} needs to have method `marshal_load'"
+        raise TypeError, "instance of #{klass} needs to have method 'marshal_load'"
       end
 
       store_unique_object obj

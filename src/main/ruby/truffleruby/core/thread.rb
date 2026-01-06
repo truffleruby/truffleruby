@@ -110,7 +110,7 @@ class Thread
       thread = Primitive.thread_allocate(self)
       thread.send(:initialize, ...)
       unless Primitive.thread_initialized?(thread)
-        raise ThreadError, "uninitialized thread - check `#{Primitive.class(thread)}#initialize'"
+        raise ThreadError, "uninitialized thread - check '#{Primitive.class(thread)}#initialize'"
       end
       thread
     end

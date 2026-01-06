@@ -89,7 +89,7 @@ public abstract class ReadSimpleGlobalVariableNode extends RubyBaseNode {
     }
 
     private String globalVariableNotInitializedMessageFor(String name) {
-        return StringUtils.format("global variable `%s' not initialized", name);
+        return StringUtils.format("global variable '%s' not initialized", name);
     }
 
 }

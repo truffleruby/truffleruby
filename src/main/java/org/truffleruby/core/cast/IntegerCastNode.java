@@ -41,7 +41,7 @@ public abstract class IntegerCastNode extends RubyBaseNode {
     static int doLongToBig(Node node, long value) {
         throw new RaiseException(
                 getContext(node),
-                coreExceptions(node).rangeError("long too big to convert into `int'", node));
+                coreExceptions(node).rangeError("long too big to convert into 'int'", node));
     }
 
     @Specialization(guards = "!isImplicitLong(value)")

@@ -33,7 +33,7 @@ class Range
   # Only used if called directly with allocate + #initialize.
   # Range.new is defined in Java.
   def initialize(first, last, exclude_end = false)
-    raise NameError, "`initialize' called twice" if self.begin
+    raise NameError, "'initialize' called twice" if self.begin
 
     unless Primitive.is_a?(first, Integer) && Primitive.is_a?(last, Integer)
       begin

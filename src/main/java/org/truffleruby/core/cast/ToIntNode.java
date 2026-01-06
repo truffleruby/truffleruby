@@ -65,15 +65,15 @@ public abstract class ToIntNode extends RubyBaseNode {
         // MRI does not have this error
         throw new RaiseException(
                 getContext(),
-                coreExceptions().rangeError("long too big to convert into `int'", this));
+                coreExceptions().rangeError("long too big to convert into 'int'", this));
     }
 
     @Specialization
     int coerceRubyBignum(RubyBignum value) {
-        // not `int' to stay as compatible as possible with MRI errors
+        // not 'int' to stay as compatible as possible with MRI errors
         throw new RaiseException(
                 getContext(),
-                coreExceptions().rangeError("bignum too big to convert into `long'", this));
+                coreExceptions().rangeError("bignum too big to convert into 'long'", this));
     }
 
     @Specialization

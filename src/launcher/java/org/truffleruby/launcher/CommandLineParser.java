@@ -507,7 +507,7 @@ public class CommandLineParser {
         final BiConsumer<CommandLineParser, Boolean> feature = FEATURES.get(name);
 
         if (feature == null) {
-            LOGGER.warning("warning: unknown argument for --" + (enable ? "enable" : "disable") + ": `" + name + "'");
+            LOGGER.warning("warning: unknown argument for --" + (enable ? "enable" : "disable") + ": '" + name + "'");
         } else {
             feature.accept(this, enable);
         }
