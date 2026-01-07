@@ -63,7 +63,6 @@ import org.truffleruby.language.RubyTopLevelRootNode;
 import org.truffleruby.language.SetTopLevelBindingNode;
 import org.truffleruby.language.arguments.MissingArgumentBehavior;
 import org.truffleruby.language.arguments.ReadPreArgumentNode;
-import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.locals.FrameDescriptorNamesIterator;
 import org.truffleruby.language.locals.WriteLocalVariableNode;
@@ -101,22 +100,34 @@ public final class YARPTranslatorDriver {
         if (parserContext.isTopLevel() != (parentFrame == null)) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw CompilerDirectives.shouldNotReachHere(
-                    "A frame should be given iff the context is not toplevel: " + parserContext + " " + parentFrame);
+                    "A parent frame should be given iff the context is not toplevel: " + parserContext + " " +
+                            parentFrame);
+        }
+    }
+
+    public static void checkParserContextAndParentDescriptor(ParserContext parserContext,
+            FrameDescriptor parentDescriptor) {
+        if (parserContext.isTopLevel() != (parentDescriptor == null)) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            throw CompilerDirectives.shouldNotReachHere(
+                    "A parent FrameDescriptor should be given iff the context is not toplevel: " + parserContext + " " +
+                            parentDescriptor);
         }
     }
 
     public RootCallTarget parse(RubySource rubySource, ParserContext parserContext, String[] argumentNames,
-            MaterializedFrame parentFrame, LexicalScope staticLexicalScope, Node currentNode) {
-        return parse(rubySource, parserContext, argumentNames, parentFrame, staticLexicalScope, currentNode, null);
+            FrameDescriptor parentDescriptor, LexicalScope staticLexicalScope, Node currentNode) {
+        return parse(rubySource, parserContext, argumentNames, parentDescriptor, staticLexicalScope, currentNode, null);
     }
 
     public RootCallTarget parse(RubySource rubySource, ParserContext parserContext, String[] argumentNames,
-            MaterializedFrame parentFrame, LexicalScope staticLexicalScope, Node currentNode, ParseResult parseResult) {
+            FrameDescriptor parentDescriptor, LexicalScope staticLexicalScope, Node currentNode,
+            ParseResult parseResult) {
         byte[] sourceBytes = rubySource.getBytes();
         this.parseEnvironment = new ParseEnvironment(language, rubySource, parserContext, currentNode);
 
         assert rubySource.isEval() == parserContext.isEval();
-        checkParserContextAndParentFrame(parserContext, parentFrame);
+        checkParserContextAndParentDescriptor(parserContext, parentDescriptor);
 
         if (!rubySource.getEncoding().isAsciiCompatible) {
             throw new RaiseException(context, context.getCoreExceptions()
@@ -131,24 +142,24 @@ public final class YARPTranslatorDriver {
 
         // prepare locals in scopes
         int blockDepth = 0;
-        if (parentFrame != null) {
-            MaterializedFrame frame = parentFrame;
+        if (parentDescriptor != null) {
+            var descriptor = parentDescriptor;
 
-            while (frame != null) {
+            while (descriptor != null) {
                 ArrayList<String> names = new ArrayList<>();
 
-                for (Object identifier : FrameDescriptorNamesIterator.iterate(frame.getFrameDescriptor())) {
+                for (Object identifier : FrameDescriptorNamesIterator.iterate(descriptor)) {
                     if (identifier instanceof String name) {
                         names.add(name.intern()); // intern() for footprint
                     }
                 }
 
                 localsInScopes.add(names);
-                frame = RubyArguments.getDeclarationFrame(frame);
+                descriptor = FrameDescriptorInfo.of(descriptor).getParentDescriptor();
                 blockDepth++;
             }
 
-            parentEnvironment = environmentForFrame(parentFrame.getFrameDescriptor(), blockDepth - 1);
+            parentEnvironment = environmentForFrame(parentDescriptor, blockDepth - 1);
         } else {
             parentEnvironment = null;
         }
@@ -194,7 +205,7 @@ public final class YARPTranslatorDriver {
         final String modulePath = staticLexicalScope == null || staticLexicalScope == context.getRootLexicalScope()
                 ? null
                 : staticLexicalScope.getLiveModule().getName();
-        final String methodName = getMethodName(parserContext, parentFrame);
+        final String methodName = getMethodName(parserContext, parentDescriptor);
         final boolean topLevel = parserContext.isTopLevel();
         final boolean isModuleBody = topLevel;
 
@@ -348,12 +359,13 @@ public final class YARPTranslatorDriver {
         return rootNode.getCallTarget();
     }
 
-    private String getMethodName(ParserContext parserContext, MaterializedFrame parentFrame) {
+    private String getMethodName(ParserContext parserContext, FrameDescriptor parentDescriptor) {
         if (parserContext.isTopLevel()) {
             return parserContext.getTopLevelName();
         } else {
-            if (parentFrame != null) {
-                return RubyArguments.getMethod(parentFrame).getName();
+            if (parentDescriptor != null) {
+                return FrameDescriptorInfo.of(parentDescriptor).getSharedMethodInfo().getMethodSharedMethodInfo()
+                        .getRuntimeName();
             } else {
                 throw new UnsupportedOperationException(
                         "Could not determine the method name for parser context " + parserContext);

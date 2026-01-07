@@ -342,7 +342,7 @@ public abstract class BasicObjectNodes {
             final RootCallTarget callTarget = getContext(node).getCodeLoader().parse(
                     source,
                     ParserContext.INSTANCE_EVAL,
-                    callerFrame,
+                    callerFrame.getFrameDescriptor(),
                     lexicalScope,
                     node);
 

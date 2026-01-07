@@ -53,7 +53,7 @@ public final class RubyInlineParsingRequestNode extends ExecutableNode {
                 rubySource,
                 ParserContext.INLINE,
                 null,
-                parentFrame,
+                parentFrame.getFrameDescriptor(),
                 parentMethod.getLexicalScope(),
                 null);
 
