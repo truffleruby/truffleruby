@@ -78,7 +78,6 @@ public final class TranslatorEnvironment {
     private BreakID breakID;
 
     private final boolean ownScopeForAssignments;
-    private final boolean isModuleBody;
 
     private final TranslatorEnvironment parent;
     private final SharedMethodInfo sharedMethodInfo;
@@ -98,7 +97,6 @@ public final class TranslatorEnvironment {
             ParseEnvironment parseEnvironment,
             ReturnID returnID,
             boolean ownScopeForAssignments,
-            boolean isModuleBody,
             SharedMethodInfo sharedMethodInfo,
             String methodName,
             int blockDepth,
@@ -111,7 +109,6 @@ public final class TranslatorEnvironment {
         this.parseEnvironment = parseEnvironment;
         this.returnID = returnID;
         this.ownScopeForAssignments = ownScopeForAssignments;
-        this.isModuleBody = isModuleBody;
         this.sharedMethodInfo = sharedMethodInfo;
         this.methodName = methodName;
         this.blockDepth = blockDepth;
@@ -172,7 +169,7 @@ public final class TranslatorEnvironment {
     /** Top-level scope, i.e. from main script/load/require. The lexical scope might not be Object in the case of
      * {@code load(file, wrap=true)}. */
     public boolean isTopLevelScope() {
-        return parent == null && isModuleBody;
+        return parent == null && isModuleBody();
     }
 
     /** Top-level scope and the lexical scope is Object, and self is the "main" object */
@@ -356,7 +353,7 @@ public final class TranslatorEnvironment {
 
     /** A way to check current scope is a module/class. If in a block, isModuleBody is always false. */
     public boolean isModuleBody() {
-        return isModuleBody;
+        return sharedMethodInfo.isModuleBody();
     }
 
     public SharedMethodInfo getSharedMethodInfo() {

@@ -226,7 +226,6 @@ public final class YARPTranslatorDriver {
                 parseEnvironment,
                 parseEnvironment.allocateReturnID(),
                 true,
-                isModuleBody,
                 sharedMethodInfo,
                 sharedMethodInfo.getMethodName(),
                 blockDepth,
@@ -529,15 +528,11 @@ public final class YARPTranslatorDriver {
             var sharedMethodInfo = FrameDescriptorInfo.of(frame.getFrameDescriptor()).getSharedMethodInfo();
             assert sharedMethodInfo.getBlockDepth() == blockDepth;
 
-            boolean isModuleBody = blockDepth == 0 &&
-                    RubyArguments.getMethod(frame).getSharedMethodInfo().isModuleBody();
-
             return new TranslatorEnvironment(
                     parentEnvironment,
                     parseEnvironment,
                     parseEnvironment.allocateReturnID(),
                     true,
-                    isModuleBody,
                     sharedMethodInfo,
                     sharedMethodInfo.getMethodName(),
                     blockDepth,

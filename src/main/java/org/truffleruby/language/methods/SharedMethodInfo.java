@@ -175,14 +175,13 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         return blockDepth > 0;
     }
 
-    @TruffleBoundary
     public boolean isModuleBody() {
         boolean isModuleBody = arity == Arity.MODULE_BODY;
         assert !(isModuleBody && isBlock()) : this;
-        assert isModuleBody == (isMethod() && isModuleBody(getMethodName()));
         return isModuleBody;
     }
 
+    /** Approximate and notably wrong for {@code <<} and {@code define_method("<module:not_module_body")} */
     public static boolean isModuleBody(String name) {
         // Handles cases: <main> | <top (required)> | <module: | <class: | <singleton
         if (name.startsWith("<")) {
