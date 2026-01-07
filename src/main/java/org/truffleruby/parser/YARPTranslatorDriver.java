@@ -148,7 +148,7 @@ public final class YARPTranslatorDriver {
                 blockDepth++;
             }
 
-            parentEnvironment = environmentForFrame(context, parentFrame, blockDepth - 1);
+            parentEnvironment = environmentForFrame(parentFrame.getFrameDescriptor(), blockDepth - 1);
         } else {
             parentEnvironment = null;
         }
@@ -517,29 +517,26 @@ public final class YARPTranslatorDriver {
         parseEnvironment.allowTruffleRubyPrimitives = allowTruffleRubyPrimitives;
     }
 
-    private TranslatorEnvironment environmentForFrame(RubyContext context, MaterializedFrame frame, int blockDepth) {
-        if (frame == null) {
-            return null;
-        } else {
-            MaterializedFrame parent = RubyArguments.getDeclarationFrame(frame);
-            assert (blockDepth == 0) == (parent == null);
-            TranslatorEnvironment parentEnvironment = environmentForFrame(context, parent, blockDepth - 1);
+    private TranslatorEnvironment environmentForFrame(FrameDescriptor descriptor, int blockDepth) {
+        var info = FrameDescriptorInfo.of(descriptor);
+        var parent = info.getParentDescriptor();
+        assert (blockDepth == 0) == (parent == null);
+        TranslatorEnvironment parentEnvironment = parent == null ? null : environmentForFrame(parent, blockDepth - 1);
 
-            var sharedMethodInfo = FrameDescriptorInfo.of(frame.getFrameDescriptor()).getSharedMethodInfo();
-            assert sharedMethodInfo.getBlockDepth() == blockDepth;
+        var sharedMethodInfo = info.getSharedMethodInfo();
+        assert sharedMethodInfo.getBlockDepth() == blockDepth;
 
-            return new TranslatorEnvironment(
-                    parentEnvironment,
-                    parseEnvironment,
-                    parseEnvironment.allocateReturnID(),
-                    true,
-                    sharedMethodInfo,
-                    sharedMethodInfo.getMethodName(),
-                    blockDepth,
-                    null,
-                    frame.getFrameDescriptor(),
-                    "<unused>");
-        }
+        return new TranslatorEnvironment(
+                parentEnvironment,
+                parseEnvironment,
+                parseEnvironment.allocateReturnID(),
+                true,
+                sharedMethodInfo,
+                sharedMethodInfo.getMethodName(),
+                blockDepth,
+                null,
+                descriptor,
+                "<unused>");
     }
 
     public static void printParseTranslateExecuteMetric(String id, RubyContext context, Source source) {
