@@ -48,7 +48,6 @@ import org.prism.ParsingOptions;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.Split;
-import org.truffleruby.core.CoreLibrary;
 import org.truffleruby.core.binding.BindingNodes;
 import org.truffleruby.core.binding.SetBindingFrameForEvalNode;
 import org.truffleruby.core.encoding.Encodings;
@@ -527,28 +526,8 @@ public final class YARPTranslatorDriver {
             assert (blockDepth == 0) == (parent == null);
             TranslatorEnvironment parentEnvironment = environmentForFrame(context, parent, blockDepth - 1);
 
-            final SharedMethodInfo sharedMethodInfo;
-            if (blockDepth == 0) {
-                sharedMethodInfo = SharedMethodInfo.forMethod(
-                        CoreLibrary.JAVA_CORE_SOURCE_SECTION,
-                        language.singleContext ? context.getRootLexicalScope() : null,
-                        Arity.NO_ARGUMENTS,
-                        "<unused>",
-                        "<unused>",
-                        "external",
-                        null);
-            } else {
-                sharedMethodInfo = SharedMethodInfo.forBlock(
-                        CoreLibrary.JAVA_CORE_SOURCE_SECTION,
-                        language.singleContext ? context.getRootLexicalScope() : null,
-                        Arity.NO_ARGUMENTS,
-                        "<unused>",
-                        "<unused>",
-                        "external",
-                        blockDepth,
-                        parentEnvironment.getSharedMethodInfo(),
-                        null);
-            }
+            var sharedMethodInfo = FrameDescriptorInfo.of(frame.getFrameDescriptor()).getSharedMethodInfo();
+            assert sharedMethodInfo.getBlockDepth() == blockDepth;
 
             boolean isModuleBody = blockDepth == 0 &&
                     RubyArguments.getMethod(frame).getSharedMethodInfo().isModuleBody();
