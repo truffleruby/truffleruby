@@ -107,7 +107,7 @@ public final class CodeLoader {
     public Object[] prepareArgs(RootCallTarget callTarget, ParserContext parserContext,
             DeclarationContext declarationContext, MaterializedFrame parentFrame, Object self,
             LexicalScope lexicalScope, Object[] arguments) {
-        YARPTranslatorDriver.checkParserContextAndParentFrame(parserContext, parentFrame);
+        assert parserContext.isTopLevel() == (parentFrame == null) : "Only give a parentFrame if not toplevel";
 
         final InternalMethod method;
         if (parentFrame != null) {

@@ -36,11 +36,9 @@
  */
 package org.truffleruby.parser;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -96,25 +94,6 @@ public final class YARPTranslatorDriver {
         this.language = context.getLanguageSlow();
     }
 
-    public static void checkParserContextAndParentFrame(ParserContext parserContext, MaterializedFrame parentFrame) {
-        if (parserContext.isTopLevel() != (parentFrame == null)) {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            throw CompilerDirectives.shouldNotReachHere(
-                    "A parent frame should be given iff the context is not toplevel: " + parserContext + " " +
-                            parentFrame);
-        }
-    }
-
-    public static void checkParserContextAndParentDescriptor(ParserContext parserContext,
-            FrameDescriptor parentDescriptor) {
-        if (parserContext.isTopLevel() != (parentDescriptor == null)) {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            throw CompilerDirectives.shouldNotReachHere(
-                    "A parent FrameDescriptor should be given iff the context is not toplevel: " + parserContext + " " +
-                            parentDescriptor);
-        }
-    }
-
     public RootCallTarget parse(RubySource rubySource, ParserContext parserContext, String[] argumentNames,
             FrameDescriptor parentDescriptor, LexicalScope staticLexicalScope, Node currentNode) {
         return parse(rubySource, parserContext, argumentNames, parentDescriptor, staticLexicalScope, currentNode, null);
@@ -123,11 +102,11 @@ public final class YARPTranslatorDriver {
     public RootCallTarget parse(RubySource rubySource, ParserContext parserContext, String[] argumentNames,
             FrameDescriptor parentDescriptor, LexicalScope staticLexicalScope, Node currentNode,
             ParseResult parseResult) {
+        assert rubySource.isEval() == parserContext.isEval();
+        assert parserContext.isTopLevel() == (parentDescriptor == null) : "Only give parentDescriptor if not toplevel";
+
         byte[] sourceBytes = rubySource.getBytes();
         this.parseEnvironment = new ParseEnvironment(language, rubySource, parserContext, currentNode);
-
-        assert rubySource.isEval() == parserContext.isEval();
-        checkParserContextAndParentDescriptor(parserContext, parentDescriptor);
 
         if (!rubySource.getEncoding().isAsciiCompatible) {
             throw new RaiseException(context, context.getCoreExceptions()
