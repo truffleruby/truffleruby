@@ -128,6 +128,20 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
                 ArgumentDescriptor.ANY_UNNAMED);
     }
 
+    public SharedMethodInfo addOneBlockDepth() {
+        int blockDepth = this.blockDepth + 1;
+        return forBlock(
+                sourceSection,
+                staticLexicalScope,
+                Arity.NO_ARGUMENTS,
+                methodName,
+                getBlockName(blockDepth, methodName),
+                null,
+                blockDepth,
+                getMethodSharedMethodInfo(),
+                null);
+    }
+
     public SourceSection getSourceSection() {
         return sourceSection;
     }
@@ -161,14 +175,13 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         return blockDepth > 0;
     }
 
-    @TruffleBoundary
     public boolean isModuleBody() {
         boolean isModuleBody = arity == Arity.MODULE_BODY;
         assert !(isModuleBody && isBlock()) : this;
-        assert isModuleBody == (isMethod() && isModuleBody(getMethodName()));
         return isModuleBody;
     }
 
+    /** Approximate and notably wrong for {@code <<} and {@code define_method("<module:not_module_body")} */
     public static boolean isModuleBody(String name) {
         // Handles cases: <main> | <top (required)> | <module: | <class: | <singleton
         if (name.startsWith("<")) {
@@ -309,7 +322,7 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
     }
 
     public SharedMethodInfo getMethodSharedMethodInfo() {
-        return methodSharedMethodInfo;
+        return methodSharedMethodInfo != null ? methodSharedMethodInfo : this;
     }
 
     private boolean hasNotes() {

@@ -22,7 +22,7 @@ import org.truffleruby.language.arguments.NoKeywordArgumentsDescriptor;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.loader.CodeLoader;
 import org.truffleruby.language.methods.DeclarationContext;
-import org.truffleruby.parser.BlockDescriptorInfo;
+import org.truffleruby.parser.FrameDescriptorInfo;
 import org.truffleruby.parser.ParserContext;
 import org.truffleruby.parser.RubySource;
 import org.truffleruby.parser.TranslatorEnvironment;
@@ -53,12 +53,13 @@ public abstract class DebugHelpers {
         final int nArgs = arguments.length / 2;
 
         final DeclarationContext declarationContext = RubyArguments.getDeclarationContext(currentFrame);
+        var currentMethod = RubyArguments.getMethod(currentFrame);
 
-        final LexicalScope lexicalScope = RubyArguments.getMethod(currentFrame).getLexicalScope();
+        final LexicalScope lexicalScope = currentMethod.getLexicalScope();
         final Object[] packedArguments = RubyArguments.pack(
                 null,
                 null,
-                RubyArguments.getMethod(currentFrame),
+                currentMethod,
                 declarationContext,
                 null,
                 RubyArguments.getSelf(currentFrame),
@@ -67,8 +68,8 @@ public abstract class DebugHelpers {
                 RubyNode.EMPTY_ARGUMENTS);
 
 
-        var builder = TranslatorEnvironment
-                .newFrameDescriptorBuilderForBlock(new BlockDescriptorInfo(currentFrameDescriptor));
+        var builder = TranslatorEnvironment.newFrameDescriptorBuilderForBlock(
+                new FrameDescriptorInfo(currentFrameDescriptor, currentMethod.getSharedMethodInfo()));
 
         for (int i = 0; i < nArgs; i++) {
             final Object identifier = arguments[i * 2];
@@ -88,7 +89,8 @@ public abstract class DebugHelpers {
 
         final RootCallTarget callTarget = context
                 .getCodeLoader()
-                .parse(new RubySource(source, "debug-eval"), ParserContext.INLINE, evalFrame, lexicalScope, null);
+                .parse(new RubySource(source, "debug-eval"), ParserContext.INLINE, evalFrame.getFrameDescriptor(),
+                        lexicalScope, null);
 
         final CodeLoader.DeferredCall deferredCall = context.getCodeLoader().prepareExecute(
                 callTarget,

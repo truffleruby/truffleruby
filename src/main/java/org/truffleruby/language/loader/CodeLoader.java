@@ -9,6 +9,7 @@
  */
 package org.truffleruby.language.loader;
 
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.source.Source;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -72,11 +73,11 @@ public final class CodeLoader {
     @TruffleBoundary
     public RootCallTarget parse(RubySource source,
             ParserContext parserContext,
-            MaterializedFrame parentFrame,
+            FrameDescriptor parentDescriptor,
             LexicalScope lexicalScope,
             Node currentNode) {
         final YARPTranslatorDriver translator = new YARPTranslatorDriver(context);
-        return translator.parse(source, parserContext, null, parentFrame, lexicalScope, currentNode);
+        return translator.parse(source, parserContext, null, parentDescriptor, lexicalScope, currentNode);
     }
 
     @TruffleBoundary
@@ -106,7 +107,7 @@ public final class CodeLoader {
     public Object[] prepareArgs(RootCallTarget callTarget, ParserContext parserContext,
             DeclarationContext declarationContext, MaterializedFrame parentFrame, Object self,
             LexicalScope lexicalScope, Object[] arguments) {
-        YARPTranslatorDriver.checkParserContextAndParentFrame(parserContext, parentFrame);
+        assert parserContext.isTopLevel() == (parentFrame == null) : "Only give a parentFrame if not toplevel";
 
         final InternalMethod method;
         if (parentFrame != null) {

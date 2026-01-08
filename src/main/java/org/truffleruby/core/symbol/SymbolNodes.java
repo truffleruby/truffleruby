@@ -56,7 +56,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -230,7 +229,7 @@ public abstract class SymbolNodes {
             final RubyLambdaRootNode rootNode = new RubyLambdaRootNode(
                     language,
                     sourceSection,
-                    new FrameDescriptor(nil),
+                    RubyLanguage.newEmptyDeclarationFrameDescriptor(),
                     sharedMethodInfo,
                     new SymbolProcNode(symbol.getString()),
                     Split.HEURISTIC,

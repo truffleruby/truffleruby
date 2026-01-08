@@ -26,6 +26,7 @@ import org.truffleruby.RubyContext;
 import org.truffleruby.interop.TranslateInteropExceptionNode;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.arguments.RubyArguments;
+import org.truffleruby.parser.FrameDescriptorInfo;
 
 @ExportLibrary(InteropLibrary.class)
 public final class SpecialVariableStorage implements TruffleObject {
@@ -47,17 +48,11 @@ public final class SpecialVariableStorage implements TruffleObject {
     }
 
     public static Assumption getAssumption(FrameDescriptor descriptor) {
-        assert hasSpecialVariableStorageSlot(descriptor);
-        return (Assumption) descriptor.getInfo();
+        return FrameDescriptorInfo.of(descriptor).getSpecialVariableAssumption();
     }
 
     public static boolean isSpecialVariableAssumption(Assumption assumption) {
         return assumption.getName() == ASSUMPTION_NAME;
-    }
-
-    public static boolean hasSpecialVariableAssumption(FrameDescriptor descriptor) {
-        var info = descriptor.getInfo();
-        return info instanceof Assumption assumption && isSpecialVariableAssumption(assumption);
     }
 
     public static boolean hasSpecialVariableStorageSlot(Frame frame) {
@@ -68,8 +63,7 @@ public final class SpecialVariableStorage implements TruffleObject {
     private static boolean hasSpecialVariableStorageSlot(FrameDescriptor descriptor) {
         assert SLOT_INDEX < descriptor.getNumberOfSlots();
         assert descriptor.getSlotName(SLOT_INDEX) == SLOT_NAME;
-        Assumption assumption = (Assumption) descriptor.getInfo();
-        return isSpecialVariableAssumption(assumption);
+        return isSpecialVariableAssumption(getAssumption(descriptor));
     }
 
     /** $~ */

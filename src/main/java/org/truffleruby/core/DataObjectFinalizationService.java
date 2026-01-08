@@ -36,7 +36,7 @@ public final class DataObjectFinalizationService
         @Child private InteropLibrary callNode;
 
         public DataObjectFinalizerRootNode(RubyLanguage language) {
-            super(language, RubyLanguage.EMPTY_FRAME_DESCRIPTOR, null);
+            super(language, RubyLanguage.newEmptyDeclarationFrameDescriptor(), null);
 
             callNode = InteropLibrary.getFactory().createDispatched(1);
         }

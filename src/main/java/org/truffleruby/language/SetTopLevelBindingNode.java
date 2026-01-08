@@ -30,7 +30,7 @@ public final class SetTopLevelBindingNode extends RubyContextSourceNode {
     private void updateTopLevelBindingFrame(MaterializedFrame mainScriptFrame) {
         final ModuleFields fields = coreLibrary().objectClass.fields;
         final RubyBinding toplevelBinding = (RubyBinding) fields.getConstant("TOPLEVEL_BINDING").getValue();
-        BindingNodes.insertAncestorFrame(toplevelBinding, mainScriptFrame);
+        BindingNodes.insertAncestorFrame(getLanguage(), toplevelBinding, mainScriptFrame);
     }
 
     @Override
