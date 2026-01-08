@@ -139,6 +139,7 @@ import org.truffleruby.language.objects.MetaClassNode;
 import org.truffleruby.language.objects.SingletonClassNode;
 import org.truffleruby.language.objects.WriteObjectFieldNode;
 import org.truffleruby.language.objects.shared.SharedObjects;
+import org.truffleruby.parser.FrameDescriptorInfo;
 import org.truffleruby.parser.ParserContext;
 import org.truffleruby.parser.RubySource;
 import org.truffleruby.parser.TranslatorEnvironment;
@@ -737,7 +738,7 @@ public abstract class KernelNodes {
                 @Cached("libFile.getEncoding(node, file)") RubyEncoding cachedFileEnc,
                 @Cached("line") int cachedLine,
                 @Cached("getBindingDescriptor(binding)") FrameDescriptor bindingDescriptor,
-                @Cached("parse(node, cachedSource, cachedSourceEnc, getLexicalScope(binding), bindingDescriptor, getJavaString(file), cachedLine)") RootCallTarget callTarget,
+                @Cached("parse(node, cachedSource, cachedSourceEnc, bindingDescriptor, getJavaString(file), cachedLine)") RootCallTarget callTarget,
                 @Cached("assignsNewUserVariables(getDescriptor(callTarget))") boolean assignsNewUserVariables,
                 @Cached("create(callTarget)") DirectCallNode callNode,
                 @Cached StringHelperNodes.EqualSameEncodingNode codeEqualNode,
@@ -754,7 +755,7 @@ public abstract class KernelNodes {
                 @Cached ToJavaStringNode toJavaStringNode) {
 
             var callTarget = parse(node, libSource.getTString(node, source), libSource.getEncoding(node, source),
-                    getLexicalScope(binding), binding.getFrame().getFrameDescriptor(),
+                    binding.getFrame().getFrameDescriptor(),
                     toJavaStringNode.execute(node, file), line);
             boolean assignsNewUserVariables = assignsNewUserVariables(getDescriptor(callTarget));
 
@@ -780,19 +781,16 @@ public abstract class KernelNodes {
 
         @TruffleBoundary
         protected static RootCallTarget parse(Node node, AbstractTruffleString sourceText, RubyEncoding encoding,
-                LexicalScope lexicalScope, FrameDescriptor parentDescriptor, String file, int line) {
+                FrameDescriptor parentDescriptor, String file, int line) {
             //intern() to improve footprint
             final String sourceFile = file.intern();
             final RubySource source = EvalLoader.createEvalSource(getContext(node), sourceText, encoding, "eval",
                     sourceFile, line, node);
+            final LexicalScope lexicalScope = FrameDescriptorInfo.of(parentDescriptor).getSharedMethodInfo()
+                    .getStaticLexicalScopeOrNull();
             return getContext(node)
                     .getCodeLoader()
                     .parse(source, ParserContext.EVAL, parentDescriptor, lexicalScope, node);
-        }
-
-        // TODO: can we use SharedMethodInfo#staticLexicalScope instead?
-        static LexicalScope getLexicalScope(RubyBinding binding) {
-            return RubyArguments.getMethod(binding.getFrame()).getLexicalScope();
         }
 
         protected FrameDescriptor getBindingDescriptor(RubyBinding binding) {
