@@ -4,7 +4,22 @@ Always release from a release branch (to avoid ever setting `"release": True,` o
 
 The TruffleRuby version to be released is denoted as `$TRUFFLERUBY_VERSION` below.
 
+## Create a cutoff branch
+
+(only for a new major release)
+
+The branch name should be `cutoff/$MAJOR`, e.g. `cutoff/33`.
+
+```bash
+git checkout -b cutoff/$MAJOR
+git push -u origin
+```
+
+This branch marks the last commit both in `master` and the release branch.
+
 ## Create a release branch
+
+(only for a new major release)
 
 The branch name should be `release/$MAJOR`, e.g. `release/33`.
 
