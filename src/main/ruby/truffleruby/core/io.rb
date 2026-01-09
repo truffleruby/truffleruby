@@ -2068,7 +2068,7 @@ class IO
   def set_encoding(external, internal = nil, **options)
     if !Primitive.nil?(internal)
       unless Primitive.nil?(external) || Primitive.is_a?(external, Encoding)
-        external = Truffle::IOOperations.parse_external_enc(self, StringValue(external))
+        external = Truffle::IOOperations.parse_external_enc(self, StringValue(external), @mode)
       end
 
       unless Primitive.is_a?(internal, Encoding)
