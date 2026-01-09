@@ -47,6 +47,7 @@ Compatibility:
 * Define `Data#initialize` to help deserializing Data instances (@eregon).
 * Fix `Rational()` and arguments type conversion (#3969, #3954 @andrykonchin).
 * Support `Rational()` with `exception` keyword argument (#3969, @andrykonchin).
+* Ignore `bom|` prefix if file is not opened for reading (#4079, @rwstauner).
 
 Performance:
 
