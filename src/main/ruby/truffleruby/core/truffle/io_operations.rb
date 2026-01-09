@@ -414,20 +414,24 @@ module Truffle
 
     BOM = /\Abom\|/i
 
-    def self.parse_external_enc(io, external)
+    def self.parse_external_enc(io, external, mode)
       if BOM.match?(external)
         external = external[4..-1]
-        strip_bom_for_regular_file(io) || Encoding.find(external)
-      else
-        Encoding.find(external)
+        if (mode & FMODE_READABLE) == 1
+          if found = strip_bom_for_regular_file(io)
+            return found
+          end
+        end
       end
+
+      Encoding.find(external)
     end
 
     # MRI: parse_mode_enc
     # Parses string as "external" or "external:internal" or "external:-"
     def self.parse_mode_enc(io, mode, string)
       external, internal = string.split(':', 2)
-      external = parse_external_enc(io, external)
+      external = parse_external_enc(io, external, mode)
 
       if internal
         if internal == '-' # Special case - "-" => no transcoding
