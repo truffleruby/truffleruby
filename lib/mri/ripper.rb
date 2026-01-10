@@ -1,8 +1,13 @@
 # frozen_string_literal: true
-require 'ripper/core'
-require 'ripper/lexer'
-require 'ripper/filter'
-require 'ripper/sexp'
+
+require 'prism'
+require 'prism/translation/ripper/shim'
+return
+
+# require 'ripper/core'
+# require 'ripper/lexer'
+# require 'ripper/filter'
+# require 'ripper/sexp'
 
 # Ripper is a Ruby script parser.
 #
@@ -71,4 +76,5 @@ require 'ripper/sexp'
 # - Minero Aoki
 # - aamine@loveruby.net
 # - http://i.loveruby.net
-class Ripper; end
+# TruffleRuby: to prevent excessive warnings like "ripper.rb:79: warning: statement not reached"
+# class Ripper; end

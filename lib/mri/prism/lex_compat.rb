@@ -2,7 +2,7 @@
 # :markup: markdown
 
 require "delegate"
-require "ripper"
+require "prism/ripper_for_lex_compat"
 
 module Prism
   # This class is responsible for lexing the source using prism and then
@@ -636,7 +636,8 @@ module Prism
       # In previous versions of Ruby, Ripper wouldn't flush the bom before the
       # first token, so we had to have a hack in place to account for that. This
       # checks for that behavior.
-      bom_flushed = Ripper.lex("\xEF\xBB\xBF# test")[0][0][1] == 0
+      # TruffleRuby: hardcode exact value, that is true on Ruby 3.3.5
+      bom_flushed = true # Ripper.lex("\xEF\xBB\xBF# test")[0][0][1] == 0
       bom = source.byteslice(0..2) == "\xEF\xBB\xBF"
 
       result_value.each_with_index do |(token, lex_state), index|
