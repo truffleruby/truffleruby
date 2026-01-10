@@ -134,6 +134,16 @@ Pass it the `$TRUFFLERUBY_VERSION`.
 
 Follow [the documentation to updating Ruby Installers](updating-ruby-installers.md).
 
+## Issue Tracker
+
+* Close the [Milestone](https://github.com/truffleruby/truffleruby/milestones) and set the date (using the `Edit` button) to the date of the GitHub release.
+* Consider commenting on issues fixed by that release (using [Milestones](https://github.com/truffleruby/truffleruby/milestones))
+
+## Social
+
+* Post about the release on Bluesky and Mastodon.
+* Consider creating a discussion on Reddit and Lobster about the release.
+
 ---
 ---
 ---
