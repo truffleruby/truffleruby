@@ -119,6 +119,7 @@ Go to https://central.sonatype.com/publishing and use `Publish Component`.
 Upload the `maven-bundle-signed.tar.gz` from the previous step.
 There is [documentation about that](https://central.sonatype.org/publish/publish-portal-upload/).
 Publish it.
+Publishing takes about 5 minutes.
 
 ## Publish GitHub release
 
