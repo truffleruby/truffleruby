@@ -18,20 +18,20 @@ You can install either of those:
 
 Native Standalone:
 ```bash
-RVM:    $ rvm install truffleruby # or truffleruby-head
-rbenv:  $ rbenv install truffleruby-VERSION
-chruby: $ ruby-install truffleruby
-        $ ruby-build -d truffleruby-VERSION ~/.rubies
-asdf:   $ asdf install ruby truffleruby-VERSION
-mise:   $ mise install ruby@truffleruby-VERSION
+$ rbenv install truffleruby-VERSION
+$ ruby-build -d truffleruby-VERSION ~/.rubies
+$ asdf install ruby truffleruby-VERSION
+$ mise install ruby@truffleruby-VERSION
+$ ruby-install truffleruby
+$ rvm install truffleruby # or truffleruby-head
 ```
 JVM Standalone:
 ```bash
-rbenv:  $ rbenv install truffleruby+graalvm-VERSION
-chruby: $ ruby-install truffleruby-graalvm
-        $ ruby-build -d truffleruby+graalvm-VERSION ~/.rubies
-asdf:   $ asdf install ruby truffleruby+graalvm-VERSION
-mise:   $ mise install ruby@truffleruby+graalvm-VERSION
+$ rbenv install truffleruby+graalvm-VERSION
+$ ruby-build -d truffleruby+graalvm-VERSION ~/.rubies
+$ asdf install ruby truffleruby+graalvm-VERSION
+$ mise install ruby@truffleruby+graalvm-VERSION
+$ ruby-install truffleruby-graalvm
 ```
 
 * In CI with GitHub Actions, see [Testing TruffleRuby in CI](doc/user/testing-truffleruby-in-ci.md) for more details and other CIs.
