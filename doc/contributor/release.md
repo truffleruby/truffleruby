@@ -4,6 +4,8 @@ Always release from a release branch (to avoid ever setting `"release": True,` o
 
 The TruffleRuby version to be released is denoted as `$TRUFFLERUBY_VERSION` below.
 
+See [the end of this page](release.md#backporting-changes-from-master) for how to backport changes.
+
 ## Create a cutoff branch
 
 (only for a new major release)
@@ -142,10 +144,8 @@ Follow [the documentation to updating Ruby Installers](updating-ruby-installers.
 ## Social
 
 * Post about the release on Bluesky and Mastodon.
-* Consider creating a discussion on Reddit and Lobster about the release.
+* Consider creating a discussion on Reddit and Lobsters about the release.
 
----
----
 ---
 
 ## Backporting changes from master
@@ -153,3 +153,5 @@ Follow [the documentation to updating Ruby Installers](updating-ruby-installers.
 Either `git cherry-pick -m 1 MERGE_COMMIT` the relevant merge commits,
 or merge all changes from `master` with `git merge master`.
 Be careful to not add newer releases in [CHANGELOG.md](../../CHANGELOG.md).
+
+You can use `git log --merges release/$MAJOR..master` to get a list of merged PRs in master but not in the release branch.
