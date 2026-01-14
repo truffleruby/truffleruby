@@ -9,6 +9,7 @@ Bug fixes:
 
 Compatibility:
 
+* Update error message of `Array#fetch` with key out of range (#4085, @herwinw).
 
 Performance:
 
