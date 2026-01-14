@@ -411,10 +411,16 @@ class Array
 
       return default unless Primitive.undefined?(default)
 
-      raise IndexError, "index #{idx} out of bounds"
+      raise IndexError, "index #{orig} outside of array bounds: #{-size}...#{size}"
     end
 
     at(idx)
+  end
+
+  def fetch_values(*idxs, &block)
+    idxs.map do |idx|
+      fetch(idx, &block)
+    end
   end
 
   private def fill_internal(a = undefined, b = undefined, c = undefined)

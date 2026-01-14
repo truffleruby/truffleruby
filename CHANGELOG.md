@@ -10,6 +10,8 @@ Bug fixes:
 Compatibility:
 * Implement `String#append_as_bytes` for Ruby 3.4 (#4087, @Earlopain).
 
+* Update error message of `Array#fetch` with key out of range (#4085, @herwinw).
+* Implement `Array#fetch_values` for Ruby 3.4 (#4085, @herwinw).
 
 Performance:
 
