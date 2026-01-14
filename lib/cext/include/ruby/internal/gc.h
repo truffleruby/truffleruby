@@ -845,6 +845,11 @@ rb_obj_write(
 }
 
 RBIMPL_ATTR_DEPRECATED(("Will be removed soon"))
+#ifdef TRUFFLERUBY
+// For -Werror. Remove the function entirely in 4.0 like upstream.
 static inline void rb_gc_force_recycle(VALUE _obj){ (void)_obj; }
+#else
+static inline void rb_gc_force_recycle(VALUE obj){}
+#endif
 
 #endif /* RBIMPL_GC_H */
