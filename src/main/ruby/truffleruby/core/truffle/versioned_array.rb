@@ -340,6 +340,11 @@ class Truffle::VersionedArray < Array
     copy.fetch(*args, &block)
   end
 
+  def fetch_values(*args, &block)
+    copy = TruffleRuby.synchronized(@lock) { Array.new self }
+    copy.fetch_values(*args, &block)
+  end
+
   def filter(*args, &block)
     copy = TruffleRuby.synchronized(@lock) { Array.new self }
     copy.filter(*args, &block)

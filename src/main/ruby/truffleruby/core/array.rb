@@ -417,6 +417,12 @@ class Array
     at(idx)
   end
 
+  def fetch_values(*idxs, &block)
+    idxs.map do |idx|
+      fetch(idx, &block)
+    end
+  end
+
   private def fill_internal(a = undefined, b = undefined, c = undefined)
     Primitive.check_frozen self
 
