@@ -8,6 +8,7 @@ Bug fixes:
 
 
 Compatibility:
+* Implement `String#append_as_bytes` for Ruby 3.4 (#4087, @Earlopain).
 
 
 Performance:

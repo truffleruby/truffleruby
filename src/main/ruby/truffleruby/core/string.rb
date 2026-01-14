@@ -1177,6 +1177,21 @@ class String
     nil
   end
 
+  def append_as_bytes(*args)
+    Primitive.check_mutable_string self
+
+    args.each do |arg|
+      case arg
+      when String
+        Primitive.string_byte_append(self, arg)
+      when Integer
+        Primitive.string_byte_append(self, (arg % 256).chr)
+      else
+        raise TypeError, "wrong argument type #{Primitive.class(arg).name} (expected String or Integer)"
+      end
+    end
+  end
+
   def byteindex(str, start = 0)
     is_regex_pattern = Primitive.is_a?(str, Regexp)
 
