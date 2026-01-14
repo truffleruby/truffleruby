@@ -60,6 +60,10 @@ module Polyglot
       to_s.[]=(...)
     end
 
+    def append_as_bytes(...)
+      to_s.append_as_bytes(...)
+    end
+
     def ascii_only?(...)
       to_s.ascii_only?(...)
     end
