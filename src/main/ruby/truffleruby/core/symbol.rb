@@ -61,11 +61,7 @@ class Symbol
   def inspect
     str = to_s
 
-    case str
-    when /\A(\$|@@?)[\p{L}_][\p{L}_\d]*\z/i,                    # Variable names
-         /\A[\p{L}_][\p{L}_\d]*[=?!]?\z/i,                      # Method names
-         /\A\$(-[\p{L}_\d]|[+~:?<_\/'"$.,`!;\\=*>&@]|\d+)\z/i,  # Special global variables
-         /\A([|^&\/%~`!]|!=|!~|<<|>>|<=>|===?|=~|[<>]=?|[+-]@?|\*\*?|\[\]=?)\z/ # Operators
+    if Truffle::Type.rb_str_symname_p?(str)
       ":#{str}"
     else
       ":#{str.inspect}"
