@@ -555,5 +555,17 @@ module Truffle
       # Avoid calling methods on object since it might be a foreign object
       Primitive.is_a?(object, NilClass) || Primitive.is_a?(object, TrueClass) || Primitive.is_a?(object, FalseClass) || Primitive.is_a?(object, Symbol) || Truffle::Type.fits_into_long?(object)
     end
+
+    def self.rb_str_symname_p?(string)
+      case string
+      when /\A(\$|@@?)[\p{L}_][\p{L}_\d]*\z/i,                   # Variable names
+           /\A[\p{L}_][\p{L}_\d]*[=?!]?\z/i,                     # Method names
+           /\A\$(-[\p{L}_\d]|[+~:?<_\/'"$.,`!;\\=*>&@]|\d+)\z/i, # Special global variables
+           /\A([|^&\/%~`!]|!=|!~|<<|>>|<=>|===?|=~|[<>]=?|[+-]@?|\*\*?|\[\]=?)\z/ # Operators
+        true
+      else
+        false
+      end
+    end
   end
 end

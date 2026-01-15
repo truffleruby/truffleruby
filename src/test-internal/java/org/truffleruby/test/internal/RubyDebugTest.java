@@ -334,7 +334,7 @@ public class RubyDebugTest {
                 "arr",
                 "[1, \"2\", 3.56, true, nil, \"A String\"]",
                 "hash",
-                "{:a=>1, \"b\"=>2}",
+                "{a: 1, \"b\" => 2}",
                 "struct",
                 "#<struct a=1, b=2>",
                 "res",

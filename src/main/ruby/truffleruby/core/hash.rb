@@ -430,7 +430,13 @@ class Hash
     out = []
     return +'{...}' if Truffle::ThreadOperations.detect_recursion self do
       each_pair do |key,value|
-        out << "#{Truffle::Type.rb_inspect(key)}=>#{Truffle::Type.rb_inspect(value)}"
+        case key
+        when Symbol
+          key = symbol_key_needs_quotes?(key.name) ? key.name.inspect : key.name
+          out << "#{key}: #{Truffle::Type.rb_inspect(value)}"
+        else
+          out << "#{Truffle::Type.rb_inspect(key)} => #{Truffle::Type.rb_inspect(value)}"
+        end
       end
     end
 
@@ -600,5 +606,11 @@ class Hash
       replace h
     end
     self
+  end
+
+  private def symbol_key_needs_quotes?(string)
+    return true if string.size == 0 || !Truffle::Type.rb_str_symname_p?(string)
+    return true if string.start_with?('@', '$', '!')
+    string.end_with?('+', '-', '*', '/', '`', '%', '^', '&', '|', ']', '<', '=', '>', '~', '@')
   end
 end

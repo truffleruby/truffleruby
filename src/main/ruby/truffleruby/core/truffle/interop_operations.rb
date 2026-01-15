@@ -94,7 +94,7 @@ module Truffle
         end
         if Truffle::Interop.has_hash_entries?(object)
           show_members = false
-          string << " {#{object.map { |k, v| "#{basic_inspect_for k}=>#{basic_inspect_for v}" }.join(', ')}}"
+          string << " {#{object.map { |k, v| "#{basic_inspect_for k} => #{basic_inspect_for v}" }.join(', ')}}"
         end
         if show_members
           pairs = pairs_from_object(object)
