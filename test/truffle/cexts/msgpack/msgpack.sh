@@ -14,7 +14,9 @@ cd msgpack-ruby || exit 1
 export BUNDLE_PATH=vendor/bundle
 bundle install
 bundle exec rake compile
-bundle exec rake spec
+
+# transient segfault: https://github.com/truffleruby/truffleruby/issues/4091
+# bundle exec rake spec
 
 cd ..
 rm -rf msgpack-ruby
