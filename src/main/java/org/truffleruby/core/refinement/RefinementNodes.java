@@ -99,11 +99,11 @@ public abstract class RefinementNodes {
         }
     }
 
-    @CoreMethod(names = { "refined_class", "target" })
-    public abstract static class RefinedClassNode extends CoreMethodArrayArgumentsNode {
+    @CoreMethod(names = "target")
+    public abstract static class TargetNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        RubyModule refinedClass(RubyModule refinement) {
+        RubyModule target(RubyModule refinement) {
             return refinement.fields.getRefinedModule();
         }
     }

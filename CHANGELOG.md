@@ -12,6 +12,7 @@ Compatibility:
 
 * Update error message of `Array#fetch` with key out of range (#4085, @herwinw).
 * Implement `Array#fetch_values` for Ruby 3.4 (#4085, @herwinw).
+* Remove deprecated `Refinement#refined_class` method for Ruby 3.4 (#4088, @herwinw).
 
 Performance:
 
