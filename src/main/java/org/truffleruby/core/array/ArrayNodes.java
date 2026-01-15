@@ -51,6 +51,7 @@ import org.truffleruby.core.cast.CmpIntNode;
 import org.truffleruby.core.cast.NameToJavaStringNode;
 import org.truffleruby.core.cast.ToAryNode;
 import org.truffleruby.core.cast.ToIntNode;
+import org.truffleruby.core.cast.ToIntClampNode;
 import org.truffleruby.core.cast.ToLongNode;
 import org.truffleruby.core.cast.ToStrNode;
 import org.truffleruby.core.encoding.RubyEncoding;
@@ -314,8 +315,8 @@ public abstract class ArrayNodes {
 
         @Specialization(guards = { "wasProvided(length)", "!isInteger(start) || !isInteger(length)" })
         Object sliceFallback(RubyArray array, Object start, Object length,
-                @Cached ToIntNode indexToInt,
-                @Cached ToIntNode lengthToInt) {
+                @Cached ToIntClampNode indexToInt,
+                @Cached ToIntClampNode lengthToInt) {
             return executeIntIndices(array, indexToInt.execute(start), lengthToInt.execute(length));
         }
 

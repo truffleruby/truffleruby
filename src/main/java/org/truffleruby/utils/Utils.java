@@ -19,6 +19,10 @@ import java.util.Objects;
 /** General purpose utility functions that do not fit in other utility classes. */
 public final class Utils {
 
+    public static long longAdd(int a, int b) {
+        return (long) a + (long) b;
+    }
+
     /** Build a {@link UnsupportedOperationException} behind a {@link TruffleBoundary} so as to avoid the
      * SVM-blacklisted {@link Throwable#fillInStackTrace()}. */
     @TruffleBoundary

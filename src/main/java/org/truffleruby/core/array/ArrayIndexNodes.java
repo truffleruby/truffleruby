@@ -25,6 +25,7 @@ import com.oracle.truffle.api.dsl.ReportPolymorphism;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.profiles.ConditionProfile;
+import org.truffleruby.utils.Utils;
 
 @CoreModule(value = "Truffle::ArrayIndex", isClass = false)
 public abstract class ArrayIndexNodes {
@@ -124,7 +125,7 @@ public abstract class ArrayIndexNodes {
                 @Cached ArrayCopyOnWriteNode cowNode,
                 @Cached ConditionProfile endsInBoundsProfile) {
             final int size = array.size;
-            final int end = endsInBoundsProfile.profile(index + length <= size)
+            final int end = endsInBoundsProfile.profile(Utils.longAdd(index, length) <= size)
                     ? length
                     : size - index;
             final Object slice = cowNode.execute(array, index, end);

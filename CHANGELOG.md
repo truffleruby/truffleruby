@@ -14,6 +14,7 @@ Compatibility:
 * Implement `Array#fetch_values` for Ruby 3.4 (#4085, @herwinw).
 * Remove deprecated `Refinement#refined_class` method for Ruby 3.4 (#4088, @herwinw).
 * Update `Hash#inspect` for Ruby 3.4 (#4090, @Earlopain).
+* Support `Array#[64-bit Integer, 64-bit Integer]` like CRuby (@eregon).
 
 Performance:
 
