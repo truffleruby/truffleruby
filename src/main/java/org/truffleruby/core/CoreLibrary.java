@@ -967,6 +967,7 @@ public final class CoreLibrary {
             "/core/truffle/exception_operations.rb",
             "/core/truffle/feature_loader.rb",
             "/core/truffle/gem_util.rb",
+            "/core/truffle/fiber_operations.rb",
             "/core/truffle/thread_operations.rb",
             "/core/thread.rb",
             "/core/true.rb",

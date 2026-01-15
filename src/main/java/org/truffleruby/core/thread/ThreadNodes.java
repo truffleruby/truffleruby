@@ -977,6 +977,15 @@ public abstract class ThreadNodes {
         }
     }
 
+    @Primitive(name = "thread_get_root_fiber")
+    public abstract static class ThreadGetRootFiberNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        RubyFiber getRootFiber(RubyThread thread) {
+            return thread.getRootFiber();
+        }
+    }
+
     /** Similar to {@link ThreadManager#runUntilResult(Node, ThreadManager.BlockingAction)} but purposed for blocking
      * native calls. If the {@link SafepointManager} needs to interrupt the thread, it will send a SIGVTALRM to abort
      * the blocking syscall and the syscall will return -1 with errno=EINTR, meaning it was interrupted. */

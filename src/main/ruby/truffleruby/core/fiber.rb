@@ -9,8 +9,17 @@
 # GNU Lesser General Public License version 2.1.
 
 class Fiber
-  def initialize(blocking: false, &block)
-    Primitive.fiber_initialize(self, Primitive.as_boolean(blocking), block)
+  def initialize(blocking: false, storage: true, &block)
+    if Primitive.undefined?(storage) || Primitive.true?(storage)
+      # Inherit from parent.
+      parent_storage = Primitive.fiber_get_storage(Fiber.current)
+      storage = Primitive.nil?(parent_storage) ? nil : parent_storage.dup
+    elsif !Primitive.nil?(storage)
+      Truffle::FiberOperations.validate_storage(storage)
+      storage = storage.dup
+    end
+
+    Primitive.fiber_initialize(self, Primitive.as_boolean(blocking), storage, block)
   end
 
   def raise(*args)
@@ -25,4 +34,57 @@ class Fiber
     "#{super.delete_suffix('>')} #{loc} (#{status})>"
   end
   alias_method :to_s, :inspect
+
+  def self.[](key)
+    key = Truffle::Type.coerce_to_symbol(key)
+    storage = Truffle::FiberOperations.get_storage_for_access(false)
+
+    Primitive.nil?(storage) ? nil : storage[key]
+  end
+
+  def self.[]=(key, value)
+    key = Truffle::Type.coerce_to_symbol(key)
+    storage = Truffle::FiberOperations.get_storage_for_access(!Primitive.nil?(value))
+
+    if Primitive.nil?(value)
+      # Delete the key from storage if the storage exists.
+      unless Primitive.nil?(storage)
+        storage.delete(key)
+      end
+    else
+      # Here, we're guaranteed to have allocated storage by virtue of a non-nil value,
+      # so we can simply assign the value to the key.
+      storage[key] = value
+    end
+
+    value
+  end
+
+  def storage
+    unless Primitive.equal?(self, Fiber.current)
+      Kernel.raise ArgumentError, 'Fiber storage can only be accessed from the Fiber it belongs to'
+    end
+
+    storage = Primitive.fiber_get_storage(self)
+
+    Primitive.nil?(storage) ? nil : storage.dup
+  end
+
+  def storage=(value)
+    # Experimental warning
+    if Warning[:experimental]
+      Warning.warn('Fiber#storage= is experimental and may be removed in the future!',
+                   category: :experimental)
+    end
+
+    unless Primitive.equal?(self, Fiber.current)
+      Kernel.raise ArgumentError, 'Fiber storage can only be accessed from the Fiber it belongs to'
+    end
+
+    Truffle::FiberOperations.validate_storage(value)
+    storage = Primitive.nil?(value) ? nil : value.dup
+    Primitive.fiber_set_storage(self, storage)
+
+    value
+  end
 end
