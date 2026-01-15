@@ -106,6 +106,33 @@ describe :array_slice, shared: true do
     a.should == [1, 2, 3]
   end
 
+  it "accepts 64-bit index and count with [index,count]" do
+    min = -(1<<63)
+    max = (1<<63)-1
+    a = [1, 2]
+    a[min, max].should == nil
+    a[max, max].should == nil
+    a[min, min].should == nil
+    a[max, min].should == nil
+
+    a[0, max].should == a
+    a[1, max].should == [2]
+    a[0, min].should == nil
+
+    a[min, 0].should == nil
+    a[min, 1].should == nil
+    a[max, 0].should == nil
+    a[max, 1].should == nil
+  end
+
+  it "rejects more than 64-bit index and count with [index,count]" do
+    a = [1, 2]
+    -> { a[bignum_value, 0] }.should raise_error(RangeError, /bignum too big to convert into ['`]long'/)
+    -> { a[-bignum_value, 0] }.should raise_error(RangeError, /bignum too big to convert into ['`]long'/)
+    -> { a[0, bignum_value] }.should raise_error(RangeError, /bignum too big to convert into ['`]long'/)
+    -> { a[0, -bignum_value] }.should raise_error(RangeError, /bignum too big to convert into ['`]long'/)
+  end
+
   it "tries to convert the passed argument to an Integer using #to_int" do
     obj = mock('to_int')
     obj.stub!(:to_int).and_return(2)
