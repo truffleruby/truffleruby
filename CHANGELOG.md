@@ -14,6 +14,7 @@ Compatibility:
 * Implement `Array#fetch_values` for Ruby 3.4 (#4085, @herwinw).
 * Remove deprecated `Refinement#refined_class` method for Ruby 3.4 (#4088, @herwinw).
 * Update `Hash#inspect` for Ruby 3.4 (#4090, @Earlopain).
+* Fix `mkmf.rb` to use host's `RbConfig` for `$ruby` when `--target-rbconfig` is used (#4097, @panozzaj).
 
 Performance:
 
