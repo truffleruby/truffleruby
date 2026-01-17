@@ -1,2 +1,1 @@
 exclude :test_build_extensions_extconf_bad, "Expected /\\/home\\/nirvdrum\\/dev\\/workspaces\\/truffleruby\\-ws\\/truffleruby\\/mxbuild\\/truffleruby\\-jvm\\-ce\\/bin\\/truffleruby .* extconf\\.rb/ to match \"current directory: /b/b/e/main/test/mri/tmp/test_rubygems_20251201-1781414-m2xvp0/gemhome/gems/a-2\\n\" +"
-exclude :test_build_extensions_with_target_rbconfig, "Expected \"/b/b/e/main/mxbuild/truffleruby-jvm-ce/lib/mri/mkmf.rb:2944:in `<module:MakeMakefile>': undefined method `ruby' for module MakeMakefile::RbConfig (NoMethodError)\\n\" +"
