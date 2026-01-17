@@ -8,7 +8,6 @@
  * GNU Lesser General Public License version 2.1.
  */
 #include <truffleruby-impl.h>
-#include <internal/hash.h>
 
 // Hash, rb_hash_*
 
@@ -62,10 +61,6 @@ VALUE rb_hash_lookup2(VALUE hash, VALUE key, VALUE default_value) {
 
 VALUE rb_hash_set_ifnone(VALUE hash, VALUE if_none) {
   return RUBY_CEXT_INVOKE("rb_hash_set_ifnone", hash, if_none);
-}
-
-VALUE rb_hash_keys(VALUE hash) {
-  return RUBY_INVOKE(hash, "keys");
 }
 
 st_index_t rb_memhash(const void *data, long length) {

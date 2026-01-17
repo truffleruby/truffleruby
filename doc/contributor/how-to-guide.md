@@ -1204,11 +1204,11 @@ end
 
 Use `#ifdef TRUFFLERUBY` for C source code:
 
-```cpp
+```c
 #ifdef TRUFFLERUBY
-VALUE rb_imemo_tmpbuf_auto_free_pointer(void);
+#define RB_OBJ_FREEZE        rb_obj_freeze
 #else
-static inline VALUE rb_imemo_tmpbuf_auto_free_pointer(void);
+#define RB_OBJ_FREEZE        rb_obj_freeze_inline /**< @alias{rb_obj_freeze_inline} */
 #endif
 ```
 

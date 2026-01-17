@@ -9,7 +9,6 @@
  */
 #include <truffleruby-impl.h>
 #include <ruby/util.h>
-#include <internal/numeric.h>
 
 // Numeric conversions, rb_*num*, rb_fix2*
 

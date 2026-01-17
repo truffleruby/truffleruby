@@ -9,7 +9,6 @@
  */
 #include <truffleruby-impl.h>
 #include <ruby/encoding.h>
-#include <internal/string.h>
 
 // Encoding, rb_enc_*
 

@@ -10,7 +10,6 @@
 #include <truffleruby-impl.h>
 #include <ruby/debug.h>
 
-
 struct rb_debug_inspector_struct {
     VALUE backtrace;
     VALUE contexts; /* [[self, klass, binding], ...] */

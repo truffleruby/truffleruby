@@ -8,7 +8,6 @@
  * GNU Lesser General Public License version 2.1.
  */
 #include <truffleruby-impl.h>
-#include <internal/re.h>
 
 // Regexp, rb_reg_*
 

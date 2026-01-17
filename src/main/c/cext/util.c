@@ -12,7 +12,6 @@
 #include <sys/types.h>
 #include "string.h"
 #include <errno.h>
-#include <internal/util.h>
 
 const char ruby_hexdigits[] = "0123456789abcdef0123456789ABCDEF";
 #define hexdigit ruby_hexdigits
