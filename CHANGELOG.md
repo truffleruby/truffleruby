@@ -1,3 +1,24 @@
+# 33.0.1
+
+New features:
+
+
+Bug fixes:
+
+
+Compatibility:
+
+* Fix `mkmf.rb` to use host's `RbConfig` for `$ruby` when `--target-rbconfig` is used (#4097, @panozzaj).
+
+Performance:
+
+
+Changes:
+
+
+Memory Footprint:
+
+
 # 33.0.0
 
 New features:

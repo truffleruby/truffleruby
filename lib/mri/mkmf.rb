@@ -2823,7 +2823,7 @@ MESSAGE
   $configure_args["--topdir"] ||= $curdir
 
   if defined?(::TruffleRuby)
-    $ruby = arg_config("--ruby", RbConfig.ruby)
+    $ruby = arg_config("--ruby", ::RbConfig.ruby)
   else
     $ruby = arg_config("--ruby", File.join(RbConfig::CONFIG["bindir"], CONFIG["ruby_install_name"]))
   end
