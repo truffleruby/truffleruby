@@ -51,6 +51,7 @@ import org.truffleruby.builtins.PrimitiveManager;
 import org.truffleruby.cext.ValueWrapperManager;
 import org.truffleruby.collections.SharedIndicesMap;
 import org.truffleruby.collections.SharedIndicesMap.LanguageArray;
+import org.truffleruby.core.CoreLibrary;
 import org.truffleruby.core.RubyHandle;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.basicobject.RubyBasicObject;
@@ -119,11 +120,13 @@ import org.truffleruby.language.RubyInlineParsingRequestNode;
 import org.truffleruby.language.RubyParsingRequestNode;
 import org.truffleruby.language.arguments.KeywordArgumentsDescriptorManager;
 import org.truffleruby.language.backtrace.BacktraceFormatter;
+import org.truffleruby.language.methods.Arity;
+import org.truffleruby.language.methods.SharedMethodInfo;
 import org.truffleruby.language.objects.RubyObjectType;
 import org.truffleruby.language.objects.classvariables.ClassVariableStorage;
 import org.truffleruby.language.threadlocal.SpecialVariableStorage;
 import org.truffleruby.options.LanguageOptions;
-import org.truffleruby.parser.BlockDescriptorInfo;
+import org.truffleruby.parser.FrameDescriptorInfo;
 import org.truffleruby.parser.ParserContext;
 import org.truffleruby.parser.ParsingParameters;
 import org.truffleruby.parser.TranslatorEnvironment;
@@ -202,11 +205,6 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     public static final String RESOURCE_SCHEME = "resource:";
 
     public static final TruffleLogger LOGGER = TruffleLogger.getLogger(TruffleRuby.LANGUAGE_ID);
-
-    /** This is a truly empty frame descriptor and should only by dummy root nodes which require no variables. Any other
-     * root nodes should should use either {@link TranslatorEnvironment#newFrameDescriptorBuilderForMethod()} or
-     * {@link TranslatorEnvironment#newFrameDescriptorBuilderForBlock(BlockDescriptorInfo)}. */
-    public static final FrameDescriptor EMPTY_FRAME_DESCRIPTOR = new FrameDescriptor(nil);
 
     public static final String INTERNAL_CORE_PREFIX = "<internal:core> ";
 
@@ -358,17 +356,43 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
 
     public final ThreadLocal<ParsingParameters> parsingRequestParams = new ThreadLocal<>();
 
-    /* Some things (such as procs created from symbols) require a declaration frame, and this should include a slot for
-     * special variable storage. This frame descriptor should be used for those frames to provide a constant frame
-     * descriptor in those cases. */
-    public final FrameDescriptor emptyDeclarationDescriptor = TranslatorEnvironment
-            .newFrameDescriptorBuilderForMethod().build();
+    private static final SharedMethodInfo EMPTY_DECLARATION_SHARED_METHOD_INFO = SharedMethodInfo.forMethod(
+            CoreLibrary.JAVA_CORE_SOURCE_SECTION,
+            null,
+            Arity.NO_ARGUMENTS,
+            "<empty-declaration-descriptor>",
+            "<empty-declaration-descriptor>",
+            null,
+            null);
+
+    private static final SharedMethodInfo EMPTY_BINDING_SHARED_METHOD_INFO = SharedMethodInfo.forMethod(
+            CoreLibrary.JAVA_CORE_SOURCE_SECTION,
+            null,
+            Arity.MODULE_BODY, // Primitive.create_empty_binding is only used in module-body methods
+            "<empty-binding>",
+            "<empty-binding>",
+            null,
+            null);
+
+    public final FrameDescriptor EMPTY_BINDING_DESCRIPTOR = TranslatorEnvironment
+            .newFrameDescriptorBuilderForMethod(EMPTY_BINDING_SHARED_METHOD_INFO).build();
+
+    public static FrameDescriptor newEmptyDeclarationFrameDescriptor() {
+        return TranslatorEnvironment.newFrameDescriptorBuilderForMethod(EMPTY_DECLARATION_SHARED_METHOD_INFO).build();
+    }
+
+    /** Some things require a declaration frame, and this should include a slot for special variable storage but nothing
+     * else. This frame descriptor should be used for those frames to provide a constant frame descriptor in those
+     * cases. Any other root nodes should use either
+     * {@link TranslatorEnvironment#newFrameDescriptorBuilderForMethod(SharedMethodInfo)} or
+     * {@link TranslatorEnvironment#newFrameDescriptorBuilderForBlock(FrameDescriptorInfo)}. */
+    public final FrameDescriptor EMPTY_DECLARATION_DESCRIPTOR = newEmptyDeclarationFrameDescriptor();
 
     public MaterializedFrame createEmptyDeclarationFrame(Object[] packedArgs, SpecialVariableStorage variables) {
-        // createVirtualFrame().materialize() compiles better if this is in PE code
+        // createVirtualFrame().materialize() optimizes better than createMaterializedFrame()
         final MaterializedFrame declarationFrame = Truffle
                 .getRuntime()
-                .createVirtualFrame(packedArgs, emptyDeclarationDescriptor)
+                .createVirtualFrame(packedArgs, EMPTY_DECLARATION_DESCRIPTOR)
                 .materialize();
 
         SpecialVariableStorage.set(declarationFrame, variables);

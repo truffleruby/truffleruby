@@ -67,11 +67,9 @@ public final class TranslatorEnvironment {
 
     private EconomicMap<Object, Integer> nameToIndex = EconomicMap.create();
     private FrameDescriptor.Builder frameDescriptorBuilder;
+    private final FrameDescriptorInfo descriptorInfo;
+    private List<FrameDescriptorInfo> childrenDescriptorInfos = null;
     private FrameDescriptor frameDescriptor;
-    /** The descriptor info is shared for all blocks at the same level (i.e., for TranslatorEnvironment direct
-     * children), in order to save footprint. It is therefore created in the parent TranslatorEnvironment of those
-     * blocks using that descriptor info. */
-    private final BlockDescriptorInfo descriptorInfoForChildren;
 
     private final List<Integer> flipFlopStates = new ArrayList<>();
 
@@ -80,7 +78,6 @@ public final class TranslatorEnvironment {
     private BreakID breakID;
 
     private final boolean ownScopeForAssignments;
-    private final boolean isModuleBody;
 
     private final TranslatorEnvironment parent;
     private final SharedMethodInfo sharedMethodInfo;
@@ -100,7 +97,6 @@ public final class TranslatorEnvironment {
             ParseEnvironment parseEnvironment,
             ReturnID returnID,
             boolean ownScopeForAssignments,
-            boolean isModuleBody,
             SharedMethodInfo sharedMethodInfo,
             String methodName,
             int blockDepth,
@@ -110,20 +106,34 @@ public final class TranslatorEnvironment {
         assert blockDepth == sharedMethodInfo.getBlockDepth();
 
         this.parent = parent;
+        this.parseEnvironment = parseEnvironment;
+        this.returnID = returnID;
+        this.ownScopeForAssignments = ownScopeForAssignments;
+        this.sharedMethodInfo = sharedMethodInfo;
+        this.methodName = methodName;
+        this.blockDepth = blockDepth;
+        this.breakID = breakID;
+        this.modulePath = modulePath;
 
         if (descriptor == null) {
-            if (blockDepth > 0) {
-                BlockDescriptorInfo descriptorInfo = Objects.requireNonNull(parent.descriptorInfoForChildren);
+            this.childrenDescriptorInfos = new ArrayList<>();
+
+            if (blockDepth > 0) { // block
+                if (parent.frameDescriptor != null) {
+                    descriptorInfo = new FrameDescriptorInfo(parent.frameDescriptor, sharedMethodInfo);
+                } else {
+                    descriptorInfo = new FrameDescriptorInfo(parent.descriptorInfo, sharedMethodInfo);
+                    parent.childrenDescriptorInfos.add(descriptorInfo);
+                }
                 this.frameDescriptorBuilder = newFrameDescriptorBuilderForBlock(descriptorInfo);
-                this.descriptorInfoForChildren = new BlockDescriptorInfo(descriptorInfo.getSpecialVariableAssumption());
-            } else {
-                var specialVariableAssumption = createSpecialVariableAssumption();
-                this.frameDescriptorBuilder = newFrameDescriptorBuilderForMethod(specialVariableAssumption);
-                this.descriptorInfoForChildren = new BlockDescriptorInfo(specialVariableAssumption);
+            } else { // method
+                this.descriptorInfo = new FrameDescriptorInfo(createSpecialVariableAssumption(), sharedMethodInfo);
+                this.frameDescriptorBuilder = newFrameDescriptorBuilderForMethod(descriptorInfo);
             }
         } else {
             this.frameDescriptor = descriptor;
-            this.descriptorInfoForChildren = new BlockDescriptorInfo(descriptor);
+            this.descriptorInfo = FrameDescriptorInfo.of(descriptor);
+            this.childrenDescriptorInfos = null;
 
             assert descriptor.getNumberOfAuxiliarySlots() == 0;
             int slots = descriptor.getNumberOfSlots();
@@ -134,16 +144,6 @@ public final class TranslatorEnvironment {
                 }
             }
         }
-
-        this.parseEnvironment = parseEnvironment;
-        this.returnID = returnID;
-        this.ownScopeForAssignments = ownScopeForAssignments;
-        this.isModuleBody = isModuleBody;
-        this.sharedMethodInfo = sharedMethodInfo;
-        this.methodName = methodName;
-        this.blockDepth = blockDepth;
-        this.breakID = breakID;
-        this.modulePath = modulePath;
     }
 
     public static String composeModulePath(String modulePath, String name) {
@@ -169,7 +169,7 @@ public final class TranslatorEnvironment {
     /** Top-level scope, i.e. from main script/load/require. The lexical scope might not be Object in the case of
      * {@code load(file, wrap=true)}. */
     public boolean isTopLevelScope() {
-        return parent == null && isModuleBody;
+        return parent == null && isModuleBody();
     }
 
     /** Top-level scope and the lexical scope is Object, and self is the "main" object */
@@ -178,7 +178,7 @@ public final class TranslatorEnvironment {
     }
 
     // region frame descriptor
-    public static FrameDescriptor.Builder newFrameDescriptorBuilderForBlock(BlockDescriptorInfo descriptorInfo) {
+    public static FrameDescriptor.Builder newFrameDescriptorBuilderForBlock(FrameDescriptorInfo descriptorInfo) {
         var builder = FrameDescriptor.newBuilder().defaultValue(Nil.INSTANCE);
         builder.info(Objects.requireNonNull(descriptorInfo));
 
@@ -194,13 +194,9 @@ public final class TranslatorEnvironment {
         return Assumption.create(SpecialVariableStorage.ASSUMPTION_NAME);
     }
 
-    private static FrameDescriptor.Builder newFrameDescriptorBuilderForMethod(Assumption specialVariableAssumption) {
+    private static FrameDescriptor.Builder newFrameDescriptorBuilderForMethod(FrameDescriptorInfo descriptorInfo) {
         var builder = FrameDescriptor.newBuilder().defaultValue(Nil.INSTANCE);
-        // We need to access this Assumption from the FrameDescriptor,
-        // and there is no way to get a RootNode from a FrameDescriptor, so we store it in the descriptor info.
-        // We do not store it as slot info for footprint, to avoid needing an info array per FrameDescriptor.
-        builder.info(specialVariableAssumption);
-
+        builder.info(descriptorInfo);
 
         int selfIndex = builder.addSlot(FrameSlotKind.Illegal, SelfNode.SELF_IDENTIFIER, null);
         if (selfIndex != SelfNode.SELF_INDEX) {
@@ -215,9 +211,9 @@ public final class TranslatorEnvironment {
         return builder;
     }
 
-    public static FrameDescriptor.Builder newFrameDescriptorBuilderForMethod() {
-        var specialVariableAssumption = createSpecialVariableAssumption();
-        return newFrameDescriptorBuilderForMethod(specialVariableAssumption);
+    public static FrameDescriptor.Builder newFrameDescriptorBuilderForMethod(SharedMethodInfo sharedMethodInfo) {
+        var descriptorInfo = new FrameDescriptorInfo(createSpecialVariableAssumption(), sharedMethodInfo);
+        return newFrameDescriptorBuilderForMethod(descriptorInfo);
     }
 
     public int declareVar(Object name) {
@@ -326,7 +322,12 @@ public final class TranslatorEnvironment {
         }
 
         frameDescriptor = frameDescriptorBuilder.build();
-        descriptorInfoForChildren.setParentDescriptor(frameDescriptor);
+
+        for (var childDescriptorInfo : childrenDescriptorInfos) {
+            childDescriptorInfo.setParentDescriptor(frameDescriptor);
+        }
+        childrenDescriptorInfos = null;
+
         frameDescriptorBuilder = null;
         nameToIndex = null;
         return frameDescriptor;
@@ -352,7 +353,7 @@ public final class TranslatorEnvironment {
 
     /** A way to check current scope is a module/class. If in a block, isModuleBody is always false. */
     public boolean isModuleBody() {
-        return isModuleBody;
+        return sharedMethodInfo.isModuleBody();
     }
 
     public SharedMethodInfo getSharedMethodInfo() {

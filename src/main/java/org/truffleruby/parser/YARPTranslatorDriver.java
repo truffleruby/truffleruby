@@ -36,11 +36,9 @@
  */
 package org.truffleruby.parser;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -48,7 +46,6 @@ import org.prism.ParsingOptions;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.Split;
-import org.truffleruby.core.CoreLibrary;
 import org.truffleruby.core.binding.BindingNodes;
 import org.truffleruby.core.binding.SetBindingFrameForEvalNode;
 import org.truffleruby.core.encoding.Encodings;
@@ -64,7 +61,6 @@ import org.truffleruby.language.RubyTopLevelRootNode;
 import org.truffleruby.language.SetTopLevelBindingNode;
 import org.truffleruby.language.arguments.MissingArgumentBehavior;
 import org.truffleruby.language.arguments.ReadPreArgumentNode;
-import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.locals.FrameDescriptorNamesIterator;
 import org.truffleruby.language.locals.WriteLocalVariableNode;
@@ -98,26 +94,19 @@ public final class YARPTranslatorDriver {
         this.language = context.getLanguageSlow();
     }
 
-    public static void checkParserContextAndParentFrame(ParserContext parserContext, MaterializedFrame parentFrame) {
-        if (parserContext.isTopLevel() != (parentFrame == null)) {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            throw CompilerDirectives.shouldNotReachHere(
-                    "A frame should be given iff the context is not toplevel: " + parserContext + " " + parentFrame);
-        }
+    public RootCallTarget parse(RubySource rubySource, ParserContext parserContext, String[] argumentNames,
+            FrameDescriptor parentDescriptor, LexicalScope staticLexicalScope, Node currentNode) {
+        return parse(rubySource, parserContext, argumentNames, parentDescriptor, staticLexicalScope, currentNode, null);
     }
 
     public RootCallTarget parse(RubySource rubySource, ParserContext parserContext, String[] argumentNames,
-            MaterializedFrame parentFrame, LexicalScope staticLexicalScope, Node currentNode) {
-        return parse(rubySource, parserContext, argumentNames, parentFrame, staticLexicalScope, currentNode, null);
-    }
+            FrameDescriptor parentDescriptor, LexicalScope staticLexicalScope, Node currentNode,
+            ParseResult parseResult) {
+        assert rubySource.isEval() == parserContext.isEval();
+        assert parserContext.isTopLevel() == (parentDescriptor == null) : "Only give parentDescriptor if not toplevel";
 
-    public RootCallTarget parse(RubySource rubySource, ParserContext parserContext, String[] argumentNames,
-            MaterializedFrame parentFrame, LexicalScope staticLexicalScope, Node currentNode, ParseResult parseResult) {
         byte[] sourceBytes = rubySource.getBytes();
         this.parseEnvironment = new ParseEnvironment(language, rubySource, parserContext, currentNode);
-
-        assert rubySource.isEval() == parserContext.isEval();
-        checkParserContextAndParentFrame(parserContext, parentFrame);
 
         if (!rubySource.getEncoding().isAsciiCompatible) {
             throw new RaiseException(context, context.getCoreExceptions()
@@ -132,24 +121,24 @@ public final class YARPTranslatorDriver {
 
         // prepare locals in scopes
         int blockDepth = 0;
-        if (parentFrame != null) {
-            MaterializedFrame frame = parentFrame;
+        if (parentDescriptor != null) {
+            var descriptor = parentDescriptor;
 
-            while (frame != null) {
+            while (descriptor != null) {
                 ArrayList<String> names = new ArrayList<>();
 
-                for (Object identifier : FrameDescriptorNamesIterator.iterate(frame.getFrameDescriptor())) {
+                for (Object identifier : FrameDescriptorNamesIterator.iterate(descriptor)) {
                     if (identifier instanceof String name) {
                         names.add(name.intern()); // intern() for footprint
                     }
                 }
 
                 localsInScopes.add(names);
-                frame = RubyArguments.getDeclarationFrame(frame);
+                descriptor = FrameDescriptorInfo.of(descriptor).getParentDescriptor();
                 blockDepth++;
             }
 
-            parentEnvironment = environmentForFrame(context, parentFrame, blockDepth - 1);
+            parentEnvironment = createEnvironmentFromDescriptor(parentDescriptor, blockDepth - 1);
         } else {
             parentEnvironment = null;
         }
@@ -195,7 +184,7 @@ public final class YARPTranslatorDriver {
         final String modulePath = staticLexicalScope == null || staticLexicalScope == context.getRootLexicalScope()
                 ? null
                 : staticLexicalScope.getLiveModule().getName();
-        final String methodName = getMethodName(parserContext, parentFrame);
+        final String methodName = getMethodName(parserContext, parentDescriptor);
         final boolean topLevel = parserContext.isTopLevel();
         final boolean isModuleBody = topLevel;
 
@@ -220,6 +209,8 @@ public final class YARPTranslatorDriver {
                     blockDepth,
                     parentEnvironment.getSharedMethodInfo(),
                     null);
+            // `def foo = eval "..."` does not use "block in foo" even though it is one frame deeper
+            sharedMethodInfo.copyRuntimeNameFrom(parentEnvironment.getSharedMethodInfo());
         }
 
         final TranslatorEnvironment environment = new TranslatorEnvironment(
@@ -227,7 +218,6 @@ public final class YARPTranslatorDriver {
                 parseEnvironment,
                 parseEnvironment.allocateReturnID(),
                 true,
-                isModuleBody,
                 sharedMethodInfo,
                 sharedMethodInfo.getMethodName(),
                 blockDepth,
@@ -350,12 +340,13 @@ public final class YARPTranslatorDriver {
         return rootNode.getCallTarget();
     }
 
-    private String getMethodName(ParserContext parserContext, MaterializedFrame parentFrame) {
+    private String getMethodName(ParserContext parserContext, FrameDescriptor parentDescriptor) {
         if (parserContext.isTopLevel()) {
             return parserContext.getTopLevelName();
         } else {
-            if (parentFrame != null) {
-                return RubyArguments.getMethod(parentFrame).getName();
+            if (parentDescriptor != null) {
+                return FrameDescriptorInfo.of(parentDescriptor).getSharedMethodInfo().getMethodSharedMethodInfo()
+                        .getRuntimeName();
             } else {
                 throw new UnsupportedOperationException(
                         "Could not determine the method name for parser context " + parserContext);
@@ -519,53 +510,28 @@ public final class YARPTranslatorDriver {
         parseEnvironment.allowTruffleRubyPrimitives = allowTruffleRubyPrimitives;
     }
 
-    private TranslatorEnvironment environmentForFrame(RubyContext context, MaterializedFrame frame, int blockDepth) {
-        if (frame == null) {
-            return null;
-        } else {
-            MaterializedFrame parent = RubyArguments.getDeclarationFrame(frame);
-            assert (blockDepth == 0) == (parent == null);
-            TranslatorEnvironment parentEnvironment = environmentForFrame(context, parent, blockDepth - 1);
+    private TranslatorEnvironment createEnvironmentFromDescriptor(FrameDescriptor descriptor, int blockDepth) {
+        var info = FrameDescriptorInfo.of(descriptor);
+        var parent = info.getParentDescriptor();
+        assert (blockDepth == 0) == (parent == null);
+        TranslatorEnvironment parentEnvironment = parent == null
+                ? null
+                : createEnvironmentFromDescriptor(parent, blockDepth - 1);
 
-            final SharedMethodInfo sharedMethodInfo;
-            if (blockDepth == 0) {
-                sharedMethodInfo = SharedMethodInfo.forMethod(
-                        CoreLibrary.JAVA_CORE_SOURCE_SECTION,
-                        language.singleContext ? context.getRootLexicalScope() : null,
-                        Arity.NO_ARGUMENTS,
-                        "<unused>",
-                        "<unused>",
-                        "external",
-                        null);
-            } else {
-                sharedMethodInfo = SharedMethodInfo.forBlock(
-                        CoreLibrary.JAVA_CORE_SOURCE_SECTION,
-                        language.singleContext ? context.getRootLexicalScope() : null,
-                        Arity.NO_ARGUMENTS,
-                        "<unused>",
-                        "<unused>",
-                        "external",
-                        blockDepth,
-                        parentEnvironment.getSharedMethodInfo(),
-                        null);
-            }
+        var sharedMethodInfo = info.getSharedMethodInfo();
+        assert sharedMethodInfo.getBlockDepth() == blockDepth;
 
-            boolean isModuleBody = blockDepth == 0 &&
-                    RubyArguments.getMethod(frame).getSharedMethodInfo().isModuleBody();
-
-            return new TranslatorEnvironment(
-                    parentEnvironment,
-                    parseEnvironment,
-                    parseEnvironment.allocateReturnID(),
-                    true,
-                    isModuleBody,
-                    sharedMethodInfo,
-                    sharedMethodInfo.getMethodName(),
-                    blockDepth,
-                    null,
-                    frame.getFrameDescriptor(),
-                    "<unused>");
-        }
+        return new TranslatorEnvironment(
+                parentEnvironment,
+                parseEnvironment,
+                parseEnvironment.allocateReturnID(),
+                true,
+                sharedMethodInfo,
+                sharedMethodInfo.getMethodName(),
+                blockDepth,
+                null,
+                descriptor,
+                "<unused>");
     }
 
     public static void printParseTranslateExecuteMetric(String id, RubyContext context, Source source) {

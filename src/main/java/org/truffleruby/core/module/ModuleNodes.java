@@ -762,7 +762,7 @@ public abstract class ModuleNodes {
             final RootCallTarget callTarget = getContext(node).getCodeLoader().parse(
                     source,
                     ParserContext.MODULE,
-                    callerFrame,
+                    callerFrame.getFrameDescriptor(),
                     lexicalScope,
                     node);
 

@@ -128,6 +128,25 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
                 ArgumentDescriptor.ANY_UNNAMED);
     }
 
+    public SharedMethodInfo addOneBlockDepthButKeepParseNameAndRuntimeName() {
+        int blockDepth = this.blockDepth + 1;
+        // Keep parseName and runtimeName the same, required for Binding
+        var parseName = this.parseName;
+
+        var info = forBlock(
+                sourceSection,
+                staticLexicalScope,
+                Arity.NO_ARGUMENTS,
+                methodName,
+                parseName,
+                null,
+                blockDepth,
+                getMethodSharedMethodInfo(),
+                null);
+        info.copyRuntimeNameFrom(this);
+        return info;
+    }
+
     public SourceSection getSourceSection() {
         return sourceSection;
     }
@@ -161,14 +180,13 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         return blockDepth > 0;
     }
 
-    @TruffleBoundary
     public boolean isModuleBody() {
         boolean isModuleBody = arity == Arity.MODULE_BODY;
         assert !(isModuleBody && isBlock()) : this;
-        assert isModuleBody == (isMethod() && isModuleBody(getMethodName()));
         return isModuleBody;
     }
 
+    /** Approximate and notably wrong for {@code <<} and {@code define_method("<module:not_module_body")} */
     public static boolean isModuleBody(String name) {
         // Handles cases: <main> | <top (required)> | <module: | <class: | <singleton
         if (name.startsWith("<")) {
@@ -221,6 +239,11 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
             // Different module names, just use the parse name then
             this.runtimeName = parseName;
         }
+    }
+
+    public void copyRuntimeNameFrom(SharedMethodInfo base) {
+        assert this.runtimeName == null;
+        this.runtimeName = base.getRuntimeName();
     }
 
     /** See also {@link org.truffleruby.core.module.ModuleOperations#constantName}. Version without context which
@@ -309,7 +332,7 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
     }
 
     public SharedMethodInfo getMethodSharedMethodInfo() {
-        return methodSharedMethodInfo;
+        return methodSharedMethodInfo != null ? methodSharedMethodInfo : this;
     }
 
     private boolean hasNotes() {

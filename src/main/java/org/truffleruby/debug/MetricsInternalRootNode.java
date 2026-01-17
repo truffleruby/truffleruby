@@ -10,7 +10,6 @@
 package org.truffleruby.debug;
 
 import org.truffleruby.RubyContext;
-import org.truffleruby.RubyLanguage;
 import org.truffleruby.language.RubyBaseRootNode;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.backtrace.InternalRootNode;
@@ -32,7 +31,10 @@ final class MetricsInternalRootNode extends RubyBaseRootNode implements Internal
     @Child private RubyNode body;
 
     public MetricsInternalRootNode(RubyContext context, String name, RubyNode body) {
-        super(context.getLanguageSlow(), RubyLanguage.EMPTY_FRAME_DESCRIPTOR, REQUIRE_METRICS_SOURCE_SECTION);
+        super(
+                context.getLanguageSlow(),
+                context.getLanguageSlow().EMPTY_DECLARATION_DESCRIPTOR,
+                REQUIRE_METRICS_SOURCE_SECTION);
         assert body != null;
 
         this.name = name;

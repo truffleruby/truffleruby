@@ -219,10 +219,10 @@ public class YARPTranslator extends YARPBaseTranslator {
     /** enter point to translate a program; a single really public method */
     public RubyRootNode translate(Nodes.Node node) {
         var body = node.accept(this);
-        var frameDescriptor = TranslatorEnvironment.newFrameDescriptorBuilderForMethod().build();
         var sourceSection = CoreLibrary.JAVA_CORE_SOURCE_SECTION;
         var sharedMethodInfo = SharedMethodInfo.forMethod(sourceSection, null, Arity.MODULE_BODY, "<main>", "<main>",
                 null, null);
+        var frameDescriptor = TranslatorEnvironment.newFrameDescriptorBuilderForMethod(sharedMethodInfo).build();
         return new RubyTopLevelRootNode(language, sourceSection, frameDescriptor, sharedMethodInfo, body,
                 Split.HEURISTIC, null, Arity.MODULE_BODY);
     }
@@ -521,9 +521,7 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         // "block (2 levels) in M::C.foo"
         String parseName = SharedMethodInfo.getBlockName(blockDepth, methodParent.getSharedMethodInfo().getParseName());
-        SharedMethodInfo methodSharedMethodInfo = environment.isBlock()
-                ? environment.getSharedMethodInfo().getMethodSharedMethodInfo()
-                : environment.getSharedMethodInfo();
+        SharedMethodInfo methodSharedMethodInfo = environment.getSharedMethodInfo().getMethodSharedMethodInfo();
 
         final SharedMethodInfo sharedMethodInfo = SharedMethodInfo.forBlock(
                 getSourceSection(node),
@@ -544,7 +542,6 @@ public class YARPTranslator extends YARPBaseTranslator {
                 parseEnvironment,
                 returnID,
                 hasOwnScope,
-                false,
                 sharedMethodInfo,
                 environment.getMethodName(),
                 blockDepth,
@@ -1567,7 +1564,6 @@ public class YARPTranslator extends YARPBaseTranslator {
                 parseEnvironment,
                 parseEnvironment.allocateReturnID(),
                 true,
-                false,
                 sharedMethodInfo,
                 node.name,
                 0,
@@ -3580,7 +3576,6 @@ public class YARPTranslator extends YARPBaseTranslator {
                 environment,
                 parseEnvironment,
                 ReturnID.MODULE_BODY,
-                true,
                 true,
                 sharedMethodInfo,
                 methodName,
