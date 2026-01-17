@@ -1,3 +1,4 @@
+// Used by st.c
 #ifndef INTERNAL_ST_H
 #define INTERNAL_ST_H
 

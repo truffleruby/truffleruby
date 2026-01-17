@@ -93,7 +93,6 @@ excludes = %w[
   src/main/c/prism-gem
   src/main/c/psych
   src/main/c/rbconfig-sizeof
-  src/main/c/ripper
   src/main/c/syslog
   src/main/c/yarp
   src/main/c/zlib

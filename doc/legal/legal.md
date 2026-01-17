@@ -22,7 +22,7 @@ version 3.4.7, including:
 
 * the standard library in `lib/mri`, 
 * Ruby C extension API in `lib/cext/include` and `src/main/c/cext`, 
-* C extensions in `src/main/c/{bigdecimal,date,debug,etc,io-console,json,nkf,openssl,psych,rbconfig-sizeof,rbs,ripper,syslog,zlib}`
+* C extensions in `src/main/c/{bigdecimal,date,debug,etc,io-console,json,nkf,openssl,psych,rbconfig-sizeof,rbs,syslog,zlib}`
 
 MRI is copyright Yukihiro Matsumoto. It is made available under the terms of the
 2-clause BSD licence `ruby-bsdl.txt`, or a custom licence `ruby-licence.txt`.

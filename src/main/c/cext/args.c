@@ -8,8 +8,6 @@
  * GNU Lesser General Public License version 2.1.
  */
 #include <truffleruby-impl.h>
-#include <internal.h>
-#include <internal/hash.h>
 
 #include <ctype.h> // isdigit
 
@@ -45,7 +43,7 @@ static void unknown_keyword_error(VALUE hash, const ID *table, int keywords) {
     VALUE key = table[i];
     rb_hash_delete(hash, ID2SYM(key));
   }
-  rb_keyword_error("unknown", rb_hash_keys(hash));
+  rb_keyword_error("unknown", RUBY_INVOKE(hash, "keys"));
 }
 
 static VALUE rb_tr_extract_keyword(VALUE keyword_hash, ID key, VALUE *values) {

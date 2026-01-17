@@ -34,6 +34,31 @@ ruby/test_memory_view.rb # rb_memory_view_register not found
 # Too slow
 racc/test_racc_command.rb
 
+# needs internal/numeric.h
+cext-ruby/integer/test_integer.rb
+cext-ruby/integer/test_my_integer.rb
+
+# needs internal/file.h, STR_EMBED_P, etc
+cext-ruby/string/test_capacity.rb
+cext-ruby/string/test_coderange.rb
+cext-ruby/string/test_cstr.rb
+cext-ruby/string/test_ellipsize.rb
+cext-ruby/string/test_enc_associate.rb
+cext-ruby/string/test_enc_str_buf_cat.rb
+cext-ruby/string/test_external_new.rb
+cext-ruby/string/test_interned_str.rb
+cext-ruby/string/test_normalize.rb
+cext-ruby/string/test_qsort.rb
+cext-ruby/string/test_rb_str_dup.rb
+cext-ruby/string/test_set_len.rb
+cext-ruby/string/test_too_many_dummy_encodings.rb
+cext-ruby/string/test_fstring.rb
+cext-ruby/string/test_modify_expand.rb
+cext-ruby/string/test_nofree.rb
+
+# needs internal/time.h
+cext-ruby/time/test_new.rb
+
 # Other issues
 
 cext-ruby/array/test_to_ary_concat.rb # non-standard extension name and irrelevant
@@ -49,9 +74,6 @@ cext-ruby/num2int/test_num2int.rb # terminates with segfault on CI
 cext-ruby/popen_deadlock/test_popen_deadlock.rb
 cext-ruby/postponed_job/test_postponed_job.rb
 cext-ruby/rational/test_rat.rb
-cext-ruby/string/test_fstring.rb
-cext-ruby/string/test_modify_expand.rb
-cext-ruby/string/test_nofree.rb
 cext-ruby/thread/test_instrumentation_api.rb # needs rb_internal_thread_add_event_hook to be implemented
 cext-ruby/win32/test_console_attr.rb
 cext-ruby/win32/test_dln.rb

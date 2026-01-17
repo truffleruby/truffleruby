@@ -16,8 +16,6 @@ cext-ruby/funcall/test_passing_block.rb
 cext-ruby/gvl/test_last_thread.rb
 cext-ruby/gvl/test_ubf_async_safe.rb
 cext-ruby/hash/test_delete.rb
-cext-ruby/integer/test_integer.rb
-cext-ruby/integer/test_my_integer.rb
 cext-ruby/load/test_dot_dot.rb
 cext-ruby/load/test_protect.rb
 cext-ruby/load/test_resolve_symbol.rb
@@ -30,19 +28,6 @@ cext-ruby/proc/test_bmethod.rb
 cext-ruby/st/test_foreach.rb
 cext-ruby/st/test_numhash.rb
 cext-ruby/st/test_update.rb
-cext-ruby/string/test_capacity.rb
-cext-ruby/string/test_coderange.rb
-cext-ruby/string/test_cstr.rb
-cext-ruby/string/test_ellipsize.rb
-cext-ruby/string/test_enc_associate.rb
-cext-ruby/string/test_enc_str_buf_cat.rb
-cext-ruby/string/test_external_new.rb
-cext-ruby/string/test_interned_str.rb
-cext-ruby/string/test_normalize.rb
-cext-ruby/string/test_qsort.rb
-cext-ruby/string/test_rb_str_dup.rb
-cext-ruby/string/test_set_len.rb
-cext-ruby/string/test_too_many_dummy_encodings.rb
 cext-ruby/struct/test_data.rb
 cext-ruby/struct/test_duplicate.rb
 cext-ruby/struct/test_len.rb
@@ -62,7 +47,6 @@ cext-ruby/test_recursion.rb
 cext-ruby/test_scan_args.rb
 cext-ruby/thread/test_lock_native_thread.rb
 cext-ruby/thread_fd/test_thread_fd_close.rb
-cext-ruby/time/test_new.rb
 cext-ruby/tracepoint/test_tracepoint.rb
 cext-ruby/typeddata/test_typeddata.rb
 cext-ruby/vm/test_at_exit.rb
