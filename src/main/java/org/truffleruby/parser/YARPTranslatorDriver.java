@@ -138,7 +138,7 @@ public final class YARPTranslatorDriver {
                 blockDepth++;
             }
 
-            parentEnvironment = environmentForFrame(parentDescriptor, blockDepth - 1);
+            parentEnvironment = createEnvironmentFromDescriptor(parentDescriptor, blockDepth - 1);
         } else {
             parentEnvironment = null;
         }
@@ -508,11 +508,13 @@ public final class YARPTranslatorDriver {
         parseEnvironment.allowTruffleRubyPrimitives = allowTruffleRubyPrimitives;
     }
 
-    private TranslatorEnvironment environmentForFrame(FrameDescriptor descriptor, int blockDepth) {
+    private TranslatorEnvironment createEnvironmentFromDescriptor(FrameDescriptor descriptor, int blockDepth) {
         var info = FrameDescriptorInfo.of(descriptor);
         var parent = info.getParentDescriptor();
         assert (blockDepth == 0) == (parent == null);
-        TranslatorEnvironment parentEnvironment = parent == null ? null : environmentForFrame(parent, blockDepth - 1);
+        TranslatorEnvironment parentEnvironment = parent == null
+                ? null
+                : createEnvironmentFromDescriptor(parent, blockDepth - 1);
 
         var sharedMethodInfo = info.getSharedMethodInfo();
         assert sharedMethodInfo.getBlockDepth() == blockDepth;
