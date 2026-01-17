@@ -236,6 +236,11 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         }
     }
 
+    public void copyRuntimeNameFrom(SharedMethodInfo base) {
+        assert this.runtimeName == null;
+        this.runtimeName = base.getRuntimeName();
+    }
+
     /** See also {@link org.truffleruby.core.module.ModuleOperations#constantName}. Version without context which
      * returns "Object::A" for top-level constant A. */
     public static String moduleAndConstantName(RubyModule module, String constantName) {

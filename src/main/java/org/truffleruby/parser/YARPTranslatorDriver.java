@@ -209,6 +209,8 @@ public final class YARPTranslatorDriver {
                     blockDepth,
                     parentEnvironment.getSharedMethodInfo(),
                     null);
+            // `def foo = eval "..."` does not use "block in foo" even though it is one frame deeper
+            sharedMethodInfo.copyRuntimeNameFrom(parentEnvironment.getSharedMethodInfo());
         }
 
         final TranslatorEnvironment environment = new TranslatorEnvironment(
