@@ -35,6 +35,23 @@ describe 'Thread::Backtrace::Location#label' do
     required_label.should == "block in <top (required)>\n"
   end
 
+  it "return the same name as the caller for eval" do
+    this = caller_locations(0)[0].label
+    eval("caller_locations(0)[0]").label.should == this
+
+    b = binding
+    b.eval("caller_locations(0)[0]").label.should == this
+
+    b.local_variable_set(:binding_var1, 1)
+    b.eval("caller_locations(0)[0]").label.should == this
+
+    b.local_variable_set(:binding_var2, 2)
+    b.eval("caller_locations(0)[0]").label.should == this
+
+    b.local_variable_set(:binding_var2, 2)
+    eval("caller_locations(0)[0]", b).label.should == this
+  end
+
   ruby_version_is "3.4" do
     describe "is Module#method for" do
       it "a core method defined natively" do

@@ -79,7 +79,8 @@ public abstract class BindingNodes {
     @TruffleBoundary
     public static FrameDescriptor newFrameDescriptor(FrameDescriptor parentDescriptor) {
         var parentInfo = FrameDescriptorInfo.of(parentDescriptor);
-        var info = new FrameDescriptorInfo(parentDescriptor, parentInfo.getSharedMethodInfo().addOneBlockDepth());
+        var info = new FrameDescriptorInfo(parentDescriptor,
+                parentInfo.getSharedMethodInfo().addOneBlockDepthButKeepParseNameAndRuntimeName());
         return TranslatorEnvironment.newFrameDescriptorBuilderForBlock(info).build();
     }
 
@@ -90,7 +91,8 @@ public abstract class BindingNodes {
         assert name != null && !name.isEmpty();
 
         var parentInfo = FrameDescriptorInfo.of(parentDescriptor);
-        var info = new FrameDescriptorInfo(parentDescriptor, parentInfo.getSharedMethodInfo().addOneBlockDepth());
+        var info = new FrameDescriptorInfo(parentDescriptor,
+                parentInfo.getSharedMethodInfo().addOneBlockDepthButKeepParseNameAndRuntimeName());
         var builder = TranslatorEnvironment.newFrameDescriptorBuilderForBlock(info);
         int index = builder.addSlot(FrameSlotKind.Illegal, name, null);
         if (index != NEW_VAR_INDEX) {

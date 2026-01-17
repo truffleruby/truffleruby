@@ -128,18 +128,23 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
                 ArgumentDescriptor.ANY_UNNAMED);
     }
 
-    public SharedMethodInfo addOneBlockDepth() {
+    public SharedMethodInfo addOneBlockDepthButKeepParseNameAndRuntimeName() {
         int blockDepth = this.blockDepth + 1;
-        return forBlock(
+        // Keep parseName and runtimeName the same, required for Binding
+        var parseName = this.parseName;
+
+        var info = forBlock(
                 sourceSection,
                 staticLexicalScope,
                 Arity.NO_ARGUMENTS,
                 methodName,
-                getBlockName(blockDepth, methodName),
+                parseName,
                 null,
                 blockDepth,
                 getMethodSharedMethodInfo(),
                 null);
+        info.copyRuntimeNameFrom(this);
+        return info;
     }
 
     public SourceSection getSourceSection() {
