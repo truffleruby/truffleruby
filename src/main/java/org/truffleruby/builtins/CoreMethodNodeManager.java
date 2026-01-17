@@ -51,6 +51,7 @@ import org.truffleruby.language.objects.SingletonClassNode;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.dsl.NodeFactory;
+import org.truffleruby.parser.TranslatorEnvironment;
 import org.truffleruby.parser.YARPTranslator;
 
 public final class CoreMethodNodeManager {
@@ -392,10 +393,12 @@ public final class CoreMethodNodeManager {
         RubyNode node = (RubyNode) createNodeFromFactory(nodeFactory, argumentsNodes);
         RubyNode methodNode = transformResult(language, method, node);
 
+        var frameDescriptor = TranslatorEnvironment.newFrameDescriptorBuilderForMethod(sharedMethodInfo).build();
+
         return new RubyCoreMethodRootNode(
                 language,
                 sharedMethodInfo.getSourceSection(),
-                null,
+                frameDescriptor,
                 sharedMethodInfo,
                 methodNode,
                 split,
