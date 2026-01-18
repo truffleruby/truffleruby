@@ -35,7 +35,7 @@ ast: |
                       flags = 0
                       sourceCharIndex = -1
                       sourceLength = 0
-                      value = 20000
+                      value = 2000
               BooleanLiteralNode
                   attributes:
                       flags = 0
