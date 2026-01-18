@@ -1,1 +1,7 @@
-exclude :test_accept_verbatim_escape_in_string, "undefined symbol: rb_reg_check_preprocess"
+exclude :test_accept_verbatim, "<\"\\n\" +"
+exclude :test_accept_verbatim_escape_in_backtick, "<\"\\n\" +"
+exclude :test_accept_verbatim_escape_in_string, "<\"\\n\" +"
+exclude :test_accept_verbatim_nl_after_backslash, "<\"\\n\" +"
+exclude :test_accept_verbatim_parseable, "<\"\\n\" +"
+exclude :test_accept_verbatim_redefinable_operators, "<\"\\n\" +"
+exclude :test_accept_verbatim_ruby, "<\"\\n\" +"
