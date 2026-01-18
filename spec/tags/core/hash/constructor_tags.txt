@@ -1,1 +1,0 @@
-fails:Hash.[] raises for elements that are not arrays
