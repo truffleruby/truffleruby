@@ -66,6 +66,7 @@ describe "Float#round" do
   it "works for corner cases" do
     42.0.round(308).should eql(42.0)
     1.0e307.round(2).should eql(1.0e307)
+    120.0.round(-1).should eql(120)
   end
 
   # redmine:5271
@@ -197,7 +198,13 @@ describe "Float#round" do
     it "returns 0 for 0 or undefined ndigits" do
       (0.0).round.should == 0
       (-0.0).round(0).should == 0
-      (0.0).round(half: :up) == 0
+      (0.0).round(half: :up).should == 0
+    end
+
+    it "returns 0 for negative ndigits" do
+      (0.0).round(-1).should == 0
+      (-0.0).round(-1).should == 0
+      (0.0).round(-1, half: :up).should == 0
     end
   end
 end
