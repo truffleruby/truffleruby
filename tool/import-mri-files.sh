@@ -119,17 +119,12 @@ rm -f test/bootstraptest/test_yjit*
 cp "$RUBY_SOURCE_DIR/BSDL" doc/legal/ruby-bsdl.txt
 cp "$RUBY_SOURCE_DIR/COPYING" doc/legal/ruby-licence.txt
 cp "$RUBY_SOURCE_DIR/gems/bundled_gems" doc/legal/bundled_gems
-cp lib/cext/include/ccan/licenses/BSD-MIT doc/legal/ccan-bsd-mit.txt
-cp lib/cext/include/ccan/licenses/CC0 doc/legal/ccan-cc0.txt
 
 # include/
 rm -rf lib/cext/include/ruby
 git checkout lib/cext/include/ruby/config.h
 cp -R "$RUBY_SOURCE_DIR/include/." lib/cext/include
 cp -R "$RUBY_SOURCE_DIR/ext/digest/digest.h" lib/cext/include/ruby
-
-rm -rf lib/cext/include/ccan
-cp -R "$RUBY_SOURCE_DIR/ccan" lib/cext/include
 
 # Keep in sync with the list in lib/cext/include/internal_all.h
 internal_headers=({bits,compilers,st,static_assert}.h)
