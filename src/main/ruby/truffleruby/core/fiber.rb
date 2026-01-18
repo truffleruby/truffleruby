@@ -37,24 +37,27 @@ class Fiber
 
   def self.[](key)
     key = Truffle::Type.coerce_to_symbol(key)
-    storage = Truffle::FiberOperations.get_storage_for_access(false)
+    fiber = Fiber.current
+    storage = Primitive.fiber_get_storage(fiber)
 
     Primitive.nil?(storage) ? nil : storage[key]
   end
 
   def self.[]=(key, value)
     key = Truffle::Type.coerce_to_symbol(key)
-    storage = Truffle::FiberOperations.get_storage_for_access(!Primitive.nil?(value))
+    fiber = Fiber.current
+    storage = Primitive.fiber_get_storage(fiber)
 
-    if Primitive.nil?(value)
-      # Delete the key from storage if the storage exists.
+    if Primitive.nil?(value) # A nil value means remove key from storage
       unless Primitive.nil?(storage)
         storage.delete(key)
       end
     else
-      # Here, we're guaranteed to have allocated storage by virtue of a non-nil value,
-      # so we can simply assign the value to the key.
-      storage[key] = value
+      if storage
+        storage[key] = value
+      else
+        Primitive.fiber_set_storage(fiber, { key => value })
+      end
     end
 
     value

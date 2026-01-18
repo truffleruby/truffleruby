@@ -46,17 +46,5 @@ module Truffle
         end
       end
     end
-
-    def self.get_storage_for_access(allocate)
-      fiber = Fiber.current
-      storage = Primitive.fiber_get_storage(fiber)
-
-      if Primitive.nil?(storage) && allocate
-        storage = {}
-        Primitive.fiber_set_storage(fiber, storage)
-      end
-
-      storage
-    end
   end
 end
