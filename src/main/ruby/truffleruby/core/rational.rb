@@ -87,7 +87,7 @@ class Rational < Numeric
         elsif self == -1
           Rational.__send__(:new_already_canonical, other.even? ? 1 : -1, 1)
         else
-          to_f ** other
+          raise ArgumentError, 'exponent is too large'
         end
       end
     when Float
