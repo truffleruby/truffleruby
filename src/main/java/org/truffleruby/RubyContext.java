@@ -266,6 +266,9 @@ public final class RubyContext {
         coreLibrary.loadRubyCoreLibraryAndPostBoot();
         Metrics.printTime("after-load-core");
 
+        // Some objects can't be created before the constructor has finished
+        coreLibrary.loadConstructorDependantObjects();
+
         // Share once everything is loaded
         if (language.options.SHARED_OBJECTS_ENABLED && language.options.SHARED_OBJECTS_FORCE) {
             sharedObjects.startSharing(language, OptionsCatalog.SHARED_OBJECTS_FORCE.getName() + " being true");

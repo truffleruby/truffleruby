@@ -167,6 +167,17 @@ describe "Hash literal" do
       {**nil}.should == {}
       {a: 1, **nil}.should == {a: 1}
     end
+
+    it "expands nil using ** into {} and provides a copy to the callable" do
+      ScratchPad.record []
+      insert = ->(key, **kw) do
+        kw[key] = 1
+        ScratchPad << kw
+      end
+      insert.call(:foo, **nil)
+      insert.call(:bar, **nil)
+      ScratchPad.recorded.should == [{ foo: 1 }, { bar: 1 }]
+    end
   end
 
   it "expands an '**{}' or '**obj' element with the last key/value pair taking precedence" do

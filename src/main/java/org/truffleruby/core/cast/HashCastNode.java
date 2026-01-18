@@ -29,6 +29,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 import static org.truffleruby.language.dispatch.DispatchConfiguration.PRIVATE_RETURN_MISSING;
 
+/** This node is used for splatting a Hash like {@code foo(**kw)} or {@code { a: 1, **b }}. Therefore it treats nil
+ * specially. */
 @GenerateCached(false)
 @GenerateInline
 public abstract class HashCastNode extends RubyBaseNode {
@@ -40,7 +42,12 @@ public abstract class HashCastNode extends RubyBaseNode {
         return hash;
     }
 
-    @Specialization(guards = "!isRubyHash(object)")
+    @Specialization
+    static RubyHash castNil(Node node, Nil nil) {
+        return getContext(node).getCoreLibrary().getEmptyFrozenHash();
+    }
+
+    @Specialization(guards = { "!isRubyHash(object)", "!isNil(object)" })
     static RubyHash cast(Node node, Object object,
             @Cached InlinedBranchProfile errorProfile,
             @Cached(inline = false) DispatchNode toHashNode) {
