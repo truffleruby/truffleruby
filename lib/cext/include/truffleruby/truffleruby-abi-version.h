@@ -25,6 +25,6 @@
 // and cannot reach the same version while having different ABI
 // ($TRUFFLERUBY_VERSION is never the same as $RUBY_VERSION).
 
-#define TRUFFLERUBY_ABI_VERSION "33.0.0.1"
+#define TRUFFLERUBY_ABI_VERSION "33.0.1.1"
 
 #endif
