@@ -44,7 +44,7 @@ public abstract class HashCastNode extends RubyBaseNode {
 
     @Specialization
     static RubyHash castNil(Node node, Nil nil) {
-        return getContext(node).getCoreLibrary().getEmptyFrozenHash();
+        return getContext(node).getCoreLibrary().emptyFrozenHash;
     }
 
     @Specialization(guards = { "!isRubyHash(object)", "!isNil(object)" })

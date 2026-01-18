@@ -37,7 +37,6 @@ import org.truffleruby.core.basicobject.RubyBasicObject;
 import org.truffleruby.core.binding.RubyBinding;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.TStringUtils;
-import org.truffleruby.core.hash.HashOperations;
 import org.truffleruby.core.hash.RubyHash;
 import org.truffleruby.core.klass.ClassNodes;
 import org.truffleruby.core.klass.RubyClass;
@@ -228,13 +227,11 @@ public final class CoreLibrary {
 
     public final RubyArray argv;
     public final RubyBasicObject mainObject;
+    public final RubyHash emptyFrozenHash;
 
     public final GlobalVariables globalVariables;
     public final BindingLocalVariablesObject interactiveBindingLocalVariablesObject;
     public final RubyClass noMatchingPatternErrorClass;
-
-    // Not final since not assignable in constructor
-    @CompilationFinal private RubyHash emptyFrozenHash;
 
     @CompilationFinal private RubyClass eagainWaitReadable;
     @CompilationFinal private RubyClass eagainWaitWritable;
@@ -555,6 +552,7 @@ public final class CoreLibrary {
 
         mainObject = new RubyBasicObject(objectClass, language.basicObjectShape);
         argv = new RubyArray(arrayClass, language.arrayShape, ArrayStoreLibrary.initialStorage(false), 0);
+        emptyFrozenHash = new RubyHash(hashClass, language.hashShape, context);
 
         globalVariables = new GlobalVariables(context);
         interactiveBindingLocalVariablesObject = new BindingLocalVariablesObject();
@@ -610,7 +608,6 @@ public final class CoreLibrary {
     }
 
     public void initialize() {
-        emptyFrozenHash = HashOperations.newEmptyHash(context, language);
         initializeConstants();
     }
 
@@ -903,10 +900,6 @@ public final class CoreLibrary {
 
     public RubyBasicObject getENV() {
         return (RubyBasicObject) objectClass.fields.getConstant("ENV").getValue();
-    }
-
-    public RubyHash getEmptyFrozenHash() {
-        return emptyFrozenHash;
     }
 
     @TruffleBoundary
