@@ -86,6 +86,30 @@ ruby_version_is "3.3" do
       describe "returned Enumerator size" do
         it "returns the Range size when Range size is finite" do
           (1..3).reverse_each.size.should == 3
+          (1...3).reverse_each.size.should == 2
+
+          (1..3.3).reverse_each.size.should == 3
+          (1...3.3).reverse_each.size.should == 3
+        end
+
+        ruby_version_is "3.3"..."3.4" do
+          it "returns a size when it is not iterable" do
+            (1.1..3).reverse_each.size.should == 2
+            (1.1..3.3).reverse_each.size.should == 3
+            (1.1..nil).reverse_each.size.should == Float::INFINITY
+            (nil..3.3).reverse_each.size.should == Float::INFINITY
+            (nil..nil).reverse_each.size.should == nil
+          end
+        end
+
+        ruby_version_is "3.4" do
+          it "raises TypeError when the range is not iterable" do
+            -> { (1.1..3).reverse_each.size }.should raise_error(TypeError, /can't iterate from Integer/)
+            -> { (1.1..3.3).reverse_each.size }.should raise_error(TypeError, /can't iterate from Float/)
+            -> { (1.1..nil).reverse_each.size }.should raise_error(TypeError, /can't iterate from NilClass/)
+            -> { (nil..3.3).reverse_each.size }.should raise_error(TypeError, /can't iterate from Float/)
+            -> { (nil..nil).reverse_each.size }.should raise_error(TypeError, /can't iterate from NilClass/)
+          end
         end
 
         ruby_bug "#20936", "3.4"..."4.0" do

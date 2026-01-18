@@ -16,8 +16,6 @@ exclude :test_min, "ArgumentError: wrong number of arguments (given 1, expected 
 exclude :test_overlap?, "Expected 1.. to not be overlap? \"a\".."
 exclude :test_range_bsearch_for_floats, "needs investigation"
 exclude :test_range_numeric_string, "<[\"9\", \"10\"]> expected but was <[]>."
-exclude :test_reverse_each_size, "TypeError expected but nothing was raised."
-exclude :test_size, "failed on 1...5.5."
 exclude :test_step_non_numeric_range, "ArgumentError: invalid value for Integer(): a"
 exclude :test_step_numeric_fixnum_boundary, "ArgumentError expected but nothing was raised."
 exclude :test_step_numeric_range, "[ArgumentError] exception expected, not #<TypeError: can't iterate from NilClass>."
