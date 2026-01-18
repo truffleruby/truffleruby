@@ -579,6 +579,30 @@ class Range
     nil
   end
 
+  private def reverse_each_size
+    if Primitive.nil?(self.end)
+      raise TypeError, "can't iterate from #{Primitive.class(self.end)}"
+    end
+
+    if Primitive.is_a?(self.begin, Integer)
+      return Float::INFINITY if self.end == Float::INFINITY
+
+      delta = self.end - self.begin
+      delta += 1 if !exclude_end? || self.end % 1 != 0
+      return delta < 0 ? 0 : delta.floor
+    end
+
+    if Primitive.nil?(self.begin)
+      return Float::INFINITY if Primitive.is_a?(self.end, Integer)
+    end
+
+    unless self.begin.respond_to?(:succ)
+      raise TypeError, "can't iterate from #{Primitive.class(self.end)}"
+    end
+
+    nil
+  end
+
   def map(&block)
     ary = Primitive.range_integer_map(self, block)
     if !Primitive.undefined?(ary)
@@ -618,29 +642,5 @@ class Range
       nil
     end
     ary
-  end
-
-  private def reverse_each_size
-    if Primitive.nil?(self.end)
-      raise TypeError, "can't iterate from #{Primitive.class(self.end)}"
-    end
-
-    if Primitive.is_a?(self.begin, Integer)
-      return Float::INFINITY if self.end == Float::INFINITY
-
-      delta = self.end - self.begin
-      delta += 1 if !exclude_end? || self.end % 1 != 0
-      return delta < 0 ? 0 : delta.floor
-    end
-
-    if Primitive.nil?(self.begin)
-      return Float::INFINITY if Primitive.is_a?(self.end, Integer)
-    end
-
-    unless self.begin.respond_to?(:succ)
-      raise TypeError, "can't iterate from #{Primitive.class(self.end)}"
-    end
-
-    nil
   end
 end
