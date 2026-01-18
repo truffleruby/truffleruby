@@ -113,7 +113,7 @@ public abstract class FiberNodes {
 
         @TruffleBoundary
         @Specialization
-        Object initialize(RubyFiber fiber, boolean blocking, RubyProc block) {
+        Object initialize(RubyFiber fiber, boolean blocking, Object storage, RubyProc block) {
             if (!getContext().getEnv().isCreateThreadAllowed()) {
                 // Because TruffleThreadBuilder#build denies it already, before the thread is even started.
                 // The permission is called allowCreateThread, so it kind of makes sense.
@@ -122,11 +122,12 @@ public abstract class FiberNodes {
             }
 
             fiber.initialize(getLanguage(), getContext(), blocking, block, this);
+            fiber.fiberStorage = storage;
             return nil;
         }
 
         @Specialization
-        Object noBlock(RubyFiber fiber, boolean blocking, Nil block) {
+        Object noBlock(RubyFiber fiber, boolean blocking, Object storage, Nil block) {
             throw new RaiseException(getContext(), coreExceptions().argumentErrorProcWithoutBlock(this));
         }
 
@@ -414,6 +415,25 @@ public abstract class FiberNodes {
         Object setErrorInfo(Object exception) {
             getLanguage().getCurrentFiber().errorInfo = exception;
             return exception;
+        }
+    }
+
+    @Primitive(name = "fiber_get_storage")
+    public abstract static class FiberGetStorageNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        Object getStorage(RubyFiber fiber) {
+            return fiber.fiberStorage;
+        }
+    }
+
+    @Primitive(name = "fiber_set_storage")
+    public abstract static class FiberSetStorageNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        Object setStorage(RubyFiber fiber, Object storage) {
+            fiber.fiberStorage = storage;
+            return storage;
         }
     }
 

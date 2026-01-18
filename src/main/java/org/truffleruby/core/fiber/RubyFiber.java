@@ -82,6 +82,7 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
     private Object lastException = nil; // fiber-local variable $!
     public Object errorInfo = nil; // MRI: rb_errinfo
     public final RubyBasicObject fiberLocals;
+    public Object fiberStorage = nil;
     public final RubyArray catchTags;
     public final CountDownLatch initializedLatch = new CountDownLatch(1);
     final BlockingQueue<FiberManager.FiberMessage> messageQueue = newMessageQueue();
@@ -180,6 +181,7 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
     @Override
     public void getAdjacentObjects(Set<Object> reachable) {
         reachable.add(fiberLocals);
+        reachable.add(fiberStorage);
         reachable.add(rubyThread);
     }
 

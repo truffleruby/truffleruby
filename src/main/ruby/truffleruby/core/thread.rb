@@ -132,6 +132,17 @@ class Thread
     if Primitive.thread_initialized?(self)
       Kernel.raise ThreadError, 'already initialized thread'
     end
+
+    # Inherit fiber storage from the current fiber to new thread's root fiber.
+    # We must set storage before `thread_initialize` to avoid a race condition.
+    # The new thread starts running immediately after `thread_initialize` returns.
+    current_storage = Primitive.fiber_get_storage(Fiber.current)
+    unless Primitive.nil?(current_storage)
+      inherited_storage = current_storage.dup
+      root_fiber = Primitive.thread_get_root_fiber(self)
+      Primitive.fiber_set_storage(root_fiber, inherited_storage)
+    end
+
     Primitive.thread_initialize(self)
   end
 

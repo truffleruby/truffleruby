@@ -9,6 +9,7 @@ Bug fixes:
 Compatibility:
 
 * Fix `mkmf.rb` to use host's `RbConfig` for `$ruby` when `--target-rbconfig` is used (#4097, @panozzaj).
+* Implement `Fiber.[]`, `Fiber.[]=`, and `Fiber#{storage,storage=}` (#4007, @nirvdrum).
 
 Performance:
 
