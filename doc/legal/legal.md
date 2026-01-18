@@ -36,14 +36,6 @@ The general-purpose hash table library `src/main/c/cext/st.c` and
 `lib/cext/include/ruby/st.h` was written originally be Peter Moore and is
 public domain.
 
-`lib/cext/include/ccan/{build_assert,check_type,container_of,str}` are all
-utilities from CCAN and are public domain or available under the terms of the
-CC0 public domain dedication, see `ccan-cc0.txt`.
-
-`lib/cext/include/ccan/list` is a utility from CCAN and is available under the
-terms of 'BSD-MIT', see `ccan-bsd-mit.txt`. Despite the filename 'BSD-MIT' this
-is the conventional MIT licence.
-
 RDoc Darkfish theme fonts under `lib/mri/rdoc/generator/template/darkfish/` are
 available under the terms of the SIL Open Font License 1.1, see `ofl.txt`.
 
