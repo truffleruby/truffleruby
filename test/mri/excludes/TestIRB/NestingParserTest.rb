@@ -1,3 +1,5 @@
-exclude :test_for_in, "undefined symbol: rb_make_temporary_id"
-exclude :test_oneliner_def, "<[\"if\"]> expected but was <[\"if\", \"def\", \"def\", \"`\"]>."
-exclude :test_ruby_syntax, "undefined symbol: rb_reg_check_preprocess"
+exclude :test_backslash_continued_nested_symbol, "<[\":\", \"<<A\", \"\\\#{\"]> expected but was <[\"<<A\", \"\\\#{\"]>."
+exclude :test_oneliner_def, "<[\"if\"]> expected but was <[\"if\","
+exclude :test_ruby_syntax, "<[\"class\"]> expected but was <[\"class\", \"def\"]>."
+exclude :test_undef_alias, "<[\"(\", \"if\"]> expected but was <[\"(\", \"do\", \"if\"]>."
+exclude :test_while_until, "<[\"while\"]> expected but was <[\"while\", \"do\"]>."
