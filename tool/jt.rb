@@ -1460,7 +1460,7 @@ module Commands
       end
 
       puts '3. Verifying tests pass'
-      run_mri_tests(options, group, [], use_exec: groups.size == 1)
+      run_mri_tests(options, group, [], use_exec: groups.size == 1, continue_on_failure: true)
     end
   end
 

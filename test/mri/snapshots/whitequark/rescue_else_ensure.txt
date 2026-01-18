@@ -21,6 +21,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── rescue_clause:
             │   @ RescueNode (location: (1,13)-(1,24))
@@ -43,6 +44,7 @@
             │   │           ├── opening_loc: ∅
             │   │           ├── arguments: ∅
             │   │           ├── closing_loc: ∅
+            │   │           ├── equal_loc: ∅
             │   │           └── block: ∅
             │   └── subsequent: ∅
             ├── else_clause:
@@ -62,6 +64,7 @@
             │   │           ├── opening_loc: ∅
             │   │           ├── arguments: ∅
             │   │           ├── closing_loc: ∅
+            │   │           ├── equal_loc: ∅
             │   │           └── block: ∅
             │   └── end_keyword_loc: (1,36)-(1,42) = "ensure"
             ├── ensure_clause:
@@ -81,6 +84,7 @@
             │   │           ├── opening_loc: ∅
             │   │           ├── arguments: ∅
             │   │           ├── closing_loc: ∅
+            │   │           ├── equal_loc: ∅
             │   │           └── block: ∅
             │   └── end_keyword_loc: (1,48)-(1,51) = "end"
             └── end_keyword_loc: (1,48)-(1,51) = "end"

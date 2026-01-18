@@ -442,23 +442,6 @@ public final class ValueWrapperManager {
 
     @ExportLibrary(InteropLibrary.class)
     @GenerateUncached
-    public static final class IsNativeObjectFunction implements TruffleObject {
-
-        @ExportMessage
-        protected boolean isExecutable() {
-            return true;
-        }
-
-        @ExportMessage
-        protected boolean execute(Object[] arguments,
-                @Cached IsNativeObjectNode isNativeObjectNode,
-                @Bind Node node) {
-            return isNativeObjectNode.execute(node, arguments[0]);
-        }
-    }
-
-    @ExportLibrary(InteropLibrary.class)
-    @GenerateUncached
     public static final class ToNativeObjectFunction implements TruffleObject {
 
         @ExportMessage

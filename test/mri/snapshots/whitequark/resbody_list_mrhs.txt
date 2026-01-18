@@ -21,6 +21,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── rescue_clause:
             │   @ RescueNode (location: (1,13)-(1,39))
@@ -39,6 +40,7 @@
             │   │       ├── opening_loc: ∅
             │   │       ├── arguments: ∅
             │   │       ├── closing_loc: ∅
+            │   │       ├── equal_loc: ∅
             │   │       └── block: ∅
             │   ├── operator_loc: ∅
             │   ├── reference: ∅
@@ -56,6 +58,7 @@
             │   │           ├── opening_loc: ∅
             │   │           ├── arguments: ∅
             │   │           ├── closing_loc: ∅
+            │   │           ├── equal_loc: ∅
             │   │           └── block: ∅
             │   └── subsequent: ∅
             ├── else_clause: ∅

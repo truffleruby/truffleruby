@@ -109,6 +109,7 @@
         │               │                   │   └── value: 1
         │               │                   └── operator_loc: (5,11)-(5,13) = "=>"
         │               ├── closing_loc: ∅
+        │               ├── equal_loc: ∅
         │               └── block: ∅
         ├── @ ReturnNode (location: (7,0)-(7,12))
         │   ├── flags: newline
@@ -146,6 +147,7 @@
         │               │                   │   └── value: 1
         │               │                   └── operator_loc: ∅
         │               ├── closing_loc: ∅
+        │               ├── equal_loc: ∅
         │               └── block: ∅
         ├── @ ReturnNode (location: (9,0)-(9,13))
         │   ├── flags: newline
@@ -183,6 +185,7 @@
         │               │                   │   └── value: 1
         │               │                   └── operator_loc: ∅
         │               ├── closing_loc: (9,12)-(9,13) = ")"
+        │               ├── equal_loc: ∅
         │               └── block: ∅
         └── @ ReturnNode (location: (11,0)-(11,14))
             ├── flags: newline
@@ -217,6 +220,7 @@
                         │                   │   ├── opening_loc: ∅
                         │                   │   ├── arguments: ∅
                         │                   │   ├── closing_loc: ∅
+                        │                   │   ├── equal_loc: ∅
                         │                   │   └── block: ∅
                         │                   ├── value:
                         │                   │   @ IntegerNode (location: (11,12)-(11,13))
@@ -224,4 +228,5 @@
                         │                   │   └── value: 1
                         │                   └── operator_loc: (11,10)-(11,12) = "=>"
                         ├── closing_loc: (11,13)-(11,14) = ")"
+                        ├── equal_loc: ∅
                         └── block: ∅

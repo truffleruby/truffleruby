@@ -17,6 +17,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── call_operator_loc: ∅
             ├── name: :[]
@@ -44,4 +45,5 @@
             │                   │   └── value: 1
             │                   └── operator_loc: (1,9)-(1,11) = "=>"
             ├── closing_loc: (1,14)-(1,15) = "]"
+            ├── equal_loc: ∅
             └── block: ∅

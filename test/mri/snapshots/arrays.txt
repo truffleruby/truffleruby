@@ -21,6 +21,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── opening_loc: (1,0)-(1,1) = "["
         │   └── closing_loc: (1,3)-(1,4) = "]"
@@ -36,6 +37,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── name: :[]=
@@ -54,6 +56,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       ├── @ CallNode (location: (3,9)-(3,12))
         │   │       │   ├── flags: variable_call, ignore_visibility
@@ -64,6 +67,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ ArrayNode (location: (3,16)-(3,23))
         │   │           ├── flags: static_literal
@@ -80,6 +84,7 @@
         │   │           ├── opening_loc: ∅
         │   │           └── closing_loc: ∅
         │   ├── closing_loc: (3,12)-(3,13) = "]"
+        │   ├── equal_loc: (3,14)-(3,15) = "="
         │   └── block: ∅
         ├── @ ArrayNode (location: (5,0)-(5,13))
         │   ├── flags: newline
@@ -199,6 +204,7 @@
         │   │               │   ├── opening_loc: ∅
         │   │               │   ├── arguments: ∅
         │   │               │   ├── closing_loc: ∅
+        │   │               │   ├── equal_loc: ∅
         │   │               │   └── block: ∅
         │   │               ├── value:
         │   │               │   @ CallNode (location: (28,8)-(28,11))
@@ -210,6 +216,7 @@
         │   │               │   ├── opening_loc: ∅
         │   │               │   ├── arguments: ∅
         │   │               │   ├── closing_loc: ∅
+        │   │               │   ├── equal_loc: ∅
         │   │               │   └── block: ∅
         │   │               └── operator_loc: (28,5)-(28,7) = "=>"
         │   ├── opening_loc: (28,0)-(28,1) = "["
@@ -229,6 +236,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── call_operator_loc: ∅
         │   │   ├── name: :[]
@@ -247,8 +255,10 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   ├── closing_loc: (30,7)-(30,8) = "]"
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── name: :[]=
@@ -267,6 +277,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ CallNode (location: (30,16)-(30,19))
         │   │           ├── flags: variable_call, ignore_visibility
@@ -277,8 +288,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (30,12)-(30,13) = "]"
+        │   ├── equal_loc: (30,14)-(30,15) = "="
         │   └── block: ∅
         ├── @ CallNode (location: (32,0)-(32,13))
         │   ├── flags: newline
@@ -295,6 +308,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── call_operator_loc: ∅
         │   │   ├── name: :[]
@@ -313,8 +327,10 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   ├── closing_loc: (32,7)-(32,8) = "]"
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── name: :[]
@@ -333,8 +349,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (32,12)-(32,13) = "]"
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ ArrayNode (location: (34,0)-(35,1))
         │   ├── flags: newline, static_literal
@@ -353,6 +371,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── name: :[]
@@ -371,6 +390,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ CallNode (location: (37,9)-(37,12))
         │   │           ├── flags: variable_call, ignore_visibility
@@ -381,8 +401,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (37,12)-(37,13) = "]"
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (39,0)-(39,19))
         │   ├── flags: newline, attribute_write
@@ -396,6 +418,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── name: :[]=
@@ -414,6 +437,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       ├── @ CallNode (location: (39,9)-(39,12))
         │   │       │   ├── flags: variable_call, ignore_visibility
@@ -424,6 +448,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ CallNode (location: (39,16)-(39,19))
         │   │           ├── flags: variable_call, ignore_visibility
@@ -434,8 +459,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (39,12)-(39,13) = "]"
+        │   ├── equal_loc: (39,14)-(39,15) = "="
         │   └── block: ∅
         ├── @ MultiWriteNode (location: (41,0)-(41,21))
         │   ├── flags: newline
@@ -452,6 +479,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   ├── opening_loc: (41,3)-(41,4) = "["
         │   │   │   ├── arguments:
@@ -475,6 +503,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       ├── opening_loc: (41,11)-(41,12) = "["
         │   │       ├── arguments:
@@ -515,6 +544,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── name: :[]
@@ -536,6 +566,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── call_operator_loc: ∅
         │   │           ├── name: :[]=
@@ -554,6 +585,7 @@
         │   │           │       │   ├── opening_loc: ∅
         │   │           │       │   ├── arguments: ∅
         │   │           │       │   ├── closing_loc: ∅
+        │   │           │       │   ├── equal_loc: ∅
         │   │           │       │   └── block: ∅
         │   │           │       └── @ CallNode (location: (43,15)-(43,18))
         │   │           │           ├── flags: variable_call, ignore_visibility
@@ -564,10 +596,13 @@
         │   │           │           ├── opening_loc: ∅
         │   │           │           ├── arguments: ∅
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block: ∅
         │   │           ├── closing_loc: (43,11)-(43,12) = "]"
+        │   │           ├── equal_loc: (43,13)-(43,14) = "="
         │   │           └── block: ∅
         │   ├── closing_loc: (43,18)-(43,19) = "]"
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (45,0)-(45,8))
         │   ├── flags: newline
@@ -581,6 +616,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── name: :[]
@@ -599,8 +635,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (45,7)-(45,8) = "]"
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (47,0)-(47,14))
         │   ├── flags: newline, attribute_write
@@ -614,6 +652,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── name: :[]=
@@ -632,6 +671,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ CallNode (location: (47,11)-(47,14))
         │   │           ├── flags: variable_call, ignore_visibility
@@ -642,8 +682,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (47,7)-(47,8) = "]"
+        │   ├── equal_loc: (47,9)-(47,10) = "="
         │   └── block: ∅
         ├── @ ArrayNode (location: (49,0)-(49,6))
         │   ├── flags: newline
@@ -680,6 +722,7 @@
         │   │               │   ├── opening_loc: ∅
         │   │               │   ├── arguments: ∅
         │   │               │   ├── closing_loc: ∅
+        │   │               │   ├── equal_loc: ∅
         │   │               │   └── block: ∅
         │   │               └── operator_loc: (51,1)-(51,3) = "**"
         │   ├── opening_loc: (51,0)-(51,1) = "["
@@ -705,6 +748,7 @@
         │   │               │   ├── opening_loc: ∅
         │   │               │   ├── arguments: ∅
         │   │               │   ├── closing_loc: ∅
+        │   │               │   ├── equal_loc: ∅
         │   │               │   └── block: ∅
         │   │               └── operator_loc: (53,4)-(53,6) = "**"
         │   ├── opening_loc: (53,0)-(53,1) = "["
@@ -730,6 +774,7 @@
         │   │           │   │   ├── opening_loc: ∅
         │   │           │   │   ├── arguments: ∅
         │   │           │   │   ├── closing_loc: ∅
+        │   │           │   │   ├── equal_loc: ∅
         │   │           │   │   └── block: ∅
         │   │           │   └── operator_loc: (55,4)-(55,6) = "**"
         │   │           ├── @ AssocSplatNode (location: (55,10)-(55,14))
@@ -753,6 +798,7 @@
         │   │               │   ├── opening_loc: ∅
         │   │               │   ├── arguments: ∅
         │   │               │   ├── closing_loc: ∅
+        │   │               │   ├── equal_loc: ∅
         │   │               │   └── block: ∅
         │   │               └── operator_loc: (55,16)-(55,18) = "**"
         │   ├── opening_loc: (55,0)-(55,1) = "["
@@ -775,6 +821,7 @@
         │   │               │   ├── opening_loc: ∅
         │   │               │   ├── arguments: ∅
         │   │               │   ├── closing_loc: ∅
+        │   │               │   ├── equal_loc: ∅
         │   │               │   └── block: ∅
         │   │               ├── value:
         │   │               │   @ CallNode (location: (58,9)-(58,12))
@@ -786,6 +833,7 @@
         │   │               │   ├── opening_loc: ∅
         │   │               │   ├── arguments: ∅
         │   │               │   ├── closing_loc: ∅
+        │   │               │   ├── equal_loc: ∅
         │   │               │   └── block: ∅
         │   │               └── operator_loc: (58,6)-(58,8) = "=>"
         │   ├── opening_loc: (57,0)-(57,1) = "["
@@ -969,6 +1017,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── opening_loc: (84,3)-(84,4) = "["
@@ -993,6 +1042,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── opening_loc: (86,3)-(86,4) = "["
@@ -1016,6 +1066,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── opening_loc: (88,3)-(88,4) = "["
@@ -1042,6 +1093,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── call_operator_loc: (90,3)-(90,4) = "."
         │   │   ├── name: :foo
@@ -1049,6 +1101,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── opening_loc: (90,7)-(90,8) = "["
@@ -1076,6 +1129,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── call_operator_loc: (92,3)-(92,4) = "."
         │   │   ├── name: :foo
@@ -1083,6 +1137,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── opening_loc: (92,7)-(92,8) = "["
@@ -1109,6 +1164,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── call_operator_loc: (94,3)-(94,4) = "."
         │   │   ├── name: :foo
@@ -1116,6 +1172,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── opening_loc: (94,7)-(94,8) = "["
@@ -1139,6 +1196,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── opening_loc: (96,3)-(96,4) = "["
@@ -1155,6 +1213,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (96,7)-(96,8) = "]"
         │   ├── block: ∅
@@ -1176,6 +1235,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── opening_loc: (98,3)-(98,4) = "["
@@ -1192,6 +1252,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (98,7)-(98,8) = "]"
         │   ├── block: ∅
@@ -1212,6 +1273,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── opening_loc: (100,3)-(100,4) = "["
@@ -1228,6 +1290,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (100,7)-(100,8) = "]"
         │   ├── block: ∅
@@ -1251,6 +1314,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── call_operator_loc: (102,3)-(102,4) = "."
         │   │   ├── name: :foo
@@ -1258,6 +1322,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── opening_loc: (102,7)-(102,8) = "["
@@ -1274,6 +1339,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (102,11)-(102,12) = "]"
         │   ├── block: ∅
@@ -1298,6 +1364,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── call_operator_loc: (104,3)-(104,4) = "."
         │   │   ├── name: :foo
@@ -1305,6 +1372,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── opening_loc: (104,7)-(104,8) = "["
@@ -1321,6 +1389,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (104,11)-(104,12) = "]"
         │   ├── block: ∅
@@ -1344,6 +1413,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── call_operator_loc: (106,3)-(106,4) = "."
         │   │   ├── name: :foo
@@ -1351,6 +1421,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── opening_loc: (106,7)-(106,8) = "["
@@ -1367,6 +1438,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (106,11)-(106,12) = "]"
         │   ├── block: ∅
@@ -1411,6 +1483,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── call_operator_loc: ∅
         │   │           ├── name: :[]
@@ -1425,6 +1498,7 @@
         │   │           │           ├── operator_loc: (108,12)-(108,13) = "*"
         │   │           │           └── expression: ∅
         │   │           ├── closing_loc: (108,13)-(108,14) = "]"
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (108,0)-(108,3) = "def"
@@ -1469,6 +1543,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── call_operator_loc: ∅
         │   │           ├── name: :[]
@@ -1486,6 +1561,7 @@
         │   │           │           ├── operator_loc: (110,15)-(110,16) = "*"
         │   │           │           └── expression: ∅
         │   │           ├── closing_loc: (110,16)-(110,17) = "]"
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (110,0)-(110,3) = "def"
@@ -1530,6 +1606,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── call_operator_loc: ∅
         │   │           ├── name: :[]=
@@ -1547,6 +1624,7 @@
         │   │           │           ├── flags: static_literal, decimal
         │   │           │           └── value: 1
         │   │           ├── closing_loc: (112,13)-(112,14) = "]"
+        │   │           ├── equal_loc: (112,15)-(112,16) = "="
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (112,0)-(112,3) = "def"
@@ -1591,6 +1669,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── call_operator_loc: ∅
         │   │           ├── name: :[]=
@@ -1611,6 +1690,7 @@
         │   │           │           ├── flags: static_literal, decimal
         │   │           │           └── value: 1
         │   │           ├── closing_loc: (114,16)-(114,17) = "]"
+        │   │           ├── equal_loc: (114,18)-(114,19) = "="
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (114,0)-(114,3) = "def"
@@ -1655,6 +1735,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── call_operator_loc: ∅
         │   │           ├── opening_loc: (116,11)-(116,12) = "["
@@ -1717,6 +1798,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── call_operator_loc: ∅
         │   │           ├── opening_loc: (118,11)-(118,12) = "["
@@ -1789,6 +1871,7 @@
         │   │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   │   ├── arguments: ∅
         │   │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   │   └── block: ∅
         │   │   │   │   ├── opening_loc: (120,21)-(120,22) = "["
         │   │   │   │   ├── arguments:
@@ -1858,6 +1941,7 @@
             │   │   │   │   ├── opening_loc: ∅
             │   │   │   │   ├── arguments: ∅
             │   │   │   │   ├── closing_loc: ∅
+            │   │   │   │   ├── equal_loc: ∅
             │   │   │   │   └── block: ∅
             │   │   │   ├── opening_loc: (122,21)-(122,22) = "["
             │   │   │   ├── arguments:

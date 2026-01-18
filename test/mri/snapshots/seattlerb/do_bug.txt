@@ -20,6 +20,7 @@
         │   │           ├── flags: static_literal, decimal
         │   │           └── value: 1
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (2,0)-(4,3))
             ├── flags: newline
@@ -33,6 +34,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── call_operator_loc: (2,1)-(2,2) = "."
             ├── name: :b
@@ -40,6 +42,7 @@
             ├── opening_loc: ∅
             ├── arguments: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (2,4)-(4,3))
                 ├── flags: ∅

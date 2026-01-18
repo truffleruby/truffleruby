@@ -39,6 +39,7 @@
         │               │           ├── name: :_2
         │               │           └── depth: 0
         │               ├── closing_loc: ∅
+        │               ├── equal_loc: ∅
         │               └── block: ∅
         └── @ ParenthesesNode (location: (4,0)-(4,5))
             ├── flags: newline

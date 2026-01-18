@@ -61,6 +61,7 @@
             │           │                   │   └── flags: static_literal
             │           │                   └── operator_loc: ∅
             │           ├── closing_loc: (1,35)-(1,36) = ")"
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── locals: []
             ├── def_keyword_loc: (1,0)-(1,3) = "def"

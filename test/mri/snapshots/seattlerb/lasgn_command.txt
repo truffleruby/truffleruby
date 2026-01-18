@@ -23,6 +23,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── call_operator_loc: (1,5)-(1,6) = "."
             │   ├── name: :c
@@ -36,5 +37,6 @@
             │   │           ├── flags: static_literal, decimal
             │   │           └── value: 1
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             └── operator_loc: (1,2)-(1,3) = "="

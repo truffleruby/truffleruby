@@ -17,6 +17,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── conditions: (length: 1)
             │   └── @ WhenNode (location: (1,10)-(1,32))
@@ -49,6 +50,7 @@
             │                   ├── opening_loc: ∅
             │                   ├── arguments: ∅
             │                   ├── closing_loc: ∅
+            │                   ├── equal_loc: ∅
             │                   └── block: ∅
             ├── else_clause: ∅
             ├── case_keyword_loc: (1,0)-(1,4) = "case"

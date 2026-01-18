@@ -27,4 +27,5 @@
             │                   │   └── value: 1
             │                   └── operator_loc: (1,2)-(1,4) = "**"
             ├── closing_loc: (1,5)-(1,6) = ")"
+            ├── equal_loc: ∅
             └── block: ∅

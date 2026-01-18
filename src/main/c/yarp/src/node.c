@@ -3805,6 +3805,15 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
                 pm_buffer_append_string(buffer, "null", 4);
             }
 
+            // Dump the equal_loc field
+            pm_buffer_append_byte(buffer, ',');
+            pm_buffer_append_string(buffer, "\"equal_loc\":", 12);
+            if (cast->equal_loc.start != NULL) {
+                pm_dump_json_location(buffer, parser, &cast->equal_loc);
+            } else {
+                pm_buffer_append_string(buffer, "null", 4);
+            }
+
             // Dump the block field
             pm_buffer_append_byte(buffer, ',');
             pm_buffer_append_string(buffer, "\"block\":", 8);

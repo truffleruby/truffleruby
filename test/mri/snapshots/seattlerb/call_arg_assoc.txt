@@ -34,4 +34,5 @@
             │                   │   └── value: 3
             │                   └── operator_loc: (1,6)-(1,8) = "=>"
             ├── closing_loc: (1,9)-(1,10) = ")"
+            ├── equal_loc: ∅
             └── block: ∅

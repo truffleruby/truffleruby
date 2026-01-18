@@ -23,6 +23,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── keyword_loc: (1,11)-(1,17) = "rescue"
             │   └── rescue_expression:
@@ -35,5 +36,6 @@
             │       ├── opening_loc: ∅
             │       ├── arguments: ∅
             │       ├── closing_loc: ∅
+            │       ├── equal_loc: ∅
             │       └── block: ∅
             └── operator_loc: (1,4)-(1,5) = "="

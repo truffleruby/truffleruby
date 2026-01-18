@@ -1268,6 +1268,22 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
                 }
             }
 
+            // equal_loc
+            {
+                pm_buffer_concat(output_buffer, prefix_buffer);
+                pm_buffer_append_string(output_buffer, "+-- equal_loc:", 14);
+                pm_location_t *location = &cast->equal_loc;
+                if (location->start == NULL) {
+                    pm_buffer_append_string(output_buffer, " nil\n", 5);
+                } else {
+                    pm_buffer_append_byte(output_buffer, ' ');
+                    prettyprint_location(output_buffer, parser, location);
+                    pm_buffer_append_string(output_buffer, " = \"", 4);
+                    pm_buffer_append_source(output_buffer, location->start, (size_t) (location->end - location->start), PM_BUFFER_ESCAPING_RUBY);
+                    pm_buffer_append_string(output_buffer, "\"\n", 2);
+                }
+            }
+
             // block
             {
                 pm_buffer_concat(output_buffer, prefix_buffer);

@@ -32,6 +32,7 @@
         │   │   │           ├── closing_loc: (1,15)-(1,16) = "'"
         │   │   │           └── unescaped: "a"
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   └── targets: (length: 1)
         │       └── @ LocalVariableTargetNode (location: (1,4)-(1,5))
@@ -72,6 +73,7 @@
         │   │           ├── closing_loc: (1,36)-(1,37) = "'"
         │   │           └── unescaped: "b"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ LocalVariableReadNode (location: (1,39)-(1,40))
         │   ├── flags: newline
@@ -86,6 +88,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ MatchWriteNode (location: (3,0)-(3,24))
         │   ├── flags: newline
@@ -114,6 +117,7 @@
         │   │   │           ├── closing_loc: (3,23)-(3,24) = "'"
         │   │   │           └── unescaped: "bar"
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   └── targets: (length: 1)
         │       └── @ LocalVariableTargetNode (location: (3,4)-(3,9))

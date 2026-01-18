@@ -12,7 +12,7 @@
             ├── name_loc: (1,0)-(1,1) = "a"
             ├── value:
             │   @ InterpolatedStringNode (location: (1,4)-(1,12))
-            │   ├── flags: static_literal
+            │   ├── flags: ∅
             │   ├── opening_loc: (1,4)-(1,12) = "<<~\"EOF\""
             │   ├── parts: (length: 3)
             │   │   ├── @ StringNode (location: (2,0)-(3,0))

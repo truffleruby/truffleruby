@@ -20,6 +20,7 @@
             │           ├── flags: ∅
             │           └── name: :@b
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (1,5)-(1,15))
                 ├── flags: ∅

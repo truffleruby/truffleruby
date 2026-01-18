@@ -32,6 +32,7 @@
         │   │   │           ├── closing_loc: (2,35)-(2,36) = "'"
         │   │   │           └── unescaped: "\x{E285}\xA7a\x{E285}\xA9b"
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   └── targets: (length: 2)
         │       ├── @ LocalVariableTargetNode (location: (2,7)-(2,8))

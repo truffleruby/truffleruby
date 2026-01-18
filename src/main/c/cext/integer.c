@@ -8,7 +8,6 @@
  * GNU Lesser General Public License version 2.1.
  */
 #include <truffleruby-impl.h>
-#include <internal/numeric.h>
 
 // Integer, rb_integer_*, rb_*int*, rb_big_*
 

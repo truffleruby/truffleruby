@@ -1,3 +1,4 @@
+// Used by src/main/c/date/date_strftime.c
 /* $OpenBSD: strlcpy.c,v 1.12 2015/01/15 03:54:12 millert Exp $ */
 
 /*

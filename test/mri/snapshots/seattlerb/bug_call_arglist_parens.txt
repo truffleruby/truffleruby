@@ -41,6 +41,7 @@
         │   │           │           ├── flags: static_literal, decimal
         │   │           │           └── value: 2
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (1,6)-(1,9) = "def"
@@ -85,6 +86,7 @@
         │   │           │           ├── flags: static_literal, decimal
         │   │           │           └── value: 2
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (6,6)-(6,9) = "def"
@@ -119,4 +121,5 @@
             │           ├── flags: static_literal, decimal
             │           └── value: 2
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

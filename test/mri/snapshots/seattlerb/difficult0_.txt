@@ -37,7 +37,7 @@
             │           │   │   ├── flags: ∅
             │           │   │   └── arguments: (length: 1)
             │           │   │       └── @ InterpolatedStringNode (location: (1,9)-(4,4))
-            │           │   │           ├── flags: static_literal
+            │           │   │           ├── flags: ∅
             │           │   │           ├── opening_loc: (1,9)-(1,10) = "'"
             │           │   │           ├── parts: (length: 2)
             │           │   │           │   ├── @ StringNode (location: (1,10)-(2,0))
@@ -54,6 +54,7 @@
             │           │   │           │       └── unescaped: "  c"
             │           │   │           └── closing_loc: (4,3)-(4,4) = "'"
             │           │   ├── closing_loc: ∅
+            │           │   ├── equal_loc: ∅
             │           │   └── block: ∅
             │           ├── call_operator_loc: ∅
             │           ├── name: :+
@@ -70,6 +71,8 @@
             │           │           ├── closing_loc: (4,7)-(4,8) = "'"
             │           │           └── unescaped: "d"
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

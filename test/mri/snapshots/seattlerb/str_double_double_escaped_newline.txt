@@ -23,6 +23,7 @@
         │   │           ├── closing_loc: (1,6)-(1,7) = "\""
         │   │           └── unescaped: "\\n"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (1,8)-(1,9))
             ├── flags: newline, variable_call, ignore_visibility
@@ -33,4 +34,5 @@
             ├── opening_loc: ∅
             ├── arguments: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

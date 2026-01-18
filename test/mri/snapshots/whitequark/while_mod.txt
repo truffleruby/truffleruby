@@ -20,6 +20,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             └── statements:
                 @ StatementsNode (location: (1,0)-(1,4))
@@ -34,4 +35,5 @@
                         ├── opening_loc: ∅
                         ├── arguments: ∅
                         ├── closing_loc: ∅
+                        ├── equal_loc: ∅
                         └── block: ∅

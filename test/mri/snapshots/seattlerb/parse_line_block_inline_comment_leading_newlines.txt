@@ -14,6 +14,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (5,0)-(5,1))
         │   ├── flags: newline, variable_call, ignore_visibility
@@ -24,6 +25,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (7,0)-(7,1))
             ├── flags: newline, variable_call, ignore_visibility
@@ -34,4 +36,5 @@
             ├── opening_loc: ∅
             ├── arguments: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

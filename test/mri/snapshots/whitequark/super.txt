@@ -22,6 +22,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rparen_loc: ∅
         │   └── block: ∅
@@ -49,6 +50,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── rparen_loc: (5,9)-(5,10) = ")"
             └── block: ∅

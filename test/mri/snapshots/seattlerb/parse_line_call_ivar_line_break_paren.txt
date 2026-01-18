@@ -20,4 +20,5 @@
             │           ├── flags: ∅
             │           └── name: :@b
             ├── closing_loc: (2,0)-(2,1) = ")"
+            ├── equal_loc: ∅
             └── block: ∅

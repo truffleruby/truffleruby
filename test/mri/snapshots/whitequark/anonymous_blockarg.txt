@@ -38,6 +38,7 @@
             │           ├── opening_loc: (1,15)-(1,16) = "("
             │           ├── arguments: ∅
             │           ├── closing_loc: (1,17)-(1,18) = ")"
+            │           ├── equal_loc: ∅
             │           └── block:
             │               @ BlockArgumentNode (location: (1,16)-(1,17))
             │               ├── flags: ∅

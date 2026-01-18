@@ -29,6 +29,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── subsequent: ∅
         │   └── end_keyword_loc: (3,0)-(3,3) = "end"
@@ -123,6 +124,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── then_keyword_loc: ∅
         │   ├── statements: ∅
@@ -168,6 +170,7 @@
         │   │           │           │   ├── opening_loc: ∅
         │   │           │           │   ├── arguments: ∅
         │   │           │           │   ├── closing_loc: ∅
+        │   │           │           │   ├── equal_loc: ∅
         │   │           │           │   └── block: ∅
         │   │           │           └── operator_loc: (22,6)-(22,7) = "="
         │   │           ├── subsequent: ∅
@@ -214,6 +217,7 @@
         │   │           │           │   ├── opening_loc: ∅
         │   │           │           │   ├── arguments: ∅
         │   │           │           │   ├── closing_loc: ∅
+        │   │           │           │   ├── equal_loc: ∅
         │   │           │           │   └── block: ∅
         │   │           │           └── operator_loc: (26,6)-(26,7) = "="
         │   │           ├── else_clause: ∅
@@ -233,6 +237,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── then_keyword_loc: ∅
         │   ├── statements:
@@ -254,6 +259,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           └── operator_loc: (29,6)-(29,7) = "="
         │   ├── else_clause: ∅
@@ -271,6 +277,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block:
             │       @ BlockNode (location: (31,7)-(33,1))
             │       ├── flags: ∅

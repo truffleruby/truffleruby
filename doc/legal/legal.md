@@ -22,7 +22,7 @@ version 3.4.7, including:
 
 * the standard library in `lib/mri`, 
 * Ruby C extension API in `lib/cext/include` and `src/main/c/cext`, 
-* C extensions in `src/main/c/{bigdecimal,date,debug,etc,io-console,json,nkf,openssl,psych,rbconfig-sizeof,rbs,ripper,syslog,zlib}`
+* C extensions in `src/main/c/{bigdecimal,date,debug,etc,io-console,json,nkf,openssl,psych,rbconfig-sizeof,rbs,syslog,zlib}`
 
 MRI is copyright Yukihiro Matsumoto. It is made available under the terms of the
 2-clause BSD licence `ruby-bsdl.txt`, or a custom licence `ruby-licence.txt`.
@@ -35,14 +35,6 @@ includes, but isn't limited to:
 The general-purpose hash table library `src/main/c/cext/st.c` and
 `lib/cext/include/ruby/st.h` was written originally be Peter Moore and is
 public domain.
-
-`lib/cext/include/ccan/{build_assert,check_type,container_of,str}` are all
-utilities from CCAN and are public domain or available under the terms of the
-CC0 public domain dedication, see `ccan-cc0.txt`.
-
-`lib/cext/include/ccan/list` is a utility from CCAN and is available under the
-terms of 'BSD-MIT', see `ccan-bsd-mit.txt`. Despite the filename 'BSD-MIT' this
-is the conventional MIT licence.
 
 RDoc Darkfish theme fonts under `lib/mri/rdoc/generator/template/darkfish/` are
 available under the terms of the SIL Open Font License 1.1, see `ofl.txt`.

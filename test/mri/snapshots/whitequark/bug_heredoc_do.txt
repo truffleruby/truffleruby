@@ -23,6 +23,7 @@
             │           ├── closing_loc: (2,0)-(3,0) = "TABLE\n"
             │           └── unescaped: ""
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (1,11)-(3,3))
                 ├── flags: ∅

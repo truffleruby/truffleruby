@@ -42,6 +42,7 @@
             │                       ├── opening_loc: ∅
             │                       ├── arguments: ∅
             │                       ├── closing_loc: ∅
+            │                       ├── equal_loc: ∅
             │                       └── block:
             │                           @ BlockNode (location: (1,11)-(1,17))
             │                           ├── flags: ∅
@@ -51,4 +52,5 @@
             │                           ├── opening_loc: (1,11)-(1,13) = "do"
             │                           └── closing_loc: (1,14)-(1,17) = "end"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

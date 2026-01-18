@@ -9,7 +9,6 @@
  */
 #include <truffleruby-impl.h>
 #include <ruby/thread_native.h>
-#include <internal/thread.h>
 
 // Threads, rb_thread_*, rb_nativethread_*
 

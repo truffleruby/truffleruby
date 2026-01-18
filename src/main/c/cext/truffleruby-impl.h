@@ -46,7 +46,6 @@ extern VALUE (*rb_tr_longwrap)(long obj);
 extern void* (*rb_tr_id2sym)(ID obj);
 extern ID (*rb_tr_sym2id)(VALUE sym);
 extern void* (*rb_tr_force_native)(VALUE obj);
-extern bool (*rb_tr_is_native_object)(VALUE value);
 extern VALUE (*rb_tr_rb_f_notimplement)(int argc, const VALUE *argv, VALUE obj, VALUE marker);
 extern void rb_tr_set_default_alloc_func(VALUE klass, rb_alloc_func_t func);
 extern VALUE rb_tr_default_alloc_func(VALUE klass);

@@ -51,6 +51,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause: ∅
         │   ├── else_clause: ∅
@@ -72,6 +73,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (15,0)-(16,3))
@@ -94,6 +96,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent: ∅
         │   ├── else_clause: ∅
@@ -115,6 +118,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ CallNode (location: (21,2)-(21,3))
         │   │           ├── flags: newline, variable_call, ignore_visibility
@@ -125,6 +129,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (22,0)-(23,3))
@@ -147,6 +152,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent: ∅
         │   ├── else_clause: ∅
@@ -212,6 +218,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (36,0)-(39,3))
@@ -237,6 +244,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent:
         │   │       @ RescueNode (location: (38,0)-(39,3))
@@ -262,6 +270,7 @@
         │   │       │           ├── opening_loc: ∅
         │   │       │           ├── arguments: ∅
         │   │       │           ├── closing_loc: ∅
+        │   │       │           ├── equal_loc: ∅
         │   │       │           └── block: ∅
         │   │       └── subsequent: ∅
         │   ├── else_clause: ∅
@@ -282,6 +291,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── end_keyword_loc: (42,0)-(42,3) = "end"
         │   └── end_keyword_loc: (42,0)-(42,3) = "end"
@@ -312,6 +322,7 @@
         │   │           │           ├── opening_loc: ∅
         │   │           │           ├── arguments: ∅
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block: ∅
         │   │           ├── rescue_clause:
         │   │           │   @ RescueNode (location: (48,2)-(48,8))
@@ -347,6 +358,7 @@
         │   │   │       │   ├── opening_loc: ∅
         │   │   │       │   ├── arguments: ∅
         │   │   │       │   ├── closing_loc: ∅
+        │   │   │       │   ├── equal_loc: ∅
         │   │   │       │   └── block: ∅
         │   │   │       └── @ CallNode (location: (52,2)-(52,5))
         │   │   │           ├── flags: newline, variable_call, ignore_visibility
@@ -357,6 +369,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent: ∅
         │   ├── else_clause: ∅
@@ -387,6 +400,7 @@
         │   │           │   │           ├── flags: ∅
         │   │           │   │           └── name: :Exception
         │   │           │   ├── closing_loc: (56,17)-(56,18) = ")"
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── keyword_loc: (56,19)-(56,25) = "rescue"
         │   │           └── rescue_expression:
@@ -405,6 +419,7 @@
         │   │               │   ├── opening_loc: ∅
         │   │               │   ├── arguments: ∅
         │   │               │   ├── closing_loc: ∅
+        │   │               │   ├── equal_loc: ∅
         │   │               │   └── block: ∅
         │   │               └── operator_loc: (56,30)-(56,31) = "="
         │   ├── rescue_clause:
@@ -546,6 +561,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent: ∅
         │   ├── else_clause: ∅

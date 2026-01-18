@@ -24,6 +24,7 @@
             │   │   │   ├── opening_loc: ∅
             │   │   │   ├── arguments: ∅
             │   │   │   ├── closing_loc: ∅
+            │   │   │   ├── equal_loc: ∅
             │   │   │   └── block: ∅
             │   │   ├── call_operator_loc: (1,10)-(1,11) = "."
             │   │   ├── name: :nil?
@@ -31,6 +32,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── call_operator_loc: ∅
             │   ├── name: :!
@@ -38,6 +40,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── then_keyword_loc: (1,16)-(1,20) = "then"
             ├── statements:

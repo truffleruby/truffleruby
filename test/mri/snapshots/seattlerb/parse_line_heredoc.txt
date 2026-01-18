@@ -26,6 +26,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   └── operator_loc: (1,13)-(1,14) = "="
         └── @ CallNode (location: (4,6)-(4,17))
@@ -44,4 +45,5 @@
             │           ├── name: :string
             │           └── depth: 0
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

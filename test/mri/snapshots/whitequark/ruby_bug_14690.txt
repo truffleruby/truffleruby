@@ -22,6 +22,7 @@
             │           ├── opening_loc: (1,4)-(1,5) = "("
             │           └── closing_loc: (1,5)-(1,6) = ")"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (1,7)-(1,23))
                 ├── flags: ∅
@@ -51,8 +52,10 @@
                 │           │           ├── opening_loc: ∅
                 │           │           ├── arguments: ∅
                 │           │           ├── closing_loc: ∅
+                │           │           ├── equal_loc: ∅
                 │           │           └── block: ∅
                 │           ├── closing_loc: (1,12)-(1,13) = ")"
+                │           ├── equal_loc: ∅
                 │           └── block:
                 │               @ BlockNode (location: (1,14)-(1,21))
                 │               ├── flags: ∅

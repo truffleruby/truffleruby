@@ -20,4 +20,5 @@
             │           ├── flags: ∅
             │           └── name: :@b
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

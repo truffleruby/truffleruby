@@ -23,6 +23,7 @@
         │   │           ├── flags: static_literal, decimal
         │   │           └── value: 10
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (3,0)-(3,8))
         │   ├── flags: newline
@@ -45,6 +46,7 @@
         │   │   │           ├── flags: static_literal, decimal
         │   │   │           └── value: 10
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── name: :-@
@@ -52,6 +54,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (5,0)-(5,10))
             ├── flags: newline
@@ -74,6 +77,7 @@
             │   │           ├── flags: static_literal, decimal
             │   │           └── value: 10
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── call_operator_loc: ∅
             ├── name: :-@
@@ -81,4 +85,5 @@
             ├── opening_loc: ∅
             ├── arguments: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

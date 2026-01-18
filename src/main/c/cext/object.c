@@ -23,28 +23,15 @@ struct RBasicWithFlags {
   struct RBasic _basic;
 };
 
-#define RB_BUILTIN_TYPE_NATIVE(x) RBIMPL_CAST((enum ruby_value_type) (((struct RBasicWithFlags*)(x))->flags & RUBY_T_MASK))
-
 bool RB_TYPE_P(VALUE value, enum ruby_value_type type) {
   if (value == Qundef) {
     return 0;
-  }
-
-  // Ripper uses RB_TYPE_P to check NODE* values for T_NODE
-  if (type == T_NODE && rb_tr_is_native_object(value)) {
-    return RB_BUILTIN_TYPE_NATIVE(value) == type;
   }
 
   return polyglot_as_boolean(polyglot_invoke(RUBY_CEXT, "RB_TYPE_P", rb_tr_unwrap(value), type));
 }
 
 bool rb_tr_special_const_symbol_p(VALUE object) {
-  // Ripper calls this from add_mark_object
-  // Cannot unwrap a natively-allocated NODE*
-  if (rb_tr_is_native_object(object)) {
-    return false;
-  }
-
   return rb_tr_symbol_p(object);
 }
 

@@ -23,7 +23,6 @@ VALUE (*rb_tr_wrap)(void *obj);
 VALUE (*rb_tr_longwrap)(long obj);
 void* (*rb_tr_id2sym)(ID id);
 ID (*rb_tr_sym2id)(VALUE val);
-bool (*rb_tr_is_native_object)(VALUE value);
 void* (*rb_tr_force_native)(VALUE obj);
 VALUE (*rb_tr_rb_f_notimplement)(int argc, const VALUE *argv, VALUE obj, VALUE marker);
 
@@ -48,7 +47,6 @@ void rb_tr_init(void *ruby_cext) {
   rb_tr_unwrap = polyglot_invoke(rb_tr_cext, "rb_tr_unwrap_function");
   rb_tr_id2sym = polyglot_invoke(rb_tr_cext, "rb_tr_id2sym_function");
   rb_tr_sym2id = polyglot_invoke(rb_tr_cext, "rb_tr_sym2id_function");
-  rb_tr_is_native_object = polyglot_invoke(rb_tr_cext, "rb_tr_is_native_object_function");
   rb_tr_wrap = polyglot_invoke(rb_tr_cext, "rb_tr_wrap_function");
   rb_tr_longwrap = polyglot_invoke(rb_tr_cext, "rb_tr_wrap_function");
   rb_tr_force_native = polyglot_invoke(rb_tr_cext, "rb_tr_force_native_function");

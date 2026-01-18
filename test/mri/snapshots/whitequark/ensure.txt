@@ -21,6 +21,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── rescue_clause: ∅
             ├── else_clause: ∅
@@ -41,6 +42,7 @@
             │   │           ├── opening_loc: ∅
             │   │           ├── arguments: ∅
             │   │           ├── closing_loc: ∅
+            │   │           ├── equal_loc: ∅
             │   │           └── block: ∅
             │   └── end_keyword_loc: (1,26)-(1,29) = "end"
             └── end_keyword_loc: (1,26)-(1,29) = "end"

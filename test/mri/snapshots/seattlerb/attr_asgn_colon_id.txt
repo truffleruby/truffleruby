@@ -23,4 +23,5 @@
             │           ├── flags: static_literal, decimal
             │           └── value: 1
             ├── closing_loc: ∅
+            ├── equal_loc: (1,5)-(1,6) = "="
             └── block: ∅

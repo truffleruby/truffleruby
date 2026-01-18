@@ -33,6 +33,7 @@
         │   │                   │   └── flags: static_literal
         │   │                   └── operator_loc: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (3,0)-(3,11))
         │   ├── flags: newline, ignore_visibility
@@ -54,8 +55,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (5,0)-(5,26))
             ├── flags: newline, ignore_visibility
@@ -101,6 +104,7 @@
             │                   │               ├── opening_loc: ∅
             │                   │               ├── arguments: ∅
             │                   │               ├── closing_loc: ∅
+            │                   │               ├── equal_loc: ∅
             │                   │               └── block:
             │                   │                   @ BlockNode (location: (5,16)-(5,22))
             │                   │                   ├── flags: ∅
@@ -111,4 +115,5 @@
             │                   │                   └── closing_loc: (5,19)-(5,22) = "end"
             │                   └── operator_loc: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅
