@@ -466,7 +466,7 @@ class Range
   end
 
   def reverse_each(&block)
-    return to_enum(:reverse_each) { size } unless block_given?
+    return to_enum(:reverse_each) { reverse_each_size } unless block_given?
 
     if Primitive.nil?(self.end)
       raise TypeError, "can't iterate from NilClass"
@@ -564,26 +564,19 @@ class Range
   end
 
   def size
-    if Primitive.nil? self.begin
-      return Primitive.is_a?(self.end, Numeric) ? Float::INFINITY : nil
-    end
-    return nil unless Primitive.is_a?(self.begin, Numeric)
-    return Float::INFINITY if Primitive.nil? self.end
+    if Primitive.is_a?(self.begin, Integer)
+      return Float::INFINITY if Primitive.nil?(self.end) || self.end == Float::INFINITY
 
-    delta = self.end - self.begin
-    return 0 if delta < 0
-
-    if Primitive.is_a?(self.begin, Float) || Primitive.is_a?(self.end, Float)
-      return delta if delta == Float::INFINITY
-
-      err = (self.begin.abs + self.end.abs + delta.abs) * Float::EPSILON
-      err = 0.5 if err > 0.5
-
-      (exclude_end? ? delta - err : delta + err).floor + 1
-    else
+      delta = self.end - self.begin
       delta += 1 unless exclude_end?
-      delta
+      return delta < 0 ? 0 : delta.floor
     end
+
+    unless self.begin.respond_to?(:succ)
+      raise TypeError, "can't iterate from #{Primitive.class(self.begin)}"
+    end
+
+    nil
   end
 
   def map(&block)
@@ -625,5 +618,29 @@ class Range
       nil
     end
     ary
+  end
+
+  private def reverse_each_size
+    if Primitive.nil?(self.end)
+      raise TypeError, "can't iterate from #{Primitive.class(self.end)}"
+    end
+
+    if Primitive.is_a?(self.begin, Integer)
+      return Float::INFINITY if self.end == Float::INFINITY
+
+      delta = self.end - self.begin
+      delta += 1 if !exclude_end? || self.end % 1 != 0
+      return delta < 0 ? 0 : delta.floor
+    end
+
+    if Primitive.nil?(self.begin)
+      return Float::INFINITY if Primitive.is_a?(self.end, Integer)
+    end
+
+    unless self.begin.respond_to?(:succ)
+      raise TypeError, "can't iterate from #{Primitive.class(self.end)}"
+    end
+
+    nil
   end
 end

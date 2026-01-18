@@ -1,2 +1,0 @@
-fails:Range#size returns Float::INFINITY for all beginless ranges
-fails:Range#size raises TypeError if a range is not iterable

@@ -17,6 +17,7 @@ Compatibility:
 * Update `Hash#inspect` for Ruby 3.4 (#4090, @Earlopain).
 * Fix `mkmf.rb` to use host's `RbConfig` for `$ruby` when `--target-rbconfig` is used (#4097, @panozzaj).
 * Implement `Fiber.[]`, `Fiber.[]=`, and `Fiber#{storage,storage=}` (#4007, @nirvdrum).
+* Update `Range#size` semantics for Ruby 3.4 (#4099, @Earlopain).
 
 Performance:
 
