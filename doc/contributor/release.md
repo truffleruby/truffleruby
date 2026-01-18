@@ -4,7 +4,8 @@ Always release from a release branch (to avoid ever setting `"release": True,` o
 
 The TruffleRuby version to be released is denoted as `$TRUFFLERUBY_VERSION` below.
 
-See [the end of this page](release.md#backporting-changes-from-master) for how to backport changes.
+For patch releases, follow the steps until `Check the CI passes`,
+then backport changes by [following these instructions](release.md#backporting-changes-from-master).
 
 ## Create a cutoff branch
 
@@ -75,6 +76,10 @@ git commit -am 'Set ABI version for release branch'
 ```bash
 git push -u origin HEAD
 ```
+
+## Check the CI passes
+
+Make sure [the CI](https://github.com/truffleruby/truffleruby/actions/workflows/ci.yml) passes on the release branch (if not fix it).
 
 ## Run the release workflow
 
@@ -150,7 +155,7 @@ Follow [the documentation to updating Ruby Installers](updating-ruby-installers.
 
 ## Backporting changes from master
 
-Either `git cherry-pick -m 1 MERGE_COMMIT` the relevant merge commits,
+Either `git cherry-pick -x -m 1 MERGE_COMMIT` the relevant merge commits,
 or merge all changes from `master` with `git merge master`.
 Be careful to not add newer releases in [CHANGELOG.md](../../CHANGELOG.md).
 
