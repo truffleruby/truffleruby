@@ -23,6 +23,7 @@
             │           ├── closing_loc: (1,9)-(1,10) = "\""
             │           └── unescaped: "foo"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (1,11)-(1,17))
                 ├── flags: ∅

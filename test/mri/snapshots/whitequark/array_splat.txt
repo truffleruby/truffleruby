@@ -21,6 +21,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── opening_loc: (1,0)-(1,1) = "["
         │   └── closing_loc: (1,5)-(1,6) = "]"
@@ -43,6 +44,7 @@
         │   │   │       ├── opening_loc: ∅
         │   │   │       ├── arguments: ∅
         │   │   │       ├── closing_loc: ∅
+        │   │   │       ├── equal_loc: ∅
         │   │   │       └── block: ∅
         │   │   └── @ IntegerNode (location: (3,10)-(3,11))
         │   │       ├── flags: static_literal, decimal
@@ -68,6 +70,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── opening_loc: (5,0)-(5,1) = "["
             └── closing_loc: (5,8)-(5,9) = "]"

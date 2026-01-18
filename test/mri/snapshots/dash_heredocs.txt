@@ -35,6 +35,7 @@
         │   │           ├── closing_loc: (9,0)-(10,0) = "SECOND\n"
         │   │           └── unescaped: "  b\n"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ InterpolatedXStringNode (location: (11,0)-(11,8))
         │   ├── flags: newline
@@ -62,6 +63,7 @@
         │   │   │   │           ├── opening_loc: ∅
         │   │   │   │           ├── arguments: ∅
         │   │   │   │           ├── closing_loc: ∅
+        │   │   │   │           ├── equal_loc: ∅
         │   │   │   │           └── block: ∅
         │   │   │   └── closing_loc: (13,3)-(13,4) = "}"
         │   │   └── @ StringNode (location: (13,4)-(14,0))
@@ -109,6 +111,7 @@
         │   │   │   │           ├── opening_loc: ∅
         │   │   │   │           ├── arguments: ∅
         │   │   │   │           ├── closing_loc: ∅
+        │   │   │   │           ├── equal_loc: ∅
         │   │   │   │           └── block: ∅
         │   │   │   └── closing_loc: (27,3)-(27,4) = "}"
         │   │   └── @ StringNode (location: (27,4)-(28,0))
@@ -144,6 +147,7 @@
         │   │   │   │           ├── opening_loc: ∅
         │   │   │   │           ├── arguments: ∅
         │   │   │   │           ├── closing_loc: ∅
+        │   │   │   │           ├── equal_loc: ∅
         │   │   │   │           └── block: ∅
         │   │   │   └── closing_loc: (32,3)-(32,4) = "}"
         │   │   └── @ StringNode (location: (32,4)-(33,0))
@@ -223,6 +227,7 @@
         │   │           │       └── unescaped: "\n"
         │   │           └── closing_loc: (55,0)-(56,0) = "B\n"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (57,0)-(57,11))
             ├── flags: newline
@@ -270,4 +275,5 @@
             │           │       └── unescaped: "\n"
             │           └── closing_loc: (63,0)-(64,0) = "B\n"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

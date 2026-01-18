@@ -34,6 +34,7 @@
         │   │       │       │           ├── opening_loc: ∅
         │   │       │       │           ├── arguments: ∅
         │   │       │       │           ├── closing_loc: ∅
+        │   │       │       │           ├── equal_loc: ∅
         │   │       │       │           └── block: ∅
         │   │       │       └── closing_loc: (1,12)-(1,13) = "}"
         │   │       └── closing_loc: ∅
@@ -68,6 +69,7 @@
             │       │   │   │           ├── opening_loc: ∅
             │       │   │   │           ├── arguments: ∅
             │       │   │   │           ├── closing_loc: ∅
+            │       │   │   │           ├── equal_loc: ∅
             │       │   │   │           └── block: ∅
             │       │   │   └── closing_loc: (3,12)-(3,13) = "}"
             │       │   ├── @ StringNode (location: (3,13)-(3,16))

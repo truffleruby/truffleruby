@@ -40,6 +40,7 @@
             │   │               ├── opening_loc: ∅
             │   │               ├── arguments: ∅
             │   │               ├── closing_loc: ∅
+            │   │               ├── equal_loc: ∅
             │   │               └── block: ∅
             │   ├── opening_loc: (1,1)-(1,2) = "("
             │   └── closing_loc: (1,12)-(1,13) = ")"
@@ -49,4 +50,5 @@
             ├── opening_loc: ∅
             ├── arguments: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

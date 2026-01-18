@@ -20,6 +20,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── call_operator_loc: (1,1)-(1,2) = "."
             │   ├── name: :b
@@ -38,8 +39,10 @@
             │   │           ├── opening_loc: (1,5)-(1,6) = "("
             │   │           ├── arguments: ∅
             │   │           ├── closing_loc: (1,6)-(1,7) = ")"
+            │   │           ├── equal_loc: ∅
             │   │           └── block: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block:
             │       @ BlockNode (location: (1,8)-(1,16))
             │       ├── flags: ∅
@@ -58,6 +61,7 @@
             │       │           ├── opening_loc: ∅
             │       │           ├── arguments: ∅
             │       │           ├── closing_loc: ∅
+            │       │           ├── equal_loc: ∅
             │       │           └── block: ∅
             │       ├── opening_loc: (1,8)-(1,10) = "do"
             │       └── closing_loc: (1,13)-(1,16) = "end"
@@ -78,8 +82,10 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (1,21)-(1,33))
                 ├── flags: ∅
@@ -116,6 +122,7 @@
                 │           ├── opening_loc: ∅
                 │           ├── arguments: ∅
                 │           ├── closing_loc: ∅
+                │           ├── equal_loc: ∅
                 │           └── block: ∅
                 ├── opening_loc: (1,21)-(1,23) = "do"
                 └── closing_loc: (1,30)-(1,33) = "end"

@@ -25,6 +25,7 @@
             │       │   ├── opening_loc: ∅
             │       │   ├── arguments: ∅
             │       │   ├── closing_loc: ∅
+            │       │   ├── equal_loc: ∅
             │       │   └── block: ∅
             │       └── @ KeywordHashNode (location: (1,5)-(1,8))
             │           ├── flags: ∅
@@ -37,4 +38,5 @@
             │                   │   └── value: 1
             │                   └── operator_loc: (1,5)-(1,7) = "**"
             ├── closing_loc: (1,8)-(1,9) = ")"
+            ├── equal_loc: ∅
             └── block: ∅

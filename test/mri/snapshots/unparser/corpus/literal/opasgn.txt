@@ -74,6 +74,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── name: :a
         │   └── depth: 0
@@ -114,6 +115,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (9,0)-(9,17))
         │   ├── flags: newline, attribute_write
@@ -155,6 +157,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ CallNode (location: (9,16)-(9,17))
         │   │           ├── flags: variable_call, ignore_visibility
@@ -165,8 +168,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (9,12)-(9,13) = "]"
+        │   ├── equal_loc: (9,14)-(9,15) = "="
         │   └── block: ∅
         ├── @ CallOperatorWriteNode (location: (10,0)-(10,8))
         │   ├── flags: newline
@@ -275,6 +280,7 @@
         │       ├── opening_loc: ∅
         │       ├── arguments: ∅
         │       ├── closing_loc: ∅
+        │       ├── equal_loc: ∅
         │       └── block: ∅
         ├── @ CallOrWriteNode (location: (16,0)-(16,9))
         │   ├── flags: newline
@@ -314,6 +320,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (17,3)-(17,4) = "]"
         │   ├── block: ∅
@@ -345,6 +352,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (18,3)-(18,4) = "]"
         │   ├── block: ∅
@@ -376,6 +384,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (19,3)-(19,4) = "]"
         │   ├── block: ∅
@@ -407,6 +416,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (20,3)-(20,4) = "]"
         │   ├── block: ∅
@@ -438,6 +448,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (21,3)-(21,4) = "]"
         │   ├── block: ∅
@@ -469,6 +480,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (22,3)-(22,4) = "]"
         │   ├── block: ∅
@@ -483,6 +495,7 @@
         │       ├── opening_loc: ∅
         │       ├── arguments: ∅
         │       ├── closing_loc: ∅
+        │       ├── equal_loc: ∅
         │       └── block: ∅
         ├── @ IndexOrWriteNode (location: (23,0)-(23,10))
         │   ├── flags: newline
@@ -506,6 +519,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (23,3)-(23,4) = "]"
         │   ├── block: ∅
@@ -526,6 +540,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── call_operator_loc: (24,3)-(24,4) = "."
             ├── message_loc: (24,4)-(24,5) = "A"

@@ -3194,7 +3194,7 @@ public abstract class Nodes {
          * Represents the predicate of the case statement. This can be either `nil` or any [non-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
          *
          *     case true; when false; end
-         *     ^^^^
+         *          ^^^^
          * </pre>
          */
         @Nullable
@@ -5164,13 +5164,23 @@ public abstract class Nodes {
 
     /**
      * <pre>
-     * Represents the use of the `super` keyword without parentheses or arguments.
+     * Represents the use of the `super` keyword without parentheses or arguments, but which might have a block.
      *
      *     super
      *     ^^^^^
+     *
+     *     super { 123 }
+     *     ^^^^^^^^^^^^^
+     *
+     * If it has any other arguments, it would be a `SuperNode` instead.
      * </pre>
      */
     public static final class ForwardingSuperNode extends Node {
+        /**
+         * <pre>
+         * All other arguments are forwarded as normal, except the original block is replaced with the new block.
+         * </pre>
+         */
         @Nullable
         public final BlockNode block;
 
@@ -10589,9 +10599,16 @@ public abstract class Nodes {
      *
      *     super foo, bar
      *     ^^^^^^^^^^^^^^
+     *
+     * If no arguments are provided (except for a block), it would be a `ForwardingSuperNode` instead.
      * </pre>
      */
     public static final class SuperNode extends Node {
+        /**
+         * <pre>
+         * Can be only `nil` when there are empty parentheses, like `super()`.
+         * </pre>
+         */
         @Nullable
         public final ArgumentsNode arguments;
         @Nullable
@@ -11267,6 +11284,7 @@ public abstract class Nodes {
         CONDITIONAL_WHILE_PREDICATE,
         CONSTANT_PATH_COLON_COLON_CONSTANT,
         DEF_ENDLESS,
+        DEF_ENDLESS_PARAMETERS,
         DEF_ENDLESS_SETTER,
         DEF_NAME,
         DEF_PARAMS_TERM,
@@ -11425,6 +11443,7 @@ public abstract class Nodes {
         PARAMETER_WILD_LOOSE_COMMA,
         PATTERN_ARRAY_MULTIPLE_RESTS,
         PATTERN_CAPTURE_DUPLICATE,
+        PATTERN_CAPTURE_IN_ALTERNATIVE,
         PATTERN_EXPRESSION_AFTER_BRACKET,
         PATTERN_EXPRESSION_AFTER_COMMA,
         PATTERN_EXPRESSION_AFTER_HROCKET,
@@ -11486,6 +11505,7 @@ public abstract class Nodes {
         UNEXPECTED_INDEX_KEYWORDS,
         UNEXPECTED_LABEL,
         UNEXPECTED_MULTI_WRITE,
+        UNEXPECTED_PARAMETER_DEFAULT_VALUE,
         UNEXPECTED_RANGE_OPERATOR,
         UNEXPECTED_SAFE_NAVIGATION,
         UNEXPECTED_TOKEN_CLOSE_CONTEXT,

@@ -23,6 +23,7 @@
             │   │   │   ├── opening_loc: ∅
             │   │   │   ├── arguments: ∅
             │   │   │   ├── closing_loc: ∅
+            │   │   │   ├── equal_loc: ∅
             │   │   │   └── block: ∅
             │   │   ├── @ SplatNode (location: (1,7)-(1,9))
             │   │   │   ├── flags: ∅
@@ -37,6 +38,7 @@
             │   │   │       ├── opening_loc: ∅
             │   │   │       ├── arguments: ∅
             │   │   │       ├── closing_loc: ∅
+            │   │   │       ├── equal_loc: ∅
             │   │   │       └── block: ∅
             │   │   └── @ CallNode (location: (1,11)-(1,12))
             │   │       ├── flags: variable_call, ignore_visibility
@@ -47,6 +49,7 @@
             │   │       ├── opening_loc: ∅
             │   │       ├── arguments: ∅
             │   │       ├── closing_loc: ∅
+            │   │       ├── equal_loc: ∅
             │   │       └── block: ∅
             │   ├── opening_loc: ∅
             │   └── closing_loc: ∅

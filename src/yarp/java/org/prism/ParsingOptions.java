@@ -15,7 +15,9 @@ public abstract class ParsingOptions {
         LATEST(0), // Handled in pm_parser_init
         V3_3(1),
         V3_4(2),
-        V3_5(3);
+        V3_5(3),
+        V4_0(3),
+        V4_1(4);
 
         private final int value;
 

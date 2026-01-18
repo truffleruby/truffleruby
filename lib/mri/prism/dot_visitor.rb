@@ -724,6 +724,11 @@ module Prism
         table.field("closing_loc", location_inspect(closing_loc))
       end
 
+      # equal_loc
+      unless (equal_loc = node.equal_loc).nil?
+        table.field("equal_loc", location_inspect(equal_loc))
+      end
+
       # block
       unless (block = node.block).nil?
         table.field("block", port: true)

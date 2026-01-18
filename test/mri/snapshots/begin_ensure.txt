@@ -21,6 +21,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause: ∅
         │   ├── else_clause: ∅
@@ -41,6 +42,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── end_keyword_loc: (5,0)-(5,3) = "end"
         │   └── end_keyword_loc: (5,0)-(5,3) = "end"
@@ -60,6 +62,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause: ∅
         │   ├── else_clause: ∅
@@ -80,6 +83,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── end_keyword_loc: (7,21)-(7,24) = "end"
         │   └── end_keyword_loc: (7,21)-(7,24) = "end"
@@ -99,6 +103,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause: ∅
         │   ├── else_clause: ∅
@@ -119,6 +124,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── end_keyword_loc: (11,1)-(11,4) = "end"
         │   └── end_keyword_loc: (11,1)-(11,4) = "end"
@@ -138,6 +144,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause: ∅
         │   ├── else_clause: ∅
@@ -158,6 +165,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── end_keyword_loc: (13,19)-(13,22) = "end"
         │   └── end_keyword_loc: (13,19)-(13,22) = "end"
@@ -218,6 +226,7 @@
             │           │           │           │   │           ├── opening_loc: ∅
             │           │           │           │   │           ├── arguments: ∅
             │           │           │           │   │           ├── closing_loc: ∅
+            │           │           │           │   │           ├── equal_loc: ∅
             │           │           │           │   │           └── block:
             │           │           │           │   │               @ BlockNode (location: (15,40)-(21,3))
             │           │           │           │   │               ├── flags: ∅
@@ -260,6 +269,7 @@
             │           │           │           │   │               │           │   │           ├── opening_loc: ∅
             │           │           │           │   │               │           │   │           ├── arguments: ∅
             │           │           │           │   │               │           │   │           ├── closing_loc: ∅
+            │           │           │           │   │               │           │   │           ├── equal_loc: ∅
             │           │           │           │   │               │           │   │           └── block:
             │           │           │           │   │               │           │   │               @ BlockNode (location: (18,22)-(19,7))
             │           │           │           │   │               │           │   │               ├── flags: ∅
@@ -275,6 +285,7 @@
             │           │           │           │   └── end_keyword_loc: (21,4)-(21,7) = "end"
             │           │           │           └── end_keyword_loc: (21,4)-(21,7) = "end"
             │           │           ├── closing_loc: ∅
+            │           │           ├── equal_loc: ∅
             │           │           └── block: ∅
             │           ├── rescue_clause: ∅
             │           ├── else_clause: ∅

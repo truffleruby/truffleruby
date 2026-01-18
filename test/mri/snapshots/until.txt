@@ -44,6 +44,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (5,4)-(5,24))
         │       ├── flags: ∅
@@ -80,6 +81,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (7,4)-(7,23))
         │       ├── flags: ∅
@@ -138,6 +140,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   └── statements:
         │       @ StatementsNode (location: (11,0)-(11,10))
@@ -167,6 +170,7 @@
         │               │           ├── closing_loc: ∅
         │               │           └── unescaped: "b"
         │               ├── closing_loc: ∅
+        │               ├── equal_loc: ∅
         │               └── block: ∅
         └── @ WhileNode (location: (13,0)-(13,20))
             ├── flags: newline
@@ -186,6 +190,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── pattern:
             │   │   @ LocalVariableTargetNode (location: (13,17)-(13,20))
@@ -206,4 +211,5 @@
                         ├── opening_loc: ∅
                         ├── arguments: ∅
                         ├── closing_loc: ∅
+                        ├── equal_loc: ∅
                         └── block: ∅

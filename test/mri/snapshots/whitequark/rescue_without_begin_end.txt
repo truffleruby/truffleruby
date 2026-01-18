@@ -14,6 +14,7 @@
             ├── opening_loc: ∅
             ├── arguments: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (1,5)-(1,30))
                 ├── flags: ∅
@@ -36,6 +37,7 @@
                 │   │           ├── opening_loc: ∅
                 │   │           ├── arguments: ∅
                 │   │           ├── closing_loc: ∅
+                │   │           ├── equal_loc: ∅
                 │   │           └── block: ∅
                 │   ├── rescue_clause:
                 │   │   @ RescueNode (location: (1,14)-(1,25))
@@ -58,6 +60,7 @@
                 │   │   │           ├── opening_loc: ∅
                 │   │   │           ├── arguments: ∅
                 │   │   │           ├── closing_loc: ∅
+                │   │   │           ├── equal_loc: ∅
                 │   │   │           └── block: ∅
                 │   │   └── subsequent: ∅
                 │   ├── else_clause: ∅

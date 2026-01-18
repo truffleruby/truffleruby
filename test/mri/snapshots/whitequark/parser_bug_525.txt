@@ -38,9 +38,11 @@
             │                   │   ├── opening_loc: ∅
             │                   │   ├── arguments: ∅
             │                   │   ├── closing_loc: ∅
+            │                   │   ├── equal_loc: ∅
             │                   │   └── block: ∅
             │                   └── operator_loc: (1,6)-(1,8) = "=>"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (1,12)-(1,32))
                 ├── flags: ∅
@@ -59,6 +61,7 @@
                 │           ├── opening_loc: (1,18)-(1,19) = "("
                 │           ├── arguments: ∅
                 │           ├── closing_loc: (1,19)-(1,20) = ")"
+                │           ├── equal_loc: ∅
                 │           └── block:
                 │               @ BlockNode (location: (1,21)-(1,27))
                 │               ├── flags: ∅

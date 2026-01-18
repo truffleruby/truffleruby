@@ -12,7 +12,7 @@
         │   ├── closing_loc: (2,0)-(3,0) = "HERE\n"
         │   └── unescaped: ""
         └── @ InterpolatedStringNode (location: (4,0)-(4,8))
-            ├── flags: newline, static_literal
+            ├── flags: newline
             ├── opening_loc: (4,0)-(4,8) = "<<~THERE"
             ├── parts: (length: 9)
             │   ├── @ StringNode (location: (5,0)-(6,0))

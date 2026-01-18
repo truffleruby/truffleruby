@@ -66,6 +66,7 @@
         │   │           │           ├── flags: static_literal, decimal
         │   │           │           └── value: 1
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: [:x]
         │   ├── def_keyword_loc: (3,0)-(3,3) = "def"
@@ -88,6 +89,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── parameters: ∅
         │   ├── body:
@@ -118,6 +120,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── parameters:
             │   @ ParametersNode (location: (7,12)-(7,13))
@@ -155,6 +158,7 @@
             │           │           ├── flags: static_literal, decimal
             │           │           └── value: 1
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── locals: [:x]
             ├── def_keyword_loc: (7,0)-(7,3) = "def"

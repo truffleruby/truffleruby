@@ -36,4 +36,5 @@
             │                   │   └── closing_loc: (1,11)-(1,12) = "}"
             │                   └── operator_loc: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

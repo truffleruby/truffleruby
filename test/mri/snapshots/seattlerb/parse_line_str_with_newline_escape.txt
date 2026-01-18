@@ -25,4 +25,5 @@
             │       └── @ TrueNode (location: (1,8)-(1,12))
             │           └── flags: static_literal
             ├── closing_loc: (1,12)-(1,13) = ")"
+            ├── equal_loc: ∅
             └── block: ∅

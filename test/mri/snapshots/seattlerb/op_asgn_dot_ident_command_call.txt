@@ -32,4 +32,5 @@
                 │           ├── flags: static_literal, decimal
                 │           └── value: 1
                 ├── closing_loc: ∅
+                ├── equal_loc: ∅
                 └── block: ∅

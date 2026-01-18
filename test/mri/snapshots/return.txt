@@ -207,6 +207,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── right:
             │   @ ParenthesesNode (location: (27,7)-(27,17))

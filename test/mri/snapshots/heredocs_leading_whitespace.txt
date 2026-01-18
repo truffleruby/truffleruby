@@ -30,7 +30,7 @@
         │   ├── closing_loc: (19,0)-(20,0) = "  FOO\n"
         │   └── unescaped: "a\nb\n"
         ├── @ InterpolatedStringNode (location: (21,0)-(21,10))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: (21,0)-(21,10) = "<<~'  FOO'"
         │   ├── parts: (length: 2)
         │   │   ├── @ StringNode (location: (22,0)-(23,0))
@@ -47,7 +47,7 @@
         │   │       └── unescaped: "b\n"
         │   └── closing_loc: (24,0)-(25,0) = "     FOO\n"
         └── @ InterpolatedStringNode (location: (26,0)-(26,10))
-            ├── flags: newline, static_literal
+            ├── flags: newline
             ├── opening_loc: (26,0)-(26,10) = "<<~'  FOO'"
             ├── parts: (length: 2)
             │   ├── @ StringNode (location: (27,0)-(28,0))

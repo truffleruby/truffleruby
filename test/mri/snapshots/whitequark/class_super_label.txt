@@ -33,6 +33,7 @@
             │   │           ├── closing_loc: ∅
             │   │           └── unescaped: "b"
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── body: ∅
             ├── end_keyword_loc: (1,17)-(1,20) = "end"

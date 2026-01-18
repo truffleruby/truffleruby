@@ -62,4 +62,5 @@
             │                   │   └── end_keyword_loc: (5,0)-(5,3) = "end"
             │                   └── operator_loc: ∅
             ├── closing_loc: (5,3)-(5,4) = ")"
+            ├── equal_loc: ∅
             └── block: ∅

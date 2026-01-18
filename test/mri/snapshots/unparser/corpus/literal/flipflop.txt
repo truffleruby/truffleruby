@@ -36,6 +36,7 @@
         │   │   │           │   │           │   ├── opening_loc: ∅
         │   │   │           │   │           │   ├── arguments: ∅
         │   │   │           │   │           │   ├── closing_loc: ∅
+        │   │   │           │   │           │   ├── equal_loc: ∅
         │   │   │           │   │           │   └── block: ∅
         │   │   │           │   │           ├── call_operator_loc: ∅
         │   │   │           │   │           ├── name: :==
@@ -49,6 +50,7 @@
         │   │   │           │   │           │           ├── flags: static_literal, decimal
         │   │   │           │   │           │           └── value: 4
         │   │   │           │   │           ├── closing_loc: ∅
+        │   │   │           │   │           ├── equal_loc: ∅
         │   │   │           │   │           └── block: ∅
         │   │   │           │   ├── opening_loc: (1,4)-(1,5) = "("
         │   │   │           │   └── closing_loc: (1,11)-(1,12) = ")"
@@ -71,6 +73,7 @@
         │   │   │           │   │           │   ├── opening_loc: ∅
         │   │   │           │   │           │   ├── arguments: ∅
         │   │   │           │   │           │   ├── closing_loc: ∅
+        │   │   │           │   │           │   ├── equal_loc: ∅
         │   │   │           │   │           │   └── block: ∅
         │   │   │           │   │           ├── call_operator_loc: ∅
         │   │   │           │   │           ├── name: :==
@@ -84,6 +87,7 @@
         │   │   │           │   │           │           ├── flags: static_literal, decimal
         │   │   │           │   │           │           └── value: 4
         │   │   │           │   │           ├── closing_loc: ∅
+        │   │   │           │   │           ├── equal_loc: ∅
         │   │   │           │   │           └── block: ∅
         │   │   │           │   ├── opening_loc: (1,14)-(1,15) = "("
         │   │   │           │   └── closing_loc: (1,21)-(1,22) = ")"
@@ -104,6 +108,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── subsequent: ∅
         │   └── end_keyword_loc: (3,0)-(3,3) = "end"
@@ -138,6 +143,7 @@
         │   │   │           │   │           │   ├── opening_loc: ∅
         │   │   │           │   │           │   ├── arguments: ∅
         │   │   │           │   │           │   ├── closing_loc: ∅
+        │   │   │           │   │           │   ├── equal_loc: ∅
         │   │   │           │   │           │   └── block: ∅
         │   │   │           │   │           ├── call_operator_loc: ∅
         │   │   │           │   │           ├── name: :==
@@ -151,6 +157,7 @@
         │   │   │           │   │           │           ├── flags: static_literal, decimal
         │   │   │           │   │           │           └── value: 4
         │   │   │           │   │           ├── closing_loc: ∅
+        │   │   │           │   │           ├── equal_loc: ∅
         │   │   │           │   │           └── block: ∅
         │   │   │           │   ├── opening_loc: (4,4)-(4,5) = "("
         │   │   │           │   └── closing_loc: (4,11)-(4,12) = ")"
@@ -173,6 +180,7 @@
         │   │   │           │   │           │   ├── opening_loc: ∅
         │   │   │           │   │           │   ├── arguments: ∅
         │   │   │           │   │           │   ├── closing_loc: ∅
+        │   │   │           │   │           │   ├── equal_loc: ∅
         │   │   │           │   │           │   └── block: ∅
         │   │   │           │   │           ├── call_operator_loc: ∅
         │   │   │           │   │           ├── name: :==
@@ -186,6 +194,7 @@
         │   │   │           │   │           │           ├── flags: static_literal, decimal
         │   │   │           │   │           │           └── value: 4
         │   │   │           │   │           ├── closing_loc: ∅
+        │   │   │           │   │           ├── equal_loc: ∅
         │   │   │           │   │           └── block: ∅
         │   │   │           │   ├── opening_loc: (4,15)-(4,16) = "("
         │   │   │           │   └── closing_loc: (4,22)-(4,23) = ")"
@@ -206,6 +215,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── subsequent: ∅
         │   └── end_keyword_loc: (6,0)-(6,3) = "end"
@@ -226,6 +236,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   └── operator_loc: (7,3)-(7,5) = ".."
         │   ├── then_keyword_loc: ∅
@@ -248,6 +259,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── right: ∅
             │   └── operator_loc: (9,6)-(9,8) = ".."

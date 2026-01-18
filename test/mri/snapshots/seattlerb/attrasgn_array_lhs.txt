@@ -45,6 +45,7 @@
             │       │   │   ├── opening_loc: ∅
             │       │   │   ├── arguments: ∅
             │       │   │   ├── closing_loc: ∅
+            │       │   │   ├── equal_loc: ∅
             │       │   │   └── block: ∅
             │       │   ├── right:
             │       │   │   @ CallNode (location: (1,21)-(1,23))
@@ -56,6 +57,7 @@
             │       │   │   ├── opening_loc: ∅
             │       │   │   ├── arguments: ∅
             │       │   │   ├── closing_loc: ∅
+            │       │   │   ├── equal_loc: ∅
             │       │   │   └── block: ∅
             │       │   └── operator_loc: (1,18)-(1,20) = ".."
             │       └── @ ArrayNode (location: (1,27)-(1,42))
@@ -82,4 +84,5 @@
             │           ├── opening_loc: (1,27)-(1,28) = "["
             │           └── closing_loc: (1,41)-(1,42) = "]"
             ├── closing_loc: (1,23)-(1,24) = "]"
+            ├── equal_loc: (1,25)-(1,26) = "="
             └── block: ∅

@@ -24,6 +24,7 @@
             │       │   ├── opening_loc: ∅
             │       │   ├── arguments: ∅
             │       │   ├── closing_loc: ∅
+            │       │   ├── equal_loc: ∅
             │       │   └── block: ∅
             │       ├── call_operator_loc: (1,4)-(1,5) = "."
             │       ├── name: :C=
@@ -43,4 +44,5 @@
                 ├── opening_loc: ∅
                 ├── arguments: ∅
                 ├── closing_loc: ∅
+                ├── equal_loc: ∅
                 └── block: ∅

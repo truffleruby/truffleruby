@@ -71,6 +71,7 @@
         │   │                       ├── name: :a
         │   │                       └── depth: 0
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (3,0)-(3,19))
             ├── flags: newline, ignore_visibility
@@ -137,4 +138,5 @@
             │                       ├── name: :a
             │                       └── depth: 0
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

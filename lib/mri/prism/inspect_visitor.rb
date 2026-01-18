@@ -402,6 +402,7 @@ module Prism
         commands << [arguments, "#{indent}│   "]
       end
       commands << ["├── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
+      commands << ["├── equal_loc: #{inspect_location(node.equal_loc)}\n", indent]
       if (block = node.block).nil?
         commands << ["└── block: ∅\n", indent]
       else

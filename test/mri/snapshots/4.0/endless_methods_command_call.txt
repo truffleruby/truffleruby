@@ -44,6 +44,7 @@
         │   │           │           │           ├── closing_loc: (1,29)-(1,30) = "\""
         │   │           │           │           └── unescaped: "Hello"
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block: ∅
         │   │           ├── locals: []
         │   │           ├── def_keyword_loc: (1,8)-(1,11) = "def"
@@ -53,6 +54,7 @@
         │   │           ├── equal_loc: (1,16)-(1,17) = "="
         │   │           └── end_keyword_loc: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (2,0)-(2,39))
         │   ├── flags: newline, ignore_visibility
@@ -99,6 +101,7 @@
         │   │           │           │           ├── closing_loc: (2,38)-(2,39) = "\""
         │   │           │           │           └── unescaped: "World"
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block: ∅
         │   │           ├── locals: []
         │   │           ├── def_keyword_loc: (2,8)-(2,11) = "def"
@@ -108,6 +111,7 @@
         │   │           ├── equal_loc: (2,16)-(2,17) = "="
         │   │           └── end_keyword_loc: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (3,0)-(3,42))
         │   ├── flags: newline, ignore_visibility
@@ -148,6 +152,7 @@
         │   │           │           │           ├── closing_loc: (3,29)-(3,30) = "\""
         │   │           │           │           └── unescaped: "Hello"
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block: ∅
         │   │           ├── locals: []
         │   │           ├── def_keyword_loc: (3,8)-(3,11) = "def"
@@ -157,6 +162,7 @@
         │   │           ├── equal_loc: (3,16)-(3,17) = "="
         │   │           └── end_keyword_loc: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (3,31)-(3,42))
         │       ├── flags: ∅
@@ -175,6 +181,7 @@
         │       │           ├── opening_loc: ∅
         │       │           ├── arguments: ∅
         │       │           ├── closing_loc: ∅
+        │       │           ├── equal_loc: ∅
         │       │           └── block: ∅
         │       ├── opening_loc: (3,31)-(3,33) = "do"
         │       └── closing_loc: (3,39)-(3,42) = "end"
@@ -217,6 +224,7 @@
         │   │           │           │           ├── closing_loc: (4,31)-(4,32) = "\""
         │   │           │           │           └── unescaped: "Hello"
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block: ∅
         │   │           ├── locals: []
         │   │           ├── def_keyword_loc: (4,8)-(4,11) = "def"
@@ -226,6 +234,7 @@
         │   │           ├── equal_loc: (4,18)-(4,19) = "="
         │   │           └── end_keyword_loc: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (5,0)-(5,27))
         │   ├── flags: newline, ignore_visibility
@@ -276,6 +285,7 @@
         │   │           │           │           ├── name: :x
         │   │           │           │           └── depth: 0
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block: ∅
         │   │           ├── locals: [:x]
         │   │           ├── def_keyword_loc: (5,8)-(5,11) = "def"
@@ -285,6 +295,7 @@
         │   │           ├── equal_loc: (5,19)-(5,20) = "="
         │   │           └── end_keyword_loc: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (6,0)-(6,34))
         │   ├── flags: newline, ignore_visibility
@@ -311,6 +322,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── parameters: ∅
         │   │           ├── body:
@@ -335,6 +347,7 @@
         │   │           │           │           ├── closing_loc: (6,33)-(6,34) = "\""
         │   │           │           │           └── unescaped: "Hello"
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block: ∅
         │   │           ├── locals: []
         │   │           ├── def_keyword_loc: (6,8)-(6,11) = "def"
@@ -344,6 +357,7 @@
         │   │           ├── equal_loc: (6,20)-(6,21) = "="
         │   │           └── end_keyword_loc: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (7,0)-(7,36))
         │   ├── flags: newline, ignore_visibility
@@ -370,6 +384,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── parameters: ∅
         │   │           ├── body:
@@ -394,6 +409,7 @@
         │   │           │           │           ├── closing_loc: (7,35)-(7,36) = "\""
         │   │           │           │           └── unescaped: "Hello"
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block: ∅
         │   │           ├── locals: []
         │   │           ├── def_keyword_loc: (7,8)-(7,11) = "def"
@@ -403,6 +419,7 @@
         │   │           ├── equal_loc: (7,22)-(7,23) = "="
         │   │           └── end_keyword_loc: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (8,0)-(8,31))
             ├── flags: newline, ignore_visibility
@@ -429,6 +446,7 @@
             │           │   ├── opening_loc: ∅
             │           │   ├── arguments: ∅
             │           │   ├── closing_loc: ∅
+            │           │   ├── equal_loc: ∅
             │           │   └── block: ∅
             │           ├── parameters:
             │           │   @ ParametersNode (location: (8,20)-(8,21))
@@ -463,6 +481,7 @@
             │           │           │           ├── name: :x
             │           │           │           └── depth: 0
             │           │           ├── closing_loc: ∅
+            │           │           ├── equal_loc: ∅
             │           │           └── block: ∅
             │           ├── locals: [:x]
             │           ├── def_keyword_loc: (8,8)-(8,11) = "def"
@@ -472,4 +491,5 @@
             │           ├── equal_loc: (8,23)-(8,24) = "="
             │           └── end_keyword_loc: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

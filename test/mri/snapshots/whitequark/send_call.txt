@@ -17,6 +17,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: (1,3)-(1,4) = "."
         │   ├── name: :call
@@ -30,6 +31,7 @@
         │   │           ├── flags: static_literal, decimal
         │   │           └── value: 1
         │   ├── closing_loc: (1,6)-(1,7) = ")"
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (3,0)-(3,8))
             ├── flags: newline
@@ -43,6 +45,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── call_operator_loc: (3,3)-(3,5) = "::"
             ├── name: :call
@@ -56,4 +59,5 @@
             │           ├── flags: static_literal, decimal
             │           └── value: 1
             ├── closing_loc: (3,7)-(3,8) = ")"
+            ├── equal_loc: ∅
             └── block: ∅

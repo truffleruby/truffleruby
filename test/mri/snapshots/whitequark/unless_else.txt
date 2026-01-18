@@ -18,6 +18,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── then_keyword_loc: (1,11)-(1,15) = "then"
         │   ├── statements:
@@ -33,6 +34,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── else_clause:
         │   │   @ ElseNode (location: (1,21)-(1,34))
@@ -51,6 +53,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── end_keyword_loc: (1,31)-(1,34) = "end"
         │   └── end_keyword_loc: (1,31)-(1,34) = "end"
@@ -67,6 +70,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── then_keyword_loc: ∅
             ├── statements:
@@ -82,6 +86,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── else_clause:
             │   @ ElseNode (location: (3,17)-(3,30))
@@ -100,6 +105,7 @@
             │   │           ├── opening_loc: ∅
             │   │           ├── arguments: ∅
             │   │           ├── closing_loc: ∅
+            │   │           ├── equal_loc: ∅
             │   │           └── block: ∅
             │   └── end_keyword_loc: (3,27)-(3,30) = "end"
             └── end_keyword_loc: (3,27)-(3,30) = "end"

@@ -1,0 +1,45 @@
+@ ProgramNode (location: (1,0)-(1,14))
+├── flags: ∅
+├── locals: []
+└── statements:
+    @ StatementsNode (location: (1,0)-(1,14))
+    ├── flags: ∅
+    └── body: (length: 1)
+        └── @ CallNode (location: (1,0)-(1,14))
+            ├── flags: newline, ignore_visibility
+            ├── receiver: ∅
+            ├── call_operator_loc: ∅
+            ├── name: :proc
+            ├── message_loc: (1,0)-(1,4) = "proc"
+            ├── opening_loc: ∅
+            ├── arguments: ∅
+            ├── closing_loc: ∅
+            ├── equal_loc: ∅
+            └── block:
+                @ BlockNode (location: (1,5)-(1,14))
+                ├── flags: ∅
+                ├── locals: []
+                ├── parameters:
+                │   @ BlockParametersNode (location: (1,7)-(1,9))
+                │   ├── flags: ∅
+                │   ├── parameters: ∅
+                │   ├── locals: (length: 0)
+                │   ├── opening_loc: (1,7)-(1,8) = "|"
+                │   └── closing_loc: (1,8)-(1,9) = "|"
+                ├── body:
+                │   @ StatementsNode (location: (1,10)-(1,12))
+                │   ├── flags: ∅
+                │   └── body: (length: 1)
+                │       └── @ CallNode (location: (1,10)-(1,12))
+                │           ├── flags: newline, variable_call, ignore_visibility
+                │           ├── receiver: ∅
+                │           ├── call_operator_loc: ∅
+                │           ├── name: :it
+                │           ├── message_loc: (1,10)-(1,12) = "it"
+                │           ├── opening_loc: ∅
+                │           ├── arguments: ∅
+                │           ├── closing_loc: ∅
+                │           ├── equal_loc: ∅
+                │           └── block: ∅
+                ├── opening_loc: (1,5)-(1,6) = "{"
+                └── closing_loc: (1,13)-(1,14) = "}"

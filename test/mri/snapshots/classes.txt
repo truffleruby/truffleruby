@@ -144,6 +144,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── call_operator_loc: ∅
         │   │   ├── name: :!
@@ -151,6 +152,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── body: ∅
         │   └── end_keyword_loc: (12,0)-(12,3) = "end"
@@ -264,6 +266,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── call_operator_loc: (18,12)-(18,13) = "."
         │   │   ├── name: :bar
@@ -271,6 +274,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── body: ∅
         │   └── end_keyword_loc: (19,0)-(19,3) = "end"
@@ -292,6 +296,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── call_operator_loc: (21,12)-(21,13) = "."
         │   │   ├── name: :bar
@@ -299,6 +304,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── body: ∅
         │   └── end_keyword_loc: (21,17)-(21,20) = "end"
@@ -352,6 +358,7 @@
         │   │           │           ├── flags: static_literal, decimal
         │   │           │           └── value: 2
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   └── end_keyword_loc: (30,0)-(30,3) = "end"
         ├── @ SingletonClassNode (location: (32,0)-(32,23))
@@ -384,6 +391,7 @@
         │   │           │           ├── flags: static_literal, decimal
         │   │           │           └── value: 2
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   └── end_keyword_loc: (32,20)-(32,23) = "end"
         └── @ ClassNode (location: (34,0)-(35,3))
@@ -414,6 +422,7 @@
             │   │           ├── flags: static_literal, decimal
             │   │           └── value: 1
             │   ├── closing_loc: (34,13)-(34,14) = "]"
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── body: ∅
             ├── end_keyword_loc: (35,0)-(35,3) = "end"

@@ -27,6 +27,7 @@
         │       ├── opening_loc: ∅
         │       ├── arguments: ∅
         │       ├── closing_loc: ∅
+        │       ├── equal_loc: ∅
         │       └── block: ∅
         ├── @ MultiWriteNode (location: (3,0)-(3,13))
         │   ├── flags: newline
@@ -58,6 +59,7 @@
         │       ├── opening_loc: ∅
         │       ├── arguments: ∅
         │       ├── closing_loc: ∅
+        │       ├── equal_loc: ∅
         │       └── block: ∅
         ├── @ MultiWriteNode (location: (5,0)-(5,8))
         │   ├── flags: newline
@@ -85,6 +87,7 @@
         │       ├── opening_loc: ∅
         │       ├── arguments: ∅
         │       ├── closing_loc: ∅
+        │       ├── equal_loc: ∅
         │       └── block: ∅
         ├── @ MultiWriteNode (location: (7,0)-(7,11))
         │   ├── flags: newline
@@ -116,6 +119,7 @@
         │       ├── opening_loc: ∅
         │       ├── arguments: ∅
         │       ├── closing_loc: ∅
+        │       ├── equal_loc: ∅
         │       └── block: ∅
         ├── @ MultiWriteNode (location: (9,0)-(9,18))
         │   ├── flags: newline
@@ -148,6 +152,7 @@
         │       │           ├── opening_loc: ∅
         │       │           ├── arguments: ∅
         │       │           ├── closing_loc: ∅
+        │       │           ├── equal_loc: ∅
         │       │           └── block: ∅
         │       ├── opening_loc: ∅
         │       └── closing_loc: ∅
@@ -177,6 +182,7 @@
         │       ├── opening_loc: ∅
         │       ├── arguments: ∅
         │       ├── closing_loc: ∅
+        │       ├── equal_loc: ∅
         │       └── block: ∅
         ├── @ MultiWriteNode (location: (13,0)-(13,13))
         │   ├── flags: newline
@@ -208,6 +214,7 @@
         │       ├── opening_loc: ∅
         │       ├── arguments: ∅
         │       ├── closing_loc: ∅
+        │       ├── equal_loc: ∅
         │       └── block: ∅
         ├── @ MultiWriteNode (location: (15,0)-(15,11))
         │   ├── flags: newline
@@ -239,6 +246,7 @@
         │       ├── opening_loc: ∅
         │       ├── arguments: ∅
         │       ├── closing_loc: ∅
+        │       ├── equal_loc: ∅
         │       └── block: ∅
         ├── @ MultiWriteNode (location: (17,0)-(17,14))
         │   ├── flags: newline
@@ -274,6 +282,7 @@
         │       ├── opening_loc: ∅
         │       ├── arguments: ∅
         │       ├── closing_loc: ∅
+        │       ├── equal_loc: ∅
         │       └── block: ∅
         └── @ MultiWriteNode (location: (19,0)-(19,16))
             ├── flags: newline
@@ -308,6 +317,7 @@
                 │   │       ├── opening_loc: ∅
                 │   │       ├── arguments: ∅
                 │   │       ├── closing_loc: ∅
+                │   │       ├── equal_loc: ∅
                 │   │       └── block: ∅
                 │   └── @ CallNode (location: (19,13)-(19,16))
                 │       ├── flags: variable_call, ignore_visibility
@@ -318,6 +328,7 @@
                 │       ├── opening_loc: ∅
                 │       ├── arguments: ∅
                 │       ├── closing_loc: ∅
+                │       ├── equal_loc: ∅
                 │       └── block: ∅
                 ├── opening_loc: ∅
                 └── closing_loc: ∅

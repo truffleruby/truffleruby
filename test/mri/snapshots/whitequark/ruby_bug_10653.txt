@@ -25,6 +25,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block:
         │   │               @ BlockNode (location: (1,14)-(1,20))
         │   │               ├── flags: ∅
@@ -50,6 +51,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block:
         │   │   │               @ BlockNode (location: (1,27)-(1,33))
         │   │   │               ├── flags: ∅
@@ -80,6 +82,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block:
         │   │               @ BlockNode (location: (3,14)-(3,16))
         │   │               ├── flags: ∅
@@ -105,6 +108,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block:
         │   │   │               @ BlockNode (location: (3,23)-(3,25))
         │   │   │               ├── flags: ∅
@@ -138,6 +142,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block:
             │               @ BlockNode (location: (5,13)-(5,27))
             │               ├── flags: ∅
@@ -181,6 +186,7 @@
             │               │           │           ├── name: :n
             │               │           │           └── depth: 0
             │               │           ├── closing_loc: ∅
+            │               │           ├── equal_loc: ∅
             │               │           └── block: ∅
             │               ├── opening_loc: (5,13)-(5,15) = "do"
             │               └── closing_loc: (5,24)-(5,27) = "end"

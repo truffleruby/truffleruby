@@ -44,4 +44,5 @@
             │                   │   └── value: 3
             │                   └── operator_loc: (1,12)-(1,14) = "**"
             ├── closing_loc: (1,15)-(1,16) = ")"
+            ├── equal_loc: ∅
             └── block: ∅

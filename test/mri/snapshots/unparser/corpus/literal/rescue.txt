@@ -17,6 +17,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── keyword_loc: (1,4)-(1,10) = "rescue"
         │   └── rescue_expression:
@@ -29,6 +30,7 @@
         │       ├── opening_loc: ∅
         │       ├── arguments: ∅
         │       ├── closing_loc: ∅
+        │       ├── equal_loc: ∅
         │       └── block: ∅
         ├── @ RescueModifierNode (location: (2,0)-(2,21))
         │   ├── flags: newline
@@ -42,6 +44,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── keyword_loc: (2,4)-(2,10) = "rescue"
         │   └── rescue_expression:
@@ -61,6 +64,7 @@
         │                   ├── opening_loc: ∅
         │                   ├── arguments: ∅
         │                   ├── closing_loc: ∅
+        │                   ├── equal_loc: ∅
         │                   └── block: ∅
         └── @ LocalVariableWriteNode (location: (3,0)-(3,27))
             ├── flags: newline
@@ -86,6 +90,7 @@
             │   │           │   ├── opening_loc: ∅
             │   │           │   ├── arguments: ∅
             │   │           │   ├── closing_loc: ∅
+            │   │           │   ├── equal_loc: ∅
             │   │           │   └── block: ∅
             │   │           ├── keyword_loc: (3,9)-(3,15) = "rescue"
             │   │           └── rescue_expression:
@@ -105,6 +110,7 @@
             │   │                           ├── opening_loc: ∅
             │   │                           ├── arguments: ∅
             │   │                           ├── closing_loc: ∅
+            │   │                           ├── equal_loc: ∅
             │   │                           └── block: ∅
             │   ├── opening_loc: (3,4)-(3,5) = "("
             │   └── closing_loc: (3,26)-(3,27) = ")"

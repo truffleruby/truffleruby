@@ -36,8 +36,10 @@
             │           │       │           ├── opening_loc: ∅
             │           │       │           ├── arguments: ∅
             │           │       │           ├── closing_loc: ∅
+            │           │       │           ├── equal_loc: ∅
             │           │       │           └── block: ∅
             │           │       └── closing_loc: (1,6)-(1,7) = "}"
             │           └── closing_loc: (1,7)-(1,8) = "`"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

@@ -32,6 +32,7 @@
             │       │   ├── opening_loc: ∅
             │       │   ├── arguments: ∅
             │       │   ├── closing_loc: ∅
+            │       │   ├── equal_loc: ∅
             │       │   └── block: ∅
             │       └── @ CallNode (location: (3,11)-(3,14))
             │           ├── flags: variable_call, ignore_visibility
@@ -42,6 +43,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── rparen_loc: ∅
             └── block:

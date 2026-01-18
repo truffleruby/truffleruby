@@ -395,6 +395,12 @@ pm_serialize_node(pm_parser_t *parser, pm_node_t *node, pm_buffer_t *buffer) {
                 pm_buffer_append_byte(buffer, 1);
                 pm_serialize_location(parser, &((pm_call_node_t *)node)->closing_loc, buffer);
             }
+            if (((pm_call_node_t *)node)->equal_loc.start == NULL) {
+                pm_buffer_append_byte(buffer, 0);
+            } else {
+                pm_buffer_append_byte(buffer, 1);
+                pm_serialize_location(parser, &((pm_call_node_t *)node)->equal_loc, buffer);
+            }
             if (((pm_call_node_t *)node)->block == NULL) {
                 pm_buffer_append_byte(buffer, 0);
             } else {
@@ -2177,7 +2183,7 @@ pm_serialize_content(pm_parser_t *parser, pm_node_t *node, pm_buffer_t *buffer) 
                 // buffer offset. We will add a leading 1 to indicate that this
                 // is a buffer offset.
                 uint32_t content_offset = pm_sizet_to_u32(buffer->length);
-                uint32_t owned_mask = (uint32_t) (1 << 31);
+                uint32_t owned_mask = 1U << 31;
 
                 assert(content_offset < owned_mask);
                 content_offset |= owned_mask;

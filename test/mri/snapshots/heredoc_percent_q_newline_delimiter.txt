@@ -1,0 +1,114 @@
+@ ProgramNode (location: (1,0)-(22,0))
+├── flags: ∅
+├── locals: []
+└── statements:
+    @ StatementsNode (location: (1,0)-(22,0))
+    ├── flags: ∅
+    └── body: (length: 7)
+        ├── @ InterpolatedStringNode (location: (1,0)-(3,0))
+        │   ├── flags: newline, static_literal, mutable
+        │   ├── opening_loc: (1,0)-(2,0) = "%Q\n"
+        │   ├── parts: (length: 1)
+        │   │   └── @ EmbeddedStatementsNode (location: (2,0)-(2,6))
+        │   │       ├── flags: ∅
+        │   │       ├── opening_loc: (2,0)-(2,2) = "\#{"
+        │   │       ├── statements:
+        │   │       │   @ StatementsNode (location: (2,2)-(2,5))
+        │   │       │   ├── flags: ∅
+        │   │       │   └── body: (length: 1)
+        │   │       │       └── @ StringNode (location: (2,2)-(2,5))
+        │   │       │           ├── flags: static_literal, frozen
+        │   │       │           ├── opening_loc: (2,2)-(2,5) = "<<B"
+        │   │       │           ├── content_loc: (3,0)-(3,0) = ""
+        │   │       │           ├── closing_loc: (3,0)-(4,0) = "B\n"
+        │   │       │           └── unescaped: ""
+        │   │       └── closing_loc: (2,5)-(2,6) = "}"
+        │   └── closing_loc: (2,6)-(3,0) = "\n"
+        ├── @ InterpolatedStringNode (location: (5,0)-(7,0))
+        │   ├── flags: newline, static_literal, mutable
+        │   ├── opening_loc: (5,0)-(6,0) = "%\n"
+        │   ├── parts: (length: 1)
+        │   │   └── @ EmbeddedStatementsNode (location: (6,0)-(6,6))
+        │   │       ├── flags: ∅
+        │   │       ├── opening_loc: (6,0)-(6,2) = "\#{"
+        │   │       ├── statements:
+        │   │       │   @ StatementsNode (location: (6,2)-(6,5))
+        │   │       │   ├── flags: ∅
+        │   │       │   └── body: (length: 1)
+        │   │       │       └── @ StringNode (location: (6,2)-(6,5))
+        │   │       │           ├── flags: static_literal, frozen
+        │   │       │           ├── opening_loc: (6,2)-(6,5) = "<<B"
+        │   │       │           ├── content_loc: (7,0)-(7,0) = ""
+        │   │       │           ├── closing_loc: (7,0)-(8,0) = "B\n"
+        │   │       │           └── unescaped: ""
+        │   │       └── closing_loc: (6,5)-(6,6) = "}"
+        │   └── closing_loc: (6,6)-(7,0) = "\n"
+        ├── @ StringNode (location: (9,0)-(9,3))
+        │   ├── flags: newline
+        │   ├── opening_loc: (9,0)-(9,3) = "<<A"
+        │   ├── content_loc: (10,0)-(10,0) = ""
+        │   ├── closing_loc: (10,0)-(11,0) = "A\n"
+        │   └── unescaped: ""
+        ├── @ InterpolatedStringNode (location: (9,5)-(12,0))
+        │   ├── flags: newline, static_literal, mutable
+        │   ├── opening_loc: (9,5)-(10,0) = "%Q\n"
+        │   ├── parts: (length: 1)
+        │   │   └── @ EmbeddedStatementsNode (location: (11,0)-(11,6))
+        │   │       ├── flags: ∅
+        │   │       ├── opening_loc: (11,0)-(11,2) = "\#{"
+        │   │       ├── statements:
+        │   │       │   @ StatementsNode (location: (11,2)-(11,5))
+        │   │       │   ├── flags: ∅
+        │   │       │   └── body: (length: 1)
+        │   │       │       └── @ StringNode (location: (11,2)-(11,5))
+        │   │       │           ├── flags: static_literal, frozen
+        │   │       │           ├── opening_loc: (11,2)-(11,5) = "<<B"
+        │   │       │           ├── content_loc: (12,0)-(12,0) = ""
+        │   │       │           ├── closing_loc: (12,0)-(13,0) = "B\n"
+        │   │       │           └── unescaped: ""
+        │   │       └── closing_loc: (11,5)-(11,6) = "}"
+        │   └── closing_loc: (11,6)-(12,0) = "\n"
+        ├── @ StringNode (location: (14,0)-(14,3))
+        │   ├── flags: newline
+        │   ├── opening_loc: (14,0)-(14,3) = "<<A"
+        │   ├── content_loc: (15,0)-(15,0) = ""
+        │   ├── closing_loc: (15,0)-(16,0) = "A\n"
+        │   └── unescaped: ""
+        ├── @ InterpolatedStringNode (location: (14,5)-(17,0))
+        │   ├── flags: newline, static_literal, mutable
+        │   ├── opening_loc: (14,5)-(15,0) = "%\n"
+        │   ├── parts: (length: 1)
+        │   │   └── @ EmbeddedStatementsNode (location: (16,0)-(16,6))
+        │   │       ├── flags: ∅
+        │   │       ├── opening_loc: (16,0)-(16,2) = "\#{"
+        │   │       ├── statements:
+        │   │       │   @ StatementsNode (location: (16,2)-(16,5))
+        │   │       │   ├── flags: ∅
+        │   │       │   └── body: (length: 1)
+        │   │       │       └── @ StringNode (location: (16,2)-(16,5))
+        │   │       │           ├── flags: static_literal, frozen
+        │   │       │           ├── opening_loc: (16,2)-(16,5) = "<<B"
+        │   │       │           ├── content_loc: (17,0)-(17,0) = ""
+        │   │       │           ├── closing_loc: (17,0)-(18,0) = "B\n"
+        │   │       │           └── unescaped: ""
+        │   │       └── closing_loc: (16,5)-(16,6) = "}"
+        │   └── closing_loc: (16,6)-(17,0) = "\n"
+        └── @ InterpolatedStringNode (location: (20,0)-(22,0))
+            ├── flags: newline, static_literal, mutable
+            ├── opening_loc: (20,0)-(21,0) = "%Q\r\n"
+            ├── parts: (length: 1)
+            │   └── @ EmbeddedStatementsNode (location: (21,0)-(21,6))
+            │       ├── flags: ∅
+            │       ├── opening_loc: (21,0)-(21,2) = "\#{"
+            │       ├── statements:
+            │       │   @ StatementsNode (location: (21,2)-(21,5))
+            │       │   ├── flags: ∅
+            │       │   └── body: (length: 1)
+            │       │       └── @ StringNode (location: (21,2)-(21,5))
+            │       │           ├── flags: static_literal, frozen
+            │       │           ├── opening_loc: (21,2)-(21,5) = "<<B"
+            │       │           ├── content_loc: (22,0)-(22,0) = ""
+            │       │           ├── closing_loc: (22,0)-(23,0) = "B\n"
+            │       │           └── unescaped: ""
+            │       └── closing_loc: (21,5)-(21,6) = "}"
+            └── closing_loc: (21,6)-(22,0) = "\r\n"

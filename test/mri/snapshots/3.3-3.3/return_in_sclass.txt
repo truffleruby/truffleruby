@@ -1,0 +1,25 @@
+@ ProgramNode (location: (1,0)-(1,23))
+├── flags: ∅
+├── locals: []
+└── statements:
+    @ StatementsNode (location: (1,0)-(1,23))
+    ├── flags: ∅
+    └── body: (length: 1)
+        └── @ SingletonClassNode (location: (1,0)-(1,23))
+            ├── flags: newline
+            ├── locals: []
+            ├── class_keyword_loc: (1,0)-(1,5) = "class"
+            ├── operator_loc: (1,6)-(1,8) = "<<"
+            ├── expression:
+            │   @ ConstantReadNode (location: (1,9)-(1,10))
+            │   ├── flags: ∅
+            │   └── name: :A
+            ├── body:
+            │   @ StatementsNode (location: (1,12)-(1,18))
+            │   ├── flags: ∅
+            │   └── body: (length: 1)
+            │       └── @ ReturnNode (location: (1,12)-(1,18))
+            │           ├── flags: newline
+            │           ├── keyword_loc: (1,12)-(1,18) = "return"
+            │           └── arguments: ∅
+            └── end_keyword_loc: (1,20)-(1,23) = "end"

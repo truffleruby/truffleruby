@@ -6,7 +6,7 @@
     ├── flags: ∅
     └── body: (length: 2)
         ├── @ InterpolatedStringNode (location: (1,0)-(1,7))
-        │   ├── flags: newline, static_literal, mutable
+        │   ├── flags: newline
         │   ├── opening_loc: (1,0)-(1,7) = "<<~RUBY"
         │   ├── parts: (length: 4)
         │   │   ├── @ StringNode (location: (2,0)-(3,0))

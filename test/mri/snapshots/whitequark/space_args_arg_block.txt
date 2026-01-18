@@ -17,6 +17,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: (1,3)-(1,4) = "."
         │   ├── name: :fun
@@ -38,6 +39,7 @@
         │   │           ├── opening_loc: (1,8)-(1,9) = "("
         │   │           └── closing_loc: (1,10)-(1,11) = ")"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (1,12)-(1,14))
         │       ├── flags: ∅
@@ -58,6 +60,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: (3,3)-(3,5) = "::"
         │   ├── name: :fun
@@ -79,6 +82,7 @@
         │   │           ├── opening_loc: (3,9)-(3,10) = "("
         │   │           └── closing_loc: (3,11)-(3,12) = ")"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (3,13)-(3,15))
         │       ├── flags: ∅
@@ -110,6 +114,7 @@
             │           ├── opening_loc: (5,4)-(5,5) = "("
             │           └── closing_loc: (5,6)-(5,7) = ")"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (5,8)-(5,10))
                 ├── flags: ∅

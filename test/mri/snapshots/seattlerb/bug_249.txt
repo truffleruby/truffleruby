@@ -37,6 +37,7 @@
             │       │   │   │           ├── opening_loc: ∅
             │       │   │   │           ├── arguments: ∅
             │       │   │   │           ├── closing_loc: ∅
+            │       │   │   │           ├── equal_loc: ∅
             │       │   │   │           └── block:
             │       │   │   │               @ BlockNode (location: (1,17)-(4,4))
             │       │   │   │               ├── flags: ∅
@@ -70,6 +71,7 @@
             │       │   ├── opening_loc: ∅
             │       │   ├── arguments: ∅
             │       │   ├── closing_loc: ∅
+            │       │   ├── equal_loc: ∅
             │       │   └── block: ∅
             │       └── @ KeywordHashNode (location: (4,11)-(4,28))
             │           ├── flags: symbol_keys
@@ -92,4 +94,5 @@
             │                   │   └── unescaped: "endpoint"
             │                   └── operator_loc: (4,15)-(4,17) = "=>"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅
