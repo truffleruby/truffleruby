@@ -13,7 +13,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
-import org.truffleruby.core.hash.library.EmptyHashStore;
 import org.truffleruby.core.hash.library.HashStoreLibrary;
 import org.truffleruby.core.numeric.BigIntegerOps;
 import org.truffleruby.core.numeric.RubyBignum;
@@ -28,10 +27,7 @@ public abstract class HashOperations {
         return new RubyHash(
                 context.getCoreLibrary().hashClass,
                 language.hashShape,
-                context,
-                EmptyHashStore.NULL_HASH_STORE,
-                0,
-                false);
+                context);
     }
 
     @TruffleBoundary

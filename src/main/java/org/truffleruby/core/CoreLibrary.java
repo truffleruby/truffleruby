@@ -37,6 +37,7 @@ import org.truffleruby.core.basicobject.RubyBasicObject;
 import org.truffleruby.core.binding.RubyBinding;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.TStringUtils;
+import org.truffleruby.core.hash.RubyHash;
 import org.truffleruby.core.klass.ClassNodes;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.module.ModuleNodes;
@@ -226,6 +227,7 @@ public final class CoreLibrary {
 
     public final RubyArray argv;
     public final RubyBasicObject mainObject;
+    public final RubyHash emptyFrozenHash;
 
     public final GlobalVariables globalVariables;
     public final BindingLocalVariablesObject interactiveBindingLocalVariablesObject;
@@ -550,6 +552,7 @@ public final class CoreLibrary {
 
         mainObject = new RubyBasicObject(objectClass, language.basicObjectShape);
         argv = new RubyArray(arrayClass, language.arrayShape, ArrayStoreLibrary.initialStorage(false), 0);
+        emptyFrozenHash = new RubyHash(hashClass, language.hashShape, context);
 
         globalVariables = new GlobalVariables(context);
         interactiveBindingLocalVariablesObject = new BindingLocalVariablesObject();

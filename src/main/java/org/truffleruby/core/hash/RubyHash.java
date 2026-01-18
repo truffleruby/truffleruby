@@ -64,6 +64,11 @@ public final class RubyHash extends RubyDynamicObject implements ObjectGraphNode
     public boolean compareByIdentity;
     public final boolean ruby2_keywords;
 
+    /** Creates an empty Hash */
+    public RubyHash(RubyClass rubyClass, Shape shape, RubyContext context) {
+        this(rubyClass, shape, context, EmptyHashStore.NULL_HASH_STORE, 0, false);
+    }
+
     public RubyHash(
             RubyClass rubyClass,
             Shape shape,
