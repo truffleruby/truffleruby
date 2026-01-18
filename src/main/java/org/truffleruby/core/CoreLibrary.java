@@ -229,12 +229,12 @@ public final class CoreLibrary {
     public final RubyArray argv;
     public final RubyBasicObject mainObject;
 
-    // Not final since not assignable in constructor
-    @CompilationFinal private RubyHash emptyFrozenHash;
-
     public final GlobalVariables globalVariables;
     public final BindingLocalVariablesObject interactiveBindingLocalVariablesObject;
     public final RubyClass noMatchingPatternErrorClass;
+
+    // Not final since not assignable in constructor
+    @CompilationFinal private RubyHash emptyFrozenHash;
 
     @CompilationFinal private RubyClass eagainWaitReadable;
     @CompilationFinal private RubyClass eagainWaitWritable;
@@ -610,6 +610,7 @@ public final class CoreLibrary {
     }
 
     public void initialize() {
+        emptyFrozenHash = HashOperations.newEmptyHash(context, language);
         initializeConstants();
     }
 
@@ -793,10 +794,6 @@ public final class CoreLibrary {
             System.err.println("\nException while loading core library:");
             throw e;
         }
-    }
-
-    public void loadConstructorDependantObjects() {
-        emptyFrozenHash = HashOperations.newEmptyHash(context, language);
     }
 
     public RubySource loadCoreFileSource(String path) throws IOException {
