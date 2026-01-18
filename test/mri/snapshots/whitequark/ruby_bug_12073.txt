@@ -44,6 +44,7 @@
         │   │                   │   └── value: 1
         │   │                   └── operator_loc: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ DefNode (location: (3,0)-(3,34))
             ├── flags: newline
@@ -94,6 +95,7 @@
             │           │           ├── closing_loc: (3,28)-(3,29) = "'"
             │           │           └── unescaped: ""
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── locals: [:raise]
             ├── def_keyword_loc: (3,0)-(3,3) = "def"

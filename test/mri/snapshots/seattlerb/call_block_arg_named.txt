@@ -14,6 +14,7 @@
             ├── opening_loc: (1,1)-(1,2) = "("
             ├── arguments: ∅
             ├── closing_loc: (1,6)-(1,7) = ")"
+            ├── equal_loc: ∅
             └── block:
                 @ BlockArgumentNode (location: (1,2)-(1,6))
                 ├── flags: ∅
@@ -27,5 +28,6 @@
                 │   ├── opening_loc: ∅
                 │   ├── arguments: ∅
                 │   ├── closing_loc: ∅
+                │   ├── equal_loc: ∅
                 │   └── block: ∅
                 └── operator_loc: (1,2)-(1,3) = "&"

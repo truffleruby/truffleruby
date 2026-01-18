@@ -25,6 +25,7 @@
             │   │   │           ├── opening_loc: ∅
             │   │   │           ├── arguments: ∅
             │   │   │           ├── closing_loc: ∅
+            │   │   │           ├── equal_loc: ∅
             │   │   │           └── block: ∅
             │   │   └── closing_loc: (1,4)-(1,5) = "}"
             │   └── @ EmbeddedStatementsNode (location: (1,5)-(1,9))
@@ -43,6 +44,7 @@
             │       │           ├── opening_loc: ∅
             │       │           ├── arguments: ∅
             │       │           ├── closing_loc: ∅
+            │       │           ├── equal_loc: ∅
             │       │           └── block: ∅
             │       └── closing_loc: (1,8)-(1,9) = "}"
             └── closing_loc: (1,9)-(1,10) = "\""

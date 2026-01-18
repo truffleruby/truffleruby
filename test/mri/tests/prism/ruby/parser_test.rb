@@ -5,8 +5,6 @@ require_relative "../test_helper"
 begin
   verbose, $VERBOSE = $VERBOSE, nil
   require "parser/ruby33"
-  require "prism/translation/parser33"
-  require "prism/translation/parser34"
 rescue LoadError
   # In CRuby's CI, we're not going to test against the parser gem because we
   # don't want to have to install it. So in this case we'll just skip this test.
@@ -62,14 +60,14 @@ module Prism
       "alias.txt",
       "seattlerb/bug_215.txt",
 
+      # %Q with newline delimiter and heredoc interpolation
+      "heredoc_percent_q_newline_delimiter.txt",
+
       # 1.. && 2
       "ranges.txt",
 
-      # Cannot yet handling leading logical operators.
-      "leading_logical.txt",
-
-      # Ruby >= 3.5 specific syntax
-      "endless_methods_command_call.txt",
+      # https://bugs.ruby-lang.org/issues/21168#note-5
+      "command_method_call_2.txt",
     ]
 
     # These files contain code that is being parsed incorrectly by the parser
@@ -103,6 +101,9 @@ module Prism
       # Regex with \c escape
       "unescaping.txt",
       "seattlerb/regexp_esc_C_slash.txt",
+
+      # https://github.com/whitequark/parser/issues/1084
+      "unary_method_calls.txt",
     ]
 
     # These files are failing to translate their lexer output into the lexer
@@ -139,7 +140,7 @@ module Prism
       "whitequark/space_args_block.txt"
     ]
 
-    Fixture.each(except: skip_syntax_error) do |fixture|
+    Fixture.each_for_version(except: skip_syntax_error, version: "3.3") do |fixture|
       define_method(fixture.test_name) do
         assert_equal_parses(
           fixture,
@@ -162,9 +163,9 @@ module Prism
 
     if RUBY_VERSION >= "3.3"
       def test_current_parser_for_current_ruby
-        major, minor, _patch = Gem::Version.new(RUBY_VERSION).segments
+        major, minor = CURRENT_MAJOR_MINOR.split(".")
         # Let's just hope there never is a Ruby 3.10 or similar
-        expected = major * 10 + minor
+        expected = major.to_i * 10 + minor.to_i
         assert_equal(expected, Translation::ParserCurrent.new.version)
       end
     end
@@ -186,7 +187,7 @@ module Prism
     end
 
     def test_it_block_parameter_syntax
-      it_fixture_path = Pathname(__dir__).join("../../../test/prism/fixtures/it.txt")
+      it_fixture_path = Pathname(__dir__).join("../../../test/prism/fixtures/3.4/it.txt")
 
       buffer = Parser::Source::Buffer.new(it_fixture_path)
       buffer.source = it_fixture_path.read

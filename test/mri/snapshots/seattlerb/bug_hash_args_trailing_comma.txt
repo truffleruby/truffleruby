@@ -39,4 +39,5 @@
             │                   │   └── flags: static_literal
             │                   └── operator_loc: ∅
             ├── closing_loc: (1,19)-(1,20) = ")"
+            ├── equal_loc: ∅
             └── block: ∅

@@ -14,6 +14,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ SingletonClassNode (location: (3,0)-(3,21))
         │   ├── flags: newline
@@ -30,6 +31,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── body:
         │   │   @ StatementsNode (location: (3,14)-(3,16))
@@ -44,6 +46,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   └── end_keyword_loc: (3,18)-(3,21) = "end"
         ├── @ ClassNode (location: (5,0)-(5,16))
@@ -69,6 +72,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── end_keyword_loc: (5,13)-(5,16) = "end"
         │   └── name: :A
@@ -93,6 +97,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (7,0)-(7,3) = "def"
@@ -122,6 +127,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── end_keyword_loc: (9,14)-(9,17) = "end"
             └── name: :A

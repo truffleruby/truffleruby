@@ -37,6 +37,7 @@
             │           │           ├── opening_loc: ∅
             │           │           ├── arguments: ∅
             │           │           ├── closing_loc: ∅
+            │           │           ├── equal_loc: ∅
             │           │           └── block:
             │           │               @ BlockNode (location: (1,23)-(1,29))
             │           │               ├── flags: ∅
@@ -53,4 +54,5 @@
             │           ├── equal_loc: ∅
             │           └── end_keyword_loc: (1,30)-(1,33) = "end"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

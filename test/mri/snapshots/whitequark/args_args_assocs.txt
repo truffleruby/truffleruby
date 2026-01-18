@@ -25,6 +25,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ KeywordHashNode (location: (1,9)-(1,18))
         │   │           ├── flags: symbol_keys
@@ -44,6 +45,7 @@
         │   │                   │   └── value: 1
         │   │                   └── operator_loc: (1,14)-(1,16) = "=>"
         │   ├── closing_loc: (1,18)-(1,19) = ")"
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (3,0)-(3,25))
             ├── flags: newline, ignore_visibility
@@ -65,6 +67,7 @@
             │       │   ├── opening_loc: ∅
             │       │   ├── arguments: ∅
             │       │   ├── closing_loc: ∅
+            │       │   ├── equal_loc: ∅
             │       │   └── block: ∅
             │       └── @ KeywordHashNode (location: (3,9)-(3,18))
             │           ├── flags: symbol_keys
@@ -84,6 +87,7 @@
             │                   │   └── value: 1
             │                   └── operator_loc: (3,14)-(3,16) = "=>"
             ├── closing_loc: (3,24)-(3,25) = ")"
+            ├── equal_loc: ∅
             └── block:
                 @ BlockArgumentNode (location: (3,20)-(3,24))
                 ├── flags: ∅
@@ -97,5 +101,6 @@
                 │   ├── opening_loc: ∅
                 │   ├── arguments: ∅
                 │   ├── closing_loc: ∅
+                │   ├── equal_loc: ∅
                 │   └── block: ∅
                 └── operator_loc: (3,20)-(3,21) = "&"

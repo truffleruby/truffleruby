@@ -17,6 +17,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── right:
         │   │   @ ParenthesesNode (location: (1,7)-(1,19))
@@ -51,6 +52,7 @@
         │   │   │               ├── opening_loc: ∅
         │   │   │               ├── arguments: ∅
         │   │   │               ├── closing_loc: ∅
+        │   │   │               ├── equal_loc: ∅
         │   │   │               └── block: ∅
         │   │   ├── opening_loc: (1,7)-(1,8) = "("
         │   │   └── closing_loc: (1,18)-(1,19) = ")"
@@ -67,6 +69,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── right:
             │   @ ParenthesesNode (location: (3,7)-(3,19))
@@ -101,6 +104,7 @@
             │   │               ├── opening_loc: ∅
             │   │               ├── arguments: ∅
             │   │               ├── closing_loc: ∅
+            │   │               ├── equal_loc: ∅
             │   │               └── block: ∅
             │   ├── opening_loc: (3,7)-(3,8) = "("
             │   └── closing_loc: (3,18)-(3,19) = ")"

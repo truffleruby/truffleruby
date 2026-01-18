@@ -34,6 +34,7 @@
             │           │           │   ├── opening_loc: ∅
             │           │           │   ├── arguments: ∅
             │           │           │   ├── closing_loc: ∅
+            │           │           │   ├── equal_loc: ∅
             │           │           │   └── block: ∅
             │           │           ├── keyword_loc: (1,5)-(1,11) = "rescue"
             │           │           └── rescue_expression:
@@ -42,4 +43,5 @@
             │           ├── opening_loc: (1,2)-(1,3) = "("
             │           └── closing_loc: (1,15)-(1,16) = ")"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

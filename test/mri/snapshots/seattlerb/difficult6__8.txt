@@ -17,6 +17,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── call_operator_loc: (1,1)-(1,3) = "::"
             ├── name: :b
@@ -38,6 +39,7 @@
             │           ├── opening_loc: (1,5)-(1,6) = "("
             │           └── closing_loc: (1,7)-(1,8) = ")"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (1,9)-(1,12))
                 ├── flags: ∅
@@ -56,6 +58,7 @@
                 │           ├── opening_loc: ∅
                 │           ├── arguments: ∅
                 │           ├── closing_loc: ∅
+                │           ├── equal_loc: ∅
                 │           └── block: ∅
                 ├── opening_loc: (1,9)-(1,10) = "{"
                 └── closing_loc: (1,11)-(1,12) = "}"

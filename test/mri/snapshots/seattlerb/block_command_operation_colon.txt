@@ -26,6 +26,7 @@
             │   │           ├── closing_loc: ∅
             │   │           └── unescaped: "b"
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block:
             │       @ BlockNode (location: (1,5)-(1,11))
             │       ├── flags: ∅
@@ -49,4 +50,5 @@
             │           ├── closing_loc: ∅
             │           └── unescaped: "d"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

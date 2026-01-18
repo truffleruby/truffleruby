@@ -40,4 +40,5 @@
             │           ├── closing_loc: (3,20)-(3,21) = "/"
             │           └── unescaped: "hello \\u{fc}"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

@@ -17,6 +17,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── call_operator_loc: (1,1)-(1,2) = "."
             ├── message_loc: (1,2)-(1,3) = "b"
@@ -39,4 +40,5 @@
                 │           ├── flags: static_literal, decimal
                 │           └── value: 1
                 ├── closing_loc: ∅
+                ├── equal_loc: ∅
                 └── block: ∅

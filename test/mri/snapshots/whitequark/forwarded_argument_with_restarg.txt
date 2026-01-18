@@ -52,6 +52,7 @@
             │           │           ├── operator_loc: (1,36)-(1,37) = "*"
             │           │           └── expression: ∅
             │           ├── closing_loc: (1,37)-(1,38) = ")"
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── locals: [:argument]
             ├── def_keyword_loc: (1,0)-(1,3) = "def"

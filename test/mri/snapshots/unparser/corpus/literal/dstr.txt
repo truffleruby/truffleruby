@@ -76,6 +76,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── subsequent: ∅
         │   └── end_keyword_loc: (11,0)-(11,3) = "end"
@@ -303,6 +304,7 @@
         │   │           │   │   │           ├── opening_loc: ∅
         │   │           │   │   │           ├── arguments: ∅
         │   │           │   │   │           ├── closing_loc: ∅
+        │   │           │   │   │           ├── equal_loc: ∅
         │   │           │   │   │           └── block: ∅
         │   │           │   │   └── closing_loc: (32,7)-(32,8) = "}"
         │   │           │   └── @ StringNode (location: (32,8)-(33,0))
@@ -313,6 +315,7 @@
         │   │           │       └── unescaped: "\n"
         │   │           └── closing_loc: (33,0)-(34,0) = "HEREDOC\n"
         │   ├── closing_loc: (31,14)-(31,15) = ")"
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (34,0)-(37,1))
             ├── flags: newline, ignore_visibility
@@ -351,6 +354,7 @@
             │           │   │   │           ├── opening_loc: ∅
             │           │   │   │           ├── arguments: ∅
             │           │   │   │           ├── closing_loc: ∅
+            │           │   │   │           ├── equal_loc: ∅
             │           │   │   │           └── block: ∅
             │           │   │   └── closing_loc: (35,7)-(35,8) = "}"
             │           │   └── @ StringNode (location: (35,8)-(36,0))
@@ -361,6 +365,7 @@
             │           │       └── unescaped: "\n"
             │           └── closing_loc: (36,0)-(37,0) = "HEREDOC\n"
             ├── closing_loc: (34,14)-(34,15) = ")"
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (34,16)-(37,1))
                 ├── flags: ∅

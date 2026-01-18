@@ -34,6 +34,7 @@
         │   │       │   │           ├── closing_loc: (2,6)-(2,7) = "\""
         │   │       │   │           └── unescaped: "a"
         │   │       │   ├── closing_loc: (2,7)-(2,8) = ")"
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       ├── @ LocalVariableWriteNode (location: (3,2)-(3,7))
         │   │       │   ├── flags: newline
@@ -61,6 +62,7 @@
         │   │       │   │           ├── name: :b
         │   │       │   │           └── depth: 0
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ LocalVariableWriteNode (location: (5,2)-(5,6))
         │   │           ├── flags: newline
@@ -83,4 +85,5 @@
             ├── opening_loc: ∅
             ├── arguments: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

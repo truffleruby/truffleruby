@@ -35,6 +35,7 @@
         │   │           │           ├── closing_loc: (1,7)-(1,8) = "'"
         │   │           │           └── unescaped: ""
         │   │           ├── closing_loc: (1,8)-(1,9) = ")"
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── subsequent:
         │   │   @ ElseNode (location: (1,10)-(1,13))
@@ -78,4 +79,5 @@
             │                   │   └── value: 3
             │                   └── operator_loc: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

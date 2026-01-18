@@ -26,6 +26,7 @@
         │   │   │           │   ├── opening_loc: ∅
         │   │   │           │   ├── arguments: ∅
         │   │   │           │   ├── closing_loc: ∅
+        │   │   │           │   ├── equal_loc: ∅
         │   │   │           │   └── block: ∅
         │   │   │           ├── right:
         │   │   │           │   @ CallNode (location: (1,7)-(1,10))
@@ -37,6 +38,7 @@
         │   │   │           │   ├── opening_loc: ∅
         │   │   │           │   ├── arguments: ∅
         │   │   │           │   ├── closing_loc: ∅
+        │   │   │           │   ├── equal_loc: ∅
         │   │   │           │   └── block: ∅
         │   │   │           └── operator_loc: (1,5)-(1,7) = ".."
         │   │   ├── opening_loc: (1,1)-(1,2) = "("
@@ -47,6 +49,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ IfNode (location: (3,0)-(3,16))
             ├── flags: newline
@@ -64,6 +67,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── right:
             │   │   @ CallNode (location: (3,8)-(3,11))
@@ -75,6 +79,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   └── operator_loc: (3,6)-(3,8) = ".."
             ├── then_keyword_loc: ∅

@@ -23,4 +23,5 @@
             │           ├── closing_loc: (3,0)-(4,0) = "E\n"
             │           └── unescaped: "x\n   y\n"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

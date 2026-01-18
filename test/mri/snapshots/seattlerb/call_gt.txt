@@ -23,4 +23,5 @@
             │           ├── flags: static_literal, decimal
             │           └── value: 2
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

@@ -45,4 +45,5 @@
             │           ├── closing_loc: (1,27)-(1,28) = "'"
             │           └── unescaped: "bar"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

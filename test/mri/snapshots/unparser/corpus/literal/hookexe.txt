@@ -20,6 +20,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── keyword_loc: (1,0)-(1,5) = "BEGIN"
         │   ├── opening_loc: (1,6)-(1,7) = "{"
@@ -33,6 +34,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ PostExecutionNode (location: (5,0)-(7,1))
             ├── flags: newline
@@ -49,6 +51,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── keyword_loc: (5,0)-(5,3) = "END"
             ├── opening_loc: (5,4)-(5,5) = "{"

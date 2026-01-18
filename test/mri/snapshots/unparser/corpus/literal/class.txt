@@ -33,6 +33,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── body: ∅
         │   └── end_keyword_loc: (5,0)-(5,3) = "end"
@@ -51,6 +52,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── body:
         │   │   @ StatementsNode (location: (8,2)-(8,3))
@@ -65,6 +67,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   └── end_keyword_loc: (9,0)-(9,3) = "end"
         ├── @ ClassNode (location: (11,0)-(12,3))
@@ -214,8 +217,10 @@
         │   │       │   │           ├── opening_loc: ∅
         │   │       │   │           ├── arguments: ∅
         │   │       │   │           ├── closing_loc: ∅
+        │   │       │   │           ├── equal_loc: ∅
         │   │       │   │           └── block: ∅
         │   │       │   ├── closing_loc: (27,15)-(27,16) = ")"
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ DefNode (location: (29,2)-(31,5))
         │   │           ├── flags: newline

@@ -21,6 +21,7 @@
             │       │   ├── opening_loc: ∅
             │       │   ├── arguments: ∅
             │       │   ├── closing_loc: ∅
+            │       │   ├── equal_loc: ∅
             │       │   └── block: ∅
             │       └── @ CallNode (location: (1,12)-(1,16))
             │           ├── flags: newline, ignore_visibility
@@ -31,6 +32,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── rescue_clause: ∅
             ├── else_clause: ∅

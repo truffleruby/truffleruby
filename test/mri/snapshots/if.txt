@@ -128,6 +128,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (10,4)-(10,21))
         │       ├── flags: ∅
@@ -165,6 +166,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (12,4)-(12,20))
         │       ├── flags: ∅
@@ -219,6 +221,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (16,4)-(16,38))
         │       ├── flags: ∅
@@ -241,6 +244,7 @@
         │       │           │   ├── opening_loc: ∅
         │       │           │   ├── arguments: ∅
         │       │           │   ├── closing_loc: ∅
+        │       │           │   ├── equal_loc: ∅
         │       │           │   └── block: ∅
         │       │           ├── then_keyword_loc: (16,19)-(16,23) = "then"
         │       │           ├── statements:
@@ -274,6 +278,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── then_keyword_loc: (19,0)-(19,4) = "then"
         │   ├── statements:
@@ -289,6 +294,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── subsequent: ∅
         │   └── end_keyword_loc: (20,0)-(20,3) = "end"
@@ -305,6 +311,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── then_keyword_loc: ∅
         │   ├── statements:
@@ -324,6 +331,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── then_keyword_loc: ∅
         │   │           ├── statements:
@@ -339,6 +347,7 @@
         │   │           │           ├── opening_loc: ∅
         │   │           │           ├── arguments: ∅
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block: ∅
         │   │           ├── subsequent: ∅
         │   │           └── end_keyword_loc: ∅
@@ -391,9 +400,11 @@
         │   │           │                   │       ├── opening_loc: ∅
         │   │           │                   │       ├── arguments: ∅
         │   │           │                   │       ├── closing_loc: ∅
+        │   │           │                   │       ├── equal_loc: ∅
         │   │           │                   │       └── block: ∅
         │   │           │                   └── operator_loc: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── subsequent:
         │   │   @ ElseNode (location: (26,0)-(27,3))
@@ -418,6 +429,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── pattern:
         │   │   │   @ IntegerNode (location: (29,11)-(29,12))
@@ -443,6 +455,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   ├── pattern:
         │   │   │   │   @ ConstantReadNode (location: (30,14)-(30,15))
@@ -467,6 +480,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── then_keyword_loc: ∅
             ├── statements:
@@ -482,6 +496,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block:
             │               @ BlockNode (location: (34,9)-(35,5))
             │               ├── flags: ∅
@@ -522,6 +537,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── then_keyword_loc: ∅
             │   ├── statements:
@@ -537,6 +553,7 @@
             │   │           ├── opening_loc: ∅
             │   │           ├── arguments: ∅
             │   │           ├── closing_loc: ∅
+            │   │           ├── equal_loc: ∅
             │   │           └── block:
             │   │               @ BlockNode (location: (37,9)-(38,5))
             │   │               ├── flags: ∅
@@ -580,6 +597,7 @@
             │   │   │           ├── opening_loc: ∅
             │   │   │           ├── arguments: ∅
             │   │   │           ├── closing_loc: ∅
+            │   │   │           ├── equal_loc: ∅
             │   │   │           └── block:
             │   │   │               @ BlockNode (location: (40,9)-(41,5))
             │   │   │               ├── flags: ∅

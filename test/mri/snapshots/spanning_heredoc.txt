@@ -57,8 +57,10 @@
         │   │           │           ├── closing_loc: (7,5)-(7,6) = "\""
         │   │           │           └── unescaped: ""
         │   │           ├── closing_loc: (7,6)-(7,7) = ")"
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (10,0)-(13,2))
         │   ├── flags: newline, ignore_visibility
@@ -78,7 +80,7 @@
         │   │       │   ├── closing_loc: (12,0)-(13,0) = "A\n"
         │   │       │   └── unescaped: "c\n"
         │   │       └── @ InterpolatedStringNode (location: (10,9)-(13,2))
-        │   │           ├── flags: static_literal
+        │   │           ├── flags: ∅
         │   │           ├── opening_loc: (10,9)-(10,10) = "\""
         │   │           ├── parts: (length: 2)
         │   │           │   ├── @ StringNode (location: (10,10)-(10,12))
@@ -95,6 +97,7 @@
         │   │           │       └── unescaped: "d"
         │   │           └── closing_loc: (13,1)-(13,2) = "\""
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (16,0)-(19,2))
         │   ├── flags: newline, ignore_visibility
@@ -114,7 +117,7 @@
         │   │       │   ├── closing_loc: (18,0)-(19,0) = "A\n"
         │   │       │   └── unescaped: "e\n"
         │   │       └── @ InterpolatedStringNode (location: (16,9)-(19,2))
-        │   │           ├── flags: static_literal
+        │   │           ├── flags: ∅
         │   │           ├── opening_loc: (16,9)-(16,12) = "%q["
         │   │           ├── parts: (length: 2)
         │   │           │   ├── @ StringNode (location: (16,12)-(16,14))
@@ -131,6 +134,7 @@
         │   │           │       └── unescaped: "f"
         │   │           └── closing_loc: (19,1)-(19,2) = "]"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (22,0)-(25,2))
         │   ├── flags: newline, ignore_visibility
@@ -150,7 +154,7 @@
         │   │       │   ├── closing_loc: (24,0)-(25,0) = "A\n"
         │   │       │   └── unescaped: "g\n"
         │   │       └── @ InterpolatedStringNode (location: (22,9)-(25,2))
-        │   │           ├── flags: static_literal
+        │   │           ├── flags: ∅
         │   │           ├── opening_loc: (22,9)-(22,12) = "%Q["
         │   │           ├── parts: (length: 2)
         │   │           │   ├── @ StringNode (location: (22,12)-(22,14))
@@ -167,6 +171,7 @@
         │   │           │       └── unescaped: "h"
         │   │           └── closing_loc: (25,1)-(25,2) = "]"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (28,0)-(31,2))
         │   ├── flags: newline, ignore_visibility
@@ -187,22 +192,28 @@
         │   │       │   └── unescaped: "i\n"
         │   │       └── @ ArrayNode (location: (28,9)-(31,2))
         │   │           ├── flags: ∅
-        │   │           ├── elements: (length: 2)
-        │   │           │   ├── @ StringNode (location: (28,12)-(28,14))
-        │   │           │   │   ├── flags: ∅
-        │   │           │   │   ├── opening_loc: ∅
-        │   │           │   │   ├── content_loc: (28,12)-(28,14) = "j\\"
-        │   │           │   │   ├── closing_loc: ∅
-        │   │           │   │   └── unescaped: "j\n"
-        │   │           │   └── @ StringNode (location: (31,0)-(31,1))
+        │   │           ├── elements: (length: 1)
+        │   │           │   └── @ InterpolatedStringNode (location: (28,12)-(31,1))
         │   │           │       ├── flags: ∅
         │   │           │       ├── opening_loc: ∅
-        │   │           │       ├── content_loc: (31,0)-(31,1) = "j"
-        │   │           │       ├── closing_loc: ∅
-        │   │           │       └── unescaped: "j"
+        │   │           │       ├── parts: (length: 2)
+        │   │           │       │   ├── @ StringNode (location: (28,12)-(28,14))
+        │   │           │       │   │   ├── flags: static_literal, frozen
+        │   │           │       │   │   ├── opening_loc: ∅
+        │   │           │       │   │   ├── content_loc: (28,12)-(28,14) = "j\\"
+        │   │           │       │   │   ├── closing_loc: ∅
+        │   │           │       │   │   └── unescaped: "j\n"
+        │   │           │       │   └── @ StringNode (location: (31,0)-(31,1))
+        │   │           │       │       ├── flags: static_literal, frozen
+        │   │           │       │       ├── opening_loc: ∅
+        │   │           │       │       ├── content_loc: (31,0)-(31,1) = "j"
+        │   │           │       │       ├── closing_loc: ∅
+        │   │           │       │       └── unescaped: "j"
+        │   │           │       └── closing_loc: ∅
         │   │           ├── opening_loc: (28,9)-(28,12) = "%w["
         │   │           └── closing_loc: (31,1)-(31,2) = "]"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (35,0)-(38,2))
         │   ├── flags: newline, ignore_visibility
@@ -222,10 +233,10 @@
         │   │       │   ├── closing_loc: (37,0)-(38,0) = "A\n"
         │   │       │   └── unescaped: "k\n"
         │   │       └── @ ArrayNode (location: (35,9)-(38,2))
-        │   │           ├── flags: static_literal
+        │   │           ├── flags: ∅
         │   │           ├── elements: (length: 1)
         │   │           │   └── @ InterpolatedStringNode (location: (35,12)-(38,1))
-        │   │           │       ├── flags: static_literal
+        │   │           │       ├── flags: ∅
         │   │           │       ├── opening_loc: ∅
         │   │           │       ├── parts: (length: 2)
         │   │           │       │   ├── @ StringNode (location: (35,12)-(35,14))
@@ -244,6 +255,7 @@
         │   │           ├── opening_loc: (35,9)-(35,12) = "%W["
         │   │           └── closing_loc: (38,1)-(38,2) = "]"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (41,0)-(44,2))
         │   ├── flags: newline, ignore_visibility
@@ -264,22 +276,28 @@
         │   │       │   └── unescaped: "m\n"
         │   │       └── @ ArrayNode (location: (41,9)-(44,2))
         │   │           ├── flags: static_literal
-        │   │           ├── elements: (length: 2)
-        │   │           │   ├── @ SymbolNode (location: (41,12)-(41,14))
-        │   │           │   │   ├── flags: static_literal, forced_us_ascii_encoding
-        │   │           │   │   ├── opening_loc: ∅
-        │   │           │   │   ├── value_loc: (41,12)-(41,14) = "n\\"
-        │   │           │   │   ├── closing_loc: ∅
-        │   │           │   │   └── unescaped: "n\n"
-        │   │           │   └── @ SymbolNode (location: (44,0)-(44,1))
-        │   │           │       ├── flags: static_literal, forced_us_ascii_encoding
+        │   │           ├── elements: (length: 1)
+        │   │           │   └── @ InterpolatedSymbolNode (location: (41,12)-(41,14))
+        │   │           │       ├── flags: static_literal
         │   │           │       ├── opening_loc: ∅
-        │   │           │       ├── value_loc: (44,0)-(44,1) = "n"
-        │   │           │       ├── closing_loc: ∅
-        │   │           │       └── unescaped: "n"
+        │   │           │       ├── parts: (length: 2)
+        │   │           │       │   ├── @ StringNode (location: (41,12)-(41,14))
+        │   │           │       │   │   ├── flags: static_literal, frozen
+        │   │           │       │   │   ├── opening_loc: ∅
+        │   │           │       │   │   ├── content_loc: (41,12)-(41,14) = "n\\"
+        │   │           │       │   │   ├── closing_loc: ∅
+        │   │           │       │   │   └── unescaped: "n\n"
+        │   │           │       │   └── @ StringNode (location: (41,12)-(41,14))
+        │   │           │       │       ├── flags: static_literal, frozen
+        │   │           │       │       ├── opening_loc: ∅
+        │   │           │       │       ├── content_loc: (41,12)-(41,14) = "n\\"
+        │   │           │       │       ├── closing_loc: ∅
+        │   │           │       │       └── unescaped: "n"
+        │   │           │       └── closing_loc: ∅
         │   │           ├── opening_loc: (41,9)-(41,12) = "%i["
         │   │           └── closing_loc: (44,1)-(44,2) = "]"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (48,0)-(51,2))
         │   ├── flags: newline, ignore_visibility
@@ -321,6 +339,7 @@
         │   │           ├── opening_loc: (48,9)-(48,12) = "%I["
         │   │           └── closing_loc: (51,1)-(51,2) = "]"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ StringNode (location: (53,0)-(53,3))
         │   ├── flags: newline
@@ -366,6 +385,7 @@
         │   │   │           ├── closing_loc: (55,12)-(55,13) = "'"
         │   │   │           └── unescaped: ""
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   └── targets: (length: 1)
         │       └── @ LocalVariableTargetNode (location: (53,5)-(55,7))

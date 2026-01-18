@@ -652,6 +652,7 @@
         │   │   ├── opening_loc: (25,9)-(25,10) = "("
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: (25,10)-(25,11) = ")"
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   └── operator_loc: (25,4)-(25,5) = "="
         ├── @ CallNode (location: (26,0)-(26,9))
@@ -667,6 +668,7 @@
         │   ├── opening_loc: (26,7)-(26,8) = "("
         │   ├── arguments: ∅
         │   ├── closing_loc: (26,8)-(26,9) = ")"
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (27,0)-(27,13))
         │   ├── flags: newline
@@ -690,6 +692,7 @@
         │   │           ├── flags: static_literal, decimal
         │   │           └── value: 2
         │   ├── closing_loc: (27,12)-(27,13) = ")"
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (28,0)-(28,11))
         │   ├── flags: newline
@@ -709,6 +712,7 @@
         │   │       └── @ TrueNode (location: (28,7)-(28,11))
         │   │           └── flags: static_literal
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (29,0)-(29,19))
         │   ├── flags: newline, attribute_write
@@ -738,6 +742,7 @@
         │   │       │       ├── opening_loc: ∅
         │   │       │       ├── arguments: ∅
         │   │       │       ├── closing_loc: ∅
+        │   │       │       ├── equal_loc: ∅
         │   │       │       └── block: ∅
         │   │       └── @ CallNode (location: (29,14)-(29,19))
         │   │           ├── flags: variable_call, ignore_visibility
@@ -748,8 +753,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (29,10)-(29,11) = "]"
+        │   ├── equal_loc: (29,12)-(29,13) = "="
         │   └── block: ∅
         ├── @ CallNode (location: (30,0)-(30,17))
         │   ├── flags: newline, attribute_write
@@ -786,8 +793,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (30,8)-(30,9) = "]"
+        │   ├── equal_loc: (30,10)-(30,11) = "="
         │   └── block: ∅
         ├── @ CallNode (location: (31,0)-(31,9))
         │   ├── flags: newline, attribute_write
@@ -808,6 +817,7 @@
         │   │           ├── flags: static_literal, decimal
         │   │           └── value: 1
         │   ├── closing_loc: (31,4)-(31,5) = "]"
+        │   ├── equal_loc: (31,6)-(31,7) = "="
         │   └── block: ∅
         ├── @ CallNode (location: (32,0)-(32,17))
         │   ├── flags: newline, attribute_write
@@ -841,8 +851,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (32,8)-(32,9) = "]"
+        │   ├── equal_loc: (32,10)-(32,11) = "="
         │   └── block: ∅
         ├── @ CallNode (location: (33,0)-(33,18))
         │   ├── flags: newline, attribute_write
@@ -868,6 +880,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ CallNode (location: (33,13)-(33,18))
         │   │           ├── flags: variable_call, ignore_visibility
@@ -878,8 +891,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (33,9)-(33,10) = "]"
+        │   ├── equal_loc: (33,11)-(33,12) = "="
         │   └── block: ∅
         ├── @ LocalVariableWriteNode (location: (34,0)-(34,7))
         │   ├── flags: newline
@@ -916,6 +931,7 @@
         │   │           ├── closing_loc: (35,6)-(35,7) = ")"
         │   │           └── unescaped: ""
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: (35,3)-(35,4) = "="
         │   └── block: ∅
         ├── @ CallNode (location: (36,0)-(36,12))
         │   ├── flags: newline, attribute_write
@@ -947,8 +963,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (36,5)-(36,6) = "]"
+        │   ├── equal_loc: (36,7)-(36,8) = "="
         │   └── block: ∅
         ├── @ IndexOrWriteNode (location: (37,0)-(37,14))
         │   ├── flags: newline
@@ -982,6 +1000,7 @@
         │       ├── opening_loc: ∅
         │       ├── arguments: ∅
         │       ├── closing_loc: ∅
+        │       ├── equal_loc: ∅
         │       └── block: ∅
         ├── @ InstanceVariableOrWriteNode (location: (38,0)-(38,10))
         │   ├── flags: newline
@@ -1062,6 +1081,7 @@
         │   │           │       └── unescaped: "\n"
         │   │           └── closing_loc: (44,0)-(45,0) = "HEREDOC\n"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: (42,3)-(42,4) = "="
         │   └── block: ∅
         ├── @ CallNode (location: (45,0)-(45,16))
         │   ├── flags: newline, attribute_write
@@ -1101,6 +1121,7 @@
         │   │           │       └── unescaped: "\n"
         │   │           └── closing_loc: (47,0)-(48,0) = "HEREDOC\n"
         │   ├── closing_loc: (45,2)-(45,3) = "]"
+        │   ├── equal_loc: (45,4)-(45,5) = "="
         │   └── block: ∅
         ├── @ IndexOrWriteNode (location: (48,0)-(48,21))
         │   ├── flags: newline
@@ -1150,6 +1171,7 @@
         │       ├── opening_loc: ∅
         │       ├── arguments: ∅
         │       ├── closing_loc: ∅
+        │       ├── equal_loc: ∅
         │       └── block: ∅
         └── @ InstanceVariableOrWriteNode (location: (51,0)-(51,17))
             ├── flags: newline

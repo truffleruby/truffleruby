@@ -48,6 +48,7 @@
             │                       │           ├── flags: static_literal, decimal
             │                       │           └── value: 1
             │                       ├── closing_loc: (2,3)-(2,4) = ")"
+            │                       ├── equal_loc: ∅
             │                       └── block:
             │                           @ BlockNode (location: (2,5)-(3,3))
             │                           ├── flags: ∅
@@ -57,4 +58,5 @@
             │                           ├── opening_loc: (2,5)-(2,7) = "do"
             │                           └── closing_loc: (3,0)-(3,3) = "end"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

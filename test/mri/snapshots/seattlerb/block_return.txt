@@ -32,8 +32,10 @@
                         │           ├── opening_loc: ∅
                         │           ├── arguments: ∅
                         │           ├── closing_loc: ∅
+                        │           ├── equal_loc: ∅
                         │           └── block: ∅
                         ├── closing_loc: ∅
+                        ├── equal_loc: ∅
                         └── block:
                             @ BlockNode (location: (1,15)-(1,27))
                             ├── flags: ∅

@@ -85,6 +85,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ LocalVariableWriteNode (location: (19,0)-(19,7))
         │   ├── flags: newline
@@ -397,6 +398,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       ├── @ CallNode (location: (45,4)-(45,5))
         │   │       │   ├── flags: newline, variable_call, ignore_visibility
@@ -407,6 +409,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ CallNode (location: (45,7)-(45,8))
         │   │           ├── flags: newline, variable_call, ignore_visibility
@@ -417,6 +420,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── opening_loc: (45,0)-(45,1) = "("
         │   └── closing_loc: (45,8)-(45,9) = ")"

@@ -31,6 +31,7 @@
         │   │           ├── equal_loc: ∅
         │   │           └── end_keyword_loc: (1,11)-(1,14) = "end"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (1,16)-(1,28))
             ├── flags: newline
@@ -44,6 +45,7 @@
             ├── opening_loc: ∅
             ├── arguments: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (1,22)-(1,28))
                 ├── flags: ∅

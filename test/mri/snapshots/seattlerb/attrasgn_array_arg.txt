@@ -17,6 +17,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── call_operator_loc: ∅
             ├── name: :[]=
@@ -41,4 +42,5 @@
             │           ├── flags: static_literal, decimal
             │           └── value: 3
             ├── closing_loc: (1,8)-(1,9) = "]"
+            ├── equal_loc: (1,10)-(1,11) = "="
             └── block: ∅

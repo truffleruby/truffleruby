@@ -21,6 +21,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── right: ∅
             │   └── operator_loc: (1,6)-(1,8) = ".."

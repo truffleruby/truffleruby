@@ -20,6 +20,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── call_operator_loc: (1,1)-(1,3) = "&."
             │   ├── name: :b
@@ -27,6 +28,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── call_operator_loc: (1,4)-(1,6) = "&."
             ├── name: :c
@@ -40,4 +42,5 @@
             │           ├── flags: static_literal, decimal
             │           └── value: 1
             ├── closing_loc: (1,9)-(1,10) = ")"
+            ├── equal_loc: ∅
             └── block: ∅

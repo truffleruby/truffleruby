@@ -15,6 +15,7 @@ CFLAGS := -g -O2 -std=c99 -Wall -Werror -Wextra -Wpedantic -Wundef -Wconversion 
 JAVA_WASM_CFLAGS := -g -Oz -std=c99 -Wall -Werror -Wextra -Wpedantic -Wundef -Wconversion -Wno-missing-braces -fPIC -fvisibility=hidden -Wimplicit-fallthrough $(JAVA_WASM_CFLAGS)
 CC ?= cc
 AR ?= ar
+ARFLAGS ?= -r$(V0:1=v)
 WASI_SDK_PATH := /opt/wasi-sdk
 
 MAKEDIRS ?= mkdir -p
@@ -38,11 +39,17 @@ build/libprism.$(SOEXT): $(SHARED_OBJECTS)
 
 build/libprism.a: $(STATIC_OBJECTS)
 	$(ECHO) "building $@ with $(AR)"
-	$(Q) $(AR) $(ARFLAGS) $@ $(STATIC_OBJECTS) $(Q1:0=>/dev/null)
+	$(Q) $(AR) $(ARFLAGS) $@ $(STATIC_OBJECTS)
 
 javascript/src/prism.wasm: Makefile $(SOURCES) $(HEADERS)
 	$(ECHO) "building $@"
-	$(Q) $(WASI_SDK_PATH)/bin/clang --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ $(DEBUG_FLAGS) -DPRISM_EXPORT_SYMBOLS -D_WASI_EMULATED_MMAN -lwasi-emulated-mman $(CPPFLAGS) $(CFLAGS) -Wl,--export-all -Wl,--no-entry -mexec-model=reactor -o $@ $(SOURCES)
+	$(Q) $(WASI_SDK_PATH)/bin/clang --sysroot=$(WASI_SDK_PATH)/share/wasi-sysroot/ \
+		$(DEBUG_FLAGS) \
+		-DPRISM_EXPORT_SYMBOLS -DPRISM_EXCLUDE_PRETTYPRINT -DPRISM_EXCLUDE_JSON -DPRISM_EXCLUDE_PACK \
+		-D_WASI_EMULATED_MMAN -lwasi-emulated-mman $(CPPFLAGS) $(CFLAGS) \
+		-Wl,--export-all -Wl,--gc-sections -Wl,--strip-all -Wl,--lto-O3 -Wl,--no-entry -mexec-model=reactor \
+		-Oz -g0 -flto -fdata-sections -ffunction-sections \
+		-o $@ $(SOURCES)
 
 java-wasm/src/test/resources/prism.wasm: Makefile $(SOURCES) $(HEADERS)
 	$(ECHO) "building $@"
@@ -62,12 +69,12 @@ build/fuzz.%: $(SOURCES) fuzz/%.c fuzz/fuzz.c
 	$(ECHO) "building $* fuzzer"
 	$(Q) $(MAKEDIRS) $(@D)
 	$(ECHO) "building main fuzz binary"
-	$(Q) AFL_HARDEN=1 afl-clang-lto $(DEBUG_FLAGS) $(CPPFLAGS) $(CFLAGS) $(FUZZ_FLAGS) -O0 -fsanitize-ignorelist=fuzz/asan.ignore -fsanitize=fuzzer,address -ggdb3 -std=c99 -Iinclude -o $@ $^
+	$(Q) afl-clang-lto $(DEBUG_FLAGS) $(CPPFLAGS) $(CFLAGS) $(FUZZ_FLAGS) -O0 -fsanitize-ignorelist=fuzz/asan.ignore -fsanitize=fuzzer,address -ggdb3 -std=c99 -Iinclude -o $@ $^
 	$(ECHO) "building cmplog binary"
-	$(Q) AFL_HARDEN=1 AFL_LLVM_CMPLOG=1 afl-clang-lto $(DEBUG_FLAGS) $(CPPFLAGS) $(CFLAGS) $(FUZZ_FLAGS) -O0 -fsanitize-ignorelist=fuzz/asan.ignore -fsanitize=fuzzer,address -ggdb3 -std=c99 -Iinclude -o $@.cmplog $^
+	$(Q) AFL_LLVM_CMPLOG=1 afl-clang-lto $(DEBUG_FLAGS) $(CPPFLAGS) $(CFLAGS) $(FUZZ_FLAGS) -O0 -fsanitize-ignorelist=fuzz/asan.ignore -fsanitize=fuzzer,address -ggdb3 -std=c99 -Iinclude -o $@.cmplog $^
 
 build/fuzz.heisenbug.%: $(SOURCES) fuzz/%.c fuzz/heisenbug.c
-	$(Q) AFL_HARDEN=1 afl-clang-lto $(DEBUG_FLAGS) $(CPPFLAGS) $(CFLAGS) $(FUZZ_FLAGS) -O0 -fsanitize-ignorelist=fuzz/asan.ignore -fsanitize=fuzzer,address -ggdb3 -std=c99 -Iinclude -o $@ $^
+	$(Q) afl-clang-lto $(DEBUG_FLAGS) $(CPPFLAGS) $(CFLAGS) $(FUZZ_FLAGS) -O0 -fsanitize-ignorelist=fuzz/asan.ignore -fsanitize=fuzzer,address -ggdb3 -std=c99 -Iinclude -o $@ $^
 
 fuzz-debug:
 	$(ECHO) "entering debug shell"

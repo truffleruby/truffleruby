@@ -55,6 +55,7 @@
             │           │                   ├── value: ∅
             │           │                   └── operator_loc: (1,21)-(1,23) = "**"
             │           ├── closing_loc: (1,23)-(1,24) = ")"
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── locals: [:a]
             ├── def_keyword_loc: (1,0)-(1,3) = "def"

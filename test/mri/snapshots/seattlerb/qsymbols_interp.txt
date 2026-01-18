@@ -49,6 +49,7 @@
             │   │   │       │           │           ├── flags: static_literal, decimal
             │   │   │       │           │           └── value: 1
             │   │   │       │           ├── closing_loc: ∅
+            │   │   │       │           ├── equal_loc: ∅
             │   │   │       │           └── block: ∅
             │   │   │       └── closing_loc: (1,11)-(1,12) = "}"
             │   │   └── closing_loc: ∅

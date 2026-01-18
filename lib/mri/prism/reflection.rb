@@ -143,7 +143,7 @@ module Prism
       when :call_and_write_node
         [FlagsField.new(:flags, [:safe_navigation?, :variable_call?, :attribute_write?, :ignore_visibility?]), OptionalNodeField.new(:receiver), OptionalLocationField.new(:call_operator_loc), OptionalLocationField.new(:message_loc), ConstantField.new(:read_name), ConstantField.new(:write_name), LocationField.new(:operator_loc), NodeField.new(:value)]
       when :call_node
-        [FlagsField.new(:flags, [:safe_navigation?, :variable_call?, :attribute_write?, :ignore_visibility?]), OptionalNodeField.new(:receiver), OptionalLocationField.new(:call_operator_loc), ConstantField.new(:name), OptionalLocationField.new(:message_loc), OptionalLocationField.new(:opening_loc), OptionalNodeField.new(:arguments), OptionalLocationField.new(:closing_loc), OptionalNodeField.new(:block)]
+        [FlagsField.new(:flags, [:safe_navigation?, :variable_call?, :attribute_write?, :ignore_visibility?]), OptionalNodeField.new(:receiver), OptionalLocationField.new(:call_operator_loc), ConstantField.new(:name), OptionalLocationField.new(:message_loc), OptionalLocationField.new(:opening_loc), OptionalNodeField.new(:arguments), OptionalLocationField.new(:closing_loc), OptionalLocationField.new(:equal_loc), OptionalNodeField.new(:block)]
       when :call_operator_write_node
         [FlagsField.new(:flags, [:safe_navigation?, :variable_call?, :attribute_write?, :ignore_visibility?]), OptionalNodeField.new(:receiver), OptionalLocationField.new(:call_operator_loc), OptionalLocationField.new(:message_loc), ConstantField.new(:read_name), ConstantField.new(:write_name), ConstantField.new(:binary_operator), LocationField.new(:binary_operator_loc), NodeField.new(:value)]
       when :call_or_write_node

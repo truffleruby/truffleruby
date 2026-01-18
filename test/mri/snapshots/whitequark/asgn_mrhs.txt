@@ -27,6 +27,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   ├── opening_loc: ∅
         │   │   └── closing_loc: ∅
@@ -49,6 +50,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   └── @ IntegerNode (location: (3,11)-(3,12))
         │   │   │       ├── flags: static_literal, decimal
@@ -74,6 +76,7 @@
             │   │   │   ├── opening_loc: ∅
             │   │   │   ├── arguments: ∅
             │   │   │   ├── closing_loc: ∅
+            │   │   │   ├── equal_loc: ∅
             │   │   │   └── block: ∅
             │   │   └── @ SplatNode (location: (5,11)-(5,15))
             │   │       ├── flags: ∅
@@ -88,6 +91,7 @@
             │   │           ├── opening_loc: ∅
             │   │           ├── arguments: ∅
             │   │           ├── closing_loc: ∅
+            │   │           ├── equal_loc: ∅
             │   │           └── block: ∅
             │   ├── opening_loc: ∅
             │   └── closing_loc: ∅

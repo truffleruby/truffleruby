@@ -34,6 +34,7 @@
             │       │           │           ├── closing_loc: ∅
             │       │           │           └── unescaped: "a"
             │       │           ├── closing_loc: ∅
+            │       │           ├── equal_loc: ∅
             │       │           └── block: ∅
             │       └── closing_loc: (1,6)-(1,7) = "}"
             └── closing_loc: (1,7)-(1,8) = "\""

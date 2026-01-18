@@ -19,6 +19,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── parameters: ∅
             ├── body:
@@ -43,6 +44,7 @@
             │           │   │           ├── flags: static_literal, decimal
             │           │   │           └── value: 42
             │           │   ├── closing_loc: ∅
+            │           │   ├── equal_loc: ∅
             │           │   └── block: ∅
             │           ├── keyword_loc: (1,36)-(1,42) = "rescue"
             │           └── rescue_expression:

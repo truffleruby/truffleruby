@@ -21,6 +21,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── right:
             │   │   @ CallNode (location: (1,6)-(1,7))
@@ -32,6 +33,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   └── operator_loc: (1,4)-(1,6) = ".."
             ├── then_keyword_loc: (1,8)-(1,12) = "then"

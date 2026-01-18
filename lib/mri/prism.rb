@@ -20,7 +20,7 @@ module Prism
   autoload :DSL, "prism/dsl"
   autoload :InspectVisitor, "prism/inspect_visitor"
   autoload :LexCompat, "prism/lex_compat"
-  autoload :LexRipper, "prism/lex_compat"
+  autoload :LexRipper, "prism/lex_ripper"
   autoload :MutationCompiler, "prism/mutation_compiler"
   autoload :Pack, "prism/pack"
   autoload :Pattern, "prism/pattern"
@@ -37,12 +37,31 @@ module Prism
   private_constant :LexCompat
   private_constant :LexRipper
 
+  # Raised when requested to parse as the currently running Ruby version but Prism has no support for it.
+  class CurrentVersionError < ArgumentError
+    # Initialize a new exception for the given ruby version string.
+    def initialize(version)
+      message = +"invalid version: Requested to parse as `version: 'current'`; "
+      segments =
+        if version.match?(/\A\d+\.\d+.\d+\z/)
+          version.split(".").map(&:to_i)
+        end
+
+      if segments && ((segments[0] < 3) || (segments[0] == 3 && segments[1] < 3))
+        message << " #{version} is below the minimum supported syntax."
+      else
+        message << " #{version} is unknown. Please update the `prism` gem."
+      end
+
+      super(message)
+    end
+  end
+
   # :call-seq:
   #   Prism::lex_compat(source, **options) -> LexCompat::Result
   #
   # Returns a parse result whose value is an array of tokens that closely
-  # resembles the return value of Ripper::lex. The main difference is that the
-  # `:on_sp` token is not emitted.
+  # resembles the return value of Ripper::lex.
   #
   # For supported options, see Prism::parse.
   def self.lex_compat(source, **options)
@@ -52,9 +71,8 @@ module Prism
   # :call-seq:
   #   Prism::lex_ripper(source) -> Array
   #
-  # This lexes with the Ripper lex. It drops any space events but otherwise
-  # returns the same tokens. Raises SyntaxError if the syntax in source is
-  # invalid.
+  # This wraps the result of Ripper.lex. It produces almost exactly the
+  # same tokens. Raises SyntaxError if the syntax in source is invalid.
   def self.lex_ripper(source)
     LexRipper.new(source).result # steep:ignore
   end

@@ -14,6 +14,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (2,0)-(2,6))
         │   ├── flags: newline, ignore_visibility
@@ -30,6 +31,7 @@
         │   │           ├── flags: static_literal, decimal
         │   │           └── value: 1
         │   ├── closing_loc: (2,5)-(2,6) = ")"
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (4,0)-(4,15))
         │   ├── flags: newline
@@ -49,6 +51,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   ├── call_operator_loc: (4,1)-(4,2) = "."
         │   │   │   ├── name: :===
@@ -67,8 +70,10 @@
         │   │   │   │           ├── opening_loc: ∅
         │   │   │   │           ├── arguments: ∅
         │   │   │   │           ├── closing_loc: ∅
+        │   │   │   │           ├── equal_loc: ∅
         │   │   │   │           └── block: ∅
         │   │   │   ├── closing_loc: (4,7)-(4,8) = ")"
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── call_operator_loc: (4,8)-(4,9) = "."
         │   │   ├── name: :c
@@ -76,6 +81,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── call_operator_loc: ∅
         │   ├── name: :==
@@ -94,8 +100,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (6,0)-(6,15))
             ├── flags: newline
@@ -109,6 +117,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── call_operator_loc: ∅
             ├── name: :==
@@ -133,6 +142,7 @@
             │           │   │   ├── opening_loc: ∅
             │           │   │   ├── arguments: ∅
             │           │   │   ├── closing_loc: ∅
+            │           │   │   ├── equal_loc: ∅
             │           │   │   └── block: ∅
             │           │   ├── call_operator_loc: (6,6)-(6,7) = "."
             │           │   ├── name: :c
@@ -140,6 +150,7 @@
             │           │   ├── opening_loc: ∅
             │           │   ├── arguments: ∅
             │           │   ├── closing_loc: ∅
+            │           │   ├── equal_loc: ∅
             │           │   └── block: ∅
             │           ├── call_operator_loc: (6,8)-(6,9) = "."
             │           ├── name: :===
@@ -158,8 +169,11 @@
             │           │           ├── opening_loc: ∅
             │           │           ├── arguments: ∅
             │           │           ├── closing_loc: ∅
+            │           │           ├── equal_loc: ∅
             │           │           └── block: ∅
             │           ├── closing_loc: (6,14)-(6,15) = ")"
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

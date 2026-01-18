@@ -43,6 +43,7 @@
             │           │           ├── name: :cmd
             │           │           └── depth: 0
             │           ├── closing_loc: (1,26)-(1,27) = ")"
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── locals: [:cmd]
             ├── def_keyword_loc: (1,0)-(1,3) = "def"

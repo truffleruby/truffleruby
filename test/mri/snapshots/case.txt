@@ -65,6 +65,7 @@
         │   │   │               │           ├── closing_loc: ∅
         │   │   │               │           └── unescaped: "hi"
         │   │   │               ├── closing_loc: ∅
+        │   │   │               ├── equal_loc: ∅
         │   │   │               └── block: ∅
         │   │   └── @ WhenNode (location: (5,32)-(5,53))
         │   │       ├── flags: ∅
@@ -95,6 +96,7 @@
         │   │                   │           ├── closing_loc: ∅
         │   │                   │           └── unescaped: "bye"
         │   │                   ├── closing_loc: ∅
+        │   │                   ├── equal_loc: ∅
         │   │                   └── block: ∅
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (5,0)-(5,4) = "case"
@@ -120,6 +122,7 @@
         │   │       │           ├── opening_loc: ∅
         │   │       │           ├── arguments: ∅
         │   │       │           ├── closing_loc: ∅
+        │   │       │           ├── equal_loc: ∅
         │   │       │           └── block: ∅
         │   │       ├── then_keyword_loc: ∅
         │   │       └── statements: ∅
@@ -177,6 +180,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── conditions: (length: 1)
         │   │   └── @ WhenNode (location: (15,11)-(15,31))
@@ -214,6 +218,7 @@
         │   │       │       │   ├── opening_loc: ∅
         │   │       │       │   ├── arguments: ∅
         │   │       │       │   ├── closing_loc: ∅
+        │   │       │       │   ├── equal_loc: ∅
         │   │       │       │   └── block: ∅
         │   │       │       ├── call_operator_loc: ∅
         │   │       │       ├── name: :==
@@ -232,8 +237,10 @@
         │   │       │       │           ├── opening_loc: ∅
         │   │       │       │           ├── arguments: ∅
         │   │       │       │           ├── closing_loc: ∅
+        │   │       │       │           ├── equal_loc: ∅
         │   │       │       │           └── block: ∅
         │   │       │       ├── closing_loc: ∅
+        │   │       │       ├── equal_loc: ∅
         │   │       │       └── block: ∅
         │   │       ├── then_keyword_loc: ∅
         │   │       └── statements: ∅
@@ -257,6 +264,7 @@
         │   │       │       ├── opening_loc: ∅
         │   │       │       ├── arguments: ∅
         │   │       │       ├── closing_loc: ∅
+        │   │       │       ├── equal_loc: ∅
         │   │       │       └── block: ∅
         │   │       ├── then_keyword_loc: ∅
         │   │       └── statements: ∅
@@ -280,6 +288,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── conditions: (length: 1)
         │   │   └── @ WhenNode (location: (28,3)-(28,10))
@@ -438,6 +447,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── conditions: (length: 1)
         │   │   └── @ InNode (location: (47,0)-(48,3))
@@ -459,6 +469,7 @@
         │   │       │   │   │   ├── opening_loc: ∅
         │   │       │   │   │   ├── arguments: ∅
         │   │       │   │   │   ├── closing_loc: ∅
+        │   │       │   │   │   ├── equal_loc: ∅
         │   │       │   │   │   └── block: ∅
         │   │       │   │   ├── right:
         │   │       │   │   │   @ CallNode (location: (47,14)-(47,15))
@@ -470,6 +481,7 @@
         │   │       │   │   │   ├── opening_loc: ∅
         │   │       │   │   │   ├── arguments: ∅
         │   │       │   │   │   ├── closing_loc: ∅
+        │   │       │   │   │   ├── equal_loc: ∅
         │   │       │   │   │   └── block: ∅
         │   │       │   │   └── operator_loc: (47,10)-(47,13) = "and"
         │   │       │   ├── then_keyword_loc: ∅
@@ -496,6 +508,7 @@
         │   │       │           ├── opening_loc: ∅
         │   │       │           ├── arguments: ∅
         │   │       │           ├── closing_loc: ∅
+        │   │       │           ├── equal_loc: ∅
         │   │       │           └── block: ∅
         │   │       ├── in_loc: (47,0)-(47,2) = "in"
         │   │       └── then_loc: ∅
@@ -514,6 +527,7 @@
             ├── opening_loc: ∅
             ├── arguments: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (51,7)-(55,3))
                 ├── flags: ∅

@@ -46,7 +46,7 @@
         │   ├── closing_loc: (9,0)-(10,0) = "EOF\n"
         │   └── unescaped: "a\n"
         ├── @ InterpolatedStringNode (location: (11,0)-(11,6))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: (11,0)-(11,6) = "<<~EOF"
         │   ├── parts: (length: 3)
         │   │   ├── @ StringNode (location: (12,0)-(13,0))
@@ -175,7 +175,7 @@
         │   │       └── unescaped: "\n"
         │   └── closing_loc: (33,0)-(34,0) = "EOF\n"
         ├── @ InterpolatedStringNode (location: (35,0)-(35,6))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: (35,0)-(35,6) = "<<~EOF"
         │   ├── parts: (length: 2)
         │   │   ├── @ StringNode (location: (36,0)-(37,0))
@@ -192,7 +192,7 @@
         │   │       └── unescaped: "b\n"
         │   └── closing_loc: (38,0)-(39,0) = "EOF\n"
         ├── @ InterpolatedStringNode (location: (40,0)-(40,6))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: (40,0)-(40,6) = "<<~EOF"
         │   ├── parts: (length: 2)
         │   │   ├── @ StringNode (location: (41,0)-(42,0))
@@ -209,7 +209,7 @@
         │   │       └── unescaped: " b\n"
         │   └── closing_loc: (43,0)-(44,0) = "EOF\n"
         ├── @ InterpolatedStringNode (location: (45,0)-(45,6))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: (45,0)-(45,6) = "<<~EOF"
         │   ├── parts: (length: 2)
         │   │   ├── @ StringNode (location: (46,0)-(47,0))
@@ -232,7 +232,7 @@
         │   ├── closing_loc: (52,0)-(53,0) = "EOF\n"
         │   └── unescaped: "a \#{1}\n"
         ├── @ InterpolatedStringNode (location: (54,0)-(54,6))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: (54,0)-(54,6) = "<<~EOF"
         │   ├── parts: (length: 2)
         │   │   ├── @ StringNode (location: (55,0)-(56,0))
@@ -249,7 +249,7 @@
         │   │       └── unescaped: " b\n"
         │   └── closing_loc: (57,0)-(58,0) = "EOF\n"
         ├── @ InterpolatedStringNode (location: (59,0)-(59,6))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: (59,0)-(59,6) = "<<~EOF"
         │   ├── parts: (length: 2)
         │   │   ├── @ StringNode (location: (60,0)-(61,0))
@@ -266,7 +266,7 @@
         │   │       └── unescaped: "b\n"
         │   └── closing_loc: (62,0)-(63,0) = "EOF\n"
         ├── @ InterpolatedStringNode (location: (64,0)-(64,6))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: (64,0)-(64,6) = "<<~EOF"
         │   ├── parts: (length: 2)
         │   │   ├── @ StringNode (location: (65,0)-(66,0))
@@ -283,7 +283,7 @@
         │   │       └── unescaped: "b\n"
         │   └── closing_loc: (67,0)-(68,0) = "EOF\n"
         ├── @ InterpolatedStringNode (location: (69,0)-(69,6))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: (69,0)-(69,6) = "<<~EOF"
         │   ├── parts: (length: 3)
         │   │   ├── @ StringNode (location: (70,0)-(71,0))
@@ -306,7 +306,7 @@
         │   │       └── unescaped: "b\n"
         │   └── closing_loc: (73,0)-(74,0) = "EOF\n"
         ├── @ InterpolatedStringNode (location: (75,0)-(75,6))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: (75,0)-(75,6) = "<<~EOF"
         │   ├── parts: (length: 3)
         │   │   ├── @ StringNode (location: (76,0)-(77,0))
@@ -329,7 +329,7 @@
         │   │       └── unescaped: "b\n"
         │   └── closing_loc: (79,0)-(80,0) = "EOF\n"
         ├── @ InterpolatedStringNode (location: (81,0)-(81,6))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: (81,0)-(81,6) = "<<~EOF"
         │   ├── parts: (length: 5)
         │   │   ├── @ StringNode (location: (82,0)-(83,0))

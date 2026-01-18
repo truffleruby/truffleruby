@@ -17,6 +17,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── call_operator_loc: ∅
             ├── name: :[]
@@ -24,6 +25,7 @@
             ├── opening_loc: (1,4)-(1,5) = "["
             ├── arguments: ∅
             ├── closing_loc: (1,5)-(1,6) = "]"
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (1,7)-(1,9))
                 ├── flags: ∅

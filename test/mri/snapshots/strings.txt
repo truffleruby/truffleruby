@@ -138,6 +138,7 @@
         │   │   │   │           ├── opening_loc: ∅
         │   │   │   │           ├── arguments: ∅
         │   │   │   │           ├── closing_loc: ∅
+        │   │   │   │           ├── equal_loc: ∅
         │   │   │   │           └── block: ∅
         │   │   │   └── closing_loc: (35,11)-(35,12) = "}"
         │   │   └── @ StringNode (location: (35,12)-(35,16))
@@ -177,6 +178,7 @@
         │   │           ├── closing_loc: (41,4)-(41,5) = "\""
         │   │           └── unescaped: "bar"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ StringNode (location: (43,0)-(46,1))
         │   ├── flags: newline
@@ -252,6 +254,7 @@
         │   │   │   │           ├── opening_loc: ∅
         │   │   │   │           ├── arguments: ∅
         │   │   │   │           ├── closing_loc: ∅
+        │   │   │   │           ├── equal_loc: ∅
         │   │   │   │           └── block: ∅
         │   │   │   └── closing_loc: (64,10)-(64,11) = "}"
         │   │   └── @ StringNode (location: (64,11)-(64,15))
@@ -393,6 +396,7 @@
         │   │   │   │   │   │           ├── opening_loc: ∅
         │   │   │   │   │   │           ├── arguments: ∅
         │   │   │   │   │   │           ├── closing_loc: ∅
+        │   │   │   │   │   │           ├── equal_loc: ∅
         │   │   │   │   │   │           └── block: ∅
         │   │   │   │   │   └── closing_loc: (79,8)-(79,9) = "}"
         │   │   │   │   └── @ StringNode (location: (79,9)-(80,3))
@@ -428,6 +432,7 @@
         │   │       │       │           ├── opening_loc: ∅
         │   │       │       │           ├── arguments: ∅
         │   │       │       │           ├── closing_loc: ∅
+        │   │       │       │           ├── equal_loc: ∅
         │   │       │       │           └── block: ∅
         │   │       │       └── closing_loc: (81,9)-(81,10) = "}"
         │   │       └── closing_loc: ∅
@@ -715,6 +720,7 @@
         │   │   │   │   │   │           ├── opening_loc: ∅
         │   │   │   │   │   │           ├── arguments: ∅
         │   │   │   │   │   │           ├── closing_loc: ∅
+        │   │   │   │   │   │           ├── equal_loc: ∅
         │   │   │   │   │   │           └── block: ∅
         │   │   │   │   │   └── closing_loc: (132,9)-(132,10) = "}"
         │   │   │   │   └── @ StringNode (location: (132,10)-(132,11))
@@ -875,7 +881,7 @@
         │   ├── closing_loc: ∅
         │   └── unescaped: "a"
         ├── @ InterpolatedStringNode (location: (173,0)-(173,6))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: ∅
         │   ├── parts: (length: 2)
         │   │   ├── @ StringNode (location: (173,0)-(173,2))

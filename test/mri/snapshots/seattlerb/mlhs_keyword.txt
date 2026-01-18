@@ -17,6 +17,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── call_operator_loc: (1,1)-(1,2) = "."
             ├── name: :!=
@@ -31,4 +32,5 @@
             │       └── @ TrueNode (location: (1,11)-(1,15))
             │           └── flags: static_literal
             ├── closing_loc: (1,15)-(1,16) = ")"
+            ├── equal_loc: ∅
             └── block: ∅

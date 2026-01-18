@@ -20,4 +20,5 @@
             │           ├── flags: static_literal, decimal
             │           └── value: 0
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

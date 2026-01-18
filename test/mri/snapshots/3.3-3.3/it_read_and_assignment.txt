@@ -17,13 +17,12 @@
             ├── opening_loc: ∅
             ├── arguments: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (1,7)-(1,30))
                 ├── flags: ∅
                 ├── locals: [:it]
-                ├── parameters:
-                │   @ ItParametersNode (location: (1,7)-(1,30))
-                │   └── flags: ∅
+                ├── parameters: ∅
                 ├── body:
                 │   @ StatementsNode (location: (1,9)-(1,28))
                 │   ├── flags: ∅
@@ -39,9 +38,19 @@
                 │       │   │   @ ArgumentsNode (location: (1,11)-(1,13))
                 │       │   │   ├── flags: ∅
                 │       │   │   └── arguments: (length: 1)
-                │       │   │       └── @ ItLocalVariableReadNode (location: (1,11)-(1,13))
-                │       │   │           └── flags: ∅
+                │       │   │       └── @ CallNode (location: (1,11)-(1,13))
+                │       │   │           ├── flags: variable_call, ignore_visibility
+                │       │   │           ├── receiver: ∅
+                │       │   │           ├── call_operator_loc: ∅
+                │       │   │           ├── name: :it
+                │       │   │           ├── message_loc: (1,11)-(1,13) = "it"
+                │       │   │           ├── opening_loc: ∅
+                │       │   │           ├── arguments: ∅
+                │       │   │           ├── closing_loc: ∅
+                │       │   │           ├── equal_loc: ∅
+                │       │   │           └── block: ∅
                 │       │   ├── closing_loc: ∅
+                │       │   ├── equal_loc: ∅
                 │       │   └── block: ∅
                 │       ├── @ LocalVariableWriteNode (location: (1,15)-(1,22))
                 │       │   ├── flags: newline
@@ -70,6 +79,7 @@
                 │           │           ├── name: :it
                 │           │           └── depth: 0
                 │           ├── closing_loc: ∅
+                │           ├── equal_loc: ∅
                 │           └── block: ∅
                 ├── opening_loc: (1,7)-(1,8) = "{"
                 └── closing_loc: (1,29)-(1,30) = "}"

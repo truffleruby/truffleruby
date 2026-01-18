@@ -33,6 +33,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── statements:
         │   │           │   @ StatementsNode (location: (2,2)-(2,5))
@@ -47,12 +48,14 @@
         │   │           │           ├── opening_loc: ∅
         │   │           │           ├── arguments: ∅
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block: ∅
         │   │           ├── for_keyword_loc: (1,4)-(1,7) = "for"
         │   │           ├── in_keyword_loc: (1,10)-(1,12) = "in"
         │   │           ├── do_keyword_loc: (1,17)-(1,19) = "do"
         │   │           └── end_keyword_loc: (3,0)-(3,3) = "end"
         │   ├── closing_loc: (3,3)-(3,4) = ")"
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ ForNode (location: (4,0)-(6,3))
         │   ├── flags: newline
@@ -71,6 +74,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── statements:
         │   │   @ StatementsNode (location: (5,2)-(5,5))
@@ -85,6 +89,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── for_keyword_loc: (4,0)-(4,3) = "for"
         │   ├── in_keyword_loc: (4,6)-(4,8) = "in"
@@ -122,6 +127,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── statements:
         │   │   @ StatementsNode (location: (8,2)-(8,5))
@@ -136,6 +142,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── for_keyword_loc: (7,0)-(7,3) = "for"
         │   ├── in_keyword_loc: (7,12)-(7,14) = "in"
@@ -169,6 +176,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── statements:
             │   @ StatementsNode (location: (11,2)-(11,5))
@@ -183,6 +191,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── for_keyword_loc: (10,0)-(10,3) = "for"
             ├── in_keyword_loc: (10,11)-(10,13) = "in"

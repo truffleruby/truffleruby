@@ -53,6 +53,7 @@
         │   │           │           ├── closing_loc: (3,13)-(3,14) = "\""
         │   │           │           └── unescaped: ""
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (3,0)-(3,3) = "def"
@@ -92,6 +93,7 @@
         │   │           │   │           ├── flags: static_literal, decimal
         │   │           │   │           └── value: 2
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── call_operator_loc: ∅
         │   │           ├── name: :+
@@ -105,6 +107,7 @@
         │   │           │           ├── flags: static_literal, decimal
         │   │           │           └── value: 3
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (5,0)-(5,3) = "def"
@@ -144,6 +147,7 @@
             │   │           │           ├── flags: static_literal, decimal
             │   │           │           └── value: 1
             │   │           ├── closing_loc: ∅
+            │   │           ├── equal_loc: ∅
             │   │           └── block: ∅
             │   ├── locals: []
             │   ├── def_keyword_loc: (7,4)-(7,7) = "def"

@@ -65,6 +65,7 @@
         │   │           │           ├── opening_loc: ∅
         │   │           │           ├── arguments: ∅
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block:
         │   │           │               @ BlockNode (location: (8,6)-(9,5))
         │   │           │               ├── flags: ∅
@@ -81,6 +82,7 @@
         │   │           ├── equal_loc: ∅
         │   │           └── end_keyword_loc: (10,0)-(10,3) = "end"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ DefNode (location: (12,0)-(13,3))
         │   ├── flags: newline

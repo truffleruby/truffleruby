@@ -35,6 +35,7 @@
         │   │           ├── closing_loc: (1,24)-(1,25) = "'"
         │   │           └── unescaped: ""
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (5,0)-(5,25))
             ├── flags: newline
@@ -66,4 +67,5 @@
             │           ├── closing_loc: (5,24)-(5,25) = "'"
             │           └── unescaped: ""
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅
