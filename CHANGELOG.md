@@ -5,6 +5,7 @@ New features:
 
 Bug fixes:
 
+* Fix `Integer#ceil` and `Float#ceil` with negative precision (#3911, @trinistr).
 
 Compatibility:
 
