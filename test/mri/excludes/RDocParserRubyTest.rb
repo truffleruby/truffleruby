@@ -1,6 +1,1 @@
-exclude :test_parse_attr, "<1> expected but was <0>."
-exclude :test_parse_attr_accessor_writer, "<2> expected but was <0>."
-exclude :test_parse_for_in, "undefined symbol: rb_make_temporary_id"
-exclude :test_parse_statements_complex_condition_in_for, "undefined symbol: rb_make_temporary_id"
-exclude :test_parse_statements_def_percent_string_pound, "undefined symbol: rb_reg_check_preprocess"
-exclude :test_parse_statements_identifier_attr, "NoMethodError: undefined method `name' for nil"
+exclude :test_parse_instance_operation_method, "<\"  <span class=\\\"ruby-keyword\\\">def</span> <span class=\\\"ruby-keyword\\\">self</span>.<span class=\\\"ruby-identifier ruby-title\\\">&amp;</span> <span class=\\\"ruby-keyword\\\">end</span>\\n\" +"
