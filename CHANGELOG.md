@@ -6,6 +6,7 @@ New features:
 
 Bug fixes:
 
+* Fix `Integer#ceil` and `Float#ceil` with negative precision (#3911, @trinistr).
 
 Compatibility:
 * Implement `String#append_as_bytes` for Ruby 3.4 (#4087, @Earlopain).
