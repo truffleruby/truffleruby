@@ -46,6 +46,7 @@ public final class RubyEncoding extends ImmutableRubyObjectNotCopyable
 
     // Copy these properties here for faster access and to make the fields final (most of these fields are not final in JCodings)
     public final boolean isDummy;
+    /** Always false for dummy encodings */
     public final boolean isAsciiCompatible;
     public final boolean isFixedWidth;
     public final boolean isSingleByte;
@@ -67,6 +68,8 @@ public final class RubyEncoding extends ImmutableRubyObjectNotCopyable
         this.isFixedWidth = jcoding.isFixedWidth();
         this.isSingleByte = jcoding.isSingleByte();
         this.isUnicode = jcoding.isUnicode();
+
+        assert isDummy ? !isAsciiCompatible : true;
     }
 
     // Special constructor to define US-ASCII encoding which is used for RubyEncoding names
