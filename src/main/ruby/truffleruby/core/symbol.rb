@@ -59,12 +59,10 @@ class Symbol
   # Returns a pretty version of the symbol, fit for viewing
   #  :symbol.inspect #=> ":symbol"
   def inspect
-    str = to_s
-
-    if Truffle::Type.rb_str_symname_p?(str)
-      ":#{str}"
+    if Truffle::Type.rb_str_symname_p?(name)
+      ":#{name}"
     else
-      ":#{str.inspect}"
+      ":#{name.inspect}"
     end
   end
 
