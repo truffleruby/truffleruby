@@ -2484,4 +2484,8 @@ module Truffle::CExt
     Truffle::EncodingOperations.define_alias(enc, alias_name)
     enc
   end
+
+  def rb_tr_enc_is_unicode(enc)
+    Primitive.encoding_is_unicode?(enc) ? 1 : 0
+  end
 end

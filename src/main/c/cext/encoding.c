@@ -329,6 +329,10 @@ int rb_enc_mbminlen(rb_encoding *enc) {
   return polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_enc_mbminlen", rb_enc_from_encoding(enc)));
 }
 
+int rb_tr_enc_is_unicode(const OnigEncodingType *enc) {
+  return polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_tr_enc_is_unicode", rb_enc_from_encoding(enc)));
+}
+
 int rb_define_dummy_encoding(const char *name) {
   return polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_define_dummy_encoding", rb_str_new_cstr(name)));
 }
@@ -490,9 +494,4 @@ int rb_char_to_option_kcode(int c, int *option, int *kcode) {
   }
   *option = ARG_ENCODING_FIXED;
   return 1;
-}
-
-int enc_is_unicode(const OnigEncodingType *enc) {
-  const char *name = rb_enc_name(enc);
-  return !strncmp(name,"UTF", 3);
 }

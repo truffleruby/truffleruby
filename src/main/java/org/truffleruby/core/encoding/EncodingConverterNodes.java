@@ -79,8 +79,8 @@ public abstract class EncodingConverterNodes {
             // by Rubinius.  Rubinius will do the heavy lifting of parsing the options hash and setting the `@options`
             // ivar to the resulting int for EConv flags.
 
-            Encoding sourceEncoding = source.jcoding;
-            Encoding destinationEncoding = destination.jcoding;
+            Encoding sourceEncoding = Encodings.getTranscodingJCoding(source);
+            Encoding destinationEncoding = Encodings.getTranscodingJCoding(destination);
 
             final EConv econv = TranscoderDB
                     .open(sourceEncoding.getName(), destinationEncoding.getName(), toJCodingFlags(options));
@@ -118,7 +118,7 @@ public abstract class EncodingConverterNodes {
                 ret = ArrayUtils.extractRange(ret, 0, retSize);
             }
 
-            final byte[] destinationName = destinationEncoding.getName();
+            final byte[] destinationName = destination.getNameByteArray();
             ret[retIndex] = getSymbol(StringUtils.toUpperCase(new String(destinationName, StandardCharsets.US_ASCII)));
 
             return createArray(ret);
@@ -459,7 +459,7 @@ public abstract class EncodingConverterNodes {
 
             final InternalByteArray byteArray = bytesNode.execute(tstring, encoding.tencoding);
             int ret = setReplacement(encodingConverter.econv, byteArray.getArray(), byteArray.getOffset(),
-                    byteArray.getLength(), encoding.jcoding.getName());
+                    byteArray.getLength(), encoding.getNameByteArray());
 
             if (ret == -1) {
                 errorProfile.enter(node);
