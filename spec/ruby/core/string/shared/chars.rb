@@ -14,7 +14,6 @@ describe :string_chars, shared: true do
     s.send(@method){}.should equal(s)
   end
 
-
   it "is unicode aware" do
     "\303\207\342\210\202\303\251\306\222g".send(@method).to_a.should ==
       ["\303\207", "\342\210\202", "\303\251", "\306\222", "g"]
@@ -64,7 +63,12 @@ describe :string_chars, shared: true do
     ]
   end
 
-  it "returns individual bytes for dummy encodings UTF-16 and UTF-32" do
+  it "returns individual chars for dummy encodings" do
+    "ab".dup.force_encoding(Encoding::UTF_7).send(@method).to_a.should == [
+      "\x61".dup.force_encoding(Encoding::UTF_7),
+      "\x62".dup.force_encoding(Encoding::UTF_7)
+    ]
+
     "abcd".dup.force_encoding(Encoding::UTF_16).send(@method).to_a.should == [
       "\x61".dup.force_encoding(Encoding::UTF_16),
       "\x62".dup.force_encoding(Encoding::UTF_16),

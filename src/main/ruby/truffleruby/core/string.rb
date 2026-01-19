@@ -211,6 +211,10 @@ class String
     if block_given?
       each_grapheme_cluster(&block)
     else
+      if encoding.dummy? or !valid_encoding?
+        return self.chars
+      end
+
       regex = Primitive.regexp_compile('\X'.encode(encoding), 0)
       scan(regex)
     end
@@ -399,8 +403,12 @@ class String
     str.tr_s!(source, replacement) || str
   end
 
-  def each_grapheme_cluster
+  def each_grapheme_cluster(&block)
     return to_enum(:each_grapheme_cluster) { size } unless block_given?
+
+    if encoding.dummy? or !valid_encoding?
+      return each_char(&block)
+    end
 
     regex = Primitive.regexp_compile('\X'.encode(encoding), 0)
     # scan(regex, &block) would leak the $ vars in the user block which is probably unwanted
