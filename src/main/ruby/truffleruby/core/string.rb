@@ -523,14 +523,6 @@ class String
     ascii = enc.ascii_compatible?
     unicode = Primitive.encoding_is_unicode? enc
 
-    actual_encoding = Primitive.get_actual_encoding(self)
-    if actual_encoding != enc
-      enc = actual_encoding
-      if unicode
-        unicode = Primitive.encoding_is_unicode? enc
-      end
-    end
-
     result = '"'.dup.force_encoding(result_encoding)
 
     index = 0

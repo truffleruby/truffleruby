@@ -22,10 +22,6 @@ import org.graalvm.shadowed.org.jcodings.EncodingDB;
 import org.graalvm.shadowed.org.jcodings.specific.ASCIIEncoding;
 import org.graalvm.shadowed.org.jcodings.specific.ISO8859_1Encoding;
 import org.graalvm.shadowed.org.jcodings.specific.USASCIIEncoding;
-import org.graalvm.shadowed.org.jcodings.specific.UTF16BEEncoding;
-import org.graalvm.shadowed.org.jcodings.specific.UTF16LEEncoding;
-import org.graalvm.shadowed.org.jcodings.specific.UTF32BEEncoding;
-import org.graalvm.shadowed.org.jcodings.specific.UTF32LEEncoding;
 import org.graalvm.shadowed.org.jcodings.specific.UTF8Encoding;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.array.ArrayUtils;
@@ -46,10 +42,10 @@ public final class Encodings {
     private static final Encoding DUMMY_JCODING = EncodingDB.getEncodings()
             .get(StringOperations.encodeAsciiBytes("UTF-7")).getEncoding();
     /** This is NOT used for the UTF-16 RubyEncoding, we only reference it to get the proper jcoding index. */
-    static final Encoding DUMMY_UTF16_JCODING = EncodingDB.getEncodings()
+    private static final Encoding DUMMY_UTF16_JCODING = EncodingDB.getEncodings()
             .get(StringOperations.encodeAsciiBytes("UTF-16")).getEncoding();
     /** This is NOT used for the UTF-32 RubyEncoding, we only reference it to get the proper jcoding index. */
-    static final Encoding DUMMY_UTF32_JCODING = EncodingDB.getEncodings()
+    private static final Encoding DUMMY_UTF32_JCODING = EncodingDB.getEncodings()
             .get(StringOperations.encodeAsciiBytes("UTF-32")).getEncoding();
 
     static final int MAX_NUMBER_OF_ENCODINGS = 256;
@@ -60,13 +56,9 @@ public final class Encodings {
 
     public static final RubyEncoding BINARY = getBuiltInEncoding(ASCIIEncoding.INSTANCE);
     public static final RubyEncoding UTF_8 = getBuiltInEncoding(UTF8Encoding.INSTANCE);
-    public static final RubyEncoding UTF16LE = getBuiltInEncoding(UTF16LEEncoding.INSTANCE);
-    public static final RubyEncoding UTF16BE = getBuiltInEncoding(UTF16BEEncoding.INSTANCE);
-    public static final RubyEncoding UTF32LE = getBuiltInEncoding(UTF32LEEncoding.INSTANCE);
-    public static final RubyEncoding UTF32BE = getBuiltInEncoding(UTF32BEEncoding.INSTANCE);
     public static final RubyEncoding ISO_8859_1 = getBuiltInEncoding(ISO8859_1Encoding.INSTANCE);
-    public static final RubyEncoding UTF16_DUMMY = getBuiltInEncoding(DUMMY_UTF16_JCODING);
-    public static final RubyEncoding UTF32_DUMMY = getBuiltInEncoding(DUMMY_UTF32_JCODING);
+    private static final RubyEncoding UTF16_DUMMY = getBuiltInEncoding(DUMMY_UTF16_JCODING);
+    private static final RubyEncoding UTF32_DUMMY = getBuiltInEncoding(DUMMY_UTF32_JCODING);
 
     @CompilationFinal(dimensions = 1) public static final RubyEncoding[] STANDARD_ENCODINGS = new RubyEncoding[3];
     static {

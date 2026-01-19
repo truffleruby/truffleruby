@@ -102,7 +102,6 @@ import org.truffleruby.core.cast.ToLongNode;
 import org.truffleruby.core.cast.ToStrNode;
 import org.truffleruby.core.encoding.EncodingNodes.CheckStringEncodingNode;
 import org.truffleruby.core.encoding.EncodingNodes.NegotiateCompatibleStringEncodingNode;
-import org.truffleruby.core.encoding.EncodingNodes.GetActualEncodingNode;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.encoding.TStringUtils;
@@ -1303,7 +1302,6 @@ public abstract class StringNodes {
         @Specialization(guards = "!string.tstring.isEmpty()")
         static Object lstripBangSingleByte(RubyString string,
                 @Cached RubyStringLibrary libString,
-                @Cached GetActualEncodingNode getActualEncodingNode,
                 @Cached CreateCodePointIteratorNode createCodePointIteratorNode,
                 @Cached TruffleString.SubstringByteIndexNode substringNode,
                 @Cached TruffleStringIterator.NextNode nextNode,
@@ -1313,7 +1311,7 @@ public abstract class StringNodes {
                 @Cached InlinedConditionProfile noopProfile,
                 @Bind Node node) {
             var tstring = string.tstring;
-            var encoding = getActualEncodingNode.execute(node, tstring, libString.getEncoding(node, string));
+            var encoding = libString.getEncoding(node, string);
             var tencoding = encoding.tencoding;
 
             var iterator = createCodePointIteratorNode.execute(tstring, tencoding, ErrorHandling.RETURN_NEGATIVE);
@@ -1431,7 +1429,6 @@ public abstract class StringNodes {
         @Specialization(guards = "!string.tstring.isEmpty()")
         static Object rstripBangNonEmptyString(RubyString string,
                 @Cached RubyStringLibrary libString,
-                @Cached GetActualEncodingNode getActualEncodingNode,
                 @Cached TruffleString.CreateBackwardCodePointIteratorNode createBackwardCodePointIteratorNode,
                 @Cached TruffleStringIterator.PreviousNode previousNode,
                 @Cached InlinedBranchProfile allWhitespaceProfile,
@@ -1441,7 +1438,7 @@ public abstract class StringNodes {
                 @Cached @Exclusive InlinedConditionProfile noopProfile,
                 @Bind Node node) {
             var tstring = string.tstring;
-            var encoding = getActualEncodingNode.execute(node, tstring, libString.getEncoding(node, string));
+            var encoding = libString.getEncoding(node, string);
             var tencoding = encoding.tencoding;
 
             var iterator = createBackwardCodePointIteratorNode.execute(tstring, tencoding,
