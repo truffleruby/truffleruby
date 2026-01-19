@@ -160,3 +160,6 @@ or merge all changes from `master` with `git merge master`.
 Be careful to not add newer releases in [CHANGELOG.md](../../CHANGELOG.md).
 
 You can use `git log --merges release/$MAJOR..master` to get a list of merged PRs in master but not in the release branch.
+
+Sometimes commits are pushed directly to `master` without a PR, for example when only touching docs or the CHANGELOG.
+You can find such commits with `git log --no-merges --first-parent release/$MAJOR..master`.
