@@ -16,4 +16,10 @@ describe "Encoding#dummy?" do
     Encoding::UTF_16.should.dummy?
     Encoding::UTF_32.should.dummy?
   end
+
+  it "implies not #ascii_compatible?" do
+    Encoding.list.select(&:dummy?).each do |encoding|
+      encoding.should_not.ascii_compatible?
+    end
+  end
 end
