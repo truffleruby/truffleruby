@@ -1053,6 +1053,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                             whenConditionNode,
                             NodeUtil.cloneNode(readPredicateNode) };
                     final RubyNode predicateNode = createCallNode(receiver, "when_splat", arguments);
+                    assignPositionOnly(whenConditions, predicateNode);
 
                     // create `if` node
                     final RubyNode thenNode = translateNodeOrNil(whenNode.statements);
@@ -1073,6 +1074,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                         final RubyNode receiver = whenCondition.accept(this);
                         final RubyNode[] arguments = new RubyNode[]{ NodeUtil.cloneNode(readPredicateNode) };
                         final RubyNode nextPredicateNode = createCallNode(receiver, "===", arguments);
+                        assignPositionAndFlags(whenCondition, nextPredicateNode);
 
                         if (predicateNode == null) {
                             predicateNode = nextPredicateNode;

@@ -30,8 +30,8 @@ ast: |
                       methodName = "when_splat"
                       notEmptyKeywordsProfile = false
                       notRuby2KeywordsHashProfile = false
-                      sourceCharIndex = -1
-                      sourceLength = 0
+                      sourceCharIndex = 13
+                      sourceLength = 8
                   children:
                       arguments = [
                           ArrayConcatNode
