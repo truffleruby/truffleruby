@@ -390,7 +390,8 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
 
     private RubyNode matchValue(Nodes.Node value) {
         RubyNode translatedValue = value.accept(yarpTranslator);
-        return createCallNode(translatedValue, "===", currentValueToMatch);
+        var rubyNode = createCallNode(translatedValue, "===", currentValueToMatch);
+        return assignPositionAndFlags(value, rubyNode);
     }
 
 }
