@@ -80,8 +80,8 @@ ast: |
                                               flags = 0
                                               integerCaseEqualAssumption = Assumption(valid, name=core method is not overridden:)
                                               parameters = RubyCallNodeParameters{methodName='===', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=true, isVCall=false, isSafeNavigation=false, isAttrAssign=false}
-                                              sourceCharIndex = -1
-                                              sourceLength = 0
+                                              sourceCharIndex = 13
+                                              sourceLength = 2
                                           children:
                                               leftNode_ =
                                                   IntegerFixnumLiteralNode
@@ -105,8 +105,8 @@ ast: |
                                               flags = 0
                                               integerCaseEqualAssumption = Assumption(valid, name=core method is not overridden:)
                                               parameters = RubyCallNodeParameters{methodName='===', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=true, isVCall=false, isSafeNavigation=false, isAttrAssign=false}
-                                              sourceCharIndex = -1
-                                              sourceLength = 0
+                                              sourceCharIndex = 17
+                                              sourceLength = 4
                                           children:
                                               leftNode_ =
                                                   FloatLiteralNode
