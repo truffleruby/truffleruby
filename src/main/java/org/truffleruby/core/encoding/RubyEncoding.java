@@ -17,7 +17,6 @@ import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.shadowed.org.jcodings.Encoding;
-import org.graalvm.shadowed.org.jcodings.specific.ASCIIEncoding;
 import org.graalvm.shadowed.org.jcodings.specific.USASCIIEncoding;
 import org.truffleruby.RubyContext;
 import org.truffleruby.core.kernel.KernelNodes;
@@ -37,9 +36,12 @@ import java.util.Set;
 public final class RubyEncoding extends ImmutableRubyObjectNotCopyable
         implements ObjectGraphNode, Comparable<RubyEncoding> {
 
+    /** Do NOT use {@link Encoding#toString()} or {@link Encoding#getName()} as they are incorrect for dummy encodings.
+     * Instead, use {@link RubyEncoding#toString()} and {@link #getNameByteArray()}. */
     public final Encoding jcoding;
     public final TruffleString.Encoding tencoding;
     public final ImmutableRubyString name;
+    public final byte[] nameByteArray;
     public final int index;
 
     // Copy these properties here for faster access and to make the fields final (most of these fields are not final in JCodings)
@@ -54,18 +56,10 @@ public final class RubyEncoding extends ImmutableRubyObjectNotCopyable
         assert name.getEncodingUncached() == Encodings.US_ASCII;
         this.jcoding = Objects.requireNonNull(jcoding);
 
-        TruffleString.Encoding tencoding;
-        try {
-            tencoding = TStringUtils.jcodingToTEncoding(jcoding);
-        } catch (IllegalArgumentException e) {
-            if (jcoding.isDummy()) {
-                tencoding = TStringUtils.jcodingToTEncoding(ASCIIEncoding.INSTANCE);
-            } else {
-                throw e;
-            }
-        }
+        var tencoding = TruffleString.Encoding.fromJCodingName(jcoding.toString());
         this.tencoding = Objects.requireNonNull(tencoding);
         this.name = Objects.requireNonNull(name);
+        this.nameByteArray = name.tstring.copyToByteArrayUncached(TruffleString.Encoding.US_ASCII);
         this.index = index;
 
         this.isDummy = jcoding.isDummy();
@@ -81,6 +75,7 @@ public final class RubyEncoding extends ImmutableRubyObjectNotCopyable
         this.tencoding = Objects.requireNonNull(TruffleString.Encoding.US_ASCII);
         this.name = Objects.requireNonNull(
                 ImmutableStrings.createAndCacheLater(TStringConstants.US_ASCII, this));
+        this.nameByteArray = name.tstring.copyToByteArrayUncached(TruffleString.Encoding.US_ASCII);
         this.index = index;
 
         var jcoding = this.jcoding;
@@ -98,7 +93,11 @@ public final class RubyEncoding extends ImmutableRubyObjectNotCopyable
 
     @Override
     public String toString() {
-        return jcoding.toString();
+        return name.toString();
+    }
+
+    public byte[] getNameByteArray() {
+        return nameByteArray;
     }
 
     // region InteropLibrary messages

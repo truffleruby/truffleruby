@@ -27,7 +27,6 @@ import com.oracle.truffle.api.strings.TruffleString;
 import com.oracle.truffle.api.strings.TruffleString.AsTruffleStringNode;
 import com.oracle.truffle.api.strings.TruffleString.ErrorHandling;
 import org.graalvm.shadowed.org.jcodings.Config;
-import org.graalvm.shadowed.org.jcodings.Encoding;
 import org.graalvm.shadowed.org.jcodings.IntHolder;
 import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
@@ -1684,9 +1683,8 @@ public abstract class CExtNodes {
         @Specialization
         Object rbTrEncMbcPut(RubyEncoding enc, int code,
                 @Cached TruffleString.FromByteArrayNode fromByteArrayNode) {
-            final Encoding encoding = enc.jcoding;
             final byte[] buf = new byte[Config.ENC_CODE_TO_MBC_MAXLEN];
-            final int resultLength = encoding.codeToMbc(code, buf, 0);
+            final int resultLength = enc.jcoding.codeToMbc(code, buf, 0);
             final byte[] result = new byte[resultLength];
             if (resultLength > 0) {
                 System.arraycopy(buf, 0, result, 0, resultLength);

@@ -63,4 +63,20 @@ describe :string_chars, shared: true do
       [0xA2].pack('C').force_encoding('SJIS')
     ]
   end
+
+  it "returns individual bytes for dummy encodings UTF-16 and UTF-32" do
+    "abcd".dup.force_encoding(Encoding::UTF_16).send(@method).to_a.should == [
+      "\x61".dup.force_encoding(Encoding::UTF_16),
+      "\x62".dup.force_encoding(Encoding::UTF_16),
+      "\x63".dup.force_encoding(Encoding::UTF_16),
+      "\x64".dup.force_encoding(Encoding::UTF_16)
+    ]
+
+    "abcd".dup.force_encoding(Encoding::UTF_32).send(@method).to_a.should == [
+      "\x61".dup.force_encoding(Encoding::UTF_32),
+      "\x62".dup.force_encoding(Encoding::UTF_32),
+      "\x63".dup.force_encoding(Encoding::UTF_32),
+      "\x64".dup.force_encoding(Encoding::UTF_32)
+    ]
+  end
 end

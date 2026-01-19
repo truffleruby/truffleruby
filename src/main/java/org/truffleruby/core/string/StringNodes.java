@@ -1520,7 +1520,7 @@ public abstract class StringNodes {
             ByteArrayBuilder outputBytes = dumpCommon(new ATStringWithEncoding(this, libString, string));
 
             outputBytes.append(FORCE_ENCODING_CALL_BYTES);
-            outputBytes.append(libString.getEncoding(this, string).jcoding.getName());
+            outputBytes.append(libString.getEncoding(this, string).getNameByteArray());
             outputBytes.append((byte) '"');
             outputBytes.append((byte) ')');
 
@@ -1530,7 +1530,8 @@ public abstract class StringNodes {
         // Taken from org.jruby.RubyString#dump
         private ByteArrayBuilder dumpCommon(ATStringWithEncoding string) {
             ByteArrayBuilder buf = null;
-            final var enc = string.encoding.jcoding;
+            final var encoding = string.encoding;
+            final var enc = encoding.jcoding;
             final var cr = string.getCodeRange();
 
             var byteArray = string.getInternalByteArray();
@@ -1584,7 +1585,7 @@ public abstract class StringNodes {
             }
 
             if (!enc.isAsciiCompatible()) {
-                len += FORCE_ENCODING_CALL_BYTES.length + enc.getName().length + "\")".length();
+                len += FORCE_ENCODING_CALL_BYTES.length + encoding.getNameByteArray().length + "\")".length();
             }
 
             TStringBuilder outBytes = new TStringBuilder();

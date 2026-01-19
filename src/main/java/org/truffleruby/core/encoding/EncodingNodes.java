@@ -363,7 +363,7 @@ public abstract class EncodingNodes {
         @TruffleBoundary
         @Specialization
         RubyEncoding defineAlias(RubyEncoding encoding, RubySymbol aliasName) {
-            getContext().getEncodingManager().defineAlias(encoding.jcoding, aliasName.getString());
+            getContext().getEncodingManager().defineAlias(encoding, aliasName.getString());
             return encoding;
         }
     }
