@@ -59,16 +59,10 @@ class Symbol
   # Returns a pretty version of the symbol, fit for viewing
   #  :symbol.inspect #=> ":symbol"
   def inspect
-    str = to_s
-
-    case str
-    when /\A(\$|@@?)[\p{L}_][\p{L}_\d]*\z/i,                    # Variable names
-         /\A[\p{L}_][\p{L}_\d]*[=?!]?\z/i,                      # Method names
-         /\A\$(-[\p{L}_\d]|[+~:?<_\/'"$.,`!;\\=*>&@]|\d+)\z/i,  # Special global variables
-         /\A([|^&\/%~`!]|!=|!~|<<|>>|<=>|===?|=~|[<>]=?|[+-]@?|\*\*?|\[\]=?)\z/ # Operators
-      ":#{str}"
+    if Truffle::Type.rb_str_symname_p?(name)
+      ":#{name}"
     else
-      ":#{str.inspect}"
+      ":#{name.inspect}"
     end
   end
 
