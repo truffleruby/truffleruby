@@ -557,6 +557,10 @@ module Truffle
     end
 
     def self.rb_str_symname_p?(string)
+      if !string.ascii_only? && (Encoding.default_internal || Encoding.default_external) != string.encoding
+        return false
+      end
+
       case string
       when /\A(\$|@@?)[\p{L}_][\p{L}_\d]*\z/i,                   # Variable names
            /\A[\p{L}_][\p{L}_\d]*[=?!]?\z/i,                     # Method names

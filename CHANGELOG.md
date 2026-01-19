@@ -19,6 +19,7 @@ Compatibility:
 * Implement `Fiber.[]`, `Fiber.[]=`, and `Fiber#{storage,storage=}` (#4007, @nirvdrum).
 * Update `Range#size` semantics for Ruby 3.4 (#4099, @Earlopain).
 * Keyword splatting `nil` is now treated as `**{}` for Ruby 3.4 (#4100, @Earlopain).
+* Fix `Symbol#inspect` to handle incompatible encodings (#4106, @eregon).
 
 Performance:
 
