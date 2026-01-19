@@ -38,6 +38,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import static org.truffleruby.core.encoding.Encodings.INITIAL_NUMBER_OF_ENCODINGS;
+import static org.truffleruby.core.encoding.Encodings.getBuiltInEncoding;
 
 /** Always use {@link Encoding#getIndex()} for encoding indices. Never use
  * {@link org.jcodings.EncodingDB.Entry#getIndex()}. */
@@ -66,7 +67,7 @@ public final class EncodingManager {
     private void initializeEncodings(RubyClass encodingClass) {
         for (RubyEncoding encoding : Encodings.BUILT_IN_ENCODINGS) {
             defineBuiltInEncoding(encoding);
-            byte[] name = encoding.jcoding.getName();
+            byte[] name = encoding.getNameByteArray();
             for (String constName : EncodingUtils.encodingNames(name, 0, name.length)) {
                 encodingClass.fields.setConstant(context, null, constName, encoding);
             }
@@ -81,10 +82,11 @@ public final class EncodingManager {
 
             // The alias name should be exactly the one in the encodings DB.
             final Encoding encoding = encodingEntry.getEncoding();
-            final RubyEncoding rubyEncoding = defineAlias(encoding,
+            final RubyEncoding rubyEncoding = getBuiltInEncoding(encoding);
+            defineAlias(rubyEncoding,
                     new String(entry.bytes, entry.p, entry.end - entry.p, StandardCharsets.US_ASCII));
 
-            // The constant names must be treated by the the <code>encodingNames</code> helper.
+            // The constant names must be treated by the <code>encodingNames</code> helper.
             for (String constName : EncodingUtils.encodingNames(entry.bytes, entry.p, entry.end)) {
                 encodingClass.fields.setConstant(context, null, constName, rubyEncoding);
             }
@@ -220,10 +222,10 @@ public final class EncodingManager {
     }
 
     @TruffleBoundary
-    public synchronized RubyEncoding defineDynamicEncoding(Encoding encoding, String name) {
+    public synchronized RubyEncoding defineDummyEncoding(String name) {
         final int encodingIndex = ENCODING_LIST_BY_ENCODING_INDEX.length;
 
-        final RubyEncoding rubyEncoding = Encodings.newRubyEncoding(language, encoding, encodingIndex, name);
+        final RubyEncoding rubyEncoding = Encodings.newDummyEncoding(language, encodingIndex, name);
 
         ENCODING_LIST_BY_ENCODING_INDEX = Arrays.copyOf(ENCODING_LIST_BY_ENCODING_INDEX, encodingIndex + 1);
         ENCODING_LIST_BY_ENCODING_INDEX[encodingIndex] = rubyEncoding;
@@ -234,10 +236,8 @@ public final class EncodingManager {
     }
 
     @TruffleBoundary
-    public RubyEncoding defineAlias(Encoding encoding, String name) {
-        final RubyEncoding rubyEncoding = Encodings.getBuiltInEncoding(encoding);
-        addToLookup(name, rubyEncoding);
-        return rubyEncoding;
+    public void defineAlias(RubyEncoding encoding, String name) {
+        addToLookup(name, encoding);
     }
 
     @TruffleBoundary
@@ -251,7 +251,7 @@ public final class EncodingManager {
             return null;
         }
 
-        return defineDynamicEncoding(Encodings.DUMMY_ENCODING_BASE, name);
+        return defineDummyEncoding(name);
     }
 
     public RubyEncoding getLocaleEncoding() {

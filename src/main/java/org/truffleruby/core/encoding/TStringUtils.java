@@ -29,21 +29,6 @@ import static com.oracle.truffle.api.strings.TruffleString.CodeRange.ASCII;
 /** Helpers for {@link TruffleString} and general byte[]/java.lang.String/TruffleString conversion */
 public final class TStringUtils {
 
-    public static TruffleString.Encoding jcodingToTEncoding(Encoding jcoding) {
-        var jcodingName = jcoding.toString();
-        if (jcodingName.equals("UTF-16")) {
-            // We use UTF_16BE because JCodings resolves UTF-16 to UTF16BEEncoding(dummy=true)
-            // See org.jcodings.EncodingDB.dummy_unicode
-            return TruffleString.Encoding.UTF_16BE;
-        } else if (jcodingName.equals("UTF-32")) {
-            // We use UTF_32BE because JCodings resolves UTF-32 to UTF32BEEncoding(dummy=true)
-            // See org.jcodings.EncodingDB.dummy_unicode
-            return TruffleString.Encoding.UTF_32BE;
-        } else {
-            return TruffleString.Encoding.fromJCodingName(jcodingName);
-        }
-    }
-
     public static TruffleString fromByteArray(byte[] bytes, TruffleString.Encoding tencoding) {
         return fromByteArray(bytes, 0, bytes.length, tencoding);
     }

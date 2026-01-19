@@ -106,7 +106,6 @@ import org.truffleruby.core.cast.ToStrNode;
 import org.truffleruby.core.encoding.EncodingNodes.CheckStringEncodingNode;
 import org.truffleruby.core.encoding.EncodingNodes.NegotiateCompatibleStringEncodingNode;
 import org.truffleruby.core.encoding.IsCharacterHeadNode;
-import org.truffleruby.core.encoding.EncodingNodes.GetActualEncodingNode;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.encoding.TStringUtils;
@@ -1486,34 +1485,28 @@ public abstract class StringPrimitiveNodes {
 
         @Specialization(
                 guards = {
-                        "!indexOutOfBounds(originalTString.byteLength(originalEncoding.tencoding), byteIndex)",
-                        "!is7Bit(originalTString, originalEncoding, codeRangeNode)" },
+                        "!indexOutOfBounds(tstring.byteLength(encoding.tencoding), byteIndex)",
+                        "!is7Bit(tstring, encoding, codeRangeNode)" },
                 limit = "1")
         static Object stringChrAt(Object string, int byteIndex,
                 @Bind Node node,
                 @Cached @Exclusive RubyStringLibrary strings,
                 @Cached @Shared TruffleString.GetByteCodeRangeNode codeRangeNode,
-                @Cached GetActualEncodingNode getActualEncodingNode,
                 @Cached @Exclusive TruffleString.SubstringByteIndexNode substringByteIndexNode,
-                @Cached TruffleString.ForceEncodingNode forceEncodingNode,
                 @Cached TruffleString.ByteLengthOfCodePointNode byteLengthOfCodePointNode,
                 @Cached InlinedConditionProfile brokenProfile,
-                @Bind("strings.getTString(node, string)") AbstractTruffleString originalTString,
-                @Bind("strings.getEncoding(node, string)") RubyEncoding originalEncoding) {
-            final RubyEncoding actualEncoding = getActualEncodingNode.execute(node, originalTString, originalEncoding);
-            var tstring = forceEncodingNode.execute(originalTString, originalEncoding.tencoding,
-                    actualEncoding.tencoding);
-
-            final int clen = byteLengthOfCodePointNode.execute(tstring, byteIndex, actualEncoding.tencoding,
+                @Bind("strings.getTString(node, string)") AbstractTruffleString tstring,
+                @Bind("strings.getEncoding(node, string)") RubyEncoding encoding) {
+            final int clen = byteLengthOfCodePointNode.execute(tstring, byteIndex, encoding.tencoding,
                     ErrorHandling.RETURN_NEGATIVE);
 
             if (brokenProfile.profile(node, !StringSupport.MBCLEN_CHARFOUND_P(clen))) {
                 return nil;
             }
 
-            assert byteIndex + clen <= tstring.byteLength(actualEncoding.tencoding);
+            assert byteIndex + clen <= tstring.byteLength(encoding.tencoding);
 
-            return createSubString(node, substringByteIndexNode, tstring, actualEncoding, byteIndex, clen);
+            return createSubString(node, substringByteIndexNode, tstring, encoding, byteIndex, clen);
         }
 
         protected static boolean indexOutOfBounds(int byteLength, int byteIndex) {

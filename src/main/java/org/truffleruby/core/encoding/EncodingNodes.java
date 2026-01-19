@@ -363,7 +363,7 @@ public abstract class EncodingNodes {
         @TruffleBoundary
         @Specialization
         RubyEncoding defineAlias(RubyEncoding encoding, RubySymbol aliasName) {
-            getContext().getEncodingManager().defineAlias(encoding.jcoding, aliasName.getString());
+            getContext().getEncodingManager().defineAlias(encoding, aliasName.getString());
             return encoding;
         }
     }
@@ -373,70 +373,6 @@ public abstract class EncodingNodes {
         @Specialization
         boolean isUnicode(RubyEncoding encoding) {
             return encoding.isUnicode;
-        }
-    }
-
-    @Primitive(name = "get_actual_encoding")
-    public abstract static class GetActualEncodingPrimitiveNode extends PrimitiveArrayArgumentsNode {
-
-        @Specialization
-        static RubyEncoding getActualEncoding(Object string,
-                @Cached GetActualEncodingNode getActualEncodingNode,
-                @Cached RubyStringLibrary libString,
-                @Bind Node node) {
-            return getActualEncodingNode.execute(node, libString.getTString(node, string),
-                    libString.getEncoding(node, string));
-        }
-
-    }
-
-    // MRI: get_actual_encoding
-    @GenerateInline
-    @GenerateCached(false)
-    public abstract static class GetActualEncodingNode extends RubyBaseNode {
-
-        public abstract RubyEncoding execute(Node node, AbstractTruffleString tstring, RubyEncoding encoding);
-
-        @Specialization(guards = "!encoding.isDummy")
-        static RubyEncoding getActualEncoding(AbstractTruffleString tstring, RubyEncoding encoding) {
-            return encoding;
-        }
-
-        @TruffleBoundary
-        @Specialization(guards = "encoding.isDummy")
-        static RubyEncoding getActualEncodingDummy(AbstractTruffleString tstring, RubyEncoding encoding,
-                @Cached(inline = false) TruffleString.ReadByteNode readByteNode) {
-            if (encoding.isUnicode) {
-                var enc = encoding.tencoding;
-                var byteLength = tstring.byteLength(enc);
-
-                // handle dummy UTF-16 and UTF-32 by scanning for BOM, as in MRI
-                if (encoding == Encodings.UTF16_DUMMY && byteLength >= 2) {
-                    int c0 = readByteNode.execute(tstring, 0, enc);
-                    int c1 = readByteNode.execute(tstring, 1, enc);
-
-                    if (c0 == 0xFE && c1 == 0xFF) {
-                        return Encodings.UTF16BE;
-                    } else if (c0 == 0xFF && c1 == 0xFE) {
-                        return Encodings.UTF16LE;
-                    }
-                    return Encodings.BINARY;
-                } else if (encoding == Encodings.UTF32_DUMMY && byteLength >= 4) {
-                    int c0 = readByteNode.execute(tstring, 0, enc);
-                    int c1 = readByteNode.execute(tstring, 1, enc);
-                    int c2 = readByteNode.execute(tstring, 2, enc);
-                    int c3 = readByteNode.execute(tstring, 3, enc);
-
-                    if (c0 == 0 && c1 == 0 && c2 == 0xFE && c3 == 0xFF) {
-                        return Encodings.UTF32BE;
-                    } else if (c3 == 0 && c2 == 0 && c1 == 0xFE && c0 == 0xFF) {
-                        return Encodings.UTF32LE;
-                    }
-                    return Encodings.BINARY;
-                }
-            }
-
-            return encoding;
         }
     }
 
