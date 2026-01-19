@@ -844,6 +844,11 @@ class String
     maybe_chomp = ->(str) { chomp ? str.chomp(sep) : str }
 
     sep = StringValue(sep)
+    if Primitive.equal?(sep, $/) && !self.encoding.ascii_compatible?
+      sep = sep.encode(self.encoding)
+    else
+      Primitive.encoding_ensure_compatible_str(self, sep)
+    end
 
     pos = 0
 
@@ -884,7 +889,6 @@ class String
       fin = byteslice pos, bytesize - pos
       yield Primitive.dup_as_string_instance(maybe_chomp.call(fin)) if fin and !fin.empty?
     else
-
       # This is the normal case.
       pat_size = sep.bytesize
       unmodified_self = Primitive.dup_as_string_instance(self)
