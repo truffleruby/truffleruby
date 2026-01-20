@@ -1128,18 +1128,27 @@ module Commands
     name = File.basename(cext_dir)
     ext_dir = "#{cext_dir}/ext/#{name}"
     target = "#{cext_dir}/lib/#{name}/#{name}.#{DLEXT}"
-    compile_cext(name, ext_dir, target)
+    compile_cext(name, ext_dir, target, skip_rebuild: false)
   end
 
-  private def compile_cext(name, ext_dir, target, env: {})
+  private def compile_cext(name, ext_dir, target, env: {}, skip_rebuild: true)
     extconf = "#{ext_dir}/extconf.rb"
     raise "#{extconf} does not exist" unless File.exist?(extconf)
 
     chdir(ext_dir) do
+      ext_file = "#{name}.#{DLEXT}"
+
+      if File.exist?(ext_file)
+        max_mtime_sources = (Dir.glob('*.{c,h.rb}') - [ext_file]).map { |file| File.mtime(file) }.max
+        if File.mtime(ext_file) > max_mtime_sources
+          STDERR.puts "#{ext_file} already up-to-date"
+          return
+        end
+      end
+
       run_ruby(env, '-rmkmf', "#{ext_dir}/extconf.rb") # -rmkmf is required for C ext tests
       if File.exist?('Makefile')
         sh('make')
-        ext_file = "#{name}.#{DLEXT}"
         if File.exist?(ext_file)
           FileUtils::Verbose.cp(ext_file, target) if target
         else
@@ -1344,7 +1353,7 @@ module Commands
                         "#{MRI_TEST_CEXT_DIR}/#{cext_name.gsub('_', '-')}"
                       end
         # Remove depend files copied from MRI as they hardcode header locations
-        FileUtils::Verbose.rm_f("#{compile_dir}/depend")
+        FileUtils::Verbose.rm_f("#{compile_dir}/depend") if File.exist?("#{compile_dir}/depend")
 
         name = File.basename(match[1])
         target_dir = if match[1].include?('/')
