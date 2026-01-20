@@ -12,6 +12,7 @@ Compatibility:
 * Fix `mkmf.rb` to use host's `RbConfig` for `$ruby` when `--target-rbconfig` is used (#4097, @panozzaj).
 * Implement `Fiber.[]`, `Fiber.[]=`, and `Fiber#{storage,storage=}` (#4007, @nirvdrum).
 * Fix `Symbol#inspect` to handle incompatible encodings (#4106, @eregon).
+* The dummy `Encoding::UTF_16` and `Encoding::UTF_32` encodings are now regular single-byte dummy encodings (#4083, @eregon).
 
 Performance:
 
