@@ -10,7 +10,7 @@
 
 #include "ruby.h"
 #include "rubyspec.h"
-#include <truffleruby/internal/id.h>
+#include "internal_id.h"
 
 #ifdef __cplusplus
 extern "C" {

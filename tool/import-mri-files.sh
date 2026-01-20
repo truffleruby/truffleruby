@@ -131,6 +131,8 @@ internal_headers=({bits,compilers,st,static_assert}.h)
 rm -f "${internal_headers[@]/#/lib/cext/include/internal/}"
 cp -R "${internal_headers[@]/#/"$RUBY_SOURCE_DIR/internal/"}" lib/cext/include/internal
 
+cp "$RUBY_BUILD_DIR"/id.h spec/truffle/capi/ext/internal_id.h
+
 rm -f lib/cext/include/ruby_assert.h && cp "$RUBY_SOURCE_DIR/ruby_assert.h" lib/cext/include/ruby_assert.h
 
 # defs/
