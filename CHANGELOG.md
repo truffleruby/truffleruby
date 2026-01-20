@@ -21,6 +21,7 @@ Compatibility:
 * Keyword splatting `nil` is now treated as `**{}` for Ruby 3.4 (#4100, @Earlopain).
 * Fix `Symbol#inspect` to handle incompatible encodings (#4106, @eregon).
 * `Rational#**` no longer returns a Float, it will raise an ArgumentError if the result is too big (#4105, @herwinw).
+* The dummy `Encoding::UTF_16` and `Encoding::UTF_32` encodings are now regular single-byte dummy encodings (#4083, @eregon).
 
 Performance:
 
