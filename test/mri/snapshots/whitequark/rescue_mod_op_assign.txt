@@ -22,6 +22,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── keyword_loc: (1,12)-(1,18) = "rescue"
             │   └── rescue_expression:
@@ -34,6 +35,7 @@
             │       ├── opening_loc: ∅
             │       ├── arguments: ∅
             │       ├── closing_loc: ∅
+            │       ├── equal_loc: ∅
             │       └── block: ∅
             ├── name: :foo
             ├── binary_operator: :+

@@ -48,6 +48,8 @@ pm_token_type_name(pm_token_type_t token_type) {
             return "NEWLINE";
         case PM_TOKEN_PARENTHESIS_RIGHT:
             return "PARENTHESIS_RIGHT";
+        case PM_TOKEN_PIPE:
+            return "PIPE";
         case PM_TOKEN_SEMICOLON:
             return "SEMICOLON";
         case PM_TOKEN_AMPERSAND:
@@ -280,8 +282,6 @@ pm_token_type_name(pm_token_type_t token_type) {
             return "PERCENT_UPPER_I";
         case PM_TOKEN_PERCENT_UPPER_W:
             return "PERCENT_UPPER_W";
-        case PM_TOKEN_PIPE:
-            return "PIPE";
         case PM_TOKEN_PIPE_EQUAL:
             return "PIPE_EQUAL";
         case PM_TOKEN_PIPE_PIPE:

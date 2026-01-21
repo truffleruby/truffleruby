@@ -143,6 +143,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── opening_loc: (10,4)-(10,5) = "("
         │   │   └── closing_loc: (10,6)-(10,7) = ")"
@@ -172,6 +173,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── opening_loc: (13,4)-(13,5) = "("
         │   │   └── closing_loc: (13,6)-(13,7) = ")"
@@ -256,6 +258,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── parameters: ∅
         │   ├── body: ∅
@@ -1049,6 +1052,7 @@
         │   │           │           ├── operator_loc: (110,12)-(110,13) = "*"
         │   │           │           └── expression: ∅
         │   │           ├── closing_loc: (110,13)-(110,14) = ")"
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (110,0)-(110,3) = "def"
@@ -1095,6 +1099,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block:
         │   │               @ BlockNode (location: (112,16)-(112,28))
         │   │               ├── flags: ∅
@@ -1127,6 +1132,7 @@
         │   │               │           │                   ├── value: ∅
         │   │               │           │                   └── operator_loc: (112,23)-(112,25) = "**"
         │   │               │           ├── closing_loc: (112,25)-(112,26) = ")"
+        │   │               │           ├── equal_loc: ∅
         │   │               │           └── block: ∅
         │   │               ├── opening_loc: (112,16)-(112,17) = "{"
         │   │               └── closing_loc: (112,27)-(112,28) = "}"
@@ -1172,6 +1178,7 @@
         │   │           │       └── @ ForwardingArgumentsNode (location: (114,14)-(114,17))
         │   │           │           └── flags: ∅
         │   │           ├── closing_loc: (114,17)-(114,18) = ")"
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (114,0)-(114,3) = "def"
@@ -1221,6 +1228,7 @@
         │   │           │       └── @ ForwardingArgumentsNode (location: (116,20)-(116,23))
         │   │           │           └── flags: ∅
         │   │           ├── closing_loc: (116,23)-(116,24) = ")"
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (116,0)-(116,3) = "def"
@@ -1252,6 +1260,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   └── operator_loc: (118,7)-(118,8) = "="
         │   │   ├── opening_loc: (118,4)-(118,5) = "("
@@ -1361,6 +1370,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   └── operator_loc: (130,7)-(130,8) = "="
         │   │   ├── opening_loc: (130,4)-(130,5) = "("
@@ -1468,6 +1478,7 @@
         │   │           │       │           │       └── @ ForwardingArgumentsNode (location: (138,20)-(138,23))
         │   │           │       │           │           └── flags: ∅
         │   │           │       │           ├── closing_loc: (138,23)-(138,24) = ")"
+        │   │           │       │           ├── equal_loc: ∅
         │   │           │       │           └── block: ∅
         │   │           │       └── closing_loc: (138,24)-(138,25) = "}"
         │   │           └── closing_loc: (138,25)-(138,26) = "\""
@@ -1519,6 +1530,7 @@
         │   │           │               │   │   ├── opening_loc: ∅
         │   │           │               │   │   ├── arguments: ∅
         │   │           │               │   │   ├── closing_loc: ∅
+        │   │           │               │   │   ├── equal_loc: ∅
         │   │           │               │   │   └── block: ∅
         │   │           │               │   └── operator_loc: (141,11)-(141,13) = "**"
         │   │           │               ├── @ AssocSplatNode (location: (141,18)-(141,23))
@@ -1533,6 +1545,7 @@
         │   │           │               │   │   ├── opening_loc: ∅
         │   │           │               │   │   ├── arguments: ∅
         │   │           │               │   │   ├── closing_loc: ∅
+        │   │           │               │   │   ├── equal_loc: ∅
         │   │           │               │   │   └── block: ∅
         │   │           │               │   └── operator_loc: (141,18)-(141,20) = "**"
         │   │           │               └── @ AssocSplatNode (location: (141,25)-(141,30))
@@ -1547,9 +1560,11 @@
         │   │           │                   │   ├── opening_loc: ∅
         │   │           │                   │   ├── arguments: ∅
         │   │           │                   │   ├── closing_loc: ∅
+        │   │           │                   │   ├── equal_loc: ∅
         │   │           │                   │   └── block: ∅
         │   │           │                   └── operator_loc: (141,25)-(141,27) = "**"
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (140,0)-(140,3) = "def"
@@ -1865,6 +1880,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── call_operator_loc: ∅
         │   │           ├── name: :>>
@@ -1883,6 +1899,7 @@
         │   │           │           ├── opening_loc: ∅
         │   │           │           ├── arguments: ∅
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block:
         │   │           │               @ BlockNode (location: (163,12)-(163,14))
         │   │           │               ├── flags: ∅
@@ -1892,6 +1909,7 @@
         │   │           │               ├── opening_loc: (163,12)-(163,13) = "{"
         │   │           │               └── closing_loc: (163,13)-(163,14) = "}"
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: [:a]
         │   ├── def_keyword_loc: (162,0)-(162,3) = "def"
@@ -1998,6 +2016,7 @@
         │   │   │           │   ├── opening_loc: ∅
         │   │   │           │   ├── arguments: ∅
         │   │   │           │   ├── closing_loc: ∅
+        │   │   │           │   ├── equal_loc: ∅
         │   │   │           │   └── block: ∅
         │   │   │           ├── call_operator_loc: ∅
         │   │   │           ├── name: :-@
@@ -2005,6 +2024,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   ├── keyword_rest: ∅
         │   │   └── block: ∅
@@ -2046,6 +2066,7 @@
         │   │   │           │   ├── opening_loc: ∅
         │   │   │           │   ├── arguments: ∅
         │   │   │           │   ├── closing_loc: ∅
+        │   │   │           │   ├── equal_loc: ∅
         │   │   │           │   └── block: ∅
         │   │   │           ├── call_operator_loc: ∅
         │   │   │           ├── name: :+@
@@ -2053,6 +2074,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   ├── keyword_rest: ∅
         │   │   └── block: ∅
@@ -2094,6 +2116,7 @@
         │   │   │           │   ├── opening_loc: ∅
         │   │   │           │   ├── arguments: ∅
         │   │   │           │   ├── closing_loc: ∅
+        │   │   │           │   ├── equal_loc: ∅
         │   │   │           │   └── block: ∅
         │   │   │           ├── call_operator_loc: ∅
         │   │   │           ├── name: :!
@@ -2101,6 +2124,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   ├── keyword_rest: ∅
         │   │   └── block: ∅
@@ -2181,6 +2205,7 @@
         │   │           │       └── @ ForwardingArgumentsNode (location: (180,6)-(180,9))
         │   │           │           └── flags: ∅
         │   │           ├── closing_loc: (180,9)-(180,10) = ")"
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (179,0)-(179,3) = "def"

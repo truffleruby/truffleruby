@@ -5,12 +5,10 @@
 #include <internal/bits.h>
 #include <ruby/encoding.h>
 
-#define STR_EMBED_P(str) (false)
-#define STR_SHARED_P(str) (false)
-
+// Old String interning API (now: rb_str_to_interned_str()) used by some gems
 VALUE rb_fstring(VALUE);
-VALUE rb_fstring_cstr(const char *str);
 
+// Useful to implement some public C API functions
 static inline const char* search_nonascii(const char *p, const char *e) {
   const uintptr_t *s, *t;
 
@@ -86,17 +84,6 @@ static inline const char* search_nonascii(const char *p, const char *e) {
     case 1: if (e[-1]&0x80) return e-1;
     case 0: return NULL;
   }
-}
-
-static inline bool
-is_ascii_string(VALUE str)
-{
-    return rb_enc_str_coderange(str) == ENC_CODERANGE_7BIT;
-}
-
-// For Ripper
-static inline VALUE rb_enc_literal_str(const char *ptr, long len, rb_encoding *enc) {
-    return rb_enc_interned_str(ptr, len, enc);
 }
 
 #endif /* INTERNAL_STRING_H */

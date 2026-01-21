@@ -25,7 +25,4 @@
 
 #define RBOOL(v) ((v) ? Qtrue : Qfalse)
 
-// For Ripper
-#define UNDEF_P RB_UNDEF_P
-
 #endif /* RUBY_INTERNAL_H */

@@ -17,6 +17,7 @@
             ├── opening_loc: ∅
             ├── arguments: ∅
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (1,9)-(1,19))
                 ├── flags: ∅

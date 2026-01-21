@@ -12,7 +12,7 @@
         │   ├── closing_loc: (13,0)-(14,0) = "RUBY\n"
         │   └── unescaped: "  \n\n  \n\n  exit\n  \\n\n  \n\n\n\n\n  argh\n  \\\n  \\  foo\nbar\n  \f\n  ok\n"
         ├── @ InterpolatedStringNode (location: (15,0)-(15,7))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: (15,0)-(15,7) = "<<~RUBY"
         │   ├── parts: (length: 11)
         │   │   ├── @ StringNode (location: (16,0)-(17,0))

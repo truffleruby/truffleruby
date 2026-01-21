@@ -1,0 +1,71 @@
+@ ProgramNode (location: (3,0)-(5,23))
+├── flags: ∅
+├── locals: []
+└── statements:
+    @ StatementsNode (location: (3,0)-(5,23))
+    ├── flags: ∅
+    └── body: (length: 2)
+        ├── @ InterpolatedStringNode (location: (3,0)-(3,11))
+        │   ├── flags: newline, static_literal, frozen
+        │   ├── opening_loc: ∅
+        │   ├── parts: (length: 2)
+        │   │   ├── @ StringNode (location: (3,0)-(3,5))
+        │   │   │   ├── flags: static_literal, frozen
+        │   │   │   ├── opening_loc: (3,0)-(3,1) = "'"
+        │   │   │   ├── content_loc: (3,1)-(3,4) = "foo"
+        │   │   │   ├── closing_loc: (3,4)-(3,5) = "'"
+        │   │   │   └── unescaped: "foo"
+        │   │   └── @ StringNode (location: (3,6)-(3,11))
+        │   │       ├── flags: static_literal, frozen
+        │   │       ├── opening_loc: (3,6)-(3,7) = "'"
+        │   │       ├── content_loc: (3,7)-(3,10) = "bar"
+        │   │       ├── closing_loc: (3,10)-(3,11) = "'"
+        │   │       └── unescaped: "bar"
+        │   └── closing_loc: ∅
+        └── @ InterpolatedStringNode (location: (5,0)-(5,23))
+            ├── flags: newline
+            ├── opening_loc: ∅
+            ├── parts: (length: 3)
+            │   ├── @ StringNode (location: (5,0)-(5,5))
+            │   │   ├── flags: static_literal, frozen
+            │   │   ├── opening_loc: (5,0)-(5,1) = "'"
+            │   │   ├── content_loc: (5,1)-(5,4) = "foo"
+            │   │   ├── closing_loc: (5,4)-(5,5) = "'"
+            │   │   └── unescaped: "foo"
+            │   ├── @ StringNode (location: (5,6)-(5,11))
+            │   │   ├── flags: static_literal, frozen
+            │   │   ├── opening_loc: (5,6)-(5,7) = "'"
+            │   │   ├── content_loc: (5,7)-(5,10) = "bar"
+            │   │   ├── closing_loc: (5,10)-(5,11) = "'"
+            │   │   └── unescaped: "bar"
+            │   └── @ InterpolatedStringNode (location: (5,12)-(5,23))
+            │       ├── flags: ∅
+            │       ├── opening_loc: (5,12)-(5,13) = "\""
+            │       ├── parts: (length: 2)
+            │       │   ├── @ StringNode (location: (5,13)-(5,16))
+            │       │   │   ├── flags: static_literal, frozen
+            │       │   │   ├── opening_loc: ∅
+            │       │   │   ├── content_loc: (5,13)-(5,16) = "baz"
+            │       │   │   ├── closing_loc: ∅
+            │       │   │   └── unescaped: "baz"
+            │       │   └── @ EmbeddedStatementsNode (location: (5,16)-(5,22))
+            │       │       ├── flags: ∅
+            │       │       ├── opening_loc: (5,16)-(5,18) = "\#{"
+            │       │       ├── statements:
+            │       │       │   @ StatementsNode (location: (5,18)-(5,21))
+            │       │       │   ├── flags: ∅
+            │       │       │   └── body: (length: 1)
+            │       │       │       └── @ CallNode (location: (5,18)-(5,21))
+            │       │       │           ├── flags: variable_call, ignore_visibility
+            │       │       │           ├── receiver: ∅
+            │       │       │           ├── call_operator_loc: ∅
+            │       │       │           ├── name: :bat
+            │       │       │           ├── message_loc: (5,18)-(5,21) = "bat"
+            │       │       │           ├── opening_loc: ∅
+            │       │       │           ├── arguments: ∅
+            │       │       │           ├── closing_loc: ∅
+            │       │       │           ├── equal_loc: ∅
+            │       │       │           └── block: ∅
+            │       │       └── closing_loc: (5,21)-(5,22) = "}"
+            │       └── closing_loc: (5,22)-(5,23) = "\""
+            └── closing_loc: ∅

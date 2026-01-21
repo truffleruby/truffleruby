@@ -73,6 +73,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (8,4)-(8,25))
         │       ├── flags: ∅
@@ -110,6 +111,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (10,4)-(10,24))
         │       ├── flags: ∅
@@ -168,6 +170,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── then_keyword_loc: ∅
             ├── statements:
@@ -198,6 +201,7 @@
             │           │           ├── closing_loc: ∅
             │           │           └── unescaped: "b"
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── else_clause: ∅
             └── end_keyword_loc: ∅

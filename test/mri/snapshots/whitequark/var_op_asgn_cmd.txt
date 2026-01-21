@@ -26,6 +26,7 @@
             │   │           ├── name: :foo
             │   │           └── depth: 0
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── name: :foo
             ├── binary_operator: :+

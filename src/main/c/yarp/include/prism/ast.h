@@ -76,6 +76,9 @@ typedef enum pm_token_type {
     /** ) */
     PM_TOKEN_PARENTHESIS_RIGHT,
 
+    /** | */
+    PM_TOKEN_PIPE,
+
     /** ; */
     PM_TOKEN_SEMICOLON,
 
@@ -423,9 +426,6 @@ typedef enum pm_token_type {
 
     /** %W */
     PM_TOKEN_PERCENT_UPPER_W,
-
-    /** | */
-    PM_TOKEN_PIPE,
 
     /** |= */
     PM_TOKEN_PIPE_EQUAL,
@@ -1051,22 +1051,6 @@ static const pm_node_flags_t PM_NODE_FLAG_NEWLINE = 0x1;
 static const pm_node_flags_t PM_NODE_FLAG_STATIC_LITERAL = 0x2;
 
 /**
- * Cast the type to an enum to allow the compiler to provide exhaustiveness
- * checking.
- */
-#define PM_NODE_TYPE(node) ((enum pm_node_type) (node)->type)
-
-/**
- * Return true if the type of the given node matches the given type.
- */
-#define PM_NODE_TYPE_P(node, type) (PM_NODE_TYPE(node) == (type))
-
-/**
- * Return true if the given flag is set on the given node.
- */
-#define PM_NODE_FLAG_P(node, flag) ((((pm_node_t *)(node))->flags & (flag)) != 0)
-
-/**
  * This is the base structure that represents a node in the syntax tree. It is
  * embedded into every node type.
  */
@@ -1095,6 +1079,32 @@ typedef struct pm_node {
      */
     pm_location_t location;
 } pm_node_t;
+
+/**
+ * Cast the given node to the base pm_node_t type.
+ */
+#define PM_NODE_UPCAST(node_) ((pm_node_t *) (node_))
+
+/**
+ * Cast the type to an enum to allow the compiler to provide exhaustiveness
+ * checking.
+ */
+#define PM_NODE_TYPE(node_) ((enum pm_node_type) (node_)->type)
+
+/**
+ * Return true if the type of the given node matches the given type.
+ */
+#define PM_NODE_TYPE_P(node_, type_) (PM_NODE_TYPE(node_) == (type_))
+
+/**
+ * Return the flags associated with the given node.
+ */
+#define PM_NODE_FLAGS(node_) (PM_NODE_UPCAST(node_)->flags)
+
+/**
+ * Return true if the given flag is set on the given node.
+ */
+#define PM_NODE_FLAG_P(node_, flag_) ((PM_NODE_FLAGS(node_) & (flag_)) != 0)
 
 /**
  * AliasGlobalVariableNode
@@ -1816,20 +1826,20 @@ typedef struct pm_block_node {
     /**
      * BlockNode#opening_loc
      *
-     * Represents the location of the opening `|`.
+     * Represents the location of the opening `{` or `do`.
      *
      *     [1, 2, 3].each { |i| puts x }
-     *                      ^
+     *                    ^
      */
     pm_location_t opening_loc;
 
     /**
      * BlockNode#closing_loc
      *
-     * Represents the location of the closing `|`.
+     * Represents the location of the closing `}` or `end`.
      *
      *     [1, 2, 3].each { |i| puts x }
-     *                        ^
+     *                                 ^
      */
     pm_location_t closing_loc;
 } pm_block_node_t;
@@ -2213,6 +2223,19 @@ typedef struct pm_call_node {
      *            ^
      */
     pm_location_t closing_loc;
+
+    /**
+     * CallNode#equal_loc
+     *
+     * Represents the location of the equal sign, in the case that this is an attribute write.
+     *
+     *     foo.bar = value
+     *             ^
+     *
+     *     foo[bar] = value
+     *              ^
+     */
+    pm_location_t equal_loc;
 
     /**
      * CallNode#block
@@ -2638,7 +2661,7 @@ typedef struct pm_case_node {
      * Represents the predicate of the case statement. This can be either `nil` or any [non-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
      *
      *     case true; when false; end
-     *     ^^^^
+     *          ^^^^
      */
     struct pm_node *predicate;
 
@@ -4084,10 +4107,15 @@ typedef struct pm_forwarding_parameter_node {
 /**
  * ForwardingSuperNode
  *
- * Represents the use of the `super` keyword without parentheses or arguments.
+ * Represents the use of the `super` keyword without parentheses or arguments, but which might have a block.
  *
  *     super
  *     ^^^^^
+ *
+ *     super { 123 }
+ *     ^^^^^^^^^^^^^
+ *
+ * If it has any other arguments, it would be a `SuperNode` instead.
  *
  * Type: ::PM_FORWARDING_SUPER_NODE
  *
@@ -4100,6 +4128,8 @@ typedef struct pm_forwarding_super_node {
 
     /**
      * ForwardingSuperNode#block
+     *
+     * All other arguments are forwarded as normal, except the original block is replaced with the new block.
      */
     struct pm_block_node *block;
 } pm_forwarding_super_node_t;
@@ -7539,6 +7569,8 @@ typedef struct pm_string_node {
  *     super foo, bar
  *     ^^^^^^^^^^^^^^
  *
+ * If no arguments are provided (except for a block), it would be a `ForwardingSuperNode` instead.
+ *
  * Type: ::PM_SUPER_NODE
  *
  * @extends pm_node_t
@@ -7560,6 +7592,8 @@ typedef struct pm_super_node {
 
     /**
      * SuperNode#arguments
+     *
+     * Can be only `nil` when there are empty parentheses, like `super()`.
      */
     struct pm_arguments_node *arguments;
 
@@ -7990,6 +8024,8 @@ typedef enum pm_arguments_node_flags {
 
     /** if the arguments contain multiple splats */
     PM_ARGUMENTS_NODE_FLAGS_CONTAINS_MULTIPLE_SPLATS = 64,
+
+    PM_ARGUMENTS_NODE_FLAGS_LAST,
 } pm_arguments_node_flags_t;
 
 /**
@@ -7998,6 +8034,8 @@ typedef enum pm_arguments_node_flags {
 typedef enum pm_array_node_flags {
     /** if array contains splat nodes */
     PM_ARRAY_NODE_FLAGS_CONTAINS_SPLAT = 4,
+
+    PM_ARRAY_NODE_FLAGS_LAST,
 } pm_array_node_flags_t;
 
 /**
@@ -8015,6 +8053,8 @@ typedef enum pm_call_node_flags {
 
     /** a call that ignores method visibility */
     PM_CALL_NODE_FLAGS_IGNORE_VISIBILITY = 32,
+
+    PM_CALL_NODE_FLAGS_LAST,
 } pm_call_node_flags_t;
 
 /**
@@ -8026,6 +8066,8 @@ typedef enum pm_encoding_flags {
 
     /** internal bytes forced the encoding to binary */
     PM_ENCODING_FLAGS_FORCED_BINARY_ENCODING = 8,
+
+    PM_ENCODING_FLAGS_LAST,
 } pm_encoding_flags_t;
 
 /**
@@ -8043,6 +8085,8 @@ typedef enum pm_integer_base_flags {
 
     /** 0x prefix */
     PM_INTEGER_BASE_FLAGS_HEXADECIMAL = 32,
+
+    PM_INTEGER_BASE_FLAGS_LAST,
 } pm_integer_base_flags_t;
 
 /**
@@ -8054,6 +8098,8 @@ typedef enum pm_interpolated_string_node_flags {
 
     /** mutable by virtue of a `frozen_string_literal: false` comment or `--disable-frozen-string-literal`; only for adjacent string literals like `'a' 'b'` */
     PM_INTERPOLATED_STRING_NODE_FLAGS_MUTABLE = 8,
+
+    PM_INTERPOLATED_STRING_NODE_FLAGS_LAST,
 } pm_interpolated_string_node_flags_t;
 
 /**
@@ -8062,6 +8108,8 @@ typedef enum pm_interpolated_string_node_flags {
 typedef enum pm_keyword_hash_node_flags {
     /** a keyword hash which only has `AssocNode` elements all with symbol keys, which means the elements can be treated as keyword arguments */
     PM_KEYWORD_HASH_NODE_FLAGS_SYMBOL_KEYS = 4,
+
+    PM_KEYWORD_HASH_NODE_FLAGS_LAST,
 } pm_keyword_hash_node_flags_t;
 
 /**
@@ -8070,6 +8118,8 @@ typedef enum pm_keyword_hash_node_flags {
 typedef enum pm_loop_flags {
     /** a loop after a begin statement, so the body is executed first before the condition */
     PM_LOOP_FLAGS_BEGIN_MODIFIER = 4,
+
+    PM_LOOP_FLAGS_LAST,
 } pm_loop_flags_t;
 
 /**
@@ -8078,6 +8128,8 @@ typedef enum pm_loop_flags {
 typedef enum pm_parameter_flags {
     /** a parameter name that has been repeated in the method signature */
     PM_PARAMETER_FLAGS_REPEATED_PARAMETER = 4,
+
+    PM_PARAMETER_FLAGS_LAST,
 } pm_parameter_flags_t;
 
 /**
@@ -8086,6 +8138,8 @@ typedef enum pm_parameter_flags {
 typedef enum pm_parentheses_node_flags {
     /** parentheses that contain multiple potentially void statements */
     PM_PARENTHESES_NODE_FLAGS_MULTIPLE_STATEMENTS = 4,
+
+    PM_PARENTHESES_NODE_FLAGS_LAST,
 } pm_parentheses_node_flags_t;
 
 /**
@@ -8094,6 +8148,8 @@ typedef enum pm_parentheses_node_flags {
 typedef enum pm_range_flags {
     /** ... operator */
     PM_RANGE_FLAGS_EXCLUDE_END = 4,
+
+    PM_RANGE_FLAGS_LAST,
 } pm_range_flags_t;
 
 /**
@@ -8132,6 +8188,8 @@ typedef enum pm_regular_expression_flags {
 
     /** internal bytes forced the encoding to US-ASCII */
     PM_REGULAR_EXPRESSION_FLAGS_FORCED_US_ASCII_ENCODING = 4096,
+
+    PM_REGULAR_EXPRESSION_FLAGS_LAST,
 } pm_regular_expression_flags_t;
 
 /**
@@ -8146,6 +8204,8 @@ typedef enum pm_shareable_constant_node_flags {
 
     /** constant writes that should be modified with shareable constant value experimental copy */
     PM_SHAREABLE_CONSTANT_NODE_FLAGS_EXPERIMENTAL_COPY = 16,
+
+    PM_SHAREABLE_CONSTANT_NODE_FLAGS_LAST,
 } pm_shareable_constant_node_flags_t;
 
 /**
@@ -8163,6 +8223,8 @@ typedef enum pm_string_flags {
 
     /** mutable by virtue of a `frozen_string_literal: false` comment or `--disable-frozen-string-literal` */
     PM_STRING_FLAGS_MUTABLE = 32,
+
+    PM_STRING_FLAGS_LAST,
 } pm_string_flags_t;
 
 /**
@@ -8177,6 +8239,8 @@ typedef enum pm_symbol_flags {
 
     /** internal bytes forced the encoding to US-ASCII */
     PM_SYMBOL_FLAGS_FORCED_US_ASCII_ENCODING = 16,
+
+    PM_SYMBOL_FLAGS_LAST,
 } pm_symbol_flags_t;
 
 /**

@@ -33,6 +33,7 @@
         │   │           │           │   ├── opening_loc: ∅
         │   │           │           │   ├── arguments: ∅
         │   │           │           │   ├── closing_loc: ∅
+        │   │           │           │   ├── equal_loc: ∅
         │   │           │           │   └── block: ∅
         │   │           │           ├── call_operator_loc: ∅
         │   │           │           ├── name: :-
@@ -51,8 +52,10 @@
         │   │           │           │           ├── opening_loc: ∅
         │   │           │           │           ├── arguments: ∅
         │   │           │           │           ├── closing_loc: ∅
+        │   │           │           │           ├── equal_loc: ∅
         │   │           │           │           └── block: ∅
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block: ∅
         │   │           ├── opening_loc: (2,2)-(2,3) = "("
         │   │           └── closing_loc: (2,8)-(2,9) = ")"
@@ -85,6 +88,7 @@
             │           │   ├── opening_loc: ∅
             │           │   ├── arguments: ∅
             │           │   ├── closing_loc: ∅
+            │           │   ├── equal_loc: ∅
             │           │   └── block: ∅
             │           ├── keyword_loc: (6,4)-(6,10) = "rescue"
             │           └── rescue_expression:

@@ -123,6 +123,7 @@
         │               ├── opening_loc: ∅
         │               ├── arguments: ∅
         │               ├── closing_loc: ∅
+        │               ├── equal_loc: ∅
         │               └── block: ∅
         ├── @ LambdaNode (location: (15,0)-(15,15))
         │   ├── flags: newline
@@ -144,6 +145,7 @@
         │               ├── opening_loc: ∅
         │               ├── arguments: ∅
         │               ├── closing_loc: ∅
+        │               ├── equal_loc: ∅
         │               └── block: ∅
         ├── @ LambdaNode (location: (17,0)-(17,29))
         │   ├── flags: newline
@@ -408,6 +410,7 @@
         │                           │           ├── name: :b
         │                           │           └── depth: 0
         │                           ├── closing_loc: ∅
+        │                           ├── equal_loc: ∅
         │                           └── block: ∅
         └── @ LambdaNode (location: (27,0)-(27,19))
             ├── flags: newline

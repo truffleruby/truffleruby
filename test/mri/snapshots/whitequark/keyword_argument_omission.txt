@@ -41,6 +41,7 @@
             │               │   │       ├── opening_loc: ∅
             │               │   │       ├── arguments: ∅
             │               │   │       ├── closing_loc: ∅
+            │               │   │       ├── equal_loc: ∅
             │               │   │       └── block: ∅
             │               │   └── operator_loc: ∅
             │               └── @ AssocNode (location: (1,8)-(1,10))
@@ -65,7 +66,9 @@
             │                   │       ├── opening_loc: ∅
             │                   │       ├── arguments: ∅
             │                   │       ├── closing_loc: ∅
+            │                   │       ├── equal_loc: ∅
             │                   │       └── block: ∅
             │                   └── operator_loc: ∅
             ├── closing_loc: (1,10)-(1,11) = ")"
+            ├── equal_loc: ∅
             └── block: ∅

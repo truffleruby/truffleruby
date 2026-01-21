@@ -8,9 +8,6 @@
  * GNU Lesser General Public License version 2.1.
  */
 #include <truffleruby-impl.h>
-#include <internal/gc.h>
-#include <internal.h>
-#include <internal/imemo.h>
 
 // Memory-related function, *alloc*, *free*, rb_mem*
 
@@ -42,10 +39,6 @@ void *ruby_xmalloc2(size_t n, size_t size) {
     total_size = 1;
   }
   return ruby_xmalloc(total_size);
-}
-
-void* rb_xmalloc_mul_add(size_t x, size_t y, size_t z) {
-  return ruby_xmalloc(x * y + z);
 }
 
 void *ruby_xcalloc(size_t n, size_t size) {
@@ -95,25 +88,4 @@ void rb_mem_clear(VALUE *mem, long n) {
   for (int i = 0; i < n; i++) {
     mem[i] = Qnil;
   }
-}
-
-VALUE rb_imemo_tmpbuf_auto_free_pointer(void) {
-  return RUBY_CEXT_INVOKE("rb_imemo_tmpbuf_auto_free_pointer");
-}
-
-void* rb_imemo_tmpbuf_set_ptr(VALUE imemo, void *ptr) {
-  polyglot_invoke(RUBY_CEXT, "rb_imemo_tmpbuf_set_ptr", rb_tr_unwrap(imemo), ptr);
-  return ptr;
-}
-
-rb_imemo_tmpbuf_t *rb_imemo_tmpbuf_parser_heap(void *buf, rb_imemo_tmpbuf_t *old_heap, size_t cnt) {
-  /* This differs from CRuby as this does not produce an object known to the
-     GC. This is not a problem for Ripper because we also mod that to free the
-     heap when freeing the parser structure, but it might be a problem if other
-     extensions use this function. */
-  rb_imemo_tmpbuf_t *imemo = ruby_xmalloc(sizeof(rb_imemo_tmpbuf_t));
-  imemo->ptr = buf;
-  imemo->next = old_heap;
-  imemo->cnt = cnt;
-  return imemo;
 }

@@ -55,6 +55,7 @@
         │   │   │   │           ├── opening_loc: ∅
         │   │   │   │           ├── arguments: ∅
         │   │   │   │           ├── closing_loc: ∅
+        │   │   │   │           ├── equal_loc: ∅
         │   │   │   │           └── block: ∅
         │   │   │   └── closing_loc: (3,12)-(3,13) = "}"
         │   │   └── @ StringNode (location: (3,13)-(3,17))
@@ -81,6 +82,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── name: :M
         │   │   ├── delimiter_loc: (5,8)-(5,10) = "::"
@@ -163,6 +165,7 @@
         │   │   │   ├── opening_loc: (14,8)-(14,9) = "["
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: (14,9)-(14,10) = "]"
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── name: :B
         │   │   ├── delimiter_loc: (14,10)-(14,12) = "::"
@@ -196,6 +199,7 @@
             │   │   │           ├── flags: static_literal, decimal
             │   │   │           └── value: 1
             │   │   ├── closing_loc: (17,10)-(17,11) = "]"
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── name: :B
             │   ├── delimiter_loc: (17,11)-(17,13) = "::"

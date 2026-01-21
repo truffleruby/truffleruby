@@ -64,8 +64,6 @@ cp -R "$RUBY_SOURCE_DIR/ext/openssl/lib"/* lib/mri
 cp "$RUBY_SOURCE_DIR/ext/pty/lib"/*.rb lib/mri
 cp "$RUBY_SOURCE_DIR/ext/psych/lib/psych.rb" lib/mri
 cp -R "$RUBY_SOURCE_DIR/ext/psych/lib/psych" lib/mri
-cp "$RUBY_SOURCE_DIR/ext/ripper/lib/ripper.rb" lib/mri
-cp -R "$RUBY_SOURCE_DIR/ext/ripper/lib/ripper" lib/mri
 cp "$RUBY_SOURCE_DIR/ext/socket/lib/socket.rb" lib/truffle/socket/mri.rb
 
 # Copy C extensions in ext/, sorted alphabetically
@@ -78,22 +76,6 @@ cp "$RUBY_SOURCE_DIR/ext/openssl"/*.{c,h,rb} src/main/c/openssl
 cp "$RUBY_SOURCE_DIR/ext/psych"/*.{c,h,rb} src/main/c/psych
 cp "$RUBY_SOURCE_DIR/ext/rbconfig/sizeof"/*.{c,rb} src/main/c/rbconfig-sizeof
 cp "$RUBY_SOURCE_DIR/ext/zlib"/*.{c,rb} src/main/c/zlib
-
-# Ripper
-rm -rf src/main/c/ripper
-mkdir -p src/main/c/ripper
-cp "$RUBY_BUILD_DIR"/{id.h,symbol.h} lib/cext/include/truffleruby/internal
-cp "$RUBY_BUILD_DIR"/{node.c,parse.c,lex.c,ruby_parser.c} src/main/c/ripper
-cp "$RUBY_BUILD_DIR/ext/ripper"/*.{c,rb} src/main/c/ripper
-cp "$RUBY_BUILD_DIR/ext/ripper/ripper.y" src/main/c/ripper/ripper.y.renamed
-cp "$RUBY_BUILD_DIR"/{node.h,node_name.inc,parse.h,parser_node.h,probes.h,probes.dmyh,regenc.h} src/main/c/ripper
-cp "$RUBY_BUILD_DIR/ext/ripper"/{eventids1.h,eventids2.h,ripper_init.h} src/main/c/ripper
-cp "$RUBY_SOURCE_DIR/rubyparser.h" src/main/c/ripper
-mkdir src/main/c/ripper/internal
-cp "$RUBY_SOURCE_DIR/internal/ruby_parser.h" src/main/c/ripper/internal
-cp "$RUBY_SOURCE_DIR/internal/parse.h" src/main/c/ripper/internal
-git checkout -- src/main/c/ripper/parser_st.h
-git checkout -- src/main/c/ripper/vm_core.h
 
 # test/
 rm -rf test/mri/tests
@@ -137,8 +119,6 @@ rm -f test/bootstraptest/test_yjit*
 cp "$RUBY_SOURCE_DIR/BSDL" doc/legal/ruby-bsdl.txt
 cp "$RUBY_SOURCE_DIR/COPYING" doc/legal/ruby-licence.txt
 cp "$RUBY_SOURCE_DIR/gems/bundled_gems" doc/legal/bundled_gems
-cp lib/cext/include/ccan/licenses/BSD-MIT doc/legal/ccan-bsd-mit.txt
-cp lib/cext/include/ccan/licenses/CC0 doc/legal/ccan-cc0.txt
 
 # include/
 rm -rf lib/cext/include/ruby
@@ -146,12 +126,12 @@ git checkout lib/cext/include/ruby/config.h
 cp -R "$RUBY_SOURCE_DIR/include/." lib/cext/include
 cp -R "$RUBY_SOURCE_DIR/ext/digest/digest.h" lib/cext/include/ruby
 
-rm -rf lib/cext/include/ccan
-cp -R "$RUBY_SOURCE_DIR/ccan" lib/cext/include
-
-internal_headers=({bignum,bits,compile,compilers,complex,error,fixnum,imemo,numeric,rational,re,st,static_assert,util}.h)
+# Keep in sync with the list in lib/cext/include/internal_all.h
+internal_headers=({bits,compilers,st,static_assert}.h)
 rm -f "${internal_headers[@]/#/lib/cext/include/internal/}"
 cp -R "${internal_headers[@]/#/"$RUBY_SOURCE_DIR/internal/"}" lib/cext/include/internal
+
+cp "$RUBY_BUILD_DIR"/id.h spec/truffle/capi/ext/internal_id.h
 
 rm -f lib/cext/include/ruby_assert.h && cp "$RUBY_SOURCE_DIR/ruby_assert.h" lib/cext/include/ruby_assert.h
 

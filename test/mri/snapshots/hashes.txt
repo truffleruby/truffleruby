@@ -31,6 +31,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   ├── value:
         │   │   │   │   @ CallNode (location: (6,7)-(6,8))
@@ -42,6 +43,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   └── operator_loc: (6,4)-(6,6) = "=>"
         │   │   └── @ AssocNode (location: (6,10)-(6,16))
@@ -56,6 +58,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       ├── value:
         │   │       │   @ CallNode (location: (6,15)-(6,16))
@@ -67,6 +70,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── operator_loc: (6,12)-(6,14) = "=>"
         │   └── closing_loc: (6,17)-(6,18) = "}"
@@ -86,6 +90,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   ├── value:
         │   │   │   │   @ CallNode (location: (8,7)-(8,8))
@@ -97,6 +102,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   └── operator_loc: (8,4)-(8,6) = "=>"
         │   │   └── @ AssocSplatNode (location: (8,10)-(8,13))
@@ -111,6 +117,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── operator_loc: (8,10)-(8,12) = "**"
         │   └── closing_loc: (8,14)-(8,15) = "}"
@@ -137,6 +144,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   └── operator_loc: ∅
         │   │   └── @ AssocNode (location: (12,6)-(12,10))
@@ -158,6 +166,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── operator_loc: ∅
         │   └── closing_loc: (16,4)-(16,5) = "}"
@@ -184,6 +193,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   └── operator_loc: ∅
         │   │   ├── @ AssocNode (location: (18,8)-(18,12))
@@ -205,6 +215,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   └── operator_loc: ∅
         │   │   ├── @ AssocSplatNode (location: (18,14)-(18,17))
@@ -219,6 +230,7 @@
         │   │   │   │   ├── opening_loc: ∅
         │   │   │   │   ├── arguments: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   └── operator_loc: (18,14)-(18,16) = "**"
         │   │   └── @ AssocNode (location: (18,19)-(18,23))
@@ -240,6 +252,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── operator_loc: ∅
         │   └── closing_loc: (18,24)-(18,25) = "}"
@@ -269,6 +282,7 @@
         │   │       │   │   ├── opening_loc: ∅
         │   │       │   │   ├── arguments: ∅
         │   │       │   │   ├── closing_loc: ∅
+        │   │       │   │   ├── equal_loc: ∅
         │   │       │   │   └── block: ∅
         │   │       │   ├── call_operator_loc: ∅
         │   │       │   ├── name: :!
@@ -276,6 +290,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── operator_loc: ∅
         │   └── closing_loc: (20,11)-(20,12) = "}"
@@ -298,6 +313,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (23,4)-(26,3))
         │       ├── flags: ∅
@@ -379,6 +395,7 @@
         │       │           │   │   │       ├── opening_loc: ∅
         │       │           │   │   │       ├── arguments: ∅
         │       │           │   │   │       ├── closing_loc: ∅
+        │       │           │   │   │       ├── equal_loc: ∅
         │       │           │   │   │       └── block: ∅
         │       │           │   │   └── operator_loc: ∅
         │       │           │   └── @ AssocNode (location: (25,16)-(25,18))

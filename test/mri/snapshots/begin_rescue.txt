@@ -21,6 +21,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (1,10)-(1,19))
@@ -43,6 +44,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent: ∅
         │   ├── else_clause:
@@ -62,6 +64,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── end_keyword_loc: (1,30)-(1,33) = "end"
         │   ├── ensure_clause: ∅
@@ -82,6 +85,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (3,10)-(3,19))
@@ -104,6 +108,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent: ∅
         │   ├── else_clause:
@@ -123,6 +128,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── end_keyword_loc: (3,30)-(3,36) = "ensure"
         │   ├── ensure_clause:
@@ -142,6 +148,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── end_keyword_loc: (3,41)-(3,44) = "end"
         │   └── end_keyword_loc: (3,41)-(3,44) = "end"
@@ -222,6 +229,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause: ∅
         │   ├── else_clause: ∅
@@ -243,6 +251,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause: ∅
         │   ├── else_clause: ∅
@@ -264,6 +273,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause: ∅
         │   ├── else_clause: ∅
@@ -285,6 +295,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause: ∅
         │   ├── else_clause: ∅
@@ -306,6 +317,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (24,0)-(29,1))
@@ -328,6 +340,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent:
         │   │       @ RescueNode (location: (26,0)-(29,1))
@@ -350,6 +363,7 @@
         │   │       │           ├── opening_loc: ∅
         │   │       │           ├── arguments: ∅
         │   │       │           ├── closing_loc: ∅
+        │   │       │           ├── equal_loc: ∅
         │   │       │           └── block: ∅
         │   │       └── subsequent:
         │   │           @ RescueNode (location: (28,0)-(29,1))
@@ -372,6 +386,7 @@
         │   │           │           ├── opening_loc: ∅
         │   │           │           ├── arguments: ∅
         │   │           │           ├── closing_loc: ∅
+        │   │           │           ├── equal_loc: ∅
         │   │           │           └── block: ∅
         │   │           └── subsequent: ∅
         │   ├── else_clause: ∅
@@ -393,6 +408,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (34,0)-(37,3))
@@ -422,6 +438,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent:
         │   │       @ RescueNode (location: (36,0)-(37,3))
@@ -454,6 +471,7 @@
         │   │       │           ├── opening_loc: ∅
         │   │       │           ├── arguments: ∅
         │   │       │           ├── closing_loc: ∅
+        │   │       │           ├── equal_loc: ∅
         │   │       │           └── block: ∅
         │   │       └── subsequent: ∅
         │   ├── else_clause: ∅
@@ -475,6 +493,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (42,0)-(43,3))
@@ -504,6 +523,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent: ∅
         │   ├── else_clause: ∅
@@ -524,6 +544,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── end_keyword_loc: (46,0)-(46,3) = "end"
         │   └── end_keyword_loc: (46,0)-(46,3) = "end"
@@ -549,6 +570,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (52,0)-(53,1))
@@ -571,6 +593,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent: ∅
         │   ├── else_clause: ∅
@@ -592,6 +615,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (56,8)-(56,16))
@@ -614,6 +638,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent: ∅
         │   ├── else_clause: ∅
@@ -635,6 +660,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (59,2)-(60,1))
@@ -657,6 +683,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent: ∅
         │   ├── else_clause: ∅
@@ -678,6 +705,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (64,0)-(65,1))
@@ -703,6 +731,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent: ∅
         │   ├── else_clause: ∅
@@ -724,6 +753,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (70,0)-(71,1))
@@ -752,6 +782,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent: ∅
         │   ├── else_clause: ∅
@@ -773,6 +804,7 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── rescue_clause:
         │   │   @ RescueNode (location: (76,0)-(77,3))
@@ -805,6 +837,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block: ∅
         │   │   └── subsequent: ∅
         │   ├── else_clause: ∅
@@ -826,6 +859,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── rescue_clause:
             │   @ RescueNode (location: (82,0)-(83,3))
@@ -855,6 +889,7 @@
             │   │           ├── opening_loc: ∅
             │   │           ├── arguments: ∅
             │   │           ├── closing_loc: ∅
+            │   │           ├── equal_loc: ∅
             │   │           └── block: ∅
             │   └── subsequent: ∅
             ├── else_clause: ∅

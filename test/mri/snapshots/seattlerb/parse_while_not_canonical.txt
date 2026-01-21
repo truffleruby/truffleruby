@@ -26,6 +26,7 @@
             │   │   │   ├── opening_loc: ∅
             │   │   │   ├── arguments: ∅
             │   │   │   ├── closing_loc: ∅
+            │   │   │   ├── equal_loc: ∅
             │   │   │   └── block: ∅
             │   │   ├── call_operator_loc: (1,13)-(1,14) = "."
             │   │   ├── name: :nil?
@@ -33,6 +34,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── call_operator_loc: ∅
             │   ├── name: :!
@@ -40,6 +42,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             └── statements:
                 @ StatementsNode (location: (2,2)-(2,7))

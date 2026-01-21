@@ -22,4 +22,5 @@
             │           ├── flags: static_literal, decimal
             │           └── value: 1
             ├── closing_loc: (1,6)-(1,7) = "]"
+            ├── equal_loc: ∅
             └── block: ∅

@@ -17,6 +17,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── right:
         │   │   @ CallNode (location: (1,7)-(1,10))
@@ -28,6 +29,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   └── operator_loc: (1,4)-(1,6) = "or"
         └── @ OrNode (location: (3,0)-(3,10))
@@ -42,6 +44,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── right:
             │   @ CallNode (location: (3,7)-(3,10))
@@ -53,5 +56,6 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             └── operator_loc: (3,4)-(3,6) = "||"

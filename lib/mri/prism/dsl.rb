@@ -167,8 +167,8 @@ module Prism
     end
 
     # Create a new CallNode node.
-    def call_node(source: default_source, node_id: 0, location: default_location, flags: 0, receiver: nil, call_operator_loc: nil, name: :"", message_loc: nil, opening_loc: nil, arguments: nil, closing_loc: nil, block: nil)
-      CallNode.new(source, node_id, location, flags, receiver, call_operator_loc, name, message_loc, opening_loc, arguments, closing_loc, block)
+    def call_node(source: default_source, node_id: 0, location: default_location, flags: 0, receiver: nil, call_operator_loc: nil, name: :"", message_loc: nil, opening_loc: nil, arguments: nil, closing_loc: nil, equal_loc: nil, block: nil)
+      CallNode.new(source, node_id, location, flags, receiver, call_operator_loc, name, message_loc, opening_loc, arguments, closing_loc, equal_loc, block)
     end
 
     # Create a new CallOperatorWriteNode node.

@@ -12,7 +12,7 @@
         │   ├── closing_loc: (5,0)-(6,0) = "E\n"
         │   └── unescaped: "    1     2\n    3\n"
         └── @ InterpolatedStringNode (location: (8,0)-(8,4))
-            ├── flags: newline, static_literal
+            ├── flags: newline
             ├── opening_loc: (8,0)-(8,4) = "<<~E"
             ├── parts: (length: 3)
             │   ├── @ StringNode (location: (9,0)-(10,0))

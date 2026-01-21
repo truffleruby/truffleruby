@@ -18,6 +18,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── then_keyword_loc: ∅
         │   ├── statements:
@@ -36,6 +37,7 @@
         │   │           │   ├── opening_loc: ∅
         │   │           │   ├── arguments: ∅
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── keyword_loc: (1,2)-(1,8) = "rescue"
         │   │           └── rescue_expression:
@@ -48,6 +50,7 @@
         │   │               ├── opening_loc: ∅
         │   │               ├── arguments: ∅
         │   │               ├── closing_loc: ∅
+        │   │               ├── equal_loc: ∅
         │   │               └── block: ∅
         │   ├── subsequent: ∅
         │   └── end_keyword_loc: ∅
@@ -64,6 +67,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── then_keyword_loc: ∅
         │   ├── statements:
@@ -88,6 +92,7 @@
         │   │           │   │   ├── opening_loc: ∅
         │   │           │   │   ├── arguments: ∅
         │   │           │   │   ├── closing_loc: ∅
+        │   │           │   │   ├── equal_loc: ∅
         │   │           │   │   └── block: ∅
         │   │           │   ├── keyword_loc: (3,6)-(3,12) = "rescue"
         │   │           │   └── rescue_expression:
@@ -100,6 +105,7 @@
         │   │           │       ├── opening_loc: ∅
         │   │           │       ├── arguments: ∅
         │   │           │       ├── closing_loc: ∅
+        │   │           │       ├── equal_loc: ∅
         │   │           │       └── block: ∅
         │   │           └── operator_loc: (3,2)-(3,3) = "="
         │   ├── subsequent: ∅
@@ -117,6 +123,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── then_keyword_loc: ∅
         │   ├── statements:
@@ -150,6 +157,7 @@
         │   │               │   ├── opening_loc: ∅
         │   │               │   ├── arguments: ∅
         │   │               │   ├── closing_loc: ∅
+        │   │               │   ├── equal_loc: ∅
         │   │               │   └── block: ∅
         │   │               ├── keyword_loc: (5,7)-(5,13) = "rescue"
         │   │               └── rescue_expression:
@@ -162,6 +170,7 @@
         │   │                   ├── opening_loc: ∅
         │   │                   ├── arguments: ∅
         │   │                   ├── closing_loc: ∅
+        │   │                   ├── equal_loc: ∅
         │   │                   └── block: ∅
         │   ├── subsequent: ∅
         │   └── end_keyword_loc: ∅
@@ -178,6 +187,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── then_keyword_loc: ∅
             ├── statements:
@@ -206,6 +216,7 @@
             │           │           │   ├── opening_loc: ∅
             │           │           │   ├── arguments: ∅
             │           │           │   ├── closing_loc: ∅
+            │           │           │   ├── equal_loc: ∅
             │           │           │   └── block: ∅
             │           │           ├── keyword_loc: (7,10)-(7,16) = "rescue"
             │           │           └── rescue_expression:
@@ -218,6 +229,7 @@
             │           │               ├── opening_loc: ∅
             │           │               ├── arguments: ∅
             │           │               ├── closing_loc: ∅
+            │           │               ├── equal_loc: ∅
             │           │               └── block: ∅
             │           ├── locals: []
             │           ├── def_keyword_loc: (7,0)-(7,3) = "def"

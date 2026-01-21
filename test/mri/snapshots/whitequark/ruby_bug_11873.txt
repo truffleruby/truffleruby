@@ -47,10 +47,13 @@
         │   │       │   │           │           ├── opening_loc: ∅
         │   │       │   │           │           ├── arguments: ∅
         │   │       │   │           │           ├── closing_loc: ∅
+        │   │       │   │           │           ├── equal_loc: ∅
         │   │       │   │           │           └── block: ∅
         │   │       │   │           ├── closing_loc: ∅
+        │   │       │   │           ├── equal_loc: ∅
         │   │       │   │           └── block: ∅
         │   │       │   ├── closing_loc: (1,7)-(1,8) = ")"
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ StringNode (location: (1,10)-(1,13))
         │   │           ├── flags: ∅
@@ -59,6 +62,7 @@
         │   │           ├── closing_loc: (1,12)-(1,13) = "\""
         │   │           └── unescaped: "x"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (1,14)-(1,20))
         │       ├── flags: ∅
@@ -109,10 +113,13 @@
         │   │       │   │           │           ├── opening_loc: ∅
         │   │       │   │           │           ├── arguments: ∅
         │   │       │   │           │           ├── closing_loc: ∅
+        │   │       │   │           │           ├── equal_loc: ∅
         │   │       │   │           │           └── block: ∅
         │   │       │   │           ├── closing_loc: ∅
+        │   │       │   │           ├── equal_loc: ∅
         │   │       │   │           └── block: ∅
         │   │       │   ├── closing_loc: (3,7)-(3,8) = ")"
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ RegularExpressionNode (location: (3,10)-(3,13))
         │   │           ├── flags: static_literal, forced_us_ascii_encoding
@@ -121,6 +128,7 @@
         │   │           ├── closing_loc: (3,12)-(3,13) = "/"
         │   │           └── unescaped: "x"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (3,14)-(3,20))
         │       ├── flags: ∅
@@ -171,10 +179,13 @@
         │   │       │   │           │           ├── opening_loc: ∅
         │   │       │   │           │           ├── arguments: ∅
         │   │       │   │           │           ├── closing_loc: ∅
+        │   │       │   │           │           ├── equal_loc: ∅
         │   │       │   │           │           └── block: ∅
         │   │       │   │           ├── closing_loc: ∅
+        │   │       │   │           ├── equal_loc: ∅
         │   │       │   │           └── block: ∅
         │   │       │   ├── closing_loc: (5,7)-(5,8) = ")"
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ RegularExpressionNode (location: (5,10)-(5,14))
         │   │           ├── flags: static_literal, multi_line, forced_us_ascii_encoding
@@ -183,6 +194,7 @@
         │   │           ├── closing_loc: (5,12)-(5,14) = "/m"
         │   │           └── unescaped: "x"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (5,15)-(5,21))
         │       ├── flags: ∅
@@ -233,10 +245,13 @@
         │   │       │   │           │           ├── opening_loc: ∅
         │   │       │   │           │           ├── arguments: ∅
         │   │       │   │           │           ├── closing_loc: ∅
+        │   │       │   │           │           ├── equal_loc: ∅
         │   │       │   │           │           └── block: ∅
         │   │       │   │           ├── closing_loc: (7,7)-(7,8) = ")"
+        │   │       │   │           ├── equal_loc: ∅
         │   │       │   │           └── block: ∅
         │   │       │   ├── closing_loc: (7,8)-(7,9) = ")"
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ StringNode (location: (7,11)-(7,14))
         │   │           ├── flags: ∅
@@ -245,6 +260,7 @@
         │   │           ├── closing_loc: (7,13)-(7,14) = "\""
         │   │           └── unescaped: "x"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (7,15)-(7,21))
         │       ├── flags: ∅
@@ -295,10 +311,13 @@
         │   │       │   │           │           ├── opening_loc: ∅
         │   │       │   │           │           ├── arguments: ∅
         │   │       │   │           │           ├── closing_loc: ∅
+        │   │       │   │           │           ├── equal_loc: ∅
         │   │       │   │           │           └── block: ∅
         │   │       │   │           ├── closing_loc: (9,7)-(9,8) = ")"
+        │   │       │   │           ├── equal_loc: ∅
         │   │       │   │           └── block: ∅
         │   │       │   ├── closing_loc: (9,8)-(9,9) = ")"
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ RegularExpressionNode (location: (9,11)-(9,14))
         │   │           ├── flags: static_literal, forced_us_ascii_encoding
@@ -307,6 +326,7 @@
         │   │           ├── closing_loc: (9,13)-(9,14) = "/"
         │   │           └── unescaped: "x"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (9,15)-(9,21))
         │       ├── flags: ∅
@@ -357,10 +377,13 @@
         │   │       │   │           │           ├── opening_loc: ∅
         │   │       │   │           │           ├── arguments: ∅
         │   │       │   │           │           ├── closing_loc: ∅
+        │   │       │   │           │           ├── equal_loc: ∅
         │   │       │   │           │           └── block: ∅
         │   │       │   │           ├── closing_loc: (11,7)-(11,8) = ")"
+        │   │       │   │           ├── equal_loc: ∅
         │   │       │   │           └── block: ∅
         │   │       │   ├── closing_loc: (11,8)-(11,9) = ")"
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block: ∅
         │   │       └── @ RegularExpressionNode (location: (11,11)-(11,15))
         │   │           ├── flags: static_literal, multi_line, forced_us_ascii_encoding
@@ -369,6 +392,7 @@
         │   │           ├── closing_loc: (11,13)-(11,15) = "/m"
         │   │           └── unescaped: "x"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (11,16)-(11,22))
         │       ├── flags: ∅
@@ -397,6 +421,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block:
         │   │       │       @ BlockNode (location: (13,3)-(13,8))
         │   │       │       ├── flags: ∅
@@ -426,8 +451,10 @@
         │   │       │       │           │           ├── opening_loc: ∅
         │   │       │       │           │           ├── arguments: ∅
         │   │       │       │           │           ├── closing_loc: ∅
+        │   │       │       │           │           ├── equal_loc: ∅
         │   │       │       │           │           └── block: ∅
         │   │       │       │           ├── closing_loc: ∅
+        │   │       │       │           ├── equal_loc: ∅
         │   │       │       │           └── block: ∅
         │   │       │       ├── opening_loc: (13,3)-(13,4) = "{"
         │   │       │       └── closing_loc: (13,7)-(13,8) = "}"
@@ -438,6 +465,7 @@
         │   │           ├── closing_loc: (13,12)-(13,13) = "\""
         │   │           └── unescaped: "x"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (13,14)-(13,20))
         │       ├── flags: ∅
@@ -466,6 +494,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block:
         │   │       │       @ BlockNode (location: (15,3)-(15,8))
         │   │       │       ├── flags: ∅
@@ -495,8 +524,10 @@
         │   │       │       │           │           ├── opening_loc: ∅
         │   │       │       │           │           ├── arguments: ∅
         │   │       │       │           │           ├── closing_loc: ∅
+        │   │       │       │           │           ├── equal_loc: ∅
         │   │       │       │           │           └── block: ∅
         │   │       │       │           ├── closing_loc: ∅
+        │   │       │       │           ├── equal_loc: ∅
         │   │       │       │           └── block: ∅
         │   │       │       ├── opening_loc: (15,3)-(15,4) = "{"
         │   │       │       └── closing_loc: (15,7)-(15,8) = "}"
@@ -507,6 +538,7 @@
         │   │           ├── closing_loc: (15,12)-(15,13) = "/"
         │   │           └── unescaped: "x"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (15,14)-(15,20))
         │       ├── flags: ∅
@@ -535,6 +567,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block:
         │   │       │       @ BlockNode (location: (17,3)-(17,8))
         │   │       │       ├── flags: ∅
@@ -564,8 +597,10 @@
         │   │       │       │           │           ├── opening_loc: ∅
         │   │       │       │           │           ├── arguments: ∅
         │   │       │       │           │           ├── closing_loc: ∅
+        │   │       │       │           │           ├── equal_loc: ∅
         │   │       │       │           │           └── block: ∅
         │   │       │       │           ├── closing_loc: ∅
+        │   │       │       │           ├── equal_loc: ∅
         │   │       │       │           └── block: ∅
         │   │       │       ├── opening_loc: (17,3)-(17,4) = "{"
         │   │       │       └── closing_loc: (17,7)-(17,8) = "}"
@@ -576,6 +611,7 @@
         │   │           ├── closing_loc: (17,12)-(17,14) = "/m"
         │   │           └── unescaped: "x"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (17,15)-(17,21))
         │       ├── flags: ∅
@@ -604,6 +640,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block:
         │   │       │       @ BlockNode (location: (19,3)-(19,9))
         │   │       │       ├── flags: ∅
@@ -633,8 +670,10 @@
         │   │       │       │           │           ├── opening_loc: ∅
         │   │       │       │           │           ├── arguments: ∅
         │   │       │       │           │           ├── closing_loc: ∅
+        │   │       │       │           │           ├── equal_loc: ∅
         │   │       │       │           │           └── block: ∅
         │   │       │       │           ├── closing_loc: (19,7)-(19,8) = ")"
+        │   │       │       │           ├── equal_loc: ∅
         │   │       │       │           └── block: ∅
         │   │       │       ├── opening_loc: (19,3)-(19,4) = "{"
         │   │       │       └── closing_loc: (19,8)-(19,9) = "}"
@@ -645,6 +684,7 @@
         │   │           ├── closing_loc: (19,13)-(19,14) = "\""
         │   │           └── unescaped: "x"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (19,15)-(19,21))
         │       ├── flags: ∅
@@ -673,6 +713,7 @@
         │   │       │   ├── opening_loc: ∅
         │   │       │   ├── arguments: ∅
         │   │       │   ├── closing_loc: ∅
+        │   │       │   ├── equal_loc: ∅
         │   │       │   └── block:
         │   │       │       @ BlockNode (location: (21,3)-(21,9))
         │   │       │       ├── flags: ∅
@@ -702,8 +743,10 @@
         │   │       │       │           │           ├── opening_loc: ∅
         │   │       │       │           │           ├── arguments: ∅
         │   │       │       │           │           ├── closing_loc: ∅
+        │   │       │       │           │           ├── equal_loc: ∅
         │   │       │       │           │           └── block: ∅
         │   │       │       │           ├── closing_loc: (21,7)-(21,8) = ")"
+        │   │       │       │           ├── equal_loc: ∅
         │   │       │       │           └── block: ∅
         │   │       │       ├── opening_loc: (21,3)-(21,4) = "{"
         │   │       │       └── closing_loc: (21,8)-(21,9) = "}"
@@ -714,6 +757,7 @@
         │   │           ├── closing_loc: (21,13)-(21,14) = "/"
         │   │           └── unescaped: "x"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (21,15)-(21,21))
         │       ├── flags: ∅
@@ -742,6 +786,7 @@
             │       │   ├── opening_loc: ∅
             │       │   ├── arguments: ∅
             │       │   ├── closing_loc: ∅
+            │       │   ├── equal_loc: ∅
             │       │   └── block:
             │       │       @ BlockNode (location: (23,3)-(23,9))
             │       │       ├── flags: ∅
@@ -771,8 +816,10 @@
             │       │       │           │           ├── opening_loc: ∅
             │       │       │           │           ├── arguments: ∅
             │       │       │           │           ├── closing_loc: ∅
+            │       │       │           │           ├── equal_loc: ∅
             │       │       │           │           └── block: ∅
             │       │       │           ├── closing_loc: (23,7)-(23,8) = ")"
+            │       │       │           ├── equal_loc: ∅
             │       │       │           └── block: ∅
             │       │       ├── opening_loc: (23,3)-(23,4) = "{"
             │       │       └── closing_loc: (23,8)-(23,9) = "}"
@@ -783,6 +830,7 @@
             │           ├── closing_loc: (23,13)-(23,15) = "/m"
             │           └── unescaped: "x"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block:
                 @ BlockNode (location: (23,16)-(23,22))
                 ├── flags: ∅

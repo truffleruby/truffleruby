@@ -14,6 +14,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (1,4)-(1,13))
         │       ├── flags: ∅
@@ -38,6 +39,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (3,4)-(3,27))
         │       ├── flags: ∅
@@ -98,6 +100,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (5,4)-(5,15))
         │       ├── flags: ∅
@@ -128,6 +131,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (7,4)-(8,3))
         │       ├── flags: ∅
@@ -164,6 +168,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (10,4)-(10,21))
         │       ├── flags: ∅
@@ -200,6 +205,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (12,4)-(12,23))
         │       ├── flags: ∅
@@ -241,6 +247,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (14,4)-(17,3))
         │       ├── flags: ∅
@@ -282,6 +289,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (19,4)-(19,15))
         │       ├── flags: ∅
@@ -314,6 +322,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (21,4)-(21,16))
         │       ├── flags: ∅
@@ -352,6 +361,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (23,4)-(23,17))
         │       ├── flags: ∅
@@ -390,6 +400,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (25,4)-(25,24))
         │       ├── flags: ∅
@@ -411,6 +422,7 @@
         │       │           │   ├── opening_loc: ∅
         │       │           │   ├── arguments: ∅
         │       │           │   ├── closing_loc: ∅
+        │       │           │   ├── equal_loc: ∅
         │       │           │   └── block: ∅
         │       │           ├── right:
         │       │           │   @ ParenthesesNode (location: (25,13)-(25,22))
@@ -446,6 +458,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block:
         │   │       @ BlockNode (location: (27,4)-(27,16))
         │   │       ├── flags: ∅
@@ -479,6 +492,7 @@
         │   │           ├── flags: static_literal, decimal
         │   │           └── value: 42
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (29,0)-(29,23))
         │   ├── flags: newline
@@ -492,6 +506,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block:
         │   │       @ BlockNode (location: (29,4)-(29,17))
         │   │       ├── flags: ∅
@@ -537,6 +552,7 @@
         │   │           ├── flags: static_literal, decimal
         │   │           └── value: 42
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ WhileNode (location: (31,0)-(31,21))
         │   ├── flags: newline
@@ -556,6 +572,7 @@
         │   │   │   ├── opening_loc: ∅
         │   │   │   ├── arguments: ∅
         │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
         │   │   │   └── block: ∅
         │   │   ├── right:
         │   │   │   @ BreakNode (location: (31,11)-(31,16))
@@ -582,6 +599,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── right:
             │   │   @ BreakNode (location: (33,11)-(33,16))

@@ -33,6 +33,7 @@
         │   │           │           ├── closing_loc: (1,21)-(1,22) = "\""
         │   │           │           └── unescaped: "Hello"
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (1,0)-(1,3) = "def"
@@ -69,6 +70,7 @@
         │   │           │           ├── closing_loc: (3,23)-(3,24) = "\""
         │   │           │           └── unescaped: "Hello"
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (3,0)-(3,3) = "def"
@@ -115,6 +117,7 @@
         │   │           │           ├── name: :x
         │   │           │           └── depth: 0
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: [:x]
         │   ├── def_keyword_loc: (5,0)-(5,3) = "def"
@@ -137,6 +140,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── parameters: ∅
         │   ├── body:
@@ -161,6 +165,7 @@
         │   │           │           ├── closing_loc: (7,25)-(7,26) = "\""
         │   │           │           └── unescaped: "Hello"
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (7,0)-(7,3) = "def"
@@ -183,6 +188,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── parameters: ∅
         │   ├── body:
@@ -207,6 +213,7 @@
         │   │           │           ├── closing_loc: (9,27)-(9,28) = "\""
         │   │           │           └── unescaped: "Hello"
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: []
         │   ├── def_keyword_loc: (9,0)-(9,3) = "def"
@@ -229,6 +236,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── parameters:
         │   │   @ ParametersNode (location: (11,12)-(11,13))
@@ -263,6 +271,7 @@
         │   │           │           ├── name: :x
         │   │           │           └── depth: 0
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── locals: [:x]
         │   ├── def_keyword_loc: (11,0)-(11,3) = "def"
@@ -314,6 +323,7 @@
         │   │           │   │           ├── closing_loc: (13,36)-(13,37) = "\""
         │   │           │   │           └── unescaped: "to be caught"
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           ├── keyword_loc: (13,38)-(13,44) = "rescue"
         │   │           └── rescue_expression:
@@ -392,6 +402,7 @@
             │           │   │           ├── closing_loc: (15,41)-(15,42) = "\""
             │           │   │           └── unescaped: "to be caught"
             │           │   ├── closing_loc: ∅
+            │           │   ├── equal_loc: ∅
             │           │   └── block: ∅
             │           ├── keyword_loc: (15,43)-(15,49) = "rescue"
             │           └── rescue_expression:

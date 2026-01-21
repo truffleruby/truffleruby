@@ -33,6 +33,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── statements:
             │   @ StatementsNode (location: (1,17)-(1,23))
@@ -58,6 +59,7 @@
             │           │           ├── name: :b
             │           │           └── depth: 0
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── for_keyword_loc: (1,0)-(1,3) = "for"
             ├── in_keyword_loc: (1,9)-(1,11) = "in"

@@ -17,6 +17,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── conditions: (length: 1)
             │   └── @ WhenNode (location: (1,8)-(1,20))
@@ -36,6 +37,7 @@
             │       │           ├── opening_loc: ∅
             │       │           ├── arguments: ∅
             │       │           ├── closing_loc: ∅
+            │       │           ├── equal_loc: ∅
             │       │           └── block: ∅
             │       ├── then_keyword_loc: (1,16)-(1,20) = "then"
             │       └── statements: ∅

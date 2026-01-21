@@ -23,6 +23,7 @@
         │   │   │           ├── flags: static_literal, decimal
         │   │   │           └── value: 1
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block:
         │   │       @ BlockNode (location: (1,7)-(1,13))
         │   │       ├── flags: ∅
@@ -48,8 +49,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (3,0)-(3,28))
         │   ├── flags: newline
@@ -69,6 +72,7 @@
         │   │   │           ├── flags: static_literal, decimal
         │   │   │           └── value: 1
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block:
         │   │       @ BlockNode (location: (3,7)-(3,13))
         │   │       ├── flags: ∅
@@ -94,8 +98,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (3,22)-(3,28))
         │       ├── flags: ∅
@@ -122,6 +128,7 @@
         │   │   │           ├── flags: static_literal, decimal
         │   │   │           └── value: 1
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block:
         │   │       @ BlockNode (location: (5,7)-(5,13))
         │   │       ├── flags: ∅
@@ -136,6 +143,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (5,18)-(5,20))
         │       ├── flags: ∅
@@ -162,6 +170,7 @@
         │   │   │           ├── flags: static_literal, decimal
         │   │   │           └── value: 1
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block:
         │   │       @ BlockNode (location: (7,7)-(7,13))
         │   │       ├── flags: ∅
@@ -187,8 +196,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (7,21)-(7,22) = ")"
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (9,0)-(9,25))
         │   ├── flags: newline
@@ -208,6 +219,7 @@
         │   │   │           ├── flags: static_literal, decimal
         │   │   │           └── value: 1
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block:
         │   │       @ BlockNode (location: (9,7)-(9,13))
         │   │       ├── flags: ∅
@@ -233,8 +245,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: (9,21)-(9,22) = ")"
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (9,23)-(9,25))
         │       ├── flags: ∅
@@ -261,6 +275,7 @@
         │   │   │           ├── flags: static_literal, decimal
         │   │   │           └── value: 1
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block:
         │   │       @ BlockNode (location: (11,7)-(11,13))
         │   │       ├── flags: ∅
@@ -286,8 +301,10 @@
         │   │           ├── opening_loc: ∅
         │   │           ├── arguments: ∅
         │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
         │   │           └── block: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (13,0)-(13,23))
             ├── flags: newline
@@ -307,6 +324,7 @@
             │   │           ├── flags: static_literal, decimal
             │   │           └── value: 1
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block:
             │       @ BlockNode (location: (13,7)-(13,13))
             │       ├── flags: ∅
@@ -332,6 +350,8 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── closing_loc: (13,22)-(13,23) = ")"
+            ├── equal_loc: ∅
             └── block: ∅

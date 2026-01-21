@@ -44,6 +44,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (5,4)-(5,24))
         │       ├── flags: ∅
@@ -80,6 +81,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (7,4)-(7,23))
         │       ├── flags: ∅
@@ -138,6 +140,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   └── statements:
         │       @ StatementsNode (location: (11,0)-(11,10))
@@ -167,6 +170,7 @@
         │               │           ├── closing_loc: ∅
         │               │           └── unescaped: "b"
         │               ├── closing_loc: ∅
+        │               ├── equal_loc: ∅
         │               └── block: ∅
         ├── @ CallNode (location: (13,0)-(13,58))
         │   ├── flags: newline, ignore_visibility
@@ -177,6 +181,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (13,4)-(13,58))
         │       ├── flags: ∅
@@ -219,6 +224,7 @@
         │       │           │   │   │           ├── opening_loc: ∅
         │       │           │   │   │           ├── arguments: ∅
         │       │           │   │   │           ├── closing_loc: ∅
+        │       │           │   │   │           ├── equal_loc: ∅
         │       │           │   │   │           └── block:
         │       │           │   │   │               @ BlockNode (location: (13,33)-(13,39))
         │       │           │   │   │               ├── flags: ∅
@@ -259,6 +265,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (15,4)-(15,55))
         │       ├── flags: ∅
@@ -303,6 +310,7 @@
         │       │           │   │           │   ├── opening_loc: ∅
         │       │           │   │           │   ├── arguments: ∅
         │       │           │   │           │   ├── closing_loc: ∅
+        │       │           │   │           │   ├── equal_loc: ∅
         │       │           │   │           │   └── block:
         │       │           │   │           │       @ BlockNode (location: (15,30)-(15,36))
         │       │           │   │           │       ├── flags: ∅
@@ -333,6 +341,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (17,4)-(17,56))
         │       ├── flags: ∅
@@ -369,6 +378,7 @@
         │       │           │   │           ├── opening_loc: ∅
         │       │           │   │           ├── arguments: ∅
         │       │           │   │           ├── closing_loc: ∅
+        │       │           │   │           ├── equal_loc: ∅
         │       │           │   │           └── block:
         │       │           │   │               @ BlockNode (location: (17,31)-(17,37))
         │       │           │   │               ├── flags: ∅
@@ -397,6 +407,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (19,4)-(19,60))
         │       ├── flags: ∅
@@ -439,6 +450,7 @@
         │       │           │   │           │   ├── opening_loc: ∅
         │       │           │   │           │   ├── arguments: ∅
         │       │           │   │           │   ├── closing_loc: ∅
+        │       │           │   │           │   ├── equal_loc: ∅
         │       │           │   │           │   └── block:
         │       │           │   │           │       @ BlockNode (location: (19,35)-(19,41))
         │       │           │   │           │       ├── flags: ∅
@@ -484,6 +496,7 @@
         │   │   │           ├── opening_loc: ∅
         │   │   │           ├── arguments: ∅
         │   │   │           ├── closing_loc: ∅
+        │   │   │           ├── equal_loc: ∅
         │   │   │           └── block:
         │   │   │               @ BlockNode (location: (21,20)-(21,26))
         │   │   │               ├── flags: ∅
@@ -518,6 +531,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── pattern:
             │   │   @ LocalVariableTargetNode (location: (23,17)-(23,20))
@@ -538,4 +552,5 @@
                         ├── opening_loc: ∅
                         ├── arguments: ∅
                         ├── closing_loc: ∅
+                        ├── equal_loc: ∅
                         └── block: ∅

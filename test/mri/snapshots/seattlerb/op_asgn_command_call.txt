@@ -22,6 +22,7 @@
             │   │   ├── opening_loc: ∅
             │   │   ├── arguments: ∅
             │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
             │   │   └── block: ∅
             │   ├── call_operator_loc: (1,7)-(1,8) = "."
             │   ├── name: :c
@@ -35,6 +36,7 @@
             │   │           ├── flags: static_literal, decimal
             │   │           └── value: 2
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── name: :a
             └── depth: 0

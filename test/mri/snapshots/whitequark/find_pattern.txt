@@ -17,6 +17,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── conditions: (length: 1)
         │   │   └── @ InNode (location: (1,10)-(1,31))
@@ -64,6 +65,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── conditions: (length: 1)
         │   │   └── @ InNode (location: (3,10)-(3,37))
@@ -114,6 +116,7 @@
         │   │   ├── opening_loc: ∅
         │   │   ├── arguments: ∅
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   ├── conditions: (length: 1)
         │   │   └── @ InNode (location: (5,10)-(5,38))
@@ -164,6 +167,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── conditions: (length: 1)
             │   └── @ InNode (location: (7,10)-(7,39))

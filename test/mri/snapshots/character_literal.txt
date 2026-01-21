@@ -1,0 +1,38 @@
+@ ProgramNode (location: (2,0)-(2,11))
+├── flags: ∅
+├── locals: []
+└── statements:
+    @ StatementsNode (location: (2,0)-(2,11))
+    ├── flags: ∅
+    └── body: (length: 1)
+        └── @ CallNode (location: (2,0)-(2,11))
+            ├── flags: newline, ignore_visibility
+            ├── receiver: ∅
+            ├── call_operator_loc: ∅
+            ├── name: :p
+            ├── message_loc: (2,0)-(2,1) = "p"
+            ├── opening_loc: ∅
+            ├── arguments:
+            │   @ ArgumentsNode (location: (2,2)-(2,11))
+            │   ├── flags: ∅
+            │   └── arguments: (length: 1)
+            │       └── @ InterpolatedStringNode (location: (2,2)-(2,11))
+            │           ├── flags: ∅
+            │           ├── opening_loc: ∅
+            │           ├── parts: (length: 2)
+            │           │   ├── @ StringNode (location: (2,2)-(2,9))
+            │           │   │   ├── flags: static_literal, forced_utf8_encoding, frozen
+            │           │   │   ├── opening_loc: (2,2)-(2,3) = "?"
+            │           │   │   ├── content_loc: (2,3)-(2,9) = "\\u3042"
+            │           │   │   ├── closing_loc: ∅
+            │           │   │   └── unescaped: "\x{E381}\x82"
+            │           │   └── @ StringNode (location: (2,9)-(2,11))
+            │           │       ├── flags: static_literal, frozen
+            │           │       ├── opening_loc: (2,9)-(2,10) = "\""
+            │           │       ├── content_loc: (2,10)-(2,10) = ""
+            │           │       ├── closing_loc: (2,10)-(2,11) = "\""
+            │           │       └── unescaped: ""
+            │           └── closing_loc: ∅
+            ├── closing_loc: ∅
+            ├── equal_loc: ∅
+            └── block: ∅

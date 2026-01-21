@@ -51,6 +51,7 @@
             │   │           │   │   │   │           ├── opening_loc: ∅
             │   │           │   │   │   │           ├── arguments: ∅
             │   │           │   │   │   │           ├── closing_loc: ∅
+            │   │           │   │   │   │           ├── equal_loc: ∅
             │   │           │   │   │   │           └── block: ∅
             │   │           │   │   │   └── closing_loc: (3,9)-(3,10) = "}"
             │   │           │   │   └── @ StringNode (location: (3,10)-(4,0))
@@ -66,7 +67,9 @@
             │   │           ├── opening_loc: ∅
             │   │           ├── arguments: ∅
             │   │           ├── closing_loc: ∅
+            │   │           ├── equal_loc: ∅
             │   │           └── block: ∅
             │   ├── closing_loc: (1,19)-(1,20) = ")"
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             └── operator_loc: (1,2)-(1,3) = "="

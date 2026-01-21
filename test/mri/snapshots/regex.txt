@@ -23,6 +23,7 @@
         │   │           ├── closing_loc: (1,8)-(1,9) = "/"
         │   │           └── unescaped: "bar"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ RegularExpressionNode (location: (3,0)-(3,8))
         │   ├── flags: newline, static_literal, ignore_case, forced_us_ascii_encoding
@@ -80,6 +81,7 @@
         │   │   │   │           ├── opening_loc: ∅
         │   │   │   │           ├── arguments: ∅
         │   │   │   │           ├── closing_loc: ∅
+        │   │   │   │           ├── equal_loc: ∅
         │   │   │   │           └── block: ∅
         │   │   │   └── closing_loc: (9,10)-(9,11) = "}"
         │   │   └── @ StringNode (location: (9,11)-(9,15))
@@ -121,8 +123,10 @@
         │   │   │   │   │           ├── opening_loc: ∅
         │   │   │   │   │           ├── arguments: ∅
         │   │   │   │   │           ├── closing_loc: ∅
+        │   │   │   │   │           ├── equal_loc: ∅
         │   │   │   │   │           └── block: ∅
         │   │   │   │   ├── closing_loc: ∅
+        │   │   │   │   ├── equal_loc: ∅
         │   │   │   │   └── block: ∅
         │   │   │   └── targets: (length: 1)
         │   │   │       └── @ LocalVariableTargetNode (location: (11,5)-(11,8))
@@ -189,6 +193,7 @@
         │   │           ├── closing_loc: (26,15)-(26,16) = "\""
         │   │           └── unescaped: "hi"
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ RegularExpressionNode (location: (28,0)-(28,9))
         │   ├── flags: newline, static_literal, forced_us_ascii_encoding
@@ -222,6 +227,7 @@
         │   │       │           ├── opening_loc: ∅
         │   │       │           ├── arguments: ∅
         │   │       │           ├── closing_loc: ∅
+        │   │       │           ├── equal_loc: ∅
         │   │       │           └── block: ∅
         │   │       └── closing_loc: (30,10)-(30,11) = "}"
         │   └── closing_loc: (30,11)-(30,13) = "/o"
@@ -252,6 +258,7 @@
         │   │   │           ├── closing_loc: (33,9)-(33,10) = "\""
         │   │   │           └── unescaped: ""
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   └── targets: (length: 1)
         │       └── @ LocalVariableTargetNode (location: (32,0)-(33,4))
@@ -289,6 +296,7 @@
         │   │   │           ├── closing_loc: (35,23)-(35,24) = "\""
         │   │   │           └── unescaped: ""
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   └── targets: (length: 1)
         │       └── @ LocalVariableTargetNode (location: (35,4)-(35,7))
@@ -323,6 +331,7 @@
         │   │           ├── closing_loc: (37,15)-(37,16) = "\""
         │   │           └── unescaped: ""
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ LocalVariableWriteNode (location: (39,0)-(39,5))
         │   ├── flags: newline
@@ -343,6 +352,7 @@
         │   ├── opening_loc: ∅
         │   ├── arguments: ∅
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block:
         │       @ BlockNode (location: (40,4)-(40,24))
         │       ├── flags: ∅
@@ -381,8 +391,10 @@
         │       │           │   │           ├── opening_loc: ∅
         │       │           │   │           ├── arguments: ∅
         │       │           │   │           ├── closing_loc: ∅
+        │       │           │   │           ├── equal_loc: ∅
         │       │           │   │           └── block: ∅
         │       │           │   ├── closing_loc: ∅
+        │       │           │   ├── equal_loc: ∅
         │       │           │   └── block: ∅
         │       │           └── targets: (length: 1)
         │       │               └── @ LocalVariableTargetNode (location: (40,10)-(40,11))
@@ -418,6 +430,7 @@
         │   │   │           ├── closing_loc: (42,15)-(42,16) = "\""
         │   │   │           └── unescaped: ""
         │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
         │   │   └── block: ∅
         │   └── targets: (length: 1)
         │       └── @ LocalVariableTargetNode (location: (42,4)-(42,7))
@@ -448,6 +461,7 @@
         │   │           ├── closing_loc: (43,15)-(43,16) = "\""
         │   │           └── unescaped: ""
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (45,0)-(45,16))
         │   ├── flags: newline
@@ -473,6 +487,7 @@
         │   │           ├── closing_loc: (45,15)-(45,16) = "\""
         │   │           └── unescaped: ""
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ DefNode (location: (46,0)-(46,32))
         │   ├── flags: newline
@@ -524,6 +539,7 @@
         │   │           │   │           ├── closing_loc: (46,31)-(46,32) = "\""
         │   │           │   │           └── unescaped: ""
         │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
         │   │           │   └── block: ∅
         │   │           └── targets: (length: 1)
         │   │               └── @ LocalVariableTargetNode (location: (46,20)-(46,23))

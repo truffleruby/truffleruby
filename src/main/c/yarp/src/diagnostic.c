@@ -10,7 +10,7 @@
 
 #include "prism/diagnostic.h"
 
-#define PM_DIAGNOSTIC_ID_MAX 321
+#define PM_DIAGNOSTIC_ID_MAX 324
 
 /** This struct holds the data for each diagnostic. */
 typedef struct {
@@ -154,6 +154,7 @@ static const pm_diagnostic_data_t diagnostic_messages[PM_DIAGNOSTIC_ID_MAX] = {
     [PM_ERR_CONDITIONAL_WHILE_PREDICATE]        = { "expected a predicate expression for the `while` statement", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_CONSTANT_PATH_COLON_COLON_CONSTANT] = { "expected a constant after the `::` operator", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_DEF_ENDLESS]                        = { "could not parse the endless method body", PM_ERROR_LEVEL_SYNTAX },
+    [PM_ERR_DEF_ENDLESS_PARAMETERS]             = { "could not parse the endless method parameters", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_DEF_ENDLESS_SETTER]                 = { "invalid method name; a setter method cannot be defined in an endless method definition", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_DEF_NAME]                           = { "unexpected %s; expected a method name", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_DEF_PARAMS_TERM]                    = { "expected a delimiter to close the parameters", PM_ERROR_LEVEL_SYNTAX },
@@ -310,6 +311,7 @@ static const pm_diagnostic_data_t diagnostic_messages[PM_DIAGNOSTIC_ID_MAX] = {
     [PM_ERR_PARAMETER_UNEXPECTED_NO_KW]         = { "unexpected **nil; no keywords marker disallowed after keywords", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_PATTERN_ARRAY_MULTIPLE_RESTS]       = { "unexpected multiple '*' rest patterns in an array pattern", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_PATTERN_CAPTURE_DUPLICATE]          = { "duplicated variable name", PM_ERROR_LEVEL_SYNTAX },
+    [PM_ERR_PATTERN_CAPTURE_IN_ALTERNATIVE]     = { "variable capture in alternative pattern", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_PATTERN_EXPRESSION_AFTER_BRACKET]   = { "expected a pattern expression after the `[` operator", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_PATTERN_EXPRESSION_AFTER_COMMA]     = { "expected a pattern expression after `,`", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_PATTERN_EXPRESSION_AFTER_HROCKET]   = { "expected a pattern expression after `=>`", PM_ERROR_LEVEL_SYNTAX },
@@ -370,6 +372,7 @@ static const pm_diagnostic_data_t diagnostic_messages[PM_DIAGNOSTIC_ID_MAX] = {
     [PM_ERR_UNEXPECTED_INDEX_KEYWORDS]          = { "unexpected keyword arg given in index assignment; keywords are not allowed in index assignment expressions", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_UNEXPECTED_LABEL]                   = { "unexpected label", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_UNEXPECTED_MULTI_WRITE]             = { "unexpected multiple assignment; multiple assignment is not allowed in this context", PM_ERROR_LEVEL_SYNTAX },
+    [PM_ERR_UNEXPECTED_PARAMETER_DEFAULT_VALUE] = { "unexpected %s; expected a default value for a parameter", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_UNEXPECTED_RANGE_OPERATOR]          = { "unexpected range operator; .. and ... are non-associative and cannot be chained", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_UNEXPECTED_SAFE_NAVIGATION]         = { "&. inside multiple assignment destination", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_UNEXPECTED_TOKEN_CLOSE_CONTEXT]     = { "unexpected %s, assuming it is closing the parent %s", PM_ERROR_LEVEL_SYNTAX },
@@ -482,6 +485,7 @@ pm_diagnostic_id_human(pm_diagnostic_id_t diag_id) {
         case PM_ERR_CONDITIONAL_WHILE_PREDICATE: return "conditional_while_predicate";
         case PM_ERR_CONSTANT_PATH_COLON_COLON_CONSTANT: return "constant_path_colon_colon_constant";
         case PM_ERR_DEF_ENDLESS: return "def_endless";
+        case PM_ERR_DEF_ENDLESS_PARAMETERS: return "def_endless_parameters";
         case PM_ERR_DEF_ENDLESS_SETTER: return "def_endless_setter";
         case PM_ERR_DEF_NAME: return "def_name";
         case PM_ERR_DEF_PARAMS_TERM: return "def_params_term";
@@ -640,6 +644,7 @@ pm_diagnostic_id_human(pm_diagnostic_id_t diag_id) {
         case PM_ERR_PARAMETER_WILD_LOOSE_COMMA: return "parameter_wild_loose_comma";
         case PM_ERR_PATTERN_ARRAY_MULTIPLE_RESTS: return "pattern_array_multiple_rests";
         case PM_ERR_PATTERN_CAPTURE_DUPLICATE: return "pattern_capture_duplicate";
+        case PM_ERR_PATTERN_CAPTURE_IN_ALTERNATIVE: return "pattern_capture_in_alternative";
         case PM_ERR_PATTERN_EXPRESSION_AFTER_BRACKET: return "pattern_expression_after_bracket";
         case PM_ERR_PATTERN_EXPRESSION_AFTER_COMMA: return "pattern_expression_after_comma";
         case PM_ERR_PATTERN_EXPRESSION_AFTER_HROCKET: return "pattern_expression_after_hrocket";
@@ -701,6 +706,7 @@ pm_diagnostic_id_human(pm_diagnostic_id_t diag_id) {
         case PM_ERR_UNEXPECTED_INDEX_KEYWORDS: return "unexpected_index_keywords";
         case PM_ERR_UNEXPECTED_LABEL: return "unexpected_label";
         case PM_ERR_UNEXPECTED_MULTI_WRITE: return "unexpected_multi_write";
+        case PM_ERR_UNEXPECTED_PARAMETER_DEFAULT_VALUE: return "unexpected_parameter_default_value";
         case PM_ERR_UNEXPECTED_RANGE_OPERATOR: return "unexpected_range_operator";
         case PM_ERR_UNEXPECTED_SAFE_NAVIGATION: return "unexpected_safe_navigation";
         case PM_ERR_UNEXPECTED_TOKEN_CLOSE_CONTEXT: return "unexpected_token_close_context";

@@ -1,4 +1,5 @@
 // START: TruffleRuby
+// Needed by lib/cext/include/ruby/st.h
 #include <ruby.h>
 
 RBIMPL_WARNING_IGNORED(-Wunused-function)
@@ -115,7 +116,9 @@ RBIMPL_WARNING_IGNORED(-Wattributes)
 #include "internal.h"
 #include "internal/bits.h"
 #include "internal/hash.h"
+#ifndef TRUFFLERUBY
 #include "internal/sanitizers.h"
+#endif
 #include "internal/st.h"
 #include "ruby_assert.h"
 #endif

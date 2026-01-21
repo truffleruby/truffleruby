@@ -29,4 +29,5 @@
             │           │   └── flags: static_literal
             │           └── operator_loc: (1,4)-(1,6) = ".."
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

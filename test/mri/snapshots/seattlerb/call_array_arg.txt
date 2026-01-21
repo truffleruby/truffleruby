@@ -37,4 +37,5 @@
             │           ├── opening_loc: (1,5)-(1,6) = "["
             │           └── closing_loc: (1,12)-(1,13) = "]"
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

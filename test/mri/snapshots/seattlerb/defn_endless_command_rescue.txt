@@ -33,6 +33,7 @@
             │           │   │           ├── flags: static_literal, decimal
             │           │   │           └── value: 42
             │           │   ├── closing_loc: ∅
+            │           │   ├── equal_loc: ∅
             │           │   └── block: ∅
             │           ├── keyword_loc: (1,34)-(1,40) = "rescue"
             │           └── rescue_expression:

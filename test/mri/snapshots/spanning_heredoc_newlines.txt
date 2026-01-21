@@ -29,6 +29,7 @@
         │   │           ├── closing_loc: (3,0)-(4,0) = "\n"
         │   │           └── unescaped: ""
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (5,0)-(8,0))
         │   ├── flags: newline
@@ -54,6 +55,7 @@
         │   │           ├── closing_loc: (7,0)-(8,0) = "\n"
         │   │           └── unescaped: ""
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (9,0)-(12,0))
         │   ├── flags: newline
@@ -79,6 +81,7 @@
         │   │           ├── closing_loc: (11,0)-(12,0) = "\n"
         │   │           └── unescaped: ""
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (13,0)-(16,0))
         │   ├── flags: newline
@@ -104,6 +107,7 @@
         │   │           ├── closing_loc: (15,0)-(16,0) = "\n"
         │   │           └── unescaped: ""
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         ├── @ CallNode (location: (17,0)-(20,0))
         │   ├── flags: newline
@@ -129,6 +133,7 @@
         │   │           ├── closing_loc: (19,0)-(20,0) = "\n"
         │   │           └── unescaped: ""
         │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
         │   └── block: ∅
         └── @ CallNode (location: (21,0)-(24,0))
             ├── flags: newline
@@ -154,4 +159,5 @@
             │           ├── closing_loc: (23,0)-(24,0) = "\n"
             │           └── unescaped: ""
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅

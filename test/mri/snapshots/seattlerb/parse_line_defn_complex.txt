@@ -43,6 +43,7 @@
             │       │   │           ├── name: :y
             │       │   │           └── depth: 0
             │       │   ├── closing_loc: (2,5)-(2,6) = ")"
+            │       │   ├── equal_loc: ∅
             │       │   └── block: ∅
             │       ├── @ LocalVariableOperatorWriteNode (location: (3,2)-(3,8))
             │       │   ├── flags: newline

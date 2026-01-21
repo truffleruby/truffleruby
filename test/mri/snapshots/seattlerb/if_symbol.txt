@@ -27,6 +27,7 @@
             │   │           ├── closing_loc: ∅
             │   │           └── unescaped: "x"
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── then_keyword_loc: ∅
             ├── statements: ∅

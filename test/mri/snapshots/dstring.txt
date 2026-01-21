@@ -37,11 +37,12 @@
         │   │       │           ├── opening_loc: ∅
         │   │       │           ├── arguments: ∅
         │   │       │           ├── closing_loc: ∅
+        │   │       │           ├── equal_loc: ∅
         │   │       │           └── block: ∅
         │   │       └── closing_loc: (5,7)-(5,8) = "}"
         │   └── closing_loc: (5,8)-(5,9) = "\""
         ├── @ InterpolatedStringNode (location: (7,0)-(9,2))
-        │   ├── flags: newline, static_literal
+        │   ├── flags: newline
         │   ├── opening_loc: ∅
         │   ├── parts: (length: 2)
         │   │   ├── @ StringNode (location: (7,0)-(8,2))

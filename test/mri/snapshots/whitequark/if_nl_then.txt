@@ -18,6 +18,7 @@
             │   ├── opening_loc: ∅
             │   ├── arguments: ∅
             │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
             │   └── block: ∅
             ├── then_keyword_loc: (2,0)-(2,4) = "then"
             ├── statements:
@@ -33,6 +34,7 @@
             │           ├── opening_loc: ∅
             │           ├── arguments: ∅
             │           ├── closing_loc: ∅
+            │           ├── equal_loc: ∅
             │           └── block: ∅
             ├── subsequent: ∅
             └── end_keyword_loc: (2,9)-(2,12) = "end"

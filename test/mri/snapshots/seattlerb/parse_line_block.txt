@@ -31,4 +31,5 @@
             │           ├── name: :a
             │           └── depth: 0
             ├── closing_loc: ∅
+            ├── equal_loc: ∅
             └── block: ∅
