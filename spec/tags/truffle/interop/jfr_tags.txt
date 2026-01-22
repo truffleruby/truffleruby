@@ -1,0 +1,1 @@
+slow:JFR event streaming can stream JFR events
