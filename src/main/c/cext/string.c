@@ -450,11 +450,8 @@ VALUE rb_str_to_interned_str(VALUE str) {
 
 VALUE rb_interned_str(const char *ptr, long len) {
   rb_encoding *enc = rb_usascii_encoding();
-  for (long i = 0; i < len; i++) {
-    if ((unsigned char)ptr[i] >= 0x80) {
-      enc = rb_ascii8bit_encoding();
-      break;
-    }
+  if (search_nonascii(ptr, ptr + len)) {
+    enc = rb_ascii8bit_encoding();
   }
   VALUE str = rb_enc_str_new(ptr, len, enc);
   return rb_str_to_interned_str(str);
