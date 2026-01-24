@@ -449,11 +449,8 @@ VALUE rb_str_to_interned_str(VALUE str) {
 }
 
 VALUE rb_interned_str(const char *ptr, long len) {
-  rb_encoding *enc = rb_usascii_encoding();
-  if (search_nonascii(ptr, ptr + len)) {
-    enc = rb_ascii8bit_encoding();
-  }
-  VALUE str = rb_enc_str_new(ptr, len, enc);
+  VALUE str = rb_usascii_str_new(ptr, len);
+  RUBY_CEXT_INVOKE_NO_WRAP("make_binary_if_not_ascii_only", str);
   return rb_str_to_interned_str(str);
 }
 

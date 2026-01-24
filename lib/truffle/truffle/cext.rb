@@ -2469,4 +2469,9 @@ module Truffle::CExt
   def rb_tr_enc_is_unicode(enc)
     Primitive.encoding_is_unicode?(enc) ? 1 : 0
   end
+
+  def make_binary_if_not_ascii_only(str)
+    str.force_encoding(Encoding::BINARY) unless str.ascii_only?
+    nil
+  end
 end
