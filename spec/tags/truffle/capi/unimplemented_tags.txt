@@ -1,2 +1,1 @@
 slow:Unimplemented functions in the C-API abort the process and show an error including the function name
-sulong(different behavior):Unimplemented functions in the C-API abort the process and show an error including the function name

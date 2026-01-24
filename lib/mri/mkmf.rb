@@ -2465,19 +2465,6 @@ RULES
   # +VPATH+ and added to the list of +INCFLAGS+.
   #
   def create_makefile(target, srcprefix = nil)
-    if defined?(::TruffleRuby) and Truffle::Boot.get_option('cexts-sulong') and ($LIBRUBYARG == nil or !Truffle::Boot.get_option('building-core-cexts'))
-      # $LIBRUBYARG was explicitly unset, the built library is not a C extension but used with FFI (e.g., sassc does).
-      # Since $LIBRUBYARG is unset we won't link to libgraalvm-llvm.so, which is expected.
-      # In the case the library uses C++ code, libc++.so/libc++abi.so will be linked and needs to be found by NFI.
-      # The toolchain does not pass -rpath automatically for libc++.so/libc++abi.so, so we do it.
-      #
-      # We also add this rpath for C++ extensions (which have $LIBRUBYARG != nil)
-      # so that libc++.so/libc++abi.so can be found.
-      libcxx_dir = ::Truffle::Boot.toolchain_paths(:LD_LIBRARY_PATH)
-      raise 'libcxx_dir should not be empty' if libcxx_dir.empty?
-      $DLDFLAGS << " -rpath #{libcxx_dir}"
-    end
-
     $target = target
     libpath = $DEFLIBPATH|$LIBPATH
     message "creating Makefile\n"

@@ -449,15 +449,13 @@ public final class FeatureLoader {
                 final Object truffleCExt = truffleModule.fields.getConstant("CExt").getValue();
 
                 Object libTrampoline = null;
-                if (!context.getOptions().CEXTS_SULONG) {
-                    var libTrampolinePath = language.getRubyHome() + "/lib/cext/libtrufflerubytrampoline" +
-                            Platform.LIB_SUFFIX;
-                    if (context.getOptions().CEXTS_LOG_LOAD) {
-                        RubyLanguage.LOGGER
-                                .info(() -> String.format("loading libtrufflerubytrampoline %s", libTrampolinePath));
-                    }
-                    libTrampoline = loadCExtLibrary("libtrufflerubytrampoline", libTrampolinePath, requireNode, false);
+                var libTrampolinePath = language.getRubyHome() + "/lib/cext/libtrufflerubytrampoline" +
+                        Platform.LIB_SUFFIX;
+                if (context.getOptions().CEXTS_LOG_LOAD) {
+                    RubyLanguage.LOGGER
+                            .info(() -> String.format("loading libtrufflerubytrampoline %s", libTrampolinePath));
                 }
+                libTrampoline = loadCExtLibrary("libtrufflerubytrampoline", libTrampolinePath, requireNode, false);
 
                 final String rubyLibPath = language.getRubyHome() + "/lib/cext/libtruffleruby" + Platform.LIB_SUFFIX;
                 final Object library = loadCExtLibRuby(rubyLibPath, feature, requireNode);
@@ -468,10 +466,8 @@ public final class FeatureLoader {
                     // Truffle::CExt.register_libtruffleruby(libtruffleruby)
                     interop.invokeMember(truffleCExt, "init_libtruffleruby", library);
 
-                    if (!context.getOptions().CEXTS_SULONG) {
-                        // Truffle::CExt.init_libtrufflerubytrampoline(libtrampoline)
-                        interop.invokeMember(truffleCExt, "init_libtrufflerubytrampoline", libTrampoline);
-                    }
+                    // Truffle::CExt.init_libtrufflerubytrampoline(libtrampoline)
+                    interop.invokeMember(truffleCExt, "init_libtrufflerubytrampoline", libTrampoline);
                 } catch (InteropException e) {
                     throw TranslateInteropExceptionNode.executeUncached(e);
                 } finally {
