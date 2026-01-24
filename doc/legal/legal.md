@@ -32,7 +32,7 @@ MRI is copyright Yukihiro Matsumoto. It is made available under the terms of the
 MRI itself includes some third-party code that we have then included. This
 includes, but isn't limited to:
 
-The general-purpose hash table library `src/main/c/cext/st.c` and
+The general-purpose hash table library `src/main/c/cext-trampoline/st.c` and
 `lib/cext/include/ruby/st.h` was written originally be Peter Moore and is
 public domain.
 
