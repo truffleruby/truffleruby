@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 files = Dir['src/main/c/cext/*.c'] + Dir['spec/ruby/optional/capi/ext/*.c']
-files -= %w[src/main/c/cext/st.c]
+files -= %w[src/main/c/cext-trampoline/st.c]
 
 files.each do |file|
   contents = File.read(file)
