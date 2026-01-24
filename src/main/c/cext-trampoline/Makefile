@@ -29,7 +29,7 @@ endif
 ROOT := $(realpath ../../../..)
 RUBY_HDR_DIR := $(ROOT)/lib/cext/include
 
-OBJECT_FILES := trampoline.o st.o strlcpy.o cext_constants.o
+OBJECT_FILES := trampoline.o st.o strlcpy.o cext_constants.o varargs.o struct_by_value.o
 
 libtrufflerubytrampoline.$(SOEXT): $(OBJECT_FILES) Makefile
 	$(Q) $(CC) -shared $(LDFLAGS) -o $@ $(OBJECT_FILES) $(LIBS)
