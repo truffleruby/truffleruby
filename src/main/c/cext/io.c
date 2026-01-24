@@ -180,6 +180,8 @@ int rb_wait_for_single_fd(int fd, int events, struct timeval *tv) {
   return polyglot_as_i32(polyglot_invoke(RUBY_CEXT, "rb_wait_for_single_fd", fd, events, tv_sec, tv_usec));
 }
 
+void rb_tr_time_interval(VALUE num, struct timeval *result);
+
 // The only difference between this implementation and CRuby's one
 // is that a fiber scheduler isn't supported here
 VALUE rb_io_wait(VALUE io, VALUE events, VALUE timeout) {
@@ -190,7 +192,7 @@ VALUE rb_io_wait(VALUE io, VALUE events, VALUE timeout) {
   struct timeval *tv = NULL;
 
   if (timeout != Qnil) {
-    tv_storage = rb_time_interval(timeout);
+    rb_tr_time_interval(timeout, &tv_storage);
     tv = &tv_storage;
   }
 

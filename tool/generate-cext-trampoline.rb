@@ -196,7 +196,7 @@ C
       if full_arg == "void"
         ""
       elsif full_arg == "..."
-        raise "C does not allow to forward varargs:\n#{declaration}\nInstead copy the approach used for rb_yield_values() or rb_sprintf()\n\n"
+        raise "C does not allow to forward varargs:\n#{declaration}\nSee src/main/c/cext-trampoline/varargs.c\n\n"
       else
         name1 or name2 or raise "Could not find argument name for #{full_arg}"
       end
@@ -233,23 +233,6 @@ C
     f.puts "}"
     f.puts
   end
-
-  f.puts <<C
-// Return struct-by-value functions
-
-struct timeval rb_time_timeval(VALUE time) {
-  struct timeval result;
-  rb_tr_time_timeval(time, &result);
-  return result;
-}
-
-struct timespec rb_time_timespec(VALUE time) {
-  struct timespec result;
-  rb_tr_time_timespec(time, &result);
-  return result;
-}
-
-C
 
   f.puts <<C
 // Init functions

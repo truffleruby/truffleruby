@@ -88,10 +88,6 @@ VALUE rb_ary_new(void);
  */
 VALUE rb_ary_new_capa(long capa);
 
-#ifdef TRUFFLERUBY
-VALUE rb_tr_ary_new_from_args_va_list(long n, va_list args);
-#endif
-
 /**
  * Constructs an array from the passed objects.
  *
@@ -99,17 +95,7 @@ VALUE rb_tr_ary_new_from_args_va_list(long n, va_list args);
  * @param[in]  ...  Arbitrary ruby objects, filled into the returning array.
  * @return     An array of size `n`, whose contents are the passed objects.
  */
-#ifdef TRUFFLERUBY
-static inline VALUE rb_ary_new_from_args(long n, ...) {
-    va_list args;
-    va_start(args, n);
-    VALUE array = rb_tr_ary_new_from_args_va_list(n, args);
-    va_end(args);
-    return array;
-}
-#else
 VALUE rb_ary_new_from_args(long n, ...);
-#endif
 
 /**
  * Identical to rb_ary_new_from_args(), except how objects are passed.

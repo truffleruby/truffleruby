@@ -134,6 +134,8 @@ VALUE rb_yield_splat(VALUE values) {
   }
 }
 
+VALUE rb_tr_ary_new_from_args_va_list(long n, va_list args);
+
 VALUE rb_tr_yield_values_va_list(int n, va_list args) {
   VALUE values = rb_tr_ary_new_from_args_va_list(n, args);
   return rb_yield_splat(values);

@@ -135,10 +135,6 @@ VALUE rb_each(VALUE obj);
  */
 VALUE rb_yield(VALUE val);
 
-#ifdef TRUFFLERUBY
-VALUE rb_tr_yield_values_va_list(int n, va_list args);
-#endif
-
 /**
  * Identical to rb_yield(),  except it takes variadic number  of parameters and
  * pass them to the block.
@@ -148,17 +144,7 @@ VALUE rb_tr_yield_values_va_list(int n, va_list args);
  * @exception  rb_eLocalJumpError  There is no block given.
  * @return     Evaluated value of the given block.
  */
-#ifdef TRUFFLERUBY
-static inline VALUE rb_yield_values(int n, ...) {
-    va_list args;
-    va_start(args, n);
-    VALUE result = rb_tr_yield_values_va_list(n, args);
-    va_end(args);
-    return result;
-}
-#else
 VALUE rb_yield_values(int n, ...);
-#endif
 
 /**
  * Identical to rb_yield_values(),  except it takes the parameters as a C array
@@ -377,10 +363,6 @@ VALUE rb_block_call_kw(VALUE obj, ID mid, int argc, const VALUE *argv, rb_block_
  */
 VALUE rb_rescue(VALUE (*b_proc)(VALUE), VALUE data1, VALUE (*r_proc)(VALUE, VALUE), VALUE data2);
 
-#ifdef TRUFFLERUBY
-VALUE rb_tr_rescue2_va_list(VALUE (*b_proc)(VALUE), VALUE data1, VALUE (*r_proc)(VALUE, VALUE), VALUE data2, va_list args);
-#endif
-
 /**
  * An equivalent of `rescue` clause.
  *
@@ -403,17 +385,7 @@ VALUE rb_tr_rescue2_va_list(VALUE (*b_proc)(VALUE), VALUE data1, VALUE (*r_proc)
  * @see            rb_protect
  * @ingroup        exception
  */
-#ifdef TRUFFLERUBY
-static inline VALUE rb_rescue2(VALUE (*b_proc)(VALUE), VALUE data1, VALUE (*r_proc)(VALUE, VALUE), VALUE data2, ...) {
-    va_list args;
-    va_start(args, data2);
-    VALUE result = rb_tr_rescue2_va_list(b_proc, data1, r_proc, data2, args);
-    va_end(args);
-    return result;
-}
-#else
 VALUE rb_rescue2(VALUE (*b_proc)(VALUE), VALUE data1, VALUE (*r_proc)(VALUE, VALUE), VALUE data2, ...);
-#endif
 
 /**
  * Identical to  rb_rescue2(), except  it takes  `va_list` instead  of variadic
