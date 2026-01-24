@@ -105,7 +105,6 @@ public final class OptionsCatalog {
     public static final OptionKey<Boolean> CEXTS_TO_NATIVE_COUNT_KEY = new OptionKey<>(CEXTS_TO_NATIVE_STATS_KEY.getDefaultValue());
     public static final OptionKey<Boolean> BACKTRACE_ON_TO_NATIVE_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> CEXTS_KEEP_HANDLES_ALIVE_KEY = new OptionKey<>(false);
-    public static final OptionKey<Boolean> CEXTS_SULONG_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> LAZY_BUILTINS_KEY = new OptionKey<>(LAZY_CALLTARGETS_KEY.getDefaultValue());
     public static final OptionKey<Boolean> LAZY_TRANSLATION_CORE_KEY = new OptionKey<>(LAZY_CALLTARGETS_KEY.getDefaultValue());
     public static final OptionKey<Boolean> CHAOS_DATA_KEY = new OptionKey<>(false);
@@ -846,14 +845,6 @@ public final class OptionsCatalog {
             .usageSyntax("")
             .build();
 
-    public static final OptionDescriptor CEXTS_SULONG = OptionDescriptor
-            .newBuilder(CEXTS_SULONG_KEY, "ruby.cexts-sulong")
-            .help("Run C extensions on Sulong instead of natively, requires rebuilding TruffleRuby from source with this option")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("")
-            .build();
-
     public static final OptionDescriptor LAZY_BUILTINS = OptionDescriptor
             .newBuilder(LAZY_BUILTINS_KEY, "ruby.lazy-builtins")
             .help("Load builtin classes (core methods & primitives) lazily on first use")
@@ -1498,8 +1489,6 @@ public final class OptionsCatalog {
                 return BACKTRACE_ON_TO_NATIVE;
             case "ruby.keep-handles-alive":
                 return CEXTS_KEEP_HANDLES_ALIVE;
-            case "ruby.cexts-sulong":
-                return CEXTS_SULONG;
             case "ruby.lazy-builtins":
                 return LAZY_BUILTINS;
             case "ruby.lazy-translation-core":
@@ -1710,7 +1699,6 @@ public final class OptionsCatalog {
             CEXTS_TO_NATIVE_COUNT,
             BACKTRACE_ON_TO_NATIVE,
             CEXTS_KEEP_HANDLES_ALIVE,
-            CEXTS_SULONG,
             LAZY_BUILTINS,
             LAZY_TRANSLATION_CORE,
             CHAOS_DATA,

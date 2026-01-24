@@ -183,8 +183,6 @@ INTERNAL: # Options for debugging the TruffleRuby implementation
     CEXTS_TO_NATIVE_COUNT: [cexts-to-native-count, boolean, CEXTS_TO_NATIVE_STATS, Track the number of conversions of VALUEs to native]
     BACKTRACE_ON_TO_NATIVE: [backtraces-to-native, boolean, false, Show a backtrace when a ValueWrapper handle is created for a Ruby object]
     CEXTS_KEEP_HANDLES_ALIVE: [keep-handles-alive, boolean, false, Keep handles for value wrappers alive forever]
-    # jt clean cexts && TRUFFLERUBYOPT="--experimental-options --cexts-sulong" jt build --env toolchain && TRUFFLERUBYOPT="--experimental-options --cexts-sulong" jt -u toolchain test :cext
-    CEXTS_SULONG: [cexts-sulong, boolean, false, "Run C extensions on Sulong instead of natively, requires rebuilding TruffleRuby from source with this option"]
 
     # Options to debug the implementation
     LAZY_BUILTINS: [lazy-builtins, boolean, LAZY_CALLTARGETS, Load builtin classes (core methods & primitives) lazily on first use]

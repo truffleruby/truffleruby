@@ -40,7 +40,7 @@ module RbConfig
   ruby_home = Truffle::Boot.ruby_home
   TOPDIR = ruby_home
 
-  sulong = Truffle::Boot.get_option('cexts-sulong')
+  build_libtruffleruby = ENV['BUILD_LIBTRUFFLERUBY'] == 'true'
 
   host_os = Truffle::System.host_os
   host_cpu = Truffle::System.host_cpu
@@ -64,7 +64,7 @@ module RbConfig
   includedir = "#{prefix}/lib/cext" # the parent dir of rubyhdrdir
   cflags_pre = ''
 
-  if sulong
+  if build_libtruffleruby
     ar = Truffle::Boot.toolchain_executable(:AR)
     cc = Truffle::Boot.toolchain_executable(:CC)
     cxx = Truffle::Boot.toolchain_executable(:CXX)
@@ -95,8 +95,8 @@ module RbConfig
   end
 
   # Determine the various flags for native compilation
-  optflags = sulong ? '' : '-O3 -fno-fast-math'
-  debugflags = sulong ? '' : '-ggdb3'
+  optflags = build_libtruffleruby ? '' : '-O3 -fno-fast-math'
+  debugflags = build_libtruffleruby ? '' : '-ggdb3'
   warnflags = [
     '-Werror=implicit-function-declaration', # https://bugs.ruby-lang.org/issues/18615
     '-Wno-int-conversion',             # MRI has VALUE defined as long while we have it as void*

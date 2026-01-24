@@ -24,9 +24,6 @@ module Truffle::CExt
   ALLOCATOR_FUNC = Primitive.object_hidden_var_create :allocator_func
   RB_IO_STRUCT = Primitive.object_hidden_var_create :rb_io_struct
 
-  SULONG = Truffle::Boot.get_option('cexts-sulong')
-  NFI = !SULONG
-
   CEXT_LOCK = Truffle::Boot.get_option('cexts-lock')
 
   SET_LIBTRUFFLERUBY = -> libtruffleruby do
@@ -180,8 +177,6 @@ module Truffle::CExt
     SET_LIBTRUFFLERUBY.call(libtruffleruby)
 
     libtruffleruby.rb_tr_init(Truffle::CExt)
-
-    SETUP_WRAPPERS.call(libtruffleruby) if SULONG
   end
 
   def self.init_libtrufflerubytrampoline(libtrampoline)
@@ -2071,11 +2066,6 @@ module Truffle::CExt
   end
 
   private def rb_thread_call_without_gvl_inner(function, data1, unblock, data2)
-    if SULONG
-      Truffle::Interop.to_native(unblock)
-      Truffle::Interop.to_native(data2)
-    end
-
     Primitive.call_with_unblocking_function(Thread.current,
       POINTER_TO_POINTER_WRAPPER, function, data1,
       Truffle::Interop.as_pointer(unblock), Truffle::Interop.as_pointer(data2))
@@ -2274,7 +2264,7 @@ module Truffle::CExt
     Primitive.cext_wrap(value)
   end
 
-  RB_THREAD_CURRENT_BACKTRACE_LOCATIONS_OMIT = NFI ? 4 : 5
+  RB_THREAD_CURRENT_BACKTRACE_LOCATIONS_OMIT = 4
 
   def rb_debug_inspector_open_contexts_and_backtrace
     contexts = Truffle::Debug.get_frame_bindings.map do |binding|

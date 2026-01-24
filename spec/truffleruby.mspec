@@ -105,10 +105,6 @@ class MSpecScript
     else
       excludes << 'jvm'
     end
-
-    if Truffle::Boot.get_option('cexts-sulong')
-      excludes << 'sulong'
-    end
   end
 
   if windows?

@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 require 'backtraces'
-abort "This test's expected output assumes not using --cexts-sulong" if Truffle::Boot.get_option('cexts-sulong')
+
 TEST_DIR = File.expand_path("../..", __FILE__)
 SRC_DIR = File.expand_path("../../../../../..", __FILE__)
 

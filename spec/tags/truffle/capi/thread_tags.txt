@@ -1,4 +1,2 @@
 slow:TruffleRuby C-API Thread function rb_thread_call_without_gvl is unblocked with RUBY_UBF_IO when using CPUSampler
 slow:TruffleRuby C-API Thread function rb_thread_call_without_gvl is unblocked with a custom unblock function when using CPUSampler
-sulong(safepoint inside C code instead):TruffleRuby C-API Thread function rb_thread_call_without_gvl is unblocked with RUBY_UBF_IO when using CPUSampler
-sulong(would need to enter the context to call the unblock function):TruffleRuby C-API Thread function rb_thread_call_without_gvl is unblocked with a custom unblock function when using CPUSampler
