@@ -447,3 +447,13 @@ VALUE rb_enc_interned_str(const char *ptr, long len, rb_encoding *enc) {
 VALUE rb_str_to_interned_str(VALUE str) {
   return RUBY_INVOKE(str, "-@");
 }
+
+VALUE rb_interned_str(const char *ptr, long len) {
+  VALUE str = rb_usascii_str_new(ptr, len);
+  RUBY_CEXT_INVOKE_NO_WRAP("make_binary_if_not_ascii_only", str);
+  return rb_str_to_interned_str(str);
+}
+
+VALUE rb_interned_str_cstr(const char *ptr) {
+  return rb_interned_str(ptr, strlen(ptr));
+}
