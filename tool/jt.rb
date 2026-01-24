@@ -88,7 +88,7 @@ LTS_JDK_VERSION = '21'
 IGV_JDK_VERSION = '21'
 DEFAULT_JDK_VERSION = 'latest'
 
-BOOTSTRAP_GRAALVM_VERSION = '25.0.1'
+BOOTSTRAP_GRAALVM_VERSION = '25.0.2'
 
 # Not yet 'jdk.graal' as we test against 21 and 21 does not know 'jdk.graal'
 GRAAL_OPTION_PREFIX = 'graal'

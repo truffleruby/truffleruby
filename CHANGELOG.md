@@ -8,6 +8,7 @@ Bug fixes:
 
 * Fix `Integer#ceil` and `Float#ceil` with negative precision (#3911, @trinistr).
 * Update `search_nonascii()` to not rely on undefined behavior (#4110, @eregon).
+* Update to GraalVM & Truffle 25.0.2 (#4116, @eregon).
 
 Compatibility:
 
