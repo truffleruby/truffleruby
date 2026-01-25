@@ -251,14 +251,19 @@ module Utilities
   end
 
   def find_mx
-    if which('mx')
-      'mx'
-    else
+    @mx_version ||= begin
       suite = File.read("#{TRUFFLERUBY_DIR}/mx.truffleruby/suite.py")
       regex = /"mxversion":\s*"([^"]+)"/
       raise 'mx version not found in mx.truffleruby/suite.py' unless regex =~ suite
-      mx_version = $1
-      mx_repo = find_or_clone_repo('https://github.com/graalvm/mx.git', mx_version)
+      $1
+    end
+
+    if mx = which('mx')
+      mx_repo = File.dirname(mx)
+      sh 'git', 'checkout', @mx_version, chdir: mx_repo
+      'mx'
+    else
+      mx_repo = find_or_clone_repo('https://github.com/graalvm/mx.git', @mx_version)
       "#{mx_repo}/mx"
     end
   end
@@ -377,8 +382,8 @@ module Utilities
     path = File.expand_path("../#{name}", TRUFFLERUBY_DIR)
     unless Dir.exist? path
       sh 'git', 'clone', url, path
-      sh 'git', 'checkout', commit, chdir: path if commit
     end
+    sh 'git', 'checkout', commit, chdir: path if commit
     path
   end
 
