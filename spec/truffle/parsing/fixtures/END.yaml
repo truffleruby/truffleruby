@@ -1,7 +1,7 @@
 subject: "END block"
 description: "END { ... }"
 notes: >
-  Is translated into a `Truffle::KernelOperations.at_exit(false) { ... }` call.
+  Is translated into a `Kernel.at_exit(false) { ... }` call.
 focused_on_node: "org.truffleruby.language.control.OnceNode"
 ruby: |
   END {
@@ -51,14 +51,6 @@ ast: |
                                               sourceCharIndex = -1
                                               sourceLength = 0
                                           children:
-                                              arguments = [
-                                                  BooleanLiteralNode
-                                                      attributes:
-                                                          flags = 0
-                                                          sourceCharIndex = -1
-                                                          sourceLength = 0
-                                                          value = false
-                                              ]
                                               block =
                                                   BlockDefinitionNodeGen
                                                       attributes:
@@ -128,26 +120,18 @@ ast: |
                                                                                           value = 2
                                                                               ]
                                               receiver =
-                                                  ReadConstantNode
+                                                  ReadConstantWithLexicalScopeNode
                                                       attributes:
                                                           flags = 0
-                                                          name = "KernelOperations"
+                                                          lexicalScope =  :: Object
+                                                          name = "Kernel"
                                                           sourceCharIndex = -1
                                                           sourceLength = 0
                                                       children:
-                                                          moduleNode =
-                                                              ReadConstantWithLexicalScopeNode
+                                                          getConstantNode =
+                                                              GetConstantNodeGen
+                                                          lookupConstantNode =
+                                                              LookupConstantWithLexicalScopeNodeGen
                                                                   attributes:
-                                                                      flags = 0
                                                                       lexicalScope =  :: Object
-                                                                      name = "Truffle"
-                                                                      sourceCharIndex = -1
-                                                                      sourceLength = 0
-                                                                  children:
-                                                                      getConstantNode =
-                                                                          GetConstantNodeGen
-                                                                      lookupConstantNode =
-                                                                          LookupConstantWithLexicalScopeNodeGen
-                                                                              attributes:
-                                                                                  lexicalScope =  :: Object
-                                                                                  name = "Truffle"
+                                                                      name = "Kernel"

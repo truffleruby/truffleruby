@@ -1718,6 +1718,13 @@ module Truffle::CExt
     end
   end
 
+  def ruby_vm_at_exit(callback, arg)
+    # No C ext lock, this is called when only 1 Thread is left
+    Primitive.add_native_exit_hook(-> {
+      Primitive.interop_execute(POINTER_TO_VOID_WRAPPER, [callback, arg])
+    })
+  end
+
   def mark_object_on_call_exit(object)
     Primitive.cext_mark_object_on_call_exit(object)
   end

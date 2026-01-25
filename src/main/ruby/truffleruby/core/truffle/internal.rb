@@ -42,9 +42,9 @@ module Truffle::Internal
     if Truffle::POSIX.respond_to? :flock
       # I think if the file can't be locked then we just silently ignore
       if file.flock(File::LOCK_EX | File::LOCK_NB)
-        Truffle::KernelOperations.at_exit true do
+        Primitive.add_system_exit_hook(-> do
           file.flock(File::LOCK_UN)
-        end
+        end)
       end
     end
 

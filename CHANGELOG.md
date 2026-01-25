@@ -29,6 +29,7 @@ Compatibility:
 * Define C API var-args and struct-by-value functions as non-inline to support taking their address (#3396, @eregon).
 * Implement `GC.config` (#3883, @eregon).
 * Use the `timeout` gem now that it is efficient and uses a single Thread (#3883, @eregon).
+* Implement `ruby_vm_at_exit()`, used by `rbs` (@eregon).
 
 Performance:
 

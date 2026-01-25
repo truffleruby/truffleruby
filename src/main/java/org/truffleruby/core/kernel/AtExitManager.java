@@ -37,18 +37,23 @@ public final class AtExitManager {
 
     private final Deque<RubyProc> atExitHooks = new ConcurrentLinkedDeque<>();
     private final Deque<RubyProc> systemExitHooks = new ConcurrentLinkedDeque<>();
+    private final Deque<RubyProc> nativeExitHooks = new ConcurrentLinkedDeque<>();
 
     public AtExitManager(RubyContext context, RubyLanguage language) {
         this.context = context;
         this.language = language;
     }
 
-    public void add(RubyProc block, boolean always) {
-        if (always) {
-            systemExitHooks.push(block);
-        } else {
-            atExitHooks.push(block);
-        }
+    public void addRegularAtExitHook(RubyProc block) {
+        atExitHooks.push(block);
+    }
+
+    public void addSystemExitHook(RubyProc block) {
+        systemExitHooks.push(block);
+    }
+
+    public void addNativeExitHook(RubyProc block) {
+        nativeExitHooks.push(block);
     }
 
     public AbstractTruffleException runAtExitHooks() {
@@ -62,6 +67,16 @@ public final class AtExitManager {
             throw e;
         } catch (RuntimeException | Error e) {
             BacktraceFormatter.printInternalError(context, e, "unexpected internal exception in system at_exit");
+        }
+    }
+
+    public void runNativeExitHooks() {
+        try {
+            runExitHooks(nativeExitHooks);
+        } catch (ExitException | ThreadDeath e) {
+            throw e;
+        } catch (RuntimeException | Error e) {
+            BacktraceFormatter.printInternalError(context, e, "unexpected internal exception in native at_exit");
         }
     }
 
@@ -113,4 +128,5 @@ public final class AtExitManager {
             context.getDefaultBacktraceFormatter().printRubyExceptionOnEnvStderr("", exception);
         }
     }
+
 }

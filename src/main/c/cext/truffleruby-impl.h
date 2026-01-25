@@ -9,6 +9,7 @@
  */
 #include <ruby.h>
 #include <ruby/encoding.h>
+#include <ruby/vm.h>
 
 #include <stdlib.h>
 #include <stdarg.h>

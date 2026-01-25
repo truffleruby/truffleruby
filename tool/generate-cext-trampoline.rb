@@ -99,6 +99,7 @@ COPYRIGHT
 #include <ruby/io.h>
 #include <ruby/ractor.h>
 #include <ruby/thread_native.h>
+#include <ruby/vm.h>
 
 #include <internal_all.h>
 

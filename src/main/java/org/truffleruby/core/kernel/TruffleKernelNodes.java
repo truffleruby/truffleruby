@@ -46,7 +46,6 @@ import org.truffleruby.language.loader.CodeLoader;
 import org.truffleruby.language.loader.FileLoader;
 import org.truffleruby.language.locals.FindDeclarationVariableNodes;
 import org.truffleruby.language.methods.DeclarationContext;
-import org.truffleruby.annotations.Split;
 import org.truffleruby.language.threadlocal.SpecialVariableStorage;
 import org.truffleruby.parser.ParserContext;
 import org.truffleruby.parser.RubySource;
@@ -65,13 +64,32 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 @CoreModule("Truffle::KernelOperations")
 public abstract class TruffleKernelNodes {
 
-    @CoreMethod(names = "at_exit", onSingleton = true, needsBlock = true, required = 1, split = Split.NEVER)
-    public abstract static class AtExitSystemNode extends CoreMethodArrayArgumentsNode {
-
+    @Primitive(name = "add_regular_at_exit_hook")
+    public abstract static class AddRegularAtExitHookNode extends PrimitiveArrayArgumentsNode {
         @TruffleBoundary
         @Specialization
-        Object atExit(boolean always, RubyProc block) {
-            getContext().getAtExitManager().add(block, always);
+        Object add(RubyProc block) {
+            getContext().getAtExitManager().addRegularAtExitHook(block);
+            return nil;
+        }
+    }
+
+    @Primitive(name = "add_system_exit_hook")
+    public abstract static class AddSystemExitHookNode extends PrimitiveArrayArgumentsNode {
+        @TruffleBoundary
+        @Specialization
+        Object add(RubyProc block) {
+            getContext().getAtExitManager().addSystemExitHook(block);
+            return nil;
+        }
+    }
+
+    @Primitive(name = "add_native_exit_hook")
+    public abstract static class AddNativeExitHookNode extends PrimitiveArrayArgumentsNode {
+        @TruffleBoundary
+        @Specialization
+        Object add(RubyProc block) {
+            getContext().getAtExitManager().addNativeExitHook(block);
             return nil;
         }
     }

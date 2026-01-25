@@ -15,7 +15,6 @@ import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.shadowed.org.jcodings.specific.EUCJPEncoding;
 import org.graalvm.shadowed.org.jcodings.specific.Windows_31JEncoding;
 import org.prism.Nodes.ConstantReadNode;
-import org.prism.Nodes.Node;
 import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -2913,16 +2912,13 @@ public class YARPTranslator extends YARPBaseTranslator {
     @Override
     public RubyNode visitPostExecutionNode(Nodes.PostExecutionNode node) {
         // END blocks run after any other code - not just code in the same file
-        // Turn into a call to Truffle::KernelOperations.at_exit
+        // Turn into a call to Kernel.at_exit
 
         // Create Prism CallNode to avoid duplication block literal related logic
-        final var receiver = new Nodes.ConstantPathNode(
-                0, 0, new Nodes.ConstantReadNode(0, 0, "Truffle"),
-                "KernelOperations");
-        final var arguments = new Nodes.ArgumentsNode(0, 0, NO_FLAGS, new Nodes.Node[]{ new Nodes.FalseNode(0, 0) });
+        final var receiver = new Nodes.ConstantReadNode(0, 0, "Kernel");
         final var block = new Nodes.BlockNode(0, 0, StringUtils.EMPTY_STRING_ARRAY, null, node.statements);
 
-        final var callNode = new Nodes.CallNode(0, 0, NO_FLAGS, receiver, "at_exit", arguments, block).accept(this);
+        final var callNode = new Nodes.CallNode(0, 0, NO_FLAGS, receiver, "at_exit", null, block).accept(this);
         final RubyNode rubyNode = new OnceNode(callNode);
         return assignPositionAndFlags(node, rubyNode);
     }
@@ -3557,8 +3553,9 @@ public class YARPTranslator extends YARPBaseTranslator {
     }
 
     /** Translates a module or class body to create a new module or class or "reopen" an existing one. */
-    private RubyNode openModule(Node moduleNode, RubyNode defineOrGetNode, String modulePath, String moduleBasename,
-            String[] locals, Node bodyNode, OpenModule type, boolean dynamicConstantLookup) {
+    private RubyNode openModule(Nodes.Node moduleNode, RubyNode defineOrGetNode, String modulePath,
+            String moduleBasename, String[] locals, Nodes.Node bodyNode, OpenModule type,
+            boolean dynamicConstantLookup) {
         final String methodName = type.format(moduleBasename);
 
         final LexicalScope newLexicalScope = dynamicConstantLookup
