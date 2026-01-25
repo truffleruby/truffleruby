@@ -1,0 +1,34 @@
+name: Check ruby-bench benchmarks still work
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 13 * * *'
+permissions:
+  contents: read
+
+jobs:
+  # Based on https://github.com/ruby/ruby-bench/blob/main/.github/workflows/test.yml
+  test-ruby-bench:
+    if: github.repository == 'truffleruby/truffleruby'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Clone ruby-bench
+      uses: actions/checkout@v4
+      with:
+        repository: ruby/ruby-bench
+
+    - name: Setup TruffleRuby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: truffleruby-head
+
+    # knucleotide: needs fork
+    # lobsters: commonmarker fails to install
+    # ruby-lsp: rbs_extension.so: undefined symbol: ruby_vm_at_exit
+    # shipit: cannot load such file -- pty
+    - name: Test run_benchmarks.rb
+      run: ./run_benchmarks.rb --excludes=knucleotide,lobsters,ruby-lsp,shipit
+      env:
+        WARMUP_ITRS: '1'
+        MIN_BENCH_ITRS: '1'
+        MIN_BENCH_TIME: '0'
