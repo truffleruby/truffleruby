@@ -40,7 +40,6 @@ cp -R "$RUBY_SOURCE_DIR/lib" lib/mri
 # CRuby-specific
 rm -r lib/mri/ruby_vm
 # We have our own version under lib/truffle
-rm lib/mri/timeout.rb
 rm lib/mri/weakref.rb
 # Files not actually installed in MRI
 find lib/mri -name '*.gemspec' -delete

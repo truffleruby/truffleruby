@@ -28,6 +28,7 @@ Compatibility:
 * Implement `rb_interned_str()` and `rb_interned_str_cstr()` (#4018, @herwinw).
 * Define C API var-args and struct-by-value functions as non-inline to support taking their address (#3396, @eregon).
 * Implement `GC.config` (#3883, @eregon).
+* Use the `timeout` gem now that it is efficient and uses a single Thread (#3883, @eregon).
 
 Performance:
 
