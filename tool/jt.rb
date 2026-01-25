@@ -1143,10 +1143,11 @@ module Commands
     chdir(ext_dir) do
       ext_file = "#{name}.#{DLEXT}"
 
-      if File.exist?(ext_file)
+      destination = target ? "#{target}/#{ext_file}" : ext_file
+      if File.exist?(destination)
         max_mtime_sources = (Dir.glob('*.{c,h.rb}') - [ext_file]).map { |file| File.mtime(file) }.max
-        if File.mtime(ext_file) > max_mtime_sources
-          STDERR.puts "#{ext_file} already up-to-date"
+        if File.mtime(destination) > max_mtime_sources
+          STDERR.puts "#{destination} already up-to-date"
           return
         end
       end
