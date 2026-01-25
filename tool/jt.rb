@@ -260,7 +260,7 @@ module Utilities
 
     if mx = which('mx')
       mx_repo = File.dirname(mx)
-      sh 'git', 'checkout', @mx_version, chdir: mx_repo
+      sh 'git', 'checkout', '--quiet', @mx_version, chdir: mx_repo
       'mx'
     else
       mx_repo = find_or_clone_repo('https://github.com/graalvm/mx.git', @mx_version)
@@ -383,7 +383,7 @@ module Utilities
     unless Dir.exist? path
       sh 'git', 'clone', url, path
     end
-    sh 'git', 'checkout', commit, chdir: path if commit
+    sh 'git', 'checkout', '--quiet', commit, chdir: path if commit
     path
   end
 
