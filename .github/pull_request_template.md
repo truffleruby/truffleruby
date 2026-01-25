@@ -1,0 +1,1 @@
+- [ ] Consider adding a ChangeLog entry, see [CONTRIBUTING.md](https://github.com/truffleruby/truffleruby/blob/master/CONTRIBUTING.md#changelog) for details.
