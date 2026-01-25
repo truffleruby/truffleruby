@@ -471,6 +471,7 @@ public final class RubyContext {
 
         atExitManager.runSystemExitHooks();
         threadManager.killAndWaitOtherThreads();
+        atExitManager.runNativeExitHooks();
     }
 
     private final ReentrantLock disposeLock = new ReentrantLock();

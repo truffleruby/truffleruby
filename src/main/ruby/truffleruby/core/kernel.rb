@@ -789,7 +789,7 @@ module Kernel
 
   def at_exit(&block)
     raise ArgumentError, 'called without a block' if Primitive.nil?(block)
-    Truffle::KernelOperations.at_exit false, &block
+    Primitive.add_regular_at_exit_hook(block)
   end
   module_function :at_exit
 
