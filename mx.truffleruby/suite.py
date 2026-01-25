@@ -554,8 +554,6 @@ suite = {
                 "-Dorg.graalvm.language.ruby.home=<path:TRUFFLERUBY_STANDALONE_COMMON>",
                 # Configure launcher
                 "-Dorg.graalvm.launcher.class=org.truffleruby.launcher.RubyLauncher",
-                # Register JFR classes for reflection (enables JFR streaming from Ruby)
-                "--features=org.truffleruby.launcher.JfrReflectionFeature",
             ],
             "dynamicBuildArgs": "librubyvm_build_args",
         },
