@@ -30,14 +30,28 @@ ruby_version_is "3.4" do
 
       it "does not change settings that aren't present in the hash" do
         previous = GC.config
-        GC.config({}).should == previous.except(:implementation)
+        GC.config({})
         GC.config.should == previous
       end
 
       it "ignores unknown keys" do
         previous = GC.config
-        GC.config(foo: "bar").should == previous.except(:implementation)
+        GC.config(foo: "bar")
         GC.config.should == previous
+      end
+
+      ruby_version_is ""..."4.0" do
+        it "returns the same as GC.config but without the :implementation key" do
+          previous = GC.config
+          GC.config({}).should == previous.except(:implementation)
+        end
+      end
+
+      ruby_version_is "4.0" do
+        it "returns the same as GC.config, including the :implementation key" do
+          previous = GC.config
+          GC.config({}).should == previous
+        end
       end
 
       it "raises an ArgumentError if options include global keys" do
