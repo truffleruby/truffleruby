@@ -1,0 +1,24 @@
+{
+  "reflection": [
+    {
+      "type": "jdk.jfr.consumer.RecordingStream",
+      "allPublicConstructors": true,
+      "allPublicMethods": true
+    },
+    {
+      "type": "jdk.jfr.consumer.RecordedEvent",
+      "allPublicMethods": true
+    },
+    {
+      "type": "jdk.jfr.consumer.RecordedThread",
+      "allPublicMethods": true
+    },
+    {
+      "type": "jdk.jfr.EventType",
+      "allPublicMethods": true
+    },
+    {
+      "type": { "proxy": ["java.util.function.Consumer"] }
+    }
+  ]
+}
