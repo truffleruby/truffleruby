@@ -30,13 +30,13 @@ ruby_version_is "3.4" do
 
       it "does not change settings that aren't present in the hash" do
         previous = GC.config
-        GC.config({})
+        GC.config({}).should == previous.except(:implementation)
         GC.config.should == previous
       end
 
       it "ignores unknown keys" do
         previous = GC.config
-        GC.config(foo: "bar")
+        GC.config(foo: "bar").should == previous.except(:implementation)
         GC.config.should == previous
       end
 

@@ -27,6 +27,7 @@ Compatibility:
 * The dummy `Encoding::UTF_16` and `Encoding::UTF_32` encodings are now regular single-byte dummy encodings (#4083, @eregon).
 * Implement `rb_interned_str()` and `rb_interned_str_cstr()` (#4018, @herwinw).
 * Define C API var-args and struct-by-value functions as non-inline to support taking their address (#3396, @eregon).
+* Implement `GC.config` (#3883, @eregon).
 
 Performance:
 
