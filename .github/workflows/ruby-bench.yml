@@ -1,4 +1,4 @@
-name: Check ruby-bench benchmarks still work
+name: Check ruby-bench
 on:
   workflow_dispatch:
   schedule:
