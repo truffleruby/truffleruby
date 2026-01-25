@@ -115,7 +115,7 @@ describe :hash_to_s, shared: true do
       eval(utf8_hash).inspect.should == utf8_hash
 
       Encoding.default_external = Encoding::Windows_31J
-      sjis_hash = "{\x87]: 1}".force_encoding('sjis')
+      sjis_hash = "{\x87]: 1}".dup.force_encoding('sjis')
       eval(sjis_hash).inspect.should == sjis_hash
     ensure
       Encoding.default_external = external
