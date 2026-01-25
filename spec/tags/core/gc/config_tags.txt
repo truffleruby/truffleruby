@@ -1,8 +1,0 @@
-fails:GC.config without arguments returns a hash of current settings
-fails:GC.config without arguments includes the name of currently loaded GC implementation as a global key
-fails:GC.config with a hash of options allows to set GC implementation's options, returning the new config
-fails:GC.config with a hash of options does not change settings that aren't present in the hash
-fails:GC.config with a hash of options ignores unknown keys
-fails:GC.config with a hash of options raises an ArgumentError if options include global keys
-fails:GC.config with a non-hash argument returns current settings if argument is nil
-fails:GC.config with a non-hash argument raises ArgumentError for all other arguments

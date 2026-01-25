@@ -154,6 +154,20 @@ module GC
     Primitive.gc_time * 1_000_000
   end
 
+  def self.config(hash = nil)
+    if Primitive.nil?(hash)
+      { implementation: 'default' }
+    else
+      raise ArgumentError unless Primitive.is_a?(hash, Hash)
+      hash.each_key do |key|
+        if key == :implementation
+          raise ArgumentError, 'Attempting to set read-only key "Implementation"'
+        end
+      end
+      {}
+    end
+  end
+
   def garbage_collect(...)
     GC.start(...)
   end
