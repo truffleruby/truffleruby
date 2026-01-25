@@ -88,7 +88,7 @@ LTS_JDK_VERSION = '21'
 IGV_JDK_VERSION = '21'
 DEFAULT_JDK_VERSION = 'latest'
 
-BOOTSTRAP_GRAALVM_VERSION = '25.0.1'
+BOOTSTRAP_GRAALVM_VERSION = '25.0.2'
 
 # Not yet 'jdk.graal' as we test against 21 and 21 does not know 'jdk.graal'
 GRAAL_OPTION_PREFIX = 'graal'
@@ -2386,14 +2386,18 @@ module Commands
     archive_version = version.sub(/\.0\.0$/, '')
     os = { 'linux' => 'linux', 'darwin' => 'macos' }.fetch(mx_os)
     arch = { 'amd64' => 'x64', 'aarch64' => 'aarch64' }.fetch(mx_arch)
-    if ee?
+    if darwin? and amd64?
+      warn "Using GraalVM CE since there is no Oracle GraalVM #{version} on macos-amd64" if ee?
+      url = "https://github.com/truffleruby/graalvm-ce-25-macos-amd64-builds/releases/download/jdk-#{version}/graalvm-community-jdk-#{version}_#{os}-#{arch}_bin.tar.gz"
+      dir = "#{JDKS_CACHE_DIR}/graalvm-community-#{version}"
+    elsif ee?
       url = "https://download.oracle.com/graalvm/#{major}/archive/graalvm-jdk-#{archive_version}_#{os}-#{arch}_bin.tar.gz"
       dir = "#{JDKS_CACHE_DIR}/graalvm-#{version}"
     else
       url = "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-#{version}/graalvm-community-jdk-#{version}_#{os}-#{arch}_bin.tar.gz"
       dir = "#{JDKS_CACHE_DIR}/graalvm-community-#{version}"
     end
-    archive = "#{dir}.tar.gz"
+    archive = "#{dir || raise}.tar.gz"
     unless File.file?(archive)
       verbosity = STDOUT.tty? ? [] : ['--no-verbose']
       sh 'wget', *verbosity, '-O', archive, url
