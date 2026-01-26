@@ -1,3 +1,4 @@
 fails:C-API Kernel function rb_block_lambda converts the implicit block into a lambda
 slow:C-API Kernel function rb_set_end_proc runs a C function on shutdown
 fails:C-API Kernel function rb_eval_string captures local variables when called within a method
+slow:C-API Kernel function ruby_vm_at_exit runs a C function after the VM is terminated
