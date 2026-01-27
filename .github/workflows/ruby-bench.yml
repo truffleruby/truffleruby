@@ -24,10 +24,9 @@ jobs:
 
     # knucleotide: needs fork
     # lobsters: commonmarker fails to install
-    # ruby-lsp: rbs_extension.so: undefined symbol: ruby_vm_at_exit
     # shipit: cannot load such file -- pty
     - name: Test run_benchmarks.rb
-      run: ./run_benchmarks.rb --excludes=knucleotide,lobsters,ruby-lsp,shipit
+      run: ./run_benchmarks.rb --excludes=knucleotide,lobsters,shipit
       env:
         WARMUP_ITRS: '1'
         MIN_BENCH_ITRS: '1'
