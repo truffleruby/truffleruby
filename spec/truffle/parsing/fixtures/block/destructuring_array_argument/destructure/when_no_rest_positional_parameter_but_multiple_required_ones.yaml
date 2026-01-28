@@ -71,67 +71,47 @@ ast: |
                                           sourceLength = 0
                                       children:
                                           condition =
-                                              AndNodeGen
+                                              ShouldDestructureNode
                                                   attributes:
                                                       flags = 0
+                                                      keywordArguments = false
                                                       sourceCharIndex = -1
                                                       sourceLength = 0
                                                   children:
-                                                      left =
-                                                          ShouldDestructureNode
+                                                      splatAndWriteNode =
+                                                          WriteLocalVariableNode
                                                               attributes:
                                                                   flags = 0
-                                                                  keywordArguments = false
-                                                                  sourceCharIndex = -1
-                                                                  sourceLength = 0
-                                                      right =
-                                                          NotNodeGen
-                                                              attributes:
-                                                                  flags = 0
+                                                                  frameSlot = 3 # %destructure_1
                                                                   sourceCharIndex = -1
                                                                   sourceLength = 0
                                                               children:
-                                                                  child =
-                                                                      IsNilNode
+                                                                  valueNode =
+                                                                      SplatCastNodeGen
                                                                           attributes:
+                                                                              conversionMethod = :to_ary
+                                                                              copy = false
                                                                               flags = 0
+                                                                              nilBehavior = NIL
                                                                               sourceCharIndex = -1
                                                                               sourceLength = 0
                                                                           children:
-                                                                              child =
-                                                                                  WriteLocalVariableNode
+                                                                              childNode_ =
+                                                                                  ProfileArgumentNodeGen
                                                                                       attributes:
                                                                                           flags = 0
-                                                                                          frameSlot = 3 # %destructure_1
                                                                                           sourceCharIndex = -1
                                                                                           sourceLength = 0
                                                                                       children:
-                                                                                          valueNode =
-                                                                                              SplatCastNodeGen
+                                                                                          childNode_ =
+                                                                                              ReadPreArgumentNode
                                                                                                   attributes:
-                                                                                                      conversionMethod = :to_ary
-                                                                                                      copy = false
                                                                                                       flags = 0
-                                                                                                      nilBehavior = NIL
+                                                                                                      index = 0
+                                                                                                      keywordArguments = false
+                                                                                                      missingArgumentBehavior = RUNTIME_ERROR
                                                                                                       sourceCharIndex = -1
                                                                                                       sourceLength = 0
-                                                                                                  children:
-                                                                                                      childNode_ =
-                                                                                                          ProfileArgumentNodeGen
-                                                                                                              attributes:
-                                                                                                                  flags = 0
-                                                                                                                  sourceCharIndex = -1
-                                                                                                                  sourceLength = 0
-                                                                                                              children:
-                                                                                                                  childNode_ =
-                                                                                                                      ReadPreArgumentNode
-                                                                                                                          attributes:
-                                                                                                                              flags = 0
-                                                                                                                              index = 0
-                                                                                                                              keywordArguments = false
-                                                                                                                              missingArgumentBehavior = RUNTIME_ERROR
-                                                                                                                              sourceCharIndex = -1
-                                                                                                                              sourceLength = 0
                                           elseBody =
                                               SequenceNode
                                                   attributes:

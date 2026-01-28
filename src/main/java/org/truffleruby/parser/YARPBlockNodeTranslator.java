@@ -17,7 +17,6 @@ import org.prism.Nodes.Node;
 import org.prism.Nodes.ParametersNode;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.Split;
-import org.truffleruby.core.IsNilNode;
 import org.truffleruby.core.cast.SplatCastNode;
 import org.truffleruby.core.cast.SplatCastNodeGen;
 import org.truffleruby.core.proc.ProcCallTargets;
@@ -28,11 +27,9 @@ import org.truffleruby.language.RubyProcRootNode;
 import org.truffleruby.language.arguments.MissingArgumentBehavior;
 import org.truffleruby.language.arguments.ReadPreArgumentNode;
 import org.truffleruby.language.arguments.ShouldDestructureNode;
-import org.truffleruby.language.control.AndNodeGen;
 import org.truffleruby.language.control.DynamicReturnNode;
 import org.truffleruby.language.control.IfElseNodeGen;
 import org.truffleruby.language.control.InvalidReturnNode;
-import org.truffleruby.language.control.NotNodeGen;
 import org.truffleruby.language.control.ReturnID;
 import org.truffleruby.language.locals.LocalVariableType;
 import org.truffleruby.language.locals.ReadLocalVariableNode;
@@ -171,14 +168,8 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
                     this);
             final RubyNode newDestructureArguments = translator.translate();
 
-            final RubyNode arrayWasNotNil = NotNodeGen.create(new IsNilNode(writeArrayNode));
-
-            final RubyNode shouldDestructureAndArrayWasNotNil = AndNodeGen.create(
-                    new ShouldDestructureNode(arity.acceptsKeywords()),
-                    arrayWasNotNil);
-
             preludeNode = IfElseNodeGen.create(
-                    shouldDestructureAndArrayWasNotNil,
+                    new ShouldDestructureNode(arity.acceptsKeywords(), writeArrayNode),
                     newDestructureArguments,
                     loadArguments);
         } else {

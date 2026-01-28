@@ -16,10 +16,13 @@ import org.truffleruby.language.RubyNode;
 
 public final class ShouldDestructureNode extends RubyContextSourceNode {
 
+    @Child RubyNode splatAndWriteNode;
+
     private final boolean keywordArguments;
 
-    public ShouldDestructureNode(boolean keywordArguments) {
+    public ShouldDestructureNode(boolean keywordArguments, RubyNode splatAndWriteNode) {
         this.keywordArguments = keywordArguments;
+        this.splatAndWriteNode = splatAndWriteNode;
     }
 
     @Override
@@ -28,12 +31,16 @@ public final class ShouldDestructureNode extends RubyContextSourceNode {
             return false;
         }
 
-        return RubyArguments.getPositionalArgumentsCount(frame, keywordArguments) == 1;
+        if (RubyArguments.getPositionalArgumentsCount(frame, keywordArguments) != 1) {
+            return false;
+        }
+
+        return splatAndWriteNode.execute(frame) != nil;
     }
 
     @Override
     public RubyNode cloneUninitialized() {
-        var copy = new ShouldDestructureNode(keywordArguments);
+        var copy = new ShouldDestructureNode(keywordArguments, splatAndWriteNode.cloneUninitialized());
         return copy.copyFlags(this);
     }
 
