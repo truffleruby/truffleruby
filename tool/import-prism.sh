@@ -59,3 +59,11 @@ rm lib/gems/specifications/default/prism-*.gemspec # remove a gemspec of the pre
 cp $PRISM/prism.generated.gemspec "lib/gems/specifications/default/prism-$VERSION.gemspec"
 rm $PRISM/prism.generated.gemspec
 rm $PRISM/prism.gem
+
+cat <<'EOF'
+
+MANUAL STEPS:
+* Update versions.json
+* Run `jt test gems default-bundled-gems`
+* Commit the result e.g. `git commit -am 'Update Prism version in tests'`
+EOF
