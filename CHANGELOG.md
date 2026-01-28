@@ -9,6 +9,7 @@ Bug fixes:
 * Fix `Integer#ceil` and `Float#ceil` with negative precision (#3911, @trinistr).
 * Update `search_nonascii()` to not rely on undefined behavior (#4110, @eregon).
 * Update to GraalVM & Truffle 25.0.2 (#4116, @eregon).
+* Fix `TypeError` from `Kernel#respond_to?` to show the class of the name argument and not self (@eregon).
 
 Compatibility:
 
@@ -30,6 +31,7 @@ Compatibility:
 * Implement `GC.config` (#3883, @eregon).
 * Use the `timeout` gem now that it is efficient and uses a single Thread (#3883, @eregon).
 * Implement `ruby_vm_at_exit()`, used by `rbs` (@eregon).
+* Fix splatting a `BasicObject` block parameter which `respond_to?(:to_ary)` (@eregon).
 
 Performance:
 

@@ -1418,7 +1418,7 @@ public abstract class KernelNodes {
                 notSymbolOrStringProfile.enter(this);
                 throw new RaiseException(
                         getContext(),
-                        coreExceptions().typeErrorIsNotAOrB(self, "symbol", "string", this));
+                        coreExceptions().typeErrorIsNotAOrB(name, "symbol", "string", this));
             }
 
             final String methodName = toJavaString.execute(this, name);

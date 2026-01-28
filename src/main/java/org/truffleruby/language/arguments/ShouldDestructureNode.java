@@ -10,25 +10,19 @@
 package org.truffleruby.language.arguments;
 
 import org.truffleruby.language.RubyContextSourceNode;
-import org.truffleruby.language.RubyGuards;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.profiles.BranchProfile;
 import org.truffleruby.language.RubyNode;
-import org.truffleruby.language.dispatch.DispatchNode;
-
-import static org.truffleruby.language.dispatch.DispatchConfiguration.PRIVATE_RETURN_MISSING;
 
 public final class ShouldDestructureNode extends RubyContextSourceNode {
 
-    @Child private DispatchNode respondToToAry;
+    @Child RubyNode splatAndWriteNode;
 
     private final boolean keywordArguments;
-    private final BranchProfile checkIsArrayProfile = BranchProfile.create();
 
-    public ShouldDestructureNode(boolean keywordArguments) {
+    public ShouldDestructureNode(boolean keywordArguments, RubyNode splatAndWriteNode) {
         this.keywordArguments = keywordArguments;
+        this.splatAndWriteNode = splatAndWriteNode;
     }
 
     @Override
@@ -41,33 +35,12 @@ public final class ShouldDestructureNode extends RubyContextSourceNode {
             return false;
         }
 
-        checkIsArrayProfile.enter();
-
-        final Object singleArgument = RubyArguments.getArgument(frame, 0);
-
-        if (RubyGuards.isRubyArray(singleArgument)) {
-            return true;
-        }
-
-        if (respondToToAry == null) {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            respondToToAry = insert(DispatchNode.create());
-        }
-
-        var respondToCallResult = respondToToAry.call(PRIVATE_RETURN_MISSING, singleArgument, "respond_to?",
-                getLanguage().coreSymbols.TO_ARY);
-        // the object may not have the #respond_to? method (e.g. an instance of BasicObject class)
-        if (respondToCallResult == DispatchNode.MISSING) {
-            return false;
-        }
-
-        assert respondToCallResult instanceof Boolean;
-        return (boolean) respondToCallResult;
+        return splatAndWriteNode.execute(frame) != nil;
     }
 
     @Override
     public RubyNode cloneUninitialized() {
-        var copy = new ShouldDestructureNode(keywordArguments);
+        var copy = new ShouldDestructureNode(keywordArguments, splatAndWriteNode.cloneUninitialized());
         return copy.copyFlags(this);
     }
 
