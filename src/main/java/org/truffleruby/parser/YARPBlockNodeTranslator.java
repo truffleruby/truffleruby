@@ -171,9 +171,7 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
                     this);
             final RubyNode newDestructureArguments = translator.translate();
 
-            final RubyNode arrayWasNotNil = YARPTranslator.sequence(
-                    writeArrayNode,
-                    NotNodeGen.create(new IsNilNode(readArrayNode)));
+            final RubyNode arrayWasNotNil = NotNodeGen.create(new IsNilNode(writeArrayNode));
 
             final RubyNode shouldDestructureAndArrayWasNotNil = AndNodeGen.create(
                     new ShouldDestructureNode(arity.acceptsKeywords()),
