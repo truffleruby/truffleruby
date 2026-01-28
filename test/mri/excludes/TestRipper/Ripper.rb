@@ -5,7 +5,7 @@ exclude :test_end_seen_eh, "NoMethodError: undefined method 'end_seen?' for an i
 exclude :test_filename, "<\"ripper\"> expected but was <\"\">."
 exclude :test_lineno, "Expected 1 to be nil."
 exclude :test_new, "NoMethodError: undefined method 'state' for an instance of Prism::Translation::Ripper"
-exclude :test_regexp_with_option, "Expected #<Prism::Translation::Ripper:0xcca8"
+exclude :test_regexp_with_option, "Expected #<Prism::Translation::Ripper:0xc808"
 exclude :test_state, "NoMethodError: undefined method 'state' for an instance of Prism::Translation::Ripper"
 exclude :test_yydebug, "NoMethodError: undefined method 'yydebug' for an instance of Prism::Translation::Ripper"
 exclude :test_yydebug_equals, "NoMethodError: undefined method 'yydebug=' for an instance of Prism::Translation::Ripper"
