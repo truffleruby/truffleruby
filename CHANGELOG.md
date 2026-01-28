@@ -14,6 +14,7 @@ Bug fixes:
 Compatibility:
 
 * `Ripper` is now using `Prism::Translation::Ripper` instead of the native extension. This is faster and more reliable because it does not depend on lots of CRuby internals (#3481, @eregon).
+* Update to Prism 1.9.0 for improved Ripper compatibility (#3481, @eregon).
 * Implement `String#append_as_bytes` for Ruby 3.4 (#4087, @Earlopain).
 * Update error message of `Array#fetch` with key out of range (#4085, @herwinw).
 * Implement `Array#fetch_values` for Ruby 3.4 (#4085, @herwinw).
