@@ -104,7 +104,7 @@ public class Loader {
         expect((byte) 'M', "incorrect prism header");
 
         expect((byte) 1, "prism major version does not match");
-        expect((byte) 8, "prism minor version does not match");
+        expect((byte) 9, "prism minor version does not match");
         expect((byte) 0, "prism patch version does not match");
 
         expect((byte) 1, "Loader.java requires no location fields in the serialized output");
