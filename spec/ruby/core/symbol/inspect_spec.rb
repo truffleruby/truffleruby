@@ -115,12 +115,10 @@ describe "Symbol#inspect" do
     sym.inspect.should == ':"foo\xA4"'
   end
 
-  ruby_version_is "3.3" do # Ruby 3.2 has Encoding#replicate which can break this
-    it "quotes symbols in non-ASCII-compatible encodings" do
-      Encoding.list.reject(&:ascii_compatible?).reject(&:dummy?).each do |encoding|
-        sym = "foo".encode(encoding).to_sym
-        sym.inspect.should == ':"foo"'
-      end
+  it "quotes symbols in non-ASCII-compatible encodings" do
+    Encoding.list.reject(&:ascii_compatible?).reject(&:dummy?).each do |encoding|
+      sym = "foo".encode(encoding).to_sym
+      sym.inspect.should == ':"foo"'
     end
   end
 

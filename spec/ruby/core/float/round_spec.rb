@@ -146,37 +146,35 @@ describe "Float#round" do
     -4.809999999999999.round(5, half: :even).should eql(-4.81)
   end
 
-  ruby_bug "#19318", ""..."3.3" do
-    # These numbers are neighbouring floating point numbers round a
-    # precise value. They test that the rounding modes work correctly
-    # round that value and precision is not lost which might cause
-    # incorrect results.
-    it "does not lose precision during the rounding process" do
-      767573.1875850001.round(5, half: nil).should eql(767573.18759)
-      767573.1875850001.round(5, half: :up).should eql(767573.18759)
-      767573.1875850001.round(5, half: :down).should eql(767573.18759)
-      767573.1875850001.round(5, half: :even).should eql(767573.18759)
-      -767573.1875850001.round(5, half: nil).should eql(-767573.18759)
-      -767573.1875850001.round(5, half: :up).should eql(-767573.18759)
-      -767573.1875850001.round(5, half: :down).should eql(-767573.18759)
-      -767573.1875850001.round(5, half: :even).should eql(-767573.18759)
-      767573.187585.round(5, half: nil).should eql(767573.18759)
-      767573.187585.round(5, half: :up).should eql(767573.18759)
-      767573.187585.round(5, half: :down).should eql(767573.18758)
-      767573.187585.round(5, half: :even).should eql(767573.18758)
-      -767573.187585.round(5, half: nil).should eql(-767573.18759)
-      -767573.187585.round(5, half: :up).should eql(-767573.18759)
-      -767573.187585.round(5, half: :down).should eql(-767573.18758)
-      -767573.187585.round(5, half: :even).should eql(-767573.18758)
-      767573.1875849998.round(5, half: nil).should eql(767573.18758)
-      767573.1875849998.round(5, half: :up).should eql(767573.18758)
-      767573.1875849998.round(5, half: :down).should eql(767573.18758)
-      767573.1875849998.round(5, half: :even).should eql(767573.18758)
-      -767573.1875849998.round(5, half: nil).should eql(-767573.18758)
-      -767573.1875849998.round(5, half: :up).should eql(-767573.18758)
-      -767573.1875849998.round(5, half: :down).should eql(-767573.18758)
-      -767573.1875849998.round(5, half: :even).should eql(-767573.18758)
-    end
+  # These numbers are neighbouring floating point numbers round a
+  # precise value. They test that the rounding modes work correctly
+  # round that value and precision is not lost which might cause
+  # incorrect results.
+  it "does not lose precision during the rounding process" do
+    767573.1875850001.round(5, half: nil).should eql(767573.18759)
+    767573.1875850001.round(5, half: :up).should eql(767573.18759)
+    767573.1875850001.round(5, half: :down).should eql(767573.18759)
+    767573.1875850001.round(5, half: :even).should eql(767573.18759)
+    -767573.1875850001.round(5, half: nil).should eql(-767573.18759)
+    -767573.1875850001.round(5, half: :up).should eql(-767573.18759)
+    -767573.1875850001.round(5, half: :down).should eql(-767573.18759)
+    -767573.1875850001.round(5, half: :even).should eql(-767573.18759)
+    767573.187585.round(5, half: nil).should eql(767573.18759)
+    767573.187585.round(5, half: :up).should eql(767573.18759)
+    767573.187585.round(5, half: :down).should eql(767573.18758)
+    767573.187585.round(5, half: :even).should eql(767573.18758)
+    -767573.187585.round(5, half: nil).should eql(-767573.18759)
+    -767573.187585.round(5, half: :up).should eql(-767573.18759)
+    -767573.187585.round(5, half: :down).should eql(-767573.18758)
+    -767573.187585.round(5, half: :even).should eql(-767573.18758)
+    767573.1875849998.round(5, half: nil).should eql(767573.18758)
+    767573.1875849998.round(5, half: :up).should eql(767573.18758)
+    767573.1875849998.round(5, half: :down).should eql(767573.18758)
+    767573.1875849998.round(5, half: :even).should eql(767573.18758)
+    -767573.1875849998.round(5, half: nil).should eql(-767573.18758)
+    -767573.1875849998.round(5, half: :up).should eql(-767573.18758)
+    -767573.1875849998.round(5, half: :down).should eql(-767573.18758)
+    -767573.1875849998.round(5, half: :even).should eql(-767573.18758)
   end
 
   it "raises FloatDomainError for exceptional values with a half option" do
