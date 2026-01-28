@@ -268,12 +268,6 @@ jobs:
 
     - uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 3.2
-        bundler: none
-    - run: jt -u ruby mspec -j --timeout 30 spec/ruby
-
-    - uses: ruby/setup-ruby@v1
-      with:
         ruby-version: 3.3
         bundler: none
     - run: jt -u ruby mspec -j --timeout 30 spec/ruby

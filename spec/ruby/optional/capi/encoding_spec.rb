@@ -747,28 +747,26 @@ describe "C-API Encoding function" do
   end
 
   describe "ONIGENC_IS_UNICODE" do
-    ruby_version_is "3.3" do # Ruby 3.2 has Encoding#replicate which can break this
-      it "is true only for select UTF-related encodings" do
-        unicode = [
-          Encoding::UTF_8,
-          Encoding::UTF8_DOCOMO,
-          Encoding::UTF8_KDDI,
-          Encoding::UTF8_MAC,
-          Encoding::UTF8_SOFTBANK,
-          Encoding::CESU_8,
-          Encoding::UTF_16LE,
-          Encoding::UTF_16BE,
-          Encoding::UTF_32LE,
-          Encoding::UTF_32BE
-        ]
-        unicode.each do |enc|
-          @s.should.ONIGENC_IS_UNICODE(enc)
-        end
-
-        (Encoding.list - unicode).each { |enc|
-          @s.should_not.ONIGENC_IS_UNICODE(enc)
-        }
+    it "is true only for select UTF-related encodings" do
+      unicode = [
+        Encoding::UTF_8,
+        Encoding::UTF8_DOCOMO,
+        Encoding::UTF8_KDDI,
+        Encoding::UTF8_MAC,
+        Encoding::UTF8_SOFTBANK,
+        Encoding::CESU_8,
+        Encoding::UTF_16LE,
+        Encoding::UTF_16BE,
+        Encoding::UTF_32LE,
+        Encoding::UTF_32BE
+      ]
+      unicode.each do |enc|
+        @s.should.ONIGENC_IS_UNICODE(enc)
       end
+
+      (Encoding.list - unicode).each { |enc|
+        @s.should_not.ONIGENC_IS_UNICODE(enc)
+      }
     end
 
     # Redundant with the above but more explicit
