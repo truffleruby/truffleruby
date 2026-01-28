@@ -31,6 +31,7 @@ Compatibility:
 * Implement `GC.config` (#3883, @eregon).
 * Use the `timeout` gem now that it is efficient and uses a single Thread (#3883, @eregon).
 * Implement `ruby_vm_at_exit()`, used by `rbs` (@eregon).
+* Fix splatting a `BasicObject` block parameter which `respond_to?(:to_ary)` (@eregon).
 
 Performance:
 
