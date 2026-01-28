@@ -11,3 +11,6 @@ fails:IO::Buffer#external? with a slice of a buffer created with .map is false
 fails:IO::Buffer#external? with a slice of a buffer created with .for is false when slicing a buffer created without a block
 fails:IO::Buffer#external? with a slice of a buffer created with .for is false when slicing a buffer created with a block
 fails:IO::Buffer#external? with a slice of a buffer created with .string is false
+fails:IO::Buffer#external? is true for a buffer with externally-managed memory
+fails:IO::Buffer#external? is false for a buffer with self-managed memory
+fails:IO::Buffer#external? is false for a null buffer

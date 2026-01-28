@@ -10,3 +10,5 @@ fails:IO::Buffer#initialize with size and flags arguments forces internal buffer
 fails:IO::Buffer#initialize with size and flags arguments raises IO::Buffer::AllocationError if neither IO::Buffer::MAPPED nor IO::Buffer::INTERNAL is given
 fails:IO::Buffer#initialize with size and flags arguments raises ArgumentError if flags is negative
 fails:IO::Buffer#initialize with size and flags arguments raises TypeError with non-Integer flags
+fails:IO::Buffer#initialize with size and flags arguments allows extra flags
+fails:IO::Buffer#initialize with size and flags arguments ignores flags if size is 0

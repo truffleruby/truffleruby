@@ -16,3 +16,7 @@ fails:IO::Buffer#readonly? with a slice of a buffer created with .for is true wh
 fails:IO::Buffer#readonly? with a slice of a buffer created with .for is false when slicing a buffer created with a block
 fails:IO::Buffer#readonly? with a slice of a buffer created with .for is true when slicing a buffer created with a block from a frozen string
 fails:IO::Buffer#readonly? with a slice of a buffer created with .string is false
+fails:IO::Buffer#readonly? is true for a buffer created with READONLY flag
+fails:IO::Buffer#readonly? is true for a buffer that is non-writable
+fails:IO::Buffer#readonly? is false for a modifiable buffer
+fails:IO::Buffer#readonly? is false for a null buffer

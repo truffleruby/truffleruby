@@ -1,0 +1,7 @@
+fails:IO::Buffer.string creates a modifiable buffer for the duration of the block
+fails:IO::Buffer.string returns contents of the buffer as a binary string
+fails:IO::Buffer.string creates an external buffer
+fails:IO::Buffer.string returns an empty string if size is 0
+fails:IO::Buffer.string raises ArgumentError if size is negative
+fails:IO::Buffer.string raises RangeError if size is too large
+fails:IO::Buffer.string raises LocalJumpError if no block is given

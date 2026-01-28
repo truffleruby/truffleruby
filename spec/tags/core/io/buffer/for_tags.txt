@@ -1,0 +1,7 @@
+fails:IO::Buffer.for without a block copies string's contents, creating a separate read-only buffer
+fails:IO::Buffer.for without a block creates an external, read-only buffer
+fails:IO::Buffer.for with a block returns the last value in the block
+fails:IO::Buffer.for with a block frees the buffer at the end of the block
+fails:IO::Buffer.for with a block if string is not frozen creates a modifiable string-backed buffer
+fails:IO::Buffer.for with a block if string is not frozen locks the original string to prevent modification
+fails:IO::Buffer.for with a block if string is frozen creates a read-only string-backed buffer

@@ -1,0 +1,1 @@
+fails:File.dirname ignores repeated leading / (edge cases on non-windows)

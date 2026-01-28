@@ -12,3 +12,7 @@ fails:IO::Buffer#shared? with a slice of a buffer created with .map is false whe
 fails:IO::Buffer#shared? with a slice of a buffer created with .for is false when slicing a buffer created without a block
 fails:IO::Buffer#shared? with a slice of a buffer created with .for is false when slicing a buffer created with a block
 fails:IO::Buffer#shared? with a slice of a buffer created with .string is false
+fails:IO::Buffer#shared? is true for a buffer created with SHARED flag
+fails:IO::Buffer#shared? is true for a non-private buffer created with .map
+fails:IO::Buffer#shared? is false for an unshared buffer
+fails:IO::Buffer#shared? is false for a null buffer
