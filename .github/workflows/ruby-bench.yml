@@ -23,10 +23,9 @@ jobs:
         ruby-version: truffleruby-head
 
     # knucleotide: needs fork
-    # lobsters: commonmarker fails to install
     # shipit: cannot load such file -- pty
     - name: Test run_benchmarks.rb
-      run: ./run_benchmarks.rb --excludes=knucleotide,lobsters,shipit
+      run: ./run_benchmarks.rb --excludes=knucleotide,shipit
       env:
         WARMUP_ITRS: '1'
         MIN_BENCH_ITRS: '1'
