@@ -25,13 +25,6 @@ require Primitive.get_original_require(__FILE__)
 
 module RSpec
   module Support
-    module RubyFeatures
-      module_function
-      def ripper_supported?
-        true
-      end
-    end
-
     def self.define_optimized_require_for_rspec(lib, &require_relative)
       name = "require_rspec_#{lib}"
 
