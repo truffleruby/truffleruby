@@ -33,6 +33,7 @@ Compatibility:
 * Use the `timeout` gem now that it is efficient and uses a single Thread (#3883, @eregon).
 * Implement `ruby_vm_at_exit()`, used by `rbs` (@eregon).
 * Fix splatting a `BasicObject` block parameter which `respond_to?(:to_ary)` (#4129, @eregon).
+* `Integer#**` no longer returns infinity for large results but either computes the result as an Integer or raises an `ArgumentError` (#4133, @eregon).
 
 Performance:
 
