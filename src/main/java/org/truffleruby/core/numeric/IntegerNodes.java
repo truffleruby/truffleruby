@@ -50,7 +50,6 @@ import org.truffleruby.language.NoImplicitCastsToLong;
 import org.truffleruby.language.NotProvided;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyGuards;
-import org.truffleruby.language.WarnNode;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.dispatch.DispatchNode;
@@ -1758,8 +1757,10 @@ public abstract class IntegerNodes {
 
         @Child private PowNode recursivePowNode;
 
-        // Value taken from MRI for determining when to promote integer exponentiation into doubles.
-        private static final int BIGLEN_LIMIT = 32 * 1024 * 1024;
+        // Value taken from MRI for determining when result is too large to compute.
+        // MRI uses 2GB (32-bit) or 16GB (64-bit). We use 16GB to match 64-bit MRI.
+        // This is the maximum size in bits for the result.
+        private static final long BIGLEN_LIMIT = 1L << 34; // 16 GB
 
         public abstract Object executePow(Object a, Object b);
 
@@ -1856,8 +1857,7 @@ public abstract class IntegerNodes {
         }
 
         @Specialization
-        Object powBignum(long base, RubyBignum exponent,
-                @Cached @Shared WarnNode warnNode) {
+        Object powBignum(long base, RubyBignum exponent) {
             if (base == 0) {
                 return 0;
             }
@@ -1878,41 +1878,34 @@ public abstract class IntegerNodes {
                 return FAILURE;
             }
 
-            if (warnNode.shouldWarn()) {
-                warnNode.warningMessage(
-                        getContext().getCallStack().getTopMostUserSourceSection(),
-                        "in a**b, b may be too big");
-            }
-            // b >= 2**63 && (a > 1 || a < -1) => larger than largest double
-            // MRI behavior/bug: always positive Infinity even if a negative and b odd (likely due
-            // to libc pow(a, +inf)).
-            return Double.POSITIVE_INFINITY;
+            // b >= 2**63 && (a > 1 || a < -1) => result would be too large
+            throw new RaiseException(getContext(), coreExceptions().argumentError("exponent is too large", this));
         }
 
         @Specialization
         Object pow(RubyBignum base, long exponent,
                 @Cached @Exclusive InlinedConditionProfile negativeProfile,
-                @Cached @Exclusive InlinedConditionProfile maybeTooBigProfile,
-                @Cached @Shared WarnNode warnNode) {
+                @Cached @Exclusive InlinedConditionProfile maybeTooBigProfile) {
             if (negativeProfile.profile(this, exponent < 0)) {
                 return FAILURE;
             } else {
                 final BigInteger bigIntegerBase = base.value;
                 final int baseBitLength = BigIntegerOps.bitLength(bigIntegerBase);
 
-                // Logic for promoting integer exponentiation into doubles taken from MRI.
+                // Logic for determining when result would be too big taken from MRI.
                 // We replicate the logic exactly so we match MRI's ranges.
-                if (maybeTooBigProfile
-                        .profile(this, baseBitLength > BIGLEN_LIMIT || (baseBitLength * exponent > BIGLEN_LIMIT))) {
-                    if (warnNode.shouldWarn()) {
-                        warnNode.warningMessage(
-                                getContext().getCallStack().getTopMostUserSourceSection(),
-                                "in a**b, b may be too big");
-                    }
-                    return BigIntegerOps.pow(bigIntegerBase, /* as double */ exponent);
+                // Check if exponent fits in int (required for BigInteger.pow)
+                // and if the result size would exceed BIGLEN_LIMIT
+                final boolean tooLarge = exponent > Integer.MAX_VALUE ||
+                        baseBitLength > BIGLEN_LIMIT ||
+                        (baseBitLength > 0 && exponent > BIGLEN_LIMIT / baseBitLength);
+
+                if (maybeTooBigProfile.profile(this, tooLarge)) {
+                    throw new RaiseException(getContext(),
+                            coreExceptions().argumentError("exponent is too large", this));
                 }
 
-                // The cast is safe because of the check above.
+                // The cast is safe because of the exponent > Integer.MAX_VALUE check above.
                 return createBignum(BigIntegerOps.pow(bigIntegerBase, (int) exponent));
             }
         }
@@ -1930,7 +1923,7 @@ public abstract class IntegerNodes {
 
         @Specialization
         Object pow(RubyBignum base, RubyBignum exponent) {
-            return FAILURE;
+            throw new RaiseException(getContext(), coreExceptions().argumentError("exponent is too large", this));
         }
 
         @Specialization(guards = "!isRubyNumber(exponent)")

@@ -49,8 +49,6 @@ class Integer < Numeric
       return Complex.new(self, 0) ** o
     elsif Primitive.is_a?(o, Integer) && o < 0
       return Rational.__send__(:new_already_canonical, self, 1) ** o
-    elsif Primitive.is_a?(o, Integer) && o > 0
-      return self ** o.to_f
     end
 
     redo_coerced :**, o
