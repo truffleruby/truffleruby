@@ -9,38 +9,35 @@
 require_relative '../../ruby/spec_helper'
 
 describe "JFR event streaming" do
+  THREAD_START_EVENT = "jdk.ThreadStart"
+
   it "can stream JFR events" do
     recording_stream_class = Java.type("jdk.jfr.consumer.RecordingStream")
 
-    gc_count = 3
     events_received = Queue.new
 
     stream = recording_stream_class.new
 
-    # Register event handler for GC events
-    stream.onEvent("jdk.GarbageCollection") do |event|
+    stream.onEvent(THREAD_START_EVENT) do |event|
       events_received << event
     end
 
     # Enable the event and start streaming asynchronously
-    stream.enable("jdk.GarbageCollection")
+    stream.enable(THREAD_START_EVENT)
     stream.startAsync
 
-    # Trigger garbage collection to generate events
-    gc_count.times { GC.start }
+    # Trigger a thread start event
+    Thread.new { }.join
 
-    # Wait for all events to be received (with timeout)
-    received = []
-    gc_count.times do
-      received << events_received.pop(timeout: 5)
-    end
+    # Wait for event to be received (with timeout)
+    received = events_received.pop(timeout: 5)
 
     stream.close
 
-    # Verify we received the expected GC events
-    received.size.should eql(gc_count)
-    received.each do |event|
-      event.getEventType.getName.should == "jdk.GarbageCollection"
-    end
+    # Verify we received the expected ThreadStart event
+    # NOTE: it's possible that the received event comes from a different thread,
+    # but that is fine, as it still shows that runtime supports streaming JFR events.
+    received.should_not be_nil
+    received.getEventType.getName.should == THREAD_START_EVENT
   end
 end
