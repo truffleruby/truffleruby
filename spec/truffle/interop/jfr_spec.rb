@@ -9,7 +9,7 @@
 require_relative '../../ruby/spec_helper'
 
 describe "JFR event streaming" do
-  THREAD_START_EVENT = "jdk.ThreadStart"
+  thread_start_event = "jdk.ThreadStart"
 
   it "can stream JFR events" do
     recording_stream_class = Java.type("jdk.jfr.consumer.RecordingStream")
@@ -18,12 +18,12 @@ describe "JFR event streaming" do
 
     stream = recording_stream_class.new
 
-    stream.onEvent(THREAD_START_EVENT) do |event|
+    stream.onEvent(thread_start_event) do |event|
       events_received << event
     end
 
     # Enable the event and start streaming asynchronously
-    stream.enable(THREAD_START_EVENT)
+    stream.enable(thread_start_event)
     stream.startAsync
 
     # Trigger a thread start event
@@ -38,6 +38,6 @@ describe "JFR event streaming" do
     # NOTE: it's possible that the received event comes from a different thread,
     # but that is fine, as it still shows that runtime supports streaming JFR events.
     received.should_not be_nil
-    received.getEventType.getName.should == THREAD_START_EVENT
+    received.getEventType.getName.should == thread_start_event
   end
 end
