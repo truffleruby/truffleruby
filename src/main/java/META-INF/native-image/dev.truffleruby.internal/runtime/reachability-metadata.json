@@ -1,4 +1,5 @@
 {
+  "comment": "JFR-related classes are registered to enable streaming JFR events with host interop, see spec/truffle/interop/jfr_spec.rb.",
   "reflection": [
     {
       "type": "jdk.jfr.consumer.RecordingStream",

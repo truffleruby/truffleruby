@@ -40,7 +40,7 @@ describe "JFR event streaming" do
     # Verify we received the expected GC events
     received.size.should eql(gc_count)
     received.each do |event|
-      event.getEventType.getName.should eql("jdk.GarbageCollection")
+      event.getEventType.getName.should == "jdk.GarbageCollection"
     end
   end
 end
