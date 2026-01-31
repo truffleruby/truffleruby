@@ -1,0 +1,2 @@
+fails:Embedding via the Context API supports setting environment variables
+fails:Embedding via the Context API supports setting the working directory

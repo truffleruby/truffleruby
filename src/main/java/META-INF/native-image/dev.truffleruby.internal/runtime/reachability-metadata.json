@@ -1,6 +1,7 @@
 {
   "comment": [
     "JFR-related classes are registered to enable streaming JFR events with host interop, see spec/truffle/interop/jfr_spec.rb.",
+    "Context-related classes are registered to enable embedding TruffleRuby via JNI.",
     "Resources are registered to be able to load the core library when creating multiple Ruby contexts."
   ],
   "reflection": [
@@ -23,7 +24,39 @@
     },
     {
       "type": { "proxy": ["java.util.function.Consumer"] }
-    }
+    },
+    {
+      "type": "org.graalvm.polyglot.Context",
+      "jniAccessible": true,
+      "allPublicConstructors": true,
+      "allPublicMethods": true
+    },
+    {
+      "type": "org.graalvm.polyglot.Context$Builder",
+      "jniAccessible": true,
+      "allPublicConstructors": true,
+      "allPublicMethods": true
+    },
+    {
+      "type": "org.graalvm.polyglot.Value",
+      "jniAccessible": true,
+      "allPublicConstructors": true,
+      "allPublicMethods": true
+    },
+    {
+      "type": "org.graalvm.polyglot.Source",
+      "jniAccessible": true,
+      "allPublicConstructors": true,
+      "allPublicMethods": true
+    },
+    {
+      "type": "java.nio.file.Path",
+      "jniAccessible": true,
+      "methods": [
+        { "name": "of", "parameterTypes": ["java.lang.String", "[Ljava.lang.String;"] }
+      ]
+    },
+    { "type": "java.nio.file.WatchEvent$Modifier" }
   ],
   "resources": [
     {
