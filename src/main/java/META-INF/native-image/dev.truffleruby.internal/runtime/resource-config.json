@@ -1,8 +1,0 @@
-{
-  "resources": {
-    "includes": [
-      { "pattern": "^truffleruby/core/.+\\.rb$" },
-      { "pattern": "^truffleruby/post-boot/.+\\.rb$" }
-    ]
-  }
-}

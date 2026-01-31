@@ -1,5 +1,8 @@
 {
-  "comment": "JFR-related classes are registered to enable streaming JFR events with host interop, see spec/truffle/interop/jfr_spec.rb.",
+  "comment": [
+    "JFR-related classes are registered to enable streaming JFR events with host interop, see spec/truffle/interop/jfr_spec.rb.",
+    "Resources are registered to be able to load the core library when creating multiple Ruby contexts."
+  ],
   "reflection": [
     {
       "type": "jdk.jfr.consumer.RecordingStream",
@@ -20,6 +23,22 @@
     },
     {
       "type": { "proxy": ["java.util.function.Consumer"] }
+    }
+  ],
+  "resources": [
+    {
+      "module": "dev.truffleruby.runtime",
+      "glob": "truffleruby/core/**/*.rb"
+    },
+    {
+      "glob": "truffleruby/core/**/*.rb"
+    },
+    {
+      "module": "dev.truffleruby.runtime",
+      "glob": "truffleruby/post-boot/**/*.rb"
+    },
+    {
+      "glob": "truffleruby/post-boot/**/*.rb"
     }
   ]
 }
