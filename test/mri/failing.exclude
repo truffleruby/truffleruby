@@ -98,4 +98,4 @@ dtrace/test_singleton_function.rb
 dtrace/test_string.rb
 misc/test_ruby_mode.rb
 ruby/enc/test_windows_1251.rb
-ruby/test_bignum.rb # relies on Bignums on Fixnum range
+ruby/test_bignum.rb # relies on Bignums in Fixnum range
