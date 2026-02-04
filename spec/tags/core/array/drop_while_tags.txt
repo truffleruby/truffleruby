@@ -1,1 +1,0 @@
-fails:Array#drop_while returns a subclass instance for Array subclasses
