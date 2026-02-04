@@ -1,2 +1,0 @@
-fails(autoload):C-API Class function rb_path2class resolves autoload constants
-fails(autoload):C-API Class function rb_path_to_class resolves autoload constants
