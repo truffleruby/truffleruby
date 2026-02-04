@@ -6,5 +6,5 @@
 #
 # Empty lines and comments are allowed.
 
-# Use spec/ruby/core/nil/nil_spec.rb as a dummy file to avoid being empty (what causes mspec to error)
+# Use spec/ruby/core/nil/nil_spec.rb as a dummy file to avoid being empty (which causes mspec to error)
 spec/ruby/core/nil/nil_spec.rb

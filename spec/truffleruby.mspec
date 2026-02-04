@@ -135,7 +135,7 @@ class MSpecScript
   # All specs.
   # :next specs are not included as they need to run in a separate process.
   # :cxx specs are not included as they need to run in a separate process.
-  # :tracepoint specs are not included as they need should run in a separate process.
+  # :tracepoint specs are not included as they should run in a separate process.
   set :all, get(:files) + get(:cext)
 end
 
