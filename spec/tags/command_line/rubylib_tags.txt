@@ -4,4 +4,3 @@ slow:The RUBYLIB environment variable adds the directory after directories added
 slow:The RUBYLIB environment variable adds the directory after directories added by -I within RUBYOPT
 slow:The RUBYLIB environment variable keeps spaces in the value
 slow:The RUBYLIB environment variable adds a File::PATH_SEPARATOR-separated list of directories to $LOAD_PATH
-fails:The RUBYLIB environment variable adds the directory at the front of $LOAD_PATH
