@@ -76,21 +76,12 @@ Compatibility:
 * Support `Rational()` with `exception` keyword argument (#3969, @andrykonchin).
 * Ignore `bom|` prefix if file is not opened for reading (#4079, @rwstauner).
 
-Performance:
-
-
 Incompatible Changes:
 
 * Maven coordinates to embed TruffleRuby have changed from `org.graalvm.polyglot:ruby`/`org.graalvm.ruby:ruby` to `dev.truffleruby:truffleruby` (#4034, @eregon).
 * The `--single-threaded` option now defaults to `false` also when embedding TruffleRuby (#3958, @eregon).
 
-Memory Footprint:
-
-
 # 25.0.0
-
-New features:
-
 
 Bug fixes:
 
@@ -129,12 +120,6 @@ Performance:
 
 * Use TRegex for binary Regexps with non-US-ASCII characters in the pattern like `/[\x80-\xff]/n` (#3858, @eregon).
 * Run C extensions marked as `rb_ext_ractor_safe()` or `rb_ext_thread_safe()` in parallel (without the C extension lock) (#2136, @eregon).
-
-Incompatible Changes:
-
-
-Memory Footprint:
-
 
 # 24.2.0
 
@@ -209,8 +194,6 @@ Incompatible Changes:
 
 * Inherit `Polyglot::ForeignException` from `StandardError` instead of `Exception` (#3620, @andrykonchin).
 
-Memory Footprint:
-
 # 24.1.0
 
 New features:
@@ -264,8 +247,6 @@ Performance:
 * Fix inline caching for Regexp creation from Strings (#3492, @andrykonchin, @eregon).
 * Optimize `Integer#pow` method for small modulus values (#3544, @andrykonchin).
 * Avoid repeated copies from native to managed string when matching Regexps on a native string (#2193, @eregon).
-
-Incompatible Changes:
 
 Memory Footprint:
 
@@ -340,12 +321,6 @@ Performance:
 * Optimize feature loading when require is called with an absolute path to a .rb file (@rwstauner).
 * Avoid extra copies for Strings passed as `:string` arguments to a FFI call and used later for Regexp matching (#3293, @eregon).
 
-Incompatible Changes:
-
-
-Memory Footprint:
-
-
 # 23.1.0
 
 New features:
@@ -409,7 +384,6 @@ Memory Footprint:
 * Replaced `RubyLibrary` with `FreezeNode` and `IsFrozenNode` (@horakivo).
 * Address many truffle-sharing warnings (@horakivo).
 * Address many truffle-inlining warnings (@horakivo).
-
 
 # 23.0.0
 
