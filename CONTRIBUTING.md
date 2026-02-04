@@ -44,13 +44,25 @@ This is the meaning of the sections in the ChangeLog:
 Always keep an empty line around the various sections, like it is done for entries in older releases.
 The idea is only add lines, never remove lines (important since this file uses union merge).
 
-GitHub might show on the Pull Request:
+GitHub might show on the Pull Request (such as [here](https://github.com/truffleruby/truffleruby/pull/4105#issuecomment-3770098818)):
 ```
-Conflicting files
+This branch has conflicts that must be resolved
 CHANGELOG.md
 ```
-This is a bug in GitHub's UI, there is never any conflict as `CHANGELOG.md` uses union merge.
+This is a GitHub bug, there is never a conflict in `CHANGELOG.md` because `CHANGELOG.md` uses union merge.
 Please do not use the `Resolve conflicts` button as that will create a redundant merge commit.
+Instead such PRs can be merged by using:
+
+```bash
+git checkout master
+git pull
+
+git fetch $REMOTE
+git merge --no-ff $REMOTE/$BRANCH
+# Copy the PR title + PR number as commit message and add `()` around the PR number to look like regular merges with the GitHub UI.
+
+git push
+```
 
 ## Code of Conduct
 
