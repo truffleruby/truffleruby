@@ -1,2 +1,0 @@
-fails:Hash#shift calls #default with nil if the Hash is empty
-fails:Hash#shift returns (computed) default for empty hashes
