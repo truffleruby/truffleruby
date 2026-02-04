@@ -1,1 +1,0 @@
-fails:Array#take returns a subclass instance for Array subclasses
