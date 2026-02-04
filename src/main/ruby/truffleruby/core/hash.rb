@@ -529,10 +529,7 @@ class Hash
 
   def to_proc
     proc_hash = self
-    Proc.new do |*args|
-      Truffle::Type.check_arity(args.size, 1, 1)
-      proc_hash[args[0]]
-    end
+    ->(arg) { proc_hash[arg] }
   end
 
   def transform_values

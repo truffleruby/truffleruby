@@ -1,2 +1,0 @@
-fails:Hash#to_proc the returned proc is a lambda
-fails:Hash#to_proc the returned proc has an arity of 1
