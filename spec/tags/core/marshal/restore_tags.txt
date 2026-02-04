@@ -1,6 +1,5 @@
 fails:Marshal.restore loads a Random
 fails:Marshal.restore when called with a proc loads an Array with proc
-fails:Marshal.restore for an Array loads an array containing the same objects
 fails:Marshal.restore for an Object raises ArgumentError if the object from an 'o' stream is not dumpable as 'o' type user class
 fails:Marshal.restore for a user object that extends a core type other than Object or BasicObject raises ArgumentError if the resulting class does not extend the same type
 fails:Marshal.restore for a wrapped C pointer raises ArgumentError when the local class is a regular object

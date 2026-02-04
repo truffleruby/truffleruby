@@ -1,3 +1,2 @@
 slow:Process.setpriority sets the scheduling priority for a specified process
 slow:Process.setpriority sets the scheduling priority for a specified process group
-fails(with EACCES Permission denied in some CIs):Process.setpriority sets the scheduling priority for a specified process group

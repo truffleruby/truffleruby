@@ -1,2 +1,1 @@
 slow:Kernel#pp lazily loads the 'pp' library and delegates the call to that library
-fails:Kernel#pp lazily loads the 'pp' library and delegates the call to that library

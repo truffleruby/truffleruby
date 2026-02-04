@@ -1,2 +1,1 @@
-fails:Enumerator::Lazy defines lazy versions of a whitelist of Enumerator methods
 fails:Enumerator::Lazy#compact returns array without nil elements
