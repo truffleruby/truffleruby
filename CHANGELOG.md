@@ -34,6 +34,7 @@ Compatibility:
 * Implement `ruby_vm_at_exit()`, used by `rbs` (@eregon).
 * Fix splatting a `BasicObject` block parameter which `respond_to?(:to_ary)` (#4129, @eregon).
 * `Integer#**` no longer returns infinity for large results but either computes the result as an Integer or raises an `ArgumentError` (#4133, @eregon).
+* `Hash.[]` now raises the correct error message for `nil`, `true` and `false` as argument ( #4140, @herwinw).
 
 Performance:
 
