@@ -1,1 +1,1 @@
-- [ ] Consider adding a ChangeLog entry, see [CONTRIBUTING.md](https://github.com/truffleruby/truffleruby/blob/master/CONTRIBUTING.md#changelog) for details.
+- [ ] Consider adding a ChangeLog entry if the change is visible or meaningful to users, see [CONTRIBUTING.md](https://github.com/truffleruby/truffleruby/blob/master/CONTRIBUTING.md#changelog) for details.
