@@ -26,7 +26,7 @@ describe "Java strings" do
 
   it "are converted to Ruby automatically on the RHS of string concatenation" do
     a = 'a'
-    b = Truffle::Interop.to_java_string('a')
+    b = Truffle::Interop.to_java_string('b')
     (a + b).should == 'ab'
   end
 
