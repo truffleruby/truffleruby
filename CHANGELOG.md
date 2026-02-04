@@ -40,7 +40,7 @@ Compatibility:
 Performance:
 
 
-Changes:
+Incompatible Changes:
 
 
 Memory Footprint:
@@ -76,21 +76,12 @@ Compatibility:
 * Support `Rational()` with `exception` keyword argument (#3969, @andrykonchin).
 * Ignore `bom|` prefix if file is not opened for reading (#4079, @rwstauner).
 
-Performance:
-
-
-Changes:
+Incompatible Changes:
 
 * Maven coordinates to embed TruffleRuby have changed from `org.graalvm.polyglot:ruby`/`org.graalvm.ruby:ruby` to `dev.truffleruby:truffleruby` (#4034, @eregon).
-* The `--single-threaded` option now defaults to false also when embedding TruffleRuby (#3958, @eregon).
-
-Memory Footprint:
-
+* The `--single-threaded` option now defaults to `false` also when embedding TruffleRuby (#3958, @eregon).
 
 # 25.0.0
-
-New features:
-
 
 Bug fixes:
 
@@ -129,12 +120,6 @@ Performance:
 
 * Use TRegex for binary Regexps with non-US-ASCII characters in the pattern like `/[\x80-\xff]/n` (#3858, @eregon).
 * Run C extensions marked as `rb_ext_ractor_safe()` or `rb_ext_thread_safe()` in parallel (without the C extension lock) (#2136, @eregon).
-
-Changes:
-
-
-Memory Footprint:
-
 
 # 24.2.0
 
@@ -205,10 +190,9 @@ Performance:
 * Speedup some C extensions like `sqlite3`, `trilogy` and `json` by 2 to 3 times by using the Panama NFI backend for faster upcalls in JVM mode (@eregon).
 * Optimize encoding negotiation for ASCII-compatible encodings (@eregon, @andrykonchin).
 
-Changes:
-* Inherit `Polyglot::ForeignException` from `StandardError` instead of `Exception` (#3620, @andrykonchin).
+Incompatible Changes:
 
-Memory Footprint:
+* Inherit `Polyglot::ForeignException` from `StandardError` instead of `Exception` (#3620, @andrykonchin).
 
 # 24.1.0
 
@@ -263,8 +247,6 @@ Performance:
 * Fix inline caching for Regexp creation from Strings (#3492, @andrykonchin, @eregon).
 * Optimize `Integer#pow` method for small modulus values (#3544, @andrykonchin).
 * Avoid repeated copies from native to managed string when matching Regexps on a native string (#2193, @eregon).
-
-Changes:
 
 Memory Footprint:
 
@@ -339,12 +321,6 @@ Performance:
 * Optimize feature loading when require is called with an absolute path to a .rb file (@rwstauner).
 * Avoid extra copies for Strings passed as `:string` arguments to a FFI call and used later for Regexp matching (#3293, @eregon).
 
-Changes:
-
-
-Memory Footprint:
-
-
 # 23.1.0
 
 New features:
@@ -398,7 +374,7 @@ Performance:
 * Improve `String#-@` performance by reducing unnecessary data copying and supporting substring lookups (@nirvdrum)
 * Specialize `Array#<<` and related methods appending elements per call site to have a single array storage strategy in the inline cache for most cases (@eregon).
 
-Changes:
+Incompatible Changes:
 
 * `gu install $LANGUAGE` is replaced by `truffleruby-polyglot-get $LANGUAGE`, available in the TruffleRuby JVM standalone (@eregon).
 * The TruffleRuby `ScriptEngine` implementation is removed in favor of the generic [ScriptEngine](https://github.com/oracle/graal/blob/master/docs/reference-manual/embedding/embed-languages.md#compatibility-with-jsr-223-scriptengine) in GraalVM docs (@eregon).
@@ -408,7 +384,6 @@ Memory Footprint:
 * Replaced `RubyLibrary` with `FreezeNode` and `IsFrozenNode` (@horakivo).
 * Address many truffle-sharing warnings (@horakivo).
 * Address many truffle-inlining warnings (@horakivo).
-
 
 # 23.0.0
 
@@ -531,7 +506,7 @@ Performance:
 * Use the system `libyaml` for `psych` to improve warmup when parsing YAML (#2089, @eregon).
 * Fixed repeated deoptimizations for methods building an `Array` which is growing over multiple calls at a given call site (@eregon).
 
-Changes:
+Incompatible Changes:
 
 * Remove `Truffle::Interop.deproxy` as it is unsafe and not useful (@eregon).
 * Removed `Truffle::Interop.unbox_without_conversion` (should not be needed by user code) (@eregon).
@@ -589,14 +564,14 @@ Performance:
 * Report polymorphism inside `Hash#[]` to recover performance (@aardvark179).
 * Improved interpreter performance by optimizing for better host inlining (@eregon).
 * Use `poll` instead of `select` for simple IO waiting to reduce overheads (#1584, @aardvark179).
+* Refactored internals of `rb_sprintf` to simplify handling of `VALUE`s in common cases (@aardvark179).
+* Refactored sharing of array objects between threads using new `SharedArrayStorage` (@aardvark179).
 
-Changes:
+Incompatible Changes:
 
 * No more conversion between Java Strings and Ruby Strings at the interop boundary (@eregon).
 * Removed `Truffle::Interop.{import_without_conversion,export_without_conversion}` (use `Polyglot.{import,export}` instead).
 * Removed `Truffle::Interop.members_without_conversion` (use `Truffle::Interop.members` instead).
-* Refactored internals of `rb_sprintf` to simplify handling of `VALUE`s in common cases (@aardvark179).
-* Refactored sharing of array objects between threads using new `SharedArrayStorage` (@aardvark179).
 
 Security:
 
@@ -658,7 +633,7 @@ Performance:
 * Improve performance of `RSTRING_PTR` for interned strings (@aardvark179).
 * Cache constant argument formats used with `rb_scan_args_kw` (@aardvark179).
 
-Changes:
+Incompatible Changes:
 
 * `-Werror=implicit-function-declaration` is now used for compiling C extensions to fail more clearly and earlier if a function is missing, like CRuby 3.2 (#2618, @eregon).
 * Disable thread pool for Fibers as it causes correctness issues (#2551, @eregon).
@@ -734,7 +709,7 @@ Performance:
 * Remove overhead when getting using `RDATA_PTR` (@aardvark179).
 * Additional copy operations have been reduced when performing IO (#2536, @aardvark179).
 
-Changes:
+Incompatible Changes:
 
 * Foreign exceptions are no longer translated to `RuntimeError` but instead remain as foreign exceptions, see the [documentation](doc/user/polyglot.md) for how to rescue them (@eregon).
 
@@ -817,7 +792,7 @@ Performance:
 * Add new fast paths for encoding negotiation between strings with different encodings, but which match common default cases (#2522, @nirvdrum).
 * Reduce footprint by removing unnecessary nodes for accessing the `FrameOnStackMarker` (#2530, @smarr).
 
-Changes:
+Incompatible Changes:
 
 * TruffleRuby now requires Java 11+ and no longer supports Java 8 (@eregon).
 
@@ -874,7 +849,7 @@ Performance:
 * Use Truffle's `ContextThreadLocal` to speedup access to thread-local data.
 * Provide a new fast path for `rb_backref*` and `rb_lastline*`functions from C extensions.
 
-Changes:
+Incompatible Changes:
 
 * `foreign_object.class` on foreign objects is no longer special and uses `Kernel#class` (it used to return the `java.lang.Class` object for a Java type or `getMetaObject()`, but that is too incompatible with Ruby code).
 * `Java.import name` imports a Java class in the enclosing module instead of always as a top-level constant.
@@ -939,7 +914,7 @@ Performance:
 * Speedup `rb_funcallv*()` by directly unwrapping the C arguments array instead of going through a Ruby `Array` (#2089).
 * Improved the performance of several `Truffle::RegexOperations` methods (#2374, @wildmapes, @nirvdrum).
 
-Changes:
+Incompatible Changes:
 
 * `rb_iterate()` (deprecated since 1.9) no longer magically passes the block to `rb_funcall()`, use `rb_block_call()` instead.
 
@@ -1034,7 +1009,7 @@ Performance:
 * Several methods that need the caller frame are now always inlined in their caller, which speeds up the interpreter and reduces footprint.
 * Pasting code in IRB should be reasonably fast, by updating to `irb` 1.3.3 and `reline` 0.2.3 (#2233).
 
-Changes:
+Incompatible Changes:
 
 * Standalone builds of TruffleRuby are now based on JDK11 (they used JDK8 previously). There should be no user-visible changes. Similarly, JDK11 is now used by default in development instead of JDK8.
 * The deprecated `Truffle::System.synchronized` has been removed.
@@ -1093,7 +1068,7 @@ Performance:
 * Refactor and implement more performant `Array#sample` (#2148, @LillianZ).
 * `String#inspect` is now more efficient.
 
-Changes:
+Incompatible Changes:
 
 * All `InteropLibrary` messages are now exposed consistently as methods on `Truffle::Interop` (#2139). Some methods were renamed to match the scheme described in the documentation.
 
@@ -1160,7 +1135,7 @@ Performance:
 * `Symbol#to_proc` is now globally cached per Symbol and refinements, to avoid creating many redundant `CallTargets`.
 * Setting and access to the special variables `$~` and `$_` has been refactored to require less splitting.
 
-Changes:
+Incompatible Changes:
 
 * Migrated from JLine 2 to JLine 3 for the `readline` standard library.
 
@@ -1237,7 +1212,7 @@ Compatibility:
 * Implemented `rb_enc_codelen`.
 * Implemented `Ripper` by using the C extension (#1585).
 
-Changes:
+Incompatible Changes:
 
 * RubyGems gem commands updated to use the `--no-document` option by default.
 
@@ -1369,7 +1344,7 @@ Compatibility:
 * Implemented `Enumerator::ArithmeticSequence`.
 * Support `(struct RBasic *)->flags` and `->klass` from `ruby.h` (#1891, #1884, #1978).
 
-Changes:
+Incompatible Changes:
 
 * `TRUFFLERUBY_RESILIENT_GEM_HOME` has been removed. Unset `GEM_HOME` and `GEM_PATH` instead if you need to.
 * The deprecated `Truffle::System.full_memory_barrier`, `Truffle::Primitive.logical_processors`, and `Truffle::AtomicReference` have been removed.
@@ -1594,7 +1569,7 @@ Compatibility:
 * `Thread.report_on_exception` is now `true` by default like MRI 2.5+.
 * `BigDecimal` compatibility has been generally improved in several ways.
 
-Changes:
+Incompatible Changes:
 
 * An interop read message sent to a `Proc` will no longer call the `Proc`.
 
@@ -1607,6 +1582,10 @@ Performance:
 # 19.1.0, June 2019
 
 *Ruby is an experimental language in the GraalVM 19.1.0 release*
+
+New features:
+
+* Interactive sources (like the GraalVM polyglot shell) now all share the same binding (#1695).
 
 Bug fixes:
 
@@ -1651,15 +1630,11 @@ Compatibility:
 * `FrozenError` is now defined and is used for `can't modify frozen` object exceptions.
 * `StringIO` is now available by default like in MRI, because it is required by RubyGems.
 
-Changes:
-
-* Interactive sources (like the GraalVM polyglot shell) now all share the same binding (#1695).
-* Hash code calculation has been improved to reduce hash collisions for `Hash` and other cases.
-
 Performance:
 
 * `eval(code, binding)` for a fixed `code` containing blocks is now much faster. This improves the performance of rendering `ERB` templates containing loops.
 * `rb_str_cat` is faster due to the C string now being concatenated without first being converted to a Ruby string or having its encoding checked. As a side effect the behaviour of `rb_str_cat` should now more closely match that of MRI.
+* Hash code calculation has been improved to reduce hash collisions for `Hash` and other cases.
 
 # 19.0.0, May 2019
 
@@ -1677,7 +1652,7 @@ Compatibility:
 
 * `do...end` blocks can now have `rescue/else/ensure` clauses like MRI (#1618).
 
-Changes:
+Incompatible Changes:
 
 * `TruffleRuby.sulong?` has been replaced by `TruffleRuby.cexts?`, and `TruffleRuby.graal?` has been replaced by `TruffleRuby.jit?`. The old methods will continue to work for now, but will produce warnings, and will be removed at a future release.
 
@@ -1696,7 +1671,7 @@ New features:
 * Support Homebrew installed in other prefixes than `/usr/local` (#1583).
 * Added a pure-Ruby implementation of FFI which passes almost all Ruby FFI specs (#1529, #1524).
 
-Changes:
+Incompatible Changes:
 
 * Support for the Darkfish theme for RDoc generation has been removed.
 
@@ -1725,14 +1700,12 @@ New features:
 
 * `Process.clock_getres` has been implemented.
 
-Changes:
+Incompatible Changes:
 
 * `debug`, `profile`, `profiler`, which were already marked as unsupported, have been removed.
 * Our experimental JRuby-compatible Java interop has been removed - use `Polyglot` and `Java` instead.
-* The Trufle handle patches applied to `psych` C extension have now been removed.
 * The `rb_tr_handle_*` functions have been removed as they are no longer used in any C extension patches.
 * Underscores and dots in options have become hyphens, so `--exceptions.print_uncaught_java` is now `--exceptions-print-uncaught-java`, for example.
-* The `rb_tr_handle_*` functions have been removed as they are no longer used in any C extension patches.
 
 Bug fixes:
 
@@ -1747,6 +1720,7 @@ Compatibility:
 * ERB now uses StringScanner and not the fallback, like on MRI. As a result `strscan` is required by `require 'erb'` (#1615).
 * Yield different number of arguments for `Hash#each` and `Hash#each_pair` based on the block arity like MRI (#1629).
 * Add support for the `base` keyword argument to `Dir.{[], glob}`.
+* The Truffle handle patches applied to `psych` C extension have now been removed.
 
 # 1.0 RC 14, 18 March 2019
 
@@ -1767,7 +1741,7 @@ New features:
 * Implemented `Dir.children` and `Dir#children`.
 * Implemented `Integer#sqrt`.
 
-Changes:
+Incompatible Changes:
 
 * `-Xoptions` has been removed - use `--help:languages` instead.
 * `-Xlog=` has been removed - use `--log.level=` instead.
@@ -1808,10 +1782,9 @@ Bug fixes:
 * Fix compatibility with RubyGems 3 (#1558).
 * `Kernel#respond_to?` now returns false if a method is protected and the `include_all` argument is false (#1568).
 
-Changes:
+Incompatible Changes:
 
 * `TRUFFLERUBY_CEXT_ENABLED` is no longer supported and C extensions are now always built, regardless of the value of this environment variable.
-* Getting a substring of a string created by a C extension now uses less memory as only the requested portion will be copied to a managed string.
 * `-Xoptions` has been deprecated and will be removed - use `--help:languages` instead.
 * `-Xlog=` has been deprecated and will be removed - use `--log.level=` instead.
 * `-J` has been deprecated and will be removed - use `--jvm.` instead.
@@ -1819,17 +1792,21 @@ Changes:
 * `-J-cmd`, `--jvm.cmd`, `JAVA_HOME`, `JAVACMD`, and `JAVA_OPTS` do not work in any released configuration of TruffleRuby, so have been removed.
 * `-Xoption=value` has been deprecated and will be removed - use `--option=value` instead.
 * `TracePoint` now raises an `ArgumentError` for unsupported events.
-* `TracePoint.trace` and `TracePoint#inspect` have been implemented.
 
 Compatibility:
 
 * Improved the exception when an `-S` file isn't found.
 * Removed the message from exceptions raised by bare `raise` to better match MRI (#1487).
 * `TracePoint` now handles the `:class` event.
+* `TracePoint.trace` and `TracePoint#inspect` have been implemented.
 
 Performance:
 
 * Sped up `String` handling in native extensions, quite substantially in some cases, by reducing conversions between native and managed strings and allowing for mutable metadata in native strings.
+
+Memory Footprint:
+
+* Getting a substring of a string created by a C extension now uses less memory as only the requested portion will be copied to a managed string.
 
 # 1.0 RC 12, 4 February 2019
 
@@ -1868,9 +1845,6 @@ Compatibility:
 * Implemented `Dir.each_child`.
 * Adding missing support for the `close_others` option to `exec` and `spawn`.
 * Implemented the missing `MatchData#named_captures` method (#1512).
-
-Changes:
-
 * `Process::CLOCK_` constants have been given the same value as in standard Ruby.
 
 Performance:
@@ -1890,6 +1864,7 @@ New features:
 * `Warning.warn` has been implemented (#1470).
 * `Thread.report_on_exception` has been implemented (#1476).
 * The emulation symbols for `Process.clock_gettime` have been implemented.
+* Timezone messages are now logged at `CONFIG` level, use `-Xlog=CONFIG` to debug if the timezone is incorrectly shown as `UTC`.
 
 Bug fixes:
 
@@ -1905,10 +1880,6 @@ Bug fixes:
 * Fixed a JRuby-style Java interop compatibility issue seen in `test-unit`.
 * Fixed problem with calling `warn` if `$stderr` has been reassigned.
 * Fixed definition of `RB_ENCODING_GET_INLINED` (#1440).
-
-Changes:
-
-* Timezone messages are now logged at `CONFIG` level, use `-Xlog=CONFIG` to debug if the timezone is incorrectly shown as `UTC`.
 
 # 1.0 RC 9, 5 November 2018
 
@@ -1928,12 +1899,15 @@ Bug fixes:
 * Updated `BigDecimal#to_s` to use `e` instead of `E` for exponent notation.
 * Fixed `BigDecimal#to_s` to allow `f` as a format flag to indicate conventional floating point notation. Previously only `F` was allowed.
 
-Changes:
+Compatibility:
 
-* The supported version of LLVM for Oracle Linux has been updated from 3.8 to 4.0.
 * `mysql2` is now patched to avoid a bug in passing `NULL` to `rb_scan_args`, and now passes the majority of its test suite.
 * The post-install script now automatically detects if recompiling the OpenSSL C extension is needed. The post-install script should always be run in TravisCI as well.
 * Detect when the system libssl is incompatible more accurately and add instructions on how to recompile the extension.
+
+Incompatible Changes:
+
+* The supported version of LLVM for Oracle Linux has been updated from 3.8 to 4.0.
 
 # 1.0 RC 8, 19 October 2018
 
@@ -1944,10 +1918,12 @@ New features:
 * Ubuntu 18.04 LTS is now supported.
 * macOS 10.14 (Mojave) is now supported.
 
-Changes:
+Incompatible Changes:
 
-* Random seeds now use Java's `NativePRNGNonBlocking`.
 * The supported version of Fedora is now 28, upgraded from 25.
+
+Dependencies:
+
 * The FFI gem has been updated from 1.9.18 to 1.9.25.
 * JCodings has been updated from 1.0.30 to 1.0.40.
 * Joni has been updated from 2.1.16 to 2.1.25.
@@ -1955,6 +1931,7 @@ Changes:
 Performance:
 
 * Performance of setting the last exception on a thread has now been improved.
+* Random seeds now use Java's `NativePRNGNonBlocking`.
 
 # 1.0 RC 7, 3 October 2018
 
@@ -1978,16 +1955,16 @@ Bug fixes:
 * Fixed `mon_initialize` when called inside `initialize_copy` (#1428).
 * `Mutex` correctly raises a `TypeError` when trying to serialize with `Marshal.dump`.
 
+Compatibility:
+
+* Many clean-ups to our internal patching mechanism used to make some native extensions run on TruffleRuby.
+* Removed obsoleted patches for Bundler compatibility now that Bundler 1.16.5 has built-in support for TruffleRuby.
+
 Performance:
 
 * Reduced memory footprint for private/internal AST nodes.
 * Increased the number of cases in which string equality checks will become compile-time constants.
 * Major performance improvement for exceptional paths where the rescue body does not access the exception object (e.g., `x.size rescue 0`).
-
-Changes:
-
-* Many clean-ups to our internal patching mechanism used to make some native extensions run on TruffleRuby.
-* Removed obsoleted patches for Bundler compatibility now that Bundler 1.16.5 has built-in support for TruffleRuby.
 * Reimplemented exceptions and other APIs that can return a backtrace to use Truffle's lazy stacktraces API.
 
 # 1.0 RC 6, 3 September 2018
@@ -2006,6 +1983,8 @@ New features:
 * A migration guide from JRuby (`doc/user/jruby-migration.md`) is now included.
 * `kind_of?` works as an alias for `is_a?` on foreign objects.
 * Boxed foreign strings unbox on `to_s`, `to_str`, and `inspect`.
+* The `-Xembedded` option can now be set set on the launcher command line.
+* The `-Xplatform.native=false` option can now load the core library, by enabling `-Xpolyglot.stdio`.
 
 Bug fixes:
 
@@ -2037,11 +2016,8 @@ Performance:
 * C extension bitcode is no longer encoded as Base64 to pass it to Sulong.
 * Faster `String#==` using vectorization.
 
-Changes:
+Incompatible Changes:
 
-* Clarified that all sources that come in from the Polyglot API `eval` method will be treated as UTF-8, and cannot be re-interpreted as another encoding using a magic comment.
-* The `-Xembedded` option can now be set set on the launcher command line.
-* The `-Xplatform.native=false` option can now load the core library, by enabling `-Xpolyglot.stdio`.
 * `$SAFE` and `Thread#safe_level` now cannot be set to `1` - raising an error rather than warning as before. `-Xsafe` allows it to be set, but there are still no checks.
 * Foreign objects are now printed as `#<Foreign:system-identity-hash-code>`, except for foreign arrays which are now printed as `#<Foreign [elements...]>`.
 * Foreign objects `to_s` now calls `inspect` rather than Java's `toString`.
@@ -2090,7 +2066,7 @@ Performance:
 * Optimize required and optional keyword arguments.
 * `rb_enc_to_index` is now faster by eliminating an expensive look-up.
 
-Changes:
+Incompatible Changes:
 
 * `-Xlog=` now needs log level names to be upper case.
 * `-Dtruffleruby.log` and `TRUFFLERUBY_LOG` have been removed - use `-Dpolyglot.log.ruby.level`.
@@ -2137,43 +2113,49 @@ New features:
 * Coercion of foreign numbers to Ruby numbers now works.
 * `to_s` works on all foreign objects and calls the Java `toString`.
 * `to_str` will try to `UNBOX` and then re-try `to_str`, in order to provoke the unboxing of foreign strings.
-
-Changes:
-
 * The version string now mentions if you're running GraalVM Community Edition (`GraalVM CE`) or GraalVM Enterprise Edition (`GraalVM EE`).
+
+Compatibility:
+
+* The `erb` standard library has been patched to stop using a -1 line number.
+
+Incompatible Changes:
+
 * The inline JavaScript functionality `-Xinline_js` has been removed.
 * Line numbers `< 0`, in the various eval methods, are now warned about, because we don't support these at all. Line numbers `> 1` are warned about (at the fine level) but they are shimmed by adding blank lines in front to get to the correct offset. Line numbers starting at `0` are also warned about at the fine level and set to `1` instead.
-* The `erb` standard library has been patched to stop using a -1 line number.
-* `-Xbacktraces.interleave_java` now includes all the trailing Java frames.
 * Objects with a `[]` method, except for `Hash`, now do not return anything for `KEYS`, to avoid the impression that you could `READ` them. `KEYINFO` also returns nothing for these objects, except for `Array` where it returns information on indices.
 * `String` now returns `false` for `HAS_KEYS`.
 * The supported additional functionality module has been renamed from `Truffle` to `TruffleRuby`. Anything not documented in `doc/user/truffleruby-additions.md` should not be used.
-* Imprecise wrong gem directory detection was replaced. TruffleRuby newly marks its gem directories with a marker file, and warns if you try to use TruffleRuby with a gem directory which is lacking the marker.
 
 Bug fixes:
 
 * TruffleRuby on SubstrateVM now correctly determines the system timezone.
 * `Kernel#require_relative` now coerces the feature argument to a path and canonicalizes it before requiring, and it now uses the current directory as the directory for a synthetic file name from `#instance_eval`.
+* `-Xbacktraces.interleave_java` now includes all the trailing Java frames.
+* Imprecise wrong gem directory detection was replaced. TruffleRuby newly marks its gem directories with a marker file, and warns if you try to use TruffleRuby with a gem directory which is lacking the marker.
 
 # 1.0 RC 1, 17 April 2018
 
 New features:
 
 * The Ruby version has been updated to version 2.3.7.
+* C++ libraries like `libc++` are now not needed if you don't run C++ extensions. `libc++abi` is now never needed. Documentation updated to make it more clear what the minimum requirements for pure Ruby, C extensions, and C++ extensions separately.
+* C extensions are now built by default - `TRUFFLERUBY_CEXT_ENABLED` is assumed `true` unless set to `false`.
+
+Compatibility:
+
+* Now using the native version of Psych.
 
 Security:
 
 * CVE-2018-6914, CVE-2018-8779, CVE-2018-8780, CVE-2018-8777, CVE-2017-17742 and CVE-2018-8778 have been mitigated.
 
-Changes:
+Incompatible Changes:
 
 * `RubyTruffleError` has been removed and uses replaced with standard exceptions.
-* C++ libraries like `libc++` are now not needed if you don't run C++ extensions. `libc++abi` is now never needed. Documentation updated to make it more clear what the minimum requirements for pure Ruby, C extensions, and C++ extensions separately.
-* C extensions are now built by default - `TRUFFLERUBY_CEXT_ENABLED` is assumed `true` unless set to `false`.
 * The `KEYS` interop message now returns an array of Java strings, rather than Ruby strings. `KEYS` on an array no longer returns indices.
 * `HAS_SIZE` now only returns `true` for `Array`.
 * A method call on a foreign object that looks like an operator (the method name does not begin with a letter) will call `IS_BOXED` on the object and based on that will possibly `UNBOX` and convert to Ruby.
-* Now using the native version of Psych.
 * The supported version of LLVM on Oracle Linux has been dropped to 3.8.
 * The supported version of Fedora has been dropped to 25, and the supported version of LLVM to 3.8, due to LLVM incompatibilities. The instructions for installing `libssl` have changed to match.
 
@@ -2191,7 +2173,7 @@ New features:
 * Added a new Java-interop API similar to the one in the Nashorn JavaScript implementation, as also implemented by Graal.js. The `Java.type` method returns a Java class object on which you can use normal interop methods. Needs the `--jvm` flag to be used.
 * Supported and tested versions of LLVM for different platforms have been more precisely [documented](doc/user/installing-llvm.md).
 
-Changes:
+Incompatible Changes:
 
 * Interop semantics of `INVOKE`, `READ`, `WRITE`, `KEYS` and `KEY_INFO` have changed significantly, so that `INVOKE` maps to Ruby method calls, `READ` calls `[]` or returns (bound) `Method` objects, and `WRITE` calls `[]=`.
 

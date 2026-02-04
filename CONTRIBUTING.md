@@ -39,7 +39,7 @@ This is the meaning of the sections in the ChangeLog:
   On the other hand, if e.g. `1 + 2` returned `4` that should be under `Bug fixes`.
 * Performance: something which improves performance (whether interpreter, warmup or peak).
 * Memory Footprint: something which improves memory footprint.
-* Changes: this means incompatible changes that users may need to adapt to.
+* Incompatible Changes: this means incompatible changes that users may need to adapt to.
 
 Always keep an empty line around the various sections, like it is done for entries in older releases.
 The idea is only add lines, never remove lines (important since this file uses union merge).
