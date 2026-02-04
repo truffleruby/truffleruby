@@ -6,4 +6,4 @@ fails:C-API Encoding function rb_enc_get_index returns -1 for an object without 
 fails:C-API Encoding function rb_enc_set_index raises an ArgumentError for a non-encoding capable object
 fails:C-API Encoding function ENCODING_SET raises an ArgumentError for a non-encoding capable object
 slow:C-API Encoding function rb_define_dummy_encoding raises EncodingError if too many encodings
-fails(string in UTF-16 with odd number of bytes):C-API Encoding function rb_enc_strlen handles broken strings combines valid character and invalid character counts in UTF-16
+keep(string in UTF-16 with odd number of bytes):C-API Encoding function rb_enc_strlen handles broken strings combines valid character and invalid character counts in UTF-16

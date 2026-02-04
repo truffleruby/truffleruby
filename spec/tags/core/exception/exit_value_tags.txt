@@ -1,1 +1,1 @@
-fails:LocalJumpError#exit_value returns the value given to return
+keep(crash):LocalJumpError#exit_value returns the value given to return

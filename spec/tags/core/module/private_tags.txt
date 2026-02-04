@@ -1,1 +1,1 @@
-fails:Module#private continues to allow a prepended module method to call super
+keep(crash):Module#private continues to allow a prepended module method to call super

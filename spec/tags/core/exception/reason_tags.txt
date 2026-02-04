@@ -1,1 +1,1 @@
-fails:LocalJumpError#reason returns 'return' for a return
+keep(crash):LocalJumpError#reason returns 'return' for a return

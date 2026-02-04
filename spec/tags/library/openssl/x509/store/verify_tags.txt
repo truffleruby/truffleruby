@@ -1,1 +1,1 @@
-fails(transient):OpenSSL::X509::Store#verify returns false for an expired root certificate
+keep(transient):OpenSSL::X509::Store#verify returns false for an expired root certificate

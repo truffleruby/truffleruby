@@ -93,10 +93,12 @@ class MSpecScript
     [%r(^(.*)/spec/truffle/(.+)_spec\.rb$),    '\1/spec/tags/truffle/\2_tags.txt'],
   ]
 
-  set :xtags, (get(:xtags) || [])
-  excludes = get(:xtags)
+  excludes = get(:xtags) || []
+  set :xtags, excludes
 
   if defined?(::TruffleRuby)
+    excludes << 'keep'
+
     if TruffleRuby.native?
       excludes << 'native'
       if GC.heap_stats.values.none?(Hash)

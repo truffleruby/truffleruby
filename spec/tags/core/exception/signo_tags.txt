@@ -1,1 +1,1 @@
-fails:SignalException#signo returns the signal number
+keep(exits):SignalException#signo returns the signal number

@@ -19,4 +19,4 @@ slow:File.expand_path raises an Encoding::CompatibilityError if the external enc
 slow:File.expand_path does not modify the string argument
 slow:File.expand_path does not modify a HOME string argument
 slow:File.expand_path returns a String when passed a String subclass
-fails(force_encoding UTF-16 with possibly odd number of bytes):File.expand_path raises an Encoding::CompatibilityError if the external encoding is not compatible
+keep(force_encoding UTF-16 with possibly odd number of bytes):File.expand_path raises an Encoding::CompatibilityError if the external encoding is not compatible

@@ -1,3 +1,3 @@
 slow:TCPSocket.open raises IO::TimeoutError with :connect_timeout when no server is listening on the given address
 slow:TCPSocket.open with a running server connects to a server when passed connect_timeout argument
-fails(transient GR-52061):TCPSocket.open raises IO::TimeoutError with :connect_timeout when no server is listening on the given address
+keep(transient GR-52061):TCPSocket.open raises IO::TimeoutError with :connect_timeout when no server is listening on the given address

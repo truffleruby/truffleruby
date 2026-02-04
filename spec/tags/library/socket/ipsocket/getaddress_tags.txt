@@ -1,1 +1,1 @@
-fails(spurious):Socket::IPSocket#getaddress raises an error on unknown hostnames
+keep(spurious):Socket::IPSocket#getaddress raises an error on unknown hostnames
