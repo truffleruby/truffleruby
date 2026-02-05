@@ -102,9 +102,7 @@ public abstract class ThreadBacktraceLocationNodes {
         @Specialization
         RubyString label(RubyBacktraceLocation threadBacktraceLocation,
                 @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-            final Backtrace backtrace = threadBacktraceLocation.backtrace;
-            final int index = threadBacktraceLocation.activationIndex;
-            final TruffleStackTraceElement element = backtrace.getStackTrace()[index];
+            TruffleStackTraceElement element = threadBacktraceLocation.getTruffleStackTraceElement();
 
             final String label = Backtrace.labelFor(element);
             return createString(fromJavaStringNode, label, Encodings.UTF_8);
@@ -116,9 +114,7 @@ public abstract class ThreadBacktraceLocationNodes {
         @Specialization
         RubyString label(RubyBacktraceLocation threadBacktraceLocation,
                 @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-            final Backtrace backtrace = threadBacktraceLocation.backtrace;
-            final int index = threadBacktraceLocation.activationIndex;
-            final TruffleStackTraceElement element = backtrace.getStackTrace()[index];
+            TruffleStackTraceElement element = threadBacktraceLocation.getTruffleStackTraceElement();
 
             final String baseLabel = Backtrace.baseLabelFor(element);
             return createString(fromJavaStringNode, baseLabel, Encodings.UTF_8);

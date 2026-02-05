@@ -1028,20 +1028,19 @@ public abstract class ThreadNodes {
             final List<TruffleStackTraceElement> elements = new ArrayList<>();
 
             getContext().getCallStack().iterateFrameBindings(SKIP, frameInstance -> {
-                final Node location = frameInstance.getCallNode();
+                Node location = frameInstance.getCallNode();
 
-                final var rootCallTarget = (RootCallTarget) frameInstance.getCallTarget();
-                final var element = TruffleStackTraceElement.create(location, rootCallTarget, null);
+                var rootCallTarget = (RootCallTarget) frameInstance.getCallTarget();
+                var element = TruffleStackTraceElement.create(location, rootCallTarget, null);
                 elements.add(element);
 
                 final var elementsArray = elements.toArray(Backtrace.EMPTY_STACK_TRACE_ELEMENTS_ARRAY);
-                final boolean readyToYield = BacktraceFormatter.nextAvailableSourceSection(elementsArray,
-                        0) != null;
+                boolean readyToYield = BacktraceFormatter.nextAvailableSourceSection(elementsArray, 0) != null;
 
                 if (readyToYield) {
                     for (int i = 0; i < elementsArray.length; i++) {
-                        final var backtrace = new Backtrace(location, 0, elementsArray);
-                        final var rubyBacktraceLocation = new RubyBacktraceLocation(
+                        var backtrace = new Backtrace(location, 0, elementsArray);
+                        var rubyBacktraceLocation = new RubyBacktraceLocation(
                                 getContext().getCoreLibrary().threadBacktraceLocationClass,
                                 getLanguage().threadBacktraceLocationShape,
                                 backtrace,

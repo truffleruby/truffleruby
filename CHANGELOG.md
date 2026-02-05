@@ -36,6 +36,7 @@ Compatibility:
 * `Integer#**` no longer returns infinity for large results but either computes the result as an Integer or raises an `ArgumentError` (#4133, @eregon).
 * `Hash#to_proc` returns a lambda with an arity of 1 (#4138, @herwinw).
 * `Hash.[]` now raises the correct error message for `nil`, `true` and `false` as argument (#4140, #4146, @herwinw).
+* Support an `Array` of `Thread::Backtrace::Location` in `Exception#set_backtrace` and `{Kernel,Thread,Fiber}#raise` (#3883, @eregon).
 
 Performance:
 
