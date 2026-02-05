@@ -37,6 +37,7 @@ Compatibility:
 * `Hash#to_proc` returns a lambda with an arity of 1 (#4138, @herwinw).
 * `Hash.[]` now raises the correct error message for `nil`, `true` and `false` as argument (#4140, #4146, @herwinw).
 * Support an `Array` of `Thread::Backtrace::Location` in `Exception#set_backtrace` and `{Kernel,Thread,Fiber}#raise` (#3883, @eregon).
+* Try `#to_ary` coercion in `Array#assoc` and `Array#rassoc` (#4137, @herwinw).
 
 Performance:
 

@@ -204,8 +204,8 @@ class Array
 
   def assoc(obj)
     each do |x|
-      if Primitive.is_a?(x, Array) and x.first == obj
-        return x
+      if x = Truffle::Type.rb_check_convert_type(x, Array, :to_ary)
+        return x if x.first == obj
       end
     end
 
@@ -878,8 +878,8 @@ class Array
 
   def rassoc(obj)
     each do |elem|
-      if Primitive.is_a?(elem, Array) and elem.at(1) == obj
-        return elem
+      if elem = Truffle::Type.rb_check_convert_type(elem, Array, :to_ary)
+        return elem if elem.at(1) == obj
       end
     end
 
