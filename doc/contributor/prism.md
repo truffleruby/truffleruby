@@ -8,6 +8,10 @@
 
 ## Print Detailed Prism AST
 
+### Expore the AST interactively
+
+See the [Ruby AST Tree Viewer](https://ko1.github.io/astv/).
+
 ### From the Prism repository
 
 ```bash
