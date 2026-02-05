@@ -1,3 +1,4 @@
+keep(assert fails):Fiber#raise re-raises a previously rescued exception without overwriting the backtrace
 fails(implemented next):Fiber#raise raises a FiberError if invoked on a transferring Fiber
 fails:Fiber#raise allows Exception, message, and backtrace_locations parameters
 fails:Fiber#raise raises on the resumed fiber
