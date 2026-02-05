@@ -38,6 +38,7 @@ Compatibility:
 * `Hash.[]` now raises the correct error message for `nil`, `true` and `false` as argument (#4140, #4146, @herwinw).
 * Support an `Array` of `Thread::Backtrace::Location` in `Exception#set_backtrace` and `{Kernel,Thread,Fiber}#raise` (#3883, @eregon).
 * Try `#to_ary` coercion in `Array#assoc` and `Array#rassoc` (#4137, @herwinw).
+* Improve compatibility of `rb_scan_args()` with Ruby 3+ changes (@eregon).
 
 Performance:
 

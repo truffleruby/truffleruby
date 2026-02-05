@@ -21,8 +21,7 @@ static VALUE rb_keyword_error_new(const char *error, VALUE keys) {
     rb_str_append(error_message, rb_str_new_cstr(": "));
     while (1) {
       const VALUE k = RARRAY_AREF(keys, i);
-      Check_Type(k, T_SYMBOL); /* wrong hash is given to rb_get_kwargs */
-      rb_str_append(error_message, rb_sym2str(k));
+      rb_str_append(error_message, rb_inspect(k));
       if (++i >= len) break;
       rb_str_append(error_message, rb_str_new_cstr(", "));
     }
@@ -105,6 +104,7 @@ int rb_get_kwargs(VALUE keyword_hash, const ID *table, int required, int optiona
   return extracted;
 }
 
+// MRI: rb_scan_args_parse
 void rb_tr_scan_args_kw_parse(const char *format, struct rb_tr_scan_args_parse_data *parse_data) {
   const char *formatp = format;
 
@@ -145,10 +145,6 @@ void rb_tr_scan_args_kw_parse(const char *format, struct rb_tr_scan_args_parse_d
   }
 
   if (*formatp != '\0') {
-    rb_raise(rb_eArgError, "bad rb_scan_args format");
+    rb_fatal("bad scan arg format: %s", format);
   }
-}
-
-bool rb_tr_scan_args_test_kwargs(VALUE kwargs, VALUE raise_error) {
-  return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("test_kwargs", kwargs, raise_error));
 }
