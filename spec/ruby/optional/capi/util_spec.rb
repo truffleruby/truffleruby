@@ -117,8 +117,15 @@ describe "C-API Util function" do
 
     it "rejects the use of nil as a hash" do
       -> {
-        @o.rb_scan_args([1, nil], "1:", 2, @acc).should == 1
+        @o.rb_scan_args([1, nil], "1:", 2, @acc)
       }.should raise_error(ArgumentError, "wrong number of arguments (given 2, expected 1)")
+      ScratchPad.recorded.should == []
+    end
+
+    it "rejects the use of of a non-Hash as keywords" do
+      -> {
+        @o.rb_scan_args([42], ":", 1, @acc)
+      }.should raise_error(ArgumentError, "wrong number of arguments (given 1, expected 0)")
       ScratchPad.recorded.should == []
     end
 
