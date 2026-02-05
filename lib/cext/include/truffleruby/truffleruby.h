@@ -180,7 +180,7 @@ static inline int rb_tr_scan_args_kw_int(int kw_flag, int argc, VALUE *argv, str
     if (parse_data.kwargs && n_mand < argc) {
       if (keyword_given) {
         if (!RB_TYPE_P(last, T_HASH)) {
-          rb_warn("Keyword flag set when calling rb_scan_args, but last entry is not a Hash");
+          rb_raise(rb_eArgError, "Keyword flag set when calling rb_scan_args, but last entry is not a Hash");
         }
         else {
           hash = last;
@@ -196,8 +196,7 @@ static inline int rb_tr_scan_args_kw_int(int kw_flag, int argc, VALUE *argv, str
       }
     }
     else if (parse_data.kwargs && keyword_given && n_mand == argc) {
-      /* Warn if treating keywords as positional, as in Ruby 3, this will be an error */
-      rb_warn("Passing the keyword argument as the last hash parameter is deprecated");
+      rb_raise(rb_eArgError, "Passing the keyword argument as the last hash parameter is no longer supported");
     }
   }
 
@@ -240,7 +239,7 @@ static inline int rb_tr_scan_args_kw_int(int kw_flag, int argc, VALUE *argv, str
        if (argn < argc) {
         arg = argv[argn];
         if (!RB_TYPE_P(arg, T_HASH)) {
-          rb_warn("Keyword flag set when calling rb_scan_args, but last entry is not a Hash");
+          rb_raise(rb_eArgError, "Keyword flag set when calling rb_scan_args, but last entry is not a Hash");
         }
         argn++;
         found_kwargs = true;
