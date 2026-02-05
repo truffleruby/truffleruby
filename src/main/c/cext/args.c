@@ -104,6 +104,7 @@ int rb_get_kwargs(VALUE keyword_hash, const ID *table, int required, int optiona
   return extracted;
 }
 
+// MRI: rb_scan_args_parse
 void rb_tr_scan_args_kw_parse(const char *format, struct rb_tr_scan_args_parse_data *parse_data) {
   const char *formatp = format;
 
@@ -144,6 +145,6 @@ void rb_tr_scan_args_kw_parse(const char *format, struct rb_tr_scan_args_parse_d
   }
 
   if (*formatp != '\0') {
-    rb_raise(rb_eArgError, "bad rb_scan_args format");
+    rb_fatal("bad scan arg format: %s", format);
   }
 }
