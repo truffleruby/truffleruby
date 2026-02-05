@@ -1,4 +1,0 @@
-fails:C-API Util function rb_scan_args rejects the use of nil as a hash
-fails:C-API Util function rb_scan_args does not reject non-symbol keys in keyword arguments
-fails:C-API Util function rb_scan_args does not reject non-symbol keys in keyword arguments with required argument
-fails:C-API Util function rb_scan_args considers keyword arguments with non-symbol keys as keywords when using splat and post arguments

@@ -1841,18 +1841,6 @@ module Truffle::CExt
     raise Exception, "rb_fatal: #{message}"
   end
 
-  def test_kwargs(kwargs, raise_error)
-    return false if Primitive.nil?(kwargs)
-
-    if Primitive.is_a?(kwargs, Hash) && kwargs.keys.all? { |k| Primitive.is_a?(k, Symbol) }
-      true
-    elsif raise_error
-      raise ArgumentError, "the value is not a Hash with all keys being Symbols as kwargs requires: #{kwargs}"
-    else
-      false
-    end
-  end
-
   def send_splatted(object, method, args)
     object.__send__(method, *args)
   end

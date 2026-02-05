@@ -148,7 +148,3 @@ void rb_tr_scan_args_kw_parse(const char *format, struct rb_tr_scan_args_parse_d
     rb_raise(rb_eArgError, "bad rb_scan_args format");
   }
 }
-
-bool rb_tr_scan_args_test_kwargs(VALUE kwargs, VALUE raise_error) {
-  return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("test_kwargs", kwargs, raise_error));
-}

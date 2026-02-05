@@ -136,8 +136,6 @@ struct rb_tr_scan_args_parse_data {
 
 void rb_tr_scan_args_kw_parse(const char *format, struct rb_tr_scan_args_parse_data *parse_data);
 
-bool rb_tr_scan_args_test_kwargs(VALUE kwargs, VALUE raise_error);
-
 ALWAYS_INLINE(static int rb_tr_scan_args_kw_int(int kw_flag, int argc, VALUE *argv, struct rb_tr_scan_args_parse_data parse_data, VALUE *v1, VALUE *v2, VALUE *v3, VALUE *v4, VALUE *v5, VALUE *v6, VALUE *v7, VALUE *v8, VALUE *v9, VALUE *v10));
 static inline int rb_tr_scan_args_kw_int(int kw_flag, int argc, VALUE *argv, struct rb_tr_scan_args_parse_data parse_data, VALUE *v1, VALUE *v2, VALUE *v3, VALUE *v4, VALUE *v5, VALUE *v6, VALUE *v7, VALUE *v8, VALUE *v9, VALUE *v10) {
 
@@ -181,36 +179,16 @@ static inline int rb_tr_scan_args_kw_int(int kw_flag, int argc, VALUE *argv, str
     if (parse_data.kwargs && n_mand < argc) {
       if (keyword_given) {
         if (!RB_TYPE_P(last, T_HASH)) {
-          rb_warn("Keyword flag set when calling rb_scan_args, but last entry is not a hash");
+          rb_warn("Keyword flag set when calling rb_scan_args, but last entry is not a Hash");
         }
         else {
           hash = last;
         }
       }
 
-      else if (NIL_P(last)) {
-        /* For backwards compatibility, nil is taken as an empty
-           option hash only if it is not ambiguous; i.e. '*' is
-           not specified and arguments are given more than sufficient.
-           This will be removed in Ruby 3. */
-        if (parse_data.rest || argc <= n_mand + n_opt) {
-          parse_data.kwargs = false;
-          erased_kwargs = true;
-        }
-      }
       else {
         hash = rb_check_hash_type(last);
         if (NIL_P(hash)) {
-          parse_data.kwargs = false;
-          erased_kwargs = true;
-        }
-      }
-
-      /* Ruby 3: Remove if branch, as it will not attempt to split hashes */
-      if (!NIL_P(hash)) {
-        if (!rb_tr_scan_args_test_kwargs(argv[argc - 1], Qfalse)) {
-          // Does not handle the case where "The last argument is split into positional and keyword parameters"
-          // Instead assumes that it is all one hash
           parse_data.kwargs = false;
           erased_kwargs = true;
         }
@@ -260,7 +238,9 @@ static inline int rb_tr_scan_args_kw_int(int kw_flag, int argc, VALUE *argv, str
     } else if (parse_data.kwargs && !taken_kwargs) {
        if (argn < argc) {
         arg = argv[argn];
-        rb_tr_scan_args_test_kwargs(arg, Qtrue);
+        if (!RB_TYPE_P(arg, T_HASH)) {
+          rb_warn("Keyword flag set when calling rb_scan_args, but last entry is not a Hash");
+        }
         argn++;
         found_kwargs = true;
       } else {
