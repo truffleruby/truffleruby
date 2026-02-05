@@ -34,4 +34,3 @@ slow:IO.popen with a leading Array argument accepts '[env, command, arg1, arg2, 
 slow:IO.popen with a leading Array argument accepts '[env, command, arg1, arg2, ...], mode, IO + exec options'
 slow:IO.popen accepts a path using the chdir: keyword argument
 slow:IO.popen accepts a path using the chdir: keyword argument and a coercible path
-fails:IO.popen accepts a path using the chdir: keyword argument

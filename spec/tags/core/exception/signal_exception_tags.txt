@@ -1,4 +1,4 @@
-fails:rescuing SignalException raises a SignalException when sent a signal
+keep(exits):rescuing SignalException raises a SignalException when sent a signal
 slow:SignalException can be rescued
 slow:SignalException runs after at_exit
 slow:SignalException cannot be trapped with Signal.trap

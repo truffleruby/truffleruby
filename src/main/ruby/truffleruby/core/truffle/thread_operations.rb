@@ -165,4 +165,8 @@ module Truffle::ThreadOperations
     $stderr.write message
   end
 
+  # To ignore this thread for the MSpec LeakChecker
+  def self.mark_as_detached_thread(thread)
+    thread.thread_variable_set(:"\0__detached_thread__", true)
+  end
 end

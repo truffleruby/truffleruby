@@ -3,7 +3,6 @@ fails:Kernel#eval unwinds through a Proc-style closure and returns from a lambda
 slow:Kernel#eval raises a LocalJumpError if there is no lambda-style closure in the chain
 slow:Kernel#eval does not share locals across eval scopes
 fails(cannot store constant with name in binary encoding):Kernel#eval with a magic encoding comment ignores the magic encoding comment if it is after a frozen_string_literal magic comment
-fails:Kernel#eval with a magic encoding comment ignores the frozen_string_literal magic comment if it appears after a token and warns if $VERBOSE is true
 fails:Kernel#eval returns from the method calling #eval when evaluating 'return'
 fails:Kernel#eval returns from the method calling #eval when evaluating 'return' in BEGIN
 fails:Kernel#eval uses (eval at __FILE__:__LINE__) if none is provided

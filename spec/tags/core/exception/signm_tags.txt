@@ -1,1 +1,1 @@
-fails:SignalException#signm returns the signal name
+keep(exits):SignalException#signm returns the signal name

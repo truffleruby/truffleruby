@@ -1,1 +1,1 @@
-fails(spurious GR-19779):ObjectSpace.define_finalizer will call the finalizer
+keep(spurious GR-19779):ObjectSpace.define_finalizer will call the finalizer

@@ -21,5 +21,5 @@ fails:TracePoint#enable target: option option value accepts Method
 fails:TracePoint#enable target: option option value accepts UnboundMethod
 fails:TracePoint#enable target: option option value accepts Proc
 fails:TracePoint#enable target_line: option accepts value that could be coerced to Integer
-fails(spurious GR-23649):TracePoint#enable with a block enables the trace object for any thread
+keep(spurious GR-23649):TracePoint#enable with a block enables the trace object for any thread
 fails:TracePoint#enable with a block enables the trace object only for the current thread

@@ -1,2 +1,1 @@
 fails:Refinement#append_features is not defined
-fails:Refinement#append_features is not called by Module#include

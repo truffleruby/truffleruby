@@ -5,4 +5,4 @@ fails:TCPSocket#initialize using IPv6 when a server is listening on the given ad
 fails:TCPSocket#initialize using IPv6 when a server is listening on the given address creates a socket which is set to close on exec
 slow:TCPSocket#initialize raises IO::TimeoutError with :connect_timeout when no server is listening on the given address
 slow:TCPSocket#initialize with a running server connects to a server when passed connect_timeout argument
-fails(transient):TCPSocket#initialize raises IO::TimeoutError with :connect_timeout when no server is listening on the given address
+keep(transient):TCPSocket#initialize raises IO::TimeoutError with :connect_timeout when no server is listening on the given address

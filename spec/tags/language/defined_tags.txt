@@ -1,13 +1,4 @@
 fails:The defined? keyword for a scoped constant returns nil when a constant is defined on top-level but not on the class
 fails:The defined? keyword for an expression &&= returns 'expression' for assigning a fully qualified constant with '&&='
 fails:The defined? keyword for an expression ||= returns 'expression' for assigning a fully qualified constant with '||='
-fails:The defined? keyword for a scoped constant returns nil when an undefined constant is scoped to a defined constant
-fails:The defined? keyword for a top-level scoped constant returns nil when an undefined constant is scoped to a defined constant
-fails:The defined? keyword for a self-send method call scoped constant returns nil if the last constant is not defined in the scope chain
-fails:The defined? keyword for a receiver method call scoped constant returns nil if the last constant is not defined in the scope chain
-fails:The defined? keyword for a module method call scoped constant returns nil if the last constant in the scope chain is not defined
-fails:The defined? keyword for a variable scoped constant returns nil if the instance scoped constant is not defined
-fails:The defined? keyword for a variable scoped constant returns nil if the global scoped constant is not defined
-fails:The defined? keyword for a variable scoped constant returns nil if the class scoped constant is not defined
-fails:The defined? keyword for a variable scoped constant returns nil if the local scoped constant is not defined
 fails:The defined? keyword for an expression returns 'assignment' for an assigning a fully qualified constant with '+='

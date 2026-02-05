@@ -1,1 +1,0 @@
-fails:ObjectSpace::WeakMap#include? reports true if the pair exists and the value is nil

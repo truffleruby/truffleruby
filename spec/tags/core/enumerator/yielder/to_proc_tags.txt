@@ -1,1 +1,0 @@
-fails:Enumerator::Yielder#to_proc returns a Proc object that takes an argument and yields it to the block

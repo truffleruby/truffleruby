@@ -93,10 +93,12 @@ class MSpecScript
     [%r(^(.*)/spec/truffle/(.+)_spec\.rb$),    '\1/spec/tags/truffle/\2_tags.txt'],
   ]
 
-  set :xtags, (get(:xtags) || [])
-  excludes = get(:xtags)
-
   if defined?(::TruffleRuby)
+    excludes = get(:xtags) || []
+    set :xtags, excludes
+
+    excludes << 'keep'
+
     if TruffleRuby.native?
       excludes << 'native'
       if GC.heap_stats.values.none?(Hash)
@@ -105,20 +107,20 @@ class MSpecScript
     else
       excludes << 'jvm'
     end
-  end
 
-  if windows?
-    excludes << 'windows'
-  elsif linux?
-    excludes << 'linux'
-  elsif darwin?
-    excludes << 'darwin'
-  elsif solaris?
-    excludes << 'solaris'
-  end
+    if windows?
+      excludes << 'windows'
+    elsif linux?
+      excludes << 'linux'
+    elsif darwin?
+      excludes << 'darwin'
+    elsif solaris?
+      excludes << 'solaris'
+    end
 
-  if aarch64?
-    excludes << 'aarch64'
+    if aarch64?
+      excludes << 'aarch64'
+    end
   end
 
   # All specs except C API specs and TracePoint specs
@@ -133,7 +135,7 @@ class MSpecScript
   # All specs.
   # :next specs are not included as they need to run in a separate process.
   # :cxx specs are not included as they need to run in a separate process.
-  # :tracepoint specs are not included as they need should run in a separate process.
+  # :tracepoint specs are not included as they should run in a separate process.
   set :all, get(:files) + get(:cext)
 end
 

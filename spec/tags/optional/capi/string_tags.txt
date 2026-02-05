@@ -1,3 +1,1 @@
 fails:C-API String function rb_str_tmp_new returns a hidden string (RBasic->klass is NULL)
-fails:C-API String function rb_str_times returns String instances
-fails:C-API String function rb_sprintf formats a TrueClass VALUE as 'true' if sign specified in format

@@ -1,7 +1,1 @@
-fails:Java strings are converted to Ruby automatically on the LHS of string concatenation
-fails:Java strings are converted to Ruby automatically on the RHS of string concatenation
-fails:Java strings respond to #to_s
-fails:Java strings respond to #to_str
-fails:Java strings can be printed with #puts
-fails:Java strings can be printed as if a Ruby string with #p
 fails:Java strings respond to Java methods

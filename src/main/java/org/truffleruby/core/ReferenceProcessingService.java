@@ -20,6 +20,7 @@ import org.truffleruby.core.thread.ThreadManager;
 import org.truffleruby.language.control.RaiseException;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import org.truffleruby.language.dispatch.DispatchNode;
 
 public abstract class ReferenceProcessingService<R extends ReferenceProcessingService.PhantomProcessingReference<R, T>, T> {
 
@@ -118,6 +119,9 @@ public abstract class ReferenceProcessingService<R extends ReferenceProcessingSe
                     service.getClass().getSimpleName();
 
             threadManager.initialize(newThread, null, THREAD_NAME, sharingReason, () -> {
+                DispatchNode.getUncached().call(context.getCoreLibrary().truffleThreadOperationsModule,
+                        "mark_as_detached_thread", newThread);
+
                 while (true) {
                     final PhantomProcessingReference<?, ?> reference = threadManager.runUntilResult(null,
                             () -> (PhantomProcessingReference<?, ?>) processingQueue.remove());
