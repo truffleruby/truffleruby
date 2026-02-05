@@ -52,7 +52,7 @@ class Hash
     hash = new
     associate_array.each_with_index do |array, i|
       unless array.respond_to? :to_ary
-        type = Primitive.boolean_or_nil?(array) ? array.inspect : Primitive.class(array)
+        type = Truffle::ExceptionOperations.to_class_name(array)
         raise ArgumentError, "wrong element type #{type} at #{i} (expected array)"
       end
       array = array.to_ary

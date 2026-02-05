@@ -35,7 +35,7 @@ Compatibility:
 * Fix splatting a `BasicObject` block parameter which `respond_to?(:to_ary)` (#4129, @eregon).
 * `Integer#**` no longer returns infinity for large results but either computes the result as an Integer or raises an `ArgumentError` (#4133, @eregon).
 * `Hash#to_proc` returns a lambda with an arity of 1 (#4138, @herwinw).
-* `Hash.[]` now raises the correct error message for `nil`, `true` and `false` as argument ( #4140, @herwinw).
+* `Hash.[]` now raises the correct error message for `nil`, `true` and `false` as argument (#4140, #4146, @herwinw).
 
 Performance:
 
