@@ -136,6 +136,7 @@ struct rb_tr_scan_args_parse_data {
 
 void rb_tr_scan_args_kw_parse(const char *format, struct rb_tr_scan_args_parse_data *parse_data);
 
+// MRI: rb_scan_args_assign
 ALWAYS_INLINE(static int rb_tr_scan_args_kw_int(int kw_flag, int argc, VALUE *argv, struct rb_tr_scan_args_parse_data parse_data, VALUE *v1, VALUE *v2, VALUE *v3, VALUE *v4, VALUE *v5, VALUE *v6, VALUE *v7, VALUE *v8, VALUE *v9, VALUE *v10));
 static inline int rb_tr_scan_args_kw_int(int kw_flag, int argc, VALUE *argv, struct rb_tr_scan_args_parse_data parse_data, VALUE *v1, VALUE *v2, VALUE *v3, VALUE *v4, VALUE *v5, VALUE *v6, VALUE *v7, VALUE *v8, VALUE *v9, VALUE *v10) {
 
@@ -148,14 +149,14 @@ static inline int rb_tr_scan_args_kw_int(int kw_flag, int argc, VALUE *argv, str
     case RB_SCAN_ARGS_LAST_HASH_KEYWORDS: /* last_hash_keyword = 1; not used currently */ break;
   }
 
-  // Check we have enough arguments
-
-  if (parse_data.pre + parse_data.post > argc) {
-    rb_raise(rb_eArgError, "not enough arguments for required");
-  }
-
   const int n_mand = parse_data.pre + parse_data.post;
   const int n_opt = parse_data.optional;
+
+  // Check we have enough arguments
+
+  if (n_mand > argc) {
+    rb_error_arity(argc, n_mand, n_mand + n_opt);
+  }
 
   // Read arguments
 
