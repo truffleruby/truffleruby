@@ -9,7 +9,9 @@
  */
 package org.truffleruby.core.exception;
 
+import com.oracle.truffle.api.TruffleStackTraceElement;
 import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.object.Shape;
@@ -21,9 +23,12 @@ import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.annotations.Primitive;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveNode;
+import org.truffleruby.core.array.ArrayGuards;
 import org.truffleruby.core.array.RubyArray;
+import org.truffleruby.core.array.library.ArrayStoreLibrary;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.proc.RubyProc;
+import org.truffleruby.core.thread.RubyBacktraceLocation;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.NotProvided;
 import org.truffleruby.annotations.Visibility;
@@ -265,6 +270,34 @@ public abstract class ExceptionNodes {
         Object set(RubyException exception, Object customBacktrace) {
             exception.customBacktrace = customBacktrace;
             return customBacktrace;
+        }
+
+    }
+
+    @ImportStatic(ArrayGuards.class)
+    @Primitive(name = "exception_set_backtrace_locations")
+    public abstract static class SetBacktraceLocations extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        @TruffleBoundary
+        Object set(RubyException exception, RubyArray backtraceLocations,
+                @CachedLibrary(limit = "storageStrategyLimit()") ArrayStoreLibrary stores) {
+            Object store = backtraceLocations.getStore();
+            int size = backtraceLocations.size;
+            assert size > 0;
+            Object[] locations = stores.boxedCopyOfRange(store, 0, size);
+
+            var newStackTrace = new TruffleStackTraceElement[size];
+            for (int i = 0; i < size; i++) {
+                var location = (RubyBacktraceLocation) locations[i];
+                newStackTrace[i] = location.getTruffleStackTraceElement();
+            }
+
+            exception.backtrace = new Backtrace(null, 0, newStackTrace);
+            exception.backtraceLocations = backtraceLocations;
+            exception.customBacktrace = null;
+            exception.backtraceStringArray = null;
+            return nil;
         }
 
     }

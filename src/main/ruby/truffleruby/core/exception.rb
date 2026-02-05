@@ -56,15 +56,18 @@ class Exception
     when Array
       if bt.all? { |s| Primitive.is_a?(s, String) }
         Primitive.exception_set_custom_backtrace(self, bt)
+      elsif bt.all? { |s| Primitive.is_a?(s, Thread::Backtrace::Location) }
+        Primitive.exception_set_backtrace_locations(self, bt.dup)
+        bt
       else
-        raise TypeError, 'backtrace must be Array of String'
+        raise TypeError, 'backtrace must be an Array of String or an Array of Thread::Backtrace::Location'
       end
     when String
       Primitive.exception_set_custom_backtrace(self, [bt])
     when nil
       Primitive.exception_set_custom_backtrace(self, nil)
     else
-      raise TypeError, 'backtrace must be Array of String'
+      raise TypeError, 'backtrace must be an Array of String or an Array of Thread::Backtrace::Location'
     end
   end
 

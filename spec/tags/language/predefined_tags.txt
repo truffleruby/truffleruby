@@ -6,7 +6,6 @@ slow:The predefined global constant ARGV contains Strings encoded in locale Enco
 slow:Global variable $0 is the path given as the main script and the same as __FILE__
 slow:Global variable $? is thread-local
 slow:Global variable $0 actually sets the program name
-fails:Predefined global $@ allows the user to set backtrace locations from a rescued exception
 fails:Predefined global $/ warns if assigned non-nil
 fails:Predefined global $-0 warns if assigned non-nil
 fails:Predefined global $\ warns if assigned non-nil
