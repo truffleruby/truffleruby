@@ -2,7 +2,5 @@ fails:String#unpack with format 'B' starts unpacking from the given offset
 fails:String#unpack with format 'B' returns nil if the offset is at the end of the string
 fails:String#unpack with format 'b' starts unpacking from the given offset
 fails:String#unpack with format 'b' returns nil if the offset is at the end of the string
-fails:String#unpack with format 'B' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'b' raise ArgumentError for NULL bytes between directives
 fails:String#unpack with format 'B' raises ArgumentError when a directive is unknown
 fails:String#unpack with format 'b' raises ArgumentError when a directive is unknown

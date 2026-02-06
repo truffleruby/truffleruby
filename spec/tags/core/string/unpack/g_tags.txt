@@ -1,6 +1,4 @@
 fails:String#unpack with format 'G' starts unpacking from the given offset
 fails:String#unpack with format 'g' starts unpacking from the given offset
-fails:String#unpack with format 'G' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'g' raise ArgumentError for NULL bytes between directives
 fails:String#unpack with format 'G' raises ArgumentError when a directive is unknown
 fails:String#unpack with format 'g' raises ArgumentError when a directive is unknown

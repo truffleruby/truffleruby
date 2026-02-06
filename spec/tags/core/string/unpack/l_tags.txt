@@ -1,22 +1,4 @@
 fails:String#unpack with format 'L' starts unpacking from the given offset
 fails:String#unpack with format 'l' starts unpacking from the given offset
-fails:String#unpack with format 'L' with modifier '<' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'L' with modifier '>' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'L' with modifier '<' and '_' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'L' with modifier '<' and '!' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'L' with modifier '>' and '_' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'L' with modifier '>' and '!' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'l' with modifier '<' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'l' with modifier '>' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'l' with modifier '<' and '_' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'l' with modifier '<' and '!' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'l' with modifier '>' and '_' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'l' with modifier '>' and '!' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'L' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'l' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'L' with modifier '_' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'L' with modifier '!' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'l' with modifier '_' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'l' with modifier '!' raise ArgumentError for NULL bytes between directives
 fails:String#unpack with format 'L' raises ArgumentError when a directive is unknown
 fails:String#unpack with format 'l' raises ArgumentError when a directive is unknown

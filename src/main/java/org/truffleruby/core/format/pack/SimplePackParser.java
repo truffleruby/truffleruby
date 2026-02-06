@@ -193,7 +193,6 @@ public final class SimplePackParser {
                             case '\u000b':
                             case '\f':
                             case '\r':
-                            case '\u0000':
                                 n++;
                                 break;
 
@@ -404,7 +403,6 @@ public final class SimplePackParser {
                 case '\u000b':
                 case '\f':
                 case '\r':
-                case '\u0000':
                     n++;
                     break;
 

@@ -1,4 +1,3 @@
 fails:String#unpack with directive 'w' starts unpacking from the given offset
 fails:String#unpack with directive 'w' returns nil if the offset is at the end of the string
-fails:String#unpack with directive 'w' raise ArgumentError for NULL bytes between directives
 fails:String#unpack with directive 'w' raises ArgumentError when a directive is unknown
