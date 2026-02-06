@@ -1,4 +1,2 @@
 fails:String#unpack with format 'I' starts unpacking from the given offset
 fails:String#unpack with format 'i' starts unpacking from the given offset
-fails:String#unpack with format 'I' raises ArgumentError when a directive is unknown
-fails:String#unpack with format 'i' raises ArgumentError when a directive is unknown

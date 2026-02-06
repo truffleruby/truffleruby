@@ -2,5 +2,3 @@ fails:String#unpack with format 'A' starts unpacking from the given offset
 fails:String#unpack with format 'A' returns nil if the offset is at the end of the string
 fails:String#unpack with format 'a' starts unpacking from the given offset
 fails:String#unpack with format 'a' returns nil if the offset is at the end of the string
-fails:String#unpack with format 'A' raises ArgumentError when a directive is unknown
-fails:String#unpack with format 'a' raises ArgumentError when a directive is unknown

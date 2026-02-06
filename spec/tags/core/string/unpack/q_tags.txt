@@ -1,4 +1,2 @@
 fails:String#unpack with format 'Q' starts unpacking from the given offset
 fails:String#unpack with format 'q' starts unpacking from the given offset
-fails:String#unpack with format 'Q' raises ArgumentError when a directive is unknown
-fails:String#unpack with format 'q' raises ArgumentError when a directive is unknown

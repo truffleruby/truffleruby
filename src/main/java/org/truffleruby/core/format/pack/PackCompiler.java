@@ -15,7 +15,6 @@ import org.truffleruby.core.format.FormatRootNode;
 import org.truffleruby.core.format.LoopRecovery;
 
 import com.oracle.truffle.api.RootCallTarget;
-import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.language.control.DeferredRaiseException;
 
 public final class PackCompiler {
@@ -37,7 +36,7 @@ public final class PackCompiler {
 
         builder.enterSequence();
 
-        final SimplePackParser parser = new SimplePackParser(builder, StringOperations.encodeAsciiBytes(format));
+        final SimplePackParser parser = new SimplePackParser(builder, format);
         parser.parse();
 
         builder.exitSequence();
