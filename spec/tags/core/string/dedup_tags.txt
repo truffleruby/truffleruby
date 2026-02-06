@@ -1,1 +1,0 @@
-fails:String#dedup interns the provided string if it is frozen

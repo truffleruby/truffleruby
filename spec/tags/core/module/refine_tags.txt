@@ -1,1 +1,0 @@
-slow:Module#refine method lookup looks in the included modules for builtin methods

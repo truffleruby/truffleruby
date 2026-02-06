@@ -1,10 +1,8 @@
-fails:The --enable and --disable flags can be used with jit
 slow:The --enable and --disable flags can be used with gems
 slow:The --enable and --disable flags can be used with gem
 slow:The --enable and --disable flags can be used with did_you_mean
 slow:The --enable and --disable flags can be used with rubyopt
 slow:The --enable and --disable flags can be used with frozen-string-literal
 slow:The --enable and --disable flags prints a warning for unknown features
-slow:The --enable and --disable flags can be used with all
 slow:The --enable and --disable flags can be used with all for enable
 slow:The --enable and --disable flags can be used with all for disable

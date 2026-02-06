@@ -1,4 +1,3 @@
-fails:A class definition extending an object (sclass) allows accessing the block of the original scope
 slow:Reopening a class does not reopen a class included in Object
 slow:Reopening a class does not reopen a class included in non-Object modules
 fails:A class definition raises TypeError if constant given as class name exists and is not a Module

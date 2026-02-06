@@ -1,6 +1,5 @@
 slow:The pre-initialized context is used when passing no incompatible options
 slow:The pre-initialized context is not used when passing incompatible options
-slow:The pre-initialized context is not used when the home is unset but was set at build time
 slow:The pre-initialized context picks up new environment variables
 slow:The pre-initialized context is not used if --engine.UsePreInitializedContext=false is passed
 slow:The pre-initialized context is used when $VERBOSE changes

@@ -1,4 +1,3 @@
 slow:CApiGCSpecs rb_gc increases gc count
 slow:CApiGCSpecs rb_gc_register_address keeps the value alive even if the value is assigned after rb_gc_register_address() is called
-slow:CApiGCSpecs rb_global_variable keeps the value alive even if the value is assigned after rb_global_variable() is called
 native-g1:CApiGCSpecs rb_gc increases gc count

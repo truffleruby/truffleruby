@@ -1,1 +1,0 @@
-fails:File#path raises IOError if file was opened with File::TMPFILE

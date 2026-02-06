@@ -1,1 +1,0 @@
-fails:String#-@ interns the provided string if it is frozen

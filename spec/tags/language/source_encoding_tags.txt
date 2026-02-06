@@ -1,6 +1,5 @@
 slow:Source files encoded in UTF-8 without a BOM can be parsed
 slow:Source files encoded in UTF-8 with a BOM can be parsed
-slow:Source files encoded in UTF-16 LE without a BOM are parsed because empty as they contain a NUL byte before the encoding comment
 slow:Source files encoded in UTF-16 LE with a BOM are invalid because they contain an invalid UTF-8 sequence before the encoding comment
 slow:Source files encoded in UTF-16 BE without a BOM are parsed as empty because they contain a NUL byte before the encoding comment
 slow:Source files encoded in UTF-16 BE with a BOM are invalid because they contain an invalid UTF-8 sequence before the encoding comment

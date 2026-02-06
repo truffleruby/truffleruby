@@ -1,1 +1,0 @@
-fails:Module#attr_accessor returns nil

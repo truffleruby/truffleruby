@@ -1,2 +1,1 @@
-fails:CApiBindingSpecs Kernel#binding gives the top-most Ruby binding when called from C
 fails:CApiBindingSpecs Kernel#binding raises when called from C

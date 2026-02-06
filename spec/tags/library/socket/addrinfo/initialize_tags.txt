@@ -1,3 +1,1 @@
-fails:Addrinfo#initialize with a sockaddr array without a family returns the Socket::PF_INET pfamily
-fails:Addrinfo#initialize with a sockaddr array without a family returns the INET pfamily
 fails:Addrinfo#initialize with a sockaddr array without a family returns the specified pfamily

@@ -1,2 +1,1 @@
-fails:GzipReader#read respects :external_encoding option
 fails:Zlib::GzipReader#read respects :external_encoding option

@@ -1,5 +1,3 @@
-fails:The -e command line option with -n and a Fixnum range mimics an awk conditional by comparing an inclusive-end range with $.
-fails:The -e command line option with -n and a Fixnum range mimics a sed conditional by comparing an exclusive-end range with $.
 slow:The -e command line option evaluates the given string
 slow:The -e command line option joins multiple strings with newlines
 slow:The -e command line option uses 'main' as self

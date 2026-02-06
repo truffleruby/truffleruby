@@ -1,4 +1,3 @@
-fails:An exception occurred during: before :all
 fails:IO::Buffer.map creates a new buffer mapped from a file
 fails:IO::Buffer.map allows to close the file after creating buffer, retaining mapping
 fails:IO::Buffer.map creates a mapped, external, shared buffer

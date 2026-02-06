@@ -1,2 +1,0 @@
-fails:Array#pack with format 'V' warns that a directive is unknown
-fails:Array#pack with format 'v' warns that a directive is unknown

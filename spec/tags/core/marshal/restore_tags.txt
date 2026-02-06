@@ -5,7 +5,6 @@ fails:Marshal.restore for a user object that extends a core type other than Obje
 fails:Marshal.restore for a wrapped C pointer raises ArgumentError when the local class is a regular object
 fails:Marshal.restore when a class does not exist in the namespace raises an ArgumentError
 fails(immutable regexp):Marshal.restore for a Regexp loads an extended Regexp
-fails(immutable regexp):Marshal.restore for a Regexp loads a extended_user_regexp having ivar
 fails:Marshal.restore when called with freeze: true when called with a proc call the proc with frozen objects
 fails:Marshal.restore for a Regexp restore the regexp instance variables
 fails:Marshal.restore for a Regexp loads a Regexp subclass instance variables when it is extended with a module

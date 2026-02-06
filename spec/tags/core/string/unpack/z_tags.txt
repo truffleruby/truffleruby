@@ -1,2 +1,0 @@
-fails:String#unpack with format 'Z' starts unpacking from the given offset
-fails:String#unpack with format 'Z' returns nil if the offset is at the end of the string

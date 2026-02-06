@@ -1,1 +1,0 @@
-fails:Heredoc string prints a warning if quoted HEREDOC identifier is ending not on same line

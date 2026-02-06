@@ -1,2 +1,0 @@
-fails:String#unpack with format 'I' starts unpacking from the given offset
-fails:String#unpack with format 'i' starts unpacking from the given offset

@@ -1,4 +1,3 @@
 slow:Redefining optimized core methods emits performance warning for redefining core classes methods
-slow:Prepending a module into a class with optimised methods emits performance warning
 slow:Prepending a module into a class with optimised methods keeps the inlined nodes if no optimised method is overridden
 slow:Prepending a module into a class with optimised methods emits performance warning if that module overrides an optimised method
