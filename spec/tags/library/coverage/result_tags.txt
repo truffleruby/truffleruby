@@ -1,4 +1,3 @@
-fails:Coverage.result second Coverage.start give exception
 fails:Coverage.result returns the correct results when eval coverage is enabled
 fails:Coverage.result returns the correct results when eval coverage is disabled
 fails:Coverage.result returns results for each mode separately when enabled :all modes

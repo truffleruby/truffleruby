@@ -7,8 +7,6 @@ slow:The launcher StringArray option parses , respecting escaping
 slow:The launcher takes options from system properties set on the command line using --vm
 slow:The launcher enables deterministic hashing if --hashing-deterministic is set
 slow:The launcher prints help containing runtime options
-slow:The launcher prints help:languages containing ruby language options
-slow:The launcher prints help:languages containing llvm language options
 slow:The launcher understands ruby polyglot options
 slow:The launcher understands ruby polyglot options without ruby. prefix
 slow:The launcher does not create context on --version and -v
@@ -50,19 +48,10 @@ slow:The launcher supports running truffleruby symlinked
 aarch64:The launcher for gem can install and uninstall the hello-world gem
 slow:The launcher should recognize ruby --vm options in RUBYOPT
 slow:The launcher should recognize ruby --vm options in TRUFFLERUBYOPT
-slow:The launcher runtime configuration flags should recognize ruby --vm options in RUBYOPT when switching to JVM
-slow:The launcher runtime configuration flags should recognize ruby --vm options in TRUFFLERUBYOPT when switching to JVM
-slow:The launcher runtime configuration flags uses --native by default
-slow:The launcher runtime configuration flags switches to JVM with --jvm as a Ruby argument
-slow:The launcher runtime configuration flags keeps --jvm as an application argument if given as an application argument
 slow:The launcher runs erb as an -S command
 slow:The launcher runs racc as an -S command
-slow:The launcher runs racc2y as an -S command
-slow:The launcher runs y2racc as an -S command
 slow:The launcher supports running erb symlinked
 slow:The launcher supports running racc symlinked
-slow:The launcher supports running racc2y symlinked
-slow:The launcher supports running y2racc symlinked
 slow:The launcher warns if the locale is not set properly
 slow:The launcher runs rbs as an -S command
 slow:The launcher supports running rbs symlinked

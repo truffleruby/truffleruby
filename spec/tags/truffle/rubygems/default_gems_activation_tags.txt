@@ -1,15 +1,10 @@
-slow:Default gems activation should activate a default gem abbrev by requiring abbrev
-slow:Default gems activation should activate a default gem base64 by requiring base64
 slow:Default gems activation should activate a default gem benchmark by requiring benchmark
-slow:Default gems activation should activate a default gem bigdecimal by requiring bigdecimal
 slow:Default gems activation should activate a default gem bundler by requiring bundler
 slow:Default gems activation should activate a default gem cgi by requiring cgi
-slow:Default gems activation should activate a default gem csv by requiring csv
 slow:Default gems activation should activate a default gem date by requiring date
 slow:Default gems activation should activate a default gem delegate by requiring delegate
 slow:Default gems activation should activate a default gem did_you_mean by requiring did_you_mean
 slow:Default gems activation should activate a default gem digest by requiring digest
-slow:Default gems activation should activate a default gem drb by requiring drb
 slow:Default gems activation should activate a default gem english by requiring English
 slow:Default gems activation should activate a default gem erb by requiring erb
 slow:Default gems activation should activate a default gem error_highlight by requiring error_highlight
@@ -19,7 +14,6 @@ slow:Default gems activation should activate a default gem fiddle by requiring f
 slow:Default gems activation should activate a default gem fileutils by requiring fileutils
 slow:Default gems activation should activate a default gem find by requiring find
 slow:Default gems activation should activate a default gem forwardable by requiring forwardable
-slow:Default gems activation should activate a default gem getoptlong by requiring getoptlong
 slow:Default gems activation should activate a default gem io-console by requiring io/console
 slow:Default gems activation should activate a default gem io-nonblock by requiring io/nonblock
 slow:Default gems activation should activate a default gem io-wait by requiring io/wait
@@ -27,11 +21,8 @@ slow:Default gems activation should activate a default gem ipaddr by requiring i
 slow:Default gems activation should activate a default gem irb by requiring irb
 slow:Default gems activation should activate a default gem json by requiring json
 slow:Default gems activation should activate a default gem logger by requiring logger
-slow:Default gems activation should activate a default gem mutex_m by requiring mutex_m
 slow:Default gems activation should activate a default gem net-http by requiring net/http
 slow:Default gems activation should activate a default gem net-protocol by requiring net/protocol
-slow:Default gems activation should activate a default gem nkf by requiring nkf
-slow:Default gems activation should activate a default gem observer by requiring observer
 slow:Default gems activation should activate a default gem open-uri by requiring open-uri
 slow:Default gems activation should activate a default gem open3 by requiring open3
 slow:Default gems activation should activate a default gem openssl by requiring openssl
@@ -42,13 +33,10 @@ slow:Default gems activation should activate a default gem pp by requiring pp
 slow:Default gems activation should activate a default gem prettyprint by requiring prettyprint
 slow:Default gems activation should activate a default gem pstore by requiring pstore
 slow:Default gems activation should activate a default gem psych by requiring psych
-slow:Default gems activation should activate a default gem racc by requiring racc
 slow:Default gems activation should activate a default gem rdoc by requiring rdoc
 slow:Default gems activation should activate a default gem readline by requiring readline
 slow:Default gems activation should activate a default gem reline by requiring reline
 slow:Default gems activation should activate a default gem resolv by requiring resolv
-slow:Default gems activation should activate a default gem resolv-replace by requiring resolv-replace
-slow:Default gems activation should activate a default gem rinda by requiring rinda/tuplespace
 slow:Default gems activation should activate a default gem ruby2_keywords by requiring ruby2_keywords
 slow:Default gems activation should activate a default gem securerandom by requiring securerandom
 slow:Default gems activation should activate a default gem set by requiring set
@@ -57,7 +45,6 @@ slow:Default gems activation should activate a default gem singleton by requirin
 slow:Default gems activation should activate a default gem stringio by requiring stringio
 slow:Default gems activation should activate a default gem strscan by requiring strscan
 slow:Default gems activation should activate a default gem syntax_suggest by requiring syntax_suggest
-slow:Default gems activation should activate a default gem syslog by requiring syslog
 slow:Default gems activation should activate a default gem tempfile by requiring tempfile
 slow:Default gems activation should activate a default gem time by requiring time
 slow:Default gems activation should activate a default gem timeout by requiring timeout

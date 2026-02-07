@@ -1,3 +1,0 @@
-fails:String#unpack with format '@' starts unpacking from the given offset
-fails:String#unpack with format '@' returns nil if the offset is at the end of the string
-fails:String#unpack with format '@' raises ArgumentError when a directive is unknown

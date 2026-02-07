@@ -9,6 +9,7 @@
  */
 package org.truffleruby.core.format.pack;
 
+import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.language.control.DeferredRaiseException;
 
 import java.nio.ByteOrder;
@@ -20,12 +21,14 @@ public final class SimplePackParser {
     public static final int SIZE_NATIVE = -1;
 
     private final SimplePackListener listener;
+    private final String format;
     private final byte[] bytes;
     private int n;
 
-    public SimplePackParser(SimplePackListener listener, byte[] bytes) {
+    public SimplePackParser(SimplePackListener listener, String format) {
         this.listener = listener;
-        this.bytes = bytes;
+        this.format = format;
+        this.bytes = StringOperations.encodeAsciiBytes(format);
     }
 
     public void parse() throws DeferredRaiseException {
@@ -193,7 +196,6 @@ public final class SimplePackParser {
                             case '\u000b':
                             case '\f':
                             case '\r':
-                            case '\u0000':
                                 n++;
                                 break;
 
@@ -404,7 +406,6 @@ public final class SimplePackParser {
                 case '\u000b':
                 case '\f':
                 case '\r':
-                case '\u0000':
                     n++;
                     break;
 
@@ -427,7 +428,8 @@ public final class SimplePackParser {
 
                 default:
                     n++;
-                    listener.error(String.format("unknown %s directive '%c'", listener.packListenerMode(), (char) b));
+                    listener.error(String.format("unknown %s directive '%c' in '%s'", listener.packListenerMode(),
+                            (char) b, format));
             }
         }
     }

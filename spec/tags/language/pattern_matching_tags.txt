@@ -1,2 +1,1 @@
 fails:Pattern matching Array pattern calls #deconstruct once for multiple patterns, caching the result
-fails:Pattern matching warning when one-line form warns about pattern matching is experimental feature

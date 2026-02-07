@@ -1,7 +1,0 @@
-fails:String#unpack with format 'U' starts unpacking from the given offset
-fails:String#unpack with format 'U' returns nil if the offset is at the end of the string
-fails:String#unpack with format 'u' starts unpacking from the given offset
-fails:String#unpack with format 'u' returns nil if the offset is at the end of the string
-fails:String#unpack with format 'U' raise ArgumentError for NULL bytes between directives
-fails:String#unpack with format 'U' raises ArgumentError when a directive is unknown
-fails:String#unpack with format 'u' raises ArgumentError when a directive is unknown

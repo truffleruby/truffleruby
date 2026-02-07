@@ -1,5 +1,4 @@
 slow:Process::Status#termsig for a child that was sent a signal returns the signal
-slow:Process::Status#termsig for a child that exited normally returns true
 slow:Process::Status#termsig for a child that raised SignalException returns the signal
 slow:Process::Status#termsig for a child that raised SignalException returns the signal
 slow:Process::Status#termsig for a child that exited normally returns nil

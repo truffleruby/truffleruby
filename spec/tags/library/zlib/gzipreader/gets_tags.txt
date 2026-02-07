@@ -1,1 +1,0 @@
-fails:GzipReader#gets with "" separator reads paragraphs skipping newlines

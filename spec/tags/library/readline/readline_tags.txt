@@ -1,2 +1,1 @@
 slow:Readline.readline returns the input string
-slow:Readline.readline taints the returned strings

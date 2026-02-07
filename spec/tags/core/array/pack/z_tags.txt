@@ -1,1 +1,0 @@
-fails:Array#pack with format 'Z' warns that a directive is unknown

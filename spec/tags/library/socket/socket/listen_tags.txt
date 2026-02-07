@@ -1,1 +1,0 @@
-aarch64:Socket#listen using IPv4 using a DGRAM socket raises Errno::EOPNOTSUPP

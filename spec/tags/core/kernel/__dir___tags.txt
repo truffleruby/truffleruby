@@ -1,3 +1,2 @@
-fails:Kernel#__dir__ when used in eval with top level binding returns the real name of the directory containing the currently-executing file
 slow:Kernel#__dir__ returns the expanded path of the directory when used in the main script
 fails:Kernel#__dir__ when used in eval with top level binding returns nil

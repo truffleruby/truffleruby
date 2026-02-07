@@ -1,2 +1,1 @@
-fails:ObjectSpace.undefine_finalizer if not used leaves the finalizer in place
 slow:ObjectSpace.undefine_finalizer successfully unregisters a finalizer

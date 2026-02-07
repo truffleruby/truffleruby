@@ -5,7 +5,6 @@ fails:Marshal.load for a user object that extends a core type other than Object 
 fails:Marshal.load for a wrapped C pointer raises ArgumentError when the local class is a regular object
 fails:Marshal.load when a class does not exist in the namespace raises an ArgumentError
 fails(immutable regexp):Marshal.load for a Regexp loads an extended Regexp
-fails(immutable regexp):Marshal.load for a Regexp loads a extended_user_regexp having ivar
 fails:Marshal.load when called with freeze: true when called with a proc call the proc with frozen objects
 fails:Marshal.load for a Regexp restore the regexp instance variables
 fails:Marshal.load for a Regexp loads a Regexp subclass instance variables when it is extended with a module

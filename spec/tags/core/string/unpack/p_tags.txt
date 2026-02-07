@@ -1,4 +1,0 @@
-fails:String#unpack with format 'P' starts unpacking from the given offset
-fails:String#unpack with format 'p' starts unpacking from the given offset
-fails:String#unpack with format 'P' raises ArgumentError when a directive is unknown
-fails:String#unpack with format 'p' raises ArgumentError when a directive is unknown

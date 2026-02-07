@@ -1,2 +1,1 @@
-slow:Critical methods whic must split are under 100 AST nodes
 slow:Critical methods which must split are under 100 AST nodes

@@ -1,2 +1,0 @@
-fails:Array#pack with format 'w' warns that a directive is unknown
-fails:Array#pack with format 'w' raise ArgumentError for NULL bytes between directives

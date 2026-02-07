@@ -1,3 +1,1 @@
 fails:Integer#pow one argument is passed bignum switch to a Float when the values is too big
-fails:Integer#pow one argument is passed fixnum raises an ArgumentError when the number is too big
-fails:Integer#pow one argument is passed bignum does not switch to a Float when the values is too big

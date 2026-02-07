@@ -16,13 +16,12 @@ describe "Kernel#require" do
     Kernel.should have_private_instance_method(:require)
   end
 
-  provided = %w[complex enumerator fiber rational thread ruby2_keywords]
-  ruby_version_is "4.0" do
-    provided << "set"
-    provided << "pathname"
-  end
+  it "provided features are already required" do
+    provided = %w[complex enumerator fiber rational thread ruby2_keywords]
+    ruby_version_is "4.0" do
+      provided += %w[set pathname]
+    end
 
-  it "#{provided.join(', ')} are already required" do
     out = ruby_exe("puts $LOADED_FEATURES", options: '--disable-gems --disable-did-you-mean')
     features = out.lines.map { |line| File.basename(line.chomp, '.*') }
 
