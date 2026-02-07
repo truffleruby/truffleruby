@@ -6,3 +6,4 @@ slow:Kernel#require ($LOADED_FEATURES) complex, enumerator, rational, thread, ru
 slow:Kernel.require ($LOADED_FEATURES) complex, enumerator, rational, thread, ruby2_keywords are already required
 slow:Kernel#require complex, enumerator, rational, thread, ruby2_keywords, fiber are already required
 slow:Kernel#require complex, enumerator, fiber, rational, thread, ruby2_keywords are already required
+slow:Kernel#require provided features are already required
