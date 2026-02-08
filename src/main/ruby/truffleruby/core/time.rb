@@ -159,6 +159,16 @@ class Time
   end
   alias_method :ctime, :asctime
 
+  def xmlschema(fraction_digits = 0)
+    fraction_digits = fraction_digits.to_i
+    s = strftime('%FT%T')
+    if fraction_digits > 0
+      s << strftime(".%#{fraction_digits}N")
+    end
+    s << (utc? ? 'Z' : strftime('%:z'))
+  end
+  alias_method :iso8601, :xmlschema
+
   def getgm
     dup.gmtime
   end

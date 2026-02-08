@@ -1,5 +1,0 @@
-fails:Time#xmlschema generates ISO-8601 strings in Z for UTC times
-fails:Time#xmlschema generates ISO-8601 string with timeone offset for non-UTC times
-fails:Time#xmlschema year is always at least 4 digits
-fails:Time#xmlschema year can be more than 4 digits
-fails:Time#xmlschema year can be negative
