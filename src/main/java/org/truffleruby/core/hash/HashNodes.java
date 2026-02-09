@@ -372,13 +372,12 @@ public abstract class HashNodes {
         }
     }
 
-    @CoreMethod(names = "initialize", needsBlock = true, optional = 1, raiseIfFrozenSelf = true,
-            split = Split.HEURISTIC)
+    @Primitive(name = "hash_initialize", lowerFixnum = 2)
     @ImportStatic(HashGuards.class)
-    public abstract static class InitializeNode extends CoreMethodArrayArgumentsNode {
+    public abstract static class InitializeNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        RubyHash initialize(RubyHash hash, NotProvided defaultValue, Nil block) {
+        RubyHash initialize(RubyHash hash, NotProvided defaultValue, int capacity, Nil block) {
             assert HashStoreLibrary.verify(hash);
             hash.defaultValue = nil;
             hash.defaultBlock = nil;
@@ -386,7 +385,7 @@ public abstract class HashNodes {
         }
 
         @Specialization
-        RubyHash initialize(RubyHash hash, NotProvided defaultValue, RubyProc block,
+        RubyHash initialize(RubyHash hash, NotProvided defaultValue, int capacity, RubyProc block,
                 @Cached @Shared PropagateSharingNode propagateSharingNode) {
             assert HashStoreLibrary.verify(hash);
             hash.defaultValue = nil;
@@ -396,7 +395,7 @@ public abstract class HashNodes {
         }
 
         @Specialization(guards = "wasProvided(defaultValue)")
-        RubyHash initialize(RubyHash hash, Object defaultValue, Nil block,
+        RubyHash initialize(RubyHash hash, Object defaultValue, int capacity, Nil block,
                 @Cached @Shared PropagateSharingNode propagateSharingNode) {
             assert HashStoreLibrary.verify(hash);
             propagateSharingNode.execute(this, hash, defaultValue);
@@ -406,7 +405,7 @@ public abstract class HashNodes {
         }
 
         @Specialization(guards = "wasProvided(defaultValue)")
-        Object initialize(RubyHash hash, Object defaultValue, RubyProc block) {
+        Object initialize(RubyHash hash, Object defaultValue, int capacity, RubyProc block) {
             throw new RaiseException(
                     getContext(),
                     coreExceptions().argumentError("wrong number of arguments (1 for 0)", this));

@@ -1,2 +1,0 @@
-fails:Hash.new accepts a capacity: argument
-fails:Hash.new raises an error if unknown keyword arguments are passed

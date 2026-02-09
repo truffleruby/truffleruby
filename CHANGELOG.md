@@ -40,6 +40,7 @@ Compatibility:
 * Try `#to_ary` coercion in `Array#assoc` and `Array#rassoc` (#4137, @herwinw).
 * Improve compatibility of `rb_scan_args()` with Ruby 3+ changes (@eregon).
 * Implement `Time#{xmlschema,iso8601}` in core like Ruby 3.4 (#3883, @eregon).
+* Implement `Hash#initialize(capacity:)` like Ruby 3.4 (#3883, @eregon).
 
 Performance:
 

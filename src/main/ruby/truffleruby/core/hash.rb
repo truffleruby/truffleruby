@@ -105,6 +105,11 @@ class Hash
     Primitive.hash_copy_and_mark_as_ruby2_keywords(hash)
   end
 
+  def initialize(default_value = undefined, capacity: 0, &block)
+    Primitive.check_frozen(self)
+    Primitive.hash_initialize(self, default_value, capacity, block)
+  end
+
   alias_method :store, :[]=
 
   def <(other)
