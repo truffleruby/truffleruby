@@ -29,6 +29,8 @@ import org.truffleruby.core.array.ArrayBuilderNode;
 import org.truffleruby.core.array.ArrayBuilderNode.BuilderState;
 import org.truffleruby.core.array.ArrayHelpers;
 import org.truffleruby.core.array.RubyArray;
+import org.truffleruby.core.hash.library.BucketsHashStore;
+import org.truffleruby.core.hash.library.CompactHashStore;
 import org.truffleruby.core.hash.library.ConcurrentHashStore;
 import org.truffleruby.core.hash.library.EmptyHashStore;
 import org.truffleruby.core.hash.library.HashStoreLibrary;
@@ -48,6 +50,7 @@ import org.truffleruby.annotations.Split;
 import org.truffleruby.language.objects.AllocationTracing;
 import org.truffleruby.language.objects.shared.IsSharedNode;
 import org.truffleruby.language.objects.shared.PropagateSharingNode;
+import org.truffleruby.language.objects.shared.SharedObjects;
 import org.truffleruby.language.yield.CallBlockNode;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -377,30 +380,45 @@ public abstract class HashNodes {
     public abstract static class InitializeNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        RubyHash initialize(RubyHash hash, NotProvided defaultValue, int capacity, Nil block) {
+        RubyHash initialize(RubyHash hash, NotProvided defaultValue, int capacity, Nil block,
+                @Cached @Shared InlinedBranchProfile capacityUsed) {
             assert HashStoreLibrary.verify(hash);
             hash.defaultValue = nil;
             hash.defaultBlock = nil;
+            if (capacity > PackedHashStoreLibrary.MAX_ENTRIES) {
+                capacityUsed.enter(this);
+                handleCapacity(hash, capacity);
+            }
             return hash;
         }
 
         @Specialization
         RubyHash initialize(RubyHash hash, NotProvided defaultValue, int capacity, RubyProc block,
-                @Cached @Shared PropagateSharingNode propagateSharingNode) {
+                @Cached @Shared PropagateSharingNode propagateSharingNode,
+                @Cached @Shared InlinedBranchProfile capacityUsed) {
             assert HashStoreLibrary.verify(hash);
             hash.defaultValue = nil;
             propagateSharingNode.execute(this, hash, block);
             hash.defaultBlock = block;
+            if (capacity > PackedHashStoreLibrary.MAX_ENTRIES) {
+                capacityUsed.enter(this);
+                handleCapacity(hash, capacity);
+            }
             return hash;
         }
 
         @Specialization(guards = "wasProvided(defaultValue)")
         RubyHash initialize(RubyHash hash, Object defaultValue, int capacity, Nil block,
-                @Cached @Shared PropagateSharingNode propagateSharingNode) {
+                @Cached @Shared PropagateSharingNode propagateSharingNode,
+                @Cached @Shared InlinedBranchProfile capacityUsed) {
             assert HashStoreLibrary.verify(hash);
             propagateSharingNode.execute(this, hash, defaultValue);
             hash.defaultValue = defaultValue;
             hash.defaultBlock = nil;
+            if (capacity > PackedHashStoreLibrary.MAX_ENTRIES) {
+                capacityUsed.enter(this);
+                handleCapacity(hash, capacity);
+            }
             return hash;
         }
 
@@ -409,6 +427,19 @@ public abstract class HashNodes {
             throw new RaiseException(
                     getContext(),
                     coreExceptions().argumentError("wrong number of arguments (1 for 0)", this));
+        }
+
+        private void handleCapacity(RubyHash hash, int capacity) {
+            if (hash.store == EmptyHashStore.NULL_HASH_STORE) {
+                assert !SharedObjects.isShared(hash);
+                assert hash.empty();
+                if (getLanguage().options.BIG_HASH_STRATEGY_IS_BUCKETS) {
+                    int bucketsCount = BucketsHashStore.growthCapacityGreaterThan(capacity);
+                    hash.store = new BucketsHashStore(new Entry[bucketsCount], null, null);
+                } else {
+                    hash.store = new CompactHashStore(capacity);
+                }
+            }
         }
 
     }
