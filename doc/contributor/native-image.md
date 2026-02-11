@@ -78,16 +78,6 @@ Each command is run 10 times and the average is reported.
 `clock_gettime(CLOCK_MONOTONIC)` is used to measure time and `getrusage()` to
 measure max RSS.
 
-There is no need to do so, but you can actually also compile your own copy of
-the Native Image version of TruffleRuby using a tool distributed as part of GraalVM and
-the Java version of TruffleRuby from GraalVM.
-
-```bash
-native-image -o native-ruby --language:ruby
-```
-
-`native-ruby` is the output file name.
-
 You can build a native build of TruffleRuby using the Native Image Tool from a
 source distribution using:
 
