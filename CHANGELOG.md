@@ -41,6 +41,7 @@ Compatibility:
 * Improve compatibility of `rb_scan_args()` with Ruby 3+ changes (@eregon).
 * Implement `Time#{xmlschema,iso8601}` in core like Ruby 3.4 (#3883, @eregon).
 * Implement `Hash#initialize(capacity:)` like Ruby 3.4 (#3883, @eregon).
+* Use `Hash` default for `#sprintf` (#4155, @eregon).
 
 Performance:
 

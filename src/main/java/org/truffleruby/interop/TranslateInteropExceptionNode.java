@@ -40,6 +40,10 @@ public abstract class TranslateInteropExceptionNode extends RubyBaseNode {
         return execute(node, exception, false, null, null);
     }
 
+    public final RuntimeException execute(Node node, InteropException exception, Object receiver) {
+        return execute(node, exception, false, receiver, null);
+    }
+
     public final RuntimeException executeInInvokeMember(Node node, InteropException exception, Object receiver,
             Object[] args) {
         return execute(node, exception, true, receiver, args);
@@ -86,7 +90,10 @@ public abstract class TranslateInteropExceptionNode extends RubyBaseNode {
     @Specialization
     static RuntimeException handle(
             Node node, UnknownKeyException exception, boolean inInvokeMember, Object receiver, Object[] args) {
-        return new RaiseException(getContext(node), coreExceptions(node).keyError(exception, node), exception);
+        assert receiver != null;
+        return new RaiseException(getContext(node),
+                coreExceptions(node).keyError(exception.getMessage(), receiver, exception.getUnknownKey(), node),
+                exception);
     }
 
     @Specialization

@@ -16,7 +16,6 @@ import java.util.EnumSet;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.interop.InvalidBufferOffsetException;
-import com.oracle.truffle.api.interop.UnknownKeyException;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.array.RubyArray;
@@ -500,15 +499,16 @@ public final class CoreExceptions {
     // KeyError
 
     @TruffleBoundary
-    public RubyException keyError(String message, Node currentNode) {
+    public RubyException keyError(String message, Object hash, Object key, Node currentNode) {
+        assert hash != null;
+        assert key != null;
         RubyClass exceptionClass = context.getCoreLibrary().keyErrorClass;
         RubyString errorMessage = StringOperations.createUTF8String(context, language, message);
-        return ExceptionOperations.createRubyException(context, exceptionClass, errorMessage, currentNode, null);
-    }
-
-    @TruffleBoundary
-    public RubyException keyError(UnknownKeyException exception, Node currentNode) {
-        return keyError(exception.getMessage(), currentNode);
+        var keyError = ExceptionOperations.createRubyException(context, exceptionClass, errorMessage, currentNode,
+                null);
+        DynamicObjectLibrary.getUncached().put(keyError, "@receiver", hash);
+        DynamicObjectLibrary.getUncached().put(keyError, "@key", key);
+        return keyError;
     }
 
     // StopIteration
