@@ -187,7 +187,6 @@ public final class CoreLibrary {
     public final RubyModule truffleCExtModule;
     public final RubyModule truffleInternalModule;
     public final RubyModule truffleBootModule;
-    public final RubyModule truffleExceptionOperationsModule;
     public final RubyModule truffleInteropModule;
     public final RubyClass unsupportedMessageExceptionClass;
     public final RubyClass invalidArrayIndexExceptionClass;
@@ -197,11 +196,13 @@ public final class CoreLibrary {
     public final RubyClass unknownKeyExceptionClass;
     public final RubyClass sourceLocationClass;
     public final RubyModule truffleFeatureLoaderModule;
-    public final RubyModule truffleKernelOperationsModule;
+    public final RubyModule truffleExceptionOperationsModule;
+    public final RubyModule truffleHashOperationsModule;
     public final RubyModule truffleInteropOperationsModule;
-    public final RubyModule truffleStringOperationsModule;
-    public final RubyModule truffleRegexpOperationsModule;
+    public final RubyModule truffleKernelOperationsModule;
     public final RubyModule truffleRandomOperationsModule;
+    public final RubyModule truffleRegexpOperationsModule;
+    public final RubyModule truffleStringOperationsModule;
     public final RubyModule truffleThreadOperationsModule;
     public final RubyModule truffleWarningOperationsModule;
     public final RubyClass encodingCompatibilityErrorClass;
@@ -468,7 +469,6 @@ public final class CoreLibrary {
         truffleModule = defineModule("Truffle");
         truffleInternalModule = defineModule(truffleModule, "Internal");
         graalErrorClass = defineClass(truffleModule, exceptionClass, "GraalError");
-        truffleExceptionOperationsModule = defineModule(truffleModule, "ExceptionOperations");
         truffleInteropModule = defineModule(truffleModule, "Interop");
         RubyClass interopExceptionClass = defineClass(
                 truffleInteropModule,
@@ -504,22 +504,26 @@ public final class CoreLibrary {
         defineModule(truffleModule, "ObjSpace");
         defineModule(truffleModule, "Coverage");
         defineModule(truffleModule, "Graal");
+
+        truffleExceptionOperationsModule = defineModule(truffleModule, "ExceptionOperations");
+        truffleHashOperationsModule = defineModule(truffleModule, "HashOperations");
+        truffleInteropOperationsModule = defineModule(truffleModule, "InteropOperations");
+        truffleKernelOperationsModule = defineModule(truffleModule, "KernelOperations");
+        defineModule(truffleModule, "MonitorOperations");
+        truffleRandomOperationsModule = defineModule(truffleModule, "RandomOperations");
         truffleRegexpOperationsModule = defineModule(truffleModule, "RegexpOperations");
         truffleStringOperationsModule = defineModule(truffleModule, "StringOperations");
+        truffleThreadOperationsModule = defineModule(truffleModule, "ThreadOperations");
+        truffleWarningOperationsModule = defineModule(truffleModule, "WarningOperations");
+        defineModule(truffleModule, "WeakRefOperations");
+
         truffleBootModule = defineModule(truffleModule, "Boot");
         defineModule(truffleModule, "System");
         truffleFeatureLoaderModule = defineModule(truffleModule, "FeatureLoader");
-        truffleKernelOperationsModule = defineModule(truffleModule, "KernelOperations");
-        truffleInteropOperationsModule = defineModule(truffleModule, "InteropOperations");
-        defineModule(truffleModule, "MonitorOperations");
         defineModule(truffleModule, "Binding");
         defineModule(truffleModule, "POSIX");
         defineModule(truffleModule, "Readline");
         defineModule(truffleModule, "ReadlineHistory");
-        truffleRandomOperationsModule = defineModule(truffleModule, "RandomOperations");
-        truffleThreadOperationsModule = defineModule(truffleModule, "ThreadOperations");
-        truffleWarningOperationsModule = defineModule(truffleModule, "WarningOperations");
-        defineModule(truffleModule, "WeakRefOperations");
         handleClass = defineClass(truffleModule, objectClass, "Handle");
         warningModule = defineModule("Warning");
 

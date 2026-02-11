@@ -47,5 +47,15 @@ module Truffle
 
       hash[ary[0]] = ary[1]
     end
+
+    def self.lookup_raise_if_nil_default(hash, key)
+      hash.fetch(key) do
+        value = hash.default(key)
+        if Primitive.nil?(value)
+          raise KeyError.new("key{#{key}} not found", receiver: hash, key: key)
+        end
+        value
+      end
+    end
   end
 end

@@ -2054,7 +2054,7 @@ public abstract class InteropNodes {
             try {
                 return interop.readHashValue(receiver, key);
             } catch (InteropException e) {
-                throw translateInteropException.execute(node, e);
+                throw translateInteropException.execute(node, e, receiver);
             }
         }
     }
@@ -2085,7 +2085,7 @@ public abstract class InteropNodes {
                 interop.removeHashEntry(receiver, key);
                 return nil;
             } catch (InteropException e) {
-                throw translateInteropException.execute(node, e);
+                throw translateInteropException.execute(node, e, receiver);
             }
         }
     }
@@ -2101,7 +2101,7 @@ public abstract class InteropNodes {
                 interop.writeHashEntry(receiver, key, value);
                 return value;
             } catch (InteropException e) {
-                throw translateInteropException.execute(node, e);
+                throw translateInteropException.execute(node, e, receiver);
             }
         }
     }
