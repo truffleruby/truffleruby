@@ -2570,7 +2570,7 @@ module Commands
       # We tried various combinations of CPUs and Xmx in https://github.com/truffleruby/truffleruby/pull/4067,
       # and the most consistent is Xmx7g 1CPU (median time ~1h31min),
       # and is also the second fastest after Xmx8g 1CPU (median time ~1h26min).
-      options = ['--extra-image-builder-argument=rubyvm:-J-Xmx7g', '--extra-image-builder-argument=rubyvm:--parallelism=1', *options]
+      options = ['--extra-image-builder-argument=rubyvm:-J-XX:MaxRAMPercentage=100', '--extra-image-builder-argument=rubyvm:--parallelism=1', *options]
     end
 
     mx_options, mx_build_options = args_split(options)
