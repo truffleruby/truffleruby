@@ -296,6 +296,19 @@ VALUE string_spec_rb_str_substr(VALUE self, VALUE str, VALUE beg, VALUE len) {
   return rb_str_substr(str, FIX2INT(beg), FIX2INT(len));
 }
 
+VALUE string_spec_rb_str_subpos(VALUE self, VALUE str, VALUE beg) {
+  long len = RSTRING_LEN(str);
+  char *p = rb_str_subpos(str, FIX2LONG(beg), &len);
+  if (p == NULL) {
+    return Qnil;
+  }
+  return rb_ary_new_from_args(2, LONG2FIX(p - RSTRING_PTR(str)), LONG2FIX(len));
+}
+
+VALUE string_spec_rb_str_sublen(VALUE self, VALUE str, VALUE pos) {
+  return LONG2FIX(rb_str_sublen(str, FIX2LONG(pos)));
+}
+
 VALUE string_spec_rb_str_to_str(VALUE self, VALUE arg) {
   return rb_str_to_str(arg);
 }
@@ -645,6 +658,8 @@ void Init_string_spec(void) {
   rb_define_method(cls, "rb_str_split", string_spec_rb_str_split, 1);
   rb_define_method(cls, "rb_str_subseq", string_spec_rb_str_subseq, 3);
   rb_define_method(cls, "rb_str_substr", string_spec_rb_str_substr, 3);
+  rb_define_method(cls, "rb_str_subpos", string_spec_rb_str_subpos, 2);
+  rb_define_method(cls, "rb_str_sublen", string_spec_rb_str_sublen, 2);
   rb_define_method(cls, "rb_str_to_str", string_spec_rb_str_to_str, 1);
   rb_define_method(cls, "RSTRING_LEN", string_spec_RSTRING_LEN, 1);
   rb_define_method(cls, "RSTRING_LENINT", string_spec_RSTRING_LENINT, 1);

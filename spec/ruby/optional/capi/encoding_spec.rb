@@ -466,6 +466,20 @@ describe "C-API Encoding function" do
     end
   end
 
+  describe "rb_enc_check" do
+    it "returns the compatible encoding of the two Strings" do
+      a = "abc".force_encoding("us-ascii")
+      b = "\u3042".encode("utf-8")
+      @s.rb_enc_check(a, b).should == Encoding::UTF_8
+    end
+
+    it "raises Encoding::CompatibilityError if the encodings are not compatible" do
+      a = [0xff].pack('C').force_encoding "binary"
+      b = "\u3042".encode("utf-8")
+      -> { @s.rb_enc_check(a, b) }.should raise_error(Encoding::CompatibilityError)
+    end
+  end
+
   describe "rb_enc_copy" do
     before :each do
       @obj = "rb_enc_copy".encode(Encoding::US_ASCII)

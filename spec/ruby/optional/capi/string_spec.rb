@@ -536,6 +536,59 @@ describe "C-API String function" do
     end
   end
 
+  describe "rb_str_subpos" do
+    it "returns [byte_offset, byte_length] for a valid character offset in an ASCII string" do
+      @s.rb_str_subpos("hello", 1).should == [1, 4]
+    end
+
+    it "returns [byte_offset, byte_length] for a valid character offset in a multibyte string" do
+      # "hëllo" where 'ë' is 2 bytes in UTF-8
+      str = "h\u00EBllo"
+      @s.rb_str_subpos(str, 1).should == [1, 5]
+    end
+
+    it "returns [0, byte_length] for offset 0" do
+      @s.rb_str_subpos("hello", 0).should == [0, 5]
+    end
+
+    it "returns nil for a negative offset that is out of range" do
+      @s.rb_str_subpos("hello", -6).should be_nil
+    end
+
+    it "returns the correct position for a negative offset" do
+      @s.rb_str_subpos("hello", -2).should == [3, 2]
+    end
+
+    it "returns [byte_length, 0] when offset equals string length" do
+      @s.rb_str_subpos("hello", 5).should == [5, 0]
+    end
+
+    it "returns nil when offset is beyond string length" do
+      @s.rb_str_subpos("hello", 6).should be_nil
+    end
+  end
+
+  describe "rb_str_sublen" do
+    it "returns the character length for a given byte offset in an ASCII string" do
+      @s.rb_str_sublen("hello", 3).should == 3
+    end
+
+    it "returns the character length for a given byte offset in a multibyte string" do
+      # "hëllo" where 'ë' is 2 bytes in UTF-8, total 6 bytes
+      str = "h\u00EBllo"
+      @s.rb_str_sublen(str, 3).should == 2
+    end
+
+    it "returns 0 for byte offset 0" do
+      @s.rb_str_sublen("hello", 0).should == 0
+    end
+
+    it "returns the full character length for the total byte length" do
+      str = "h\u00EBllo"
+      @s.rb_str_sublen(str, str.bytesize).should == str.length
+    end
+  end
+
   describe "rb_str_to_str" do
     it "calls #to_str to coerce the value to a String" do
       @s.rb_str_to_str("foo").should == "foo"

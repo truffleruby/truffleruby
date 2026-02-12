@@ -709,6 +709,58 @@ describe "rb_cloexec_open" do
   end
 end
 
+describe "rb_cloexec_dup" do
+  before :each do
+    @o = CApiIOSpecs.new
+    @name = tmp("c_api_rb_io_specs")
+    touch @name
+
+    @io = new_io @name, "r"
+    @dup = nil
+  end
+
+  after :each do
+    @dup.close unless @dup.nil? || @dup.closed?
+    @io.close unless @io.closed?
+    rm_r @name
+  end
+
+  it "duplicates a file descriptor and sets close_on_exec" do
+    @dup = @o.rb_cloexec_dup(@io)
+    @dup.close_on_exec?.should be_true
+    @dup.fileno.should_not == @io.fileno
+  end
+end
+
+describe "rb_cloexec_fcntl_dupfd" do
+  before :each do
+    @o = CApiIOSpecs.new
+    @name = tmp("c_api_rb_io_specs")
+    touch @name
+
+    @io = new_io @name, "r"
+    @dup = nil
+  end
+
+  after :each do
+    @dup.close unless @dup.nil? || @dup.closed?
+    @io.close unless @io.closed?
+    rm_r @name
+  end
+
+  it "duplicates a file descriptor and sets close_on_exec" do
+    @dup = @o.rb_cloexec_fcntl_dupfd(@io, 3)
+    @dup.close_on_exec?.should be_true
+    @dup.fileno.should_not == @io.fileno
+  end
+
+  it "returns a file descriptor greater than or equal to minfd" do
+    @dup = @o.rb_cloexec_fcntl_dupfd(@io, 100)
+    @dup.fileno.should >= 100
+    @dup.close_on_exec?.should be_true
+  end
+end
+
 describe "rb_io_t modes flags" do
   before :each do
     @o = CApiIOSpecs.new
