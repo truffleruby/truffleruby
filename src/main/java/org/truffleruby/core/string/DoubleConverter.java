@@ -277,8 +277,9 @@ public final class DoubleConverter {
     }
 
     private boolean parseDecimalDigits() {
+        // Allow decimal point with omitted fractional part (e.g., "1.")
         if (isEOS()) {
-            return strictError();
+            return true;
         }
 
         byte value = next();
@@ -302,6 +303,10 @@ public final class DoubleConverter {
             }
             // Always add a digit after the .
             addToResult(value);
+        } else if (isExponent(value)) {
+            // Allow "1.e+0" (exponent immediately after decimal point)
+            addToResult(value);
+            return parseExponent();
         } else {
             return strictError();
         }
