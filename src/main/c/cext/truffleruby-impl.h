@@ -26,6 +26,8 @@ POLYGLOT_DECLARE_TYPE(VALUE)
 
 #define rb_boolean(c) ((c) ? Qtrue : Qfalse)
 
+#define rb_binary_encoding() rb_ascii8bit_encoding()
+
 // Support
 
 extern void* rb_tr_cext;
@@ -57,6 +59,8 @@ extern VALUE rb_tr_default_alloc_func(VALUE klass);
 // so this must be only used as an argument to an internal Truffle::CExt method which does not return or store
 // the RubyString but only run some operation on it.
 VALUE rb_tr_temporary_native_string(const char *ptr, long len, rb_encoding *enc);
+
+VALUE rb_tr_static_native_string(const char *ptr, long len, rb_encoding *enc);
 
 // Invoking ruby methods.
 

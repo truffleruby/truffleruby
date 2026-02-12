@@ -66,9 +66,8 @@ VALUE rb_str_new(const char *string, long length) {
   }
 }
 
-VALUE rb_str_new_static(const char *string, long length) {
-  /* The string will be copied immediately anyway, so no real difference to rb_str_new. */
-  return rb_str_new(string, length);
+VALUE rb_str_new_static(const char *ptr, long len) {
+  return rb_enc_str_new_static(ptr, len, rb_binary_encoding());
 }
 
 VALUE rb_str_new_cstr(const char *string) {
@@ -324,7 +323,7 @@ VALUE rb_usascii_str_new(const char *ptr, long len) {
 }
 
 VALUE rb_usascii_str_new_static(const char *ptr, long len) {
-  return rb_usascii_str_new(ptr, len);
+  return rb_enc_str_new_static(ptr, len, rb_usascii_encoding());
 }
 
 VALUE rb_usascii_str_new_cstr(const char *ptr) {
@@ -351,7 +350,7 @@ VALUE rb_utf8_str_new_cstr(const char *ptr) {
 }
 
 VALUE rb_utf8_str_new_static(const char *ptr, long len) {
-  return rb_utf8_str_new(ptr, len);
+  return rb_enc_str_new_static(ptr, len, rb_utf8_encoding());
 }
 
 void rb_str_modify_expand(VALUE str, long expand) {
@@ -440,7 +439,7 @@ VALUE rb_enc_interned_str_cstr(const char *ptr, rb_encoding *enc) {
 }
 
 VALUE rb_enc_interned_str(const char *ptr, long len, rb_encoding *enc) {
-  VALUE str = rb_enc_str_new(ptr, len, enc ? enc : rb_ascii8bit_encoding());
+  VALUE str = rb_enc_str_new(ptr, len, enc ? enc : rb_binary_encoding());
   return rb_str_to_interned_str(str);
 }
 
