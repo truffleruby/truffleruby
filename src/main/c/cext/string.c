@@ -66,9 +66,8 @@ VALUE rb_str_new(const char *string, long length) {
   }
 }
 
-VALUE rb_str_new_static(const char *string, long length) {
-  /* The string will be copied immediately anyway, so no real difference to rb_str_new. */
-  return rb_str_new(string, length);
+VALUE rb_str_new_static(const char *ptr, long len) {
+  return rb_enc_str_new_static(ptr, len, rb_binary_encoding());
 }
 
 VALUE rb_str_new_cstr(const char *string) {
@@ -295,6 +294,38 @@ VALUE rb_str_substr(VALUE string, long beg, long len) {
   return rb_tr_wrap(polyglot_invoke(rb_tr_unwrap(string), "[]", beg, len));
 }
 
+char* rb_str_subpos(VALUE string, long from, long* lenp) {
+  long len = *lenp;
+  long size = rb_str_strlen(string);
+
+  if (from < 0) {
+    from += size;
+  }
+
+  if (from < 0 || from > size || len < 0) {
+    return NULL;
+  }
+
+  long to = MIN(from + len, size);
+
+  long byte_from = rb_str_offset(string, from);
+  long byte_to = rb_str_offset(string, to);
+
+  *lenp = (byte_to - byte_from);
+
+  return RSTRING_PTR(string) + byte_from;
+}
+
+// character offset to byte offset
+long rb_str_offset(VALUE str, long pos) {
+  return polyglot_as_i64(polyglot_invoke(RUBY_CEXT, "rb_str_offset", rb_tr_unwrap(str), pos));
+}
+
+// byte offset to character offset
+long rb_str_sublen(VALUE str, long pos) {
+  return polyglot_as_i64(polyglot_invoke(RUBY_CEXT, "rb_str_sublen", rb_tr_unwrap(str), pos));
+}
+
 st_index_t rb_str_hash(VALUE string) {
   return (st_index_t) polyglot_as_i64(polyglot_invoke(rb_tr_unwrap(string), "hash"));
 }
@@ -324,7 +355,7 @@ VALUE rb_usascii_str_new(const char *ptr, long len) {
 }
 
 VALUE rb_usascii_str_new_static(const char *ptr, long len) {
-  return rb_usascii_str_new(ptr, len);
+  return rb_enc_str_new_static(ptr, len, rb_usascii_encoding());
 }
 
 VALUE rb_usascii_str_new_cstr(const char *ptr) {
@@ -351,7 +382,7 @@ VALUE rb_utf8_str_new_cstr(const char *ptr) {
 }
 
 VALUE rb_utf8_str_new_static(const char *ptr, long len) {
-  return rb_utf8_str_new(ptr, len);
+  return rb_enc_str_new_static(ptr, len, rb_utf8_encoding());
 }
 
 void rb_str_modify_expand(VALUE str, long expand) {
@@ -440,7 +471,7 @@ VALUE rb_enc_interned_str_cstr(const char *ptr, rb_encoding *enc) {
 }
 
 VALUE rb_enc_interned_str(const char *ptr, long len, rb_encoding *enc) {
-  VALUE str = rb_enc_str_new(ptr, len, enc ? enc : rb_ascii8bit_encoding());
+  VALUE str = rb_enc_str_new(ptr, len, enc ? enc : rb_binary_encoding());
   return rb_str_to_interned_str(str);
 }
 

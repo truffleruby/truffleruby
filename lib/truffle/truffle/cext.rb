@@ -2459,4 +2459,12 @@ module Truffle::CExt
     str.force_encoding(Encoding::BINARY) unless str.ascii_only?
     nil
   end
+
+  def rb_str_offset(string, index)
+    Primitive.character_index_to_byte_index(string, index)
+  end
+
+  def rb_str_sublen(string, index)
+    Primitive.byte_index_to_character_index(string, index)
+  end
 end

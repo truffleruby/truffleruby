@@ -170,6 +170,27 @@ rb_encoding* rb_enc_compatible(VALUE str1, VALUE str2) {
   return NULL;
 }
 
+static const char* rb_enc_inspect_name(rb_encoding *enc) {
+  if (enc == rb_binary_encoding()) {
+    return "BINARY (ASCII-8BIT)";
+  }
+  return enc->name;
+}
+
+static rb_encoding* rb_encoding_check(rb_encoding* enc, VALUE str1, VALUE str2) {
+  if (!enc) {
+    rb_raise(rb_eEncCompatError, "incompatible character encodings: %s and %s",
+      rb_enc_inspect_name(rb_enc_get(str1)),
+      rb_enc_inspect_name(rb_enc_get(str2)));
+  }
+  return enc;
+}
+
+rb_encoding* rb_enc_check(VALUE str1, VALUE str2) {
+  rb_encoding *enc = rb_enc_compatible(str1, str2);
+  return rb_encoding_check(enc, str1, str2);
+}
+
 void rb_enc_copy(VALUE obj1, VALUE obj2) {
   rb_enc_associate_index(obj1, rb_enc_get_index(obj2));
 }
@@ -342,6 +363,11 @@ VALUE rb_tr_temporary_native_string(const char *ptr, long len, rb_encoding *enc)
     "rb_tr_temporary_native_string", ptr, len, rb_tr_unwrap(rb_enc_from_encoding(enc))));
 }
 
+VALUE rb_tr_static_native_string(const char *ptr, long len, rb_encoding *enc) {
+  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT,
+    "rb_tr_static_native_string", (long)ptr, len, rb_tr_unwrap(rb_enc_from_encoding(enc))));
+}
+
 #undef rb_enc_str_new
 VALUE rb_enc_str_new(const char *ptr, long len, rb_encoding *enc) {
   return RUBY_INVOKE(rb_str_new(ptr, len), "force_encoding", rb_enc_from_encoding(enc)); // TODO: do it more directly
@@ -363,11 +389,10 @@ VALUE rb_enc_str_new_static(const char *ptr, long len, rb_encoding *enc) {
     rb_raise(rb_eArgError, "negative string size (or size too big)");
   }
   if (!enc) {
-    enc = rb_ascii8bit_encoding();
+    enc = rb_binary_encoding();
   }
 
-  VALUE string = rb_enc_str_new(ptr, len, enc);
-  return string;
+  return rb_tr_static_native_string(ptr, len, enc);
 }
 
 #define castchar(from) (char)((from) & 0xff)

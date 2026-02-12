@@ -287,6 +287,18 @@ VALUE io_spec_rb_cloexec_open(VALUE self, VALUE path, VALUE flags, VALUE mode) {
   return rb_funcall(rb_cIO, rb_intern("for_fd"), 1, INT2FIX(fd));
 }
 
+VALUE io_spec_rb_cloexec_dup(VALUE self, VALUE io) {
+  int fd = io_spec_get_fd(io);
+  int new_fd = rb_cloexec_dup(fd);
+  return rb_funcall(rb_cIO, rb_intern("for_fd"), 1, INT2FIX(new_fd));
+}
+
+VALUE io_spec_rb_cloexec_fcntl_dupfd(VALUE self, VALUE io, VALUE minfd) {
+  int fd = io_spec_get_fd(io);
+  int new_fd = rb_cloexec_fcntl_dupfd(fd, FIX2INT(minfd));
+  return rb_funcall(rb_cIO, rb_intern("for_fd"), 1, INT2FIX(new_fd));
+}
+
 VALUE io_spec_rb_io_close(VALUE self, VALUE io) {
   return rb_io_close(io);
 }
@@ -391,6 +403,8 @@ void Init_io_spec(void) {
   rb_define_method(cls, "rb_io_binmode", io_spec_rb_io_binmode, 1);
   rb_define_method(cls, "rb_fd_fix_cloexec", io_spec_rb_fd_fix_cloexec, 1);
   rb_define_method(cls, "rb_cloexec_open", io_spec_rb_cloexec_open, 3);
+  rb_define_method(cls, "rb_cloexec_dup", io_spec_rb_cloexec_dup, 1);
+  rb_define_method(cls, "rb_cloexec_fcntl_dupfd", io_spec_rb_cloexec_fcntl_dupfd, 2);
   rb_define_method(cls, "errno=", io_spec_errno_set, 1);
   rb_define_method(cls, "rb_io_mode_sync_flag", io_spec_mode_sync_flag, 1);
 #if defined(RUBY_VERSION_IS_3_3) || defined(TRUFFLERUBY)

@@ -403,4 +403,46 @@ VALUE rb_io_getbyte(VALUE io) {
   return RUBY_INVOKE(io, "getbyte");
 }
 
+static void rb_maygvl_fd_fix_cloexec(int fd) {
+  int flags = fcntl(fd, F_GETFD); /* should not fail except EBADF. */
+  if (flags == -1) {
+    rb_bug("rb_maygvl_fd_fix_cloexec: fcntl(%d, F_GETFD) failed: %s", fd, strerror(errno));
+  }
+
+  int flags2;
+  if (fd <= 2) {
+    flags2 = flags & ~FD_CLOEXEC; /* Clear CLOEXEC for standard file descriptors: 0, 1, 2. */
+  } else {
+    flags2 = flags | FD_CLOEXEC; /* Set CLOEXEC for non-standard file descriptors: 3, 4, 5, ... */
+  }
+
+  if (flags != flags2) {
+    int ret = fcntl(fd, F_SETFD, flags2);
+    if (ret != 0) {
+      rb_bug("rb_maygvl_fd_fix_cloexec: fcntl(%d, F_SETFD, %d) failed: %s", fd, flags2, strerror(errno));
+    }
+  }
+}
+
+int rb_cloexec_dup(int oldfd) {
+  /* Don't allocate standard file descriptors: 0, 1, 2 */
+  return rb_cloexec_fcntl_dupfd(oldfd, 3);
+}
+
+int rb_cloexec_fcntl_dupfd(int fd, int minfd) {
+  int ret = fcntl(fd, F_DUPFD_CLOEXEC, minfd);
+  if (ret != -1) {
+    if (ret <= 2) {
+      rb_maygvl_fd_fix_cloexec(ret);
+    }
+    return ret;
+  }
+
+  if (ret < 0) {
+    return ret;
+  }
+  rb_maygvl_fd_fix_cloexec(ret);
+  return ret;
+}
+
 RBIMPL_WARNING_POP()

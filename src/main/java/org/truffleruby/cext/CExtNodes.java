@@ -817,6 +817,21 @@ public abstract class CExtNodes {
         }
     }
 
+    /** Alternative to rb_str_new*() which does not copy the bytes from native memory, to use when the bytes are from
+     * static memory such as a C String literal. */
+    @CoreMethod(names = "rb_tr_static_native_string", onSingleton = true, required = 3, lowerFixnum = 2)
+    public abstract static class StaticNativeStringNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization
+        RubyString staticNativeString(long address, int byteLength, RubyEncoding encoding,
+                @Cached MutableTruffleString.FromNativePointerNode fromNativePointerNode) {
+            Pointer pointer = new Pointer(getContext(), address, byteLength + NATIVE_STRING_TERMINATOR_LENGTH);
+            var nativeTString = fromNativePointerNode.execute(pointer, 0, byteLength, encoding.tencoding, false);
+            // CRuby does not freeze so we also don't
+            return createMutableString(nativeTString, encoding);
+        }
+    }
+
     @CoreMethod(names = "rb_str_capacity", onSingleton = true, required = 1)
     public abstract static class RbStrCapacityNode extends CoreMethodArrayArgumentsNode {
 
