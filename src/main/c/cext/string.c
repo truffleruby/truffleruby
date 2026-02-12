@@ -294,6 +294,38 @@ VALUE rb_str_substr(VALUE string, long beg, long len) {
   return rb_tr_wrap(polyglot_invoke(rb_tr_unwrap(string), "[]", beg, len));
 }
 
+char* rb_str_subpos(VALUE string, long from, long* lenp) {
+  long len = *lenp;
+  long size = rb_str_strlen(string);
+
+  if (from < 0) {
+    from += size;
+  }
+
+  if (from < 0 || from > size || len < 0) {
+    return NULL;
+  }
+
+  long to = MIN(from + len, size);
+
+  long byte_from = rb_str_offset(string, from);
+  long byte_to = rb_str_offset(string, to);
+
+  *lenp = (byte_to - byte_from);
+
+  return RSTRING_PTR(string) + byte_from;
+}
+
+// character offset to byte offset
+long rb_str_offset(VALUE str, long pos) {
+  return polyglot_as_i64(polyglot_invoke(RUBY_CEXT, "rb_str_offset", rb_tr_unwrap(str), pos));
+}
+
+// byte offset to character offset
+long rb_str_sublen(VALUE str, long pos) {
+  return polyglot_as_i64(polyglot_invoke(RUBY_CEXT, "rb_str_sublen", rb_tr_unwrap(str), pos));
+}
+
 st_index_t rb_str_hash(VALUE string) {
   return (st_index_t) polyglot_as_i64(polyglot_invoke(rb_tr_unwrap(string), "hash"));
 }

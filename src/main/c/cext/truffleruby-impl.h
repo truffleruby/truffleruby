@@ -28,6 +28,9 @@ POLYGLOT_DECLARE_TYPE(VALUE)
 
 #define rb_binary_encoding() rb_ascii8bit_encoding()
 
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 // Support
 
 extern void* rb_tr_cext;
