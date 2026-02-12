@@ -50,3 +50,74 @@ then set or enable the breakpoints that we want for our application code.
 Generally, IDEA has a very powerful debugger that you may not expect if you're
 coming from the perspective of a Ruby developer, and you should explore it and
 see what you're able to do beyond this.
+
+## GDB Debugging
+
+You can debug native extensions by using `gdb`.
+
+For example by running `gdb --args ruby ...`.
+
+### Save history in GDB
+
+Add this in `~/.gdbinit`:
+
+```
+set history save on
+set history filename ~/.gdb_history
+set history size 10000
+set history remove-duplicates unlimited
+```
+
+### Ignore SIGSEGV from JVM
+
+```
+(gdb) handle SIGSEGV pass nostop noprint
+```
+
+### Missing Symbols
+
+Sometimes missing symbols are not shown, e.g. because STDERR is redirected.
+In that case the program may exit with exit code 127 but no other information.
+You can use gdb to figure out which is the missing symbol.
+
+On Linux:
+```
+(gdb) b __GI__dl_fatal_printf
+Function "__GI__dl_fatal_printf" not defined.
+Make breakpoint pending on future shared library load? (y or [n]) y
+Breakpoint 1 (__GI__dl_fatal_printf) pending.
+```
+
+And then run the program:
+```
+(gdb) run
+...
+Thread 1 "ruby" hit Breakpoint 1, __GI__dl_fatal_printf (fmt=fmt@entry=0x7ffff7ff14cc "%s: %s: %s%s%s%s%s\n")
+    at dl-printf.c:305
+
+(gdb) bt
+#0  __GI__dl_fatal_printf (fmt=fmt@entry=0x7ffff7ff14cc "%s: %s: %s%s%s%s%s\n") at dl-printf.c:305
+#1  0x00007ffff7fc63a9 in fatal_error (errcode=<optimized out>,
+    objname=0x5555558e160f "/home/eregon/code/readline-ext/lib/readline.so", occasion=0x7ffff7ff195b "symbol lookup error",
+    errstring=<optimized out>) at dl-catch.c:83
+#2  0x00007ffff7fc643a in __GI__dl_signal_exception (errcode=<optimized out>, exception=<optimized out>,
+    occasion=<optimized out>) at dl-catch.c:107
+#3  0x00007ffff7fc6552 in _dl_signal_cexception (errcode=errcode@entry=0, exception=exception@entry=0x7ffffffe7eb0,
+    occasion=occasion@entry=0x7ffff7ff195b "symbol lookup error") at dl-catch.c:165
+#4  0x00007ffff7fcfdfe in _dl_lookup_symbol_x (undef_name=0x7fffc2c3912d "rb_enc_check",
+    undef_map=undef_map@entry=0x55555659d270, ref=ref@entry=0x7ffffffe7f30, symbol_scope=<optimized out>, version=0x0,
+    type_class=type_class@entry=1, flags=5, skip_map=0x0) at dl-lookup.c:810
+...
+```
+
+This shows the missing symbol on the `_dl_lookup_symbol_x` frame, which is `rb_enc_check` in this example.
+
+### Catch Process Exit
+
+A way to catch the process exit before it's performed is:
+```
+(gdb) catch syscall exit_group
+```
+
+Then you can print the stacktrace, etc to find out what "called exit".
+This also works for finding missing symbols for example.
