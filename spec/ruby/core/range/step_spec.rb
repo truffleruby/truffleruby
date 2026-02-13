@@ -69,6 +69,17 @@ describe "Range#step" do
       t = Time.utc(2023, 2, 24)
       -> { (t..t+1).step(0) { break } }.should_not raise_error(ArgumentError)
     end
+
+    it "does not iterate if step does not move values for bounded non-numeric ranges" do
+      t = Time.utc(2023, 2, 24)
+      (t..t + 1).step(0) { |x| ScratchPad << x }
+      ScratchPad.recorded.should eql([])
+    end
+
+    it "raises an ArgumentError when iterating a beginless range" do
+      -> { (..10).step(1) { break } }.should raise_error(ArgumentError,
+        "#step iteration for beginless ranges is meaningless")
+    end
   end
 
   ruby_version_is ""..."3.4" do
@@ -657,7 +668,17 @@ describe "Range#step" do
 
           ruby_version_is "3.4" do
             it "raises an ArgumentError" do
-              -> { Range.new(nil, nil).step(1) }.should raise_error(ArgumentError)
+              -> { Range.new(nil, nil).step(1) }.should raise_error(ArgumentError,
+                "#step for non-numeric beginless ranges is meaningless")
+            end
+          end
+        end
+
+        context "when range is beginless and finite" do
+          ruby_version_is "3.4" do
+            it "raises an ArgumentError if step is non-numeric" do
+              -> { (..10).step("a") }.should raise_error(ArgumentError,
+                "#step for non-numeric beginless ranges is meaningless")
             end
           end
         end

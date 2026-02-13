@@ -498,57 +498,182 @@ class Range
   private def step_internal(step_size = 1, &block) # :yields: object
     return Truffle::RangeOperations.step_no_block(self, step_size) unless block
 
-    values = Truffle::RangeOperations.validate_step_size(self.begin, self.end, step_size)
-    first = values[0]
-    last = values[1]
-    step_size = values[2]
+    first = self.begin
+    last = self.end
 
-    return step_endless(first, step_size, &block) if Primitive.nil?(last)
-
-    case first
-    when Float
-      iterations = Truffle::NumericOperations.float_step_size(first, last, step_size, exclude_end?)
-
-      i = 0
-      while i < iterations
-        curr = i * step_size + first
-        curr = last if last < curr
-        yield curr
-        i += 1
-      end
-    when Numeric
-      curr = first
-      last -= 1 if exclude_end?
-
-      while curr <= last
-        yield curr
-        curr += step_size
-      end
-    else
-      i = 0
-      each do |item|
-        yield item if i % step_size == 0
-        i += 1
-      end
+    if Primitive.nil?(first)
+      raise ArgumentError, '#step iteration for beginless ranges is meaningless'
     end
 
-    self
-  end
+    numeric_begin = Primitive.is_a?(first, Numeric)
+    numeric_step = Primitive.is_a?(step_size, Numeric)
 
-  private def step_endless(first, step_size, &block)
-    if Primitive.is_a?(first, Numeric)
+    if numeric_begin && numeric_step && step_size == 0
+      raise ArgumentError, "step can't be 0"
+    end
+
+    # String/Symbol ranges with Integer steps retain pre-3.4 succ-based iteration for
+    # backward compatibility. See https://bugs.ruby-lang.org/issues/18368 for discussion.
+    if (Primitive.is_a?(first, String) || Primitive.is_a?(first, Symbol)) && Primitive.is_a?(step_size, Integer)
+      if step_size <= 0
+        raise ArgumentError, step_size < 0 ? "step can't be negative" : "step can't be 0"
+      end
+
+      if Primitive.nil?(last)
+        i = 0
+        each_endless(first) do |item|
+          yield item if i % step_size == 0
+          i += 1
+        end
+      else
+        i = 0
+        each do |item|
+          yield item if i % step_size == 0
+          i += 1
+        end
+      end
+
+      return self
+    end
+
+    # When any argument involves a Float, coerce all values to Float for consistent
+    # floating-point iteration. This mirrors CRuby's ruby_float_step behavior.
+    if Primitive.is_a?(first, Float) || Primitive.is_a?(last, Float) || Primitive.is_a?(step_size, Float)
+      begin
+        converting = step_size
+        step_size = Float(step_size)
+        converting = first
+        first = Float(first)
+        unless Primitive.nil?(last)
+          converting = last
+          last = Float(last)
+        end
+      rescue ArgumentError
+        raise TypeError, "no implicit conversion to float from #{Primitive.class(converting)}"
+      end
+
+      if step_size == 0
+        raise ArgumentError, "step can't be 0"
+      end
+
+      if Primitive.nil?(last)
+        curr = first
+        while true
+          yield curr
+          curr += step_size
+        end
+      else
+        iterations = Truffle::NumericOperations.float_step_size(first, last, step_size, exclude_end?)
+
+        i = 0
+        while i < iterations
+          curr = i * step_size + first
+          curr = last if last < curr
+          yield curr
+          i += 1
+        end
+      end
+
+      return self
+    end
+
+    # Numeric + numeric step (non-Float)
+    if numeric_begin && numeric_step
+      if Primitive.nil?(last)
+        curr = first
+        while true
+          yield curr
+          curr += step_size
+        end
+      elsif step_size > 0
+        if exclude_end?
+          curr = first
+          while curr < last
+            yield curr
+            curr += step_size
+          end
+        else
+          curr = first
+          while curr <= last
+            yield curr
+            curr += step_size
+          end
+        end
+      else # step_size < 0
+        if exclude_end?
+          curr = first
+          while curr > last
+            yield curr
+            curr += step_size
+          end
+        else
+          curr = first
+          while curr >= last
+            yield curr
+            curr += step_size
+          end
+        end
+      end
+
+      return self
+    end
+
+    # Generic path: iterate using the + operator, which is the Ruby 3.4 behavior
+    # that enables stepping through non-numeric ranges like Time and Date.
+    if Primitive.nil?(last)
       curr = first
       while true
         yield curr
         curr += step_size
       end
     else
-      i = 0
-      each_endless(first) do |item|
-        yield item if i % step_size == 0
-        i += 1
+      direction = (first <=> last)
+
+      if Primitive.nil?(direction)
+        return self
+      end
+
+      if direction == 0
+        yield first unless exclude_end?
+        return self
+      end
+
+      # Verify the step moves iteration in the same direction as from begin to end;
+      # otherwise, the iteration should be empty.
+      stepped = first + step_size
+      step_direction = (first <=> stepped)
+
+      if Primitive.nil?(step_direction)
+        return self
+      end
+
+      if step_direction == 0
+        return self
+      end
+
+      if step_direction != direction
+        return self
+      end
+
+      # Iterate while curr is on the same side of last as first was.
+      # For forward ranges (direction=-1): continues while curr < last.
+      # For backward ranges (direction=1): continues while curr > last.
+      curr = first
+      if exclude_end?
+        while (curr <=> last) == direction
+          yield curr
+          curr += step_size
+        end
+      else
+        while (cmp = (curr <=> last)) && (cmp == direction || cmp == 0)
+          yield curr
+          break if cmp == 0
+          curr += step_size
+        end
       end
     end
+
+    self
   end
 
   def to_s
