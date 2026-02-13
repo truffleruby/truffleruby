@@ -65,15 +65,10 @@ describe "Range#step" do
   end
 
   ruby_version_is "3.4" do
-    it "does not raise an ArgumentError if step is 0 for non-numeric ranges" do
-      t = Time.utc(2023, 2, 24)
-      -> { (t..t+1).step(0) { break } }.should_not raise_error(ArgumentError)
-    end
-
-    it "does not iterate if step does not move values for bounded non-numeric ranges" do
+    it "does not iterate if step is 0 for bounded non-numeric ranges" do
       t = Time.utc(2023, 2, 24)
       (t..t + 1).step(0) { |x| ScratchPad << x }
-      ScratchPad.recorded.should eql([])
+      ScratchPad.recorded.should == []
     end
 
     it "raises an ArgumentError when iterating a beginless range" do
@@ -148,6 +143,18 @@ describe "Range#step" do
         ScratchPad.record []
         (0.0..Float::INFINITY).step(2) { |x| ScratchPad << x; break if ScratchPad.recorded.size == 3 }
         ScratchPad.recorded.should eql([0.0, 2.0, 4.0])
+      end
+
+      ruby_version_is "3.4" do
+        it "does not iterate if step is negative for forward range" do
+          (-1.0..1.0).step(-0.5) { |x| ScratchPad << x }
+          ScratchPad.recorded.should eql([])
+        end
+
+        it "iterates backward if step is negative for backward range" do
+          (1.0..-1.0).step(-0.5) { |x| ScratchPad << x }
+          ScratchPad.recorded.should eql([1.0, 0.5, 0.0, -0.5, -1.0])
+        end
       end
     end
 
@@ -347,6 +354,13 @@ describe "Range#step" do
         ScratchPad.record []
         (0.0...Float::INFINITY).step(2) { |x| ScratchPad << x; break if ScratchPad.recorded.size == 3 }
         ScratchPad.recorded.should eql([0.0, 2.0, 4.0])
+      end
+
+      ruby_version_is "3.4" do
+        it "iterates backward with exclusive end if step is negative" do
+          (1.0...-1.0).step(-0.5) { |x| ScratchPad << x }
+          ScratchPad.recorded.should eql([1.0, 0.5, 0.0, -0.5])
+        end
       end
     end
 

@@ -551,7 +551,11 @@ class Range
         i = 0
         while i < iterations
           curr = i * step_size + first
-          curr = last if last < curr
+          if step_size > 0
+            curr = last if curr > last
+          else
+            curr = last if curr < last
+          end
           yield curr
           i += 1
         end
