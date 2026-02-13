@@ -69,6 +69,17 @@ describe "Range#step" do
       t = Time.utc(2023, 2, 24)
       -> { (t..t+1).step(0) { break } }.should_not raise_error(ArgumentError)
     end
+
+    it "does not iterate if step does not move values for bounded non-numeric ranges" do
+      t = Time.utc(2023, 2, 24)
+      (t..t + 1).step(0) { |x| ScratchPad << x }
+      ScratchPad.recorded.should eql([])
+    end
+
+    it "raises an ArgumentError when iterating a beginless range" do
+      -> { (..10).step(1) { break } }.should raise_error(ArgumentError,
+        "#step iteration for beginless ranges is meaningless")
+    end
   end
 
   ruby_version_is ""..."3.4" do
@@ -461,6 +472,13 @@ describe "Range#step" do
         ScratchPad.recorded.should eql([-1.0, -0.5, 0.0, 0.5])
       end
 
+      it "computes each value independently to avoid accumulating floating-point errors" do
+        result = []
+        (0.0..).step(0.1) { |x| result << x; break if result.size == 20 }
+        expected = 20.times.map { |i| i * 0.1 + 0.0 }
+        result.should eql(expected)
+      end
+
       it "handles infinite values at the start" do
         (-Float::INFINITY..).step(2) { |x| ScratchPad << x; break if ScratchPad.recorded.size == 3 }
         ScratchPad.recorded.should eql([-Float::INFINITY, -Float::INFINITY, -Float::INFINITY])
@@ -657,7 +675,17 @@ describe "Range#step" do
 
           ruby_version_is "3.4" do
             it "raises an ArgumentError" do
-              -> { Range.new(nil, nil).step(1) }.should raise_error(ArgumentError)
+              -> { Range.new(nil, nil).step(1) }.should raise_error(ArgumentError,
+                "#step for non-numeric beginless ranges is meaningless")
+            end
+          end
+        end
+
+        context "when range is beginless and finite" do
+          ruby_version_is "3.4" do
+            it "raises an ArgumentError if step is non-numeric" do
+              -> { (..10).step("a") }.should raise_error(ArgumentError,
+                "#step for non-numeric beginless ranges is meaningless")
             end
           end
         end
