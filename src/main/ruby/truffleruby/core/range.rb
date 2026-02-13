@@ -1,5 +1,32 @@
 # frozen_string_literal: true
 
+# Copyright (c) 2026, TruffleRuby contributors
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 # Copyright (c) 2007-2015, Evan Phoenix and contributors
 # All rights reserved.
 #
@@ -498,57 +525,176 @@ class Range
   private def step_internal(step_size = 1, &block) # :yields: object
     return Truffle::RangeOperations.step_no_block(self, step_size) unless block
 
-    values = Truffle::RangeOperations.validate_step_size(self.begin, self.end, step_size)
-    first = values[0]
-    last = values[1]
-    step_size = values[2]
+    first = self.begin
+    last = self.end
 
-    return step_endless(first, step_size, &block) if Primitive.nil?(last)
+    # Beginless ranges can't be iterated with a block
+    if Primitive.nil?(first)
+      raise ArgumentError, "can't iterate from NilClass"
+    end
 
-    case first
-    when Float
-      iterations = Truffle::NumericOperations.float_step_size(first, last, step_size, exclude_end?)
+    b_num = Primitive.is_a?(first, Numeric)
+    s_num = Primitive.is_a?(step_size, Numeric)
 
-      i = 0
-      while i < iterations
-        curr = i * step_size + first
-        curr = last if last < curr
-        yield curr
-        i += 1
+    # Zero check: only for numeric begin + numeric step
+    if b_num && s_num && step_size == 0
+      raise ArgumentError, "step can't be 0"
+    end
+
+    # String/Symbol + Integer step -> backward compat (succ-based)
+    if (Primitive.is_a?(first, String) || Primitive.is_a?(first, Symbol)) && Primitive.is_a?(step_size, Integer)
+      if step_size <= 0
+        raise ArgumentError, step_size < 0 ? "step can't be negative" : "step can't be 0"
       end
-    when Numeric
-      curr = first
-      last -= 1 if exclude_end?
 
-      while curr <= last
+      if Primitive.nil?(last)
+        i = 0
+        each_endless(first) do |item|
+          yield item if i % step_size == 0
+          i += 1
+        end
+      else
+        i = 0
+        each do |item|
+          yield item if i % step_size == 0
+          i += 1
+        end
+      end
+
+      return self
+    end
+
+    # Float path
+    if Primitive.is_a?(first, Float) || Primitive.is_a?(last, Float) || Primitive.is_a?(step_size, Float)
+      begin
+        step_size = Float(from = step_size)
+        first     = Float(from = first)
+        last      = Float(from = last) unless Primitive.nil?(last)
+      rescue ArgumentError
+        raise TypeError, "no implicit conversion to float from #{Primitive.class(from)}"
+      end
+
+      if step_size == 0
+        raise ArgumentError, "step can't be 0"
+      end
+
+      if Primitive.nil?(last)
+        curr = first
+        while true
+          yield curr
+          curr += step_size
+        end
+      else
+        iterations = Truffle::NumericOperations.float_step_size(first, last, step_size, exclude_end?)
+
+        i = 0
+        while i < iterations
+          curr = i * step_size + first
+          curr = last if last < curr
+          yield curr
+          i += 1
+        end
+      end
+
+      return self
+    end
+
+    # Numeric + numeric step (non-Float) - handles positive and negative steps
+    if b_num && s_num
+      if Primitive.nil?(last)
+        curr = first
+        while true
+          yield curr
+          curr += step_size
+        end
+      elsif step_size > 0
+        if exclude_end?
+          curr = first
+          while curr < last
+            yield curr
+            curr += step_size
+          end
+        else
+          curr = first
+          while curr <= last
+            yield curr
+            curr += step_size
+          end
+        end
+      else # step_size < 0
+        if exclude_end?
+          curr = first
+          while curr > last
+            yield curr
+            curr += step_size
+          end
+        else
+          curr = first
+          while curr >= last
+            yield curr
+            curr += step_size
+          end
+        end
+      end
+
+      return self
+    end
+
+    # Generic path: use + operator with direction detection
+    if Primitive.nil?(last)
+      # Endless
+      curr = first
+      while true
         yield curr
-        curr += step_size
+        curr = curr + step_size
       end
     else
-      i = 0
-      each do |item|
-        yield item if i % step_size == 0
-        i += 1
+      dir = (first <=> last)
+
+      # If <=> returns nil, no iteration
+      if Primitive.nil?(dir)
+        return self
+      end
+
+      # If first == last, yield once (if inclusive) and return
+      if dir == 0
+        yield first unless exclude_end?
+        return self
+      end
+
+      # Check step direction
+      stepped = first + step_size
+      step_dir = (first <=> stepped)
+
+      if Primitive.nil?(step_dir)
+        return self
+      end
+
+      # If step direction doesn't match range direction, no iteration
+      if step_dir != 0 && step_dir != dir
+        return self
+      end
+
+      # Iterate while comparison matches range direction.
+      # cmp == dir means "curr is still on the iterating side of last":
+      #   forward (dir=-1): continues while curr < last
+      #   backward (dir=1): continues while curr > last
+      curr = first
+      if exclude_end?
+        while (curr <=> last) == dir
+          yield curr
+          curr = curr + step_size
+        end
+      else
+        while (cmp = (curr <=> last)) && (cmp == dir || cmp == 0)
+          yield curr
+          break if cmp == 0
+          curr = curr + step_size
+        end
       end
     end
 
     self
-  end
-
-  private def step_endless(first, step_size, &block)
-    if Primitive.is_a?(first, Numeric)
-      curr = first
-      while true
-        yield curr
-        curr += step_size
-      end
-    else
-      i = 0
-      each_endless(first) do |item|
-        yield item if i % step_size == 0
-        i += 1
-      end
-    end
   end
 
   def to_s
