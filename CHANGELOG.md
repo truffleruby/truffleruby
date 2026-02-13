@@ -44,6 +44,7 @@ Compatibility:
 * Use `Hash` default for `#sprintf` (#4155, @eregon).
 * Implement `rb_cloexec_dup()`, `rb_cloexec_fcntl_dupfd()`, `rb_enc_check()`, `rb_str_subpos()`, `rb_str_offset()` and `rb_str_sublen()` necessary for the `readline-ext` gem (#3018, @eregon).
 * Make `rb_*str_new_static()` functions use the passed pointer as the String storage like CRuby (#3018, @eregon).
+* Add support for creating `Float` values from strings with the decimal part omitted (#3883, @nirvdrum).
 
 Performance:
 
