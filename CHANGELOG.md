@@ -49,6 +49,7 @@ Compatibility:
 * Implement `Method#original_name` (#4165, @eregon).
 * Add `Socket::ResolutionError` like Ruby 3.4 (#3883, @eregon).
 * Support the `resolv_timeout` and `fast_fallback` keyword arguments for `TCPSocket.new` (#3883, @eregon).
+* Rewrite `Range#step` to handle many more cases, including non-`Numeric` step values using the `+`-based iteration semantics introduced in Ruby 3.4 (#3883, @nirvdrum).
 
 Performance:
 
