@@ -1,19 +1,1 @@
-fails:Range#step when no block is given raises an ArgumentError if step is 0
-fails:Range#step when no block is given returned Enumerator size raises a TypeError if step does not respond to #to_int
-fails:Range#step when no block is given returned Enumerator size raises a TypeError if #to_int does not return an Integer
 fails:Range#step with exclusive end and Float values correctly handles values near the upper limit
-fails:Range#step calls #coerce to coerce step to an Integer
-fails:Range#step does not raise an ArgumentError if step is 0 for non-numeric ranges
-fails:Range#step with inclusive end and Integer values does not iterate if step is negative for forward range
-fails:Range#step with inclusive end and Integer values iterates backward if step is negative for backward range
-fails:Range#step with inclusive end and String values yields String values adjusted by step and less than or equal to end
-fails:Range#step with inclusive end and String values calls #+ on begin and each element returned by #+
-fails:Range#step with inclusive end and String values iterates backward if the step is decreasing values, and the range is backward
-fails:Range#step with inclusive end and String values does no iteration of the direction of the range and of the step don't match
-fails:Range#step with exclusive end and String values yields String values adjusted by step and less than or equal to end
-fails:Range#step with an endless range and String values yields String values adjusted by step
-fails:Range#step when no block is given returned Enumerator size returns nil with begin and end are String
-fails:Range#step when no block is given returned Enumerator size return nil and not raises a TypeError if the first element is not of compatible type
-fails:Range#step when no block is given returned Enumerator type when range is endless returns an instance of Enumerator when begin is not numeric
-fails:Range#step when no block is given returned Enumerator type when range is beginless and endless raises an ArgumentError
-fails:Range#step when no block is given returned Enumerator type when begin and end are not numerics returns an instance of Enumerator
