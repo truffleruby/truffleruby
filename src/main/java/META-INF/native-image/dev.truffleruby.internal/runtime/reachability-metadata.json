@@ -56,6 +56,34 @@
         { "name": "of", "parameterTypes": ["java.lang.String", "[Ljava.lang.String;"] }
       ]
     },
+    {
+      "type": "java.lang.Boolean",
+      "jniAccessible": true,
+      "methods": [
+        { "name": "valueOf", "parameterTypes": ["boolean"] }
+      ]
+    },
+    {
+      "type": "java.lang.Integer",
+      "jniAccessible": true,
+      "methods": [
+        { "name": "valueOf", "parameterTypes": ["int"] }
+      ]
+    },
+    {
+      "type": "java.lang.Long",
+      "jniAccessible": true,
+      "methods": [
+        { "name": "valueOf", "parameterTypes": ["long"] }
+      ]
+    },
+    {
+      "type": "java.lang.Double",
+      "jniAccessible": true,
+      "methods": [
+        { "name": "valueOf", "parameterTypes": ["double"] }
+      ]
+    },
     { "type": "java.nio.file.WatchEvent$Modifier" }
   ],
   "resources": [
