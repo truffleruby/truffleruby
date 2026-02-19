@@ -20,6 +20,7 @@ import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.Hashing;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.basicobject.ReferenceEqualNode;
+import org.truffleruby.core.cast.ToSymbolNode;
 import org.truffleruby.core.inlined.AlwaysInlinedMethodNode;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.module.MethodLookupResult;
@@ -55,6 +56,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+// Keep the methods in alphabetic order to be consistent with UnboundMethodNodes
 @CoreModule(value = "Method", isClass = true)
 public abstract class MethodNodes {
 
@@ -145,16 +147,6 @@ public abstract class MethodNodes {
         }
     }
 
-    @CoreMethod(names = "name")
-    public abstract static class NameNode extends CoreMethodArrayArgumentsNode {
-
-        @Specialization
-        RubySymbol name(RubyMethod method) {
-            return getSymbol(method.method.getName());
-        }
-
-    }
-
     @CoreMethod(names = "hash")
     public abstract static class HashNode extends CoreMethodArrayArgumentsNode {
 
@@ -168,6 +160,27 @@ public abstract class MethodNodes {
             return Hashing.end(h);
         }
 
+    }
+
+    @CoreMethod(names = "name")
+    public abstract static class NameNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization
+        RubySymbol name(RubyMethod method) {
+            return getSymbol(method.method.getName());
+        }
+
+    }
+
+    @CoreMethod(names = "original_name")
+    public abstract static class OriginalNameNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization
+        RubySymbol originalName(RubyMethod method,
+                @Cached ToSymbolNode toSymbolNode) {
+            String originalName = method.method.getOriginalName();
+            return toSymbolNode.execute(this, originalName);
+        }
     }
 
     @CoreMethod(names = "owner")

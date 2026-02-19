@@ -45,6 +45,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 
+// Keep the methods in alphabetic order to be consistent with MethodNodes
 @CoreModule(value = "UnboundMethod", isClass = true)
 public abstract class UnboundMethodNodes {
 
@@ -155,6 +156,21 @@ public abstract class UnboundMethodNodes {
 
     }
 
+    @CoreMethod(names = "parameters")
+    public abstract static class ParametersNode extends CoreMethodArrayArgumentsNode {
+
+        @TruffleBoundary
+        @Specialization
+        RubyArray parameters(RubyUnboundMethod method) {
+            final ArgumentDescriptor[] argsDesc = method.method
+                    .getSharedMethodInfo()
+                    .getArgumentDescriptors();
+
+            return ArgumentDescriptorUtils.argumentDescriptorsToParameters(getLanguage(), getContext(), argsDesc, true);
+        }
+
+    }
+
     @CoreMethod(names = "private?")
     public abstract static class IsPrivateNode extends CoreMethodArrayArgumentsNode {
         @Specialization
@@ -177,21 +193,6 @@ public abstract class UnboundMethodNodes {
         boolean isPublic(RubyUnboundMethod unboundMethod) {
             return unboundMethod.method.isPublic();
         }
-    }
-
-    @CoreMethod(names = "parameters")
-    public abstract static class ParametersNode extends CoreMethodArrayArgumentsNode {
-
-        @TruffleBoundary
-        @Specialization
-        RubyArray parameters(RubyUnboundMethod method) {
-            final ArgumentDescriptor[] argsDesc = method.method
-                    .getSharedMethodInfo()
-                    .getArgumentDescriptors();
-
-            return ArgumentDescriptorUtils.argumentDescriptorsToParameters(getLanguage(), getContext(), argsDesc, true);
-        }
-
     }
 
     @CoreMethod(names = "source_location")

@@ -1,3 +1,0 @@
-fails:Method#original_name returns the name of the method
-fails:Method#original_name returns the original name when aliased
-fails:Method#original_name returns the original name even when aliased twice
