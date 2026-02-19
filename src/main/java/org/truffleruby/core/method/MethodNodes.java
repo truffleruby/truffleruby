@@ -20,6 +20,7 @@ import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.Hashing;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.basicobject.ReferenceEqualNode;
+import org.truffleruby.core.cast.ToSymbolNode;
 import org.truffleruby.core.inlined.AlwaysInlinedMethodNode;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.module.MethodLookupResult;
@@ -153,6 +154,17 @@ public abstract class MethodNodes {
             return getSymbol(method.method.getName());
         }
 
+    }
+
+    @CoreMethod(names = "original_name")
+    public abstract static class OriginalNameNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization
+        RubySymbol originalName(RubyMethod method,
+                @Cached ToSymbolNode toSymbolNode) {
+            String originalName = method.method.getOriginalName();
+            return toSymbolNode.execute(this, originalName);
+        }
     }
 
     @CoreMethod(names = "hash")
