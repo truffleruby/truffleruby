@@ -56,6 +56,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+// Keep the methods in alphabetic order to be consistent with UnboundMethodNodes
 @CoreModule(value = "Method", isClass = true)
 public abstract class MethodNodes {
 
@@ -146,6 +147,21 @@ public abstract class MethodNodes {
         }
     }
 
+    @CoreMethod(names = "hash")
+    public abstract static class HashNode extends CoreMethodArrayArgumentsNode {
+
+        @TruffleBoundary
+        @Specialization
+        long hash(RubyMethod rubyMethod) {
+            final InternalMethod method = rubyMethod.method;
+            long h = getContext().getHashing(this).start(method.getDeclaringModule().hashCode());
+            h = Hashing.update(h, rubyMethod.receiver.hashCode());
+            h = Hashing.update(h, hashInternalMethod(method));
+            return Hashing.end(h);
+        }
+
+    }
+
     @CoreMethod(names = "name")
     public abstract static class NameNode extends CoreMethodArrayArgumentsNode {
 
@@ -165,21 +181,6 @@ public abstract class MethodNodes {
             String originalName = method.method.getOriginalName();
             return toSymbolNode.execute(this, originalName);
         }
-    }
-
-    @CoreMethod(names = "hash")
-    public abstract static class HashNode extends CoreMethodArrayArgumentsNode {
-
-        @TruffleBoundary
-        @Specialization
-        long hash(RubyMethod rubyMethod) {
-            final InternalMethod method = rubyMethod.method;
-            long h = getContext().getHashing(this).start(method.getDeclaringModule().hashCode());
-            h = Hashing.update(h, rubyMethod.receiver.hashCode());
-            h = Hashing.update(h, hashInternalMethod(method));
-            return Hashing.end(h);
-        }
-
     }
 
     @CoreMethod(names = "owner")
