@@ -36,16 +36,15 @@ class Addrinfo
                        protocol = nil, flags = nil, timeout: nil)
     # NOTE: timeout is ignored currently. On MRI it's ignored but only for platforms without getaddrinfo_a().
 
-    raw = Socket
-      .getaddrinfo(nodename, service, family, socktype, protocol, flags)
+    raw = Socket.getaddrinfo(nodename, service, family, socktype, protocol, flags)
 
     raw.map do |pair|
       lfamily, lport, lhost, laddress, _, lsocktype, lprotocol = pair
 
       sockaddr = Socket.pack_sockaddr_in(lport, laddress)
-      addr     = Addrinfo.new(sockaddr, lfamily, lsocktype, lprotocol)
+      addr = Addrinfo.new(sockaddr, lfamily, lsocktype, lprotocol)
 
-      if flags and flags | Socket::AI_CANONNAME
+      if flags && (flags | Socket::AI_CANONNAME) != 0
         addr.instance_variable_set(:@canonname, lhost)
       end
 
@@ -86,8 +85,7 @@ class Addrinfo
   # address families.
   #
   # Because modifying #initialize would break compatibility we have to define a
-  # separate new-like method that completely ignores #initialize. You can thank
-  # Ruby for being such a well designed language.
+  # separate new-like method that completely ignores #initialize.
   #
   # For the sake of simplicity `family` **must** be an Integer, a String based
   # address family is not supported.

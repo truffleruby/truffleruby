@@ -110,6 +110,8 @@ class Socket < BasicSocket
         family = Socket::AF_INET
       elsif af == 'AF_INET6'
         family = Socket::AF_INET6
+      else
+        family = Socket.const_get(af)
       end
 
       sockaddr = Truffle::Socket::Foreign

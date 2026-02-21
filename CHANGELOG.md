@@ -46,6 +46,7 @@ Compatibility:
 * Make `rb_*str_new_static()` functions use the passed pointer as the String storage like CRuby (#3018, @eregon).
 * Add support for creating `Float` values from strings with the decimal part omitted (#3883, @nirvdrum).
 * Implement `Method#original_name` (#4165, @eregon).
+* Add `Socket::ResolutionError` like Ruby 3.4 (#3883, @eregon).
 
 Performance:
 
