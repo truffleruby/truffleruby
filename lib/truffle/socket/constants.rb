@@ -69,4 +69,13 @@ class Socket < BasicSocket
     # Truffle: added unless const_defined? to avoid warnings
     const_set(const, Constants.const_get(const)) unless const_defined?(const)
   end
+
+  class ResolutionError < SocketError
+    attr_reader :error_code
+
+    def initialize(message, error_code)
+      super(message)
+      @error_code = error_code
+    end
+  end
 end

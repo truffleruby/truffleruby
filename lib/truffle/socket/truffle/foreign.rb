@@ -160,7 +160,7 @@ module Truffle
         res_p.clear
         err = _getaddrinfo(host, service, hints.pointer, res_p)
 
-        raise SocketError, gai_strerror(err) unless err == 0
+        raise resolution_error(err) unless err == 0
 
         ptr = res_p.read_pointer
 
@@ -199,6 +199,11 @@ module Truffle
         end
       end
 
+      def self.resolution_error(code)
+        error = gai_strerror(code)
+        ::Socket::ResolutionError.new("getaddrinfo: #{error}", code)
+      end
+
       def self.getaddress(host)
         addrinfos = getaddrinfo(host)
 
@@ -225,7 +230,7 @@ module Truffle
                              ::Socket::NI_MAXHOST, service,
                              ::Socket::NI_MAXSERV, flags)
 
-          raise SocketError, gai_strerror(err) unless err == 0
+          raise resolution_error(err) unless err == 0
 
           sa_family = SockaddrIn.new(sockaddr_p)[:sin_family]
 
@@ -301,7 +306,7 @@ module Truffle
 
         err = _getaddrinfo(host, port.to_s, hints.pointer, res_p)
 
-        raise SocketError, gai_strerror(err) unless err == 0
+        raise resolution_error(err) unless err == 0
 
         return [] if res_p.read_pointer.null?
 
