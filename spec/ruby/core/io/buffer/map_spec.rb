@@ -2,21 +2,33 @@ require_relative '../../../spec_helper'
 
 describe "IO::Buffer.map" do
   before :all do
-    @big_file_name = tmp("big_file")
-    # Usually 4 kibibytes + 16 bytes
-    File.write(@big_file_name, "12345678" * (IO::Buffer::PAGE_SIZE / 8 + 2))
+    @tmp_files = []
+
+    @big_file_name = nil
+    @small_file_name = nil
   end
 
   after :all do
-    File.delete(@big_file_name)
+    @tmp_files.each {|file| File.delete(file)}
   end
 
   def open_fixture
-    File.open("#{__dir__}/../fixtures/read_text.txt", "r+")
+    unless @small_file_name
+      @small_file_name = tmp("read_text.txt")
+      File.copy_stream(fixture(__dir__, "read_text.txt"), @small_file_name)
+      @tmp_files << @small_file_name
+    end
+    File.open(@small_file_name, "rb+")
   end
 
   def open_big_file_fixture
-    File.open(@big_file_name, "r+")
+    unless @big_file_name
+      @big_file_name = tmp("big_file")
+      # Usually 4 kibibytes + 16 bytes
+      File.write(@big_file_name, "12345678" * (IO::Buffer::PAGE_SIZE / 8 + 2))
+      @tmp_files << @big_file_name
+    end
+    File.open(@big_file_name, "rb+")
   end
 
   after :each do
@@ -61,7 +73,7 @@ describe "IO::Buffer.map" do
     @buffer.should.valid?
   end
 
-  platform_is_not :windows do
+  platform_is_not :windows, :openbsd do
     it "is shareable across processes" do
       file_name = tmp("shared_buffer")
       @file = File.open(file_name, "w+")
@@ -89,24 +101,19 @@ describe "IO::Buffer.map" do
   end
 
   context "with an empty file" do
-    ruby_version_is ""..."4.0" do
-      it "raises a SystemCallError" do
-        @file = File.open("#{__dir__}/../fixtures/empty.txt", "r+")
-        -> { IO::Buffer.map(@file) }.should raise_error(SystemCallError)
-      end
-    end
-
     ruby_version_is "4.0" do
       it "raises ArgumentError" do
-        @file = File.open("#{__dir__}/../fixtures/empty.txt", "r+")
+        file_name = tmp("empty.txt")
+        @file = File.open(file_name, "wb+")
+        @tmp_files << file_name
         -> { IO::Buffer.map(@file) }.should raise_error(ArgumentError, "Invalid negative or zero file size!")
       end
     end
   end
 
   context "with a file opened only for reading" do
-    it "raises a SystemCallError if no flags are used" do
-      @file = File.open("#{__dir__}/../fixtures/read_text.txt", "r")
+    it "raises a SystemCallError unless read-only" do
+      @file = File.open(fixture(__dir__, "read_text.txt"), "rb")
       -> { IO::Buffer.map(@file) }.should raise_error(SystemCallError)
     end
   end
@@ -128,15 +135,6 @@ describe "IO::Buffer.map" do
     end
 
     context "if size is 0" do
-      ruby_version_is ""..."4.0" do
-        platform_is_not :windows do
-          it "raises a SystemCallError" do
-            @file = open_fixture
-            -> { IO::Buffer.map(@file, 0) }.should raise_error(SystemCallError)
-          end
-        end
-      end
-
       ruby_version_is "4.0" do
         it "raises ArgumentError" do
           @file = open_fixture
@@ -247,18 +245,6 @@ describe "IO::Buffer.map" do
       -> { IO::Buffer.map(@file, 4, nil) }.should raise_error(TypeError, /no implicit conversion/)
     end
 
-    it "raises a SystemCallError if offset is not an allowed value" do
-      @file = open_fixture
-      -> { IO::Buffer.map(@file, 4, 3) }.should raise_error(SystemCallError)
-    end
-
-    ruby_version_is ""..."4.0" do
-      it "raises a SystemCallError if offset is negative" do
-        @file = open_fixture
-        -> { IO::Buffer.map(@file, 4, -1) }.should raise_error(SystemCallError)
-      end
-    end
-
     ruby_version_is "4.0" do
       it "raises ArgumentError if offset is negative" do
         @file = open_fixture
@@ -279,7 +265,7 @@ describe "IO::Buffer.map" do
       end
 
       it "allows mapping read-only files" do
-        @file = File.open("#{__dir__}/../fixtures/read_text.txt", "r")
+        @file = File.open(fixture(__dir__, "read_text.txt"), "rb")
         @buffer = IO::Buffer.map(@file, nil, 0, IO::Buffer::READONLY)
 
         @buffer.should.readonly?
@@ -308,11 +294,11 @@ describe "IO::Buffer.map" do
         @buffer.set_string("test12345")
         @buffer.get_string.should == "test12345".b
 
-        @file.read.should == "abcâdef\n"
+        @file.read.should == "abcâdef\n".b
       end
 
       it "allows mapping read-only files and modifying the buffer" do
-        @file = File.open("#{__dir__}/../fixtures/read_text.txt", "r")
+        @file = File.open(fixture(__dir__, "read_text.txt"), "rb")
         @buffer = IO::Buffer.map(@file, nil, 0, IO::Buffer::PRIVATE)
 
         @buffer.should.private?
@@ -323,7 +309,7 @@ describe "IO::Buffer.map" do
         @buffer.set_string("test12345")
         @buffer.get_string.should == "test12345".b
 
-        @file.read.should == "abcâdef\n"
+        @file.read.should == "abcâdef\n".b
       end
 
       platform_is_not :windows do

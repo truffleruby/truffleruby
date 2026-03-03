@@ -418,6 +418,7 @@ VALUE string_spec_RSTRING_PTR_read(VALUE self, VALUE str, VALUE path) {
   if (read(fd, buffer, 30) < 0) {
     rb_syserr_fail(errno, "read");
   }
+  rb_str_set_len(str, 30);
 
   rb_str_modify_expand(str, 53);
   rb_ary_push(capacities, SIZET2NUM(rb_str_capacity(str)));

@@ -948,7 +948,7 @@ describe "Module#autoload" do
 
             begin
               Object.const_get(mod_name).foo
-            rescue NameError, NoMethodError
+            rescue NameError, NoMethodError # rubocop:disable Lint/ShadowedException
               barrier.disable!
               break false
             end
