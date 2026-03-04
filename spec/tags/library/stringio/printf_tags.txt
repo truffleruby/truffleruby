@@ -6,3 +6,6 @@ fails:StringIO#printf formatting other formats c displays no characters if argum
 fails:StringIO#printf formatting integer formats d converts to the empty string if precision is 0 and value is 0
 fails:StringIO#printf formatting integer formats i converts to the empty string if precision is 0 and value is 0
 fails:StringIO#printf formatting integer formats u converts to the empty string if precision is 0 and value is 0
+fails:StringIO#printf formatting other formats c raises TypeError if argument is nil
+fails:StringIO#printf formatting other formats c raises TypeError if converting to String with to_str returns non-String
+fails:StringIO#printf formatting other formats c raises TypeError if converting to Integer with to_int returns non-Integer

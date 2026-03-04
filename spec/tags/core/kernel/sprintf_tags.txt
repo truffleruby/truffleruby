@@ -18,3 +18,9 @@ fails:Kernel#sprintf integer formats u converts to the empty string if precision
 fails:Kernel.sprintf integer formats d converts to the empty string if precision is 0 and value is 0
 fails:Kernel.sprintf integer formats i converts to the empty string if precision is 0 and value is 0
 fails:Kernel.sprintf integer formats u converts to the empty string if precision is 0 and value is 0
+fails:Kernel#sprintf other formats c raises TypeError if argument is nil
+fails:Kernel#sprintf other formats c raises TypeError if converting to String with to_str returns non-String
+fails:Kernel#sprintf other formats c raises TypeError if converting to Integer with to_int returns non-Integer
+fails:Kernel.sprintf other formats c raises TypeError if argument is nil
+fails:Kernel.sprintf other formats c raises TypeError if converting to String with to_str returns non-String
+fails:Kernel.sprintf other formats c raises TypeError if converting to Integer with to_int returns non-Integer

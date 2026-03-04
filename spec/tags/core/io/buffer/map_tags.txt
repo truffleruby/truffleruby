@@ -30,3 +30,4 @@ fails:IO::Buffer.map with flags argument when READONLY flag is specified causes 
 fails:IO::Buffer.map with flags argument when PRIVATE is specified sets private flag on the buffer, making it freely modifiable
 fails:IO::Buffer.map with flags argument when PRIVATE is specified allows mapping read-only files and modifying the buffer
 fails:IO::Buffer.map with flags argument when PRIVATE is specified is not shared across processes
+fails:IO::Buffer.map with a file opened only for reading raises a SystemCallError unless read-only

@@ -1,0 +1,2 @@
+fails:IO.select raises an ArgumentError when passed a negative timeout
+fails:IO.select raises an RangeError when passed NaN as timeout

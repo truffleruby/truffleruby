@@ -1,0 +1,4 @@
+fails:IO::Buffer#~ inverts every bit of the buffer
+fails:IO::Buffer#~ creates a new internal buffer of the same size
+fails:IO::Buffer#not! inverts every bit of the buffer
+fails:IO::Buffer#not! modifies the buffer in place

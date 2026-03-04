@@ -1,1 +1,2 @@
 fails(immutable regexp):Regexp.compile works by default for subclasses with overridden #initialize
+fails:Regexp.compile given a non-String/Regexp raises TypeError if #to_str returns non-String value

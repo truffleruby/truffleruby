@@ -1,0 +1,2 @@
+fails:Module#define_method raises TypeError when #to_str called on non-String name returns non-String value
+fails:Kernel.printf formatting io is not specified other formats c raises TypeError if converting to Integer with to_int returns non-Integer

@@ -1,0 +1,1 @@
+fails:IO#lineno= raises TypeError if cannot convert argument to Integer implicitly
