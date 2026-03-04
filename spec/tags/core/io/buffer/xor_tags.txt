@@ -1,0 +1,8 @@
+fails:IO::Buffer#^ applies the argument buffer as an XOR bit mask across the whole buffer
+fails:IO::Buffer#^ ignores extra parts of mask if it is longer than source buffer
+fails:IO::Buffer#^ raises TypeError if mask is not an IO::Buffer
+fails:IO::Buffer#^ creates a new internal buffer of the same size
+fails:IO::Buffer#xor! applies the argument buffer as an XOR bit mask across the whole buffer
+fails:IO::Buffer#xor! ignores extra parts of mask if it is longer than source buffer
+fails:IO::Buffer#xor! raises TypeError if mask is not an IO::Buffer
+fails:IO::Buffer#xor! modifies the buffer in place

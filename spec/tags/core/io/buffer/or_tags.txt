@@ -1,0 +1,8 @@
+fails:IO::Buffer#| applies the argument buffer as an OR bit mask across the whole buffer
+fails:IO::Buffer#| ignores extra parts of mask if it is longer than source buffer
+fails:IO::Buffer#| raises TypeError if mask is not an IO::Buffer
+fails:IO::Buffer#| creates a new internal buffer of the same size
+fails:IO::Buffer#or! applies the argument buffer as an OR bit mask across the whole buffer
+fails:IO::Buffer#or! ignores extra parts of mask if it is longer than source buffer
+fails:IO::Buffer#or! raises TypeError if mask is not an IO::Buffer
+fails:IO::Buffer#or! modifies the buffer in place

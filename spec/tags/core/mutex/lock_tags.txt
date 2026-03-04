@@ -1,0 +1,3 @@
+keep(hangs):Mutex#lock raises a deadlock ThreadError when multiple fibers from the same thread try to lock
+keep(spurious internal error):Mutex#lock does not raise deadlock if a fiber's attempt to lock was interrupted
+

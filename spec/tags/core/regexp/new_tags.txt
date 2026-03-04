@@ -1,1 +1,2 @@
 fails(immutable regexp):Regexp.new works by default for subclasses with overridden #initialize
+fails:Regexp.new given a non-String/Regexp raises TypeError if #to_str returns non-String value

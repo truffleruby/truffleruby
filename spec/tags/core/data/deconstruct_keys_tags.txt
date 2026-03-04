@@ -1,0 +1,1 @@
+fails:Data#deconstruct_keys raises a TypeError if the conversion with #to_int does not return an Integer
