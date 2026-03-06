@@ -91,6 +91,9 @@ Restricting it to a single core for benchmarking does not make sense, it would c
 
 ### Avoid Benchmarking on macOS
 
+A significant performance difference for the Native configuration is that the better G1 GC is only available on Linux, on macOS the slower SerialGC is used.
+This does not impact the JVM configuration though.
+
 macOS's memory management is subpar and can cause unnecessary memory swapping even when there is enough memory (e.g. it sometimes keeps terminated processes in memory needlessly).
 
 macOS's TCP stack is also subpar, see the [Passenger docs](https://www.phusionpassenger.com/library/config/apache/optimization/#operating-system-recommendations) on this subject.
