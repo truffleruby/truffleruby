@@ -151,6 +151,11 @@ Follow [the documentation to updating Ruby Installers](updating-ruby-installers.
 * Post about the release on Bluesky and Mastodon.
 * Consider creating a discussion on Reddit and Lobsters about the release.
 
+## CI
+
+For major releases, look at the latest [truffleruby-gem-tracker workflow run](https://github.com/truffleruby/truffleruby-gem-tracker/actions) of `Check CIs for TruffleRuby head`
+and consider making PRs to these gems to test on `truffleruby` instead of `truffleruby-head` for improved CI stability.
+
 ---
 
 ## Backporting changes from master
