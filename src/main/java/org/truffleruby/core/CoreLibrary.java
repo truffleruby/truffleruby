@@ -522,8 +522,6 @@ public final class CoreLibrary {
         truffleFeatureLoaderModule = defineModule(truffleModule, "FeatureLoader");
         defineModule(truffleModule, "Binding");
         defineModule(truffleModule, "POSIX");
-        defineModule(truffleModule, "Readline");
-        defineModule(truffleModule, "ReadlineHistory");
         handleClass = defineClass(truffleModule, objectClass, "Handle");
         warningModule = defineModule("Warning");
 

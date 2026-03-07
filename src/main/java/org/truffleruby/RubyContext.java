@@ -15,7 +15,6 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Objects;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -84,7 +83,6 @@ import org.truffleruby.shared.Metrics;
 import org.truffleruby.shared.TruffleRuby;
 import org.truffleruby.shared.options.OptionsCatalog;
 import org.truffleruby.shared.options.RubyOptionTypes;
-import org.truffleruby.stdlib.readline.ConsoleHolder;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -138,7 +136,6 @@ public final class RubyContext {
     private final ThreadManager threadManager;
     public final FiberManager fiberManager;
     private final LexicalScope rootLexicalScope;
-    private volatile ConsoleHolder consoleHolder;
 
     public final ContextArray<GlobalVariableStorage> globalVariablesArray;
 
@@ -496,10 +493,6 @@ public final class RubyContext {
             return;
         }
 
-        if (consoleHolder != null) {
-            consoleHolder.close();
-        }
-
         threadManager.dispose();
         threadManager.checkNoRunningThreads();
 
@@ -661,27 +654,6 @@ public final class RubyContext {
 
     public TruffleLogger getLogger() {
         return logger;
-    }
-
-    @TruffleBoundary
-    public ConsoleHolder getConsoleHolder() {
-        if (consoleHolder == null) {
-            synchronized (this) {
-                if (consoleHolder == null) {
-                    consoleHolder = ConsoleHolder.create(this, language);
-                }
-            }
-        }
-
-        return consoleHolder;
-    }
-
-    public void setConsoleHolder(ConsoleHolder consoleHolder) {
-        synchronized (this) {
-            final ConsoleHolder previous = Objects.requireNonNull(this.consoleHolder);
-            previous.close();
-            this.consoleHolder = consoleHolder;
-        }
     }
 
     public boolean isInitialized() {

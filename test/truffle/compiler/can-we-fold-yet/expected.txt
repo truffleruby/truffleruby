@@ -9,4 +9,4 @@ Yes! Truffle can constant fold this to 2
 Yes! Truffle can constant fold this to 2
 > rand
 No :( Truffle can't constant fold that
-> exit
+> 

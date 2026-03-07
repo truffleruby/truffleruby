@@ -33,6 +33,7 @@ describe "RubyGems" do
       'bundler', # explicitly requires RubyGems
       'dbm', 'gdbm', # not available
       'debug', # not available
+      'readline', # tries to load readline.$DLEXT from the readline-ext gem, so needs RubyGems
     ]
     default_gems[default_gems.index('english')] = 'English'
 
