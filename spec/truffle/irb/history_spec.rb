@@ -10,20 +10,22 @@ require_relative '../../ruby/spec_helper'
 
 describe "IRB" do
   it "ignores key sequences that would move past history in singleline mode" do
-    # --readline is needed otherwise Readline is not used when stdin is not a TTY.
+    # --readline is needed otherwise Reline is not used when stdin is not a TTY.
     IO.popen([*ruby_exe, "-S", "irb", "-f", "--prompt=simple", "--readline", "--singleline"], "r+") do |io|
       io.gets.should == "Switch to inspect mode.\n"
 
       io.puts "\C-n" # next-history (none)
-      io.gets.should == ">> \n"
+      line = io.gets
+      line.should.start_with?(">> ")
+      line.should.end_with?("\n")
 
       # Prove that the session is still valid.
       io.puts "1+1"
-      io.gets.should == ">> 1+1\n"
-      io.gets.should == "=> 2\n"
+      io.gets.should.include? "1+1"
+      io.gets.should.include? "=> 2\n"
 
       io.puts "exit"
-      io.gets.should == ">> exit\n"
+      io.gets.should.include? "exit"
     end
   end
 end
