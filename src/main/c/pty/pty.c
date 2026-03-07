@@ -55,8 +55,10 @@
 #endif
 
 #include "internal.h"
+#ifndef TRUFFLERUBY
 #include "internal/process.h"
 #include "internal/signal.h"
+#endif
 #include "ruby/io.h"
 #include "ruby/util.h"
 
