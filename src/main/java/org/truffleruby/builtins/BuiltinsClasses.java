@@ -169,10 +169,6 @@ import org.truffleruby.stdlib.ObjSpaceNodesBuiltins;
 import org.truffleruby.stdlib.ObjSpaceNodesFactory;
 import org.truffleruby.stdlib.digest.DigestNodesBuiltins;
 import org.truffleruby.stdlib.digest.DigestNodesFactory;
-import org.truffleruby.stdlib.readline.ReadlineHistoryNodesBuiltins;
-import org.truffleruby.stdlib.readline.ReadlineHistoryNodesFactory;
-import org.truffleruby.stdlib.readline.ReadlineNodesBuiltins;
-import org.truffleruby.stdlib.readline.ReadlineNodesFactory;
 
 import com.oracle.truffle.api.dsl.NodeFactory;
 
@@ -227,8 +223,6 @@ public abstract class BuiltinsClasses {
         QueueNodesBuiltins.setup(coreManager);
         RandomizerNodesBuiltins.setup(coreManager);
         RangeNodesBuiltins.setup(coreManager);
-        ReadlineNodesBuiltins.setup(coreManager);
-        ReadlineHistoryNodesBuiltins.setup(coreManager);
         RefinementNodesBuiltins.setup(coreManager);
         RegexpNodesBuiltins.setup(coreManager);
         SecureRandomizerNodesBuiltins.setup(coreManager);
@@ -311,8 +305,6 @@ public abstract class BuiltinsClasses {
         QueueNodesBuiltins.setupPrimitives(primitiveManager);
         RandomizerNodesBuiltins.setupPrimitives(primitiveManager);
         RangeNodesBuiltins.setupPrimitives(primitiveManager);
-        ReadlineNodesBuiltins.setupPrimitives(primitiveManager);
-        ReadlineHistoryNodesBuiltins.setupPrimitives(primitiveManager);
         RefinementNodesBuiltins.setupPrimitives(primitiveManager);
         RegexpNodesBuiltins.setupPrimitives(primitiveManager);
         SecureRandomizerNodesBuiltins.setupPrimitives(primitiveManager);
@@ -396,8 +388,6 @@ public abstract class BuiltinsClasses {
                 QueueNodesFactory.getFactories(),
                 RandomizerNodesFactory.getFactories(),
                 RangeNodesFactory.getFactories(),
-                ReadlineNodesFactory.getFactories(),
-                ReadlineHistoryNodesFactory.getFactories(),
                 RefinementNodesFactory.getFactories(),
                 RegexpNodesFactory.getFactories(),
                 SecureRandomizerNodesFactory.getFactories(),
