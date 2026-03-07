@@ -15,7 +15,14 @@ require_relative '../pe/pe_harness'
 puts 'Can TruffleRuby constant fold yet?'
 
 loop do
-  code = Readline.readline('> ', true)
+  if STDIN.tty?
+    code = Readline.readline('> ', true)
+  else
+    # Workaround for https://github.com/ruby/reline/issues/886
+    print '> '
+    code = STDIN.gets
+    puts code
+  end
   break unless code # EOF
 
   test_thread = Thread.new do
