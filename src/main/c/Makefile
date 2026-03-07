@@ -41,7 +41,7 @@ SYSLOG_GEM_EXT := $(ROOT)/lib/gems/gems/syslog-$(SYSLOG_VERSION)/ext/syslog
 IF_EXTCONF_FAIL := ( echo "`pwd`/extconf.rb failed:" 1>&2 && cat mkmf.log && false )
 
 all: $(TRAMPOLINE) $(LIBTRUFFLERUBY) openssl/openssl.$(DLEXT) zlib/zlib.$(DLEXT) \
-			psych/psych.$(DLEXT) syslog/syslog_ext.$(DLEXT) nkf/nkf.$(DLEXT) \
+			psych/psych.$(DLEXT) pty/pty.$(DLEXT) syslog/syslog_ext.$(DLEXT) nkf/nkf.$(DLEXT) \
 			bigdecimal/bigdecimal.$(DLEXT) date/date_core.$(DLEXT) io-console/console.$(DLEXT) etc/etc.$(DLEXT) \
 			rbconfig-sizeof/sizeof.$(DLEXT) json/parser/parser.$(DLEXT) \
 			debug/debug.$(DLEXT) rbs/rbs_extension.$(DLEXT)
@@ -56,6 +56,7 @@ clean_cexts:
 	$(Q) rm -f openssl/Makefile openssl/*.o openssl/openssl.$(DLEXT) openssl/extconf.h
 	$(Q) rm -f zlib/Makefile zlib/*.o zlib/zlib.$(DLEXT)
 	$(Q) rm -f psych/Makefile psych/*.o psych/psych.$(DLEXT)
+	$(Q) rm -f pty/Makefile pty/*.o pty/pty.$(DLEXT)
 	$(Q) rm -f date/Makefile date/*.o date/date_core.$(DLEXT)
 	$(Q) rm -f io-console/Makefile io-console/*.o io-console/console.$(DLEXT)
 	$(Q) rm -f etc/Makefile etc/*.o etc/etc.$(DLEXT) etc/constdefs.h
@@ -144,6 +145,13 @@ psych/Makefile: psych/extconf.rb $(EXTCONF_DEPS)
 
 psych/psych.$(DLEXT): psych/Makefile psych/*.c psych/*.h
 	$(Q) cd psych && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
+
+# pty
+pty/Makefile: pty/extconf.rb $(EXTCONF_DEPS)
+	$(Q) cd pty && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
+
+pty/pty.$(DLEXT): pty/Makefile pty/*.c
+	$(Q) cd pty && $(MAKE) $(MKMF_MAKEFILE_SUBPROCESS_FLAGS)
 
 # Bundled gems: the approach is to copy files from the gem into src/main/c/$GEM first, and then proceed like for a default gem. The order is alphabetic.
 
