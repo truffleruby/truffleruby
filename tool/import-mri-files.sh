@@ -73,6 +73,7 @@ cp "$RUBY_SOURCE_DIR/ext/etc"/*.{c,rb} src/main/c/etc
 cp "$RUBY_SOURCE_DIR/ext/io/console"/*.{c,rb} src/main/c/io-console
 cp "$RUBY_SOURCE_DIR/ext/openssl"/*.{c,h,rb} src/main/c/openssl
 cp "$RUBY_SOURCE_DIR/ext/psych"/*.{c,h,rb} src/main/c/psych
+cp "$RUBY_SOURCE_DIR/ext/pty"/*.{c,rb} src/main/c/pty
 cp "$RUBY_SOURCE_DIR/ext/rbconfig/sizeof"/*.{c,rb} src/main/c/rbconfig-sizeof
 cp "$RUBY_SOURCE_DIR/ext/zlib"/*.{c,rb} src/main/c/zlib
 
