@@ -54,7 +54,7 @@ import java.lang.management.ManagementFactory;
 @CoreModule("Truffle::Graal")
 public abstract class TruffleGraalNodes {
 
-    @Primitive(name = "always_split")
+    @Primitive(name = "always_split", isPublic = true)
     public abstract static class AlwaysSplitNode extends PrimitiveArrayArgumentsNode {
         @TruffleBoundary
         @Specialization
