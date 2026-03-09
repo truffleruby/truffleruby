@@ -393,7 +393,7 @@ class Dir
     def mkdir(path, mode = 0777)
       path = Truffle::Type.coerce_to_path(path)
       if mode
-        mode = Primitive.rb_to_int(mode)
+        mode = Primitive.convert_to_integer(mode)
       end
       ret = Truffle::POSIX.mkdir(path, mode)
       Errno.handle path if ret != 0

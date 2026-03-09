@@ -194,7 +194,7 @@ class Float < Numeric
   end
 
   def round(ndigits = 0, half: :up)
-    ndigits = Primitive.rb_to_int(ndigits)
+    ndigits = Primitive.convert_to_integer(ndigits)
 
     if self == 0.0
       return ndigits > 0 ? self : 0

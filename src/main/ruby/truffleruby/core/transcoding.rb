@@ -190,13 +190,13 @@ class Encoding
       if Primitive.nil? offset
         offset = target.bytesize
       else
-        offset = Primitive.rb_to_int offset
+        offset = Primitive.convert_to_integer offset
       end
 
       if Primitive.nil? size
         size = -1
       else
-        size = Primitive.rb_to_int size
+        size = Primitive.convert_to_integer size
 
         if size < 0
           raise ArgumentError, 'byte size is negative'

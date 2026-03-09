@@ -59,7 +59,7 @@ class Integer < Numeric
     if Primitive.is_a?(index, Range)
       Truffle::IntegerOperations.bits_reference_range(self, index)
     else
-      index = Primitive.rb_to_int(index)
+      index = Primitive.convert_to_integer(index)
       if Primitive.undefined?(len)
         index < 0 ? 0 : (self >> index) & 1
       else
@@ -69,12 +69,12 @@ class Integer < Numeric
   end
 
   def allbits?(mask)
-    mask = Primitive.rb_to_int(mask)
+    mask = Primitive.convert_to_integer(mask)
     (self & mask) == mask
   end
 
   def anybits?(mask)
-    mask = Primitive.rb_to_int(mask)
+    mask = Primitive.convert_to_integer(mask)
     (self & mask) != 0
   end
 
@@ -130,7 +130,7 @@ class Integer < Numeric
   end
 
   def nobits?(mask)
-    mask = Primitive.rb_to_int(mask)
+    mask = Primitive.convert_to_integer(mask)
     (self & mask) == 0
   end
 
@@ -327,7 +327,7 @@ class Integer < Numeric
 
   def digits(base = 10)
     raise Math::DomainError, 'out of domain' if negative?
-    base = Primitive.rb_to_int(base)
+    base = Primitive.convert_to_integer(base)
     raise ArgumentError, 'negative radix' if base < 0
     raise ArgumentError, "invalid radix #{base}" if base < 2
     return [0] if self == 0
@@ -350,7 +350,7 @@ class Integer < Numeric
   end
 
   def self.sqrt(n)
-    n = Primitive.rb_to_int(n)
+    n = Primitive.convert_to_integer(n)
     raise Math::DomainError if n.negative?
     return Math.sqrt(n).floor if n < 0xfffffffffffff
 

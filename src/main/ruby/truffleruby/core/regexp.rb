@@ -87,7 +87,7 @@ class Regexp
         when Symbol, String
           # no conversion needed
         else
-          index = Primitive.rb_to_int index
+          index = Primitive.convert_to_integer index
         end
         match[index]
       else

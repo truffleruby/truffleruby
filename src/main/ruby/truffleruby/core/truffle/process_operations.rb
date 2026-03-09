@@ -73,7 +73,7 @@ module Truffle
         # do nothing
       else
         unless r = Truffle::Type.rb_check_convert_type(resource, String, :to_str)
-          return Primitive.rb_to_int resource
+          return Primitive.convert_to_integer resource
         end
 
         resource = r
@@ -139,7 +139,7 @@ module Truffle
     end
 
     def self.wait(input_pid, flags, set_status, raise_on_error)
-      input_pid = Primitive.rb_to_int input_pid
+      input_pid = Primitive.convert_to_integer input_pid
       flags ||= 0
 
       FFI::MemoryPointer.new(:int, 4) do |ptr|
@@ -289,7 +289,7 @@ module Truffle
             if Primitive.true?(value)
               value = 0
             elsif value
-              value = Primitive.rb_to_int value
+              value = Primitive.convert_to_integer value
               raise ArgumentError, "negative process group ID : #{value}" if value < 0
             else
               value = -1
@@ -408,7 +408,7 @@ module Truffle
         when nil
           OFLAGS['r']
         else
-          Primitive.rb_to_int obj
+          Primitive.convert_to_integer obj
         end
       end
 

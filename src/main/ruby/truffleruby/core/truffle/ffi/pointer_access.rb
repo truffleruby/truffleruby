@@ -47,7 +47,7 @@ class Truffle::FFI::Pointer
 
   def write_char(value)
     check_bounds(0, 1)
-    Primitive.pointer_write_char address, Primitive.rb_to_int(value)
+    Primitive.pointer_write_char address, Primitive.convert_to_integer(value)
     self
   end
   alias_method :write_int8, :write_char
@@ -60,7 +60,7 @@ class Truffle::FFI::Pointer
 
   def put_char(offset, value)
     check_bounds(offset, 1)
-    Primitive.pointer_write_char address + offset, Primitive.rb_to_int(value)
+    Primitive.pointer_write_char address + offset, Primitive.convert_to_integer(value)
     self
   end
   alias_method :put_int8, :put_char
@@ -77,7 +77,7 @@ class Truffle::FFI::Pointer
     Truffle::Type.rb_check_type(ary, ::Array)
     check_bounds(0, ary.size * 1)
     ary.each_with_index do |value, i|
-      Primitive.pointer_write_char address + (i * 1), Primitive.rb_to_int(value)
+      Primitive.pointer_write_char address + (i * 1), Primitive.convert_to_integer(value)
     end
     self
   end
@@ -104,7 +104,7 @@ class Truffle::FFI::Pointer
 
   def write_uchar(value)
     check_bounds(0, 1)
-    Primitive.pointer_write_uchar address, Primitive.rb_to_int(value)
+    Primitive.pointer_write_uchar address, Primitive.convert_to_integer(value)
     self
   end
   alias_method :write_uint8, :write_uchar
@@ -117,7 +117,7 @@ class Truffle::FFI::Pointer
 
   def put_uchar(offset, value)
     check_bounds(offset, 1)
-    Primitive.pointer_write_uchar address + offset, Primitive.rb_to_int(value)
+    Primitive.pointer_write_uchar address + offset, Primitive.convert_to_integer(value)
     self
   end
   alias_method :put_uint8, :put_uchar
@@ -134,7 +134,7 @@ class Truffle::FFI::Pointer
     Truffle::Type.rb_check_type(ary, ::Array)
     check_bounds(0, ary.size * 1)
     ary.each_with_index do |value, i|
-      Primitive.pointer_write_uchar address + (i * 1), Primitive.rb_to_int(value)
+      Primitive.pointer_write_uchar address + (i * 1), Primitive.convert_to_integer(value)
     end
     self
   end
@@ -161,7 +161,7 @@ class Truffle::FFI::Pointer
 
   def write_short(value)
     check_bounds(0, 2)
-    Primitive.pointer_write_short address, Primitive.rb_to_int(value)
+    Primitive.pointer_write_short address, Primitive.convert_to_integer(value)
     self
   end
   alias_method :write_int16, :write_short
@@ -174,7 +174,7 @@ class Truffle::FFI::Pointer
 
   def put_short(offset, value)
     check_bounds(offset, 2)
-    Primitive.pointer_write_short address + offset, Primitive.rb_to_int(value)
+    Primitive.pointer_write_short address + offset, Primitive.convert_to_integer(value)
     self
   end
   alias_method :put_int16, :put_short
@@ -191,7 +191,7 @@ class Truffle::FFI::Pointer
     Truffle::Type.rb_check_type(ary, ::Array)
     check_bounds(0, ary.size * 2)
     ary.each_with_index do |value, i|
-      Primitive.pointer_write_short address + (i * 2), Primitive.rb_to_int(value)
+      Primitive.pointer_write_short address + (i * 2), Primitive.convert_to_integer(value)
     end
     self
   end
@@ -218,7 +218,7 @@ class Truffle::FFI::Pointer
 
   def write_ushort(value)
     check_bounds(0, 2)
-    Primitive.pointer_write_ushort address, Primitive.rb_to_int(value)
+    Primitive.pointer_write_ushort address, Primitive.convert_to_integer(value)
     self
   end
   alias_method :write_uint16, :write_ushort
@@ -231,7 +231,7 @@ class Truffle::FFI::Pointer
 
   def put_ushort(offset, value)
     check_bounds(offset, 2)
-    Primitive.pointer_write_ushort address + offset, Primitive.rb_to_int(value)
+    Primitive.pointer_write_ushort address + offset, Primitive.convert_to_integer(value)
     self
   end
   alias_method :put_uint16, :put_ushort
@@ -248,7 +248,7 @@ class Truffle::FFI::Pointer
     Truffle::Type.rb_check_type(ary, ::Array)
     check_bounds(0, ary.size * 2)
     ary.each_with_index do |value, i|
-      Primitive.pointer_write_ushort address + (i * 2), Primitive.rb_to_int(value)
+      Primitive.pointer_write_ushort address + (i * 2), Primitive.convert_to_integer(value)
     end
     self
   end
@@ -275,7 +275,7 @@ class Truffle::FFI::Pointer
 
   def write_int(value)
     check_bounds(0, 4)
-    Primitive.pointer_write_int address, Primitive.rb_to_int(value)
+    Primitive.pointer_write_int address, Primitive.convert_to_integer(value)
     self
   end
   alias_method :write_int32, :write_int
@@ -288,7 +288,7 @@ class Truffle::FFI::Pointer
 
   def put_int(offset, value)
     check_bounds(offset, 4)
-    Primitive.pointer_write_int address + offset, Primitive.rb_to_int(value)
+    Primitive.pointer_write_int address + offset, Primitive.convert_to_integer(value)
     self
   end
   alias_method :put_int32, :put_int
@@ -305,7 +305,7 @@ class Truffle::FFI::Pointer
     Truffle::Type.rb_check_type(ary, ::Array)
     check_bounds(0, ary.size * 4)
     ary.each_with_index do |value, i|
-      Primitive.pointer_write_int address + (i * 4), Primitive.rb_to_int(value)
+      Primitive.pointer_write_int address + (i * 4), Primitive.convert_to_integer(value)
     end
     self
   end
@@ -332,7 +332,7 @@ class Truffle::FFI::Pointer
 
   def write_uint(value)
     check_bounds(0, 4)
-    Primitive.pointer_write_uint address, Primitive.rb_to_int(value)
+    Primitive.pointer_write_uint address, Primitive.convert_to_integer(value)
     self
   end
   alias_method :write_uint32, :write_uint
@@ -345,7 +345,7 @@ class Truffle::FFI::Pointer
 
   def put_uint(offset, value)
     check_bounds(offset, 4)
-    Primitive.pointer_write_uint address + offset, Primitive.rb_to_int(value)
+    Primitive.pointer_write_uint address + offset, Primitive.convert_to_integer(value)
     self
   end
   alias_method :put_uint32, :put_uint
@@ -362,7 +362,7 @@ class Truffle::FFI::Pointer
     Truffle::Type.rb_check_type(ary, ::Array)
     check_bounds(0, ary.size * 4)
     ary.each_with_index do |value, i|
-      Primitive.pointer_write_uint address + (i * 4), Primitive.rb_to_int(value)
+      Primitive.pointer_write_uint address + (i * 4), Primitive.convert_to_integer(value)
     end
     self
   end
@@ -390,7 +390,7 @@ class Truffle::FFI::Pointer
 
   def write_long(value)
     check_bounds(0, 8)
-    Primitive.pointer_write_long address, Primitive.rb_to_int(value)
+    Primitive.pointer_write_long address, Primitive.convert_to_integer(value)
     self
   end
   alias_method :write_int64, :write_long
@@ -405,7 +405,7 @@ class Truffle::FFI::Pointer
 
   def put_long(offset, value)
     check_bounds(offset, 8)
-    Primitive.pointer_write_long address + offset, Primitive.rb_to_int(value)
+    Primitive.pointer_write_long address + offset, Primitive.convert_to_integer(value)
     self
   end
   alias_method :put_int64, :put_long
@@ -424,7 +424,7 @@ class Truffle::FFI::Pointer
     Truffle::Type.rb_check_type(ary, ::Array)
     check_bounds(0, ary.size * 8)
     ary.each_with_index do |value, i|
-      Primitive.pointer_write_long address + (i * 8), Primitive.rb_to_int(value)
+      Primitive.pointer_write_long address + (i * 8), Primitive.convert_to_integer(value)
     end
     self
   end
@@ -455,7 +455,7 @@ class Truffle::FFI::Pointer
 
   def write_ulong(value)
     check_bounds(0, 8)
-    Primitive.pointer_write_ulong address, Primitive.rb_to_int(value)
+    Primitive.pointer_write_ulong address, Primitive.convert_to_integer(value)
     self
   end
   alias_method :write_uint64, :write_ulong
@@ -470,7 +470,7 @@ class Truffle::FFI::Pointer
 
   def put_ulong(offset, value)
     check_bounds(offset, 8)
-    Primitive.pointer_write_ulong address + offset, Primitive.rb_to_int(value)
+    Primitive.pointer_write_ulong address + offset, Primitive.convert_to_integer(value)
     self
   end
   alias_method :put_uint64, :put_ulong
@@ -489,7 +489,7 @@ class Truffle::FFI::Pointer
     Truffle::Type.rb_check_type(ary, ::Array)
     check_bounds(0, ary.size * 8)
     ary.each_with_index do |value, i|
-      Primitive.pointer_write_ulong address + (i * 8), Primitive.rb_to_int(value)
+      Primitive.pointer_write_ulong address + (i * 8), Primitive.convert_to_integer(value)
     end
     self
   end

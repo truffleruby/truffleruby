@@ -219,10 +219,10 @@ module Truffle
         if Primitive.nil? range.begin
           omit = 0
         else
-          omit = Primitive.rb_to_int(range.begin)
+          omit = Primitive.convert_to_integer(range.begin)
         end
         unless Primitive.nil? range.end
-          end_index = Primitive.rb_to_int(range.end)
+          end_index = Primitive.convert_to_integer(range.end)
           if end_index < 0
             length = end_index
           else

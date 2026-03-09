@@ -351,7 +351,7 @@ module Truffle
       end
 
       if count
-        count = Primitive.rb_to_int count
+        count = Primitive.convert_to_integer count
 
         if count < 0
           raise IndexError, 'count is negative'
@@ -409,7 +409,7 @@ module Truffle
 
     def self.assign_regexp(string, index, count, replacement)
       if count
-        count = Primitive.rb_to_int count
+        count = Primitive.convert_to_integer count
       else
         count = 0
       end

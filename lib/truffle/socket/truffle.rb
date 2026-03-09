@@ -141,7 +141,7 @@ module Truffle
     end
 
     def self.listen(source, backlog)
-      backlog = Primitive.rb_to_int(backlog)
+      backlog = Primitive.convert_to_integer(backlog)
       err     = Foreign.listen(source.fileno, backlog)
 
       Error.read_error('listen(2)', source) if err < 0

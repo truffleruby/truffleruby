@@ -115,7 +115,7 @@ class Array
     elsif str = Truffle::Type.rb_check_convert_type(count, String, :to_str)
       join(str)
     else
-      self * Primitive.rb_to_int(count)
+      self * Primitive.convert_to_integer(count)
     end
   end
 

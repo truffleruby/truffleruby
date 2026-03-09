@@ -244,7 +244,7 @@ module Truffle
         raise ArgumentError, 'timeout must be positive' if timeout < 0
 
         # Milliseconds, rounded down
-        timeout_ms = Primitive.rb_to_int((timeout * 1_000).to_i)
+        timeout_ms = Primitive.convert_to_integer((timeout * 1_000).to_i)
         while timeout_ms > 2147483647 # INT_MAX
           timeout_ms -= 2147483000
           ret = poll(io, event_mask, 2147483)
@@ -494,7 +494,7 @@ module Truffle
         mode ||= default_mode
 
         if flags = options[:flags]
-          flags = Primitive.rb_to_int(flags)
+          flags = Primitive.convert_to_integer(flags)
 
           if Primitive.nil?(mode)
             mode = flags

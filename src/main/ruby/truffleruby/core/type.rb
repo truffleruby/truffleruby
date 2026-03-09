@@ -74,7 +74,7 @@ module Truffle
 
     # MRI conversion macros and functions
 
-    # See Primitive.rb_num2int, Primitive.rb_num2long, Primitive.rb_to_int which are not defined as methods for efficiency
+    # See Primitive.rb_num2int, Primitive.rb_num2long, Primitive.convert_to_integer which are not defined as methods for efficiency
 
     def self.rb_num2uint(val)
       num = Primitive.rb_num2long(val)
@@ -95,7 +95,7 @@ module Truffle
         fval = val.to_int
         rb_num2ulong(fval)
       else
-        rb_num2ulong(Primitive.rb_to_int(val))
+        rb_num2ulong(Primitive.convert_to_integer(val))
       end
     end
 
@@ -438,7 +438,7 @@ module Truffle
       if Primitive.is_a? obj, Float
         raise TypeError, "can't convert Float into Integer for bitwise arithmetic"
       end
-      Primitive.rb_to_int obj
+      Primitive.convert_to_integer obj
     end
 
     # String helpers

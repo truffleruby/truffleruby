@@ -99,7 +99,7 @@ SIZEOF = {
 
 RUBY
     elsif integer_type
-      transform = -> value { "Primitive.rb_to_int(#{value})" }
+      transform = -> value { "Primitive.convert_to_integer(#{value})" }
     else
       transform = -> value { "Truffle::Type.rb_to_f(#{value})" }
     end

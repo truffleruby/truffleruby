@@ -1486,7 +1486,7 @@ module Marshal
       end
     end
 
-    depth = Primitive.rb_to_int limit
+    depth = Primitive.convert_to_integer limit
     ms = State.new nil, depth, nil, nil
 
     if an_io

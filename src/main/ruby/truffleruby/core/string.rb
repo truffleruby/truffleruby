@@ -97,9 +97,9 @@ class String
       start, len = Primitive.range_normalized_start_length(index_or_range, bytesize)
       len = Primitive.max(0, len)
     else
-      start = Primitive.rb_to_int(index_or_range)
+      start = Primitive.convert_to_integer(index_or_range)
       start += bytesize if start < 0
-      len = Primitive.rb_to_int(length)
+      len = Primitive.convert_to_integer(length)
     end
 
     str = Primitive.convert_to_str(str)
@@ -114,9 +114,9 @@ class String
         str_len = Primitive.max(0, str_len)
         str_arg_is_range = true
       else
-        str_start = Primitive.rb_to_int(str_index_or_range)
+        str_start = Primitive.convert_to_integer(str_index_or_range)
         str_start += str.bytesize if str_start < 0
-        str_len = Primitive.rb_to_int(str_length)
+        str_len = Primitive.convert_to_integer(str_length)
         str_arg_is_range = false
       end
 
@@ -383,7 +383,7 @@ class String
   end
 
   def to_i(base = 10)
-    base = Primitive.rb_to_int base
+    base = Primitive.convert_to_integer base
 
     if base < 0 || base == 1 || base > 36
       raise ArgumentError, "illegal radix #{base}"
@@ -1038,7 +1038,7 @@ class String
     when Regexp
       Truffle::StringOperations.assign_regexp(self, index, count, replacement)
     else
-      index = Primitive.rb_to_int index
+      index = Primitive.convert_to_integer index
 
       if count
         return self[index, count] = replacement
@@ -1056,7 +1056,7 @@ class String
 
     Primitive.encoding_ensure_compatible_str self, padding
 
-    width = Primitive.rb_to_int width
+    width = Primitive.convert_to_integer width
     pad = width - size
     return Primitive.dup_as_string_instance(self) if pad <= 0
 
@@ -1069,7 +1069,7 @@ class String
 
     enc = Primitive.encoding_ensure_compatible_str self, padding
 
-    width = Primitive.rb_to_int width
+    width = Primitive.convert_to_integer width
     pad = width - size
     return Primitive.dup_as_string_instance(self) if pad <= 0
 
@@ -1086,7 +1086,7 @@ class String
 
     enc = Primitive.encoding_ensure_compatible_str self, padding
 
-    width = Primitive.rb_to_int width
+    width = Primitive.convert_to_integer width
     pad = width - size
     return Primitive.dup_as_string_instance(self) if pad <= 0
 
@@ -1102,7 +1102,7 @@ class String
     if Primitive.undefined?(start)
       start = 0
     else
-      start = Primitive.rb_to_int start
+      start = Primitive.convert_to_integer start
 
       start += size if start < 0
       if start < 0 or start > size
@@ -1147,7 +1147,7 @@ class String
     if Primitive.undefined?(finish)
       finish = size
     else
-      finish = Primitive.rb_to_int(finish)
+      finish = Primitive.convert_to_integer(finish)
       finish += size if finish < 0
       return nil if finish < 0
       finish = size if finish >= size
@@ -1199,7 +1199,7 @@ class String
   def byteindex(str, start = 0)
     is_regex_pattern = Primitive.is_a?(str, Regexp)
 
-    start = Primitive.rb_to_int(start)
+    start = Primitive.convert_to_integer(start)
 
     start += bytesize if start < 0
     if start < 0 || start > bytesize
@@ -1231,7 +1231,7 @@ class String
   end
 
   def byterindex(str, finish = bytesize)
-    finish = Primitive.rb_to_int(finish)
+    finish = Primitive.convert_to_integer(finish)
     finish += bytesize if finish < 0
     return nil if finish < 0
 
@@ -1288,7 +1288,7 @@ class String
   def insert(index, other)
     other = Primitive.convert_to_str(other)
 
-    index = Primitive.rb_to_int index
+    index = Primitive.convert_to_integer index
     index = length + 1 + index if index < 0
 
     if index > length or index < 0 then

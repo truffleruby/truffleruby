@@ -471,7 +471,7 @@ module Kernel
         nil
       end
     else
-      max = Primitive.rb_to_int(limit)
+      max = Primitive.convert_to_integer(limit)
       if max == 0
         randomizer.random_float
       else
@@ -501,7 +501,7 @@ module Kernel
       seed = Primitive.thread_randomizer.generate_seed
     end
 
-    seed = Primitive.rb_to_int seed
+    seed = Primitive.convert_to_integer seed
     Primitive.thread_randomizer.swap_seed seed
   end
   module_function :srand
@@ -627,7 +627,7 @@ module Kernel
       prefix = if Primitive.nil?(uplevel)
                  ''
                else
-                 uplevel = Primitive.rb_to_int(uplevel)
+                 uplevel = Primitive.convert_to_integer(uplevel)
                  raise ArgumentError, "negative level (#{uplevel})" unless uplevel >= 0
 
                  uplevel += 1 # skip Kernel#warn itself

@@ -62,7 +62,7 @@ class Random
       seed = Primitive.thread_randomizer.generate_seed
     end
 
-    seed = Primitive.rb_to_int(seed)
+    seed = Primitive.convert_to_integer(seed)
     Primitive.thread_randomizer.swap_seed(seed)
   end
 
@@ -87,7 +87,7 @@ class Random
   def initialize(seed = undefined)
     @randomizer = Truffle::PRNGRandomizer.new
     unless Primitive.undefined?(seed)
-      @randomizer.swap_seed Primitive.rb_to_int(seed)
+      @randomizer.swap_seed Primitive.convert_to_integer(seed)
     end
   end
 

@@ -441,7 +441,9 @@ public abstract class TypeNodes {
         }
     }
 
-    @Primitive(name = "rb_to_int", isPublic = true)
+    // MRI: rb_to_int().
+    // Should be `convert_to_int` for consistency but that's too confusing with converting to a Java int.
+    @Primitive(name = "convert_to_integer", isPublic = true)
     public abstract static class RbToIntNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization

@@ -265,7 +265,7 @@ class Struct
   end
 
   private def check_index_var!(var)
-    var = Primitive.rb_to_int(var)
+    var = Primitive.convert_to_integer(var)
     a_len = _attrs.length
     if var >= a_len
       raise IndexError, "offset #{var} too large for struct(size:#{a_len})"

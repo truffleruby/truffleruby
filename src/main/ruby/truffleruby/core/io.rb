@@ -523,11 +523,11 @@ class IO
     offset = 0 if Primitive.nil? offset
     name = Truffle::Type.coerce_to_path name
 
-    offset = Primitive.rb_to_int(offset || 0)
+    offset = Primitive.convert_to_integer(offset || 0)
     raise Errno::EINVAL, 'offset must not be negative' if offset < 0
 
     unless Primitive.nil?(length)
-      length = Primitive.rb_to_int(length)
+      length = Primitive.convert_to_integer(length)
       raise ArgumentError, 'length must not be negative' if length < 0
     end
 
@@ -856,7 +856,7 @@ class IO
 
     mode, binary, external, internal, autoclose_tmp, _perm, path = Truffle::IOOperations.normalize_options(mode, nil, options)
 
-    fd = Primitive.rb_to_int(fd)
+    fd = Primitive.convert_to_integer(fd)
     sync = fd == 2 # stderr is always unbuffered, see setvbuf(3)
     IO.setup(self, fd, mode, sync)
 
@@ -1387,10 +1387,10 @@ class IO
     elsif Primitive.is_a?(arg, String)
       raise NotImplementedError, 'cannot handle String'
     else
-      arg = Primitive.rb_to_int arg
+      arg = Primitive.convert_to_integer arg
     end
 
-    command = Primitive.rb_to_int command
+    command = Primitive.convert_to_integer command
     Truffle::POSIX.fcntl Primitive.io_fd(self), command, arg
   end
 
@@ -1425,10 +1425,10 @@ class IO
       buffer.write_bytes(arg)
       real_arg = buffer.address
     else
-      real_arg = Primitive.rb_to_int(arg)
+      real_arg = Primitive.convert_to_integer(arg)
     end
 
-    command = Primitive.rb_to_int(command)
+    command = Primitive.convert_to_integer(command)
     ret = Truffle::POSIX.ioctl(Primitive.io_fd(self), command, real_arg)
     Errno.handle if ret < 0
 
@@ -1612,8 +1612,8 @@ class IO
   def pread(length, offset, buffer = nil)
     ensure_open_and_readable
 
-    length = Primitive.rb_to_int(length)
-    offset = Primitive.rb_to_int(offset)
+    length = Primitive.convert_to_integer(length)
+    offset = Primitive.convert_to_integer(offset)
 
     raise ArgumentError, 'negative string size (or size too big)' if length < 0
     raise Errno::EINVAL, 'offset must not be negative' if offset < 0
@@ -1657,7 +1657,7 @@ class IO
     if Primitive.is_a? obj, String
       write Primitive.string_substring(obj, 0, 1)
     else
-      byte = Primitive.rb_to_int(obj) & 0xff
+      byte = Primitive.convert_to_integer(obj) & 0xff
       write byte.chr
     end
 
@@ -1691,7 +1691,7 @@ class IO
 
   def pwrite(object, offset)
     string = Truffle::Type.rb_obj_as_string(object)
-    offset = Primitive.rb_to_int(offset)
+    offset = Primitive.convert_to_integer(offset)
 
     ensure_open_and_writable
 

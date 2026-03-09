@@ -189,7 +189,7 @@ class MatchData
       return array.last
     end
 
-    Primitive.rb_to_int(index)
+    Primitive.convert_to_integer(index)
   end
 end
 
