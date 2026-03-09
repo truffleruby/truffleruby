@@ -150,7 +150,7 @@ class Time
   end
 
   def strftime(format)
-    Primitive.time_strftime self, StringValue(format)
+    Primitive.time_strftime self, Primitive.convert_to_str(format)
   end
   Primitive.always_split self, :strftime
 

@@ -91,7 +91,7 @@ module Digest
   NO_MESSAGE = Object.new
 
   def Digest.hexencode(message)
-    StringValue(message).unpack('H*').first
+    Primitive.convert_to_str(message).unpack('H*').first
   end
 
   module Instance
@@ -148,7 +148,7 @@ module Digest
     end
 
     def digest_length
-      StringValue(digest).length
+      Primitive.convert_to_str(digest).length
     end
 
     def size
@@ -165,7 +165,7 @@ module Digest
         other_str = Truffle::Type.rb_check_convert_type(other, String, :to_str)
         return false if Primitive.nil?(other_str)
       end
-      StringValue(self_str) == StringValue(other_str)
+      Primitive.convert_to_str(self_str) == Primitive.convert_to_str(other_str)
     end
 
     def inspect
@@ -208,7 +208,7 @@ module Digest
     end
 
     def update(str)
-      str = StringValue(str)
+      str = Primitive.convert_to_str(str)
       Truffle::Digest.update(@digest, str)
 
       self

@@ -442,7 +442,7 @@ class IO
     when nil
       # do nothing
     else
-      separator = StringValue(separator)
+      separator = Primitive.convert_to_str(separator)
     end
 
     limit = nil if Primitive.undefined?(limit)
@@ -1252,7 +1252,7 @@ class IO
 
     if limit
       limit = Primitive.rb_num2long(limit)
-      sep = sep_or_limit ? StringValue(sep_or_limit) : nil
+      sep = sep_or_limit ? Primitive.convert_to_str(sep_or_limit) : nil
     else
       case sep_or_limit
       when String
@@ -1628,7 +1628,7 @@ class IO
     raise EOFError if Primitive.nil? str
 
     if buffer
-      buffer = StringValue(buffer)
+      buffer = Primitive.convert_to_str(buffer)
       buffer.replace str.force_encoding(buffer.encoding)
     else
       str
@@ -1684,7 +1684,7 @@ class IO
   end
 
   def printf(fmt, *args)
-    fmt = StringValue(fmt)
+    fmt = Primitive.convert_to_str(fmt)
     write sprintf(fmt, *args)
   end
   Primitive.always_split self, :printf
@@ -1700,7 +1700,7 @@ class IO
 
   def read(length = nil, buffer = nil)
     ensure_open_and_readable
-    buffer = StringValue(buffer) if buffer
+    buffer = Primitive.convert_to_str(buffer) if buffer
 
     unless length
       str = IO.read_encode self, read_all
@@ -1777,7 +1777,7 @@ class IO
     ensure_open_and_readable
     self.nonblock = true
 
-    buffer = StringValue buffer if buffer
+    buffer = Primitive.convert_to_str(buffer) if buffer
 
     return ''.b if size == 0
 
@@ -1897,7 +1897,7 @@ class IO
     ensure_open_and_readable
 
     if buffer
-      buffer = StringValue(buffer)
+      buffer = Primitive.convert_to_str(buffer)
 
       Truffle::StringOperations.shorten!(buffer, buffer.bytesize)
 
@@ -2068,11 +2068,11 @@ class IO
   def set_encoding(external, internal = nil, **options)
     if !Primitive.nil?(internal)
       unless Primitive.nil?(external) || Primitive.is_a?(external, Encoding)
-        external = Truffle::IOOperations.parse_external_enc(self, StringValue(external), @mode)
+        external = Truffle::IOOperations.parse_external_enc(self, Primitive.convert_to_str(external), @mode)
       end
 
       unless Primitive.is_a?(internal, Encoding)
-        internal = StringValue(internal)
+        internal = Primitive.convert_to_str(internal)
         if internal == '-' # Special case - "-" => no transcoding
           internal = nil
         else
@@ -2090,7 +2090,7 @@ class IO
         external, internal = Truffle::IOOperations.rb_io_ext_int_to_encs(@mode, nil, nil)
       else
         if !Primitive.is_a?(external, Encoding) and
-            external = StringValue(external) and external.encoding.ascii_compatible?
+            external = Primitive.convert_to_str(external) and external.encoding.ascii_compatible?
           external, internal = Truffle::IOOperations.parse_mode_enc(self, @mode, external)
         else
           external, internal = Truffle::IOOperations.rb_io_ext_int_to_encs(@mode, Encoding.find(external), nil)
@@ -2182,7 +2182,7 @@ class IO
     flush
     raise IOError unless @ibuffer.empty?
 
-    buffer = StringValue(buffer) if buffer
+    buffer = Primitive.convert_to_str(buffer) if buffer
 
     str, errno = Truffle::POSIX.read_string(self, number_of_bytes)
     Errno.handle_errno(errno) unless errno == 0
@@ -2248,7 +2248,7 @@ class IO
     when nil
       return
     else
-      str = StringValue(obj)
+      str = Primitive.convert_to_str(obj)
     end
 
     @ibuffer.put_back(str)
@@ -2266,7 +2266,7 @@ class IO
     when nil
       return
     else
-      str = StringValue(obj)
+      str = Primitive.convert_to_str(obj)
     end
 
     @ibuffer.put_back(str)

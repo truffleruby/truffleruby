@@ -296,12 +296,12 @@ class SystemCallError < StandardError
         else
           errno = nil
           message = args.first
-          message = StringValue(message) unless Primitive.nil?(message)
+          message = Primitive.convert_to_str(message) unless Primitive.nil?(message)
         end
         location = nil
       when 2
         message, errno = args
-        message = StringValue(message) unless Primitive.nil? message
+        message = Primitive.convert_to_str(message) unless Primitive.nil? message
         location = nil
       when 3
         message, errno, location = args
@@ -322,7 +322,7 @@ class SystemCallError < StandardError
         message = nil
         location = nil
       when 1
-        message = StringValue(args.first)
+        message = Primitive.convert_to_str(args.first)
         location = nil
       when 2
         message, location = args
@@ -353,8 +353,8 @@ class SystemCallError < StandardError
     Primitive.exception_set_errno self, errno
 
     msg = +'unknown error'
-    msg << " @ #{StringValue(location)}" if location
-    msg << " - #{StringValue(message)}" if message
+    msg << " @ #{Primitive.convert_to_str(location)}" if location
+    msg << " - #{Primitive.convert_to_str(message)}" if message
     super(msg)
   end
 end

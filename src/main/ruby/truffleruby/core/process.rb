@@ -311,7 +311,7 @@ module Process
 
   def self.abort(msg = nil)
     if msg
-      msg = StringValue(msg)
+      msg = Primitive.convert_to_str(msg)
       $stderr.puts(msg)
     end
     raise SystemExit.new(1, msg)
@@ -521,7 +521,7 @@ module Process
   end
 
   def initgroups(username, gid)
-    username = StringValue(username)
+    username = Primitive.convert_to_str(username)
     gid = Truffle::Type.coerce_to gid, Integer, :to_int
 
     if Truffle::POSIX.initgroups(username, gid) == -1
@@ -928,7 +928,7 @@ Truffle::KernelOperations.define_hooked_variable(
   :'$0',
   -> { Primitive.global_variable_get :'$0' },
   -> _, v {
-    v = StringValue(v)
+    v = Primitive.convert_to_str(v)
     Process.setproctitle(v)
     Primitive.global_variable_set :'$0', v
   })

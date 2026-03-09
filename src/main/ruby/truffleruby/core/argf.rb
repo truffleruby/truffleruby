@@ -380,7 +380,7 @@ module Truffle
       if Primitive.nil? output
         output = default_value
       else
-        output = StringValue(output)
+        output = Primitive.convert_to_str(output)
         output.clear
       end
 
@@ -420,7 +420,7 @@ module Truffle
       if Primitive.nil? output
         output = default_value
       else
-        output = StringValue(output)
+        output = Primitive.convert_to_str(output)
         output.clear
       end
 

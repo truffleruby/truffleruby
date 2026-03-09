@@ -198,7 +198,7 @@ class File < IO
 
     # special case. if ext is ".*", remove any extension
 
-    ext = StringValue(ext)
+    ext = Primitive.convert_to_str(ext)
 
     if ext == '.*'
       if pos = Primitive.find_string_reverse(path, '.', path.bytesize)
@@ -639,7 +639,7 @@ class File < IO
   #  File.fnmatch(pattern, 'a/.b/c/foo', File::FNM_PATHNAME | File::FNM_DOTMATCH) #=> true
 
   def self.fnmatch(pattern, path, flags = 0)
-    pattern = StringValue(pattern)
+    pattern = Primitive.convert_to_str(pattern)
     Truffle::Type.check_null_safe(pattern)
     path    = Truffle::Type.coerce_to_path(path)
     flags   = Primitive.rb_to_int(flags)
@@ -732,7 +732,7 @@ class File < IO
       raise ArgumentError, 'recursive array' if recursion
     else
       # We need to use dup here, since it's possible that
-      # StringValue gives us a direct object we shouldn't mutate
+      # coerce_to_path() gives us a direct object we shouldn't mutate
       first = Truffle::Type.coerce_to_path(first).dup
     end
     Truffle::Type.check_null_safe(first)

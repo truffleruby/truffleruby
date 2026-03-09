@@ -14,7 +14,7 @@ require 'digest'
 module Digest
 
   def self.bubblebabble(message)
-    Truffle::Digest.bubblebabble(StringValue(message))
+    Truffle::Digest.bubblebabble(Primitive.convert_to_str(message))
   end
 
   class Class

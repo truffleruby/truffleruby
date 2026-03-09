@@ -136,7 +136,7 @@ class Regexp
         if Primitive.is_a?(pat, Regexp)
           pat
         else
-          StringValue(pat)
+          Primitive.convert_to_str(pat)
         end
       end
 

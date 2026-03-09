@@ -159,7 +159,7 @@ class Encoding
     end
 
     def convert(str)
-      str = StringValue(str)
+      str = Primitive.convert_to_str(str)
 
       dest = +''
       status = primitive_convert str.dup, dest, nil, nil, @options | PARTIAL_INPUT
@@ -182,8 +182,8 @@ class Encoding
     end
 
     def primitive_convert(source, target, offset = nil, size = nil, options = 0)
-      source = source ? StringValue(source) : +''
-      target = StringValue(target)
+      source = source ? Primitive.convert_to_str(source) : +''
+      target = Primitive.convert_to_str(target)
 
       Primitive.check_mutable_string target
 

@@ -21,8 +21,8 @@ module Polyglot
     # (those languages can be listed with +Polyglot.languages+).
     # Automatically closes the context when given a block.
     def self.new(languages: [], language_options: {}, inherit_all_access: true, code_sharing: true, on_cancelled: DEFAULT_ON_CANCELLED)
-      languages = languages.map { |language| StringValue(language) }
-      language_options = language_options.flat_map { |k, v| [StringValue(k), StringValue(v)] }
+      languages = languages.map { |language| Primitive.convert_to_str(language) }
+      language_options = language_options.flat_map { |k, v| [Primitive.convert_to_str(k), Primitive.convert_to_str(v)] }
       code_sharing = code_sharing == :inherit ? nil : Primitive.as_boolean(code_sharing)
 
       inner_context = Primitive.inner_context_new(self, languages, language_options, inherit_all_access, code_sharing, on_cancelled)

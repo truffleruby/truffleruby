@@ -362,7 +362,7 @@ module Truffle
     def self.parse_mode(mode)
       return mode if Primitive.is_a? mode, Integer
 
-      mode = StringValue(mode)
+      mode = Primitive.convert_to_str(mode)
 
       ret = CLOEXEC
 
@@ -555,14 +555,14 @@ module Truffle
           if Primitive.is_a?(encoding, Encoding)
             external = encoding
           elsif !Primitive.nil?(encoding)
-            encoding = StringValue(encoding)
+            encoding = Primitive.convert_to_str(encoding)
             external, internal = encoding.split(':', 2)
           end
         end
 
         path = options[:path]
         unless Primitive.nil? path
-          path = StringValue(path)
+          path = Primitive.convert_to_str(path)
         end
       end
       external = Encoding::BINARY if binary and !external and !internal

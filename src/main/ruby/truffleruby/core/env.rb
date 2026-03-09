@@ -50,7 +50,7 @@ class << ENV
   alias_method :length, :size
 
   private def lookup(key)
-    value = Truffle::POSIX.getenv(StringValue(key))
+    value = Truffle::POSIX.getenv(Primitive.convert_to_str(key))
     if value
       value = set_encoding(value)
     end
@@ -62,12 +62,12 @@ class << ENV
   end
 
   def []=(key, value)
-    key = StringValue(key)
+    key = Primitive.convert_to_str(key)
     if Primitive.nil? value
       Truffle::POSIX.unsetenv(key)
       @variables.delete(key)
     else
-      if Truffle::POSIX.setenv(key, StringValue(value), 1) != 0
+      if Truffle::POSIX.setenv(key, Primitive.convert_to_str(value), 1) != 0
         Errno.handle('setenv')
       end
       unless @variables.include?(key)
@@ -83,7 +83,7 @@ class << ENV
   end
 
   def delete(key)
-    key = StringValue(key)
+    key = Primitive.convert_to_str(key)
     existing_value = lookup(key)
     if existing_value
       Truffle::POSIX.unsetenv(key)
@@ -223,7 +223,7 @@ class << ENV
   end
 
   def key(value)
-    value = StringValue(value);
+    value = Primitive.convert_to_str(value);
     each do |k, v|
       return k if v == value
     end
@@ -330,7 +330,7 @@ class << ENV
   alias_method :filter!, :select!
 
   def assoc(key)
-    key = StringValue(key)
+    key = Primitive.convert_to_str(key)
     value = lookup(key)
     value ? [key, value] : nil
   end

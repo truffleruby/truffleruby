@@ -54,7 +54,7 @@ class StringScanner
       @original = string
       @string = string
     else
-      @original = StringValue(string)
+      @original = Primitive.convert_to_str(string)
       @string = String.new @original
     end
 
@@ -112,7 +112,7 @@ class StringScanner
   end
 
   def concat(str)
-    @string << StringValue(str)
+    @string << Primitive.convert_to_str(str)
     self
   end
   alias_method :<<, :concat
@@ -330,7 +330,7 @@ class StringScanner
       @original = string
       @string = string
     else
-      @original = StringValue(string)
+      @original = Primitive.convert_to_str(string)
       @string = String.new @original
     end
   end

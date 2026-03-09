@@ -161,13 +161,8 @@ module Kernel
   end
   module_function :String
 
-  def StringValue(obj)
-    Primitive.convert_to_str(obj)
-  end
-  module_function :StringValue
-
   def `(str) #`
-    str = StringValue(str) unless Primitive.is_a?(str, String)
+    str = Primitive.convert_to_str(str) unless Primitive.is_a?(str, String)
 
     output = IO.popen(str) { |io| io.read }
 

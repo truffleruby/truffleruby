@@ -158,7 +158,7 @@ class StringIO
       if Primitive.is_a?(mode, Integer)
         mode_from_integer(mode)
       else
-        mode = StringValue(mode)
+        mode = Primitive.convert_to_str(mode)
         mode_from_string(mode)
       end
     else
@@ -479,7 +479,7 @@ class StringIO
         length = Truffle::Type.coerce_to length, Integer, :to_int
         raise ArgumentError if length < 0
 
-        buffer = StringValue(buffer) if buffer
+        buffer = Primitive.convert_to_str(buffer) if buffer
 
         if eof?
           buffer.clear if buffer
@@ -578,7 +578,7 @@ class StringIO
   def string=(string)
     d = @__data__
     TruffleRuby.synchronized(d) do
-      d.string = StringValue(string)
+      d.string = Primitive.convert_to_str(string)
       d.pos = 0
       d.lineno = 0
     end
@@ -652,7 +652,7 @@ class StringIO
     if Primitive.is_a?(bytes, Integer)
       bytes = ''.b << (bytes & 0xff)
     else
-      bytes = StringValue(bytes).b
+      bytes = Primitive.convert_to_str(bytes).b
       return if bytes.bytesize == 0
     end
 

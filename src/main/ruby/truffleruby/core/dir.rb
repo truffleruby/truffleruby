@@ -227,7 +227,7 @@ class Dir
     end
 
     def home(user = nil)
-      user = StringValue(user) unless Primitive.nil?(user)
+      user = Primitive.convert_to_str(user) unless Primitive.nil?(user)
 
       if user and !user.empty?
         ptr = Truffle::POSIX.truffleposix_get_user_home(user)

@@ -205,20 +205,20 @@ module Truffle
         else
           if cmd = Truffle::Type.try_convert(command, Array, :to_ary)
             raise ArgumentError, 'wrong first argument' unless cmd.size == 2
-            command = Truffle::Type.check_null_safe(StringValue(cmd[0]))
-            name = Truffle::Type.check_null_safe(StringValue(cmd[1]))
+            command = Truffle::Type.check_null_safe(Primitive.convert_to_str(cmd[0]))
+            name = Truffle::Type.check_null_safe(Primitive.convert_to_str(cmd[1]))
           else
-            name = command = Truffle::Type.check_null_safe(StringValue(command))
+            name = command = Truffle::Type.check_null_safe(Primitive.convert_to_str(command))
           end
 
           argv = [name]
-          args.each { |arg| argv << Truffle::Type.check_null_safe(StringValue(arg)) }
+          args.each { |arg| argv << Truffle::Type.check_null_safe(Primitive.convert_to_str(arg)) }
 
           @command = command
           @argv = argv
         end
 
-        @command = Truffle::Type.check_null_safe(StringValue(@command))
+        @command = Truffle::Type.check_null_safe(Primitive.convert_to_str(@command))
 
         if @argv.empty? # A single String for both command and arguments
           if should_use_shell?(@command)
@@ -413,7 +413,7 @@ module Truffle
       end
 
       def convert_env_key(key)
-        key = Truffle::Type.check_null_safe(StringValue(key))
+        key = Truffle::Type.check_null_safe(Primitive.convert_to_str(key))
 
         if key.include?('=')
           raise ArgumentError, "environment name contains a equal : #{key}"
@@ -424,7 +424,7 @@ module Truffle
 
       def convert_env_value(value)
         return nil if Primitive.nil? value
-        Truffle::Type.check_null_safe(StringValue(value))
+        Truffle::Type.check_null_safe(Primitive.convert_to_str(value))
       end
 
       # Mapping of string open modes to integer oflag versions.

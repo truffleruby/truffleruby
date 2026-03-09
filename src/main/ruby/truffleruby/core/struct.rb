@@ -41,7 +41,7 @@ class Struct
     first = attrs[0]
     if attrs.size >= 1 && !Primitive.is_a?(first, Symbol)
       # nil check because Struct.new(nil, :foo) is valid
-      klass_name = StringValue(first) unless Primitive.nil?(first)
+      klass_name = Primitive.convert_to_str(first) unless Primitive.nil?(first)
       attrs.shift
     end
 

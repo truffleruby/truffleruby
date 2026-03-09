@@ -658,7 +658,7 @@ class Array
 
     out = +''
     raise ArgumentError, 'recursive array join' if Truffle::ThreadOperations.detect_recursion self do
-      sep = Primitive.nil?(sep) ? $, : StringValue(sep)
+      sep = Primitive.nil?(sep) ? $, : Primitive.convert_to_str(sep)
 
       # We've manually unwound the first loop entry for performance
       # reasons.

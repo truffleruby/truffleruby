@@ -102,7 +102,7 @@ class String
       len = Primitive.rb_to_int(length)
     end
 
-    str = StringValue(str)
+    str = Primitive.convert_to_str(str)
 
     if !Primitive.undefined?(str_index_or_range)
       if Primitive.undefined?(str_length)
@@ -221,7 +221,7 @@ class String
   end
 
   def include?(needle)
-    Primitive.as_boolean(Primitive.find_string(self, StringValue(needle), 0))
+    Primitive.as_boolean(Primitive.find_string(self, Primitive.convert_to_str(needle), 0))
   end
 
   def to_sym
@@ -267,7 +267,7 @@ class String
         return [m.pre_match, m.to_s, m.post_match]
       end
     else
-      pattern = StringValue(pattern)
+      pattern = Primitive.convert_to_str(pattern)
       if i = index(pattern)
         post_start = i + pattern.length
         post_len = size - post_start
@@ -290,7 +290,7 @@ class String
         return [m.pre_match, m[0], m.post_match]
       end
     else
-      pattern = StringValue(pattern)
+      pattern = Primitive.convert_to_str(pattern)
       if i = rindex(pattern)
         post_start = i + pattern.length
         post_len = size - post_start
@@ -623,16 +623,16 @@ class String
 
   def prepend(*others)
     if others.size == 1
-      Primitive.string_replace(self, StringValue(others.first) + self)
+      Primitive.string_replace(self, Primitive.convert_to_str(others.first) + self)
     else
-      reduced = others.reduce(''.encode(self.encoding)) { |memo, other| memo + StringValue(other) }
-      Primitive.string_replace(self, StringValue(reduced) + self)
+      reduced = others.reduce(''.encode(self.encoding)) { |memo, other| memo + Primitive.convert_to_str(other) }
+      Primitive.string_replace(self, Primitive.convert_to_str(reduced) + self)
     end
   end
 
   def upto(stop, exclusive = false)
     return to_enum :upto, stop, exclusive unless block_given?
-    stop = StringValue(stop)
+    stop = Primitive.convert_to_str(stop)
 
     if stop.bytesize == 1 && bytesize == 1 && self.ascii_only? && stop.ascii_only?
       enc = Primitive.encoding_ensure_compatible_str(self, stop)
@@ -662,7 +662,7 @@ class String
 
         until current == after_stop
           yield current
-          current = StringValue(current.succ).force_encoding(enc)
+          current = Primitive.convert_to_str(current.succ).force_encoding(enc)
           break if current.size > stop.size || current.empty?
         end
       end
@@ -770,7 +770,7 @@ class String
     if Primitive.undefined?(sep)
       sep = $/
     elsif sep
-      sep = StringValue(sep)
+      sep = Primitive.convert_to_str(sep)
     end
 
     return if Primitive.nil? sep
@@ -843,7 +843,7 @@ class String
 
     maybe_chomp = ->(str) { chomp ? str.chomp(sep) : str }
 
-    sep = StringValue(sep)
+    sep = Primitive.convert_to_str(sep)
     if Primitive.equal?(sep, $/) && !self.encoding.ascii_compatible?
       sep = sep.encode(self.encoding)
     else
@@ -988,7 +988,7 @@ class String
     end
 
     validate = -> str {
-      str = StringValue(str)
+      str = Primitive.convert_to_str(str)
       unless str.valid_encoding?
         raise ArgumentError, 'replacement must be valid byte sequence'
       end
@@ -1051,7 +1051,7 @@ class String
   end
 
   def center(width, padding = ' ')
-    padding = StringValue(padding)
+    padding = Primitive.convert_to_str(padding)
     raise ArgumentError, 'zero width padding' if padding.empty?
 
     Primitive.encoding_ensure_compatible_str self, padding
@@ -1064,7 +1064,7 @@ class String
   end
 
   def ljust(width, padding = ' ')
-    padding = StringValue(padding)
+    padding = Primitive.convert_to_str(padding)
     raise ArgumentError, 'zero width padding' if padding.empty?
 
     enc = Primitive.encoding_ensure_compatible_str self, padding
@@ -1081,7 +1081,7 @@ class String
   end
 
   def rjust(width, padding = ' ')
-    padding = StringValue(padding)
+    padding = Primitive.convert_to_str(padding)
     raise ArgumentError, 'zero width padding' if padding.empty?
 
     enc = Primitive.encoding_ensure_compatible_str self, padding
@@ -1124,7 +1124,7 @@ class String
       end
     end
 
-    str = StringValue(str)
+    str = Primitive.convert_to_str(str)
     return start if str == ''
 
     enc = Primitive.encoding_ensure_compatible_str self, str
@@ -1163,7 +1163,7 @@ class String
       return match_data.begin(0) if match_data
 
     else
-      needle = StringValue(sub)
+      needle = Primitive.convert_to_str(sub)
       needle_size = needle.size
 
       # needle is bigger that haystack
@@ -1222,7 +1222,7 @@ class String
       return match ? Primitive.match_data_byte_begin(match, 0) : nil
     end
 
-    str = StringValue(str)
+    str = Primitive.convert_to_str(str)
     return start if str.empty?
     return nil if start + str.bytesize > bytesize
 
@@ -1249,7 +1249,7 @@ class String
       return match ? Primitive.match_data_byte_begin(match, 0) : nil
     end
 
-    str = StringValue(str)
+    str = Primitive.convert_to_str(str)
     return finish if str.empty?
     return nil if str.bytesize > bytesize
 
@@ -1286,7 +1286,7 @@ class String
   end
 
   def insert(index, other)
-    other = StringValue(other)
+    other = Primitive.convert_to_str(other)
 
     index = Primitive.rb_to_int index
     index = length + 1 + index if index < 0
@@ -1423,7 +1423,7 @@ class String
   end
 
   def crypt(salt)
-    salt = StringValue(salt)
+    salt = Primitive.convert_to_str(salt)
     raise ArgumentError, 'salt too short (need >= 2 bytes)' if salt.bytesize < 2 || salt[0] == "\0" || salt[1] == "\0"
     raise ArgumentError, 'string contains null byte' if include?("\0")
     crypted = Truffle::POSIX.crypt(self, salt)

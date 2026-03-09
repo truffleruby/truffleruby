@@ -93,7 +93,7 @@ class Encoding
     when String
       str = obj
     else
-      str = StringValue obj
+      str = Primitive.convert_to_str(obj)
     end
 
     key = str.upcase.to_sym

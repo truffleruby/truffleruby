@@ -362,7 +362,7 @@ module Truffle
       if Primitive.is_a?(pattern, Regexp)
         pattern
       else
-        pattern = StringValue(pattern)
+        pattern = Primitive.convert_to_str(pattern)
         pattern = Regexp.quote(pattern) if quote
         Primitive.regexp_compile pattern, 0
       end
@@ -374,7 +374,7 @@ module Truffle
       when Encoding
         obj
       else
-        Encoding.find StringValue(obj)
+        Encoding.find Primitive.convert_to_str(obj)
       end
     end
 
@@ -386,7 +386,7 @@ module Truffle
           obj = obj.to_path
         end
 
-        path = StringValue(obj)
+        path = Primitive.convert_to_str(obj)
       end
 
       unless path.encoding.ascii_compatible?

@@ -272,7 +272,7 @@ module Truffle::FFI
     end
 
     def self.from_string(str)
-      str = StringValue(str)
+      str = Primitive.convert_to_str(str)
       ptr = new(1, str.bytesize + 1, false)
       ptr.put_string(0, str)
       ptr

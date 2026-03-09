@@ -42,7 +42,7 @@ module Truffle
 
     def self.compose(time_class, utc_offset, year, month, mday, hour, min, sec, nsec, is_dst)
       if Primitive.is_a?(month, String) or month.respond_to?(:to_str)
-        month = StringValue(month)
+        month = Primitive.convert_to_str(month)
         month = MonthValue[month.upcase] || month.to_i
 
         raise ArgumentError, 'month argument out of range' unless month

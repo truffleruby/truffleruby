@@ -22,7 +22,7 @@ module Truffle
     def self.match(re, str, pos = 0)
       return nil unless str
 
-      str = Primitive.is_a?(str, Symbol) ? str.to_s : StringValue(str)
+      str = Primitive.is_a?(str, Symbol) ? str.to_s : Primitive.convert_to_str(str)
 
       pos = pos < 0 ? pos + str.size : pos
       return nil if pos < 0 or pos > str.size
@@ -36,7 +36,7 @@ module Truffle
     def self.match?(re, str, pos = 0)
       return false unless str
 
-      str = Primitive.is_a?(str, Symbol) ? str.to_s : StringValue(str)
+      str = Primitive.is_a?(str, Symbol) ? str.to_s : Primitive.convert_to_str(str)
 
       pos = pos < 0 ? pos + str.size : pos
       return false if pos < 0 or pos > str.size
