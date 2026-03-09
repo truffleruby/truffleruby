@@ -14,7 +14,7 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.shadowed.org.jcodings.specific.EUCJPEncoding;
 import org.graalvm.shadowed.org.jcodings.specific.Windows_31JEncoding;
-import org.prism.Nodes.ConstantReadNode;
+import org.ruby_lang.prism.Nodes.ConstantReadNode;
 import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -145,7 +145,7 @@ import org.truffleruby.language.objects.SingletonClassNodeGen.SingletonClassASTN
 import org.truffleruby.language.objects.WriteInstanceVariableNodeGen;
 import org.truffleruby.language.objects.classvariables.ReadClassVariableNode;
 import org.truffleruby.language.objects.classvariables.WriteClassVariableNode;
-import org.prism.Nodes;
+import org.ruby_lang.prism.Nodes;
 import org.truffleruby.language.supercall.ReadSuperArgumentsNode;
 import org.truffleruby.language.supercall.ReadZSuperArgumentsNode;
 import org.truffleruby.language.supercall.SuperCallNode;
@@ -170,7 +170,7 @@ import static org.truffleruby.parser.TranslatorEnvironment.FORWARDED_REST_NAME;
  *
  * The main translator that delegates handling of some nodes (e.g. method or block definition) to helper translators.
  *
- * Every Prism node class is documented in the {@code org.prism.Nodes}. */
+ * Every Prism node class is documented in the {@link Nodes}. */
 public class YARPTranslator extends YARPBaseTranslator {
 
     public static final int NO_FRAME_ON_STACK_MARKER = -1;

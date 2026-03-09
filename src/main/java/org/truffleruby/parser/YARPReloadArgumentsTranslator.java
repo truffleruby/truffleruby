@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import org.prism.Nodes;
+import org.ruby_lang.prism.Nodes;
 import org.truffleruby.Layouts;
 import org.truffleruby.core.hash.ConcatHashLiteralNode;
 import org.truffleruby.core.hash.HashLiteralNode;

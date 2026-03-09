@@ -1,7 +1,7 @@
 #include "prism.h"
-#include "org_prism_Parser.h"
+#include "org_ruby_lang_prism_Parser.h"
 
-JNIEXPORT jbyteArray JNICALL Java_org_prism_Parser_parseAndSerialize(JNIEnv *env, jclass clazz, jbyteArray source, jbyteArray options) {
+JNIEXPORT jbyteArray JNICALL Java_org_ruby_1lang_prism_Parser_parseAndSerialize(JNIEnv *env, jclass clazz, jbyteArray source, jbyteArray options) {
   jsize size = (*env)->GetArrayLength(env, source);
   // Null-terminate for safety, as parsers are prone to read further than the end
   jbyte *bytes = malloc(size + 4);

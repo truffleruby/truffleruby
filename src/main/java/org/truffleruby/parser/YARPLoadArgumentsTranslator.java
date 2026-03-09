@@ -27,7 +27,7 @@ import org.truffleruby.language.arguments.SaveMethodBlockNode;
 import org.truffleruby.language.locals.WriteLocalVariableNode;
 
 import org.truffleruby.language.methods.Arity;
-import org.prism.Nodes;
+import org.ruby_lang.prism.Nodes;
 
 /** Translate method or block parameters and assign local variables.
  *

@@ -126,7 +126,7 @@ suite = {
 
         # ------------- Projects -------------
 
-        "org.prism": {
+        "org.ruby_lang.prism": {
             "dir": "src/yarp",
             "sourceDirs": ["java"],
             "jniHeaders": True,
@@ -243,7 +243,7 @@ suite = {
             "cflags": ["-g", "-O3", "-std=c99", "-Wall", "-Werror"],
         },
 
-        "org.prism.libprism": {
+        "org.ruby_lang.prism.libprism": {
             "class": "YARPNativeProject",
             "dir": "src/main/c/yarp",
             # "makeTarget": "all-no-debug", # Can use this to build without asserts
@@ -251,7 +251,7 @@ suite = {
             "description": "YARP used as a static library with only semantics fields"
         },
 
-        "org.prism.libprism.for.gem": {
+        "org.ruby_lang.prism.libprism.for.gem": {
             "class": "YARPNativeProject",
             "dir": "src/main/c/prism-gem",
             # "makeTarget": "all-no-debug", # Can use this to build without asserts
@@ -283,13 +283,13 @@ suite = {
             "native": "shared_lib",
             "deliverable": "yarpbindings",
             "buildDependencies": [
-                "org.prism.libprism", # libprism.a
-                "org.prism", # for the generated JNI header file
+                "org.ruby_lang.prism.libprism", # libprism.a
+                "org.ruby_lang.prism", # for the generated JNI header file
             ],
             "use_jdk_headers": True, # the generated JNI header includes jni.h
-            "cflags": ["-g", "-O3", "-Wall", "-Werror", "-pthread", "-I<path:org.prism.libprism>/include"],
+            "cflags": ["-g", "-O3", "-Wall", "-Werror", "-pthread", "-I<path:org.ruby_lang.prism.libprism>/include"],
             "ldflags": ["-pthread"],
-            "ldlibs": ["<path:org.prism.libprism>/build/libprism.a"],
+            "ldlibs": ["<path:org.ruby_lang.prism.libprism>/build/libprism.a"],
             "description": "JNI bindings for YARP"
         },
 
@@ -304,7 +304,7 @@ suite = {
             ],
             "dependencies": [
                 # Projects
-                "org.prism",
+                "org.ruby_lang.prism",
                 # Distributions, keep in sync with TRUFFLERUBY.distDependencies
                 "truffleruby:TRUFFLERUBY-ANNOTATIONS",
                 "truffleruby:TRUFFLERUBY-SHARED",
@@ -868,7 +868,7 @@ suite = {
                     "dependency:org.truffleruby.yarp.bindings",
                 ],
                 "lib/prism/": [
-                    "dependency:org.prism.libprism.for.gem/build/<lib:prism>",
+                    "dependency:org.ruby_lang.prism.libprism.for.gem/build/<lib:prism>",
                 ],
                 "lib/cext/": [
                     "dependency:org.truffleruby.librubysignal",

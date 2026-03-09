@@ -16,7 +16,7 @@ import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.methods.Arity;
 import org.truffleruby.language.methods.CachedLazyCallTargetSupplier;
 
-import org.prism.Nodes;
+import org.ruby_lang.prism.Nodes;
 
 public final class YARPDefNodeTranslator extends YARPTranslator {
 

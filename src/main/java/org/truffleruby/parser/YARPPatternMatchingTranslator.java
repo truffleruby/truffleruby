@@ -9,7 +9,7 @@
  */
 package org.truffleruby.parser;
 
-import org.prism.Nodes;
+import org.ruby_lang.prism.Nodes;
 import org.truffleruby.core.array.ArrayDeconstructNodeGen;
 import org.truffleruby.core.array.ArrayFindPatternNodeGen;
 import org.truffleruby.core.array.ArrayIndexNodes;

@@ -11,7 +11,7 @@ package org.truffleruby.parser;
 
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
-import org.prism.Nodes;
+import org.ruby_lang.prism.Nodes;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.RubyLanguage.RubySourceOptions;
 import org.truffleruby.annotations.SuppressFBWarnings;

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import org.prism.Nodes;
+import org.ruby_lang.prism.Nodes;
 import org.truffleruby.core.array.ArrayIndexNodes;
 import org.truffleruby.core.array.ArraySliceNodeGen;
 import org.truffleruby.core.hash.HashLiteralNode;

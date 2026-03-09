@@ -45,7 +45,7 @@ import org.graalvm.nativeimage.ImageInfo;
 import org.graalvm.options.OptionCategory;
 import org.graalvm.options.OptionDescriptors;
 import org.graalvm.options.OptionKey;
-import org.prism.Parser;
+import org.ruby_lang.prism.Parser;
 import org.truffleruby.annotations.SuppressFBWarnings;
 import org.truffleruby.builtins.PrimitiveManager;
 import org.truffleruby.cext.ValueWrapperManager;

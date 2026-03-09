@@ -15,7 +15,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.Assumption;
-import org.prism.Nodes;
+import org.ruby_lang.prism.Nodes;
 import org.truffleruby.Layouts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameSlotKind;

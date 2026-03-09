@@ -9,7 +9,7 @@
  */
 package org.truffleruby.parser;
 
-import org.prism.Nodes;
+import org.ruby_lang.prism.Nodes;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.locals.LocalVariableType;
 import org.truffleruby.language.locals.ReadLocalVariableNode;
