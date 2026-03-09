@@ -9,6 +9,9 @@ if you are looking to modify the template
 ++
 =end
 
+#--
+# rbs_inline: enabled
+
 module Prism
   # This visitor is responsible for composing the strings that get returned by
   # the various #inspect methods defined on each of the nodes.
@@ -18,8 +21,9 @@ module Prism
     # when we hit an element in that list. In this case, we have a special
     # command that replaces the subsequent indent with the given value.
     class Replace # :nodoc:
-      attr_reader :value
+      attr_reader :value #: String
 
+      #: (String value) -> void
       def initialize(value)
         @value = value
       end
@@ -28,19 +32,25 @@ module Prism
     private_constant :Replace
 
     # The current prefix string.
-    attr_reader :indent
+    # :stopdoc:
+    attr_reader :indent #: String
+    # :startdoc:
 
     # The list of commands that we need to execute in order to compose the
     # final string.
-    attr_reader :commands
+    #: stopdoc:
+    attr_reader :commands #: Array[[String | node | Replace, String]]
+    # :startdoc:
 
-    # Initializes a new instance of the InspectVisitor.
-    def initialize(indent = +"")
+    #: (?String indent) -> void
+    def initialize(indent = +"") # :nodoc:
       @indent = indent
       @commands = []
     end
 
     # Compose an inspect string for the given node.
+    #--
+    #: (node node) -> String
     def self.compose(node)
       visitor = new
       node.accept(visitor)
@@ -48,7 +58,9 @@ module Prism
     end
 
     # Compose the final string.
-    def compose
+    #--
+    #: () -> String
+    def compose # :nodoc:
       buffer = +""
       replace = nil
 
@@ -76,8 +88,8 @@ module Prism
       buffer
     end
 
-    # Inspect a AliasGlobalVariableNode node.
-    def visit_alias_global_variable_node(node)
+    #: (AliasGlobalVariableNode node) -> void
+    def visit_alias_global_variable_node(node) # :nodoc:
       commands << [inspect_node("AliasGlobalVariableNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -88,8 +100,8 @@ module Prism
       commands << ["└── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
     end
 
-    # Inspect a AliasMethodNode node.
-    def visit_alias_method_node(node)
+    #: (AliasMethodNode node) -> void
+    def visit_alias_method_node(node) # :nodoc:
       commands << [inspect_node("AliasMethodNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -100,8 +112,8 @@ module Prism
       commands << ["└── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
     end
 
-    # Inspect a AlternationPatternNode node.
-    def visit_alternation_pattern_node(node)
+    #: (AlternationPatternNode node) -> void
+    def visit_alternation_pattern_node(node) # :nodoc:
       commands << [inspect_node("AlternationPatternNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -112,8 +124,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a AndNode node.
-    def visit_and_node(node)
+    #: (AndNode node) -> void
+    def visit_and_node(node) # :nodoc:
       commands << [inspect_node("AndNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -124,8 +136,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a ArgumentsNode node.
-    def visit_arguments_node(node)
+    #: (ArgumentsNode node) -> void
+    def visit_arguments_node(node) # :nodoc:
       commands << [inspect_node("ArgumentsNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("contains_forwarding" if node.contains_forwarding?), ("contains_keywords" if node.contains_keywords?), ("contains_keyword_splat" if node.contains_keyword_splat?), ("contains_splat" if node.contains_splat?), ("contains_multiple_splats" if node.contains_multiple_splats?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -140,8 +152,8 @@ module Prism
       end
     end
 
-    # Inspect a ArrayNode node.
-    def visit_array_node(node)
+    #: (ArrayNode node) -> void
+    def visit_array_node(node) # :nodoc:
       commands << [inspect_node("ArrayNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("contains_splat" if node.contains_splat?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -158,8 +170,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a ArrayPatternNode node.
-    def visit_array_pattern_node(node)
+    #: (ArrayPatternNode node) -> void
+    def visit_array_pattern_node(node) # :nodoc:
       commands << [inspect_node("ArrayPatternNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -197,8 +209,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a AssocNode node.
-    def visit_assoc_node(node)
+    #: (AssocNode node) -> void
+    def visit_assoc_node(node) # :nodoc:
       commands << [inspect_node("AssocNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -209,8 +221,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a AssocSplatNode node.
-    def visit_assoc_splat_node(node)
+    #: (AssocSplatNode node) -> void
+    def visit_assoc_splat_node(node) # :nodoc:
       commands << [inspect_node("AssocSplatNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -223,16 +235,16 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a BackReferenceReadNode node.
-    def visit_back_reference_read_node(node)
+    #: (BackReferenceReadNode node) -> void
+    def visit_back_reference_read_node(node) # :nodoc:
       commands << [inspect_node("BackReferenceReadNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── name: #{node.name.inspect}\n", indent]
     end
 
-    # Inspect a BeginNode node.
-    def visit_begin_node(node)
+    #: (BeginNode node) -> void
+    def visit_begin_node(node) # :nodoc:
       commands << [inspect_node("BeginNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -264,8 +276,8 @@ module Prism
       commands << ["└── end_keyword_loc: #{inspect_location(node.end_keyword_loc)}\n", indent]
     end
 
-    # Inspect a BlockArgumentNode node.
-    def visit_block_argument_node(node)
+    #: (BlockArgumentNode node) -> void
+    def visit_block_argument_node(node) # :nodoc:
       commands << [inspect_node("BlockArgumentNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -278,16 +290,16 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a BlockLocalVariableNode node.
-    def visit_block_local_variable_node(node)
+    #: (BlockLocalVariableNode node) -> void
+    def visit_block_local_variable_node(node) # :nodoc:
       commands << [inspect_node("BlockLocalVariableNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("repeated_parameter" if node.repeated_parameter?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── name: #{node.name.inspect}\n", indent]
     end
 
-    # Inspect a BlockNode node.
-    def visit_block_node(node)
+    #: (BlockNode node) -> void
+    def visit_block_node(node) # :nodoc:
       commands << [inspect_node("BlockNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -308,8 +320,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a BlockParameterNode node.
-    def visit_block_parameter_node(node)
+    #: (BlockParameterNode node) -> void
+    def visit_block_parameter_node(node) # :nodoc:
       commands << [inspect_node("BlockParameterNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("repeated_parameter" if node.repeated_parameter?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -322,8 +334,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a BlockParametersNode node.
-    def visit_block_parameters_node(node)
+    #: (BlockParametersNode node) -> void
+    def visit_block_parameters_node(node) # :nodoc:
       commands << [inspect_node("BlockParametersNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -346,8 +358,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a BreakNode node.
-    def visit_break_node(node)
+    #: (BreakNode node) -> void
+    def visit_break_node(node) # :nodoc:
       commands << [inspect_node("BreakNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -360,8 +372,8 @@ module Prism
       commands << ["└── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
     end
 
-    # Inspect a CallAndWriteNode node.
-    def visit_call_and_write_node(node)
+    #: (CallAndWriteNode node) -> void
+    def visit_call_and_write_node(node) # :nodoc:
       commands << [inspect_node("CallAndWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("safe_navigation" if node.safe_navigation?), ("variable_call" if node.variable_call?), ("attribute_write" if node.attribute_write?), ("ignore_visibility" if node.ignore_visibility?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -380,8 +392,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a CallNode node.
-    def visit_call_node(node)
+    #: (CallNode node) -> void
+    def visit_call_node(node) # :nodoc:
       commands << [inspect_node("CallNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("safe_navigation" if node.safe_navigation?), ("variable_call" if node.variable_call?), ("attribute_write" if node.attribute_write?), ("ignore_visibility" if node.ignore_visibility?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -411,8 +423,8 @@ module Prism
       end
     end
 
-    # Inspect a CallOperatorWriteNode node.
-    def visit_call_operator_write_node(node)
+    #: (CallOperatorWriteNode node) -> void
+    def visit_call_operator_write_node(node) # :nodoc:
       commands << [inspect_node("CallOperatorWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("safe_navigation" if node.safe_navigation?), ("variable_call" if node.variable_call?), ("attribute_write" if node.attribute_write?), ("ignore_visibility" if node.ignore_visibility?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -432,8 +444,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a CallOrWriteNode node.
-    def visit_call_or_write_node(node)
+    #: (CallOrWriteNode node) -> void
+    def visit_call_or_write_node(node) # :nodoc:
       commands << [inspect_node("CallOrWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("safe_navigation" if node.safe_navigation?), ("variable_call" if node.variable_call?), ("attribute_write" if node.attribute_write?), ("ignore_visibility" if node.ignore_visibility?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -452,8 +464,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a CallTargetNode node.
-    def visit_call_target_node(node)
+    #: (CallTargetNode node) -> void
+    def visit_call_target_node(node) # :nodoc:
       commands << [inspect_node("CallTargetNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("safe_navigation" if node.safe_navigation?), ("variable_call" if node.variable_call?), ("attribute_write" if node.attribute_write?), ("ignore_visibility" if node.ignore_visibility?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -464,8 +476,8 @@ module Prism
       commands << ["└── message_loc: #{inspect_location(node.message_loc)}\n", indent]
     end
 
-    # Inspect a CapturePatternNode node.
-    def visit_capture_pattern_node(node)
+    #: (CapturePatternNode node) -> void
+    def visit_capture_pattern_node(node) # :nodoc:
       commands << [inspect_node("CapturePatternNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -476,8 +488,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a CaseMatchNode node.
-    def visit_case_match_node(node)
+    #: (CaseMatchNode node) -> void
+    def visit_case_match_node(node) # :nodoc:
       commands << [inspect_node("CaseMatchNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -506,8 +518,8 @@ module Prism
       commands << ["└── end_keyword_loc: #{inspect_location(node.end_keyword_loc)}\n", indent]
     end
 
-    # Inspect a CaseNode node.
-    def visit_case_node(node)
+    #: (CaseNode node) -> void
+    def visit_case_node(node) # :nodoc:
       commands << [inspect_node("CaseNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -536,8 +548,8 @@ module Prism
       commands << ["└── end_keyword_loc: #{inspect_location(node.end_keyword_loc)}\n", indent]
     end
 
-    # Inspect a ClassNode node.
-    def visit_class_node(node)
+    #: (ClassNode node) -> void
+    def visit_class_node(node) # :nodoc:
       commands << [inspect_node("ClassNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -562,8 +574,8 @@ module Prism
       commands << ["└── name: #{node.name.inspect}\n", indent]
     end
 
-    # Inspect a ClassVariableAndWriteNode node.
-    def visit_class_variable_and_write_node(node)
+    #: (ClassVariableAndWriteNode node) -> void
+    def visit_class_variable_and_write_node(node) # :nodoc:
       commands << [inspect_node("ClassVariableAndWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -574,8 +586,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a ClassVariableOperatorWriteNode node.
-    def visit_class_variable_operator_write_node(node)
+    #: (ClassVariableOperatorWriteNode node) -> void
+    def visit_class_variable_operator_write_node(node) # :nodoc:
       commands << [inspect_node("ClassVariableOperatorWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -587,8 +599,8 @@ module Prism
       commands << ["└── binary_operator: #{node.binary_operator.inspect}\n", indent]
     end
 
-    # Inspect a ClassVariableOrWriteNode node.
-    def visit_class_variable_or_write_node(node)
+    #: (ClassVariableOrWriteNode node) -> void
+    def visit_class_variable_or_write_node(node) # :nodoc:
       commands << [inspect_node("ClassVariableOrWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -599,24 +611,24 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a ClassVariableReadNode node.
-    def visit_class_variable_read_node(node)
+    #: (ClassVariableReadNode node) -> void
+    def visit_class_variable_read_node(node) # :nodoc:
       commands << [inspect_node("ClassVariableReadNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── name: #{node.name.inspect}\n", indent]
     end
 
-    # Inspect a ClassVariableTargetNode node.
-    def visit_class_variable_target_node(node)
+    #: (ClassVariableTargetNode node) -> void
+    def visit_class_variable_target_node(node) # :nodoc:
       commands << [inspect_node("ClassVariableTargetNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── name: #{node.name.inspect}\n", indent]
     end
 
-    # Inspect a ClassVariableWriteNode node.
-    def visit_class_variable_write_node(node)
+    #: (ClassVariableWriteNode node) -> void
+    def visit_class_variable_write_node(node) # :nodoc:
       commands << [inspect_node("ClassVariableWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -627,8 +639,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a ConstantAndWriteNode node.
-    def visit_constant_and_write_node(node)
+    #: (ConstantAndWriteNode node) -> void
+    def visit_constant_and_write_node(node) # :nodoc:
       commands << [inspect_node("ConstantAndWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -639,8 +651,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a ConstantOperatorWriteNode node.
-    def visit_constant_operator_write_node(node)
+    #: (ConstantOperatorWriteNode node) -> void
+    def visit_constant_operator_write_node(node) # :nodoc:
       commands << [inspect_node("ConstantOperatorWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -652,8 +664,8 @@ module Prism
       commands << ["└── binary_operator: #{node.binary_operator.inspect}\n", indent]
     end
 
-    # Inspect a ConstantOrWriteNode node.
-    def visit_constant_or_write_node(node)
+    #: (ConstantOrWriteNode node) -> void
+    def visit_constant_or_write_node(node) # :nodoc:
       commands << [inspect_node("ConstantOrWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -664,8 +676,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a ConstantPathAndWriteNode node.
-    def visit_constant_path_and_write_node(node)
+    #: (ConstantPathAndWriteNode node) -> void
+    def visit_constant_path_and_write_node(node) # :nodoc:
       commands << [inspect_node("ConstantPathAndWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -676,8 +688,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a ConstantPathNode node.
-    def visit_constant_path_node(node)
+    #: (ConstantPathNode node) -> void
+    def visit_constant_path_node(node) # :nodoc:
       commands << [inspect_node("ConstantPathNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -696,8 +708,8 @@ module Prism
       commands << ["└── name_loc: #{inspect_location(node.name_loc)}\n", indent]
     end
 
-    # Inspect a ConstantPathOperatorWriteNode node.
-    def visit_constant_path_operator_write_node(node)
+    #: (ConstantPathOperatorWriteNode node) -> void
+    def visit_constant_path_operator_write_node(node) # :nodoc:
       commands << [inspect_node("ConstantPathOperatorWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -709,8 +721,8 @@ module Prism
       commands << ["└── binary_operator: #{node.binary_operator.inspect}\n", indent]
     end
 
-    # Inspect a ConstantPathOrWriteNode node.
-    def visit_constant_path_or_write_node(node)
+    #: (ConstantPathOrWriteNode node) -> void
+    def visit_constant_path_or_write_node(node) # :nodoc:
       commands << [inspect_node("ConstantPathOrWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -721,8 +733,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a ConstantPathTargetNode node.
-    def visit_constant_path_target_node(node)
+    #: (ConstantPathTargetNode node) -> void
+    def visit_constant_path_target_node(node) # :nodoc:
       commands << [inspect_node("ConstantPathTargetNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -741,8 +753,8 @@ module Prism
       commands << ["└── name_loc: #{inspect_location(node.name_loc)}\n", indent]
     end
 
-    # Inspect a ConstantPathWriteNode node.
-    def visit_constant_path_write_node(node)
+    #: (ConstantPathWriteNode node) -> void
+    def visit_constant_path_write_node(node) # :nodoc:
       commands << [inspect_node("ConstantPathWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -753,24 +765,24 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a ConstantReadNode node.
-    def visit_constant_read_node(node)
+    #: (ConstantReadNode node) -> void
+    def visit_constant_read_node(node) # :nodoc:
       commands << [inspect_node("ConstantReadNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── name: #{node.name.inspect}\n", indent]
     end
 
-    # Inspect a ConstantTargetNode node.
-    def visit_constant_target_node(node)
+    #: (ConstantTargetNode node) -> void
+    def visit_constant_target_node(node) # :nodoc:
       commands << [inspect_node("ConstantTargetNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── name: #{node.name.inspect}\n", indent]
     end
 
-    # Inspect a ConstantWriteNode node.
-    def visit_constant_write_node(node)
+    #: (ConstantWriteNode node) -> void
+    def visit_constant_write_node(node) # :nodoc:
       commands << [inspect_node("ConstantWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -781,8 +793,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a DefNode node.
-    def visit_def_node(node)
+    #: (DefNode node) -> void
+    def visit_def_node(node) # :nodoc:
       commands << [inspect_node("DefNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -815,8 +827,8 @@ module Prism
       commands << ["└── end_keyword_loc: #{inspect_location(node.end_keyword_loc)}\n", indent]
     end
 
-    # Inspect a DefinedNode node.
-    def visit_defined_node(node)
+    #: (DefinedNode node) -> void
+    def visit_defined_node(node) # :nodoc:
       commands << [inspect_node("DefinedNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -827,8 +839,8 @@ module Prism
       commands << ["└── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
     end
 
-    # Inspect a ElseNode node.
-    def visit_else_node(node)
+    #: (ElseNode node) -> void
+    def visit_else_node(node) # :nodoc:
       commands << [inspect_node("ElseNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -842,8 +854,8 @@ module Prism
       commands << ["└── end_keyword_loc: #{inspect_location(node.end_keyword_loc)}\n", indent]
     end
 
-    # Inspect a EmbeddedStatementsNode node.
-    def visit_embedded_statements_node(node)
+    #: (EmbeddedStatementsNode node) -> void
+    def visit_embedded_statements_node(node) # :nodoc:
       commands << [inspect_node("EmbeddedStatementsNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -857,8 +869,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a EmbeddedVariableNode node.
-    def visit_embedded_variable_node(node)
+    #: (EmbeddedVariableNode node) -> void
+    def visit_embedded_variable_node(node) # :nodoc:
       commands << [inspect_node("EmbeddedVariableNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -867,8 +879,8 @@ module Prism
       commands << [node.variable, "#{indent}    "]
     end
 
-    # Inspect a EnsureNode node.
-    def visit_ensure_node(node)
+    #: (EnsureNode node) -> void
+    def visit_ensure_node(node) # :nodoc:
       commands << [inspect_node("EnsureNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -882,15 +894,15 @@ module Prism
       commands << ["└── end_keyword_loc: #{inspect_location(node.end_keyword_loc)}\n", indent]
     end
 
-    # Inspect a FalseNode node.
-    def visit_false_node(node)
+    #: (FalseNode node) -> void
+    def visit_false_node(node) # :nodoc:
       commands << [inspect_node("FalseNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a FindPatternNode node.
-    def visit_find_pattern_node(node)
+    #: (FindPatternNode node) -> void
+    def visit_find_pattern_node(node) # :nodoc:
       commands << [inspect_node("FindPatternNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -917,8 +929,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a FlipFlopNode node.
-    def visit_flip_flop_node(node)
+    #: (FlipFlopNode node) -> void
+    def visit_flip_flop_node(node) # :nodoc:
       commands << [inspect_node("FlipFlopNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("exclude_end" if node.exclude_end?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -937,16 +949,16 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a FloatNode node.
-    def visit_float_node(node)
+    #: (FloatNode node) -> void
+    def visit_float_node(node) # :nodoc:
       commands << [inspect_node("FloatNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── value: #{node.value.inspect}\n", indent]
     end
 
-    # Inspect a ForNode node.
-    def visit_for_node(node)
+    #: (ForNode node) -> void
+    def visit_for_node(node) # :nodoc:
       commands << [inspect_node("ForNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -966,22 +978,22 @@ module Prism
       commands << ["└── end_keyword_loc: #{inspect_location(node.end_keyword_loc)}\n", indent]
     end
 
-    # Inspect a ForwardingArgumentsNode node.
-    def visit_forwarding_arguments_node(node)
+    #: (ForwardingArgumentsNode node) -> void
+    def visit_forwarding_arguments_node(node) # :nodoc:
       commands << [inspect_node("ForwardingArgumentsNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a ForwardingParameterNode node.
-    def visit_forwarding_parameter_node(node)
+    #: (ForwardingParameterNode node) -> void
+    def visit_forwarding_parameter_node(node) # :nodoc:
       commands << [inspect_node("ForwardingParameterNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a ForwardingSuperNode node.
-    def visit_forwarding_super_node(node)
+    #: (ForwardingSuperNode node) -> void
+    def visit_forwarding_super_node(node) # :nodoc:
       commands << [inspect_node("ForwardingSuperNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -993,8 +1005,8 @@ module Prism
       end
     end
 
-    # Inspect a GlobalVariableAndWriteNode node.
-    def visit_global_variable_and_write_node(node)
+    #: (GlobalVariableAndWriteNode node) -> void
+    def visit_global_variable_and_write_node(node) # :nodoc:
       commands << [inspect_node("GlobalVariableAndWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1005,8 +1017,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a GlobalVariableOperatorWriteNode node.
-    def visit_global_variable_operator_write_node(node)
+    #: (GlobalVariableOperatorWriteNode node) -> void
+    def visit_global_variable_operator_write_node(node) # :nodoc:
       commands << [inspect_node("GlobalVariableOperatorWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1018,8 +1030,8 @@ module Prism
       commands << ["└── binary_operator: #{node.binary_operator.inspect}\n", indent]
     end
 
-    # Inspect a GlobalVariableOrWriteNode node.
-    def visit_global_variable_or_write_node(node)
+    #: (GlobalVariableOrWriteNode node) -> void
+    def visit_global_variable_or_write_node(node) # :nodoc:
       commands << [inspect_node("GlobalVariableOrWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1030,24 +1042,24 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a GlobalVariableReadNode node.
-    def visit_global_variable_read_node(node)
+    #: (GlobalVariableReadNode node) -> void
+    def visit_global_variable_read_node(node) # :nodoc:
       commands << [inspect_node("GlobalVariableReadNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── name: #{node.name.inspect}\n", indent]
     end
 
-    # Inspect a GlobalVariableTargetNode node.
-    def visit_global_variable_target_node(node)
+    #: (GlobalVariableTargetNode node) -> void
+    def visit_global_variable_target_node(node) # :nodoc:
       commands << [inspect_node("GlobalVariableTargetNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── name: #{node.name.inspect}\n", indent]
     end
 
-    # Inspect a GlobalVariableWriteNode node.
-    def visit_global_variable_write_node(node)
+    #: (GlobalVariableWriteNode node) -> void
+    def visit_global_variable_write_node(node) # :nodoc:
       commands << [inspect_node("GlobalVariableWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1058,8 +1070,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a HashNode node.
-    def visit_hash_node(node)
+    #: (HashNode node) -> void
+    def visit_hash_node(node) # :nodoc:
       commands << [inspect_node("HashNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1076,8 +1088,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a HashPatternNode node.
-    def visit_hash_pattern_node(node)
+    #: (HashPatternNode node) -> void
+    def visit_hash_pattern_node(node) # :nodoc:
       commands << [inspect_node("HashPatternNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1106,8 +1118,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a IfNode node.
-    def visit_if_node(node)
+    #: (IfNode node) -> void
+    def visit_if_node(node) # :nodoc:
       commands << [inspect_node("IfNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1130,8 +1142,8 @@ module Prism
       commands << ["└── end_keyword_loc: #{inspect_location(node.end_keyword_loc)}\n", indent]
     end
 
-    # Inspect a ImaginaryNode node.
-    def visit_imaginary_node(node)
+    #: (ImaginaryNode node) -> void
+    def visit_imaginary_node(node) # :nodoc:
       commands << [inspect_node("ImaginaryNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1139,8 +1151,8 @@ module Prism
       commands << [node.numeric, "#{indent}    "]
     end
 
-    # Inspect a ImplicitNode node.
-    def visit_implicit_node(node)
+    #: (ImplicitNode node) -> void
+    def visit_implicit_node(node) # :nodoc:
       commands << [inspect_node("ImplicitNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1148,15 +1160,15 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a ImplicitRestNode node.
-    def visit_implicit_rest_node(node)
+    #: (ImplicitRestNode node) -> void
+    def visit_implicit_rest_node(node) # :nodoc:
       commands << [inspect_node("ImplicitRestNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a InNode node.
-    def visit_in_node(node)
+    #: (InNode node) -> void
+    def visit_in_node(node) # :nodoc:
       commands << [inspect_node("InNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1172,8 +1184,8 @@ module Prism
       commands << ["└── then_loc: #{inspect_location(node.then_loc)}\n", indent]
     end
 
-    # Inspect a IndexAndWriteNode node.
-    def visit_index_and_write_node(node)
+    #: (IndexAndWriteNode node) -> void
+    def visit_index_and_write_node(node) # :nodoc:
       commands << [inspect_node("IndexAndWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("safe_navigation" if node.safe_navigation?), ("variable_call" if node.variable_call?), ("attribute_write" if node.attribute_write?), ("ignore_visibility" if node.ignore_visibility?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1203,8 +1215,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a IndexOperatorWriteNode node.
-    def visit_index_operator_write_node(node)
+    #: (IndexOperatorWriteNode node) -> void
+    def visit_index_operator_write_node(node) # :nodoc:
       commands << [inspect_node("IndexOperatorWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("safe_navigation" if node.safe_navigation?), ("variable_call" if node.variable_call?), ("attribute_write" if node.attribute_write?), ("ignore_visibility" if node.ignore_visibility?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1235,8 +1247,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a IndexOrWriteNode node.
-    def visit_index_or_write_node(node)
+    #: (IndexOrWriteNode node) -> void
+    def visit_index_or_write_node(node) # :nodoc:
       commands << [inspect_node("IndexOrWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("safe_navigation" if node.safe_navigation?), ("variable_call" if node.variable_call?), ("attribute_write" if node.attribute_write?), ("ignore_visibility" if node.ignore_visibility?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1266,8 +1278,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a IndexTargetNode node.
-    def visit_index_target_node(node)
+    #: (IndexTargetNode node) -> void
+    def visit_index_target_node(node) # :nodoc:
       commands << [inspect_node("IndexTargetNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("safe_navigation" if node.safe_navigation?), ("variable_call" if node.variable_call?), ("attribute_write" if node.attribute_write?), ("ignore_visibility" if node.ignore_visibility?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1289,8 +1301,8 @@ module Prism
       end
     end
 
-    # Inspect a InstanceVariableAndWriteNode node.
-    def visit_instance_variable_and_write_node(node)
+    #: (InstanceVariableAndWriteNode node) -> void
+    def visit_instance_variable_and_write_node(node) # :nodoc:
       commands << [inspect_node("InstanceVariableAndWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1301,8 +1313,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a InstanceVariableOperatorWriteNode node.
-    def visit_instance_variable_operator_write_node(node)
+    #: (InstanceVariableOperatorWriteNode node) -> void
+    def visit_instance_variable_operator_write_node(node) # :nodoc:
       commands << [inspect_node("InstanceVariableOperatorWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1314,8 +1326,8 @@ module Prism
       commands << ["└── binary_operator: #{node.binary_operator.inspect}\n", indent]
     end
 
-    # Inspect a InstanceVariableOrWriteNode node.
-    def visit_instance_variable_or_write_node(node)
+    #: (InstanceVariableOrWriteNode node) -> void
+    def visit_instance_variable_or_write_node(node) # :nodoc:
       commands << [inspect_node("InstanceVariableOrWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1326,24 +1338,24 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a InstanceVariableReadNode node.
-    def visit_instance_variable_read_node(node)
+    #: (InstanceVariableReadNode node) -> void
+    def visit_instance_variable_read_node(node) # :nodoc:
       commands << [inspect_node("InstanceVariableReadNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── name: #{node.name.inspect}\n", indent]
     end
 
-    # Inspect a InstanceVariableTargetNode node.
-    def visit_instance_variable_target_node(node)
+    #: (InstanceVariableTargetNode node) -> void
+    def visit_instance_variable_target_node(node) # :nodoc:
       commands << [inspect_node("InstanceVariableTargetNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── name: #{node.name.inspect}\n", indent]
     end
 
-    # Inspect a InstanceVariableWriteNode node.
-    def visit_instance_variable_write_node(node)
+    #: (InstanceVariableWriteNode node) -> void
+    def visit_instance_variable_write_node(node) # :nodoc:
       commands << [inspect_node("InstanceVariableWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1354,16 +1366,16 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a IntegerNode node.
-    def visit_integer_node(node)
+    #: (IntegerNode node) -> void
+    def visit_integer_node(node) # :nodoc:
       commands << [inspect_node("IntegerNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("binary" if node.binary?), ("decimal" if node.decimal?), ("octal" if node.octal?), ("hexadecimal" if node.hexadecimal?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── value: #{node.value.inspect}\n", indent]
     end
 
-    # Inspect a InterpolatedMatchLastLineNode node.
-    def visit_interpolated_match_last_line_node(node)
+    #: (InterpolatedMatchLastLineNode node) -> void
+    def visit_interpolated_match_last_line_node(node) # :nodoc:
       commands << [inspect_node("InterpolatedMatchLastLineNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("ignore_case" if node.ignore_case?), ("extended" if node.extended?), ("multi_line" if node.multi_line?), ("once" if node.once?), ("euc_jp" if node.euc_jp?), ("ascii_8bit" if node.ascii_8bit?), ("windows_31j" if node.windows_31j?), ("utf_8" if node.utf_8?), ("forced_utf8_encoding" if node.forced_utf8_encoding?), ("forced_binary_encoding" if node.forced_binary_encoding?), ("forced_us_ascii_encoding" if node.forced_us_ascii_encoding?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1380,8 +1392,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a InterpolatedRegularExpressionNode node.
-    def visit_interpolated_regular_expression_node(node)
+    #: (InterpolatedRegularExpressionNode node) -> void
+    def visit_interpolated_regular_expression_node(node) # :nodoc:
       commands << [inspect_node("InterpolatedRegularExpressionNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("ignore_case" if node.ignore_case?), ("extended" if node.extended?), ("multi_line" if node.multi_line?), ("once" if node.once?), ("euc_jp" if node.euc_jp?), ("ascii_8bit" if node.ascii_8bit?), ("windows_31j" if node.windows_31j?), ("utf_8" if node.utf_8?), ("forced_utf8_encoding" if node.forced_utf8_encoding?), ("forced_binary_encoding" if node.forced_binary_encoding?), ("forced_us_ascii_encoding" if node.forced_us_ascii_encoding?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1398,8 +1410,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a InterpolatedStringNode node.
-    def visit_interpolated_string_node(node)
+    #: (InterpolatedStringNode node) -> void
+    def visit_interpolated_string_node(node) # :nodoc:
       commands << [inspect_node("InterpolatedStringNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("frozen" if node.frozen?), ("mutable" if node.mutable?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1416,8 +1428,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a InterpolatedSymbolNode node.
-    def visit_interpolated_symbol_node(node)
+    #: (InterpolatedSymbolNode node) -> void
+    def visit_interpolated_symbol_node(node) # :nodoc:
       commands << [inspect_node("InterpolatedSymbolNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1434,8 +1446,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a InterpolatedXStringNode node.
-    def visit_interpolated_x_string_node(node)
+    #: (InterpolatedXStringNode node) -> void
+    def visit_interpolated_x_string_node(node) # :nodoc:
       commands << [inspect_node("InterpolatedXStringNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1452,22 +1464,22 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a ItLocalVariableReadNode node.
-    def visit_it_local_variable_read_node(node)
+    #: (ItLocalVariableReadNode node) -> void
+    def visit_it_local_variable_read_node(node) # :nodoc:
       commands << [inspect_node("ItLocalVariableReadNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a ItParametersNode node.
-    def visit_it_parameters_node(node)
+    #: (ItParametersNode node) -> void
+    def visit_it_parameters_node(node) # :nodoc:
       commands << [inspect_node("ItParametersNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a KeywordHashNode node.
-    def visit_keyword_hash_node(node)
+    #: (KeywordHashNode node) -> void
+    def visit_keyword_hash_node(node) # :nodoc:
       commands << [inspect_node("KeywordHashNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("symbol_keys" if node.symbol_keys?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1482,8 +1494,8 @@ module Prism
       end
     end
 
-    # Inspect a KeywordRestParameterNode node.
-    def visit_keyword_rest_parameter_node(node)
+    #: (KeywordRestParameterNode node) -> void
+    def visit_keyword_rest_parameter_node(node) # :nodoc:
       commands << [inspect_node("KeywordRestParameterNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("repeated_parameter" if node.repeated_parameter?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1496,8 +1508,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a LambdaNode node.
-    def visit_lambda_node(node)
+    #: (LambdaNode node) -> void
+    def visit_lambda_node(node) # :nodoc:
       commands << [inspect_node("LambdaNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1519,8 +1531,8 @@ module Prism
       end
     end
 
-    # Inspect a LocalVariableAndWriteNode node.
-    def visit_local_variable_and_write_node(node)
+    #: (LocalVariableAndWriteNode node) -> void
+    def visit_local_variable_and_write_node(node) # :nodoc:
       commands << [inspect_node("LocalVariableAndWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1532,8 +1544,8 @@ module Prism
       commands << ["└── depth: #{node.depth.inspect}\n", indent]
     end
 
-    # Inspect a LocalVariableOperatorWriteNode node.
-    def visit_local_variable_operator_write_node(node)
+    #: (LocalVariableOperatorWriteNode node) -> void
+    def visit_local_variable_operator_write_node(node) # :nodoc:
       commands << [inspect_node("LocalVariableOperatorWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1546,8 +1558,8 @@ module Prism
       commands << ["└── depth: #{node.depth.inspect}\n", indent]
     end
 
-    # Inspect a LocalVariableOrWriteNode node.
-    def visit_local_variable_or_write_node(node)
+    #: (LocalVariableOrWriteNode node) -> void
+    def visit_local_variable_or_write_node(node) # :nodoc:
       commands << [inspect_node("LocalVariableOrWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1559,8 +1571,8 @@ module Prism
       commands << ["└── depth: #{node.depth.inspect}\n", indent]
     end
 
-    # Inspect a LocalVariableReadNode node.
-    def visit_local_variable_read_node(node)
+    #: (LocalVariableReadNode node) -> void
+    def visit_local_variable_read_node(node) # :nodoc:
       commands << [inspect_node("LocalVariableReadNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1568,8 +1580,8 @@ module Prism
       commands << ["└── depth: #{node.depth.inspect}\n", indent]
     end
 
-    # Inspect a LocalVariableTargetNode node.
-    def visit_local_variable_target_node(node)
+    #: (LocalVariableTargetNode node) -> void
+    def visit_local_variable_target_node(node) # :nodoc:
       commands << [inspect_node("LocalVariableTargetNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1577,8 +1589,8 @@ module Prism
       commands << ["└── depth: #{node.depth.inspect}\n", indent]
     end
 
-    # Inspect a LocalVariableWriteNode node.
-    def visit_local_variable_write_node(node)
+    #: (LocalVariableWriteNode node) -> void
+    def visit_local_variable_write_node(node) # :nodoc:
       commands << [inspect_node("LocalVariableWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1590,8 +1602,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a MatchLastLineNode node.
-    def visit_match_last_line_node(node)
+    #: (MatchLastLineNode node) -> void
+    def visit_match_last_line_node(node) # :nodoc:
       commands << [inspect_node("MatchLastLineNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("ignore_case" if node.ignore_case?), ("extended" if node.extended?), ("multi_line" if node.multi_line?), ("once" if node.once?), ("euc_jp" if node.euc_jp?), ("ascii_8bit" if node.ascii_8bit?), ("windows_31j" if node.windows_31j?), ("utf_8" if node.utf_8?), ("forced_utf8_encoding" if node.forced_utf8_encoding?), ("forced_binary_encoding" if node.forced_binary_encoding?), ("forced_us_ascii_encoding" if node.forced_us_ascii_encoding?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1601,8 +1613,8 @@ module Prism
       commands << ["└── unescaped: #{node.unescaped.inspect}\n", indent]
     end
 
-    # Inspect a MatchPredicateNode node.
-    def visit_match_predicate_node(node)
+    #: (MatchPredicateNode node) -> void
+    def visit_match_predicate_node(node) # :nodoc:
       commands << [inspect_node("MatchPredicateNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1613,8 +1625,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a MatchRequiredNode node.
-    def visit_match_required_node(node)
+    #: (MatchRequiredNode node) -> void
+    def visit_match_required_node(node) # :nodoc:
       commands << [inspect_node("MatchRequiredNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1625,8 +1637,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a MatchWriteNode node.
-    def visit_match_write_node(node)
+    #: (MatchWriteNode node) -> void
+    def visit_match_write_node(node) # :nodoc:
       commands << [inspect_node("MatchWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1643,15 +1655,15 @@ module Prism
       end
     end
 
-    # Inspect a MissingNode node.
-    def visit_missing_node(node)
+    #: (MissingNode node) -> void
+    def visit_missing_node(node) # :nodoc:
       commands << [inspect_node("MissingNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a ModuleNode node.
-    def visit_module_node(node)
+    #: (ModuleNode node) -> void
+    def visit_module_node(node) # :nodoc:
       commands << [inspect_node("ModuleNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1669,8 +1681,8 @@ module Prism
       commands << ["└── name: #{node.name.inspect}\n", indent]
     end
 
-    # Inspect a MultiTargetNode node.
-    def visit_multi_target_node(node)
+    #: (MultiTargetNode node) -> void
+    def visit_multi_target_node(node) # :nodoc:
       commands << [inspect_node("MultiTargetNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1702,8 +1714,8 @@ module Prism
       commands << ["└── rparen_loc: #{inspect_location(node.rparen_loc)}\n", indent]
     end
 
-    # Inspect a MultiWriteNode node.
-    def visit_multi_write_node(node)
+    #: (MultiWriteNode node) -> void
+    def visit_multi_write_node(node) # :nodoc:
       commands << [inspect_node("MultiWriteNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1738,8 +1750,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a NextNode node.
-    def visit_next_node(node)
+    #: (NextNode node) -> void
+    def visit_next_node(node) # :nodoc:
       commands << [inspect_node("NextNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1752,15 +1764,24 @@ module Prism
       commands << ["└── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
     end
 
-    # Inspect a NilNode node.
-    def visit_nil_node(node)
+    #: (NilNode node) -> void
+    def visit_nil_node(node) # :nodoc:
       commands << [inspect_node("NilNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a NoKeywordsParameterNode node.
-    def visit_no_keywords_parameter_node(node)
+    #: (NoBlockParameterNode node) -> void
+    def visit_no_block_parameter_node(node) # :nodoc:
+      commands << [inspect_node("NoBlockParameterNode", node), indent]
+      flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
+      commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
+      commands << ["├── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
+      commands << ["└── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
+    end
+
+    #: (NoKeywordsParameterNode node) -> void
+    def visit_no_keywords_parameter_node(node) # :nodoc:
       commands << [inspect_node("NoKeywordsParameterNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1768,24 +1789,24 @@ module Prism
       commands << ["└── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
     end
 
-    # Inspect a NumberedParametersNode node.
-    def visit_numbered_parameters_node(node)
+    #: (NumberedParametersNode node) -> void
+    def visit_numbered_parameters_node(node) # :nodoc:
       commands << [inspect_node("NumberedParametersNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── maximum: #{node.maximum.inspect}\n", indent]
     end
 
-    # Inspect a NumberedReferenceReadNode node.
-    def visit_numbered_reference_read_node(node)
+    #: (NumberedReferenceReadNode node) -> void
+    def visit_numbered_reference_read_node(node) # :nodoc:
       commands << [inspect_node("NumberedReferenceReadNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── number: #{node.number.inspect}\n", indent]
     end
 
-    # Inspect a OptionalKeywordParameterNode node.
-    def visit_optional_keyword_parameter_node(node)
+    #: (OptionalKeywordParameterNode node) -> void
+    def visit_optional_keyword_parameter_node(node) # :nodoc:
       commands << [inspect_node("OptionalKeywordParameterNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("repeated_parameter" if node.repeated_parameter?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1795,8 +1816,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a OptionalParameterNode node.
-    def visit_optional_parameter_node(node)
+    #: (OptionalParameterNode node) -> void
+    def visit_optional_parameter_node(node) # :nodoc:
       commands << [inspect_node("OptionalParameterNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("repeated_parameter" if node.repeated_parameter?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1807,8 +1828,8 @@ module Prism
       commands << [node.value, "#{indent}    "]
     end
 
-    # Inspect a OrNode node.
-    def visit_or_node(node)
+    #: (OrNode node) -> void
+    def visit_or_node(node) # :nodoc:
       commands << [inspect_node("OrNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1819,8 +1840,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a ParametersNode node.
-    def visit_parameters_node(node)
+    #: (ParametersNode node) -> void
+    def visit_parameters_node(node) # :nodoc:
       commands << [inspect_node("ParametersNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1880,8 +1901,8 @@ module Prism
       end
     end
 
-    # Inspect a ParenthesesNode node.
-    def visit_parentheses_node(node)
+    #: (ParenthesesNode node) -> void
+    def visit_parentheses_node(node) # :nodoc:
       commands << [inspect_node("ParenthesesNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("multiple_statements" if node.multiple_statements?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1895,8 +1916,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a PinnedExpressionNode node.
-    def visit_pinned_expression_node(node)
+    #: (PinnedExpressionNode node) -> void
+    def visit_pinned_expression_node(node) # :nodoc:
       commands << [inspect_node("PinnedExpressionNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1907,8 +1928,8 @@ module Prism
       commands << ["└── rparen_loc: #{inspect_location(node.rparen_loc)}\n", indent]
     end
 
-    # Inspect a PinnedVariableNode node.
-    def visit_pinned_variable_node(node)
+    #: (PinnedVariableNode node) -> void
+    def visit_pinned_variable_node(node) # :nodoc:
       commands << [inspect_node("PinnedVariableNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1917,8 +1938,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a PostExecutionNode node.
-    def visit_post_execution_node(node)
+    #: (PostExecutionNode node) -> void
+    def visit_post_execution_node(node) # :nodoc:
       commands << [inspect_node("PostExecutionNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1933,8 +1954,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a PreExecutionNode node.
-    def visit_pre_execution_node(node)
+    #: (PreExecutionNode node) -> void
+    def visit_pre_execution_node(node) # :nodoc:
       commands << [inspect_node("PreExecutionNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1949,8 +1970,8 @@ module Prism
       commands << ["└── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
     end
 
-    # Inspect a ProgramNode node.
-    def visit_program_node(node)
+    #: (ProgramNode node) -> void
+    def visit_program_node(node) # :nodoc:
       commands << [inspect_node("ProgramNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1959,8 +1980,8 @@ module Prism
       commands << [node.statements, "#{indent}    "]
     end
 
-    # Inspect a RangeNode node.
-    def visit_range_node(node)
+    #: (RangeNode node) -> void
+    def visit_range_node(node) # :nodoc:
       commands << [inspect_node("RangeNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("exclude_end" if node.exclude_end?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1979,8 +2000,8 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a RationalNode node.
-    def visit_rational_node(node)
+    #: (RationalNode node) -> void
+    def visit_rational_node(node) # :nodoc:
       commands << [inspect_node("RationalNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("binary" if node.binary?), ("decimal" if node.decimal?), ("octal" if node.octal?), ("hexadecimal" if node.hexadecimal?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -1988,15 +2009,15 @@ module Prism
       commands << ["└── denominator: #{node.denominator.inspect}\n", indent]
     end
 
-    # Inspect a RedoNode node.
-    def visit_redo_node(node)
+    #: (RedoNode node) -> void
+    def visit_redo_node(node) # :nodoc:
       commands << [inspect_node("RedoNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a RegularExpressionNode node.
-    def visit_regular_expression_node(node)
+    #: (RegularExpressionNode node) -> void
+    def visit_regular_expression_node(node) # :nodoc:
       commands << [inspect_node("RegularExpressionNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("ignore_case" if node.ignore_case?), ("extended" if node.extended?), ("multi_line" if node.multi_line?), ("once" if node.once?), ("euc_jp" if node.euc_jp?), ("ascii_8bit" if node.ascii_8bit?), ("windows_31j" if node.windows_31j?), ("utf_8" if node.utf_8?), ("forced_utf8_encoding" if node.forced_utf8_encoding?), ("forced_binary_encoding" if node.forced_binary_encoding?), ("forced_us_ascii_encoding" if node.forced_us_ascii_encoding?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2006,8 +2027,8 @@ module Prism
       commands << ["└── unescaped: #{node.unescaped.inspect}\n", indent]
     end
 
-    # Inspect a RequiredKeywordParameterNode node.
-    def visit_required_keyword_parameter_node(node)
+    #: (RequiredKeywordParameterNode node) -> void
+    def visit_required_keyword_parameter_node(node) # :nodoc:
       commands << [inspect_node("RequiredKeywordParameterNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("repeated_parameter" if node.repeated_parameter?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2015,16 +2036,16 @@ module Prism
       commands << ["└── name_loc: #{inspect_location(node.name_loc)}\n", indent]
     end
 
-    # Inspect a RequiredParameterNode node.
-    def visit_required_parameter_node(node)
+    #: (RequiredParameterNode node) -> void
+    def visit_required_parameter_node(node) # :nodoc:
       commands << [inspect_node("RequiredParameterNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("repeated_parameter" if node.repeated_parameter?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── name: #{node.name.inspect}\n", indent]
     end
 
-    # Inspect a RescueModifierNode node.
-    def visit_rescue_modifier_node(node)
+    #: (RescueModifierNode node) -> void
+    def visit_rescue_modifier_node(node) # :nodoc:
       commands << [inspect_node("RescueModifierNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2035,8 +2056,8 @@ module Prism
       commands << [node.rescue_expression, "#{indent}    "]
     end
 
-    # Inspect a RescueNode node.
-    def visit_rescue_node(node)
+    #: (RescueNode node) -> void
+    def visit_rescue_node(node) # :nodoc:
       commands << [inspect_node("RescueNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2072,8 +2093,8 @@ module Prism
       end
     end
 
-    # Inspect a RestParameterNode node.
-    def visit_rest_parameter_node(node)
+    #: (RestParameterNode node) -> void
+    def visit_rest_parameter_node(node) # :nodoc:
       commands << [inspect_node("RestParameterNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("repeated_parameter" if node.repeated_parameter?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2086,15 +2107,15 @@ module Prism
       commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
     end
 
-    # Inspect a RetryNode node.
-    def visit_retry_node(node)
+    #: (RetryNode node) -> void
+    def visit_retry_node(node) # :nodoc:
       commands << [inspect_node("RetryNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a ReturnNode node.
-    def visit_return_node(node)
+    #: (ReturnNode node) -> void
+    def visit_return_node(node) # :nodoc:
       commands << [inspect_node("ReturnNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2107,15 +2128,15 @@ module Prism
       end
     end
 
-    # Inspect a SelfNode node.
-    def visit_self_node(node)
+    #: (SelfNode node) -> void
+    def visit_self_node(node) # :nodoc:
       commands << [inspect_node("SelfNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a ShareableConstantNode node.
-    def visit_shareable_constant_node(node)
+    #: (ShareableConstantNode node) -> void
+    def visit_shareable_constant_node(node) # :nodoc:
       commands << [inspect_node("ShareableConstantNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("literal" if node.literal?), ("experimental_everything" if node.experimental_everything?), ("experimental_copy" if node.experimental_copy?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2123,8 +2144,8 @@ module Prism
       commands << [node.write, "#{indent}    "]
     end
 
-    # Inspect a SingletonClassNode node.
-    def visit_singleton_class_node(node)
+    #: (SingletonClassNode node) -> void
+    def visit_singleton_class_node(node) # :nodoc:
       commands << [inspect_node("SingletonClassNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2142,30 +2163,30 @@ module Prism
       commands << ["└── end_keyword_loc: #{inspect_location(node.end_keyword_loc)}\n", indent]
     end
 
-    # Inspect a SourceEncodingNode node.
-    def visit_source_encoding_node(node)
+    #: (SourceEncodingNode node) -> void
+    def visit_source_encoding_node(node) # :nodoc:
       commands << [inspect_node("SourceEncodingNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a SourceFileNode node.
-    def visit_source_file_node(node)
+    #: (SourceFileNode node) -> void
+    def visit_source_file_node(node) # :nodoc:
       commands << [inspect_node("SourceFileNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("forced_utf8_encoding" if node.forced_utf8_encoding?), ("forced_binary_encoding" if node.forced_binary_encoding?), ("frozen" if node.frozen?), ("mutable" if node.mutable?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["└── filepath: #{node.filepath.inspect}\n", indent]
     end
 
-    # Inspect a SourceLineNode node.
-    def visit_source_line_node(node)
+    #: (SourceLineNode node) -> void
+    def visit_source_line_node(node) # :nodoc:
       commands << [inspect_node("SourceLineNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a SplatNode node.
-    def visit_splat_node(node)
+    #: (SplatNode node) -> void
+    def visit_splat_node(node) # :nodoc:
       commands << [inspect_node("SplatNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2178,8 +2199,8 @@ module Prism
       end
     end
 
-    # Inspect a StatementsNode node.
-    def visit_statements_node(node)
+    #: (StatementsNode node) -> void
+    def visit_statements_node(node) # :nodoc:
       commands << [inspect_node("StatementsNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2194,8 +2215,8 @@ module Prism
       end
     end
 
-    # Inspect a StringNode node.
-    def visit_string_node(node)
+    #: (StringNode node) -> void
+    def visit_string_node(node) # :nodoc:
       commands << [inspect_node("StringNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("forced_utf8_encoding" if node.forced_utf8_encoding?), ("forced_binary_encoding" if node.forced_binary_encoding?), ("frozen" if node.frozen?), ("mutable" if node.mutable?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2205,8 +2226,8 @@ module Prism
       commands << ["└── unescaped: #{node.unescaped.inspect}\n", indent]
     end
 
-    # Inspect a SuperNode node.
-    def visit_super_node(node)
+    #: (SuperNode node) -> void
+    def visit_super_node(node) # :nodoc:
       commands << [inspect_node("SuperNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2227,8 +2248,8 @@ module Prism
       end
     end
 
-    # Inspect a SymbolNode node.
-    def visit_symbol_node(node)
+    #: (SymbolNode node) -> void
+    def visit_symbol_node(node) # :nodoc:
       commands << [inspect_node("SymbolNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("forced_utf8_encoding" if node.forced_utf8_encoding?), ("forced_binary_encoding" if node.forced_binary_encoding?), ("forced_us_ascii_encoding" if node.forced_us_ascii_encoding?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2238,15 +2259,15 @@ module Prism
       commands << ["└── unescaped: #{node.unescaped.inspect}\n", indent]
     end
 
-    # Inspect a TrueNode node.
-    def visit_true_node(node)
+    #: (TrueNode node) -> void
+    def visit_true_node(node) # :nodoc:
       commands << [inspect_node("TrueNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
-    # Inspect a UndefNode node.
-    def visit_undef_node(node)
+    #: (UndefNode node) -> void
+    def visit_undef_node(node) # :nodoc:
       commands << [inspect_node("UndefNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2262,8 +2283,8 @@ module Prism
       commands << ["└── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
     end
 
-    # Inspect a UnlessNode node.
-    def visit_unless_node(node)
+    #: (UnlessNode node) -> void
+    def visit_unless_node(node) # :nodoc:
       commands << [inspect_node("UnlessNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2286,8 +2307,8 @@ module Prism
       commands << ["└── end_keyword_loc: #{inspect_location(node.end_keyword_loc)}\n", indent]
     end
 
-    # Inspect a UntilNode node.
-    def visit_until_node(node)
+    #: (UntilNode node) -> void
+    def visit_until_node(node) # :nodoc:
       commands << [inspect_node("UntilNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("begin_modifier" if node.begin_modifier?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2304,8 +2325,8 @@ module Prism
       end
     end
 
-    # Inspect a WhenNode node.
-    def visit_when_node(node)
+    #: (WhenNode node) -> void
+    def visit_when_node(node) # :nodoc:
       commands << [inspect_node("WhenNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2328,8 +2349,8 @@ module Prism
       end
     end
 
-    # Inspect a WhileNode node.
-    def visit_while_node(node)
+    #: (WhileNode node) -> void
+    def visit_while_node(node) # :nodoc:
       commands << [inspect_node("WhileNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("begin_modifier" if node.begin_modifier?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2346,8 +2367,8 @@ module Prism
       end
     end
 
-    # Inspect a XStringNode node.
-    def visit_x_string_node(node)
+    #: (XStringNode node) -> void
+    def visit_x_string_node(node) # :nodoc:
       commands << [inspect_node("XStringNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("forced_utf8_encoding" if node.forced_utf8_encoding?), ("forced_binary_encoding" if node.forced_binary_encoding?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2357,8 +2378,8 @@ module Prism
       commands << ["└── unescaped: #{node.unescaped.inspect}\n", indent]
     end
 
-    # Inspect a YieldNode node.
-    def visit_yield_node(node)
+    #: (YieldNode node) -> void
+    def visit_yield_node(node) # :nodoc:
       commands << [inspect_node("YieldNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
@@ -2376,13 +2397,17 @@ module Prism
     private
 
     # Compose a header for the given node.
-    def inspect_node(name, node)
+    #--
+    #: (String name, node node) -> String
+    def inspect_node(name, node) # :nodoc:
       location = node.location
       "@ #{name} (location: (#{location.start_line},#{location.start_column})-(#{location.end_line},#{location.end_column}))\n"
     end
 
     # Compose a string representing the given inner location field.
-    def inspect_location(location)
+    #--
+    #: (Location? location) -> String
+    def inspect_location(location) # :nodoc:
       if location
         "(#{location.start_line},#{location.start_column})-(#{location.end_line},#{location.end_column}) = #{location.slice.inspect}"
       else

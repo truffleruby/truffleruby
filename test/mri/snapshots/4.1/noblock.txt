@@ -1,0 +1,61 @@
+@ ProgramNode (location: (1,0)-(4,12))
+├── flags: ∅
+├── locals: []
+└── statements:
+    @ StatementsNode (location: (1,0)-(4,12))
+    ├── flags: ∅
+    └── body: (length: 2)
+        ├── @ DefNode (location: (1,0)-(2,3))
+        │   ├── flags: newline
+        │   ├── name: :foo
+        │   ├── name_loc: (1,4)-(1,7) = "foo"
+        │   ├── receiver: ∅
+        │   ├── parameters:
+        │   │   @ ParametersNode (location: (1,8)-(1,12))
+        │   │   ├── flags: ∅
+        │   │   ├── requireds: (length: 0)
+        │   │   ├── optionals: (length: 0)
+        │   │   ├── rest: ∅
+        │   │   ├── posts: (length: 0)
+        │   │   ├── keywords: (length: 0)
+        │   │   ├── keyword_rest: ∅
+        │   │   └── block:
+        │   │       @ NoBlockParameterNode (location: (1,8)-(1,12))
+        │   │       ├── flags: ∅
+        │   │       ├── operator_loc: (1,8)-(1,9) = "&"
+        │   │       └── keyword_loc: (1,9)-(1,12) = "nil"
+        │   ├── body: ∅
+        │   ├── locals: []
+        │   ├── def_keyword_loc: (1,0)-(1,3) = "def"
+        │   ├── operator_loc: ∅
+        │   ├── lparen_loc: (1,7)-(1,8) = "("
+        │   ├── rparen_loc: (1,12)-(1,13) = ")"
+        │   ├── equal_loc: ∅
+        │   └── end_keyword_loc: (2,0)-(2,3) = "end"
+        └── @ LambdaNode (location: (4,0)-(4,12))
+            ├── flags: newline
+            ├── locals: []
+            ├── operator_loc: (4,0)-(4,2) = "->"
+            ├── opening_loc: (4,10)-(4,11) = "{"
+            ├── closing_loc: (4,11)-(4,12) = "}"
+            ├── parameters:
+            │   @ BlockParametersNode (location: (4,3)-(4,9))
+            │   ├── flags: ∅
+            │   ├── parameters:
+            │   │   @ ParametersNode (location: (4,4)-(4,8))
+            │   │   ├── flags: ∅
+            │   │   ├── requireds: (length: 0)
+            │   │   ├── optionals: (length: 0)
+            │   │   ├── rest: ∅
+            │   │   ├── posts: (length: 0)
+            │   │   ├── keywords: (length: 0)
+            │   │   ├── keyword_rest: ∅
+            │   │   └── block:
+            │   │       @ NoBlockParameterNode (location: (4,4)-(4,8))
+            │   │       ├── flags: ∅
+            │   │       ├── operator_loc: (4,4)-(4,5) = "&"
+            │   │       └── keyword_loc: (4,5)-(4,8) = "nil"
+            │   ├── locals: (length: 0)
+            │   ├── opening_loc: (4,3)-(4,4) = "("
+            │   └── closing_loc: (4,8)-(4,9) = ")"
+            └── body: ∅

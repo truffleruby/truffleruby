@@ -9,12 +9,15 @@ if you are looking to modify the template
 ++
 =end
 
+#--
+# rbs_inline: enabled
+
 require "stringio"
 require_relative "polyfill/unpack1"
 
 module Prism
   # A module responsible for deserializing parse results.
-  module Serialize
+  module Serialize # :nodoc:
     # The major version of prism that we are expecting to find in the serialized
     # strings.
     MAJOR_VERSION = 1
@@ -31,9 +34,11 @@ module Prism
     #
     # The formatting of the source of this method is purposeful to illustrate
     # the structure of the serialized data.
+    #--
+    #: (String input, String serialized, bool freeze) -> ParseResult
     def self.load_parse(input, serialized, freeze)
       input = input.dup
-      source = Source.for(input)
+      source = Source.for(input, 1, [])
       loader = Loader.new(source, serialized)
 
                        loader.load_header
@@ -52,9 +57,9 @@ module Prism
       cpool_base =     loader.load_uint32
       cpool_size =     loader.load_varuint
 
-      constant_pool = ConstantPool.new(input, serialized, cpool_base, cpool_size)
+      constant_pool = ConstantPool.new(serialized, cpool_base, cpool_size)
 
-      node =           loader.load_node(constant_pool, encoding, freeze)
+      node =           loader.load_node(constant_pool, encoding, freeze) #: ProgramNode
                        loader.load_constant_pool(constant_pool)
       raise unless     loader.eof?
 
@@ -84,8 +89,10 @@ module Prism
     #
     # The formatting of the source of this method is purposeful to illustrate
     # the structure of the serialized data.
+    #--
+    #: (String input, String serialized, bool freeze) -> LexResult
     def self.load_lex(input, serialized, freeze)
-      source = Source.for(input)
+      source = Source.for(input, 1, [])
       loader = Loader.new(source, serialized)
 
       tokens =         loader.load_tokens
@@ -128,8 +135,10 @@ module Prism
     #
     # The formatting of the source of this method is purposeful to illustrate
     # the structure of the serialized data.
+    #--
+    #: (String input, String serialized, bool freeze) -> Array[Comment]
     def self.load_parse_comments(input, serialized, freeze)
-      source = Source.for(input)
+      source = Source.for(input, 1, [])
       loader = Loader.new(source, serialized)
 
                    loader.load_header
@@ -150,8 +159,10 @@ module Prism
     #
     # The formatting of the source of this method is purposeful to illustrate
     # the structure of the serialized data.
+    #--
+    #: (String input, String serialized, bool freeze) -> ParseLexResult
     def self.load_parse_lex(input, serialized, freeze)
-      source = Source.for(input)
+      source = Source.for(input, 1, [])
       loader = Loader.new(source, serialized)
 
       tokens =         loader.load_tokens
@@ -171,13 +182,13 @@ module Prism
       cpool_base =     loader.load_uint32
       cpool_size =     loader.load_varuint
 
-      constant_pool = ConstantPool.new(input, serialized, cpool_base, cpool_size)
+      constant_pool = ConstantPool.new(serialized, cpool_base, cpool_size)
 
-      node =           loader.load_node(constant_pool, encoding, freeze)
+      node =           loader.load_node(constant_pool, encoding, freeze) #: ProgramNode
                        loader.load_constant_pool(constant_pool)
       raise unless     loader.eof?
 
-      value = [node, tokens]
+      value = [node, tokens] #: [ProgramNode, Array[[Token, Integer]]]
       result = ParseLexResult.new(value, comments, magic_comments, data_loc, errors, warnings, source)
 
       tokens.each do |token|
@@ -200,34 +211,36 @@ module Prism
     end
 
     class ConstantPool # :nodoc:
-      attr_reader :size
+      attr_reader :size #: Integer
 
-      def initialize(input, serialized, base, size)
-        @input = input
+      # @rbs @serialized: String
+      # @rbs @base: Integer
+      # @rbs @pool: Array[Symbol?]
+
+      #: (String serialized, Integer base, Integer size) -> void
+      def initialize(serialized, base, size)
         @serialized = serialized
         @base = base
         @size = size
         @pool = Array.new(size, nil)
       end
 
+      #: (Integer index, Encoding encoding) -> Symbol
       def get(index, encoding)
         @pool[index] ||=
           begin
             offset = @base + index * 8
-            start = @serialized.unpack1("L", offset: offset)
-            length = @serialized.unpack1("L", offset: offset + 4)
+            start = @serialized.unpack1("L", offset: offset) #: Integer
+            length = @serialized.unpack1("L", offset: offset + 4) #: Integer
 
-            if start.nobits?(1 << 31)
-              @input.byteslice(start, length).force_encoding(encoding).to_sym
-            else
-              @serialized.byteslice(start & ((1 << 31) - 1), length).force_encoding(encoding).to_sym
-            end
+            (@serialized.byteslice(start, length) or raise).force_encoding(encoding).to_sym
           end
       end
     end
 
     if RUBY_ENGINE == "truffleruby"
       # StringIO is synchronized and that adds a high overhead on TruffleRuby.
+      # @rbs skip
       class FastStringIO # :nodoc:
         attr_accessor :pos
 
@@ -257,8 +270,11 @@ module Prism
     end
 
     class Loader # :nodoc:
-      attr_reader :input, :io, :source
+      attr_reader :input #: String
+      attr_reader :io #: StringIO
+      attr_reader :source #: Source
 
+      #: (Source source, String serialized) -> void
       def initialize(source, serialized)
         @input = source.source.dup
         raise unless serialized.encoding == Encoding::BINARY
@@ -267,40 +283,46 @@ module Prism
         define_load_node_lambdas if RUBY_ENGINE != "ruby"
       end
 
+      #: () -> bool
       def eof?
         io.getbyte
         io.eof?
       end
 
+      #: (ConstantPool constant_pool) -> void
       def load_constant_pool(constant_pool)
         trailer = 0
 
         constant_pool.size.times do |index|
-          start, length = io.read(8).unpack("L2")
-          trailer += length if start.anybits?(1 << 31)
+          length = (io.read(8) or raise).unpack1("L", offset: 4) #: Integer
+          trailer += length
         end
 
         io.read(trailer)
       end
 
+      #: () -> void
       def load_header
         raise "Invalid serialization" if io.read(5) != "PRISM"
-        raise "Invalid serialization" if io.read(3).unpack("C3") != [MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION]
+        raise "Invalid serialization" if (io.read(3) or raise).unpack("C3") != [MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION]
         raise "Invalid serialization (location fields must be included but are not)" if io.getbyte != 0
       end
 
+      #: () -> Encoding
       def load_encoding
-        encoding = Encoding.find(io.read(load_varuint))
+        encoding = Encoding.find((io.read(load_varuint) or raise)) or raise
         @input = input.force_encoding(encoding).freeze
         encoding
       end
 
+      #: (bool freeze) -> Array[Integer]
       def load_line_offsets(freeze)
         offsets = Array.new(load_varuint) { load_varuint }
         offsets.freeze if freeze
         offsets
       end
 
+      #: (bool freeze) -> Array[Comment]
       def load_comments(freeze)
         comments =
           Array.new(load_varuint) do
@@ -308,6 +330,7 @@ module Prism
               case load_varuint
               when 0 then InlineComment.new(load_location_object(freeze))
               when 1 then EmbDocComment.new(load_location_object(freeze))
+              else raise
               end
 
             comment.freeze if freeze
@@ -318,6 +341,7 @@ module Prism
         comments
       end
 
+      #: (bool freeze) -> Array[MagicComment]
       def load_magic_comments(freeze)
         magic_comments =
           Array.new(load_varuint) do
@@ -354,6 +378,8 @@ module Prism
         :argument_forwarding_unbound,
         :argument_no_forwarding_ampersand,
         :argument_no_forwarding_ellipses,
+        :argument_no_forwarding_ellipses_lambda,
+        :argument_no_forwarding_ellipses_block,
         :argument_no_forwarding_star,
         :argument_no_forwarding_star_star,
         :argument_splat_after_assoc_splat,
@@ -399,6 +425,7 @@ module Prism
         :def_endless,
         :def_endless_parameters,
         :def_endless_setter,
+        :def_endless_do_block,
         :def_name,
         :def_params_term,
         :def_params_term_paren,
@@ -660,10 +687,11 @@ module Prism
         :unreachable_statement,
         :unused_local_variable,
         :void_statement,
-      ].freeze
+      ].freeze #: Array[Symbol]
 
       private_constant :DIAGNOSTIC_TYPES
 
+      #: () -> Symbol
       def load_error_level
         level = io.getbyte
 
@@ -679,13 +707,14 @@ module Prism
         end
       end
 
+      #: (Encoding encoding, bool freeze) -> Array[ParseError]
       def load_errors(encoding, freeze)
         errors =
           Array.new(load_varuint) do
             error =
               ParseError.new(
                 DIAGNOSTIC_TYPES.fetch(load_varuint),
-                load_embedded_string(encoding),
+                load_string(encoding),
                 load_location_object(freeze),
                 load_error_level
               )
@@ -698,6 +727,7 @@ module Prism
         errors
       end
 
+      #: () -> Symbol
       def load_warning_level
         level = io.getbyte
 
@@ -711,13 +741,14 @@ module Prism
         end
       end
 
+      #: (Encoding encoding, bool freeze) -> Array[ParseWarning]
       def load_warnings(encoding, freeze)
         warnings =
           Array.new(load_varuint) do
             warning =
               ParseWarning.new(
                 DIAGNOSTIC_TYPES.fetch(load_varuint),
-                load_embedded_string(encoding),
+                load_string(encoding),
                 load_location_object(freeze),
                 load_warning_level
               )
@@ -730,8 +761,9 @@ module Prism
         warnings
       end
 
+      #: () -> Array[[Token, Integer]]
       def load_tokens
-        tokens = []
+        tokens = [] #: Array[[Token, Integer]]
 
         while (type = TOKEN_TYPES.fetch(load_varuint))
           start = load_varuint
@@ -749,25 +781,29 @@ module Prism
 
       # variable-length integer using https://en.wikipedia.org/wiki/LEB128
       # This is also what protobuf uses: https://protobuf.dev/programming-guides/encoding/#varints
+      #--
+      #: () -> Integer
       def load_varuint
-        n = io.getbyte
+        n = (io.getbyte or raise)
         if n < 128
           n
         else
           n -= 128
           shift = 0
-          while (b = io.getbyte) >= 128
+          while (b = (io.getbyte or raise)) >= 128
             n += (b - 128) << (shift += 7)
           end
           n + (b << (shift + 7))
         end
       end
 
+      #: () -> Integer
       def load_varsint
         n = load_varuint
         (n >> 1) ^ (-(n & 1))
       end
 
+      #: () -> Integer
       def load_integer
         negative = io.getbyte != 0
         length = load_varuint
@@ -779,14 +815,17 @@ module Prism
         value
       end
 
+      #: () -> Float
       def load_double
-        io.read(8).unpack1("D")
+        (io.read(8) or raise).unpack1("D") #: Float
       end
 
+      #: () -> Integer
       def load_uint32
-        io.read(4).unpack1("L")
+        (io.read(4) or raise).unpack1("L") #: Integer
       end
 
+      #: (ConstantPool constant_pool, Encoding encoding, bool freeze) -> node?
       def load_optional_node(constant_pool, encoding, freeze)
         if io.getbyte != 0
           io.pos -= 1
@@ -794,677 +833,2456 @@ module Prism
         end
       end
 
-      def load_embedded_string(encoding)
-        io.read(load_varuint).force_encoding(encoding).freeze
-      end
-
+      #: (Encoding encoding) -> String
       def load_string(encoding)
-        case (type = io.getbyte)
-        when 1
-          input.byteslice(load_varuint, load_varuint).force_encoding(encoding).freeze
-        when 2
-          load_embedded_string(encoding)
-        else
-          raise "Unknown serialized string type: #{type}"
-        end
+        (io.read(load_varuint) or raise).force_encoding(encoding).freeze
       end
 
+      #: (bool freeze) -> Location
       def load_location_object(freeze)
         location = Location.new(source, load_varuint, load_varuint)
         location.freeze if freeze
         location
       end
 
+      # Load a location object from the serialized data. Note that we are lying
+      # about the signature a bit here, because we sometimes load it as a packed
+      # integer instead of an object.
+      #--
+      #: (bool freeze) -> Location
       def load_location(freeze)
         return load_location_object(freeze) if freeze
-        (load_varuint << 32) | load_varuint
+        (load_varuint << 32) | load_varuint #: Location
       end
 
+      # Load an optional location object from the serialized data if it is
+      # present. Note that we are lying about the signature a bit here, because
+      # we sometimes load it as a packed integer instead of an object.
+      #--
+      #: (bool freeze) -> Location?
       def load_optional_location(freeze)
         load_location(freeze) if io.getbyte != 0
       end
 
+      #: (bool freeze) -> Location?
       def load_optional_location_object(freeze)
         load_location_object(freeze) if io.getbyte != 0
       end
 
+      #: (ConstantPool constant_pool, Encoding encoding) -> Symbol
       def load_constant(constant_pool, encoding)
         index = load_varuint
         constant_pool.get(index - 1, encoding)
       end
 
+      #: (ConstantPool constant_pool, Encoding encoding) -> Symbol?
       def load_optional_constant(constant_pool, encoding)
         index = load_varuint
         constant_pool.get(index - 1, encoding) if index != 0
       end
 
       if RUBY_ENGINE == "ruby"
+        #: (ConstantPool constant_pool, Encoding encoding, bool freeze) -> node
         def load_node(constant_pool, encoding, freeze)
           type = io.getbyte
           node_id = load_varuint
-          location = load_location(freeze)
-          value = case type
-          when 1 then
-            AliasGlobalVariableNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 2 then
-            AliasMethodNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 3 then
-            AlternationPatternNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 4 then
-            AndNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 5 then
-            ArgumentsNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze })
-          when 6 then
-            ArrayNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_location(freeze), load_optional_location(freeze))
-          when 7 then
-            ArrayPatternNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_location(freeze), load_optional_location(freeze))
-          when 8 then
-            AssocNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_optional_location(freeze))
-          when 9 then
-            AssocSplatNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 10 then
-            BackReferenceReadNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
-          when 11 then
-            BeginNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze))
-          when 12 then
-            BlockArgumentNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 13 then
-            BlockLocalVariableNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
-          when 14 then
-            BlockNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze }, load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze))
-          when 15 then
-            BlockParameterNode.new(source, node_id, location, load_varuint, load_optional_constant(constant_pool, encoding), load_optional_location(freeze), load_location(freeze))
-          when 16 then
-            BlockParametersNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_location(freeze), load_optional_location(freeze))
-          when 17 then
-            BreakNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 18 then
-            CallAndWriteNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_location(freeze), load_constant(constant_pool, encoding), load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 19 then
-            CallNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_constant(constant_pool, encoding), load_optional_location(freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze))
-          when 20 then
-            CallOperatorWriteNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_location(freeze), load_constant(constant_pool, encoding), load_constant(constant_pool, encoding), load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 21 then
-            CallOrWriteNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_location(freeze), load_constant(constant_pool, encoding), load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 22 then
-            CallTargetNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_constant(constant_pool, encoding), load_location(freeze))
-          when 23 then
-            CapturePatternNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 24 then
-            CaseMatchNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze))
-          when 25 then
-            CaseNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze))
-          when 26 then
-            ClassNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze }, load_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_constant(constant_pool, encoding))
-          when 27 then
-            ClassVariableAndWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 28 then
-            ClassVariableOperatorWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding))
-          when 29 then
-            ClassVariableOrWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 30 then
-            ClassVariableReadNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
-          when 31 then
-            ClassVariableTargetNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
-          when 32 then
-            ClassVariableWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 33 then
-            ConstantAndWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 34 then
-            ConstantOperatorWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding))
-          when 35 then
-            ConstantOrWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 36 then
-            ConstantPathAndWriteNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 37 then
-            ConstantPathNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_constant(constant_pool, encoding), load_location(freeze), load_location(freeze))
-          when 38 then
-            ConstantPathOperatorWriteNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding))
-          when 39 then
-            ConstantPathOrWriteNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 40 then
-            ConstantPathTargetNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_constant(constant_pool, encoding), load_location(freeze), load_location(freeze))
-          when 41 then
-            ConstantPathWriteNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 42 then
-            ConstantReadNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
-          when 43 then
-            ConstantTargetNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
-          when 44 then
-            ConstantWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 45 then
-            load_uint32
-            DefNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze }, load_location(freeze), load_optional_location(freeze), load_optional_location(freeze), load_optional_location(freeze), load_optional_location(freeze), load_optional_location(freeze))
-          when 46 then
-            DefinedNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_location(freeze))
-          when 47 then
-            ElseNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze))
-          when 48 then
-            EmbeddedStatementsNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 49 then
-            EmbeddedVariableNode.new(source, node_id, location, load_varuint, load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 50 then
-            EnsureNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 51 then
-            FalseNode.new(source, node_id, location, load_varuint)
-          when 52 then
-            FindPatternNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_location(freeze))
-          when 53 then
-            FlipFlopNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 54 then
-            FloatNode.new(source, node_id, location, load_varuint, load_double)
-          when 55 then
-            ForNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze), load_optional_location(freeze), load_location(freeze))
-          when 56 then
-            ForwardingArgumentsNode.new(source, node_id, location, load_varuint)
-          when 57 then
-            ForwardingParameterNode.new(source, node_id, location, load_varuint)
-          when 58 then
-            ForwardingSuperNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze))
-          when 59 then
-            GlobalVariableAndWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 60 then
-            GlobalVariableOperatorWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding))
-          when 61 then
-            GlobalVariableOrWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 62 then
-            GlobalVariableReadNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
-          when 63 then
-            GlobalVariableTargetNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
-          when 64 then
-            GlobalVariableWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 65 then
-            HashNode.new(source, node_id, location, load_varuint, load_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_location(freeze))
-          when 66 then
-            HashPatternNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_location(freeze))
-          when 67 then
-            IfNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze))
-          when 68 then
-            ImaginaryNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze))
-          when 69 then
-            ImplicitNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze))
-          when 70 then
-            ImplicitRestNode.new(source, node_id, location, load_varuint)
-          when 71 then
-            InNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_optional_location(freeze))
-          when 72 then
-            IndexAndWriteNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 73 then
-            IndexOperatorWriteNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 74 then
-            IndexOrWriteNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 75 then
-            IndexTargetNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze))
-          when 76 then
-            InstanceVariableAndWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 77 then
-            InstanceVariableOperatorWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding))
-          when 78 then
-            InstanceVariableOrWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 79 then
-            InstanceVariableReadNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
-          when 80 then
-            InstanceVariableTargetNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
-          when 81 then
-            InstanceVariableWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 82 then
-            IntegerNode.new(source, node_id, location, load_varuint, load_integer)
-          when 83 then
-            InterpolatedMatchLastLineNode.new(source, node_id, location, load_varuint, load_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_location(freeze))
-          when 84 then
-            InterpolatedRegularExpressionNode.new(source, node_id, location, load_varuint, load_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_location(freeze))
-          when 85 then
-            InterpolatedStringNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_location(freeze))
-          when 86 then
-            InterpolatedSymbolNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_location(freeze))
-          when 87 then
-            InterpolatedXStringNode.new(source, node_id, location, load_varuint, load_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_location(freeze))
-          when 88 then
-            ItLocalVariableReadNode.new(source, node_id, location, load_varuint)
-          when 89 then
-            ItParametersNode.new(source, node_id, location, load_varuint)
-          when 90 then
-            KeywordHashNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze })
-          when 91 then
-            KeywordRestParameterNode.new(source, node_id, location, load_varuint, load_optional_constant(constant_pool, encoding), load_optional_location(freeze), load_location(freeze))
-          when 92 then
-            LambdaNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze }, load_location(freeze), load_location(freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze))
-          when 93 then
-            LocalVariableAndWriteNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding), load_varuint)
-          when 94 then
-            LocalVariableOperatorWriteNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding), load_constant(constant_pool, encoding), load_varuint)
-          when 95 then
-            LocalVariableOrWriteNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding), load_varuint)
-          when 96 then
-            LocalVariableReadNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_varuint)
-          when 97 then
-            LocalVariableTargetNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_varuint)
-          when 98 then
-            LocalVariableWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_varuint, load_location(freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 99 then
-            MatchLastLineNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze), load_location(freeze), load_string(encoding))
-          when 100 then
-            MatchPredicateNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 101 then
-            MatchRequiredNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 102 then
-            MatchWriteNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze })
-          when 103 then
-            MissingNode.new(source, node_id, location, load_varuint)
-          when 104 then
-            ModuleNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze }, load_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_constant(constant_pool, encoding))
-          when 105 then
-            MultiTargetNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_location(freeze), load_optional_location(freeze))
-          when 106 then
-            MultiWriteNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_location(freeze), load_optional_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 107 then
-            NextNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 108 then
-            NilNode.new(source, node_id, location, load_varuint)
-          when 109 then
-            NoKeywordsParameterNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze))
-          when 110 then
-            NumberedParametersNode.new(source, node_id, location, load_varuint, io.getbyte)
-          when 111 then
-            NumberedReferenceReadNode.new(source, node_id, location, load_varuint, load_varuint)
-          when 112 then
-            OptionalKeywordParameterNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 113 then
-            OptionalParameterNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 114 then
-            OrNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 115 then
-            ParametersNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze))
-          when 116 then
-            ParenthesesNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze))
-          when 117 then
-            PinnedExpressionNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze), load_location(freeze))
-          when 118 then
-            PinnedVariableNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 119 then
-            PostExecutionNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze), load_location(freeze))
-          when 120 then
-            PreExecutionNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze), load_location(freeze))
-          when 121 then
-            ProgramNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze }, load_node(constant_pool, encoding, freeze))
-          when 122 then
-            RangeNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 123 then
-            RationalNode.new(source, node_id, location, load_varuint, load_integer, load_integer)
-          when 124 then
-            RedoNode.new(source, node_id, location, load_varuint)
-          when 125 then
-            RegularExpressionNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze), load_location(freeze), load_string(encoding))
-          when 126 then
-            RequiredKeywordParameterNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze))
-          when 127 then
-            RequiredParameterNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
-          when 128 then
-            RescueModifierNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
-          when 129 then
-            RescueNode.new(source, node_id, location, load_varuint, load_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze))
-          when 130 then
-            RestParameterNode.new(source, node_id, location, load_varuint, load_optional_constant(constant_pool, encoding), load_optional_location(freeze), load_location(freeze))
-          when 131 then
-            RetryNode.new(source, node_id, location, load_varuint)
-          when 132 then
-            ReturnNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_node(constant_pool, encoding, freeze))
-          when 133 then
-            SelfNode.new(source, node_id, location, load_varuint)
-          when 134 then
-            ShareableConstantNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze))
-          when 135 then
-            SingletonClassNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze }, load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
-          when 136 then
-            SourceEncodingNode.new(source, node_id, location, load_varuint)
-          when 137 then
-            SourceFileNode.new(source, node_id, location, load_varuint, load_string(encoding))
-          when 138 then
-            SourceLineNode.new(source, node_id, location, load_varuint)
-          when 139 then
-            SplatNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_node(constant_pool, encoding, freeze))
-          when 140 then
-            StatementsNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze })
-          when 141 then
-            StringNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), load_location(freeze), load_optional_location(freeze), load_string(encoding))
-          when 142 then
-            SuperNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze))
-          when 143 then
-            SymbolNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), load_optional_location(freeze), load_optional_location(freeze), load_string(encoding))
-          when 144 then
-            TrueNode.new(source, node_id, location, load_varuint)
-          when 145 then
-            UndefNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_location(freeze))
-          when 146 then
-            UnlessNode.new(source, node_id, location, load_varuint, load_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze))
-          when 147 then
-            UntilNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_location(freeze), load_optional_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze))
-          when 148 then
-            WhenNode.new(source, node_id, location, load_varuint, load_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }.tap { |nodes| nodes.freeze if freeze }, load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze))
-          when 149 then
-            WhileNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_location(freeze), load_optional_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze))
-          when 150 then
-            XStringNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze), load_location(freeze), load_string(encoding))
-          when 151 then
-            YieldNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze))
-          end
+          location = load_location(freeze) #: Location
+          value =
+            case type
+            when 1
+              AliasGlobalVariableNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
+                load_node(constant_pool, encoding, freeze), #: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode | SymbolNode | MissingNode)
+                load_location(freeze),
+              )
+            when 2
+              AliasMethodNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: (SymbolNode | InterpolatedSymbolNode)
+                load_node(constant_pool, encoding, freeze), #: (SymbolNode | InterpolatedSymbolNode | GlobalVariableReadNode | MissingNode)
+                load_location(freeze),
+              )
+            when 3
+              AlternationPatternNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+              )
+            when 4
+              AndNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+              )
+            when 5
+              ArgumentsNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: Prism::node
+                end.tap { |nodes| nodes.freeze if freeze },
+              )
+            when 6
+              ArrayNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: Prism::node
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+              )
+            when 7
+              ArrayPatternNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: (ConstantPathNode | ConstantReadNode)?
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: Prism::node
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: Prism::node
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+              )
+            when 8
+              AssocNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_optional_location(freeze),
+              )
+            when 9
+              AssocSplatNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_location(freeze),
+              )
+            when 10
+              BackReferenceReadNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+              )
+            when 11
+              BeginNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                load_optional_node(constant_pool, encoding, freeze), #: RescueNode?
+                load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
+                load_optional_node(constant_pool, encoding, freeze), #: EnsureNode?
+                load_optional_location(freeze),
+              )
+            when 12
+              BlockArgumentNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_location(freeze),
+              )
+            when 13
+              BlockLocalVariableNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+              )
+            when 14
+              BlockNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
+                load_optional_node(constant_pool, encoding, freeze), #: (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
+                load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
+                load_location(freeze),
+                load_location(freeze),
+              )
+            when 15
+              BlockParameterNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_constant(constant_pool, encoding),
+                load_optional_location(freeze),
+                load_location(freeze),
+              )
+            when 16
+              BlockParametersNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: ParametersNode?
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: BlockLocalVariableNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+              )
+            when 17
+              BreakNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                load_location(freeze),
+              )
+            when 18
+              CallAndWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+                load_constant(constant_pool, encoding),
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 19
+              CallNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_optional_location(freeze),
+                load_constant(constant_pool, encoding),
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: (BlockNode | BlockArgumentNode)?
+              )
+            when 20
+              CallOperatorWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+                load_constant(constant_pool, encoding),
+                load_constant(constant_pool, encoding),
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 21
+              CallOrWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+                load_constant(constant_pool, encoding),
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 22
+              CallTargetNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+              )
+            when 23
+              CapturePatternNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_node(constant_pool, encoding, freeze), #: LocalVariableTargetNode
+                load_location(freeze),
+              )
+            when 24
+              CaseMatchNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: InNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
+                load_location(freeze),
+                load_location(freeze),
+              )
+            when 25
+              CaseNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: WhenNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
+                load_location(freeze),
+                load_location(freeze),
+              )
+            when 26
+              ClassNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: (ConstantReadNode | ConstantPathNode | CallNode)
+                load_optional_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
+                load_location(freeze),
+                load_constant(constant_pool, encoding),
+              )
+            when 27
+              ClassVariableAndWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 28
+              ClassVariableOperatorWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_constant(constant_pool, encoding),
+              )
+            when 29
+              ClassVariableOrWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 30
+              ClassVariableReadNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+              )
+            when 31
+              ClassVariableTargetNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+              )
+            when 32
+              ClassVariableWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+              )
+            when 33
+              ConstantAndWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 34
+              ConstantOperatorWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_constant(constant_pool, encoding),
+              )
+            when 35
+              ConstantOrWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 36
+              ConstantPathAndWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: ConstantPathNode
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 37
+              ConstantPathNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_optional_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+              )
+            when 38
+              ConstantPathOperatorWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: ConstantPathNode
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_constant(constant_pool, encoding),
+              )
+            when 39
+              ConstantPathOrWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: ConstantPathNode
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 40
+              ConstantPathTargetNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_optional_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+              )
+            when 41
+              ConstantPathWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: ConstantPathNode
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 42
+              ConstantReadNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+              )
+            when 43
+              ConstantTargetNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+              )
+            when 44
+              ConstantWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+              )
+            when 45
+              load_uint32
+              DefNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_optional_node(constant_pool, encoding, freeze), #: ParametersNode?
+                load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
+                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
+                load_location(freeze),
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+              )
+            when 46
+              DefinedNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_optional_location(freeze),
+                load_location(freeze),
+              )
+            when 47
+              ElseNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                load_optional_location(freeze),
+              )
+            when 48
+              EmbeddedStatementsNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                load_location(freeze),
+              )
+            when 49
+              EmbeddedVariableNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: (InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
+              )
+            when 50
+              EnsureNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                load_location(freeze),
+              )
+            when 51
+              FalseNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 52
+              FindPatternNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: (ConstantPathNode | ConstantReadNode)?
+                load_node(constant_pool, encoding, freeze), #: SplatNode
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: Prism::node
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_node(constant_pool, encoding, freeze), #: (SplatNode | MissingNode)
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+              )
+            when 53
+              FlipFlopNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_location(freeze),
+              )
+            when 54
+              FloatNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_double,
+              )
+            when 55
+              ForNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | BackReferenceReadNode | NumberedReferenceReadNode | MissingNode)
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                load_location(freeze),
+                load_location(freeze),
+                load_optional_location(freeze),
+                load_location(freeze),
+              )
+            when 56
+              ForwardingArgumentsNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 57
+              ForwardingParameterNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 58
+              ForwardingSuperNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: BlockNode?
+              )
+            when 59
+              GlobalVariableAndWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 60
+              GlobalVariableOperatorWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_constant(constant_pool, encoding),
+              )
+            when 61
+              GlobalVariableOrWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 62
+              GlobalVariableReadNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+              )
+            when 63
+              GlobalVariableTargetNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+              )
+            when 64
+              GlobalVariableWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+              )
+            when 65
+              HashNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: AssocNode | AssocSplatNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_location(freeze),
+              )
+            when 66
+              HashPatternNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: (ConstantPathNode | ConstantReadNode)?
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: AssocNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_node(constant_pool, encoding, freeze), #: (AssocSplatNode | NoKeywordsParameterNode)?
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+              )
+            when 67
+              IfNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_optional_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                load_optional_node(constant_pool, encoding, freeze), #: (ElseNode | IfNode)?
+                load_optional_location(freeze),
+              )
+            when 68
+              ImaginaryNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: (FloatNode | IntegerNode | RationalNode)
+              )
+            when 69
+              ImplicitNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: (LocalVariableReadNode | CallNode | ConstantReadNode | LocalVariableTargetNode)
+              )
+            when 70
+              ImplicitRestNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 71
+              InNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                load_location(freeze),
+                load_optional_location(freeze),
+              )
+            when 72
+              IndexAndWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_optional_location(freeze),
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 73
+              IndexOperatorWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_optional_location(freeze),
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 74
+              IndexOrWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_optional_location(freeze),
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 75
+              IndexTargetNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
+              )
+            when 76
+              InstanceVariableAndWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 77
+              InstanceVariableOperatorWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_constant(constant_pool, encoding),
+              )
+            when 78
+              InstanceVariableOrWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 79
+              InstanceVariableReadNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+              )
+            when 80
+              InstanceVariableTargetNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+              )
+            when 81
+              InstanceVariableWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+              )
+            when 82
+              IntegerNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_integer,
+              )
+            when 83
+              InterpolatedMatchLastLineNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_location(freeze),
+              )
+            when 84
+              InterpolatedRegularExpressionNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_location(freeze),
+              )
+            when 85
+              InterpolatedStringNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_location(freeze),
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode | InterpolatedStringNode | XStringNode | InterpolatedXStringNode | SymbolNode | InterpolatedSymbolNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_location(freeze),
+              )
+            when 86
+              InterpolatedSymbolNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_location(freeze),
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_location(freeze),
+              )
+            when 87
+              InterpolatedXStringNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_location(freeze),
+              )
+            when 88
+              ItLocalVariableReadNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 89
+              ItParametersNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 90
+              KeywordHashNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: AssocNode | AssocSplatNode
+                end.tap { |nodes| nodes.freeze if freeze },
+              )
+            when 91
+              KeywordRestParameterNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_constant(constant_pool, encoding),
+                load_optional_location(freeze),
+                load_location(freeze),
+              )
+            when 92
+              LambdaNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
+                load_location(freeze),
+                load_location(freeze),
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
+                load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
+              )
+            when 93
+              LocalVariableAndWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_constant(constant_pool, encoding),
+                load_varuint,
+              )
+            when 94
+              LocalVariableOperatorWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_constant(constant_pool, encoding),
+                load_constant(constant_pool, encoding),
+                load_varuint,
+              )
+            when 95
+              LocalVariableOrWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_constant(constant_pool, encoding),
+                load_varuint,
+              )
+            when 96
+              LocalVariableReadNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_varuint,
+              )
+            when 97
+              LocalVariableTargetNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_varuint,
+              )
+            when 98
+              LocalVariableWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_varuint,
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+              )
+            when 99
+              MatchLastLineNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_location(freeze),
+                load_location(freeze),
+                load_string(encoding),
+              )
+            when 100
+              MatchPredicateNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+              )
+            when 101
+              MatchRequiredNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+              )
+            when 102
+              MatchWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: CallNode
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode
+                end.tap { |nodes| nodes.freeze if freeze },
+              )
+            when 103
+              MissingNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 104
+              ModuleNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: (ConstantReadNode | ConstantPathNode | MissingNode)
+                load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
+                load_location(freeze),
+                load_constant(constant_pool, encoding),
+              )
+            when 105
+              MultiTargetNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode | BackReferenceReadNode | NumberedReferenceReadNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_node(constant_pool, encoding, freeze), #: (ImplicitRestNode | SplatNode)?
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode | BackReferenceReadNode | NumberedReferenceReadNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+              )
+            when 106
+              MultiWriteNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | BackReferenceReadNode | NumberedReferenceReadNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_node(constant_pool, encoding, freeze), #: (ImplicitRestNode | SplatNode)?
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | BackReferenceReadNode | NumberedReferenceReadNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 107
+              NextNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                load_location(freeze),
+              )
+            when 108
+              NilNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 109
+              NoBlockParameterNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_location(freeze),
+              )
+            when 110
+              NoKeywordsParameterNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_location(freeze),
+              )
+            when 111
+              NumberedParametersNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                (io.getbyte or raise),
+              )
+            when 112
+              NumberedReferenceReadNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_varuint,
+              )
+            when 113
+              OptionalKeywordParameterNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 114
+              OptionalParameterNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 115
+              OrNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+              )
+            when 116
+              ParametersNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: RequiredParameterNode | MultiTargetNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: OptionalParameterNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_node(constant_pool, encoding, freeze), #: (RestParameterNode | ImplicitRestNode)?
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: RequiredParameterNode | MultiTargetNode | KeywordRestParameterNode | NoKeywordsParameterNode | ForwardingParameterNode | BlockParameterNode | NoBlockParameterNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: RequiredKeywordParameterNode | OptionalKeywordParameterNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_node(constant_pool, encoding, freeze), #: (KeywordRestParameterNode | ForwardingParameterNode | NoKeywordsParameterNode)?
+                load_optional_node(constant_pool, encoding, freeze), #: (BlockParameterNode | NoBlockParameterNode)?
+              )
+            when 117
+              ParenthesesNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_location(freeze),
+                load_location(freeze),
+              )
+            when 118
+              PinnedExpressionNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+                load_location(freeze),
+                load_location(freeze),
+              )
+            when 119
+              PinnedVariableNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: (LocalVariableReadNode | InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode | ItLocalVariableReadNode | MissingNode)
+                load_location(freeze),
+              )
+            when 120
+              PostExecutionNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                load_location(freeze),
+                load_location(freeze),
+                load_location(freeze),
+              )
+            when 121
+              PreExecutionNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                load_location(freeze),
+                load_location(freeze),
+                load_location(freeze),
+              )
+            when 122
+              ProgramNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
+                load_node(constant_pool, encoding, freeze), #: StatementsNode
+              )
+            when 123
+              RangeNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                load_location(freeze),
+              )
+            when 124
+              RationalNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_integer,
+                load_integer,
+              )
+            when 125
+              RedoNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 126
+              RegularExpressionNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_location(freeze),
+                load_location(freeze),
+                load_string(encoding),
+              )
+            when 127
+              RequiredKeywordParameterNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+                load_location(freeze),
+              )
+            when 128
+              RequiredParameterNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_constant(constant_pool, encoding),
+              )
+            when 129
+              RescueModifierNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+              )
+            when 130
+              RescueNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: Prism::node
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | BackReferenceReadNode | NumberedReferenceReadNode | MissingNode)?
+                load_optional_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                load_optional_node(constant_pool, encoding, freeze), #: RescueNode?
+              )
+            when 131
+              RestParameterNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_constant(constant_pool, encoding),
+                load_optional_location(freeze),
+                load_location(freeze),
+              )
+            when 132
+              RetryNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 133
+              ReturnNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+              )
+            when 134
+              SelfNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 135
+              ShareableConstantNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_node(constant_pool, encoding, freeze), #: (ConstantWriteNode | ConstantAndWriteNode | ConstantOrWriteNode | ConstantOperatorWriteNode | ConstantPathWriteNode | ConstantPathAndWriteNode | ConstantPathOrWriteNode | ConstantPathOperatorWriteNode)
+              )
+            when 136
+              SingletonClassNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
+                load_location(freeze),
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
+                load_location(freeze),
+              )
+            when 137
+              SourceEncodingNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 138
+              SourceFileNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_string(encoding),
+              )
+            when 139
+              SourceLineNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 140
+              SplatNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+              )
+            when 141
+              StatementsNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: Prism::node
+                end.tap { |nodes| nodes.freeze if freeze },
+              )
+            when 142
+              StringNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_location(freeze),
+                load_location(freeze),
+                load_optional_location(freeze),
+                load_string(encoding),
+              )
+            when 143
+              SuperNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_optional_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                load_optional_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: (BlockNode | BlockArgumentNode)?
+              )
+            when 144
+              SymbolNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+                load_string(encoding),
+              )
+            when 145
+              TrueNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+              )
+            when 146
+              UndefNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: SymbolNode | InterpolatedSymbolNode
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_location(freeze),
+              )
+            when 147
+              UnlessNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_optional_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
+                load_optional_location(freeze),
+              )
+            when 148
+              UntilNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+              )
+            when 149
+              WhenNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                Array.new(load_varuint) do
+                  load_node(constant_pool, encoding, freeze) #: Prism::node
+                end.tap { |nodes| nodes.freeze if freeze },
+                load_optional_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+              )
+            when 150
+              WhileNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_optional_location(freeze),
+                load_optional_location(freeze),
+                load_node(constant_pool, encoding, freeze), #: Prism::node
+                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+              )
+            when 151
+              XStringNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_location(freeze),
+                load_location(freeze),
+                load_string(encoding),
+              )
+            when 152
+              YieldNode.new(
+                source,
+                node_id,
+                location,
+                load_varuint,
+                load_location(freeze),
+                load_optional_location(freeze),
+                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                load_optional_location(freeze),
+              )
+            else
+              raise "Unknown node type: #{type}"
+            end
 
           value.freeze if freeze
           value
         end
       else
+        # @rbs skip
         def load_node(constant_pool, encoding, freeze)
-          @load_node_lambdas[io.getbyte].call(constant_pool, encoding, freeze)
+          @load_node_lambdas[(io.getbyte or raise)].call(constant_pool, encoding, freeze)
         end
 
+        # @rbs skip
         def define_load_node_lambdas
           @load_node_lambdas = [
             nil,
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = AliasGlobalVariableNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                AliasGlobalVariableNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
+                  load_node(constant_pool, encoding, freeze), #: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode | SymbolNode | MissingNode)
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = AliasMethodNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                AliasMethodNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: (SymbolNode | InterpolatedSymbolNode)
+                  load_node(constant_pool, encoding, freeze), #: (SymbolNode | InterpolatedSymbolNode | GlobalVariableReadNode | MissingNode)
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = AlternationPatternNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                AlternationPatternNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = AndNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                AndNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ArgumentsNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) })
+              value =
+                ArgumentsNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: Prism::node
+                  end,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ArrayNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_location(freeze), load_optional_location(freeze))
+              value =
+                ArrayNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: Prism::node
+                  end,
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ArrayPatternNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_location(freeze), load_optional_location(freeze))
+              value =
+                ArrayPatternNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: (ConstantPathNode | ConstantReadNode)?
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: Prism::node
+                  end,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: Prism::node
+                  end,
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = AssocNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_optional_location(freeze))
+              value =
+                AssocNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = AssocSplatNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                AssocSplatNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = BackReferenceReadNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
+              value =
+                BackReferenceReadNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = BeginNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze))
+              value =
+                BeginNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                  load_optional_node(constant_pool, encoding, freeze), #: RescueNode?
+                  load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
+                  load_optional_node(constant_pool, encoding, freeze), #: EnsureNode?
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = BlockArgumentNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                BlockArgumentNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = BlockLocalVariableNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
+              value =
+                BlockLocalVariableNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = BlockNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_constant(constant_pool, encoding) }, load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze))
+              value =
+                BlockNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
+                  load_optional_node(constant_pool, encoding, freeze), #: (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
+                  load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
+                  load_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = BlockParameterNode.new(source, node_id, location, load_varuint, load_optional_constant(constant_pool, encoding), load_optional_location(freeze), load_location(freeze))
+              value =
+                BlockParameterNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_constant(constant_pool, encoding),
+                  load_optional_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = BlockParametersNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_location(freeze), load_optional_location(freeze))
+              value =
+                BlockParametersNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: ParametersNode?
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: BlockLocalVariableNode
+                  end,
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = BreakNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                BreakNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = CallAndWriteNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_location(freeze), load_constant(constant_pool, encoding), load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                CallAndWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                  load_constant(constant_pool, encoding),
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = CallNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_constant(constant_pool, encoding), load_optional_location(freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze))
+              value =
+                CallNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_optional_location(freeze),
+                  load_constant(constant_pool, encoding),
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: (BlockNode | BlockArgumentNode)?
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = CallOperatorWriteNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_location(freeze), load_constant(constant_pool, encoding), load_constant(constant_pool, encoding), load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                CallOperatorWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                  load_constant(constant_pool, encoding),
+                  load_constant(constant_pool, encoding),
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = CallOrWriteNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_location(freeze), load_constant(constant_pool, encoding), load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                CallOrWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                  load_constant(constant_pool, encoding),
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = CallTargetNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_constant(constant_pool, encoding), load_location(freeze))
+              value =
+                CallTargetNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = CapturePatternNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                CapturePatternNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_node(constant_pool, encoding, freeze), #: LocalVariableTargetNode
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = CaseMatchNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze))
+              value =
+                CaseMatchNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: InNode
+                  end,
+                  load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
+                  load_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = CaseNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze))
+              value =
+                CaseNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: WhenNode
+                  end,
+                  load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
+                  load_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ClassNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_constant(constant_pool, encoding) }, load_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_constant(constant_pool, encoding))
+              value =
+                ClassNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: (ConstantReadNode | ConstantPathNode | CallNode)
+                  load_optional_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
+                  load_location(freeze),
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ClassVariableAndWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                ClassVariableAndWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ClassVariableOperatorWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding))
+              value =
+                ClassVariableOperatorWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ClassVariableOrWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                ClassVariableOrWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ClassVariableReadNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
+              value =
+                ClassVariableReadNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ClassVariableTargetNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
+              value =
+                ClassVariableTargetNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ClassVariableWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                ClassVariableWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ConstantAndWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                ConstantAndWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ConstantOperatorWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding))
+              value =
+                ConstantOperatorWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ConstantOrWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                ConstantOrWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ConstantPathAndWriteNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                ConstantPathAndWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: ConstantPathNode
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ConstantPathNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_constant(constant_pool, encoding), load_location(freeze), load_location(freeze))
+              value =
+                ConstantPathNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_optional_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ConstantPathOperatorWriteNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding))
+              value =
+                ConstantPathOperatorWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: ConstantPathNode
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ConstantPathOrWriteNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                ConstantPathOrWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: ConstantPathNode
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ConstantPathTargetNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_constant(constant_pool, encoding), load_location(freeze), load_location(freeze))
+              value =
+                ConstantPathTargetNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_optional_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ConstantPathWriteNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                ConstantPathWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: ConstantPathNode
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ConstantReadNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
+              value =
+                ConstantReadNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ConstantTargetNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
+              value =
+                ConstantTargetNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ConstantWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                ConstantWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
@@ -1472,755 +3290,1797 @@ module Prism
               node_id = load_varuint
               location = load_location(freeze)
               load_uint32
-              value = DefNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_constant(constant_pool, encoding) }, load_location(freeze), load_optional_location(freeze), load_optional_location(freeze), load_optional_location(freeze), load_optional_location(freeze), load_optional_location(freeze))
+              value =
+                DefNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_optional_node(constant_pool, encoding, freeze), #: ParametersNode?
+                  load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
+                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
+                  load_location(freeze),
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = DefinedNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_location(freeze))
+              value =
+                DefinedNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_optional_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ElseNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze))
+              value =
+                ElseNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = EmbeddedStatementsNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                EmbeddedStatementsNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = EmbeddedVariableNode.new(source, node_id, location, load_varuint, load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                EmbeddedVariableNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: (InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = EnsureNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                EnsureNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = FalseNode.new(source, node_id, location, load_varuint)
+              value =
+                FalseNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = FindPatternNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_location(freeze))
+              value =
+                FindPatternNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: (ConstantPathNode | ConstantReadNode)?
+                  load_node(constant_pool, encoding, freeze), #: SplatNode
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: Prism::node
+                  end,
+                  load_node(constant_pool, encoding, freeze), #: (SplatNode | MissingNode)
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = FlipFlopNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                FlipFlopNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = FloatNode.new(source, node_id, location, load_varuint, load_double)
+              value =
+                FloatNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_double,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ForNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze), load_optional_location(freeze), load_location(freeze))
+              value =
+                ForNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | BackReferenceReadNode | NumberedReferenceReadNode | MissingNode)
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_optional_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ForwardingArgumentsNode.new(source, node_id, location, load_varuint)
+              value =
+                ForwardingArgumentsNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ForwardingParameterNode.new(source, node_id, location, load_varuint)
+              value =
+                ForwardingParameterNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ForwardingSuperNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze))
+              value =
+                ForwardingSuperNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: BlockNode?
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = GlobalVariableAndWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                GlobalVariableAndWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = GlobalVariableOperatorWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding))
+              value =
+                GlobalVariableOperatorWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = GlobalVariableOrWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                GlobalVariableOrWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = GlobalVariableReadNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
+              value =
+                GlobalVariableReadNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = GlobalVariableTargetNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
+              value =
+                GlobalVariableTargetNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = GlobalVariableWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                GlobalVariableWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = HashNode.new(source, node_id, location, load_varuint, load_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_location(freeze))
+              value =
+                HashNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: AssocNode | AssocSplatNode
+                  end,
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = HashPatternNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_location(freeze))
+              value =
+                HashPatternNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: (ConstantPathNode | ConstantReadNode)?
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: AssocNode
+                  end,
+                  load_optional_node(constant_pool, encoding, freeze), #: (AssocSplatNode | NoKeywordsParameterNode)?
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = IfNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze))
+              value =
+                IfNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_optional_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                  load_optional_node(constant_pool, encoding, freeze), #: (ElseNode | IfNode)?
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ImaginaryNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze))
+              value =
+                ImaginaryNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: (FloatNode | IntegerNode | RationalNode)
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ImplicitNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze))
+              value =
+                ImplicitNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: (LocalVariableReadNode | CallNode | ConstantReadNode | LocalVariableTargetNode)
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ImplicitRestNode.new(source, node_id, location, load_varuint)
+              value =
+                ImplicitRestNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = InNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_optional_location(freeze))
+              value =
+                InNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                  load_location(freeze),
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = IndexAndWriteNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                IndexAndWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_optional_location(freeze),
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = IndexOperatorWriteNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                IndexOperatorWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_optional_location(freeze),
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = IndexOrWriteNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                IndexOrWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_optional_location(freeze),
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = IndexTargetNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze))
+              value =
+                IndexTargetNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = InstanceVariableAndWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                InstanceVariableAndWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = InstanceVariableOperatorWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding))
+              value =
+                InstanceVariableOperatorWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = InstanceVariableOrWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                InstanceVariableOrWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = InstanceVariableReadNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
+              value =
+                InstanceVariableReadNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = InstanceVariableTargetNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
+              value =
+                InstanceVariableTargetNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = InstanceVariableWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                InstanceVariableWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = IntegerNode.new(source, node_id, location, load_varuint, load_integer)
+              value =
+                IntegerNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_integer,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = InterpolatedMatchLastLineNode.new(source, node_id, location, load_varuint, load_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_location(freeze))
+              value =
+                InterpolatedMatchLastLineNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
+                  end,
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = InterpolatedRegularExpressionNode.new(source, node_id, location, load_varuint, load_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_location(freeze))
+              value =
+                InterpolatedRegularExpressionNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
+                  end,
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = InterpolatedStringNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_location(freeze))
+              value =
+                InterpolatedStringNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_location(freeze),
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode | InterpolatedStringNode | XStringNode | InterpolatedXStringNode | SymbolNode | InterpolatedSymbolNode
+                  end,
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = InterpolatedSymbolNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_location(freeze))
+              value =
+                InterpolatedSymbolNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_location(freeze),
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
+                  end,
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = InterpolatedXStringNode.new(source, node_id, location, load_varuint, load_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_location(freeze))
+              value =
+                InterpolatedXStringNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
+                  end,
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ItLocalVariableReadNode.new(source, node_id, location, load_varuint)
+              value =
+                ItLocalVariableReadNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ItParametersNode.new(source, node_id, location, load_varuint)
+              value =
+                ItParametersNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = KeywordHashNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) })
+              value =
+                KeywordHashNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: AssocNode | AssocSplatNode
+                  end,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = KeywordRestParameterNode.new(source, node_id, location, load_varuint, load_optional_constant(constant_pool, encoding), load_optional_location(freeze), load_location(freeze))
+              value =
+                KeywordRestParameterNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_constant(constant_pool, encoding),
+                  load_optional_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = LambdaNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_constant(constant_pool, encoding) }, load_location(freeze), load_location(freeze), load_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze))
+              value =
+                LambdaNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
+                  load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = LocalVariableAndWriteNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding), load_varuint)
+              value =
+                LocalVariableAndWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_constant(constant_pool, encoding),
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = LocalVariableOperatorWriteNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding), load_constant(constant_pool, encoding), load_varuint)
+              value =
+                LocalVariableOperatorWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_constant(constant_pool, encoding),
+                  load_constant(constant_pool, encoding),
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = LocalVariableOrWriteNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_constant(constant_pool, encoding), load_varuint)
+              value =
+                LocalVariableOrWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_constant(constant_pool, encoding),
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = LocalVariableReadNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_varuint)
+              value =
+                LocalVariableReadNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = LocalVariableTargetNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_varuint)
+              value =
+                LocalVariableTargetNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = LocalVariableWriteNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_varuint, load_location(freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                LocalVariableWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_varuint,
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = MatchLastLineNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze), load_location(freeze), load_string(encoding))
+              value =
+                MatchLastLineNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_string(encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = MatchPredicateNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                MatchPredicateNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = MatchRequiredNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                MatchRequiredNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = MatchWriteNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) })
+              value =
+                MatchWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: CallNode
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode
+                  end,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = MissingNode.new(source, node_id, location, load_varuint)
+              value =
+                MissingNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ModuleNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_constant(constant_pool, encoding) }, load_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_constant(constant_pool, encoding))
+              value =
+                ModuleNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: (ConstantReadNode | ConstantPathNode | MissingNode)
+                  load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
+                  load_location(freeze),
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = MultiTargetNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_location(freeze), load_optional_location(freeze))
+              value =
+                MultiTargetNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode | BackReferenceReadNode | NumberedReferenceReadNode
+                  end,
+                  load_optional_node(constant_pool, encoding, freeze), #: (ImplicitRestNode | SplatNode)?
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode | BackReferenceReadNode | NumberedReferenceReadNode
+                  end,
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = MultiWriteNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_location(freeze), load_optional_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                MultiWriteNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | BackReferenceReadNode | NumberedReferenceReadNode
+                  end,
+                  load_optional_node(constant_pool, encoding, freeze), #: (ImplicitRestNode | SplatNode)?
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | BackReferenceReadNode | NumberedReferenceReadNode
+                  end,
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = NextNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                NextNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = NilNode.new(source, node_id, location, load_varuint)
+              value =
+                NilNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = NoKeywordsParameterNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze))
+              value =
+                NoBlockParameterNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = NumberedParametersNode.new(source, node_id, location, load_varuint, io.getbyte)
+              value =
+                NoKeywordsParameterNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = NumberedReferenceReadNode.new(source, node_id, location, load_varuint, load_varuint)
+              value =
+                NumberedParametersNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  (io.getbyte or raise),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = OptionalKeywordParameterNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                NumberedReferenceReadNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = OptionalParameterNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                OptionalKeywordParameterNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = OrNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                OptionalParameterNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ParametersNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_node(constant_pool, encoding, freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze))
+              value =
+                OrNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ParenthesesNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze))
+              value =
+                ParametersNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: RequiredParameterNode | MultiTargetNode
+                  end,
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: OptionalParameterNode
+                  end,
+                  load_optional_node(constant_pool, encoding, freeze), #: (RestParameterNode | ImplicitRestNode)?
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: RequiredParameterNode | MultiTargetNode | KeywordRestParameterNode | NoKeywordsParameterNode | ForwardingParameterNode | BlockParameterNode | NoBlockParameterNode
+                  end,
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: RequiredKeywordParameterNode | OptionalKeywordParameterNode
+                  end,
+                  load_optional_node(constant_pool, encoding, freeze), #: (KeywordRestParameterNode | ForwardingParameterNode | NoKeywordsParameterNode)?
+                  load_optional_node(constant_pool, encoding, freeze), #: (BlockParameterNode | NoBlockParameterNode)?
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = PinnedExpressionNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze), load_location(freeze))
+              value =
+                ParenthesesNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = PinnedVariableNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                PinnedExpressionNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = PostExecutionNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze), load_location(freeze))
+              value =
+                PinnedVariableNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: (LocalVariableReadNode | InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode | ItLocalVariableReadNode | MissingNode)
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = PreExecutionNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_location(freeze), load_location(freeze), load_location(freeze))
+              value =
+                PostExecutionNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ProgramNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_constant(constant_pool, encoding) }, load_node(constant_pool, encoding, freeze))
+              value =
+                PreExecutionNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = RangeNode.new(source, node_id, location, load_varuint, load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                ProgramNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
+                  load_node(constant_pool, encoding, freeze), #: StatementsNode
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = RationalNode.new(source, node_id, location, load_varuint, load_integer, load_integer)
+              value =
+                RangeNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = RedoNode.new(source, node_id, location, load_varuint)
+              value =
+                RationalNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_integer,
+                  load_integer,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = RegularExpressionNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze), load_location(freeze), load_string(encoding))
+              value =
+                RedoNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = RequiredKeywordParameterNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding), load_location(freeze))
+              value =
+                RegularExpressionNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_string(encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = RequiredParameterNode.new(source, node_id, location, load_varuint, load_constant(constant_pool, encoding))
+              value =
+                RequiredKeywordParameterNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = RescueModifierNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze), load_location(freeze), load_node(constant_pool, encoding, freeze))
+              value =
+                RequiredParameterNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_constant(constant_pool, encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = RescueNode.new(source, node_id, location, load_varuint, load_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze))
+              value =
+                RescueModifierNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = RestParameterNode.new(source, node_id, location, load_varuint, load_optional_constant(constant_pool, encoding), load_optional_location(freeze), load_location(freeze))
+              value =
+                RescueNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: Prism::node
+                  end,
+                  load_optional_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | BackReferenceReadNode | NumberedReferenceReadNode | MissingNode)?
+                  load_optional_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                  load_optional_node(constant_pool, encoding, freeze), #: RescueNode?
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = RetryNode.new(source, node_id, location, load_varuint)
+              value =
+                RestParameterNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_constant(constant_pool, encoding),
+                  load_optional_location(freeze),
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ReturnNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_node(constant_pool, encoding, freeze))
+              value =
+                RetryNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = SelfNode.new(source, node_id, location, load_varuint)
+              value =
+                ReturnNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = ShareableConstantNode.new(source, node_id, location, load_varuint, load_node(constant_pool, encoding, freeze))
+              value =
+                SelfNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = SingletonClassNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_constant(constant_pool, encoding) }, load_location(freeze), load_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_location(freeze))
+              value =
+                ShareableConstantNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_node(constant_pool, encoding, freeze), #: (ConstantWriteNode | ConstantAndWriteNode | ConstantOrWriteNode | ConstantOperatorWriteNode | ConstantPathWriteNode | ConstantPathAndWriteNode | ConstantPathOrWriteNode | ConstantPathOperatorWriteNode)
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = SourceEncodingNode.new(source, node_id, location, load_varuint)
+              value =
+                SingletonClassNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = SourceFileNode.new(source, node_id, location, load_varuint, load_string(encoding))
+              value =
+                SourceEncodingNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = SourceLineNode.new(source, node_id, location, load_varuint)
+              value =
+                SourceFileNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_string(encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = SplatNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_node(constant_pool, encoding, freeze))
+              value =
+                SourceLineNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = StatementsNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) })
+              value =
+                SplatNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = StringNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), load_location(freeze), load_optional_location(freeze), load_string(encoding))
+              value =
+                StatementsNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: Prism::node
+                  end,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = SuperNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze))
+              value =
+                StringNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_location(freeze),
+                  load_location(freeze),
+                  load_optional_location(freeze),
+                  load_string(encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = SymbolNode.new(source, node_id, location, load_varuint, load_optional_location(freeze), load_optional_location(freeze), load_optional_location(freeze), load_string(encoding))
+              value =
+                SuperNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_optional_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                  load_optional_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: (BlockNode | BlockArgumentNode)?
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = TrueNode.new(source, node_id, location, load_varuint)
+              value =
+                SymbolNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                  load_string(encoding),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = UndefNode.new(source, node_id, location, load_varuint, Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_location(freeze))
+              value =
+                TrueNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = UnlessNode.new(source, node_id, location, load_varuint, load_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze))
+              value =
+                UndefNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: SymbolNode | InterpolatedSymbolNode
+                  end,
+                  load_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = UntilNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_location(freeze), load_optional_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze))
+              value =
+                UnlessNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_optional_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                  load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = WhenNode.new(source, node_id, location, load_varuint, load_location(freeze), Array.new(load_varuint) { load_node(constant_pool, encoding, freeze) }, load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze))
+              value =
+                UntilNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = WhileNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_location(freeze), load_optional_location(freeze), load_node(constant_pool, encoding, freeze), load_optional_node(constant_pool, encoding, freeze))
+              value =
+                WhenNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  Array.new(load_varuint) do
+                    load_node(constant_pool, encoding, freeze) #: Prism::node
+                  end,
+                  load_optional_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = XStringNode.new(source, node_id, location, load_varuint, load_location(freeze), load_location(freeze), load_location(freeze), load_string(encoding))
+              value =
+                WhileNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_optional_location(freeze),
+                  load_optional_location(freeze),
+                  load_node(constant_pool, encoding, freeze), #: Prism::node
+                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
+                )
               value.freeze if freeze
               value
             },
             -> (constant_pool, encoding, freeze) {
               node_id = load_varuint
               location = load_location(freeze)
-              value = YieldNode.new(source, node_id, location, load_varuint, load_location(freeze), load_optional_location(freeze), load_optional_node(constant_pool, encoding, freeze), load_optional_location(freeze))
+              value =
+                XStringNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_location(freeze),
+                  load_string(encoding),
+                )
+              value.freeze if freeze
+              value
+            },
+            -> (constant_pool, encoding, freeze) {
+              node_id = load_varuint
+              location = load_location(freeze)
+              value =
+                YieldNode.new(
+                  source,
+                  node_id,
+                  location,
+                  load_varuint,
+                  load_location(freeze),
+                  load_optional_location(freeze),
+                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
+                  load_optional_location(freeze),
+                )
               value.freeze if freeze
               value
             },
           ]
         end
       end
+
+      # @rbs!
+      #   @load_node_lambdas: Array[Proc]
+      #   def define_load_node_lambdas: () -> void
     end
 
     # The token types that can be indexed by their enum values.
@@ -2307,6 +5167,7 @@ module Prism
       :KEYWORD_CLASS,
       :KEYWORD_DEF,
       :KEYWORD_DEFINED,
+      :KEYWORD_DO_BLOCK,
       :KEYWORD_DO_LOOP,
       :KEYWORD_END_UPCASE,
       :KEYWORD_FALSE,
@@ -2388,9 +5249,7 @@ module Prism
       :USTAR_STAR,
       :WORDS_SEP,
       :__END__,
-      :MISSING,
-      :NOT_PROVIDED,
-    ].freeze
+    ].freeze #: Array[Symbol?]
 
     private_constant :MAJOR_VERSION, :MINOR_VERSION, :PATCH_VERSION
     private_constant :ConstantPool, :FastStringIO, :Loader, :TOKEN_TYPES

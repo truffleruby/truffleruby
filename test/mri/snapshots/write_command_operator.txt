@@ -1,0 +1,84 @@
+@ ProgramNode (location: (1,0)-(3,24))
+├── flags: ∅
+├── locals: [:foo]
+└── statements:
+    @ StatementsNode (location: (1,0)-(3,24))
+    ├── flags: ∅
+    └── body: (length: 2)
+        ├── @ OrNode (location: (1,0)-(1,27))
+        │   ├── flags: newline
+        │   ├── left:
+        │   │   @ LocalVariableWriteNode (location: (1,0)-(1,17))
+        │   │   ├── flags: ∅
+        │   │   ├── name: :foo
+        │   │   ├── depth: 0
+        │   │   ├── name_loc: (1,0)-(1,3) = "foo"
+        │   │   ├── value:
+        │   │   │   @ CallNode (location: (1,6)-(1,17))
+        │   │   │   ├── flags: ∅
+        │   │   │   ├── receiver:
+        │   │   │   │   @ IntegerNode (location: (1,6)-(1,9))
+        │   │   │   │   ├── flags: static_literal, decimal
+        │   │   │   │   └── value: 123
+        │   │   │   ├── call_operator_loc: ∅
+        │   │   │   ├── name: :|
+        │   │   │   ├── message_loc: (1,10)-(1,11) = "|"
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   ├── arguments:
+        │   │   │   │   @ ArgumentsNode (location: (1,12)-(1,17))
+        │   │   │   │   ├── flags: ∅
+        │   │   │   │   └── arguments: (length: 1)
+        │   │   │   │       └── @ StringNode (location: (1,12)-(1,17))
+        │   │   │   │           ├── flags: ∅
+        │   │   │   │           ├── opening_loc: (1,12)-(1,13) = "'"
+        │   │   │   │           ├── content_loc: (1,13)-(1,16) = "456"
+        │   │   │   │           ├── closing_loc: (1,16)-(1,17) = "'"
+        │   │   │   │           └── unescaped: "456"
+        │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
+        │   │   │   └── block: ∅
+        │   │   └── operator_loc: (1,4)-(1,5) = "="
+        │   ├── right:
+        │   │   @ ReturnNode (location: (1,21)-(1,27))
+        │   │   ├── flags: ∅
+        │   │   ├── keyword_loc: (1,21)-(1,27) = "return"
+        │   │   └── arguments: ∅
+        │   └── operator_loc: (1,18)-(1,20) = "or"
+        └── @ MatchPredicateNode (location: (3,0)-(3,24))
+            ├── flags: newline
+            ├── value:
+            │   @ LocalVariableWriteNode (location: (3,0)-(3,17))
+            │   ├── flags: ∅
+            │   ├── name: :foo
+            │   ├── depth: 0
+            │   ├── name_loc: (3,0)-(3,3) = "foo"
+            │   ├── value:
+            │   │   @ CallNode (location: (3,6)-(3,17))
+            │   │   ├── flags: ∅
+            │   │   ├── receiver:
+            │   │   │   @ IntegerNode (location: (3,6)-(3,9))
+            │   │   │   ├── flags: static_literal, decimal
+            │   │   │   └── value: 123
+            │   │   ├── call_operator_loc: ∅
+            │   │   ├── name: :|
+            │   │   ├── message_loc: (3,10)-(3,11) = "|"
+            │   │   ├── opening_loc: ∅
+            │   │   ├── arguments:
+            │   │   │   @ ArgumentsNode (location: (3,12)-(3,17))
+            │   │   │   ├── flags: ∅
+            │   │   │   └── arguments: (length: 1)
+            │   │   │       └── @ StringNode (location: (3,12)-(3,17))
+            │   │   │           ├── flags: ∅
+            │   │   │           ├── opening_loc: (3,12)-(3,13) = "'"
+            │   │   │           ├── content_loc: (3,13)-(3,16) = "456"
+            │   │   │           ├── closing_loc: (3,16)-(3,17) = "'"
+            │   │   │           └── unescaped: "456"
+            │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
+            │   │   └── block: ∅
+            │   └── operator_loc: (3,4)-(3,5) = "="
+            ├── pattern:
+            │   @ ConstantReadNode (location: (3,21)-(3,24))
+            │   ├── flags: ∅
+            │   └── name: :BAR
+            └── operator_loc: (3,18)-(3,20) = "in"
