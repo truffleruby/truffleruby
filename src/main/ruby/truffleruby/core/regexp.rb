@@ -87,7 +87,7 @@ class Regexp
         when Symbol, String
           # no conversion needed
         else
-          index = Primitive.convert_to_integer index
+          index = Primitive.convert_with_to_int index
         end
         match[index]
       else
@@ -136,7 +136,7 @@ class Regexp
         if Primitive.is_a?(pat, Regexp)
           pat
         else
-          Primitive.convert_to_str(pat)
+          Primitive.convert_with_to_str(pat)
         end
       end
 
@@ -155,7 +155,7 @@ class Regexp
       opts = pattern.options
       pattern = pattern.source
     else
-      pattern = Primitive.convert_to_str(pattern)
+      pattern = Primitive.convert_with_to_str(pattern)
     end
 
     if Primitive.is_a?(opts, Integer)
@@ -187,7 +187,7 @@ class Regexp
     end
 
     if encoding
-      encoding = Primitive.convert_to_str(encoding)
+      encoding = Primitive.convert_with_to_str(encoding)
       code = encoding[0]
       if code == ?n or code == ?N
         opts |= NOENCODING

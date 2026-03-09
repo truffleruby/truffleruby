@@ -74,7 +74,7 @@ module Truffle
 
     # MRI conversion macros and functions
 
-    # See Primitive.rb_num2int, Primitive.rb_num2long, Primitive.convert_to_integer which are not defined as methods for efficiency
+    # See Primitive.rb_num2int, Primitive.rb_num2long, Primitive.convert_with_to_int which are not defined as methods for efficiency
 
     def self.rb_num2uint(val)
       num = Primitive.rb_num2long(val)
@@ -95,7 +95,7 @@ module Truffle
         fval = val.to_int
         rb_num2ulong(fval)
       else
-        rb_num2ulong(Primitive.convert_to_integer(val))
+        rb_num2ulong(Primitive.convert_with_to_int(val))
       end
     end
 
@@ -358,7 +358,7 @@ module Truffle
       if Primitive.is_a?(pattern, Regexp)
         pattern
       else
-        pattern = Primitive.convert_to_str(pattern)
+        pattern = Primitive.convert_with_to_str(pattern)
         pattern = Regexp.quote(pattern) if quote
         Primitive.regexp_compile pattern, 0
       end
@@ -370,7 +370,7 @@ module Truffle
       when Encoding
         obj
       else
-        Encoding.find Primitive.convert_to_str(obj)
+        Encoding.find Primitive.convert_with_to_str(obj)
       end
     end
 
@@ -382,7 +382,7 @@ module Truffle
           obj = obj.to_path
         end
 
-        path = Primitive.convert_to_str(obj)
+        path = Primitive.convert_with_to_str(obj)
       end
 
       unless path.encoding.ascii_compatible?
@@ -438,7 +438,7 @@ module Truffle
       if Primitive.is_a? obj, Float
         raise TypeError, "can't convert Float into Integer for bitwise arithmetic"
       end
-      Primitive.convert_to_integer obj
+      Primitive.convert_with_to_int obj
     end
 
     # String helpers

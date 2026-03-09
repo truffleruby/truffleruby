@@ -150,7 +150,7 @@ class StringIO
       mode ||= IO::RDWR
       @__data__ = Data.new ''.force_encoding(Encoding.default_external)
     else
-      string = Primitive.convert_to_str string
+      string = Primitive.convert_with_to_str string
       @__data__ = Data.new string
     end
 
@@ -158,7 +158,7 @@ class StringIO
       if Primitive.is_a?(mode, Integer)
         mode_from_integer(mode)
       else
-        mode = Primitive.convert_to_str(mode)
+        mode = Primitive.convert_with_to_str(mode)
         mode_from_string(mode)
       end
     else
@@ -458,7 +458,7 @@ class StringIO
     if Primitive.is_a?(obj, String)
       char = obj[0]
     else
-      c = Primitive.convert_to_integer obj
+      c = Primitive.convert_with_to_int obj
       char = (c & 0xff).chr
     end
 
@@ -476,10 +476,10 @@ class StringIO
       # intentionally don't preserve buffer's encoding
       # see https://bugs.ruby-lang.org/issues/20418
       if length
-        length = Primitive.convert_to_integer length
+        length = Primitive.convert_with_to_int length
         raise ArgumentError if length < 0
 
-        buffer = Primitive.convert_to_str(buffer) if buffer
+        buffer = Primitive.convert_with_to_str(buffer) if buffer
 
         if eof?
           buffer.clear if buffer
@@ -544,7 +544,7 @@ class StringIO
 
   def seek(to, whence = IO::SEEK_SET)
     raise IOError, 'closed stream' if self.closed?
-    to = Primitive.convert_to_integer to
+    to = Primitive.convert_with_to_int to
 
     d = @__data__
     TruffleRuby.synchronized(d) do
@@ -578,7 +578,7 @@ class StringIO
   def string=(string)
     d = @__data__
     TruffleRuby.synchronized(d) do
-      d.string = Primitive.convert_to_str(string)
+      d.string = Primitive.convert_with_to_str(string)
       d.pos = 0
       d.lineno = 0
     end
@@ -598,7 +598,7 @@ class StringIO
 
   def truncate(length)
     check_writable
-    len = Primitive.convert_to_integer length
+    len = Primitive.convert_with_to_int length
     raise Errno::EINVAL, 'negative length' if len < 0
 
     d = @__data__
@@ -622,7 +622,7 @@ class StringIO
     if Primitive.is_a?(char, Integer)
       char = Primitive.convert_type char, String, :chr
     else
-      char = Primitive.convert_to_str char
+      char = Primitive.convert_with_to_str char
     end
 
     d = @__data__
@@ -652,7 +652,7 @@ class StringIO
     if Primitive.is_a?(bytes, Integer)
       bytes = ''.b << (bytes & 0xff)
     else
-      bytes = Primitive.convert_to_str(bytes).b
+      bytes = Primitive.convert_with_to_str(bytes).b
       return if bytes.bytesize == 0
     end
 
@@ -730,8 +730,8 @@ class StringIO
 
   private def getline(arg_error, sep, limit, chomp = false)
     if limit != Undefined
-      limit = Primitive.convert_to_integer limit if limit
-      sep = Primitive.convert_to_str sep if sep
+      limit = Primitive.convert_with_to_int limit if limit
+      sep = Primitive.convert_with_to_str sep if sep
     else
       limit = nil
 
@@ -739,7 +739,7 @@ class StringIO
         osep = sep
         sep = Truffle::Type.rb_check_convert_type sep, String, :to_str
         unless sep
-          limit = Primitive.convert_to_integer osep
+          limit = Primitive.convert_with_to_int osep
           sep = $/
         end
       end

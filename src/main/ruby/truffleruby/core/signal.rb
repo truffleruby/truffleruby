@@ -75,7 +75,7 @@ module Signal
         raise ArgumentError, "unsupported signal 'SIG#{signal}'"
       end
     else
-      number = Primitive.convert_to_integer signal
+      number = Primitive.convert_with_to_int signal
 
       unless Numbers.key? number
         raise ArgumentError, "invalid signal number (#{number})"
@@ -141,7 +141,7 @@ module Signal
   end
 
   def self.signame(signo)
-    index = Primitive.convert_to_integer signo
+    index = Primitive.convert_with_to_int signo
 
     Numbers[index]
   end

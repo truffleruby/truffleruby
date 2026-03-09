@@ -74,7 +74,7 @@ module Truffle
         elsif Primitive.is_a?(pattern, Regexp)
           split_type_regexp(string, pattern, limit, callable)
         else
-          pattern = Primitive.convert_to_str(pattern)
+          pattern = Primitive.convert_with_to_str(pattern)
 
           valid_encoding?(string)
           valid_encoding?(pattern)

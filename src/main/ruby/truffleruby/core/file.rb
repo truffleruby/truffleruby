@@ -198,7 +198,7 @@ class File < IO
 
     # special case. if ext is ".*", remove any extension
 
-    ext = Primitive.convert_to_str(ext)
+    ext = Primitive.convert_with_to_str(ext)
 
     if ext == '.*'
       if pos = Primitive.find_string_reverse(path, '.', path.bytesize)
@@ -257,7 +257,7 @@ class File < IO
     # the link, not the file referenced by the link).
     # Often not available.
     def self.lchmod(mode, *paths)
-      mode = Primitive.convert_to_integer(mode)
+      mode = Primitive.convert_with_to_int(mode)
 
       paths.each do |path|
         n = POSIX.lchmod Truffle::Type.coerce_to_path(path), mode
@@ -286,13 +286,13 @@ class File < IO
   #  File.chown(nil, 100, "testfile")
   def self.chown(owner, group, *paths)
     if owner
-      owner = Primitive.convert_to_integer(owner)
+      owner = Primitive.convert_with_to_int(owner)
     else
       owner = -1
     end
 
     if group
-      group = Primitive.convert_to_integer(group)
+      group = Primitive.convert_with_to_int(group)
     else
       group = -1
     end
@@ -306,7 +306,7 @@ class File < IO
   end
 
   def chmod(mode)
-    mode = Primitive.convert_to_integer(mode)
+    mode = Primitive.convert_with_to_int(mode)
     n = POSIX.fchmod Primitive.io_fd(self), File.clamp_short(mode)
     Errno.handle if n == -1
     n
@@ -314,13 +314,13 @@ class File < IO
 
   def chown(owner, group)
     if owner
-      owner = Primitive.convert_to_integer(owner)
+      owner = Primitive.convert_with_to_int(owner)
     else
       owner = -1
     end
 
     if group
-      group = Primitive.convert_to_integer(group)
+      group = Primitive.convert_with_to_int(group)
     else
       group = -1
     end
@@ -338,13 +338,13 @@ class File < IO
   # of files in the argument list.
   def self.lchown(owner, group, *paths)
     if owner
-      owner = Primitive.convert_to_integer(owner)
+      owner = Primitive.convert_with_to_int(owner)
     else
       owner = -1
     end
 
     if group
-      group = Primitive.convert_to_integer(group)
+      group = Primitive.convert_with_to_int(group)
     else
       group = -1
     end
@@ -358,7 +358,7 @@ class File < IO
   end
 
   def self.mkfifo(path, mode = 0666)
-    mode = Primitive.convert_to_integer mode
+    mode = Primitive.convert_with_to_int mode
     path = Truffle::Type.coerce_to_path(path)
     status = Truffle::POSIX.mkfifo(path, mode)
     Errno.handle path if status != 0
@@ -639,10 +639,10 @@ class File < IO
   #  File.fnmatch(pattern, 'a/.b/c/foo', File::FNM_PATHNAME | File::FNM_DOTMATCH) #=> true
 
   def self.fnmatch(pattern, path, flags = 0)
-    pattern = Primitive.convert_to_str(pattern)
+    pattern = Primitive.convert_with_to_str(pattern)
     Truffle::Type.check_null_safe(pattern)
     path    = Truffle::Type.coerce_to_path(path)
-    flags   = Primitive.convert_to_integer(flags)
+    flags   = Primitive.convert_with_to_int(flags)
     brace_match = false
 
     if (flags & FNM_EXTGLOB) != 0
@@ -1045,7 +1045,7 @@ class File < IO
       raise Errno::ENOENT, path
     end
 
-    length = Primitive.convert_to_integer length
+    length = Primitive.convert_with_to_int length
 
     r = Truffle::POSIX.truncate(path, length)
     Errno.handle(path) if r == -1
@@ -1200,7 +1200,7 @@ class File < IO
   end
 
   def flock(const)
-    const = Primitive.convert_to_integer const
+    const = Primitive.convert_with_to_int const
 
     result = POSIX.flock Primitive.io_fd(self), const
     if result == -1
@@ -1227,7 +1227,7 @@ class File < IO
 
 
   def truncate(length)
-    length = Primitive.convert_to_integer length
+    length = Primitive.convert_with_to_int length
 
     ensure_open_and_writable
     raise Errno::EINVAL, "Can't truncate a file to a negative length" if length < 0

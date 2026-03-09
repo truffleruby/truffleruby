@@ -153,7 +153,7 @@ class Thread
 
   def name=(val)
     unless Primitive.nil? val
-      val = Truffle::Type.check_null_safe(Primitive.convert_to_str(val))
+      val = Truffle::Type.check_null_safe(Primitive.convert_with_to_str(val))
       Kernel.raise ArgumentError, "ASCII incompatible encoding #{val.encoding.name}" unless val.encoding.ascii_compatible?
       # TODO BJF Aug 27, 2016 Need to rb_str_new_frozen the val here and SET_ANOTHER_THREAD_NAME
     end

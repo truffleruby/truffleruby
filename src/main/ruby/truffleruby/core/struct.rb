@@ -41,7 +41,7 @@ class Struct
     first = attrs[0]
     if attrs.size >= 1 && !Primitive.is_a?(first, Symbol)
       # nil check because Struct.new(nil, :foo) is valid
-      klass_name = Primitive.convert_to_str(first) unless Primitive.nil?(first)
+      klass_name = Primitive.convert_with_to_str(first) unless Primitive.nil?(first)
       attrs.shift
     end
 
@@ -265,7 +265,7 @@ class Struct
   end
 
   private def check_index_var!(var)
-    var = Primitive.convert_to_integer(var)
+    var = Primitive.convert_with_to_int(var)
     a_len = _attrs.length
     if var >= a_len
       raise IndexError, "offset #{var} too large for struct(size:#{a_len})"

@@ -73,7 +73,7 @@ module Truffle
         # do nothing
       else
         unless r = Truffle::Type.rb_check_convert_type(resource, String, :to_str)
-          return Primitive.convert_to_integer resource
+          return Primitive.convert_with_to_int resource
         end
 
         resource = r
@@ -139,7 +139,7 @@ module Truffle
     end
 
     def self.wait(input_pid, flags, set_status, raise_on_error)
-      input_pid = Primitive.convert_to_integer input_pid
+      input_pid = Primitive.convert_with_to_int input_pid
       flags ||= 0
 
       FFI::MemoryPointer.new(:int, 4) do |ptr|
@@ -205,20 +205,20 @@ module Truffle
         else
           if cmd = Truffle::Type.try_convert(command, Array, :to_ary)
             raise ArgumentError, 'wrong first argument' unless cmd.size == 2
-            command = Truffle::Type.check_null_safe(Primitive.convert_to_str(cmd[0]))
-            name = Truffle::Type.check_null_safe(Primitive.convert_to_str(cmd[1]))
+            command = Truffle::Type.check_null_safe(Primitive.convert_with_to_str(cmd[0]))
+            name = Truffle::Type.check_null_safe(Primitive.convert_with_to_str(cmd[1]))
           else
-            name = command = Truffle::Type.check_null_safe(Primitive.convert_to_str(command))
+            name = command = Truffle::Type.check_null_safe(Primitive.convert_with_to_str(command))
           end
 
           argv = [name]
-          args.each { |arg| argv << Truffle::Type.check_null_safe(Primitive.convert_to_str(arg)) }
+          args.each { |arg| argv << Truffle::Type.check_null_safe(Primitive.convert_with_to_str(arg)) }
 
           @command = command
           @argv = argv
         end
 
-        @command = Truffle::Type.check_null_safe(Primitive.convert_to_str(@command))
+        @command = Truffle::Type.check_null_safe(Primitive.convert_with_to_str(@command))
 
         if @argv.empty? # A single String for both command and arguments
           if should_use_shell?(@command)
@@ -289,7 +289,7 @@ module Truffle
             if Primitive.true?(value)
               value = 0
             elsif value
-              value = Primitive.convert_to_integer value
+              value = Primitive.convert_with_to_int value
               raise ArgumentError, "negative process group ID : #{value}" if value < 0
             else
               value = -1
@@ -408,12 +408,12 @@ module Truffle
         when nil
           OFLAGS['r']
         else
-          Primitive.convert_to_integer obj
+          Primitive.convert_with_to_int obj
         end
       end
 
       def convert_env_key(key)
-        key = Truffle::Type.check_null_safe(Primitive.convert_to_str(key))
+        key = Truffle::Type.check_null_safe(Primitive.convert_with_to_str(key))
 
         if key.include?('=')
           raise ArgumentError, "environment name contains a equal : #{key}"
@@ -424,7 +424,7 @@ module Truffle
 
       def convert_env_value(value)
         return nil if Primitive.nil? value
-        Truffle::Type.check_null_safe(Primitive.convert_to_str(value))
+        Truffle::Type.check_null_safe(Primitive.convert_with_to_str(value))
       end
 
       # Mapping of string open modes to integer oflag versions.

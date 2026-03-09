@@ -134,7 +134,7 @@ module Truffle
 
     # default implementation of Exception#detailed_message hook
     def self.detailed_message(exception, highlight)
-      message = Primitive.convert_to_str(exception.message.to_s)
+      message = Primitive.convert_with_to_str(exception.message.to_s)
 
       exception_class = Primitive.class(exception)
       class_name = exception_class.to_s

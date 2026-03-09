@@ -162,7 +162,7 @@ module Kernel
   module_function :String
 
   def `(str) #`
-    str = Primitive.convert_to_str(str) unless Primitive.is_a?(str, String)
+    str = Primitive.convert_with_to_str(str) unless Primitive.is_a?(str, String)
 
     output = IO.popen(str) { |io| io.read }
 
@@ -471,7 +471,7 @@ module Kernel
         nil
       end
     else
-      max = Primitive.convert_to_integer(limit)
+      max = Primitive.convert_with_to_int(limit)
       if max == 0
         randomizer.random_float
       else
@@ -501,7 +501,7 @@ module Kernel
       seed = Primitive.thread_randomizer.generate_seed
     end
 
-    seed = Primitive.convert_to_integer seed
+    seed = Primitive.convert_with_to_int seed
     Primitive.thread_randomizer.swap_seed seed
   end
   module_function :srand
@@ -627,7 +627,7 @@ module Kernel
       prefix = if Primitive.nil?(uplevel)
                  ''
                else
-                 uplevel = Primitive.convert_to_integer(uplevel)
+                 uplevel = Primitive.convert_with_to_int(uplevel)
                  raise ArgumentError, "negative level (#{uplevel})" unless uplevel >= 0
 
                  uplevel += 1 # skip Kernel#warn itself

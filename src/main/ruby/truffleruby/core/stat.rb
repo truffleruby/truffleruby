@@ -102,7 +102,7 @@ class File
     end
 
     def self.fstat(fd)
-      fd = Primitive.convert_to_integer fd
+      fd = Primitive.convert_with_to_int fd
       Truffle::FFI::MemoryPointer.new(:uint32, BUFFER_SIZE) do |ptr|
         result = Truffle::POSIX.truffleposix_fstat(fd, ptr)
         Errno.handle "file descriptor #{fd}" unless result == 0

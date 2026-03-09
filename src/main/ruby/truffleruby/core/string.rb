@@ -97,12 +97,12 @@ class String
       start, len = Primitive.range_normalized_start_length(index_or_range, bytesize)
       len = Primitive.max(0, len)
     else
-      start = Primitive.convert_to_integer(index_or_range)
+      start = Primitive.convert_with_to_int(index_or_range)
       start += bytesize if start < 0
-      len = Primitive.convert_to_integer(length)
+      len = Primitive.convert_with_to_int(length)
     end
 
-    str = Primitive.convert_to_str(str)
+    str = Primitive.convert_with_to_str(str)
 
     if !Primitive.undefined?(str_index_or_range)
       if Primitive.undefined?(str_length)
@@ -114,9 +114,9 @@ class String
         str_len = Primitive.max(0, str_len)
         str_arg_is_range = true
       else
-        str_start = Primitive.convert_to_integer(str_index_or_range)
+        str_start = Primitive.convert_with_to_int(str_index_or_range)
         str_start += str.bytesize if str_start < 0
-        str_len = Primitive.convert_to_integer(str_length)
+        str_len = Primitive.convert_with_to_int(str_length)
         str_arg_is_range = false
       end
 
@@ -182,7 +182,7 @@ class String
 
   def delete_prefix!(prefix)
     Primitive.check_mutable_string self
-    prefix = Primitive.convert_to_str(prefix)
+    prefix = Primitive.convert_with_to_str(prefix)
     if !prefix.empty? && self[0, prefix.size] == prefix
       self[0, prefix.size] = ''
       self
@@ -198,7 +198,7 @@ class String
 
   def delete_suffix!(suffix)
     Primitive.check_mutable_string self
-    suffix = Primitive.convert_to_str(suffix)
+    suffix = Primitive.convert_with_to_str(suffix)
     if !suffix.empty? && self[-suffix.size, suffix.size] == suffix
       self[size - suffix.size, suffix.size] = ''
       self
@@ -221,7 +221,7 @@ class String
   end
 
   def include?(needle)
-    Primitive.as_boolean(Primitive.find_string(self, Primitive.convert_to_str(needle), 0))
+    Primitive.as_boolean(Primitive.find_string(self, Primitive.convert_with_to_str(needle), 0))
   end
 
   def to_sym
@@ -267,7 +267,7 @@ class String
         return [m.pre_match, m.to_s, m.post_match]
       end
     else
-      pattern = Primitive.convert_to_str(pattern)
+      pattern = Primitive.convert_with_to_str(pattern)
       if i = index(pattern)
         post_start = i + pattern.length
         post_len = size - post_start
@@ -290,7 +290,7 @@ class String
         return [m.pre_match, m[0], m.post_match]
       end
     else
-      pattern = Primitive.convert_to_str(pattern)
+      pattern = Primitive.convert_with_to_str(pattern)
       if i = rindex(pattern)
         post_start = i + pattern.length
         post_len = size - post_start
@@ -383,7 +383,7 @@ class String
   end
 
   def to_i(base = 10)
-    base = Primitive.convert_to_integer base
+    base = Primitive.convert_with_to_int base
 
     if base < 0 || base == 1 || base > 36
       raise ArgumentError, "illegal radix #{base}"
@@ -453,7 +453,7 @@ class String
           (_, fallback_enc_from, fallback_enc_to, error_bytes, _) = ec.primitive_errinfo
           rep = fallback[error_bytes.force_encoding(fallback_enc_from)]
           raise ec.last_error unless rep
-          rep = Primitive.convert_to_str(rep)
+          rep = Primitive.convert_with_to_str(rep)
           dest << rep.encode(fallback_enc_to)
           status = ec.primitive_convert src, dest, nil, nil
         end
@@ -504,7 +504,7 @@ class String
     end
 
     suffixes.each do |original_suffix|
-      suffix = Primitive.convert_to_str(original_suffix)
+      suffix = Primitive.convert_with_to_str(original_suffix)
       enc = Primitive.encoding_ensure_compatible_str self, suffix
       return true if Primitive.string_end_with?(self, suffix, enc)
     end
@@ -623,16 +623,16 @@ class String
 
   def prepend(*others)
     if others.size == 1
-      Primitive.string_replace(self, Primitive.convert_to_str(others.first) + self)
+      Primitive.string_replace(self, Primitive.convert_with_to_str(others.first) + self)
     else
-      reduced = others.reduce(''.encode(self.encoding)) { |memo, other| memo + Primitive.convert_to_str(other) }
-      Primitive.string_replace(self, Primitive.convert_to_str(reduced) + self)
+      reduced = others.reduce(''.encode(self.encoding)) { |memo, other| memo + Primitive.convert_with_to_str(other) }
+      Primitive.string_replace(self, Primitive.convert_with_to_str(reduced) + self)
     end
   end
 
   def upto(stop, exclusive = false)
     return to_enum :upto, stop, exclusive unless block_given?
-    stop = Primitive.convert_to_str(stop)
+    stop = Primitive.convert_with_to_str(stop)
 
     if stop.bytesize == 1 && bytesize == 1 && self.ascii_only? && stop.ascii_only?
       enc = Primitive.encoding_ensure_compatible_str(self, stop)
@@ -662,7 +662,7 @@ class String
 
         until current == after_stop
           yield current
-          current = Primitive.convert_to_str(current.succ).force_encoding(enc)
+          current = Primitive.convert_with_to_str(current.succ).force_encoding(enc)
           break if current.size > stop.size || current.empty?
         end
       end
@@ -770,7 +770,7 @@ class String
     if Primitive.undefined?(sep)
       sep = $/
     elsif sep
-      sep = Primitive.convert_to_str(sep)
+      sep = Primitive.convert_with_to_str(sep)
     end
 
     return if Primitive.nil? sep
@@ -843,7 +843,7 @@ class String
 
     maybe_chomp = ->(str) { chomp ? str.chomp(sep) : str }
 
-    sep = Primitive.convert_to_str(sep)
+    sep = Primitive.convert_with_to_str(sep)
     if Primitive.equal?(sep, $/) && !self.encoding.ascii_compatible?
       sep = sep.encode(self.encoding)
     else
@@ -988,7 +988,7 @@ class String
     end
 
     validate = -> str {
-      str = Primitive.convert_to_str(str)
+      str = Primitive.convert_with_to_str(str)
       unless str.valid_encoding?
         raise ArgumentError, 'replacement must be valid byte sequence'
       end
@@ -1038,7 +1038,7 @@ class String
     when Regexp
       Truffle::StringOperations.assign_regexp(self, index, count, replacement)
     else
-      index = Primitive.convert_to_integer index
+      index = Primitive.convert_with_to_int index
 
       if count
         return self[index, count] = replacement
@@ -1051,12 +1051,12 @@ class String
   end
 
   def center(width, padding = ' ')
-    padding = Primitive.convert_to_str(padding)
+    padding = Primitive.convert_with_to_str(padding)
     raise ArgumentError, 'zero width padding' if padding.empty?
 
     Primitive.encoding_ensure_compatible_str self, padding
 
-    width = Primitive.convert_to_integer width
+    width = Primitive.convert_with_to_int width
     pad = width - size
     return Primitive.dup_as_string_instance(self) if pad <= 0
 
@@ -1064,12 +1064,12 @@ class String
   end
 
   def ljust(width, padding = ' ')
-    padding = Primitive.convert_to_str(padding)
+    padding = Primitive.convert_with_to_str(padding)
     raise ArgumentError, 'zero width padding' if padding.empty?
 
     enc = Primitive.encoding_ensure_compatible_str self, padding
 
-    width = Primitive.convert_to_integer width
+    width = Primitive.convert_with_to_int width
     pad = width - size
     return Primitive.dup_as_string_instance(self) if pad <= 0
 
@@ -1081,12 +1081,12 @@ class String
   end
 
   def rjust(width, padding = ' ')
-    padding = Primitive.convert_to_str(padding)
+    padding = Primitive.convert_with_to_str(padding)
     raise ArgumentError, 'zero width padding' if padding.empty?
 
     enc = Primitive.encoding_ensure_compatible_str self, padding
 
-    width = Primitive.convert_to_integer width
+    width = Primitive.convert_with_to_int width
     pad = width - size
     return Primitive.dup_as_string_instance(self) if pad <= 0
 
@@ -1102,7 +1102,7 @@ class String
     if Primitive.undefined?(start)
       start = 0
     else
-      start = Primitive.convert_to_integer start
+      start = Primitive.convert_with_to_int start
 
       start += size if start < 0
       if start < 0 or start > size
@@ -1124,7 +1124,7 @@ class String
       end
     end
 
-    str = Primitive.convert_to_str(str)
+    str = Primitive.convert_with_to_str(str)
     return start if str == ''
 
     enc = Primitive.encoding_ensure_compatible_str self, str
@@ -1147,7 +1147,7 @@ class String
     if Primitive.undefined?(finish)
       finish = size
     else
-      finish = Primitive.convert_to_integer(finish)
+      finish = Primitive.convert_with_to_int(finish)
       finish += size if finish < 0
       return nil if finish < 0
       finish = size if finish >= size
@@ -1163,7 +1163,7 @@ class String
       return match_data.begin(0) if match_data
 
     else
-      needle = Primitive.convert_to_str(sub)
+      needle = Primitive.convert_with_to_str(sub)
       needle_size = needle.size
 
       # needle is bigger that haystack
@@ -1199,7 +1199,7 @@ class String
   def byteindex(str, start = 0)
     is_regex_pattern = Primitive.is_a?(str, Regexp)
 
-    start = Primitive.convert_to_integer(start)
+    start = Primitive.convert_with_to_int(start)
 
     start += bytesize if start < 0
     if start < 0 || start > bytesize
@@ -1222,7 +1222,7 @@ class String
       return match ? Primitive.match_data_byte_begin(match, 0) : nil
     end
 
-    str = Primitive.convert_to_str(str)
+    str = Primitive.convert_with_to_str(str)
     return start if str.empty?
     return nil if start + str.bytesize > bytesize
 
@@ -1231,7 +1231,7 @@ class String
   end
 
   def byterindex(str, finish = bytesize)
-    finish = Primitive.convert_to_integer(finish)
+    finish = Primitive.convert_with_to_int(finish)
     finish += bytesize if finish < 0
     return nil if finish < 0
 
@@ -1249,7 +1249,7 @@ class String
       return match ? Primitive.match_data_byte_begin(match, 0) : nil
     end
 
-    str = Primitive.convert_to_str(str)
+    str = Primitive.convert_with_to_str(str)
     return finish if str.empty?
     return nil if str.bytesize > bytesize
 
@@ -1277,7 +1277,7 @@ class String
         Primitive.regexp_last_match_set(storage, match_data)
         return true if match_data
       else
-        prefix = Primitive.convert_to_str(original_prefix)
+        prefix = Primitive.convert_with_to_str(original_prefix)
         enc = Primitive.encoding_ensure_compatible_str self, prefix
         return true if Primitive.string_start_with?(self, prefix, enc)
       end
@@ -1286,9 +1286,9 @@ class String
   end
 
   def insert(index, other)
-    other = Primitive.convert_to_str(other)
+    other = Primitive.convert_with_to_str(other)
 
-    index = Primitive.convert_to_integer index
+    index = Primitive.convert_with_to_int index
     index = length + 1 + index if index < 0
 
     if index > length or index < 0 then
@@ -1423,7 +1423,7 @@ class String
   end
 
   def crypt(salt)
-    salt = Primitive.convert_to_str(salt)
+    salt = Primitive.convert_with_to_str(salt)
     raise ArgumentError, 'salt too short (need >= 2 bytes)' if salt.bytesize < 2 || salt[0] == "\0" || salt[1] == "\0"
     raise ArgumentError, 'string contains null byte' if include?("\0")
     crypted = Truffle::POSIX.crypt(self, salt)
@@ -1432,7 +1432,7 @@ class String
   end
 
   def unpack(format, offset: undefined)
-    format = Primitive.convert_to_str(format)
+    format = Primitive.convert_with_to_str(format)
     unless Primitive.undefined?(offset)
       offset = Primitive.rb_num2int(offset) # to guarantee it's `int` finally
     end

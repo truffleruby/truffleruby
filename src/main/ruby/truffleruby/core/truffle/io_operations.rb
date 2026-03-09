@@ -244,7 +244,7 @@ module Truffle
         raise ArgumentError, 'timeout must be positive' if timeout < 0
 
         # Milliseconds, rounded down
-        timeout_ms = Primitive.convert_to_integer((timeout * 1_000).to_i)
+        timeout_ms = Primitive.convert_with_to_int((timeout * 1_000).to_i)
         while timeout_ms > 2147483647 # INT_MAX
           timeout_ms -= 2147483000
           ret = poll(io, event_mask, 2147483)
@@ -362,7 +362,7 @@ module Truffle
     def self.parse_mode(mode)
       return mode if Primitive.is_a? mode, Integer
 
-      mode = Primitive.convert_to_str(mode)
+      mode = Primitive.convert_with_to_str(mode)
 
       ret = CLOEXEC
 
@@ -477,13 +477,13 @@ module Truffle
 
       if mode
         mode = (Truffle::Type.try_convert(mode, Integer, :to_int) or
-          Primitive.convert_to_str(mode))
+          Primitive.convert_with_to_str(mode))
       end
 
       if options
         if optmode = options[:mode]
           optmode = (Truffle::Type.try_convert(optmode, Integer, :to_int) or
-            Primitive.convert_to_str(optmode))
+            Primitive.convert_with_to_str(optmode))
         end
 
         if mode && optmode
@@ -494,7 +494,7 @@ module Truffle
         mode ||= default_mode
 
         if flags = options[:flags]
-          flags = Primitive.convert_to_integer(flags)
+          flags = Primitive.convert_with_to_int(flags)
 
           if Primitive.nil?(mode)
             mode = flags
@@ -555,14 +555,14 @@ module Truffle
           if Primitive.is_a?(encoding, Encoding)
             external = encoding
           elsif !Primitive.nil?(encoding)
-            encoding = Primitive.convert_to_str(encoding)
+            encoding = Primitive.convert_with_to_str(encoding)
             external, internal = encoding.split(':', 2)
           end
         end
 
         path = options[:path]
         unless Primitive.nil? path
-          path = Primitive.convert_to_str(path)
+          path = Primitive.convert_with_to_str(path)
         end
       end
       external = Encoding::BINARY if binary and !external and !internal

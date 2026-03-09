@@ -768,7 +768,11 @@ There are more specific *primitives* defined in `TypeNodes.java`.
 The most common are the following:
 - `Primitive.rb_num2long`
 - `Primitive.rb_num2int`
-- `Primitive.convert_to_integer`
+- `Primitive.convert_with_to_int`
+- `Primitive.convert_with_to_str`
+- `Primitive.convert_with_to_ary`
+- `Primitive.convert_with_to_hash`
+- `Primitive.convert_type`
 - `Primitive.as_boolean`
 
 These primitives are preferred to `rb_convert_type`/`rb_check_convert_type` since they are more efficient (for execution speed and footprint).

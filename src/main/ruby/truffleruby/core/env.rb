@@ -50,7 +50,7 @@ class << ENV
   alias_method :length, :size
 
   private def lookup(key)
-    value = Truffle::POSIX.getenv(Primitive.convert_to_str(key))
+    value = Truffle::POSIX.getenv(Primitive.convert_with_to_str(key))
     if value
       value = set_encoding(value)
     end
@@ -62,12 +62,12 @@ class << ENV
   end
 
   def []=(key, value)
-    key = Primitive.convert_to_str(key)
+    key = Primitive.convert_with_to_str(key)
     if Primitive.nil? value
       Truffle::POSIX.unsetenv(key)
       @variables.delete(key)
     else
-      if Truffle::POSIX.setenv(key, Primitive.convert_to_str(value), 1) != 0
+      if Truffle::POSIX.setenv(key, Primitive.convert_with_to_str(value), 1) != 0
         Errno.handle('setenv')
       end
       unless @variables.include?(key)
@@ -83,7 +83,7 @@ class << ENV
   end
 
   def delete(key)
-    key = Primitive.convert_to_str(key)
+    key = Primitive.convert_with_to_str(key)
     existing_value = lookup(key)
     if existing_value
       Truffle::POSIX.unsetenv(key)
@@ -223,7 +223,7 @@ class << ENV
   end
 
   def key(value)
-    value = Primitive.convert_to_str(value);
+    value = Primitive.convert_with_to_str(value);
     each do |k, v|
       return k if v == value
     end
@@ -253,7 +253,7 @@ class << ENV
 
   def replace(other)
     return self if Primitive.equal?(self, other)
-    other = Primitive.convert_to_hash(other)
+    other = Primitive.convert_with_to_hash(other)
     keys_to_delete = keys
     other.each do |k, v|
       self[k] = v
@@ -298,7 +298,7 @@ class << ENV
     others.each do |other|
       next if Primitive.equal?(self, other)
 
-      other = Primitive.convert_to_hash(other)
+      other = Primitive.convert_with_to_hash(other)
 
       if block_given?
         other.each do |k, v|
@@ -330,7 +330,7 @@ class << ENV
   alias_method :filter!, :select!
 
   def assoc(key)
-    key = Primitive.convert_to_str(key)
+    key = Primitive.convert_with_to_str(key)
     value = lookup(key)
     value ? [key, value] : nil
   end

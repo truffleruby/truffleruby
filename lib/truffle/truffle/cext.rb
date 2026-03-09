@@ -426,7 +426,7 @@ module Truffle::CExt
   end
 
   def rb_to_int(val)
-    Primitive.convert_to_integer(val)
+    Primitive.convert_with_to_int(val)
   end
 
   def rb_fix2int(value)
@@ -1435,7 +1435,7 @@ module Truffle::CExt
 
   def rb_class_new_instance_kw(klass, args)
     *args, kwargs = args
-    kwargs = Primitive.convert_to_hash kwargs
+    kwargs = Primitive.convert_with_to_hash kwargs
 
     obj = klass.send(:__allocate__)
     obj.send(:initialize, *args, **kwargs)

@@ -380,7 +380,7 @@ module Truffle
       if Primitive.nil? output
         output = default_value
       else
-        output = Primitive.convert_to_str(output)
+        output = Primitive.convert_with_to_str(output)
         output.clear
       end
 
@@ -420,7 +420,7 @@ module Truffle
       if Primitive.nil? output
         output = default_value
       else
-        output = Primitive.convert_to_str(output)
+        output = Primitive.convert_with_to_str(output)
         output.clear
       end
 
@@ -637,5 +637,5 @@ Truffle::KernelOperations.define_read_only_global(:$FILENAME, -> { ARGF.filename
 Truffle::KernelOperations.define_hooked_variable(
   :$.,
   -> { ARGF.instance_variable_get(:@last_lineno) },
-  -> _, value { value = Primitive.convert_to_integer(value)
+  -> _, value { value = Primitive.convert_with_to_int(value)
                 ARGF.instance_variable_set(:@last_lineno, value) } )

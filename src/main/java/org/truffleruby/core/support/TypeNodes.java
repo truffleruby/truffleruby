@@ -443,8 +443,7 @@ public abstract class TypeNodes {
     }
 
     // MRI: rb_to_int().
-    // Should be `convert_to_int` for consistency but that's too confusing with converting to a Java int.
-    @Primitive(name = "convert_to_integer", isPublic = true)
+    @Primitive(name = "convert_with_to_int", isPublic = true)
     public abstract static class RbToIntNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
@@ -455,7 +454,7 @@ public abstract class TypeNodes {
     }
 
     // MRI: StringValue()
-    @Primitive(name = "convert_to_str", isPublic = true)
+    @Primitive(name = "convert_with_to_str", isPublic = true)
     public abstract static class ConvertToStrNode extends PrimitiveArrayArgumentsNode {
         @Specialization(guards = "strings.isRubyString(this, object)", limit = "1")
         Object convert(Object object,
@@ -471,7 +470,7 @@ public abstract class TypeNodes {
         }
     }
 
-    @Primitive(name = "convert_to_ary", isPublic = true)
+    @Primitive(name = "convert_with_to_ary", isPublic = true)
     public abstract static class ConvertToAryNode extends PrimitiveArrayArgumentsNode {
         @Specialization
         Object convert(RubyArray object) {
@@ -486,7 +485,7 @@ public abstract class TypeNodes {
         }
     }
 
-    @Primitive(name = "convert_to_hash", isPublic = true)
+    @Primitive(name = "convert_with_to_hash", isPublic = true)
     public abstract static class ConvertToHashNode extends PrimitiveArrayArgumentsNode {
         @Specialization
         Object convert(RubyHash object) {

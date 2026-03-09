@@ -442,7 +442,7 @@ class IO
     when nil
       # do nothing
     else
-      separator = Primitive.convert_to_str(separator)
+      separator = Primitive.convert_with_to_str(separator)
     end
 
     limit = nil if Primitive.undefined?(limit)
@@ -523,11 +523,11 @@ class IO
     offset = 0 if Primitive.nil? offset
     name = Truffle::Type.coerce_to_path name
 
-    offset = Primitive.convert_to_integer(offset || 0)
+    offset = Primitive.convert_with_to_int(offset || 0)
     raise Errno::EINVAL, 'offset must not be negative' if offset < 0
 
     unless Primitive.nil?(length)
-      length = Primitive.convert_to_integer(length)
+      length = Primitive.convert_with_to_int(length)
       raise ArgumentError, 'length must not be negative' if length < 0
     end
 
@@ -738,7 +738,7 @@ class IO
     end
 
     if readables
-      readables = Primitive.convert_to_ary(readables).dup
+      readables = Primitive.convert_with_to_ary(readables).dup
       readable_ios = readables.map do |obj|
         io = Primitive.convert_type(obj, IO, :to_io)
         raise IOError, 'closed stream' if io.closed?
@@ -751,7 +751,7 @@ class IO
     end
 
     if writables
-      writables = Primitive.convert_to_ary(writables).dup
+      writables = Primitive.convert_with_to_ary(writables).dup
       writable_ios = writables.map do |obj|
         io = Primitive.convert_type(obj, IO, :to_io)
         raise IOError, 'closed stream' if io.closed?
@@ -763,7 +763,7 @@ class IO
     end
 
     if errorables
-      errorables = Primitive.convert_to_ary(errorables).dup
+      errorables = Primitive.convert_with_to_ary(errorables).dup
       errorable_ios = errorables.map do |obj|
         io = Primitive.convert_type(obj, IO, :to_io)
         raise IOError, 'closed stream' if io.closed?
@@ -856,7 +856,7 @@ class IO
 
     mode, binary, external, internal, autoclose_tmp, _perm, path = Truffle::IOOperations.normalize_options(mode, nil, options)
 
-    fd = Primitive.convert_to_integer(fd)
+    fd = Primitive.convert_with_to_int(fd)
     sync = fd == 2 # stderr is always unbuffered, see setvbuf(3)
     IO.setup(self, fd, mode, sync)
 
@@ -1252,7 +1252,7 @@ class IO
 
     if limit
       limit = Primitive.rb_num2long(limit)
-      sep = sep_or_limit ? Primitive.convert_to_str(sep_or_limit) : nil
+      sep = sep_or_limit ? Primitive.convert_with_to_str(sep_or_limit) : nil
     else
       case sep_or_limit
       when String
@@ -1387,10 +1387,10 @@ class IO
     elsif Primitive.is_a?(arg, String)
       raise NotImplementedError, 'cannot handle String'
     else
-      arg = Primitive.convert_to_integer arg
+      arg = Primitive.convert_with_to_int arg
     end
 
-    command = Primitive.convert_to_integer command
+    command = Primitive.convert_with_to_int command
     Truffle::POSIX.fcntl Primitive.io_fd(self), command, arg
   end
 
@@ -1425,10 +1425,10 @@ class IO
       buffer.write_bytes(arg)
       real_arg = buffer.address
     else
-      real_arg = Primitive.convert_to_integer(arg)
+      real_arg = Primitive.convert_with_to_int(arg)
     end
 
-    command = Primitive.convert_to_integer(command)
+    command = Primitive.convert_with_to_int(command)
     ret = Truffle::POSIX.ioctl(Primitive.io_fd(self), command, real_arg)
     Errno.handle if ret < 0
 
@@ -1612,8 +1612,8 @@ class IO
   def pread(length, offset, buffer = nil)
     ensure_open_and_readable
 
-    length = Primitive.convert_to_integer(length)
-    offset = Primitive.convert_to_integer(offset)
+    length = Primitive.convert_with_to_int(length)
+    offset = Primitive.convert_with_to_int(offset)
 
     raise ArgumentError, 'negative string size (or size too big)' if length < 0
     raise Errno::EINVAL, 'offset must not be negative' if offset < 0
@@ -1628,7 +1628,7 @@ class IO
     raise EOFError if Primitive.nil? str
 
     if buffer
-      buffer = Primitive.convert_to_str(buffer)
+      buffer = Primitive.convert_with_to_str(buffer)
       buffer.replace str.force_encoding(buffer.encoding)
     else
       str
@@ -1657,7 +1657,7 @@ class IO
     if Primitive.is_a? obj, String
       write Primitive.string_substring(obj, 0, 1)
     else
-      byte = Primitive.convert_to_integer(obj) & 0xff
+      byte = Primitive.convert_with_to_int(obj) & 0xff
       write byte.chr
     end
 
@@ -1684,14 +1684,14 @@ class IO
   end
 
   def printf(fmt, *args)
-    fmt = Primitive.convert_to_str(fmt)
+    fmt = Primitive.convert_with_to_str(fmt)
     write sprintf(fmt, *args)
   end
   Primitive.always_split self, :printf
 
   def pwrite(object, offset)
     string = Truffle::Type.rb_obj_as_string(object)
-    offset = Primitive.convert_to_integer(offset)
+    offset = Primitive.convert_with_to_int(offset)
 
     ensure_open_and_writable
 
@@ -1700,7 +1700,7 @@ class IO
 
   def read(length = nil, buffer = nil)
     ensure_open_and_readable
-    buffer = Primitive.convert_to_str(buffer) if buffer
+    buffer = Primitive.convert_with_to_str(buffer) if buffer
 
     unless length
       str = IO.read_encode self, read_all
@@ -1777,7 +1777,7 @@ class IO
     ensure_open_and_readable
     self.nonblock = true
 
-    buffer = Primitive.convert_to_str(buffer) if buffer
+    buffer = Primitive.convert_with_to_str(buffer) if buffer
 
     return ''.b if size == 0
 
@@ -1897,7 +1897,7 @@ class IO
     ensure_open_and_readable
 
     if buffer
-      buffer = Primitive.convert_to_str(buffer)
+      buffer = Primitive.convert_with_to_str(buffer)
 
       Truffle::StringOperations.shorten!(buffer, buffer.bytesize)
 
@@ -2068,11 +2068,11 @@ class IO
   def set_encoding(external, internal = nil, **options)
     if !Primitive.nil?(internal)
       unless Primitive.nil?(external) || Primitive.is_a?(external, Encoding)
-        external = Truffle::IOOperations.parse_external_enc(self, Primitive.convert_to_str(external), @mode)
+        external = Truffle::IOOperations.parse_external_enc(self, Primitive.convert_with_to_str(external), @mode)
       end
 
       unless Primitive.is_a?(internal, Encoding)
-        internal = Primitive.convert_to_str(internal)
+        internal = Primitive.convert_with_to_str(internal)
         if internal == '-' # Special case - "-" => no transcoding
           internal = nil
         else
@@ -2090,7 +2090,7 @@ class IO
         external, internal = Truffle::IOOperations.rb_io_ext_int_to_encs(@mode, nil, nil)
       else
         if !Primitive.is_a?(external, Encoding) and
-            external = Primitive.convert_to_str(external) and external.encoding.ascii_compatible?
+            external = Primitive.convert_with_to_str(external) and external.encoding.ascii_compatible?
           external, internal = Truffle::IOOperations.parse_mode_enc(self, @mode, external)
         else
           external, internal = Truffle::IOOperations.rb_io_ext_int_to_encs(@mode, Encoding.find(external), nil)
@@ -2182,7 +2182,7 @@ class IO
     flush
     raise IOError unless @ibuffer.empty?
 
-    buffer = Primitive.convert_to_str(buffer) if buffer
+    buffer = Primitive.convert_with_to_str(buffer) if buffer
 
     str, errno = Truffle::POSIX.read_string(self, number_of_bytes)
     Errno.handle_errno(errno) unless errno == 0
@@ -2248,7 +2248,7 @@ class IO
     when nil
       return
     else
-      str = Primitive.convert_to_str(obj)
+      str = Primitive.convert_with_to_str(obj)
     end
 
     @ibuffer.put_back(str)
@@ -2266,7 +2266,7 @@ class IO
     when nil
       return
     else
-      str = Primitive.convert_to_str(obj)
+      str = Primitive.convert_with_to_str(obj)
     end
 
     @ibuffer.put_back(str)
