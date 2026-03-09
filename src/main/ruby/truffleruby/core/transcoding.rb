@@ -152,7 +152,7 @@ class Encoding
 
       if (@options & (INVALID_REPLACE | UNDEF_REPLACE | UNDEF_HEX_CHARREF))
         unless Primitive.nil? new_replacement
-          new_replacement = Primitive.convert_type new_replacement, String, :to_str
+          new_replacement = Primitive.convert_to_str new_replacement
           self.replacement = new_replacement # We can only call `self.replacement=` after the converter has been initialized.
         end
       end

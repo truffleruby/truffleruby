@@ -176,7 +176,7 @@ module Process
   # @return [Title]
   #
   def setproctitle(title)
-    title = Primitive.convert_type(title, String, :to_str)
+    title = Primitive.convert_to_str(title)
     argv = Primitive.vm_native_argv
 
     # Not run from ruby launcher, we cannot set process title

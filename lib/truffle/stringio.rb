@@ -150,7 +150,7 @@ class StringIO
       mode ||= IO::RDWR
       @__data__ = Data.new ''.force_encoding(Encoding.default_external)
     else
-      string = Primitive.convert_type string, String, :to_str
+      string = Primitive.convert_to_str string
       @__data__ = Data.new string
     end
 
@@ -622,7 +622,7 @@ class StringIO
     if Primitive.is_a?(char, Integer)
       char = Primitive.convert_type char, String, :chr
     else
-      char = Primitive.convert_type char, String, :to_str
+      char = Primitive.convert_to_str char
     end
 
     d = @__data__
@@ -731,7 +731,7 @@ class StringIO
   private def getline(arg_error, sep, limit, chomp = false)
     if limit != Undefined
       limit = Primitive.rb_to_int limit if limit
-      sep = Primitive.convert_type sep, String, :to_str if sep
+      sep = Primitive.convert_to_str sep if sep
     else
       limit = nil
 

@@ -182,7 +182,7 @@ class String
 
   def delete_prefix!(prefix)
     Primitive.check_mutable_string self
-    prefix = Primitive.convert_type(prefix, String, :to_str)
+    prefix = Primitive.convert_to_str(prefix)
     if !prefix.empty? && self[0, prefix.size] == prefix
       self[0, prefix.size] = ''
       self
@@ -198,7 +198,7 @@ class String
 
   def delete_suffix!(suffix)
     Primitive.check_mutable_string self
-    suffix = Primitive.convert_type(suffix, String, :to_str)
+    suffix = Primitive.convert_to_str(suffix)
     if !suffix.empty? && self[-suffix.size, suffix.size] == suffix
       self[size - suffix.size, suffix.size] = ''
       self
@@ -1432,7 +1432,7 @@ class String
   end
 
   def unpack(format, offset: undefined)
-    format = Primitive.convert_type(format, String, :to_str)
+    format = Primitive.convert_to_str(format)
     unless Primitive.undefined?(offset)
       offset = Primitive.rb_num2int(offset) # to guarantee it's `int` finally
     end

@@ -477,13 +477,13 @@ module Truffle
 
       if mode
         mode = (Truffle::Type.try_convert(mode, Integer, :to_int) or
-          Primitive.convert_type(mode, String, :to_str))
+          Primitive.convert_to_str(mode))
       end
 
       if options
         if optmode = options[:mode]
           optmode = (Truffle::Type.try_convert(optmode, Integer, :to_int) or
-            Primitive.convert_type(optmode, String, :to_str))
+            Primitive.convert_to_str(optmode))
         end
 
         if mode && optmode
