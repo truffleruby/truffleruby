@@ -2461,10 +2461,10 @@ module Truffle::CExt
   end
 
   def rb_str_offset(string, index)
-    Primitive.character_index_to_byte_index(string, index)
+    Primitive.string_character_index_to_byte_index(string, index)
   end
 
   def rb_str_sublen(string, index)
-    Primitive.byte_index_to_character_index(string, index)
+    Primitive.string_byte_index_to_character_index(string, index)
   end
 end
