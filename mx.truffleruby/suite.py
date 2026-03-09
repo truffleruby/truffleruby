@@ -131,7 +131,7 @@ suite = {
             "sourceDirs": ["java"],
             "jniHeaders": True,
             "jacoco": "include",
-            "javaCompliance": "8+",
+            "javaCompliance": "17+",
             "workingSets": "TruffleRuby",
             "license": ["MIT"],
         },
