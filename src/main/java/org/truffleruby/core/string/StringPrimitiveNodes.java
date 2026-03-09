@@ -1841,7 +1841,7 @@ public abstract class StringPrimitiveNodes {
 
     }
 
-    @Primitive(name = "byte_index_to_character_index", lowerFixnum = 1)
+    @Primitive(name = "string_byte_index_to_character_index", lowerFixnum = 1, isPublic = true)
     public abstract static class StringByteCharacterIndexNode extends PrimitiveArrayArgumentsNode {
         @Specialization
         int byteIndexToCodePointIndex(Object string, int byteIndex,
@@ -1854,7 +1854,7 @@ public abstract class StringPrimitiveNodes {
     }
 
     // Named 'string_byte_index' in Rubinius.
-    @Primitive(name = "character_index_to_byte_index", lowerFixnum = 1)
+    @Primitive(name = "string_character_index_to_byte_index", lowerFixnum = 1, isPublic = true)
     public abstract static class StringByteIndexFromCharIndexNode extends PrimitiveArrayArgumentsNode {
         @Specialization
         Object byteIndexFromCharIndex(Object string, int characterIndex,

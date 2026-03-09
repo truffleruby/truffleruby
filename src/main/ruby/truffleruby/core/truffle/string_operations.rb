@@ -346,7 +346,7 @@ module Truffle
         raise IndexError, "index #{index} out of string"
       end
 
-      unless bi = Primitive.character_index_to_byte_index(string, index)
+      unless bi = Primitive.string_character_index_to_byte_index(string, index)
         raise IndexError, "unable to find character at: #{index}"
       end
 
@@ -361,10 +361,10 @@ module Truffle
         if total >= string.size
           bs = string.bytesize - bi
         else
-          bs = Primitive.character_index_to_byte_index(string, total) - bi
+          bs = Primitive.string_character_index_to_byte_index(string, total) - bi
         end
       else
-        bs = index == string.size ? 0 : Primitive.character_index_to_byte_index(string, index + 1) - bi
+        bs = index == string.size ? 0 : Primitive.string_character_index_to_byte_index(string, index + 1) - bi
       end
 
       replacement = StringValue replacement
@@ -390,7 +390,7 @@ module Truffle
 
       raise RangeError, "#{range} out of range" if start < 0 or start > string.size
 
-      bi = Primitive.character_index_to_byte_index(string, start)
+      bi = Primitive.string_character_index_to_byte_index(string, start)
       raise IndexError, "unable to find character at: #{start}" unless bi
 
       if stop < start
@@ -398,7 +398,7 @@ module Truffle
       elsif stop >= string.size
         bs = string.bytesize - bi
       else
-        bs = Primitive.character_index_to_byte_index(string, stop + 1) - bi
+        bs = Primitive.string_character_index_to_byte_index(string, stop + 1) - bi
       end
 
       replacement = StringValue replacement
@@ -432,8 +432,8 @@ module Truffle
       replacement = StringValue replacement
       enc = Primitive.encoding_ensure_compatible_str string, replacement
 
-      bi = Primitive.character_index_to_byte_index(string, match.begin(count))
-      bs = Primitive.character_index_to_byte_index(string, match.end(count)) - bi
+      bi = Primitive.string_character_index_to_byte_index(string, match.begin(count))
+      bs = Primitive.string_character_index_to_byte_index(string, match.end(count)) - bi
 
       Primitive.string_splice(string, replacement, bi, bs, enc)
     end
