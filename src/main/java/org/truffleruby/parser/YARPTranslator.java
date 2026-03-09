@@ -14,7 +14,7 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.shadowed.org.jcodings.specific.EUCJPEncoding;
 import org.graalvm.shadowed.org.jcodings.specific.Windows_31JEncoding;
-import org.prism.Nodes.ConstantReadNode;
+import org.ruby_lang.prism.Nodes.NoBlockParameterNode;
 import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -145,7 +145,7 @@ import org.truffleruby.language.objects.SingletonClassNodeGen.SingletonClassASTN
 import org.truffleruby.language.objects.WriteInstanceVariableNodeGen;
 import org.truffleruby.language.objects.classvariables.ReadClassVariableNode;
 import org.truffleruby.language.objects.classvariables.WriteClassVariableNode;
-import org.prism.Nodes;
+import org.ruby_lang.prism.Nodes;
 import org.truffleruby.language.supercall.ReadSuperArgumentsNode;
 import org.truffleruby.language.supercall.ReadZSuperArgumentsNode;
 import org.truffleruby.language.supercall.SuperCallNode;
@@ -155,6 +155,7 @@ import org.truffleruby.language.yield.YieldExpressionNode;
 import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
@@ -170,7 +171,7 @@ import static org.truffleruby.parser.TranslatorEnvironment.FORWARDED_REST_NAME;
  *
  * The main translator that delegates handling of some nodes (e.g. method or block definition) to helper translators.
  *
- * Every Prism node class is documented in the {@code org.prism.Nodes}. */
+ * Every Prism node class is documented in the {@link Nodes}. */
 public class YARPTranslator extends YARPBaseTranslator {
 
     public static final int NO_FRAME_ON_STACK_MARKER = -1;
@@ -591,6 +592,11 @@ public class YARPTranslator extends YARPBaseTranslator {
     }
 
     @Override
+    public RubyNode visitNoBlockParameterNode(NoBlockParameterNode node) {
+        throw CompilerDirectives.shouldNotReachHere("handled in YARPLoadArgumentsTranslator");
+    }
+
+    @Override
     public RubyNode visitBlockParametersNode(Nodes.BlockParametersNode node) {
         throw CompilerDirectives.shouldNotReachHere("handled in translateBlockAndLambda");
     }
@@ -781,15 +787,14 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         final RubyNode[] translatedArguments;
         if (isSplatted) {
-            translatedArguments = new RubyNode[]{ translateExpressionsList(arguments) };
+            var translatedArgumentsNode = translateExpressionsList(arguments);
+            // No need to copy the array for call(*splat), the elements will be copied to the frame arguments
+            if (translatedArgumentsNode instanceof SplatCastNode splatNode) {
+                splatNode.doNotCopy();
+            }
+            translatedArguments = new RubyNode[]{ translatedArgumentsNode };
         } else {
             translatedArguments = translate(arguments);
-        }
-
-        // No need to copy the array for call(*splat), the elements will be copied to the frame arguments
-        if (isSplatted && translatedArguments.length == 1 &&
-                translatedArguments[0] instanceof SplatCastNode splatNode) {
-            splatNode.doNotCopy();
         }
 
         final RubyNode blockNode;
@@ -1140,8 +1145,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                     // whenConditions are translated into an array-producing node
                     // so `when a, *b, c` is translated into `[a, *b, c].any?`
                     final RubyNode whenConditionNode = translateExpressionsList(whenConditions);
-                    final RubyNode receiver = whenConditionNode;
-                    final RubyNode predicateNode = createCallNode(receiver, "any?", RubyNode.EMPTY_ARRAY);
+                    final RubyNode predicateNode = createCallNode(whenConditionNode, "any?", RubyNode.EMPTY_ARRAY);
 
                     // create `if` node
                     final RubyNode thenNode = translateNodeOrNil(whenNode.statements);
@@ -2194,10 +2198,8 @@ public class YARPTranslator extends YARPBaseTranslator {
         if (node.arguments == null) {
             arguments = new Nodes.Node[1];
         } else {
-            arguments = new Nodes.Node[node.arguments.arguments.length + 1];
-            for (int i = 0; i < node.arguments.arguments.length; i++) {
-                arguments[i] = node.arguments.arguments[i];
-            }
+            arguments = Arrays.copyOf(node.arguments.arguments, node.arguments.arguments.length + 1,
+                    Nodes.Node[].class);
         }
 
         arguments[arguments.length - 1] = new Nodes.NilNode(0, 0);
@@ -2289,8 +2291,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         }
 
         // defined?(a[b] ||= c) should return 'assignment'
-        final RubyNode rubyNode = new DefinedWrapperNode(language.coreStrings.ASSIGNMENT, sequence);
-        return rubyNode;
+        return new DefinedWrapperNode(language.coreStrings.ASSIGNMENT, sequence);
     }
 
     @Override
@@ -2526,6 +2527,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         for (var part : parts) {
             if (part.hasNewLineFlag()) {
                 isNewLineFlag = true;
+                break;
             }
         }
 
@@ -3605,7 +3607,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         body = new InsideModuleDefinitionNode(body);
         assignPositionOnly(moduleNode, body); // source location is needed to trigger :class TracePoint event
 
-        if (environment.getFlipFlopStates().size() > 0) {
+        if (!environment.getFlipFlopStates().isEmpty()) {
             body = sequence(initFlipFlopStates(environment), body);
         }
 
@@ -3647,7 +3649,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                     break;
                 }
 
-                if (parent instanceof ConstantReadNode readNode) {
+                if (parent instanceof Nodes.ConstantReadNode readNode) {
                     parts.addFirst(readNode.name);
                     break;
                 }
@@ -3819,8 +3821,7 @@ public class YARPTranslator extends YARPBaseTranslator {
             loop = new WhileNode(WhileNodeFactory.DoWhileRepeatingNodeGen.create(condition, body));
         }
 
-        final RubyNode rubyNode = new CatchBreakNode(whileBreakID, loop, true);
-        return rubyNode;
+        return new CatchBreakNode(whileBreakID, loop, true);
     }
 
     /** A node is side-effect-free if it cannot access $! */
@@ -3909,9 +3910,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         }
 
         if (parametersNode.keyword_rest != null) {
-            if (parametersNode.keyword_rest instanceof Nodes.KeywordRestParameterNode) {
-                final var keywordRestParameterNode = (Nodes.KeywordRestParameterNode) parametersNode.keyword_rest;
-
+            if (parametersNode.keyword_rest instanceof Nodes.KeywordRestParameterNode keywordRestParameterNode) {
                 if (keywordRestParameterNode.name == null) {
                     descriptors.add(new ArgumentDescriptor(ArgumentType.anonkeyrest, DEFAULT_KEYWORD_REST_NAME));
                 } else {
@@ -3930,12 +3929,12 @@ public class YARPTranslator extends YARPBaseTranslator {
             }
         }
 
-        if (parametersNode.block != null) {
-            if (parametersNode.block.name == null) {
+        if (parametersNode.block instanceof Nodes.BlockParameterNode blockParameterNode) {
+            if (blockParameterNode.name == null) {
                 // def a(&) ... end
                 descriptors.add(new ArgumentDescriptor(ArgumentType.anonblock, DEFAULT_BLOCK_NAME));
             } else {
-                var descriptor = new ArgumentDescriptor(ArgumentType.block, parametersNode.block.name);
+                var descriptor = new ArgumentDescriptor(ArgumentType.block, blockParameterNode.name);
                 descriptors.add(descriptor);
             }
         }

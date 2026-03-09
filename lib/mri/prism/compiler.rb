@@ -9,6 +9,9 @@ if you are looking to modify the template
 ++
 =end
 
+#--
+# rbs_inline: enabled
+
 module Prism
   # A compiler is a visitor that returns the value of each node as it visits.
   # This is as opposed to a visitor which will only walk the tree. This can be
@@ -29,772 +32,783 @@ module Prism
   #
   class Compiler < Visitor
     # Visit an individual node.
-    def visit(node)
+    #--
+    #: (node?) -> untyped
+    def visit(node) # :nodoc:
       node&.accept(self)
     end
 
     # Visit a list of nodes.
-    def visit_all(nodes)
+    #--
+    #: (Array[node?]) -> untyped
+    def visit_all(nodes) # :nodoc:
       nodes.map { |node| node&.accept(self) }
     end
 
     # Visit the child nodes of the given node.
-    def visit_child_nodes(node)
+    #--
+    #: (node) -> Array[untyped]
+    def visit_child_nodes(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a AliasGlobalVariableNode node
-    def visit_alias_global_variable_node(node)
+    #: (AliasGlobalVariableNode) -> Array[untyped]
+    def visit_alias_global_variable_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a AliasMethodNode node
-    def visit_alias_method_node(node)
+    #: (AliasMethodNode) -> Array[untyped]
+    def visit_alias_method_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a AlternationPatternNode node
-    def visit_alternation_pattern_node(node)
+    #: (AlternationPatternNode) -> Array[untyped]
+    def visit_alternation_pattern_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a AndNode node
-    def visit_and_node(node)
+    #: (AndNode) -> Array[untyped]
+    def visit_and_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ArgumentsNode node
-    def visit_arguments_node(node)
+    #: (ArgumentsNode) -> Array[untyped]
+    def visit_arguments_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ArrayNode node
-    def visit_array_node(node)
+    #: (ArrayNode) -> Array[untyped]
+    def visit_array_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ArrayPatternNode node
-    def visit_array_pattern_node(node)
+    #: (ArrayPatternNode) -> Array[untyped]
+    def visit_array_pattern_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a AssocNode node
-    def visit_assoc_node(node)
+    #: (AssocNode) -> Array[untyped]
+    def visit_assoc_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a AssocSplatNode node
-    def visit_assoc_splat_node(node)
+    #: (AssocSplatNode) -> Array[untyped]
+    def visit_assoc_splat_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a BackReferenceReadNode node
-    def visit_back_reference_read_node(node)
+    #: (BackReferenceReadNode) -> Array[untyped]
+    def visit_back_reference_read_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a BeginNode node
-    def visit_begin_node(node)
+    #: (BeginNode) -> Array[untyped]
+    def visit_begin_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a BlockArgumentNode node
-    def visit_block_argument_node(node)
+    #: (BlockArgumentNode) -> Array[untyped]
+    def visit_block_argument_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a BlockLocalVariableNode node
-    def visit_block_local_variable_node(node)
+    #: (BlockLocalVariableNode) -> Array[untyped]
+    def visit_block_local_variable_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a BlockNode node
-    def visit_block_node(node)
+    #: (BlockNode) -> Array[untyped]
+    def visit_block_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a BlockParameterNode node
-    def visit_block_parameter_node(node)
+    #: (BlockParameterNode) -> Array[untyped]
+    def visit_block_parameter_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a BlockParametersNode node
-    def visit_block_parameters_node(node)
+    #: (BlockParametersNode) -> Array[untyped]
+    def visit_block_parameters_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a BreakNode node
-    def visit_break_node(node)
+    #: (BreakNode) -> Array[untyped]
+    def visit_break_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a CallAndWriteNode node
-    def visit_call_and_write_node(node)
+    #: (CallAndWriteNode) -> Array[untyped]
+    def visit_call_and_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a CallNode node
-    def visit_call_node(node)
+    #: (CallNode) -> Array[untyped]
+    def visit_call_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a CallOperatorWriteNode node
-    def visit_call_operator_write_node(node)
+    #: (CallOperatorWriteNode) -> Array[untyped]
+    def visit_call_operator_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a CallOrWriteNode node
-    def visit_call_or_write_node(node)
+    #: (CallOrWriteNode) -> Array[untyped]
+    def visit_call_or_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a CallTargetNode node
-    def visit_call_target_node(node)
+    #: (CallTargetNode) -> Array[untyped]
+    def visit_call_target_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a CapturePatternNode node
-    def visit_capture_pattern_node(node)
+    #: (CapturePatternNode) -> Array[untyped]
+    def visit_capture_pattern_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a CaseMatchNode node
-    def visit_case_match_node(node)
+    #: (CaseMatchNode) -> Array[untyped]
+    def visit_case_match_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a CaseNode node
-    def visit_case_node(node)
+    #: (CaseNode) -> Array[untyped]
+    def visit_case_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ClassNode node
-    def visit_class_node(node)
+    #: (ClassNode) -> Array[untyped]
+    def visit_class_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ClassVariableAndWriteNode node
-    def visit_class_variable_and_write_node(node)
+    #: (ClassVariableAndWriteNode) -> Array[untyped]
+    def visit_class_variable_and_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ClassVariableOperatorWriteNode node
-    def visit_class_variable_operator_write_node(node)
+    #: (ClassVariableOperatorWriteNode) -> Array[untyped]
+    def visit_class_variable_operator_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ClassVariableOrWriteNode node
-    def visit_class_variable_or_write_node(node)
+    #: (ClassVariableOrWriteNode) -> Array[untyped]
+    def visit_class_variable_or_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ClassVariableReadNode node
-    def visit_class_variable_read_node(node)
+    #: (ClassVariableReadNode) -> Array[untyped]
+    def visit_class_variable_read_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ClassVariableTargetNode node
-    def visit_class_variable_target_node(node)
+    #: (ClassVariableTargetNode) -> Array[untyped]
+    def visit_class_variable_target_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ClassVariableWriteNode node
-    def visit_class_variable_write_node(node)
+    #: (ClassVariableWriteNode) -> Array[untyped]
+    def visit_class_variable_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ConstantAndWriteNode node
-    def visit_constant_and_write_node(node)
+    #: (ConstantAndWriteNode) -> Array[untyped]
+    def visit_constant_and_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ConstantOperatorWriteNode node
-    def visit_constant_operator_write_node(node)
+    #: (ConstantOperatorWriteNode) -> Array[untyped]
+    def visit_constant_operator_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ConstantOrWriteNode node
-    def visit_constant_or_write_node(node)
+    #: (ConstantOrWriteNode) -> Array[untyped]
+    def visit_constant_or_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ConstantPathAndWriteNode node
-    def visit_constant_path_and_write_node(node)
+    #: (ConstantPathAndWriteNode) -> Array[untyped]
+    def visit_constant_path_and_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ConstantPathNode node
-    def visit_constant_path_node(node)
+    #: (ConstantPathNode) -> Array[untyped]
+    def visit_constant_path_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ConstantPathOperatorWriteNode node
-    def visit_constant_path_operator_write_node(node)
+    #: (ConstantPathOperatorWriteNode) -> Array[untyped]
+    def visit_constant_path_operator_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ConstantPathOrWriteNode node
-    def visit_constant_path_or_write_node(node)
+    #: (ConstantPathOrWriteNode) -> Array[untyped]
+    def visit_constant_path_or_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ConstantPathTargetNode node
-    def visit_constant_path_target_node(node)
+    #: (ConstantPathTargetNode) -> Array[untyped]
+    def visit_constant_path_target_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ConstantPathWriteNode node
-    def visit_constant_path_write_node(node)
+    #: (ConstantPathWriteNode) -> Array[untyped]
+    def visit_constant_path_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ConstantReadNode node
-    def visit_constant_read_node(node)
+    #: (ConstantReadNode) -> Array[untyped]
+    def visit_constant_read_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ConstantTargetNode node
-    def visit_constant_target_node(node)
+    #: (ConstantTargetNode) -> Array[untyped]
+    def visit_constant_target_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ConstantWriteNode node
-    def visit_constant_write_node(node)
+    #: (ConstantWriteNode) -> Array[untyped]
+    def visit_constant_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a DefNode node
-    def visit_def_node(node)
+    #: (DefNode) -> Array[untyped]
+    def visit_def_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a DefinedNode node
-    def visit_defined_node(node)
+    #: (DefinedNode) -> Array[untyped]
+    def visit_defined_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ElseNode node
-    def visit_else_node(node)
+    #: (ElseNode) -> Array[untyped]
+    def visit_else_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a EmbeddedStatementsNode node
-    def visit_embedded_statements_node(node)
+    #: (EmbeddedStatementsNode) -> Array[untyped]
+    def visit_embedded_statements_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a EmbeddedVariableNode node
-    def visit_embedded_variable_node(node)
+    #: (EmbeddedVariableNode) -> Array[untyped]
+    def visit_embedded_variable_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a EnsureNode node
-    def visit_ensure_node(node)
+    #: (EnsureNode) -> Array[untyped]
+    def visit_ensure_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a FalseNode node
-    def visit_false_node(node)
+    #: (FalseNode) -> Array[untyped]
+    def visit_false_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a FindPatternNode node
-    def visit_find_pattern_node(node)
+    #: (FindPatternNode) -> Array[untyped]
+    def visit_find_pattern_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a FlipFlopNode node
-    def visit_flip_flop_node(node)
+    #: (FlipFlopNode) -> Array[untyped]
+    def visit_flip_flop_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a FloatNode node
-    def visit_float_node(node)
+    #: (FloatNode) -> Array[untyped]
+    def visit_float_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ForNode node
-    def visit_for_node(node)
+    #: (ForNode) -> Array[untyped]
+    def visit_for_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ForwardingArgumentsNode node
-    def visit_forwarding_arguments_node(node)
+    #: (ForwardingArgumentsNode) -> Array[untyped]
+    def visit_forwarding_arguments_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ForwardingParameterNode node
-    def visit_forwarding_parameter_node(node)
+    #: (ForwardingParameterNode) -> Array[untyped]
+    def visit_forwarding_parameter_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ForwardingSuperNode node
-    def visit_forwarding_super_node(node)
+    #: (ForwardingSuperNode) -> Array[untyped]
+    def visit_forwarding_super_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a GlobalVariableAndWriteNode node
-    def visit_global_variable_and_write_node(node)
+    #: (GlobalVariableAndWriteNode) -> Array[untyped]
+    def visit_global_variable_and_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a GlobalVariableOperatorWriteNode node
-    def visit_global_variable_operator_write_node(node)
+    #: (GlobalVariableOperatorWriteNode) -> Array[untyped]
+    def visit_global_variable_operator_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a GlobalVariableOrWriteNode node
-    def visit_global_variable_or_write_node(node)
+    #: (GlobalVariableOrWriteNode) -> Array[untyped]
+    def visit_global_variable_or_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a GlobalVariableReadNode node
-    def visit_global_variable_read_node(node)
+    #: (GlobalVariableReadNode) -> Array[untyped]
+    def visit_global_variable_read_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a GlobalVariableTargetNode node
-    def visit_global_variable_target_node(node)
+    #: (GlobalVariableTargetNode) -> Array[untyped]
+    def visit_global_variable_target_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a GlobalVariableWriteNode node
-    def visit_global_variable_write_node(node)
+    #: (GlobalVariableWriteNode) -> Array[untyped]
+    def visit_global_variable_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a HashNode node
-    def visit_hash_node(node)
+    #: (HashNode) -> Array[untyped]
+    def visit_hash_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a HashPatternNode node
-    def visit_hash_pattern_node(node)
+    #: (HashPatternNode) -> Array[untyped]
+    def visit_hash_pattern_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a IfNode node
-    def visit_if_node(node)
+    #: (IfNode) -> Array[untyped]
+    def visit_if_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ImaginaryNode node
-    def visit_imaginary_node(node)
+    #: (ImaginaryNode) -> Array[untyped]
+    def visit_imaginary_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ImplicitNode node
-    def visit_implicit_node(node)
+    #: (ImplicitNode) -> Array[untyped]
+    def visit_implicit_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ImplicitRestNode node
-    def visit_implicit_rest_node(node)
+    #: (ImplicitRestNode) -> Array[untyped]
+    def visit_implicit_rest_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a InNode node
-    def visit_in_node(node)
+    #: (InNode) -> Array[untyped]
+    def visit_in_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a IndexAndWriteNode node
-    def visit_index_and_write_node(node)
+    #: (IndexAndWriteNode) -> Array[untyped]
+    def visit_index_and_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a IndexOperatorWriteNode node
-    def visit_index_operator_write_node(node)
+    #: (IndexOperatorWriteNode) -> Array[untyped]
+    def visit_index_operator_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a IndexOrWriteNode node
-    def visit_index_or_write_node(node)
+    #: (IndexOrWriteNode) -> Array[untyped]
+    def visit_index_or_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a IndexTargetNode node
-    def visit_index_target_node(node)
+    #: (IndexTargetNode) -> Array[untyped]
+    def visit_index_target_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a InstanceVariableAndWriteNode node
-    def visit_instance_variable_and_write_node(node)
+    #: (InstanceVariableAndWriteNode) -> Array[untyped]
+    def visit_instance_variable_and_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a InstanceVariableOperatorWriteNode node
-    def visit_instance_variable_operator_write_node(node)
+    #: (InstanceVariableOperatorWriteNode) -> Array[untyped]
+    def visit_instance_variable_operator_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a InstanceVariableOrWriteNode node
-    def visit_instance_variable_or_write_node(node)
+    #: (InstanceVariableOrWriteNode) -> Array[untyped]
+    def visit_instance_variable_or_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a InstanceVariableReadNode node
-    def visit_instance_variable_read_node(node)
+    #: (InstanceVariableReadNode) -> Array[untyped]
+    def visit_instance_variable_read_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a InstanceVariableTargetNode node
-    def visit_instance_variable_target_node(node)
+    #: (InstanceVariableTargetNode) -> Array[untyped]
+    def visit_instance_variable_target_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a InstanceVariableWriteNode node
-    def visit_instance_variable_write_node(node)
+    #: (InstanceVariableWriteNode) -> Array[untyped]
+    def visit_instance_variable_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a IntegerNode node
-    def visit_integer_node(node)
+    #: (IntegerNode) -> Array[untyped]
+    def visit_integer_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a InterpolatedMatchLastLineNode node
-    def visit_interpolated_match_last_line_node(node)
+    #: (InterpolatedMatchLastLineNode) -> Array[untyped]
+    def visit_interpolated_match_last_line_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a InterpolatedRegularExpressionNode node
-    def visit_interpolated_regular_expression_node(node)
+    #: (InterpolatedRegularExpressionNode) -> Array[untyped]
+    def visit_interpolated_regular_expression_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a InterpolatedStringNode node
-    def visit_interpolated_string_node(node)
+    #: (InterpolatedStringNode) -> Array[untyped]
+    def visit_interpolated_string_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a InterpolatedSymbolNode node
-    def visit_interpolated_symbol_node(node)
+    #: (InterpolatedSymbolNode) -> Array[untyped]
+    def visit_interpolated_symbol_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a InterpolatedXStringNode node
-    def visit_interpolated_x_string_node(node)
+    #: (InterpolatedXStringNode) -> Array[untyped]
+    def visit_interpolated_x_string_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ItLocalVariableReadNode node
-    def visit_it_local_variable_read_node(node)
+    #: (ItLocalVariableReadNode) -> Array[untyped]
+    def visit_it_local_variable_read_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ItParametersNode node
-    def visit_it_parameters_node(node)
+    #: (ItParametersNode) -> Array[untyped]
+    def visit_it_parameters_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a KeywordHashNode node
-    def visit_keyword_hash_node(node)
+    #: (KeywordHashNode) -> Array[untyped]
+    def visit_keyword_hash_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a KeywordRestParameterNode node
-    def visit_keyword_rest_parameter_node(node)
+    #: (KeywordRestParameterNode) -> Array[untyped]
+    def visit_keyword_rest_parameter_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a LambdaNode node
-    def visit_lambda_node(node)
+    #: (LambdaNode) -> Array[untyped]
+    def visit_lambda_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a LocalVariableAndWriteNode node
-    def visit_local_variable_and_write_node(node)
+    #: (LocalVariableAndWriteNode) -> Array[untyped]
+    def visit_local_variable_and_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a LocalVariableOperatorWriteNode node
-    def visit_local_variable_operator_write_node(node)
+    #: (LocalVariableOperatorWriteNode) -> Array[untyped]
+    def visit_local_variable_operator_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a LocalVariableOrWriteNode node
-    def visit_local_variable_or_write_node(node)
+    #: (LocalVariableOrWriteNode) -> Array[untyped]
+    def visit_local_variable_or_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a LocalVariableReadNode node
-    def visit_local_variable_read_node(node)
+    #: (LocalVariableReadNode) -> Array[untyped]
+    def visit_local_variable_read_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a LocalVariableTargetNode node
-    def visit_local_variable_target_node(node)
+    #: (LocalVariableTargetNode) -> Array[untyped]
+    def visit_local_variable_target_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a LocalVariableWriteNode node
-    def visit_local_variable_write_node(node)
+    #: (LocalVariableWriteNode) -> Array[untyped]
+    def visit_local_variable_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a MatchLastLineNode node
-    def visit_match_last_line_node(node)
+    #: (MatchLastLineNode) -> Array[untyped]
+    def visit_match_last_line_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a MatchPredicateNode node
-    def visit_match_predicate_node(node)
+    #: (MatchPredicateNode) -> Array[untyped]
+    def visit_match_predicate_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a MatchRequiredNode node
-    def visit_match_required_node(node)
+    #: (MatchRequiredNode) -> Array[untyped]
+    def visit_match_required_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a MatchWriteNode node
-    def visit_match_write_node(node)
+    #: (MatchWriteNode) -> Array[untyped]
+    def visit_match_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a MissingNode node
-    def visit_missing_node(node)
+    #: (MissingNode) -> Array[untyped]
+    def visit_missing_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ModuleNode node
-    def visit_module_node(node)
+    #: (ModuleNode) -> Array[untyped]
+    def visit_module_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a MultiTargetNode node
-    def visit_multi_target_node(node)
+    #: (MultiTargetNode) -> Array[untyped]
+    def visit_multi_target_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a MultiWriteNode node
-    def visit_multi_write_node(node)
+    #: (MultiWriteNode) -> Array[untyped]
+    def visit_multi_write_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a NextNode node
-    def visit_next_node(node)
+    #: (NextNode) -> Array[untyped]
+    def visit_next_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a NilNode node
-    def visit_nil_node(node)
+    #: (NilNode) -> Array[untyped]
+    def visit_nil_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a NoKeywordsParameterNode node
-    def visit_no_keywords_parameter_node(node)
+    #: (NoBlockParameterNode) -> Array[untyped]
+    def visit_no_block_parameter_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a NumberedParametersNode node
-    def visit_numbered_parameters_node(node)
+    #: (NoKeywordsParameterNode) -> Array[untyped]
+    def visit_no_keywords_parameter_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a NumberedReferenceReadNode node
-    def visit_numbered_reference_read_node(node)
+    #: (NumberedParametersNode) -> Array[untyped]
+    def visit_numbered_parameters_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a OptionalKeywordParameterNode node
-    def visit_optional_keyword_parameter_node(node)
+    #: (NumberedReferenceReadNode) -> Array[untyped]
+    def visit_numbered_reference_read_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a OptionalParameterNode node
-    def visit_optional_parameter_node(node)
+    #: (OptionalKeywordParameterNode) -> Array[untyped]
+    def visit_optional_keyword_parameter_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a OrNode node
-    def visit_or_node(node)
+    #: (OptionalParameterNode) -> Array[untyped]
+    def visit_optional_parameter_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ParametersNode node
-    def visit_parameters_node(node)
+    #: (OrNode) -> Array[untyped]
+    def visit_or_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ParenthesesNode node
-    def visit_parentheses_node(node)
+    #: (ParametersNode) -> Array[untyped]
+    def visit_parameters_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a PinnedExpressionNode node
-    def visit_pinned_expression_node(node)
+    #: (ParenthesesNode) -> Array[untyped]
+    def visit_parentheses_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a PinnedVariableNode node
-    def visit_pinned_variable_node(node)
+    #: (PinnedExpressionNode) -> Array[untyped]
+    def visit_pinned_expression_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a PostExecutionNode node
-    def visit_post_execution_node(node)
+    #: (PinnedVariableNode) -> Array[untyped]
+    def visit_pinned_variable_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a PreExecutionNode node
-    def visit_pre_execution_node(node)
+    #: (PostExecutionNode) -> Array[untyped]
+    def visit_post_execution_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ProgramNode node
-    def visit_program_node(node)
+    #: (PreExecutionNode) -> Array[untyped]
+    def visit_pre_execution_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a RangeNode node
-    def visit_range_node(node)
+    #: (ProgramNode) -> Array[untyped]
+    def visit_program_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a RationalNode node
-    def visit_rational_node(node)
+    #: (RangeNode) -> Array[untyped]
+    def visit_range_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a RedoNode node
-    def visit_redo_node(node)
+    #: (RationalNode) -> Array[untyped]
+    def visit_rational_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a RegularExpressionNode node
-    def visit_regular_expression_node(node)
+    #: (RedoNode) -> Array[untyped]
+    def visit_redo_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a RequiredKeywordParameterNode node
-    def visit_required_keyword_parameter_node(node)
+    #: (RegularExpressionNode) -> Array[untyped]
+    def visit_regular_expression_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a RequiredParameterNode node
-    def visit_required_parameter_node(node)
+    #: (RequiredKeywordParameterNode) -> Array[untyped]
+    def visit_required_keyword_parameter_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a RescueModifierNode node
-    def visit_rescue_modifier_node(node)
+    #: (RequiredParameterNode) -> Array[untyped]
+    def visit_required_parameter_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a RescueNode node
-    def visit_rescue_node(node)
+    #: (RescueModifierNode) -> Array[untyped]
+    def visit_rescue_modifier_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a RestParameterNode node
-    def visit_rest_parameter_node(node)
+    #: (RescueNode) -> Array[untyped]
+    def visit_rescue_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a RetryNode node
-    def visit_retry_node(node)
+    #: (RestParameterNode) -> Array[untyped]
+    def visit_rest_parameter_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ReturnNode node
-    def visit_return_node(node)
+    #: (RetryNode) -> Array[untyped]
+    def visit_retry_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a SelfNode node
-    def visit_self_node(node)
+    #: (ReturnNode) -> Array[untyped]
+    def visit_return_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a ShareableConstantNode node
-    def visit_shareable_constant_node(node)
+    #: (SelfNode) -> Array[untyped]
+    def visit_self_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a SingletonClassNode node
-    def visit_singleton_class_node(node)
+    #: (ShareableConstantNode) -> Array[untyped]
+    def visit_shareable_constant_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a SourceEncodingNode node
-    def visit_source_encoding_node(node)
+    #: (SingletonClassNode) -> Array[untyped]
+    def visit_singleton_class_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a SourceFileNode node
-    def visit_source_file_node(node)
+    #: (SourceEncodingNode) -> Array[untyped]
+    def visit_source_encoding_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a SourceLineNode node
-    def visit_source_line_node(node)
+    #: (SourceFileNode) -> Array[untyped]
+    def visit_source_file_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a SplatNode node
-    def visit_splat_node(node)
+    #: (SourceLineNode) -> Array[untyped]
+    def visit_source_line_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a StatementsNode node
-    def visit_statements_node(node)
+    #: (SplatNode) -> Array[untyped]
+    def visit_splat_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a StringNode node
-    def visit_string_node(node)
+    #: (StatementsNode) -> Array[untyped]
+    def visit_statements_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a SuperNode node
-    def visit_super_node(node)
+    #: (StringNode) -> Array[untyped]
+    def visit_string_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a SymbolNode node
-    def visit_symbol_node(node)
+    #: (SuperNode) -> Array[untyped]
+    def visit_super_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a TrueNode node
-    def visit_true_node(node)
+    #: (SymbolNode) -> Array[untyped]
+    def visit_symbol_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a UndefNode node
-    def visit_undef_node(node)
+    #: (TrueNode) -> Array[untyped]
+    def visit_true_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a UnlessNode node
-    def visit_unless_node(node)
+    #: (UndefNode) -> Array[untyped]
+    def visit_undef_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a UntilNode node
-    def visit_until_node(node)
+    #: (UnlessNode) -> Array[untyped]
+    def visit_unless_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a WhenNode node
-    def visit_when_node(node)
+    #: (UntilNode) -> Array[untyped]
+    def visit_until_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a WhileNode node
-    def visit_while_node(node)
+    #: (WhenNode) -> Array[untyped]
+    def visit_when_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a XStringNode node
-    def visit_x_string_node(node)
+    #: (WhileNode) -> Array[untyped]
+    def visit_while_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 
-    # Compile a YieldNode node
-    def visit_yield_node(node)
+    #: (XStringNode) -> Array[untyped]
+    def visit_x_string_node(node) # :nodoc:
+      node.each_child_node.map { |node| node.accept(self) }
+    end
+
+    #: (YieldNode) -> Array[untyped]
+    def visit_yield_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
   end

@@ -14,8 +14,8 @@ import java.util.List;
 import java.util.Objects;
 
 import com.oracle.truffle.api.nodes.Node;
-import org.prism.AbstractNodeVisitor;
-import org.prism.Nodes;
+import org.ruby_lang.prism.AbstractNodeVisitor;
+import org.ruby_lang.prism.Nodes;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.encoding.RubyEncoding;

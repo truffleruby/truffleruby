@@ -12,7 +12,6 @@ package org.truffleruby.language.threadlocal;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import org.truffleruby.RubyContext;
-import org.truffleruby.RubyLanguage;
 import org.truffleruby.language.Nil;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -28,12 +27,12 @@ public final class ThreadAndFrameLocalStorage {
 
     public ThreadAndFrameLocalStorage(RubyContext context) {
         // Cannot store a Thread id while pre-initializing
-        originalThreadId = context.isPreInitializing() ? 0 : RubyLanguage.getThreadId(Thread.currentThread());
+        originalThreadId = context.isPreInitializing() ? 0 : Thread.currentThread().threadId();
         originalThreadValue = Nil.INSTANCE;
     }
 
     public Object get(Node node, InlinedConditionProfile sameThreadProfile) {
-        if (sameThreadProfile.profile(node, RubyLanguage.getThreadId(Thread.currentThread()) == originalThreadId)) {
+        if (sameThreadProfile.profile(node, Thread.currentThread().threadId() == originalThreadId)) {
             return originalThreadValue;
         } else {
             return fallbackGet();
@@ -62,7 +61,7 @@ public final class ThreadAndFrameLocalStorage {
     }
 
     public void set(Node node, Object value, InlinedConditionProfile sameThreadProfile) {
-        if (sameThreadProfile.profile(node, RubyLanguage.getThreadId(Thread.currentThread()) == originalThreadId)) {
+        if (sameThreadProfile.profile(node, Thread.currentThread().threadId() == originalThreadId)) {
             originalThreadValue = value;
         } else {
             fallbackSet(value);

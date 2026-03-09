@@ -149,7 +149,7 @@ public final class ThreadManager {
 
         language.rubyThreadInitMap.put(thread, fiber.rubyThread);
         language.rubyFiberInitMap.put(thread, fiber);
-        thread.setName(FiberManager.NAME_PREFIX + " id=" + RubyLanguage.getThreadId(thread) + " from " +
+        thread.setName(FiberManager.NAME_PREFIX + " id=" + thread.threadId() + " from " +
                 language.fileLine(sourceSection));
         thread.setDaemon(true); // GR-33255
         rubyManagedThreads.add(thread); // need to be set before initializeThread()
@@ -173,7 +173,7 @@ public final class ThreadManager {
 
         language.rubyThreadInitMap.put(thread, rubyThread);
         language.rubyFiberInitMap.put(thread, rubyThread.getRootFiber());
-        thread.setName(NAME_PREFIX + " id=" + RubyLanguage.getThreadId(thread) + " from " + info);
+        thread.setName(NAME_PREFIX + " id=" + thread.threadId() + " from " + info);
         rubyManagedThreads.add(thread); // need to be set before initializeThread()
         thread.setUncaughtExceptionHandler(uncaughtExceptionHandler(rubyThread.getRootFiber()));
         return thread;

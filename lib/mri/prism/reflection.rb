@@ -9,6 +9,9 @@ if you are looking to modify the template
 ++
 =end
 
+#--
+# rbs_inline: enabled
+
 module Prism
   # The Reflection module provides the ability to reflect on the structure of
   # the syntax tree itself, as opposed to looking at a single syntax tree. This
@@ -18,9 +21,11 @@ module Prism
     # for all other field types.
     class Field
       # The name of the field.
-      attr_reader :name
+      attr_reader :name #: Symbol
 
       # Initializes the field with the given name.
+      #--
+      #: (Symbol name) -> void
       def initialize(name)
         @name = name
       end
@@ -94,9 +99,11 @@ module Prism
     # the bitset should be accessed through their query methods.
     class FlagsField < Field
       # The names of the flags in the bitset.
-      attr_reader :flags
+      attr_reader :flags #: Array[Symbol]
 
       # Initializes the flags field with the given name and flags.
+      #--
+      #: (Symbol name, Array[Symbol] flags) -> void
       def initialize(name, flags)
         super(name)
         @flags = flags
@@ -104,6 +111,8 @@ module Prism
     end
 
     # Returns the fields for the given node.
+    #--
+    #: (singleton(Node) node) -> Array[Field]
     def self.fields_for(node)
       case node.type
       when :alias_global_variable_node
@@ -322,6 +331,8 @@ module Prism
         [OptionalNodeField.new(:arguments), LocationField.new(:keyword_loc)]
       when :nil_node
         []
+      when :no_block_parameter_node
+        [LocationField.new(:operator_loc), LocationField.new(:keyword_loc)]
       when :no_keywords_parameter_node
         [LocationField.new(:operator_loc), LocationField.new(:keyword_loc)]
       when :numbered_parameters_node

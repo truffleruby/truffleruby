@@ -3035,7 +3035,7 @@ module Commands
     # This is a good way to be notified when new node types are added in Prism,
     # and helps to ensure we handle all nodes.
     def all_visit_methods_in_yarp_translator
-      visit_methods = File.read('src/yarp/java/org/prism/AbstractNodeVisitor.java').scan(/\bpublic T (visit\w+)\(/).map(&:first)
+      visit_methods = File.read('src/yarp/java/org/ruby_lang/prism/AbstractNodeVisitor.java').scan(/\bpublic T (visit\w+)\(/).map(&:first)
       overridden_methods = File.read('src/main/java/org/truffleruby/parser/YARPTranslator.java').scan(/\bpublic \w*Node (visit\w+)\(/).map(&:first)
       missing = visit_methods - overridden_methods
       if missing.empty?

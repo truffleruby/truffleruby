@@ -10,8 +10,8 @@
 package org.truffleruby.parser;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import org.prism.AbstractNodeVisitor;
-import org.prism.Nodes;
+import org.ruby_lang.prism.AbstractNodeVisitor;
+import org.ruby_lang.prism.Nodes;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.array.AssignableNode;
 import org.truffleruby.core.array.MultipleAssignmentNode;

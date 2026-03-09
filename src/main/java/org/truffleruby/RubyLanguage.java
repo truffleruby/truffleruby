@@ -45,7 +45,7 @@ import org.graalvm.nativeimage.ImageInfo;
 import org.graalvm.options.OptionCategory;
 import org.graalvm.options.OptionDescriptors;
 import org.graalvm.options.OptionKey;
-import org.prism.Parser;
+import org.ruby_lang.prism.Parser;
 import org.truffleruby.annotations.SuppressFBWarnings;
 import org.truffleruby.builtins.PrimitiveManager;
 import org.truffleruby.cext.ValueWrapperManager;
@@ -747,7 +747,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     }
 
     private String showThread(Thread thread) {
-        return "#" + getThreadId(thread) + " " + thread + " = " + this.rubyThread.get(thread);
+        return "#" + thread.threadId() + " " + thread + " = " + this.rubyThread.get(thread);
     }
 
     @Override
@@ -1090,8 +1090,4 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
         }
     }
 
-    @SuppressWarnings("deprecation") // deprecated on JDK19 by Thread#threadId, but that's added in JDK19
-    public static long getThreadId(Thread thread) {
-        return thread.getId();
-    }
 }

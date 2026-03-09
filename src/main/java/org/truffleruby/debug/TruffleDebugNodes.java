@@ -34,7 +34,7 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.collections.Pair;
-import org.prism.ParseResult;
+import org.ruby_lang.prism.ParseResult;
 import org.truffleruby.Layouts;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.CoreMethod;
