@@ -54,7 +54,7 @@ public abstract class ToFNode extends RubyBaseNode {
             @Cached DispatchNode toFNode) {
         return (double) toFNode.call(
                 coreLibrary().truffleTypeModule,
-                "rb_convert_type",
+                "rb_convert_type_fallback",
                 object,
                 coreLibrary().floatClass,
                 coreSymbols().TO_F);

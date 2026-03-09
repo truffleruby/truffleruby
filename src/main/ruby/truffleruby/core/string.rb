@@ -453,7 +453,7 @@ class String
           (_, fallback_enc_from, fallback_enc_to, error_bytes, _) = ec.primitive_errinfo
           rep = fallback[error_bytes.force_encoding(fallback_enc_from)]
           raise ec.last_error unless rep
-          rep = Truffle::Type.rb_convert_type rep, String, :to_str
+          rep = Primitive.convert_to_str(rep)
           dest << rep.encode(fallback_enc_to)
           status = ec.primitive_convert src, dest, nil, nil
         end
@@ -504,7 +504,7 @@ class String
     end
 
     suffixes.each do |original_suffix|
-      suffix = Truffle::Type.rb_convert_type original_suffix, String, :to_str
+      suffix = Primitive.convert_to_str(original_suffix)
       enc = Primitive.encoding_ensure_compatible_str self, suffix
       return true if Primitive.string_end_with?(self, suffix, enc)
     end
@@ -1277,7 +1277,7 @@ class String
         Primitive.regexp_last_match_set(storage, match_data)
         return true if match_data
       else
-        prefix = Truffle::Type.rb_convert_type original_prefix, String, :to_str
+        prefix = Primitive.convert_to_str(original_prefix)
         enc = Primitive.encoding_ensure_compatible_str self, prefix
         return true if Primitive.string_start_with?(self, prefix, enc)
       end

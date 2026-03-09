@@ -330,7 +330,7 @@ module Truffle
 
     IMPLICIT_CONVERSION_METHODS = [:to_int, :to_ary, :to_str, :to_sym, :to_hash, :to_proc, :to_io]
 
-    def self.conversion_error_message(meth, obj, cls)
+    def self.conversion_error_message(obj, cls, meth)
       message = IMPLICIT_CONVERSION_METHODS.include?(meth) ? 'no implicit conversion of' : "can't convert"
       type_name = to_class_name(obj)
       "#{message} #{type_name} into #{cls}"

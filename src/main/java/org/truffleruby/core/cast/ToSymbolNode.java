@@ -90,7 +90,7 @@ public abstract class ToSymbolNode extends RubyBaseNode {
             @Cached(inline = false) ToSymbolNode toSymbolNode) {
         var coerced = toStrNode.call(
                 coreLibrary(node).truffleTypeModule,
-                "rb_convert_type",
+                "rb_convert_type_fallback",
                 object,
                 coreLibrary(node).stringClass,
                 coreSymbols(node).TO_STR);

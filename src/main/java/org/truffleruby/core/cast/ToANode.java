@@ -44,7 +44,7 @@ public abstract class ToANode extends RubyBaseNodeWithExecute {
             @Cached DispatchNode toAryNode) {
         return (RubyArray) toAryNode.call(
                 coreLibrary().truffleTypeModule,
-                "rb_convert_type",
+                "rb_convert_type_fallback",
                 object,
                 coreLibrary().arrayClass,
                 coreSymbols().TO_A);

@@ -44,6 +44,8 @@ import org.truffleruby.language.RubyGuards;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.dispatch.DispatchNode;
+import org.truffleruby.language.dispatch.LazyDispatchNode;
+import org.truffleruby.language.library.RubyStringLibrary;
 import org.truffleruby.language.objects.FreezeNode;
 import org.truffleruby.language.objects.IsANode;
 import org.truffleruby.language.objects.IsFrozenNode;
@@ -446,6 +448,39 @@ public abstract class TypeNodes {
         Object toRubyInteger(Object value,
                 @Cached ToRubyIntegerNode toRubyInteger) {
             return toRubyInteger.execute(this, value);
+        }
+    }
+
+    // MRI: StringValue()
+    @Primitive(name = "convert_to_str", isPublic = true)
+    public abstract static class ConvertToStrNode extends PrimitiveArrayArgumentsNode {
+        @Specialization(guards = "strings.isRubyString(this, object)", limit = "1")
+        Object convert(Object object,
+                @Cached RubyStringLibrary strings) {
+            return object;
+        }
+
+        @Fallback
+        Object convert(Object object,
+                @Cached DispatchNode fallback) {
+            return fallback.call(coreLibrary().truffleTypeModule, "rb_convert_type_fallback",
+                    object, coreLibrary().stringClass, coreSymbols().TO_STR);
+        }
+    }
+
+    // The generic one, prefers one of the specific above if available. MRI: rb_convert_type()
+    @Primitive(name = "convert_type", isPublic = true)
+    public abstract static class ConvertTypeNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        Object convert(Object object, RubyClass klass, RubySymbol coercionMethod,
+                @Cached IsANode isANode,
+                @Cached LazyDispatchNode fallback) {
+            if (isANode.executeIsA(object, klass)) {
+                return object;
+            } else {
+                return fallback.get(this).call(coreLibrary().truffleTypeModule, "rb_convert_type_fallback",
+                        object, klass, coercionMethod);
+            }
         }
     }
 

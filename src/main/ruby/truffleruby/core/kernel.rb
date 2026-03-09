@@ -161,14 +161,8 @@ module Kernel
   end
   module_function :String
 
-  ##
-  # MRI uses a macro named StringValue which has essentially the same
-  # semantics as Truffle::Type.rb_convert_type obj, String, :to_str, but rather than using that
-  # long construction everywhere, we define a private method similar to
-  # String().
-
   def StringValue(obj)
-    Truffle::Type.rb_convert_type obj, String, :to_str
+    Primitive.convert_to_str(obj)
   end
   module_function :StringValue
 
