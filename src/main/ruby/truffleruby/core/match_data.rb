@@ -165,7 +165,7 @@ class MatchData
     number = Truffle::Type.rb_check_convert_type(n, Integer, :to_int)
     return self[number] if number
     # To convert the last type (String) we used rb_convert_type instead of rb_check_convert_type which throws an exception
-    name = Truffle::Type.rb_check_convert_type(n, Symbol, :to_sym) || Truffle::Type.rb_convert_type(n, String, :to_str)
+    name = Truffle::Type.rb_check_convert_type(n, Symbol, :to_sym) || Primitive.convert_type(n, String, :to_str)
     self[name]
   end
 

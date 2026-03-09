@@ -77,7 +77,7 @@ module Truffle
       if Primitive.is_a?(sec, String)
         sec = sec.to_i
       elsif nsec
-        sec = Truffle::Type.coerce_to(sec || 0, Integer, :to_int)
+        sec = Primitive.convert_type(sec || 0, Integer, :to_int)
       else
         s = Truffle::Type.coerce_to_exact_num(sec || 0)
 

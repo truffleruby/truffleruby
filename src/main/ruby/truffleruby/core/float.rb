@@ -194,7 +194,7 @@ class Float < Numeric
   end
 
   def round(ndigits = 0, half: :up)
-    ndigits = Truffle::Type.coerce_to(ndigits, Integer, :to_int)
+    ndigits = Primitive.convert_type(ndigits, Integer, :to_int)
 
     if self == 0.0
       return ndigits > 0 ? self : 0

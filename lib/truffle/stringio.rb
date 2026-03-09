@@ -150,7 +150,7 @@ class StringIO
       mode ||= IO::RDWR
       @__data__ = Data.new ''.force_encoding(Encoding.default_external)
     else
-      string = Truffle::Type.coerce_to string, String, :to_str
+      string = Primitive.convert_type string, String, :to_str
       @__data__ = Data.new string
     end
 
@@ -177,7 +177,7 @@ class StringIO
   end
 
   def initialize_copy(from)
-    from = Truffle::Type.coerce_to(from, StringIO, :to_strio)
+    from = Primitive.convert_type(from, StringIO, :to_strio)
 
     @append = from.instance_variable_get(:@append)
     @readable = from.instance_variable_get(:@readable)
@@ -458,7 +458,7 @@ class StringIO
     if Primitive.is_a?(obj, String)
       char = obj[0]
     else
-      c = Truffle::Type.coerce_to obj, Integer, :to_int
+      c = Primitive.convert_type obj, Integer, :to_int
       char = (c & 0xff).chr
     end
 
@@ -476,7 +476,7 @@ class StringIO
       # intentionally don't preserve buffer's encoding
       # see https://bugs.ruby-lang.org/issues/20418
       if length
-        length = Truffle::Type.coerce_to length, Integer, :to_int
+        length = Primitive.convert_type length, Integer, :to_int
         raise ArgumentError if length < 0
 
         buffer = Primitive.convert_to_str(buffer) if buffer
@@ -522,7 +522,7 @@ class StringIO
 
   def reopen(string = nil, mode = Undefined)
     if string and not Primitive.is_a?(string, String) and Primitive.equal?(mode, Undefined)
-      stringio = Truffle::Type.coerce_to(string, StringIO, :to_strio)
+      stringio = Primitive.convert_type(string, StringIO, :to_strio)
 
       initialize_copy stringio
     else
@@ -544,7 +544,7 @@ class StringIO
 
   def seek(to, whence = IO::SEEK_SET)
     raise IOError, 'closed stream' if self.closed?
-    to = Truffle::Type.coerce_to to, Integer, :to_int
+    to = Primitive.convert_type to, Integer, :to_int
 
     d = @__data__
     TruffleRuby.synchronized(d) do
@@ -598,7 +598,7 @@ class StringIO
 
   def truncate(length)
     check_writable
-    len = Truffle::Type.coerce_to length, Integer, :to_int
+    len = Primitive.convert_type length, Integer, :to_int
     raise Errno::EINVAL, 'negative length' if len < 0
 
     d = @__data__
@@ -620,9 +620,9 @@ class StringIO
     check_readable
 
     if Primitive.is_a?(char, Integer)
-      char = Truffle::Type.coerce_to char, String, :chr
+      char = Primitive.convert_type char, String, :chr
     else
-      char = Truffle::Type.coerce_to char, String, :to_str
+      char = Primitive.convert_type char, String, :to_str
     end
 
     d = @__data__
@@ -731,7 +731,7 @@ class StringIO
   private def getline(arg_error, sep, limit, chomp = false)
     if limit != Undefined
       limit = Primitive.rb_to_int limit if limit
-      sep = Truffle::Type.coerce_to sep, String, :to_str if sep
+      sep = Primitive.convert_type sep, String, :to_str if sep
     else
       limit = nil
 

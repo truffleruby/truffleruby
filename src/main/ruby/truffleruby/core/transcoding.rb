@@ -113,7 +113,7 @@ class Encoding
       if Primitive.is_a?(options, Integer)
         @options = options
       else
-        options = Truffle::Type.coerce_to options, Hash, :to_hash
+        options = Primitive.convert_type options, Hash, :to_hash
 
         @options = 0
         unless options.empty?
@@ -152,7 +152,7 @@ class Encoding
 
       if (@options & (INVALID_REPLACE | UNDEF_REPLACE | UNDEF_HEX_CHARREF))
         unless Primitive.nil? new_replacement
-          new_replacement = Truffle::Type.coerce_to new_replacement, String, :to_str
+          new_replacement = Primitive.convert_type new_replacement, String, :to_str
           self.replacement = new_replacement # We can only call `self.replacement=` after the converter has been initialized.
         end
       end
@@ -212,7 +212,7 @@ class Encoding
       end
 
       unless Primitive.is_a?(options, Integer)
-        opts = Truffle::Type.coerce_to options, Hash, :to_hash
+        opts = Primitive.convert_type options, Hash, :to_hash
 
         options = 0
         options |= PARTIAL_INPUT if opts[:partial_input]

@@ -58,7 +58,7 @@ class Array
   end
 
   def &(other)
-    other = Truffle::Type.coerce_to other, Array, :to_ary
+    other = Primitive.convert_type other, Array, :to_ary
 
     h = {}
     other.each { |e| h[e] = true }
@@ -66,7 +66,7 @@ class Array
   end
 
   def |(other)
-    other = Truffle::Type.coerce_to other, Array, :to_ary
+    other = Primitive.convert_type other, Array, :to_ary
 
     h = {}
     each { |e| h[e] = true }
@@ -75,7 +75,7 @@ class Array
   end
 
   def -(other)
-    other = Truffle::Type.coerce_to other, Array, :to_ary
+    other = Primitive.convert_type other, Array, :to_ary
 
     h = {}
     other.each { |e| h[e] = true }
@@ -115,7 +115,7 @@ class Array
     elsif str = Truffle::Type.rb_check_convert_type(count, String, :to_str)
       join(str)
     else
-      self * Truffle::Type.coerce_to(count, Integer, :to_int)
+      self * Primitive.convert_type(count, Integer, :to_int)
     end
   end
 
@@ -618,7 +618,7 @@ class Array
   alias_method :to_s, :inspect
 
   def intersect?(other)
-    other = Truffle::Type.coerce_to other, Array, :to_ary
+    other = Primitive.convert_type other, Array, :to_ary
 
     shorter, longer = size > other.size ? [other, self] : [self, other]
     return false if shorter.empty?
@@ -640,7 +640,7 @@ class Array
     each { |e| common[e] = true }
 
     others.each do |other|
-      other = Truffle::Type.coerce_to other, Array, :to_ary
+      other = Primitive.convert_type other, Array, :to_ary
 
       other_hash = {}
       other.each { |e| other_hash[e] = true }
@@ -841,7 +841,7 @@ class Array
   # combinations by building it up successively using "inject" and starting
   # with one responsible to append the values.
   def product(*args)
-    args.map! { |x| Truffle::Type.coerce_to(x, Array, :to_ary) }
+    args.map! { |x| Primitive.convert_type(x, Array, :to_ary) }
 
     # Check the result size will fit in an Array.
     sum = args.inject(size) { |n, x| n * x.size }
@@ -1253,7 +1253,7 @@ class Array
     random_generator = Kernel
 
     unless Primitive.undefined? options
-      options = Truffle::Type.coerce_to options, Hash, :to_hash
+      options = Primitive.convert_type options, Hash, :to_hash
       random_generator = options[:random] if options[:random].respond_to?(:rand)
     end
 
@@ -1313,7 +1313,7 @@ class Array
     max = nil
 
     each do |ary|
-      ary = Truffle::Type.coerce_to ary, Array, :to_ary
+      ary = Primitive.convert_type ary, Array, :to_ary
       max ||= ary.size
 
       # Catches too-large as well as too-small (for which #fetch would suffice)

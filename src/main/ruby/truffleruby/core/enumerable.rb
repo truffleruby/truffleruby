@@ -288,7 +288,7 @@ module Enumerable
     if Primitive.undefined?(hash)
       hash = {}
     else
-      hash = Truffle::Type.rb_convert_type(hash, Hash, :to_hash)
+      hash = Primitive.convert_type(hash, Hash, :to_hash)
       Primitive.check_frozen(hash)
     end
 

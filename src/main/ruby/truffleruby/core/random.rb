@@ -62,7 +62,7 @@ class Random
       seed = Primitive.thread_randomizer.generate_seed
     end
 
-    seed = Truffle::Type.coerce_to(seed, Integer, :to_int)
+    seed = Primitive.convert_type(seed, Integer, :to_int)
     Primitive.thread_randomizer.swap_seed(seed)
   end
 

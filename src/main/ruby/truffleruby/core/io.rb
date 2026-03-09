@@ -368,7 +368,7 @@ class IO
       if io = IO.try_convert(obj)
         [true, io]
       else
-        path = Truffle::Type.coerce_to obj, String, :to_path
+        path = Primitive.convert_type obj, String, :to_path
         io = File.open path, mode
         [false, io]
       end
@@ -738,9 +738,9 @@ class IO
     end
 
     if readables
-      readables = Truffle::Type.coerce_to(readables, Array, :to_ary).dup
+      readables = Primitive.convert_type(readables, Array, :to_ary).dup
       readable_ios = readables.map do |obj|
-        io = Truffle::Type.coerce_to(obj, IO, :to_io)
+        io = Primitive.convert_type(obj, IO, :to_io)
         raise IOError, 'closed stream' if io.closed?
         return [[obj], [], []] unless io.__send__(:buffer_empty?)
         io
@@ -751,9 +751,9 @@ class IO
     end
 
     if writables
-      writables = Truffle::Type.coerce_to(writables, Array, :to_ary).dup
+      writables = Primitive.convert_type(writables, Array, :to_ary).dup
       writable_ios = writables.map do |obj|
-        io = Truffle::Type.coerce_to(obj, IO, :to_io)
+        io = Primitive.convert_type(obj, IO, :to_io)
         raise IOError, 'closed stream' if io.closed?
         io
       end
@@ -763,9 +763,9 @@ class IO
     end
 
     if errorables
-      errorables = Truffle::Type.coerce_to(errorables, Array, :to_ary).dup
+      errorables = Primitive.convert_type(errorables, Array, :to_ary).dup
       errorable_ios = errorables.map do |obj|
-        io = Truffle::Type.coerce_to(obj, IO, :to_io)
+        io = Primitive.convert_type(obj, IO, :to_io)
         raise IOError, 'closed stream' if io.closed?
         io
       end
@@ -856,7 +856,7 @@ class IO
 
     mode, binary, external, internal, autoclose_tmp, _perm, path = Truffle::IOOperations.normalize_options(mode, nil, options)
 
-    fd = Truffle::Type.coerce_to(fd, Integer, :to_int)
+    fd = Primitive.convert_type(fd, Integer, :to_int)
     sync = fd == 2 # stderr is always unbuffered, see setvbuf(3)
     IO.setup(self, fd, mode, sync)
 
@@ -1657,7 +1657,7 @@ class IO
     if Primitive.is_a? obj, String
       write Primitive.string_substring(obj, 0, 1)
     else
-      byte = Truffle::Type.coerce_to(obj, Integer, :to_int) & 0xff
+      byte = Primitive.convert_type(obj, Integer, :to_int) & 0xff
       write byte.chr
     end
 

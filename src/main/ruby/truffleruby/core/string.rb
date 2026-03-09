@@ -182,7 +182,7 @@ class String
 
   def delete_prefix!(prefix)
     Primitive.check_mutable_string self
-    prefix = Truffle::Type.coerce_to(prefix, String, :to_str)
+    prefix = Primitive.convert_type(prefix, String, :to_str)
     if !prefix.empty? && self[0, prefix.size] == prefix
       self[0, prefix.size] = ''
       self
@@ -198,7 +198,7 @@ class String
 
   def delete_suffix!(suffix)
     Primitive.check_mutable_string self
-    suffix = Truffle::Type.coerce_to(suffix, String, :to_str)
+    suffix = Primitive.convert_type(suffix, String, :to_str)
     if !suffix.empty? && self[-suffix.size, suffix.size] == suffix
       self[size - suffix.size, suffix.size] = ''
       self
@@ -383,7 +383,7 @@ class String
   end
 
   def to_i(base = 10)
-    base = Truffle::Type.coerce_to base, Integer, :to_int
+    base = Primitive.convert_type base, Integer, :to_int
 
     if base < 0 || base == 1 || base > 36
       raise ArgumentError, "illegal radix #{base}"
@@ -1147,7 +1147,7 @@ class String
     if Primitive.undefined?(finish)
       finish = size
     else
-      finish = Truffle::Type.coerce_to(finish, Integer, :to_int)
+      finish = Primitive.convert_type(finish, Integer, :to_int)
       finish += size if finish < 0
       return nil if finish < 0
       finish = size if finish >= size
@@ -1432,7 +1432,7 @@ class String
   end
 
   def unpack(format, offset: undefined)
-    format = Truffle::Type.rb_convert_type(format, String, :to_str)
+    format = Primitive.convert_type(format, String, :to_str)
     unless Primitive.undefined?(offset)
       offset = Primitive.rb_num2int(offset) # to guarantee it's `int` finally
     end

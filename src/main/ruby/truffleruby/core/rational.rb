@@ -391,7 +391,7 @@ class Rational < Numeric
     if !Primitive.is_a?(num, Integer) && Primitive.equal?(den, 1)
       # den isn't given or is 1
       begin
-        return Truffle::Type.rb_convert_type(num, Rational, :to_r)
+        return Primitive.convert_type(num, Rational, :to_r)
       rescue Exception # rubocop:disable Lint/RescueException
         raise if exception
         return nil
@@ -399,7 +399,7 @@ class Rational < Numeric
     else
       if !Primitive.is_a?(num, Numeric)
         begin
-          num = Truffle::Type.rb_convert_type(num, Rational, :to_r)
+          num = Primitive.convert_type(num, Rational, :to_r)
         rescue Exception # rubocop:disable Lint/RescueException
           raise if exception
           return nil
@@ -408,7 +408,7 @@ class Rational < Numeric
 
       if !Primitive.is_a?(den, Numeric)
         begin
-          den = Truffle::Type.rb_convert_type(den, Rational, :to_r)
+          den = Primitive.convert_type(den, Rational, :to_r)
         rescue Exception # rubocop:disable Lint/RescueException
           raise if exception
           return nil

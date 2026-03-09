@@ -62,7 +62,7 @@ class Enumerator
       receiver = receiver_or_size
     end
 
-    method_name = Truffle::Type.coerce_to method_name, Symbol, :to_sym
+    method_name = Primitive.convert_type method_name, Symbol, :to_sym
 
     initialize_enumerator receiver, size, method_name, *method_args, **method_kwargs
 
@@ -193,7 +193,7 @@ class Enumerator
 
   def with_index(offset = 0)
     if offset
-      offset = Truffle::Type.coerce_to offset, Integer, :to_int
+      offset = Primitive.convert_type offset, Integer, :to_int
     else
       offset = 0
     end
@@ -399,7 +399,7 @@ class Enumerator
     alias_method :force, :to_a
 
     def take(n)
-      n = Truffle::Type.coerce_to n, Integer, :to_int
+      n = Primitive.convert_type n, Integer, :to_int
       raise ArgumentError, 'attempt to take negative size' if n < 0
 
       current_size = enumerator_size
@@ -425,7 +425,7 @@ class Enumerator
     end
 
     def drop(n)
-      n = Truffle::Type.coerce_to n, Integer, :to_int
+      n = Primitive.convert_type n, Integer, :to_int
       raise ArgumentError, 'attempt to drop negative size' if n < 0
 
       current_size = enumerator_size

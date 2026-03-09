@@ -265,7 +265,7 @@ class Struct
   end
 
   private def check_index_var!(var)
-    var = Truffle::Type.rb_convert_type(var, Integer, :to_int)
+    var = Primitive.convert_type(var, Integer, :to_int)
     a_len = _attrs.length
     if var >= a_len
       raise IndexError, "offset #{var} too large for struct(size:#{a_len})"

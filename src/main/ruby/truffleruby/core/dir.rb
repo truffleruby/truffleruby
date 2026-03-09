@@ -51,7 +51,7 @@ class Dir
     if Primitive.undefined? options
       enc = Encoding.filesystem
     else
-      options = Truffle::Type.coerce_to options, Hash, :to_hash
+      options = Primitive.convert_type options, Hash, :to_hash
       enc = options[:encoding]
       enc = Truffle::Type.coerce_to_encoding enc if enc
     end
@@ -393,7 +393,7 @@ class Dir
     def mkdir(path, mode = 0777)
       path = Truffle::Type.coerce_to_path(path)
       if mode
-        mode = Truffle::Type.rb_convert_type(mode, Integer, :to_int)
+        mode = Primitive.convert_type(mode, Integer, :to_int)
       end
       ret = Truffle::POSIX.mkdir(path, mode)
       Errno.handle path if ret != 0

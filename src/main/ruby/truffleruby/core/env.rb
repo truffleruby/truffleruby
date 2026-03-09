@@ -253,7 +253,7 @@ class << ENV
 
   def replace(other)
     return self if Primitive.equal?(self, other)
-    other = Truffle::Type.rb_convert_type(other, Hash, :to_hash)
+    other = Primitive.convert_type(other, Hash, :to_hash)
     keys_to_delete = keys
     other.each do |k, v|
       self[k] = v
@@ -298,7 +298,7 @@ class << ENV
     others.each do |other|
       next if Primitive.equal?(self, other)
 
-      other = Truffle::Type.rb_convert_type(other, Hash, :to_hash)
+      other = Primitive.convert_type(other, Hash, :to_hash)
 
       if block_given?
         other.each do |k, v|

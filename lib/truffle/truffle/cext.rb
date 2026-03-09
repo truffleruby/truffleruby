@@ -652,7 +652,7 @@ module Truffle::CExt
   end
 
   def rb_convert_type(obj, type_name, method)
-    Truffle::Type.rb_convert_type(obj, Object.const_get(type_name), method.to_sym)
+    Primitive.convert_type(obj, Object.const_get(type_name), method.to_sym)
   end
 
   def rb_check_to_integer(obj, method)
@@ -1435,7 +1435,7 @@ module Truffle::CExt
 
   def rb_class_new_instance_kw(klass, args)
     *args, kwargs = args
-    kwargs = Truffle::Type.rb_convert_type kwargs, Hash, :to_hash
+    kwargs = Primitive.convert_type kwargs, Hash, :to_hash
 
     obj = klass.send(:__allocate__)
     obj.send(:initialize, *args, **kwargs)
