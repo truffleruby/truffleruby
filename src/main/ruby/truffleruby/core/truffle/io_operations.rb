@@ -494,7 +494,7 @@ module Truffle
         mode ||= default_mode
 
         if flags = options[:flags]
-          flags = Primitive.convert_type(flags, Integer, :to_int)
+          flags = Primitive.rb_to_int(flags)
 
           if Primitive.nil?(mode)
             mode = flags

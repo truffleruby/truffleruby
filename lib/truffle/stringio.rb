@@ -458,7 +458,7 @@ class StringIO
     if Primitive.is_a?(obj, String)
       char = obj[0]
     else
-      c = Primitive.convert_type obj, Integer, :to_int
+      c = Primitive.rb_to_int obj
       char = (c & 0xff).chr
     end
 
@@ -476,7 +476,7 @@ class StringIO
       # intentionally don't preserve buffer's encoding
       # see https://bugs.ruby-lang.org/issues/20418
       if length
-        length = Primitive.convert_type length, Integer, :to_int
+        length = Primitive.rb_to_int length
         raise ArgumentError if length < 0
 
         buffer = Primitive.convert_to_str(buffer) if buffer
@@ -544,7 +544,7 @@ class StringIO
 
   def seek(to, whence = IO::SEEK_SET)
     raise IOError, 'closed stream' if self.closed?
-    to = Primitive.convert_type to, Integer, :to_int
+    to = Primitive.rb_to_int to
 
     d = @__data__
     TruffleRuby.synchronized(d) do
@@ -598,7 +598,7 @@ class StringIO
 
   def truncate(length)
     check_writable
-    len = Primitive.convert_type length, Integer, :to_int
+    len = Primitive.rb_to_int length
     raise Errno::EINVAL, 'negative length' if len < 0
 
     d = @__data__

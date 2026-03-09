@@ -62,7 +62,7 @@ class Random
       seed = Primitive.thread_randomizer.generate_seed
     end
 
-    seed = Primitive.convert_type(seed, Integer, :to_int)
+    seed = Primitive.rb_to_int(seed)
     Primitive.thread_randomizer.swap_seed(seed)
   end
 

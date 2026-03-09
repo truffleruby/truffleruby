@@ -441,7 +441,7 @@ public abstract class TypeNodes {
         }
     }
 
-    @Primitive(name = "rb_to_int")
+    @Primitive(name = "rb_to_int", isPublic = true)
     public abstract static class RbToIntNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization

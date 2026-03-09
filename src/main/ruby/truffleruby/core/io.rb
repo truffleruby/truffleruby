@@ -856,7 +856,7 @@ class IO
 
     mode, binary, external, internal, autoclose_tmp, _perm, path = Truffle::IOOperations.normalize_options(mode, nil, options)
 
-    fd = Primitive.convert_type(fd, Integer, :to_int)
+    fd = Primitive.rb_to_int(fd)
     sync = fd == 2 # stderr is always unbuffered, see setvbuf(3)
     IO.setup(self, fd, mode, sync)
 
@@ -1657,7 +1657,7 @@ class IO
     if Primitive.is_a? obj, String
       write Primitive.string_substring(obj, 0, 1)
     else
-      byte = Primitive.convert_type(obj, Integer, :to_int) & 0xff
+      byte = Primitive.rb_to_int(obj) & 0xff
       write byte.chr
     end
 

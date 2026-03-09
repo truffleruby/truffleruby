@@ -383,7 +383,7 @@ class String
   end
 
   def to_i(base = 10)
-    base = Primitive.convert_type base, Integer, :to_int
+    base = Primitive.rb_to_int base
 
     if base < 0 || base == 1 || base > 36
       raise ArgumentError, "illegal radix #{base}"
@@ -1147,7 +1147,7 @@ class String
     if Primitive.undefined?(finish)
       finish = size
     else
-      finish = Primitive.convert_type(finish, Integer, :to_int)
+      finish = Primitive.rb_to_int(finish)
       finish += size if finish < 0
       return nil if finish < 0
       finish = size if finish >= size

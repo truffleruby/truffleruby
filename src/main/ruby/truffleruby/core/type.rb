@@ -438,7 +438,7 @@ module Truffle
       if Primitive.is_a? obj, Float
         raise TypeError, "can't convert Float into Integer for bitwise arithmetic"
       end
-      Primitive.convert_type obj, Integer, :to_int
+      Primitive.rb_to_int obj
     end
 
     # String helpers

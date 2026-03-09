@@ -193,7 +193,7 @@ class Enumerator
 
   def with_index(offset = 0)
     if offset
-      offset = Primitive.convert_type offset, Integer, :to_int
+      offset = Primitive.rb_to_int offset
     else
       offset = 0
     end
@@ -399,7 +399,7 @@ class Enumerator
     alias_method :force, :to_a
 
     def take(n)
-      n = Primitive.convert_type n, Integer, :to_int
+      n = Primitive.rb_to_int n
       raise ArgumentError, 'attempt to take negative size' if n < 0
 
       current_size = enumerator_size
@@ -425,7 +425,7 @@ class Enumerator
     end
 
     def drop(n)
-      n = Primitive.convert_type n, Integer, :to_int
+      n = Primitive.rb_to_int n
       raise ArgumentError, 'attempt to drop negative size' if n < 0
 
       current_size = enumerator_size
