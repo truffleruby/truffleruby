@@ -142,11 +142,7 @@ module Truffle
 
     # Fallback for Primitive.{rb_to_int, rb_num2int, rb_num2long}
     def self.rb_to_int_fallback(val)
-      res = convert_type(val, Integer, :to_int, true)
-      unless Primitive.is_a?(res, Integer)
-        conversion_mismatch(val, Integer, :to_int, res)
-      end
-      res
+      rb_convert_type_fallback(val, Integer, :to_int)
     end
 
     def self.conversion_mismatch(obj, cls, meth, res)
