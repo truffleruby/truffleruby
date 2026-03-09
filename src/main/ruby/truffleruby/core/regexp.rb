@@ -87,7 +87,7 @@ class Regexp
         when Symbol, String
           # no conversion needed
         else
-          index = Primitive.rb_to_int index
+          index = Primitive.convert_with_to_int index
         end
         match[index]
       else
@@ -136,7 +136,7 @@ class Regexp
         if Primitive.is_a?(pat, Regexp)
           pat
         else
-          StringValue(pat)
+          Primitive.convert_with_to_str(pat)
         end
       end
 
@@ -155,7 +155,7 @@ class Regexp
       opts = pattern.options
       pattern = pattern.source
     else
-      pattern = Truffle::Type.rb_convert_type pattern, String, :to_str
+      pattern = Primitive.convert_with_to_str(pattern)
     end
 
     if Primitive.is_a?(opts, Integer)
@@ -187,7 +187,7 @@ class Regexp
     end
 
     if encoding
-      encoding = Truffle::Type.rb_convert_type encoding, String, :to_str
+      encoding = Primitive.convert_with_to_str(encoding)
       code = encoding[0]
       if code == ?n or code == ?N
         opts |= NOENCODING

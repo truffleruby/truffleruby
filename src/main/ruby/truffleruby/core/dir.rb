@@ -51,7 +51,7 @@ class Dir
     if Primitive.undefined? options
       enc = Encoding.filesystem
     else
-      options = Truffle::Type.coerce_to options, Hash, :to_hash
+      options = Primitive.convert_with_to_hash options
       enc = options[:encoding]
       enc = Truffle::Type.coerce_to_encoding enc if enc
     end
@@ -227,7 +227,7 @@ class Dir
     end
 
     def home(user = nil)
-      user = StringValue(user) unless Primitive.nil?(user)
+      user = Primitive.convert_with_to_str(user) unless Primitive.nil?(user)
 
       if user and !user.empty?
         ptr = Truffle::POSIX.truffleposix_get_user_home(user)
@@ -393,7 +393,7 @@ class Dir
     def mkdir(path, mode = 0777)
       path = Truffle::Type.coerce_to_path(path)
       if mode
-        mode = Truffle::Type.rb_convert_type(mode, Integer, :to_int)
+        mode = Primitive.convert_with_to_int(mode)
       end
       ret = Truffle::POSIX.mkdir(path, mode)
       Errno.handle path if ret != 0

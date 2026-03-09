@@ -45,7 +45,7 @@ module Truffle
           return real
         elsif !Primitive.is_a?(real, Numeric)
           if raise_exception
-            return Truffle::Type.rb_convert_type(real, Complex, :to_c)
+            return Primitive.convert_type(real, Complex, :to_c)
           else
             return Truffle::Type.rb_check_convert_type(real, Complex, :to_c)
           end

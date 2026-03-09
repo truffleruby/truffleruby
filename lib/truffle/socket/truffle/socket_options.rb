@@ -54,7 +54,7 @@ module Truffle
         elsif level.respond_to?(:to_str)
           socket_level(Socket.coerce_to_string(level), family)
         else
-          Primitive.rb_to_int level
+          Primitive.convert_with_to_int level
         end
       end
 
@@ -84,7 +84,7 @@ module Truffle
           if optname.respond_to?(:to_str)
             socket_option(level, Socket.coerce_to_string(optname))
           else
-            Primitive.rb_to_int optname
+            Primitive.convert_with_to_int optname
           end
         end
       end

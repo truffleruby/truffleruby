@@ -29,6 +29,7 @@ import org.truffleruby.core.cast.BooleanCastNode;
 import org.truffleruby.core.cast.ToIntNode;
 import org.truffleruby.core.cast.ToLongNode;
 import org.truffleruby.core.cast.ToRubyIntegerNode;
+import org.truffleruby.core.hash.RubyHash;
 import org.truffleruby.core.kernel.KernelNodes;
 import org.truffleruby.core.kernel.KernelNodes.ToSNode;
 import org.truffleruby.core.klass.RubyClass;
@@ -44,6 +45,8 @@ import org.truffleruby.language.RubyGuards;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.dispatch.DispatchNode;
+import org.truffleruby.language.dispatch.LazyDispatchNode;
+import org.truffleruby.language.library.RubyStringLibrary;
 import org.truffleruby.language.objects.FreezeNode;
 import org.truffleruby.language.objects.IsANode;
 import org.truffleruby.language.objects.IsFrozenNode;
@@ -439,13 +442,77 @@ public abstract class TypeNodes {
         }
     }
 
-    @Primitive(name = "rb_to_int")
+    // MRI: rb_to_int().
+    @Primitive(name = "convert_with_to_int", isPublic = true)
     public abstract static class RbToIntNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
         Object toRubyInteger(Object value,
                 @Cached ToRubyIntegerNode toRubyInteger) {
             return toRubyInteger.execute(this, value);
+        }
+    }
+
+    // MRI: StringValue()
+    @Primitive(name = "convert_with_to_str", isPublic = true)
+    public abstract static class ConvertToStrNode extends PrimitiveArrayArgumentsNode {
+        @Specialization(guards = "strings.isRubyString(this, object)", limit = "1")
+        Object convert(Object object,
+                @Cached RubyStringLibrary strings) {
+            return object;
+        }
+
+        @Fallback
+        Object convert(Object object,
+                @Cached DispatchNode fallback) {
+            return fallback.call(coreLibrary().truffleTypeModule, "rb_convert_type_fallback",
+                    object, coreLibrary().stringClass, coreSymbols().TO_STR);
+        }
+    }
+
+    @Primitive(name = "convert_with_to_ary", isPublic = true)
+    public abstract static class ConvertToAryNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        Object convert(RubyArray object) {
+            return object;
+        }
+
+        @Fallback
+        Object convert(Object object,
+                @Cached DispatchNode fallback) {
+            return fallback.call(coreLibrary().truffleTypeModule, "rb_convert_type_fallback",
+                    object, coreLibrary().arrayClass, coreSymbols().TO_ARY);
+        }
+    }
+
+    @Primitive(name = "convert_with_to_hash", isPublic = true)
+    public abstract static class ConvertToHashNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        Object convert(RubyHash object) {
+            return object;
+        }
+
+        @Fallback
+        Object convert(Object object,
+                @Cached DispatchNode fallback) {
+            return fallback.call(coreLibrary().truffleTypeModule, "rb_convert_type_fallback",
+                    object, coreLibrary().hashClass, coreSymbols().TO_HASH);
+        }
+    }
+
+    // The generic one, prefers one of the specific above if available. MRI: rb_convert_type()
+    @Primitive(name = "convert_type", isPublic = true)
+    public abstract static class ConvertTypeNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        Object convert(Object object, RubyClass klass, RubySymbol coercionMethod,
+                @Cached IsANode isANode,
+                @Cached LazyDispatchNode fallback) {
+            if (isANode.executeIsA(object, klass)) {
+                return object;
+            } else {
+                return fallback.get(this).call(coreLibrary().truffleTypeModule, "rb_convert_type_fallback",
+                        object, klass, coercionMethod);
+            }
         }
     }
 

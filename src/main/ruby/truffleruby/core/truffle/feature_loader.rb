@@ -293,7 +293,7 @@ module Truffle
         raise '$LOADED_FEATURES is frozen; cannot append feature' if $LOADED_FEATURES.frozen?
         @loaded_features_index.clear
         $LOADED_FEATURES.map! do |val|
-          val = StringValue(val)
+          val = Primitive.convert_with_to_str(val)
           #val.freeze # TODO freeze these but post-boot.rb issue using replace
           val
         end

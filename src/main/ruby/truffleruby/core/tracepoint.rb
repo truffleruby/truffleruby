@@ -15,7 +15,7 @@ class TracePoint
 
   def initialize(*events, &handler)
     events = [:line] if events.empty?
-    events = events.map { |event| Truffle::Type.coerce_to event, Symbol, :to_sym }
+    events = events.map { |event| Primitive.convert_type event, Symbol, :to_sym }
     events.each do |event|
       case event
       when :line, :class, :never

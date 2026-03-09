@@ -113,7 +113,7 @@ class Encoding
       if Primitive.is_a?(options, Integer)
         @options = options
       else
-        options = Truffle::Type.coerce_to options, Hash, :to_hash
+        options = Primitive.convert_with_to_hash options
 
         @options = 0
         unless options.empty?
@@ -152,14 +152,14 @@ class Encoding
 
       if (@options & (INVALID_REPLACE | UNDEF_REPLACE | UNDEF_HEX_CHARREF))
         unless Primitive.nil? new_replacement
-          new_replacement = Truffle::Type.coerce_to new_replacement, String, :to_str
+          new_replacement = Primitive.convert_with_to_str new_replacement
           self.replacement = new_replacement # We can only call `self.replacement=` after the converter has been initialized.
         end
       end
     end
 
     def convert(str)
-      str = StringValue(str)
+      str = Primitive.convert_with_to_str(str)
 
       dest = +''
       status = primitive_convert str.dup, dest, nil, nil, @options | PARTIAL_INPUT
@@ -182,21 +182,21 @@ class Encoding
     end
 
     def primitive_convert(source, target, offset = nil, size = nil, options = 0)
-      source = source ? StringValue(source) : +''
-      target = StringValue(target)
+      source = source ? Primitive.convert_with_to_str(source) : +''
+      target = Primitive.convert_with_to_str(target)
 
       Primitive.check_mutable_string target
 
       if Primitive.nil? offset
         offset = target.bytesize
       else
-        offset = Primitive.rb_to_int offset
+        offset = Primitive.convert_with_to_int offset
       end
 
       if Primitive.nil? size
         size = -1
       else
-        size = Primitive.rb_to_int size
+        size = Primitive.convert_with_to_int size
 
         if size < 0
           raise ArgumentError, 'byte size is negative'
@@ -212,7 +212,7 @@ class Encoding
       end
 
       unless Primitive.is_a?(options, Integer)
-        opts = Truffle::Type.coerce_to options, Hash, :to_hash
+        opts = Primitive.convert_with_to_hash options
 
         options = 0
         options |= PARTIAL_INPUT if opts[:partial_input]

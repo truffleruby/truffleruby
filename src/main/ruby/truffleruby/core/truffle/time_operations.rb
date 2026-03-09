@@ -42,7 +42,7 @@ module Truffle
 
     def self.compose(time_class, utc_offset, year, month, mday, hour, min, sec, nsec, is_dst)
       if Primitive.is_a?(month, String) or month.respond_to?(:to_str)
-        month = StringValue(month)
+        month = Primitive.convert_with_to_str(month)
         month = MonthValue[month.upcase] || month.to_i
 
         raise ArgumentError, 'month argument out of range' unless month
@@ -77,7 +77,7 @@ module Truffle
       if Primitive.is_a?(sec, String)
         sec = sec.to_i
       elsif nsec
-        sec = Truffle::Type.coerce_to(sec || 0, Integer, :to_int)
+        sec = Primitive.convert_with_to_int(sec || 0)
       else
         s = Truffle::Type.coerce_to_exact_num(sec || 0)
 

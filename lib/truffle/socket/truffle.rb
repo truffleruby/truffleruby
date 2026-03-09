@@ -141,7 +141,7 @@ module Truffle
     end
 
     def self.listen(source, backlog)
-      backlog = Primitive.rb_to_int(backlog)
+      backlog = Primitive.convert_with_to_int(backlog)
       err     = Foreign.listen(source.fileno, backlog)
 
       Error.read_error('listen(2)', source) if err < 0
@@ -163,7 +163,7 @@ module Truffle
       if Primitive.is_a?(object, String) or Primitive.is_a?(object, Symbol)
         object.to_s
       elsif object.respond_to?(:to_str)
-        Truffle::Type.coerce_to(object, String, :to_str)
+        Primitive.convert_with_to_str(object)
       else
         raise TypeError, "no implicit conversion of #{object.inspect} into Integer"
       end
@@ -215,7 +215,7 @@ module Truffle
         ::Socket::AF_UNSPEC
       else
         if family.respond_to?(:to_str)
-          address_family(Truffle::Type.coerce_to(family, String, :to_str))
+          address_family(Primitive.convert_with_to_str(family))
         else
           raise SocketError, "unknown socket domain: #{family}"
         end
@@ -286,7 +286,7 @@ module Truffle
         ::Socket::PF_UNSPEC
       else
         if family.respond_to?(:to_str)
-          protocol_family(Truffle::Type.coerce_to(family, String, :to_str))
+          protocol_family(Primitive.convert_with_to_str(family))
         else
           raise SocketError, "unknown socket domain: #{family}"
         end
@@ -313,7 +313,7 @@ module Truffle
         0
       else
         if type.respond_to?(:to_str)
-          socket_type(Truffle::Type.coerce_to(type, String, :to_str))
+          socket_type(Primitive.convert_with_to_str(type))
         else
           raise SocketError, "unknown socket type: #{type}"
         end

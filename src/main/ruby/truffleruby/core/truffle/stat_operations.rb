@@ -80,7 +80,7 @@ module Truffle
     def self.world_readable?(mode)
       if mode & File::Stat::S_IROTH == File::Stat::S_IROTH
         tmp = mode & (File::Stat::S_IRUGO | File::Stat::S_IWUGO | File::Stat::S_IXUGO)
-        Primitive.rb_to_int tmp
+        Primitive.convert_with_to_int tmp
       else
         nil
       end
@@ -89,7 +89,7 @@ module Truffle
     def self.world_writable?(mode)
       if mode & File::Stat::S_IWOTH == File::Stat::S_IWOTH
         tmp = mode & (File::Stat::S_IRUGO | File::Stat::S_IWUGO | File::Stat::S_IXUGO)
-        Primitive.rb_to_int tmp
+        Primitive.convert_with_to_int tmp
       else
         nil
       end

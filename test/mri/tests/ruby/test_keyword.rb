@@ -4189,7 +4189,7 @@ class TestKeywordArguments < Test::Unit::TestCase
       end
     end
 
-    assert_raise_with_message(TypeError, /expected Hash/, bug13015) do
+    assert_raise_with_message(TypeError, /expected Hash|no implicit conversion of Array into Hash/, bug13015) do
       klass.new(d: 4)
     end
   end

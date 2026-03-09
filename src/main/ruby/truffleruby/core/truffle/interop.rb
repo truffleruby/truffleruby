@@ -233,7 +233,7 @@ module Truffle
       if !Primitive.undefined?(java_array)
         java_array
       else
-        to_java_array(Truffle::Type.coerce_to(array, Array, :to_a))
+        to_java_array(Primitive.convert_type(array, Array, :to_a))
       end
     end
 
@@ -242,7 +242,7 @@ module Truffle
       if !Primitive.undefined?(list)
         list
       else
-        to_java_list(Truffle::Type.coerce_to(array, Array, :to_a))
+        to_java_list(Primitive.convert_type(array, Array, :to_a))
       end
     end
 

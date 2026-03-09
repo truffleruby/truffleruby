@@ -23,7 +23,7 @@ module Coverage
     if modes == :all || Primitive.undefined?(modes)
       options = {}
     else
-      options = Truffle::Type.rb_convert_type(modes, Hash, :to_hash)
+      options = Primitive.convert_with_to_hash(modes)
     end
 
     if options[:lines] && options[:oneshot_lines]

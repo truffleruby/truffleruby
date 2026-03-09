@@ -113,13 +113,13 @@ class Hash
   alias_method :store, :[]=
 
   def <(other)
-    other = Truffle::Type.coerce_to(other, Hash, :to_hash)
+    other = Primitive.convert_with_to_hash(other)
     return false if self.size >= other.size
     Primitive.class(self).contains_all_internal(self, other)
   end
 
   def <=(other)
-    other = Truffle::Type.coerce_to(other, Hash, :to_hash)
+    other = Primitive.convert_with_to_hash(other)
     return false if self.size > other.size
     Primitive.class(self).contains_all_internal(self, other)
   end
@@ -160,13 +160,13 @@ class Hash
   private :eql_op
 
   def >(other)
-    other = Truffle::Type.coerce_to(other, Hash, :to_hash)
+    other = Primitive.convert_with_to_hash(other)
     return false if self.size <= other.size
     Primitive.class(self).contains_all_internal(other, self)
   end
 
   def >=(other)
-    other = Truffle::Type.coerce_to(other, Hash, :to_hash)
+    other = Primitive.convert_with_to_hash(other)
     return false if self.size < other.size
     Primitive.class(self).contains_all_internal(other, self)
   end
@@ -198,7 +198,7 @@ class Hash
   def default_proc=(proc)
     Primitive.check_frozen self
     unless Primitive.nil? proc
-      proc = Truffle::Type.coerce_to proc, Proc, :to_proc
+      proc = Primitive.convert_type proc, Proc, :to_proc
 
       if proc.lambda? and proc.arity != 2
         raise TypeError, 'default proc must have arity 2'
@@ -272,7 +272,7 @@ class Hash
     if block_given?
       others.each do |other|
         other.each do |k, v|
-          other = Truffle::Type.coerce_to(other, Hash, :to_hash)
+          other = Primitive.convert_with_to_hash(other)
           if current.include?(k)
             current[k] = yield(k, current[k], v)
           else
@@ -282,7 +282,7 @@ class Hash
       end
     else
       others.each do |other|
-        other = Truffle::Type.coerce_to(other, Hash, :to_hash)
+        other = Primitive.convert_with_to_hash(other)
         current = Truffle::HashOperations.hash_merge(current, other)
       end
     end
@@ -293,7 +293,7 @@ class Hash
     Primitive.check_frozen self
 
     others.each do |other|
-      other = Truffle::Type.coerce_to other, Hash, :to_hash
+      other = Primitive.convert_with_to_hash other
 
       if block_given?
         other.each_pair do |key,value|
@@ -565,7 +565,7 @@ class Hash
     h = {}
 
     if mapping
-      mapping = Truffle::Type.coerce_to(mapping, Hash, :to_hash)
+      mapping = Primitive.convert_with_to_hash(mapping)
       each_pair do |key, value|
         k = Primitive.hash_get_or_undefined(mapping, key)
         k = has_block ? yield(key) : key if Primitive.undefined?(k)
@@ -591,7 +591,7 @@ class Hash
 
     begin
       if mapping
-        mapping = Truffle::Type.coerce_to(mapping, Hash, :to_hash)
+        mapping = Primitive.convert_with_to_hash(mapping)
         each_pair do |key, value|
           k = Primitive.hash_get_or_undefined(mapping, key)
           k = has_block ? yield(key) : key if Primitive.undefined?(k)

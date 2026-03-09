@@ -76,7 +76,7 @@ module Process
     when false
       code = 1
     else
-      code = Truffle::Type.coerce_to code, Integer, :to_int
+      code = Primitive.convert_with_to_int code
     end
 
     raise SystemExit.new(code, 'exit')
@@ -89,7 +89,7 @@ module Process
     when false
       code = 1
     else
-      code = Truffle::Type.coerce_to code, Integer, :to_int
+      code = Primitive.convert_with_to_int code
     end
 
     Primitive.vm_exit code
@@ -176,7 +176,7 @@ module Process
   # @return [Title]
   #
   def setproctitle(title)
-    title = Truffle::Type.coerce_to(title, String, :to_str)
+    title = Primitive.convert_with_to_str(title)
     argv = Primitive.vm_native_argv
 
     # Not run from ruby launcher, we cannot set process title
@@ -199,12 +199,12 @@ module Process
 
   def setrlimit(resource, cur_limit, max_limit = undefined)
     resource =  Truffle::ProcessOperations.coerce_rlimit_resource(resource)
-    cur_limit = Truffle::Type.coerce_to cur_limit, Integer, :to_int
+    cur_limit = Primitive.convert_with_to_int cur_limit
 
     if Primitive.undefined? max_limit
       max_limit = cur_limit
     else
-      max_limit = Truffle::Type.coerce_to max_limit, Integer, :to_int
+      max_limit = Primitive.convert_with_to_int max_limit
     end
 
     rlim_t = Truffle::Config['platform.typedef.rlim_t']
@@ -290,7 +290,7 @@ module Process
     end
 
     pids.each do |pid|
-      pid = Truffle::Type.coerce_to pid, Integer, :to_int
+      pid = Primitive.convert_with_to_int pid
 
       if pid == Process.pid && signal != 0
         signal_name = Signal::Numbers[signal].to_sym
@@ -311,14 +311,14 @@ module Process
 
   def self.abort(msg = nil)
     if msg
-      msg = StringValue(msg)
+      msg = Primitive.convert_with_to_str(msg)
       $stderr.puts(msg)
     end
     raise SystemExit.new(1, msg)
   end
 
   def getpgid(pid)
-    pid = Truffle::Type.coerce_to pid, Integer, :to_int
+    pid = Primitive.convert_with_to_int pid
 
     ret = Truffle::POSIX.getpgid(pid)
     Errno.handle if ret == -1
@@ -326,8 +326,8 @@ module Process
   end
 
   def setpgid(pid, int)
-    pid = Truffle::Type.coerce_to pid, Integer, :to_int
-    int = Truffle::Type.coerce_to int, Integer, :to_int
+    pid = Primitive.convert_with_to_int pid
+    int = Primitive.convert_with_to_int int
 
     ret = Truffle::POSIX.setpgid(pid, int)
     Errno.handle if ret == -1
@@ -372,7 +372,7 @@ module Process
     # the 4 rescue clauses below are needed
     # until respond_to? can be used to query the implementation of methods attached via FFI
     # atm respond_to returns true if a method is attached but not implemented on the platform
-    uid = Truffle::Type.coerce_to uid, Integer, :to_int
+    uid = Primitive.convert_with_to_int uid
     begin
       ret = Truffle::POSIX.setresuid(uid, -1, -1)
     rescue NotImplementedError
@@ -472,8 +472,8 @@ module Process
   end
 
   def getpriority(kind, id)
-    kind = Truffle::Type.coerce_to kind, Integer, :to_int
-    id =   Truffle::Type.coerce_to id, Integer, :to_int
+    kind = Primitive.convert_with_to_int kind
+    id =   Primitive.convert_with_to_int id
 
     ret = Truffle::POSIX.truffleposix_getpriority(kind, id)
     if ret <= -100
@@ -483,9 +483,9 @@ module Process
   end
 
   def setpriority(kind, id, priority)
-    kind = Truffle::Type.coerce_to kind, Integer, :to_int
-    id =   Truffle::Type.coerce_to id, Integer, :to_int
-    priority = Truffle::Type.coerce_to priority, Integer, :to_int
+    kind = Primitive.convert_with_to_int kind
+    id =   Primitive.convert_with_to_int id
+    priority = Primitive.convert_with_to_int priority
 
     ret = Truffle::POSIX.setpriority(kind, id, priority)
     Errno.handle if ret == -1
@@ -521,8 +521,8 @@ module Process
   end
 
   def initgroups(username, gid)
-    username = StringValue(username)
-    gid = Truffle::Type.coerce_to gid, Integer, :to_int
+    username = Primitive.convert_with_to_str(username)
+    gid = Primitive.convert_with_to_int gid
 
     if Truffle::POSIX.initgroups(username, gid) == -1
       Errno.handle
@@ -632,7 +632,7 @@ module Process
   #       and called periodically.
   #
   def detach(pid)
-    pid = Truffle::Type.rb_convert_type(pid, Integer, :to_int)
+    pid = Primitive.convert_with_to_int(pid)
     raise ArgumentError, 'Only positive pids may be detached' unless pid > 0
 
     thread = Thread.new do
@@ -746,7 +746,7 @@ module Process
       end
 
       def setgid(gid)
-        gid = Truffle::Type.coerce_to gid, Integer, :to_int
+        gid = Primitive.convert_with_to_int gid
 
         ret = Truffle::POSIX.setgid gid
         Errno.handle if ret == -1
@@ -754,7 +754,7 @@ module Process
       end
 
       def setuid(uid)
-        uid = Truffle::Type.coerce_to uid, Integer, :to_int
+        uid = Primitive.convert_with_to_int uid
 
         ret = Truffle::POSIX.setuid uid
         Errno.handle if ret == -1
@@ -762,7 +762,7 @@ module Process
       end
 
       def setegid(egid)
-        egid = Truffle::Type.coerce_to egid, Integer, :to_int
+        egid = Primitive.convert_with_to_int egid
 
         ret = Truffle::POSIX.setegid egid
         Errno.handle if ret == -1
@@ -770,7 +770,7 @@ module Process
       end
 
       def seteuid(euid)
-        euid = Truffle::Type.coerce_to euid, Integer, :to_int
+        euid = Primitive.convert_with_to_int euid
 
         ret = Truffle::POSIX.seteuid euid
         Errno.handle if ret == -1
@@ -786,8 +786,8 @@ module Process
       end
 
       def setregid(rid, eid)
-        rid = Truffle::Type.coerce_to rid, Integer, :to_int
-        eid = Truffle::Type.coerce_to eid, Integer, :to_int
+        rid = Primitive.convert_with_to_int rid
+        eid = Primitive.convert_with_to_int eid
 
         ret = Truffle::POSIX.setregid rid, eid
         Errno.handle if ret == -1
@@ -795,8 +795,8 @@ module Process
       end
 
       def setreuid(rid, eid)
-        rid = Truffle::Type.coerce_to rid, Integer, :to_int
-        eid = Truffle::Type.coerce_to eid, Integer, :to_int
+        rid = Primitive.convert_with_to_int rid
+        eid = Primitive.convert_with_to_int eid
 
         ret = Truffle::POSIX.setreuid rid, eid
         Errno.handle if ret == -1
@@ -804,9 +804,9 @@ module Process
       end
 
       def setresgid(rid, eid, sid)
-        rid = Truffle::Type.coerce_to rid, Integer, :to_int
-        eid = Truffle::Type.coerce_to eid, Integer, :to_int
-        sid = Truffle::Type.coerce_to sid, Integer, :to_int
+        rid = Primitive.convert_with_to_int rid
+        eid = Primitive.convert_with_to_int eid
+        sid = Primitive.convert_with_to_int sid
 
         ret = Truffle::POSIX.setresgid rid, eid, sid
         Errno.handle if ret == -1
@@ -814,9 +814,9 @@ module Process
       end
 
       def setresuid(rid, eid, sid)
-        rid = Truffle::Type.coerce_to rid, Integer, :to_int
-        eid = Truffle::Type.coerce_to eid, Integer, :to_int
-        sid = Truffle::Type.coerce_to sid, Integer, :to_int
+        rid = Primitive.convert_with_to_int rid
+        eid = Primitive.convert_with_to_int eid
+        sid = Primitive.convert_with_to_int sid
 
         ret = Truffle::POSIX.setresuid rid, eid, sid
         Errno.handle if ret == -1
@@ -828,7 +828,7 @@ module Process
   module UID
     class << self
       def change_privilege(uid)
-        uid = Truffle::Type.coerce_to uid, Integer, :to_int
+        uid = Primitive.convert_with_to_int uid
 
         ret = Truffle::POSIX.setreuid(uid, uid)
         Errno.handle if ret == -1
@@ -840,7 +840,7 @@ module Process
       end
 
       def eid=(uid)
-        uid = Truffle::Type.coerce_to uid, Integer, :to_int
+        uid = Primitive.convert_with_to_int uid
 
         ret = Truffle::POSIX.seteuid(uid)
         Errno.handle if ret == -1
@@ -865,7 +865,7 @@ module Process
   module GID
     class << self
       def change_privilege(gid)
-        gid = Truffle::Type.coerce_to gid, Integer, :to_int
+        gid = Primitive.convert_with_to_int gid
 
         ret = Truffle::POSIX.setregid(gid, gid)
         Errno.handle if ret == -1
@@ -877,7 +877,7 @@ module Process
       end
 
       def eid=(gid)
-        gid = Truffle::Type.coerce_to gid, Integer, :to_int
+        gid = Primitive.convert_with_to_int gid
 
         ret = Truffle::POSIX.setegid(gid)
         Errno.handle if ret == -1
@@ -928,7 +928,7 @@ Truffle::KernelOperations.define_hooked_variable(
   :'$0',
   -> { Primitive.global_variable_get :'$0' },
   -> _, v {
-    v = StringValue(v)
+    v = Primitive.convert_with_to_str(v)
     Process.setproctitle(v)
     Primitive.global_variable_set :'$0', v
   })

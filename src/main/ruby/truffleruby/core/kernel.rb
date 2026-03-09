@@ -75,13 +75,13 @@ module Kernel
       end
     when Complex
       if obj.respond_to?(:imag) && Primitive.equal?(obj.imag, 0)
-        Truffle::Type.coerce_to obj, Float, :to_f
+        Primitive.convert_type obj, Float, :to_f
       else
         raise RangeError, "can't convert #{obj} into Float"
       end
     else
       if raise_exception
-        Truffle::Type.rb_convert_type(obj, Float, :to_f)
+        Primitive.convert_type(obj, Float, :to_f)
       else
         Truffle::Type.rb_check_convert_type(obj, Float, :to_f)
       end
@@ -141,7 +141,7 @@ module Kernel
         return converted_to_int_obj unless Primitive.nil? converted_to_int_obj
 
         return Truffle::Type.rb_check_to_integer(obj, :to_i) unless raise_exception
-        Truffle::Type.rb_convert_type(obj, Integer, :to_i)
+        Primitive.convert_type(obj, Integer, :to_i)
       end
     end
   end
@@ -155,25 +155,14 @@ module Kernel
   def String(obj)
     str = Truffle::Type.rb_check_convert_type(obj, String, :to_str)
     if Primitive.nil? str
-      str = Truffle::Type.rb_convert_type(obj, String, :to_s)
+      str = Primitive.convert_type(obj, String, :to_s)
     end
     str
   end
   module_function :String
 
-  ##
-  # MRI uses a macro named StringValue which has essentially the same
-  # semantics as Truffle::Type.rb_convert_type obj, String, :to_str, but rather than using that
-  # long construction everywhere, we define a private method similar to
-  # String().
-
-  def StringValue(obj)
-    Truffle::Type.rb_convert_type obj, String, :to_str
-  end
-  module_function :StringValue
-
   def `(str) #`
-    str = StringValue(str) unless Primitive.is_a?(str, String)
+    str = Primitive.convert_with_to_str(str) unless Primitive.is_a?(str, String)
 
     output = IO.popen(str) { |io| io.read }
 
@@ -482,7 +471,7 @@ module Kernel
         nil
       end
     else
-      max = Primitive.rb_to_int(limit)
+      max = Primitive.convert_with_to_int(limit)
       if max == 0
         randomizer.random_float
       else
@@ -512,7 +501,7 @@ module Kernel
       seed = Primitive.thread_randomizer.generate_seed
     end
 
-    seed = Truffle::Type.coerce_to seed, Integer, :to_int
+    seed = Primitive.convert_with_to_int seed
     Primitive.thread_randomizer.swap_seed seed
   end
   module_function :srand
@@ -630,7 +619,7 @@ module Kernel
   def warn(*messages, uplevel: nil, category: nil)
     if !Primitive.nil?($VERBOSE) && !messages.empty?
       unless Primitive.nil?(category)
-        category = Truffle::Type.rb_convert_type(category, Symbol, :to_sym)
+        category = Primitive.convert_type(category, Symbol, :to_sym)
         Truffle::WarningOperations.check_category(category)
         return nil unless Warning[category]
       end
@@ -638,7 +627,7 @@ module Kernel
       prefix = if Primitive.nil?(uplevel)
                  ''
                else
-                 uplevel = Primitive.rb_to_int(uplevel)
+                 uplevel = Primitive.convert_with_to_int(uplevel)
                  raise ArgumentError, "negative level (#{uplevel})" unless uplevel >= 0
 
                  uplevel += 1 # skip Kernel#warn itself

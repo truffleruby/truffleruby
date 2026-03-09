@@ -72,46 +72,9 @@ module Truffle
       Primitive.vm_method_lookup obj, name
     end
 
-    # Returns an object of given class. If given object already is one, it is
-    # returned. Otherwise tries obj.meth and returns the result if it is of the
-    # right kind. TypeError is raised if the conversion method fails or the
-    # conversion result is wrong.
-    #
-    # Prefer the more correct #rb_convert_type.
-    def self.coerce_to(obj, cls, meth)
-      if Primitive.is_a?(obj, cls)
-        obj
-      else
-        execute_coerce_to(obj, cls, meth)
-      end
-    end
-
-    def self.execute_coerce_to(obj, cls, meth)
-      begin
-        ret = obj.__send__(meth)
-      rescue
-        coerce_to_failed obj, cls
-      end
-
-      if Primitive.is_a?(ret, cls)
-        ret
-      else
-        coerce_to_type_error obj, ret, meth, cls
-      end
-    end
-
-    def self.coerce_to_failed(object, klass)
-      raise TypeError, "wrong argument type #{Primitive.class object} (expected #{klass})"
-    end
-
-    def self.coerce_to_type_error(original, converted, method, klass)
-      oc = Primitive.class original
-      raise TypeError, "failed to convert #{oc} to #{klass}: #{oc}\##{method} returned #{Primitive.class converted}"
-    end
-
     # MRI conversion macros and functions
 
-    # See Primitive.rb_num2int, Primitive.rb_num2long, Primitive.rb_to_int which are not defined as methods for efficiency
+    # See Primitive.rb_num2int, Primitive.rb_num2long, Primitive.convert_with_to_int which are not defined as methods for efficiency
 
     def self.rb_num2uint(val)
       num = Primitive.rb_num2long(val)
@@ -132,7 +95,7 @@ module Truffle
         fval = val.to_int
         rb_num2ulong(fval)
       else
-        rb_num2ulong(Primitive.rb_to_int(val))
+        rb_num2ulong(Primitive.convert_with_to_int(val))
       end
     end
 
@@ -179,11 +142,7 @@ module Truffle
 
     # Fallback for Primitive.{rb_to_int, rb_num2int, rb_num2long}
     def self.rb_to_int_fallback(val)
-      res = convert_type(val, Integer, :to_int, true)
-      unless Primitive.is_a?(res, Integer)
-        conversion_mismatch(val, Integer, :to_int, res)
-      end
-      res
+      rb_convert_type_fallback(val, Integer, :to_int)
     end
 
     def self.conversion_mismatch(obj, cls, meth, res)
@@ -239,7 +198,7 @@ module Truffle
     end
 
     # Try to coerce obj to cls using meth.
-    # Similar to coerce_to but returns nil if conversion fails.
+    # Similar to Primitive.convert_type but returns nil if conversion fails.
     def self.rb_check_convert_type(obj, cls, meth)
       if Primitive.is_a?(obj, cls)
         obj
@@ -255,14 +214,10 @@ module Truffle
       end
     end
 
-    def self.rb_convert_type(obj, cls, meth)
-      if Primitive.is_a?(obj, cls)
-        obj
-      else
-        v = convert_type(obj, cls, meth, true)
-        conversion_mismatch(obj, cls, meth, v) unless Primitive.is_a?(v, cls)
-        v
-      end
+    def self.rb_convert_type_fallback(obj, cls, meth)
+      v = convert_type(obj, cls, meth, true)
+      conversion_mismatch(obj, cls, meth, v) unless Primitive.is_a?(v, cls)
+      v
     end
 
     # MRI: Check_Type / rb_check_type
@@ -277,7 +232,7 @@ module Truffle
       r = check_funcall(obj, meth)
       if Primitive.undefined?(r)
         if raise_on_error
-          raise TypeError, Truffle::ExceptionOperations.conversion_error_message(meth, obj, cls)
+          raise TypeError, Truffle::ExceptionOperations.conversion_error_message(obj, cls, meth)
         else
           nil
         end
@@ -393,11 +348,9 @@ module Truffle
       when Float
         obj
       when Numeric
-        coerce_to obj, Float, :to_f
-      when nil, true, false
-        raise TypeError, "can't convert #{obj.inspect} into Float"
+        Primitive.convert_type obj, Float, :to_f
       else
-        raise TypeError, "can't convert #{Primitive.class(obj)} into Float"
+        raise TypeError, ExceptionOperations.conversion_error_message(obj, Float, :to_f)
       end
     end
 
@@ -405,7 +358,7 @@ module Truffle
       if Primitive.is_a?(pattern, Regexp)
         pattern
       else
-        pattern = StringValue(pattern)
+        pattern = Primitive.convert_with_to_str(pattern)
         pattern = Regexp.quote(pattern) if quote
         Primitive.regexp_compile pattern, 0
       end
@@ -416,10 +369,8 @@ module Truffle
       case obj
       when Encoding
         obj
-      when String
-        Encoding.find obj
       else
-        Encoding.find StringValue(obj)
+        Encoding.find Primitive.convert_with_to_str(obj)
       end
     end
 
@@ -431,7 +382,7 @@ module Truffle
           obj = obj.to_path
         end
 
-        path = StringValue(obj)
+        path = Primitive.convert_with_to_str(obj)
       end
 
       unless path.encoding.ascii_compatible?
@@ -487,7 +438,7 @@ module Truffle
       if Primitive.is_a? obj, Float
         raise TypeError, "can't convert Float into Integer for bitwise arithmetic"
       end
-      coerce_to obj, Integer, :to_int
+      Primitive.convert_with_to_int obj
     end
 
     # String helpers

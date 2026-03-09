@@ -215,7 +215,7 @@ class Pathname
         path = path.__send__(TO_PATH)
       end
 
-      path = StringValue(path)
+      path = Primitive.convert_with_to_str(path)
     end
 
     if path.include? "\0"

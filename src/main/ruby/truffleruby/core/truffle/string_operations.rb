@@ -38,7 +38,7 @@ module Truffle
       else
         unless Primitive.is_a?(replacement, String)
           hash = Truffle::Type.rb_check_convert_type(replacement, Hash, :to_hash)
-          replacement = StringValue(replacement) unless hash
+          replacement = Primitive.convert_with_to_str(replacement) unless hash
         end
 
         if hash
@@ -165,7 +165,7 @@ module Truffle
 
           other = other.chr(string.encoding)
         else
-          other = StringValue(other)
+          other = Primitive.convert_with_to_str(other)
         end
       end
 
@@ -351,7 +351,7 @@ module Truffle
       end
 
       if count
-        count = Primitive.rb_to_int count
+        count = Primitive.convert_with_to_int count
 
         if count < 0
           raise IndexError, 'count is negative'
@@ -367,7 +367,7 @@ module Truffle
         bs = index == string.size ? 0 : Primitive.string_character_index_to_byte_index(string, index + 1) - bi
       end
 
-      replacement = StringValue replacement
+      replacement = Primitive.convert_with_to_str(replacement)
       enc = Primitive.encoding_ensure_compatible_str string, replacement
 
       Primitive.string_splice(string, replacement, bi, bs, enc)
@@ -378,7 +378,7 @@ module Truffle
         raise IndexError, 'string not matched'
       end
 
-      replacement = StringValue replacement
+      replacement = Primitive.convert_with_to_str(replacement)
       enc = Primitive.encoding_ensure_compatible_str string, replacement
 
       Primitive.string_splice(string, replacement, start, index.bytesize, enc)
@@ -401,7 +401,7 @@ module Truffle
         bs = Primitive.string_character_index_to_byte_index(string, stop + 1) - bi
       end
 
-      replacement = StringValue replacement
+      replacement = Primitive.convert_with_to_str(replacement)
       enc = Primitive.encoding_ensure_compatible_str string, replacement
 
       Primitive.string_splice(string, replacement, bi, bs, enc)
@@ -409,7 +409,7 @@ module Truffle
 
     def self.assign_regexp(string, index, count, replacement)
       if count
-        count = Primitive.rb_to_int count
+        count = Primitive.convert_with_to_int count
       else
         count = 0
       end
@@ -429,7 +429,7 @@ module Truffle
         raise IndexError, "regexp group #{count} not matched"
       end
 
-      replacement = StringValue replacement
+      replacement = Primitive.convert_with_to_str(replacement)
       enc = Primitive.encoding_ensure_compatible_str string, replacement
 
       bi = Primitive.string_character_index_to_byte_index(string, match.begin(count))

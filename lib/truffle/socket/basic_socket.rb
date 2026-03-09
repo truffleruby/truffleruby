@@ -120,7 +120,7 @@ class BasicSocket < IO
   end
 
   def send(message, flags, dest_sockaddr = nil)
-    message    = StringValue(message)
+    message    = Primitive.convert_with_to_str(message)
     bytes      = message.bytesize
     bytes_sent = 0
 

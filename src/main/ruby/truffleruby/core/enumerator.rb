@@ -62,7 +62,7 @@ class Enumerator
       receiver = receiver_or_size
     end
 
-    method_name = Truffle::Type.coerce_to method_name, Symbol, :to_sym
+    method_name = Primitive.convert_type method_name, Symbol, :to_sym
 
     initialize_enumerator receiver, size, method_name, *method_args, **method_kwargs
 
@@ -193,7 +193,7 @@ class Enumerator
 
   def with_index(offset = 0)
     if offset
-      offset = Truffle::Type.coerce_to offset, Integer, :to_int
+      offset = Primitive.convert_with_to_int offset
     else
       offset = 0
     end
@@ -399,7 +399,7 @@ class Enumerator
     alias_method :force, :to_a
 
     def take(n)
-      n = Truffle::Type.coerce_to n, Integer, :to_int
+      n = Primitive.convert_with_to_int n
       raise ArgumentError, 'attempt to take negative size' if n < 0
 
       current_size = enumerator_size
@@ -425,7 +425,7 @@ class Enumerator
     end
 
     def drop(n)
-      n = Truffle::Type.coerce_to n, Integer, :to_int
+      n = Primitive.convert_with_to_int n
       raise ArgumentError, 'attempt to drop negative size' if n < 0
 
       current_size = enumerator_size
@@ -748,7 +748,7 @@ class Enumerator::ArithmeticSequence < Enumerator
 
     return last if Primitive.undefined?(n)
 
-    n = Primitive.rb_to_int(n) if !Primitive.is_a?(n, Integer)
+    n = Primitive.convert_with_to_int(n) if !Primitive.is_a?(n, Integer)
 
     raise ArgumentError, 'negative array size' if n < 0
 
@@ -811,7 +811,7 @@ class Enumerator::ArithmeticSequence < Enumerator
   def size
     from, to, step, exclude_end  = @begin, @end, @step, @exclude_end
     unless Primitive.is_a?(from, Float) || Primitive.is_a?(to, Float) || Primitive.is_a?(step, Float)
-      step = Primitive.rb_to_int(step)
+      step = Primitive.convert_with_to_int(step)
     end
     Truffle::NumericOperations.step_size(from, to, step, true, exclude_end)
   end

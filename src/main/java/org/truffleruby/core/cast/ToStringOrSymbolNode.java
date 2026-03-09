@@ -50,7 +50,7 @@ public abstract class ToStringOrSymbolNode extends RubyBaseNode {
             @Cached(inline = false) DispatchNode toStrNode) {
         return toStrNode.call(
                 coreLibrary(node).truffleTypeModule,
-                "rb_convert_type",
+                "rb_convert_type_fallback",
                 object,
                 coreLibrary(node).stringClass,
                 coreSymbols(node).TO_STR);

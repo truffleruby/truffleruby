@@ -204,7 +204,7 @@ module FFI
       elsif Primitive.is_a?(value, String)
         Truffle::CExt.string_to_ffi_pointer_inplace(value)
       elsif value.respond_to?(:to_ptr)
-        Truffle::Type.coerce_to value, Truffle::FFI::Pointer, :to_ptr
+        Primitive.convert_type value, Truffle::FFI::Pointer, :to_ptr
       else
         raise ArgumentError, "#{value.inspect} (#{Primitive.class(value)}) is not a pointer"
       end

@@ -484,7 +484,7 @@ public abstract class HashNodes {
                 @Cached InitializeCopyNode initializeCopy) {
             final Object otherHash = coerceNode.call(
                     coreLibrary().truffleTypeModule,
-                    "coerce_to",
+                    "rb_convert_type_fallback",
                     from,
                     coreLibrary().hashClass,
                     coreSymbols().TO_HASH);
