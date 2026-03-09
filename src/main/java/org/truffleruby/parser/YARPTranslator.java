@@ -3930,12 +3930,12 @@ public class YARPTranslator extends YARPBaseTranslator {
             }
         }
 
-        if (parametersNode.block != null) {
-            if (parametersNode.block.name == null) {
+        if (parametersNode.block instanceof Nodes.BlockParameterNode blockParameterNode) {
+            if (blockParameterNode.name == null) {
                 // def a(&) ... end
                 descriptors.add(new ArgumentDescriptor(ArgumentType.anonblock, DEFAULT_BLOCK_NAME));
             } else {
-                var descriptor = new ArgumentDescriptor(ArgumentType.block, parametersNode.block.name);
+                var descriptor = new ArgumentDescriptor(ArgumentType.block, blockParameterNode.name);
                 descriptors.add(descriptor);
             }
         }
