@@ -1435,7 +1435,7 @@ module Truffle::CExt
 
   def rb_class_new_instance_kw(klass, args)
     *args, kwargs = args
-    kwargs = Primitive.convert_type kwargs, Hash, :to_hash
+    kwargs = Primitive.convert_to_hash kwargs
 
     obj = klass.send(:__allocate__)
     obj.send(:initialize, *args, **kwargs)

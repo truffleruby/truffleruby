@@ -23,7 +23,7 @@ module Coverage
     if modes == :all || Primitive.undefined?(modes)
       options = {}
     else
-      options = Primitive.convert_type(modes, Hash, :to_hash)
+      options = Primitive.convert_to_hash(modes)
     end
 
     if options[:lines] && options[:oneshot_lines]

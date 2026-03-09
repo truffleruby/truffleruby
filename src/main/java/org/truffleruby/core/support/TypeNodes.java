@@ -29,6 +29,7 @@ import org.truffleruby.core.cast.BooleanCastNode;
 import org.truffleruby.core.cast.ToIntNode;
 import org.truffleruby.core.cast.ToLongNode;
 import org.truffleruby.core.cast.ToRubyIntegerNode;
+import org.truffleruby.core.hash.RubyHash;
 import org.truffleruby.core.kernel.KernelNodes;
 import org.truffleruby.core.kernel.KernelNodes.ToSNode;
 import org.truffleruby.core.klass.RubyClass;
@@ -467,6 +468,36 @@ public abstract class TypeNodes {
                 @Cached DispatchNode fallback) {
             return fallback.call(coreLibrary().truffleTypeModule, "rb_convert_type_fallback",
                     object, coreLibrary().stringClass, coreSymbols().TO_STR);
+        }
+    }
+
+    @Primitive(name = "convert_to_ary", isPublic = true)
+    public abstract static class ConvertToAryNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        Object convert(RubyArray object) {
+            return object;
+        }
+
+        @Fallback
+        Object convert(Object object,
+                @Cached DispatchNode fallback) {
+            return fallback.call(coreLibrary().truffleTypeModule, "rb_convert_type_fallback",
+                    object, coreLibrary().arrayClass, coreSymbols().TO_ARY);
+        }
+    }
+
+    @Primitive(name = "convert_to_hash", isPublic = true)
+    public abstract static class ConvertToHashNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        Object convert(RubyHash object) {
+            return object;
+        }
+
+        @Fallback
+        Object convert(Object object,
+                @Cached DispatchNode fallback) {
+            return fallback.call(coreLibrary().truffleTypeModule, "rb_convert_type_fallback",
+                    object, coreLibrary().hashClass, coreSymbols().TO_HASH);
         }
     }
 

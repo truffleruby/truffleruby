@@ -58,7 +58,7 @@ class Array
   end
 
   def &(other)
-    other = Primitive.convert_type other, Array, :to_ary
+    other = Primitive.convert_to_ary other
 
     h = {}
     other.each { |e| h[e] = true }
@@ -66,7 +66,7 @@ class Array
   end
 
   def |(other)
-    other = Primitive.convert_type other, Array, :to_ary
+    other = Primitive.convert_to_ary other
 
     h = {}
     each { |e| h[e] = true }
@@ -75,7 +75,7 @@ class Array
   end
 
   def -(other)
-    other = Primitive.convert_type other, Array, :to_ary
+    other = Primitive.convert_to_ary other
 
     h = {}
     other.each { |e| h[e] = true }
@@ -618,7 +618,7 @@ class Array
   alias_method :to_s, :inspect
 
   def intersect?(other)
-    other = Primitive.convert_type other, Array, :to_ary
+    other = Primitive.convert_to_ary other
 
     shorter, longer = size > other.size ? [other, self] : [self, other]
     return false if shorter.empty?
@@ -640,7 +640,7 @@ class Array
     each { |e| common[e] = true }
 
     others.each do |other|
-      other = Primitive.convert_type other, Array, :to_ary
+      other = Primitive.convert_to_ary other
 
       other_hash = {}
       other.each { |e| other_hash[e] = true }
@@ -841,7 +841,7 @@ class Array
   # combinations by building it up successively using "inject" and starting
   # with one responsible to append the values.
   def product(*args)
-    args.map! { |x| Primitive.convert_type(x, Array, :to_ary) }
+    args.map! { |x| Primitive.convert_to_ary(x) }
 
     # Check the result size will fit in an Array.
     sum = args.inject(size) { |n, x| n * x.size }
@@ -1253,7 +1253,7 @@ class Array
     random_generator = Kernel
 
     unless Primitive.undefined? options
-      options = Primitive.convert_type options, Hash, :to_hash
+      options = Primitive.convert_to_hash options
       random_generator = options[:random] if options[:random].respond_to?(:rand)
     end
 
@@ -1313,7 +1313,7 @@ class Array
     max = nil
 
     each do |ary|
-      ary = Primitive.convert_type ary, Array, :to_ary
+      ary = Primitive.convert_to_ary ary
       max ||= ary.size
 
       # Catches too-large as well as too-small (for which #fetch would suffice)

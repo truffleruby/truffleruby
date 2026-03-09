@@ -738,7 +738,7 @@ class IO
     end
 
     if readables
-      readables = Primitive.convert_type(readables, Array, :to_ary).dup
+      readables = Primitive.convert_to_ary(readables).dup
       readable_ios = readables.map do |obj|
         io = Primitive.convert_type(obj, IO, :to_io)
         raise IOError, 'closed stream' if io.closed?
@@ -751,7 +751,7 @@ class IO
     end
 
     if writables
-      writables = Primitive.convert_type(writables, Array, :to_ary).dup
+      writables = Primitive.convert_to_ary(writables).dup
       writable_ios = writables.map do |obj|
         io = Primitive.convert_type(obj, IO, :to_io)
         raise IOError, 'closed stream' if io.closed?
@@ -763,7 +763,7 @@ class IO
     end
 
     if errorables
-      errorables = Primitive.convert_type(errorables, Array, :to_ary).dup
+      errorables = Primitive.convert_to_ary(errorables).dup
       errorable_ios = errorables.map do |obj|
         io = Primitive.convert_type(obj, IO, :to_io)
         raise IOError, 'closed stream' if io.closed?

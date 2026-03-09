@@ -113,7 +113,7 @@ class Encoding
       if Primitive.is_a?(options, Integer)
         @options = options
       else
-        options = Primitive.convert_type options, Hash, :to_hash
+        options = Primitive.convert_to_hash options
 
         @options = 0
         unless options.empty?
@@ -212,7 +212,7 @@ class Encoding
       end
 
       unless Primitive.is_a?(options, Integer)
-        opts = Primitive.convert_type options, Hash, :to_hash
+        opts = Primitive.convert_to_hash options
 
         options = 0
         options |= PARTIAL_INPUT if opts[:partial_input]

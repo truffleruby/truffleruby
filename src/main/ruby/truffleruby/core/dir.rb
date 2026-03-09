@@ -51,7 +51,7 @@ class Dir
     if Primitive.undefined? options
       enc = Encoding.filesystem
     else
-      options = Primitive.convert_type options, Hash, :to_hash
+      options = Primitive.convert_to_hash options
       enc = options[:encoding]
       enc = Truffle::Type.coerce_to_encoding enc if enc
     end
