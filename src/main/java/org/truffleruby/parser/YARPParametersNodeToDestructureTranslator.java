@@ -14,6 +14,7 @@ import java.util.List;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import org.ruby_lang.prism.Nodes;
+import org.ruby_lang.prism.Nodes.NoBlockParameterNode;
 import org.truffleruby.core.array.ArrayIndexNodes;
 import org.truffleruby.core.array.ArraySliceNodeGen;
 import org.truffleruby.core.hash.HashLiteralNode;
@@ -242,6 +243,11 @@ public final class YARPParametersNodeToDestructureTranslator extends YARPBaseTra
 
         final int slot = environment.findFrameSlot(name);
         return new SaveMethodBlockNode(slot);
+    }
+
+    @Override
+    public RubyNode visitNoBlockParameterNode(NoBlockParameterNode node) {
+        throw CompilerDirectives.shouldNotReachHere("&nil is Ruby 4.0+");
     }
 
     @Override

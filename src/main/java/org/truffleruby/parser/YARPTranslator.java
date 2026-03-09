@@ -14,6 +14,7 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.shadowed.org.jcodings.specific.EUCJPEncoding;
 import org.graalvm.shadowed.org.jcodings.specific.Windows_31JEncoding;
+import org.ruby_lang.prism.Nodes.NoBlockParameterNode;
 import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -587,6 +588,11 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     @Override
     public RubyNode visitBlockParameterNode(Nodes.BlockParameterNode node) {
+        throw CompilerDirectives.shouldNotReachHere("handled in YARPLoadArgumentsTranslator");
+    }
+
+    @Override
+    public RubyNode visitNoBlockParameterNode(NoBlockParameterNode node) {
         throw CompilerDirectives.shouldNotReachHere("handled in YARPLoadArgumentsTranslator");
     }
 

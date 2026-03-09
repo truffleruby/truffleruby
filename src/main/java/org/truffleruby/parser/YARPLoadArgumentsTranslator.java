@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import org.ruby_lang.prism.Nodes.NoBlockParameterNode;
 import org.truffleruby.Layouts;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.arguments.MissingArgumentBehavior;
@@ -300,6 +301,11 @@ public final class YARPLoadArgumentsTranslator extends YARPBaseTranslator {
         }
 
         return new SaveMethodBlockNode(slot);
+    }
+
+    @Override
+    public RubyNode visitNoBlockParameterNode(NoBlockParameterNode node) {
+        throw CompilerDirectives.shouldNotReachHere("&nil is Ruby 4.0+");
     }
 
     @Override
