@@ -58,8 +58,6 @@ static void
 pm_serialize_node(pm_parser_t *parser, pm_node_t *node, pm_buffer_t *buffer) {
     pm_buffer_append_byte(buffer, (uint8_t) PM_NODE_TYPE(node));
 
-    size_t offset = buffer->length;
-
     pm_serialize_location(&node->location, buffer);
 
     switch (PM_NODE_TYPE(node)) {
@@ -473,7 +471,7 @@ pm_serialize_node(pm_parser_t *parser, pm_node_t *node, pm_buffer_t *buffer) {
                 pm_buffer_append_varuint(buffer, pm_sizet_to_u32(((pm_def_node_t *)node)->locals.ids[index]));
             }
             // serialize length
-            uint32_t length = pm_sizet_to_u32(buffer->length - offset - sizeof(uint32_t));
+            uint32_t length = pm_sizet_to_u32(buffer->length - length_offset);
             memcpy(buffer->value + length_offset, &length, sizeof(uint32_t));
             break;
         }
@@ -1424,7 +1422,7 @@ pm_serialize_metadata(pm_parser_t *parser, pm_buffer_t *buffer) {
     pm_serialize_diagnostic_list(&parser->warning_list, buffer);
 }
 
-#line 253 "prism/templates/src/serialize.c.erb"
+#line 251 "prism/templates/src/serialize.c.erb"
 /**
  * Serialize the metadata, nodes, and constant pool.
  */

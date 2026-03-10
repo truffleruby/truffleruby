@@ -23,7 +23,7 @@ import java.util.Locale;
 public class Loader {
 
     public static ParseResult load(byte[] serialized, byte[] sourceBytes) {
-        return new Loader(serialized, sourceBytes).load();
+        return new Loader(serialized).load(sourceBytes);
     }
 
     // Overridable methods
@@ -74,17 +74,19 @@ public class Loader {
     }
 
     private final ByteBuffer buffer;
-    private final Nodes.Source source;
     protected String encodingName;
     private Charset encodingCharset;
     private ConstantPool constantPool;
 
-    protected Loader(byte[] serialized, byte[] sourceBytes) {
+    protected Loader(byte[] serialized) {
         this.buffer = ByteBuffer.wrap(serialized).order(ByteOrder.nativeOrder());
-        this.source = new Nodes.Source(sourceBytes);
     }
 
-    protected ParseResult load() {
+    // We pass sourceBytes here and not in the constructor to avoid keeping
+    // the sourceBytes in memory unnecessarily with lazy DefNode's which hold on the Loader.
+    protected ParseResult load(byte[] sourceBytes) {
+        Nodes.Source source = new Nodes.Source(sourceBytes);
+
         expect((byte) 'P', "incorrect prism header");
         expect((byte) 'R', "incorrect prism header");
         expect((byte) 'I', "incorrect prism header");
@@ -425,7 +427,7 @@ public class Loader {
             case 44:
                 return new Nodes.ConstantWriteNode(startOffset, length, loadConstant(), loadNode());
             case 45:
-                return new Nodes.DefNode(startOffset, length, buffer.getInt(), loadConstant(), loadOptionalNode(), (Nodes.ParametersNode) loadOptionalNode(), loadOptionalNode(), loadConstants());
+                return loadDefNode(startOffset, length);
             case 46:
                 return new Nodes.DefinedNode(startOffset, length, loadNode());
             case 47:
@@ -642,6 +644,32 @@ public class Loader {
                 return new Nodes.YieldNode(startOffset, length, (Nodes.ArgumentsNode) loadOptionalNode());
             default:
                 throw new Error("Unknown node type: " + type);
+        }
+    }
+
+    // Can be overridden to use createLazyDefNode instead
+    protected Nodes.DefNode loadDefNode(int startOffset, int length) {
+        return createDefNode(startOffset, length);
+    }
+
+    protected Nodes.DefNode createLazyDefNode(int startOffset, int length) {
+        int bufferPosition = buffer.position();
+        int serializedLength = buffer.getInt();
+        // Load everything except the body and locals, because the name, receiver, parameters are still needed for lazily defining the method
+        Nodes.DefNode lazyDefNode = new Nodes.DefNode(startOffset, length, -bufferPosition, this, loadConstant(), loadOptionalNode(), (Nodes.ParametersNode) loadOptionalNode(), null, Nodes.EMPTY_STRING_ARRAY);
+        buffer.position(bufferPosition + serializedLength); // skip past the serialized DefNode
+        return lazyDefNode;
+    }
+
+    protected Nodes.DefNode createDefNode(int startOffset, int length) {
+        return new Nodes.DefNode(startOffset, length, buffer.getInt(), null, loadConstant(), loadOptionalNode(), (Nodes.ParametersNode) loadOptionalNode(), loadOptionalNode(), loadConstants());
+    }
+
+    Nodes.DefNode createDefNodeFromSavedPosition(int startOffset, int length, int bufferPosition) {
+        // This method mutates the buffer position and may be called from different threads so we must synchronize
+        synchronized (this) {
+            buffer.position(bufferPosition);
+            return createDefNode(startOffset, length);
         }
     }
 
