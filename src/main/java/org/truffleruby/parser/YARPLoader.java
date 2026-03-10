@@ -47,14 +47,14 @@ import java.nio.charset.Charset;
 public final class YARPLoader extends Loader {
 
     public static ParseResult load(byte[] serialized, byte[] sourceBytes, RubySource rubySource) {
-        return new YARPLoader(serialized, sourceBytes, rubySource).load();
+        return new YARPLoader(serialized, rubySource.getEncoding()).load(sourceBytes);
     }
 
     private final RubyEncoding encoding;
 
-    public YARPLoader(byte[] serialized, byte[] sourceBytes, RubySource rubySource) {
-        super(serialized, sourceBytes);
-        this.encoding = rubySource.getEncoding();
+    public YARPLoader(byte[] serialized, RubyEncoding encoding) {
+        super(serialized);
+        this.encoding = encoding;
     }
 
     @Override
