@@ -1993,7 +1993,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the ArgumentsNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ArgumentsNodeFlags\":", 21);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_ARGUMENTS_NODE_FLAGS_CONTAINS_FORWARDING)) {
@@ -2046,7 +2046,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the ArrayNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ArrayNodeFlags\":", 17);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_ARRAY_NODE_FLAGS_CONTAINS_SPLAT)) {
@@ -2317,7 +2317,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the ParameterFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ParameterFlags\":", 17);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
@@ -2392,7 +2392,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the ParameterFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ParameterFlags\":", 17);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
@@ -2507,7 +2507,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the CallNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"CallNodeFlags\":", 16);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
@@ -2590,7 +2590,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the CallNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"CallNodeFlags\":", 16);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
@@ -2703,7 +2703,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the CallNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"CallNodeFlags\":", 16);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
@@ -2791,7 +2791,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the CallNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"CallNodeFlags\":", 16);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
@@ -2874,7 +2874,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the CallNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"CallNodeFlags\":", 16);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
@@ -3912,7 +3912,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the RangeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"RangeFlags\":", 13);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_RANGE_FLAGS_EXCLUDE_END)) {
@@ -4428,7 +4428,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the CallNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"CallNodeFlags\":", 16);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
@@ -4520,7 +4520,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the CallNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"CallNodeFlags\":", 16);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
@@ -4617,7 +4617,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the CallNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"CallNodeFlags\":", 16);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
@@ -4709,7 +4709,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the CallNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"CallNodeFlags\":", 16);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
@@ -4927,7 +4927,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the IntegerBaseFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"IntegerBaseFlags\":", 19);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_INTEGER_BASE_FLAGS_BINARY)) {
@@ -4968,7 +4968,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the RegularExpressionFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"RegularExpressionFlags\":", 25);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_IGNORE_CASE)) {
@@ -5061,7 +5061,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the RegularExpressionFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"RegularExpressionFlags\":", 25);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_IGNORE_CASE)) {
@@ -5154,7 +5154,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the InterpolatedStringNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"InterpolatedStringNodeFlags\":", 30);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_INTERPOLATED_STRING_NODE_FLAGS_FROZEN)) {
@@ -5298,7 +5298,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the KeywordHashNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"KeywordHashNodeFlags\":", 23);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_KEYWORD_HASH_NODE_FLAGS_SYMBOL_KEYS)) {
@@ -5331,7 +5331,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the ParameterFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ParameterFlags\":", 17);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
@@ -5608,7 +5608,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the RegularExpressionFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"RegularExpressionFlags\":", 25);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_IGNORE_CASE)) {
@@ -6063,7 +6063,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the ParameterFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ParameterFlags\":", 17);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
@@ -6099,7 +6099,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the ParameterFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ParameterFlags\":", 17);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
@@ -6248,7 +6248,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the ParenthesesNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ParenthesesNodeFlags\":", 23);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_PARENTHESES_NODE_FLAGS_MULTIPLE_STATEMENTS)) {
@@ -6428,7 +6428,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the RangeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"RangeFlags\":", 13);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_RANGE_FLAGS_EXCLUDE_END)) {
@@ -6472,7 +6472,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the IntegerBaseFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"IntegerBaseFlags\":", 19);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_INTEGER_BASE_FLAGS_BINARY)) {
@@ -6527,7 +6527,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the RegularExpressionFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"RegularExpressionFlags\":", 25);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_IGNORE_CASE)) {
@@ -6621,7 +6621,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the ParameterFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ParameterFlags\":", 17);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
@@ -6652,7 +6652,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the ParameterFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ParameterFlags\":", 17);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
@@ -6773,7 +6773,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the ParameterFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ParameterFlags\":", 17);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
@@ -6858,7 +6858,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the ShareableConstantNodeFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ShareableConstantNodeFlags\":", 29);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_SHAREABLE_CONSTANT_NODE_FLAGS_LITERAL)) {
@@ -6953,7 +6953,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the StringFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"StringFlags\":", 14);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_STRING_FLAGS_FORCED_UTF8_ENCODING)) {
@@ -7050,7 +7050,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the StringFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"StringFlags\":", 14);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_STRING_FLAGS_FORCED_UTF8_ENCODING)) {
@@ -7167,7 +7167,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the SymbolFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"SymbolFlags\":", 14);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_SYMBOL_FLAGS_FORCED_UTF8_ENCODING)) {
@@ -7323,7 +7323,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the LoopFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"LoopFlags\":", 12);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_LOOP_FLAGS_BEGIN_MODIFIER)) {
@@ -7425,7 +7425,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the LoopFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"LoopFlags\":", 12);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_LOOP_FLAGS_BEGIN_MODIFIER)) {
@@ -7483,7 +7483,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
 
             // Dump the EncodingFlags field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"EncodingFlags\":", 16);
+            pm_buffer_append_string(buffer, "\"flags\":", 8);
             size_t flags = 0;
             pm_buffer_append_byte(buffer, '[');
             if (PM_NODE_FLAG_P(cast, PM_ENCODING_FLAGS_FORCED_UTF8_ENCODING)) {

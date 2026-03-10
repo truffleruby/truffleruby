@@ -8,8 +8,6 @@
 
 package org.ruby_lang.prism;
 
-import org.ruby_lang.prism.Nodes;
-
 import java.lang.Short;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -22,8 +20,8 @@ import java.util.Locale;
 // @formatter:off
 public class Loader {
 
-    public static ParseResult load(byte[] serialized, byte[] sourceBytes) {
-        return new Loader(serialized, sourceBytes).load();
+    public static ParseResult load(byte[] serialized) {
+        return new Loader(serialized).load();
     }
 
     // Overridable methods
@@ -74,17 +72,18 @@ public class Loader {
     }
 
     private final ByteBuffer buffer;
-    private final Nodes.Source source;
     protected String encodingName;
     private Charset encodingCharset;
     private ConstantPool constantPool;
+    private Nodes.Source source = null;
 
-    protected Loader(byte[] serialized, byte[] sourceBytes) {
+    protected Loader(byte[] serialized) {
         this.buffer = ByteBuffer.wrap(serialized).order(ByteOrder.nativeOrder());
-        this.source = new Nodes.Source(sourceBytes);
     }
 
     protected ParseResult load() {
+        this.source = new Nodes.Source();
+
         expect((byte) 'P', "incorrect prism header");
         expect((byte) 'R', "incorrect prism header");
         expect((byte) 'I', "incorrect prism header");
@@ -111,6 +110,7 @@ public class Loader {
         Nodes.Location dataLocation = loadOptionalLocation();
         ParseResult.Error[] errors = loadErrors();
         ParseResult.Warning[] warnings = loadWarnings();
+        boolean continuable = buffer.get() != 0;
 
         int constantPoolBufferOffset = buffer.getInt();
         int constantPoolLength = loadVarUInt();
@@ -125,14 +125,13 @@ public class Loader {
                 throw new Error("Expected to consume all bytes while deserializing but there were " + left + " bytes left");
             }
 
-            boolean[] newlineMarked = new boolean[1 + source.getLineCount()];
-            MarkNewlinesVisitor visitor = new MarkNewlinesVisitor(source, newlineMarked);
+            MarkNewlinesVisitor visitor = new MarkNewlinesVisitor(source);
             node.accept(visitor);
         } else {
             node = null;
         }
 
-        return new ParseResult(node, magicComments, dataLocation, errors, warnings, source);
+        return new ParseResult(node, magicComments, dataLocation, errors, warnings, continuable, source);
     }
 
     private byte[] loadString() {
@@ -191,7 +190,7 @@ public class Loader {
 
         // warning messages only contain ASCII characters
         for (int i = 0; i < count; i++) {
-            Nodes.WarningType type = Nodes.WARNING_TYPES[loadVarUInt() - 297];
+            Nodes.WarningType type = Nodes.WARNING_TYPES[loadVarUInt() - 299];
             byte[] bytes = loadString();
             String message = new String(bytes, StandardCharsets.US_ASCII);
             Nodes.Location location = loadLocation();
@@ -425,7 +424,7 @@ public class Loader {
             case 44:
                 return new Nodes.ConstantWriteNode(startOffset, length, loadConstant(), loadNode());
             case 45:
-                return new Nodes.DefNode(startOffset, length, buffer.getInt(), loadConstant(), loadOptionalNode(), (Nodes.ParametersNode) loadOptionalNode(), loadOptionalNode(), loadConstants());
+                return loadDefNode(startOffset, length);
             case 46:
                 return new Nodes.DefinedNode(startOffset, length, loadNode());
             case 47:
@@ -643,6 +642,38 @@ public class Loader {
             default:
                 throw new Error("Unknown node type: " + type);
         }
+    }
+
+    // Can be overridden to use createLazyDefNode instead
+    protected Nodes.DefNode loadDefNode(int startOffset, int length) {
+        return createDefNode(startOffset, length);
+    }
+
+    protected Nodes.DefNode createLazyDefNode(int startOffset, int length) {
+        int bufferPosition = buffer.position();
+        int serializedLength = buffer.getInt();
+        // Load everything except the body and locals, because the name, receiver, parameters are still needed for lazily defining the method
+        Nodes.DefNode lazyDefNode = new Nodes.DefNode(startOffset, length, -bufferPosition, this, loadConstant(), loadOptionalNode(), (Nodes.ParametersNode) loadOptionalNode(), null, Nodes.EMPTY_STRING_ARRAY);
+        buffer.position(bufferPosition + serializedLength); // skip past the serialized DefNode
+        return lazyDefNode;
+    }
+
+    protected Nodes.DefNode createDefNode(int startOffset, int length) {
+        return new Nodes.DefNode(startOffset, length, buffer.getInt(), null, loadConstant(), loadOptionalNode(), (Nodes.ParametersNode) loadOptionalNode(), loadOptionalNode(), loadConstants());
+    }
+
+    Nodes.DefNode createDefNodeFromSavedPosition(int startOffset, int length, int bufferPosition) {
+        Nodes.DefNode node;
+        // This method mutates the buffer position and may be called from different threads so we must synchronize
+        synchronized (this) {
+            buffer.position(bufferPosition);
+            node = createDefNode(startOffset, length);
+        }
+
+        MarkNewlinesVisitor visitor = new MarkNewlinesVisitor(source);
+        node.accept(visitor);
+
+        return node;
     }
 
     private static final Nodes.Node[] EMPTY_Node_ARRAY = {};

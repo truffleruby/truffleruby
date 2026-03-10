@@ -6,9 +6,9 @@ final class MarkNewlinesVisitor extends AbstractNodeVisitor<Void> {
     private final Nodes.Source source;
     private boolean[] newlineMarked;
 
-    MarkNewlinesVisitor(Nodes.Source source, boolean[] newlineMarked) {
+    MarkNewlinesVisitor(Nodes.Source source) {
         this.source = source;
-        this.newlineMarked = newlineMarked;
+        this.newlineMarked = new boolean[1 + source.getLineCount()];
     }
 
     @Override

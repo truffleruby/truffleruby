@@ -6,7 +6,7 @@
     ├── flags: ∅
     └── body: (length: 1)
         └── @ RegularExpressionNode (location: (1,0)-(1,6))
-            ├── flags: newline, static_literal
+            ├── flags: newline, static_literal, forced_us_ascii_encoding
             ├── opening_loc: (1,0)-(1,1) = "/"
             ├── content_loc: (1,1)-(1,5) = "\\“"
             ├── closing_loc: (1,5)-(1,6) = "/"
