@@ -54,6 +54,7 @@ Compatibility:
 
 Performance:
 
+* Speedup parsing by up to 35% by lazily parsing method definitions (#4182, @eregon).
 
 Incompatible Changes:
 

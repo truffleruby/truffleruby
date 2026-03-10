@@ -76,9 +76,9 @@ public final class YARPDefNodeTranslator extends YARPTranslator {
             Arity arity) {
         if (shouldLazyTranslate) {
             return new CachedLazyCallTargetSupplier(
-                    () -> translateMethodNode(node, parameters, arity).getCallTarget());
+                    () -> translateMethodNode(node.getNonLazy(), parameters, arity).getCallTarget());
         } else {
-            final RubyMethodRootNode root = translateMethodNode(node, parameters, arity);
+            final RubyMethodRootNode root = translateMethodNode(node.getNonLazy(), parameters, arity);
             return new CachedLazyCallTargetSupplier(() -> root.getCallTarget());
         }
     }
