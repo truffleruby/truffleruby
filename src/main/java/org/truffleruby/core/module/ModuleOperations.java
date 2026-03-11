@@ -359,25 +359,8 @@ public abstract class ModuleOperations {
 
         ModuleChain chain = module.fields.getFirstModuleChain();
 
-        while (true) {
-            if (chain instanceof PrependMarker) {
-                // We need to stop if we are entering prepended modules of a class which is not a
-                // singleton class. So we look for the PrependMarker explicitly here.
-                final RubyModule origin = ((PrependMarker) chain).getOrigin().getActualModule();
-                // When we find a class which is not a singleton class, we are done
-                if (origin instanceof RubyClass && !((RubyClass) origin).isSingleton) {
-                    break;
-                } else {
-                    chain = chain.getParentModule();
-                }
-            }
-
+        while ((chain = getNextModuleChainBeforeLogicalClass(chain)) != null) {
             final RubyModule ancestor = chain.getActualModule();
-
-            // When we find a class which is not a singleton class, we are done
-            if (ancestor instanceof RubyClass && !((RubyClass) ancestor).isSingleton) {
-                break;
-            }
 
             for (InternalMethod method : ancestor.fields.getMethods()) {
                 methods.putIfAbsent(method.getName(), method);
@@ -387,6 +370,52 @@ public abstract class ModuleOperations {
         }
 
         return methods;
+    }
+
+    @TruffleBoundary
+    public static InternalMethod getMethodBeforeLogicalClass(RubyModule module, String name) {
+        ModuleChain chain = module.fields.getFirstModuleChain();
+
+        while ((chain = getNextModuleChainBeforeLogicalClass(chain)) != null) {
+            final RubyModule ancestor = chain.getActualModule();
+
+            InternalMethod method = ancestor.fields.getMethod(name);
+            if (method != null) {
+                return method;
+            }
+
+            chain = chain.getParentModule();
+        }
+
+        return null;
+    }
+
+    private static ModuleChain getNextModuleChainBeforeLogicalClass(ModuleChain chain) {
+        if (chain == null) {
+            return null;
+        }
+
+        if (chain instanceof PrependMarker) {
+            // We need to stop if we are entering prepended modules of a class which is not a
+            // singleton class. So we look for the PrependMarker explicitly here.
+            final RubyModule origin = ((PrependMarker) chain).getOrigin().getActualModule();
+
+            // When we find a class which is not a singleton class, we are done.
+            if (origin instanceof RubyClass && !((RubyClass) origin).isSingleton) {
+                return null;
+            } else {
+                chain = chain.getParentModule();
+            }
+        }
+
+        final RubyModule ancestor = chain.getActualModule();
+
+        // When we find a class which is not a singleton class, we are done.
+        if (ancestor instanceof RubyClass && !((RubyClass) ancestor).isSingleton) {
+            return null;
+        }
+
+        return chain;
     }
 
     @TruffleBoundary
