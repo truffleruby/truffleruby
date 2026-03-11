@@ -395,7 +395,7 @@ public abstract class ModuleOperations {
             return null;
         }
 
-        while (chain instanceof PrependMarker) {
+        if (chain instanceof PrependMarker) {
             // We need to stop if we are entering prepended modules of a class which is not a
             // singleton class. So we look for the PrependMarker explicitly here.
             final RubyModule origin = ((PrependMarker) chain).getOrigin().getActualModule();
@@ -403,9 +403,9 @@ public abstract class ModuleOperations {
             // When we find a class which is not a singleton class, we are done.
             if (origin instanceof RubyClass && !((RubyClass) origin).isSingleton) {
                 return null;
+            } else {
+                chain = chain.getParentModule();
             }
-
-            chain = chain.getParentModule();
         }
 
         final RubyModule ancestor = chain.getActualModule();
