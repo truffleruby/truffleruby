@@ -359,7 +359,7 @@ public abstract class ModuleOperations {
 
         ModuleChain chain = module.fields.getFirstModuleChain();
 
-        while ((chain = getNextSingletonMethodLookupChain(chain)) != null) {
+        while ((chain = getNextModuleChainBeforeLogicalClass(chain)) != null) {
             final RubyModule ancestor = chain.getActualModule();
 
             for (InternalMethod method : ancestor.fields.getMethods()) {
@@ -373,10 +373,10 @@ public abstract class ModuleOperations {
     }
 
     @TruffleBoundary
-    public static InternalMethod lookupSingletonMethod(RubyModule module, String name) {
+    public static InternalMethod getMethodBeforeLogicalClass(RubyModule module, String name) {
         ModuleChain chain = module.fields.getFirstModuleChain();
 
-        while ((chain = getNextSingletonMethodLookupChain(chain)) != null) {
+        while ((chain = getNextModuleChainBeforeLogicalClass(chain)) != null) {
             final RubyModule ancestor = chain.getActualModule();
 
             InternalMethod method = ancestor.fields.getMethod(name);
@@ -390,7 +390,7 @@ public abstract class ModuleOperations {
         return null;
     }
 
-    private static ModuleChain getNextSingletonMethodLookupChain(ModuleChain chain) {
+    private static ModuleChain getNextModuleChainBeforeLogicalClass(ModuleChain chain) {
         if (chain == null) {
             return null;
         }

@@ -1494,7 +1494,7 @@ public abstract class KernelNodes {
             final RubyClass metaClass = metaClassNode.execute(this, self);
 
             if (singletonProfile.profile(this, metaClass.isSingleton)) {
-                final InternalMethod method = ModuleOperations.lookupSingletonMethod(metaClass, name);
+                final InternalMethod method = ModuleOperations.getMethodBeforeLogicalClass(metaClass, name);
                 if (methodProfile.profile(this, method != null && !method.isUndefined())) {
                     final RubyMethod instance = new RubyMethod(
                             coreLibrary().methodClass,
