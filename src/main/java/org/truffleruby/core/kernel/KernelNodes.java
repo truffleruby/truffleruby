@@ -75,6 +75,7 @@ import org.truffleruby.core.inlined.AlwaysInlinedMethodNode;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.method.MethodFilter;
 import org.truffleruby.core.method.RubyMethod;
+import org.truffleruby.core.module.ModuleOperations;
 import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.core.numeric.BigIntegerOps;
 import org.truffleruby.core.numeric.RubyBignum;
@@ -1493,7 +1494,7 @@ public abstract class KernelNodes {
             final RubyClass metaClass = metaClassNode.execute(this, self);
 
             if (singletonProfile.profile(this, metaClass.isSingleton)) {
-                final InternalMethod method = metaClass.fields.getMethod(name);
+                final InternalMethod method = ModuleOperations.lookupSingletonMethod(metaClass, name);
                 if (methodProfile.profile(this, method != null && !method.isUndefined())) {
                     final RubyMethod instance = new RubyMethod(
                             coreLibrary().methodClass,

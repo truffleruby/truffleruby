@@ -390,6 +390,37 @@ public abstract class ModuleOperations {
     }
 
     @TruffleBoundary
+    public static InternalMethod lookupSingletonMethod(RubyModule module, String name) {
+        ModuleChain chain = module.fields.getFirstModuleChain();
+
+        while (true) {
+            if (chain instanceof PrependMarker) {
+                final RubyModule origin = ((PrependMarker) chain).getOrigin().getActualModule();
+                if (origin instanceof RubyClass && !((RubyClass) origin).isSingleton) {
+                    break;
+                } else {
+                    chain = chain.getParentModule();
+                }
+            }
+
+            final RubyModule ancestor = chain.getActualModule();
+
+            if (ancestor instanceof RubyClass && !((RubyClass) ancestor).isSingleton) {
+                break;
+            }
+
+            InternalMethod method = ancestor.fields.getMethod(name);
+            if (method != null) {
+                return method;
+            }
+
+            chain = chain.getParentModule();
+        }
+
+        return null;
+    }
+
+    @TruffleBoundary
     public static Map<String, InternalMethod> getMethodsUntilLogicalClass(RubyModule module) {
         final Map<String, InternalMethod> methods = new HashMap<>();
 

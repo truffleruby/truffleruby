@@ -50,6 +50,7 @@ Compatibility:
 * Add `Socket::ResolutionError` like Ruby 3.4 (#3883, @eregon).
 * Support the `resolv_timeout` and `fast_fallback` keyword arguments for `TCPSocket.new` (#3883, @eregon).
 * `require 'readline'` now uses either `Reline` or the `readline-ext` gem, same as CRuby (#3018, @eregon).
+* Update `Kernel#singleton_method` to implement Ruby 3.4 singleton ancestor lookup semantics (#3883, @nirvdrum).
 
 Performance:
 
