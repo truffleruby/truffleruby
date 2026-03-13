@@ -38,14 +38,22 @@ module Truffle
   module RangeOperations
     def self.step_no_block(range, step_size)
       from, to = range.begin, range.end
-      if arithmetic_range?(from, to)
-        Enumerator::ArithmeticSequence.new(range, :step, from, to, step_size, range.exclude_end?)
-      else
-        range.to_enum(:step, step_size) do
-          validated_step_args = validate_step_size(from, to, step_size)
-          step_iterations_size(range, *validated_step_args)
+
+      if Primitive.is_a?(step_size, Numeric)
+        if Primitive.is_a?(from, Numeric) && step_size == 0
+          raise ArgumentError, "step can't be 0"
+        end
+
+        if arithmetic_range?(from, to)
+          return Enumerator::ArithmeticSequence.new(range, :step, from, to, step_size, range.exclude_end?)
         end
       end
+
+      if Primitive.nil?(from)
+        raise ArgumentError, '#step for non-numeric beginless ranges is meaningless'
+      end
+
+      range.to_enum(:step, step_size) { nil }
     end
 
     def self.arithmetic_range?(from, to)
@@ -54,41 +62,6 @@ module Truffle
       else
         Primitive.nil?(from) && Primitive.is_a?(to, Numeric)
       end
-    end
-
-    def self.step_iterations_size(range, first, last, step_size)
-      case first
-      when Float
-        Truffle::NumericOperations.float_step_size(first, last, step_size, range.exclude_end?)
-      else
-        Primitive.nil?(range.size) ? nil : (range.size.fdiv(step_size)).ceil
-      end
-    end
-
-    def self.validate_step_size(first, last, step_size)
-      if Primitive.is_a?(step_size, Float) or Primitive.is_a?(first, Float) or Primitive.is_a?(last, Float)
-        # if any are floats they all must be
-        begin
-          step_size = Float(from = step_size)
-          first     = Float(from = first)
-          last      = Float(from = last) unless Primitive.nil? last
-        rescue ArgumentError
-          raise TypeError, "no implicit conversion to float from #{Primitive.class(from)}"
-        end
-      else
-        step_size = Integer(from = step_size)
-
-        unless Primitive.is_a?(step_size, Integer)
-          raise TypeError, "can't convert #{Primitive.class(from)} to Integer (#{Primitive.class(from)}#to_int gives #{Primitive.class(step_size)})"
-        end
-      end
-
-      if step_size <= 0
-        raise ArgumentError, "step can't be negative" if step_size < 0
-        raise ArgumentError, "step can't be 0"
-      end
-
-      [first, last, step_size]
     end
 
     # MRI: r_cover_range_p

@@ -69,6 +69,17 @@ describe "Range#step" do
       t = Time.utc(2023, 2, 24)
       -> { (t..t+1).step(0) { break } }.should_not raise_error(ArgumentError)
     end
+
+    it "does not iterate if step does not move values for bounded non-numeric ranges" do
+      t = Time.utc(2023, 2, 24)
+      (t..t + 1).step(0) { |x| ScratchPad << x }
+      ScratchPad.recorded.should eql([])
+    end
+
+    it "raises an ArgumentError when iterating a beginless range" do
+      -> { (..10).step(1) { break } }.should raise_error(ArgumentError,
+        "#step iteration for beginless ranges is meaningless")
+    end
   end
 
   ruby_version_is ""..."3.4" do
@@ -137,6 +148,18 @@ describe "Range#step" do
         ScratchPad.record []
         (0.0..Float::INFINITY).step(2) { |x| ScratchPad << x; break if ScratchPad.recorded.size == 3 }
         ScratchPad.recorded.should eql([0.0, 2.0, 4.0])
+      end
+
+      ruby_version_is "3.4" do
+        it "does not iterate if step is negative for forward range" do
+          (-1.0..1.0).step(-0.5) { |x| ScratchPad << x }
+          ScratchPad.recorded.should eql([])
+        end
+
+        it "iterates backward if step is negative for backward range" do
+          (1.0..-1.0).step(-0.5) { |x| ScratchPad << x }
+          ScratchPad.recorded.should eql([1.0, 0.5, 0.0, -0.5, -1.0])
+        end
       end
     end
 
@@ -336,6 +359,13 @@ describe "Range#step" do
         ScratchPad.record []
         (0.0...Float::INFINITY).step(2) { |x| ScratchPad << x; break if ScratchPad.recorded.size == 3 }
         ScratchPad.recorded.should eql([0.0, 2.0, 4.0])
+      end
+
+      ruby_version_is "3.4" do
+        it "iterates backward with exclusive end if step is negative" do
+          (1.0...-1.0).step(-0.5) { |x| ScratchPad << x }
+          ScratchPad.recorded.should eql([1.0, 0.5, 0.0, -0.5])
+        end
       end
     end
 
@@ -657,7 +687,17 @@ describe "Range#step" do
 
           ruby_version_is "3.4" do
             it "raises an ArgumentError" do
-              -> { Range.new(nil, nil).step(1) }.should raise_error(ArgumentError)
+              -> { Range.new(nil, nil).step(1) }.should raise_error(ArgumentError,
+                "#step for non-numeric beginless ranges is meaningless")
+            end
+          end
+        end
+
+        context "when range is beginless and finite" do
+          ruby_version_is "3.4" do
+            it "raises an ArgumentError if step is non-numeric" do
+              -> { (..10).step("a") }.should raise_error(ArgumentError,
+                "#step for non-numeric beginless ranges is meaningless")
             end
           end
         end
