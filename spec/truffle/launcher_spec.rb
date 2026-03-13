@@ -121,6 +121,23 @@ describe "The launcher" do
     end
   end
 
+  it "lets bundler detect TruffleRuby hybrid launchers as Ruby scripts" do
+    require 'bundler'           # ensures Bundler and Bundler::CLI are defined
+    require 'bundler/cli/exec'
+    require 'tempfile'
+
+    detector = Bundler::CLI::Exec.allocate
+    bundle_launcher = File.expand_path("../../../exe/bundle", __FILE__)
+    plain_bash = Tempfile.new("plain-bash-launcher")
+    plain_bash.write("#!/usr/bin/env bash\necho hi\n")
+    plain_bash.flush
+
+    detector.send(:ruby_shebang?, bundle_launcher).should be_true
+    detector.send(:ruby_shebang?, plain_bash.path).should be_false
+  ensure
+    plain_bash&.close!
+  end
+
   it "for gem can install and uninstall the hello-world gem" do
     # install
     Dir.chdir(__dir__ + '/fixtures/hello-world') do
