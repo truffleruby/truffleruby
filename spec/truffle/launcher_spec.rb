@@ -122,6 +122,7 @@ describe "The launcher" do
   end
 
   it "lets bundler detect TruffleRuby hybrid launchers as Ruby scripts" do
+    require 'bundler'           # ensures Bundler and Bundler::CLI are defined
     require 'bundler/cli/exec'
     require 'tempfile'
 
