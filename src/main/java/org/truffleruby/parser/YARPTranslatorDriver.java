@@ -51,6 +51,7 @@ import org.truffleruby.core.binding.SetBindingFrameForEvalNode;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.TStringUtils;
 import org.truffleruby.core.string.StringOperations;
+import org.truffleruby.debug.MetricsProfiler.MetricKind;
 import org.truffleruby.language.DataNode;
 import org.truffleruby.language.EmitWarningsNode;
 import org.truffleruby.language.LexicalScope;
@@ -163,7 +164,7 @@ public final class YARPTranslatorDriver {
         if (parseResult == null) {
             printParseTranslateExecuteMetric("before-parsing", context, source);
             parseResult = context.getMetricsProfiler().callWithMetrics(
-                    "parsing",
+                    MetricKind.PARSING,
                     source.getName(),
                     () -> parseToYARPAST(rubySource, sourcePath, sourceBytes, localsInScopes,
                             language.options.FROZEN_STRING_LITERALS, options, parserContext));
@@ -241,7 +242,7 @@ public final class YARPTranslatorDriver {
         printParseTranslateExecuteMetric("before-translate", context, source);
         try {
             truffleNode = context.getMetricsProfiler().callWithMetrics(
-                    "translating",
+                    MetricKind.TRANSLATING,
                     source.getName(),
                     () -> node.accept(translator));
         } finally {

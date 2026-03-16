@@ -36,6 +36,7 @@ import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.core.support.IONodes.IOThreadBufferAllocateNode;
 import org.truffleruby.core.thread.RubyThread;
+import org.truffleruby.debug.MetricsProfiler.MetricKind;
 import org.truffleruby.extra.TruffleRubyNodes;
 import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.interop.InteropNodes;
@@ -277,7 +278,7 @@ public final class FeatureLoader {
     @TruffleBoundary
     public String findFeature(String feature) {
         return context.getMetricsProfiler().callWithMetrics(
-                "searching",
+                MetricKind.SEARCHING,
                 feature,
                 () -> findFeatureImpl(feature));
     }
