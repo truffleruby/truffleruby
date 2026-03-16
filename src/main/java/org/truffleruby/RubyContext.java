@@ -62,6 +62,7 @@ import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.core.thread.ThreadManager;
 import org.truffleruby.core.time.GetTimeZoneNode;
 import org.truffleruby.debug.MetricsProfiler;
+import org.truffleruby.debug.MetricsProfiler.MetricKind;
 import org.truffleruby.language.CallStackManager;
 import org.truffleruby.language.LexicalScope;
 import org.truffleruby.language.RubyBaseNode;
@@ -82,6 +83,7 @@ import org.truffleruby.platform.TruffleNFIPlatform;
 import org.truffleruby.shared.Metrics;
 import org.truffleruby.shared.TruffleRuby;
 import org.truffleruby.shared.options.OptionsCatalog;
+import org.truffleruby.shared.options.Profile;
 import org.truffleruby.shared.options.RubyOptionTypes;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -497,6 +499,15 @@ public final class RubyContext {
         threadManager.checkNoRunningThreads();
 
         Signals.restoreDefaultHandlers();
+
+        if (options.METRICS_PROFILE_REQUIRE == Profile.TOTAL) {
+            for (MetricKind metricKind : MetricKind.VALUES) {
+                if (!metricKind.nested) {
+                    RubyLanguage.LOGGER.info("total %11s time: %dms".formatted(metricKind,
+                            metricsProfiler.totals.get(metricKind.ordinal()) / 1_000_000));
+                }
+            }
+        }
 
         if (options.PRINT_INTERNED_TSTRING_STATS) {
             RubyLanguage.LOGGER.info("tstrings re-used: " + language.tstringCache.getTStringsReusedCount());

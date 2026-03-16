@@ -13,6 +13,7 @@ import java.util.Locale;
 
 public enum Profile {
     NONE,
+    TOTAL,
     SUMMARY,
     DETAIL;
 

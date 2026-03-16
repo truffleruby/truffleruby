@@ -25,6 +25,7 @@ import org.truffleruby.cext.ValueWrapperManager;
 import org.truffleruby.core.cast.BooleanCastNode;
 import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.core.string.StringUtils;
+import org.truffleruby.debug.MetricsProfiler.MetricKind;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyConstant;
 import org.truffleruby.language.WarningNode;
@@ -70,7 +71,7 @@ public abstract class RequireNode extends RubyBaseNode {
         try {
             //intern() to improve footprint
             return getContext().getMetricsProfiler().callWithMetrics(
-                    "require",
+                    MetricKind.REQUIRE,
                     feature,
                     () -> requireConsideringAutoload(feature, internedExpandedPath, pathString));
         } finally {
@@ -236,7 +237,7 @@ public abstract class RequireNode extends RubyBaseNode {
             requireMetric("before-execute-" + feature);
             try {
                 getContext().getMetricsProfiler().callWithMetrics(
-                        "execute",
+                        MetricKind.EXECUTE,
                         feature,
                         () -> deferredCall.call(callNode));
             } finally {
