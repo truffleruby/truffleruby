@@ -9,14 +9,17 @@
  */
 package org.truffleruby.parser;
 
+import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.Split;
+import org.truffleruby.debug.MetricsProfiler.MetricKind;
 import org.truffleruby.language.RubyMethodRootNode;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.methods.Arity;
 import org.truffleruby.language.methods.CachedLazyCallTargetSupplier;
 
 import org.ruby_lang.prism.Nodes;
+import org.truffleruby.shared.options.Profile;
 
 public final class YARPDefNodeTranslator extends YARPTranslator {
 
@@ -72,11 +75,38 @@ public final class YARPDefNodeTranslator extends YARPTranslator {
                 arity);
     }
 
+    private RubyMethodRootNode translateMethodNodeWithMetrics(RubyContext context, Nodes.DefNode node,
+            Nodes.ParametersNode parameters, Arity arity) {
+        if (context != null && context.getOptions().METRICS_PROFILE_REQUIRE == Profile.TOTAL) {
+            return context.getMetricsProfiler().callWithMetrics(
+                    MetricKind.TRANSLATING,
+                    parseEnvironment.rubySource.getSourcePath(),
+                    () -> translateMethodNode(node, parameters, arity));
+        } else {
+            return translateMethodNode(node, parameters, arity);
+        }
+    }
+
+    private Nodes.DefNode getNonLazyDefNodeWithMetrics(RubyContext context, Nodes.DefNode node) {
+        if (context != null && context.getOptions().METRICS_PROFILE_REQUIRE == Profile.TOTAL) {
+            return context.getMetricsProfiler().callWithMetrics(
+                    MetricKind.PARSING,
+                    parseEnvironment.rubySource.getSourcePath(),
+                    () -> node.getNonLazy());
+        } else {
+            return node.getNonLazy();
+        }
+    }
+
     public CachedLazyCallTargetSupplier buildMethodNodeCompiler(Nodes.DefNode node, Nodes.ParametersNode parameters,
             Arity arity) {
         if (shouldLazyTranslate) {
             return new CachedLazyCallTargetSupplier(
-                    () -> translateMethodNode(node.getNonLazy(), parameters, arity).getCallTarget());
+                    () -> {
+                        var context = RubyLanguage.getCurrentContext();
+                        Nodes.DefNode fullDefNode = getNonLazyDefNodeWithMetrics(context, node);
+                        return translateMethodNodeWithMetrics(context, fullDefNode, parameters, arity).getCallTarget();
+                    });
         } else {
             final RubyMethodRootNode root = translateMethodNode(node.getNonLazy(), parameters, arity);
             return new CachedLazyCallTargetSupplier(() -> root.getCallTarget());
