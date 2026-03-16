@@ -14,7 +14,6 @@ import com.oracle.truffle.api.TruffleStackTrace;
 import com.oracle.truffle.api.TruffleStackTraceElement;
 import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -357,12 +356,7 @@ public final class BacktraceFormatter {
     }
 
     public static boolean isUserSourceSection(RubyLanguage language, SourceSection sourceSection) {
-        return isAvailable(sourceSection) && !isRubyCore(language, sourceSection.getSource());
-    }
-
-    public static boolean isRubyCore(RubyLanguage language, Source source) {
-        final String path = RubyLanguage.getPath(source);
-        return path.startsWith(language.coreLoadPath);
+        return isAvailable(sourceSection) && !language.isCoreSource(sourceSection.getSource());
     }
 
     public static String formatJavaThrowableMessage(Throwable t) {

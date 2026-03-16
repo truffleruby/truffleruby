@@ -61,7 +61,7 @@ public abstract class ThreadBacktraceLocationNodes {
                 return language.coreStrings.UNKNOWN.createInstance(context);
             } else {
                 final Source source = sourceSection.getSource();
-                if (BacktraceFormatter.isRubyCore(language, source)) {
+                if (language.isCoreSource(source)) {
                     return nil;
                 } else if (source.getPath() != null) { // A normal file
                     final String path = language.getSourcePath(source);

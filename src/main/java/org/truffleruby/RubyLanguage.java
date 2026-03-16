@@ -1011,6 +1011,11 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
         }
     }
 
+    public boolean isCoreSource(Source source) {
+        final String path = getPath(source);
+        return path.startsWith(coreLoadPath);
+    }
+
     @TruffleBoundary
     public int getStartLineAdjusted(SourceSection sourceSection) {
         int lineOffset = sourceSection.getSource().getOptions(this).get(RubySourceOptions.LineOffset);
