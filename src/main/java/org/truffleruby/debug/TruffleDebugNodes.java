@@ -177,7 +177,7 @@ public abstract class TruffleDebugNodes {
             final SourceSectionFilter filter = SourceSectionFilter
                     .newBuilder()
                     .mimeTypeIs(RubyLanguage.MIME_TYPES)
-                    .sourceIs(source -> source != null && getLanguage().getSourcePath(source).equals(fileString))
+                    .sourceIs(source -> source != null && RubyLanguage.getPath(source).equals(fileString))
                     .lineIs(line)
                     .tagIs(StandardTags.StatementTag.class)
                     .build();
@@ -277,7 +277,7 @@ public abstract class TruffleDebugNodes {
         }
 
         private static ParseResult getParseResult(RubyLanguage language, RubySource rubySource) {
-            String sourcePath = rubySource.getSourcePath(language).intern();
+            String sourcePath = rubySource.getSourcePath().intern();
 
             return YARPTranslatorDriver.parseToYARPAST(rubySource, sourcePath, rubySource.getBytes(),
                     Collections.emptyList(), language.options.FROZEN_STRING_LITERALS, null,

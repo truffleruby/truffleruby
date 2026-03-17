@@ -1170,7 +1170,7 @@ public abstract class CExtNodes {
         @Specialization
         RubyString sourceFile() {
             final SourceSection sourceSection = getTopUserSourceSection("rb_sourcefile");
-            final String file = getLanguage().getSourcePath(sourceSection.getSource());
+            final String file = RubyLanguage.getPath(sourceSection.getSource());
 
             return createString(fromJavaStringNode, file, Encodings.UTF_8);
         }

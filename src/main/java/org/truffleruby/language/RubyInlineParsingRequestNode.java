@@ -45,7 +45,7 @@ public final class RubyInlineParsingRequestNode extends ExecutableNode {
         this.context = context;
         var parentMethod = RubyArguments.getMethod(parentFrame);
 
-        final RubySource rubySource = new RubySource(source, language.getSourcePath(source), null, true, 0);
+        final RubySource rubySource = new RubySource(source, RubyLanguage.getPath(source), null, true, 0);
 
         // We use the current frame as the lexical scope to parse, but then we may run with a new frame in the future
         final YARPTranslatorDriver translator = new YARPTranslatorDriver(context);

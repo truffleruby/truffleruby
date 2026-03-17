@@ -61,10 +61,10 @@ public abstract class ThreadBacktraceLocationNodes {
                 return language.coreStrings.UNKNOWN.createInstance(context);
             } else {
                 final Source source = sourceSection.getSource();
-                if (language.isCoreSource(source)) {
+                if (RubyLanguage.isCoreSource(source)) {
                     return nil;
                 } else if (source.getPath() != null) { // A normal file
-                    final String path = language.getSourcePath(source);
+                    final String path = RubyLanguage.getPath(source);
                     final String canonicalPath = context.getFeatureLoader().canonicalize(path, source);
                     var cachedTString = language.tstringCache.getTString(TStringUtils.utf8TString(canonicalPath),
                             Encodings.UTF_8);

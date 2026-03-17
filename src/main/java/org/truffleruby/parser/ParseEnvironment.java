@@ -49,11 +49,10 @@ public final class ParseEnvironment {
         this.parserContext = parserContext;
         this.currentNode = currentNode;
 
-        String path = language.getSourcePath(source);
-        this.inCore = path.startsWith(RubyLanguage.INTERNAL_CORE_PREFIX);
-
+        this.inCore = RubyLanguage.isCoreSource(source);
         boolean canUsePrivatePrimitives = false;
         if (!inCore) {
+            String path = RubyLanguage.getPath(source);
             for (String prefix : language.allowPrivatePrimitivesPrefixes) {
                 if (path.startsWith(prefix)) {
                     canUsePrivatePrimitives = true;

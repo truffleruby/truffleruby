@@ -36,7 +36,7 @@ public final class PathToTStringCache {
 
     @TruffleBoundary
     public TruffleString getCachedPath(Source source) {
-        final String path = language.getSourcePath(source);
+        final String path = RubyLanguage.getPath(source);
 
         final Lock readLock = lock.readLock();
         readLock.lock();

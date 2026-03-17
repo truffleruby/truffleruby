@@ -34,6 +34,7 @@ import com.oracle.truffle.api.strings.AbstractTruffleString;
 import com.oracle.truffle.api.strings.TruffleString;
 import com.oracle.truffle.api.utilities.AssumedValue;
 import org.truffleruby.RubyContext;
+import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.CoreMethod;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.annotations.CoreModule;
@@ -289,7 +290,7 @@ public abstract class KernelNodes {
                 }
 
                 Source source = sourceSection.getSource();
-                String sourcePath = getLanguage(node).getSourcePath(source);
+                String sourcePath = RubyLanguage.getPath(source);
                 sourcePath = getContext(node).getFeatureLoader().canonicalize(sourcePath, source);
 
                 featurePath = getContext(node).getFeatureLoader().dirname(sourcePath) + "/" + featureString;

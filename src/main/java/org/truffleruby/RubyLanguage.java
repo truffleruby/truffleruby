@@ -598,7 +598,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
         context.disposeContext();
 
         if (options.COVERAGE_GLOBAL) {
-            coverageManager.print(this, System.out);
+            coverageManager.print(System.out);
         }
 
         synchronized (this) {
@@ -976,11 +976,9 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
         }
     }
 
-    /** {@link RubyLanguage#getSourcePath(Source)} should be used instead whenever possible (i.e., when we can access
-     * the language).
-     *
-     * Returns the path of a Source. Returns the short, potentially relative, path for the main script. Note however
+    /** Returns the path of a Source. Returns the short, potentially relative, path for the main script. Note however
      * that the path of {@code eval(code, nil, filename)} is just {@code filename} and might not be absolute. */
+    @TruffleBoundary
     public static String getPath(Source source) {
         final String path = source.getPath();
         if (path != null) {
@@ -993,15 +991,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
         }
     }
 
-    /** {@link RubyLanguage#getPath(Source)} but also handles core library sources. Ideally this method would be static
-     * but for now the core load path is an option and it also depends on the current working directory. Once we have
-     * Source metadata in Truffle we could use that to identify core library sources without needing the language. */
-    @TruffleBoundary
-    public String getSourcePath(Source source) {
-        return getPath(source);
-    }
-
-    public boolean isCoreSource(Source source) {
+    public static boolean isCoreSource(Source source) {
         return getPath(source).startsWith(INTERNAL_CORE_PREFIX);
     }
 
@@ -1037,7 +1027,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
         if (section == null) {
             return "no source section";
         } else {
-            final String path = getSourcePath(section.getSource());
+            final String path = getPath(section.getSource());
 
             if (section.isAvailable()) {
                 return path + ":" + getStartLineAdjusted(section);
@@ -1053,7 +1043,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
         if (!BacktraceFormatter.isAvailable(section)) {
             return nil;
         } else {
-            var file = createString(node, fromJavaStringNode, getSourcePath(section.getSource()), Encodings.UTF_8);
+            var file = createString(node, fromJavaStringNode, getPath(section.getSource()), Encodings.UTF_8);
             Object[] objects = new Object[]{ file, getStartLineAdjusted(section) };
             return createArray(node, objects);
         }

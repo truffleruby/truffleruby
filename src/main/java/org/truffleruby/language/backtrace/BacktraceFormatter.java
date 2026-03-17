@@ -85,9 +85,9 @@ public final class BacktraceFormatter {
     }
 
     /** For debug purposes. */
-    public static boolean isApplicationCode(RubyLanguage language, SourceSection sourceSection) {
-        return isUserSourceSection(language, sourceSection) &&
-                !language.getSourcePath(sourceSection.getSource()).contains("/lib/stdlib/rubygems");
+    public static boolean isApplicationCode(SourceSection sourceSection) {
+        return isUserSourceSection(sourceSection) &&
+                !RubyLanguage.getPath(sourceSection.getSource()).contains("/lib/stdlib/rubygems");
     }
 
     public BacktraceFormatter(RubyContext context, RubyLanguage language, EnumSet<FormattingFlags> flags) {
@@ -277,7 +277,7 @@ public final class BacktraceFormatter {
             if (reportedSourceSection == null) {
                 builder.append("???");
             } else {
-                builder.append(language.getSourcePath(reportedSourceSection.getSource()));
+                builder.append(RubyLanguage.getPath(reportedSourceSection.getSource()));
                 builder.append(":");
                 builder.append(language.getStartLineAdjusted(reportedSourceSection));
             }
@@ -355,8 +355,8 @@ public final class BacktraceFormatter {
         return sourceSection != null && sourceSection.isAvailable();
     }
 
-    public static boolean isUserSourceSection(RubyLanguage language, SourceSection sourceSection) {
-        return isAvailable(sourceSection) && !language.isCoreSource(sourceSection.getSource());
+    public static boolean isUserSourceSection(SourceSection sourceSection) {
+        return isAvailable(sourceSection) && !RubyLanguage.isCoreSource(sourceSection.getSource());
     }
 
     public static String formatJavaThrowableMessage(Throwable t) {
