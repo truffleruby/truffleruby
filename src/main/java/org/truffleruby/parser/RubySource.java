@@ -85,9 +85,9 @@ public final class RubySource {
         return source;
     }
 
-    public String getSourcePath(RubyLanguage language) {
+    public String getSourcePath() {
         // NOTE: we avoid storing the source path in RubySource because that is problematic for pre-initialization
-        return language.getSourcePath(source);
+        return RubyLanguage.getPath(source);
     }
 
     public TruffleString getTruffleString() {

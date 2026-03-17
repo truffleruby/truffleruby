@@ -10,6 +10,7 @@
 package org.truffleruby.language;
 
 import com.oracle.truffle.api.strings.TruffleString;
+import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.language.dispatch.DispatchNode;
@@ -54,7 +55,7 @@ public final class DataNode extends RubyContextSourceNode {
 
     @TruffleBoundary
     private String getPath() {
-        return getLanguage().getSourcePath(getEncapsulatingSourceSection().getSource());
+        return RubyLanguage.getPath(getEncapsulatingSourceSection().getSource());
     }
 
     @Override

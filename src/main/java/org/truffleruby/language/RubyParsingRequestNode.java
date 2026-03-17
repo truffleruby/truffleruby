@@ -40,7 +40,7 @@ public final class RubyParsingRequestNode extends RubyBaseRootNode implements In
     public RubyParsingRequestNode(RubyLanguage language, RubyContext context, Source source, String[] argumentNames) {
         super(language, null, null);
 
-        final RubySource rubySource = new RubySource(source, language.getSourcePath(source));
+        final RubySource rubySource = new RubySource(source, RubyLanguage.getPath(source));
 
         final YARPTranslatorDriver translator = new YARPTranslatorDriver(context);
         callTarget = translator.parse(

@@ -174,7 +174,7 @@ public final class RubyContext {
         Metrics.printTime("before-context-constructor");
 
         this.language = language;
-        this.callStack = new CallStackManager(language, this);
+        this.callStack = new CallStackManager(this);
         setEnv(env);
         this.preInitialized = preInitializing;
 

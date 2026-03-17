@@ -157,7 +157,7 @@ public final class CoverageManager {
         return counts;
     }
 
-    public synchronized void print(RubyLanguage language, PrintStream out) {
+    public synchronized void print(PrintStream out) {
         final int maxCountDigits = Long.toString(getMaxCount()).length();
 
         final String countFormat = "%" + maxCountDigits + "d";
@@ -168,7 +168,7 @@ public final class CoverageManager {
         final String noCodeString = new String(noCodeChars);
 
         for (Map.Entry<Source, AtomicLongArray> entry : counters.entrySet()) {
-            out.println(language.getSourcePath(entry.getKey()));
+            out.println(RubyLanguage.getPath(entry.getKey()));
 
             for (int n = 0; n < entry.getValue().length(); n++) {
                 // TODO CS 5-Sep-17 can we keep the line as a CharSequence rather than using toString?

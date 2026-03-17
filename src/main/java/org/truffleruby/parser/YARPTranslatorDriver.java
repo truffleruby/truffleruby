@@ -152,7 +152,7 @@ public final class YARPTranslatorDriver {
 
         // Parse to the YARP AST
         final RubyDeferredWarnings rubyWarnings = new RubyDeferredWarnings();
-        final String sourcePath = rubySource.getSourcePath(language).intern();
+        final String sourcePath = rubySource.getSourcePath().intern();
         final Options options;
 
         if (parserContext == ParserContext.TOP_LEVEL_FIRST) {
@@ -538,7 +538,7 @@ public final class YARPTranslatorDriver {
     public static void printParseTranslateExecuteMetric(String id, RubyContext context, Source source) {
         if (Metrics.getMetricsTime()) {
             if (context.getOptions().METRICS_TIME_PARSING_FILE) {
-                String name = context.getLanguageSlow().getSourcePath(source);
+                String name = RubyLanguage.getPath(source);
                 int lastSlash = name.lastIndexOf('/');
                 int lastDot = name.lastIndexOf('.');
                 if (lastSlash >= 0 && lastDot >= 0 && lastSlash + 1 < lastDot) {

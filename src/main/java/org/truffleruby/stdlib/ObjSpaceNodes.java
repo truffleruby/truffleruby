@@ -15,6 +15,7 @@ import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
+import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.CoreMethod;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.annotations.CoreModule;
@@ -224,7 +225,7 @@ public abstract class ObjSpaceNodes {
             if (trace == null) {
                 return nil;
             } else {
-                final String sourcePath = getLanguage().getSourcePath(trace.allocatingSourceSection.getSource());
+                final String sourcePath = RubyLanguage.getPath(trace.allocatingSourceSection.getSource());
                 return createString(fromJavaStringNode, sourcePath, Encodings.UTF_8);
             }
         }

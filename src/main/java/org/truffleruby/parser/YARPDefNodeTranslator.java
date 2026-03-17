@@ -30,7 +30,7 @@ public final class YARPDefNodeTranslator extends YARPTranslator {
 
         if (parseEnvironment.parserContext.isEval() || parseEnvironment.isCoverageEnabled()) {
             shouldLazyTranslate = false;
-        } else if (language.getSourcePath(source).startsWith(language.coreLoadPath)) {
+        } else if (RubyLanguage.isCoreSource(source)) {
             shouldLazyTranslate = language.options.LAZY_TRANSLATION_CORE;
         } else {
             shouldLazyTranslate = language.options.LAZY_TRANSLATION_USER;

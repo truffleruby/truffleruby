@@ -13,7 +13,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import org.truffleruby.RubyContext;
-import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.SuppressFBWarnings;
 import org.truffleruby.collections.Memo;
 import org.truffleruby.core.CoreLibrary;
@@ -39,11 +38,9 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public final class CallStackManager {
 
-    private final RubyLanguage language;
     private final RubyContext context;
 
-    public CallStackManager(RubyLanguage language, RubyContext context) {
-        this.language = language;
+    public CallStackManager(RubyContext context) {
         this.context = context;
     }
 
@@ -119,7 +116,7 @@ public final class CallStackManager {
 
     @TruffleBoundary
     public SourceSection getTopMostUserSourceSection(SourceSection encapsulatingSourceSection) {
-        if (BacktraceFormatter.isUserSourceSection(language, encapsulatingSourceSection)) {
+        if (BacktraceFormatter.isUserSourceSection(encapsulatingSourceSection)) {
             return encapsulatingSourceSection;
         } else {
             return getTopMostUserSourceSection();
@@ -135,7 +132,7 @@ public final class CallStackManager {
             }
 
             final SourceSection sourceSection = callNode.getEncapsulatingSourceSection();
-            if (BacktraceFormatter.isUserSourceSection(context.getLanguageSlow(), sourceSection)) {
+            if (BacktraceFormatter.isUserSourceSection(sourceSection)) {
                 return sourceSection;
             } else {
                 return null; // Go to the next frame

@@ -14,7 +14,6 @@ import com.oracle.truffle.api.TruffleStackTrace;
 import com.oracle.truffle.api.TruffleStackTraceElement;
 import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -86,9 +85,9 @@ public final class BacktraceFormatter {
     }
 
     /** For debug purposes. */
-    public static boolean isApplicationCode(RubyLanguage language, SourceSection sourceSection) {
-        return isUserSourceSection(language, sourceSection) &&
-                !language.getSourcePath(sourceSection.getSource()).contains("/lib/stdlib/rubygems");
+    public static boolean isApplicationCode(SourceSection sourceSection) {
+        return isUserSourceSection(sourceSection) &&
+                !RubyLanguage.getPath(sourceSection.getSource()).contains("/lib/stdlib/rubygems");
     }
 
     public BacktraceFormatter(RubyContext context, RubyLanguage language, EnumSet<FormattingFlags> flags) {
@@ -278,7 +277,7 @@ public final class BacktraceFormatter {
             if (reportedSourceSection == null) {
                 builder.append("???");
             } else {
-                builder.append(language.getSourcePath(reportedSourceSection.getSource()));
+                builder.append(RubyLanguage.getPath(reportedSourceSection.getSource()));
                 builder.append(":");
                 builder.append(language.getStartLineAdjusted(reportedSourceSection));
             }
@@ -356,13 +355,8 @@ public final class BacktraceFormatter {
         return sourceSection != null && sourceSection.isAvailable();
     }
 
-    public static boolean isUserSourceSection(RubyLanguage language, SourceSection sourceSection) {
-        return isAvailable(sourceSection) && !isRubyCore(language, sourceSection.getSource());
-    }
-
-    public static boolean isRubyCore(RubyLanguage language, Source source) {
-        final String path = RubyLanguage.getPath(source);
-        return path.startsWith(language.coreLoadPath);
+    public static boolean isUserSourceSection(SourceSection sourceSection) {
+        return isAvailable(sourceSection) && !RubyLanguage.isCoreSource(sourceSection.getSource());
     }
 
     public static String formatJavaThrowableMessage(Throwable t) {

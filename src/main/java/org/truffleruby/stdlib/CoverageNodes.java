@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.oracle.truffle.api.strings.TruffleString;
+import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.CoreMethod;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.annotations.CoreModule;
@@ -78,7 +79,7 @@ public abstract class CoverageNodes {
                     }
                 }
 
-                final String path = getLanguage().getSourcePath(source.getKey());
+                final String path = RubyLanguage.getPath(source.getKey());
                 assert !results.containsKey(path) : "path already exists in coverage results";
                 results.put(path, createArray(new Object[]{
                         createString(fromJavaStringNode,

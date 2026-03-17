@@ -9,7 +9,6 @@
  */
 package org.truffleruby;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.ref.Cleaner;
@@ -262,8 +261,6 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
 
     public final CyclicAssumption traceFuncUnusedAssumption = new CyclicAssumption("set_trace_func is not used");
 
-    @CompilationFinal public String coreLoadPath;
-    @CompilationFinal public String corePath;
     public final CoreMethodAssumptions coreMethodAssumptions;
     public final CoreStrings coreStrings;
     public final CoreSymbols coreSymbols;
@@ -501,8 +498,6 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
                 setRubyHome(findRubyHome(env));
                 setupLocale(env, rubyHome);
                 loadLibYARPBindings();
-                this.coreLoadPath = buildCoreLoadPath(this.options.CORE_LOAD_PATH);
-                this.corePath = coreLoadPath + File.separator + "core" + File.separator;
                 Instrumenter instrumenter = Objects.requireNonNull(env.lookup(Instrumenter.class));
                 this.coverageManager = new CoverageManager(this, instrumenter);
                 if (options.INSTRUMENT_ALL_NODES) {
@@ -603,7 +598,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
         context.disposeContext();
 
         if (options.COVERAGE_GLOBAL) {
-            coverageManager.print(this, System.out);
+            coverageManager.print(System.out);
         }
 
         synchronized (this) {
@@ -981,11 +976,9 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
         }
     }
 
-    /** {@link RubyLanguage#getSourcePath(Source)} should be used instead whenever possible (i.e., when we can access
-     * the language).
-     *
-     * Returns the path of a Source. Returns the short, potentially relative, path for the main script. Note however
+    /** Returns the path of a Source. Returns the short, potentially relative, path for the main script. Note however
      * that the path of {@code eval(code, nil, filename)} is just {@code filename} and might not be absolute. */
+    @TruffleBoundary
     public static String getPath(Source source) {
         final String path = source.getPath();
         if (path != null) {
@@ -998,17 +991,8 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
         }
     }
 
-    /** {@link RubyLanguage#getPath(Source)} but also handles core library sources. Ideally this method would be static
-     * but for now the core load path is an option and it also depends on the current working directory. Once we have
-     * Source metadata in Truffle we could use that to identify core library sources without needing the language. */
-    @TruffleBoundary
-    public String getSourcePath(Source source) {
-        final String path = getPath(source);
-        if (path.startsWith(coreLoadPath)) {
-            return INTERNAL_CORE_PREFIX + path.substring(coreLoadPath.length() + 1);
-        } else {
-            return path;
-        }
+    public static boolean isCoreSource(Source source) {
+        return getPath(source).startsWith(INTERNAL_CORE_PREFIX);
     }
 
     @TruffleBoundary
@@ -1018,7 +1002,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     }
 
     /** Only use when no language/context is available (e.g. Node#toString). Prefer
-     * {@link RubyLanguage#fileLine(SourceSection)} as it accounts for coreLoadPath and line offsets. */
+     * {@link RubyLanguage#fileLine(SourceSection)} as it accounts for line offsets. */
     @TruffleBoundary
     public static String fileLineRange(SourceSection section) {
         if (section == null) {
@@ -1043,7 +1027,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
         if (section == null) {
             return "no source section";
         } else {
-            final String path = getSourcePath(section.getSource());
+            final String path = getPath(section.getSource());
 
             if (section.isAvailable()) {
                 return path + ":" + getStartLineAdjusted(section);
@@ -1059,7 +1043,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
         if (!BacktraceFormatter.isAvailable(section)) {
             return nil;
         } else {
-            var file = createString(node, fromJavaStringNode, getSourcePath(section.getSource()), Encodings.UTF_8);
+            var file = createString(node, fromJavaStringNode, getPath(section.getSource()), Encodings.UTF_8);
             Object[] objects = new Object[]{ file, getStartLineAdjusted(section) };
             return createArray(node, objects);
         }
@@ -1072,22 +1056,6 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     @TruffleBoundary
     public Assumption getGlobalVariableNeverAliasedAssumption(int index) {
         return globalVariableNeverAliasedAssumptions.get(index);
-    }
-
-    private static String buildCoreLoadPath(String coreLoadPath) {
-        while (coreLoadPath.endsWith("/")) {
-            coreLoadPath = coreLoadPath.substring(0, coreLoadPath.length() - 1);
-        }
-
-        if (coreLoadPath.startsWith(RubyLanguage.RESOURCE_SCHEME)) {
-            return coreLoadPath;
-        }
-
-        try {
-            return new File(coreLoadPath).getCanonicalPath();
-        } catch (IOException e) {
-            throw CompilerDirectives.shouldNotReachHere(e);
-        }
     }
 
 }

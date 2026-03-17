@@ -20,6 +20,7 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.options.OptionDescriptor;
 import org.truffleruby.RubyContext;
+import org.truffleruby.RubyLanguage;
 import org.truffleruby.RubyLanguage.RubySourceOptions;
 import org.truffleruby.annotations.CoreMethod;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
@@ -267,7 +268,7 @@ public abstract class TruffleBootNodes {
                 return nil;
             }
 
-            return createString(fromJavaStringNode, getLanguage().getSourcePath(source), Encodings.UTF_8);
+            return createString(fromJavaStringNode, RubyLanguage.getPath(source), Encodings.UTF_8);
         }
 
     }

@@ -319,7 +319,7 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
         if (node.name.equals("it") && node.receiver == null && node.isVariableCall() && noBlockParameters) {
             SourceSection section = rubySource.getSource().createSection(node.startOffset, node.length);
 
-            String sourcePath = rubySource.getSourcePath(language).intern();
+            String sourcePath = rubySource.getSourcePath().intern();
             int lineNumber = section.getStartLine() + rubySource.getLineOffset();
             String message = "`it` calls without arguments will refer to the first block param in Ruby 3.4; use it() or self.it";
 

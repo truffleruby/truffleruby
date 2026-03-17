@@ -56,6 +56,17 @@ public final class FileLoader {
         }
     }
 
+    public static byte[] readFile(RubyLanguage language, RubyContext context, String path) throws IOException {
+        if (context.getOptions().LOG_LOAD) {
+            RubyLanguage.LOGGER.info("loading " + path);
+        }
+
+        final TruffleFile file = getSafeTruffleFile(language, context, path);
+        ensureReadable(context, file, null);
+
+        return file.readAllBytes();
+    }
+
     public RubySource loadFile(String path) throws IOException {
         if (context.getOptions().LOG_LOAD) {
             RubyLanguage.LOGGER.info("loading " + path);
@@ -153,10 +164,6 @@ public final class FileLoader {
             canonicalPath = new File(path).getCanonicalPath();
         } catch (IOException e) {
             return false;
-        }
-
-        if (canonicalPath.startsWith(language.coreLoadPath)) {
-            return language.options.CORE_AS_INTERNAL;
         }
 
         // If the file is part of the standard library then we may consider it internal
