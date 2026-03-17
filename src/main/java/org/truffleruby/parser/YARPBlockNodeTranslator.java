@@ -130,13 +130,6 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
         return rubyNode;
     }
 
-    private void declareLocalVariables(String[] locals) {
-        // YARP doesn't add hidden locals for rest/keyrest/block anonymous parameters or ...
-        for (String name : locals) {
-            environment.declareVar(name);
-        }
-    }
-
     private RubyNode preludeProc(
             Arity arity,
             RubyNode loadArguments,

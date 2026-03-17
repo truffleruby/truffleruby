@@ -38,7 +38,7 @@ public final class YARPDefNodeTranslator extends YARPTranslator {
     }
 
     private RubyNode compileMethodBody(Nodes.DefNode node, Nodes.ParametersNode parameters, Arity arity) {
-        declareLocalVariables(node);
+        declareLocalVariables(node.locals);
 
         final RubyNode loadArguments = new YARPLoadArgumentsTranslator(
                 environment,
@@ -117,13 +117,6 @@ public final class YARPDefNodeTranslator extends YARPTranslator {
         } else {
             final RubyMethodRootNode root = translateMethodNode(node.getNonLazy(), parameters, arity);
             return new CachedLazyCallTargetSupplier(() -> root.getCallTarget());
-        }
-    }
-
-    private void declareLocalVariables(Nodes.DefNode node) {
-        for (String name : node.locals) {
-            assert !(name.equals("*") || name.equals("**") || name.equals("&") || name.equals("...")) : name;
-            environment.declareVar(name);
         }
     }
 

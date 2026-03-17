@@ -3579,12 +3579,9 @@ public class YARPTranslator extends YARPBaseTranslator {
                 null,
                 modulePath);
 
-        // declare local variables defined in a module or class body
-        for (String name : locals) {
-            newEnvironment.declareVar(name);
-        }
-
         final YARPTranslator moduleTranslator = new YARPTranslator(newEnvironment);
+        // declare local variables defined in a module or class body
+        moduleTranslator.declareLocalVariables(locals);
         final ModuleBodyDefinition definition = moduleTranslator.compileClassNode(moduleNode, bodyNode);
         return new RunModuleDefinitionNode(definition, defineOrGetNode);
     }

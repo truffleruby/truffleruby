@@ -299,4 +299,12 @@ public abstract class YARPBaseTranslator extends AbstractNodeVisitor<RubyNode> {
         return node.keyword_rest != null && !(node.keyword_rest instanceof Nodes.NoKeywordsParameterNode);
     }
 
+    protected final void declareLocalVariables(String[] locals) {
+        // YARP doesn't add hidden locals for rest/keyrest/block anonymous parameters or ...
+        for (String name : locals) {
+            assert !(name.equals("*") || name.equals("**") || name.equals("&") || name.equals("...")) : name;
+            environment.declareVar(name);
+        }
+    }
+
 }
