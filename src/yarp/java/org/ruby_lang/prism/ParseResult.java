@@ -69,14 +69,16 @@ public final class ParseResult {
     public final Nodes.Location dataLocation;
     public final Error[] errors;
     public final Warning[] warnings;
+    public final boolean continuable;
     public final Nodes.Source source;
 
-    public ParseResult(Nodes.Node value, MagicComment[] magicComments, Nodes.Location dataLocation, Error[] errors, Warning[] warnings, Nodes.Source source) {
+    public ParseResult(Nodes.Node value, MagicComment[] magicComments, Nodes.Location dataLocation, Error[] errors, Warning[] warnings, boolean continuable, Nodes.Source source) {
         this.value = value;
         this.magicComments = magicComments;
         this.dataLocation = dataLocation;
         this.errors = errors;
         this.warnings = warnings;
+        this.continuable = continuable;
         this.source = source;
     }
 }

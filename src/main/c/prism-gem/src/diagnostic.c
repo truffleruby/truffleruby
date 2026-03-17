@@ -8,7 +8,7 @@
 
 #include "prism/diagnostic.h"
 
-#define PM_DIAGNOSTIC_ID_MAX 327
+#define PM_DIAGNOSTIC_ID_MAX 329
 
 /** This struct holds the data for each diagnostic. */
 typedef struct {
@@ -338,13 +338,15 @@ static const pm_diagnostic_data_t diagnostic_messages[PM_DIAGNOSTIC_ID_MAX] = {
     [PM_ERR_PATTERN_TERM_PAREN]                 = { "expected a `)` to close the pattern expression", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_PIPEPIPEEQ_MULTI_ASSIGN]            = { "unexpected `||=` in a multiple assignment", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_REGEXP_ENCODING_OPTION_MISMATCH]    = { "regexp encoding option '%c' differs from source encoding '%s'", PM_ERROR_LEVEL_SYNTAX },
+    [PM_ERR_REGEXP_ESCAPED_NON_ASCII_IN_UTF8]   = { "escaped non ASCII character in UTF-8 regexp: /%.*s/", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_REGEXP_INCOMPAT_CHAR_ENCODING]      = { "incompatible character encoding: /%.*s/", PM_ERROR_LEVEL_SYNTAX },
-    [PM_ERR_REGEXP_NON_ESCAPED_MBC]             = { "/.../n has a non escaped non ASCII character in non ASCII-8BIT script: /%.*s/", PM_ERROR_LEVEL_SYNTAX },
+    [PM_ERR_REGEXP_INVALID_CHAR_PROPERTY]       = { "invalid character property name {%.*s}: /%.*s/", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_REGEXP_INVALID_UNICODE_RANGE]       = { "invalid Unicode range: /%.*s/", PM_ERROR_LEVEL_SYNTAX },
+    [PM_ERR_REGEXP_NON_ESCAPED_MBC]             = { "/.../n has a non escaped non ASCII character in non ASCII-8BIT script: /%.*s/", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_REGEXP_PARSE_ERROR]                 = { "%s", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_REGEXP_UNKNOWN_OPTIONS]             = { "unknown regexp %s - %.*s", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_REGEXP_TERM]                        = { "unterminated regexp meets end of file; expected a closing delimiter", PM_ERROR_LEVEL_SYNTAX },
-    [PM_ERR_REGEXP_UTF8_CHAR_NON_UTF8_REGEXP]   = { "UTF-8 character in non UTF-8 regexp: /%s/", PM_ERROR_LEVEL_SYNTAX },
+    [PM_ERR_REGEXP_UTF8_CHAR_NON_UTF8_REGEXP]   = { "UTF-8 character in non UTF-8 regexp: /%.*s/", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_RESCUE_EXPRESSION]                  = { "expected a rescued expression", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_RESCUE_MODIFIER_VALUE]              = { "expected a value after the `rescue` modifier", PM_ERROR_LEVEL_SYNTAX },
     [PM_ERR_RESCUE_TERM]                        = { "expected a closing delimiter for the `rescue` clause", PM_ERROR_LEVEL_SYNTAX },
@@ -674,7 +676,9 @@ pm_diagnostic_id_human(pm_diagnostic_id_t diag_id) {
         case PM_ERR_PATTERN_TERM_PAREN: return "pattern_term_paren";
         case PM_ERR_PIPEPIPEEQ_MULTI_ASSIGN: return "pipepipeeq_multi_assign";
         case PM_ERR_REGEXP_ENCODING_OPTION_MISMATCH: return "regexp_encoding_option_mismatch";
+        case PM_ERR_REGEXP_ESCAPED_NON_ASCII_IN_UTF8: return "regexp_escaped_non_ascii_in_utf8";
         case PM_ERR_REGEXP_INCOMPAT_CHAR_ENCODING: return "regexp_incompat_char_encoding";
+        case PM_ERR_REGEXP_INVALID_CHAR_PROPERTY: return "regexp_invalid_char_property";
         case PM_ERR_REGEXP_INVALID_UNICODE_RANGE: return "regexp_invalid_unicode_range";
         case PM_ERR_REGEXP_NON_ESCAPED_MBC: return "regexp_non_escaped_mbc";
         case PM_ERR_REGEXP_PARSE_ERROR: return "regexp_parse_error";

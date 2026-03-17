@@ -96,7 +96,7 @@ public final class MetricsProfiler {
 
     private <T> RootCallTarget newCallTarget(String name) {
         final MetricsBodyNode<T> body = new MetricsBodyNode<>();
-        final MetricsInternalRootNode rootNode = new MetricsInternalRootNode(context, name, body);
+        final MetricsInternalRootNode rootNode = new MetricsInternalRootNode(language, name, body);
         return rootNode.getCallTarget();
     }
 

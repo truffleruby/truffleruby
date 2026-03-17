@@ -37,6 +37,7 @@
 package org.truffleruby.parser;
 
 import org.ruby_lang.prism.Loader;
+import org.ruby_lang.prism.Nodes.DefNode;
 import org.ruby_lang.prism.ParseResult;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.RubyEncoding;
@@ -46,15 +47,15 @@ import java.nio.charset.Charset;
 
 public final class YARPLoader extends Loader {
 
-    public static ParseResult load(byte[] serialized, byte[] sourceBytes, RubySource rubySource) {
-        return new YARPLoader(serialized, sourceBytes, rubySource).load();
+    public static ParseResult load(byte[] serialized, RubySource rubySource) {
+        return new YARPLoader(serialized, rubySource.getEncoding()).load();
     }
 
     private final RubyEncoding encoding;
 
-    public YARPLoader(byte[] serialized, byte[] sourceBytes, RubySource rubySource) {
-        super(serialized, sourceBytes);
-        this.encoding = rubySource.getEncoding();
+    public YARPLoader(byte[] serialized, RubyEncoding encoding) {
+        super(serialized);
+        this.encoding = encoding;
     }
 
     @Override
@@ -69,4 +70,8 @@ public final class YARPLoader extends Loader {
         return TStringUtils.bytesToJavaStringOrThrow(bytes, 0, bytes.length, encoding);
     }
 
+    @Override
+    protected DefNode loadDefNode(int startOffset, int length) {
+        return createLazyDefNode(startOffset, length);
+    }
 }

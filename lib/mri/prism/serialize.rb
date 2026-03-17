@@ -54,6 +54,7 @@ module Prism
       data_loc =       loader.load_optional_location_object(freeze)
       errors =         loader.load_errors(encoding, freeze)
       warnings =       loader.load_warnings(encoding, freeze)
+      continuable =    loader.load_bool
       cpool_base =     loader.load_uint32
       cpool_size =     loader.load_varuint
 
@@ -63,7 +64,7 @@ module Prism
                        loader.load_constant_pool(constant_pool)
       raise unless     loader.eof?
 
-      result = ParseResult.new(node, comments, magic_comments, data_loc, errors, warnings, source)
+      result = ParseResult.new(node, comments, magic_comments, data_loc, errors, warnings, continuable, source)
       result.freeze if freeze
 
       input.force_encoding(encoding)
@@ -108,9 +109,10 @@ module Prism
       data_loc =       loader.load_optional_location_object(freeze)
       errors =         loader.load_errors(encoding, freeze)
       warnings =       loader.load_warnings(encoding, freeze)
+      continuable =    loader.load_bool
       raise unless     loader.eof?
 
-      result = LexResult.new(tokens, comments, magic_comments, data_loc, errors, warnings, source)
+      result = LexResult.new(tokens, comments, magic_comments, data_loc, errors, warnings, continuable, source)
 
       tokens.each do |token|
         token[0].value.force_encoding(encoding)
@@ -179,6 +181,7 @@ module Prism
       data_loc =       loader.load_optional_location_object(freeze)
       errors =         loader.load_errors(encoding, freeze)
       warnings =       loader.load_warnings(encoding, freeze)
+      continuable =    loader.load_bool
       cpool_base =     loader.load_uint32
       cpool_size =     loader.load_varuint
 
@@ -189,7 +192,7 @@ module Prism
       raise unless     loader.eof?
 
       value = [node, tokens] #: [ProgramNode, Array[[Token, Integer]]]
-      result = ParseLexResult.new(value, comments, magic_comments, data_loc, errors, warnings, source)
+      result = ParseLexResult.new(value, comments, magic_comments, data_loc, errors, warnings, continuable, source)
 
       tokens.each do |token|
         token[0].value.force_encoding(encoding)
@@ -609,7 +612,9 @@ module Prism
         :pattern_term_paren,
         :pipepipeeq_multi_assign,
         :regexp_encoding_option_mismatch,
+        :regexp_escaped_non_ascii_in_utf8,
         :regexp_incompat_char_encoding,
+        :regexp_invalid_char_property,
         :regexp_invalid_unicode_range,
         :regexp_non_escaped_mbc,
         :regexp_parse_error,
@@ -818,6 +823,11 @@ module Prism
       #: () -> Float
       def load_double
         (io.read(8) or raise).unpack1("D") #: Float
+      end
+
+      #: () -> bool
+      def load_bool
+        (io.getbyte or raise) != 0
       end
 
       #: () -> Integer

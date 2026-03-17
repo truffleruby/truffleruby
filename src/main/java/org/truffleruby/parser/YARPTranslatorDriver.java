@@ -451,7 +451,7 @@ public final class YARPTranslatorDriver {
                 version, encodingLocked, mainScript, partialScript, scopes);
         byte[] serializedBytes = Parser.parseAndSerialize(sourceBytes, parsingOptions);
 
-        return YARPLoader.load(serializedBytes, sourceBytes, rubySource);
+        return YARPLoader.load(serializedBytes, rubySource);
     }
 
     public static void handleWarningsErrorsPrimitives(RubyLanguage language, RubyContext context,
