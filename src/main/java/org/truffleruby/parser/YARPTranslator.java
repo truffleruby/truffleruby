@@ -2748,7 +2748,7 @@ public class YARPTranslator extends YARPBaseTranslator {
             while (!environmentToDeclareIn.hasOwnScopeForAssignments()) {
                 environmentToDeclareIn = environmentToDeclareIn.getParent();
             }
-            environmentToDeclareIn.declareVar(name);
+            environmentToDeclareIn.findFrameSlot(name);
             nilSetters[i] = match2NilSetter(name);
             setters[i] = match2NonNilSetter(name, tempSlot);
         }

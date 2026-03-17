@@ -214,14 +214,12 @@ public final class TranslatorEnvironment {
     public int declareVar(Object name) {
         assert name != null && !(name instanceof String && ((String) name).isEmpty());
 
-        Integer existingSlot = nameToIndex.get(name);
-        if (existingSlot != null) {
-            return existingSlot;
-        } else {
-            int index = addSlot(name);
-            nameToIndex.put(name, index);
-            return index;
+        int index = addSlot(name);
+        Object prev = nameToIndex.putIfAbsent(name, index);
+        if (prev != null) {
+            throw CompilerDirectives.shouldNotReachHere("Expected variable " + name + " to not already be declared");
         }
+        return index;
     }
 
     private int addSlot(Object name) {
