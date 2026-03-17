@@ -25,11 +25,8 @@ public final class YARPDefNodeTranslator extends YARPTranslator {
 
     private final boolean shouldLazyTranslate;
 
-    public YARPDefNodeTranslator(
-            RubyLanguage language,
-            TranslatorEnvironment environment,
-            RubyDeferredWarnings rubyWarnings) {
-        super(environment, rubyWarnings);
+    public YARPDefNodeTranslator(RubyLanguage language, TranslatorEnvironment environment) {
+        super(environment);
 
         if (parseEnvironment.parserContext.isEval() || parseEnvironment.isCoverageEnabled()) {
             shouldLazyTranslate = false;

@@ -180,8 +180,6 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     public Deque<Integer> frameOnStackMarkerSlotStack = new ArrayDeque<>();
 
-    protected RubyDeferredWarnings rubyWarnings;
-
     /** whether a while-loop body is translated; needed to check correctness of operators like break/next/etc */
     private boolean translatingWhile = false;
     /** whether a for-loop body is translated; needed to enforce variables in the for-loop body to be declared outside
@@ -207,9 +205,8 @@ public class YARPTranslator extends YARPBaseTranslator {
     /** all the encountered BEGIN {} blocks; they will be added finally at the beginning of the program AST */
     private final ArrayList<RubyNode> beginBlocks = new ArrayList<>();
 
-    public YARPTranslator(TranslatorEnvironment environment, RubyDeferredWarnings rubyWarnings) {
+    public YARPTranslator(TranslatorEnvironment environment) {
         super(environment);
-        this.rubyWarnings = rubyWarnings;
     }
 
     public RubyNode[] getBeginBlocks() {
@@ -552,8 +549,7 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         final YARPBlockNodeTranslator blockCompiler = new YARPBlockNodeTranslator(
                 newEnvironment,
-                arity,
-                rubyWarnings);
+                arity);
 
         blockCompiler.frameOnStackMarkerSlotStack = frameOnStackMarkerSlotStack;
 
@@ -1578,8 +1574,7 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         final var defNodeTranslator = new YARPDefNodeTranslator(
                 language,
-                newEnvironment,
-                rubyWarnings);
+                newEnvironment);
         var callTargetSupplier = defNodeTranslator.buildMethodNodeCompiler(node, parameters, arity);
 
         final boolean isDefSingleton = singletonClassNode != null;
@@ -3589,7 +3584,7 @@ public class YARPTranslator extends YARPBaseTranslator {
             newEnvironment.declareVar(name);
         }
 
-        final YARPTranslator moduleTranslator = new YARPTranslator(newEnvironment, rubyWarnings);
+        final YARPTranslator moduleTranslator = new YARPTranslator(newEnvironment);
         final ModuleBodyDefinition definition = moduleTranslator.compileClassNode(moduleNode, bodyNode);
         return new RunModuleDefinitionNode(definition, defineOrGetNode);
     }

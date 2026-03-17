@@ -236,7 +236,7 @@ public final class YARPTranslatorDriver {
         // Translate to Ruby Truffle nodes
 
         // use source encoding detected by manually, before source file is fully parsed
-        final YARPTranslator translator = new YARPTranslator(environment, rubyWarnings);
+        final YARPTranslator translator = new YARPTranslator(environment);
 
         RubyNode truffleNode;
         printParseTranslateExecuteMetric("before-translate", context, source);

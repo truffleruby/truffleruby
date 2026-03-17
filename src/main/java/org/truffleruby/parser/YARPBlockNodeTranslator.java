@@ -43,11 +43,8 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
 
     private final Arity arity;
 
-    public YARPBlockNodeTranslator(
-            TranslatorEnvironment environment,
-            Arity arity,
-            RubyDeferredWarnings rubyWarnings) {
-        super(environment, rubyWarnings);
+    public YARPBlockNodeTranslator(TranslatorEnvironment environment, Arity arity) {
+        super(environment);
         this.arity = arity;
     }
 
