@@ -79,14 +79,16 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
         final boolean isLambdaMethodCall = !isStabbyLambda && environment.literalBlockPassedToMethod.equals("lambda");
         final boolean emitLambda = isStabbyLambda || isLambdaMethodCall;
 
-        final Supplier<RootCallTarget> procCompiler = procCompiler(
-                arity,
-                preludeProc,
-                bodyNode,
-                isLambdaMethodCall,
-                language,
-                environment,
-                sourceSection);
+        final Supplier<RootCallTarget> procCompiler = isStabbyLambda
+                ? null
+                : procCompiler(
+                        arity,
+                        preludeProc,
+                        bodyNode,
+                        isLambdaMethodCall,
+                        language,
+                        environment,
+                        sourceSection);
 
         final Supplier<RootCallTarget> lambdaCompiler = lambdaCompiler(
                 isStabbyLambda,
