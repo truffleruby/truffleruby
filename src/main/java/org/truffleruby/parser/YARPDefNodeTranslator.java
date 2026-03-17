@@ -75,15 +75,25 @@ public final class YARPDefNodeTranslator extends YARPTranslator {
                 arity);
     }
 
+    private RubyMethodRootNode translateMethodNodeLazily(Nodes.DefNode node, Nodes.ParametersNode parameters,
+            Arity arity) {
+        /* Multiple methods of the same file might trigger lazy translation at the same time. We need to prevent that
+         * because there is shared mutable state in at least YARPTranslator, TranslatorEnvironment and ParseEnvironment.
+         * So we synchronize on the common object for all translations in a file, ParseEnvironment. */
+        synchronized (parseEnvironment) {
+            return translateMethodNode(node, parameters, arity);
+        }
+    }
+
     private RubyMethodRootNode translateMethodNodeWithMetrics(RubyContext context, Nodes.DefNode node,
             Nodes.ParametersNode parameters, Arity arity) {
         if (context != null && context.getOptions().METRICS_PROFILE_REQUIRE == Profile.TOTAL) {
             return context.getMetricsProfiler().callWithMetrics(
                     MetricKind.TRANSLATING,
                     parseEnvironment.rubySource.getSourcePath(),
-                    () -> translateMethodNode(node, parameters, arity));
+                    () -> translateMethodNodeLazily(node, parameters, arity));
         } else {
-            return translateMethodNode(node, parameters, arity);
+            return translateMethodNodeLazily(node, parameters, arity);
         }
     }
 
