@@ -553,7 +553,6 @@ public class YARPTranslator extends YARPBaseTranslator {
         final YARPBlockNodeTranslator blockCompiler = new YARPBlockNodeTranslator(
                 newEnvironment,
                 arity,
-                parameters.block != null,
                 rubyWarnings);
 
         blockCompiler.frameOnStackMarkerSlotStack = frameOnStackMarkerSlotStack;

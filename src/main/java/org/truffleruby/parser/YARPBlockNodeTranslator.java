@@ -42,17 +42,13 @@ import java.util.function.Supplier;
 public final class YARPBlockNodeTranslator extends YARPTranslator {
 
     private final Arity arity;
-    /** Whether a block itself accepts a block parameter (&block). The Arity class does not contain this information. */
-    private final boolean acceptsBlockParameter;
 
     public YARPBlockNodeTranslator(
             TranslatorEnvironment environment,
             Arity arity,
-            boolean acceptsBlockParameter,
             RubyDeferredWarnings rubyWarnings) {
         super(environment, rubyWarnings);
         this.arity = arity;
-        this.acceptsBlockParameter = acceptsBlockParameter;
     }
 
     public RubyNode compileBlockNode(Node body, ParametersNode parameters, Node parametersNode, String[] locals,
@@ -311,24 +307,6 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
         } else {
             return true;
         }
-    }
-
-    @Override
-    public RubyNode visitCallNode(Nodes.CallNode node) {
-        // emit a warning if `it` is called without arguments in a block without ordinal parameters
-        boolean noBlockParameters = !arity.acceptsKeywords() && !arity.acceptsPositionalArguments() &&
-                !acceptsBlockParameter;
-        if (node.name.equals("it") && node.receiver == null && node.isVariableCall() && noBlockParameters) {
-            SourceSection section = rubySource.getSource().createSection(node.startOffset, node.length);
-
-            String sourcePath = rubySource.getSourcePath().intern();
-            int lineNumber = section.getStartLine() + rubySource.getLineOffset();
-            String message = "`it` calls without arguments will refer to the first block param in Ruby 3.4; use it() or self.it";
-
-            rubyWarnings.warn(sourcePath, lineNumber, message);
-        }
-
-        return super.visitCallNode(node);
     }
 
 }
