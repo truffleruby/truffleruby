@@ -269,7 +269,7 @@ public final class YARPTranslatorDriver {
 
         // Load flip-flop states
 
-        if (environment.getFlipFlopStates().size() > 0) {
+        if (environment.hasFlipFlopStates()) {
             truffleNode = YARPTranslator.sequence(YARPTranslator.initFlipFlopStates(environment), truffleNode);
         }
 

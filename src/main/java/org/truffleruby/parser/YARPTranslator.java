@@ -3607,7 +3607,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         body = new InsideModuleDefinitionNode(body);
         assignPositionOnly(moduleNode, body); // source location is needed to trigger :class TracePoint event
 
-        if (!environment.getFlipFlopStates().isEmpty()) {
+        if (environment.hasFlipFlopStates()) {
             body = sequence(initFlipFlopStates(environment), body);
         }
 

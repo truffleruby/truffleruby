@@ -71,7 +71,7 @@ public final class TranslatorEnvironment {
     private List<FrameDescriptorInfo> childrenDescriptorInfos = null;
     private FrameDescriptor frameDescriptor;
 
-    private final List<Integer> flipFlopStates = new ArrayList<>();
+    private List<Integer> flipFlopStates = null;
 
     private final ReturnID returnID;
     private final int blockDepth;
@@ -195,8 +195,7 @@ public final class TranslatorEnvironment {
     }
 
     private static FrameDescriptor.Builder newFrameDescriptorBuilderForMethod(FrameDescriptorInfo descriptorInfo) {
-        var builder = FrameDescriptor.newBuilder().defaultValue(Nil.INSTANCE);
-        builder.info(descriptorInfo);
+        var builder = FrameDescriptor.newBuilder().defaultValue(Nil.INSTANCE).info(descriptorInfo);
 
         int selfIndex = builder.addSlot(FrameSlotKind.Illegal, SelfNode.SELF_IDENTIFIER, null);
         if (selfIndex != SelfNode.SELF_INDEX) {
@@ -360,7 +359,14 @@ public final class TranslatorEnvironment {
         return sharedMethodInfo;
     }
 
+    public boolean hasFlipFlopStates() {
+        return flipFlopStates != null && !flipFlopStates.isEmpty();
+    }
+
     public List<Integer> getFlipFlopStates() {
+        if (flipFlopStates == null) {
+            flipFlopStates = new ArrayList<>();
+        }
         return flipFlopStates;
     }
 

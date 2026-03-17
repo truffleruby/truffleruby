@@ -293,7 +293,7 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
     private static RubyNode composeBody(TranslatorEnvironment environment, RubyNode prelude, RubyNode body) {
         body = YARPTranslator.sequence(prelude, body);
 
-        if (environment.getFlipFlopStates().size() > 0) {
+        if (environment.hasFlipFlopStates()) {
             body = YARPTranslator.sequence(YARPTranslator.initFlipFlopStates(environment), body);
         }
 

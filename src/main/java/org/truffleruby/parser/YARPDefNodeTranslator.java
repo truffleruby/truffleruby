@@ -54,7 +54,7 @@ public final class YARPDefNodeTranslator extends YARPTranslator {
         RubyNode body = translateNodeOrNil(node.body).simplifyAsTailExpression();
         body = sequence(loadArguments, body);
 
-        if (environment.getFlipFlopStates().size() > 0) {
+        if (environment.hasFlipFlopStates()) {
             body = sequence(initFlipFlopStates(environment), body);
         }
 
