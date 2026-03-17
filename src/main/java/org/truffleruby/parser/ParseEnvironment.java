@@ -12,6 +12,7 @@ package org.truffleruby.parser;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import org.ruby_lang.prism.Nodes;
+import org.truffleruby.Layouts;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.RubyLanguage.RubySourceOptions;
 import org.truffleruby.annotations.SuppressFBWarnings;
@@ -37,6 +38,8 @@ public final class ParseEnvironment {
 
     // Set once after parsing and before translating
     public Boolean allowTruffleRubyPrimitives = null;
+
+    private int tempIndex = 0;
 
     public ParseEnvironment(
             RubyLanguage language,
@@ -91,6 +94,10 @@ public final class ParseEnvironment {
     @SuppressFBWarnings("ISC_INSTANTIATE_STATIC_CLASS")
     public BreakID allocateBreakID() {
         return new BreakID();
+    }
+
+    public String allocateLocalTemp(String indicator) {
+        return Layouts.TEMP_PREFIX + indicator + "_" + tempIndex++;
     }
 
 }

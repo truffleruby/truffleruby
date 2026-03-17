@@ -39,12 +39,12 @@ public final class YARPExecutedOnceExpression {
             // Method call argument could be *a. So just storing its result in a local variable
             // and passing it later as a call argument will lose splatting. So handle it independently.
             TranslatorEnvironment environment = yarpTranslator.getEnvironment();
-            name = environment.allocateLocalTemp(baseName);
+            name = environment.getParseEnvironment().allocateLocalTemp(baseName);
             slot = environment.declareVar(name);
             valueNode = splatNode.expression.accept(yarpTranslator);
         } else {
             TranslatorEnvironment environment = yarpTranslator.getEnvironment();
-            name = environment.allocateLocalTemp(baseName);
+            name = environment.getParseEnvironment().allocateLocalTemp(baseName);
             slot = environment.declareVar(name);
             valueNode = node.accept(yarpTranslator);
         }

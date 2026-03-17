@@ -12,7 +12,6 @@ package org.truffleruby.parser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.Assumption;
 import org.ruby_lang.prism.Nodes;
@@ -88,9 +87,6 @@ public final class TranslatorEnvironment {
     public String literalBlockPassedToMethod = null;
     /** Only set for def methods */
     public Nodes.ParametersNode parametersNode = null;
-
-    // TODO(CS): overflow? and it should be per-context, or even more local
-    private static final AtomicInteger tempIndex = new AtomicInteger();
 
     public TranslatorEnvironment(
             TranslatorEnvironment parent,
@@ -232,12 +228,8 @@ public final class TranslatorEnvironment {
         return frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
     }
 
-    public String allocateLocalTemp(String indicator) {
-        return Layouts.TEMP_PREFIX + indicator + "_" + tempIndex.getAndIncrement();
-    }
-
     public int declareLocalTemp(String indicator) {
-        final String name = allocateLocalTemp(indicator);
+        final String name = parseEnvironment.allocateLocalTemp(indicator);
         // TODO: might not need to add to nameToIndex for temp vars
         return declareVar(name);
     }
@@ -411,9 +403,4 @@ public final class TranslatorEnvironment {
         return environment;
     }
 
-    /** Used only in tests to make temporary variable names stable and not changed every time tests are run. It
-     * shouldn't be used for anything except that purpose. */
-    public static void resetTemporaryVariablesIndex() {
-        tempIndex.set(0);
-    }
 }

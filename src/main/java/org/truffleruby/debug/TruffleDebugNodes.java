@@ -106,7 +106,6 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.utilities.TriState;
 import org.truffleruby.parser.ParserContext;
 import org.truffleruby.parser.RubySource;
-import org.truffleruby.parser.TranslatorEnvironment;
 import org.truffleruby.parser.YARPTranslatorDriver;
 import org.truffleruby.shared.TruffleRuby;
 
@@ -1438,7 +1437,6 @@ public abstract class TruffleDebugNodes {
 
         private RubyRootNode parse(TStringWithEncoding sourceCode, boolean mainScript) {
             Source source = Source.newBuilder("ruby", new ByteBasedCharSequence(sourceCode), "<parse_ast>").build();
-            TranslatorEnvironment.resetTemporaryVariablesIndex();
             var parserContext = mainScript ? ParserContext.TOP_LEVEL_FIRST : ParserContext.TOP_LEVEL;
 
             final RootCallTarget callTarget = getContext().getCodeLoader().parse(

@@ -1719,7 +1719,7 @@ public class YARPTranslator extends YARPBaseTranslator {
      * recognise when visiting a block node. */
     @Override
     public RubyNode visitForNode(Nodes.ForNode node) {
-        final String parameterName = environment.allocateLocalTemp("for");
+        final String parameterName = parseEnvironment.allocateLocalTemp("for");
 
         final var requireds = new Nodes.Node[]{ new Nodes.RequiredParameterNode(0, 0, NO_FLAGS, parameterName) };
         final var parameters = new Nodes.ParametersNode(0, 0, requireds, EMPTY_OPTIONAL_PARAMETER_NODE_ARRAY, null,
