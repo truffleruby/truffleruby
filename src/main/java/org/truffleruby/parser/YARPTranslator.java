@@ -3943,24 +3943,20 @@ public class YARPTranslator extends YARPBaseTranslator {
         final int requiredKeywordArgumentsCount;
 
         if (parametersNode.keywords.length > 0) {
-            final List<String> requiredKeywords = new ArrayList<>();
-            final List<String> optionalKeywords = new ArrayList<>();
-
+            keywordArguments = new String[parametersNode.keywords.length];
+            int i = 0;
             for (var node : parametersNode.keywords) {
                 if (node instanceof Nodes.RequiredKeywordParameterNode required) {
-                    requiredKeywords.add(required.name);
-                } else if (node instanceof Nodes.OptionalKeywordParameterNode optional) {
-                    optionalKeywords.add(optional.name);
-                } else {
-                    throw CompilerDirectives.shouldNotReachHere();
+                    keywordArguments[i++] = required.name;
                 }
             }
-
-            final List<String> keywords = new ArrayList<>(requiredKeywords);
-            keywords.addAll(optionalKeywords);
-
-            keywordArguments = keywords.toArray(StringUtils.EMPTY_STRING_ARRAY);
-            requiredKeywordArgumentsCount = requiredKeywords.size();
+            requiredKeywordArgumentsCount = i;
+            for (var node : parametersNode.keywords) {
+                if (node instanceof Nodes.OptionalKeywordParameterNode optional) {
+                    keywordArguments[i++] = optional.name;
+                }
+            }
+            assert i == keywordArguments.length;
         } else {
             keywordArguments = Arity.NO_KEYWORDS;
             requiredKeywordArgumentsCount = 0;
