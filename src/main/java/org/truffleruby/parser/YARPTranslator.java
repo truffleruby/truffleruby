@@ -2729,49 +2729,32 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         // build nodes to initialize local variables for Regexp named capture groups
         final int numberOfNames = node.targets.length;
-        String[] names = new String[numberOfNames];
-
-        for (int i = 0; i < numberOfNames; i++) {
-            names[i] = node.targets[i].name;
-        }
-
         final RubyNode[] setters = new RubyNode[numberOfNames];
         final RubyNode[] nilSetters = new RubyNode[numberOfNames];
         final int tempSlot = environment.declareLocalTemp("match_data");
 
         for (int i = 0; i < numberOfNames; i++) {
-            final String name = names[i];
+            final String name = node.targets[i].name;
 
+            int depth = 0;
             TranslatorEnvironment environmentToDeclareIn = environment;
 
             // TODO: use Nodes.LocalVariableTargetNode#depth field
             while (!environmentToDeclareIn.hasOwnScopeForAssignments()) {
                 environmentToDeclareIn = environmentToDeclareIn.getParent();
+                depth++;
             }
-            environmentToDeclareIn.findFrameSlot(name);
-            nilSetters[i] = match2NilSetter(name);
-            setters[i] = match2NonNilSetter(name, tempSlot);
+            int slot = environmentToDeclareIn.findFrameSlot(name);
+            nilSetters[i] = WriteLocalNode.create(slot, depth, new NilLiteralNode());
+            setters[i] = WriteLocalNode.create(slot, depth,
+                    new MatchDataNodes.GetFixedNameMatchNode(environment.readNode(tempSlot), language.getSymbol(name)));
         }
 
-        final RubyNode readNode = ReadGlobalVariableNodeGen.create("$~");
-        final ReadLocalNode tempVarReadNode = environment.readNode(tempSlot);
-        final RubyNode readMatchDataNode = tempVarReadNode.makeWriteNode(readNode);
-        final RubyNode rubyNode = new ReadMatchReferenceNodes.SetNamedVariablesMatchNode(matchNode, readMatchDataNode,
+        var readMatchDataAndSetTemp = new WriteLocalVariableNode(tempSlot, ReadGlobalVariableNodeGen.create("$~"));
+        var rubyNode = new ReadMatchReferenceNodes.SetNamedVariablesMatchNode(matchNode, readMatchDataAndSetTemp,
                 setters, nilSetters);
 
         return assignPositionAndFlags(node, rubyNode);
-    }
-
-    private RubyNode match2NilSetter(String name) {
-        return environment.findLocalVarNode(name).makeWriteNode(new NilLiteralNode());
-    }
-
-    private RubyNode match2NonNilSetter(String name, int tempSlot) {
-        ReadLocalNode varNode = environment.findLocalVarNode(name);
-        ReadLocalNode tempVarNode = environment.readNode(tempSlot);
-        MatchDataNodes.GetFixedNameMatchNode getIndexNode = new MatchDataNodes.GetFixedNameMatchNode(tempVarNode,
-                language.getSymbol(name));
-        return varNode.makeWriteNode(getIndexNode);
     }
 
     @Override
