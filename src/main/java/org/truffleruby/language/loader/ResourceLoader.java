@@ -12,50 +12,25 @@ package org.truffleruby.language.loader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Locale;
 
 import org.truffleruby.RubyLanguage;
-import org.truffleruby.core.encoding.Encodings;
-import org.truffleruby.parser.MagicCommentParser;
-import org.truffleruby.parser.RubySource;
-import org.truffleruby.shared.TruffleRuby;
 
-import com.oracle.truffle.api.source.Source;
-
-/*
- * Loads source files that have been stored as resources (in the Java jar file sense.)
- */
+/** Loads source files that have been stored as resources (in the Java jar file sense). */
 public abstract class ResourceLoader {
 
-    public static RubySource loadResource(String path, boolean internal) throws IOException {
+    public static byte[] readResource(String path) throws IOException {
         assert path.startsWith(RubyLanguage.RESOURCE_SCHEME);
-
-        if (!path.toLowerCase(Locale.ENGLISH).endsWith(".rb")) {
-            throw new FileNotFoundException(path);
-        }
+        assert path.endsWith(".rb");
 
         final String resourcePath = path.substring(RubyLanguage.RESOURCE_SCHEME.length());
 
-        final byte[] sourceBytes;
         try (InputStream stream = ResourceLoader.class.getResourceAsStream(resourcePath)) {
             if (stream == null) {
                 throw new FileNotFoundException(resourcePath);
             }
 
-            sourceBytes = stream.readAllBytes();
+            return stream.readAllBytes();
         }
-
-
-        var sourceTString = MagicCommentParser.createSourceTStringBasedOnMagicEncodingComment(sourceBytes,
-                Encodings.UTF_8);
-
-        Source source = Source
-                .newBuilder(TruffleRuby.LANGUAGE_ID, new ByteBasedCharSequence(sourceTString), path)
-                .option("ruby.Coverage", "false")
-                .internal(internal)
-                .build();
-
-        return new RubySource(source, path, sourceTString);
     }
 
 }

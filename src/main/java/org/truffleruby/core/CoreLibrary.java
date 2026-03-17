@@ -9,6 +9,7 @@
  */
 package org.truffleruby.core;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -53,6 +54,7 @@ import org.truffleruby.language.Nil;
 import org.truffleruby.language.NotProvided;
 import org.truffleruby.language.globals.GlobalVariableReader;
 import org.truffleruby.language.globals.GlobalVariables;
+import org.truffleruby.language.loader.ByteBasedCharSequence;
 import org.truffleruby.language.loader.CodeLoader;
 import org.truffleruby.language.loader.FileLoader;
 import org.truffleruby.language.loader.ResourceLoader;
@@ -61,6 +63,7 @@ import org.truffleruby.language.methods.InternalMethod;
 import org.truffleruby.language.methods.SharedMethodInfo;
 import org.truffleruby.language.objects.ForeignClassNode;
 import org.truffleruby.language.objects.SingletonClassNode;
+import org.truffleruby.parser.MagicCommentParser;
 import org.truffleruby.parser.ParserContext;
 import org.truffleruby.parser.RubySource;
 import org.truffleruby.parser.YARPTranslatorDriver;
@@ -110,6 +113,8 @@ public final class CoreLibrary {
 
     /** Source section for core methods implemented in Java (marked by {@link CoreMethod}). */
     public static final SourceSection JAVA_CORE_SOURCE_SECTION = initCoreSourceSection();
+
+    private final String coreLoadPath;
 
     public final RubyClass argumentErrorClass;
     public final RubyClass arrayClass;
@@ -291,6 +296,7 @@ public final class CoreLibrary {
     public CoreLibrary(RubyContext context, RubyLanguage language) {
         this.context = context;
         this.language = language;
+        this.coreLoadPath = buildCoreLoadPath(language.options.CORE_LOAD_PATH);
         this.node = SingletonClassNode.getUncached();
 
         // Nothing in this constructor can use RubyContext.getCoreLibrary() as we are building it!
@@ -771,7 +777,7 @@ public final class CoreLibrary {
                     state = State.LOADED;
                 }
 
-                var rubySource = loadCoreFileSource(language.coreLoadPath + file);
+                var rubySource = loadCoreFileSource(file);
                 final Source source = rubySource.getSource();
                 final RootCallTarget callTarget = context.getCodeLoader().parseTopLevelWithCache(rubySource, node);
 
@@ -795,13 +801,25 @@ public final class CoreLibrary {
         }
     }
 
-    public RubySource loadCoreFileSource(String path) throws IOException {
-        if (path.startsWith(RubyLanguage.RESOURCE_SCHEME)) {
-            return ResourceLoader.loadResource(path, language.options.CORE_AS_INTERNAL);
+    public RubySource loadCoreFileSource(String coreFile) throws IOException {
+        String coreSourceName = RubyLanguage.INTERNAL_CORE_PREFIX + coreFile.substring(1);
+        String coreFilePath = coreLoadPath + coreFile;
+        final byte[] sourceBytes;
+        if (coreLoadPath.startsWith(RubyLanguage.RESOURCE_SCHEME)) {
+            sourceBytes = ResourceLoader.readResource(coreFilePath);
         } else {
-            final FileLoader fileLoader = new FileLoader(context, language);
-            return fileLoader.loadFile(path);
+            sourceBytes = FileLoader.readFile(language, context, coreFilePath);
         }
+
+        var sourceTString = MagicCommentParser.createSourceTStringBasedOnMagicEncodingComment(sourceBytes,
+                Encodings.UTF_8);
+
+        Source source = Source
+                .newBuilder(TruffleRuby.LANGUAGE_ID, new ByteBasedCharSequence(sourceTString), coreSourceName)
+                .internal(language.options.CORE_AS_INTERNAL)
+                .build();
+
+        return new RubySource(source, coreSourceName, sourceTString);
     }
 
     private void afterLoadCoreLibrary() {
@@ -950,6 +968,22 @@ public final class CoreLibrary {
         }
 
         return callNodeToCheckSplittingEnabled.isCallTargetCloned();
+    }
+
+    private static String buildCoreLoadPath(String coreLoadPath) {
+        while (coreLoadPath.endsWith("/")) {
+            coreLoadPath = coreLoadPath.substring(0, coreLoadPath.length() - 1);
+        }
+
+        if (coreLoadPath.startsWith(RubyLanguage.RESOURCE_SCHEME)) {
+            return coreLoadPath;
+        }
+
+        try {
+            return new File(coreLoadPath).getCanonicalPath();
+        } catch (IOException e) {
+            throw CompilerDirectives.shouldNotReachHere(e);
+        }
     }
 
     private static final String POST_BOOT_FILE = "/post-boot/post-boot.rb";
