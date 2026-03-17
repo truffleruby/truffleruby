@@ -108,7 +108,7 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
 
         final int deconstructedSlot = environment.declareLocalTemp("pattern_deconstruct_array");
         final ReadLocalNode readTemp = environment.readNode(deconstructedSlot, node);
-        final RubyNode assignTemp = readTemp.makeWriteNode(deconstructed);
+        final RubyNode assignTemp = environment.writeNode(deconstructedSlot, deconstructed);
 
         RubyNode outerPrev = currentValueToMatch;
         currentValueToMatch = readTemp;
@@ -189,7 +189,7 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
 
         final int deconstructedSlot = environment.declareLocalTemp("pattern_deconstruct_find");
         final ReadLocalNode readTemp = environment.readNode(deconstructedSlot, node);
-        final RubyNode assignTemp = readTemp.makeWriteNode(deconstructed);
+        final RubyNode assignTemp = environment.writeNode(deconstructedSlot, deconstructed);
 
         RubyNode outerPrev = currentValueToMatch;
         currentValueToMatch = readTemp;
@@ -208,7 +208,7 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
             for (int i = 0; i < middleSize; i++) {
                 int slot = environment.declareLocalTemp("pattern_find_middle");
                 var readSlot = environment.readNode(slot, node);
-                writeSlots[i] = readSlot.makeWriteNode(null);
+                writeSlots[i] = environment.writeNode(slot, null);
 
                 RubyNode prev = currentValueToMatch;
                 currentValueToMatch = readSlot;
@@ -222,7 +222,7 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
             Nodes.SplatNode leftSplat = node.left;
             int leftSlot = environment.declareLocalTemp("pattern_find_left");
             var readLeftSlot = environment.readNode(leftSlot, node);
-            var writeLeftSlot = readLeftSlot.makeWriteNode(null);
+            var writeLeftSlot = environment.writeNode(leftSlot, null);
             RubyNode leftCondition;
 
             RubyNode prev = currentValueToMatch;
@@ -236,7 +236,7 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
             Nodes.SplatNode rightSplat = node.right;
             int rightSlot = environment.declareLocalTemp("pattern_find_right");
             var readRightSlot = environment.readNode(rightSlot, node);
-            var writeRightSlot = readRightSlot.makeWriteNode(null);
+            var writeRightSlot = environment.writeNode(rightSlot, null);
             RubyNode rightCondition;
 
             prev = currentValueToMatch;
@@ -292,7 +292,7 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
 
         final int deconstructedSlot = environment.declareLocalTemp("pattern_deconstruct_hash");
         final ReadLocalNode readTemp = environment.readNode(deconstructedSlot, node);
-        final RubyNode assignTemp = readTemp.makeWriteNode(deconstructed);
+        final RubyNode assignTemp = environment.writeNode(deconstructedSlot, deconstructed);
 
         RubyNode outerPrev = currentValueToMatch;
         currentValueToMatch = readTemp;
@@ -314,7 +314,7 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
 
                 final int valueSlot = environment.declareLocalTemp("pattern_hash_value");
                 final ReadLocalNode readValue = environment.readNode(valueSlot, assocNode);
-                final RubyNode writeValue = readValue.makeWriteNode(valueOrUndefined);
+                final RubyNode writeValue = environment.writeNode(valueSlot, valueOrUndefined);
 
                 RubyNode prev = currentValueToMatch;
                 currentValueToMatch = readValue;

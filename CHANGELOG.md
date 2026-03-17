@@ -56,6 +56,7 @@ Compatibility:
 Performance:
 
 * Speedup parsing by up to 35% by lazily parsing method definitions (#4182, @eregon).
+* Use the local variable depth from Prism to speedup translation from Prism AST to TruffleRuby AST (#4188, @eregon).
 
 Incompatible Changes:
 

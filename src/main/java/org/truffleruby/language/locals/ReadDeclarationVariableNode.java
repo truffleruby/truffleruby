@@ -26,6 +26,7 @@ public final class ReadDeclarationVariableNode extends ReadLocalNode {
         this.frameDepth = frameDepth;
     }
 
+    @Override
     public int getFrameDepth() {
         return frameDepth;
     }
@@ -44,11 +45,6 @@ public final class ReadDeclarationVariableNode extends ReadLocalNode {
 
         final Frame declarationFrame = RubyArguments.getDeclarationFrame(frame, frameDepth);
         return readFrameSlotNode.executeRead(declarationFrame);
-    }
-
-    @Override
-    public WriteLocalNode makeWriteNode(RubyNode rhs) {
-        return new WriteDeclarationVariableNode(frameSlot, frameDepth, rhs);
     }
 
     @Override

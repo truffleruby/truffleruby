@@ -20,8 +20,6 @@ import org.truffleruby.core.cast.SplatCastNode;
 import org.truffleruby.core.cast.SplatCastNodeGen;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.literal.NilLiteralNode;
-import org.truffleruby.language.locals.ReadLocalNode;
-import org.truffleruby.language.locals.WriteLocalNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -227,9 +225,7 @@ public final class YARPMultiTargetNodeTranslator extends AbstractNodeVisitor<Ass
 
     @Override
     public AssignableNode visitRequiredParameterNode(Nodes.RequiredParameterNode node) {
-        final String name = node.name;
-        final ReadLocalNode lhs = yarpTranslator.getEnvironment().findLocalVarNode(name);
-        final WriteLocalNode rubyNode = lhs.makeWriteNode(null);
+        var rubyNode = yarpTranslator.getEnvironment().writeNode(node.name, 0, null);
 
         return rubyNode.toAssignableNode();
     }

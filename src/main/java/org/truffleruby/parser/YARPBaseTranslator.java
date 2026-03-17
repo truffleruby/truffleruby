@@ -115,10 +115,15 @@ public abstract class YARPBaseTranslator extends AbstractNodeVisitor<RubyNode> {
 
     protected final RubyContextSourceNode createCallNode(boolean ignoreVisibility, RubyNode receiver, String method,
             RubyNode... arguments) {
+        return createCallNodeWithBlock(ignoreVisibility, receiver, method, null, arguments);
+    }
+
+    protected final RubyContextSourceNode createCallNodeWithBlock(boolean ignoreVisibility, RubyNode receiver,
+            String method, RubyNode block, RubyNode... arguments) {
         var parameters = new RubyCallNodeParameters(
                 receiver,
                 method,
-                null,
+                block,
                 NoKeywordArgumentsDescriptor.INSTANCE,
                 arguments,
                 ignoreVisibility);

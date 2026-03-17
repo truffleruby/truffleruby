@@ -21,6 +21,11 @@ public final class ReadLocalVariableNode extends ReadLocalNode {
     }
 
     @Override
+    public int getFrameDepth() {
+        return 0;
+    }
+
+    @Override
     public Object execute(VirtualFrame frame) {
         return readFrameSlot(frame);
     }
@@ -33,11 +38,6 @@ public final class ReadLocalVariableNode extends ReadLocalNode {
         }
 
         return readFrameSlotNode.executeRead(frame);
-    }
-
-    @Override
-    public WriteLocalNode makeWriteNode(RubyNode rhs) {
-        return new WriteLocalVariableNode(frameSlot, rhs);
     }
 
     @Override

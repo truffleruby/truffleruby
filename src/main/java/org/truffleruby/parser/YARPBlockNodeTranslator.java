@@ -96,7 +96,7 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
         int frameOnStackMarkerSlot;
 
         if (emitLambda || frameOnStackMarkerSlotStack.isEmpty()) {
-            frameOnStackMarkerSlot = -1;
+            frameOnStackMarkerSlot = YARPTranslator.NO_FRAME_ON_STACK_MARKER;
         } else {
             frameOnStackMarkerSlot = frameOnStackMarkerSlotStack.peek();
         }
@@ -121,13 +121,12 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
             callTargets = new ProcCallTargets(procCompiler.get(), null, lambdaCompiler);
         }
 
-        final RubyNode rubyNode = BlockDefinitionNodeGen.create(
+        return BlockDefinitionNodeGen.create(
                 emitLambda ? ProcType.LAMBDA : ProcType.PROC,
                 environment.getSharedMethodInfo(),
                 callTargets,
                 environment.getBreakID(),
                 frameOnStackMarkerSlot);
-        return rubyNode;
     }
 
     private RubyNode preludeProc(

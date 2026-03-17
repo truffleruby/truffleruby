@@ -216,9 +216,9 @@ public final class YARPTranslatorDriver {
 
         final TranslatorEnvironment environment = new TranslatorEnvironment(
                 parentEnvironment,
+                0,
                 parseEnvironment,
                 parseEnvironment.allocateReturnID(),
-                true,
                 sharedMethodInfo,
                 sharedMethodInfo.getMethodName(),
                 blockDepth,
@@ -524,9 +524,9 @@ public final class YARPTranslatorDriver {
 
         return new TranslatorEnvironment(
                 parentEnvironment,
+                0,
                 parseEnvironment,
                 parseEnvironment.allocateReturnID(),
-                true,
                 sharedMethodInfo,
                 sharedMethodInfo.getMethodName(),
                 blockDepth,

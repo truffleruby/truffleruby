@@ -22,10 +22,6 @@ import com.oracle.truffle.api.instrumentation.Tag;
 
 public abstract class WriteLocalNode extends RubyContextSourceAssignableNode {
 
-    protected final int frameSlot;
-
-    @Child protected RubyNode valueNode;
-
     public static WriteLocalNode create(int frameSlot, int frameDepth, RubyNode valueNode) {
         if (frameDepth == 0) {
             return new WriteLocalVariableNode(frameSlot, valueNode);
@@ -33,6 +29,10 @@ public abstract class WriteLocalNode extends RubyContextSourceAssignableNode {
             return new WriteDeclarationVariableNode(frameSlot, frameDepth, valueNode);
         }
     }
+
+    protected final int frameSlot;
+
+    @Child protected RubyNode valueNode;
 
     public WriteLocalNode(int frameSlot, RubyNode valueNode) {
         this.frameSlot = frameSlot;
