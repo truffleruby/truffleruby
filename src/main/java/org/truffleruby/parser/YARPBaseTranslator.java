@@ -157,6 +157,7 @@ public abstract class YARPBaseTranslator extends AbstractNodeVisitor<RubyNode> {
         return TStringUtils.toJavaStringOrThrow(toTString(bytes), sourceEncoding);
     }
 
+    // Also useful for debugging to show the file and line of a node
     protected final SourceSection getSourceSection(Nodes.Node yarpNode) {
         if (yarpNode.length == 0 && yarpNode.startOffset == 0) {
             return source.createUnavailableSection();
