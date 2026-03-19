@@ -22,7 +22,6 @@ import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
-import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.CoreMethod;
@@ -164,8 +163,8 @@ public abstract class BindingNodes {
     static boolean isHiddenVariable(String name) {
         assert !name.isEmpty();
         final char first = name.charAt(0);
-        return first == '$' || // Frame-local global variable
-                first == Layouts.TEMP_PREFIX_CHAR;
+        return first == '$' /* Frame-local global variable */ ||
+                first == '%' /* temporary variable */;
     }
 
     @CoreMethod(names = { "dup", "clone" })

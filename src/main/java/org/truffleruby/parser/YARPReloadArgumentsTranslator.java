@@ -15,7 +15,6 @@ import java.util.List;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import org.ruby_lang.prism.Nodes;
-import org.truffleruby.Layouts;
 import org.truffleruby.core.hash.ConcatHashLiteralNode;
 import org.truffleruby.core.hash.HashLiteralNode;
 import org.truffleruby.language.RubyNode;
@@ -244,7 +243,7 @@ public final class YARPReloadArgumentsTranslator extends YARPBaseTranslator {
      * parameters. That's why such local variables should be declared now. */
     private String createNameForRepeatedParameter(String name) {
         int count = repeatedParameterCounter++;
-        return Layouts.TEMP_PREFIX + name + count;
+        return "%" + name + count;
     }
 
 }

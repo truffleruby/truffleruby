@@ -12,7 +12,6 @@ package org.truffleruby.parser;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import org.ruby_lang.prism.Nodes;
-import org.truffleruby.Layouts;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.RubyLanguage.RubySourceOptions;
 import org.truffleruby.annotations.SuppressFBWarnings;
@@ -97,7 +96,7 @@ public final class ParseEnvironment {
     }
 
     public String allocateLocalTemp(String indicator) {
-        return Layouts.TEMP_PREFIX + indicator + "_" + tempIndex++;
+        return "%" + indicator + "_" + tempIndex++;
     }
 
 }

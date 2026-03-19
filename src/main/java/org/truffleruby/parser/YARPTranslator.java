@@ -15,7 +15,6 @@ import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.shadowed.org.jcodings.specific.EUCJPEncoding;
 import org.graalvm.shadowed.org.jcodings.specific.Windows_31JEncoding;
 import org.ruby_lang.prism.Nodes.NoBlockParameterNode;
-import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.Split;
@@ -200,7 +199,7 @@ public class YARPTranslator extends YARPBaseTranslator {
             "_9"
     };
 
-    static final String IT_PARAMETER_NAME = Layouts.TEMP_PREFIX + "it";
+    static final String IT_PARAMETER_NAME = "%it";
 
     /** all the encountered BEGIN {} blocks; they will be added finally at the beginning of the program AST */
     private final ArrayList<RubyNode> beginBlocks = new ArrayList<>();

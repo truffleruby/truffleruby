@@ -15,7 +15,6 @@ import java.util.Objects;
 
 import com.oracle.truffle.api.Assumption;
 import org.ruby_lang.prism.Nodes;
-import org.truffleruby.Layouts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import org.graalvm.collections.EconomicMap;
@@ -46,21 +45,21 @@ public final class TranslatorEnvironment {
      * method call with *, **, & or "...". */
 
     /** local variable to access a block argument */
-    public static final String METHOD_BLOCK_NAME = Layouts.TEMP_PREFIX + "method_block_arg";
+    public static final String METHOD_BLOCK_NAME = "%method_block_arg";
 
     /** local variable name for * parameter */
-    static final String DEFAULT_REST_NAME = Layouts.TEMP_PREFIX + "unnamed_rest";
+    static final String DEFAULT_REST_NAME = "%unnamed_rest";
     /** local variable name for ** parameter */
-    static final String DEFAULT_KEYWORD_REST_NAME = Layouts.TEMP_PREFIX + "kwrest";
+    static final String DEFAULT_KEYWORD_REST_NAME = "%kwrest";
     /** local variable name for & parameter */
-    public static final String DEFAULT_BLOCK_NAME = Layouts.TEMP_PREFIX + "unnamed_block";
+    public static final String DEFAULT_BLOCK_NAME = "%unnamed_block";
 
     /** local variable name for * parameter caused by desugaring ... parameter (forward-everything) */
-    public static final String FORWARDED_REST_NAME = Layouts.TEMP_PREFIX + "forward_rest";
+    public static final String FORWARDED_REST_NAME = "%forward_rest";
     /** local variable name for ** parameter caused by desugaring ... parameter (forward-everything) */
-    public static final String FORWARDED_KEYWORD_REST_NAME = Layouts.TEMP_PREFIX + "forward_kwrest";
+    public static final String FORWARDED_KEYWORD_REST_NAME = "%forward_kwrest";
     /** local variable name for & parameter caused by desugaring ... parameter (forward-everything) */
-    public static final String FORWARDED_BLOCK_NAME = Layouts.TEMP_PREFIX + "forward_block";
+    public static final String FORWARDED_BLOCK_NAME = "%forward_block";
 
     private final ParseEnvironment parseEnvironment;
 
