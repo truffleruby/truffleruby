@@ -200,6 +200,17 @@ class StringScanner
 
   def getch = scan(/./)
 
+  def scan_integer(base: 10)
+    case base
+    when 10
+      scan(/[+-]?\d+/)&.to_i
+    when 16
+      scan(/[+-]?(0x)?[0-9a-fA-F]+/)&.to_i(16)
+    else
+      raise ArgumentError, "Unsupported integer base: #{base}, expected 10 or 16"
+    end
+  end
+
   def scan_full(pattern, advance_pointer, return_string)
     if advance_pointer
       if return_string
@@ -430,14 +441,4 @@ class StringScanner
     end
   end
   Primitive.always_split self, :skip_until
-
-  # Private methods
-
-  private def scan_base10_integer
-    scan(/[+-]?\d+/)&.to_i
-  end
-
-  private def scan_base16_integer
-    scan(/[+-]?(0x)?[0-9a-fA-F]+/)&.to_i(16)
-  end
 end
