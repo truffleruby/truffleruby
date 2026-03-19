@@ -46,24 +46,26 @@ class StringScanner
   end
 
   def inspect
-    return "#<#{self.class} (uninitialized)>" unless @string
-    return "#<#{self.class} fin>" if eos?
+    return "#<#{Primitive.class(self)} (uninitialized)>" unless @string
+    return "#<#{Primitive.class(self)} fin>" if eos?
 
-    before = if @pos == 0
-      ''
-    elsif @pos < 5
-      "#{@string.byteslice(0, @pos).inspect} "
-    else
-      "#{('...' + @string.byteslice(@pos - 5, 5)).inspect} "
-    end
+    before =
+      if @pos == 0
+        ''
+      elsif @pos < 5
+        "#{@string.byteslice(0, @pos).inspect} "
+      else
+        "#{('...' + @string.byteslice(@pos - 5, 5)).inspect} "
+      end
 
-    after = if @pos >= @string.bytesize - 5
-      " #{@string.byteslice(@pos..).inspect}"
-    else
-      " #{(@string.byteslice(@pos, 5) + '...').inspect}"
-    end
+    after =
+      if @pos >= @string.bytesize - 5
+        " #{@string.byteslice(@pos..).inspect}"
+      else
+        " #{(@string.byteslice(@pos, 5) + '...').inspect}"
+      end
 
-    "#<#{self.class} #{@pos}/#{@string.bytesize} #{before}@#{after}>"
+    "#<#{Primitive.class(self)} #{@pos}/#{@string.bytesize} #{before}@#{after}>"
   end
 
   def pos=(new_pos)
@@ -137,7 +139,7 @@ class StringScanner
 
   # MatchData-like methods
 
-  def matched? = @last_match != nil
+  def matched? = !Primitive.nil?(@last_match)
 
   def matched = @last_match&.to_s
 
