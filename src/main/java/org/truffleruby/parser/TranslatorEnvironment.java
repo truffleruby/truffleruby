@@ -24,6 +24,7 @@ import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.control.BreakID;
 import org.truffleruby.language.control.ReturnID;
 import org.truffleruby.language.literal.NilLiteralNode;
+import org.truffleruby.language.locals.FindDeclarationVariableNodes.FrameSlotAndDepth;
 import org.truffleruby.language.locals.LocalVariableType;
 import org.truffleruby.language.locals.ReadDeclarationVariableNode;
 import org.truffleruby.language.locals.ReadLocalNode;
@@ -276,17 +277,17 @@ public final class TranslatorEnvironment {
     public ReadLocalNode findLocalVarNodeOrNull(String name) {
         assert name != null;
         TranslatorEnvironment current = this;
-        int level = 0;
+        int depth = 0;
 
         while (current != null) {
             final Integer slot = current.findFrameSlotOrNull(name);
 
             if (slot != null) {
                 final ReadLocalNode node;
-                if (level == 0) {
+                if (depth == 0) {
                     node = new ReadLocalVariableNode(LocalVariableType.FRAME_LOCAL, slot);
                 } else {
-                    node = new ReadDeclarationVariableNode(LocalVariableType.FRAME_LOCAL, level, slot);
+                    node = new ReadDeclarationVariableNode(LocalVariableType.FRAME_LOCAL, depth, slot);
                 }
 
                 return node;
@@ -298,10 +299,34 @@ public final class TranslatorEnvironment {
             }
 
             current = current.parent;
-            level++;
+            depth++;
         }
 
         return null;
+    }
+
+    public FrameSlotAndDepth findFrameSlotAndDepth(String name) {
+        assert name != null;
+        TranslatorEnvironment current = this;
+        int depth = 0;
+
+        while (current != null) {
+            final Integer slot = current.findFrameSlotOrNull(name);
+
+            if (slot != null) {
+                return new FrameSlotAndDepth(slot, depth);
+            }
+
+            if (current.getNeverAssignInParentScope()) {
+                // Do not try to look above scope barriers (def, module)
+                throw CompilerDirectives.shouldNotReachHere(name + " local variable should be declared");
+            }
+
+            current = current.parent;
+            depth++;
+        }
+
+        throw CompilerDirectives.shouldNotReachHere(name + " local variable should be declared");
     }
 
     public FrameDescriptor computeFrameDescriptor() {

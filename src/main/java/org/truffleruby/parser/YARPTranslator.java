@@ -2735,17 +2735,15 @@ public class YARPTranslator extends YARPBaseTranslator {
         for (int i = 0; i < numberOfNames; i++) {
             final String name = node.targets[i].name;
 
-            int depth = 0;
-            TranslatorEnvironment environmentToDeclareIn = environment;
-
             // TODO: use Nodes.LocalVariableTargetNode#depth field
-            while (!environmentToDeclareIn.hasOwnScopeForAssignments()) {
-                environmentToDeclareIn = environmentToDeclareIn.getParent();
-                depth++;
+            TranslatorEnvironment environmentToStartSearch = environment;
+            while (!environmentToStartSearch.hasOwnScopeForAssignments()) {
+                environmentToStartSearch = environmentToStartSearch.getParent();
             }
-            int slot = environmentToDeclareIn.findFrameSlot(name);
-            nilSetters[i] = WriteLocalNode.create(slot, depth, new NilLiteralNode());
-            setters[i] = WriteLocalNode.create(slot, depth,
+
+            var slotAndDepth = environmentToStartSearch.findFrameSlotAndDepth(name);
+            nilSetters[i] = WriteLocalNode.create(slotAndDepth.slot, slotAndDepth.depth, new NilLiteralNode());
+            setters[i] = WriteLocalNode.create(slotAndDepth.slot, slotAndDepth.depth,
                     new MatchDataNodes.GetFixedNameMatchNode(environment.readNode(tempSlot), language.getSymbol(name)));
         }
 
