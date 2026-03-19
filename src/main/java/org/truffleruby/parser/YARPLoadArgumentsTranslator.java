@@ -15,7 +15,6 @@ import java.util.Objects;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import org.ruby_lang.prism.Nodes.NoBlockParameterNode;
-import org.truffleruby.Layouts;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.arguments.MissingArgumentBehavior;
 import org.truffleruby.language.arguments.ReadKeywordArgumentNode;
@@ -359,7 +358,7 @@ public final class YARPLoadArgumentsTranslator extends YARPBaseTranslator {
      * parameters. That's why such local variables should be declared now. */
     private String createNameForRepeatedParameter(String name) {
         int count = repeatedParameterCounter++;
-        return Layouts.TEMP_PREFIX + name + count;
+        return "%" + name + count;
     }
 
 }

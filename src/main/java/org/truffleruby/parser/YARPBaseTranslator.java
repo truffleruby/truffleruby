@@ -157,6 +157,7 @@ public abstract class YARPBaseTranslator extends AbstractNodeVisitor<RubyNode> {
         return TStringUtils.toJavaStringOrThrow(toTString(bytes), sourceEncoding);
     }
 
+    // Also useful for debugging to show the file and line of a node
     protected final SourceSection getSourceSection(Nodes.Node yarpNode) {
         if (yarpNode.length == 0 && yarpNode.startOffset == 0) {
             return source.createUnavailableSection();
@@ -297,6 +298,14 @@ public abstract class YARPBaseTranslator extends AbstractNodeVisitor<RubyNode> {
     // so we provide a helper and reviewed all usages of ParametersNode#keyword_rest.
     public static boolean hasKeywordsRest(Nodes.ParametersNode node) {
         return node.keyword_rest != null && !(node.keyword_rest instanceof Nodes.NoKeywordsParameterNode);
+    }
+
+    protected final void declareLocalVariables(String[] locals) {
+        // YARP doesn't add hidden locals for rest/keyrest/block anonymous parameters or ...
+        for (String name : locals) {
+            assert !(name.equals("*") || name.equals("**") || name.equals("&") || name.equals("...")) : name;
+            environment.declareVar(name);
+        }
     }
 
 }

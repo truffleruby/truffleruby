@@ -12,11 +12,9 @@ package org.truffleruby.parser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.Assumption;
 import org.ruby_lang.prism.Nodes;
-import org.truffleruby.Layouts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import org.graalvm.collections.EconomicMap;
@@ -26,6 +24,7 @@ import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.control.BreakID;
 import org.truffleruby.language.control.ReturnID;
 import org.truffleruby.language.literal.NilLiteralNode;
+import org.truffleruby.language.locals.FindDeclarationVariableNodes.FrameSlotAndDepth;
 import org.truffleruby.language.locals.LocalVariableType;
 import org.truffleruby.language.locals.ReadDeclarationVariableNode;
 import org.truffleruby.language.locals.ReadLocalNode;
@@ -47,21 +46,21 @@ public final class TranslatorEnvironment {
      * method call with *, **, & or "...". */
 
     /** local variable to access a block argument */
-    public static final String METHOD_BLOCK_NAME = Layouts.TEMP_PREFIX + "method_block_arg";
+    public static final String METHOD_BLOCK_NAME = "%method_block_arg";
 
     /** local variable name for * parameter */
-    static final String DEFAULT_REST_NAME = Layouts.TEMP_PREFIX + "unnamed_rest";
+    static final String DEFAULT_REST_NAME = "%unnamed_rest";
     /** local variable name for ** parameter */
-    static final String DEFAULT_KEYWORD_REST_NAME = Layouts.TEMP_PREFIX + "kwrest";
+    static final String DEFAULT_KEYWORD_REST_NAME = "%kwrest";
     /** local variable name for & parameter */
-    public static final String DEFAULT_BLOCK_NAME = Layouts.TEMP_PREFIX + "unnamed_block";
+    public static final String DEFAULT_BLOCK_NAME = "%unnamed_block";
 
     /** local variable name for * parameter caused by desugaring ... parameter (forward-everything) */
-    public static final String FORWARDED_REST_NAME = Layouts.TEMP_PREFIX + "forward_rest";
+    public static final String FORWARDED_REST_NAME = "%forward_rest";
     /** local variable name for ** parameter caused by desugaring ... parameter (forward-everything) */
-    public static final String FORWARDED_KEYWORD_REST_NAME = Layouts.TEMP_PREFIX + "forward_kwrest";
+    public static final String FORWARDED_KEYWORD_REST_NAME = "%forward_kwrest";
     /** local variable name for & parameter caused by desugaring ... parameter (forward-everything) */
-    public static final String FORWARDED_BLOCK_NAME = Layouts.TEMP_PREFIX + "forward_block";
+    public static final String FORWARDED_BLOCK_NAME = "%forward_block";
 
     private final ParseEnvironment parseEnvironment;
 
@@ -71,7 +70,7 @@ public final class TranslatorEnvironment {
     private List<FrameDescriptorInfo> childrenDescriptorInfos = null;
     private FrameDescriptor frameDescriptor;
 
-    private final List<Integer> flipFlopStates = new ArrayList<>();
+    private List<Integer> flipFlopStates = null;
 
     private final ReturnID returnID;
     private final int blockDepth;
@@ -88,9 +87,6 @@ public final class TranslatorEnvironment {
     public String literalBlockPassedToMethod = null;
     /** Only set for def methods */
     public Nodes.ParametersNode parametersNode = null;
-
-    // TODO(CS): overflow? and it should be per-context, or even more local
-    private static final AtomicInteger tempIndex = new AtomicInteger();
 
     public TranslatorEnvironment(
             TranslatorEnvironment parent,
@@ -195,8 +191,7 @@ public final class TranslatorEnvironment {
     }
 
     private static FrameDescriptor.Builder newFrameDescriptorBuilderForMethod(FrameDescriptorInfo descriptorInfo) {
-        var builder = FrameDescriptor.newBuilder().defaultValue(Nil.INSTANCE);
-        builder.info(descriptorInfo);
+        var builder = FrameDescriptor.newBuilder().defaultValue(Nil.INSTANCE).info(descriptorInfo);
 
         int selfIndex = builder.addSlot(FrameSlotKind.Illegal, SelfNode.SELF_IDENTIFIER, null);
         if (selfIndex != SelfNode.SELF_INDEX) {
@@ -219,26 +214,20 @@ public final class TranslatorEnvironment {
     public int declareVar(Object name) {
         assert name != null && !(name instanceof String && ((String) name).isEmpty());
 
-        Integer existingSlot = nameToIndex.get(name);
-        if (existingSlot != null) {
-            return existingSlot;
-        } else {
-            int index = addSlot(name);
-            nameToIndex.put(name, index);
-            return index;
+        int index = addSlot(name);
+        Object prev = nameToIndex.putIfAbsent(name, index);
+        if (prev != null) {
+            throw CompilerDirectives.shouldNotReachHere("Expected variable " + name + " to not already be declared");
         }
+        return index;
     }
 
     private int addSlot(Object name) {
         return frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, name, null);
     }
 
-    public String allocateLocalTemp(String indicator) {
-        return Layouts.TEMP_PREFIX + indicator + "_" + tempIndex.getAndIncrement();
-    }
-
     public int declareLocalTemp(String indicator) {
-        final String name = allocateLocalTemp(indicator);
+        final String name = parseEnvironment.allocateLocalTemp(indicator);
         // TODO: might not need to add to nameToIndex for temp vars
         return declareVar(name);
     }
@@ -288,17 +277,17 @@ public final class TranslatorEnvironment {
     public ReadLocalNode findLocalVarNodeOrNull(String name) {
         assert name != null;
         TranslatorEnvironment current = this;
-        int level = 0;
+        int depth = 0;
 
         while (current != null) {
             final Integer slot = current.findFrameSlotOrNull(name);
 
             if (slot != null) {
                 final ReadLocalNode node;
-                if (level == 0) {
+                if (depth == 0) {
                     node = new ReadLocalVariableNode(LocalVariableType.FRAME_LOCAL, slot);
                 } else {
-                    node = new ReadDeclarationVariableNode(LocalVariableType.FRAME_LOCAL, level, slot);
+                    node = new ReadDeclarationVariableNode(LocalVariableType.FRAME_LOCAL, depth, slot);
                 }
 
                 return node;
@@ -310,10 +299,34 @@ public final class TranslatorEnvironment {
             }
 
             current = current.parent;
-            level++;
+            depth++;
         }
 
         return null;
+    }
+
+    public FrameSlotAndDepth findFrameSlotAndDepth(String name) {
+        assert name != null;
+        TranslatorEnvironment current = this;
+        int depth = 0;
+
+        while (current != null) {
+            final Integer slot = current.findFrameSlotOrNull(name);
+
+            if (slot != null) {
+                return new FrameSlotAndDepth(slot, depth);
+            }
+
+            if (current.getNeverAssignInParentScope()) {
+                // Do not try to look above scope barriers (def, module)
+                throw CompilerDirectives.shouldNotReachHere(name + " local variable should be declared");
+            }
+
+            current = current.parent;
+            depth++;
+        }
+
+        throw CompilerDirectives.shouldNotReachHere(name + " local variable should be declared");
     }
 
     public FrameDescriptor computeFrameDescriptor() {
@@ -360,7 +373,14 @@ public final class TranslatorEnvironment {
         return sharedMethodInfo;
     }
 
+    public boolean hasFlipFlopStates() {
+        return flipFlopStates != null && !flipFlopStates.isEmpty();
+    }
+
     public List<Integer> getFlipFlopStates() {
+        if (flipFlopStates == null) {
+            flipFlopStates = new ArrayList<>();
+        }
         return flipFlopStates;
     }
 
@@ -405,9 +425,4 @@ public final class TranslatorEnvironment {
         return environment;
     }
 
-    /** Used only in tests to make temporary variable names stable and not changed every time tests are run. It
-     * shouldn't be used for anything except that purpose. */
-    public static void resetTemporaryVariablesIndex() {
-        tempIndex.set(0);
-    }
 }

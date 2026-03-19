@@ -42,17 +42,10 @@ import java.util.function.Supplier;
 public final class YARPBlockNodeTranslator extends YARPTranslator {
 
     private final Arity arity;
-    /** Whether a block itself accepts a block parameter (&block). The Arity class does not contain this information. */
-    private final boolean acceptsBlockParameter;
 
-    public YARPBlockNodeTranslator(
-            TranslatorEnvironment environment,
-            Arity arity,
-            boolean acceptsBlockParameter,
-            RubyDeferredWarnings rubyWarnings) {
-        super(environment, rubyWarnings);
+    public YARPBlockNodeTranslator(TranslatorEnvironment environment, Arity arity) {
+        super(environment);
         this.arity = arity;
-        this.acceptsBlockParameter = acceptsBlockParameter;
     }
 
     public RubyNode compileBlockNode(Node body, ParametersNode parameters, Node parametersNode, String[] locals,
@@ -79,14 +72,16 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
         final boolean isLambdaMethodCall = !isStabbyLambda && environment.literalBlockPassedToMethod.equals("lambda");
         final boolean emitLambda = isStabbyLambda || isLambdaMethodCall;
 
-        final Supplier<RootCallTarget> procCompiler = procCompiler(
-                arity,
-                preludeProc,
-                bodyNode,
-                isLambdaMethodCall,
-                language,
-                environment,
-                sourceSection);
+        final Supplier<RootCallTarget> procCompiler = isStabbyLambda
+                ? null
+                : procCompiler(
+                        arity,
+                        preludeProc,
+                        bodyNode,
+                        isLambdaMethodCall,
+                        language,
+                        environment,
+                        sourceSection);
 
         final Supplier<RootCallTarget> lambdaCompiler = lambdaCompiler(
                 isStabbyLambda,
@@ -133,13 +128,6 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
                 environment.getBreakID(),
                 frameOnStackMarkerSlot);
         return rubyNode;
-    }
-
-    private void declareLocalVariables(String[] locals) {
-        // YARP doesn't add hidden locals for rest/keyrest/block anonymous parameters or ...
-        for (String name : locals) {
-            environment.declareVar(name);
-        }
     }
 
     private RubyNode preludeProc(
@@ -291,7 +279,7 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
     private static RubyNode composeBody(TranslatorEnvironment environment, RubyNode prelude, RubyNode body) {
         body = YARPTranslator.sequence(prelude, body);
 
-        if (environment.getFlipFlopStates().size() > 0) {
+        if (environment.hasFlipFlopStates()) {
             body = YARPTranslator.sequence(YARPTranslator.initFlipFlopStates(environment), body);
         }
 
@@ -309,24 +297,6 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
         } else {
             return true;
         }
-    }
-
-    @Override
-    public RubyNode visitCallNode(Nodes.CallNode node) {
-        // emit a warning if `it` is called without arguments in a block without ordinal parameters
-        boolean noBlockParameters = !arity.acceptsKeywords() && !arity.acceptsPositionalArguments() &&
-                !acceptsBlockParameter;
-        if (node.name.equals("it") && node.receiver == null && node.isVariableCall() && noBlockParameters) {
-            SourceSection section = rubySource.getSource().createSection(node.startOffset, node.length);
-
-            String sourcePath = rubySource.getSourcePath().intern();
-            int lineNumber = section.getStartLine() + rubySource.getLineOffset();
-            String message = "`it` calls without arguments will refer to the first block param in Ruby 3.4; use it() or self.it";
-
-            rubyWarnings.warn(sourcePath, lineNumber, message);
-        }
-
-        return super.visitCallNode(node);
     }
 
 }

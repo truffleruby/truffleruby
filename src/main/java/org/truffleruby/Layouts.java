@@ -15,11 +15,6 @@ public abstract class Layouts {
 
     public static final int FROZEN_FLAG = 1;
 
-    // Special variables
-
-    public static final String TEMP_PREFIX = "%";
-    public static final char TEMP_PREFIX_CHAR = TEMP_PREFIX.charAt(0);
-
     // Standard identifiers
 
     public static final HiddenKey OBJECT_ID_IDENTIFIER = new HiddenKey("object_id"); // long

@@ -221,7 +221,7 @@ public final class YARPParametersNodeToDestructureTranslator extends YARPBaseTra
             slot = environment.findFrameSlot(node.name);
         } else {
             final String name = TranslatorEnvironment.DEFAULT_KEYWORD_REST_NAME;
-            slot = environment.declareVar(name);
+            slot = environment.findFrameSlot(name); // declared by YARPLoadArgumentsTranslator
         }
 
         // keyword arguments couldn't be passed to a block in case of destructuring single Array argument,

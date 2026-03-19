@@ -38,6 +38,8 @@ public final class ParseEnvironment {
     // Set once after parsing and before translating
     public Boolean allowTruffleRubyPrimitives = null;
 
+    private int tempIndex = 0;
+
     public ParseEnvironment(
             RubyLanguage language,
             RubySource rubySource,
@@ -91,6 +93,10 @@ public final class ParseEnvironment {
     @SuppressFBWarnings("ISC_INSTANTIATE_STATIC_CLASS")
     public BreakID allocateBreakID() {
         return new BreakID();
+    }
+
+    public String allocateLocalTemp(String indicator) {
+        return "%" + indicator + "_" + tempIndex++;
     }
 
 }

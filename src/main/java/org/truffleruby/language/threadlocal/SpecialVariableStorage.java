@@ -21,7 +21,6 @@ import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.Node;
 
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
-import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
 import org.truffleruby.interop.TranslateInteropExceptionNode;
 import org.truffleruby.language.Nil;
@@ -34,7 +33,7 @@ public final class SpecialVariableStorage implements TruffleObject {
     // This slot is not needed for all frames and could be lazily added via auxiliary slots,
     // but that would add a lot of complexity and significantly increase the footprint of frames which do need it.
     public static final int SLOT_INDEX = 1;
-    public static final String SLOT_NAME = Layouts.TEMP_PREFIX + "$~_";
+    public static final String SLOT_NAME = "%$~_";
     public static final String ASSUMPTION_NAME = "does not need SpecialVariableStorage";
 
     public static Object get(Frame frame) {

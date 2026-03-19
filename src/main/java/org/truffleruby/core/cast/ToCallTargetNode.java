@@ -27,7 +27,6 @@ import org.truffleruby.language.library.RubyStringLibrary;
 import org.truffleruby.language.loader.ByteBasedCharSequence;
 import org.truffleruby.parser.ParserContext;
 import org.truffleruby.parser.RubySource;
-import org.truffleruby.parser.TranslatorEnvironment;
 
 @GenerateInline
 @GenerateCached(false)
@@ -56,7 +55,6 @@ public abstract class ToCallTargetNode extends RubyBaseNode {
         var code = new TStringWithEncoding(StringOperations.asTruffleStringUncached(string),
                 RubyStringLibrary.getEncodingUncached(string));
         Source source = Source.newBuilder("ruby", new ByteBasedCharSequence(code), "<parse_ast>").build();
-        TranslatorEnvironment.resetTemporaryVariablesIndex();
         var parserContext = ParserContext.TOP_LEVEL;
 
         return getContext(node).getCodeLoader().parse(

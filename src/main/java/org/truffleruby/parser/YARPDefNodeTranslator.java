@@ -25,15 +25,12 @@ public final class YARPDefNodeTranslator extends YARPTranslator {
 
     private final boolean shouldLazyTranslate;
 
-    public YARPDefNodeTranslator(
-            RubyLanguage language,
-            TranslatorEnvironment environment,
-            RubyDeferredWarnings rubyWarnings) {
-        super(environment, rubyWarnings);
+    public YARPDefNodeTranslator(RubyLanguage language, TranslatorEnvironment environment) {
+        super(environment);
 
         if (parseEnvironment.parserContext.isEval() || parseEnvironment.isCoverageEnabled()) {
             shouldLazyTranslate = false;
-        } else if (RubyLanguage.isCoreSource(source)) {
+        } else if (parseEnvironment.inCore()) {
             shouldLazyTranslate = language.options.LAZY_TRANSLATION_CORE;
         } else {
             shouldLazyTranslate = language.options.LAZY_TRANSLATION_USER;
@@ -41,7 +38,7 @@ public final class YARPDefNodeTranslator extends YARPTranslator {
     }
 
     private RubyNode compileMethodBody(Nodes.DefNode node, Nodes.ParametersNode parameters, Arity arity) {
-        declareLocalVariables(node);
+        declareLocalVariables(node.locals);
 
         final RubyNode loadArguments = new YARPLoadArgumentsTranslator(
                 environment,
@@ -54,7 +51,7 @@ public final class YARPDefNodeTranslator extends YARPTranslator {
         RubyNode body = translateNodeOrNil(node.body).simplifyAsTailExpression();
         body = sequence(loadArguments, body);
 
-        if (environment.getFlipFlopStates().size() > 0) {
+        if (environment.hasFlipFlopStates()) {
             body = sequence(initFlipFlopStates(environment), body);
         }
 
@@ -120,13 +117,6 @@ public final class YARPDefNodeTranslator extends YARPTranslator {
         } else {
             final RubyMethodRootNode root = translateMethodNode(node.getNonLazy(), parameters, arity);
             return new CachedLazyCallTargetSupplier(() -> root.getCallTarget());
-        }
-    }
-
-    private void declareLocalVariables(Nodes.DefNode node) {
-        for (String name : node.locals) {
-            assert !(name.equals("*") || name.equals("**") || name.equals("&") || name.equals("...")) : name;
-            environment.declareVar(name);
         }
     }
 

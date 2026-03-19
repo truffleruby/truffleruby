@@ -15,7 +15,6 @@ import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.shadowed.org.jcodings.specific.EUCJPEncoding;
 import org.graalvm.shadowed.org.jcodings.specific.Windows_31JEncoding;
 import org.ruby_lang.prism.Nodes.NoBlockParameterNode;
-import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.Split;
@@ -180,8 +179,6 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     public Deque<Integer> frameOnStackMarkerSlotStack = new ArrayDeque<>();
 
-    protected RubyDeferredWarnings rubyWarnings;
-
     /** whether a while-loop body is translated; needed to check correctness of operators like break/next/etc */
     private boolean translatingWhile = false;
     /** whether a for-loop body is translated; needed to enforce variables in the for-loop body to be declared outside
@@ -202,14 +199,13 @@ public class YARPTranslator extends YARPBaseTranslator {
             "_9"
     };
 
-    static final String IT_PARAMETER_NAME = Layouts.TEMP_PREFIX + "it";
+    static final String IT_PARAMETER_NAME = "%it";
 
     /** all the encountered BEGIN {} blocks; they will be added finally at the beginning of the program AST */
     private final ArrayList<RubyNode> beginBlocks = new ArrayList<>();
 
-    public YARPTranslator(TranslatorEnvironment environment, RubyDeferredWarnings rubyWarnings) {
+    public YARPTranslator(TranslatorEnvironment environment) {
         super(environment);
-        this.rubyWarnings = rubyWarnings;
     }
 
     public RubyNode[] getBeginBlocks() {
@@ -552,9 +548,7 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         final YARPBlockNodeTranslator blockCompiler = new YARPBlockNodeTranslator(
                 newEnvironment,
-                arity,
-                parameters.block != null,
-                rubyWarnings);
+                arity);
 
         blockCompiler.frameOnStackMarkerSlotStack = frameOnStackMarkerSlotStack;
 
@@ -1579,8 +1573,7 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         final var defNodeTranslator = new YARPDefNodeTranslator(
                 language,
-                newEnvironment,
-                rubyWarnings);
+                newEnvironment);
         var callTargetSupplier = defNodeTranslator.buildMethodNodeCompiler(node, parameters, arity);
 
         final boolean isDefSingleton = singletonClassNode != null;
@@ -1725,7 +1718,7 @@ public class YARPTranslator extends YARPBaseTranslator {
      * recognise when visiting a block node. */
     @Override
     public RubyNode visitForNode(Nodes.ForNode node) {
-        final String parameterName = environment.allocateLocalTemp("for");
+        final String parameterName = parseEnvironment.allocateLocalTemp("for");
 
         final var requireds = new Nodes.Node[]{ new Nodes.RequiredParameterNode(0, 0, NO_FLAGS, parameterName) };
         final var parameters = new Nodes.ParametersNode(0, 0, requireds, EMPTY_OPTIONAL_PARAMETER_NODE_ARRAY, null,
@@ -2735,49 +2728,30 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         // build nodes to initialize local variables for Regexp named capture groups
         final int numberOfNames = node.targets.length;
-        String[] names = new String[numberOfNames];
-
-        for (int i = 0; i < numberOfNames; i++) {
-            names[i] = node.targets[i].name;
-        }
-
         final RubyNode[] setters = new RubyNode[numberOfNames];
         final RubyNode[] nilSetters = new RubyNode[numberOfNames];
         final int tempSlot = environment.declareLocalTemp("match_data");
 
         for (int i = 0; i < numberOfNames; i++) {
-            final String name = names[i];
-
-            TranslatorEnvironment environmentToDeclareIn = environment;
+            final String name = node.targets[i].name;
 
             // TODO: use Nodes.LocalVariableTargetNode#depth field
-            while (!environmentToDeclareIn.hasOwnScopeForAssignments()) {
-                environmentToDeclareIn = environmentToDeclareIn.getParent();
+            TranslatorEnvironment environmentToStartSearch = environment;
+            while (!environmentToStartSearch.hasOwnScopeForAssignments()) {
+                environmentToStartSearch = environmentToStartSearch.getParent();
             }
-            environmentToDeclareIn.declareVar(name);
-            nilSetters[i] = match2NilSetter(name);
-            setters[i] = match2NonNilSetter(name, tempSlot);
+
+            var slotAndDepth = environmentToStartSearch.findFrameSlotAndDepth(name);
+            nilSetters[i] = WriteLocalNode.create(slotAndDepth.slot, slotAndDepth.depth, new NilLiteralNode());
+            setters[i] = WriteLocalNode.create(slotAndDepth.slot, slotAndDepth.depth,
+                    new MatchDataNodes.GetFixedNameMatchNode(environment.readNode(tempSlot), language.getSymbol(name)));
         }
 
-        final RubyNode readNode = ReadGlobalVariableNodeGen.create("$~");
-        final ReadLocalNode tempVarReadNode = environment.readNode(tempSlot);
-        final RubyNode readMatchDataNode = tempVarReadNode.makeWriteNode(readNode);
-        final RubyNode rubyNode = new ReadMatchReferenceNodes.SetNamedVariablesMatchNode(matchNode, readMatchDataNode,
+        var readMatchDataAndSetTemp = new WriteLocalVariableNode(tempSlot, ReadGlobalVariableNodeGen.create("$~"));
+        var rubyNode = new ReadMatchReferenceNodes.SetNamedVariablesMatchNode(matchNode, readMatchDataAndSetTemp,
                 setters, nilSetters);
 
         return assignPositionAndFlags(node, rubyNode);
-    }
-
-    private RubyNode match2NilSetter(String name) {
-        return environment.findLocalVarNode(name).makeWriteNode(new NilLiteralNode());
-    }
-
-    private RubyNode match2NonNilSetter(String name, int tempSlot) {
-        ReadLocalNode varNode = environment.findLocalVarNode(name);
-        ReadLocalNode tempVarNode = environment.readNode(tempSlot);
-        MatchDataNodes.GetFixedNameMatchNode getIndexNode = new MatchDataNodes.GetFixedNameMatchNode(tempVarNode,
-                language.getSymbol(name));
-        return varNode.makeWriteNode(getIndexNode);
     }
 
     @Override
@@ -3585,12 +3559,9 @@ public class YARPTranslator extends YARPBaseTranslator {
                 null,
                 modulePath);
 
+        final YARPTranslator moduleTranslator = new YARPTranslator(newEnvironment);
         // declare local variables defined in a module or class body
-        for (String name : locals) {
-            newEnvironment.declareVar(name);
-        }
-
-        final YARPTranslator moduleTranslator = new YARPTranslator(newEnvironment, rubyWarnings);
+        moduleTranslator.declareLocalVariables(locals);
         final ModuleBodyDefinition definition = moduleTranslator.compileClassNode(moduleNode, bodyNode);
         return new RunModuleDefinitionNode(definition, defineOrGetNode);
     }
@@ -3607,7 +3578,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         body = new InsideModuleDefinitionNode(body);
         assignPositionOnly(moduleNode, body); // source location is needed to trigger :class TracePoint event
 
-        if (!environment.getFlipFlopStates().isEmpty()) {
+        if (environment.hasFlipFlopStates()) {
             body = sequence(initFlipFlopStates(environment), body);
         }
 
@@ -3952,24 +3923,20 @@ public class YARPTranslator extends YARPBaseTranslator {
         final int requiredKeywordArgumentsCount;
 
         if (parametersNode.keywords.length > 0) {
-            final List<String> requiredKeywords = new ArrayList<>();
-            final List<String> optionalKeywords = new ArrayList<>();
-
+            keywordArguments = new String[parametersNode.keywords.length];
+            int i = 0;
             for (var node : parametersNode.keywords) {
                 if (node instanceof Nodes.RequiredKeywordParameterNode required) {
-                    requiredKeywords.add(required.name);
-                } else if (node instanceof Nodes.OptionalKeywordParameterNode optional) {
-                    optionalKeywords.add(optional.name);
-                } else {
-                    throw CompilerDirectives.shouldNotReachHere();
+                    keywordArguments[i++] = required.name;
                 }
             }
-
-            final List<String> keywords = new ArrayList<>(requiredKeywords);
-            keywords.addAll(optionalKeywords);
-
-            keywordArguments = keywords.toArray(StringUtils.EMPTY_STRING_ARRAY);
-            requiredKeywordArgumentsCount = requiredKeywords.size();
+            requiredKeywordArgumentsCount = i;
+            for (var node : parametersNode.keywords) {
+                if (node instanceof Nodes.OptionalKeywordParameterNode optional) {
+                    keywordArguments[i++] = optional.name;
+                }
+            }
+            assert i == keywordArguments.length;
         } else {
             keywordArguments = Arity.NO_KEYWORDS;
             requiredKeywordArgumentsCount = 0;

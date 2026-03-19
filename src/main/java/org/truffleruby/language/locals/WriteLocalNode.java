@@ -26,6 +26,14 @@ public abstract class WriteLocalNode extends RubyContextSourceAssignableNode {
 
     @Child protected RubyNode valueNode;
 
+    public static WriteLocalNode create(int frameSlot, int frameDepth, RubyNode valueNode) {
+        if (frameDepth == 0) {
+            return new WriteLocalVariableNode(frameSlot, valueNode);
+        } else {
+            return new WriteDeclarationVariableNode(frameSlot, frameDepth, valueNode);
+        }
+    }
+
     public WriteLocalNode(int frameSlot, RubyNode valueNode) {
         this.frameSlot = frameSlot;
         this.valueNode = valueNode;
