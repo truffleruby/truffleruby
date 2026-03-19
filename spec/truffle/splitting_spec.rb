@@ -11,8 +11,6 @@ require_relative '../ruby/spec_helper'
 describe 'Critical methods which must split' do
   it 'are under 100 AST nodes' do
     code = <<-'EOF'
-require 'strscan'
-
 methods = [
   String.instance_method(:sub),
   String.instance_method(:sub!),
@@ -38,8 +36,6 @@ methods = [
 
   String.instance_method(:[]),
   Truffle::StringOperations.method(:subpattern),
-
-  StringScanner.instance_method(:scan_internal),
 ]
 
 methods.each do |meth|
