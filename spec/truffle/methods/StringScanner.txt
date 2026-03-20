@@ -6,14 +6,11 @@ captures
 charpos
 check
 check_until
-clear
 concat
-empty?
 eos?
 exist?
 fixed_anchor?
 get_byte
-getbyte
 getch
 inspect
 match?
@@ -23,7 +20,6 @@ matched_size
 named_captures
 peek
 peek_byte
-peep
 pointer
 pointer=
 pos
@@ -34,7 +30,6 @@ reset
 rest
 rest?
 rest_size
-restsize
 scan
 scan_byte
 scan_full
