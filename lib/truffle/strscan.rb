@@ -82,7 +82,7 @@ class StringScanner
 
   def rest = @string.byteslice(@pos..)
 
-  def rest_size = rest.size
+  def rest_size = rest.bytesize
 
   def concat(more_string)
     @string.concat(Primitive.convert_with_to_str(more_string))
