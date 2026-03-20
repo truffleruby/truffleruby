@@ -30,7 +30,7 @@ class StringScanner
   ::Object::ScanError = Error
   ::Object.deprecate_constant :ScanError
 
-  Version = '3.1.8'
+  Version = '3.1.7'
   Id = '$Id$'
 
   def self.must_C_version = self
