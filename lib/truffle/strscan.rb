@@ -198,7 +198,7 @@ class StringScanner
     end
   end
 
-  def getch = scan(/./)
+  def getch = scan(/./m)
 
   def scan_integer(base: 10)
     case base
