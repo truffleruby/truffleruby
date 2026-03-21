@@ -748,28 +748,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         }
 
         boolean isForwardArguments = argumentsNode != null && argumentsNode.isContainsForwarding();
-
-        if (isForwardArguments) {
-            // Relies on ... being only valid as a method parameter and not a block parameter
-            int prismDepth = environment.getPrismDepthToSurroundingMethod();
-            var readRest = new Nodes.LocalVariableReadNode(0, 0, FORWARDED_REST_NAME, prismDepth);
-            var readKeyRest = new Nodes.LocalVariableReadNode(0, 0, FORWARDED_KEYWORD_REST_NAME, prismDepth);
-
-            final var splat = new Nodes.SplatNode(0, 0, readRest);
-            final var keywordHash = new Nodes.KeywordHashNode(0, 0, (short) 0,
-                    new Nodes.Node[]{ new Nodes.AssocSplatNode(0, 0, readKeyRest) });
-
-            // replace '...' argument with rest and keyrest arguments
-            final var forwarding = new Nodes.Node[arguments.length + 1];
-            System.arraycopy(arguments, 0, forwarding, 0, arguments.length - 1);
-            forwarding[forwarding.length - 2] = splat;
-            forwarding[forwarding.length - 1] = keywordHash;
-
-            arguments = forwarding;
-        }
-
-        // should be after handling of forward-argument as far as ... means there is a splatted argument
-        boolean isSplatted = containYARPSplatNode(arguments);
+        boolean isSplatted = containYARPSplatOrForwardingNode(arguments);
         var argumentsDescriptor = getKeywordArgumentsDescriptor(arguments);
 
         final RubyNode[] translatedArguments;
@@ -779,6 +758,7 @@ public class YARPTranslator extends YARPBaseTranslator {
             if (translatedArgumentsNode instanceof SplatCastNode splatNode) {
                 splatNode.doNotCopy();
             }
+
             translatedArguments = new RubyNode[]{ translatedArgumentsNode };
         } else {
             translatedArguments = translate(arguments);
@@ -3416,7 +3396,7 @@ public class YARPTranslator extends YARPBaseTranslator {
             return ArrayLiteralNode.create(language, RubyNode.EMPTY_ARRAY);
         }
 
-        boolean containSplatOperator = containYARPSplatNode(nodes);
+        boolean containSplatOperator = containYARPSplatOrForwardingNode(nodes);
 
         // fast path (no SplatNode)
 
@@ -3435,7 +3415,20 @@ public class YARPTranslator extends YARPBaseTranslator {
         // is translated into
         //   ArrayConcatNode(ArrayLiteralNode(a, b), "splat-operator-node", ArrayLiteralNode(d))
         for (Nodes.Node node : nodes) {
-            if (node instanceof Nodes.SplatNode) {
+            if (node instanceof Nodes.ForwardingArgumentsNode) {
+                // Handled like SplatNode for forward-* and a non-splat node for forward-**
+                if (!current.isEmpty()) {
+                    arraysToConcat.add(ArrayLiteralNode.create(language, current.toArray(RubyNode.EMPTY_ARRAY)));
+                    current = new ArrayList<>();
+                }
+                // Relies on ... being only valid as a method parameter and not a block parameter
+                arraysToConcat.add(
+                        SplatCastNodeGen.create(language, SplatCastNode.NilBehavior.CONVERT, false,
+                                environment.readFromMethodFrameNode(FORWARDED_REST_NAME)));
+
+                current.add(HashCastNodeGen.HashCastASTNodeGen.create(
+                        environment.readFromMethodFrameNode(FORWARDED_KEYWORD_REST_NAME)));
+            } else if (node instanceof Nodes.SplatNode) {
                 if (!current.isEmpty()) {
                     arraysToConcat.add(ArrayLiteralNode.create(language, current.toArray(RubyNode.EMPTY_ARRAY)));
                     current = new ArrayList<>();
@@ -3796,6 +3789,16 @@ public class YARPTranslator extends YARPBaseTranslator {
     private boolean containYARPSplatNode(Nodes.Node[] nodes) {
         for (var n : nodes) {
             if (n instanceof Nodes.SplatNode) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean containYARPSplatOrForwardingNode(Nodes.Node[] nodes) {
+        for (var n : nodes) {
+            if (n instanceof Nodes.SplatNode || n instanceof Nodes.ForwardingArgumentsNode) {
                 return true;
             }
         }

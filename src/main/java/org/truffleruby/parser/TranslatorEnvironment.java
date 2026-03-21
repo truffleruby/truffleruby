@@ -275,32 +275,6 @@ public final class TranslatorEnvironment {
         return node;
     }
 
-    /** See {@link #depthOffset} and {@link #getActualDepth(int)} */
-    public int getPrismDepthToSurroundingMethod() {
-        int prismDepth = 0;
-        var scope = this;
-        while (scope.isBlock()) {
-            prismDepth = prismDepth + 1 - scope.depthOffset;
-            scope = scope.getParent();
-        }
-        assert scope.depthOffset == 0 : "method scope should have no depthOffset";
-        assert getActualDepth(prismDepth) == getBlockDepth();
-        return prismDepth;
-    }
-
-    /** See {@link #depthOffset} */
-    public int getActualDepth(int prismNodeDepth) {
-        int remainingDepth = prismNodeDepth + depthOffset;
-        int actualDepth = 0;
-        var scope = this;
-        while (remainingDepth > 0) {
-            scope = scope.parent;
-            remainingDepth = remainingDepth - 1 + scope.depthOffset;
-            actualDepth++;
-        }
-        return actualDepth;
-    }
-
     public ReadLocalNode readNode(String name, int prismNodeDepth) {
         // Copy of the actualDepth logic because we need both scope and actualDepth
         int remainingDepth = prismNodeDepth + depthOffset;
