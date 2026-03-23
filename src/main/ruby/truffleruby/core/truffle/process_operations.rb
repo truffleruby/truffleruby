@@ -630,21 +630,26 @@ module Truffle
 
       def resolve_in_path(command)
         unless should_search_path?(command)
-          if File.file?(command) && File.executable?(command)
+          if File.file?(command)
+            raise Errno::EACCES, command unless File.executable?(command)
             return command
-          else
-            return nil
           end
+          nil
         end
 
         path = @add_to_env['PATH'] || ENV['PATH']
+        return nil unless path
+
+        found_non_executable = nil
         path.split(File::PATH_SEPARATOR).each do |dir|
           file = File.join(dir, command)
-          if File.file?(file) && File.executable?(file)
-            return file
+          if File.file?(file)
+            return file if File.executable?(file)
+            found_non_executable ||= file
           end
         end
 
+        raise Errno::EACCES, found_non_executable if found_non_executable
         nil
       end
     end
