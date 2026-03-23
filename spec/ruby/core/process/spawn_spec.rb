@@ -697,10 +697,44 @@ describe "Process.spawn" do
     -> { Process.spawn "nonesuch" }.should raise_error(Errno::ENOENT)
   end
 
+  it "sets $? to exit status 127 when the command does not exist" do
+    Process.spawn("nonesuch") rescue nil
+    $?.exitstatus.should == 127
+  end
+
+  it "raises an Errno::ENOENT if the file does not exist" do
+    -> { Process.spawn "./nonesuch" }.should raise_error(Errno::ENOENT)
+  end
+
+  it "sets $? to exit status 127 when the file does not exist" do
+    Process.spawn("./nonesuch") rescue nil
+    $?.exitstatus.should == 127
+  end
+
   unless File.executable?(__FILE__) # Some FS (e.g. vboxfs) locate all files executable
     platform_is_not :windows do
       it "raises an Errno::EACCES when the file does not have execute permissions" do
         -> { Process.spawn __FILE__ }.should raise_error(Errno::EACCES)
+      end
+
+      it "sets $? to exit status 127 when the file does not have execute permissions" do
+        Process.spawn(__FILE__) rescue nil
+        $?.exitstatus.should == 127
+      end
+
+      it "raises an Errno::EACCES when a non-executable file is found in PATH" do
+        dir = tmp("spawn_path_dir")
+        mkdir_p dir
+        begin
+          exe = 'process-spawn-non-executable-in-path'
+          File.write("#{dir}/#{exe}", "#!/bin/sh\necho hi")
+          File.chmod(0644, "#{dir}/#{exe}")
+          env = { "PATH" => "#{dir}#{File::PATH_SEPARATOR}#{ENV['PATH']}" }
+          -> { Process.spawn(env, exe) }.should raise_error(Errno::EACCES)
+          $?.exitstatus.should == 127
+        ensure
+          rm_r dir
+        end
       end
     end
 

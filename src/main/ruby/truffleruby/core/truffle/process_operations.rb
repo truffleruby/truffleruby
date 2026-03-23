@@ -504,24 +504,19 @@ module Truffle
 
       def spawn
         log_command 'spawn'
-        pid = posix_spawnp @command, @argv, @env_array, @options
-        # Check if the command exists *after* invoking posix_spawn so we have a pid
-        if not resolve_in_path(@command)
-          if pid < 0
-            # macOS posix_spawnp(3) returns -1 and no pid when the command is not found,
-            # Linux returns 0, sets the pid and let the child do the PATH lookup.
-            Primitive.thread_set_return_code Process::Status.new(-1, 127, nil, nil)
-          else
-            # the subprocess will fail, just wait for it
-            Process.wait(pid) # Sets $? and avoids a zombie process
-            unless $?.exitstatus == 127
-              raise "command #{@command} does not exist in PATH but posix_spawnp found it!"
-            end
-          end
-          raise Errno::ENOENT, "No such file or directory - #{@command}"
-        elsif pid < 0
-          raise SystemCallError.new("posix_spawnp #{@command}", -pid)
+
+        # Check if the command exists before posix_spawnp to avoid zombie processes
+        # if posix_spawnp returned a pid (e.g. on Linux) but the command is not found/executable.
+        # Also sets $? like MRI does when spawn raises.
+        begin
+          resolve_in_path(@command)
+        rescue Errno::ENOENT, Errno::EACCES
+          Primitive.thread_set_return_code Process::Status.new(-1, 127, nil, nil)
+          raise
         end
+
+        pid = posix_spawnp @command, @argv, @env_array, @options
+        raise SystemCallError.new("posix_spawnp #{@command}", -pid) if pid < 0
         pid
       end
 
@@ -592,11 +587,7 @@ module Truffle
         log_command('exec')
         # exec validates the command only if it searches in $PATH
         if should_search_path?(@command)
-          if resolved = resolve_in_path(@command)
-            @command = resolved
-          else
-            raise Errno::ENOENT, "No such file or directory - #{@command}"
-          end
+          @command = resolve_in_path(@command)
         end
 
         Truffle::POSIX.with_array_of_strings_pointer(@argv) do |argv|
@@ -630,29 +621,28 @@ module Truffle
 
       def resolve_in_path(command)
         unless should_search_path?(command)
-          if File.file?(command)
-            raise Errno::EACCES, command unless File.executable?(command)
-            return command
-          end
-          nil
+          raise Errno::ENOENT, command unless File.file?(command)
+          raise Errno::EACCES, command unless File.executable?(command)
+
+          return command
         end
 
         path = @add_to_env['PATH'] || ENV['PATH']
-        return nil unless path
 
-        found_non_executable = nil
-        path.split(File::PATH_SEPARATOR).each do |dir|
-          file = File.join(dir, command)
-          if File.file?(file)
-            return file if File.executable?(file)
-            found_non_executable ||= file
+        if path
+          found_non_executable = nil
+          path.split(File::PATH_SEPARATOR).each do |dir|
+            file = File.join(dir, command)
+            if File.file?(file)
+              return file if File.executable?(file)
+              found_non_executable ||= file
+            end
           end
-        end
 
-        raise Errno::EACCES, found_non_executable if found_non_executable
-        nil
+          raise Errno::EACCES, found_non_executable if found_non_executable
+        end
+        raise Errno::ENOENT, command
       end
     end
-
   end
 end
