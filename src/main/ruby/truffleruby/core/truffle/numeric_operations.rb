@@ -177,7 +177,7 @@ module Truffle
         # but it can be either value if passed via keyword arguments.
 
         raise TypeError, 'step must be numeric' if Primitive.nil? step
-        raise ArgumentError, "step can't be 0" if step == 0
+        Truffle::RangeOperations.check_step_zero(step)
       end
 
       unless Primitive.is_a?(step, Numeric)

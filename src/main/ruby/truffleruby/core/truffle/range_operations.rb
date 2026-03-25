@@ -50,16 +50,13 @@ module Truffle
       numeric_begin = Primitive.is_a?(first, Numeric)
       numeric_step = Primitive.is_a?(step_size, Numeric)
 
-      if numeric_begin && numeric_step && step_size == 0
-        raise ArgumentError, "step can't be 0"
-      end
+      check_step_zero(step_size) if numeric_begin && numeric_step
 
       # String/Symbol ranges with Integer steps retain pre-3.4 succ-based iteration for
       # backward compatibility. See https://bugs.ruby-lang.org/issues/18368 for discussion.
       if (Primitive.is_a?(first, String) || Primitive.is_a?(first, Symbol)) && Primitive.is_a?(step_size, Integer)
-        if step_size <= 0
-          raise ArgumentError, step_size < 0 ? "step can't be negative" : "step can't be 0"
-        end
+        check_step_zero(step_size)
+        raise ArgumentError, "step can't be negative" if step_size < 0
 
         i = 0
         range.each do |item|
@@ -77,9 +74,7 @@ module Truffle
         first = Truffle::Type.rb_num2dbl(first)
         last = Truffle::Type.rb_num2dbl(last) unless Primitive.nil?(last)
 
-        if step_size == 0
-          raise ArgumentError, "step can't be 0"
-        end
+        check_step_zero(step_size)
 
         if Primitive.nil?(last)
           i = 0
@@ -192,9 +187,7 @@ module Truffle
       from, to = range.begin, range.end
 
       if Primitive.is_a?(step_size, Numeric)
-        if Primitive.is_a?(from, Numeric) && step_size == 0
-          raise ArgumentError, "step can't be 0"
-        end
+        check_step_zero(step_size) if Primitive.is_a?(from, Numeric)
 
         if arithmetic_range?(from, to)
           return Enumerator::ArithmeticSequence.new(range, :step, from, to, step_size, range.exclude_end?)
@@ -206,6 +199,12 @@ module Truffle
       end
 
       range.to_enum(:step, step_size) { nil }
+    end
+
+    def self.check_step_zero(step_size)
+      if step_size == 0
+        raise ArgumentError, "step can't be 0"
+      end
     end
 
     def self.arithmetic_range?(from, to)
