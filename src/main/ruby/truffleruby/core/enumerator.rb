@@ -813,7 +813,7 @@ class Enumerator::ArithmeticSequence < Enumerator
     unless Primitive.is_a?(from, Float) || Primitive.is_a?(to, Float) || Primitive.is_a?(step, Float)
       step = Primitive.convert_with_to_int(step)
     end
-    Truffle::NumericOperations.step_size(from, to, step, true, exclude_end)
+    Truffle::NumericOperations.step_size(from, to, step, exclude_end)
   end
 end
 

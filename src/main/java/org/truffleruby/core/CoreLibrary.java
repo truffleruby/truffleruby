@@ -206,6 +206,7 @@ public final class CoreLibrary {
     public final RubyModule truffleInteropOperationsModule;
     public final RubyModule truffleKernelOperationsModule;
     public final RubyModule truffleRandomOperationsModule;
+    public final RubyModule truffleRangeOperationsModule;
     public final RubyModule truffleRegexpOperationsModule;
     public final RubyModule truffleStringOperationsModule;
     public final RubyModule truffleThreadOperationsModule;
@@ -517,6 +518,7 @@ public final class CoreLibrary {
         truffleKernelOperationsModule = defineModule(truffleModule, "KernelOperations");
         defineModule(truffleModule, "MonitorOperations");
         truffleRandomOperationsModule = defineModule(truffleModule, "RandomOperations");
+        truffleRangeOperationsModule = defineModule(truffleModule, "RangeOperations");
         truffleRegexpOperationsModule = defineModule(truffleModule, "RegexpOperations");
         truffleStringOperationsModule = defineModule(truffleModule, "StringOperations");
         truffleThreadOperationsModule = defineModule(truffleModule, "ThreadOperations");

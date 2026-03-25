@@ -284,7 +284,13 @@ class Range
       raise TypeError, "can't iterate from #{Primitive.class(first)}"
     end
 
-    return each_endless(first, &block) if Primitive.nil? last
+    if Primitive.nil?(last)
+      current = first
+      while true
+        yield current
+        current = current.succ
+      end
+    end
 
     case first
     when Integer
@@ -320,22 +326,6 @@ class Range
     end
 
     self
-  end
-
-  private def each_endless(first, &block)
-    if Primitive.is_a?(first, Integer)
-      i = first
-      while true
-        yield i
-        i += 1
-      end
-    else
-      current = first
-      while true
-        yield current
-        current = current.succ
-      end
-    end
   end
 
   def first(n = undefined)
@@ -493,62 +483,6 @@ class Range
     end
 
     self
-  end
-
-  private def step_internal(step_size = 1, &block) # :yields: object
-    return Truffle::RangeOperations.step_no_block(self, step_size) unless block
-
-    values = Truffle::RangeOperations.validate_step_size(self.begin, self.end, step_size)
-    first = values[0]
-    last = values[1]
-    step_size = values[2]
-
-    return step_endless(first, step_size, &block) if Primitive.nil?(last)
-
-    case first
-    when Float
-      iterations = Truffle::NumericOperations.float_step_size(first, last, step_size, exclude_end?)
-
-      i = 0
-      while i < iterations
-        curr = i * step_size + first
-        curr = last if last < curr
-        yield curr
-        i += 1
-      end
-    when Numeric
-      curr = first
-      last -= 1 if exclude_end?
-
-      while curr <= last
-        yield curr
-        curr += step_size
-      end
-    else
-      i = 0
-      each do |item|
-        yield item if i % step_size == 0
-        i += 1
-      end
-    end
-
-    self
-  end
-
-  private def step_endless(first, step_size, &block)
-    if Primitive.is_a?(first, Numeric)
-      curr = first
-      while true
-        yield curr
-        curr += step_size
-      end
-    else
-      i = 0
-      each_endless(first) do |item|
-        yield item if i % step_size == 0
-        i += 1
-      end
-    end
   end
 
   def to_s

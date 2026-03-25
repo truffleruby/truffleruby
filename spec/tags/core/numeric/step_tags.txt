@@ -1,2 +1,0 @@
-fails:Numeric#step with mixed arguments  raises an ArgumentError when step is 0
-fails:Numeric#step with mixed arguments raises an ArgumentError when step is 0.0

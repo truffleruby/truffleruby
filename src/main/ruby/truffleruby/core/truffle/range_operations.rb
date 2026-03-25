@@ -36,15 +36,134 @@
 
 module Truffle
   module RangeOperations
+    def self.step_fallback(range, step_size, &block) # :yields: object
+      return step_no_block(range, step_size) unless block
+
+      first = range.begin
+      last = range.end
+      exclude_end = range.exclude_end?
+
+      if Primitive.nil?(first)
+        raise ArgumentError, '#step iteration for beginless ranges is meaningless'
+      end
+
+      # String/Symbol ranges with Integer steps retain pre-3.4 succ-based iteration for
+      # backward compatibility. See https://bugs.ruby-lang.org/issues/18368 for discussion.
+      if (Primitive.is_a?(first, String) || Primitive.is_a?(first, Symbol)) && Primitive.is_a?(step_size, Integer)
+        check_step_zero(step_size)
+        raise ArgumentError, "step can't be negative" if step_size < 0
+
+        i = 0
+        range.each do |item|
+          yield item if i % step_size == 0
+          i += 1
+        end
+
+        return range
+      end
+
+      # When any argument involves a Float, coerce all values to Float for consistent
+      # floating-point iteration. This mirrors CRuby's ruby_float_step behavior.
+      if Primitive.is_a?(first, Float) || Primitive.is_a?(last, Float) || Primitive.is_a?(step_size, Float)
+        step_size = Truffle::Type.rb_num2dbl(step_size)
+        check_step_zero(step_size)
+        desc = step_size < 0
+        first = Truffle::Type.rb_num2dbl(first)
+        if Primitive.nil?(last)
+          last = desc ? -Float::INFINITY : Float::INFINITY
+        else
+          last = Truffle::Type.rb_num2dbl(last)
+        end
+
+        Truffle::NumericOperations.step_float(first, last, step_size, step_size < 0, exclude_end, &block)
+        return range
+      end
+
+      # Numeric + numeric step (non-Float)
+      if Primitive.is_a?(first, Numeric) && Primitive.is_a?(step_size, Numeric)
+        check_step_zero(step_size)
+        if Primitive.nil?(last)
+          curr = first
+          while true
+            yield curr
+            curr += step_size
+          end
+        else
+          desc = step_size < 0
+          if exclude_end
+            Truffle::NumericOperations.step_non_float_exclude_end(first, last, step_size, desc, &block)
+          else
+            Truffle::NumericOperations.step_non_float(first, last, step_size, desc, &block)
+          end
+        end
+
+        return range
+      end
+
+      # Generic path: iterate using the + operator, which is the Ruby 3.4 behavior
+      # that enables stepping through non-numeric ranges like Time and Date.
+      # This does NOT raise for step_size == 0.
+      if Primitive.nil?(last)
+        curr = first
+        while true
+          yield curr
+          curr += step_size
+        end
+      else
+        direction = (first <=> last)
+
+        if Primitive.nil?(direction)
+          return range
+        elsif direction == 0
+          yield first unless exclude_end
+          return range
+        end
+
+        # Verify the step moves iteration in the same direction as from begin to end;
+        # otherwise, the iteration should be empty.
+        second = first + step_size
+        step_direction = (first <=> second)
+
+        if Primitive.nil?(step_direction) || step_direction != direction
+          return range
+        end
+
+        # Iterate while curr is on the same side of last as first was.
+        # For forward ranges (direction=-1): continues while curr < last.
+        # For backward ranges (direction=1): continues while curr > last.
+        curr = first
+        while (cmp = (curr <=> last)) == direction
+          yield curr
+          curr += step_size
+        end
+        yield curr if !exclude_end && cmp == 0
+      end
+
+      range
+    end
+    Primitive.always_split singleton_class, :step_fallback
+
     def self.step_no_block(range, step_size)
       from, to = range.begin, range.end
-      if arithmetic_range?(from, to)
-        Enumerator::ArithmeticSequence.new(range, :step, from, to, step_size, range.exclude_end?)
-      else
-        range.to_enum(:step, step_size) do
-          validated_step_args = validate_step_size(from, to, step_size)
-          step_iterations_size(range, *validated_step_args)
+
+      if Primitive.is_a?(step_size, Numeric)
+        check_step_zero(step_size) if Primitive.is_a?(from, Numeric)
+
+        if arithmetic_range?(from, to)
+          return Enumerator::ArithmeticSequence.new(range, :step, from, to, step_size, range.exclude_end?)
         end
+      end
+
+      if Primitive.nil?(from)
+        raise ArgumentError, '#step for non-numeric beginless ranges is meaningless'
+      end
+
+      range.to_enum(:step, step_size) { nil }
+    end
+
+    def self.check_step_zero(step_size)
+      if step_size == 0
+        raise ArgumentError, "step can't be 0"
       end
     end
 
@@ -54,41 +173,6 @@ module Truffle
       else
         Primitive.nil?(from) && Primitive.is_a?(to, Numeric)
       end
-    end
-
-    def self.step_iterations_size(range, first, last, step_size)
-      case first
-      when Float
-        Truffle::NumericOperations.float_step_size(first, last, step_size, range.exclude_end?)
-      else
-        Primitive.nil?(range.size) ? nil : (range.size.fdiv(step_size)).ceil
-      end
-    end
-
-    def self.validate_step_size(first, last, step_size)
-      if Primitive.is_a?(step_size, Float) or Primitive.is_a?(first, Float) or Primitive.is_a?(last, Float)
-        # if any are floats they all must be
-        begin
-          step_size = Float(from = step_size)
-          first     = Float(from = first)
-          last      = Float(from = last) unless Primitive.nil? last
-        rescue ArgumentError
-          raise TypeError, "no implicit conversion to float from #{Primitive.class(from)}"
-        end
-      else
-        step_size = Integer(from = step_size)
-
-        unless Primitive.is_a?(step_size, Integer)
-          raise TypeError, "can't convert #{Primitive.class(from)} to Integer (#{Primitive.class(from)}#to_int gives #{Primitive.class(step_size)})"
-        end
-      end
-
-      if step_size <= 0
-        raise ArgumentError, "step can't be negative" if step_size < 0
-        raise ArgumentError, "step can't be 0"
-      end
-
-      [first, last, step_size]
     end
 
     # MRI: r_cover_range_p

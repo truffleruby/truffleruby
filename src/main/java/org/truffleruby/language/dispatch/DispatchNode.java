@@ -172,6 +172,16 @@ public abstract class DispatchNode extends SpecialVariablesSendingNode {
         return execute(null, receiver, method, rubyArgs, PRIVATE);
     }
 
+    public Object callWithBlock(Object receiver, String method, Object block, Object arg1, Object arg2) {
+        final Object[] rubyArgs = RubyArguments.allocate(2);
+        RubyArguments.setSelf(rubyArgs, receiver);
+        RubyArguments.setBlock(rubyArgs, block);
+        RubyArguments.setDescriptor(rubyArgs, NoKeywordArgumentsDescriptor.INSTANCE);
+        RubyArguments.setArgument(rubyArgs, 0, arg1);
+        RubyArguments.setArgument(rubyArgs, 1, arg2);
+        return execute(null, receiver, method, rubyArgs, PRIVATE);
+    }
+
     public Object callWithBlock(DispatchConfiguration config, Object receiver, String method, Object block, Object arg1,
             Object arg2) {
         final Object[] rubyArgs = RubyArguments.allocate(2);

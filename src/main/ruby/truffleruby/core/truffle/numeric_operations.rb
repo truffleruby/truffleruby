@@ -36,7 +36,7 @@
 
 module Truffle
   module NumericOperations
-    def self.step_no_block(from, orig_limit, orig_step, by, to, limit, step, uses_kwargs)
+    def self.step_no_block(from, orig_limit, orig_step, by, to, limit, step)
       step = 1 if Primitive.nil?(step)
 
       if (Primitive.undefined?(to) || Primitive.nil?(to) || Primitive.is_a?(to, Numeric)) && Primitive.is_a?(step, Numeric)
@@ -47,42 +47,46 @@ module Truffle
       kwargs[:by] = by unless Primitive.undefined?(by)
       kwargs[:to] = to unless Primitive.undefined?(to)
       from.to_enum(:step, orig_limit, orig_step, kwargs) do
-        Truffle::NumericOperations.step_size(from, limit, step, uses_kwargs, false)
+        Truffle::NumericOperations.step_size(from, limit, step, false)
       end
     end
 
     def self.step_non_float(value, limit, step, desc)
-      if step == 0
-        while true
+      if desc
+        until value < limit
           yield value
           value += step
         end
       else
-        if desc
-          until value < limit
-            yield value
-            value += step
-          end
-        else
-          until value > limit
-            yield value
-            value += step
-          end
+        until value > limit
+          yield value
+          value += step
         end
       end
     end
     Primitive.always_split singleton_class, :step_non_float
 
-    def self.step_float(value, limit, step, desc)
-      n = float_step_size(value, limit, step, false)
+    def self.step_non_float_exclude_end(value, limit, step, desc)
+      if desc
+        until value <= limit
+          yield value
+          value += step
+        end
+      else
+        until value >= limit
+          yield value
+          value += step
+        end
+      end
+    end
+    Primitive.always_split singleton_class, :step_non_float
+
+    def self.step_float(value, limit, step, desc, exclude_end)
+      n = float_step_size(value, limit, step, exclude_end)
 
       if n > 0
         if step.infinite?
           yield value
-        elsif step == 0
-          while true
-            yield value
-          end
         else
           i = 0
           if desc
@@ -110,10 +114,6 @@ module Truffle
         return step > 0 ? (value <= limit ? 1 : 0) : (value >= limit ? 1 : 0)
       end
 
-      if step == 0
-        return Float::INFINITY
-      end
-
       n = (limit - value) / step
       return 0 if n < 0
 
@@ -137,9 +137,9 @@ module Truffle
       n + 1
     end
 
-    def self.step_size(value, limit, step, uses_kwargs, exclude_end)
+    def self.step_size(value, limit, step, exclude_end)
       value, limit, step, desc, is_float =
-        step_fetch_args(value, limit, step, uses_kwargs)
+        step_fetch_args(value, limit, step)
 
       if stepping_forever?(limit, step, desc)
         Float::INFINITY
@@ -169,17 +169,7 @@ module Truffle
       end
     end
 
-    def self.step_fetch_args(value, limit, step, uses_kwargs)
-      if uses_kwargs
-        step ||= 1
-      else
-        # Step can't be `nil` or `0` if passed via positional arguments,
-        # but it can be either value if passed via keyword arguments.
-
-        raise TypeError, 'step must be numeric' if Primitive.nil? step
-        raise ArgumentError, "step can't be 0" if step == 0
-      end
-
+    def self.step_fetch_args(value, limit, step)
       unless Primitive.is_a?(step, Numeric)
         coerced = Truffle::Type.check_funcall(step, :>, [0])
         raise TypeError, "0 can't be coerced into #{Primitive.class(step)}" if Primitive.undefined?(coerced)
