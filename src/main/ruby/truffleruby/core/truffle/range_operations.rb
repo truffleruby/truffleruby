@@ -50,8 +50,6 @@ module Truffle
       numeric_begin = Primitive.is_a?(first, Numeric)
       numeric_step = Primitive.is_a?(step_size, Numeric)
 
-      check_step_zero(step_size) if numeric_begin && numeric_step
-
       # String/Symbol ranges with Integer steps retain pre-3.4 succ-based iteration for
       # backward compatibility. See https://bugs.ruby-lang.org/issues/18368 for discussion.
       if (Primitive.is_a?(first, String) || Primitive.is_a?(first, Symbol)) && Primitive.is_a?(step_size, Integer)
@@ -86,6 +84,7 @@ module Truffle
 
       # Numeric + numeric step (non-Float)
       if numeric_begin && numeric_step
+        check_step_zero(step_size)
         if Primitive.nil?(last)
           curr = first
           while true
@@ -106,6 +105,7 @@ module Truffle
 
       # Generic path: iterate using the + operator, which is the Ruby 3.4 behavior
       # that enables stepping through non-numeric ranges like Time and Date.
+      # This does NOT raise for step_size == 0.
       if Primitive.nil?(last)
         curr = first
         while true
