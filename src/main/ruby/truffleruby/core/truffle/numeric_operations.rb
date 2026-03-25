@@ -66,6 +66,21 @@ module Truffle
     end
     Primitive.always_split singleton_class, :step_non_float
 
+    def self.step_non_float_exclude_end(value, limit, step, desc)
+      if desc
+        until value <= limit
+          yield value
+          value += step
+        end
+      else
+        until value >= limit
+          yield value
+          value += step
+        end
+      end
+    end
+    Primitive.always_split singleton_class, :step_non_float
+
     def self.step_float(value, limit, step, desc, exclude_end)
       n = float_step_size(value, limit, step, exclude_end)
 

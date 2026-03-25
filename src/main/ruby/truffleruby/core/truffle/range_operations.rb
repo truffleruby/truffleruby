@@ -92,33 +92,12 @@ module Truffle
             yield curr
             curr += step_size
           end
-        elsif step_size > 0
+        else
+          desc = step_size < 0
           if exclude_end
-            curr = first
-            while curr < last
-              yield curr
-              curr += step_size
-            end
+            Truffle::NumericOperations.step_non_float_exclude_end(first, last, step_size, desc, &block)
           else
-            curr = first
-            while curr <= last
-              yield curr
-              curr += step_size
-            end
-          end
-        else # step_size < 0
-          if exclude_end
-            curr = first
-            while curr > last
-              yield curr
-              curr += step_size
-            end
-          else
-            curr = first
-            while curr >= last
-              yield curr
-              curr += step_size
-            end
+            Truffle::NumericOperations.step_non_float(first, last, step_size, desc, &block)
           end
         end
 
