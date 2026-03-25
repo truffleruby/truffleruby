@@ -33,7 +33,7 @@ Most features of Ruby 3.4 and earlier are supported in TruffleRuby.
 However, some features are not yet implemented.
 See the following issues for details:
 
-* [Ruby 3.4 features](https://github.com/truffleruby/truffleruby/issues/3883)
+* [Ruby 3.4 features (complete)](https://github.com/truffleruby/truffleruby/issues/3883)
 * [Ruby 3.3 features](https://github.com/truffleruby/truffleruby/issues/3681)
 * [Ruby 3.2 features](https://github.com/truffleruby/truffleruby/issues/3039)
 * [Ruby 3.1 features](https://github.com/truffleruby/truffleruby/issues/2733)
