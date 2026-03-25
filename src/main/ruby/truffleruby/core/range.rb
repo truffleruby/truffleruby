@@ -284,7 +284,13 @@ class Range
       raise TypeError, "can't iterate from #{Primitive.class(first)}"
     end
 
-    return each_endless(first, &block) if Primitive.nil? last
+    if Primitive.nil?(last)
+      current = first
+      while true
+        yield current
+        current = current.succ
+      end
+    end
 
     case first
     when Integer
@@ -320,22 +326,6 @@ class Range
     end
 
     self
-  end
-
-  private def each_endless(first, &block)
-    if Primitive.is_a?(first, Integer)
-      i = first
-      while true
-        yield i
-        i += 1
-      end
-    else
-      current = first
-      while true
-        yield current
-        current = current.succ
-      end
-    end
   end
 
   def first(n = undefined)
