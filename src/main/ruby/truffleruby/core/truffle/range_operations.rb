@@ -36,6 +36,158 @@
 
 module Truffle
   module RangeOperations
+    def self.step_fallback(range, step_size, &block) # :yields: object
+      return step_no_block(range, step_size) unless block
+
+      first = range.begin
+      last = range.end
+      exclude_end = range.exclude_end?
+
+      if Primitive.nil?(first)
+        raise ArgumentError, '#step iteration for beginless ranges is meaningless'
+      end
+
+      numeric_begin = Primitive.is_a?(first, Numeric)
+      numeric_step = Primitive.is_a?(step_size, Numeric)
+
+      if numeric_begin && numeric_step && step_size == 0
+        raise ArgumentError, "step can't be 0"
+      end
+
+      # String/Symbol ranges with Integer steps retain pre-3.4 succ-based iteration for
+      # backward compatibility. See https://bugs.ruby-lang.org/issues/18368 for discussion.
+      if (Primitive.is_a?(first, String) || Primitive.is_a?(first, Symbol)) && Primitive.is_a?(step_size, Integer)
+        if step_size <= 0
+          raise ArgumentError, step_size < 0 ? "step can't be negative" : "step can't be 0"
+        end
+
+        i = 0
+        range.each do |item|
+          yield item if i % step_size == 0
+          i += 1
+        end
+
+        return range
+      end
+
+      # When any argument involves a Float, coerce all values to Float for consistent
+      # floating-point iteration. This mirrors CRuby's ruby_float_step behavior.
+      if Primitive.is_a?(first, Float) || Primitive.is_a?(last, Float) || Primitive.is_a?(step_size, Float)
+        step_size = Truffle::Type.rb_num2dbl(step_size)
+        first = Truffle::Type.rb_num2dbl(first)
+        last = Truffle::Type.rb_num2dbl(last) unless Primitive.nil?(last)
+
+        if step_size == 0
+          raise ArgumentError, "step can't be 0"
+        end
+
+        if Primitive.nil?(last)
+          i = 0
+          while true
+            yield i * step_size + first
+            i += 1
+          end
+        else
+          iterations = Truffle::NumericOperations.float_step_size(first, last, step_size, exclude_end)
+
+          i = 0
+          while i < iterations
+            curr = i * step_size + first
+            if step_size > 0
+              curr = last if curr > last
+            else
+              curr = last if curr < last
+            end
+            yield curr
+            i += 1
+          end
+        end
+
+        return range
+      end
+
+      # Numeric + numeric step (non-Float)
+      if numeric_begin && numeric_step
+        if Primitive.nil?(last)
+          curr = first
+          while true
+            yield curr
+            curr += step_size
+          end
+        elsif step_size > 0
+          if exclude_end
+            curr = first
+            while curr < last
+              yield curr
+              curr += step_size
+            end
+          else
+            curr = first
+            while curr <= last
+              yield curr
+              curr += step_size
+            end
+          end
+        else # step_size < 0
+          if exclude_end
+            curr = first
+            while curr > last
+              yield curr
+              curr += step_size
+            end
+          else
+            curr = first
+            while curr >= last
+              yield curr
+              curr += step_size
+            end
+          end
+        end
+
+        return range
+      end
+
+      # Generic path: iterate using the + operator, which is the Ruby 3.4 behavior
+      # that enables stepping through non-numeric ranges like Time and Date.
+      if Primitive.nil?(last)
+        curr = first
+        while true
+          yield curr
+          curr += step_size
+        end
+      else
+        direction = (first <=> last)
+
+        if Primitive.nil?(direction)
+          return range
+        elsif direction == 0
+          yield first unless exclude_end
+          return range
+        end
+
+        # Verify the step moves iteration in the same direction as from begin to end;
+        # otherwise, the iteration should be empty.
+        stepped = first + step_size
+        step_direction = (first <=> stepped)
+
+        if Primitive.nil?(step_direction) || step_direction != direction
+          return range
+        end
+
+        # Iterate while curr is on the same side of last as first was.
+        # For forward ranges (direction=-1): continues while curr < last.
+        # For backward ranges (direction=1): continues while curr > last.
+        curr = first
+        while (cmp = (curr <=> last)) == direction
+          yield curr
+          curr += step_size
+        end
+        yield curr if !exclude_end && cmp == 0
+      end
+
+      range
+    end
+
     def self.step_no_block(range, step_size)
       from, to = range.begin, range.end
 

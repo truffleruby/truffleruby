@@ -37,7 +37,6 @@ import org.truffleruby.language.RubyContextSourceNode;
 import org.truffleruby.language.RubyGuards;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.annotations.Visibility;
-import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.language.objects.AllocationTracing;
@@ -49,7 +48,6 @@ import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.profiles.ConditionProfile;
@@ -264,7 +262,7 @@ public abstract class RangeNodes {
         }
 
         @Fallback
-        Object stepFallback(VirtualFrame frame, Object range, Object step, Object block) {
+        Object stepFallback(Object range, Object step, Object block) {
             if (stepInternalCall == null) {
                 CompilerDirectives.transferToInterpreterAndInvalidate();
                 stepInternalCall = insert(DispatchNode.create());
@@ -274,8 +272,8 @@ public abstract class RangeNodes {
                 step = 1;
             }
 
-            final Object blockArgument = RubyArguments.getBlock(frame);
-            return stepInternalCall.callWithBlock(range, "step_internal", blockArgument, step);
+            return stepInternalCall.callWithBlock(coreLibrary().truffleRangeOperationsModule, "step_fallback", block,
+                    range, step);
         }
     }
 
