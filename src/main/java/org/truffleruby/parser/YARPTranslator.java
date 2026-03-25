@@ -3238,7 +3238,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         if (blockNode != null) {
             return blockNode;
         } else {
-            return environment.findLocalVarOrNilNode(TranslatorEnvironment.METHOD_BLOCK_NAME);
+            return environment.readFromMethodFrameNodeOrNil(TranslatorEnvironment.METHOD_BLOCK_NAME);
         }
     }
 
@@ -3361,7 +3361,7 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         var argumentsAndBlock = translateArgumentsAndBlock(node.arguments, null, "<yield>", false);
 
-        RubyNode readBlock = environment.findLocalVarOrNilNode(TranslatorEnvironment.METHOD_BLOCK_NAME);
+        RubyNode readBlock = environment.readFromMethodFrameNodeOrNil(TranslatorEnvironment.METHOD_BLOCK_NAME);
 
         var rubyNode = new YieldExpressionNode(
                 argumentsAndBlock.isSplatted,

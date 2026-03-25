@@ -267,14 +267,6 @@ public final class TranslatorEnvironment {
         return node;
     }
 
-    public RubyNode findLocalVarOrNilNode(String name) {
-        RubyNode node = findLocalVarNodeOrNull(name);
-        if (node == null) {
-            node = new NilLiteralNode();
-        }
-        return node;
-    }
-
     public ReadLocalNode readNode(String name, int prismNodeDepth) {
         // Copy of the actualDepth logic because we need both scope and actualDepth
         int remainingDepth = prismNodeDepth + depthOffset;
@@ -311,28 +303,10 @@ public final class TranslatorEnvironment {
         return ReadLocalNode.create(slot, depth);
     }
 
-    private ReadLocalNode findLocalVarNodeOrNull(String name) {
-        assert name != null;
-        TranslatorEnvironment current = this;
-        int depth = 0;
-
-        while (current != null) {
-            final Integer slot = current.findFrameSlotOrNull(name);
-
-            if (slot != null) {
-                return ReadLocalNode.create(slot, depth);
-            }
-
-            if (current.getNeverAssignInParentScope()) {
-                // Do not try to look above scope barriers (def, module)
-                return null;
-            }
-
-            current = current.parent;
-            depth++;
-        }
-
-        return null;
+    public RubyNode readFromMethodFrameNodeOrNil(String name) {
+        int depth = getBlockDepth();
+        Integer slot = getSurroundingMethodEnvironment().findFrameSlotOrNull(name);
+        return slot != null ? ReadLocalNode.create(slot, depth) : new NilLiteralNode();
     }
 
     public FrameDescriptor computeFrameDescriptor() {
@@ -359,11 +333,6 @@ public final class TranslatorEnvironment {
 
     public ParseEnvironment getParseEnvironment() {
         return parseEnvironment;
-    }
-
-    /** Whether this is a lexical scope barrier (def, module, class) */
-    public boolean getNeverAssignInParentScope() {
-        return !isBlock();
     }
 
     /** A way to check current scope is a module/class. If in a block, isModuleBody is always false. */
