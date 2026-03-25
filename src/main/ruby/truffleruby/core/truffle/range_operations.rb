@@ -47,9 +47,6 @@ module Truffle
         raise ArgumentError, '#step iteration for beginless ranges is meaningless'
       end
 
-      numeric_begin = Primitive.is_a?(first, Numeric)
-      numeric_step = Primitive.is_a?(step_size, Numeric)
-
       # String/Symbol ranges with Integer steps retain pre-3.4 succ-based iteration for
       # backward compatibility. See https://bugs.ruby-lang.org/issues/18368 for discussion.
       if (Primitive.is_a?(first, String) || Primitive.is_a?(first, Symbol)) && Primitive.is_a?(step_size, Integer)
@@ -83,7 +80,7 @@ module Truffle
       end
 
       # Numeric + numeric step (non-Float)
-      if numeric_begin && numeric_step
+      if Primitive.is_a?(first, Numeric) && Primitive.is_a?(step_size, Numeric)
         check_step_zero(step_size)
         if Primitive.nil?(last)
           curr = first
