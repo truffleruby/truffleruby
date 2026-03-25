@@ -1201,7 +1201,9 @@ module Commands
   end
 
   def test_unit(*rest)
-    mx('build', '--dependencies', 'TRUFFLERUBY-TEST-EMBEDDING,TRUFFLERUBY-TEST-INTERNAL')
+    unless ENV.key? 'SKIP_BUILD'
+      mx('build', '--dependencies', 'TRUFFLERUBY-TEST-EMBEDDING,TRUFFLERUBY-TEST-INTERNAL')
+    end
     unittest_args, mx_options = args_split(rest)
     unittest_options, tests = unittest_args.partition { |arg| arg.start_with?('-') }
 
