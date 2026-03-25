@@ -124,8 +124,8 @@ module Truffle
 
         # Verify the step moves iteration in the same direction as from begin to end;
         # otherwise, the iteration should be empty.
-        stepped = first + step_size
-        step_direction = (first <=> stepped)
+        second = first + step_size
+        step_direction = (first <=> second)
 
         if Primitive.nil?(step_direction) || step_direction != direction
           return range
