@@ -157,7 +157,6 @@ import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
 
@@ -179,8 +178,6 @@ public class YARPTranslator extends YARPBaseTranslator {
     public static final int NO_FRAME_ON_STACK_MARKER = -1;
 
     public static final RescueNode[] EMPTY_RESCUE_NODE_ARRAY = new RescueNode[0];
-
-    public Deque<Integer> frameOnStackMarkerSlotStack = new ArrayDeque<>();
 
     /** whether a while-loop body is translated; needed to check correctness of operators like break/next/etc */
     private boolean translatingWhile = false;
@@ -469,7 +466,7 @@ public class YARPTranslator extends YARPBaseTranslator {
     }
 
     private RubyNode translateBlockAndLambda(Node node, Node parametersNode, Node body, String[] locals,
-            String literalBlockPassedToMethod, boolean isForOrENDBody) {
+            String literalBlockPassedToMethod, int frameOnStackMarkerSlot, boolean isForOrENDBody) {
         final boolean isStabbyLambda = node instanceof Nodes.LambdaNode;
 
         TranslatorEnvironment methodParent = environment.getSurroundingMethodEnvironment();
@@ -539,11 +536,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                 environment.modulePath);
         newEnvironment.literalBlockPassedToMethod = literalBlockPassedToMethod;
 
-        final YARPBlockNodeTranslator blockCompiler = new YARPBlockNodeTranslator(
-                newEnvironment,
-                arity);
-
-        blockCompiler.frameOnStackMarkerSlotStack = frameOnStackMarkerSlotStack;
+        final YARPBlockNodeTranslator blockCompiler = new YARPBlockNodeTranslator(newEnvironment, arity);
 
         final RubyNode rubyNode = blockCompiler.compileBlockNode(
                 body,
@@ -551,6 +544,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                 parametersNode,
                 locals,
                 isStabbyLambda,
+                frameOnStackMarkerSlot,
                 getSourceSection(node));
 
         return assignPositionAndFlags(node, rubyNode);
@@ -770,12 +764,8 @@ public class YARPTranslator extends YARPBaseTranslator {
             if (block instanceof Nodes.BlockNode b) {
                 // a() {}
                 frameOnStackMarkerSlot = environment.declareLocalTemp("frame_on_stack_marker");
-                frameOnStackMarkerSlotStack.push(frameOnStackMarkerSlot);
-                try {
-                    blockNode = translateBlockAndLambda(b, b.parameters, b.body, b.locals, methodName, isForOrENDBody);
-                } finally {
-                    frameOnStackMarkerSlotStack.pop();
-                }
+                blockNode = translateBlockAndLambda(b, b.parameters, b.body, b.locals, methodName,
+                        frameOnStackMarkerSlot, isForOrENDBody);
             } else if (block instanceof Nodes.BlockArgumentNode blockArgument) {
                 // a(&:b)
                 blockNode = blockArgument.accept(this);
@@ -2556,7 +2546,8 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     @Override
     public RubyNode visitLambdaNode(Nodes.LambdaNode node) {
-        return translateBlockAndLambda(node, node.parameters, node.body, node.locals, null, false);
+        return translateBlockAndLambda(node, node.parameters, node.body, node.locals, null, NO_FRAME_ON_STACK_MARKER,
+                false);
     }
 
     @Override
@@ -3745,12 +3736,9 @@ public class YARPTranslator extends YARPBaseTranslator {
         translatingWhile = true;
         final BreakID oldBreakID = environment.getBreakID();
         environment.setBreakIDForWhile(whileBreakID);
-        frameOnStackMarkerSlotStack.push(NO_FRAME_ON_STACK_MARKER);
-
         try {
             body = translateNodeOrNil(statements);
         } finally {
-            frameOnStackMarkerSlotStack.pop();
             environment.setBreakIDForWhile(oldBreakID);
             translatingWhile = oldTranslatingWhile;
         }

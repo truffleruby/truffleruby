@@ -20,6 +20,7 @@ public final class FrameOnStackNode extends RubyContextSourceNode {
     private final int frameOnStackMarkerSlot;
 
     public FrameOnStackNode(RubyNode child, int frameOnStackMarkerSlot) {
+        assert frameOnStackMarkerSlot >= 0;
         this.child = child;
         this.frameOnStackMarkerSlot = frameOnStackMarkerSlot;
     }
