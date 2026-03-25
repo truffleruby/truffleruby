@@ -73,8 +73,8 @@ module Truffle
     end
     Primitive.always_split singleton_class, :step_non_float
 
-    def self.step_float(value, limit, step, desc)
-      n = float_step_size(value, limit, step, false)
+    def self.step_float(value, limit, step, desc, exclude_end)
+      n = float_step_size(value, limit, step, exclude_end)
 
       if n > 0
         if step.infinite?

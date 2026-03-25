@@ -86,7 +86,7 @@ class Numeric
       Truffle::NumericOperations.step_fetch_args(self, limit, step, uses_kwargs)
 
     if is_float
-      Truffle::NumericOperations.step_float(value, limit, step, desc, &block)
+      Truffle::NumericOperations.step_float(value, limit, step, desc, false, &block)
     else
       Truffle::NumericOperations.step_non_float(value, limit, step, desc, &block)
     end

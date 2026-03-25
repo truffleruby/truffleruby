@@ -71,33 +71,16 @@ module Truffle
       # floating-point iteration. This mirrors CRuby's ruby_float_step behavior.
       if Primitive.is_a?(first, Float) || Primitive.is_a?(last, Float) || Primitive.is_a?(step_size, Float)
         step_size = Truffle::Type.rb_num2dbl(step_size)
-        first = Truffle::Type.rb_num2dbl(first)
-        last = Truffle::Type.rb_num2dbl(last) unless Primitive.nil?(last)
-
         check_step_zero(step_size)
-
+        desc = step_size < 0
+        first = Truffle::Type.rb_num2dbl(first)
         if Primitive.nil?(last)
-          i = 0
-          while true
-            yield i * step_size + first
-            i += 1
-          end
+          last = desc ? -Float::INFINITY : Float::INFINITY
         else
-          iterations = Truffle::NumericOperations.float_step_size(first, last, step_size, exclude_end)
-
-          i = 0
-          while i < iterations
-            curr = i * step_size + first
-            if step_size > 0
-              curr = last if curr > last
-            else
-              curr = last if curr < last
-            end
-            yield curr
-            i += 1
-          end
+          last = Truffle::Type.rb_num2dbl(last)
         end
 
+        Truffle::NumericOperations.step_float(first, last, step_size, step_size < 0, exclude_end, &block)
         return range
       end
 
@@ -182,6 +165,7 @@ module Truffle
 
       range
     end
+    Primitive.always_split singleton_class, :step_fallback
 
     def self.step_no_block(range, step_size)
       from, to = range.begin, range.end
