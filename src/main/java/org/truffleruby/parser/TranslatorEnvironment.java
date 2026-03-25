@@ -239,9 +239,9 @@ public final class TranslatorEnvironment {
         return declareVar(name);
     }
 
-    public Integer findFrameSlotOrNull(Object name) {
+    private int findFrameSlotOrMinusOne(Object name) {
         assert name != null;
-        return nameToIndex.get(name);
+        return nameToIndex.get(name, -1);
     }
 
     public int findFrameSlot(Object name) {
@@ -305,8 +305,8 @@ public final class TranslatorEnvironment {
 
     public RubyNode readFromMethodFrameNodeOrNil(String name) {
         int depth = getBlockDepth();
-        Integer slot = getSurroundingMethodEnvironment().findFrameSlotOrNull(name);
-        return slot != null ? ReadLocalNode.create(slot, depth) : new NilLiteralNode();
+        int slot = getSurroundingMethodEnvironment().findFrameSlotOrMinusOne(name);
+        return slot != -1 ? ReadLocalNode.create(slot, depth) : new NilLiteralNode();
     }
 
     public FrameDescriptor computeFrameDescriptor() {
