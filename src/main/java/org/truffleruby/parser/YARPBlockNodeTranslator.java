@@ -50,6 +50,8 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
 
     public RubyNode compileBlockNode(Node body, ParametersNode parameters, Node parametersNode, String[] locals,
             boolean isStabbyLambda, int frameOnStackMarkerSlot, SourceSection sourceSection) {
+        assert isStabbyLambda == (frameOnStackMarkerSlot == NO_FRAME_ON_STACK_MARKER);
+
         declareLocalVariables(locals);
         if (parametersNode instanceof Nodes.ItParametersNode) {
             environment.declareVar(IT_PARAMETER_NAME);
@@ -118,7 +120,7 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
                 environment.getSharedMethodInfo(),
                 callTargets,
                 environment.getBreakID(),
-                emitLambda ? NO_FRAME_ON_STACK_MARKER : frameOnStackMarkerSlot);
+                frameOnStackMarkerSlot);
     }
 
     private RubyNode preludeProc(

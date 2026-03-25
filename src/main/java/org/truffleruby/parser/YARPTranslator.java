@@ -175,8 +175,6 @@ import static org.truffleruby.parser.TranslatorEnvironment.FORWARDED_REST_NAME;
  * Every Prism node class is documented in the {@link Nodes}. */
 public class YARPTranslator extends YARPBaseTranslator {
 
-    public static final int NO_FRAME_ON_STACK_MARKER = -1;
-
     public static final RescueNode[] EMPTY_RESCUE_NODE_ARRAY = new RescueNode[0];
 
     /** whether a while-loop body is translated; needed to check correctness of operators like break/next/etc */

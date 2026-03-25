@@ -15,6 +15,7 @@ import org.truffleruby.core.proc.ProcType;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.language.RubyContextSourceNode;
 import org.truffleruby.language.RubyNode;
+import org.truffleruby.language.control.FrameOnStackMarker;
 import org.truffleruby.language.methods.BlockDefinitionNode;
 import org.truffleruby.parser.YARPBlockNodeTranslator;
 
@@ -30,15 +31,19 @@ public final class LambdaToProcNode extends RubyContextSourceNode {
     /** A {@link BlockDefinitionNode}, possibly wrapped in a RubyNodeWrapper by instrumentation */
     @Child private RubyNode blockNode;
 
+    private final int frameOnStackMarkerSlot;
+
     public LambdaToProcNode(BlockDefinitionNode blockNode) {
         this.blockNode = blockNode;
+        this.frameOnStackMarkerSlot = blockNode.getFrameOnStackMarkerSlot();
     }
 
     @Override
     public RubyProc execute(VirtualFrame frame) {
         final RubyProc block = (RubyProc) blockNode.execute(frame);
         assert block.type == ProcType.LAMBDA;
-        return ProcOperations.createProcFromBlock(getContext(), getLanguage(), block);
+        FrameOnStackMarker frameOnStackMarker = (FrameOnStackMarker) frame.getObject(frameOnStackMarkerSlot);
+        return ProcOperations.createProcFromBlock(getContext(), getLanguage(), block, frameOnStackMarker);
     }
 
     @Override
