@@ -75,16 +75,14 @@ import org.ruby_lang.prism.Parser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
 public final class YARPTranslatorDriver {
 
-    private static final byte[][] EMPTY_BYTE_ARRAY_ARRAY = new byte[0][];
     private static final ParsingOptions.Forwarding[] EMPTY_FORWARDING_ARRAY = new ParsingOptions.Forwarding[0];
     private static final ParsingOptions.Scope[] EMPTY_SCOPE_ARRAY = new ParsingOptions.Scope[0];
-    private static final ParsingOptions.Scope EMPTY_SCOPE = new ParsingOptions.Scope(EMPTY_BYTE_ARRAY_ARRAY,
-            EMPTY_FORWARDING_ARRAY);
 
     private final RubyContext context;
     private final RubyLanguage language;
@@ -105,7 +103,10 @@ public final class YARPTranslatorDriver {
             ParseResult parseResult) {
         assert rubySource.isEval() == parserContext.isEval();
         assert parserContext.isTopLevel() == (parentDescriptor == null) : "Only give parentDescriptor if not toplevel";
+        assert !(argumentNames != null &&
+                parentDescriptor != null) : "Cannot pass both argumentNames and parentDescriptor";
 
+        boolean hasArgumentNames = argumentNames != null && argumentNames.length > 0;
         byte[] sourceBytes = rubySource.getBytes();
         this.parseEnvironment = new ParseEnvironment(language, rubySource, parserContext, currentNode);
 
@@ -123,8 +124,12 @@ public final class YARPTranslatorDriver {
         // prepare locals in scopes
         int blockDepth = 0;
         if (parentDescriptor != null) {
-            var descriptor = parentDescriptor;
+            // Add one extra empty innerscope to have local variables treated by Prism
+            // as declared in the outer scopes and not the current scope.
+            // See https://github.com/ruby/prism/issues/2327 and https://github.com/ruby/prism/issues/2192
+            localsInScopes.add(Collections.emptyList());
 
+            var descriptor = parentDescriptor;
             while (descriptor != null) {
                 ArrayList<String> names = new ArrayList<>();
 
@@ -140,14 +145,11 @@ public final class YARPTranslatorDriver {
             }
 
             parentEnvironment = createEnvironmentFromDescriptor(parentDescriptor, blockDepth - 1);
+        } else if (hasArgumentNames) {
+            localsInScopes.add(Arrays.asList(argumentNames));
+            parentEnvironment = null;
         } else {
             parentEnvironment = null;
-        }
-
-        // there could be an outer lexical scope that may have its own local variables -
-        // so they should be passed to parser as well
-        if (argumentNames != null) {
-            localsInScopes.add(Arrays.asList(argumentNames));
         }
 
         // Parse to the YARP AST
@@ -216,9 +218,9 @@ public final class YARPTranslatorDriver {
 
         final TranslatorEnvironment environment = new TranslatorEnvironment(
                 parentEnvironment,
+                0,
                 parseEnvironment,
                 parseEnvironment.allocateReturnID(),
-                true,
                 sharedMethodInfo,
                 sharedMethodInfo.getMethodName(),
                 blockDepth,
@@ -226,16 +228,8 @@ public final class YARPTranslatorDriver {
                 null,
                 modulePath);
 
-        // Declare arguments as local variables in the top-level environment - we'll put the values there in a prelude
-        if (argumentNames != null) {
-            for (String name : argumentNames) {
-                environment.declareVar(name);
-            }
-        }
+        // Translate to TruffleRuby nodes
 
-        // Translate to Ruby Truffle nodes
-
-        // use source encoding detected by manually, before source file is fully parsed
         final YARPTranslator translator = new YARPTranslator(environment);
 
         RubyNode truffleNode;
@@ -249,22 +243,18 @@ public final class YARPTranslatorDriver {
             printParseTranslateExecuteMetric("after-translate", context, source);
         }
 
-        // Load arguments
-        if (argumentNames != null && argumentNames.length > 0) {
-            final List<RubyNode> sequence = new ArrayList<>();
-
+        // Load arguments into local variables
+        if (hasArgumentNames) {
+            final RubyNode[] sequence = new RubyNode[argumentNames.length + 1];
             for (int n = 0; n < argumentNames.length; n++) {
-                final String name = argumentNames[n];
-                final RubyNode readNode = YARPTranslator
-                        .profileArgument(
-                                language,
-                                new ReadPreArgumentNode(n, false, MissingArgumentBehavior.NIL));
-                final int slot = environment.findFrameSlot(name);
-                sequence.add(new WriteLocalVariableNode(slot, readNode));
+                String name = argumentNames[n];
+                int slot = environment.findFrameSlot(name);
+                final RubyNode readNode = YARPTranslator.profileArgument(language,
+                        new ReadPreArgumentNode(n, false, MissingArgumentBehavior.NIL));
+                sequence[n] = new WriteLocalVariableNode(slot, readNode);
             }
-
-            sequence.add(truffleNode);
-            truffleNode = YARPTranslator.sequence(sequence.toArray(RubyNode.EMPTY_ARRAY));
+            sequence[argumentNames.length] = truffleNode;
+            truffleNode = YARPTranslator.sequence(sequence);
         }
 
         // Load flip-flop states
@@ -400,10 +390,7 @@ public final class YARPTranslatorDriver {
 
         if (!localsInScopes.isEmpty()) {
             int scopesCount = localsInScopes.size();
-            // Add one empty extra scope at the end to have local variables treated by Prism
-            // as declared in the outer scope.
-            // See https://github.com/ruby/prism/issues/2327 and https://github.com/ruby/prism/issues/2192
-            scopes = new ParsingOptions.Scope[scopesCount + 1];
+            scopes = new ParsingOptions.Scope[scopesCount];
 
             for (int i = 0; i < scopesCount; i++) {
                 // Local variables are in order from inner scope to outer one, but Prism expects order from outer to inner.
@@ -441,8 +428,6 @@ public final class YARPTranslatorDriver {
                 var forwardingArray = forwarding.toArray(EMPTY_FORWARDING_ARRAY);
                 scopes[i] = new ParsingOptions.Scope(namesBytes, forwardingArray);
             }
-
-            scopes[scopes.length - 1] = EMPTY_SCOPE;
         } else {
             scopes = EMPTY_SCOPE_ARRAY;
         }
@@ -524,9 +509,9 @@ public final class YARPTranslatorDriver {
 
         return new TranslatorEnvironment(
                 parentEnvironment,
+                0,
                 parseEnvironment,
                 parseEnvironment.allocateReturnID(),
-                true,
                 sharedMethodInfo,
                 sharedMethodInfo.getMethodName(),
                 blockDepth,

@@ -166,14 +166,14 @@ public final class CoreMethodAssumptions {
 
         if (callParameters.getBlock() != null) {
             if (callParameters.getMethodName().equals("lambda") &&
-                    (callParameters.getBlock() instanceof BlockDefinitionNode)) {
-
+                    (callParameters.getBlock() instanceof BlockDefinitionNode blockDefinitionNode)) {
                 if (callParameters.isIgnoreVisibility() && n == 1) {
-                    return InlinedLambdaNodeGen.create(language, callParameters, self, callParameters.getBlock());
+                    return InlinedLambdaNodeGen.create(language, callParameters,
+                            blockDefinitionNode.getFrameOnStackMarkerSlot(), self, blockDefinitionNode);
                 }
 
                 // The block definition node had a default lambda call target, must be converted to proc.
-                final RubyNode blockNode = new LambdaToProcNode((BlockDefinitionNode) callParameters.getBlock());
+                final RubyNode blockNode = new LambdaToProcNode(blockDefinitionNode);
                 return new RubyCallNode(callParameters.withBlock(blockNode));
 
             } else {

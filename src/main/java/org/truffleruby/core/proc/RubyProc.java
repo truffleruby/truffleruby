@@ -70,6 +70,7 @@ public final class RubyProc extends RubyDynamicObject implements ObjectGraphNode
             FrameOnStackMarker frameOnStackMarker,
             DeclarationContext declarationContext) {
         super(rubyClass, shape);
+        assert (type == ProcType.PROC) == (frameOnStackMarker != null);
         this.type = type;
         this.arity = arity;
         this.argumentDescriptors = argumentDescriptors;

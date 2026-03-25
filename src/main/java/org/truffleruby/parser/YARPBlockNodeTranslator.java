@@ -49,7 +49,9 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
     }
 
     public RubyNode compileBlockNode(Node body, ParametersNode parameters, Node parametersNode, String[] locals,
-            boolean isStabbyLambda, SourceSection sourceSection) {
+            boolean isStabbyLambda, int frameOnStackMarkerSlot, SourceSection sourceSection) {
+        assert isStabbyLambda == (frameOnStackMarkerSlot == NO_FRAME_ON_STACK_MARKER);
+
         declareLocalVariables(locals);
         if (parametersNode instanceof Nodes.ItParametersNode) {
             environment.declareVar(IT_PARAMETER_NAME);
@@ -93,14 +95,6 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
                 environment,
                 sourceSection);
 
-        int frameOnStackMarkerSlot;
-
-        if (emitLambda || frameOnStackMarkerSlotStack.isEmpty()) {
-            frameOnStackMarkerSlot = -1;
-        } else {
-            frameOnStackMarkerSlot = frameOnStackMarkerSlotStack.peek();
-        }
-
         final ProcCallTargets callTargets;
         if (isStabbyLambda) {
             // 100% lambda
@@ -121,13 +115,12 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
             callTargets = new ProcCallTargets(procCompiler.get(), null, lambdaCompiler);
         }
 
-        final RubyNode rubyNode = BlockDefinitionNodeGen.create(
+        return BlockDefinitionNodeGen.create(
                 emitLambda ? ProcType.LAMBDA : ProcType.PROC,
                 environment.getSharedMethodInfo(),
                 callTargets,
                 environment.getBreakID(),
                 frameOnStackMarkerSlot);
-        return rubyNode;
     }
 
     private RubyNode preludeProc(

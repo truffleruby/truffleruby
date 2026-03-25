@@ -14,7 +14,6 @@ import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.string.FrozenStrings;
 import org.truffleruby.debug.SingleMemberDescriptor;
 import org.truffleruby.language.RubyContextSourceNode;
-import org.truffleruby.language.RubyNode;
 import org.truffleruby.utils.Utils;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -22,6 +21,14 @@ import com.oracle.truffle.api.instrumentation.StandardTags.ReadVariableTag;
 import com.oracle.truffle.api.instrumentation.Tag;
 
 public abstract class ReadLocalNode extends RubyContextSourceNode {
+
+    public static ReadLocalNode create(int frameSlot, int frameDepth) {
+        if (frameDepth == 0) {
+            return new ReadLocalVariableNode(LocalVariableType.FRAME_LOCAL, frameSlot);
+        } else {
+            return new ReadDeclarationVariableNode(LocalVariableType.FRAME_LOCAL, frameDepth, frameSlot);
+        }
+    }
 
     protected final int frameSlot;
     protected final LocalVariableType type;
@@ -35,13 +42,13 @@ public abstract class ReadLocalNode extends RubyContextSourceNode {
 
     protected abstract Object readFrameSlot(VirtualFrame frame);
 
-    public abstract WriteLocalNode makeWriteNode(RubyNode rhs);
-
     protected abstract String getVariableName();
 
     public int getFrameSlot() {
         return frameSlot;
     }
+
+    public abstract int getFrameDepth();
 
     @Override
     public Object isDefined(VirtualFrame frame, RubyLanguage language, RubyContext context) {

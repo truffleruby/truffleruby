@@ -16,6 +16,8 @@ import org.truffleruby.language.locals.ReadLocalVariableNode;
 import org.truffleruby.language.locals.WriteLocalVariableNode;
 import org.truffleruby.language.objects.SelfNode;
 
+import static org.truffleruby.parser.TranslatorEnvironment.CURRENT_FRAME_DEPTH;
+
 /** Similar to ValueFromNode class but for YARP nodes */
 public final class YARPExecutedOnceExpression {
 
@@ -54,10 +56,10 @@ public final class YARPExecutedOnceExpression {
         if (node instanceof Nodes.SelfNode) {
             return node;
         } else if (node instanceof Nodes.SplatNode) {
-            var read = new Nodes.LocalVariableReadNode(0, 0, name, 0);
+            var read = new Nodes.LocalVariableReadNode(0, 0, name, CURRENT_FRAME_DEPTH);
             return new Nodes.SplatNode(node.startOffset, node.length, read);
         } else {
-            return new Nodes.LocalVariableReadNode(node.startOffset, node.length, name, 0);
+            return new Nodes.LocalVariableReadNode(node.startOffset, node.length, name, CURRENT_FRAME_DEPTH);
         }
     }
 

@@ -344,24 +344,6 @@ public final class RubyCallNode extends LiteralCallAssignableNode {
         return copy.copyFlags(this);
     }
 
-    public RubyNode cloneUninitializedWithArguments(RubyNode[] arguments) {
-        boolean isVCall = arguments.length == 0;
-
-        RubyCallNodeParameters parameters = new RubyCallNodeParameters(
-                receiver.cloneUninitialized(),
-                methodName,
-                cloneUninitialized(block),
-                descriptor,
-                arguments,
-                isSplatted,
-                dispatchConfig == PRIVATE,
-                isVCall,
-                isSafeNavigation,
-                isAttrAssign);
-        var copy = getLanguage().coreMethodAssumptions.createCallNode(parameters);
-        return copy.copyFlags(this);
-    }
-
     abstract static class DefinedNode extends RubyBaseNode {
 
         private final RubySymbol methodNameSymbol;

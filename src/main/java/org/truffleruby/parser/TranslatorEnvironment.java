@@ -24,11 +24,11 @@ import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.control.BreakID;
 import org.truffleruby.language.control.ReturnID;
 import org.truffleruby.language.literal.NilLiteralNode;
-import org.truffleruby.language.locals.FindDeclarationVariableNodes.FrameSlotAndDepth;
 import org.truffleruby.language.locals.LocalVariableType;
-import org.truffleruby.language.locals.ReadDeclarationVariableNode;
 import org.truffleruby.language.locals.ReadLocalNode;
 import org.truffleruby.language.locals.ReadLocalVariableNode;
+import org.truffleruby.language.locals.WriteLocalNode;
+import org.truffleruby.language.locals.WriteLocalVariableNode;
 import org.truffleruby.language.methods.SharedMethodInfo;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -62,6 +62,16 @@ public final class TranslatorEnvironment {
     /** local variable name for & parameter caused by desugaring ... parameter (forward-everything) */
     public static final String FORWARDED_BLOCK_NAME = "%forward_block";
 
+    /** This should be 0, but because Prism does not increase the depth inside the `for` loop body and `END` body we
+     * need to not add depthOffset to the depth for temporary variables which must always be read from the current
+     * frame. So we work around by using a negative depth to handle this case. */
+    public static final int CURRENT_FRAME_DEPTH = -1;
+
+    private final TranslatorEnvironment parent;
+    /** The depth reported by Prism inside the `for` loop body and `END` body do not match TruffleRuby and CRuby:
+     * https://github.com/ruby/prism/issues/4010. So we compensate by having a depthOffset of 1 for those cases. 0 in
+     * all other cases. */
+    private final int depthOffset;
     private final ParseEnvironment parseEnvironment;
 
     private EconomicMap<Object, Integer> nameToIndex = EconomicMap.create();
@@ -76,9 +86,6 @@ public final class TranslatorEnvironment {
     private final int blockDepth;
     private BreakID breakID;
 
-    private final boolean ownScopeForAssignments;
-
-    private final TranslatorEnvironment parent;
     private final SharedMethodInfo sharedMethodInfo;
 
     public final String modulePath;
@@ -90,9 +97,9 @@ public final class TranslatorEnvironment {
 
     public TranslatorEnvironment(
             TranslatorEnvironment parent,
+            int depthOffset,
             ParseEnvironment parseEnvironment,
             ReturnID returnID,
-            boolean ownScopeForAssignments,
             SharedMethodInfo sharedMethodInfo,
             String methodName,
             int blockDepth,
@@ -102,9 +109,9 @@ public final class TranslatorEnvironment {
         assert blockDepth == sharedMethodInfo.getBlockDepth();
 
         this.parent = parent;
+        this.depthOffset = depthOffset;
         this.parseEnvironment = parseEnvironment;
         this.returnID = returnID;
-        this.ownScopeForAssignments = ownScopeForAssignments;
         this.sharedMethodInfo = sharedMethodInfo;
         this.methodName = methodName;
         this.blockDepth = blockDepth;
@@ -232,9 +239,9 @@ public final class TranslatorEnvironment {
         return declareVar(name);
     }
 
-    public Integer findFrameSlotOrNull(Object name) {
+    private int findFrameSlotOrMinusOne(Object name) {
         assert name != null;
-        return nameToIndex.get(name);
+        return nameToIndex.get(name, -1);
     }
 
     public int findFrameSlot(Object name) {
@@ -250,83 +257,56 @@ public final class TranslatorEnvironment {
         return new ReadLocalVariableNode(LocalVariableType.FRAME_LOCAL, slot);
     }
 
+    public WriteLocalVariableNode writeNode(int slot, RubyNode valueNode) {
+        return new WriteLocalVariableNode(slot, valueNode);
+    }
+
     public ReadLocalVariableNode readNode(int slot, Nodes.Node yarpNode) {
         var node = new ReadLocalVariableNode(LocalVariableType.FRAME_LOCAL, slot);
         node.unsafeSetSourceSection(yarpNode.startOffset, yarpNode.length);
         return node;
     }
 
-    public RubyNode findLocalVarOrNilNode(String name) {
-        RubyNode node = findLocalVarNodeOrNull(name);
-        if (node == null) {
-            node = new NilLiteralNode();
+    public ReadLocalNode readNode(String name, int prismNodeDepth) {
+        // Copy of the actualDepth logic because we need both scope and actualDepth
+        int remainingDepth = prismNodeDepth + depthOffset;
+        int actualDepth = 0;
+        var scope = this;
+        while (remainingDepth > 0) {
+            scope = scope.parent;
+            remainingDepth = remainingDepth - 1 + scope.depthOffset;
+            actualDepth++;
         }
-        return node;
+
+        int slot = scope.findFrameSlot(name);
+        return ReadLocalNode.create(slot, actualDepth);
     }
 
-    public ReadLocalNode findLocalVarNode(String name) {
-        final ReadLocalNode node = findLocalVarNodeOrNull(name);
-
-        if (node == null) {
-            throw CompilerDirectives.shouldNotReachHere(name + " local variable should be declared");
+    public WriteLocalNode writeNode(String name, int prismNodeDepth, RubyNode valueNode) {
+        // Copy of the actualDepth logic because we need both scope and actualDepth
+        int remainingDepth = prismNodeDepth + depthOffset;
+        int actualDepth = 0;
+        var scope = this;
+        while (remainingDepth > 0) {
+            scope = scope.parent;
+            remainingDepth = remainingDepth - 1 + scope.depthOffset;
+            actualDepth++;
         }
 
-        return node;
+        int slot = scope.findFrameSlot(name);
+        return WriteLocalNode.create(slot, actualDepth, valueNode);
     }
 
-    public ReadLocalNode findLocalVarNodeOrNull(String name) {
-        assert name != null;
-        TranslatorEnvironment current = this;
-        int depth = 0;
-
-        while (current != null) {
-            final Integer slot = current.findFrameSlotOrNull(name);
-
-            if (slot != null) {
-                final ReadLocalNode node;
-                if (depth == 0) {
-                    node = new ReadLocalVariableNode(LocalVariableType.FRAME_LOCAL, slot);
-                } else {
-                    node = new ReadDeclarationVariableNode(LocalVariableType.FRAME_LOCAL, depth, slot);
-                }
-
-                return node;
-            }
-
-            if (current.getNeverAssignInParentScope()) {
-                // Do not try to look above scope barriers (def, module)
-                return null;
-            }
-
-            current = current.parent;
-            depth++;
-        }
-
-        return null;
+    public ReadLocalNode readFromMethodFrameNode(String name) {
+        int depth = getBlockDepth();
+        int slot = getSurroundingMethodEnvironment().findFrameSlot(name);
+        return ReadLocalNode.create(slot, depth);
     }
 
-    public FrameSlotAndDepth findFrameSlotAndDepth(String name) {
-        assert name != null;
-        TranslatorEnvironment current = this;
-        int depth = 0;
-
-        while (current != null) {
-            final Integer slot = current.findFrameSlotOrNull(name);
-
-            if (slot != null) {
-                return new FrameSlotAndDepth(slot, depth);
-            }
-
-            if (current.getNeverAssignInParentScope()) {
-                // Do not try to look above scope barriers (def, module)
-                throw CompilerDirectives.shouldNotReachHere(name + " local variable should be declared");
-            }
-
-            current = current.parent;
-            depth++;
-        }
-
-        throw CompilerDirectives.shouldNotReachHere(name + " local variable should be declared");
+    public RubyNode readFromMethodFrameNodeOrNil(String name) {
+        int depth = getBlockDepth();
+        int slot = getSurroundingMethodEnvironment().findFrameSlotOrMinusOne(name);
+        return slot != -1 ? ReadLocalNode.create(slot, depth) : new NilLiteralNode();
     }
 
     public FrameDescriptor computeFrameDescriptor() {
@@ -353,15 +333,6 @@ public final class TranslatorEnvironment {
 
     public ParseEnvironment getParseEnvironment() {
         return parseEnvironment;
-    }
-
-    public boolean hasOwnScopeForAssignments() {
-        return ownScopeForAssignments;
-    }
-
-    /** Whether this is a lexical scope barrier (def, module, class) */
-    public boolean getNeverAssignInParentScope() {
-        return !isBlock();
     }
 
     /** A way to check current scope is a module/class. If in a block, isModuleBody is always false. */

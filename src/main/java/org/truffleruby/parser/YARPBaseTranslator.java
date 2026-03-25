@@ -36,6 +36,16 @@ import com.oracle.truffle.api.strings.TruffleString;
 
 public abstract class YARPBaseTranslator extends AbstractNodeVisitor<RubyNode> {
 
+    public static final Nodes.Node[] EMPTY_NODE_ARRAY = Nodes.Node.EMPTY_ARRAY;
+    public static final Nodes.OptionalParameterNode[] EMPTY_OPTIONAL_PARAMETER_NODE_ARRAY = {};
+    public static final Nodes.BlockLocalVariableNode[] EMPTY_BLOCK_LOCAL_VARIABLE_NODE_ARRAY = {};
+
+    public static final Nodes.ParametersNode ZERO_PARAMETERS_NODE = new Nodes.ParametersNode(0, 0, EMPTY_NODE_ARRAY,
+            EMPTY_OPTIONAL_PARAMETER_NODE_ARRAY, null, EMPTY_NODE_ARRAY, EMPTY_NODE_ARRAY, null, null);
+
+    public static final short NO_FLAGS = 0;
+    public static final int NO_FRAME_ON_STACK_MARKER = -1;
+
     protected final TranslatorEnvironment environment;
 
     // For convenient/concise access, actually redundant with environment.getParseEnvironment()
@@ -45,15 +55,6 @@ public abstract class YARPBaseTranslator extends AbstractNodeVisitor<RubyNode> {
     protected final Source source;
     protected final RubyEncoding sourceEncoding;
     protected final Node currentNode;
-
-    public static final Nodes.Node[] EMPTY_NODE_ARRAY = Nodes.Node.EMPTY_ARRAY;
-    public static final Nodes.OptionalParameterNode[] EMPTY_OPTIONAL_PARAMETER_NODE_ARRAY = {};
-    public static final Nodes.BlockLocalVariableNode[] EMPTY_BLOCK_LOCAL_VARIABLE_NODE_ARRAY = {};
-
-    public static final Nodes.ParametersNode ZERO_PARAMETERS_NODE = new Nodes.ParametersNode(0, 0, EMPTY_NODE_ARRAY,
-            EMPTY_OPTIONAL_PARAMETER_NODE_ARRAY, null, EMPTY_NODE_ARRAY, EMPTY_NODE_ARRAY, null, null);
-
-    public static final short NO_FLAGS = 0;
 
     public YARPBaseTranslator(TranslatorEnvironment environment) {
         this.environment = Objects.requireNonNull(environment);
@@ -115,10 +116,15 @@ public abstract class YARPBaseTranslator extends AbstractNodeVisitor<RubyNode> {
 
     protected final RubyContextSourceNode createCallNode(boolean ignoreVisibility, RubyNode receiver, String method,
             RubyNode... arguments) {
+        return createCallNodeWithBlock(ignoreVisibility, receiver, method, null, arguments);
+    }
+
+    protected final RubyContextSourceNode createCallNodeWithBlock(boolean ignoreVisibility, RubyNode receiver,
+            String method, RubyNode block, RubyNode... arguments) {
         var parameters = new RubyCallNodeParameters(
                 receiver,
                 method,
-                null,
+                block,
                 NoKeywordArgumentsDescriptor.INSTANCE,
                 arguments,
                 ignoreVisibility);

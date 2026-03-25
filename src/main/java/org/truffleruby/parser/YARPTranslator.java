@@ -14,7 +14,9 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.shadowed.org.jcodings.specific.EUCJPEncoding;
 import org.graalvm.shadowed.org.jcodings.specific.Windows_31JEncoding;
+import org.ruby_lang.prism.Nodes.ArgumentsNode;
 import org.ruby_lang.prism.Nodes.NoBlockParameterNode;
+import org.ruby_lang.prism.Nodes.Node;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.Split;
@@ -155,10 +157,10 @@ import java.math.BigInteger;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
 
+import static org.truffleruby.parser.TranslatorEnvironment.CURRENT_FRAME_DEPTH;
 import static org.truffleruby.parser.TranslatorEnvironment.DEFAULT_BLOCK_NAME;
 import static org.truffleruby.parser.TranslatorEnvironment.DEFAULT_KEYWORD_REST_NAME;
 import static org.truffleruby.parser.TranslatorEnvironment.DEFAULT_REST_NAME;
@@ -173,17 +175,10 @@ import static org.truffleruby.parser.TranslatorEnvironment.FORWARDED_REST_NAME;
  * Every Prism node class is documented in the {@link Nodes}. */
 public class YARPTranslator extends YARPBaseTranslator {
 
-    public static final int NO_FRAME_ON_STACK_MARKER = -1;
-
     public static final RescueNode[] EMPTY_RESCUE_NODE_ARRAY = new RescueNode[0];
-
-    public Deque<Integer> frameOnStackMarkerSlotStack = new ArrayDeque<>();
 
     /** whether a while-loop body is translated; needed to check correctness of operators like break/next/etc */
     private boolean translatingWhile = false;
-    /** whether a for-loop body is translated; needed to enforce variables in the for-loop body to be declared outside
-     * the for-loop */
-    private boolean translatingForStatement = false;
 
     /** names of numbered parameters in procs */
     private static final String[] NUMBERED_PARAMETER_NAMES = {
@@ -468,16 +463,9 @@ public class YARPTranslator extends YARPBaseTranslator {
                 "BlockNode should be translated specially by its parent node to pass the method name to which the block is passed");
     }
 
-    private RubyNode visitBlockNode(Nodes.BlockNode node, String literalBlockPassedToMethod) {
-        return translateBlockAndLambda(node, node.parameters, node.body, node.locals, literalBlockPassedToMethod);
-    }
-
-    private RubyNode translateBlockAndLambda(Nodes.Node node, Nodes.Node parametersNode,
-            Nodes.Node body, String[] locals, String literalBlockPassedToMethod) {
+    private RubyNode translateBlockAndLambda(Node node, Node parametersNode, Node body, String[] locals,
+            String literalBlockPassedToMethod, int frameOnStackMarkerSlot, boolean isForOrENDBody) {
         final boolean isStabbyLambda = node instanceof Nodes.LambdaNode;
-
-        // Unset this flag for a `for`-loop's block
-        final boolean hasOwnScope = !translatingForStatement;
 
         TranslatorEnvironment methodParent = environment.getSurroundingMethodEnvironment();
         final String methodName = methodParent.getMethodName();
@@ -535,9 +523,9 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         final TranslatorEnvironment newEnvironment = new TranslatorEnvironment(
                 environment,
+                isForOrENDBody ? 1 : 0,
                 parseEnvironment,
                 returnID,
-                hasOwnScope,
                 sharedMethodInfo,
                 environment.getMethodName(),
                 blockDepth,
@@ -546,11 +534,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                 environment.modulePath);
         newEnvironment.literalBlockPassedToMethod = literalBlockPassedToMethod;
 
-        final YARPBlockNodeTranslator blockCompiler = new YARPBlockNodeTranslator(
-                newEnvironment,
-                arity);
-
-        blockCompiler.frameOnStackMarkerSlotStack = frameOnStackMarkerSlotStack;
+        final YARPBlockNodeTranslator blockCompiler = new YARPBlockNodeTranslator(newEnvironment, arity);
 
         final RubyNode rubyNode = blockCompiler.compileBlockNode(
                 body,
@@ -558,6 +542,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                 parametersNode,
                 locals,
                 isStabbyLambda,
+                frameOnStackMarkerSlot,
                 getSourceSection(node));
 
         return assignPositionAndFlags(node, rubyNode);
@@ -570,7 +555,7 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         if (node.expression == null) {
             // def foo(&) a(&) end
-            valueNode = environment.findLocalVarNode(DEFAULT_BLOCK_NAME);
+            valueNode = environment.readFromMethodFrameNode(DEFAULT_BLOCK_NAME);
         } else {
             // a(&:b)
             valueNode = node.expression.accept(this);
@@ -662,7 +647,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         var methodName = node.name;
         var receiver = node.receiver == null ? new SelfNode() : node.receiver.accept(this);
 
-        var argumentsAndBlock = translateArgumentsAndBlock(node.arguments, node.block, methodName);
+        var argumentsAndBlock = translateArgumentsAndBlock(node.arguments, node.block, methodName, false);
         var translatedArguments = argumentsAndBlock.arguments;
 
         if (parseEnvironment.inCore() && node.isVariableCall() && methodName.equals("undefined")) {
@@ -745,8 +730,8 @@ public class YARPTranslator extends YARPBaseTranslator {
     }
 
     /** Translate a method call arguments */
-    private ArgumentsAndBlockTranslation translateArgumentsAndBlock(Nodes.ArgumentsNode argumentsNode, Nodes.Node block,
-            String methodName) {
+    private ArgumentsAndBlockTranslation translateArgumentsAndBlock(ArgumentsNode argumentsNode, Node block,
+            String methodName, boolean isForOrENDBody) {
         Nodes.Node[] arguments;
         if (argumentsNode == null) {
             arguments = EMPTY_NODE_ARRAY;
@@ -754,29 +739,8 @@ public class YARPTranslator extends YARPBaseTranslator {
             arguments = argumentsNode.arguments;
         }
 
-        boolean isForwardArguments = (arguments.length > 0 &&
-                ArrayUtils.getLast(arguments) instanceof Nodes.ForwardingArgumentsNode);
-
-        if (isForwardArguments) {
-            // use depth = 0 as far as it's ignored
-            final var readRest = new Nodes.LocalVariableReadNode(0, 0, FORWARDED_REST_NAME, 0);
-            final var readKeyRest = new Nodes.LocalVariableReadNode(0, 0, FORWARDED_KEYWORD_REST_NAME, 0);
-
-            final var splat = new Nodes.SplatNode(0, 0, readRest);
-            final var keywordHash = new Nodes.KeywordHashNode(0, 0, (short) 0,
-                    new Nodes.Node[]{ new Nodes.AssocSplatNode(0, 0, readKeyRest) });
-
-            // replace '...' argument with rest and keyrest arguments
-            final var forwarding = new Nodes.Node[arguments.length + 1];
-            System.arraycopy(arguments, 0, forwarding, 0, arguments.length - 1);
-            forwarding[forwarding.length - 2] = splat;
-            forwarding[forwarding.length - 1] = keywordHash;
-
-            arguments = forwarding;
-        }
-
-        // should be after handling of forward-argument as far as ... means there is a splatted argument
-        boolean isSplatted = containYARPSplatNode(arguments);
+        boolean isForwardArguments = argumentsNode != null && argumentsNode.isContainsForwarding();
+        boolean isSplatted = containYARPSplatOrForwardingNode(arguments);
         var argumentsDescriptor = getKeywordArgumentsDescriptor(arguments);
 
         final RubyNode[] translatedArguments;
@@ -786,6 +750,7 @@ public class YARPTranslator extends YARPBaseTranslator {
             if (translatedArgumentsNode instanceof SplatCastNode splatNode) {
                 splatNode.doNotCopy();
             }
+
             translatedArguments = new RubyNode[]{ translatedArgumentsNode };
         } else {
             translatedArguments = translate(arguments);
@@ -797,12 +762,8 @@ public class YARPTranslator extends YARPBaseTranslator {
             if (block instanceof Nodes.BlockNode b) {
                 // a() {}
                 frameOnStackMarkerSlot = environment.declareLocalTemp("frame_on_stack_marker");
-                frameOnStackMarkerSlotStack.push(frameOnStackMarkerSlot);
-                try {
-                    blockNode = visitBlockNode(b, methodName);
-                } finally {
-                    frameOnStackMarkerSlotStack.pop();
-                }
+                blockNode = translateBlockAndLambda(b, b.parameters, b.body, b.locals, methodName,
+                        frameOnStackMarkerSlot, isForOrENDBody);
             } else if (block instanceof Nodes.BlockArgumentNode blockArgument) {
                 // a(&:b)
                 blockNode = blockArgument.accept(this);
@@ -812,9 +773,8 @@ public class YARPTranslator extends YARPBaseTranslator {
             }
         } else if (isForwardArguments) {
             // a(...)
-            // use depth = 0 as far as it's ignored
-            final var readBlock = new Nodes.LocalVariableReadNode(0, 0, FORWARDED_BLOCK_NAME, 0);
-            final var readBlockNode = readBlock.accept(this);
+            // Relies on ... being only valid as a method parameter and not a block parameter
+            var readBlockNode = environment.readFromMethodFrameNode(FORWARDED_BLOCK_NAME);
             blockNode = ToProcNodeGen.create(readBlockNode);
             frameOnStackMarkerSlot = NO_FRAME_ON_STACK_MARKER;
         } else {
@@ -1560,9 +1520,9 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         final TranslatorEnvironment newEnvironment = new TranslatorEnvironment(
                 environment,
+                0,
                 parseEnvironment,
                 parseEnvironment.allocateReturnID(),
-                true,
                 sharedMethodInfo,
                 node.name,
                 0,
@@ -1714,10 +1674,11 @@ public class YARPTranslator extends YARPBaseTranslator {
      * http://stackoverflow.com/questions/3294509/for-vs-each-in-ruby
      *
      * The other complication is that normal locals should be defined in the enclosing scope, unlike a normal block. We
-     * do that by setting a flag on this translator object when we visit the new iter, translatingForStatement, which we
-     * recognise when visiting a block node. */
+     * do that by passing a isForOrENDBody flag when translating the block. */
     @Override
     public RubyNode visitForNode(Nodes.ForNode node) {
+        var receiver = node.collection.accept(this);
+
         final String parameterName = parseEnvironment.allocateLocalTemp("for");
 
         final var requireds = new Nodes.Node[]{ new Nodes.RequiredParameterNode(0, 0, NO_FLAGS, parameterName) };
@@ -1727,7 +1688,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         final var blockParameters = new Nodes.BlockParametersNode(0, 0, parameters,
                 EMPTY_BLOCK_LOCAL_VARIABLE_NODE_ARRAY);
 
-        final var readParameter = new Nodes.LocalVariableReadNode(0, 0, parameterName, 0);
+        final var readParameter = new Nodes.LocalVariableReadNode(0, 0, parameterName, CURRENT_FRAME_DEPTH);
         final Nodes.Node writeIndex;
 
         // replace -Target node with a -Write one
@@ -1789,25 +1750,18 @@ public class YARPTranslator extends YARPBaseTranslator {
             body = new Nodes.StatementsNode(bodyStartOffset, bodyLength, statements);
         }
 
-        // in the block environment declare local variable only for parameter
-        // and skip declaration all the local variables defined in the block
+        // in the block environment declare only the local variable for the parameter
+        // and skip declaration of all the local variables defined in the block as they
+        // are actually declared in the scope around the block
         String[] locals = new String[]{ parameterName };
-        final var block = new Nodes.BlockNode(bodyStartOffset, bodyLength, locals, blockParameters, body);
-        final var eachCall = new Nodes.CallNode(node.startOffset,
-                node.length, NO_FLAGS, node.collection, "each", null, block);
+        var blockNode = new Nodes.BlockNode(bodyStartOffset, bodyLength, locals, blockParameters, body);
 
-        final RubyNode rubyNode;
-        final boolean translatingForStatement = this.translatingForStatement;
-        this.translatingForStatement = true;
+        var argumentsAndBlock = translateArgumentsAndBlock(null, blockNode, "each", true);
 
-        try {
-            rubyNode = eachCall.accept(this);
-        } finally {
-            this.translatingForStatement = translatingForStatement;
-        }
+        RubyNode callNode = createCallNodeWithBlock(false, receiver, "each", argumentsAndBlock.block);
+        callNode = wrapCallWithLiteralBlock(argumentsAndBlock, callNode);
 
-        copyNewlineFlag(node, rubyNode);
-        return rubyNode;
+        return assignPositionAndFlags(node, callNode);
     }
 
     @Override
@@ -1822,7 +1776,7 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     @Override
     public RubyNode visitForwardingSuperNode(Nodes.ForwardingSuperNode node) {
-        var argumentsAndBlock = translateArgumentsAndBlock(null, node.block, environment.getMethodName());
+        var argumentsAndBlock = translateArgumentsAndBlock(null, node.block, environment.getMethodName(), false);
         boolean insideDefineMethod = false;
 
         // find an enclosing method environment
@@ -1960,7 +1914,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                     //   def foo(**)
                     //     bar(**)
                     //   end
-                    valueNode = environment.findLocalVarNode(DEFAULT_KEYWORD_REST_NAME);
+                    valueNode = environment.readFromMethodFrameNode(DEFAULT_KEYWORD_REST_NAME);
                 }
 
                 hashConcats.add(HashCastNodeGen.HashCastASTNodeGen.create(valueNode));
@@ -2568,7 +2522,7 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     @Override
     public RubyNode visitItLocalVariableReadNode(Nodes.ItLocalVariableReadNode node) {
-        return assignPositionAndFlags(node, environment.findLocalVarNode(IT_PARAMETER_NAME));
+        return assignPositionAndFlags(node, environment.readNode(IT_PARAMETER_NAME, 0));
     }
 
     @Override
@@ -2590,14 +2544,15 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     @Override
     public RubyNode visitLambdaNode(Nodes.LambdaNode node) {
-        return translateBlockAndLambda(node, node.parameters, node.body, node.locals, null);
+        return translateBlockAndLambda(node, node.parameters, node.body, node.locals, null, NO_FRAME_ON_STACK_MARKER,
+                false);
     }
 
     @Override
     public RubyNode visitLocalVariableReadNode(Nodes.LocalVariableReadNode node) {
         final String name = node.name;
 
-        final RubyNode rubyNode = environment.findLocalVarNode(name);
+        var rubyNode = environment.readNode(name, node.depth);
 
         return assignPositionAndFlags(node, rubyNode);
     }
@@ -2653,10 +2608,8 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     @Override
     public WriteLocalNode visitLocalVariableWriteNode(Nodes.LocalVariableWriteNode node) {
-        final String name = node.name;
-        final ReadLocalNode lhs = environment.findLocalVarNode(name);
-        final RubyNode rhs = node.value.accept(this);
-        final WriteLocalNode rubyNode = lhs.makeWriteNode(rhs);
+        final RubyNode valueNode = node.value.accept(this);
+        var rubyNode = environment.writeNode(node.name, node.depth, valueNode);
 
         assignPositionAndFlags(node, rubyNode);
         return rubyNode;
@@ -2664,9 +2617,7 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     @Override
     public WriteLocalNode visitLocalVariableTargetNode(Nodes.LocalVariableTargetNode node) {
-        final String name = node.name;
-        final ReadLocalNode lhs = environment.findLocalVarNode(name);
-        final WriteLocalNode rubyNode = lhs.makeWriteNode(null);
+        var rubyNode = environment.writeNode(node.name, node.depth, null);
 
         assignPositionAndFlags(node, rubyNode);
         return rubyNode;
@@ -2691,7 +2642,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         // Evaluate the expression and store it in a local
         final int tempSlot = environment.declareLocalTemp("value_of_=>");
         final ReadLocalNode readTemp = environment.readNode(tempSlot, node);
-        final RubyNode assignTemp = readTemp.makeWriteNode(node.value.accept(this));
+        final RubyNode assignTemp = environment.writeNode(tempSlot, node.value.accept(this));
 
         RubyNode condition = translator.translatePatternNode(node.pattern, readTemp);
 
@@ -2706,7 +2657,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         // Evaluate the expression and store it in a local
         final int tempSlot = environment.declareLocalTemp("value_of_=>");
         final ReadLocalNode readTemp = environment.readNode(tempSlot, node);
-        final RubyNode assignTemp = readTemp.makeWriteNode(node.value.accept(this));
+        final RubyNode assignTemp = environment.writeNode(tempSlot, node.value.accept(this));
 
         RubyNode condition = translator.translatePatternNode(node.pattern, readTemp);
         RubyNode check = UnlessNodeGen.create(condition, NoMatchingPatternNodeGen.create(NodeUtil.cloneNode(readTemp)));
@@ -2733,17 +2684,11 @@ public class YARPTranslator extends YARPBaseTranslator {
         final int tempSlot = environment.declareLocalTemp("match_data");
 
         for (int i = 0; i < numberOfNames; i++) {
-            final String name = node.targets[i].name;
+            var target = node.targets[i];
+            String name = target.name;
 
-            // TODO: use Nodes.LocalVariableTargetNode#depth field
-            TranslatorEnvironment environmentToStartSearch = environment;
-            while (!environmentToStartSearch.hasOwnScopeForAssignments()) {
-                environmentToStartSearch = environmentToStartSearch.getParent();
-            }
-
-            var slotAndDepth = environmentToStartSearch.findFrameSlotAndDepth(name);
-            nilSetters[i] = WriteLocalNode.create(slotAndDepth.slot, slotAndDepth.depth, new NilLiteralNode());
-            setters[i] = WriteLocalNode.create(slotAndDepth.slot, slotAndDepth.depth,
+            nilSetters[i] = environment.writeNode(target.name, target.depth, new NilLiteralNode());
+            setters[i] = environment.writeNode(target.name, target.depth,
                     new MatchDataNodes.GetFixedNameMatchNode(environment.readNode(tempSlot), language.getSymbol(name)));
         }
 
@@ -2890,11 +2835,14 @@ public class YARPTranslator extends YARPBaseTranslator {
         // END blocks run after any other code - not just code in the same file
         // Turn into a call to Kernel.at_exit
 
-        // Create Prism CallNode to avoid duplication block literal related logic
-        final var receiver = new Nodes.ConstantReadNode(0, 0, "Kernel");
-        final var block = new Nodes.BlockNode(0, 0, StringUtils.EMPTY_STRING_ARRAY, null, node.statements);
+        var receiver = new Nodes.ConstantReadNode(0, 0, "Kernel").accept(this);
+        var blockNode = new Nodes.BlockNode(0, 0, StringUtils.EMPTY_STRING_ARRAY, null, node.statements);
 
-        final var callNode = new Nodes.CallNode(0, 0, NO_FLAGS, receiver, "at_exit", null, block).accept(this);
+        var argumentsAndBlock = translateArgumentsAndBlock(null, blockNode, "at_exit", true);
+
+        RubyNode callNode = createCallNodeWithBlock(false, receiver, "at_exit", argumentsAndBlock.block);
+        callNode = wrapCallWithLiteralBlock(argumentsAndBlock, callNode);
+
         final RubyNode rubyNode = new OnceNode(callNode);
         return assignPositionAndFlags(node, rubyNode);
     }
@@ -3213,7 +3161,7 @@ public class YARPTranslator extends YARPBaseTranslator {
             //   end
 
             // no need for SplatCastNodeGen for * because it's always an Array and cannot be reassigned
-            rubyNode = environment.findLocalVarNode(DEFAULT_REST_NAME);
+            rubyNode = environment.readFromMethodFrameNode(DEFAULT_REST_NAME);
         }
 
         return assignPositionAndFlags(node, rubyNode);
@@ -3259,7 +3207,8 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     @Override
     public RubyNode visitSuperNode(Nodes.SuperNode node) {
-        var argumentsAndBlock = translateArgumentsAndBlock(node.arguments, node.block, environment.getMethodName());
+        var argumentsAndBlock = translateArgumentsAndBlock(node.arguments, node.block, environment.getMethodName(),
+                false);
 
         final RubyNode arguments = new ReadSuperArgumentsNode(
                 argumentsAndBlock.arguments,
@@ -3278,7 +3227,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         if (blockNode != null) {
             return blockNode;
         } else {
-            return environment.findLocalVarOrNilNode(TranslatorEnvironment.METHOD_BLOCK_NAME);
+            return environment.readFromMethodFrameNodeOrNil(TranslatorEnvironment.METHOD_BLOCK_NAME);
         }
     }
 
@@ -3399,9 +3348,9 @@ public class YARPTranslator extends YARPBaseTranslator {
                             getSourceSection(node)));
         }
 
-        var argumentsAndBlock = translateArgumentsAndBlock(node.arguments, null, "<yield>");
+        var argumentsAndBlock = translateArgumentsAndBlock(node.arguments, null, "<yield>", false);
 
-        RubyNode readBlock = environment.findLocalVarOrNilNode(TranslatorEnvironment.METHOD_BLOCK_NAME);
+        RubyNode readBlock = environment.readFromMethodFrameNodeOrNil(TranslatorEnvironment.METHOD_BLOCK_NAME);
 
         var rubyNode = new YieldExpressionNode(
                 argumentsAndBlock.isSplatted,
@@ -3436,7 +3385,7 @@ public class YARPTranslator extends YARPBaseTranslator {
             return ArrayLiteralNode.create(language, RubyNode.EMPTY_ARRAY);
         }
 
-        boolean containSplatOperator = containYARPSplatNode(nodes);
+        boolean containSplatOperator = containYARPSplatOrForwardingNode(nodes);
 
         // fast path (no SplatNode)
 
@@ -3455,7 +3404,20 @@ public class YARPTranslator extends YARPBaseTranslator {
         // is translated into
         //   ArrayConcatNode(ArrayLiteralNode(a, b), "splat-operator-node", ArrayLiteralNode(d))
         for (Nodes.Node node : nodes) {
-            if (node instanceof Nodes.SplatNode) {
+            if (node instanceof Nodes.ForwardingArgumentsNode) {
+                // Handled like SplatNode for forward-* and a non-splat node for forward-**
+                if (!current.isEmpty()) {
+                    arraysToConcat.add(ArrayLiteralNode.create(language, current.toArray(RubyNode.EMPTY_ARRAY)));
+                    current = new ArrayList<>();
+                }
+                // Relies on ... being only valid as a method parameter and not a block parameter
+                arraysToConcat.add(
+                        SplatCastNodeGen.create(language, SplatCastNode.NilBehavior.CONVERT, false,
+                                environment.readFromMethodFrameNode(FORWARDED_REST_NAME)));
+
+                current.add(HashCastNodeGen.HashCastASTNodeGen.create(
+                        environment.readFromMethodFrameNode(FORWARDED_KEYWORD_REST_NAME)));
+            } else if (node instanceof Nodes.SplatNode) {
                 if (!current.isEmpty()) {
                     arraysToConcat.add(ArrayLiteralNode.create(language, current.toArray(RubyNode.EMPTY_ARRAY)));
                     current = new ArrayList<>();
@@ -3549,9 +3511,9 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         final TranslatorEnvironment newEnvironment = new TranslatorEnvironment(
                 environment,
+                0,
                 parseEnvironment,
                 ReturnID.MODULE_BODY,
-                true,
                 sharedMethodInfo,
                 methodName,
                 0,
@@ -3772,12 +3734,9 @@ public class YARPTranslator extends YARPBaseTranslator {
         translatingWhile = true;
         final BreakID oldBreakID = environment.getBreakID();
         environment.setBreakIDForWhile(whileBreakID);
-        frameOnStackMarkerSlotStack.push(NO_FRAME_ON_STACK_MARKER);
-
         try {
             body = translateNodeOrNil(statements);
         } finally {
-            frameOnStackMarkerSlotStack.pop();
             environment.setBreakIDForWhile(oldBreakID);
             translatingWhile = oldTranslatingWhile;
         }
@@ -3816,6 +3775,16 @@ public class YARPTranslator extends YARPBaseTranslator {
     private boolean containYARPSplatNode(Nodes.Node[] nodes) {
         for (var n : nodes) {
             if (n instanceof Nodes.SplatNode) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean containYARPSplatOrForwardingNode(Nodes.Node[] nodes) {
+        for (var n : nodes) {
+            if (n instanceof Nodes.SplatNode || n instanceof Nodes.ForwardingArgumentsNode) {
                 return true;
             }
         }

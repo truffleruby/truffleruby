@@ -67,6 +67,11 @@ public final class ParseEnvironment {
         this.coverageEnabled = rubySource.getSource().getOptions(language).get(RubySourceOptions.Coverage);
     }
 
+    @Override
+    public String toString() {
+        return RubyLanguage.getPath(source);
+    }
+
     public boolean inCore() {
         return inCore;
     }

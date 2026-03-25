@@ -23,7 +23,8 @@ import org.truffleruby.language.control.BreakID;
 import org.truffleruby.language.control.FrameOnStackMarker;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import org.truffleruby.parser.YARPTranslator;
+
+import static org.truffleruby.parser.YARPBaseTranslator.NO_FRAME_ON_STACK_MARKER;
 
 /** Create a Ruby Proc to pass as a block to the called method. The literal block is represented as call targets and a
  * SharedMethodInfo. This is executed at the call site just before dispatch. */
@@ -41,17 +42,20 @@ public abstract class BlockDefinitionNode extends RubyContextSourceNode {
             ProcCallTargets callTargets,
             BreakID breakID,
             int frameOnStackMarkerSlot) {
-        assert (type == ProcType.PROC) == (frameOnStackMarkerSlot != YARPTranslator.NO_FRAME_ON_STACK_MARKER);
+        assert !(type == ProcType.PROC && frameOnStackMarkerSlot == NO_FRAME_ON_STACK_MARKER);
         this.type = type;
         this.sharedMethodInfo = sharedMethodInfo;
         this.callTargets = callTargets;
         this.breakID = breakID;
-
         this.frameOnStackMarkerSlot = frameOnStackMarkerSlot;
     }
 
     public BreakID getBreakID() {
         return breakID;
+    }
+
+    public int getFrameOnStackMarkerSlot() {
+        return frameOnStackMarkerSlot;
     }
 
     @Override
@@ -62,7 +66,7 @@ public abstract class BlockDefinitionNode extends RubyContextSourceNode {
             @Cached GetSpecialVariableStorage readSpecialVariableStorageNode,
             @Cached WithoutVisibilityNode withoutVisibilityNode) {
         final FrameOnStackMarker frameOnStackMarker;
-        if (frameOnStackMarkerSlot != YARPTranslator.NO_FRAME_ON_STACK_MARKER) {
+        if (type == ProcType.PROC) {
             frameOnStackMarker = (FrameOnStackMarker) frame.getObject(frameOnStackMarkerSlot);
             assert frameOnStackMarker != null;
         } else {
