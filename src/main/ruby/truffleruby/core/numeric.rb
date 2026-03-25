@@ -62,28 +62,29 @@ class Numeric
   end
 
   def step(orig_limit = undefined, orig_step = undefined, by: undefined, to: undefined, &block)
-    uses_kwargs = false
     limit = if Primitive.undefined?(to)
               Primitive.undefined?(orig_limit) ? nil : orig_limit
             else
               raise ArgumentError, 'to is given twice' unless Primitive.undefined?(orig_limit)
-              uses_kwargs = true
               to
             end
     step = if Primitive.undefined?(by)
+             raise TypeError, 'step must be numeric' if Primitive.nil?(orig_step)
              Primitive.undefined?(orig_step) ? 1 : orig_step
            else
              raise ArgumentError, 'step is given twice' unless Primitive.undefined?(orig_step)
-             uses_kwargs = true
+             by = 1 if Primitive.nil?(by)
              by
            end
 
+    Truffle::RangeOperations.check_step_zero(step)
+
     unless block_given?
-      return Truffle::NumericOperations.step_no_block(self, orig_limit, orig_step, by, to, limit, step, uses_kwargs)
+      return Truffle::NumericOperations.step_no_block(self, orig_limit, orig_step, by, to, limit, step)
     end
 
     value, limit, step, desc, is_float =
-      Truffle::NumericOperations.step_fetch_args(self, limit, step, uses_kwargs)
+      Truffle::NumericOperations.step_fetch_args(self, limit, step)
 
     if is_float
       Truffle::NumericOperations.step_float(value, limit, step, desc, false, &block)
