@@ -34,6 +34,7 @@ import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.nodes.ControlFlowException;
 import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.language.control.TerminationException;
+import org.truffleruby.signal.LibRubySignal;
 
 @GenerateUncached
 @GenerateInline(inlineByDefault = true)
@@ -131,8 +132,8 @@ public abstract class TranslateExceptionNode extends RubyBaseNode {
         boolean ignore = InitStackOverflowClassesEagerlyNode.ignore(error);
         if (!ignore) {
             if (context.getOptions().EXCEPTIONS_WARN_STACKOVERFLOW) {
-                // We cannot afford to initialize the Log class
-                System.err.print("[ruby] WARNING StackOverflowError\n");
+                // We cannot afford to use more Java frames
+                LibRubySignal.warnStackOverflowError();
             }
 
             logJavaException(context, node, error);
@@ -144,8 +145,8 @@ public abstract class TranslateExceptionNode extends RubyBaseNode {
     @TruffleBoundary
     private static RubyException translateOutOfMemory(Node node, RubyContext context, OutOfMemoryError error) {
         if (context.getOptions().EXCEPTIONS_WARN_OUT_OF_MEMORY) {
-            // We cannot afford to initialize the Log class
-            System.err.print("[ruby] WARNING OutOfMemoryError\n");
+            // We cannot afford to use more Java frames
+            LibRubySignal.warnOutOfMemoryError();
         }
 
         logJavaException(context, node, error);

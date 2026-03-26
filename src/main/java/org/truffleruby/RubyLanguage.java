@@ -891,6 +891,9 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     }
 
     private void setupLocale(Env env, String rubyHome) {
+        // Always load LibRubySignal because it might be used by TranslateExceptionNode
+        LibRubySignal.loadLibrary(rubyHome, Platform.LIB_SUFFIX);
+
         // CRuby does setlocale(LC_CTYPE, "") because this is needed to get the locale encoding with nl_langinfo(CODESET).
         // This means every locale category except LC_CTYPE remains the initial "C".
         // LC_CTYPE is set according to environment variables (LC_ALL, LC_CTYPE, LANG).
@@ -901,14 +904,12 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
         if (env.getOptions().get(OptionsCatalog.EMBEDDED_KEY)) {
             if (ImageInfo.inImageRuntimeCode()) {
                 // Only do this on Native Image, to handle the case of the embedder setting UseSystemLocale=false.
-                LibRubySignal.loadLibrary(rubyHome, Platform.LIB_SUFFIX);
                 LibRubySignal.setupLocaleOnlyCTYPE();
             } else {
                 // Nothing to do, JVM and Native Image UseSystemLocale=true already did setlocale(LC_ALL, "")
                 // so there is no need to setlocale(LC_CTYPE, "").
             }
         } else {
-            LibRubySignal.loadLibrary(rubyHome, Platform.LIB_SUFFIX);
             LibRubySignal.setupLocale();
         }
     }

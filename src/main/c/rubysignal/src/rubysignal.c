@@ -8,6 +8,7 @@
  * GNU Lesser General Public License version 2.1.
  */
 #include "org_truffleruby_signal_LibRubySignal.h"
+#include <errno.h>
 #include <locale.h>
 #include <pthread.h>
 #include <signal.h>
@@ -15,6 +16,30 @@
 #include <sys/syscall.h>
 
 _Static_assert(sizeof(pthread_t) == sizeof(jlong), "Expected sizeof(pthread_t) == sizeof(jlong)");
+
+static void write_to_stderr(const char *msg, ssize_t len) {
+  while (len > 0) {
+    ssize_t n = write(STDERR_FILENO, msg, len);
+    if (n > 0) {
+      msg += n;
+      len -= n;
+    } else if (n == -1 && errno == EINTR) {
+      continue;
+    } else {
+      break;
+    }
+  }
+}
+
+JNIEXPORT void JNICALL Java_org_truffleruby_signal_LibRubySignal_warnStackOverflowError(JNIEnv *env, jclass clazz) {
+  static const char message[] = "[ruby] WARNING StackOverflowError\n";
+  write_to_stderr(message, sizeof(message) - 1);
+}
+
+JNIEXPORT void JNICALL Java_org_truffleruby_signal_LibRubySignal_warnOutOfMemoryError(JNIEnv *env, jclass clazz) {
+  static const char message[] = "[ruby] WARNING OutOfMemoryError\n";
+  write_to_stderr(message, sizeof(message) - 1);
+}
 
 JNIEXPORT void JNICALL Java_org_truffleruby_signal_LibRubySignal_setupLocale(JNIEnv *env, jclass clazz) {
   setlocale(LC_ALL, "C");
