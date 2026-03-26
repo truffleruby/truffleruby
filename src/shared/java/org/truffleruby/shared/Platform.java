@@ -56,6 +56,10 @@ public abstract class Platform {
     }
 
     private static String determineArchName(OS_TYPE os, ARCH architecture) {
+        if (os == OS_TYPE.DARWIN && architecture == ARCH.AMD64) {
+            throw new Error("darwin-amd64 is no longer supported");
+        }
+
         return switch (architecture) {
             case AMD64 -> "x86_64";
             case AARCH64 ->

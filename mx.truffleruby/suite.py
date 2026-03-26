@@ -789,7 +789,6 @@ suite = {
             "platforms": [
                 "linux-amd64",
                 "linux-aarch64",
-                "darwin-amd64",
                 "darwin-aarch64",
             ],
             "maven": False,

@@ -1230,12 +1230,11 @@ Such constant values are stored in platform-specific configuration files
 - `LinuxAArch64NativeConfiguration.java`
 - `LinuxAMD64NativeConfiguration.java`
 - `DarwinAArch64NativeConfiguration.java`
-- `DarwinAMD64NativeConfiguration.java`
 
 Example of constant configuration:
 
 ```java
-// src/main/java/org/truffleruby/platform/DarwinAMD64NativeConfiguration.java
+// src/main/java/org/truffleruby/platform/DarwinAArch64NativeConfiguration.java
 configuration.config("platform.file.O_RDONLY", 0);
 configuration.config("platform.file.O_WRONLY", 1);
 configuration.config("platform.file.O_RDWR", 2);

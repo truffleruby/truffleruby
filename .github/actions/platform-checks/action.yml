@@ -1,4 +1,5 @@
 name: 'CI checks for every platform'
+description: 'CI checks for every platform'
 runs:
   using: "composite"
   steps:
@@ -23,7 +24,7 @@ runs:
       shell: bash
 
     # run jt test fast on each platform
-    - run: jt build # ~4-6min, 13min on macos-15-intel
+    - run: jt build # ~4-6min
       shell: bash
     - run: jt test fast # ~1.5min
       shell: bash
