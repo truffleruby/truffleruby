@@ -116,6 +116,8 @@ module Prism
   #      
   #      def visit_ensure_node: (EnsureNode) -> void
   #      
+  #      def visit_error_recovery_node: (ErrorRecoveryNode) -> void
+  #      
   #      def visit_false_node: (FalseNode) -> void
   #      
   #      def visit_find_pattern_node: (FindPatternNode) -> void
@@ -219,8 +221,6 @@ module Prism
   #      def visit_match_required_node: (MatchRequiredNode) -> void
   #      
   #      def visit_match_write_node: (MatchWriteNode) -> void
-  #      
-  #      def visit_missing_node: (MissingNode) -> void
   #      
   #      def visit_module_node: (ModuleNode) -> void
   #      
@@ -723,6 +723,13 @@ module Prism
       node.each_child_node { |node| node.accept(self) }
     end
 
+    # Visit a ErrorRecoveryNode node
+    #--
+    #: (ErrorRecoveryNode node) -> void
+    def visit_error_recovery_node(node)
+      node.each_child_node { |node| node.accept(self) }
+    end
+
     # Visit a FalseNode node
     #--
     #: (FalseNode node) -> void
@@ -1084,13 +1091,6 @@ module Prism
     #--
     #: (MatchWriteNode node) -> void
     def visit_match_write_node(node)
-      node.each_child_node { |node| node.accept(self) }
-    end
-
-    # Visit a MissingNode node
-    #--
-    #: (MissingNode node) -> void
-    def visit_missing_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 

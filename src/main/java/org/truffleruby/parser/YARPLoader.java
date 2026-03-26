@@ -36,6 +36,7 @@
  */
 package org.truffleruby.parser;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import org.ruby_lang.prism.Loader;
 import org.ruby_lang.prism.Nodes.DefNode;
 import org.ruby_lang.prism.ParseResult;
@@ -43,12 +44,13 @@ import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.encoding.TStringUtils;
 
-import java.nio.charset.Charset;
-
 public final class YARPLoader extends Loader {
 
     public static ParseResult load(byte[] serialized, RubySource rubySource) {
-        return new YARPLoader(serialized, rubySource.getEncoding()).load();
+        var loader = new YARPLoader(serialized, rubySource.getEncoding());
+        var parseResult = loader.load();
+        loader.checkEncoding();
+        return parseResult;
     }
 
     private final RubyEncoding encoding;
@@ -58,11 +60,12 @@ public final class YARPLoader extends Loader {
         this.encoding = encoding;
     }
 
-    @Override
-    public Charset getEncodingCharset(String encodingName) {
-        var rubyEncoding = Encodings.getBuiltInEncoding(encodingName);
-        assert rubyEncoding == encoding : rubyEncoding + " (" + encodingName + ") vs " + encoding;
-        return null; // encodingCharset is not used
+    private void checkEncoding() {
+        var encodingFromPrism = Encodings.getBuiltInEncoding(encodingName);
+        if (encodingFromPrism != encoding) {
+            throw CompilerDirectives.shouldNotReachHere("Encoding from Prism " + encodingFromPrism + " (" +
+                    encodingName + ") does not match the detected encoding " + encoding);
+        }
     }
 
     @Override

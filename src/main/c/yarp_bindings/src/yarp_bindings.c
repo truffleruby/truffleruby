@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <string.h>
+
 #include "prism.h"
 #include "org_ruby_lang_prism_Parser.h"
 
@@ -16,20 +19,22 @@ JNIEXPORT jbyteArray JNICALL Java_org_ruby_1lang_prism_Parser_parseAndSerialize(
       options_bytes = NULL;
   }
 
-  pm_buffer_t buffer;
-  pm_buffer_init(&buffer);
+  pm_buffer_t *buffer = pm_buffer_new();
 
-  pm_serialize_parse(&buffer, (uint8_t *) bytes, size, (char *) options_bytes);
+  pm_serialize_parse(buffer, (uint8_t *) bytes, size, (char *) options_bytes);
 
   free(bytes);
   if (options) {
       (*env)->ReleaseByteArrayElements(env, options, options_bytes, JNI_ABORT);
   }
 
-  jbyteArray serialized = (*env)->NewByteArray(env, buffer.length);
-  (*env)->SetByteArrayRegion(env, serialized, 0, buffer.length, (jbyte *) buffer.value);
+  char* buffer_value = pm_buffer_value(buffer);
+  size_t buffer_length = pm_buffer_length(buffer);
 
-  pm_buffer_free(&buffer);
+  jbyteArray serialized = (*env)->NewByteArray(env, buffer_length);
+  (*env)->SetByteArrayRegion(env, serialized, 0, buffer_length, (jbyte *) buffer_value);
+
+  pm_buffer_free(buffer);
 
   return serialized;
 }

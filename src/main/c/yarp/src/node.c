@@ -7,7 +7,11 @@
 /*----------------------------------------------------------------------------*/
 
 #line 2 "prism/templates/src/node.c.erb"
-#include "prism/node.h"
+#include "prism/internal/node.h"
+
+#include "prism/internal/arena.h"
+
+#include <stdlib.h>
 
 /**
  * Attempts to grow the node list to the next size. If there is already
@@ -47,10 +51,11 @@ pm_node_list_grow(pm_arena_t *arena, pm_node_list_t *list, size_t size) {
 }
 
 /**
- * Append a new node onto the end of the node list.
+ * Slow path for pm_node_list_append: grow the list and append the node.
+ * Do not call directly - use pm_node_list_append instead.
  */
 void
-pm_node_list_append(pm_arena_t *arena, pm_node_list_t *list, pm_node_t *node) {
+pm_node_list_append_slow(pm_arena_t *arena, pm_node_list_t *list, pm_node_t *node) {
     pm_node_list_grow(arena, list, 1);
     list->nodes[list->size++] = node;
 }
@@ -81,8 +86,8 @@ pm_node_list_concat(pm_arena_t *arena, pm_node_list_t *list, pm_node_list_t *oth
 /**
  * Returns a string representation of the given node type.
  */
-PRISM_EXPORTED_FUNCTION const char *
-pm_node_type_to_str(pm_node_type_t node_type)
+const char *
+pm_node_type(pm_node_type_t node_type)
 {
     switch (node_type) {
         case PM_ALIAS_GLOBAL_VARIABLE_NODE:
@@ -185,6 +190,8 @@ pm_node_type_to_str(pm_node_type_t node_type)
             return "PM_EMBEDDED_VARIABLE_NODE";
         case PM_ENSURE_NODE:
             return "PM_ENSURE_NODE";
+        case PM_ERROR_RECOVERY_NODE:
+            return "PM_ERROR_RECOVERY_NODE";
         case PM_FALSE_NODE:
             return "PM_FALSE_NODE";
         case PM_FIND_PATTERN_NODE:
@@ -289,8 +296,6 @@ pm_node_type_to_str(pm_node_type_t node_type)
             return "PM_MATCH_REQUIRED_NODE";
         case PM_MATCH_WRITE_NODE:
             return "PM_MATCH_WRITE_NODE";
-        case PM_MISSING_NODE:
-            return "PM_MISSING_NODE";
         case PM_MODULE_NODE:
             return "PM_MODULE_NODE";
         case PM_MULTI_TARGET_NODE:
@@ -401,7 +406,7 @@ pm_node_type_to_str(pm_node_type_t node_type)
  * pointer and is passed to the visitor callback for consumers to use as they
  * see fit.
  */
-PRISM_EXPORTED_FUNCTION void
+void
 pm_visit_node(const pm_node_t *node, bool (*visitor)(const pm_node_t *node, void *data), void *data) {
     if (visitor(node, data)) pm_visit_child_nodes(node, visitor, data);
 }
@@ -411,7 +416,7 @@ pm_visit_node(const pm_node_t *node, bool (*visitor)(const pm_node_t *node, void
  * default behavior for walking the tree that is called from pm_visit_node if
  * the callback returns true.
  */
-PRISM_EXPORTED_FUNCTION void
+void
 pm_visit_child_nodes(const pm_node_t *node, bool (*visitor)(const pm_node_t *node, void *data), void *data) {
     switch (PM_NODE_TYPE(node)) {
         case PM_ALIAS_GLOBAL_VARIABLE_NODE: {
@@ -950,6 +955,16 @@ pm_visit_child_nodes(const pm_node_t *node, bool (*visitor)(const pm_node_t *nod
 
             break;
         }
+        case PM_ERROR_RECOVERY_NODE: {
+            const pm_error_recovery_node_t *cast = (const pm_error_recovery_node_t *) node;
+
+            // Visit the unexpected field
+            if (cast->unexpected != NULL) {
+                pm_visit_node((const pm_node_t *) cast->unexpected, visitor, data);
+            }
+
+            break;
+        }
         case PM_FALSE_NODE:
             break;
         case PM_FIND_PATTERN_NODE: {
@@ -1424,8 +1439,6 @@ pm_visit_child_nodes(const pm_node_t *node, bool (*visitor)(const pm_node_t *nod
 
             break;
         }
-        case PM_MISSING_NODE:
-            break;
         case PM_MODULE_NODE: {
             const pm_module_node_t *cast = (const pm_module_node_t *) node;
 
@@ -1866,5708 +1879,2637 @@ pm_visit_child_nodes(const pm_node_t *node, bool (*visitor)(const pm_node_t *nod
     }
 }
 
-// We optionally support dumping to JSON. For systems that don't want or need
-// this functionality, it can be turned off with the PRISM_EXCLUDE_JSON define.
-#ifndef PRISM_EXCLUDE_JSON
+/**
+ * Allocate and initialize a new AliasGlobalVariableNode node.
+ */
+pm_alias_global_variable_node_t *
+pm_alias_global_variable_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *new_name, struct pm_node *old_name, pm_location_t keyword_loc) {
+    pm_alias_global_variable_node_t *node = (pm_alias_global_variable_node_t *) pm_arena_alloc(arena, sizeof(pm_alias_global_variable_node_t), PRISM_ALIGNOF(pm_alias_global_variable_node_t));
 
-static void
-pm_dump_json_constant(pm_buffer_t *buffer, const pm_parser_t *parser, pm_constant_id_t constant_id) {
-    const pm_constant_t *constant = pm_constant_pool_id_to_constant(&parser->constant_pool, constant_id);
-    pm_buffer_append_byte(buffer, '"');
-    pm_buffer_append_source(buffer, constant->start, constant->length, PM_BUFFER_ESCAPING_JSON);
-    pm_buffer_append_byte(buffer, '"');
-}
+    *node = (pm_alias_global_variable_node_t) {
+        .base = { .type = PM_ALIAS_GLOBAL_VARIABLE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .new_name = new_name,
+        .old_name = old_name,
+        .keyword_loc = keyword_loc
+    };
 
-static void
-pm_dump_json_location(pm_buffer_t *buffer, const pm_location_t *location) {
-    pm_buffer_append_format(buffer, "{\"start\":%" PRIu32 ",\"length\":%" PRIu32 "}", location->start, location->length);
+    return node;
 }
 
 /**
- * Dump JSON to the given buffer.
+ * Allocate and initialize a new AliasMethodNode node.
  */
-PRISM_EXPORTED_FUNCTION void
-pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *node) {
-    switch (PM_NODE_TYPE(node)) {
-        case PM_ALIAS_GLOBAL_VARIABLE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"AliasGlobalVariableNode\",\"location\":", 45);
-
-            const pm_alias_global_variable_node_t *cast = (const pm_alias_global_variable_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the new_name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"new_name\":", 11);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->new_name);
-
-            // Dump the old_name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"old_name\":", 11);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->old_name);
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_ALIAS_METHOD_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"AliasMethodNode\",\"location\":", 37);
-
-            const pm_alias_method_node_t *cast = (const pm_alias_method_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the new_name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"new_name\":", 11);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->new_name);
-
-            // Dump the old_name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"old_name\":", 11);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->old_name);
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_ALTERNATION_PATTERN_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"AlternationPatternNode\",\"location\":", 44);
-
-            const pm_alternation_pattern_node_t *cast = (const pm_alternation_pattern_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the left field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"left\":", 7);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->left);
-
-            // Dump the right field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"right\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->right);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_AND_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"AndNode\",\"location\":", 29);
-
-            const pm_and_node_t *cast = (const pm_and_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the left field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"left\":", 7);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->left);
-
-            // Dump the right field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"right\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->right);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_ARGUMENTS_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ArgumentsNode\",\"location\":", 35);
-
-            const pm_arguments_node_t *cast = (const pm_arguments_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the ArgumentsNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_ARGUMENTS_NODE_FLAGS_CONTAINS_FORWARDING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"CONTAINS_FORWARDING\"", 21);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_ARGUMENTS_NODE_FLAGS_CONTAINS_KEYWORDS)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"CONTAINS_KEYWORDS\"", 19);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_ARGUMENTS_NODE_FLAGS_CONTAINS_KEYWORD_SPLAT)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"CONTAINS_KEYWORD_SPLAT\"", 24);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_ARGUMENTS_NODE_FLAGS_CONTAINS_SPLAT)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"CONTAINS_SPLAT\"", 16);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_ARGUMENTS_NODE_FLAGS_CONTAINS_MULTIPLE_SPLATS)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"CONTAINS_MULTIPLE_SPLATS\"", 26);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the arguments field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"arguments\":", 12);
-            const pm_node_list_t *arguments = &cast->arguments;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < arguments->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, arguments->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_ARRAY_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ArrayNode\",\"location\":", 31);
-
-            const pm_array_node_t *cast = (const pm_array_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the ArrayNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_ARRAY_NODE_FLAGS_CONTAINS_SPLAT)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"CONTAINS_SPLAT\"", 16);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the elements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"elements\":", 11);
-            const pm_node_list_t *elements = &cast->elements;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < elements->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, elements->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            if (cast->opening_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->opening_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_ARRAY_PATTERN_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ArrayPatternNode\",\"location\":", 38);
-
-            const pm_array_pattern_node_t *cast = (const pm_array_pattern_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the constant field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"constant\":", 11);
-            if (cast->constant != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->constant);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the requireds field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"requireds\":", 12);
-            const pm_node_list_t *requireds = &cast->requireds;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < requireds->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, requireds->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the rest field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rest\":", 7);
-            if (cast->rest != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->rest);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the posts field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"posts\":", 8);
-            const pm_node_list_t *posts = &cast->posts;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < posts->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, posts->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            if (cast->opening_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->opening_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_ASSOC_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"AssocNode\",\"location\":", 31);
-
-            const pm_assoc_node_t *cast = (const pm_assoc_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the key field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"key\":", 6);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->key);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            if (cast->operator_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->operator_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_ASSOC_SPLAT_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"AssocSplatNode\",\"location\":", 36);
-
-            const pm_assoc_splat_node_t *cast = (const pm_assoc_splat_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            if (cast->value != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_BACK_REFERENCE_READ_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"BackReferenceReadNode\",\"location\":", 43);
-
-            const pm_back_reference_read_node_t *cast = (const pm_back_reference_read_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_BEGIN_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"BeginNode\",\"location\":", 31);
-
-            const pm_begin_node_t *cast = (const pm_begin_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the begin_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"begin_keyword_loc\":", 20);
-            if (cast->begin_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->begin_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the rescue_clause field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rescue_clause\":", 16);
-            if (cast->rescue_clause != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->rescue_clause);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the else_clause field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"else_clause\":", 14);
-            if (cast->else_clause != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->else_clause);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the ensure_clause field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ensure_clause\":", 16);
-            if (cast->ensure_clause != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->ensure_clause);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the end_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
-            if (cast->end_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->end_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_BLOCK_ARGUMENT_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"BlockArgumentNode\",\"location\":", 39);
-
-            const pm_block_argument_node_t *cast = (const pm_block_argument_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the expression field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"expression\":", 13);
-            if (cast->expression != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->expression);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_BLOCK_LOCAL_VARIABLE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"BlockLocalVariableNode\",\"location\":", 44);
-
-            const pm_block_local_variable_node_t *cast = (const pm_block_local_variable_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the ParameterFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"REPEATED_PARAMETER\"", 20);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_BLOCK_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"BlockNode\",\"location\":", 31);
-
-            const pm_block_node_t *cast = (const pm_block_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the locals field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"locals\":", 9);
-            const pm_constant_id_list_t *locals = &cast->locals;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < locals->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json_constant(buffer, parser, locals->ids[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the parameters field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"parameters\":", 13);
-            if (cast->parameters != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->parameters);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the body field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"body\":", 7);
-            if (cast->body != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->body);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_BLOCK_PARAMETER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"BlockParameterNode\",\"location\":", 40);
-
-            const pm_block_parameter_node_t *cast = (const pm_block_parameter_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the ParameterFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"REPEATED_PARAMETER\"", 20);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            if (cast->name != PM_CONSTANT_ID_UNSET) {
-                pm_dump_json_constant(buffer, parser, cast->name);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            if (cast->name_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->name_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_BLOCK_PARAMETERS_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"BlockParametersNode\",\"location\":", 41);
-
-            const pm_block_parameters_node_t *cast = (const pm_block_parameters_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the parameters field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"parameters\":", 13);
-            if (cast->parameters != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->parameters);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the locals field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"locals\":", 9);
-            const pm_node_list_t *locals = &cast->locals;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < locals->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, locals->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            if (cast->opening_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->opening_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_BREAK_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"BreakNode\",\"location\":", 31);
-
-            const pm_break_node_t *cast = (const pm_break_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the arguments field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"arguments\":", 12);
-            if (cast->arguments != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->arguments);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CALL_AND_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"CallAndWriteNode\",\"location\":", 38);
-
-            const pm_call_and_write_node_t *cast = (const pm_call_and_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the CallNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"SAFE_NAVIGATION\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_VARIABLE_CALL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"VARIABLE_CALL\"", 15);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_ATTRIBUTE_WRITE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ATTRIBUTE_WRITE\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_IGNORE_VISIBILITY)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"IGNORE_VISIBILITY\"", 19);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the receiver field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"receiver\":", 11);
-            if (cast->receiver != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->receiver);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the call_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"call_operator_loc\":", 20);
-            if (cast->call_operator_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->call_operator_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the message_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"message_loc\":", 14);
-            if (cast->message_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->message_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the read_name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"read_name\":", 12);
-            pm_dump_json_constant(buffer, parser, cast->read_name);
-
-            // Dump the write_name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"write_name\":", 13);
-            pm_dump_json_constant(buffer, parser, cast->write_name);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CALL_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"CallNode\",\"location\":", 30);
-
-            const pm_call_node_t *cast = (const pm_call_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the CallNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"SAFE_NAVIGATION\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_VARIABLE_CALL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"VARIABLE_CALL\"", 15);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_ATTRIBUTE_WRITE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ATTRIBUTE_WRITE\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_IGNORE_VISIBILITY)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"IGNORE_VISIBILITY\"", 19);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the receiver field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"receiver\":", 11);
-            if (cast->receiver != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->receiver);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the call_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"call_operator_loc\":", 20);
-            if (cast->call_operator_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->call_operator_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the message_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"message_loc\":", 14);
-            if (cast->message_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->message_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            if (cast->opening_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->opening_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the arguments field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"arguments\":", 12);
-            if (cast->arguments != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->arguments);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the equal_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"equal_loc\":", 12);
-            if (cast->equal_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->equal_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the block field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"block\":", 8);
-            if (cast->block != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->block);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CALL_OPERATOR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"CallOperatorWriteNode\",\"location\":", 43);
-
-            const pm_call_operator_write_node_t *cast = (const pm_call_operator_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the CallNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"SAFE_NAVIGATION\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_VARIABLE_CALL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"VARIABLE_CALL\"", 15);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_ATTRIBUTE_WRITE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ATTRIBUTE_WRITE\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_IGNORE_VISIBILITY)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"IGNORE_VISIBILITY\"", 19);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the receiver field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"receiver\":", 11);
-            if (cast->receiver != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->receiver);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the call_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"call_operator_loc\":", 20);
-            if (cast->call_operator_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->call_operator_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the message_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"message_loc\":", 14);
-            if (cast->message_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->message_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the read_name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"read_name\":", 12);
-            pm_dump_json_constant(buffer, parser, cast->read_name);
-
-            // Dump the write_name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"write_name\":", 13);
-            pm_dump_json_constant(buffer, parser, cast->write_name);
-
-            // Dump the binary_operator field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator\":", 18);
-            pm_dump_json_constant(buffer, parser, cast->binary_operator);
-
-            // Dump the binary_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator_loc\":", 22);
-            pm_dump_json_location(buffer, &cast->binary_operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CALL_OR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"CallOrWriteNode\",\"location\":", 37);
-
-            const pm_call_or_write_node_t *cast = (const pm_call_or_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the CallNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"SAFE_NAVIGATION\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_VARIABLE_CALL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"VARIABLE_CALL\"", 15);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_ATTRIBUTE_WRITE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ATTRIBUTE_WRITE\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_IGNORE_VISIBILITY)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"IGNORE_VISIBILITY\"", 19);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the receiver field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"receiver\":", 11);
-            if (cast->receiver != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->receiver);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the call_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"call_operator_loc\":", 20);
-            if (cast->call_operator_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->call_operator_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the message_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"message_loc\":", 14);
-            if (cast->message_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->message_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the read_name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"read_name\":", 12);
-            pm_dump_json_constant(buffer, parser, cast->read_name);
-
-            // Dump the write_name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"write_name\":", 13);
-            pm_dump_json_constant(buffer, parser, cast->write_name);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CALL_TARGET_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"CallTargetNode\",\"location\":", 36);
-
-            const pm_call_target_node_t *cast = (const pm_call_target_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the CallNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"SAFE_NAVIGATION\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_VARIABLE_CALL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"VARIABLE_CALL\"", 15);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_ATTRIBUTE_WRITE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ATTRIBUTE_WRITE\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_IGNORE_VISIBILITY)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"IGNORE_VISIBILITY\"", 19);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the receiver field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"receiver\":", 11);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->receiver);
-
-            // Dump the call_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"call_operator_loc\":", 20);
-            pm_dump_json_location(buffer, &cast->call_operator_loc);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the message_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"message_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->message_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CAPTURE_PATTERN_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"CapturePatternNode\",\"location\":", 40);
-
-            const pm_capture_pattern_node_t *cast = (const pm_capture_pattern_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the target field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"target\":", 9);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->target);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CASE_MATCH_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"CaseMatchNode\",\"location\":", 35);
-
-            const pm_case_match_node_t *cast = (const pm_case_match_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the predicate field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"predicate\":", 12);
-            if (cast->predicate != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->predicate);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the conditions field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"conditions\":", 13);
-            const pm_node_list_t *conditions = &cast->conditions;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < conditions->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, conditions->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the else_clause field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"else_clause\":", 14);
-            if (cast->else_clause != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->else_clause);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the case_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"case_keyword_loc\":", 19);
-            pm_dump_json_location(buffer, &cast->case_keyword_loc);
-
-            // Dump the end_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
-            pm_dump_json_location(buffer, &cast->end_keyword_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CASE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"CaseNode\",\"location\":", 30);
-
-            const pm_case_node_t *cast = (const pm_case_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the predicate field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"predicate\":", 12);
-            if (cast->predicate != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->predicate);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the conditions field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"conditions\":", 13);
-            const pm_node_list_t *conditions = &cast->conditions;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < conditions->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, conditions->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the else_clause field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"else_clause\":", 14);
-            if (cast->else_clause != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->else_clause);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the case_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"case_keyword_loc\":", 19);
-            pm_dump_json_location(buffer, &cast->case_keyword_loc);
-
-            // Dump the end_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
-            pm_dump_json_location(buffer, &cast->end_keyword_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CLASS_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ClassNode\",\"location\":", 31);
-
-            const pm_class_node_t *cast = (const pm_class_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the locals field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"locals\":", 9);
-            const pm_constant_id_list_t *locals = &cast->locals;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < locals->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json_constant(buffer, parser, locals->ids[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the class_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"class_keyword_loc\":", 20);
-            pm_dump_json_location(buffer, &cast->class_keyword_loc);
-
-            // Dump the constant_path field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"constant_path\":", 16);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->constant_path);
-
-            // Dump the inheritance_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"inheritance_operator_loc\":", 27);
-            if (cast->inheritance_operator_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->inheritance_operator_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the superclass field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"superclass\":", 13);
-            if (cast->superclass != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->superclass);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the body field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"body\":", 7);
-            if (cast->body != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->body);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the end_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
-            pm_dump_json_location(buffer, &cast->end_keyword_loc);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CLASS_VARIABLE_AND_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ClassVariableAndWriteNode\",\"location\":", 47);
-
-            const pm_class_variable_and_write_node_t *cast = (const pm_class_variable_and_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CLASS_VARIABLE_OPERATOR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ClassVariableOperatorWriteNode\",\"location\":", 52);
-
-            const pm_class_variable_operator_write_node_t *cast = (const pm_class_variable_operator_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the binary_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator_loc\":", 22);
-            pm_dump_json_location(buffer, &cast->binary_operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the binary_operator field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator\":", 18);
-            pm_dump_json_constant(buffer, parser, cast->binary_operator);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CLASS_VARIABLE_OR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ClassVariableOrWriteNode\",\"location\":", 46);
-
-            const pm_class_variable_or_write_node_t *cast = (const pm_class_variable_or_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CLASS_VARIABLE_READ_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ClassVariableReadNode\",\"location\":", 43);
-
-            const pm_class_variable_read_node_t *cast = (const pm_class_variable_read_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CLASS_VARIABLE_TARGET_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ClassVariableTargetNode\",\"location\":", 45);
-
-            const pm_class_variable_target_node_t *cast = (const pm_class_variable_target_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CLASS_VARIABLE_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ClassVariableWriteNode\",\"location\":", 44);
-
-            const pm_class_variable_write_node_t *cast = (const pm_class_variable_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CONSTANT_AND_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ConstantAndWriteNode\",\"location\":", 42);
-
-            const pm_constant_and_write_node_t *cast = (const pm_constant_and_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CONSTANT_OPERATOR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ConstantOperatorWriteNode\",\"location\":", 47);
-
-            const pm_constant_operator_write_node_t *cast = (const pm_constant_operator_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the binary_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator_loc\":", 22);
-            pm_dump_json_location(buffer, &cast->binary_operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the binary_operator field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator\":", 18);
-            pm_dump_json_constant(buffer, parser, cast->binary_operator);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CONSTANT_OR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ConstantOrWriteNode\",\"location\":", 41);
-
-            const pm_constant_or_write_node_t *cast = (const pm_constant_or_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CONSTANT_PATH_AND_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ConstantPathAndWriteNode\",\"location\":", 46);
-
-            const pm_constant_path_and_write_node_t *cast = (const pm_constant_path_and_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the target field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"target\":", 9);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->target);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CONSTANT_PATH_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ConstantPathNode\",\"location\":", 38);
-
-            const pm_constant_path_node_t *cast = (const pm_constant_path_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the parent field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"parent\":", 9);
-            if (cast->parent != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->parent);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            if (cast->name != PM_CONSTANT_ID_UNSET) {
-                pm_dump_json_constant(buffer, parser, cast->name);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the delimiter_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"delimiter_loc\":", 16);
-            pm_dump_json_location(buffer, &cast->delimiter_loc);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CONSTANT_PATH_OPERATOR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ConstantPathOperatorWriteNode\",\"location\":", 51);
-
-            const pm_constant_path_operator_write_node_t *cast = (const pm_constant_path_operator_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the target field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"target\":", 9);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->target);
-
-            // Dump the binary_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator_loc\":", 22);
-            pm_dump_json_location(buffer, &cast->binary_operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the binary_operator field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator\":", 18);
-            pm_dump_json_constant(buffer, parser, cast->binary_operator);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CONSTANT_PATH_OR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ConstantPathOrWriteNode\",\"location\":", 45);
-
-            const pm_constant_path_or_write_node_t *cast = (const pm_constant_path_or_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the target field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"target\":", 9);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->target);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CONSTANT_PATH_TARGET_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ConstantPathTargetNode\",\"location\":", 44);
-
-            const pm_constant_path_target_node_t *cast = (const pm_constant_path_target_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the parent field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"parent\":", 9);
-            if (cast->parent != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->parent);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            if (cast->name != PM_CONSTANT_ID_UNSET) {
-                pm_dump_json_constant(buffer, parser, cast->name);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the delimiter_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"delimiter_loc\":", 16);
-            pm_dump_json_location(buffer, &cast->delimiter_loc);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CONSTANT_PATH_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ConstantPathWriteNode\",\"location\":", 43);
-
-            const pm_constant_path_write_node_t *cast = (const pm_constant_path_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the target field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"target\":", 9);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->target);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CONSTANT_READ_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ConstantReadNode\",\"location\":", 38);
-
-            const pm_constant_read_node_t *cast = (const pm_constant_read_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CONSTANT_TARGET_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ConstantTargetNode\",\"location\":", 40);
-
-            const pm_constant_target_node_t *cast = (const pm_constant_target_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_CONSTANT_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ConstantWriteNode\",\"location\":", 39);
-
-            const pm_constant_write_node_t *cast = (const pm_constant_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_DEF_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"DefNode\",\"location\":", 29);
-
-            const pm_def_node_t *cast = (const pm_def_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the receiver field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"receiver\":", 11);
-            if (cast->receiver != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->receiver);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the parameters field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"parameters\":", 13);
-            if (cast->parameters != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->parameters);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the body field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"body\":", 7);
-            if (cast->body != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->body);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the locals field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"locals\":", 9);
-            const pm_constant_id_list_t *locals = &cast->locals;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < locals->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json_constant(buffer, parser, locals->ids[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the def_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"def_keyword_loc\":", 18);
-            pm_dump_json_location(buffer, &cast->def_keyword_loc);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            if (cast->operator_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->operator_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the lparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"lparen_loc\":", 13);
-            if (cast->lparen_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->lparen_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the rparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rparen_loc\":", 13);
-            if (cast->rparen_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->rparen_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the equal_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"equal_loc\":", 12);
-            if (cast->equal_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->equal_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the end_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
-            if (cast->end_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->end_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_DEFINED_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"DefinedNode\",\"location\":", 33);
-
-            const pm_defined_node_t *cast = (const pm_defined_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the lparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"lparen_loc\":", 13);
-            if (cast->lparen_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->lparen_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the rparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rparen_loc\":", 13);
-            if (cast->rparen_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->rparen_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_ELSE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ElseNode\",\"location\":", 30);
-
-            const pm_else_node_t *cast = (const pm_else_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the else_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"else_keyword_loc\":", 19);
-            pm_dump_json_location(buffer, &cast->else_keyword_loc);
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the end_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
-            if (cast->end_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->end_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_EMBEDDED_STATEMENTS_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"EmbeddedStatementsNode\",\"location\":", 44);
-
-            const pm_embedded_statements_node_t *cast = (const pm_embedded_statements_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_EMBEDDED_VARIABLE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"EmbeddedVariableNode\",\"location\":", 42);
-
-            const pm_embedded_variable_node_t *cast = (const pm_embedded_variable_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the variable field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"variable\":", 11);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->variable);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_ENSURE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"EnsureNode\",\"location\":", 32);
-
-            const pm_ensure_node_t *cast = (const pm_ensure_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the ensure_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"ensure_keyword_loc\":", 21);
-            pm_dump_json_location(buffer, &cast->ensure_keyword_loc);
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the end_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
-            pm_dump_json_location(buffer, &cast->end_keyword_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_FALSE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"FalseNode\",\"location\":", 31);
-
-            const pm_false_node_t *cast = (const pm_false_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_FIND_PATTERN_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"FindPatternNode\",\"location\":", 37);
-
-            const pm_find_pattern_node_t *cast = (const pm_find_pattern_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the constant field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"constant\":", 11);
-            if (cast->constant != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->constant);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the left field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"left\":", 7);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->left);
-
-            // Dump the requireds field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"requireds\":", 12);
-            const pm_node_list_t *requireds = &cast->requireds;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < requireds->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, requireds->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the right field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"right\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->right);
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            if (cast->opening_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->opening_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_FLIP_FLOP_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"FlipFlopNode\",\"location\":", 34);
-
-            const pm_flip_flop_node_t *cast = (const pm_flip_flop_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the RangeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_RANGE_FLAGS_EXCLUDE_END)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"EXCLUDE_END\"", 13);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the left field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"left\":", 7);
-            if (cast->left != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->left);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the right field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"right\":", 8);
-            if (cast->right != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->right);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_FLOAT_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"FloatNode\",\"location\":", 31);
-
-            const pm_float_node_t *cast = (const pm_float_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_buffer_append_format(buffer, "%f", cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_FOR_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ForNode\",\"location\":", 29);
-
-            const pm_for_node_t *cast = (const pm_for_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the index field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"index\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->index);
-
-            // Dump the collection field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"collection\":", 13);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->collection);
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the for_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"for_keyword_loc\":", 18);
-            pm_dump_json_location(buffer, &cast->for_keyword_loc);
-
-            // Dump the in_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"in_keyword_loc\":", 17);
-            pm_dump_json_location(buffer, &cast->in_keyword_loc);
-
-            // Dump the do_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"do_keyword_loc\":", 17);
-            if (cast->do_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->do_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the end_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
-            pm_dump_json_location(buffer, &cast->end_keyword_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_FORWARDING_ARGUMENTS_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ForwardingArgumentsNode\",\"location\":", 45);
-
-            const pm_forwarding_arguments_node_t *cast = (const pm_forwarding_arguments_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_FORWARDING_PARAMETER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ForwardingParameterNode\",\"location\":", 45);
-
-            const pm_forwarding_parameter_node_t *cast = (const pm_forwarding_parameter_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_FORWARDING_SUPER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ForwardingSuperNode\",\"location\":", 41);
-
-            const pm_forwarding_super_node_t *cast = (const pm_forwarding_super_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the block field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"block\":", 8);
-            if (cast->block != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->block);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_GLOBAL_VARIABLE_AND_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"GlobalVariableAndWriteNode\",\"location\":", 48);
-
-            const pm_global_variable_and_write_node_t *cast = (const pm_global_variable_and_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_GLOBAL_VARIABLE_OPERATOR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"GlobalVariableOperatorWriteNode\",\"location\":", 53);
-
-            const pm_global_variable_operator_write_node_t *cast = (const pm_global_variable_operator_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the binary_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator_loc\":", 22);
-            pm_dump_json_location(buffer, &cast->binary_operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the binary_operator field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator\":", 18);
-            pm_dump_json_constant(buffer, parser, cast->binary_operator);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_GLOBAL_VARIABLE_OR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"GlobalVariableOrWriteNode\",\"location\":", 47);
-
-            const pm_global_variable_or_write_node_t *cast = (const pm_global_variable_or_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_GLOBAL_VARIABLE_READ_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"GlobalVariableReadNode\",\"location\":", 44);
-
-            const pm_global_variable_read_node_t *cast = (const pm_global_variable_read_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_GLOBAL_VARIABLE_TARGET_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"GlobalVariableTargetNode\",\"location\":", 46);
-
-            const pm_global_variable_target_node_t *cast = (const pm_global_variable_target_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_GLOBAL_VARIABLE_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"GlobalVariableWriteNode\",\"location\":", 45);
-
-            const pm_global_variable_write_node_t *cast = (const pm_global_variable_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_HASH_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"HashNode\",\"location\":", 30);
-
-            const pm_hash_node_t *cast = (const pm_hash_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the elements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"elements\":", 11);
-            const pm_node_list_t *elements = &cast->elements;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < elements->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, elements->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_HASH_PATTERN_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"HashPatternNode\",\"location\":", 37);
-
-            const pm_hash_pattern_node_t *cast = (const pm_hash_pattern_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the constant field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"constant\":", 11);
-            if (cast->constant != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->constant);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the elements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"elements\":", 11);
-            const pm_node_list_t *elements = &cast->elements;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < elements->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, elements->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the rest field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rest\":", 7);
-            if (cast->rest != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->rest);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            if (cast->opening_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->opening_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_IF_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"IfNode\",\"location\":", 28);
-
-            const pm_if_node_t *cast = (const pm_if_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the if_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"if_keyword_loc\":", 17);
-            if (cast->if_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->if_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the predicate field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"predicate\":", 12);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->predicate);
-
-            // Dump the then_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"then_keyword_loc\":", 19);
-            if (cast->then_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->then_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the subsequent field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"subsequent\":", 13);
-            if (cast->subsequent != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->subsequent);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the end_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
-            if (cast->end_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->end_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_IMAGINARY_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ImaginaryNode\",\"location\":", 35);
-
-            const pm_imaginary_node_t *cast = (const pm_imaginary_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the numeric field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"numeric\":", 10);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->numeric);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_IMPLICIT_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ImplicitNode\",\"location\":", 34);
-
-            const pm_implicit_node_t *cast = (const pm_implicit_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_IMPLICIT_REST_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ImplicitRestNode\",\"location\":", 38);
-
-            const pm_implicit_rest_node_t *cast = (const pm_implicit_rest_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_IN_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"InNode\",\"location\":", 28);
-
-            const pm_in_node_t *cast = (const pm_in_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the pattern field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"pattern\":", 10);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->pattern);
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the in_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"in_loc\":", 9);
-            pm_dump_json_location(buffer, &cast->in_loc);
-
-            // Dump the then_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"then_loc\":", 11);
-            if (cast->then_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->then_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INDEX_AND_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"IndexAndWriteNode\",\"location\":", 39);
-
-            const pm_index_and_write_node_t *cast = (const pm_index_and_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the CallNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"SAFE_NAVIGATION\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_VARIABLE_CALL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"VARIABLE_CALL\"", 15);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_ATTRIBUTE_WRITE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ATTRIBUTE_WRITE\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_IGNORE_VISIBILITY)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"IGNORE_VISIBILITY\"", 19);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the receiver field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"receiver\":", 11);
-            if (cast->receiver != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->receiver);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the call_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"call_operator_loc\":", 20);
-            if (cast->call_operator_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->call_operator_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the arguments field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"arguments\":", 12);
-            if (cast->arguments != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->arguments);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            // Dump the block field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"block\":", 8);
-            if (cast->block != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->block);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INDEX_OPERATOR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"IndexOperatorWriteNode\",\"location\":", 44);
-
-            const pm_index_operator_write_node_t *cast = (const pm_index_operator_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the CallNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"SAFE_NAVIGATION\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_VARIABLE_CALL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"VARIABLE_CALL\"", 15);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_ATTRIBUTE_WRITE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ATTRIBUTE_WRITE\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_IGNORE_VISIBILITY)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"IGNORE_VISIBILITY\"", 19);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the receiver field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"receiver\":", 11);
-            if (cast->receiver != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->receiver);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the call_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"call_operator_loc\":", 20);
-            if (cast->call_operator_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->call_operator_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the arguments field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"arguments\":", 12);
-            if (cast->arguments != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->arguments);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            // Dump the block field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"block\":", 8);
-            if (cast->block != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->block);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the binary_operator field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator\":", 18);
-            pm_dump_json_constant(buffer, parser, cast->binary_operator);
-
-            // Dump the binary_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator_loc\":", 22);
-            pm_dump_json_location(buffer, &cast->binary_operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INDEX_OR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"IndexOrWriteNode\",\"location\":", 38);
-
-            const pm_index_or_write_node_t *cast = (const pm_index_or_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the CallNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"SAFE_NAVIGATION\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_VARIABLE_CALL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"VARIABLE_CALL\"", 15);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_ATTRIBUTE_WRITE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ATTRIBUTE_WRITE\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_IGNORE_VISIBILITY)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"IGNORE_VISIBILITY\"", 19);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the receiver field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"receiver\":", 11);
-            if (cast->receiver != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->receiver);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the call_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"call_operator_loc\":", 20);
-            if (cast->call_operator_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->call_operator_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the arguments field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"arguments\":", 12);
-            if (cast->arguments != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->arguments);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            // Dump the block field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"block\":", 8);
-            if (cast->block != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->block);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INDEX_TARGET_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"IndexTargetNode\",\"location\":", 37);
-
-            const pm_index_target_node_t *cast = (const pm_index_target_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the CallNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_SAFE_NAVIGATION)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"SAFE_NAVIGATION\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_VARIABLE_CALL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"VARIABLE_CALL\"", 15);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_ATTRIBUTE_WRITE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ATTRIBUTE_WRITE\"", 17);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_CALL_NODE_FLAGS_IGNORE_VISIBILITY)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"IGNORE_VISIBILITY\"", 19);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the receiver field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"receiver\":", 11);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->receiver);
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the arguments field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"arguments\":", 12);
-            if (cast->arguments != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->arguments);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            // Dump the block field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"block\":", 8);
-            if (cast->block != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->block);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INSTANCE_VARIABLE_AND_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"InstanceVariableAndWriteNode\",\"location\":", 50);
-
-            const pm_instance_variable_and_write_node_t *cast = (const pm_instance_variable_and_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INSTANCE_VARIABLE_OPERATOR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"InstanceVariableOperatorWriteNode\",\"location\":", 55);
-
-            const pm_instance_variable_operator_write_node_t *cast = (const pm_instance_variable_operator_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the binary_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator_loc\":", 22);
-            pm_dump_json_location(buffer, &cast->binary_operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the binary_operator field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator\":", 18);
-            pm_dump_json_constant(buffer, parser, cast->binary_operator);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INSTANCE_VARIABLE_OR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"InstanceVariableOrWriteNode\",\"location\":", 49);
-
-            const pm_instance_variable_or_write_node_t *cast = (const pm_instance_variable_or_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INSTANCE_VARIABLE_READ_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"InstanceVariableReadNode\",\"location\":", 46);
-
-            const pm_instance_variable_read_node_t *cast = (const pm_instance_variable_read_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INSTANCE_VARIABLE_TARGET_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"InstanceVariableTargetNode\",\"location\":", 48);
-
-            const pm_instance_variable_target_node_t *cast = (const pm_instance_variable_target_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INSTANCE_VARIABLE_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"InstanceVariableWriteNode\",\"location\":", 47);
-
-            const pm_instance_variable_write_node_t *cast = (const pm_instance_variable_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INTEGER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"IntegerNode\",\"location\":", 33);
-
-            const pm_integer_node_t *cast = (const pm_integer_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the IntegerBaseFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_INTEGER_BASE_FLAGS_BINARY)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"BINARY\"", 8);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_INTEGER_BASE_FLAGS_DECIMAL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"DECIMAL\"", 9);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_INTEGER_BASE_FLAGS_OCTAL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"OCTAL\"", 7);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_INTEGER_BASE_FLAGS_HEXADECIMAL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"HEXADECIMAL\"", 13);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_integer_string(buffer, &cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INTERPOLATED_MATCH_LAST_LINE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"InterpolatedMatchLastLineNode\",\"location\":", 51);
-
-            const pm_interpolated_match_last_line_node_t *cast = (const pm_interpolated_match_last_line_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the RegularExpressionFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_IGNORE_CASE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"IGNORE_CASE\"", 13);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_EXTENDED)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"EXTENDED\"", 10);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_MULTI_LINE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"MULTI_LINE\"", 12);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_ONCE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ONCE\"", 6);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_EUC_JP)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"EUC_JP\"", 8);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_ASCII_8BIT)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ASCII_8BIT\"", 12);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_WINDOWS_31J)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"WINDOWS_31J\"", 13);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_UTF_8)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"UTF_8\"", 7);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_FORCED_UTF8_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_UTF8_ENCODING\"", 22);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_FORCED_BINARY_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_BINARY_ENCODING\"", 24);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_FORCED_US_ASCII_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_US_ASCII_ENCODING\"", 26);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the parts field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"parts\":", 8);
-            const pm_node_list_t *parts = &cast->parts;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < parts->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, parts->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INTERPOLATED_REGULAR_EXPRESSION_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"InterpolatedRegularExpressionNode\",\"location\":", 55);
-
-            const pm_interpolated_regular_expression_node_t *cast = (const pm_interpolated_regular_expression_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the RegularExpressionFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_IGNORE_CASE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"IGNORE_CASE\"", 13);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_EXTENDED)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"EXTENDED\"", 10);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_MULTI_LINE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"MULTI_LINE\"", 12);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_ONCE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ONCE\"", 6);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_EUC_JP)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"EUC_JP\"", 8);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_ASCII_8BIT)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ASCII_8BIT\"", 12);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_WINDOWS_31J)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"WINDOWS_31J\"", 13);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_UTF_8)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"UTF_8\"", 7);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_FORCED_UTF8_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_UTF8_ENCODING\"", 22);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_FORCED_BINARY_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_BINARY_ENCODING\"", 24);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_FORCED_US_ASCII_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_US_ASCII_ENCODING\"", 26);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the parts field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"parts\":", 8);
-            const pm_node_list_t *parts = &cast->parts;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < parts->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, parts->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INTERPOLATED_STRING_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"InterpolatedStringNode\",\"location\":", 44);
-
-            const pm_interpolated_string_node_t *cast = (const pm_interpolated_string_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the InterpolatedStringNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_INTERPOLATED_STRING_NODE_FLAGS_FROZEN)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FROZEN\"", 8);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_INTERPOLATED_STRING_NODE_FLAGS_MUTABLE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"MUTABLE\"", 9);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            if (cast->opening_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->opening_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the parts field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"parts\":", 8);
-            const pm_node_list_t *parts = &cast->parts;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < parts->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, parts->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INTERPOLATED_SYMBOL_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"InterpolatedSymbolNode\",\"location\":", 44);
-
-            const pm_interpolated_symbol_node_t *cast = (const pm_interpolated_symbol_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            if (cast->opening_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->opening_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the parts field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"parts\":", 8);
-            const pm_node_list_t *parts = &cast->parts;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < parts->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, parts->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_INTERPOLATED_X_STRING_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"InterpolatedXStringNode\",\"location\":", 45);
-
-            const pm_interpolated_x_string_node_t *cast = (const pm_interpolated_x_string_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the parts field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"parts\":", 8);
-            const pm_node_list_t *parts = &cast->parts;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < parts->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, parts->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_IT_LOCAL_VARIABLE_READ_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ItLocalVariableReadNode\",\"location\":", 45);
-
-            const pm_it_local_variable_read_node_t *cast = (const pm_it_local_variable_read_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_IT_PARAMETERS_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ItParametersNode\",\"location\":", 38);
-
-            const pm_it_parameters_node_t *cast = (const pm_it_parameters_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_KEYWORD_HASH_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"KeywordHashNode\",\"location\":", 37);
-
-            const pm_keyword_hash_node_t *cast = (const pm_keyword_hash_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the KeywordHashNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_KEYWORD_HASH_NODE_FLAGS_SYMBOL_KEYS)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"SYMBOL_KEYS\"", 13);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the elements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"elements\":", 11);
-            const pm_node_list_t *elements = &cast->elements;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < elements->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, elements->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_KEYWORD_REST_PARAMETER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"KeywordRestParameterNode\",\"location\":", 46);
-
-            const pm_keyword_rest_parameter_node_t *cast = (const pm_keyword_rest_parameter_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the ParameterFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"REPEATED_PARAMETER\"", 20);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            if (cast->name != PM_CONSTANT_ID_UNSET) {
-                pm_dump_json_constant(buffer, parser, cast->name);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            if (cast->name_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->name_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_LAMBDA_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"LambdaNode\",\"location\":", 32);
-
-            const pm_lambda_node_t *cast = (const pm_lambda_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the locals field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"locals\":", 9);
-            const pm_constant_id_list_t *locals = &cast->locals;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < locals->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json_constant(buffer, parser, locals->ids[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            // Dump the parameters field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"parameters\":", 13);
-            if (cast->parameters != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->parameters);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the body field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"body\":", 7);
-            if (cast->body != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->body);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_LOCAL_VARIABLE_AND_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"LocalVariableAndWriteNode\",\"location\":", 47);
-
-            const pm_local_variable_and_write_node_t *cast = (const pm_local_variable_and_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the depth field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"depth\":", 8);
-            pm_buffer_append_format(buffer, "%" PRIu32, cast->depth);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_LOCAL_VARIABLE_OPERATOR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"LocalVariableOperatorWriteNode\",\"location\":", 52);
-
-            const pm_local_variable_operator_write_node_t *cast = (const pm_local_variable_operator_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the binary_operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator_loc\":", 22);
-            pm_dump_json_location(buffer, &cast->binary_operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the binary_operator field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"binary_operator\":", 18);
-            pm_dump_json_constant(buffer, parser, cast->binary_operator);
-
-            // Dump the depth field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"depth\":", 8);
-            pm_buffer_append_format(buffer, "%" PRIu32, cast->depth);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_LOCAL_VARIABLE_OR_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"LocalVariableOrWriteNode\",\"location\":", 46);
-
-            const pm_local_variable_or_write_node_t *cast = (const pm_local_variable_or_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the depth field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"depth\":", 8);
-            pm_buffer_append_format(buffer, "%" PRIu32, cast->depth);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_LOCAL_VARIABLE_READ_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"LocalVariableReadNode\",\"location\":", 43);
-
-            const pm_local_variable_read_node_t *cast = (const pm_local_variable_read_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the depth field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"depth\":", 8);
-            pm_buffer_append_format(buffer, "%" PRIu32, cast->depth);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_LOCAL_VARIABLE_TARGET_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"LocalVariableTargetNode\",\"location\":", 45);
-
-            const pm_local_variable_target_node_t *cast = (const pm_local_variable_target_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the depth field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"depth\":", 8);
-            pm_buffer_append_format(buffer, "%" PRIu32, cast->depth);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_LOCAL_VARIABLE_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"LocalVariableWriteNode\",\"location\":", 44);
-
-            const pm_local_variable_write_node_t *cast = (const pm_local_variable_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the depth field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"depth\":", 8);
-            pm_buffer_append_format(buffer, "%" PRIu32, cast->depth);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_MATCH_LAST_LINE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"MatchLastLineNode\",\"location\":", 39);
-
-            const pm_match_last_line_node_t *cast = (const pm_match_last_line_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the RegularExpressionFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_IGNORE_CASE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"IGNORE_CASE\"", 13);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_EXTENDED)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"EXTENDED\"", 10);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_MULTI_LINE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"MULTI_LINE\"", 12);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_ONCE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ONCE\"", 6);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_EUC_JP)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"EUC_JP\"", 8);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_ASCII_8BIT)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ASCII_8BIT\"", 12);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_WINDOWS_31J)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"WINDOWS_31J\"", 13);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_UTF_8)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"UTF_8\"", 7);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_FORCED_UTF8_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_UTF8_ENCODING\"", 22);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_FORCED_BINARY_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_BINARY_ENCODING\"", 24);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_FORCED_US_ASCII_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_US_ASCII_ENCODING\"", 26);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the content_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"content_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->content_loc);
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            // Dump the unescaped field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"unescaped\":", 12);
-            const pm_string_t *unescaped = &cast->unescaped;
-            pm_buffer_append_byte(buffer, '"');
-            pm_buffer_append_source(buffer, pm_string_source(unescaped), pm_string_length(unescaped), PM_BUFFER_ESCAPING_JSON);
-            pm_buffer_append_byte(buffer, '"');
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_MATCH_PREDICATE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"MatchPredicateNode\",\"location\":", 40);
-
-            const pm_match_predicate_node_t *cast = (const pm_match_predicate_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the pattern field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"pattern\":", 10);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->pattern);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_MATCH_REQUIRED_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"MatchRequiredNode\",\"location\":", 39);
-
-            const pm_match_required_node_t *cast = (const pm_match_required_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            // Dump the pattern field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"pattern\":", 10);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->pattern);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_MATCH_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"MatchWriteNode\",\"location\":", 36);
-
-            const pm_match_write_node_t *cast = (const pm_match_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the call field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"call\":", 7);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->call);
-
-            // Dump the targets field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"targets\":", 10);
-            const pm_node_list_t *targets = &cast->targets;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < targets->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, targets->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_MISSING_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"MissingNode\",\"location\":", 33);
-
-            const pm_missing_node_t *cast = (const pm_missing_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_MODULE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ModuleNode\",\"location\":", 32);
-
-            const pm_module_node_t *cast = (const pm_module_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the locals field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"locals\":", 9);
-            const pm_constant_id_list_t *locals = &cast->locals;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < locals->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json_constant(buffer, parser, locals->ids[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the module_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"module_keyword_loc\":", 21);
-            pm_dump_json_location(buffer, &cast->module_keyword_loc);
-
-            // Dump the constant_path field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"constant_path\":", 16);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->constant_path);
-
-            // Dump the body field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"body\":", 7);
-            if (cast->body != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->body);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the end_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
-            pm_dump_json_location(buffer, &cast->end_keyword_loc);
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_MULTI_TARGET_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"MultiTargetNode\",\"location\":", 37);
-
-            const pm_multi_target_node_t *cast = (const pm_multi_target_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the lefts field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"lefts\":", 8);
-            const pm_node_list_t *lefts = &cast->lefts;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < lefts->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, lefts->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the rest field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rest\":", 7);
-            if (cast->rest != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->rest);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the rights field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rights\":", 9);
-            const pm_node_list_t *rights = &cast->rights;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < rights->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, rights->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the lparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"lparen_loc\":", 13);
-            if (cast->lparen_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->lparen_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the rparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rparen_loc\":", 13);
-            if (cast->rparen_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->rparen_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_MULTI_WRITE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"MultiWriteNode\",\"location\":", 36);
-
-            const pm_multi_write_node_t *cast = (const pm_multi_write_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the lefts field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"lefts\":", 8);
-            const pm_node_list_t *lefts = &cast->lefts;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < lefts->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, lefts->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the rest field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rest\":", 7);
-            if (cast->rest != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->rest);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the rights field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rights\":", 9);
-            const pm_node_list_t *rights = &cast->rights;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < rights->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, rights->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the lparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"lparen_loc\":", 13);
-            if (cast->lparen_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->lparen_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the rparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rparen_loc\":", 13);
-            if (cast->rparen_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->rparen_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_NEXT_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"NextNode\",\"location\":", 30);
-
-            const pm_next_node_t *cast = (const pm_next_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the arguments field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"arguments\":", 12);
-            if (cast->arguments != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->arguments);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_NIL_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"NilNode\",\"location\":", 29);
-
-            const pm_nil_node_t *cast = (const pm_nil_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_NO_BLOCK_PARAMETER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"NoBlockParameterNode\",\"location\":", 42);
-
-            const pm_no_block_parameter_node_t *cast = (const pm_no_block_parameter_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_NO_KEYWORDS_PARAMETER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"NoKeywordsParameterNode\",\"location\":", 45);
-
-            const pm_no_keywords_parameter_node_t *cast = (const pm_no_keywords_parameter_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_NUMBERED_PARAMETERS_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"NumberedParametersNode\",\"location\":", 44);
-
-            const pm_numbered_parameters_node_t *cast = (const pm_numbered_parameters_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the maximum field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"maximum\":", 10);
-            pm_buffer_append_format(buffer, "%" PRIu8, cast->maximum);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_NUMBERED_REFERENCE_READ_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"NumberedReferenceReadNode\",\"location\":", 47);
-
-            const pm_numbered_reference_read_node_t *cast = (const pm_numbered_reference_read_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the number field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"number\":", 9);
-            pm_buffer_append_format(buffer, "%" PRIu32, cast->number);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_OPTIONAL_KEYWORD_PARAMETER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"OptionalKeywordParameterNode\",\"location\":", 50);
-
-            const pm_optional_keyword_parameter_node_t *cast = (const pm_optional_keyword_parameter_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the ParameterFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"REPEATED_PARAMETER\"", 20);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_OPTIONAL_PARAMETER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"OptionalParameterNode\",\"location\":", 43);
-
-            const pm_optional_parameter_node_t *cast = (const pm_optional_parameter_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the ParameterFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"REPEATED_PARAMETER\"", 20);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the value field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->value);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_OR_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"OrNode\",\"location\":", 28);
-
-            const pm_or_node_t *cast = (const pm_or_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the left field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"left\":", 7);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->left);
-
-            // Dump the right field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"right\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->right);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_PARAMETERS_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ParametersNode\",\"location\":", 36);
-
-            const pm_parameters_node_t *cast = (const pm_parameters_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the requireds field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"requireds\":", 12);
-            const pm_node_list_t *requireds = &cast->requireds;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < requireds->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, requireds->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the optionals field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"optionals\":", 12);
-            const pm_node_list_t *optionals = &cast->optionals;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < optionals->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, optionals->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the rest field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rest\":", 7);
-            if (cast->rest != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->rest);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the posts field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"posts\":", 8);
-            const pm_node_list_t *posts = &cast->posts;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < posts->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, posts->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the keywords field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keywords\":", 11);
-            const pm_node_list_t *keywords = &cast->keywords;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < keywords->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, keywords->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the keyword_rest field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_rest\":", 15);
-            if (cast->keyword_rest != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->keyword_rest);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the block field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"block\":", 8);
-            if (cast->block != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->block);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_PARENTHESES_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ParenthesesNode\",\"location\":", 37);
-
-            const pm_parentheses_node_t *cast = (const pm_parentheses_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the ParenthesesNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_PARENTHESES_NODE_FLAGS_MULTIPLE_STATEMENTS)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"MULTIPLE_STATEMENTS\"", 21);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the body field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"body\":", 7);
-            if (cast->body != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->body);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_PINNED_EXPRESSION_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"PinnedExpressionNode\",\"location\":", 42);
-
-            const pm_pinned_expression_node_t *cast = (const pm_pinned_expression_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the expression field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"expression\":", 13);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->expression);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the lparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"lparen_loc\":", 13);
-            pm_dump_json_location(buffer, &cast->lparen_loc);
-
-            // Dump the rparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rparen_loc\":", 13);
-            pm_dump_json_location(buffer, &cast->rparen_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_PINNED_VARIABLE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"PinnedVariableNode\",\"location\":", 40);
-
-            const pm_pinned_variable_node_t *cast = (const pm_pinned_variable_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the variable field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"variable\":", 11);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->variable);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_POST_EXECUTION_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"PostExecutionNode\",\"location\":", 39);
-
-            const pm_post_execution_node_t *cast = (const pm_post_execution_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_PRE_EXECUTION_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"PreExecutionNode\",\"location\":", 38);
-
-            const pm_pre_execution_node_t *cast = (const pm_pre_execution_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_PROGRAM_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ProgramNode\",\"location\":", 33);
-
-            const pm_program_node_t *cast = (const pm_program_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the locals field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"locals\":", 9);
-            const pm_constant_id_list_t *locals = &cast->locals;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < locals->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json_constant(buffer, parser, locals->ids[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_RANGE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"RangeNode\",\"location\":", 31);
-
-            const pm_range_node_t *cast = (const pm_range_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the RangeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_RANGE_FLAGS_EXCLUDE_END)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"EXCLUDE_END\"", 13);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the left field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"left\":", 7);
-            if (cast->left != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->left);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the right field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"right\":", 8);
-            if (cast->right != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->right);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_RATIONAL_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"RationalNode\",\"location\":", 34);
-
-            const pm_rational_node_t *cast = (const pm_rational_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the IntegerBaseFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_INTEGER_BASE_FLAGS_BINARY)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"BINARY\"", 8);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_INTEGER_BASE_FLAGS_DECIMAL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"DECIMAL\"", 9);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_INTEGER_BASE_FLAGS_OCTAL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"OCTAL\"", 7);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_INTEGER_BASE_FLAGS_HEXADECIMAL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"HEXADECIMAL\"", 13);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the numerator field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"numerator\":", 12);
-            pm_integer_string(buffer, &cast->numerator);
-
-            // Dump the denominator field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"denominator\":", 14);
-            pm_integer_string(buffer, &cast->denominator);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_REDO_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"RedoNode\",\"location\":", 30);
-
-            const pm_redo_node_t *cast = (const pm_redo_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_REGULAR_EXPRESSION_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"RegularExpressionNode\",\"location\":", 43);
-
-            const pm_regular_expression_node_t *cast = (const pm_regular_expression_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the RegularExpressionFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_IGNORE_CASE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"IGNORE_CASE\"", 13);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_EXTENDED)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"EXTENDED\"", 10);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_MULTI_LINE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"MULTI_LINE\"", 12);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_ONCE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ONCE\"", 6);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_EUC_JP)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"EUC_JP\"", 8);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_ASCII_8BIT)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"ASCII_8BIT\"", 12);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_WINDOWS_31J)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"WINDOWS_31J\"", 13);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_UTF_8)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"UTF_8\"", 7);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_FORCED_UTF8_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_UTF8_ENCODING\"", 22);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_FORCED_BINARY_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_BINARY_ENCODING\"", 24);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_REGULAR_EXPRESSION_FLAGS_FORCED_US_ASCII_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_US_ASCII_ENCODING\"", 26);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the content_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"content_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->content_loc);
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            // Dump the unescaped field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"unescaped\":", 12);
-            const pm_string_t *unescaped = &cast->unescaped;
-            pm_buffer_append_byte(buffer, '"');
-            pm_buffer_append_source(buffer, pm_string_source(unescaped), pm_string_length(unescaped), PM_BUFFER_ESCAPING_JSON);
-            pm_buffer_append_byte(buffer, '"');
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_REQUIRED_KEYWORD_PARAMETER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"RequiredKeywordParameterNode\",\"location\":", 50);
-
-            const pm_required_keyword_parameter_node_t *cast = (const pm_required_keyword_parameter_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the ParameterFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"REPEATED_PARAMETER\"", 20);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            pm_dump_json_location(buffer, &cast->name_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_REQUIRED_PARAMETER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"RequiredParameterNode\",\"location\":", 43);
-
-            const pm_required_parameter_node_t *cast = (const pm_required_parameter_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the ParameterFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"REPEATED_PARAMETER\"", 20);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            pm_dump_json_constant(buffer, parser, cast->name);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_RESCUE_MODIFIER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"RescueModifierNode\",\"location\":", 40);
-
-            const pm_rescue_modifier_node_t *cast = (const pm_rescue_modifier_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the expression field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"expression\":", 13);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->expression);
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            // Dump the rescue_expression field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rescue_expression\":", 20);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->rescue_expression);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_RESCUE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"RescueNode\",\"location\":", 32);
-
-            const pm_rescue_node_t *cast = (const pm_rescue_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            // Dump the exceptions field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"exceptions\":", 13);
-            const pm_node_list_t *exceptions = &cast->exceptions;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < exceptions->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, exceptions->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            if (cast->operator_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->operator_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the reference field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"reference\":", 12);
-            if (cast->reference != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->reference);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the then_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"then_keyword_loc\":", 19);
-            if (cast->then_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->then_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the subsequent field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"subsequent\":", 13);
-            if (cast->subsequent != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->subsequent);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_REST_PARAMETER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"RestParameterNode\",\"location\":", 39);
-
-            const pm_rest_parameter_node_t *cast = (const pm_rest_parameter_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the ParameterFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_PARAMETER_FLAGS_REPEATED_PARAMETER)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"REPEATED_PARAMETER\"", 20);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the name field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name\":", 7);
-            if (cast->name != PM_CONSTANT_ID_UNSET) {
-                pm_dump_json_constant(buffer, parser, cast->name);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the name_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"name_loc\":", 11);
-            if (cast->name_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->name_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_RETRY_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"RetryNode\",\"location\":", 31);
-
-            const pm_retry_node_t *cast = (const pm_retry_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_RETURN_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ReturnNode\",\"location\":", 32);
-
-            const pm_return_node_t *cast = (const pm_return_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            // Dump the arguments field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"arguments\":", 12);
-            if (cast->arguments != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->arguments);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_SELF_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"SelfNode\",\"location\":", 30);
-
-            const pm_self_node_t *cast = (const pm_self_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_SHAREABLE_CONSTANT_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"ShareableConstantNode\",\"location\":", 43);
-
-            const pm_shareable_constant_node_t *cast = (const pm_shareable_constant_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the ShareableConstantNodeFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_SHAREABLE_CONSTANT_NODE_FLAGS_LITERAL)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"LITERAL\"", 9);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_SHAREABLE_CONSTANT_NODE_FLAGS_EXPERIMENTAL_EVERYTHING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"EXPERIMENTAL_EVERYTHING\"", 25);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_SHAREABLE_CONSTANT_NODE_FLAGS_EXPERIMENTAL_COPY)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"EXPERIMENTAL_COPY\"", 19);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the write field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"write\":", 8);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->write);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_SINGLETON_CLASS_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"SingletonClassNode\",\"location\":", 40);
-
-            const pm_singleton_class_node_t *cast = (const pm_singleton_class_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the locals field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"locals\":", 9);
-            const pm_constant_id_list_t *locals = &cast->locals;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < locals->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json_constant(buffer, parser, locals->ids[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the class_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"class_keyword_loc\":", 20);
-            pm_dump_json_location(buffer, &cast->class_keyword_loc);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the expression field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"expression\":", 13);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->expression);
-
-            // Dump the body field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"body\":", 7);
-            if (cast->body != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->body);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the end_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
-            pm_dump_json_location(buffer, &cast->end_keyword_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_SOURCE_ENCODING_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"SourceEncodingNode\",\"location\":", 40);
-
-            const pm_source_encoding_node_t *cast = (const pm_source_encoding_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_SOURCE_FILE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"SourceFileNode\",\"location\":", 36);
-
-            const pm_source_file_node_t *cast = (const pm_source_file_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the StringFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_STRING_FLAGS_FORCED_UTF8_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_UTF8_ENCODING\"", 22);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_STRING_FLAGS_FORCED_BINARY_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_BINARY_ENCODING\"", 24);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_STRING_FLAGS_FROZEN)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FROZEN\"", 8);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_STRING_FLAGS_MUTABLE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"MUTABLE\"", 9);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the filepath field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"filepath\":", 11);
-            const pm_string_t *filepath = &cast->filepath;
-            pm_buffer_append_byte(buffer, '"');
-            pm_buffer_append_source(buffer, pm_string_source(filepath), pm_string_length(filepath), PM_BUFFER_ESCAPING_JSON);
-            pm_buffer_append_byte(buffer, '"');
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_SOURCE_LINE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"SourceLineNode\",\"location\":", 36);
-
-            const pm_source_line_node_t *cast = (const pm_source_line_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_SPLAT_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"SplatNode\",\"location\":", 31);
-
-            const pm_splat_node_t *cast = (const pm_splat_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the operator_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
-
-            // Dump the expression field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"expression\":", 13);
-            if (cast->expression != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->expression);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_STATEMENTS_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"StatementsNode\",\"location\":", 36);
-
-            const pm_statements_node_t *cast = (const pm_statements_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the body field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"body\":", 7);
-            const pm_node_list_t *body = &cast->body;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < body->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, body->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_STRING_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"StringNode\",\"location\":", 32);
-
-            const pm_string_node_t *cast = (const pm_string_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the StringFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_STRING_FLAGS_FORCED_UTF8_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_UTF8_ENCODING\"", 22);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_STRING_FLAGS_FORCED_BINARY_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_BINARY_ENCODING\"", 24);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_STRING_FLAGS_FROZEN)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FROZEN\"", 8);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_STRING_FLAGS_MUTABLE)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"MUTABLE\"", 9);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            if (cast->opening_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->opening_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the content_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"content_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->content_loc);
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the unescaped field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"unescaped\":", 12);
-            const pm_string_t *unescaped = &cast->unescaped;
-            pm_buffer_append_byte(buffer, '"');
-            pm_buffer_append_source(buffer, pm_string_source(unescaped), pm_string_length(unescaped), PM_BUFFER_ESCAPING_JSON);
-            pm_buffer_append_byte(buffer, '"');
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_SUPER_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"SuperNode\",\"location\":", 31);
-
-            const pm_super_node_t *cast = (const pm_super_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            // Dump the lparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"lparen_loc\":", 13);
-            if (cast->lparen_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->lparen_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the arguments field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"arguments\":", 12);
-            if (cast->arguments != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->arguments);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the rparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rparen_loc\":", 13);
-            if (cast->rparen_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->rparen_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the block field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"block\":", 8);
-            if (cast->block != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->block);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_SYMBOL_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"SymbolNode\",\"location\":", 32);
-
-            const pm_symbol_node_t *cast = (const pm_symbol_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the SymbolFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_SYMBOL_FLAGS_FORCED_UTF8_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_UTF8_ENCODING\"", 22);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_SYMBOL_FLAGS_FORCED_BINARY_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_BINARY_ENCODING\"", 24);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_SYMBOL_FLAGS_FORCED_US_ASCII_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_US_ASCII_ENCODING\"", 26);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            if (cast->opening_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->opening_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the value_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value_loc\":", 12);
-            if (cast->value_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->value_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the unescaped field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"unescaped\":", 12);
-            const pm_string_t *unescaped = &cast->unescaped;
-            pm_buffer_append_byte(buffer, '"');
-            pm_buffer_append_source(buffer, pm_string_source(unescaped), pm_string_length(unescaped), PM_BUFFER_ESCAPING_JSON);
-            pm_buffer_append_byte(buffer, '"');
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_TRUE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"TrueNode\",\"location\":", 30);
-
-            const pm_true_node_t *cast = (const pm_true_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_UNDEF_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"UndefNode\",\"location\":", 31);
-
-            const pm_undef_node_t *cast = (const pm_undef_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the names field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"names\":", 8);
-            const pm_node_list_t *names = &cast->names;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < names->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, names->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_UNLESS_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"UnlessNode\",\"location\":", 32);
-
-            const pm_unless_node_t *cast = (const pm_unless_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            // Dump the predicate field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"predicate\":", 12);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->predicate);
-
-            // Dump the then_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"then_keyword_loc\":", 19);
-            if (cast->then_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->then_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the else_clause field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"else_clause\":", 14);
-            if (cast->else_clause != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->else_clause);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the end_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
-            if (cast->end_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->end_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_UNTIL_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"UntilNode\",\"location\":", 31);
-
-            const pm_until_node_t *cast = (const pm_until_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the LoopFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_LOOP_FLAGS_BEGIN_MODIFIER)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"BEGIN_MODIFIER\"", 16);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            // Dump the do_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"do_keyword_loc\":", 17);
-            if (cast->do_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->do_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the predicate field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"predicate\":", 12);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->predicate);
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_WHEN_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"WhenNode\",\"location\":", 30);
-
-            const pm_when_node_t *cast = (const pm_when_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            // Dump the conditions field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"conditions\":", 13);
-            const pm_node_list_t *conditions = &cast->conditions;
-            pm_buffer_append_byte(buffer, '[');
-
-            for (size_t index = 0; index < conditions->size; index++) {
-                if (index != 0) pm_buffer_append_byte(buffer, ',');
-                pm_dump_json(buffer, parser, conditions->nodes[index]);
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the then_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"then_keyword_loc\":", 19);
-            if (cast->then_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->then_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_WHILE_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"WhileNode\",\"location\":", 31);
-
-            const pm_while_node_t *cast = (const pm_while_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the LoopFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_LOOP_FLAGS_BEGIN_MODIFIER)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"BEGIN_MODIFIER\"", 16);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            // Dump the do_keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"do_keyword_loc\":", 17);
-            if (cast->do_keyword_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->do_keyword_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the predicate field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"predicate\":", 12);
-            pm_dump_json(buffer, parser, (const pm_node_t *) cast->predicate);
-
-            // Dump the statements field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"statements\":", 13);
-            if (cast->statements != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->statements);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_X_STRING_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"XStringNode\",\"location\":", 33);
-
-            const pm_x_string_node_t *cast = (const pm_x_string_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the EncodingFlags field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"flags\":", 8);
-            size_t flags = 0;
-            pm_buffer_append_byte(buffer, '[');
-            if (PM_NODE_FLAG_P(cast, PM_ENCODING_FLAGS_FORCED_UTF8_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_UTF8_ENCODING\"", 22);
-                flags++;
-            }
-            if (PM_NODE_FLAG_P(cast, PM_ENCODING_FLAGS_FORCED_BINARY_ENCODING)) {
-                if (flags != 0) pm_buffer_append_byte(buffer, ',');
-                pm_buffer_append_string(buffer, "\"FORCED_BINARY_ENCODING\"", 24);
-                flags++;
-            }
-            pm_buffer_append_byte(buffer, ']');
-
-            // Dump the opening_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"opening_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->opening_loc);
-
-            // Dump the content_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"content_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->content_loc);
-
-            // Dump the closing_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->closing_loc);
-
-            // Dump the unescaped field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"unescaped\":", 12);
-            const pm_string_t *unescaped = &cast->unescaped;
-            pm_buffer_append_byte(buffer, '"');
-            pm_buffer_append_source(buffer, pm_string_source(unescaped), pm_string_length(unescaped), PM_BUFFER_ESCAPING_JSON);
-            pm_buffer_append_byte(buffer, '"');
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_YIELD_NODE: {
-            pm_buffer_append_string(buffer, "{\"type\":\"YieldNode\",\"location\":", 31);
-
-            const pm_yield_node_t *cast = (const pm_yield_node_t *) node;
-            pm_dump_json_location(buffer, &cast->base.location);
-
-            // Dump the keyword_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
-
-            // Dump the lparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"lparen_loc\":", 13);
-            if (cast->lparen_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->lparen_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the arguments field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"arguments\":", 12);
-            if (cast->arguments != NULL) {
-                pm_dump_json(buffer, parser, (const pm_node_t *) cast->arguments);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            // Dump the rparen_loc field
-            pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"rparen_loc\":", 13);
-            if (cast->rparen_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->rparen_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
-
-            pm_buffer_append_byte(buffer, '}');
-            break;
-        }
-        case PM_SCOPE_NODE:
-            break;
-    }
+pm_alias_method_node_t *
+pm_alias_method_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *new_name, struct pm_node *old_name, pm_location_t keyword_loc) {
+    pm_alias_method_node_t *node = (pm_alias_method_node_t *) pm_arena_alloc(arena, sizeof(pm_alias_method_node_t), PRISM_ALIGNOF(pm_alias_method_node_t));
+
+    *node = (pm_alias_method_node_t) {
+        .base = { .type = PM_ALIAS_METHOD_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .new_name = new_name,
+        .old_name = old_name,
+        .keyword_loc = keyword_loc
+    };
+
+    return node;
 }
 
-#endif
+/**
+ * Allocate and initialize a new AlternationPatternNode node.
+ */
+pm_alternation_pattern_node_t *
+pm_alternation_pattern_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *left, struct pm_node *right, pm_location_t operator_loc) {
+    pm_alternation_pattern_node_t *node = (pm_alternation_pattern_node_t *) pm_arena_alloc(arena, sizeof(pm_alternation_pattern_node_t), PRISM_ALIGNOF(pm_alternation_pattern_node_t));
+
+    *node = (pm_alternation_pattern_node_t) {
+        .base = { .type = PM_ALTERNATION_PATTERN_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .left = left,
+        .right = right,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new AndNode node.
+ */
+pm_and_node_t *
+pm_and_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *left, struct pm_node *right, pm_location_t operator_loc) {
+    pm_and_node_t *node = (pm_and_node_t *) pm_arena_alloc(arena, sizeof(pm_and_node_t), PRISM_ALIGNOF(pm_and_node_t));
+
+    *node = (pm_and_node_t) {
+        .base = { .type = PM_AND_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .left = left,
+        .right = right,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ArgumentsNode node.
+ */
+pm_arguments_node_t *
+pm_arguments_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t arguments) {
+    pm_arguments_node_t *node = (pm_arguments_node_t *) pm_arena_alloc(arena, sizeof(pm_arguments_node_t), PRISM_ALIGNOF(pm_arguments_node_t));
+
+    *node = (pm_arguments_node_t) {
+        .base = { .type = PM_ARGUMENTS_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .arguments = arguments
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ArrayNode node.
+ */
+pm_array_node_t *
+pm_array_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t elements, pm_location_t opening_loc, pm_location_t closing_loc) {
+    pm_array_node_t *node = (pm_array_node_t *) pm_arena_alloc(arena, sizeof(pm_array_node_t), PRISM_ALIGNOF(pm_array_node_t));
+
+    *node = (pm_array_node_t) {
+        .base = { .type = PM_ARRAY_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .elements = elements,
+        .opening_loc = opening_loc,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ArrayPatternNode node.
+ */
+pm_array_pattern_node_t *
+pm_array_pattern_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *constant, pm_node_list_t requireds, struct pm_node *rest, pm_node_list_t posts, pm_location_t opening_loc, pm_location_t closing_loc) {
+    pm_array_pattern_node_t *node = (pm_array_pattern_node_t *) pm_arena_alloc(arena, sizeof(pm_array_pattern_node_t), PRISM_ALIGNOF(pm_array_pattern_node_t));
+
+    *node = (pm_array_pattern_node_t) {
+        .base = { .type = PM_ARRAY_PATTERN_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .constant = constant,
+        .requireds = requireds,
+        .rest = rest,
+        .posts = posts,
+        .opening_loc = opening_loc,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new AssocNode node.
+ */
+pm_assoc_node_t *
+pm_assoc_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *key, struct pm_node *value, pm_location_t operator_loc) {
+    pm_assoc_node_t *node = (pm_assoc_node_t *) pm_arena_alloc(arena, sizeof(pm_assoc_node_t), PRISM_ALIGNOF(pm_assoc_node_t));
+
+    *node = (pm_assoc_node_t) {
+        .base = { .type = PM_ASSOC_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .key = key,
+        .value = value,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new AssocSplatNode node.
+ */
+pm_assoc_splat_node_t *
+pm_assoc_splat_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value, pm_location_t operator_loc) {
+    pm_assoc_splat_node_t *node = (pm_assoc_splat_node_t *) pm_arena_alloc(arena, sizeof(pm_assoc_splat_node_t), PRISM_ALIGNOF(pm_assoc_splat_node_t));
+
+    *node = (pm_assoc_splat_node_t) {
+        .base = { .type = PM_ASSOC_SPLAT_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .value = value,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new BackReferenceReadNode node.
+ */
+pm_back_reference_read_node_t *
+pm_back_reference_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name) {
+    pm_back_reference_read_node_t *node = (pm_back_reference_read_node_t *) pm_arena_alloc(arena, sizeof(pm_back_reference_read_node_t), PRISM_ALIGNOF(pm_back_reference_read_node_t));
+
+    *node = (pm_back_reference_read_node_t) {
+        .base = { .type = PM_BACK_REFERENCE_READ_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new BeginNode node.
+ */
+pm_begin_node_t *
+pm_begin_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t begin_keyword_loc, struct pm_statements_node *statements, struct pm_rescue_node *rescue_clause, struct pm_else_node *else_clause, struct pm_ensure_node *ensure_clause, pm_location_t end_keyword_loc) {
+    pm_begin_node_t *node = (pm_begin_node_t *) pm_arena_alloc(arena, sizeof(pm_begin_node_t), PRISM_ALIGNOF(pm_begin_node_t));
+
+    *node = (pm_begin_node_t) {
+        .base = { .type = PM_BEGIN_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .begin_keyword_loc = begin_keyword_loc,
+        .statements = statements,
+        .rescue_clause = rescue_clause,
+        .else_clause = else_clause,
+        .ensure_clause = ensure_clause,
+        .end_keyword_loc = end_keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new BlockArgumentNode node.
+ */
+pm_block_argument_node_t *
+pm_block_argument_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *expression, pm_location_t operator_loc) {
+    pm_block_argument_node_t *node = (pm_block_argument_node_t *) pm_arena_alloc(arena, sizeof(pm_block_argument_node_t), PRISM_ALIGNOF(pm_block_argument_node_t));
+
+    *node = (pm_block_argument_node_t) {
+        .base = { .type = PM_BLOCK_ARGUMENT_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .expression = expression,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new BlockLocalVariableNode node.
+ */
+pm_block_local_variable_node_t *
+pm_block_local_variable_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name) {
+    pm_block_local_variable_node_t *node = (pm_block_local_variable_node_t *) pm_arena_alloc(arena, sizeof(pm_block_local_variable_node_t), PRISM_ALIGNOF(pm_block_local_variable_node_t));
+
+    *node = (pm_block_local_variable_node_t) {
+        .base = { .type = PM_BLOCK_LOCAL_VARIABLE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new BlockNode node.
+ */
+pm_block_node_t *
+pm_block_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_list_t locals, struct pm_node *parameters, struct pm_node *body, pm_location_t opening_loc, pm_location_t closing_loc) {
+    pm_block_node_t *node = (pm_block_node_t *) pm_arena_alloc(arena, sizeof(pm_block_node_t), PRISM_ALIGNOF(pm_block_node_t));
+
+    *node = (pm_block_node_t) {
+        .base = { .type = PM_BLOCK_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .locals = locals,
+        .parameters = parameters,
+        .body = body,
+        .opening_loc = opening_loc,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new BlockParameterNode node.
+ */
+pm_block_parameter_node_t *
+pm_block_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc) {
+    pm_block_parameter_node_t *node = (pm_block_parameter_node_t *) pm_arena_alloc(arena, sizeof(pm_block_parameter_node_t), PRISM_ALIGNOF(pm_block_parameter_node_t));
+
+    *node = (pm_block_parameter_node_t) {
+        .base = { .type = PM_BLOCK_PARAMETER_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new BlockParametersNode node.
+ */
+pm_block_parameters_node_t *
+pm_block_parameters_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_parameters_node *parameters, pm_node_list_t locals, pm_location_t opening_loc, pm_location_t closing_loc) {
+    pm_block_parameters_node_t *node = (pm_block_parameters_node_t *) pm_arena_alloc(arena, sizeof(pm_block_parameters_node_t), PRISM_ALIGNOF(pm_block_parameters_node_t));
+
+    *node = (pm_block_parameters_node_t) {
+        .base = { .type = PM_BLOCK_PARAMETERS_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .parameters = parameters,
+        .locals = locals,
+        .opening_loc = opening_loc,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new BreakNode node.
+ */
+pm_break_node_t *
+pm_break_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_arguments_node *arguments, pm_location_t keyword_loc) {
+    pm_break_node_t *node = (pm_break_node_t *) pm_arena_alloc(arena, sizeof(pm_break_node_t), PRISM_ALIGNOF(pm_break_node_t));
+
+    *node = (pm_break_node_t) {
+        .base = { .type = PM_BREAK_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .arguments = arguments,
+        .keyword_loc = keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new CallAndWriteNode node.
+ */
+pm_call_and_write_node_t *
+pm_call_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_location_t message_loc, pm_constant_id_t read_name, pm_constant_id_t write_name, pm_location_t operator_loc, struct pm_node *value) {
+    pm_call_and_write_node_t *node = (pm_call_and_write_node_t *) pm_arena_alloc(arena, sizeof(pm_call_and_write_node_t), PRISM_ALIGNOF(pm_call_and_write_node_t));
+
+    *node = (pm_call_and_write_node_t) {
+        .base = { .type = PM_CALL_AND_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .receiver = receiver,
+        .call_operator_loc = call_operator_loc,
+        .message_loc = message_loc,
+        .read_name = read_name,
+        .write_name = write_name,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new CallNode node.
+ */
+pm_call_node_t *
+pm_call_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_constant_id_t name, pm_location_t message_loc, pm_location_t opening_loc, struct pm_arguments_node *arguments, pm_location_t closing_loc, pm_location_t equal_loc, struct pm_node *block) {
+    pm_call_node_t *node = (pm_call_node_t *) pm_arena_alloc(arena, sizeof(pm_call_node_t), PRISM_ALIGNOF(pm_call_node_t));
+
+    *node = (pm_call_node_t) {
+        .base = { .type = PM_CALL_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .receiver = receiver,
+        .call_operator_loc = call_operator_loc,
+        .name = name,
+        .message_loc = message_loc,
+        .opening_loc = opening_loc,
+        .arguments = arguments,
+        .closing_loc = closing_loc,
+        .equal_loc = equal_loc,
+        .block = block
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new CallOperatorWriteNode node.
+ */
+pm_call_operator_write_node_t *
+pm_call_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_location_t message_loc, pm_constant_id_t read_name, pm_constant_id_t write_name, pm_constant_id_t binary_operator, pm_location_t binary_operator_loc, struct pm_node *value) {
+    pm_call_operator_write_node_t *node = (pm_call_operator_write_node_t *) pm_arena_alloc(arena, sizeof(pm_call_operator_write_node_t), PRISM_ALIGNOF(pm_call_operator_write_node_t));
+
+    *node = (pm_call_operator_write_node_t) {
+        .base = { .type = PM_CALL_OPERATOR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .receiver = receiver,
+        .call_operator_loc = call_operator_loc,
+        .message_loc = message_loc,
+        .read_name = read_name,
+        .write_name = write_name,
+        .binary_operator = binary_operator,
+        .binary_operator_loc = binary_operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new CallOrWriteNode node.
+ */
+pm_call_or_write_node_t *
+pm_call_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_location_t message_loc, pm_constant_id_t read_name, pm_constant_id_t write_name, pm_location_t operator_loc, struct pm_node *value) {
+    pm_call_or_write_node_t *node = (pm_call_or_write_node_t *) pm_arena_alloc(arena, sizeof(pm_call_or_write_node_t), PRISM_ALIGNOF(pm_call_or_write_node_t));
+
+    *node = (pm_call_or_write_node_t) {
+        .base = { .type = PM_CALL_OR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .receiver = receiver,
+        .call_operator_loc = call_operator_loc,
+        .message_loc = message_loc,
+        .read_name = read_name,
+        .write_name = write_name,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new CallTargetNode node.
+ */
+pm_call_target_node_t *
+pm_call_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_constant_id_t name, pm_location_t message_loc) {
+    pm_call_target_node_t *node = (pm_call_target_node_t *) pm_arena_alloc(arena, sizeof(pm_call_target_node_t), PRISM_ALIGNOF(pm_call_target_node_t));
+
+    *node = (pm_call_target_node_t) {
+        .base = { .type = PM_CALL_TARGET_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .receiver = receiver,
+        .call_operator_loc = call_operator_loc,
+        .name = name,
+        .message_loc = message_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new CapturePatternNode node.
+ */
+pm_capture_pattern_node_t *
+pm_capture_pattern_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value, struct pm_local_variable_target_node *target, pm_location_t operator_loc) {
+    pm_capture_pattern_node_t *node = (pm_capture_pattern_node_t *) pm_arena_alloc(arena, sizeof(pm_capture_pattern_node_t), PRISM_ALIGNOF(pm_capture_pattern_node_t));
+
+    *node = (pm_capture_pattern_node_t) {
+        .base = { .type = PM_CAPTURE_PATTERN_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .value = value,
+        .target = target,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new CaseMatchNode node.
+ */
+pm_case_match_node_t *
+pm_case_match_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *predicate, pm_node_list_t conditions, struct pm_else_node *else_clause, pm_location_t case_keyword_loc, pm_location_t end_keyword_loc) {
+    pm_case_match_node_t *node = (pm_case_match_node_t *) pm_arena_alloc(arena, sizeof(pm_case_match_node_t), PRISM_ALIGNOF(pm_case_match_node_t));
+
+    *node = (pm_case_match_node_t) {
+        .base = { .type = PM_CASE_MATCH_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .predicate = predicate,
+        .conditions = conditions,
+        .else_clause = else_clause,
+        .case_keyword_loc = case_keyword_loc,
+        .end_keyword_loc = end_keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new CaseNode node.
+ */
+pm_case_node_t *
+pm_case_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *predicate, pm_node_list_t conditions, struct pm_else_node *else_clause, pm_location_t case_keyword_loc, pm_location_t end_keyword_loc) {
+    pm_case_node_t *node = (pm_case_node_t *) pm_arena_alloc(arena, sizeof(pm_case_node_t), PRISM_ALIGNOF(pm_case_node_t));
+
+    *node = (pm_case_node_t) {
+        .base = { .type = PM_CASE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .predicate = predicate,
+        .conditions = conditions,
+        .else_clause = else_clause,
+        .case_keyword_loc = case_keyword_loc,
+        .end_keyword_loc = end_keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ClassNode node.
+ */
+pm_class_node_t *
+pm_class_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_list_t locals, pm_location_t class_keyword_loc, struct pm_node *constant_path, pm_location_t inheritance_operator_loc, struct pm_node *superclass, struct pm_node *body, pm_location_t end_keyword_loc, pm_constant_id_t name) {
+    pm_class_node_t *node = (pm_class_node_t *) pm_arena_alloc(arena, sizeof(pm_class_node_t), PRISM_ALIGNOF(pm_class_node_t));
+
+    *node = (pm_class_node_t) {
+        .base = { .type = PM_CLASS_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .locals = locals,
+        .class_keyword_loc = class_keyword_loc,
+        .constant_path = constant_path,
+        .inheritance_operator_loc = inheritance_operator_loc,
+        .superclass = superclass,
+        .body = body,
+        .end_keyword_loc = end_keyword_loc,
+        .name = name
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ClassVariableAndWriteNode node.
+ */
+pm_class_variable_and_write_node_t *
+pm_class_variable_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value) {
+    pm_class_variable_and_write_node_t *node = (pm_class_variable_and_write_node_t *) pm_arena_alloc(arena, sizeof(pm_class_variable_and_write_node_t), PRISM_ALIGNOF(pm_class_variable_and_write_node_t));
+
+    *node = (pm_class_variable_and_write_node_t) {
+        .base = { .type = PM_CLASS_VARIABLE_AND_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ClassVariableOperatorWriteNode node.
+ */
+pm_class_variable_operator_write_node_t *
+pm_class_variable_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t binary_operator_loc, struct pm_node *value, pm_constant_id_t binary_operator) {
+    pm_class_variable_operator_write_node_t *node = (pm_class_variable_operator_write_node_t *) pm_arena_alloc(arena, sizeof(pm_class_variable_operator_write_node_t), PRISM_ALIGNOF(pm_class_variable_operator_write_node_t));
+
+    *node = (pm_class_variable_operator_write_node_t) {
+        .base = { .type = PM_CLASS_VARIABLE_OPERATOR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .binary_operator_loc = binary_operator_loc,
+        .value = value,
+        .binary_operator = binary_operator
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ClassVariableOrWriteNode node.
+ */
+pm_class_variable_or_write_node_t *
+pm_class_variable_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value) {
+    pm_class_variable_or_write_node_t *node = (pm_class_variable_or_write_node_t *) pm_arena_alloc(arena, sizeof(pm_class_variable_or_write_node_t), PRISM_ALIGNOF(pm_class_variable_or_write_node_t));
+
+    *node = (pm_class_variable_or_write_node_t) {
+        .base = { .type = PM_CLASS_VARIABLE_OR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ClassVariableReadNode node.
+ */
+pm_class_variable_read_node_t *
+pm_class_variable_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name) {
+    pm_class_variable_read_node_t *node = (pm_class_variable_read_node_t *) pm_arena_alloc(arena, sizeof(pm_class_variable_read_node_t), PRISM_ALIGNOF(pm_class_variable_read_node_t));
+
+    *node = (pm_class_variable_read_node_t) {
+        .base = { .type = PM_CLASS_VARIABLE_READ_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ClassVariableTargetNode node.
+ */
+pm_class_variable_target_node_t *
+pm_class_variable_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name) {
+    pm_class_variable_target_node_t *node = (pm_class_variable_target_node_t *) pm_arena_alloc(arena, sizeof(pm_class_variable_target_node_t), PRISM_ALIGNOF(pm_class_variable_target_node_t));
+
+    *node = (pm_class_variable_target_node_t) {
+        .base = { .type = PM_CLASS_VARIABLE_TARGET_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ClassVariableWriteNode node.
+ */
+pm_class_variable_write_node_t *
+pm_class_variable_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, struct pm_node *value, pm_location_t operator_loc) {
+    pm_class_variable_write_node_t *node = (pm_class_variable_write_node_t *) pm_arena_alloc(arena, sizeof(pm_class_variable_write_node_t), PRISM_ALIGNOF(pm_class_variable_write_node_t));
+
+    *node = (pm_class_variable_write_node_t) {
+        .base = { .type = PM_CLASS_VARIABLE_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .value = value,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ConstantAndWriteNode node.
+ */
+pm_constant_and_write_node_t *
+pm_constant_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value) {
+    pm_constant_and_write_node_t *node = (pm_constant_and_write_node_t *) pm_arena_alloc(arena, sizeof(pm_constant_and_write_node_t), PRISM_ALIGNOF(pm_constant_and_write_node_t));
+
+    *node = (pm_constant_and_write_node_t) {
+        .base = { .type = PM_CONSTANT_AND_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ConstantOperatorWriteNode node.
+ */
+pm_constant_operator_write_node_t *
+pm_constant_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t binary_operator_loc, struct pm_node *value, pm_constant_id_t binary_operator) {
+    pm_constant_operator_write_node_t *node = (pm_constant_operator_write_node_t *) pm_arena_alloc(arena, sizeof(pm_constant_operator_write_node_t), PRISM_ALIGNOF(pm_constant_operator_write_node_t));
+
+    *node = (pm_constant_operator_write_node_t) {
+        .base = { .type = PM_CONSTANT_OPERATOR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .binary_operator_loc = binary_operator_loc,
+        .value = value,
+        .binary_operator = binary_operator
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ConstantOrWriteNode node.
+ */
+pm_constant_or_write_node_t *
+pm_constant_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value) {
+    pm_constant_or_write_node_t *node = (pm_constant_or_write_node_t *) pm_arena_alloc(arena, sizeof(pm_constant_or_write_node_t), PRISM_ALIGNOF(pm_constant_or_write_node_t));
+
+    *node = (pm_constant_or_write_node_t) {
+        .base = { .type = PM_CONSTANT_OR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ConstantPathAndWriteNode node.
+ */
+pm_constant_path_and_write_node_t *
+pm_constant_path_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_constant_path_node *target, pm_location_t operator_loc, struct pm_node *value) {
+    pm_constant_path_and_write_node_t *node = (pm_constant_path_and_write_node_t *) pm_arena_alloc(arena, sizeof(pm_constant_path_and_write_node_t), PRISM_ALIGNOF(pm_constant_path_and_write_node_t));
+
+    *node = (pm_constant_path_and_write_node_t) {
+        .base = { .type = PM_CONSTANT_PATH_AND_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .target = target,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ConstantPathNode node.
+ */
+pm_constant_path_node_t *
+pm_constant_path_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *parent, pm_constant_id_t name, pm_location_t delimiter_loc, pm_location_t name_loc) {
+    pm_constant_path_node_t *node = (pm_constant_path_node_t *) pm_arena_alloc(arena, sizeof(pm_constant_path_node_t), PRISM_ALIGNOF(pm_constant_path_node_t));
+
+    *node = (pm_constant_path_node_t) {
+        .base = { .type = PM_CONSTANT_PATH_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .parent = parent,
+        .name = name,
+        .delimiter_loc = delimiter_loc,
+        .name_loc = name_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ConstantPathOperatorWriteNode node.
+ */
+pm_constant_path_operator_write_node_t *
+pm_constant_path_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_constant_path_node *target, pm_location_t binary_operator_loc, struct pm_node *value, pm_constant_id_t binary_operator) {
+    pm_constant_path_operator_write_node_t *node = (pm_constant_path_operator_write_node_t *) pm_arena_alloc(arena, sizeof(pm_constant_path_operator_write_node_t), PRISM_ALIGNOF(pm_constant_path_operator_write_node_t));
+
+    *node = (pm_constant_path_operator_write_node_t) {
+        .base = { .type = PM_CONSTANT_PATH_OPERATOR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .target = target,
+        .binary_operator_loc = binary_operator_loc,
+        .value = value,
+        .binary_operator = binary_operator
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ConstantPathOrWriteNode node.
+ */
+pm_constant_path_or_write_node_t *
+pm_constant_path_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_constant_path_node *target, pm_location_t operator_loc, struct pm_node *value) {
+    pm_constant_path_or_write_node_t *node = (pm_constant_path_or_write_node_t *) pm_arena_alloc(arena, sizeof(pm_constant_path_or_write_node_t), PRISM_ALIGNOF(pm_constant_path_or_write_node_t));
+
+    *node = (pm_constant_path_or_write_node_t) {
+        .base = { .type = PM_CONSTANT_PATH_OR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .target = target,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ConstantPathTargetNode node.
+ */
+pm_constant_path_target_node_t *
+pm_constant_path_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *parent, pm_constant_id_t name, pm_location_t delimiter_loc, pm_location_t name_loc) {
+    pm_constant_path_target_node_t *node = (pm_constant_path_target_node_t *) pm_arena_alloc(arena, sizeof(pm_constant_path_target_node_t), PRISM_ALIGNOF(pm_constant_path_target_node_t));
+
+    *node = (pm_constant_path_target_node_t) {
+        .base = { .type = PM_CONSTANT_PATH_TARGET_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .parent = parent,
+        .name = name,
+        .delimiter_loc = delimiter_loc,
+        .name_loc = name_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ConstantPathWriteNode node.
+ */
+pm_constant_path_write_node_t *
+pm_constant_path_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_constant_path_node *target, pm_location_t operator_loc, struct pm_node *value) {
+    pm_constant_path_write_node_t *node = (pm_constant_path_write_node_t *) pm_arena_alloc(arena, sizeof(pm_constant_path_write_node_t), PRISM_ALIGNOF(pm_constant_path_write_node_t));
+
+    *node = (pm_constant_path_write_node_t) {
+        .base = { .type = PM_CONSTANT_PATH_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .target = target,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ConstantReadNode node.
+ */
+pm_constant_read_node_t *
+pm_constant_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name) {
+    pm_constant_read_node_t *node = (pm_constant_read_node_t *) pm_arena_alloc(arena, sizeof(pm_constant_read_node_t), PRISM_ALIGNOF(pm_constant_read_node_t));
+
+    *node = (pm_constant_read_node_t) {
+        .base = { .type = PM_CONSTANT_READ_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ConstantTargetNode node.
+ */
+pm_constant_target_node_t *
+pm_constant_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name) {
+    pm_constant_target_node_t *node = (pm_constant_target_node_t *) pm_arena_alloc(arena, sizeof(pm_constant_target_node_t), PRISM_ALIGNOF(pm_constant_target_node_t));
+
+    *node = (pm_constant_target_node_t) {
+        .base = { .type = PM_CONSTANT_TARGET_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ConstantWriteNode node.
+ */
+pm_constant_write_node_t *
+pm_constant_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, struct pm_node *value, pm_location_t operator_loc) {
+    pm_constant_write_node_t *node = (pm_constant_write_node_t *) pm_arena_alloc(arena, sizeof(pm_constant_write_node_t), PRISM_ALIGNOF(pm_constant_write_node_t));
+
+    *node = (pm_constant_write_node_t) {
+        .base = { .type = PM_CONSTANT_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .value = value,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new DefNode node.
+ */
+pm_def_node_t *
+pm_def_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, struct pm_node *receiver, struct pm_parameters_node *parameters, struct pm_node *body, pm_constant_id_list_t locals, pm_location_t def_keyword_loc, pm_location_t operator_loc, pm_location_t lparen_loc, pm_location_t rparen_loc, pm_location_t equal_loc, pm_location_t end_keyword_loc) {
+    pm_def_node_t *node = (pm_def_node_t *) pm_arena_alloc(arena, sizeof(pm_def_node_t), PRISM_ALIGNOF(pm_def_node_t));
+
+    *node = (pm_def_node_t) {
+        .base = { .type = PM_DEF_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .receiver = receiver,
+        .parameters = parameters,
+        .body = body,
+        .locals = locals,
+        .def_keyword_loc = def_keyword_loc,
+        .operator_loc = operator_loc,
+        .lparen_loc = lparen_loc,
+        .rparen_loc = rparen_loc,
+        .equal_loc = equal_loc,
+        .end_keyword_loc = end_keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new DefinedNode node.
+ */
+pm_defined_node_t *
+pm_defined_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t lparen_loc, struct pm_node *value, pm_location_t rparen_loc, pm_location_t keyword_loc) {
+    pm_defined_node_t *node = (pm_defined_node_t *) pm_arena_alloc(arena, sizeof(pm_defined_node_t), PRISM_ALIGNOF(pm_defined_node_t));
+
+    *node = (pm_defined_node_t) {
+        .base = { .type = PM_DEFINED_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .lparen_loc = lparen_loc,
+        .value = value,
+        .rparen_loc = rparen_loc,
+        .keyword_loc = keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ElseNode node.
+ */
+pm_else_node_t *
+pm_else_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t else_keyword_loc, struct pm_statements_node *statements, pm_location_t end_keyword_loc) {
+    pm_else_node_t *node = (pm_else_node_t *) pm_arena_alloc(arena, sizeof(pm_else_node_t), PRISM_ALIGNOF(pm_else_node_t));
+
+    *node = (pm_else_node_t) {
+        .base = { .type = PM_ELSE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .else_keyword_loc = else_keyword_loc,
+        .statements = statements,
+        .end_keyword_loc = end_keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new EmbeddedStatementsNode node.
+ */
+pm_embedded_statements_node_t *
+pm_embedded_statements_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, struct pm_statements_node *statements, pm_location_t closing_loc) {
+    pm_embedded_statements_node_t *node = (pm_embedded_statements_node_t *) pm_arena_alloc(arena, sizeof(pm_embedded_statements_node_t), PRISM_ALIGNOF(pm_embedded_statements_node_t));
+
+    *node = (pm_embedded_statements_node_t) {
+        .base = { .type = PM_EMBEDDED_STATEMENTS_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .opening_loc = opening_loc,
+        .statements = statements,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new EmbeddedVariableNode node.
+ */
+pm_embedded_variable_node_t *
+pm_embedded_variable_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t operator_loc, struct pm_node *variable) {
+    pm_embedded_variable_node_t *node = (pm_embedded_variable_node_t *) pm_arena_alloc(arena, sizeof(pm_embedded_variable_node_t), PRISM_ALIGNOF(pm_embedded_variable_node_t));
+
+    *node = (pm_embedded_variable_node_t) {
+        .base = { .type = PM_EMBEDDED_VARIABLE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .operator_loc = operator_loc,
+        .variable = variable
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new EnsureNode node.
+ */
+pm_ensure_node_t *
+pm_ensure_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t ensure_keyword_loc, struct pm_statements_node *statements, pm_location_t end_keyword_loc) {
+    pm_ensure_node_t *node = (pm_ensure_node_t *) pm_arena_alloc(arena, sizeof(pm_ensure_node_t), PRISM_ALIGNOF(pm_ensure_node_t));
+
+    *node = (pm_ensure_node_t) {
+        .base = { .type = PM_ENSURE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .ensure_keyword_loc = ensure_keyword_loc,
+        .statements = statements,
+        .end_keyword_loc = end_keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ErrorRecoveryNode node.
+ */
+pm_error_recovery_node_t *
+pm_error_recovery_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *unexpected) {
+    pm_error_recovery_node_t *node = (pm_error_recovery_node_t *) pm_arena_alloc(arena, sizeof(pm_error_recovery_node_t), PRISM_ALIGNOF(pm_error_recovery_node_t));
+
+    *node = (pm_error_recovery_node_t) {
+        .base = { .type = PM_ERROR_RECOVERY_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .unexpected = unexpected
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new FalseNode node.
+ */
+pm_false_node_t *
+pm_false_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location) {
+    pm_false_node_t *node = (pm_false_node_t *) pm_arena_alloc(arena, sizeof(pm_false_node_t), PRISM_ALIGNOF(pm_false_node_t));
+
+    *node = (pm_false_node_t) {
+        .base = { .type = PM_FALSE_NODE, .flags = flags, .node_id = node_id, .location = location }
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new FindPatternNode node.
+ */
+pm_find_pattern_node_t *
+pm_find_pattern_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *constant, struct pm_splat_node *left, pm_node_list_t requireds, struct pm_splat_node *right, pm_location_t opening_loc, pm_location_t closing_loc) {
+    pm_find_pattern_node_t *node = (pm_find_pattern_node_t *) pm_arena_alloc(arena, sizeof(pm_find_pattern_node_t), PRISM_ALIGNOF(pm_find_pattern_node_t));
+
+    *node = (pm_find_pattern_node_t) {
+        .base = { .type = PM_FIND_PATTERN_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .constant = constant,
+        .left = left,
+        .requireds = requireds,
+        .right = right,
+        .opening_loc = opening_loc,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new FlipFlopNode node.
+ */
+pm_flip_flop_node_t *
+pm_flip_flop_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *left, struct pm_node *right, pm_location_t operator_loc) {
+    pm_flip_flop_node_t *node = (pm_flip_flop_node_t *) pm_arena_alloc(arena, sizeof(pm_flip_flop_node_t), PRISM_ALIGNOF(pm_flip_flop_node_t));
+
+    *node = (pm_flip_flop_node_t) {
+        .base = { .type = PM_FLIP_FLOP_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .left = left,
+        .right = right,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new FloatNode node.
+ */
+pm_float_node_t *
+pm_float_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, double value) {
+    pm_float_node_t *node = (pm_float_node_t *) pm_arena_alloc(arena, sizeof(pm_float_node_t), PRISM_ALIGNOF(pm_float_node_t));
+
+    *node = (pm_float_node_t) {
+        .base = { .type = PM_FLOAT_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ForNode node.
+ */
+pm_for_node_t *
+pm_for_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *index, struct pm_node *collection, struct pm_statements_node *statements, pm_location_t for_keyword_loc, pm_location_t in_keyword_loc, pm_location_t do_keyword_loc, pm_location_t end_keyword_loc) {
+    pm_for_node_t *node = (pm_for_node_t *) pm_arena_alloc(arena, sizeof(pm_for_node_t), PRISM_ALIGNOF(pm_for_node_t));
+
+    *node = (pm_for_node_t) {
+        .base = { .type = PM_FOR_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .index = index,
+        .collection = collection,
+        .statements = statements,
+        .for_keyword_loc = for_keyword_loc,
+        .in_keyword_loc = in_keyword_loc,
+        .do_keyword_loc = do_keyword_loc,
+        .end_keyword_loc = end_keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ForwardingArgumentsNode node.
+ */
+pm_forwarding_arguments_node_t *
+pm_forwarding_arguments_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location) {
+    pm_forwarding_arguments_node_t *node = (pm_forwarding_arguments_node_t *) pm_arena_alloc(arena, sizeof(pm_forwarding_arguments_node_t), PRISM_ALIGNOF(pm_forwarding_arguments_node_t));
+
+    *node = (pm_forwarding_arguments_node_t) {
+        .base = { .type = PM_FORWARDING_ARGUMENTS_NODE, .flags = flags, .node_id = node_id, .location = location }
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ForwardingParameterNode node.
+ */
+pm_forwarding_parameter_node_t *
+pm_forwarding_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location) {
+    pm_forwarding_parameter_node_t *node = (pm_forwarding_parameter_node_t *) pm_arena_alloc(arena, sizeof(pm_forwarding_parameter_node_t), PRISM_ALIGNOF(pm_forwarding_parameter_node_t));
+
+    *node = (pm_forwarding_parameter_node_t) {
+        .base = { .type = PM_FORWARDING_PARAMETER_NODE, .flags = flags, .node_id = node_id, .location = location }
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ForwardingSuperNode node.
+ */
+pm_forwarding_super_node_t *
+pm_forwarding_super_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, struct pm_block_node *block) {
+    pm_forwarding_super_node_t *node = (pm_forwarding_super_node_t *) pm_arena_alloc(arena, sizeof(pm_forwarding_super_node_t), PRISM_ALIGNOF(pm_forwarding_super_node_t));
+
+    *node = (pm_forwarding_super_node_t) {
+        .base = { .type = PM_FORWARDING_SUPER_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .keyword_loc = keyword_loc,
+        .block = block
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new GlobalVariableAndWriteNode node.
+ */
+pm_global_variable_and_write_node_t *
+pm_global_variable_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value) {
+    pm_global_variable_and_write_node_t *node = (pm_global_variable_and_write_node_t *) pm_arena_alloc(arena, sizeof(pm_global_variable_and_write_node_t), PRISM_ALIGNOF(pm_global_variable_and_write_node_t));
+
+    *node = (pm_global_variable_and_write_node_t) {
+        .base = { .type = PM_GLOBAL_VARIABLE_AND_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new GlobalVariableOperatorWriteNode node.
+ */
+pm_global_variable_operator_write_node_t *
+pm_global_variable_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t binary_operator_loc, struct pm_node *value, pm_constant_id_t binary_operator) {
+    pm_global_variable_operator_write_node_t *node = (pm_global_variable_operator_write_node_t *) pm_arena_alloc(arena, sizeof(pm_global_variable_operator_write_node_t), PRISM_ALIGNOF(pm_global_variable_operator_write_node_t));
+
+    *node = (pm_global_variable_operator_write_node_t) {
+        .base = { .type = PM_GLOBAL_VARIABLE_OPERATOR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .binary_operator_loc = binary_operator_loc,
+        .value = value,
+        .binary_operator = binary_operator
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new GlobalVariableOrWriteNode node.
+ */
+pm_global_variable_or_write_node_t *
+pm_global_variable_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value) {
+    pm_global_variable_or_write_node_t *node = (pm_global_variable_or_write_node_t *) pm_arena_alloc(arena, sizeof(pm_global_variable_or_write_node_t), PRISM_ALIGNOF(pm_global_variable_or_write_node_t));
+
+    *node = (pm_global_variable_or_write_node_t) {
+        .base = { .type = PM_GLOBAL_VARIABLE_OR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new GlobalVariableReadNode node.
+ */
+pm_global_variable_read_node_t *
+pm_global_variable_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name) {
+    pm_global_variable_read_node_t *node = (pm_global_variable_read_node_t *) pm_arena_alloc(arena, sizeof(pm_global_variable_read_node_t), PRISM_ALIGNOF(pm_global_variable_read_node_t));
+
+    *node = (pm_global_variable_read_node_t) {
+        .base = { .type = PM_GLOBAL_VARIABLE_READ_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new GlobalVariableTargetNode node.
+ */
+pm_global_variable_target_node_t *
+pm_global_variable_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name) {
+    pm_global_variable_target_node_t *node = (pm_global_variable_target_node_t *) pm_arena_alloc(arena, sizeof(pm_global_variable_target_node_t), PRISM_ALIGNOF(pm_global_variable_target_node_t));
+
+    *node = (pm_global_variable_target_node_t) {
+        .base = { .type = PM_GLOBAL_VARIABLE_TARGET_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new GlobalVariableWriteNode node.
+ */
+pm_global_variable_write_node_t *
+pm_global_variable_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, struct pm_node *value, pm_location_t operator_loc) {
+    pm_global_variable_write_node_t *node = (pm_global_variable_write_node_t *) pm_arena_alloc(arena, sizeof(pm_global_variable_write_node_t), PRISM_ALIGNOF(pm_global_variable_write_node_t));
+
+    *node = (pm_global_variable_write_node_t) {
+        .base = { .type = PM_GLOBAL_VARIABLE_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .value = value,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new HashNode node.
+ */
+pm_hash_node_t *
+pm_hash_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_node_list_t elements, pm_location_t closing_loc) {
+    pm_hash_node_t *node = (pm_hash_node_t *) pm_arena_alloc(arena, sizeof(pm_hash_node_t), PRISM_ALIGNOF(pm_hash_node_t));
+
+    *node = (pm_hash_node_t) {
+        .base = { .type = PM_HASH_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .opening_loc = opening_loc,
+        .elements = elements,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new HashPatternNode node.
+ */
+pm_hash_pattern_node_t *
+pm_hash_pattern_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *constant, pm_node_list_t elements, struct pm_node *rest, pm_location_t opening_loc, pm_location_t closing_loc) {
+    pm_hash_pattern_node_t *node = (pm_hash_pattern_node_t *) pm_arena_alloc(arena, sizeof(pm_hash_pattern_node_t), PRISM_ALIGNOF(pm_hash_pattern_node_t));
+
+    *node = (pm_hash_pattern_node_t) {
+        .base = { .type = PM_HASH_PATTERN_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .constant = constant,
+        .elements = elements,
+        .rest = rest,
+        .opening_loc = opening_loc,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new IfNode node.
+ */
+pm_if_node_t *
+pm_if_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t if_keyword_loc, struct pm_node *predicate, pm_location_t then_keyword_loc, struct pm_statements_node *statements, struct pm_node *subsequent, pm_location_t end_keyword_loc) {
+    pm_if_node_t *node = (pm_if_node_t *) pm_arena_alloc(arena, sizeof(pm_if_node_t), PRISM_ALIGNOF(pm_if_node_t));
+
+    *node = (pm_if_node_t) {
+        .base = { .type = PM_IF_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .if_keyword_loc = if_keyword_loc,
+        .predicate = predicate,
+        .then_keyword_loc = then_keyword_loc,
+        .statements = statements,
+        .subsequent = subsequent,
+        .end_keyword_loc = end_keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ImaginaryNode node.
+ */
+pm_imaginary_node_t *
+pm_imaginary_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *numeric) {
+    pm_imaginary_node_t *node = (pm_imaginary_node_t *) pm_arena_alloc(arena, sizeof(pm_imaginary_node_t), PRISM_ALIGNOF(pm_imaginary_node_t));
+
+    *node = (pm_imaginary_node_t) {
+        .base = { .type = PM_IMAGINARY_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .numeric = numeric
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ImplicitNode node.
+ */
+pm_implicit_node_t *
+pm_implicit_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value) {
+    pm_implicit_node_t *node = (pm_implicit_node_t *) pm_arena_alloc(arena, sizeof(pm_implicit_node_t), PRISM_ALIGNOF(pm_implicit_node_t));
+
+    *node = (pm_implicit_node_t) {
+        .base = { .type = PM_IMPLICIT_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ImplicitRestNode node.
+ */
+pm_implicit_rest_node_t *
+pm_implicit_rest_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location) {
+    pm_implicit_rest_node_t *node = (pm_implicit_rest_node_t *) pm_arena_alloc(arena, sizeof(pm_implicit_rest_node_t), PRISM_ALIGNOF(pm_implicit_rest_node_t));
+
+    *node = (pm_implicit_rest_node_t) {
+        .base = { .type = PM_IMPLICIT_REST_NODE, .flags = flags, .node_id = node_id, .location = location }
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new InNode node.
+ */
+pm_in_node_t *
+pm_in_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *pattern, struct pm_statements_node *statements, pm_location_t in_loc, pm_location_t then_loc) {
+    pm_in_node_t *node = (pm_in_node_t *) pm_arena_alloc(arena, sizeof(pm_in_node_t), PRISM_ALIGNOF(pm_in_node_t));
+
+    *node = (pm_in_node_t) {
+        .base = { .type = PM_IN_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .pattern = pattern,
+        .statements = statements,
+        .in_loc = in_loc,
+        .then_loc = then_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new IndexAndWriteNode node.
+ */
+pm_index_and_write_node_t *
+pm_index_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_location_t opening_loc, struct pm_arguments_node *arguments, pm_location_t closing_loc, struct pm_block_argument_node *block, pm_location_t operator_loc, struct pm_node *value) {
+    pm_index_and_write_node_t *node = (pm_index_and_write_node_t *) pm_arena_alloc(arena, sizeof(pm_index_and_write_node_t), PRISM_ALIGNOF(pm_index_and_write_node_t));
+
+    *node = (pm_index_and_write_node_t) {
+        .base = { .type = PM_INDEX_AND_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .receiver = receiver,
+        .call_operator_loc = call_operator_loc,
+        .opening_loc = opening_loc,
+        .arguments = arguments,
+        .closing_loc = closing_loc,
+        .block = block,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new IndexOperatorWriteNode node.
+ */
+pm_index_operator_write_node_t *
+pm_index_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_location_t opening_loc, struct pm_arguments_node *arguments, pm_location_t closing_loc, struct pm_block_argument_node *block, pm_constant_id_t binary_operator, pm_location_t binary_operator_loc, struct pm_node *value) {
+    pm_index_operator_write_node_t *node = (pm_index_operator_write_node_t *) pm_arena_alloc(arena, sizeof(pm_index_operator_write_node_t), PRISM_ALIGNOF(pm_index_operator_write_node_t));
+
+    *node = (pm_index_operator_write_node_t) {
+        .base = { .type = PM_INDEX_OPERATOR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .receiver = receiver,
+        .call_operator_loc = call_operator_loc,
+        .opening_loc = opening_loc,
+        .arguments = arguments,
+        .closing_loc = closing_loc,
+        .block = block,
+        .binary_operator = binary_operator,
+        .binary_operator_loc = binary_operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new IndexOrWriteNode node.
+ */
+pm_index_or_write_node_t *
+pm_index_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_location_t opening_loc, struct pm_arguments_node *arguments, pm_location_t closing_loc, struct pm_block_argument_node *block, pm_location_t operator_loc, struct pm_node *value) {
+    pm_index_or_write_node_t *node = (pm_index_or_write_node_t *) pm_arena_alloc(arena, sizeof(pm_index_or_write_node_t), PRISM_ALIGNOF(pm_index_or_write_node_t));
+
+    *node = (pm_index_or_write_node_t) {
+        .base = { .type = PM_INDEX_OR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .receiver = receiver,
+        .call_operator_loc = call_operator_loc,
+        .opening_loc = opening_loc,
+        .arguments = arguments,
+        .closing_loc = closing_loc,
+        .block = block,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new IndexTargetNode node.
+ */
+pm_index_target_node_t *
+pm_index_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t opening_loc, struct pm_arguments_node *arguments, pm_location_t closing_loc, struct pm_block_argument_node *block) {
+    pm_index_target_node_t *node = (pm_index_target_node_t *) pm_arena_alloc(arena, sizeof(pm_index_target_node_t), PRISM_ALIGNOF(pm_index_target_node_t));
+
+    *node = (pm_index_target_node_t) {
+        .base = { .type = PM_INDEX_TARGET_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .receiver = receiver,
+        .opening_loc = opening_loc,
+        .arguments = arguments,
+        .closing_loc = closing_loc,
+        .block = block
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new InstanceVariableAndWriteNode node.
+ */
+pm_instance_variable_and_write_node_t *
+pm_instance_variable_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value) {
+    pm_instance_variable_and_write_node_t *node = (pm_instance_variable_and_write_node_t *) pm_arena_alloc(arena, sizeof(pm_instance_variable_and_write_node_t), PRISM_ALIGNOF(pm_instance_variable_and_write_node_t));
+
+    *node = (pm_instance_variable_and_write_node_t) {
+        .base = { .type = PM_INSTANCE_VARIABLE_AND_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new InstanceVariableOperatorWriteNode node.
+ */
+pm_instance_variable_operator_write_node_t *
+pm_instance_variable_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t binary_operator_loc, struct pm_node *value, pm_constant_id_t binary_operator) {
+    pm_instance_variable_operator_write_node_t *node = (pm_instance_variable_operator_write_node_t *) pm_arena_alloc(arena, sizeof(pm_instance_variable_operator_write_node_t), PRISM_ALIGNOF(pm_instance_variable_operator_write_node_t));
+
+    *node = (pm_instance_variable_operator_write_node_t) {
+        .base = { .type = PM_INSTANCE_VARIABLE_OPERATOR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .binary_operator_loc = binary_operator_loc,
+        .value = value,
+        .binary_operator = binary_operator
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new InstanceVariableOrWriteNode node.
+ */
+pm_instance_variable_or_write_node_t *
+pm_instance_variable_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value) {
+    pm_instance_variable_or_write_node_t *node = (pm_instance_variable_or_write_node_t *) pm_arena_alloc(arena, sizeof(pm_instance_variable_or_write_node_t), PRISM_ALIGNOF(pm_instance_variable_or_write_node_t));
+
+    *node = (pm_instance_variable_or_write_node_t) {
+        .base = { .type = PM_INSTANCE_VARIABLE_OR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new InstanceVariableReadNode node.
+ */
+pm_instance_variable_read_node_t *
+pm_instance_variable_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name) {
+    pm_instance_variable_read_node_t *node = (pm_instance_variable_read_node_t *) pm_arena_alloc(arena, sizeof(pm_instance_variable_read_node_t), PRISM_ALIGNOF(pm_instance_variable_read_node_t));
+
+    *node = (pm_instance_variable_read_node_t) {
+        .base = { .type = PM_INSTANCE_VARIABLE_READ_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new InstanceVariableTargetNode node.
+ */
+pm_instance_variable_target_node_t *
+pm_instance_variable_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name) {
+    pm_instance_variable_target_node_t *node = (pm_instance_variable_target_node_t *) pm_arena_alloc(arena, sizeof(pm_instance_variable_target_node_t), PRISM_ALIGNOF(pm_instance_variable_target_node_t));
+
+    *node = (pm_instance_variable_target_node_t) {
+        .base = { .type = PM_INSTANCE_VARIABLE_TARGET_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new InstanceVariableWriteNode node.
+ */
+pm_instance_variable_write_node_t *
+pm_instance_variable_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, struct pm_node *value, pm_location_t operator_loc) {
+    pm_instance_variable_write_node_t *node = (pm_instance_variable_write_node_t *) pm_arena_alloc(arena, sizeof(pm_instance_variable_write_node_t), PRISM_ALIGNOF(pm_instance_variable_write_node_t));
+
+    *node = (pm_instance_variable_write_node_t) {
+        .base = { .type = PM_INSTANCE_VARIABLE_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .value = value,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new IntegerNode node.
+ */
+pm_integer_node_t *
+pm_integer_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_integer_t value) {
+    pm_integer_node_t *node = (pm_integer_node_t *) pm_arena_alloc(arena, sizeof(pm_integer_node_t), PRISM_ALIGNOF(pm_integer_node_t));
+
+    *node = (pm_integer_node_t) {
+        .base = { .type = PM_INTEGER_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new InterpolatedMatchLastLineNode node.
+ */
+pm_interpolated_match_last_line_node_t *
+pm_interpolated_match_last_line_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_node_list_t parts, pm_location_t closing_loc) {
+    pm_interpolated_match_last_line_node_t *node = (pm_interpolated_match_last_line_node_t *) pm_arena_alloc(arena, sizeof(pm_interpolated_match_last_line_node_t), PRISM_ALIGNOF(pm_interpolated_match_last_line_node_t));
+
+    *node = (pm_interpolated_match_last_line_node_t) {
+        .base = { .type = PM_INTERPOLATED_MATCH_LAST_LINE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .opening_loc = opening_loc,
+        .parts = parts,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new InterpolatedRegularExpressionNode node.
+ */
+pm_interpolated_regular_expression_node_t *
+pm_interpolated_regular_expression_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_node_list_t parts, pm_location_t closing_loc) {
+    pm_interpolated_regular_expression_node_t *node = (pm_interpolated_regular_expression_node_t *) pm_arena_alloc(arena, sizeof(pm_interpolated_regular_expression_node_t), PRISM_ALIGNOF(pm_interpolated_regular_expression_node_t));
+
+    *node = (pm_interpolated_regular_expression_node_t) {
+        .base = { .type = PM_INTERPOLATED_REGULAR_EXPRESSION_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .opening_loc = opening_loc,
+        .parts = parts,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new InterpolatedStringNode node.
+ */
+pm_interpolated_string_node_t *
+pm_interpolated_string_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_node_list_t parts, pm_location_t closing_loc) {
+    pm_interpolated_string_node_t *node = (pm_interpolated_string_node_t *) pm_arena_alloc(arena, sizeof(pm_interpolated_string_node_t), PRISM_ALIGNOF(pm_interpolated_string_node_t));
+
+    *node = (pm_interpolated_string_node_t) {
+        .base = { .type = PM_INTERPOLATED_STRING_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .opening_loc = opening_loc,
+        .parts = parts,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new InterpolatedSymbolNode node.
+ */
+pm_interpolated_symbol_node_t *
+pm_interpolated_symbol_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_node_list_t parts, pm_location_t closing_loc) {
+    pm_interpolated_symbol_node_t *node = (pm_interpolated_symbol_node_t *) pm_arena_alloc(arena, sizeof(pm_interpolated_symbol_node_t), PRISM_ALIGNOF(pm_interpolated_symbol_node_t));
+
+    *node = (pm_interpolated_symbol_node_t) {
+        .base = { .type = PM_INTERPOLATED_SYMBOL_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .opening_loc = opening_loc,
+        .parts = parts,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new InterpolatedXStringNode node.
+ */
+pm_interpolated_x_string_node_t *
+pm_interpolated_x_string_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_node_list_t parts, pm_location_t closing_loc) {
+    pm_interpolated_x_string_node_t *node = (pm_interpolated_x_string_node_t *) pm_arena_alloc(arena, sizeof(pm_interpolated_x_string_node_t), PRISM_ALIGNOF(pm_interpolated_x_string_node_t));
+
+    *node = (pm_interpolated_x_string_node_t) {
+        .base = { .type = PM_INTERPOLATED_X_STRING_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .opening_loc = opening_loc,
+        .parts = parts,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ItLocalVariableReadNode node.
+ */
+pm_it_local_variable_read_node_t *
+pm_it_local_variable_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location) {
+    pm_it_local_variable_read_node_t *node = (pm_it_local_variable_read_node_t *) pm_arena_alloc(arena, sizeof(pm_it_local_variable_read_node_t), PRISM_ALIGNOF(pm_it_local_variable_read_node_t));
+
+    *node = (pm_it_local_variable_read_node_t) {
+        .base = { .type = PM_IT_LOCAL_VARIABLE_READ_NODE, .flags = flags, .node_id = node_id, .location = location }
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ItParametersNode node.
+ */
+pm_it_parameters_node_t *
+pm_it_parameters_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location) {
+    pm_it_parameters_node_t *node = (pm_it_parameters_node_t *) pm_arena_alloc(arena, sizeof(pm_it_parameters_node_t), PRISM_ALIGNOF(pm_it_parameters_node_t));
+
+    *node = (pm_it_parameters_node_t) {
+        .base = { .type = PM_IT_PARAMETERS_NODE, .flags = flags, .node_id = node_id, .location = location }
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new KeywordHashNode node.
+ */
+pm_keyword_hash_node_t *
+pm_keyword_hash_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t elements) {
+    pm_keyword_hash_node_t *node = (pm_keyword_hash_node_t *) pm_arena_alloc(arena, sizeof(pm_keyword_hash_node_t), PRISM_ALIGNOF(pm_keyword_hash_node_t));
+
+    *node = (pm_keyword_hash_node_t) {
+        .base = { .type = PM_KEYWORD_HASH_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .elements = elements
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new KeywordRestParameterNode node.
+ */
+pm_keyword_rest_parameter_node_t *
+pm_keyword_rest_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc) {
+    pm_keyword_rest_parameter_node_t *node = (pm_keyword_rest_parameter_node_t *) pm_arena_alloc(arena, sizeof(pm_keyword_rest_parameter_node_t), PRISM_ALIGNOF(pm_keyword_rest_parameter_node_t));
+
+    *node = (pm_keyword_rest_parameter_node_t) {
+        .base = { .type = PM_KEYWORD_REST_PARAMETER_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new LambdaNode node.
+ */
+pm_lambda_node_t *
+pm_lambda_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_list_t locals, pm_location_t operator_loc, pm_location_t opening_loc, pm_location_t closing_loc, struct pm_node *parameters, struct pm_node *body) {
+    pm_lambda_node_t *node = (pm_lambda_node_t *) pm_arena_alloc(arena, sizeof(pm_lambda_node_t), PRISM_ALIGNOF(pm_lambda_node_t));
+
+    *node = (pm_lambda_node_t) {
+        .base = { .type = PM_LAMBDA_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .locals = locals,
+        .operator_loc = operator_loc,
+        .opening_loc = opening_loc,
+        .closing_loc = closing_loc,
+        .parameters = parameters,
+        .body = body
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new LocalVariableAndWriteNode node.
+ */
+pm_local_variable_and_write_node_t *
+pm_local_variable_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value, pm_constant_id_t name, uint32_t depth) {
+    pm_local_variable_and_write_node_t *node = (pm_local_variable_and_write_node_t *) pm_arena_alloc(arena, sizeof(pm_local_variable_and_write_node_t), PRISM_ALIGNOF(pm_local_variable_and_write_node_t));
+
+    *node = (pm_local_variable_and_write_node_t) {
+        .base = { .type = PM_LOCAL_VARIABLE_AND_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name_loc = name_loc,
+        .operator_loc = operator_loc,
+        .value = value,
+        .name = name,
+        .depth = depth
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new LocalVariableOperatorWriteNode node.
+ */
+pm_local_variable_operator_write_node_t *
+pm_local_variable_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t name_loc, pm_location_t binary_operator_loc, struct pm_node *value, pm_constant_id_t name, pm_constant_id_t binary_operator, uint32_t depth) {
+    pm_local_variable_operator_write_node_t *node = (pm_local_variable_operator_write_node_t *) pm_arena_alloc(arena, sizeof(pm_local_variable_operator_write_node_t), PRISM_ALIGNOF(pm_local_variable_operator_write_node_t));
+
+    *node = (pm_local_variable_operator_write_node_t) {
+        .base = { .type = PM_LOCAL_VARIABLE_OPERATOR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name_loc = name_loc,
+        .binary_operator_loc = binary_operator_loc,
+        .value = value,
+        .name = name,
+        .binary_operator = binary_operator,
+        .depth = depth
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new LocalVariableOrWriteNode node.
+ */
+pm_local_variable_or_write_node_t *
+pm_local_variable_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value, pm_constant_id_t name, uint32_t depth) {
+    pm_local_variable_or_write_node_t *node = (pm_local_variable_or_write_node_t *) pm_arena_alloc(arena, sizeof(pm_local_variable_or_write_node_t), PRISM_ALIGNOF(pm_local_variable_or_write_node_t));
+
+    *node = (pm_local_variable_or_write_node_t) {
+        .base = { .type = PM_LOCAL_VARIABLE_OR_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name_loc = name_loc,
+        .operator_loc = operator_loc,
+        .value = value,
+        .name = name,
+        .depth = depth
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new LocalVariableReadNode node.
+ */
+pm_local_variable_read_node_t *
+pm_local_variable_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, uint32_t depth) {
+    pm_local_variable_read_node_t *node = (pm_local_variable_read_node_t *) pm_arena_alloc(arena, sizeof(pm_local_variable_read_node_t), PRISM_ALIGNOF(pm_local_variable_read_node_t));
+
+    *node = (pm_local_variable_read_node_t) {
+        .base = { .type = PM_LOCAL_VARIABLE_READ_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .depth = depth
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new LocalVariableTargetNode node.
+ */
+pm_local_variable_target_node_t *
+pm_local_variable_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, uint32_t depth) {
+    pm_local_variable_target_node_t *node = (pm_local_variable_target_node_t *) pm_arena_alloc(arena, sizeof(pm_local_variable_target_node_t), PRISM_ALIGNOF(pm_local_variable_target_node_t));
+
+    *node = (pm_local_variable_target_node_t) {
+        .base = { .type = PM_LOCAL_VARIABLE_TARGET_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .depth = depth
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new LocalVariableWriteNode node.
+ */
+pm_local_variable_write_node_t *
+pm_local_variable_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, uint32_t depth, pm_location_t name_loc, struct pm_node *value, pm_location_t operator_loc) {
+    pm_local_variable_write_node_t *node = (pm_local_variable_write_node_t *) pm_arena_alloc(arena, sizeof(pm_local_variable_write_node_t), PRISM_ALIGNOF(pm_local_variable_write_node_t));
+
+    *node = (pm_local_variable_write_node_t) {
+        .base = { .type = PM_LOCAL_VARIABLE_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .depth = depth,
+        .name_loc = name_loc,
+        .value = value,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new MatchLastLineNode node.
+ */
+pm_match_last_line_node_t *
+pm_match_last_line_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t content_loc, pm_location_t closing_loc, pm_string_t unescaped) {
+    pm_match_last_line_node_t *node = (pm_match_last_line_node_t *) pm_arena_alloc(arena, sizeof(pm_match_last_line_node_t), PRISM_ALIGNOF(pm_match_last_line_node_t));
+
+    *node = (pm_match_last_line_node_t) {
+        .base = { .type = PM_MATCH_LAST_LINE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .opening_loc = opening_loc,
+        .content_loc = content_loc,
+        .closing_loc = closing_loc,
+        .unescaped = unescaped
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new MatchPredicateNode node.
+ */
+pm_match_predicate_node_t *
+pm_match_predicate_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value, struct pm_node *pattern, pm_location_t operator_loc) {
+    pm_match_predicate_node_t *node = (pm_match_predicate_node_t *) pm_arena_alloc(arena, sizeof(pm_match_predicate_node_t), PRISM_ALIGNOF(pm_match_predicate_node_t));
+
+    *node = (pm_match_predicate_node_t) {
+        .base = { .type = PM_MATCH_PREDICATE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .value = value,
+        .pattern = pattern,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new MatchRequiredNode node.
+ */
+pm_match_required_node_t *
+pm_match_required_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value, struct pm_node *pattern, pm_location_t operator_loc) {
+    pm_match_required_node_t *node = (pm_match_required_node_t *) pm_arena_alloc(arena, sizeof(pm_match_required_node_t), PRISM_ALIGNOF(pm_match_required_node_t));
+
+    *node = (pm_match_required_node_t) {
+        .base = { .type = PM_MATCH_REQUIRED_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .value = value,
+        .pattern = pattern,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new MatchWriteNode node.
+ */
+pm_match_write_node_t *
+pm_match_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_call_node *call, pm_node_list_t targets) {
+    pm_match_write_node_t *node = (pm_match_write_node_t *) pm_arena_alloc(arena, sizeof(pm_match_write_node_t), PRISM_ALIGNOF(pm_match_write_node_t));
+
+    *node = (pm_match_write_node_t) {
+        .base = { .type = PM_MATCH_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .call = call,
+        .targets = targets
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ModuleNode node.
+ */
+pm_module_node_t *
+pm_module_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_list_t locals, pm_location_t module_keyword_loc, struct pm_node *constant_path, struct pm_node *body, pm_location_t end_keyword_loc, pm_constant_id_t name) {
+    pm_module_node_t *node = (pm_module_node_t *) pm_arena_alloc(arena, sizeof(pm_module_node_t), PRISM_ALIGNOF(pm_module_node_t));
+
+    *node = (pm_module_node_t) {
+        .base = { .type = PM_MODULE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .locals = locals,
+        .module_keyword_loc = module_keyword_loc,
+        .constant_path = constant_path,
+        .body = body,
+        .end_keyword_loc = end_keyword_loc,
+        .name = name
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new MultiTargetNode node.
+ */
+pm_multi_target_node_t *
+pm_multi_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t lefts, struct pm_node *rest, pm_node_list_t rights, pm_location_t lparen_loc, pm_location_t rparen_loc) {
+    pm_multi_target_node_t *node = (pm_multi_target_node_t *) pm_arena_alloc(arena, sizeof(pm_multi_target_node_t), PRISM_ALIGNOF(pm_multi_target_node_t));
+
+    *node = (pm_multi_target_node_t) {
+        .base = { .type = PM_MULTI_TARGET_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .lefts = lefts,
+        .rest = rest,
+        .rights = rights,
+        .lparen_loc = lparen_loc,
+        .rparen_loc = rparen_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new MultiWriteNode node.
+ */
+pm_multi_write_node_t *
+pm_multi_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t lefts, struct pm_node *rest, pm_node_list_t rights, pm_location_t lparen_loc, pm_location_t rparen_loc, pm_location_t operator_loc, struct pm_node *value) {
+    pm_multi_write_node_t *node = (pm_multi_write_node_t *) pm_arena_alloc(arena, sizeof(pm_multi_write_node_t), PRISM_ALIGNOF(pm_multi_write_node_t));
+
+    *node = (pm_multi_write_node_t) {
+        .base = { .type = PM_MULTI_WRITE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .lefts = lefts,
+        .rest = rest,
+        .rights = rights,
+        .lparen_loc = lparen_loc,
+        .rparen_loc = rparen_loc,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new NextNode node.
+ */
+pm_next_node_t *
+pm_next_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_arguments_node *arguments, pm_location_t keyword_loc) {
+    pm_next_node_t *node = (pm_next_node_t *) pm_arena_alloc(arena, sizeof(pm_next_node_t), PRISM_ALIGNOF(pm_next_node_t));
+
+    *node = (pm_next_node_t) {
+        .base = { .type = PM_NEXT_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .arguments = arguments,
+        .keyword_loc = keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new NilNode node.
+ */
+pm_nil_node_t *
+pm_nil_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location) {
+    pm_nil_node_t *node = (pm_nil_node_t *) pm_arena_alloc(arena, sizeof(pm_nil_node_t), PRISM_ALIGNOF(pm_nil_node_t));
+
+    *node = (pm_nil_node_t) {
+        .base = { .type = PM_NIL_NODE, .flags = flags, .node_id = node_id, .location = location }
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new NoBlockParameterNode node.
+ */
+pm_no_block_parameter_node_t *
+pm_no_block_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t operator_loc, pm_location_t keyword_loc) {
+    pm_no_block_parameter_node_t *node = (pm_no_block_parameter_node_t *) pm_arena_alloc(arena, sizeof(pm_no_block_parameter_node_t), PRISM_ALIGNOF(pm_no_block_parameter_node_t));
+
+    *node = (pm_no_block_parameter_node_t) {
+        .base = { .type = PM_NO_BLOCK_PARAMETER_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .operator_loc = operator_loc,
+        .keyword_loc = keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new NoKeywordsParameterNode node.
+ */
+pm_no_keywords_parameter_node_t *
+pm_no_keywords_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t operator_loc, pm_location_t keyword_loc) {
+    pm_no_keywords_parameter_node_t *node = (pm_no_keywords_parameter_node_t *) pm_arena_alloc(arena, sizeof(pm_no_keywords_parameter_node_t), PRISM_ALIGNOF(pm_no_keywords_parameter_node_t));
+
+    *node = (pm_no_keywords_parameter_node_t) {
+        .base = { .type = PM_NO_KEYWORDS_PARAMETER_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .operator_loc = operator_loc,
+        .keyword_loc = keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new NumberedParametersNode node.
+ */
+pm_numbered_parameters_node_t *
+pm_numbered_parameters_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, uint8_t maximum) {
+    pm_numbered_parameters_node_t *node = (pm_numbered_parameters_node_t *) pm_arena_alloc(arena, sizeof(pm_numbered_parameters_node_t), PRISM_ALIGNOF(pm_numbered_parameters_node_t));
+
+    *node = (pm_numbered_parameters_node_t) {
+        .base = { .type = PM_NUMBERED_PARAMETERS_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .maximum = maximum
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new NumberedReferenceReadNode node.
+ */
+pm_numbered_reference_read_node_t *
+pm_numbered_reference_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, uint32_t number) {
+    pm_numbered_reference_read_node_t *node = (pm_numbered_reference_read_node_t *) pm_arena_alloc(arena, sizeof(pm_numbered_reference_read_node_t), PRISM_ALIGNOF(pm_numbered_reference_read_node_t));
+
+    *node = (pm_numbered_reference_read_node_t) {
+        .base = { .type = PM_NUMBERED_REFERENCE_READ_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .number = number
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new OptionalKeywordParameterNode node.
+ */
+pm_optional_keyword_parameter_node_t *
+pm_optional_keyword_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, struct pm_node *value) {
+    pm_optional_keyword_parameter_node_t *node = (pm_optional_keyword_parameter_node_t *) pm_arena_alloc(arena, sizeof(pm_optional_keyword_parameter_node_t), PRISM_ALIGNOF(pm_optional_keyword_parameter_node_t));
+
+    *node = (pm_optional_keyword_parameter_node_t) {
+        .base = { .type = PM_OPTIONAL_KEYWORD_PARAMETER_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new OptionalParameterNode node.
+ */
+pm_optional_parameter_node_t *
+pm_optional_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value) {
+    pm_optional_parameter_node_t *node = (pm_optional_parameter_node_t *) pm_arena_alloc(arena, sizeof(pm_optional_parameter_node_t), PRISM_ALIGNOF(pm_optional_parameter_node_t));
+
+    *node = (pm_optional_parameter_node_t) {
+        .base = { .type = PM_OPTIONAL_PARAMETER_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .operator_loc = operator_loc,
+        .value = value
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new OrNode node.
+ */
+pm_or_node_t *
+pm_or_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *left, struct pm_node *right, pm_location_t operator_loc) {
+    pm_or_node_t *node = (pm_or_node_t *) pm_arena_alloc(arena, sizeof(pm_or_node_t), PRISM_ALIGNOF(pm_or_node_t));
+
+    *node = (pm_or_node_t) {
+        .base = { .type = PM_OR_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .left = left,
+        .right = right,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ParametersNode node.
+ */
+pm_parameters_node_t *
+pm_parameters_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t requireds, pm_node_list_t optionals, struct pm_node *rest, pm_node_list_t posts, pm_node_list_t keywords, struct pm_node *keyword_rest, struct pm_node *block) {
+    pm_parameters_node_t *node = (pm_parameters_node_t *) pm_arena_alloc(arena, sizeof(pm_parameters_node_t), PRISM_ALIGNOF(pm_parameters_node_t));
+
+    *node = (pm_parameters_node_t) {
+        .base = { .type = PM_PARAMETERS_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .requireds = requireds,
+        .optionals = optionals,
+        .rest = rest,
+        .posts = posts,
+        .keywords = keywords,
+        .keyword_rest = keyword_rest,
+        .block = block
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ParenthesesNode node.
+ */
+pm_parentheses_node_t *
+pm_parentheses_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *body, pm_location_t opening_loc, pm_location_t closing_loc) {
+    pm_parentheses_node_t *node = (pm_parentheses_node_t *) pm_arena_alloc(arena, sizeof(pm_parentheses_node_t), PRISM_ALIGNOF(pm_parentheses_node_t));
+
+    *node = (pm_parentheses_node_t) {
+        .base = { .type = PM_PARENTHESES_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .body = body,
+        .opening_loc = opening_loc,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new PinnedExpressionNode node.
+ */
+pm_pinned_expression_node_t *
+pm_pinned_expression_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *expression, pm_location_t operator_loc, pm_location_t lparen_loc, pm_location_t rparen_loc) {
+    pm_pinned_expression_node_t *node = (pm_pinned_expression_node_t *) pm_arena_alloc(arena, sizeof(pm_pinned_expression_node_t), PRISM_ALIGNOF(pm_pinned_expression_node_t));
+
+    *node = (pm_pinned_expression_node_t) {
+        .base = { .type = PM_PINNED_EXPRESSION_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .expression = expression,
+        .operator_loc = operator_loc,
+        .lparen_loc = lparen_loc,
+        .rparen_loc = rparen_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new PinnedVariableNode node.
+ */
+pm_pinned_variable_node_t *
+pm_pinned_variable_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *variable, pm_location_t operator_loc) {
+    pm_pinned_variable_node_t *node = (pm_pinned_variable_node_t *) pm_arena_alloc(arena, sizeof(pm_pinned_variable_node_t), PRISM_ALIGNOF(pm_pinned_variable_node_t));
+
+    *node = (pm_pinned_variable_node_t) {
+        .base = { .type = PM_PINNED_VARIABLE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .variable = variable,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new PostExecutionNode node.
+ */
+pm_post_execution_node_t *
+pm_post_execution_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_statements_node *statements, pm_location_t keyword_loc, pm_location_t opening_loc, pm_location_t closing_loc) {
+    pm_post_execution_node_t *node = (pm_post_execution_node_t *) pm_arena_alloc(arena, sizeof(pm_post_execution_node_t), PRISM_ALIGNOF(pm_post_execution_node_t));
+
+    *node = (pm_post_execution_node_t) {
+        .base = { .type = PM_POST_EXECUTION_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .statements = statements,
+        .keyword_loc = keyword_loc,
+        .opening_loc = opening_loc,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new PreExecutionNode node.
+ */
+pm_pre_execution_node_t *
+pm_pre_execution_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_statements_node *statements, pm_location_t keyword_loc, pm_location_t opening_loc, pm_location_t closing_loc) {
+    pm_pre_execution_node_t *node = (pm_pre_execution_node_t *) pm_arena_alloc(arena, sizeof(pm_pre_execution_node_t), PRISM_ALIGNOF(pm_pre_execution_node_t));
+
+    *node = (pm_pre_execution_node_t) {
+        .base = { .type = PM_PRE_EXECUTION_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .statements = statements,
+        .keyword_loc = keyword_loc,
+        .opening_loc = opening_loc,
+        .closing_loc = closing_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ProgramNode node.
+ */
+pm_program_node_t *
+pm_program_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_list_t locals, struct pm_statements_node *statements) {
+    pm_program_node_t *node = (pm_program_node_t *) pm_arena_alloc(arena, sizeof(pm_program_node_t), PRISM_ALIGNOF(pm_program_node_t));
+
+    *node = (pm_program_node_t) {
+        .base = { .type = PM_PROGRAM_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .locals = locals,
+        .statements = statements
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new RangeNode node.
+ */
+pm_range_node_t *
+pm_range_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *left, struct pm_node *right, pm_location_t operator_loc) {
+    pm_range_node_t *node = (pm_range_node_t *) pm_arena_alloc(arena, sizeof(pm_range_node_t), PRISM_ALIGNOF(pm_range_node_t));
+
+    *node = (pm_range_node_t) {
+        .base = { .type = PM_RANGE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .left = left,
+        .right = right,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new RationalNode node.
+ */
+pm_rational_node_t *
+pm_rational_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_integer_t numerator, pm_integer_t denominator) {
+    pm_rational_node_t *node = (pm_rational_node_t *) pm_arena_alloc(arena, sizeof(pm_rational_node_t), PRISM_ALIGNOF(pm_rational_node_t));
+
+    *node = (pm_rational_node_t) {
+        .base = { .type = PM_RATIONAL_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .numerator = numerator,
+        .denominator = denominator
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new RedoNode node.
+ */
+pm_redo_node_t *
+pm_redo_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location) {
+    pm_redo_node_t *node = (pm_redo_node_t *) pm_arena_alloc(arena, sizeof(pm_redo_node_t), PRISM_ALIGNOF(pm_redo_node_t));
+
+    *node = (pm_redo_node_t) {
+        .base = { .type = PM_REDO_NODE, .flags = flags, .node_id = node_id, .location = location }
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new RegularExpressionNode node.
+ */
+pm_regular_expression_node_t *
+pm_regular_expression_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t content_loc, pm_location_t closing_loc, pm_string_t unescaped) {
+    pm_regular_expression_node_t *node = (pm_regular_expression_node_t *) pm_arena_alloc(arena, sizeof(pm_regular_expression_node_t), PRISM_ALIGNOF(pm_regular_expression_node_t));
+
+    *node = (pm_regular_expression_node_t) {
+        .base = { .type = PM_REGULAR_EXPRESSION_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .opening_loc = opening_loc,
+        .content_loc = content_loc,
+        .closing_loc = closing_loc,
+        .unescaped = unescaped
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new RequiredKeywordParameterNode node.
+ */
+pm_required_keyword_parameter_node_t *
+pm_required_keyword_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc) {
+    pm_required_keyword_parameter_node_t *node = (pm_required_keyword_parameter_node_t *) pm_arena_alloc(arena, sizeof(pm_required_keyword_parameter_node_t), PRISM_ALIGNOF(pm_required_keyword_parameter_node_t));
+
+    *node = (pm_required_keyword_parameter_node_t) {
+        .base = { .type = PM_REQUIRED_KEYWORD_PARAMETER_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new RequiredParameterNode node.
+ */
+pm_required_parameter_node_t *
+pm_required_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name) {
+    pm_required_parameter_node_t *node = (pm_required_parameter_node_t *) pm_arena_alloc(arena, sizeof(pm_required_parameter_node_t), PRISM_ALIGNOF(pm_required_parameter_node_t));
+
+    *node = (pm_required_parameter_node_t) {
+        .base = { .type = PM_REQUIRED_PARAMETER_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new RescueModifierNode node.
+ */
+pm_rescue_modifier_node_t *
+pm_rescue_modifier_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *expression, pm_location_t keyword_loc, struct pm_node *rescue_expression) {
+    pm_rescue_modifier_node_t *node = (pm_rescue_modifier_node_t *) pm_arena_alloc(arena, sizeof(pm_rescue_modifier_node_t), PRISM_ALIGNOF(pm_rescue_modifier_node_t));
+
+    *node = (pm_rescue_modifier_node_t) {
+        .base = { .type = PM_RESCUE_MODIFIER_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .expression = expression,
+        .keyword_loc = keyword_loc,
+        .rescue_expression = rescue_expression
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new RescueNode node.
+ */
+pm_rescue_node_t *
+pm_rescue_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_node_list_t exceptions, pm_location_t operator_loc, struct pm_node *reference, pm_location_t then_keyword_loc, struct pm_statements_node *statements, struct pm_rescue_node *subsequent) {
+    pm_rescue_node_t *node = (pm_rescue_node_t *) pm_arena_alloc(arena, sizeof(pm_rescue_node_t), PRISM_ALIGNOF(pm_rescue_node_t));
+
+    *node = (pm_rescue_node_t) {
+        .base = { .type = PM_RESCUE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .keyword_loc = keyword_loc,
+        .exceptions = exceptions,
+        .operator_loc = operator_loc,
+        .reference = reference,
+        .then_keyword_loc = then_keyword_loc,
+        .statements = statements,
+        .subsequent = subsequent
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new RestParameterNode node.
+ */
+pm_rest_parameter_node_t *
+pm_rest_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc) {
+    pm_rest_parameter_node_t *node = (pm_rest_parameter_node_t *) pm_arena_alloc(arena, sizeof(pm_rest_parameter_node_t), PRISM_ALIGNOF(pm_rest_parameter_node_t));
+
+    *node = (pm_rest_parameter_node_t) {
+        .base = { .type = PM_REST_PARAMETER_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .name = name,
+        .name_loc = name_loc,
+        .operator_loc = operator_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new RetryNode node.
+ */
+pm_retry_node_t *
+pm_retry_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location) {
+    pm_retry_node_t *node = (pm_retry_node_t *) pm_arena_alloc(arena, sizeof(pm_retry_node_t), PRISM_ALIGNOF(pm_retry_node_t));
+
+    *node = (pm_retry_node_t) {
+        .base = { .type = PM_RETRY_NODE, .flags = flags, .node_id = node_id, .location = location }
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ReturnNode node.
+ */
+pm_return_node_t *
+pm_return_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, struct pm_arguments_node *arguments) {
+    pm_return_node_t *node = (pm_return_node_t *) pm_arena_alloc(arena, sizeof(pm_return_node_t), PRISM_ALIGNOF(pm_return_node_t));
+
+    *node = (pm_return_node_t) {
+        .base = { .type = PM_RETURN_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .keyword_loc = keyword_loc,
+        .arguments = arguments
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new SelfNode node.
+ */
+pm_self_node_t *
+pm_self_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location) {
+    pm_self_node_t *node = (pm_self_node_t *) pm_arena_alloc(arena, sizeof(pm_self_node_t), PRISM_ALIGNOF(pm_self_node_t));
+
+    *node = (pm_self_node_t) {
+        .base = { .type = PM_SELF_NODE, .flags = flags, .node_id = node_id, .location = location }
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new ShareableConstantNode node.
+ */
+pm_shareable_constant_node_t *
+pm_shareable_constant_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *write) {
+    pm_shareable_constant_node_t *node = (pm_shareable_constant_node_t *) pm_arena_alloc(arena, sizeof(pm_shareable_constant_node_t), PRISM_ALIGNOF(pm_shareable_constant_node_t));
+
+    *node = (pm_shareable_constant_node_t) {
+        .base = { .type = PM_SHAREABLE_CONSTANT_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .write = write
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new SingletonClassNode node.
+ */
+pm_singleton_class_node_t *
+pm_singleton_class_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_list_t locals, pm_location_t class_keyword_loc, pm_location_t operator_loc, struct pm_node *expression, struct pm_node *body, pm_location_t end_keyword_loc) {
+    pm_singleton_class_node_t *node = (pm_singleton_class_node_t *) pm_arena_alloc(arena, sizeof(pm_singleton_class_node_t), PRISM_ALIGNOF(pm_singleton_class_node_t));
+
+    *node = (pm_singleton_class_node_t) {
+        .base = { .type = PM_SINGLETON_CLASS_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .locals = locals,
+        .class_keyword_loc = class_keyword_loc,
+        .operator_loc = operator_loc,
+        .expression = expression,
+        .body = body,
+        .end_keyword_loc = end_keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new SourceEncodingNode node.
+ */
+pm_source_encoding_node_t *
+pm_source_encoding_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location) {
+    pm_source_encoding_node_t *node = (pm_source_encoding_node_t *) pm_arena_alloc(arena, sizeof(pm_source_encoding_node_t), PRISM_ALIGNOF(pm_source_encoding_node_t));
+
+    *node = (pm_source_encoding_node_t) {
+        .base = { .type = PM_SOURCE_ENCODING_NODE, .flags = flags, .node_id = node_id, .location = location }
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new SourceFileNode node.
+ */
+pm_source_file_node_t *
+pm_source_file_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_string_t filepath) {
+    pm_source_file_node_t *node = (pm_source_file_node_t *) pm_arena_alloc(arena, sizeof(pm_source_file_node_t), PRISM_ALIGNOF(pm_source_file_node_t));
+
+    *node = (pm_source_file_node_t) {
+        .base = { .type = PM_SOURCE_FILE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .filepath = filepath
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new SourceLineNode node.
+ */
+pm_source_line_node_t *
+pm_source_line_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location) {
+    pm_source_line_node_t *node = (pm_source_line_node_t *) pm_arena_alloc(arena, sizeof(pm_source_line_node_t), PRISM_ALIGNOF(pm_source_line_node_t));
+
+    *node = (pm_source_line_node_t) {
+        .base = { .type = PM_SOURCE_LINE_NODE, .flags = flags, .node_id = node_id, .location = location }
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new SplatNode node.
+ */
+pm_splat_node_t *
+pm_splat_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t operator_loc, struct pm_node *expression) {
+    pm_splat_node_t *node = (pm_splat_node_t *) pm_arena_alloc(arena, sizeof(pm_splat_node_t), PRISM_ALIGNOF(pm_splat_node_t));
+
+    *node = (pm_splat_node_t) {
+        .base = { .type = PM_SPLAT_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .operator_loc = operator_loc,
+        .expression = expression
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new StatementsNode node.
+ */
+pm_statements_node_t *
+pm_statements_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t body) {
+    pm_statements_node_t *node = (pm_statements_node_t *) pm_arena_alloc(arena, sizeof(pm_statements_node_t), PRISM_ALIGNOF(pm_statements_node_t));
+
+    *node = (pm_statements_node_t) {
+        .base = { .type = PM_STATEMENTS_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .body = body
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new StringNode node.
+ */
+pm_string_node_t *
+pm_string_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t content_loc, pm_location_t closing_loc, pm_string_t unescaped) {
+    pm_string_node_t *node = (pm_string_node_t *) pm_arena_alloc(arena, sizeof(pm_string_node_t), PRISM_ALIGNOF(pm_string_node_t));
+
+    *node = (pm_string_node_t) {
+        .base = { .type = PM_STRING_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .opening_loc = opening_loc,
+        .content_loc = content_loc,
+        .closing_loc = closing_loc,
+        .unescaped = unescaped
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new SuperNode node.
+ */
+pm_super_node_t *
+pm_super_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_location_t lparen_loc, struct pm_arguments_node *arguments, pm_location_t rparen_loc, struct pm_node *block) {
+    pm_super_node_t *node = (pm_super_node_t *) pm_arena_alloc(arena, sizeof(pm_super_node_t), PRISM_ALIGNOF(pm_super_node_t));
+
+    *node = (pm_super_node_t) {
+        .base = { .type = PM_SUPER_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .keyword_loc = keyword_loc,
+        .lparen_loc = lparen_loc,
+        .arguments = arguments,
+        .rparen_loc = rparen_loc,
+        .block = block
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new SymbolNode node.
+ */
+pm_symbol_node_t *
+pm_symbol_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t value_loc, pm_location_t closing_loc, pm_string_t unescaped) {
+    pm_symbol_node_t *node = (pm_symbol_node_t *) pm_arena_alloc(arena, sizeof(pm_symbol_node_t), PRISM_ALIGNOF(pm_symbol_node_t));
+
+    *node = (pm_symbol_node_t) {
+        .base = { .type = PM_SYMBOL_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .opening_loc = opening_loc,
+        .value_loc = value_loc,
+        .closing_loc = closing_loc,
+        .unescaped = unescaped
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new TrueNode node.
+ */
+pm_true_node_t *
+pm_true_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location) {
+    pm_true_node_t *node = (pm_true_node_t *) pm_arena_alloc(arena, sizeof(pm_true_node_t), PRISM_ALIGNOF(pm_true_node_t));
+
+    *node = (pm_true_node_t) {
+        .base = { .type = PM_TRUE_NODE, .flags = flags, .node_id = node_id, .location = location }
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new UndefNode node.
+ */
+pm_undef_node_t *
+pm_undef_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t names, pm_location_t keyword_loc) {
+    pm_undef_node_t *node = (pm_undef_node_t *) pm_arena_alloc(arena, sizeof(pm_undef_node_t), PRISM_ALIGNOF(pm_undef_node_t));
+
+    *node = (pm_undef_node_t) {
+        .base = { .type = PM_UNDEF_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .names = names,
+        .keyword_loc = keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new UnlessNode node.
+ */
+pm_unless_node_t *
+pm_unless_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, struct pm_node *predicate, pm_location_t then_keyword_loc, struct pm_statements_node *statements, struct pm_else_node *else_clause, pm_location_t end_keyword_loc) {
+    pm_unless_node_t *node = (pm_unless_node_t *) pm_arena_alloc(arena, sizeof(pm_unless_node_t), PRISM_ALIGNOF(pm_unless_node_t));
+
+    *node = (pm_unless_node_t) {
+        .base = { .type = PM_UNLESS_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .keyword_loc = keyword_loc,
+        .predicate = predicate,
+        .then_keyword_loc = then_keyword_loc,
+        .statements = statements,
+        .else_clause = else_clause,
+        .end_keyword_loc = end_keyword_loc
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new UntilNode node.
+ */
+pm_until_node_t *
+pm_until_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_location_t do_keyword_loc, pm_location_t closing_loc, struct pm_node *predicate, struct pm_statements_node *statements) {
+    pm_until_node_t *node = (pm_until_node_t *) pm_arena_alloc(arena, sizeof(pm_until_node_t), PRISM_ALIGNOF(pm_until_node_t));
+
+    *node = (pm_until_node_t) {
+        .base = { .type = PM_UNTIL_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .keyword_loc = keyword_loc,
+        .do_keyword_loc = do_keyword_loc,
+        .closing_loc = closing_loc,
+        .predicate = predicate,
+        .statements = statements
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new WhenNode node.
+ */
+pm_when_node_t *
+pm_when_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_node_list_t conditions, pm_location_t then_keyword_loc, struct pm_statements_node *statements) {
+    pm_when_node_t *node = (pm_when_node_t *) pm_arena_alloc(arena, sizeof(pm_when_node_t), PRISM_ALIGNOF(pm_when_node_t));
+
+    *node = (pm_when_node_t) {
+        .base = { .type = PM_WHEN_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .keyword_loc = keyword_loc,
+        .conditions = conditions,
+        .then_keyword_loc = then_keyword_loc,
+        .statements = statements
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new WhileNode node.
+ */
+pm_while_node_t *
+pm_while_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_location_t do_keyword_loc, pm_location_t closing_loc, struct pm_node *predicate, struct pm_statements_node *statements) {
+    pm_while_node_t *node = (pm_while_node_t *) pm_arena_alloc(arena, sizeof(pm_while_node_t), PRISM_ALIGNOF(pm_while_node_t));
+
+    *node = (pm_while_node_t) {
+        .base = { .type = PM_WHILE_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .keyword_loc = keyword_loc,
+        .do_keyword_loc = do_keyword_loc,
+        .closing_loc = closing_loc,
+        .predicate = predicate,
+        .statements = statements
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new XStringNode node.
+ */
+pm_x_string_node_t *
+pm_x_string_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t content_loc, pm_location_t closing_loc, pm_string_t unescaped) {
+    pm_x_string_node_t *node = (pm_x_string_node_t *) pm_arena_alloc(arena, sizeof(pm_x_string_node_t), PRISM_ALIGNOF(pm_x_string_node_t));
+
+    *node = (pm_x_string_node_t) {
+        .base = { .type = PM_X_STRING_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .opening_loc = opening_loc,
+        .content_loc = content_loc,
+        .closing_loc = closing_loc,
+        .unescaped = unescaped
+    };
+
+    return node;
+}
+
+/**
+ * Allocate and initialize a new YieldNode node.
+ */
+pm_yield_node_t *
+pm_yield_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_location_t lparen_loc, struct pm_arguments_node *arguments, pm_location_t rparen_loc) {
+    pm_yield_node_t *node = (pm_yield_node_t *) pm_arena_alloc(arena, sizeof(pm_yield_node_t), PRISM_ALIGNOF(pm_yield_node_t));
+
+    *node = (pm_yield_node_t) {
+        .base = { .type = PM_YIELD_NODE, .flags = flags, .node_id = node_id, .location = location },
+        .keyword_loc = keyword_loc,
+        .lparen_loc = lparen_loc,
+        .arguments = arguments,
+        .rparen_loc = rparen_loc
+    };
+
+    return node;
+}

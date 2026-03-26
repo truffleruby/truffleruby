@@ -894,6 +894,19 @@ module Prism
       commands << ["└── end_keyword_loc: #{inspect_location(node.end_keyword_loc)}\n", indent]
     end
 
+    #: (ErrorRecoveryNode node) -> void
+    def visit_error_recovery_node(node) # :nodoc:
+      commands << [inspect_node("ErrorRecoveryNode", node), indent]
+      flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
+      commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
+      if (unexpected = node.unexpected).nil?
+        commands << ["└── unexpected: ∅\n", indent]
+      else
+        commands << ["└── unexpected:\n", indent]
+        commands << [unexpected, "#{indent}    "]
+      end
+    end
+
     #: (FalseNode node) -> void
     def visit_false_node(node) # :nodoc:
       commands << [inspect_node("FalseNode", node), indent]
@@ -997,6 +1010,7 @@ module Prism
       commands << [inspect_node("ForwardingSuperNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
+      commands << ["├── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
       if (block = node.block).nil?
         commands << ["└── block: ∅\n", indent]
       else
@@ -1653,13 +1667,6 @@ module Prism
         commands << [Replace.new("#{indent}    └── "), indent]
         commands << [targets[-1], "#{indent}        "]
       end
-    end
-
-    #: (MissingNode node) -> void
-    def visit_missing_node(node) # :nodoc:
-      commands << [inspect_node("MissingNode", node), indent]
-      flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
-      commands << ["└── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
     end
 
     #: (ModuleNode node) -> void

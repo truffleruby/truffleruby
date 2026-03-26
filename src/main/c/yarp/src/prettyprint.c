@@ -8,23 +8,34 @@
 
 #include "prism/prettyprint.h"
 
-// We optionally support pretty printing nodes. For systems that don't want or
-// need this functionality, it can be turned off with the
-// PRISM_EXCLUDE_PRETTYPRINT define.
+/* We optionally support pretty printing nodes. For systems that don't want or
+ * need this functionality, it can be turned off with the
+ * PRISM_EXCLUDE_PRETTYPRINT define. */
 #ifdef PRISM_EXCLUDE_PRETTYPRINT
 
-void pm_prettyprint(void) {}
+/* Ensure this translation unit is never empty, even when prettyprint is
+ * excluded. */
+typedef int pm_prettyprint_unused_t;
 
 #else
 
-static inline void
+#include "prism/compiler/inline.h"
+#include "prism/internal/buffer.h"
+#include "prism/internal/constant_pool.h"
+#include "prism/internal/integer.h"
+#include "prism/internal/parser.h"
+#include "prism/line_offset_list.h"
+
+#include <inttypes.h>
+
+static PRISM_INLINE void
 prettyprint_location(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm_location_t *location) {
     pm_line_column_t start = pm_line_offset_list_line_column(&parser->line_offsets, location->start, parser->start_line);
     pm_line_column_t end = pm_line_offset_list_line_column(&parser->line_offsets, location->start + location->length, parser->start_line);
     pm_buffer_append_format(output_buffer, "(%" PRIi32 ",%" PRIu32 ")-(%" PRIi32 ",%" PRIu32 ")", start.line, start.column, end.line, end.column);
 }
 
-static inline void
+static PRISM_INLINE void
 prettyprint_constant(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm_constant_id_t constant_id) {
     pm_constant_t *constant = pm_constant_pool_id_to_constant(&parser->constant_pool, constant_id);
     pm_buffer_append_format(output_buffer, ":%.*s", (int) constant->length, constant->start);
@@ -3249,6 +3260,31 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
 
             break;
         }
+        case PM_ERROR_RECOVERY_NODE: {
+            pm_error_recovery_node_t *cast = (pm_error_recovery_node_t *) node;
+            pm_buffer_append_string(output_buffer, "@ ErrorRecoveryNode (location: ", 31);
+            prettyprint_location(output_buffer, parser, &node->location);
+            pm_buffer_append_string(output_buffer, ")\n", 2);
+
+            // unexpected
+            {
+                pm_buffer_concat(output_buffer, prefix_buffer);
+                pm_buffer_append_string(output_buffer, "+-- unexpected:", 15);
+                if (cast->unexpected == NULL) {
+                    pm_buffer_append_string(output_buffer, " nil\n", 5);
+                } else {
+                    pm_buffer_append_byte(output_buffer, '\n');
+
+                    size_t prefix_length = prefix_buffer->length;
+                    pm_buffer_append_string(prefix_buffer, "    ", 4);
+                    pm_buffer_concat(output_buffer, prefix_buffer);
+                    prettyprint_node(output_buffer, parser, (pm_node_t *) cast->unexpected, prefix_buffer);
+                    prefix_buffer->length = prefix_length;
+                }
+            }
+
+            break;
+        }
         case PM_FALSE_NODE: {
             pm_buffer_append_string(output_buffer, "@ FalseNode (location: ", 23);
             prettyprint_location(output_buffer, parser, &node->location);
@@ -3562,6 +3598,18 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
             pm_buffer_append_string(output_buffer, "@ ForwardingSuperNode (location: ", 33);
             prettyprint_location(output_buffer, parser, &node->location);
             pm_buffer_append_string(output_buffer, ")\n", 2);
+
+            // keyword_loc
+            {
+                pm_buffer_concat(output_buffer, prefix_buffer);
+                pm_buffer_append_string(output_buffer, "+-- keyword_loc:", 16);
+                pm_location_t *location = &cast->keyword_loc;
+                pm_buffer_append_byte(output_buffer, ' ');
+                prettyprint_location(output_buffer, parser, location);
+                pm_buffer_append_string(output_buffer, " = \"", 4);
+                pm_buffer_append_source(output_buffer, parser->start + location->start, (size_t) location->length, PM_BUFFER_ESCAPING_RUBY);
+                pm_buffer_append_string(output_buffer, "\"\n", 2);
+            }
 
             // block
             {
@@ -6249,13 +6297,6 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
                     prefix_buffer->length = prefix_length;
                 }
             }
-
-            break;
-        }
-        case PM_MISSING_NODE: {
-            pm_buffer_append_string(output_buffer, "@ MissingNode (location: ", 25);
-            prettyprint_location(output_buffer, parser, &node->location);
-            pm_buffer_append_string(output_buffer, ")\n", 2);
 
             break;
         }
@@ -8977,11 +9018,11 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
 /**
  * Pretty-prints the AST represented by the given node to the given buffer.
  */
-PRISM_EXPORTED_FUNCTION void
+void
 pm_prettyprint(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm_node_t *node) {
     pm_buffer_t prefix_buffer = { 0 };
     prettyprint_node(output_buffer, parser, node, &prefix_buffer);
-    pm_buffer_free(&prefix_buffer);
+    pm_buffer_cleanup(&prefix_buffer);
 }
 
 #endif

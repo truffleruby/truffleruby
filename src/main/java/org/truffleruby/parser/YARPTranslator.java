@@ -15,6 +15,7 @@ import com.oracle.truffle.api.strings.TruffleString;
 import org.graalvm.shadowed.org.jcodings.specific.EUCJPEncoding;
 import org.graalvm.shadowed.org.jcodings.specific.Windows_31JEncoding;
 import org.ruby_lang.prism.Nodes.ArgumentsNode;
+import org.ruby_lang.prism.Nodes.ErrorRecoveryNode;
 import org.ruby_lang.prism.Nodes.NoBlockParameterNode;
 import org.ruby_lang.prism.Nodes.Node;
 import org.truffleruby.RubyContext;
@@ -1597,6 +1598,11 @@ public class YARPTranslator extends YARPBaseTranslator {
     }
 
     @Override
+    public RubyNode visitErrorRecoveryNode(ErrorRecoveryNode node) {
+        throw CompilerDirectives.shouldNotReachHere("There should be no ErrorRecoveryNode in the AST");
+    }
+
+    @Override
     public RubyNode visitFalseNode(Nodes.FalseNode node) {
         RubyNode rubyNode = new BooleanLiteralNode(false);
         return assignPositionAndFlags(node, rubyNode);
@@ -2697,11 +2703,6 @@ public class YARPTranslator extends YARPBaseTranslator {
                 setters, nilSetters);
 
         return assignPositionAndFlags(node, rubyNode);
-    }
-
-    @Override
-    public RubyNode visitMissingNode(Nodes.MissingNode node) {
-        throw fail(node);
     }
 
     @Override

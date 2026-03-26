@@ -302,6 +302,11 @@ module Prism
       node.each_child_node.map { |node| node.accept(self) }
     end
 
+    #: (ErrorRecoveryNode) -> Array[untyped]
+    def visit_error_recovery_node(node) # :nodoc:
+      node.each_child_node.map { |node| node.accept(self) }
+    end
+
     #: (FalseNode) -> Array[untyped]
     def visit_false_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
@@ -559,11 +564,6 @@ module Prism
 
     #: (MatchWriteNode) -> Array[untyped]
     def visit_match_write_node(node) # :nodoc:
-      node.each_child_node.map { |node| node.accept(self) }
-    end
-
-    #: (MissingNode) -> Array[untyped]
-    def visit_missing_node(node) # :nodoc:
       node.each_child_node.map { |node| node.accept(self) }
     end
 

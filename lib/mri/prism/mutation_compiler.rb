@@ -267,6 +267,11 @@ module Prism
       node.copy(statements: visit(node.statements))
     end
 
+    #: (ErrorRecoveryNode) -> node?
+    def visit_error_recovery_node(node) # :nodoc:
+      node.copy(unexpected: visit(node.unexpected))
+    end
+
     #: (FalseNode) -> node?
     def visit_false_node(node) # :nodoc:
       node.copy
@@ -525,11 +530,6 @@ module Prism
     #: (MatchWriteNode) -> node?
     def visit_match_write_node(node) # :nodoc:
       node.copy(call: visit(node.call), targets: visit_all(node.targets))
-    end
-
-    #: (MissingNode) -> node?
-    def visit_missing_node(node) # :nodoc:
-      node.copy
     end
 
     #: (ModuleNode) -> node?

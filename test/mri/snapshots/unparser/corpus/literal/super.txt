@@ -7,6 +7,7 @@
     └── body: (length: 11)
         ├── @ ForwardingSuperNode (location: (1,0)-(1,5))
         │   ├── flags: newline
+        │   ├── keyword_loc: (1,0)-(1,5) = "super"
         │   └── block: ∅
         ├── @ SuperNode (location: (2,0)-(2,7))
         │   ├── flags: newline
@@ -170,6 +171,7 @@
         │   └── block: ∅
         ├── @ ForwardingSuperNode (location: (10,0)-(12,1))
         │   ├── flags: newline
+        │   ├── keyword_loc: (10,0)-(10,5) = "super"
         │   └── block:
         │       @ BlockNode (location: (10,6)-(12,1))
         │       ├── flags: ∅

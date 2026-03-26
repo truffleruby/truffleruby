@@ -439,6 +439,13 @@ module Prism
       listeners[:on_ensure_node_leave]&.each { |listener| listener.on_ensure_node_leave(node) }
     end
 
+    #: (ErrorRecoveryNode node) -> void
+    def visit_error_recovery_node(node) # :nodoc:
+      listeners[:on_error_recovery_node_enter]&.each { |listener| listener.on_error_recovery_node_enter(node) }
+      super
+      listeners[:on_error_recovery_node_leave]&.each { |listener| listener.on_error_recovery_node_leave(node) }
+    end
+
     #: (FalseNode node) -> void
     def visit_false_node(node) # :nodoc:
       listeners[:on_false_node_enter]&.each { |listener| listener.on_false_node_enter(node) }
@@ -801,13 +808,6 @@ module Prism
       listeners[:on_match_write_node_enter]&.each { |listener| listener.on_match_write_node_enter(node) }
       super
       listeners[:on_match_write_node_leave]&.each { |listener| listener.on_match_write_node_leave(node) }
-    end
-
-    #: (MissingNode node) -> void
-    def visit_missing_node(node) # :nodoc:
-      listeners[:on_missing_node_enter]&.each { |listener| listener.on_missing_node_enter(node) }
-      super
-      listeners[:on_missing_node_leave]&.each { |listener| listener.on_missing_node_leave(node) }
     end
 
     #: (ModuleNode node) -> void
@@ -1561,6 +1561,14 @@ module Prism
         listeners[:on_ensure_node_leave]&.each { |listener| listener.on_ensure_node_leave(node) }
       end
 
+      # Dispatch enter and leave events for ErrorRecoveryNode nodes.
+      #--
+      #: (ErrorRecoveryNode node) -> void
+      def visit_error_recovery_node(node)
+        listeners[:on_error_recovery_node_enter]&.each { |listener| listener.on_error_recovery_node_enter(node) }
+        listeners[:on_error_recovery_node_leave]&.each { |listener| listener.on_error_recovery_node_leave(node) }
+      end
+
       # Dispatch enter and leave events for FalseNode nodes.
       #--
       #: (FalseNode node) -> void
@@ -1975,14 +1983,6 @@ module Prism
       def visit_match_write_node(node)
         listeners[:on_match_write_node_enter]&.each { |listener| listener.on_match_write_node_enter(node) }
         listeners[:on_match_write_node_leave]&.each { |listener| listener.on_match_write_node_leave(node) }
-      end
-
-      # Dispatch enter and leave events for MissingNode nodes.
-      #--
-      #: (MissingNode node) -> void
-      def visit_missing_node(node)
-        listeners[:on_missing_node_enter]&.each { |listener| listener.on_missing_node_enter(node) }
-        listeners[:on_missing_node_leave]&.each { |listener| listener.on_missing_node_leave(node) }
       end
 
       # Dispatch enter and leave events for ModuleNode nodes.

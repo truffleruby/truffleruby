@@ -16,7 +16,7 @@ module Prism
   # The DSL module provides a set of methods that can be used to create prism
   # nodes in a more concise manner. For example, instead of writing:
   #
-  #     source = Prism::Source.for("[1]", 1, [])
+  #     source = Prism::Source.for("[1]", 1, [0])
   #
   #     Prism::ArrayNode.new(
   #       source,
@@ -73,7 +73,7 @@ module Prism
     #--
     #: (String string) -> Source
     def source(string)
-      Source.for(string, 1, [])
+      Source.for(string, 1, build_offsets(string))
     end
 
     # Create a new Location object.
@@ -85,14 +85,14 @@ module Prism
 
     # Create a new AliasGlobalVariableNode node.
     #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?new_name: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode), ?old_name: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode | SymbolNode | MissingNode), ?keyword_loc: Location) -> AliasGlobalVariableNode
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?new_name: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode), ?old_name: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode), ?keyword_loc: Location) -> AliasGlobalVariableNode
     def alias_global_variable_node(source: default_source, node_id: 0, location: default_location, flags: 0, new_name: global_variable_read_node(source: source), old_name: global_variable_read_node(source: source), keyword_loc: location)
       AliasGlobalVariableNode.new(source, node_id, location, flags, new_name, old_name, keyword_loc)
     end
 
     # Create a new AliasMethodNode node.
     #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?new_name: (SymbolNode | InterpolatedSymbolNode), ?old_name: (SymbolNode | InterpolatedSymbolNode | GlobalVariableReadNode | MissingNode), ?keyword_loc: Location) -> AliasMethodNode
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?new_name: (SymbolNode | InterpolatedSymbolNode), ?old_name: (SymbolNode | InterpolatedSymbolNode), ?keyword_loc: Location) -> AliasMethodNode
     def alias_method_node(source: default_source, node_id: 0, location: default_location, flags: 0, new_name: symbol_node(source: source), old_name: symbol_node(source: source), keyword_loc: location)
       AliasMethodNode.new(source, node_id, location, flags, new_name, old_name, keyword_loc)
     end
@@ -260,7 +260,7 @@ module Prism
 
     # Create a new ClassNode node.
     #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?locals: Array[Symbol], ?class_keyword_loc: Location, ?constant_path: (ConstantReadNode | ConstantPathNode | CallNode), ?inheritance_operator_loc: Location?, ?superclass: Prism::node?, ?body: (StatementsNode | BeginNode)?, ?end_keyword_loc: Location, ?name: Symbol) -> ClassNode
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?locals: Array[Symbol], ?class_keyword_loc: Location, ?constant_path: (ConstantReadNode | ConstantPathNode), ?inheritance_operator_loc: Location?, ?superclass: Prism::node?, ?body: (StatementsNode | BeginNode)?, ?end_keyword_loc: Location, ?name: Symbol) -> ClassNode
     def class_node(source: default_source, node_id: 0, location: default_location, flags: 0, locals: [], class_keyword_loc: location, constant_path: constant_read_node(source: source), inheritance_operator_loc: nil, superclass: nil, body: nil, end_keyword_loc: location, name: :"")
       ClassNode.new(source, node_id, location, flags, locals, class_keyword_loc, constant_path, inheritance_operator_loc, superclass, body, end_keyword_loc, name)
     end
@@ -433,6 +433,13 @@ module Prism
       EnsureNode.new(source, node_id, location, flags, ensure_keyword_loc, statements, end_keyword_loc)
     end
 
+    # Create a new ErrorRecoveryNode node.
+    #--
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?unexpected: Prism::node?) -> ErrorRecoveryNode
+    def error_recovery_node(source: default_source, node_id: 0, location: default_location, flags: 0, unexpected: nil)
+      ErrorRecoveryNode.new(source, node_id, location, flags, unexpected)
+    end
+
     # Create a new FalseNode node.
     #--
     #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer) -> FalseNode
@@ -442,7 +449,7 @@ module Prism
 
     # Create a new FindPatternNode node.
     #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?constant: (ConstantPathNode | ConstantReadNode)?, ?left: SplatNode, ?requireds: Array[Prism::node], ?right: (SplatNode | MissingNode), ?opening_loc: Location?, ?closing_loc: Location?) -> FindPatternNode
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?constant: (ConstantPathNode | ConstantReadNode)?, ?left: SplatNode, ?requireds: Array[Prism::node], ?right: SplatNode, ?opening_loc: Location?, ?closing_loc: Location?) -> FindPatternNode
     def find_pattern_node(source: default_source, node_id: 0, location: default_location, flags: 0, constant: nil, left: splat_node(source: source), requireds: [], right: splat_node(source: source), opening_loc: nil, closing_loc: nil)
       FindPatternNode.new(source, node_id, location, flags, constant, left, requireds, right, opening_loc, closing_loc)
     end
@@ -463,7 +470,7 @@ module Prism
 
     # Create a new ForNode node.
     #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?index: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | BackReferenceReadNode | NumberedReferenceReadNode | MissingNode), ?collection: Prism::node, ?statements: StatementsNode?, ?for_keyword_loc: Location, ?in_keyword_loc: Location, ?do_keyword_loc: Location?, ?end_keyword_loc: Location) -> ForNode
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?index: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode), ?collection: Prism::node, ?statements: StatementsNode?, ?for_keyword_loc: Location, ?in_keyword_loc: Location, ?do_keyword_loc: Location?, ?end_keyword_loc: Location) -> ForNode
     def for_node(source: default_source, node_id: 0, location: default_location, flags: 0, index: local_variable_target_node(source: source), collection: default_node(source, location), statements: nil, for_keyword_loc: location, in_keyword_loc: location, do_keyword_loc: nil, end_keyword_loc: location)
       ForNode.new(source, node_id, location, flags, index, collection, statements, for_keyword_loc, in_keyword_loc, do_keyword_loc, end_keyword_loc)
     end
@@ -484,9 +491,9 @@ module Prism
 
     # Create a new ForwardingSuperNode node.
     #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?block: BlockNode?) -> ForwardingSuperNode
-    def forwarding_super_node(source: default_source, node_id: 0, location: default_location, flags: 0, block: nil)
-      ForwardingSuperNode.new(source, node_id, location, flags, block)
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?keyword_loc: Location, ?block: BlockNode?) -> ForwardingSuperNode
+    def forwarding_super_node(source: default_source, node_id: 0, location: default_location, flags: 0, keyword_loc: location, block: nil)
+      ForwardingSuperNode.new(source, node_id, location, flags, keyword_loc, block)
     end
 
     # Create a new GlobalVariableAndWriteNode node.
@@ -673,7 +680,7 @@ module Prism
 
     # Create a new InterpolatedStringNode node.
     #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?opening_loc: Location?, ?parts: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode | InterpolatedStringNode | XStringNode | InterpolatedXStringNode | SymbolNode | InterpolatedSymbolNode], ?closing_loc: Location?) -> InterpolatedStringNode
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?opening_loc: Location?, ?parts: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode | InterpolatedStringNode], ?closing_loc: Location?) -> InterpolatedStringNode
     def interpolated_string_node(source: default_source, node_id: 0, location: default_location, flags: 0, opening_loc: nil, parts: [], closing_loc: nil)
       InterpolatedStringNode.new(source, node_id, location, flags, opening_loc, parts, closing_loc)
     end
@@ -797,30 +804,23 @@ module Prism
       MatchWriteNode.new(source, node_id, location, flags, call, targets)
     end
 
-    # Create a new MissingNode node.
-    #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer) -> MissingNode
-    def missing_node(source: default_source, node_id: 0, location: default_location, flags: 0)
-      MissingNode.new(source, node_id, location, flags)
-    end
-
     # Create a new ModuleNode node.
     #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?locals: Array[Symbol], ?module_keyword_loc: Location, ?constant_path: (ConstantReadNode | ConstantPathNode | MissingNode), ?body: (StatementsNode | BeginNode)?, ?end_keyword_loc: Location, ?name: Symbol) -> ModuleNode
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?locals: Array[Symbol], ?module_keyword_loc: Location, ?constant_path: (ConstantReadNode | ConstantPathNode), ?body: (StatementsNode | BeginNode)?, ?end_keyword_loc: Location, ?name: Symbol) -> ModuleNode
     def module_node(source: default_source, node_id: 0, location: default_location, flags: 0, locals: [], module_keyword_loc: location, constant_path: constant_read_node(source: source), body: nil, end_keyword_loc: location, name: :"")
       ModuleNode.new(source, node_id, location, flags, locals, module_keyword_loc, constant_path, body, end_keyword_loc, name)
     end
 
     # Create a new MultiTargetNode node.
     #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?lefts: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode | BackReferenceReadNode | NumberedReferenceReadNode], ?rest: (ImplicitRestNode | SplatNode)?, ?rights: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode | BackReferenceReadNode | NumberedReferenceReadNode], ?lparen_loc: Location?, ?rparen_loc: Location?) -> MultiTargetNode
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?lefts: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode], ?rest: (ImplicitRestNode | SplatNode)?, ?rights: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode], ?lparen_loc: Location?, ?rparen_loc: Location?) -> MultiTargetNode
     def multi_target_node(source: default_source, node_id: 0, location: default_location, flags: 0, lefts: [], rest: nil, rights: [], lparen_loc: nil, rparen_loc: nil)
       MultiTargetNode.new(source, node_id, location, flags, lefts, rest, rights, lparen_loc, rparen_loc)
     end
 
     # Create a new MultiWriteNode node.
     #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?lefts: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | BackReferenceReadNode | NumberedReferenceReadNode], ?rest: (ImplicitRestNode | SplatNode)?, ?rights: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | BackReferenceReadNode | NumberedReferenceReadNode], ?lparen_loc: Location?, ?rparen_loc: Location?, ?operator_loc: Location, ?value: Prism::node) -> MultiWriteNode
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?lefts: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode], ?rest: (ImplicitRestNode | SplatNode)?, ?rights: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode], ?lparen_loc: Location?, ?rparen_loc: Location?, ?operator_loc: Location, ?value: Prism::node) -> MultiWriteNode
     def multi_write_node(source: default_source, node_id: 0, location: default_location, flags: 0, lefts: [], rest: nil, rights: [], lparen_loc: nil, rparen_loc: nil, operator_loc: location, value: default_node(source, location))
       MultiWriteNode.new(source, node_id, location, flags, lefts, rest, rights, lparen_loc, rparen_loc, operator_loc, value)
     end
@@ -890,7 +890,7 @@ module Prism
 
     # Create a new ParametersNode node.
     #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?requireds: Array[RequiredParameterNode | MultiTargetNode], ?optionals: Array[OptionalParameterNode], ?rest: (RestParameterNode | ImplicitRestNode)?, ?posts: Array[RequiredParameterNode | MultiTargetNode | KeywordRestParameterNode | NoKeywordsParameterNode | ForwardingParameterNode | BlockParameterNode | NoBlockParameterNode], ?keywords: Array[RequiredKeywordParameterNode | OptionalKeywordParameterNode], ?keyword_rest: (KeywordRestParameterNode | ForwardingParameterNode | NoKeywordsParameterNode)?, ?block: (BlockParameterNode | NoBlockParameterNode)?) -> ParametersNode
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?requireds: Array[RequiredParameterNode | MultiTargetNode], ?optionals: Array[OptionalParameterNode], ?rest: (RestParameterNode | ImplicitRestNode)?, ?posts: Array[RequiredParameterNode | MultiTargetNode], ?keywords: Array[RequiredKeywordParameterNode | OptionalKeywordParameterNode], ?keyword_rest: (KeywordRestParameterNode | ForwardingParameterNode | NoKeywordsParameterNode)?, ?block: (BlockParameterNode | NoBlockParameterNode)?) -> ParametersNode
     def parameters_node(source: default_source, node_id: 0, location: default_location, flags: 0, requireds: [], optionals: [], rest: nil, posts: [], keywords: [], keyword_rest: nil, block: nil)
       ParametersNode.new(source, node_id, location, flags, requireds, optionals, rest, posts, keywords, keyword_rest, block)
     end
@@ -911,7 +911,7 @@ module Prism
 
     # Create a new PinnedVariableNode node.
     #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?variable: (LocalVariableReadNode | InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode | ItLocalVariableReadNode | MissingNode), ?operator_loc: Location) -> PinnedVariableNode
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?variable: (LocalVariableReadNode | InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode | ItLocalVariableReadNode), ?operator_loc: Location) -> PinnedVariableNode
     def pinned_variable_node(source: default_source, node_id: 0, location: default_location, flags: 0, variable: local_variable_read_node(source: source), operator_loc: location)
       PinnedVariableNode.new(source, node_id, location, flags, variable, operator_loc)
     end
@@ -988,7 +988,7 @@ module Prism
 
     # Create a new RescueNode node.
     #--
-    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?keyword_loc: Location, ?exceptions: Array[Prism::node], ?operator_loc: Location?, ?reference: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | BackReferenceReadNode | NumberedReferenceReadNode | MissingNode)?, ?then_keyword_loc: Location?, ?statements: StatementsNode?, ?subsequent: RescueNode?) -> RescueNode
+    #: (?source: Source, ?node_id: Integer, ?location: Location, ?flags: Integer, ?keyword_loc: Location, ?exceptions: Array[Prism::node], ?operator_loc: Location?, ?reference: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode)?, ?then_keyword_loc: Location?, ?statements: StatementsNode?, ?subsequent: RescueNode?) -> RescueNode
     def rescue_node(source: default_source, node_id: 0, location: default_location, flags: 0, keyword_loc: location, exceptions: [], operator_loc: nil, reference: nil, then_keyword_loc: nil, statements: nil, subsequent: nil)
       RescueNode.new(source, node_id, location, flags, keyword_loc, exceptions, operator_loc, reference, then_keyword_loc, statements, subsequent)
     end
@@ -1333,7 +1333,7 @@ module Prism
     #--
     #: () -> Source
     def default_source
-      Source.for("", 1, [])
+      Source.for("", 1, [0])
     end
 
     # The default location object that gets attached to nodes if no location is
@@ -1349,7 +1349,21 @@ module Prism
     #--
     #: (Source source, Location location) -> node
     def default_node(source, location)
-      MissingNode.new(source, -1, location, 0)
+      ErrorRecoveryNode.new(source, -1, location, 0, nil)
+    end
+
+    private
+
+    # Build the newline byte offset array for the given source string.
+    #--
+    #: (String source) -> Array[Integer]
+    def build_offsets(source)
+      offsets = [0]
+      start = 0
+      while (index = source.byteindex("\n", start))
+        offsets << (start = index + 1)
+      end
+      offsets
     end
   end
 end
