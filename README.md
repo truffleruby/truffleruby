@@ -200,3 +200,10 @@ For further licensing information, see [LICENCE](LICENCE.md), [3rd_party_license
 ## Attribution
 
 TruffleRuby includes infrastructure code from [JRuby](https://github.com/jruby/jruby) (e.g. JCodings, Joni), core library code from the [Rubinius](https://github.com/rubinius/rubinius) project, as well as code from the standard implementation of Ruby, [MRI](https://github.com/ruby/ruby).
+
+## Credits
+
+We are thankful for JetBrains providing the TruffleRuby core maintainers an All Products Pack subscription.
+We use IntelliJ and the Ruby plugin for a great integrated experience developing TruffleRuby.
+
+[![JetBrains logo.](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)](https://jb.gg/OpenSource)
