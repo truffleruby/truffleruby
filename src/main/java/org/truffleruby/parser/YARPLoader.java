@@ -69,8 +69,8 @@ public final class YARPLoader extends Loader {
     }
 
     @Override
-    public String bytesToName(byte[] bytes) {
-        return TStringUtils.bytesToJavaStringOrThrow(bytes, 0, bytes.length, encoding);
+    public String bytesToName(byte[] serialized, int offset, int length) {
+        return TStringUtils.bytesToJavaStringOrThrow(serialized, offset, length, encoding);
     }
 
     @Override
