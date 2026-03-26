@@ -1482,8 +1482,6 @@ rbimpl_exc_new_cstr(VALUE exc, const char *str)
     return rb_exc_new(exc, str, len);
 }
 
-#ifndef TRUFFLERUBY
-
 /**
  * Allocates an instance of ::rb_cString.
  *
@@ -1673,8 +1671,6 @@ rbimpl_exc_new_cstr(VALUE exc, const char *str)
     ((RBIMPL_CONSTANT_P(str) ?                  \
       rbimpl_exc_new_cstr    :                  \
       rb_exc_new_cstr) ((exc), (str)))
-
-#endif // TRUFFLERUBY
 
 #define rb_str_new2 rb_str_new_cstr                  /**< @old{rb_str_new_cstr} */
 #define rb_str_new3 rb_str_new_shared                /**< @old{rb_str_new_shared} */

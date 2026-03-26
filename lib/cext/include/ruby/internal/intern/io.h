@@ -36,8 +36,6 @@ RBIMPL_SYMBOL_EXPORT_BEGIN()
  */
 #define rb_defout rb_stdout
 
-#ifndef TRUFFLERUBY
-
 /* string.c */ /* ...why? moved in commit de7161526014b781468cea5d84411e23be */
 
 /**
@@ -93,8 +91,6 @@ RUBY_EXTERN VALUE rb_default_rs;
  *             deprecated.
  */
 RUBY_EXTERN VALUE rb_output_rs;
-
-#endif // TRUFFLERUBY
 
 /**
  * Writes the given string to the given IO.

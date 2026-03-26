@@ -3,11 +3,9 @@ require 'test/unit'
 
 module TestRipper; end
 class TestRipper::Generic < Test::Unit::TestCase
-  # TruffleRuby: Changed from MRI to reflect the different relative path of the test suite.
-  SRCDIR = File.expand_path("../../../../..", __FILE__)
+  SRCDIR = File.expand_path("../../..", __FILE__)
 
   def assert_parse_files(dir, pattern = "**/*.rb", exclude: nil, gc_stress: GC.stress, test_ratio: nil)
-    omit 'assert_parse_files is quite slow and causes transients due to testing a random subset' if defined?(::TruffleRuby)
     test_ratio ||= ENV["TEST_RIPPER_RATIO"]&.tap {|s|break s.to_f} || 0.05 # testing all files needs too long time...
     assert_separately(%W[-rripper - #{SRCDIR}/#{dir} #{pattern}],
                       __FILE__, __LINE__, "#{<<-"begin;"}\n#{<<-'end;'}", timeout: Float::INFINITY)

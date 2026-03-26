@@ -36,6 +36,7 @@ class TestRange < Test::Unit::TestCase
     assert_equal(["a"], ("a" ... "b").to_a)
     assert_equal(["a", "b"], ("a" .. "b").to_a)
     assert_equal([*"a".."z", "aa"], ("a"..).take(27))
+    assert_equal([*"a".."z"], eval("('a' || 'b')..'z'").to_a)
   end
 
   def test_range_numeric_string
@@ -1460,7 +1461,7 @@ class TestRange < Test::Unit::TestCase
     assert_equal 41, (1...42).count
     assert_equal 0, (42..1).count
     assert_equal 0, (42...1).count
-    # assert_equal 2**100, (1..2**100).count # TruffleRuby: it's too slow
+    assert_equal 2**100, (1..2**100).count
     assert_equal 6, (1...6.3).count
     assert_equal 4, ('a'..'d').count
     assert_equal 3, ('a'...'d').count

@@ -17,12 +17,7 @@ begin
   require_relative '../../lib/helper'
 rescue LoadError
 end
-
-if defined?(::TruffleRuby)
-  require 'rdoc'
-else
-  require_relative '../../../lib/rdoc'
-end
+require_relative '../../../lib/rdoc'
 
 ##
 # RDoc::TestCase is an abstract TestCase to provide common setup and teardown

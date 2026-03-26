@@ -243,14 +243,14 @@ assert_equal '1', %q{
   end
   undef :"foo#{:bar}"
   1
-}, '[ruby-dev:32308]', tagged: true
+}, '[ruby-dev:32308]'
 assert_equal '1', %q{
   def foobar
     1
   end
   alias :"bar#{:baz}" :"foo#{:bar}"
   barbaz
-}, '[ruby-dev:32308]', tagged: true
+}, '[ruby-dev:32308]'
 
 # private
 assert_equal '1',       %q( class C
@@ -354,7 +354,7 @@ assert_equal '[:ok1, [:ok2, 11]]', %q{
   $ary = []
   C.new[]+=1
   $ary
-}, tagged: true
+}
 
 # splat and block arguments
 assert_equal %q{[[[:x, :y, :z], NilClass], [[1, :x, :y, :z], NilClass], [[1, 2, :x, :y, :z], NilClass], [[:obj], NilClass], [[1, :obj], NilClass], [[1, 2, :obj], NilClass], [[], Proc], [[1], Proc], [[1, 2], Proc], [[], Proc], [[1], Proc], [[1, 2], Proc], [[:x, :y, :z], Proc], [[1, :x, :y, :z], Proc], [[1, 2, :x, :y, :z], Proc]]}, %q{
@@ -657,17 +657,17 @@ tests.each{|setup, methods| setup = setup.dup; setup.strip!
 assert_equal %q{[:C0_m, [1, 2, :o1, :o2, 3, 4]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, p1, p2); super; end; end
-; C1.new.m(1,2,3,4)}, tagged: true
+; C1.new.m(1,2,3,4)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, :o2, 4, 5]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5)}, tagged: true
+; C1.new.m(1,2,3,4,5)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6)}, tagged: true
+; C1.new.m(1,2,3,4,5,6)}
 
 assert_equal %q{[:C0_m, [1, :o]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
@@ -698,27 +698,27 @@ class C1 < C0; def m a
 assert_equal %q{[:C0_m, [1, 2, 3, 4]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4)}, tagged: true
+; C1.new.m(1,2,3,4)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5)}, tagged: true
+; C1.new.m(1,2,3,4,5)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6)}, tagged: true
+; C1.new.m(1,2,3,4,5,6)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6, 7]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6,7)}, tagged: true
+; C1.new.m(1,2,3,4,5,6,7)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6, 7, 8]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6,7,8)}, tagged: true
+; C1.new.m(1,2,3,4,5,6,7,8)}
 
 assert_equal %q{[:C0_m, [1, :o]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
@@ -810,32 +810,32 @@ class C1 < C0; def m a, *r
 assert_equal %q{[:C0_m, [1, 2, :o1, :o2, 3, 4]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4)}, tagged: true
+; C1.new.m(1,2,3,4)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, :o2, 4, 5]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5)}, tagged: true
+; C1.new.m(1,2,3,4,5)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6)}, tagged: true
+; C1.new.m(1,2,3,4,5,6)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6, 7]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6,7)}, tagged: true
+; C1.new.m(1,2,3,4,5,6,7)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6, 7, 8]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6,7,8)}, tagged: true
+; C1.new.m(1,2,3,4,5,6,7,8)}
 
 assert_equal %q{[:C0_m, [1, 2, 3, 4, 5, 6, 7, 8, 9]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
 class C1 < C0; def m(m1, m2, o1=:o1, o2=:o2, *r, p1, p2); super; end; end
-; C1.new.m(1,2,3,4,5,6,7,8,9)}, tagged: true
+; C1.new.m(1,2,3,4,5,6,7,8,9)}
 
 assert_equal %q{[:C0_m, [1]]}, %q{
 class C0; def m *args; [:C0_m, args]; end; end
@@ -888,7 +888,7 @@ assert_equal 'ok', %q{
     end
   }.call
   C.new.m
-}, '[ruby-core:11998]', tagged: true
+}, '[ruby-core:11998]'
 
 assert_equal 'ok', %q{
   class B
@@ -906,7 +906,7 @@ assert_equal 'ok', %q{
   rescue NameError
     :ok
   end
-}, '[ruby-dev:31816], [ruby-dev:31817]', tagged: true
+}, '[ruby-dev:31816], [ruby-dev:31817]'
 
 assert_normal_exit %q{
   begin
@@ -970,7 +970,7 @@ assert_equal '[false, false, false, false, true, true]', %q{
   D.new.foo
   D.new.bar{}
   [C.new.foo, C.new.foo{}, D.new.m1, D.new.m1{}, D.new.m2, D.new.m2{}]
-}, '[ruby-core:14813]', tagged: true
+}, '[ruby-core:14813]'
 
 assert_equal 'ok', %q{
   class Foo
@@ -1166,7 +1166,7 @@ assert_equal 'DC', %q{
   end
   test2 o1, [], block
   $result.join
-}, tagged: true
+}
 
 assert_equal 'ok', %q{
   def foo
@@ -1419,3 +1419,18 @@ assert_equal 'ok', %q{
     "ok"
   end
 }
+
+assert_equal '[1, 2, 3]', %q{
+  def target(*args) = args
+  def x = [1]
+  def forwarder(...) = target(*x, 2, ...)
+  forwarder(3).inspect
+}, '[Bug #21832] post-splat args before forwarding'
+
+assert_equal 'ok', <<~RUBY
+  def test(*, kw: false)
+    "ok"
+  end
+
+  test
+RUBY

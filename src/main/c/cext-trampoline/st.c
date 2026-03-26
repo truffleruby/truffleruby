@@ -1,11 +1,3 @@
-// START: TruffleRuby
-// Needed by lib/cext/include/ruby/st.h
-#include <ruby.h>
-
-RBIMPL_WARNING_IGNORED(-Wunused-function)
-RBIMPL_WARNING_IGNORED(-Wattributes)
-// END: TruffleRuby
-
 /* This is a public domain general purpose hash table package
    originally written by Peter Moore @ UCB.
 
@@ -116,15 +108,10 @@ RBIMPL_WARNING_IGNORED(-Wattributes)
 #include "internal.h"
 #include "internal/bits.h"
 #include "internal/hash.h"
-#ifndef TRUFFLERUBY
 #include "internal/sanitizers.h"
-#endif
 #include "internal/st.h"
 #include "ruby_assert.h"
 #endif
-
-// Needed here for TruffleRuby.
-#include "internal/bits.h"
 
 #include <stdio.h>
 #ifdef HAVE_STDLIB_H
@@ -2130,7 +2117,7 @@ st_numhash(st_data_t n)
     return (st_index_t)((n>>s1|(n<<s2)) ^ (n>>s2));
 }
 
-#ifndef TRUFFLERUBY
+#ifdef RUBY
 /* Expand TAB to be suitable for holding SIZ entries in total.
    Pre-existing entries remain not deleted inside of TAB, but its bins
    are cleared to expect future reconstruction. See rehash below. */
@@ -2368,4 +2355,4 @@ rb_st_compact_table(st_table *tab)
     }
 }
 
-#endif /* TRUFFLERUBY */
+#endif

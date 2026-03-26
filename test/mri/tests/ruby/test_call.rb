@@ -1,6 +1,6 @@
 # frozen_string_literal: false
 require 'test/unit'
-# require '-test-/iter'
+require '-test-/iter'
 
 class TestCall < Test::Unit::TestCase
   # These dummy method definitions prevent warnings "the block passed to 'a'..."
@@ -372,6 +372,35 @@ class TestCall < Test::Unit::TestCase
     o.foo(*a, :x, **b)
 
     assert_equal({splat_modified: false}, b)
+  end
+
+  def test_anon_splat_mutated_bug_21757
+    args = [1, 2]
+    kw = {bug: true}
+
+    def self.m(*); end
+    m(*args, bug: true)
+    assert_equal(2, args.length)
+
+    proc = ->(*) { }
+    proc.(*args, bug: true)
+    assert_equal(2, args.length)
+
+    def self.m2(*); end
+    m2(*args, **kw)
+    assert_equal(2, args.length)
+
+    proc = ->(*) { }
+    proc.(*args, **kw)
+    assert_equal(2, args.length)
+
+    def self.m3(*, **nil); end
+    assert_raise(ArgumentError) { m3(*args, bug: true) }
+    assert_equal(2, args.length)
+
+    proc = ->(*, **nil) { }
+    assert_raise(ArgumentError) { proc.(*args, bug: true) }
+    assert_equal(2, args.length)
   end
 
   def test_kwsplat_block_eval_order

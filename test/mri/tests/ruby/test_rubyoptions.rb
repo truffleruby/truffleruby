@@ -573,6 +573,8 @@ class TestRubyOptions < Test::Unit::TestCase
 
     assert_in_out_err(%w(- -#=foo), "#!ruby -s\n", [],
                       /invalid name for global variable - -# \(NameError\)/)
+
+    assert_in_out_err(['-s', '-e', 'GC.start; p $DEBUG', '--', '-DEBUG=x'], "", ['"x"'])
   end
 
   def test_option_missing_argument
@@ -983,6 +985,27 @@ class TestRubyOptions < Test::Unit::TestCase
     end
     assert_crash_report("| #{echo} %e:%f:%p") do |stdin, stdout, status|
       assert_equal(["#{File.basename(EnvUtil.rubybin)}:-e:#{status.pid}"], stdin)
+    end
+  end
+
+  def test_crash_report_pipe_script
+    omit "only runs on Linux" unless RUBY_PLATFORM.include?("linux")
+
+    Tempfile.create(["script", ".sh"]) do |script|
+      Tempfile.create("crash_report") do |crash_report|
+        script.write(<<~BASH)
+          #!/usr/bin/env bash
+
+          cat > #{crash_report.path}
+        BASH
+        script.close
+
+        FileUtils.chmod("+x", script)
+
+        assert_crash_report("| #{script.path}") do
+          assert_include(File.read(crash_report.path), "[BUG] Segmentation fault at")
+        end
+      end
     end
   end
 

@@ -13,24 +13,7 @@
 
 require "mkmf"
 
-if defined?(::TruffleRuby)
-  # Statically-link libssl & libcrypto, and do not export any of their symbols.
-  # That way, if some other extension/library loads libssl there won't be any conflict.
-  # Keep in sync with psych/extconf.rb
-  repository = Truffle::System.get_java_property 'truffleruby.repository'
-  ssl_dirs = dir_config("openssl", "#{repository}/src/main/c/libssl")
-  # Since we link statically we have to set the dependencies here
-  $CFLAGS << " -pthread"
-  $LDFLAGS << " -pthread"
-  if Truffle::Platform.linux?
-    # -Wl,--exclude-libs,ALL also works but let's be consistent with the approach on macOS
-    LINK_SO << " '-Wl,--version-script=#{__dir__}/exports.map'"
-  else
-    LINK_SO << " '-Wl,-exported_symbols_list,#{__dir__}/exports.txt' -Wl,-dead_strip"
-  end
-else
-  ssl_dirs = dir_config("openssl")
-end
+ssl_dirs = dir_config("openssl")
 dir_config_given = ssl_dirs.any?
 
 _, ssl_ldir = ssl_dirs
@@ -57,7 +40,7 @@ Logging::message "=== OpenSSL for Ruby configurator ===\n"
 
 $defs.push("-D""OPENSSL_SUPPRESS_DEPRECATED")
 
-have_func("rb_io_descriptor", "ruby/io.h")
+have_func("rb_io_descriptor")
 have_func("rb_io_maybe_wait(0, Qnil, Qnil, Qnil)", "ruby/io.h") # Ruby 3.1
 have_func("rb_io_timeout", "ruby/io.h")
 
@@ -134,14 +117,6 @@ if !pkg_config_found && !find_openssl_library
     "--with-openssl-dir=<dir> option to specify the prefix where OpenSSL " \
     "is installed."
 end
-
-# TruffleRuby: do not perform all checks again if extconf.h already exists
-extconf_h = "#{__dir__}/extconf.h"
-in_development = ENV.key?('MX_HOME')
-if in_development && File.exist?(extconf_h) && File.mtime(extconf_h) >= File.mtime(__FILE__)
-  $extconf_h = extconf_h
-else
-### START of checks
 
 version_ok = if have_macro("LIBRESSL_VERSION_NUMBER", "openssl/opensslv.h")
   is_libressl = true
@@ -242,9 +217,5 @@ extldflags = ENV["RUBY_OPENSSL_EXTLDFLAGS"]
 append_ldflags(extldflags.split) if extldflags
 
 create_header
-
-### END of checks
-end
-
 create_makefile("openssl")
 Logging::message "Done.\n"

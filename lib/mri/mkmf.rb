@@ -7,47 +7,6 @@ require 'rbconfig'
 require 'fileutils'
 require 'shellwords'
 
-if defined?(::TruffleRuby)
-  # Set RbConfig::CONFIG['COMPILE_C'] and 'COMPILE_CXX' to call the preprocessor only when needed.
-  # This avoids the cost of an extra process just for patching C files when most C files don't need patching.
-  # 'COMPILE_C' and 'COMPILE_CXX' are not defined in rbconfig.rb in MRI, so it is OK to define them only here.
-  require 'truffle/cext_preprocessor'
-
-  # We use -I$(<D) (the directory portion of the prerequisite - i.e. the
-  # C or C++ file) to add the file's path as the first entry on the
-  # include path. This is to ensure that files from the source file's
-  # directory are included in preference to others on the include path,
-  # and is required because we are actually piping the file into the
-  # compiler which disables this standard behaviour of the C preprocessor.
-  begin
-    cext_dir = "#{RbConfig::CONFIG['libdir']}/cext"
-
-    with_conditional_preprocessing = proc do |command1, command2|
-      Truffle::CExt::Preprocessor.makefile_matcher(command1, command2)
-    end
-
-    for_file = proc do |compiler, flags|
-      "#{compiler} #{flags} $(CSRCFLAG)$<"
-    end
-
-    for_pipe = proc do |compiler, flags|
-      language_flag = '$(CXX)' == compiler ? '-xc++' : '-xc'
-      "#{RbConfig.ruby} #{cext_dir}/preprocess.rb $< #{flags} | #{compiler} -I$(<D) #{flags} #{language_flag} -"
-    end
-
-    c_flags = '$(INCFLAGS) $(CPPFLAGS) $(CFLAGS) $(COUTFLAG)$@ -c'
-    cxx_flags = '$(INCFLAGS) $(CPPFLAGS) $(CXXFLAGS) $(COUTFLAG)$@ -c'
-
-    RbConfig::MAKEFILE_CONFIG['COMPILE_C'] = with_conditional_preprocessing.call(
-        for_pipe.call('$(CC)', c_flags),
-        for_file.call('$(CC)', c_flags))
-
-    RbConfig::MAKEFILE_CONFIG['COMPILE_CXX'] = with_conditional_preprocessing.call(
-        for_pipe.call('$(CXX)', cxx_flags),
-        for_file.call('$(CXX)', cxx_flags))
-  end
-end
-
 class String # :nodoc:
   # Wraps a string in escaped quotes if it contains whitespace.
   def quote
@@ -272,49 +231,30 @@ module MakeMakefile
     map.inject(dir) {|d, (orig, new)| d.gsub(orig, new)}
   end
 
-  if defined?(::TruffleRuby)
-    $extmk = Truffle::Boot.get_option('building-core-cexts') || ENV.key?('MKMF_SET_EXTMK_TO_TRUE')
-    topdir = RbConfig::CONFIG['prefix'] # the TruffleRuby home
-    $hdrdir = RbConfig::CONFIG["rubyhdrdir"] # lib/cext/include
-    $arch_hdrdir = RbConfig::CONFIG["rubyarchhdrdir"] # lib/cext/include
-
-    unless File.exist?("#{$hdrdir}/ruby/ruby.h")
-      abort "mkmf.rb can't find header files for ruby at #{$hdrdir}/ruby/ruby.h"
+  topdir = File.dirname(File.dirname(__FILE__))
+  path = File.expand_path($0)
+  until (dir = File.dirname(path)) == path
+    if File.identical?(dir, topdir)
+      $extmk = true if %r"\A(?:ext|enc|tool|test)\z" =~ File.basename(path)
+      break
     end
-
-    if not $extmk
-      $topdir = $hdrdir # lib/cext/include
-      $top_srcdir = $hdrdir # lib/cext/include
-    else
-      $top_srcdir ||= topdir + "/lib/cext/include/stubs" # lib/cext/include/stubs
-      $topdir ||= RbConfig::CONFIG["topdir"] # lib/mri
-    end
+    path = dir
+  end
+  $extmk ||= false
+  if not $extmk and File.exist?(($hdrdir = RbConfig::CONFIG["rubyhdrdir"]) + "/ruby/ruby.h")
+    $topdir = $hdrdir
+    $top_srcdir = $hdrdir
+    $arch_hdrdir = RbConfig::CONFIG["rubyarchhdrdir"]
+  elsif File.exist?(($hdrdir = ($top_srcdir ||= topdir) + "/include")  + "/ruby.h")
+    $topdir ||= RbConfig::CONFIG["topdir"]
+    $arch_hdrdir = "$(extout)/include/$(arch)"
   else
-    topdir = File.dirname(File.dirname(__FILE__))
-    path = File.expand_path($0)
-    until (dir = File.dirname(path)) == path
-      if File.identical?(dir, topdir)
-        $extmk = true if %r"\A(?:ext|enc|tool|test)\z" =~ File.basename(path)
-        break
-      end
-      path = dir
-    end
-    $extmk ||= false
-    if not $extmk and File.exist?(($hdrdir = RbConfig::CONFIG["rubyhdrdir"]) + "/ruby/ruby.h")
-      $topdir = $hdrdir
-      $top_srcdir = $hdrdir
-      $arch_hdrdir = RbConfig::CONFIG["rubyarchhdrdir"]
-    elsif File.exist?(($hdrdir = ($top_srcdir ||= topdir) + "/include")  + "/ruby.h")
-      $topdir ||= RbConfig::CONFIG["topdir"]
-      $arch_hdrdir = "$(extout)/include/$(arch)"
-    else
-      abort <<MESSAGE
+    abort <<MESSAGE
 mkmf.rb can't find header files for ruby at #{$hdrdir}/ruby.h
 
 You might have to install separate package for the ruby development
 environment, ruby-dev or ruby-devel for example.
 MESSAGE
-    end
   end
 
   CONFTEST = "conftest".freeze
@@ -421,15 +361,6 @@ MESSAGE
       end
     end
 
-    if defined?(::TruffleRuby)
-      def self::read_log
-        return 'no log file' unless @logfile
-        log_close
-        return 'log file does not exist' unless File.exist?(@logfile)
-        "\nContents of #{@logfile}:\n#{File.binread(@logfile)}"
-      end
-    end
-
     def self::postpone
       tmplog = "mkmftmp#{@postpone += 1}.log"
       open do
@@ -518,13 +449,7 @@ MESSAGE
         end
         result
       else
-        if defined?(::TruffleRuby)
-          result = system(env, *command)
-          puts "Process failed: #{$?.inspect}" unless result
-          result
-        else
-          system(env, *command)
-        end
+        system(env, *command)
       end
     end
   end
@@ -603,7 +528,6 @@ EOM
       raise <<MSG
 The compiler failed to generate an executable file.
 You have to install development tools first.
-#{Logging::read_log if defined?(::TruffleRuby)}
 MSG
     end
     begin
@@ -615,7 +539,7 @@ MSG
   end
 
   def link_config(ldflags, opt="", libpath=$DEFLIBPATH|$LIBPATH)
-    librubyarg = !defined?(::TruffleRuby) && $extmk ? $LIBRUBYARG_STATIC : "$(LIBRUBYARG)"
+    librubyarg = $extmk ? $LIBRUBYARG_STATIC : "$(LIBRUBYARG)"
     conf = RbConfig::CONFIG.merge('hdrdir' => $hdrdir.quote,
                                   'src' => "#{conftest_source}",
                                   'arch_hdrdir' => $arch_hdrdir.quote,
@@ -2396,14 +2320,7 @@ RULES
     unless suffixes.empty?
       depout.unshift(".SUFFIXES: ." + suffixes.uniq.join(" .") + "\n\n")
     end
-    if defined?(::TruffleRuby)
-      # Added dependency on Makefile as we should recompile if the Makefile was re-generated
-      if $extconf_h
-        depout.unshift("$(OBJS): Makefile $(RUBY_EXTCONF_H)\n\n")
-      else
-        depout.unshift("$(OBJS): Makefile\n\n")
-      end
-    else
+    if $extconf_h
       depout.unshift("$(OBJS): $(RUBY_EXTCONF_H)\n\n")
       depout.unshift("$(OBJS): $(hdrdir)/ruby/win32.h\n\n") if $mswin or $mingw
     end
@@ -2769,12 +2686,7 @@ site-install-rb: install-rb
     if File.exist?(depend)
       mfile.print("###\n", *depend_rules(File.read(depend)))
     else
-      if defined?(::TruffleRuby)
-        # Added dependency on Makefile as we should recompile if the Makefile was re-generated
-        mfile.print "$(OBJS): $(HDRS) $(ruby_headers) Makefile\n"
-      else
-        mfile.print "$(OBJS): $(HDRS) $(ruby_headers)\n"
-      end
+      mfile.print "$(OBJS): $(HDRS) $(ruby_headers)\n"
     end
 
     $makefile_created = true
@@ -2825,9 +2737,7 @@ site-install-rb: install-rb
     $LIBRUBYARG = ""
     $LIBRUBYARG_STATIC = config['LIBRUBYARG_STATIC']
     $LIBRUBYARG_SHARED = config['LIBRUBYARG_SHARED']
-    # TruffleRuby: no need to add libdir to rpath of C exts, since we do not link to libtruffleruby (GR-29448)
-    # That way, C extensions do not depend on a specific TruffleRuby build.
-    $DEFLIBPATH = defined?(::TruffleRuby) ? [] : [$extmk ? "$(topdir)" : "$(#{config["libdirname"] || "libdir"})"]
+    $DEFLIBPATH = [$extmk ? "$(topdir)" : "$(#{config["libdirname"] || "libdir"})"]
     $DEFLIBPATH.unshift(".")
     $LIBPATH = []
     $INSTALLFILES = []
@@ -2873,11 +2783,7 @@ MESSAGE
   def mkmf_failed(path)
     unless $makefile_created or File.exist?("Makefile")
       opts = $arg_config.collect {|t, n| "\t#{t}#{n ? "=#{n}" : ""}\n"}
-      if defined?(::TruffleRuby)
-        abort "*** #{path} failed ***\n" + FailedMessage + opts.join + Logging::read_log
-      else
-        abort "*** #{path} failed ***\n" + FailedMessage + opts.join
-      end
+      abort "*** #{path} failed ***\n" + FailedMessage + opts.join
     end
   end
 
@@ -2926,12 +2832,7 @@ MESSAGE
     RbConfig::CONFIG["topdir"] = curdir
   end
   $configure_args["--topdir"] ||= $curdir
-
-  if defined?(::TruffleRuby)
-    $ruby = arg_config("--ruby", ::RbConfig.ruby)
-  else
-    $ruby = arg_config("--ruby", File.join(RbConfig::CONFIG["bindir"], CONFIG["ruby_install_name"]))
-  end
+  $ruby = arg_config("--ruby", File.join(RbConfig::CONFIG["bindir"], CONFIG["ruby_install_name"]))
 
   RbConfig.expand(CONFIG["RUBY_SO_NAME"])
 
@@ -3003,14 +2904,6 @@ MESSAGE
   TRY_LINK = config_string('TRY_LINK') ||
     "$(CC) #{OUTFLAG}#{CONFTEST}#{$EXEEXT} $(INCFLAGS) $(CPPFLAGS) " \
     "$(CFLAGS) $(src) $(LIBPATH) $(LDFLAGS) $(ARCH_FLAG) $(LOCAL_LIBS) $(LIBS)"
-
-  if defined?(::TruffleRuby)
-    # We need to link to libtrufflerubytrampoline for MakeMakefile#try_link to succeed.
-    # The created executable will link against libtrufflerubytrampoline and
-    # might be executed for #try_constant and #try_run so we also need -rpath.
-    libtrufflerubytrampoline_dir = File.dirname(RbConfig::CONFIG['libtrufflerubytrampoline'])
-    TRY_LINK << " -L#{libtrufflerubytrampoline_dir} -Wl,-rpath,#{libtrufflerubytrampoline_dir} -ltrufflerubytrampoline"
-  end
 
   ##
   # Command which will link a shared library
