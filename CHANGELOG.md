@@ -2,7 +2,7 @@
 
 New features:
 
-* Updated to Ruby 3.4.7 (#3883, @nirvdrum, @eregon, @andrykonchin).
+* Updated to Ruby 3.4.9 (#3883, @nirvdrum, @eregon, @andrykonchin).
 
 Bug fixes:
 

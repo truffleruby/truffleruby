@@ -29,7 +29,7 @@
       "net-protocol": "0.2.2",
       "open-uri": "0.5.0",
       "open3": "0.2.1",
-      "openssl": "3.3.0",
+      "openssl": "3.3.1",
       "optparse": "0.6.0",
       "ostruct": "0.6.1",
       "pathname": "0.4.0",
@@ -59,7 +59,7 @@
       "uri": "1.0.4",
       "weakref": "0.1.3",
       "yaml": "0.4.0",
-      "zlib": "3.2.1"
+      "zlib": "3.2.3"
     },
     "bundled": {
       "abbrev": "0.1.2",
@@ -85,7 +85,7 @@
       "rbs": "3.8.0",
       "repl_type_completor": "0.1.9",
       "resolv-replace": "0.1.1",
-      "rexml": "3.4.0",
+      "rexml": "3.4.4",
       "rinda": "0.2.0",
       "rss": "0.3.1",
       "syslog": "0.2.0",
