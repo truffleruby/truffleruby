@@ -16,12 +16,14 @@
 #ifndef PRISM_AST_H
 #define PRISM_AST_H
 
-#include "prism/defines.h"
-#include "prism/util/pm_constant_pool.h"
-#include "prism/util/pm_integer.h"
-#include "prism/util/pm_string.h"
+#include "prism/compiler/align.h"
+#include "prism/compiler/exported.h"
 
-#include <assert.h>
+#include "prism/arena.h"
+#include "prism/constant_pool.h"
+#include "prism/integer.h"
+#include "prism/stringy.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -89,7 +91,7 @@ typedef enum pm_token_type {
     /** &&= */
     PM_TOKEN_AMPERSAND_AMPERSAND_EQUAL,
 
-    /** &\. */
+    /** &. */
     PM_TOKEN_AMPERSAND_DOT,
 
     /** &= */
@@ -101,7 +103,7 @@ typedef enum pm_token_type {
     /** a back reference */
     PM_TOKEN_BACK_REFERENCE,
 
-    /** \! or \!@ */
+    /** \! or \!\@ */
     PM_TOKEN_BANG,
 
     /** \!= */
@@ -152,13 +154,13 @@ typedef enum pm_token_type {
     /** a constant */
     PM_TOKEN_CONSTANT,
 
-    /** the \. call operator */
+    /** the . call operator */
     PM_TOKEN_DOT,
 
-    /** the \.\. range operator */
+    /** the .. range operator */
     PM_TOKEN_DOT_DOT,
 
-    /** the \.\.\. range operator or forwarding parameter */
+    /** the ... range operator or forwarding parameter */
     PM_TOKEN_DOT_DOT_DOT,
 
     /** =begin */
@@ -482,7 +484,7 @@ typedef enum pm_token_type {
     /** the beginning of a symbol */
     PM_TOKEN_SYMBOL_BEGIN,
 
-    /** ~ or ~@ */
+    /** ~ or ~\@ */
     PM_TOKEN_TILDE,
 
     /** unary & */
@@ -491,19 +493,19 @@ typedef enum pm_token_type {
     /** unary :: */
     PM_TOKEN_UCOLON_COLON,
 
-    /** unary \.\. operator */
+    /** unary .. operator */
     PM_TOKEN_UDOT_DOT,
 
-    /** unary \.\.\. operator */
+    /** unary ... operator */
     PM_TOKEN_UDOT_DOT_DOT,
 
-    /** \-@ */
+    /** \-\@ */
     PM_TOKEN_UMINUS,
 
-    /** \-@ for a number */
+    /** \-\@ for a number */
     PM_TOKEN_UMINUS_NUM,
 
-    /** \+@ */
+    /** \+\@ */
     PM_TOKEN_UPLUS,
 
     /** unary \* */
@@ -536,6 +538,15 @@ typedef struct {
     /** A pointer to the end location of the token in the source. */
     const uint8_t *end;
 } pm_token_t;
+
+/**
+ * Returns a string representation of the given token type.
+ *
+ * @param token_type The type of the token to get the string representation of.
+ * @returns A string representation of the given token type. This is meant for
+ *     debugging purposes and is not guaranteed to be stable across versions.
+ */
+PRISM_EXPORTED_FUNCTION const char * pm_token_type(pm_token_type_t token_type);
 
 /**
  * This struct represents a slice in the source code, defined by an offset and
@@ -723,164 +734,164 @@ enum pm_node_type {
     /** EnsureNode */
     PM_ENSURE_NODE = 50,
 
+    /** ErrorRecoveryNode */
+    PM_ERROR_RECOVERY_NODE = 51,
+
     /** FalseNode */
-    PM_FALSE_NODE = 51,
+    PM_FALSE_NODE = 52,
 
     /** FindPatternNode */
-    PM_FIND_PATTERN_NODE = 52,
+    PM_FIND_PATTERN_NODE = 53,
 
     /** FlipFlopNode */
-    PM_FLIP_FLOP_NODE = 53,
+    PM_FLIP_FLOP_NODE = 54,
 
     /** FloatNode */
-    PM_FLOAT_NODE = 54,
+    PM_FLOAT_NODE = 55,
 
     /** ForNode */
-    PM_FOR_NODE = 55,
+    PM_FOR_NODE = 56,
 
     /** ForwardingArgumentsNode */
-    PM_FORWARDING_ARGUMENTS_NODE = 56,
+    PM_FORWARDING_ARGUMENTS_NODE = 57,
 
     /** ForwardingParameterNode */
-    PM_FORWARDING_PARAMETER_NODE = 57,
+    PM_FORWARDING_PARAMETER_NODE = 58,
 
     /** ForwardingSuperNode */
-    PM_FORWARDING_SUPER_NODE = 58,
+    PM_FORWARDING_SUPER_NODE = 59,
 
     /** GlobalVariableAndWriteNode */
-    PM_GLOBAL_VARIABLE_AND_WRITE_NODE = 59,
+    PM_GLOBAL_VARIABLE_AND_WRITE_NODE = 60,
 
     /** GlobalVariableOperatorWriteNode */
-    PM_GLOBAL_VARIABLE_OPERATOR_WRITE_NODE = 60,
+    PM_GLOBAL_VARIABLE_OPERATOR_WRITE_NODE = 61,
 
     /** GlobalVariableOrWriteNode */
-    PM_GLOBAL_VARIABLE_OR_WRITE_NODE = 61,
+    PM_GLOBAL_VARIABLE_OR_WRITE_NODE = 62,
 
     /** GlobalVariableReadNode */
-    PM_GLOBAL_VARIABLE_READ_NODE = 62,
+    PM_GLOBAL_VARIABLE_READ_NODE = 63,
 
     /** GlobalVariableTargetNode */
-    PM_GLOBAL_VARIABLE_TARGET_NODE = 63,
+    PM_GLOBAL_VARIABLE_TARGET_NODE = 64,
 
     /** GlobalVariableWriteNode */
-    PM_GLOBAL_VARIABLE_WRITE_NODE = 64,
+    PM_GLOBAL_VARIABLE_WRITE_NODE = 65,
 
     /** HashNode */
-    PM_HASH_NODE = 65,
+    PM_HASH_NODE = 66,
 
     /** HashPatternNode */
-    PM_HASH_PATTERN_NODE = 66,
+    PM_HASH_PATTERN_NODE = 67,
 
     /** IfNode */
-    PM_IF_NODE = 67,
+    PM_IF_NODE = 68,
 
     /** ImaginaryNode */
-    PM_IMAGINARY_NODE = 68,
+    PM_IMAGINARY_NODE = 69,
 
     /** ImplicitNode */
-    PM_IMPLICIT_NODE = 69,
+    PM_IMPLICIT_NODE = 70,
 
     /** ImplicitRestNode */
-    PM_IMPLICIT_REST_NODE = 70,
+    PM_IMPLICIT_REST_NODE = 71,
 
     /** InNode */
-    PM_IN_NODE = 71,
+    PM_IN_NODE = 72,
 
     /** IndexAndWriteNode */
-    PM_INDEX_AND_WRITE_NODE = 72,
+    PM_INDEX_AND_WRITE_NODE = 73,
 
     /** IndexOperatorWriteNode */
-    PM_INDEX_OPERATOR_WRITE_NODE = 73,
+    PM_INDEX_OPERATOR_WRITE_NODE = 74,
 
     /** IndexOrWriteNode */
-    PM_INDEX_OR_WRITE_NODE = 74,
+    PM_INDEX_OR_WRITE_NODE = 75,
 
     /** IndexTargetNode */
-    PM_INDEX_TARGET_NODE = 75,
+    PM_INDEX_TARGET_NODE = 76,
 
     /** InstanceVariableAndWriteNode */
-    PM_INSTANCE_VARIABLE_AND_WRITE_NODE = 76,
+    PM_INSTANCE_VARIABLE_AND_WRITE_NODE = 77,
 
     /** InstanceVariableOperatorWriteNode */
-    PM_INSTANCE_VARIABLE_OPERATOR_WRITE_NODE = 77,
+    PM_INSTANCE_VARIABLE_OPERATOR_WRITE_NODE = 78,
 
     /** InstanceVariableOrWriteNode */
-    PM_INSTANCE_VARIABLE_OR_WRITE_NODE = 78,
+    PM_INSTANCE_VARIABLE_OR_WRITE_NODE = 79,
 
     /** InstanceVariableReadNode */
-    PM_INSTANCE_VARIABLE_READ_NODE = 79,
+    PM_INSTANCE_VARIABLE_READ_NODE = 80,
 
     /** InstanceVariableTargetNode */
-    PM_INSTANCE_VARIABLE_TARGET_NODE = 80,
+    PM_INSTANCE_VARIABLE_TARGET_NODE = 81,
 
     /** InstanceVariableWriteNode */
-    PM_INSTANCE_VARIABLE_WRITE_NODE = 81,
+    PM_INSTANCE_VARIABLE_WRITE_NODE = 82,
 
     /** IntegerNode */
-    PM_INTEGER_NODE = 82,
+    PM_INTEGER_NODE = 83,
 
     /** InterpolatedMatchLastLineNode */
-    PM_INTERPOLATED_MATCH_LAST_LINE_NODE = 83,
+    PM_INTERPOLATED_MATCH_LAST_LINE_NODE = 84,
 
     /** InterpolatedRegularExpressionNode */
-    PM_INTERPOLATED_REGULAR_EXPRESSION_NODE = 84,
+    PM_INTERPOLATED_REGULAR_EXPRESSION_NODE = 85,
 
     /** InterpolatedStringNode */
-    PM_INTERPOLATED_STRING_NODE = 85,
+    PM_INTERPOLATED_STRING_NODE = 86,
 
     /** InterpolatedSymbolNode */
-    PM_INTERPOLATED_SYMBOL_NODE = 86,
+    PM_INTERPOLATED_SYMBOL_NODE = 87,
 
     /** InterpolatedXStringNode */
-    PM_INTERPOLATED_X_STRING_NODE = 87,
+    PM_INTERPOLATED_X_STRING_NODE = 88,
 
     /** ItLocalVariableReadNode */
-    PM_IT_LOCAL_VARIABLE_READ_NODE = 88,
+    PM_IT_LOCAL_VARIABLE_READ_NODE = 89,
 
     /** ItParametersNode */
-    PM_IT_PARAMETERS_NODE = 89,
+    PM_IT_PARAMETERS_NODE = 90,
 
     /** KeywordHashNode */
-    PM_KEYWORD_HASH_NODE = 90,
+    PM_KEYWORD_HASH_NODE = 91,
 
     /** KeywordRestParameterNode */
-    PM_KEYWORD_REST_PARAMETER_NODE = 91,
+    PM_KEYWORD_REST_PARAMETER_NODE = 92,
 
     /** LambdaNode */
-    PM_LAMBDA_NODE = 92,
+    PM_LAMBDA_NODE = 93,
 
     /** LocalVariableAndWriteNode */
-    PM_LOCAL_VARIABLE_AND_WRITE_NODE = 93,
+    PM_LOCAL_VARIABLE_AND_WRITE_NODE = 94,
 
     /** LocalVariableOperatorWriteNode */
-    PM_LOCAL_VARIABLE_OPERATOR_WRITE_NODE = 94,
+    PM_LOCAL_VARIABLE_OPERATOR_WRITE_NODE = 95,
 
     /** LocalVariableOrWriteNode */
-    PM_LOCAL_VARIABLE_OR_WRITE_NODE = 95,
+    PM_LOCAL_VARIABLE_OR_WRITE_NODE = 96,
 
     /** LocalVariableReadNode */
-    PM_LOCAL_VARIABLE_READ_NODE = 96,
+    PM_LOCAL_VARIABLE_READ_NODE = 97,
 
     /** LocalVariableTargetNode */
-    PM_LOCAL_VARIABLE_TARGET_NODE = 97,
+    PM_LOCAL_VARIABLE_TARGET_NODE = 98,
 
     /** LocalVariableWriteNode */
-    PM_LOCAL_VARIABLE_WRITE_NODE = 98,
+    PM_LOCAL_VARIABLE_WRITE_NODE = 99,
 
     /** MatchLastLineNode */
-    PM_MATCH_LAST_LINE_NODE = 99,
+    PM_MATCH_LAST_LINE_NODE = 100,
 
     /** MatchPredicateNode */
-    PM_MATCH_PREDICATE_NODE = 100,
+    PM_MATCH_PREDICATE_NODE = 101,
 
     /** MatchRequiredNode */
-    PM_MATCH_REQUIRED_NODE = 101,
+    PM_MATCH_REQUIRED_NODE = 102,
 
     /** MatchWriteNode */
-    PM_MATCH_WRITE_NODE = 102,
-
-    /** MissingNode */
-    PM_MISSING_NODE = 103,
+    PM_MATCH_WRITE_NODE = 103,
 
     /** ModuleNode */
     PM_MODULE_NODE = 104,
@@ -3756,6 +3767,27 @@ typedef struct pm_ensure_node {
 } pm_ensure_node_t;
 
 /**
+ * ErrorRecoveryNode
+ *
+ * Represents a node that is either missing or unexpected and results in a syntax error.
+ *
+ * Type: ::PM_ERROR_RECOVERY_NODE
+ *
+ * @extends pm_node_t
+ */
+typedef struct pm_error_recovery_node {
+    /** The embedded base node. */
+    pm_node_t base;
+
+    /**
+     * ErrorRecoveryNode#unexpected
+     *
+     * The unexpected node that was found in the tree, if there was one.
+     */
+    PM_NODE_ALIGNAS struct pm_node *unexpected;
+} pm_error_recovery_node_t;
+
+/**
  * FalseNode
  *
  * Represents the use of the literal `false` keyword.
@@ -4078,6 +4110,17 @@ typedef struct pm_forwarding_parameter_node {
 typedef struct pm_forwarding_super_node {
     /** The embedded base node. */
     pm_node_t base;
+
+    /**
+     * ForwardingSuperNode#keyword_loc
+     *
+     * super
+     * ^^^^^
+     *
+     * super { 123 }
+     * ^^^^^
+     */
+    pm_location_t keyword_loc;
 
     /**
      * ForwardingSuperNode#block
@@ -5998,20 +6041,6 @@ typedef struct pm_match_write_node {
 } pm_match_write_node_t;
 
 /**
- * MissingNode
- *
- * Represents a node that is missing from the source and results in a syntax error.
- *
- * Type: ::PM_MISSING_NODE
- *
- * @extends pm_node_t
- */
-typedef struct pm_missing_node {
-    /** The embedded base node. */
-    pm_node_t base;
-} pm_missing_node_t;
-
-/**
  * ModuleNode
  *
  * Represents a module declaration involving the `module` keyword.
@@ -6854,7 +6883,7 @@ typedef struct pm_range_node {
      *
      *     1...foo
      *         ^^^
-     * If neither right-hand or left-hand side was included, this will be a MissingNode.
+     * If neither right-hand or left-hand side was included, this will be an ErrorRecoveryNode.
      */
     PM_NODE_ALIGNAS struct pm_node *right;
 
@@ -8130,6 +8159,2185 @@ typedef enum pm_symbol_flags {
 
     PM_SYMBOL_FLAGS_LAST,
 } pm_symbol_flags_t;
+
+/**
+ * Allocate and initialize a new AliasGlobalVariableNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param new_name Represents the new name of the global variable that can be used after aliasing.
+ * @param old_name Represents the old name of the global variable that can be used before aliasing.
+ * @param keyword_loc The Location of the \`alias\` keyword.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_alias_global_variable_node_t * pm_alias_global_variable_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *new_name, struct pm_node *old_name, pm_location_t keyword_loc);
+
+/**
+ * Allocate and initialize a new AliasMethodNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param new_name Represents the new name of the method that will be aliased.
+ * @param old_name Represents the old name of the method that will be aliased.
+ * @param keyword_loc Represents the Location of the \`alias\` keyword.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_alias_method_node_t * pm_alias_method_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *new_name, struct pm_node *old_name, pm_location_t keyword_loc);
+
+/**
+ * Allocate and initialize a new AlternationPatternNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param left Represents the left side of the expression.
+ * @param right Represents the right side of the expression.
+ * @param operator_loc Represents the alternation operator Location.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_alternation_pattern_node_t * pm_alternation_pattern_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *left, struct pm_node *right, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new AndNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param left Represents the left side of the expression. It can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param right Represents the right side of the expression.
+ * @param operator_loc The Location of the \`and\` keyword or the \`&&\` operator.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_and_node_t * pm_and_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *left, struct pm_node *right, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new ArgumentsNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param arguments The list of arguments, if present. These can be any [non\-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_arguments_node_t * pm_arguments_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t arguments);
+
+/**
+ * Allocate and initialize a new ArrayNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param elements Represent the list of zero or more [non\-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression) within the array.
+ * @param opening_loc Represents the optional source Location for the opening token.
+ * @param closing_loc Represents the optional source Location for the closing token.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_array_node_t * pm_array_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t elements, pm_location_t opening_loc, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new ArrayPatternNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param constant Represents the optional constant preceding the Array
+ * @param requireds Represents the required elements of the array pattern.
+ * @param rest Represents the rest element of the array pattern.
+ * @param posts Represents the elements after the rest element of the array pattern.
+ * @param opening_loc Represents the opening Location of the array pattern.
+ * @param closing_loc Represents the closing Location of the array pattern.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_array_pattern_node_t * pm_array_pattern_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *constant, pm_node_list_t requireds, struct pm_node *rest, pm_node_list_t posts, pm_location_t opening_loc, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new AssocNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param key The key of the association. This can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param value The value of the association, if present. This can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param operator_loc The Location of the \`=\>\` operator, if present.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_assoc_node_t * pm_assoc_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *key, struct pm_node *value, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new AssocSplatNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param value The value to be splatted, if present. Will be missing when keyword rest argument forwarding is used.
+ * @param operator_loc The Location of the \`\*\*\` operator.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_assoc_splat_node_t * pm_assoc_splat_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new BackReferenceReadNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the back\-reference variable, including the leading \`$\`.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_back_reference_read_node_t * pm_back_reference_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name);
+
+/**
+ * Allocate and initialize a new BeginNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param begin_keyword_loc Represents the Location of the \`begin\` keyword.
+ * @param statements Represents the statements within the begin block.
+ * @param rescue_clause Represents the rescue clause within the begin block.
+ * @param else_clause Represents the else clause within the begin block.
+ * @param ensure_clause Represents the ensure clause within the begin block.
+ * @param end_keyword_loc Represents the Location of the \`end\` keyword.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_begin_node_t * pm_begin_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t begin_keyword_loc, struct pm_statements_node *statements, struct pm_rescue_node *rescue_clause, struct pm_else_node *else_clause, struct pm_ensure_node *ensure_clause, pm_location_t end_keyword_loc);
+
+/**
+ * Allocate and initialize a new BlockArgumentNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param expression The expression that is being passed as a block argument. This can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param operator_loc Represents the Location of the \`&\` operator.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_block_argument_node_t * pm_block_argument_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *expression, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new BlockLocalVariableNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the block local variable.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_block_local_variable_node_t * pm_block_local_variable_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name);
+
+/**
+ * Allocate and initialize a new BlockNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param locals The local variables declared in the block.
+ * @param parameters The parameters of the block.
+ * @param body The body of the block.
+ * @param opening_loc Represents the Location of the opening \`{\` or \`do\`.
+ * @param closing_loc Represents the Location of the closing \`}\` or \`end\`.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_block_node_t * pm_block_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_list_t locals, struct pm_node *parameters, struct pm_node *body, pm_location_t opening_loc, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new BlockParameterNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the block parameter.
+ * @param name_loc Represents the Location of the block parameter name.
+ * @param operator_loc Represents the Location of the \`&\` operator.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_block_parameter_node_t * pm_block_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new BlockParametersNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param parameters Represents the parameters of the block.
+ * @param locals Represents the local variables of the block.
+ * @param opening_loc Represents the opening Location of the block parameters.
+ * @param closing_loc Represents the closing Location of the block parameters.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_block_parameters_node_t * pm_block_parameters_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_parameters_node *parameters, pm_node_list_t locals, pm_location_t opening_loc, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new BreakNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param arguments The arguments to the break statement, if present. These can be any [non\-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param keyword_loc The Location of the \`break\` keyword.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_break_node_t * pm_break_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_arguments_node *arguments, pm_location_t keyword_loc);
+
+/**
+ * Allocate and initialize a new CallAndWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param receiver The object that the method is being called on. This can be either \`nil\` or any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param call_operator_loc Represents the Location of the call operator.
+ * @param message_loc Represents the Location of the message.
+ * @param read_name Represents the name of the method being called.
+ * @param write_name Represents the name of the method being written to.
+ * @param operator_loc Represents the Location of the operator.
+ * @param value Represents the value being assigned.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_call_and_write_node_t * pm_call_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_location_t message_loc, pm_constant_id_t read_name, pm_constant_id_t write_name, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new CallNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param receiver The object that the method is being called on. This can be either \`nil\` or any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param call_operator_loc Represents the Location of the call operator.
+ * @param name Represents the name of the method being called.
+ * @param message_loc Represents the Location of the message.
+ * @param opening_loc Represents the Location of the left parenthesis.
+ * @param arguments Represents the arguments to the method call. These can be any [non\-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param closing_loc Represents the Location of the right parenthesis.
+ * @param equal_loc Represents the Location of the equal sign, in the case that this is an attribute write.
+ * @param block Represents the block that is being passed to the method.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_call_node_t * pm_call_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_constant_id_t name, pm_location_t message_loc, pm_location_t opening_loc, struct pm_arguments_node *arguments, pm_location_t closing_loc, pm_location_t equal_loc, struct pm_node *block);
+
+/**
+ * Allocate and initialize a new CallOperatorWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param receiver The object that the method is being called on. This can be either \`nil\` or any [non\-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param call_operator_loc Represents the Location of the call operator.
+ * @param message_loc Represents the Location of the message.
+ * @param read_name Represents the name of the method being called.
+ * @param write_name Represents the name of the method being written to.
+ * @param binary_operator Represents the binary operator being used.
+ * @param binary_operator_loc Represents the Location of the binary operator.
+ * @param value Represents the value being assigned.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_call_operator_write_node_t * pm_call_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_location_t message_loc, pm_constant_id_t read_name, pm_constant_id_t write_name, pm_constant_id_t binary_operator, pm_location_t binary_operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new CallOrWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param receiver The object that the method is being called on. This can be either \`nil\` or any [non\-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param call_operator_loc Represents the Location of the call operator.
+ * @param message_loc Represents the Location of the message.
+ * @param read_name Represents the name of the method being called.
+ * @param write_name Represents the name of the method being written to.
+ * @param operator_loc Represents the Location of the operator.
+ * @param value Represents the value being assigned.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_call_or_write_node_t * pm_call_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_location_t message_loc, pm_constant_id_t read_name, pm_constant_id_t write_name, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new CallTargetNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param receiver The object that the method is being called on. This can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param call_operator_loc Represents the Location of the call operator.
+ * @param name Represents the name of the method being called.
+ * @param message_loc Represents the Location of the message.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_call_target_node_t * pm_call_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_constant_id_t name, pm_location_t message_loc);
+
+/**
+ * Allocate and initialize a new CapturePatternNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param value Represents the value to capture.
+ * @param target Represents the target of the capture.
+ * @param operator_loc Represents the Location of the \`=\>\` operator.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_capture_pattern_node_t * pm_capture_pattern_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value, struct pm_local_variable_target_node *target, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new CaseMatchNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param predicate Represents the predicate of the case match. This can be either \`nil\` or any [non\-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param conditions Represents the conditions of the case match.
+ * @param else_clause Represents the else clause of the case match.
+ * @param case_keyword_loc Represents the Location of the \`case\` keyword.
+ * @param end_keyword_loc Represents the Location of the \`end\` keyword.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_case_match_node_t * pm_case_match_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *predicate, pm_node_list_t conditions, struct pm_else_node *else_clause, pm_location_t case_keyword_loc, pm_location_t end_keyword_loc);
+
+/**
+ * Allocate and initialize a new CaseNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param predicate Represents the predicate of the case statement. This can be either \`nil\` or any [non\-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param conditions Represents the conditions of the case statement.
+ * @param else_clause Represents the else clause of the case statement.
+ * @param case_keyword_loc Represents the Location of the \`case\` keyword.
+ * @param end_keyword_loc Represents the Location of the \`end\` keyword.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_case_node_t * pm_case_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *predicate, pm_node_list_t conditions, struct pm_else_node *else_clause, pm_location_t case_keyword_loc, pm_location_t end_keyword_loc);
+
+/**
+ * Allocate and initialize a new ClassNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param locals The locals field.
+ * @param class_keyword_loc Represents the Location of the \`class\` keyword.
+ * @param constant_path The constant_path field.
+ * @param inheritance_operator_loc Represents the Location of the \`\<\` operator.
+ * @param superclass Represents the superclass of the class.
+ * @param body Represents the body of the class.
+ * @param end_keyword_loc Represents the Location of the \`end\` keyword.
+ * @param name The name of the class.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_class_node_t * pm_class_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_list_t locals, pm_location_t class_keyword_loc, struct pm_node *constant_path, pm_location_t inheritance_operator_loc, struct pm_node *superclass, struct pm_node *body, pm_location_t end_keyword_loc, pm_constant_id_t name);
+
+/**
+ * Allocate and initialize a new ClassVariableAndWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the class variable, which is a \`\@\@\` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#identifiers).
+ * @param name_loc Represents the Location of the variable name.
+ * @param operator_loc Represents the Location of the \`&&=\` operator.
+ * @param value Represents the value being assigned. This can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_class_variable_and_write_node_t * pm_class_variable_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new ClassVariableOperatorWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param binary_operator_loc The binary_operator_loc field.
+ * @param value The value field.
+ * @param binary_operator The binary_operator field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_class_variable_operator_write_node_t * pm_class_variable_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t binary_operator_loc, struct pm_node *value, pm_constant_id_t binary_operator);
+
+/**
+ * Allocate and initialize a new ClassVariableOrWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_class_variable_or_write_node_t * pm_class_variable_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new ClassVariableReadNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the class variable, which is a \`\@\@\` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#identifiers).
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_class_variable_read_node_t * pm_class_variable_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name);
+
+/**
+ * Allocate and initialize a new ClassVariableTargetNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_class_variable_target_node_t * pm_class_variable_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name);
+
+/**
+ * Allocate and initialize a new ClassVariableWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the class variable, which is a \`\@\@\` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#identifiers).
+ * @param name_loc The Location of the variable name.
+ * @param value The value to write to the class variable. This can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param operator_loc The Location of the \`=\` operator.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_class_variable_write_node_t * pm_class_variable_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, struct pm_node *value, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new ConstantAndWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_constant_and_write_node_t * pm_constant_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new ConstantOperatorWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param binary_operator_loc The binary_operator_loc field.
+ * @param value The value field.
+ * @param binary_operator The binary_operator field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_constant_operator_write_node_t * pm_constant_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t binary_operator_loc, struct pm_node *value, pm_constant_id_t binary_operator);
+
+/**
+ * Allocate and initialize a new ConstantOrWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_constant_or_write_node_t * pm_constant_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new ConstantPathAndWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param target The target field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_constant_path_and_write_node_t * pm_constant_path_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_constant_path_node *target, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new ConstantPathNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param parent The left\-hand node of the path, if present. It can be \`nil\` or any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression). It will be \`nil\` when the constant lookup is at the root of the module tree.
+ * @param name The name of the constant being accessed. This could be \`nil\` in the event of a syntax error.
+ * @param delimiter_loc The Location of the \`::\` delimiter.
+ * @param name_loc The Location of the name of the constant.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_constant_path_node_t * pm_constant_path_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *parent, pm_constant_id_t name, pm_location_t delimiter_loc, pm_location_t name_loc);
+
+/**
+ * Allocate and initialize a new ConstantPathOperatorWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param target The target field.
+ * @param binary_operator_loc The binary_operator_loc field.
+ * @param value The value field.
+ * @param binary_operator The binary_operator field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_constant_path_operator_write_node_t * pm_constant_path_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_constant_path_node *target, pm_location_t binary_operator_loc, struct pm_node *value, pm_constant_id_t binary_operator);
+
+/**
+ * Allocate and initialize a new ConstantPathOrWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param target The target field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_constant_path_or_write_node_t * pm_constant_path_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_constant_path_node *target, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new ConstantPathTargetNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param parent The parent field.
+ * @param name The name field.
+ * @param delimiter_loc The delimiter_loc field.
+ * @param name_loc The name_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_constant_path_target_node_t * pm_constant_path_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *parent, pm_constant_id_t name, pm_location_t delimiter_loc, pm_location_t name_loc);
+
+/**
+ * Allocate and initialize a new ConstantPathWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param target A node representing the constant path being written to.
+ * @param operator_loc The Location of the \`=\` operator.
+ * @param value The value to write to the constant path. It can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_constant_path_write_node_t * pm_constant_path_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_constant_path_node *target, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new ConstantReadNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the [constant](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#constants).
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_constant_read_node_t * pm_constant_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name);
+
+/**
+ * Allocate and initialize a new ConstantTargetNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_constant_target_node_t * pm_constant_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name);
+
+/**
+ * Allocate and initialize a new ConstantWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the [constant](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#constants).
+ * @param name_loc The Location of the constant name.
+ * @param value The value to write to the constant. It can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param operator_loc The Location of the \`=\` operator.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_constant_write_node_t * pm_constant_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, struct pm_node *value, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new DefNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param receiver The receiver field.
+ * @param parameters The parameters field.
+ * @param body The body field.
+ * @param locals The locals field.
+ * @param def_keyword_loc The def_keyword_loc field.
+ * @param operator_loc The operator_loc field.
+ * @param lparen_loc The lparen_loc field.
+ * @param rparen_loc The rparen_loc field.
+ * @param equal_loc The equal_loc field.
+ * @param end_keyword_loc The end_keyword_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_def_node_t * pm_def_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, struct pm_node *receiver, struct pm_parameters_node *parameters, struct pm_node *body, pm_constant_id_list_t locals, pm_location_t def_keyword_loc, pm_location_t operator_loc, pm_location_t lparen_loc, pm_location_t rparen_loc, pm_location_t equal_loc, pm_location_t end_keyword_loc);
+
+/**
+ * Allocate and initialize a new DefinedNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param lparen_loc The lparen_loc field.
+ * @param value The value field.
+ * @param rparen_loc The rparen_loc field.
+ * @param keyword_loc The keyword_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_defined_node_t * pm_defined_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t lparen_loc, struct pm_node *value, pm_location_t rparen_loc, pm_location_t keyword_loc);
+
+/**
+ * Allocate and initialize a new ElseNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param else_keyword_loc The else_keyword_loc field.
+ * @param statements The statements field.
+ * @param end_keyword_loc The end_keyword_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_else_node_t * pm_else_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t else_keyword_loc, struct pm_statements_node *statements, pm_location_t end_keyword_loc);
+
+/**
+ * Allocate and initialize a new EmbeddedStatementsNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param opening_loc The opening_loc field.
+ * @param statements The statements field.
+ * @param closing_loc The closing_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_embedded_statements_node_t * pm_embedded_statements_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, struct pm_statements_node *statements, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new EmbeddedVariableNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param operator_loc The operator_loc field.
+ * @param variable The variable field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_embedded_variable_node_t * pm_embedded_variable_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t operator_loc, struct pm_node *variable);
+
+/**
+ * Allocate and initialize a new EnsureNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param ensure_keyword_loc The ensure_keyword_loc field.
+ * @param statements The statements field.
+ * @param end_keyword_loc The end_keyword_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_ensure_node_t * pm_ensure_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t ensure_keyword_loc, struct pm_statements_node *statements, pm_location_t end_keyword_loc);
+
+/**
+ * Allocate and initialize a new ErrorRecoveryNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param unexpected The unexpected node that was found in the tree, if there was one.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_error_recovery_node_t * pm_error_recovery_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *unexpected);
+
+/**
+ * Allocate and initialize a new FalseNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_false_node_t * pm_false_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location);
+
+/**
+ * Allocate and initialize a new FindPatternNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param constant Represents the optional constant preceding the pattern
+ * @param left Represents the first wildcard node in the pattern.
+ * @param requireds Represents the nodes in between the wildcards.
+ * @param right Represents the second wildcard node in the pattern.
+ * @param opening_loc The Location of the opening brace.
+ * @param closing_loc The Location of the closing brace.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_find_pattern_node_t * pm_find_pattern_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *constant, struct pm_splat_node *left, pm_node_list_t requireds, struct pm_splat_node *right, pm_location_t opening_loc, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new FlipFlopNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param left The left field.
+ * @param right The right field.
+ * @param operator_loc The operator_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_flip_flop_node_t * pm_flip_flop_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *left, struct pm_node *right, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new FloatNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param value The value of the floating point number as a Float.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_float_node_t * pm_float_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, double value);
+
+/**
+ * Allocate and initialize a new ForNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param index The index expression for \`for\` loops.
+ * @param collection The collection to iterate over.
+ * @param statements Represents the body of statements to execute for each iteration of the loop.
+ * @param for_keyword_loc The Location of the \`for\` keyword.
+ * @param in_keyword_loc The Location of the \`in\` keyword.
+ * @param do_keyword_loc The Location of the \`do\` keyword, if present.
+ * @param end_keyword_loc The Location of the \`end\` keyword.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_for_node_t * pm_for_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *index, struct pm_node *collection, struct pm_statements_node *statements, pm_location_t for_keyword_loc, pm_location_t in_keyword_loc, pm_location_t do_keyword_loc, pm_location_t end_keyword_loc);
+
+/**
+ * Allocate and initialize a new ForwardingArgumentsNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_forwarding_arguments_node_t * pm_forwarding_arguments_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location);
+
+/**
+ * Allocate and initialize a new ForwardingParameterNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_forwarding_parameter_node_t * pm_forwarding_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location);
+
+/**
+ * Allocate and initialize a new ForwardingSuperNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param keyword_loc super
+ * @param block All other arguments are forwarded as normal, except the original block is replaced with the new block.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_forwarding_super_node_t * pm_forwarding_super_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, struct pm_block_node *block);
+
+/**
+ * Allocate and initialize a new GlobalVariableAndWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_global_variable_and_write_node_t * pm_global_variable_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new GlobalVariableOperatorWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param binary_operator_loc The binary_operator_loc field.
+ * @param value The value field.
+ * @param binary_operator The binary_operator field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_global_variable_operator_write_node_t * pm_global_variable_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t binary_operator_loc, struct pm_node *value, pm_constant_id_t binary_operator);
+
+/**
+ * Allocate and initialize a new GlobalVariableOrWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_global_variable_or_write_node_t * pm_global_variable_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new GlobalVariableReadNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the global variable, which is a \`$\` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#identifier). Alternatively, it can be one of the special global variables designated by a symbol.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_global_variable_read_node_t * pm_global_variable_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name);
+
+/**
+ * Allocate and initialize a new GlobalVariableTargetNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_global_variable_target_node_t * pm_global_variable_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name);
+
+/**
+ * Allocate and initialize a new GlobalVariableWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the global variable, which is a \`$\` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#identifier). Alternatively, it can be one of the special global variables designated by a symbol.
+ * @param name_loc The Location of the global variable's name.
+ * @param value The value to write to the global variable. It can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param operator_loc The Location of the \`=\` operator.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_global_variable_write_node_t * pm_global_variable_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, struct pm_node *value, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new HashNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param opening_loc The Location of the opening brace.
+ * @param elements The elements of the hash. These can be either \`AssocNode\`s or \`AssocSplatNode\`s.
+ * @param closing_loc The Location of the closing brace.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_hash_node_t * pm_hash_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_node_list_t elements, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new HashPatternNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param constant Represents the optional constant preceding the Hash.
+ * @param elements Represents the explicit named hash keys and values.
+ * @param rest Represents the rest of the Hash keys and values. This can be named, unnamed, or explicitly forbidden via \`\*\*nil\`, this last one results in a \`NoKeywordsParameterNode\`.
+ * @param opening_loc The Location of the opening brace.
+ * @param closing_loc The Location of the closing brace.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_hash_pattern_node_t * pm_hash_pattern_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *constant, pm_node_list_t elements, struct pm_node *rest, pm_location_t opening_loc, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new IfNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param if_keyword_loc The Location of the \`if\` keyword if present.
+ * @param predicate The node for the condition the \`IfNode\` is testing.
+ * @param then_keyword_loc The Location of the \`then\` keyword (if present) or the \`?\` in a ternary expression, \`nil\` otherwise.
+ * @param statements Represents the body of statements that will be executed when the predicate is evaluated as truthy. Will be \`nil\` when no body is provided.
+ * @param subsequent Represents an \`ElseNode\` or an \`IfNode\` when there is an \`else\` or an \`elsif\` in the \`if\` statement.
+ * @param end_keyword_loc The Location of the \`end\` keyword if present, \`nil\` otherwise.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_if_node_t * pm_if_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t if_keyword_loc, struct pm_node *predicate, pm_location_t then_keyword_loc, struct pm_statements_node *statements, struct pm_node *subsequent, pm_location_t end_keyword_loc);
+
+/**
+ * Allocate and initialize a new ImaginaryNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param numeric The numeric field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_imaginary_node_t * pm_imaginary_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *numeric);
+
+/**
+ * Allocate and initialize a new ImplicitNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_implicit_node_t * pm_implicit_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new ImplicitRestNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_implicit_rest_node_t * pm_implicit_rest_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location);
+
+/**
+ * Allocate and initialize a new InNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param pattern The pattern field.
+ * @param statements The statements field.
+ * @param in_loc The in_loc field.
+ * @param then_loc The then_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_in_node_t * pm_in_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *pattern, struct pm_statements_node *statements, pm_location_t in_loc, pm_location_t then_loc);
+
+/**
+ * Allocate and initialize a new IndexAndWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param receiver The receiver field.
+ * @param call_operator_loc The call_operator_loc field.
+ * @param opening_loc The opening_loc field.
+ * @param arguments The arguments field.
+ * @param closing_loc The closing_loc field.
+ * @param block The block field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_index_and_write_node_t * pm_index_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_location_t opening_loc, struct pm_arguments_node *arguments, pm_location_t closing_loc, struct pm_block_argument_node *block, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new IndexOperatorWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param receiver The receiver field.
+ * @param call_operator_loc The call_operator_loc field.
+ * @param opening_loc The opening_loc field.
+ * @param arguments The arguments field.
+ * @param closing_loc The closing_loc field.
+ * @param block The block field.
+ * @param binary_operator The binary_operator field.
+ * @param binary_operator_loc The binary_operator_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_index_operator_write_node_t * pm_index_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_location_t opening_loc, struct pm_arguments_node *arguments, pm_location_t closing_loc, struct pm_block_argument_node *block, pm_constant_id_t binary_operator, pm_location_t binary_operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new IndexOrWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param receiver The receiver field.
+ * @param call_operator_loc The call_operator_loc field.
+ * @param opening_loc The opening_loc field.
+ * @param arguments The arguments field.
+ * @param closing_loc The closing_loc field.
+ * @param block The block field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_index_or_write_node_t * pm_index_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t call_operator_loc, pm_location_t opening_loc, struct pm_arguments_node *arguments, pm_location_t closing_loc, struct pm_block_argument_node *block, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new IndexTargetNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param receiver The receiver field.
+ * @param opening_loc The opening_loc field.
+ * @param arguments The arguments field.
+ * @param closing_loc The closing_loc field.
+ * @param block The block field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_index_target_node_t * pm_index_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *receiver, pm_location_t opening_loc, struct pm_arguments_node *arguments, pm_location_t closing_loc, struct pm_block_argument_node *block);
+
+/**
+ * Allocate and initialize a new InstanceVariableAndWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_instance_variable_and_write_node_t * pm_instance_variable_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new InstanceVariableOperatorWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param binary_operator_loc The binary_operator_loc field.
+ * @param value The value field.
+ * @param binary_operator The binary_operator field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_instance_variable_operator_write_node_t * pm_instance_variable_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t binary_operator_loc, struct pm_node *value, pm_constant_id_t binary_operator);
+
+/**
+ * Allocate and initialize a new InstanceVariableOrWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_instance_variable_or_write_node_t * pm_instance_variable_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new InstanceVariableReadNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the instance variable, which is a \`\@\` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#identifiers).
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_instance_variable_read_node_t * pm_instance_variable_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name);
+
+/**
+ * Allocate and initialize a new InstanceVariableTargetNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_instance_variable_target_node_t * pm_instance_variable_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name);
+
+/**
+ * Allocate and initialize a new InstanceVariableWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the instance variable, which is a \`\@\` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#identifiers).
+ * @param name_loc The Location of the variable name.
+ * @param value The value to write to the instance variable. It can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param operator_loc The Location of the \`=\` operator.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_instance_variable_write_node_t * pm_instance_variable_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, struct pm_node *value, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new IntegerNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param value The value of the integer literal as a number.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_integer_node_t * pm_integer_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_integer_t value);
+
+/**
+ * Allocate and initialize a new InterpolatedMatchLastLineNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param opening_loc The opening_loc field.
+ * @param parts The parts field.
+ * @param closing_loc The closing_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_interpolated_match_last_line_node_t * pm_interpolated_match_last_line_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_node_list_t parts, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new InterpolatedRegularExpressionNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param opening_loc The opening_loc field.
+ * @param parts The parts field.
+ * @param closing_loc The closing_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_interpolated_regular_expression_node_t * pm_interpolated_regular_expression_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_node_list_t parts, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new InterpolatedStringNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param opening_loc The opening_loc field.
+ * @param parts The parts field.
+ * @param closing_loc The closing_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_interpolated_string_node_t * pm_interpolated_string_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_node_list_t parts, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new InterpolatedSymbolNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param opening_loc The opening_loc field.
+ * @param parts The parts field.
+ * @param closing_loc The closing_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_interpolated_symbol_node_t * pm_interpolated_symbol_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_node_list_t parts, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new InterpolatedXStringNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param opening_loc The opening_loc field.
+ * @param parts The parts field.
+ * @param closing_loc The closing_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_interpolated_x_string_node_t * pm_interpolated_x_string_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_node_list_t parts, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new ItLocalVariableReadNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_it_local_variable_read_node_t * pm_it_local_variable_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location);
+
+/**
+ * Allocate and initialize a new ItParametersNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_it_parameters_node_t * pm_it_parameters_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location);
+
+/**
+ * Allocate and initialize a new KeywordHashNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param elements The elements field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_keyword_hash_node_t * pm_keyword_hash_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t elements);
+
+/**
+ * Allocate and initialize a new KeywordRestParameterNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param operator_loc The operator_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_keyword_rest_parameter_node_t * pm_keyword_rest_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new LambdaNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param locals The locals field.
+ * @param operator_loc The operator_loc field.
+ * @param opening_loc The opening_loc field.
+ * @param closing_loc The closing_loc field.
+ * @param parameters The parameters field.
+ * @param body The body field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_lambda_node_t * pm_lambda_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_list_t locals, pm_location_t operator_loc, pm_location_t opening_loc, pm_location_t closing_loc, struct pm_node *parameters, struct pm_node *body);
+
+/**
+ * Allocate and initialize a new LocalVariableAndWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name_loc The name_loc field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @param name The name field.
+ * @param depth The depth field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_local_variable_and_write_node_t * pm_local_variable_and_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value, pm_constant_id_t name, uint32_t depth);
+
+/**
+ * Allocate and initialize a new LocalVariableOperatorWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name_loc The name_loc field.
+ * @param binary_operator_loc The binary_operator_loc field.
+ * @param value The value field.
+ * @param name The name field.
+ * @param binary_operator The binary_operator field.
+ * @param depth The depth field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_local_variable_operator_write_node_t * pm_local_variable_operator_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t name_loc, pm_location_t binary_operator_loc, struct pm_node *value, pm_constant_id_t name, pm_constant_id_t binary_operator, uint32_t depth);
+
+/**
+ * Allocate and initialize a new LocalVariableOrWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name_loc The name_loc field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @param name The name field.
+ * @param depth The depth field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_local_variable_or_write_node_t * pm_local_variable_or_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value, pm_constant_id_t name, uint32_t depth);
+
+/**
+ * Allocate and initialize a new LocalVariableReadNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the local variable, which is an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#identifiers).
+ * @param depth The number of visible scopes that should be searched to find the origin of this local variable.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_local_variable_read_node_t * pm_local_variable_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, uint32_t depth);
+
+/**
+ * Allocate and initialize a new LocalVariableTargetNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param depth The depth field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_local_variable_target_node_t * pm_local_variable_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, uint32_t depth);
+
+/**
+ * Allocate and initialize a new LocalVariableWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name of the local variable, which is an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#identifiers).
+ * @param depth The number of semantic scopes we have to traverse to find the declaration of this variable.
+ * @param name_loc The Location of the variable name.
+ * @param value The value to write to the local variable. It can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param operator_loc The Location of the \`=\` operator.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_local_variable_write_node_t * pm_local_variable_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, uint32_t depth, pm_location_t name_loc, struct pm_node *value, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new MatchLastLineNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param opening_loc The opening_loc field.
+ * @param content_loc The content_loc field.
+ * @param closing_loc The closing_loc field.
+ * @param unescaped The unescaped field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_match_last_line_node_t * pm_match_last_line_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t content_loc, pm_location_t closing_loc, pm_string_t unescaped);
+
+/**
+ * Allocate and initialize a new MatchPredicateNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param value The value field.
+ * @param pattern The pattern field.
+ * @param operator_loc The operator_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_match_predicate_node_t * pm_match_predicate_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value, struct pm_node *pattern, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new MatchRequiredNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param value Represents the left\-hand side of the operator.
+ * @param pattern Represents the right\-hand side of the operator. The type of the node depends on the expression.
+ * @param operator_loc The Location of the operator.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_match_required_node_t * pm_match_required_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value, struct pm_node *pattern, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new MatchWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param call The call field.
+ * @param targets The targets field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_match_write_node_t * pm_match_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_call_node *call, pm_node_list_t targets);
+
+/**
+ * Allocate and initialize a new ModuleNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param locals The locals field.
+ * @param module_keyword_loc The module_keyword_loc field.
+ * @param constant_path The constant_path field.
+ * @param body The body field.
+ * @param end_keyword_loc The end_keyword_loc field.
+ * @param name The name field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_module_node_t * pm_module_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_list_t locals, pm_location_t module_keyword_loc, struct pm_node *constant_path, struct pm_node *body, pm_location_t end_keyword_loc, pm_constant_id_t name);
+
+/**
+ * Allocate and initialize a new MultiTargetNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param lefts Represents the targets expressions before a splat node.
+ * @param rest Represents a splat node in the target expression.
+ * @param rights Represents the targets expressions after a splat node.
+ * @param lparen_loc The Location of the opening parenthesis.
+ * @param rparen_loc The Location of the closing parenthesis.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_multi_target_node_t * pm_multi_target_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t lefts, struct pm_node *rest, pm_node_list_t rights, pm_location_t lparen_loc, pm_location_t rparen_loc);
+
+/**
+ * Allocate and initialize a new MultiWriteNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param lefts Represents the targets expressions before a splat node.
+ * @param rest Represents a splat node in the target expression.
+ * @param rights Represents the targets expressions after a splat node.
+ * @param lparen_loc The Location of the opening parenthesis.
+ * @param rparen_loc The Location of the closing parenthesis.
+ * @param operator_loc The Location of the operator.
+ * @param value The value to write to the targets. It can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_multi_write_node_t * pm_multi_write_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t lefts, struct pm_node *rest, pm_node_list_t rights, pm_location_t lparen_loc, pm_location_t rparen_loc, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new NextNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param arguments The arguments field.
+ * @param keyword_loc The keyword_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_next_node_t * pm_next_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_arguments_node *arguments, pm_location_t keyword_loc);
+
+/**
+ * Allocate and initialize a new NilNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_nil_node_t * pm_nil_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location);
+
+/**
+ * Allocate and initialize a new NoBlockParameterNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param operator_loc The operator_loc field.
+ * @param keyword_loc The keyword_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_no_block_parameter_node_t * pm_no_block_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t operator_loc, pm_location_t keyword_loc);
+
+/**
+ * Allocate and initialize a new NoKeywordsParameterNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param operator_loc The operator_loc field.
+ * @param keyword_loc The keyword_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_no_keywords_parameter_node_t * pm_no_keywords_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t operator_loc, pm_location_t keyword_loc);
+
+/**
+ * Allocate and initialize a new NumberedParametersNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param maximum The maximum field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_numbered_parameters_node_t * pm_numbered_parameters_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, uint8_t maximum);
+
+/**
+ * Allocate and initialize a new NumberedReferenceReadNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param number The (1\-indexed, from the left) number of the capture group. Numbered references that are too large result in this value being \`0\`.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_numbered_reference_read_node_t * pm_numbered_reference_read_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, uint32_t number);
+
+/**
+ * Allocate and initialize a new OptionalKeywordParameterNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_optional_keyword_parameter_node_t * pm_optional_keyword_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new OptionalParameterNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param operator_loc The operator_loc field.
+ * @param value The value field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_optional_parameter_node_t * pm_optional_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc, struct pm_node *value);
+
+/**
+ * Allocate and initialize a new OrNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param left Represents the left side of the expression. It can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param right Represents the right side of the expression.
+ * @param operator_loc The Location of the \`or\` keyword or the \`||\` operator.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_or_node_t * pm_or_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *left, struct pm_node *right, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new ParametersNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param requireds The requireds field.
+ * @param optionals The optionals field.
+ * @param rest The rest field.
+ * @param posts The posts field.
+ * @param keywords The keywords field.
+ * @param keyword_rest The keyword_rest field.
+ * @param block The block field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_parameters_node_t * pm_parameters_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t requireds, pm_node_list_t optionals, struct pm_node *rest, pm_node_list_t posts, pm_node_list_t keywords, struct pm_node *keyword_rest, struct pm_node *block);
+
+/**
+ * Allocate and initialize a new ParenthesesNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param body The body field.
+ * @param opening_loc The opening_loc field.
+ * @param closing_loc The closing_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_parentheses_node_t * pm_parentheses_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *body, pm_location_t opening_loc, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new PinnedExpressionNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param expression The expression used in the pinned expression
+ * @param operator_loc The Location of the \`^\` operator
+ * @param lparen_loc The Location of the opening parenthesis.
+ * @param rparen_loc The Location of the closing parenthesis.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_pinned_expression_node_t * pm_pinned_expression_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *expression, pm_location_t operator_loc, pm_location_t lparen_loc, pm_location_t rparen_loc);
+
+/**
+ * Allocate and initialize a new PinnedVariableNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param variable The variable used in the pinned expression
+ * @param operator_loc The Location of the \`^\` operator
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_pinned_variable_node_t * pm_pinned_variable_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *variable, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new PostExecutionNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param statements The statements field.
+ * @param keyword_loc The keyword_loc field.
+ * @param opening_loc The opening_loc field.
+ * @param closing_loc The closing_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_post_execution_node_t * pm_post_execution_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_statements_node *statements, pm_location_t keyword_loc, pm_location_t opening_loc, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new PreExecutionNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param statements The statements field.
+ * @param keyword_loc The keyword_loc field.
+ * @param opening_loc The opening_loc field.
+ * @param closing_loc The closing_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_pre_execution_node_t * pm_pre_execution_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_statements_node *statements, pm_location_t keyword_loc, pm_location_t opening_loc, pm_location_t closing_loc);
+
+/**
+ * Allocate and initialize a new ProgramNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param locals The locals field.
+ * @param statements The statements field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_program_node_t * pm_program_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_list_t locals, struct pm_statements_node *statements);
+
+/**
+ * Allocate and initialize a new RangeNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param left The left\-hand side of the range, if present. It can be either \`nil\` or any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param right The right\-hand side of the range, if present. It can be either \`nil\` or any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param operator_loc The Location of the \`..\` or \`...\` operator.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_range_node_t * pm_range_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *left, struct pm_node *right, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new RationalNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param numerator The numerator of the rational number.
+ * @param denominator The denominator of the rational number.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_rational_node_t * pm_rational_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_integer_t numerator, pm_integer_t denominator);
+
+/**
+ * Allocate and initialize a new RedoNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_redo_node_t * pm_redo_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location);
+
+/**
+ * Allocate and initialize a new RegularExpressionNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param opening_loc The opening_loc field.
+ * @param content_loc The content_loc field.
+ * @param closing_loc The closing_loc field.
+ * @param unescaped The unescaped field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_regular_expression_node_t * pm_regular_expression_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t content_loc, pm_location_t closing_loc, pm_string_t unescaped);
+
+/**
+ * Allocate and initialize a new RequiredKeywordParameterNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_required_keyword_parameter_node_t * pm_required_keyword_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc);
+
+/**
+ * Allocate and initialize a new RequiredParameterNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_required_parameter_node_t * pm_required_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name);
+
+/**
+ * Allocate and initialize a new RescueModifierNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param expression The expression field.
+ * @param keyword_loc The keyword_loc field.
+ * @param rescue_expression The rescue_expression field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_rescue_modifier_node_t * pm_rescue_modifier_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *expression, pm_location_t keyword_loc, struct pm_node *rescue_expression);
+
+/**
+ * Allocate and initialize a new RescueNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param keyword_loc The keyword_loc field.
+ * @param exceptions The exceptions field.
+ * @param operator_loc The operator_loc field.
+ * @param reference The reference field.
+ * @param then_keyword_loc The then_keyword_loc field.
+ * @param statements The statements field.
+ * @param subsequent The subsequent field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_rescue_node_t * pm_rescue_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_node_list_t exceptions, pm_location_t operator_loc, struct pm_node *reference, pm_location_t then_keyword_loc, struct pm_statements_node *statements, struct pm_rescue_node *subsequent);
+
+/**
+ * Allocate and initialize a new RestParameterNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param name The name field.
+ * @param name_loc The name_loc field.
+ * @param operator_loc The operator_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_rest_parameter_node_t * pm_rest_parameter_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_t name, pm_location_t name_loc, pm_location_t operator_loc);
+
+/**
+ * Allocate and initialize a new RetryNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_retry_node_t * pm_retry_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location);
+
+/**
+ * Allocate and initialize a new ReturnNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param keyword_loc The keyword_loc field.
+ * @param arguments The arguments field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_return_node_t * pm_return_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, struct pm_arguments_node *arguments);
+
+/**
+ * Allocate and initialize a new SelfNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_self_node_t * pm_self_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location);
+
+/**
+ * Allocate and initialize a new ShareableConstantNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param write The constant write that should be modified with the shareability state.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_shareable_constant_node_t * pm_shareable_constant_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *write);
+
+/**
+ * Allocate and initialize a new SingletonClassNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param locals The locals field.
+ * @param class_keyword_loc The class_keyword_loc field.
+ * @param operator_loc The operator_loc field.
+ * @param expression The expression field.
+ * @param body The body field.
+ * @param end_keyword_loc The end_keyword_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_singleton_class_node_t * pm_singleton_class_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_constant_id_list_t locals, pm_location_t class_keyword_loc, pm_location_t operator_loc, struct pm_node *expression, struct pm_node *body, pm_location_t end_keyword_loc);
+
+/**
+ * Allocate and initialize a new SourceEncodingNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_source_encoding_node_t * pm_source_encoding_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location);
+
+/**
+ * Allocate and initialize a new SourceFileNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param filepath Represents the file path being parsed. This corresponds directly to the \`filepath\` option given to the various \`Prism.parse\*\` APIs.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_source_file_node_t * pm_source_file_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_string_t filepath);
+
+/**
+ * Allocate and initialize a new SourceLineNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_source_line_node_t * pm_source_line_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location);
+
+/**
+ * Allocate and initialize a new SplatNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param operator_loc The operator_loc field.
+ * @param expression The expression field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_splat_node_t * pm_splat_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t operator_loc, struct pm_node *expression);
+
+/**
+ * Allocate and initialize a new StatementsNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param body The body field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_statements_node_t * pm_statements_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t body);
+
+/**
+ * Allocate and initialize a new StringNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param opening_loc The opening_loc field.
+ * @param content_loc The content_loc field.
+ * @param closing_loc The closing_loc field.
+ * @param unescaped The unescaped field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_string_node_t * pm_string_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t content_loc, pm_location_t closing_loc, pm_string_t unescaped);
+
+/**
+ * Allocate and initialize a new SuperNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param keyword_loc The keyword_loc field.
+ * @param lparen_loc The lparen_loc field.
+ * @param arguments Can be only \`nil\` when there are empty parentheses, like \`super()\`.
+ * @param rparen_loc The rparen_loc field.
+ * @param block The block field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_super_node_t * pm_super_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_location_t lparen_loc, struct pm_arguments_node *arguments, pm_location_t rparen_loc, struct pm_node *block);
+
+/**
+ * Allocate and initialize a new SymbolNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param opening_loc The opening_loc field.
+ * @param value_loc The value_loc field.
+ * @param closing_loc The closing_loc field.
+ * @param unescaped The unescaped field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_symbol_node_t * pm_symbol_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t value_loc, pm_location_t closing_loc, pm_string_t unescaped);
+
+/**
+ * Allocate and initialize a new TrueNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_true_node_t * pm_true_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location);
+
+/**
+ * Allocate and initialize a new UndefNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param names The names field.
+ * @param keyword_loc The keyword_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_undef_node_t * pm_undef_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_node_list_t names, pm_location_t keyword_loc);
+
+/**
+ * Allocate and initialize a new UnlessNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param keyword_loc The Location of the \`unless\` keyword.
+ * @param predicate The condition to be evaluated for the unless expression. It can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
+ * @param then_keyword_loc The Location of the \`then\` keyword, if present.
+ * @param statements The body of statements that will executed if the unless condition is
+ * @param else_clause The else clause of the unless expression, if present.
+ * @param end_keyword_loc The Location of the \`end\` keyword, if present.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_unless_node_t * pm_unless_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, struct pm_node *predicate, pm_location_t then_keyword_loc, struct pm_statements_node *statements, struct pm_else_node *else_clause, pm_location_t end_keyword_loc);
+
+/**
+ * Allocate and initialize a new UntilNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param keyword_loc The keyword_loc field.
+ * @param do_keyword_loc The do_keyword_loc field.
+ * @param closing_loc The closing_loc field.
+ * @param predicate The predicate field.
+ * @param statements The statements field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_until_node_t * pm_until_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_location_t do_keyword_loc, pm_location_t closing_loc, struct pm_node *predicate, struct pm_statements_node *statements);
+
+/**
+ * Allocate and initialize a new WhenNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param keyword_loc The keyword_loc field.
+ * @param conditions The conditions field.
+ * @param then_keyword_loc The then_keyword_loc field.
+ * @param statements The statements field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_when_node_t * pm_when_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_node_list_t conditions, pm_location_t then_keyword_loc, struct pm_statements_node *statements);
+
+/**
+ * Allocate and initialize a new WhileNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param keyword_loc The keyword_loc field.
+ * @param do_keyword_loc The do_keyword_loc field.
+ * @param closing_loc The closing_loc field.
+ * @param predicate The predicate field.
+ * @param statements The statements field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_while_node_t * pm_while_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_location_t do_keyword_loc, pm_location_t closing_loc, struct pm_node *predicate, struct pm_statements_node *statements);
+
+/**
+ * Allocate and initialize a new XStringNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param opening_loc The opening_loc field.
+ * @param content_loc The content_loc field.
+ * @param closing_loc The closing_loc field.
+ * @param unescaped The unescaped field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_x_string_node_t * pm_x_string_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t content_loc, pm_location_t closing_loc, pm_string_t unescaped);
+
+/**
+ * Allocate and initialize a new YieldNode node.
+ *
+ * @param arena The arena to allocate from.
+ * @param node_id The unique identifier for this node.
+ * @param flags The flags for this node.
+ * @param location The location of this node in the source.
+ * @param keyword_loc The keyword_loc field.
+ * @param lparen_loc The lparen_loc field.
+ * @param arguments The arguments field.
+ * @param rparen_loc The rparen_loc field.
+ * @returns The newly allocated and initialized node.
+ */
+PRISM_EXPORTED_FUNCTION pm_yield_node_t * pm_yield_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_location_t lparen_loc, struct pm_arguments_node *arguments, pm_location_t rparen_loc);
 
 /**
  * When we're serializing to Java, we want to skip serializing the location

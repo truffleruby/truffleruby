@@ -215,6 +215,8 @@ module Prism
         [LocationField.new(:operator_loc), NodeField.new(:variable)]
       when :ensure_node
         [LocationField.new(:ensure_keyword_loc), OptionalNodeField.new(:statements), LocationField.new(:end_keyword_loc)]
+      when :error_recovery_node
+        [OptionalNodeField.new(:unexpected)]
       when :false_node
         []
       when :find_pattern_node
@@ -230,7 +232,7 @@ module Prism
       when :forwarding_parameter_node
         []
       when :forwarding_super_node
-        [OptionalNodeField.new(:block)]
+        [LocationField.new(:keyword_loc), OptionalNodeField.new(:block)]
       when :global_variable_and_write_node
         [ConstantField.new(:name), LocationField.new(:name_loc), LocationField.new(:operator_loc), NodeField.new(:value)]
       when :global_variable_operator_write_node
@@ -319,8 +321,6 @@ module Prism
         [NodeField.new(:value), NodeField.new(:pattern), LocationField.new(:operator_loc)]
       when :match_write_node
         [NodeField.new(:call), NodeListField.new(:targets)]
-      when :missing_node
-        []
       when :module_node
         [ConstantListField.new(:locals), LocationField.new(:module_keyword_loc), NodeField.new(:constant_path), OptionalNodeField.new(:body), LocationField.new(:end_keyword_loc), ConstantField.new(:name)]
       when :multi_target_node
