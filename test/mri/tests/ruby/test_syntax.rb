@@ -341,7 +341,8 @@ class TestSyntax < Test::Unit::TestCase
     o = KW2.new
     begin
       verbose_bak, $VERBOSE = $VERBOSE, nil
-      assert_equal([23, 2], eval("o.kw(**{k1: 22}, **{k1: 23})"), bug10315)
+      r = EnvUtil.suppress_warning { eval "o.kw(**{k1: 22}, **{k1: 23})" } # TruffleRuby: use eval to avoid warning
+      assert_equal([23, 2], r, bug10315)
     ensure
       $VERBOSE = verbose_bak
     end

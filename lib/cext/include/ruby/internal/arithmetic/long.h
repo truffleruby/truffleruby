@@ -59,7 +59,12 @@
 #define RB_ULONG2NUM rb_ulong2num_inline  /**< @alias{rb_ulong2num_inline} */
 #define ULONG2NUM    RB_ULONG2NUM         /**< @old{RB_ULONG2NUM} */
 #define rb_fix_new   RB_INT2FIX           /**< @alias{RB_INT2FIX} */
+
+#ifdef TRUFFLERUBY
+#define rb_long2int  rb_long2int
+#else
 #define rb_long2int  rb_long2int_inline   /**< @alias{rb_long2int_inline} */
+#endif
 
 /** @cond INTERNAL_MACRO */
 #define RB_INT2FIX RB_INT2FIX
@@ -96,6 +101,9 @@ long rb_num2long(VALUE num);
  * @return     The passed value converted into C's `unsigned long`.
  */
 unsigned long rb_num2ulong(VALUE num);
+#ifdef TRUFFLERUBY
+int rb_long2int(long value);
+#endif
 RBIMPL_SYMBOL_EXPORT_END()
 
 RBIMPL_ATTR_CONST_UNLESS_DEBUG()
@@ -131,6 +139,7 @@ RB_INT2FIX(long i)
  * @exception  rb_eRangeError  `n` is out of range of `int`.
  * @return     Identical value of type `int`
  */
+#ifndef TRUFFLERUBY
 static inline int
 rb_long2int_inline(long n)
 {
@@ -145,6 +154,7 @@ rb_long2int_inline(long n)
 
     return i;
 }
+#endif
 
 RBIMPL_ATTR_CONST_UNLESS_DEBUG()
 RBIMPL_ATTR_CONSTEXPR_UNLESS_DEBUG(CXX14)

@@ -352,6 +352,13 @@ void rb_check_safe_str(VALUE);
  * @param[in]  func           The function name where encountered NULL pointer.
  */
 void rb_debug_rstring_null_ptr(const char *func);
+
+#ifdef TRUFFLERUBY
+int rb_tr_str_len(VALUE string);
+char* rb_tr_rstring_ptr(VALUE string);
+char* rb_tr_rstring_end(VALUE string);
+#endif
+
 RBIMPL_SYMBOL_EXPORT_END()
 
 RBIMPL_ATTR_PURE_UNLESS_DEBUG()
@@ -366,7 +373,11 @@ RBIMPL_ATTR_ARTIFICIAL()
 static inline long
 RSTRING_LEN(VALUE str)
 {
+#ifdef TRUFFLERUBY
+    return rb_tr_str_len(str);
+#else
     return RSTRING(str)->len;
+#endif
 }
 
 RBIMPL_ATTR_ARTIFICIAL()
@@ -380,6 +391,9 @@ RBIMPL_ATTR_ARTIFICIAL()
 static inline char *
 RSTRING_PTR(VALUE str)
 {
+#ifdef TRUFFLERUBY
+    return rb_tr_rstring_ptr(str);
+#else
     char *ptr = RB_FL_TEST_RAW(str, RSTRING_NOEMBED) ?
         RSTRING(str)->as.heap.ptr :
         RSTRING(str)->as.embed.ary;
@@ -395,6 +409,7 @@ RSTRING_PTR(VALUE str)
     }
 
     return ptr;
+#endif
 }
 
 RBIMPL_ATTR_ARTIFICIAL()
@@ -408,6 +423,9 @@ RBIMPL_ATTR_ARTIFICIAL()
 static inline char *
 RSTRING_END(VALUE str)
 {
+#ifdef TRUFFLERUBY
+    return rb_tr_rstring_end(str);
+#else
     char *ptr = RB_FL_TEST_RAW(str, RSTRING_NOEMBED) ?
         RSTRING(str)->as.heap.ptr :
         RSTRING(str)->as.embed.ary;
@@ -419,6 +437,7 @@ RSTRING_END(VALUE str)
     }
 
     return &ptr[len];
+#endif
 }
 
 RBIMPL_ATTR_ARTIFICIAL()
@@ -437,7 +456,11 @@ RBIMPL_ATTR_ARTIFICIAL()
 static inline int
 RSTRING_LENINT(VALUE str)
 {
+#ifdef TRUFFLERUBY
+    return rb_tr_str_len(str);
+#else
     return rb_long2int(RSTRING_LEN(str));
+#endif
 }
 
 /**

@@ -1,7 +1,7 @@
 # frozen_string_literal: false
 require 'test/unit'
 require 'tempfile'
-require "-test-/file"
+# require "-test-/file"
 require_relative 'ut_eof'
 
 class TestFile < Test::Unit::TestCase
