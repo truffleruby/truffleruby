@@ -73,9 +73,11 @@ test/truffle/cexts/**/*.bundle
 test/truffle/cexts/**/mkmf.log
 test/truffle/cexts/**/Makefile
 
+test/mri/tests/cext-c/exts.mk
 test/mri/tests/cext-c/**/*.o
 test/mri/tests/cext-c/**/*.so
 test/mri/tests/cext-c/**/*.bundle
+test/mri/tests/cext-c/**/*.failed
 test/mri/tests/cext-c/**/extconf.h
 test/mri/tests/cext-c/**/mkmf.log
 test/mri/tests/cext-c/**/Makefile
