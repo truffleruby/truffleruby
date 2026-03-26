@@ -26,7 +26,7 @@ public class Loader {
 
     // Overridable methods
 
-    public String bytesToName(byte[] bytes) {
+    public String bytesToName(byte[] serialized, int offset, int length) {
         throw new AbstractMethodError("Loader.bytesToName(String) is not implemented");
     }
 
@@ -39,7 +39,7 @@ public class Loader {
         ConstantPool(Loader loader, int bufferOffset, int length) {
             this.loader = loader;
             this.bufferOffset = bufferOffset;
-            cache = new String[length];
+            this.cache = new String[length];
         }
 
         String get(ByteBuffer buffer, int oneBasedIndex) {
@@ -51,10 +51,7 @@ public class Loader {
                 int start = buffer.getInt(offset);
                 int length = buffer.getInt(offset + 4);
 
-                byte[] bytes = new byte[length];
-                buffer.get(start, bytes);
-
-                constant = loader.bytesToName(bytes);
+                constant = loader.bytesToName(loader.serialized, start, length);
                 cache[index] = constant;
             }
 
@@ -63,12 +60,14 @@ public class Loader {
 
     }
 
+    private final byte[] serialized;
     private final ByteBuffer buffer;
     protected String encodingName;
     private ConstantPool constantPool;
     private Nodes.Source source = null;
 
     protected Loader(byte[] serialized) {
+        this.serialized = serialized;
         this.buffer = ByteBuffer.wrap(serialized).order(ByteOrder.nativeOrder());
     }
 
