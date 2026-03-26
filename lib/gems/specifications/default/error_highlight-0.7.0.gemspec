@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Yusuke Endoh".freeze]
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "The gem enhances Exception#message by adding a short explanation where the exception is raised".freeze
   s.email = ["mame@ruby-lang.org".freeze]
   s.files = ["error_highlight.rb".freeze, "error_highlight/base.rb".freeze, "error_highlight/core_ext.rb".freeze, "error_highlight/formatter.rb".freeze, "error_highlight/version.rb".freeze]

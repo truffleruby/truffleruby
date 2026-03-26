@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["aycabta".freeze, "Keiju ISHITSUKA".freeze]
   s.bindir = "exe".freeze
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "Interactive Ruby command-line tool for REPL (Read Eval Print Loop).".freeze
   s.email = ["aycabta@gmail.com".freeze, "keiju@ruby-lang.org".freeze]
   s.executables = ["irb".freeze]

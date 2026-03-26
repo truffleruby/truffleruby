@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.metadata = { "homepage_uri" => "https://github.com/ruby/delegate", "source_code_uri" => "https://github.com/ruby/delegate" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Yukihiro Matsumoto".freeze]
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "Provides three abilities to delegate method calls to an object.".freeze
   s.email = ["matz@ruby-lang.org".freeze]
   s.files = ["delegate.rb".freeze]

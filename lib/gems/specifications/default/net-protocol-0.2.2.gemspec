@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.metadata = { "changelog_uri" => "https://github.com/ruby/net-protocol/releases", "homepage_uri" => "https://github.com/ruby/net-protocol", "source_code_uri" => "https://github.com/ruby/net-protocol" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Yukihiro Matsumoto".freeze]
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "The abstract interface for net-* client.".freeze
   s.email = ["matz@ruby-lang.org".freeze]
   s.files = ["net/protocol.rb".freeze]
