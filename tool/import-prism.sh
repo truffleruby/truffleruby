@@ -25,12 +25,15 @@ function copy_c_files_and_makefile() {
 # 1. Copy Prism files for the TruffleRuby parser
 
 export PRISM_SERIALIZE_ONLY_SEMANTICS_FIELDS=1
+export PRISM_JAVA_BACKEND=truffleruby
 create_generated_files
 copy_c_files_and_makefile src/main/c/yarp
 
 # Copy .java files
 rm -rf src/yarp/java
-cp -R $PRISM/java src/yarp/java
+mkdir src/yarp/java
+cp -R $PRISM/java/{api,native}/src/main/java/* src/yarp/java
+cp -R $PRISM/java/api/target/generated-sources/java/* src/yarp/java
 
 # 2. Copy Prism files for the default gem
 
