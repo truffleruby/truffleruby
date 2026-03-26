@@ -17,6 +17,10 @@ public abstract class LibRubySignal {
         System.load(path);
     }
 
+    public static native void warnStackOverflowError();
+
+    public static native void warnOutOfMemoryError();
+
     public static native void setupLocale();
 
     public static native void setupLocaleOnlyCTYPE();

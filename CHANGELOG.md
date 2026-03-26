@@ -12,6 +12,7 @@ Bug fixes:
 * Fix `TypeError` from `Kernel#respond_to?` to show the class of the name argument and not self (@eregon).
 * Fix `super` with methods not accepting keywords like `def foo(**nil)` (#4168, @eregon).
 * Fix potential race conditions when multiple methods of the same file are lazily translated concurrently (#4182, @eregon).
+* Fix `IndexOutOfBoundsException` happening on stack overflow (#4193, #4199, @eregon).
 
 Compatibility:
 
