@@ -8,7 +8,7 @@ See the [Compatibility](compatibility.md) guide for compatibility with other Rub
 
 You can use the `--version` command-line option. TruffleRuby will report for example:
 ```shell
-truffleruby ..., like ruby ..., GraalVM CE Native [x86_64-darwin]
+truffleruby ..., like ruby ..., Oracle GraalVM Native [x86_64-linux]
 ```
 
 In Ruby code, you can look at the standard `RUBY_ENGINE` constant, which will be `'truffleruby'`.

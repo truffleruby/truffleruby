@@ -64,8 +64,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [amd64, aarch64]
-    runs-on: ${{ matrix.arch == 'amd64' && 'macos-15-intel' || 'macos-14' }}
+        arch: [aarch64]
+    runs-on: 'macos-14'
     steps:
     - name: Clone TruffleRuby
       uses: actions/checkout@v4
@@ -132,10 +132,6 @@ jobs:
         name: truffleruby-release-archives-linux-amd64
         path: release
     # No truffleruby-release-archives-linux-aarch64 since it will be rebuilt anyway
-    - uses: actions/download-artifact@v4
-      with:
-        name: truffleruby-release-archives-darwin-amd64
-        path: release
     - uses: actions/download-artifact@v4
       with:
         name: truffleruby-release-archives-darwin-aarch64

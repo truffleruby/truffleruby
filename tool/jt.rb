@@ -40,7 +40,6 @@ FileUtils.mkdir_p(CACHE_EXTRA_DIR)
 ALL_PLATFORMS = %w[
   linux-amd64
   linux-aarch64
-  darwin-amd64
   darwin-aarch64
 ]
 
@@ -2394,11 +2393,7 @@ module Commands
     archive_version = version.sub(/\.0\.0$/, '')
     os = { 'linux' => 'linux', 'darwin' => 'macos' }.fetch(mx_os)
     arch = { 'amd64' => 'x64', 'aarch64' => 'aarch64' }.fetch(mx_arch)
-    if darwin? and amd64?
-      warn "Using GraalVM CE since there is no Oracle GraalVM #{version} on macos-amd64" if ee?
-      url = "https://github.com/truffleruby/graalvm-ce-25-macos-amd64-builds/releases/download/jdk-#{version}/graalvm-community-jdk-#{version}_#{os}-#{arch}_bin.tar.gz"
-      dir = "#{JDKS_CACHE_DIR}/graalvm-community-#{version}"
-    elsif ee?
+    if ee?
       url = "https://download.oracle.com/graalvm/#{major}/archive/graalvm-jdk-#{archive_version}_#{os}-#{arch}_bin.tar.gz"
       dir = "#{JDKS_CACHE_DIR}/graalvm-#{version}"
     else
@@ -2435,11 +2430,8 @@ module Commands
       if aarch64?
         eclipse_url = 'https://github.com/truffleruby/eclipse-mirror/releases/download/eclipse-SDK-4.26/eclipse-4.26.0-darwin-aarch64.dmg'
         sha256 = 'fcabac1b5a7c49ac674bd0f6273f5a93007261d3f7a0296473be9295d9424e00'
-      elsif amd64?
-        eclipse_url = 'https://github.com/truffleruby/eclipse-mirror/releases/download/eclipse-SDK-4.26/eclipse-4.26.0-darwin-amd64.dmg'
-        sha256 = '9f26d17e3633085aaac2b97212205492134ae4e5497cadb9957c2bb6c4b63a59'
       else
-        raise 'Only AARCH64 and AMD64 are supported for Eclipse on macOS'
+        raise 'Only AARCH64 is supported for Eclipse on macOS'
       end
     else
       raise 'Installing Eclipse is only available on Linux and macOS currently'

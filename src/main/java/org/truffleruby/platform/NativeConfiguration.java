@@ -73,9 +73,6 @@ public final class NativeConfiguration {
                 break;
             case DARWIN:
                 switch (Platform.ARCHITECTURE) {
-                    case AMD64:
-                        DarwinAMD64NativeConfiguration.load(nativeConfiguration, context);
-                        return nativeConfiguration;
                     case AARCH64:
                         DarwinAArch64NativeConfiguration.load(nativeConfiguration, context);
                         return nativeConfiguration;

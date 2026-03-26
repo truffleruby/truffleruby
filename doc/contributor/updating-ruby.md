@@ -226,7 +226,7 @@ Update all of these:
 * Grep for the old Ruby version with `git grep -F x.y doc`
 * Grep for the old Bundler version with `git grep -F x.y.z`
 * If `tool/id.def` or `lib/cext/include/truffleruby/internal/id.h` has changed, then run `jt build core-symbols` and check for correctness.
-* Update `config_*.h` files by running the CI and also the [daily darwin-amd64 workflow](https://github.com/truffleruby/truffleruby/actions/workflows/daily.yml) and copying the output.
+* Update `config_*.h` files by running the CI and copying the output.
 
 For a new major version:
 * Update `TargetRubyVersion` in `.rubocop.yml`

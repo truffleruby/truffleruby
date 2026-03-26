@@ -126,7 +126,6 @@ GEM
 
 PLATFORMS
   ruby
-  x86_64-darwin-23
 
 DEPENDENCIES
   abbrev (= 0.1.2)

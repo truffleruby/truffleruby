@@ -18,7 +18,7 @@ cp "$repo/lib/ffi/pointer.rb" src/main/ruby/truffleruby/core/truffle/ffi/pointer
 
 # Only keep files for the platforms TruffleRuby supports (see NativeConfiguration)
 rm -rf lib/truffle/ffi/platform/*
-cp -R "$repo"/lib/ffi/platform/{x86_64-darwin,aarch64-darwin,x86_64-linux,aarch64-linux} lib/truffle/ffi/platform
+cp -R "$repo"/lib/ffi/platform/{aarch64-darwin,x86_64-linux,aarch64-linux} lib/truffle/ffi/platform
 
 # spec/
 rm -rf spec/ffi

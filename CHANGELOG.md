@@ -61,6 +61,7 @@ Performance:
 
 Incompatible Changes:
 
+* Remove support for `darwin-amd64` (aka `x86_64-darwin`, macOS Intel) since both Apple and GraalVM no longer support it (#4011, @eregon).
 
 Memory Footprint:
 
