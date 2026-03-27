@@ -54,6 +54,7 @@ Compatibility:
 * `require 'readline'` now uses either `Reline` or the `readline-ext` gem, same as CRuby (#3018, @eregon).
 * Update `Kernel#singleton_method` to implement Ruby 3.4 singleton ancestor lookup semantics (#3883, @nirvdrum).
 * Rewrite `Range#step` to handle many more cases, including non-`Numeric` step values using the `+`-based iteration semantics introduced in Ruby 3.4 (#3883, @nirvdrum).
+* `Process.spawn` now raises `Errno::EACCES` instead of `Errno::ENOENT` when the file exists but is not executable (#4176, @alessandro54).
 
 Performance:
 
