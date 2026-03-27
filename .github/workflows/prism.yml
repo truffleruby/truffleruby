@@ -15,7 +15,7 @@ jobs:
       BUNDLE_WITHOUT: "memcheck:types"
     steps:
     - name: Clone Prism
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: ruby/prism
         path: prism
@@ -30,7 +30,7 @@ jobs:
     # has the correct relative path to the cloned prism repo.
     - run: mkdir truffleruby-ws
     - name: Clone TruffleRuby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: truffleruby-ws/truffleruby
     - name: Setup jt

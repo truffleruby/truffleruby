@@ -27,7 +27,7 @@ jobs:
     timeout-minutes: 30
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0 # Necessary for jt check_abi
     - name: Setup system Ruby
@@ -60,7 +60,7 @@ jobs:
         working-directory: build
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: build
     - name: Setup system Ruby
@@ -80,7 +80,7 @@ jobs:
         mv "$(jt -u jvm ruby-home)" "${{ github.workspace }}/truffleruby-jvm"
         cd ${{ github.workspace }}
         tar cf ${{ github.workspace }}/truffleruby-jvm.tar truffleruby-jvm
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: truffleruby-jvm
         path: ${{ github.workspace }}/truffleruby-jvm.tar
@@ -97,7 +97,7 @@ jobs:
         working-directory: build
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: build
     - name: Setup system Ruby
@@ -117,7 +117,7 @@ jobs:
         mv "$(jt -u native ruby-home)" "${{ github.workspace }}/truffleruby-native"
         cd ${{ github.workspace }}
         tar cf ${{ github.workspace }}/truffleruby-native.tar truffleruby-native
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: truffleruby-native
         path: ${{ github.workspace }}/truffleruby-native.tar
@@ -133,7 +133,7 @@ jobs:
         os: [ubuntu-22.04, ubuntu-22.04-arm, macos-14]
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Setup system Ruby
       uses: ruby/setup-ruby@v1
     - name: Setup jt
@@ -151,7 +151,7 @@ jobs:
         working-directory: build
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: build
     - name: Setup system Ruby
@@ -194,13 +194,13 @@ jobs:
         - gems ecosystem # ~2min ~6min
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Setup system Ruby
       uses: ruby/setup-ruby@v1
     - name: Setup jt
       run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         name: truffleruby-jvm
     - uses: ./.github/actions/setup-truffleruby
@@ -214,13 +214,13 @@ jobs:
     timeout-minutes: 30
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Setup system Ruby
       uses: ruby/setup-ruby@v1
     - name: Setup jt
       run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         name: truffleruby-native
     - uses: ./.github/actions/setup-truffleruby
@@ -238,13 +238,13 @@ jobs:
     runs-on: ubuntu-22.04-arm
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Setup system Ruby
       uses: ruby/setup-ruby@v1
     - name: Setup jt
       run: echo "SYSTEM_RUBY=$(which ruby)" >> $GITHUB_ENV && echo "$PWD/bin" >> $GITHUB_PATH
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         name: truffleruby-native
     - uses: ./.github/actions/setup-truffleruby
@@ -260,7 +260,7 @@ jobs:
     env:
       CHECK_LEAKS: 'true'
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Setup jt
       run: echo "$PWD/bin" >> $GITHUB_PATH
 
