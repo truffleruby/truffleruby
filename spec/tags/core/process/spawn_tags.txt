@@ -70,8 +70,6 @@ slow:Process.spawn with a command array raises an ArgumentError if the Strings i
 slow:Process.spawn with a command array raises a TypeError if an element in the Array does not respond to #to_str
 slow:Process.spawn redirects both STDERR and STDOUT at the time to the given name
 fails:Process.spawn sets the umask if given the :umask option
-fails:Process.spawn raises an Errno::EACCES when the file does not have execute permissions
-fails:Process.spawn raises an Errno::EACCES or Errno::EISDIR when passed a directory
 keep(spurious failure):Process.spawn when passed close_others: false does not close file descriptors >= 3 in the child process if fds are set close_on_exec=false
 keep(spurious failure):Process.spawn when passed close_others: false closes file descriptors >= 3 in the child process because they are set close_on_exec by default
 keep(spurious failure):Process.spawn when passed close_others: true closes file descriptors >= 3 in the child process even if fds are set close_on_exec=false
