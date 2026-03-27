@@ -27,9 +27,9 @@ custom message (java.lang.RuntimeException)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionNodeFactory$ThrowJavaExceptionNodeGen.executeAndSpecialize(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionNodeFactory$ThrowJavaExceptionNodeGen.execute(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.language.RubyCoreMethodRootNode.execute(RubyCoreMethodRootNode.java:LINE)
-#{file}:10:in 'Truffle::Debug.throw_java_exception'
-	from #{file}:10:in 'Object#foo'
-	from #{file}:13:in '<main>'
+#{file}:11:in 'Truffle::Debug.throw_java_exception'
+	from #{file}:11:in 'Object#foo'
+	from #{file}:14:in '<main>'
 ```
     EOS
   end
@@ -51,9 +51,9 @@ custom message (java.lang.RuntimeException)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionNodeFactory$ThrowJavaExceptionNodeGen.executeAndSpecialize(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionNodeFactory$ThrowJavaExceptionNodeGen.execute(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.language.RubyCoreMethodRootNode.execute(RubyCoreMethodRootNode.java:LINE)
-#{file}:10:in 'Truffle::Debug.throw_java_exception'
-	from #{file}:10:in 'Object#foo'
-	from #{file}:14:in 'block in <main>'
+#{file}:11:in 'Truffle::Debug.throw_java_exception'
+	from #{file}:11:in 'Object#foo'
+	from #{file}:15:in 'block in <main>'
 ```
     EOS
   end
@@ -73,27 +73,27 @@ message (java.lang.RuntimeException)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionWithCauseNodeFactory$ThrowJavaExceptionWithCauseNodeGen.executeAndSpecialize(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionWithCauseNodeFactory$ThrowJavaExceptionWithCauseNodeGen.execute(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.language.RubyCoreMethodRootNode.execute(RubyCoreMethodRootNode.java:LINE)
-#{file}:10:in 'Truffle::Debug.throw_java_exception_with_cause'
-	from #{file}:10:in 'Object#foo'
-	from #{file}:13:in '<main>'
+#{file}:11:in 'Truffle::Debug.throw_java_exception_with_cause'
+	from #{file}:11:in 'Object#foo'
+	from #{file}:14:in '<main>'
 Caused by:
 cause 1 (java.lang.RuntimeException)
 	from org.truffleruby.debug.TruffleDebugNodes$ThrowJavaExceptionWithCauseNode.throwJavaExceptionWithCause(TruffleDebugNodes.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionWithCauseNodeFactory$ThrowJavaExceptionWithCauseNodeGen.executeAndSpecialize(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionWithCauseNodeFactory$ThrowJavaExceptionWithCauseNodeGen.execute(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.language.RubyCoreMethodRootNode.execute(RubyCoreMethodRootNode.java:LINE)
-#{file}:10:in 'Truffle::Debug.throw_java_exception_with_cause'
-	from #{file}:10:in 'Object#foo'
-	from #{file}:13:in '<main>'
+#{file}:11:in 'Truffle::Debug.throw_java_exception_with_cause'
+	from #{file}:11:in 'Object#foo'
+	from #{file}:14:in '<main>'
 Caused by:
 cause 2 (java.lang.RuntimeException)
 	from org.truffleruby.debug.TruffleDebugNodes$ThrowJavaExceptionWithCauseNode.throwJavaExceptionWithCause(TruffleDebugNodes.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionWithCauseNodeFactory$ThrowJavaExceptionWithCauseNodeGen.executeAndSpecialize(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.debug.TruffleDebugNodesFactory$ThrowJavaExceptionWithCauseNodeFactory$ThrowJavaExceptionWithCauseNodeGen.execute(TruffleDebugNodesFactory.java:LINE)
 	from org.truffleruby.language.RubyCoreMethodRootNode.execute(RubyCoreMethodRootNode.java:LINE)
-#{file}:10:in 'Truffle::Debug.throw_java_exception_with_cause'
-	from #{file}:10:in 'Object#foo'
-	from #{file}:13:in '<main>'
+#{file}:11:in 'Truffle::Debug.throw_java_exception_with_cause'
+	from #{file}:11:in 'Object#foo'
+	from #{file}:14:in '<main>'
 ```
     EOS
   end

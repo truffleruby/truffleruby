@@ -8,7 +8,6 @@
 # GNU Lesser General Public License version 2.1.
 
 # Beware, RubyTCKLanguageProvider use hard-coded line numbers from this file!
-
 -> {
   a = 14
   3.times do
