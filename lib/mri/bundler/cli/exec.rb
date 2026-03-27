@@ -82,8 +82,18 @@ module Bundler
         return false
       end
 
-      first_line = File.open(file, "rb") {|f| f.read(possibilities.map(&:size).max) }
-      possibilities.any? {|shebang| first_line.start_with?(shebang) }
+      File.open(file, "rb") do |f|
+        first_line = f.read(possibilities.map(&:size).max)
+        return true if possibilities.any? {|shebang| first_line.start_with?(shebang) }
+
+        # TruffleRuby launchers in bin/ and exe/ are hybrid scripts with a Bash
+        # prelude and a Ruby section starting at #!ruby. Recognize them so
+        # bundle exec can use the load fast-path and avoid an extra subprocess.
+        f.rewind
+        launcher_header = f.read(4096)
+        launcher_header.include?("# bash section ignored by the Ruby interpreter\n") &&
+          launcher_header.include?("\n#!ruby\n")
+      end
     end
   end
 end
