@@ -39,7 +39,7 @@ jobs:
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Setup system Ruby
       uses: ruby/setup-ruby@v1
     - name: Setup jt
@@ -47,7 +47,7 @@ jobs:
 
     - run: jt build_release_archives_with_old_glibc
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: truffleruby-release-archives-linux-${{ matrix.arch }}
         path: ${{ github.workspace }}/release/*.tar.gz
@@ -68,7 +68,7 @@ jobs:
     runs-on: 'macos-14'
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Setup system Ruby
       uses: ruby/setup-ruby@v1
     - name: Setup jt
@@ -77,7 +77,7 @@ jobs:
 
     - run: jt build_release_archives
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: truffleruby-release-archives-darwin-${{ matrix.arch }}
         path: ${{ github.workspace }}/release/*.tar.gz
@@ -99,13 +99,13 @@ jobs:
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Setup system Ruby
       uses: ruby/setup-ruby@v1
     - name: Setup jt
       run: echo "$PWD/bin" >> $GITHUB_PATH
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         name: truffleruby-release-archives-linux-${{ matrix.arch }}
         path: release
@@ -119,7 +119,7 @@ jobs:
     runs-on: ubuntu-22.04-arm
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Setup system Ruby
       uses: ruby/setup-ruby@v1
     - name: Setup jt
@@ -127,19 +127,19 @@ jobs:
     - uses: ./.github/actions/setup-jvmci-graal
 
     - run: mkdir -p release
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         name: truffleruby-release-archives-linux-amd64
         path: release
     # No truffleruby-release-archives-linux-aarch64 since it will be rebuilt anyway
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         name: truffleruby-release-archives-darwin-aarch64
         path: release
 
     - run: jt build_maven_bundle_with_old_glibc
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: maven-bundle
         path: ${{ github.workspace }}/release/maven-bundle.tar.gz
