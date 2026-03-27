@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Soutaro Matsumoto".freeze]
   s.bindir = "exe".freeze
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "RBS is the language for type signatures for Ruby and standard library definitions.".freeze
   s.email = ["matsumoto@soutaro.com".freeze]
   s.executables = ["rbs".freeze]

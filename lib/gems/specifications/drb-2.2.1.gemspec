@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.metadata = { "homepage_uri" => "https://github.com/ruby/drb", "source_code_uri" => "https://github.com/ruby/drb" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Masatoshi SEKI".freeze]
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "Distributed object system for Ruby".freeze
   s.email = ["seki@ruby-lang.org".freeze]
   s.homepage = "https://github.com/ruby/drb".freeze

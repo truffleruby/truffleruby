@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["NARUSE Yui".freeze, "Charles Oliver Nutter".freeze]
   s.bindir = "exe".freeze
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "Ruby extension for Network Kanji Filter".freeze
   s.email = ["naruse@airemix.jp".freeze, "headius@headius.com".freeze]
   s.extensions = ["ext/nkf/extconf.rb".freeze]

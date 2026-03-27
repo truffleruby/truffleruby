@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.metadata = { "source_code_uri" => "https://github.com/ruby/fileutils" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Minero Aoki".freeze]
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "Several file utility methods for copying, moving, removing, etc.".freeze
   s.email = [nil]
   s.files = ["fileutils.rb".freeze]

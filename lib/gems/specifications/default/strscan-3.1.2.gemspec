@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Minero Aoki".freeze, "Sutou Kouhei".freeze, "Charles Oliver Nutter".freeze]
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "Provides lexical scanning operations on a String.".freeze
   s.email = [nil, "kou@cozmixng.org".freeze, "headius@headius.com".freeze]
   s.extensions = ["ext/strscan/extconf.rb".freeze]

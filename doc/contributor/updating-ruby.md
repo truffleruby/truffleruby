@@ -63,6 +63,8 @@ Follow instructions how to update default and bundled gems.
 
 ## Setup
 
+For both the current version of Ruby you're using and the new version:
+
 Set the environment variable `$VERSION` to the target version:
 ```
 export VERSION=n.n.n
@@ -78,8 +80,6 @@ ruby-build $VERSION ~/.rubies/ruby-$VERSION
 ruby-install --no-install-deps -r ~/tmp ruby $VERSION
 rm -rf ~/tmp/ruby-$VERSION
 ```
-
-Ensure that currently supported MRI version is installed this way too.
 
 `ruby-build` does not keep the build directory
 (required as `RUBY_BUILD_DIR` for `tool/import-mri-files.sh`),
@@ -124,6 +124,8 @@ git revert vOld
 ```
 
 You'll usually get some conflicts to work out.
+When you commit, uncomment the `Conflicts:` section in the git commit message
+so there is a clear record of which files had conflicts.
 
 ## Comment out `-test-` requires
 
@@ -175,15 +177,15 @@ cd $TRUFFLERUBY
 rm -f lib/gems/gems/**/*.{o,a,so,bundle}(N) lib/gems/gems/**/{Makefile,extconf.h,mkmf.log} lib/gems/gems/**/*.mk
 rm -rf lib/gems/gems/typeprof-* lib/gems/specifications/typeprof-*.gemspec
 rm -f lib/gems/gems/rbs-*/Gemfile.lock(N)
-git checkout -- lib/gems/specifications/default/prism-*.gemspec
 ruby tool/patch-default-gemspecs.rb
 ```
 
 Then review bundled gems with extensions like `lib/gems/gems/debug-*` and `lib/gems/gems/rbs-*`
 to ensure no build artifacts/generated files are committed, only "sources".
 
-Update the `ruby/prism` default gem with `tool/import-prism.sh` script. See the "Update Prism" section
-in the [Prism](prism.md) document.
+Update the `ruby/prism` default gem with `tool/import-prism.sh` script.
+See the "Update Prism" section in the [Prism](prism.md) document.
+That way the Prism `gemspec` is correct.
 
 ## Updating exe/ executables
 
@@ -200,14 +202,17 @@ Also update the list of `provided_executables` in `mx_truffleruby.py` if some la
 
 Update all of these:
 
+* Re-apply the patch for the `debug` gem, see `git log -p lib/gems/gems/debug-*/ext/debug/extconf.rb`.
+* Re-apply the patch for the `rbs` gem, see `git log -p lib/gems/gems/rbs-*/ext/rbs_extension/extconf.rb`.
 * Update `.ruby-version`, `TruffleRuby.LANGUAGE_VERSION`
+* IMPORTANT: switch to CRuby n.n.n in the current terminal, e.g., `chruby $(cat .ruby-version)`
 * Update the `SyntaxVersion` in `YARPTranslatorDriver`
 * Given a Ruby version `A.B.C`, update the TruffleRuby version in `mx.truffleruby/suite.py` to `AB.0.0`.
 * Reset `truffleruby-abi-version.h` to `$RUBY_VERSION.1` and `lib/cext/ABI_check.txt` to `1` if `RUBY_VERSION` was updated.
   * use `$TRUFFLERUBY_VERSION.1` in `truffleruby-abi-version.h` instead when on a release branch.
 * Update `versions.json`
-  * run `RUBY_SOURCE_DIR=../ruby-$VERSION tool/update-gem-versions-list.rb`
-* Also update version numbers for bundled gems like `debug` in `lib/gems/gems/debug-*/ext/debug/extconf.rb`.
+  * run `RUBY_SOURCE_DIR=../ruby tool/update-gem-versions-list.rb`
+  * Undo the change to the `prism` version
 * Copy and paste the `-h` and `--help` output from CRuby to `RubyLauncher` (instructions are in the end of the file `src/launcher/java/org/truffleruby/launcher/RubyLauncher.java`)
 * This is a good time to get `jt build` working.
 * Copy and paste the TruffleRuby `--help` output to `doc/user/options.md` (e.g., with `jt ruby --help | xsel -b`)
@@ -225,7 +230,7 @@ Update all of these:
 * Grep for the old Ruby version with `git grep -F x.y.z`
 * Grep for the old Ruby version with `git grep -F x.y doc`
 * Grep for the old Bundler version with `git grep -F x.y.z`
-* If `tool/id.def` or `lib/cext/include/truffleruby/internal/id.h` has changed, then run `jt build core-symbols` and check for correctness.
+* If `tool/id.def` has changed, then run `jt build core-symbols` and check for correctness.
 * Update `config_*.h` files by running the CI and copying the output.
 
 For a new major version:

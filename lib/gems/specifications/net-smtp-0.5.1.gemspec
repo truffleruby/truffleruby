@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.metadata = { "homepage_uri" => "https://github.com/ruby/net-smtp", "source_code_uri" => "https://github.com/ruby/net-smtp" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Yukihiro Matsumoto".freeze]
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "Simple Mail Transfer Protocol client library for Ruby.".freeze
   s.email = ["matz@ruby-lang.org".freeze]
   s.homepage = "https://github.com/ruby/net-smtp".freeze

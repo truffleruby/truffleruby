@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Akinori MUSHA".freeze]
   s.bindir = "exe".freeze
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "Calculates a set of unique abbreviations for a given set of strings".freeze
   s.email = ["knu@idaemons.org".freeze]
   s.homepage = "https://github.com/ruby/abbrev".freeze

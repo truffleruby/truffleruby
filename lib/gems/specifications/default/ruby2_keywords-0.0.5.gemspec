@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Nobuyoshi Nakada".freeze]
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.extra_rdoc_files = ["LICENSE".freeze, "README.md".freeze, "ChangeLog".freeze]
   s.files = ["ChangeLog".freeze, "LICENSE".freeze, "README.md".freeze, "ruby2_keywords.rb".freeze]
   s.homepage = "https://github.com/ruby/ruby2_keywords".freeze

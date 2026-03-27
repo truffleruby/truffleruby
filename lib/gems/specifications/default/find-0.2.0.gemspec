@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.metadata = { "homepage_uri" => "https://github.com/ruby/find", "source_code_uri" => "https://github.com/ruby/find" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Kazuki Tsujimoto".freeze]
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "This module supports top-down traversal of a set of file paths.".freeze
   s.email = ["kazuki@callcc.net".freeze]
   s.files = ["find.rb".freeze]

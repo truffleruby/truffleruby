@@ -47,3 +47,7 @@
 # All our headers are C - don't magically work out they're ObjectiveC or C++
 
 *.h linguist-language=C
+
+# Force textual diff of *.gemspec even if they contain \0 bytes
+
+*.gemspec diff

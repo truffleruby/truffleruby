@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Marc-Andre Lafortune".freeze]
   s.bindir = "exe".freeze
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "An implementation of Matrix and Vector classes.".freeze
   s.email = ["ruby-core@marc-andre.ca".freeze]
   s.homepage = "https://github.com/ruby/matrix".freeze

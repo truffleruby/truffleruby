@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Marc-Andre Lafortune".freeze]
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "Class to build custom data structures, similar to a Hash.".freeze
   s.email = ["ruby-core@marc-andre.ca".freeze]
   s.files = ["ostruct.rb".freeze]

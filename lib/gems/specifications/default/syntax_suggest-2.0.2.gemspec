@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["schneems".freeze]
   s.bindir = "exe".freeze
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "When you get an \"unexpected end\" in your syntax this gem helps you find it".freeze
   s.email = ["richard.schneeman+foo@gmail.com".freeze]
   s.executables = ["syntax_suggest".freeze]

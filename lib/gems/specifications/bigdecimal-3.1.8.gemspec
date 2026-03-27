@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.metadata = { "changelog_uri" => "https://github.com/ruby/bigdecimal/blob/master/CHANGES.md" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Kenta Murata".freeze, "Zachary Scott".freeze, "Shigeo Kobayashi".freeze]
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "This library provides arbitrary-precision decimal floating-point number class.".freeze
   s.email = ["mrkn@mrkn.jp".freeze]
   s.extensions = ["ext/bigdecimal/extconf.rb".freeze]

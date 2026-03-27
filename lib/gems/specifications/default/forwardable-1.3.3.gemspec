@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Keiju ISHITSUKA".freeze]
   s.bindir = "exe".freeze
-  s.date = "2025-10-08"
+  s.date = "2026-03-11"
   s.description = "Provides delegation of specified methods to a designated object.".freeze
   s.email = ["keiju@ruby-lang.org".freeze]
   s.files = ["forwardable.rb".freeze, "forwardable/impl.rb".freeze]
