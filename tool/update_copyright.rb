@@ -1,6 +1,7 @@
-# Copyright (c) 2014, 2025 Oracle and/or its affiliates. All rights reserved. This
-# code is released under a tri EPL/GPL/LGPL license. You can use it,
-# redistribute it and/or modify it under the terms of the:
+# Copyright (c) 2026 TruffleRuby contributors.
+# Copyright (c) 2014-2025 Oracle and/or its affiliates.
+# This code is released under a tri EPL/GPL/LGPL license.
+# You can use it, redistribute it and/or modify it under the terms of the:
 #
 # Eclipse Public License version 2.0, or
 # GNU General Public License version 2, or
@@ -11,9 +12,9 @@ year = Integer(ARGV.first)
 new_copyright_year = year
 
 RB_COPYRIGHT = <<-EOS
-# Copyright (c) #{new_copyright_year} Oracle and/or its affiliates. All rights reserved. This
-# code is released under a tri EPL/GPL/LGPL license. You can use it,
-# redistribute it and/or modify it under the terms of the:
+# Copyright (c) #{new_copyright_year} TruffleRuby contributors
+# This code is released under a tri EPL/GPL/LGPL license.
+# You can use it, redistribute it and/or modify it under the terms of the:
 #
 # Eclipse Public License version 2.0, or
 # GNU General Public License version 2, or
@@ -23,9 +24,9 @@ EOS
 
 JAVA_COPYRIGHT = <<-EOS
 /*
- * Copyright (c) #{new_copyright_year} Oracle and/or its affiliates. All rights reserved. This
- * code is released under a tri EPL/GPL/LGPL license. You can use it,
- * redistribute it and/or modify it under the terms of the:
+ * Copyright (c) #{new_copyright_year} TruffleRuby contributors
+ * This code is released under a tri EPL/GPL/LGPL license.
+ * You can use it, redistribute it and/or modify it under the terms of the:
  *
  * Eclipse Public License version 2.0, or
  * GNU General Public License version 2, or
@@ -44,8 +45,7 @@ NEW_COPYRIGHT = {
 
 EXTENSIONS = %w[.java .rb .c .h .md]
 
-COPYRIGHT = /(?<copyright>Copyright) \(c\) (?<year1>\d{4})(?:(?<sep>, )(?<year2>\d{4}))? Oracle\b/
-COPYRIGHT_MARKDOWN = /(?<copyright>copyright) \(c\) (?<year1>\d{4})(?:(?<sep>-)(?<year2>\d{4}))? Oracle\b/
+COPYRIGHT = /(?<copyright>Copyright|copyright) \(c\) (?<year1>\d{4})(?:-(?<year2>\d{4}))?(?<comma>,)? (?<holder>TruffleRuby contributors)\b/
 
 OTHER_COPYRIGHTS = [
   /Copyright \(c\) \d{4}(?:-\d{4})?,? Evan Phoenix/,
@@ -55,6 +55,7 @@ OTHER_COPYRIGHTS = [
   /Copyright \(C\) \d{4}-\d{4} Wayne Meissner/, # FFI
   /Copyright \(c\) \d{4}, Brian Shirai/, # rubysl-socket
   /Copyright \(c\) \d{4}, \d{4} Todd C\. Miller <Todd\.Miller@courtesan\.com>/, # strlcpy.c
+  /Copyright \(C\) \d{4} Koichi Sasada/, # id.h
   /Ruby is copyrighted free software by Yukihiro Matsumoto/, # MRI license
   /Copyright(?:::)?\s+\(C\)\s+\d{4}\s+Network Applied Communication Laboratory, Inc\./, # MRI stdlibs: thread, timeout
   /\* BEGIN LICENSE BLOCK \**\s*\n\s*\*\s*Version: EPL 2\.0\/GPL 2\.0\/LGPL 2\.1/,
@@ -84,10 +85,12 @@ excludes = %w[
   lib/truffle/io/console/size.rb
   lib/truffle/pathname
   lib/truffle/securerandom
+  lib/truffle/strscan
   src/main/c/bigdecimal
   src/main/c/date
   src/main/c/etc
   src/main/c/io-console
+  src/main/c/json
   src/main/c/nkf
   src/main/c/openssl
   src/main/c/prism-gem
@@ -128,7 +131,7 @@ paths.each do |file|
   md = ext == '.md'
   header = File.read(file, *(400 unless md))
 
-  copyright_regexp = md ? COPYRIGHT_MARKDOWN : COPYRIGHT
+  copyright_regexp = COPYRIGHT
 
   unless copyright_regexp =~ header
     next if md
@@ -141,15 +144,14 @@ paths.each do |file|
 
   next if ENV["ADD_ONLY"]
 
-  copyright, year1, sep, year2 = $~[:copyright], $~[:year1], $~[:sep], $~[:year2]
+  copyright, year1, year2, comma, holder = $~[:copyright], $~[:year1], $~[:year2], $~[:comma], $~[:holder]
   year1 = Integer(year1)
   year2 = Integer(year2 || year1)
-  sep ||= md ? '-' : ', '
 
   if year > year2
     contents = File.read(file)
-    years = "#{year1}#{sep}#{year}"
-    contents.sub!(copyright_regexp, "#{copyright} (c) #{years} Oracle")
+    years = "#{year1}-#{year}"
+    contents.sub!(copyright_regexp, "#{copyright} (c) #{years}#{comma} #{holder}")
     File.write(file, contents)
 
     puts "Updated year in #{file}"

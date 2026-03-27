@@ -1,7 +1,8 @@
 /*
- * Copyright (c) 2017, 2025 Oracle and/or its affiliates. All rights reserved. This
- * code is released under a tri EPL/GPL/LGPL license. You can use it,
- * redistribute it and/or modify it under the terms of the:
+ * Copyright (c) 2026 TruffleRuby contributors.
+ * Copyright (c) 2017-2025 Oracle and/or its affiliates.
+ * This code is released under a tri EPL/GPL/LGPL license.
+ * You can use it, redistribute it and/or modify it under the terms of the:
  *
  * Eclipse Public License version 2.0, or
  * GNU General Public License version 2, or
@@ -19,7 +20,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.CodeSource;
-import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -206,10 +206,10 @@ public class BuildInformationProcessor extends TruffleRubyProcessor {
 
         try (PrintStream stream = new PrintStream(output.openOutputStream(), true, "UTF-8")) {
             stream.println("/*\n" +
-                    " * Copyright (c) " + Calendar.getInstance().get(Calendar.YEAR) +
-                    " Oracle and/or its affiliates. All rights reserved. This\n" +
-                    " * code is released under a tri EPL/GPL/LGPL license. You can use it,\n" +
-                    " * redistribute it and/or modify it under the terms of the:\n" +
+                    " * Copyright (c) 2026 TruffleRuby contributors.\n" +
+                    " * Copyright (c) 2025 Oracle and/or its affiliates.\n" +
+                    " * This code is released under a tri EPL/GPL/LGPL license.\n" +
+                    " * You can use it, redistribute it and/or modify it under the terms of the:\n" +
                     " *\n" +
                     " * Eclipse Public License version 2.0, or\n" +
                     " * GNU General Public License version 2, or\n" +

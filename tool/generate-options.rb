@@ -1,14 +1,15 @@
 #!/usr/bin/env ruby
 
-# Copyright (c) 2016, 2025 Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2026 TruffleRuby contributors.
+# Copyright (c) 2016-2025 Oracle and/or its affiliates.
 # This code is released under a tri EPL/GPL/LGPL license. You can use it,
-# redistribute it and/or modify it under the terms of the:
+# You can use it, redistribute it and/or modify it under the terms of the:
 #
 # Eclipse Public License version 2.0, or
 # GNU General Public License version 2, or
 # GNU Lesser General Public License version 2.1.
 
-copyright = File.read(__FILE__)[/Copyright \(c\) \d+, \d+ Oracle/]
+copyright = File.read(__FILE__)[/Copyright .+? TruffleRuby contributors/]
 
 require 'ostruct'
 require 'yaml'
@@ -136,9 +137,10 @@ file = __FILE__
 
 TEMPLATE = <<'JAVA'
 /*
- * <%= copyright %> and/or its affiliates. All rights reserved. This
- * code is released under a tri EPL/GPL/LGPL license. You can use it,
- * redistribute it and/or modify it under the terms of the:
+ * <%= copyright %>.
+ * Copyright (c) 2016-2025 Oracle and/or its affiliates.
+ * This code is released under a tri EPL/GPL/LGPL license.
+ * You can use it, redistribute it and/or modify it under the terms of the:
  *
  * Eclipse Public License version 2.0, or
  * GNU General Public License version 2, or
@@ -219,9 +221,10 @@ File.write('src/main/java/org/truffleruby/options/LanguageOptions.java', ERB.new
 
 File.write('src/shared/java/org/truffleruby/shared/options/OptionsCatalog.java', ERB.new(<<JAVA).result)
 /*
- * <%= copyright %> and/or its affiliates. All rights reserved. This
- * code is released under a tri EPL/GPL/LGPL license. You can use it,
- * redistribute it and/or modify it under the terms of the:
+ * <%= copyright %>.
+ * Copyright (c) 2016-2025 Oracle and/or its affiliates.
+ * This code is released under a tri EPL/GPL/LGPL license.
+ * You can use it, redistribute it and/or modify it under the terms of the:
  *
  * Eclipse Public License version 2.0, or
  * GNU General Public License version 2, or
