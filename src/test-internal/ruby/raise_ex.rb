@@ -10,7 +10,6 @@
 # GNU Lesser General Public License version 2.1.
 
 # Beware, RubyDebugTest use hard-coded line numbers from this file!
-
 def shortArg(n)
   if n > 65535
     raise ArgumentError, 'Number too big', caller # Using a custom backtrace

@@ -10,7 +10,6 @@
 # GNU Lesser General Public License version 2.1.
 
 # Beware, RubyDebugTest use hard-coded line numbers from this file!
-
 a = 14
 b = 2
 c = 3

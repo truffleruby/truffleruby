@@ -8,7 +8,6 @@
 # GNU Lesser General Public License version 2.1.
 
 # Beware, RubyDebugTest use hard-coded line numbers from this file!
-
 def temperature_in_city(name)
   cityArray = name.bytes
   citySum = cityArray.reduce(0, :+)

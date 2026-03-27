@@ -18,8 +18,8 @@ module TruffleDebugSpecFixtures
     c * 2
   end
 
-  ADD_LINE = 16
-  MUL_LINE = 17
+  ADD_LINE = 17
+  MUL_LINE = 18
 
 end
 

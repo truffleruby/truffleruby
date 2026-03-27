@@ -8,7 +8,6 @@
 # GNU Lesser General Public License version 2.1.
 
 # TODO CS 19-Feb-16 Not compliant with MRI - here as a regression test
-
 require_relative 'tracing'
 
 def add(a)
