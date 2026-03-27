@@ -23,7 +23,7 @@ jobs:
         registry: ghcr.io
         username: truffleruby
         password: ${{ secrets.GITHUB_TOKEN }}
-    - uses: docker/build-push-action@v6
+    - uses: docker/build-push-action@v7
       with:
         file: tool/dockerfiles/${{ matrix.dockerfile }}.dockerfile
         tags: ghcr.io/truffleruby/truffleruby:${{ matrix.dockerfile }}
