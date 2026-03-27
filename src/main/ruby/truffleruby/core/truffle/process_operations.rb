@@ -509,7 +509,7 @@ module Truffle
         # if posix_spawnp returned a pid (e.g. on Linux) but the command is not found/executable.
         # Also sets $? like MRI does when spawn raises.
         begin
-          resolve_in_path(@command)
+          @command = resolve_in_path(@command)
         rescue Errno::ENOENT, Errno::EACCES
           Primitive.thread_set_return_code Process::Status.new(-1, 127, nil, nil)
           raise
