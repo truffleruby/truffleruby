@@ -171,7 +171,7 @@ module RbConfig
     'host'              => host,
     'host_os'           => host_os_full,
     'includedir'        => includedir,
-    'INSTALL'           => '/usr/bin/install -c',
+    'INSTALL'           => 'install -c',
     'LDFLAGS'           => ldflags,
     'libdirname'        => 'libdir',
     'LIBEXT'            => 'a',
