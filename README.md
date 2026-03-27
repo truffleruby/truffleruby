@@ -188,8 +188,8 @@ For known vulnerabilities in Ruby, please refer to the [known-cves](doc/user/kno
 
 ## Licence
 
-TruffleRuby is copyright (c) 2013-2025 Oracle and/or its affiliates, and is made
-available to you under the terms of any one of the following three licenses:
+TruffleRuby is copyright (c) 2013-2025 Oracle and/or its affiliates; 2026 TruffleRuby contributors,
+and is made available to you under the terms of any one of the following three licenses:
 
 * Eclipse Public License version 2.0, or
 * GNU General Public License version 2, or

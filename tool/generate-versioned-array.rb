@@ -1,6 +1,7 @@
-# Copyright (c) 2021, 2025 Oracle and/or its affiliates. All rights reserved. This
-# code is released under a tri EPL/GPL/LGPL license. You can use it,
-# redistribute it and/or modify it under the terms of the:
+# Copyright (c) 2026 TruffleRuby contributors.
+# Copyright (c) 2021-2025 Oracle and/or its affiliates.
+# This code is released under a tri EPL/GPL/LGPL license.
+# You can use it, redistribute it and/or modify it under the terms of the:
 #
 # Eclipse Public License version 2.0, or
 # GNU General Public License version 2, or
@@ -8,15 +9,16 @@
 
 abort "this file should be run on TruffleRuby to list TruffleRuby's Array methods" unless RUBY_ENGINE == 'truffleruby'
 
-copyright = File.read(__FILE__)[/Copyright \(c\) \d+, \d+ Oracle/]
+copyright = File.read(__FILE__)[/Copyright .+? TruffleRuby contributors/]
 file = 'src/main/ruby/truffleruby/core/truffle/versioned_array.rb'
 
 code = <<RUBY
 # frozen_string_literal: true
 
-# #{copyright} and/or its affiliates. All rights reserved. This
-# code is released under a tri EPL/GPL/LGPL license. You can use it,
-# redistribute it and/or modify it under the terms of the:
+# #{copyright}.
+# Copyright (c) 2021-2025 Oracle and/or its affiliates.
+# This code is released under a tri EPL/GPL/LGPL license.
+# You can use it, redistribute it and/or modify it under the terms of the:
 #
 # Eclipse Public License version 2.0, or
 # GNU General Public License version 2, or
