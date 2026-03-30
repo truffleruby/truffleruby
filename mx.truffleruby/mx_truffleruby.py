@@ -423,10 +423,23 @@ def truffleruby_standalone_deps():
     return mx_truffle.resolve_truffle_dist_names(use_optimized_runtime=include_truffle_runtime)
 
 def librubyvm_build_args():
+    args = []
+
     if mx_sdk_vm_ng.is_nativeimage_ee() and mx.get_os() == 'linux' and 'NATIVE_IMAGE_AUXILIARY_ENGINE_CACHE' not in os.environ:
-        return ['--gc=G1', '-H:-ProtectionKeys']
-    else:
-        return []
+        args += ['--gc=G1', '-H:-ProtectionKeys']
+
+    # The native-image driver sanitizes the builder JVM's environment, keeping only a
+    # small set of variables (PATH, HOME, etc.). On systems like NixOS where libraries
+    # and SDKs aren't in standard paths, the compiler and linker need additional
+    # environment variables to locate them. LIBRARY_PATH is needed on Linux for the
+    # linker to find libraries like zlib, and SDKROOT is needed on macOS for the SDK
+    # headers and libraries. The -E flag passes these through the sanitization barrier
+    # when set in the current environment, and is a no-op otherwise.
+    for env_var in ['LIBRARY_PATH', 'SDKROOT']:
+        if env_var in os.environ:
+            args.append('-E' + env_var)
+
+    return args
 
 # Commands
 
