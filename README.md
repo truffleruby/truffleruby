@@ -95,8 +95,8 @@ TruffleRuby is actively tested on the following systems:
 
 Architectures:
 
-* AMD64 (aka `x86_64`): Supported
-* AArch64 (aka `arm64`): Supported on Linux (from 21.2) and on macOS (from 22.2)
+* AMD64 (aka `x86_64`): Supported on Linux
+* AArch64 (aka `arm64`): Supported on Linux and on macOS
 
 You may find that TruffleRuby will not work if you severely restrict the
 environment, for example, by unmounting system filesystems such as `/dev/shm`.
