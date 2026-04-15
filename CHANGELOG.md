@@ -8,6 +8,7 @@ Bug fixes:
 
 Compatibility:
 
+* Support  `--vm.XstartOnFirstThread` on macOS, which is required for some UI libraries like `SDL` (#4228, @timfel).
 
 Performance:
 
