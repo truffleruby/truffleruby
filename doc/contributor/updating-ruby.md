@@ -27,8 +27,8 @@ Then run:
 ```
 cd truffleruby
 cd ../ruby
-git checkout -b truffleruby-updates-$VERSION vn_n_n
-git cherry-pick 8f70c5757c5fb900bc438465d9b1afc804f9a3e2
+git checkout -b truffleruby-updates-$VERSION vn.n.n
+git cherry-pick 5ca7fd9d2bfc028f41fe563be39e44e6d1e31129
 pushd ../..
 git clone git@github.com:ruby/$GEM.git
 cd $GEM
@@ -81,7 +81,7 @@ export VERSION=n.n.n
 Re-install the target MRI version using the commands, to have a clean set of gems:
 ```
 rm -rf ~/.rubies/ruby-$VERSION
-ruby-build $VERSION ~/.rubies/ruby-$VERSION
+ruby-build -d ruby-$VERSION ~/.rubies
 ```
 
 ## Create reference branches
@@ -92,7 +92,7 @@ reference branches (in the TruffleRuby repository) that include unmodified MRI s
 Check out the version of Ruby you want to create the branch for in `../ruby`, e.g.:
 
 ```
-git clone --branch v3_1_2 https://github.com/ruby/ruby.git ../ruby
+git clone --branch v4.0.2 https://github.com/ruby/ruby.git ../ruby
 ```
 
 Then create the reference branch in the TruffleRuby repository
