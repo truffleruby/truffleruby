@@ -145,11 +145,9 @@ struct rb_io {
     RBIMPL_ATTR_DEPRECATED(("with no replacement"))
     VALUE self;
 
-#ifndef TRUFFLERUBY
     /** stdio ptr for read/write, if available. */
     RBIMPL_ATTR_DEPRECATED(("with no replacement"))
     FILE *stdio_file;
-#endif
 
     /** file descriptor. */
     RBIMPL_ATTR_DEPRECATED(("rb_io_descriptor"))
@@ -159,7 +157,6 @@ struct rb_io {
     RBIMPL_ATTR_DEPRECATED(("rb_io_mode"))
     int mode;
 
-#ifndef TRUFFLERUBY
     /** child's pid (for pipes) */
     RBIMPL_ATTR_DEPRECATED(("with no replacement"))
     rb_pid_t pid;
@@ -167,13 +164,11 @@ struct rb_io {
     /** number of lines read */
     RBIMPL_ATTR_DEPRECATED(("with no replacement"))
     int lineno;
-#endif
 
     /** pathname for file */
     RBIMPL_ATTR_DEPRECATED(("rb_io_path"))
     VALUE pathv;
 
-#ifndef TRUFFLERUBY
     /** finalize proc */
     RBIMPL_ATTR_DEPRECATED(("with no replacement"))
     void (*finalize)(struct rb_io*,int);
@@ -188,7 +183,6 @@ struct rb_io {
      */
     RBIMPL_ATTR_DEPRECATED(("with no replacement"))
     rb_io_buffer_t rbuf;
-#endif
 
     /**
      * Duplex IO object, if set.
@@ -198,7 +192,6 @@ struct rb_io {
     RBIMPL_ATTR_DEPRECATED(("rb_io_get_write_io"))
     VALUE tied_io_for_writing;
 
-#ifndef TRUFFLERUBY
     RBIMPL_ATTR_DEPRECATED(("with no replacement"))
     struct rb_io_encoding encs; /**< Decomposed encoding flags. */
 
@@ -259,7 +252,6 @@ struct rb_io {
      */
     RBIMPL_ATTR_DEPRECATED(("rb_io_timeout/rb_io_set_timeout"))
     VALUE timeout;
-#endif // TRUFFLERUBY
 };
 #endif
 
@@ -401,12 +393,7 @@ VALUE rb_io_closed_p(VALUE io);
  * @exception   rb_eIOError      `obj` is closed.
  * @post        `fp` holds `obj`'s underlying IO.
  */
-#ifdef TRUFFLERUBY
-rb_io_t* rb_tr_io_get_rb_io_t(VALUE io);
-#define RB_IO_POINTER(obj,fp) rb_io_check_closed((fp) = rb_tr_io_get_rb_io_t(rb_io_taint_check(obj)))
-#else
 #define RB_IO_POINTER(obj,fp) rb_io_check_closed((fp) = RFILE(rb_io_taint_check(obj))->fptr)
-#endif
 
 /**
  * This is  an old name  of #RB_IO_POINTER.  Not sure  if we want  to deprecate
@@ -769,12 +756,6 @@ VALUE rb_io_path(VALUE io);
  * @retval      int        A file descriptor.
  */
 int rb_io_descriptor(VALUE io);
-
-#ifdef TRUFFLERUBY
-// These functions come from 3.3 but truffleruby already implements them
-VALUE rb_io_path(VALUE io);
-int rb_io_mode(VALUE io);
-#endif
 
 /**
  * Get the mode of the IO.

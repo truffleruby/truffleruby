@@ -35,12 +35,6 @@ enum ruby_coderange_type {
     /** The object's coderange is unclear yet. */
     RUBY_ENC_CODERANGE_UNKNOWN  = 0,
 
-#ifdef TRUFFLERUBY
-    RUBY_ENC_CODERANGE_7BIT     = 1,
-    RUBY_ENC_CODERANGE_VALID    = 2,
-    RUBY_ENC_CODERANGE_BROKEN   = 4
-#else
-
     /** The object holds 0 to 127 inclusive and nothing else. */
     RUBY_ENC_CODERANGE_7BIT     = ((int)RUBY_FL_USER8),
 
@@ -54,7 +48,6 @@ enum ruby_coderange_type {
     RUBY_ENC_CODERANGE_MASK     = (RUBY_ENC_CODERANGE_7BIT|
                                    RUBY_ENC_CODERANGE_VALID|
                                    RUBY_ENC_CODERANGE_BROKEN)
-#endif
 };
 
 RBIMPL_ATTR_CONST()
@@ -98,9 +91,6 @@ RBIMPL_ATTR_PURE_UNLESS_DEBUG()
  * @param[in]  obj  Target object.
  * @return     An enum ::ruby_coderange_type.
  */
-#ifdef TRUFFLERUBY
-enum ruby_coderange_type RB_ENC_CODERANGE(VALUE obj);
-#else
 static inline enum ruby_coderange_type
 RB_ENC_CODERANGE(VALUE obj)
 {
@@ -108,7 +98,6 @@ RB_ENC_CODERANGE(VALUE obj)
 
     return RBIMPL_CAST((enum ruby_coderange_type)ret);
 }
-#endif
 
 RBIMPL_ATTR_PURE_UNLESS_DEBUG()
 /**
@@ -136,16 +125,12 @@ RB_ENC_CODERANGE_ASCIIONLY(VALUE obj)
  * @param[out]  cr   An enum ::ruby_coderange_type.
  * @post        `obj`'s code range is `cr`.
  */
-#ifdef TRUFFLERUBY
-void RB_ENC_CODERANGE_SET(VALUE obj, int cr);
-#else
 static inline void
 RB_ENC_CODERANGE_SET(VALUE obj, enum ruby_coderange_type cr)
 {
     RB_FL_UNSET_RAW(obj, RUBY_ENC_CODERANGE_MASK);
     RB_FL_SET_RAW(obj, cr);
 }
-#endif
 
 /**
  * Destructively clears  the passed object's  (inline) code range.   The object
@@ -155,20 +140,11 @@ RB_ENC_CODERANGE_SET(VALUE obj, enum ruby_coderange_type cr)
  * @param[out]  obj  Target object.
  * @post        `obj`'s code range is ::RUBY_ENC_CODERANGE_UNKNOWN.
  */
-#ifdef TRUFFLERUBY
-void rb_enc_coderange_clear(VALUE);
-static inline void
-RB_ENC_CODERANGE_CLEAR(VALUE obj)
-{
-    rb_enc_coderange_clear(obj);
-}
-#else
 static inline void
 RB_ENC_CODERANGE_CLEAR(VALUE obj)
 {
     RB_FL_UNSET_RAW(obj, RUBY_ENC_CODERANGE_MASK);
 }
-#endif
 
 RBIMPL_ATTR_CONST()
 /* assumed ASCII compatibility */

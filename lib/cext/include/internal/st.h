@@ -1,8 +1,7 @@
-// Used by st.c
 #ifndef INTERNAL_ST_H
 #define INTERNAL_ST_H
 
-#include "ruby/st.h"
+#include "include/ruby/st.h"
 
 st_table *rb_st_replace(st_table *new_tab, st_table *old_tab);
 #define st_replace rb_st_replace

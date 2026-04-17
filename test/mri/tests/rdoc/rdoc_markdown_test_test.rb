@@ -2,13 +2,8 @@
 require_relative 'helper'
 require 'pp'
 
-if defined?(::TruffleRuby)
-  require 'rdoc/markup/block_quote'
-  require 'rdoc/markdown'
-else
-  require_relative '../../lib/rdoc/markup/block_quote'
-  require_relative '../../lib/rdoc/markdown'
-end
+require_relative '../../lib/rdoc'
+require_relative '../../lib/rdoc/markdown'
 
 class RDocMarkdownTestTest < RDoc::TestCase
 

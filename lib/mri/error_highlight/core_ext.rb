@@ -36,9 +36,7 @@ module ErrorHighlight
     end
   end
 
-  unless defined?(::TruffleRuby) # uses RubyVM::AbstractSyntaxTree
-    NameError.prepend(CoreExt)
-  end
+  NameError.prepend(CoreExt)
 
   if Exception.method_defined?(:detailed_message)
     # ErrorHighlight is enabled for TypeError and ArgumentError only when Exception#detailed_message is available.

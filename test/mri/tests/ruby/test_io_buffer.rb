@@ -4,14 +4,13 @@ require 'tempfile'
 require 'rbconfig/sizeof'
 
 class TestIOBuffer < Test::Unit::TestCase
-  # TruffleRuby: no IO::Buffer yet
-  # experimental = Warning[:experimental]
-  # begin
-  #   Warning[:experimental] = false
-  #   IO::Buffer.new(0)
-  # ensure
-  #   Warning[:experimental] = experimental
-  # end
+  experimental = Warning[:experimental]
+  begin
+    Warning[:experimental] = false
+    IO::Buffer.new(0)
+  ensure
+    Warning[:experimental] = experimental
+  end
 
   def assert_negative(value)
     assert(value < 0, "Expected #{value} to be negative!")

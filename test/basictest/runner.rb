@@ -3,13 +3,8 @@
 exit if defined?(CROSS_COMPILING) and CROSS_COMPILING
 ruby = ENV["RUBY"]
 unless ruby
-  if defined?(::TruffleRuby)
-    require 'rbconfig'
-    ruby = RbConfig.ruby
-  else
-    load './rbconfig.rb'
-    ruby = "./#{RbConfig::CONFIG['ruby_install_name']}#{RbConfig::CONFIG['EXEEXT']}"
-  end
+  load './rbconfig.rb'
+  ruby = "./#{RbConfig::CONFIG['ruby_install_name']}#{RbConfig::CONFIG['EXEEXT']}"
 end
 unless File.exist? ruby
   print "#{ruby} is not found.\n"
