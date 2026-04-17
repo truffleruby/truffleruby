@@ -203,7 +203,7 @@ Update all of these:
 * Re-apply the patch for the `debug` gem, see `git log --follow -p 'lib/gems/gems/debug-*/ext/debug/extconf.rb'`.
 * Re-apply the patch for the `rbs` gem, see `git log --follow -p 'lib/gems/gems/rbs-*/ext/rbs_extension/extconf.rb'`.
 * Update `.ruby-version`, `TruffleRuby.LANGUAGE_VERSION`
-* IMPORTANT: switch to CRuby n.n.n in the current terminal, e.g., `chruby $(cat .ruby-version)`
+* IMPORTANT: switch to CRuby n.n.n in the current terminal, e.g., `chruby ruby-$(cat .ruby-version)`
 * Update the `SyntaxVersion` in `YARPTranslatorDriver`
 * Given a Ruby version `A.B.C`, update the TruffleRuby version in `mx.truffleruby/suite.py` to `AB.0.0`.
 * Reset `truffleruby-abi-version.h` to `$RUBY_VERSION.1` and `lib/cext/ABI_check.txt` to `1` if `RUBY_VERSION` was updated.
