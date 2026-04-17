@@ -39,30 +39,46 @@ module JSON
         '\\'  =>  '\\\\',
       }.freeze # :nodoc:
 
-      ESCAPE_PATTERN = /[\/"\\\x0-\x1f]/n # :nodoc:
-
       SCRIPT_SAFE_MAP = MAP.merge(
         '/'  =>  '\\/',
-        "\u2028".b => '\u2028',
-        "\u2029".b => '\u2029',
+        "\u2028" => '\u2028',
+        "\u2029" => '\u2029',
       ).freeze
 
-      SCRIPT_SAFE_ESCAPE_PATTERN = Regexp.union(ESCAPE_PATTERN, "\u2028".b, "\u2029".b)
+      SCRIPT_SAFE_ESCAPE_PATTERN = /[\/"\\\x0-\x1f\u2028-\u2029]/
+
+      def self.native_type?(value) # :nodoc:
+        (false == value || true == value || nil == value || String === value || Array === value || Hash === value || Integer === value || Float === value || Fragment === value)
+      end
+
+      def self.native_key?(key) # :nodoc:
+        (Symbol === key || String === key)
+      end
+
+      def self.valid_encoding?(string) # :nodoc:
+        return false unless string.encoding == ::Encoding::UTF_8 || string.encoding == ::Encoding::US_ASCII
+        string.is_a?(Symbol) || string.valid_encoding?
+      end
 
       # Convert a UTF8 encoded Ruby string _string_ to a JSON string, encoded with
       # UTF16 big endian characters as \u????, and return it.
-      def utf8_to_json(string, script_safe = false) # :nodoc:
-        string = string.b
+      def self.utf8_to_json(string, script_safe = false) # :nodoc:
         if script_safe
-          string.gsub!(SCRIPT_SAFE_ESCAPE_PATTERN) { SCRIPT_SAFE_MAP[$&] || $& }
+          if SCRIPT_SAFE_ESCAPE_PATTERN.match?(string)
+            string.gsub(SCRIPT_SAFE_ESCAPE_PATTERN, SCRIPT_SAFE_MAP)
+          else
+            string
+          end
         else
-          string.gsub!(ESCAPE_PATTERN) { MAP[$&] || $& }
+          if /["\\\x0-\x1f]/.match?(string)
+            string.gsub(/["\\\x0-\x1f]/, MAP)
+          else
+            string
+          end
         end
-        string.force_encoding(::Encoding::UTF_8)
-        string
       end
 
-      def utf8_to_json_ascii(original_string, script_safe = false) # :nodoc:
+      def self.utf8_to_json_ascii(original_string, script_safe = false) # :nodoc:
         string = original_string.b
         map = script_safe ? SCRIPT_SAFE_MAP : MAP
         string.gsub!(/[\/"\\\x0-\x1f]/n) { map[$&] || $& }
@@ -86,24 +102,17 @@ module JSON
         raise GeneratorError.new(e.message, original_string)
       end
 
-      def valid_utf8?(string)
+      def self.valid_utf8?(string)
         encoding = string.encoding
         (encoding == Encoding::UTF_8 || encoding == Encoding::ASCII) &&
           string.valid_encoding?
       end
-      module_function :utf8_to_json, :utf8_to_json_ascii, :valid_utf8?
 
       # This class is used to create State instances, that are use to hold data
       # while generating a JSON text from a Ruby data structure.
       class State
         def self.generate(obj, opts = nil, io = nil)
-          string = new(opts).generate(obj)
-          if io
-            io.write(string)
-            io
-          else
-            string
-          end
+          new(opts).generate(obj, io)
         end
 
         # Creates a State object from _opts_, which ought to be Hash to create
@@ -111,16 +120,17 @@ module JSON
         # an unconfigured instance. If _opts_ is a State object, it is just
         # returned.
         def self.from_state(opts)
-          case
-          when self === opts
-            opts
-          when opts.respond_to?(:to_hash)
-            new(opts.to_hash)
-          when opts.respond_to?(:to_h)
-            new(opts.to_h)
-          else
-            SAFE_STATE_PROTOTYPE.dup
+          if opts
+            case
+            when self === opts
+              return opts
+            when opts.respond_to?(:to_hash)
+              return new(opts.to_hash)
+            when opts.respond_to?(:to_h)
+              return new(opts.to_h)
+            end
           end
+          new
         end
 
         # Instantiates a new State object, configured by _opts_.
@@ -148,6 +158,7 @@ module JSON
           @array_nl              = ''
           @allow_nan             = false
           @ascii_only            = false
+          @as_json               = false
           @depth                 = 0
           @buffer_initial_length = 1024
           @script_safe           = false
@@ -172,6 +183,9 @@ module JSON
 
         # This string is put at the end of a line that holds a JSON array.
         attr_accessor :array_nl
+
+        # This proc converts unsupported types into native JSON types.
+        attr_accessor :as_json
 
         # This integer returns the maximum level of data structure nesting in
         # the generated JSON, max_nesting = 0 if no maximum is checked.
@@ -203,7 +217,7 @@ module JSON
           return if @max_nesting.zero?
           current_nesting = depth + 1
           current_nesting > @max_nesting and
-            raise NestingError, "nesting of #{current_nesting} is too deep"
+            raise NestingError, "nesting of #{current_nesting} is too deep. Did you try to serialize objects with circular references?"
         end
 
         # Returns true, if circular data structures are checked,
@@ -257,6 +271,7 @@ module JSON
           @object_nl             = opts[:object_nl]     || '' if opts.key?(:object_nl)
           @array_nl              = opts[:array_nl]      || '' if opts.key?(:array_nl)
           @allow_nan             = !!opts[:allow_nan]         if opts.key?(:allow_nan)
+          @as_json               = opts[:as_json].to_proc     if opts[:as_json]
           @ascii_only            = opts[:ascii_only]          if opts.key?(:ascii_only)
           @depth                 = opts[:depth] || 0
           @buffer_initial_length ||= opts[:buffer_initial_length]
@@ -267,6 +282,12 @@ module JSON
             !!opts[:escape_slash]
           else
             false
+          end
+
+          if opts.key?(:allow_duplicate_key)
+            @allow_duplicate_key = !!opts[:allow_duplicate_key]
+          else
+            @allow_duplicate_key = nil # nil is deprecation
           end
 
           @strict                = !!opts[:strict] if opts.key?(:strict)
@@ -282,14 +303,23 @@ module JSON
         end
         alias merge configure
 
+        def allow_duplicate_key? # :nodoc:
+          @allow_duplicate_key
+        end
+
         # Returns the configuration instance variables as a hash, that can be
         # passed to the configure method.
         def to_h
           result = {}
           instance_variables.each do |iv|
-            iv = iv.to_s[1..-1]
-            result[iv.to_sym] = self[iv]
+            key = iv.to_s[1..-1]
+            result[key.to_sym] = instance_variable_get(iv)
           end
+
+          if result[:allow_duplicate_key].nil?
+            result.delete(:allow_duplicate_key)
+          end
+
           result
         end
 
@@ -299,9 +329,12 @@ module JSON
         # returns the result. If no valid JSON document can be
         # created this method raises a
         # GeneratorError exception.
-        def generate(obj)
+        def generate(obj, anIO = nil)
+          return dup.generate(obj, anIO) if frozen?
+
+          depth = @depth
           if @indent.empty? and @space.empty? and @space_before.empty? and @object_nl.empty? and @array_nl.empty? and
-              !@ascii_only and !@script_safe and @max_nesting == 0 and !@strict
+              !@ascii_only and !@script_safe and @max_nesting == 0 and (!@strict || Symbol === obj)
             result = generate_json(obj, ''.dup)
           else
             result = obj.to_json(self)
@@ -310,7 +343,14 @@ module JSON
             "source sequence #{result.inspect} is illegal/malformed utf-8",
             obj
           )
-          result
+          if anIO
+            anIO.write(result)
+            anIO
+          else
+            result
+          end
+        ensure
+          @depth = depth unless frozen?
         end
 
         # Handles @allow_nan, @buffer_initial_length, other ivars must be the default value (see above)
@@ -319,8 +359,17 @@ module JSON
           when Hash
             buf << '{'
             first = true
+            key_type = nil
             obj.each_pair do |k,v|
-              buf << ',' unless first
+              if first
+                key_type = k.class
+              else
+                if key_type && !@allow_duplicate_key && key_type != k.class
+                  key_type = nil # stop checking
+                  JSON.send(:on_mixed_keys_hash, obj, !@allow_duplicate_key.nil?)
+                end
+                buf << ','
+              end
 
               key_str = k.to_s
               if key_str.class == String
@@ -353,6 +402,12 @@ module JSON
             end
           when Integer
             buf << obj.to_s
+          when Symbol
+            if @strict
+              fast_serialize_string(obj.name, buf)
+            else
+              buf << obj.to_json(self)
+            end
           else
             # Note: Float is handled this way since Float#to_s is slow anyway
             buf << obj.to_json(self)
@@ -371,8 +426,8 @@ module JSON
           end
           raise GeneratorError.new("source sequence is illegal/malformed utf-8", string) unless string.valid_encoding?
 
-          if /["\\\x0-\x1f]/n.match?(string)
-            buf << string.gsub(/["\\\x0-\x1f]/n, MAP)
+          if /["\\\x0-\x1f]/.match?(string)
+            buf << string.gsub(/["\\\x0-\x1f]/, MAP)
           else
             buf << string
           end
@@ -381,6 +436,8 @@ module JSON
 
         # Return the value returned by method +name+.
         def [](name)
+          ::JSON.deprecation_warning("JSON::State#[] is deprecated and will be removed in json 3.0.0")
+
           if respond_to?(name)
             __send__(name)
           else
@@ -390,6 +447,8 @@ module JSON
         end
 
         def []=(name, value)
+          ::JSON.deprecation_warning("JSON::State#[]= is deprecated and will be removed in json 3.0.0")
+
           if respond_to?(name_writer = "#{name}=")
             __send__ name_writer, value
           else
@@ -404,8 +463,20 @@ module JSON
           # it to a JSON string, and returns the result. This is a fallback, if no
           # special method #to_json was defined for some object.
           def to_json(state = nil, *)
-            if state && State.from_state(state).strict?
-              raise GeneratorError.new("#{self.class} not allowed in JSON", self)
+            state = State.from_state(state) if state
+            if state&.strict?
+              value = self
+              if state.strict? && !Generator.native_type?(value)
+                if state.as_json
+                  value = state.as_json.call(value, false)
+                  unless Generator.native_type?(value)
+                    raise GeneratorError.new("#{value.class} returned by #{state.as_json} not allowed in JSON", value)
+                  end
+                  value.to_json(state)
+                else
+                  raise GeneratorError.new("#{value.class} not allowed in JSON", value)
+                end
+              end
             else
               to_s.to_json
             end
@@ -420,16 +491,14 @@ module JSON
           # _depth_ is used to find out nesting depth, to indent accordingly.
           def to_json(state = nil, *)
             state = State.from_state(state)
+            depth = state.depth
             state.check_max_nesting
             json_transform(state)
+          ensure
+            state.depth = depth
           end
 
           private
-
-          def json_shift(state)
-            state.object_nl.empty? or return ''
-            state.indent * state.depth
-          end
 
           def json_transform(state)
             depth = state.depth += 1
@@ -442,10 +511,33 @@ module JSON
             delim = ",#{state.object_nl}"
             result = +"{#{state.object_nl}"
             first = true
+            key_type = nil
             indent = !state.object_nl.empty?
             each { |key, value|
-              result << delim unless first
+              if first
+                key_type = key.class
+              else
+                if key_type && !state.allow_duplicate_key? && key_type != key.class
+                  key_type = nil # stop checking
+                  JSON.send(:on_mixed_keys_hash, self, state.allow_duplicate_key? == false)
+                end
+                result << delim
+              end
               result << state.indent * depth if indent
+
+              if state.strict?
+                if state.as_json && (!Generator.native_key?(key) || !Generator.valid_encoding?(key))
+                  key = state.as_json.call(key, true)
+                end
+
+                unless Generator.native_key?(key)
+                  raise GeneratorError.new("#{key.class} not allowed as object key in JSON", key)
+                end
+
+                unless Generator.valid_encoding?(key)
+                  raise GeneratorError.new("source sequence is illegal/malformed utf-8", key)
+                end
+              end
 
               key_str = key.to_s
               if key_str.is_a?(String)
@@ -455,16 +547,26 @@ module JSON
               end
 
               result = +"#{result}#{key_json}#{state.space_before}:#{state.space}"
-              if state.strict? && !(false == value || true == value || nil == value || String === value || Array === value || Hash === value || Integer === value || Float === value)
-                raise GeneratorError.new("#{value.class} not allowed in JSON", value)
+              if state.strict? && !Generator.native_type?(value)
+                if state.as_json
+                  value = state.as_json.call(value, false)
+                  unless Generator.native_type?(value)
+                    raise GeneratorError.new("#{value.class} returned by #{state.as_json} not allowed in JSON", value)
+                  end
+                  result << value.to_json(state)
+                  state.depth = depth
+                else
+                  raise GeneratorError.new("#{value.class} not allowed in JSON", value)
+                end
               elsif value.respond_to?(:to_json)
                 result << value.to_json(state)
+                state.depth = depth
               else
                 result << %{"#{String(value)}"}
               end
               first = false
             }
-            depth = state.depth -= 1
+            depth -= 1
             unless first
               result << state.object_nl
               result << state.indent * depth if indent
@@ -481,8 +583,11 @@ module JSON
           # produced JSON string output further.
           def to_json(state = nil, *)
             state = State.from_state(state)
+            depth = state.depth
             state.check_max_nesting
             json_transform(state)
+          ensure
+            state.depth = depth
           end
 
           private
@@ -508,16 +613,25 @@ module JSON
             each { |value|
               result << delim unless first
               result << state.indent * depth if indent
-              if state.strict? && !(false == value || true == value || nil == value || String === value || Array === value || Hash === value || Integer === value || Float === value)
-                raise GeneratorError.new("#{value.class} not allowed in JSON", value)
+              if state.strict? && !Generator.native_type?(value)
+                if state.as_json
+                  value = state.as_json.call(value, false)
+                  unless Generator.native_type?(value)
+                    raise GeneratorError.new("#{value.class} returned by #{state.as_json} not allowed in JSON", value)
+                  end
+                  result << value.to_json(state)
+                else
+                  raise GeneratorError.new("#{value.class} not allowed in JSON", value)
+                end
               elsif value.respond_to?(:to_json)
                 result << value.to_json(state)
+                state.depth = depth
               else
                 result << %{"#{String(value)}"}
               end
               first = false
             }
-            depth = state.depth -= 1
+            depth -= 1
             result << state.array_nl
             result << state.indent * depth if indent
             result << ']'
@@ -531,23 +645,42 @@ module JSON
 
         module Float
           # Returns a JSON string representation for this Float number.
-          def to_json(state = nil, *)
+          def to_json(state = nil, *args)
             state = State.from_state(state)
-            case
-            when infinite?
+            if infinite? || nan?
               if state.allow_nan?
                 to_s
-              else
-                raise GeneratorError.new("#{self} not allowed in JSON", self)
-              end
-            when nan?
-              if state.allow_nan?
-                to_s
+              elsif state.strict? && state.as_json
+                casted_value = state.as_json.call(self, false)
+
+                if casted_value.equal?(self)
+                  raise GeneratorError.new("#{self} not allowed in JSON", self)
+                end
+                unless Generator.native_type?(casted_value)
+                  raise GeneratorError.new("#{casted_value.class} returned by #{state.as_json} not allowed in JSON", casted_value)
+                end
+
+                state.check_max_nesting
+                state.depth += 1
+                result = casted_value.to_json(state, *args)
+                state.depth -= 1
+                result
               else
                 raise GeneratorError.new("#{self} not allowed in JSON", self)
               end
             else
               to_s
+            end
+          end
+        end
+
+        module Symbol
+          def to_json(state = nil, *args)
+            state = State.from_state(state)
+            if state.strict?
+              name.to_json(state, *args)
+            else
+              super
             end
           end
         end
@@ -558,14 +691,25 @@ module JSON
           # \u????.
           def to_json(state = nil, *args)
             state = State.from_state(state)
-            if encoding == ::Encoding::UTF_8
-              unless valid_encoding?
+            string = self
+
+            if state.strict? && state.as_json
+              unless Generator.valid_encoding?(string)
+                string = state.as_json.call(string, false)
+                unless string.is_a?(::String)
+                  return string.to_json(state, *args)
+                end
+              end
+            end
+
+            if string.encoding == ::Encoding::UTF_8
+              unless string.valid_encoding?
                 raise GeneratorError.new("source sequence is illegal/malformed utf-8", self)
               end
-              string = self
             else
-              string = encode(::Encoding::UTF_8)
+              string = string.encode(::Encoding::UTF_8)
             end
+
             if state.ascii_only?
               %("#{JSON::TruffleRuby::Generator.utf8_to_json_ascii(string, state.script_safe)}")
             else
@@ -573,39 +717,6 @@ module JSON
             end
           rescue Encoding::UndefinedConversionError => error
             raise ::JSON::GeneratorError.new(error.message, self)
-          end
-
-          # Module that holds the extending methods if, the String module is
-          # included.
-          module Extend
-            # Raw Strings are JSON Objects (the raw bytes are stored in an
-            # array for the key "raw"). The Ruby String can be created by this
-            # module method.
-            def json_create(o)
-              o['raw'].pack('C*')
-            end
-          end
-
-          # Extends _modul_ with the String::Extend module.
-          def self.included(modul)
-            modul.extend Extend
-          end
-
-          # This method creates a raw object hash, that can be nested into
-          # other data structures and will be unparsed as a raw string. This
-          # method should be used, if you want to convert raw strings to JSON
-          # instead of UTF-8 strings, e. g. binary data.
-          def to_json_raw_object
-            {
-              JSON.create_id  => self.class.name,
-              'raw'           => self.unpack('C*'),
-            }
-          end
-
-          # This method creates a JSON text from the result of
-          # a call to to_json_raw_object of this String.
-          def to_json_raw(*args)
-            to_json_raw_object.to_json(*args)
           end
         end
 
