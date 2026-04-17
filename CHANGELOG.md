@@ -57,6 +57,7 @@ Compatibility:
 * `Process.spawn` now raises `Errno::EACCES` instead of `Errno::ENOENT` when the file exists but is not executable (#4176, @alessandro54).
 * Support building native extensions on systems that don't follow the Filesystem Hierarchy Standard (FHS), such as NixOS (@nirvdrum).
 * Fallback to `/bin/sh` like CRuby when the command given to `Kernel#spawn` is not executable (@van-sprundel, #4220).
+* Support  `--vm.XstartOnFirstThread` on macOS, which is required for some UI libraries like `SDL` (#4228, @timfel).
 
 Performance:
 
