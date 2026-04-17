@@ -1,0 +1,608 @@
+# <!-- rdoc-file=lib/uri/common.rb -->
+# Base class for all URI exceptions.
+#
+class URI::Error < StandardError
+end
+
+# <!-- rdoc-file=lib/uri/common.rb -->
+# Not a URI.
+#
+class URI::InvalidURIError < URI::Error
+end
+
+# <!-- rdoc-file=lib/uri/common.rb -->
+# Not a URI component.
+#
+class URI::InvalidComponentError < URI::Error
+end
+
+# <!-- rdoc-file=lib/uri/common.rb -->
+# URI is valid, bad usage is not.
+#
+class URI::BadURIError < URI::Error
+end
+
+# <!-- rdoc-file=lib/uri.rb -->
+# URI is a module providing classes to handle Uniform Resource Identifiers
+# ([RFC2396](https://www.rfc-editor.org/rfc/rfc2396)).
+#
+# ## Features
+#
+# *   Uniform way of handling URIs.
+# *   Flexibility to introduce custom URI schemes.
+# *   Flexibility to have an alternate URI::Parser (or just different patterns
+#     and regexp's).
+#
+# ## Basic example
+#
+#     require 'uri'
+#
+#     uri = URI("http://foo.com/posts?id=30&limit=5#time=1305298413")
+#     #=> #<URI::HTTP http://foo.com/posts?id=30&limit=5#time=1305298413>
+#
+#     uri.scheme    #=> "http"
+#     uri.host      #=> "foo.com"
+#     uri.path      #=> "/posts"
+#     uri.query     #=> "id=30&limit=5"
+#     uri.fragment  #=> "time=1305298413"
+#
+#     uri.to_s      #=> "http://foo.com/posts?id=30&limit=5#time=1305298413"
+#
+# ## Adding custom URIs
+#
+#     module URI
+#       class RSYNC < Generic
+#         DEFAULT_PORT = 873
+#       end
+#       register_scheme 'RSYNC', RSYNC
+#     end
+#     #=> URI::RSYNC
+#
+#     URI.scheme_list
+#     #=> {"FILE"=>URI::File, "FTP"=>URI::FTP, "HTTP"=>URI::HTTP,
+#     #    "HTTPS"=>URI::HTTPS, "LDAP"=>URI::LDAP, "LDAPS"=>URI::LDAPS,
+#     #    "MAILTO"=>URI::MailTo, "RSYNC"=>URI::RSYNC}
+#
+#     uri = URI("rsync://rsync.foo.com")
+#     #=> #<URI::RSYNC rsync://rsync.foo.com>
+#
+# ## RFC References
+#
+# A good place to view an RFC spec is http://www.ietf.org/rfc.html.
+#
+# Here is a list of all related RFC's:
+# *   [RFC822](https://www.rfc-editor.org/rfc/rfc822)
+# *   [RFC1738](https://www.rfc-editor.org/rfc/rfc1738)
+# *   [RFC2255](https://www.rfc-editor.org/rfc/rfc2255)
+# *   [RFC2368](https://www.rfc-editor.org/rfc/rfc2368)
+# *   [RFC2373](https://www.rfc-editor.org/rfc/rfc2373)
+# *   [RFC2396](https://www.rfc-editor.org/rfc/rfc2396)
+# *   [RFC2732](https://www.rfc-editor.org/rfc/rfc2732)
+# *   [RFC3986](https://www.rfc-editor.org/rfc/rfc3986)
+#
+# ## Class tree
+#
+# *   URI::Generic (in uri/generic.rb)
+#     *   URI::File - (in uri/file.rb)
+#     *   URI::FTP - (in uri/ftp.rb)
+#     *   URI::HTTP - (in uri/http.rb)
+#         *   URI::HTTPS - (in uri/https.rb)
+#     *   URI::LDAP - (in uri/ldap.rb)
+#         *   URI::LDAPS - (in uri/ldaps.rb)
+#     *   URI::MailTo - (in uri/mailto.rb)
+# *   URI::Parser - (in uri/common.rb)
+# *   URI::REGEXP - (in uri/common.rb)
+#     *   URI::REGEXP::PATTERN - (in uri/common.rb)
+# *   URI::Util - (in uri/common.rb)
+# *   URI::Error - (in uri/common.rb)
+#     *   URI::InvalidURIError - (in uri/common.rb)
+#     *   URI::InvalidComponentError - (in uri/common.rb)
+#     *   URI::BadURIError - (in uri/common.rb)
+#
+# ## Copyright Info
+#
+# Author
+# :   Akira Yamada <akira@ruby-lang.org>
+#
+# Documentation
+# :   Akira Yamada <akira@ruby-lang.org> Dmitry V. Sabanin <sdmitry@lrn.ru>
+#     Vincent Batts <vbatts@hashbangbash.com>
+#
+# License
+# :   Copyright (c) 2001 akira yamada <akira@ruby-lang.org> You can redistribute
+#     it and/or modify it under the same term as Ruby.
+#
+module URI
+  include URI::RFC2396_REGEXP
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - decode_uri_component(str, enc=Encoding::UTF_8)
+  # -->
+  # Like URI.decode_www_form_component, except that `'+'` is preserved.
+  #
+  def self.decode_uri_component: (String str, ?encoding enc) -> String
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - decode_www_form(str, enc=Encoding::UTF_8, separator: '&', use__charset_: false, isindex: false)
+  # -->
+  # Returns name/value pairs derived from the given string `str`, which must be an
+  # ASCII string.
+  #
+  # The method may be used to decode the body of Net::HTTPResponse object `res`
+  # for which `res['Content-Type']` is `'application/x-www-form-urlencoded'`.
+  #
+  # The returned data is an array of 2-element subarrays; each subarray is a
+  # name/value pair (both are strings). Each returned string has encoding `enc`,
+  # and has had invalid characters removed via
+  # [String#scrub](rdoc-ref:String#scrub).
+  #
+  # A simple example:
+  #
+  #     URI.decode_www_form('foo=0&bar=1&baz')
+  #     # => [["foo", "0"], ["bar", "1"], ["baz", ""]]
+  #
+  # The returned strings have certain conversions, similar to those performed in
+  # URI.decode_www_form_component:
+  #
+  #     URI.decode_www_form('f%23o=%2F&b-r=%24&b+z=%40')
+  #     # => [["f#o", "/"], ["b-r", "$"], ["b z", "@"]]
+  #
+  # The given string may contain consecutive separators:
+  #
+  #     URI.decode_www_form('foo=0&&bar=1&&baz=2')
+  #     # => [["foo", "0"], ["", ""], ["bar", "1"], ["", ""], ["baz", "2"]]
+  #
+  # A different separator may be specified:
+  #
+  #     URI.decode_www_form('foo=0--bar=1--baz', separator: '--')
+  #     # => [["foo", "0"], ["bar", "1"], ["baz", ""]]
+  #
+  def self.decode_www_form: (String str, ?encoding enc, ?isindex: boolish, ?use__charset_: boolish, ?separator: String) -> Array[[ String, String ]]
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - decode_www_form_component(str, enc=Encoding::UTF_8)
+  # -->
+  # Returns a string decoded from the given URL-encoded string `str`.
+  #
+  # The given string is first encoded as Encoding::ASCII-8BIT (using String#b),
+  # then decoded (as below), and finally force-encoded to the given encoding
+  # `enc`.
+  #
+  # The returned string:
+  #
+  # *   Preserves:
+  #
+  #     *   Characters `'*'`, `'.'`, `'-'`, and `'_'`.
+  #     *   Character in ranges `'a'..'z'`, `'A'..'Z'`, and `'0'..'9'`.
+  #
+  #     Example:
+  #
+  #         URI.decode_www_form_component('*.-_azAZ09')
+  #         # => "*.-_azAZ09"
+  #
+  # *   Converts:
+  #
+  #     *   Character `'+'` to character `' '`.
+  #     *   Each "percent notation" to an ASCII character.
+  #
+  #     Example:
+  #
+  #         URI.decode_www_form_component('Here+are+some+punctuation+characters%3A+%2C%3B%3F%3A')
+  #         # => "Here are some punctuation characters: ,;?:"
+  #
+  # Related: URI.decode_uri_component (preserves `'+'`).
+  #
+  def self.decode_www_form_component: (String str, ?encoding enc) -> String
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - encode_uri_component(str, enc=nil)
+  # -->
+  # Like URI.encode_www_form_component, except that `' '` (space) is encoded as
+  # `'%20'` (instead of `'+'`).
+  #
+  def self.encode_uri_component: (String str, ?encoding enc) -> String
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - encode_www_form(enum, enc=nil)
+  # -->
+  # Returns a URL-encoded string derived from the given
+  # [Enumerable](rdoc-ref:Enumerable@Enumerable+in+Ruby+Classes) `enum`.
+  #
+  # The result is suitable for use as form data for an HTTP request whose
+  # `Content-Type` is `'application/x-www-form-urlencoded'`.
+  #
+  # The returned string consists of the elements of `enum`, each converted to one
+  # or more URL-encoded strings, and all joined with character `'&'`.
+  #
+  # Simple examples:
+  #
+  #     URI.encode_www_form([['foo', 0], ['bar', 1], ['baz', 2]])
+  #     # => "foo=0&bar=1&baz=2"
+  #     URI.encode_www_form({foo: 0, bar: 1, baz: 2})
+  #     # => "foo=0&bar=1&baz=2"
+  #
+  # The returned string is formed using method URI.encode_www_form_component,
+  # which converts certain characters:
+  #
+  #     URI.encode_www_form('f#o': '/', 'b-r': '$', 'b z': '@')
+  #     # => "f%23o=%2F&b-r=%24&b+z=%40"
+  #
+  # When `enum` is Array-like, each element `ele` is converted to a field:
+  #
+  # *   If `ele` is an array of two or more elements, the field is formed from its
+  #     first two elements (and any additional elements are ignored):
+  #
+  #         name = URI.encode_www_form_component(ele[0], enc)
+  #         value = URI.encode_www_form_component(ele[1], enc)
+  #         "#{name}=#{value}"
+  #
+  #     Examples:
+  #
+  #         URI.encode_www_form([%w[foo bar], %w[baz bat bah]])
+  #         # => "foo=bar&baz=bat"
+  #         URI.encode_www_form([['foo', 0], ['bar', :baz, 'bat']])
+  #         # => "foo=0&bar=baz"
+  #
+  # *   If `ele` is an array of one element, the field is formed from `ele[0]`:
+  #
+  #         URI.encode_www_form_component(ele[0])
+  #
+  #     Example:
+  #
+  #         URI.encode_www_form([['foo'], [:bar], [0]])
+  #         # => "foo&bar&0"
+  #
+  # *   Otherwise the field is formed from `ele`:
+  #
+  #         URI.encode_www_form_component(ele)
+  #
+  #     Example:
+  #
+  #         URI.encode_www_form(['foo', :bar, 0])
+  #         # => "foo&bar&0"
+  #
+  # The elements of an Array-like `enum` may be mixture:
+  #
+  #     URI.encode_www_form([['foo', 0], ['bar', 1, 2], ['baz'], :bat])
+  #     # => "foo=0&bar=1&baz&bat"
+  #
+  # When `enum` is Hash-like, each `key`/`value` pair is converted to one or more
+  # fields:
+  #
+  # *   If `value` is
+  #     [Array-convertible](rdoc-ref:implicit_conversion.rdoc@Array-Convertible+Ob
+  #     jects), each element `ele` in `value` is paired with `key` to form a
+  #     field:
+  #
+  #         name = URI.encode_www_form_component(key, enc)
+  #         value = URI.encode_www_form_component(ele, enc)
+  #         "#{name}=#{value}"
+  #
+  #     Example:
+  #
+  #         URI.encode_www_form({foo: [:bar, 1], baz: [:bat, :bam, 2]})
+  #         # => "foo=bar&foo=1&baz=bat&baz=bam&baz=2"
+  #
+  # *   Otherwise, `key` and `value` are paired to form a field:
+  #
+  #         name = URI.encode_www_form_component(key, enc)
+  #         value = URI.encode_www_form_component(value, enc)
+  #         "#{name}=#{value}"
+  #
+  #     Example:
+  #
+  #         URI.encode_www_form({foo: 0, bar: 1, baz: 2})
+  #         # => "foo=0&bar=1&baz=2"
+  #
+  # The elements of a Hash-like `enum` may be mixture:
+  #
+  #     URI.encode_www_form({foo: [0, 1], bar: 2})
+  #     # => "foo=0&foo=1&bar=2"
+  #
+  def self.encode_www_form: (Enumerable[[ _ToS, _ToS ]] enum, ?encoding? enc) -> String
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - encode_www_form_component(str, enc=nil)
+  # -->
+  # Returns a URL-encoded string derived from the given string `str`.
+  #
+  # The returned string:
+  #
+  # *   Preserves:
+  #
+  #     *   Characters `'*'`, `'.'`, `'-'`, and `'_'`.
+  #     *   Character in ranges `'a'..'z'`, `'A'..'Z'`, and `'0'..'9'`.
+  #
+  #     Example:
+  #
+  #         URI.encode_www_form_component('*.-_azAZ09')
+  #         # => "*.-_azAZ09"
+  #
+  # *   Converts:
+  #
+  #     *   Character `' '` to character `'+'`.
+  #     *   Any other character to "percent notation"; the percent notation for
+  #         character *c* is `'%%%X' % c.ord`.
+  #
+  #     Example:
+  #
+  #         URI.encode_www_form_component('Here are some punctuation characters: ,;?:')
+  #         # => "Here+are+some+punctuation+characters%3A+%2C%3B%3F%3A"
+  #
+  # Encoding:
+  #
+  # *   If `str` has encoding Encoding::ASCII_8BIT, argument `enc` is ignored.
+  # *   Otherwise `str` is converted first to Encoding::UTF_8 (with suitable
+  #     character replacements), and then to encoding `enc`.
+  #
+  # In either case, the returned string has forced encoding Encoding::US_ASCII.
+  #
+  # Related: URI.encode_uri_component (encodes `' '` as `'%20'`).
+  #
+  def self.encode_www_form_component: (_ToS str, ?encoding? enc) -> String
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - extract(str, schemes = nil, &block)
+  # -->
+  # ## Synopsis
+  #
+  #     URI::extract(str[, schemes][,&blk])
+  #
+  # ## Args
+  #
+  # `str`
+  # :   String to extract URIs from.
+  # `schemes`
+  # :   Limit URI matching to specific schemes.
+  #
+  #
+  # ## Description
+  #
+  # Extracts URIs from a string. If block given, iterates through all matched
+  # URIs. Returns nil if block given or array with matches.
+  #
+  # ## Usage
+  #
+  #     require "uri"
+  #
+  #     URI.extract("text here http://foo.example.org/bla and here mailto:test@example.com and here also.")
+  #     # => ["http://foo.example.com/bla", "mailto:test@example.com"]
+  #
+  def self.extract: (String str, ?Array[String] schemes) -> Array[String]
+                  | (String str, ?Array[String] schemes) { (String) -> void } -> nil
+
+  def self.get_encoding: (String label) -> Encoding?
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - join(*str)
+  # -->
+  # Merges the given URI strings `str` per [RFC
+  # 2396](https://www.rfc-editor.org/rfc/rfc2396.html).
+  #
+  # Each string in `str` is converted to an [RFC3986
+  # URI](https://www.rfc-editor.org/rfc/rfc3986.html) before being merged.
+  #
+  # Examples:
+  #
+  #     URI.join("http://example.com/","main.rbx")
+  #     # => #<URI::HTTP http://example.com/main.rbx>
+  #
+  #     URI.join('http://example.com', 'foo')
+  #     # => #<URI::HTTP http://example.com/foo>
+  #
+  #     URI.join('http://example.com', '/foo', '/bar')
+  #     # => #<URI::HTTP http://example.com/bar>
+  #
+  #     URI.join('http://example.com', '/foo', 'bar')
+  #     # => #<URI::HTTP http://example.com/bar>
+  #
+  #     URI.join('http://example.com', '/foo/', 'bar')
+  #     # => #<URI::HTTP http://example.com/foo/bar>
+  #
+  def self.join: (_ToStr | URI::Generic str, *_ToStr | URI::Generic strs) -> URI::Generic
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - parse(uri)
+  # -->
+  # Returns a new URI object constructed from the given string `uri`:
+  #
+  #     URI.parse('https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top')
+  #     # => #<URI::HTTPS https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top>
+  #     URI.parse('http://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top')
+  #     # => #<URI::HTTP http://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top>
+  #
+  # It's recommended to first URI::RFC2396_PARSER.escape string `uri` if it may
+  # contain invalid URI characters.
+  #
+  def self.parse: (_ToStr uri) -> (File | FTP | HTTP | HTTPS | LDAP | LDAPS | MailTo | WS | WSS | Generic)
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - regexp(schemes = nil)
+  # -->
+  # ## Synopsis
+  #
+  #     URI::regexp([match_schemes])
+  #
+  # ## Args
+  #
+  # `match_schemes`
+  # :   Array of schemes. If given, resulting regexp matches to URIs whose scheme
+  #     is one of the match_schemes.
+  #
+  #
+  # ## Description
+  #
+  # Returns a Regexp object which matches to URI-like strings. The Regexp object
+  # returned by this method includes arbitrary number of capture group
+  # (parentheses).  Never rely on its number.
+  #
+  # ## Usage
+  #
+  #     require 'uri'
+  #
+  #     # extract first URI from html_string
+  #     html_string.slice(URI.regexp)
+  #
+  #     # remove ftp URIs
+  #     html_string.sub(URI.regexp(['ftp']), '')
+  #
+  #     # You should not rely on the number of parentheses
+  #     html_string.scan(URI.regexp) do |*matches|
+  #       p $&
+  #     end
+  #
+  def self.regexp: (?Array[String]? schemes) -> Regexp
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - scheme_list()
+  # -->
+  # Returns a hash of the defined schemes:
+  #
+  #     URI.scheme_list
+  #     # =>
+  #     {"MAILTO"=>URI::MailTo,
+  #      "LDAPS"=>URI::LDAPS,
+  #      "WS"=>URI::WS,
+  #      "HTTP"=>URI::HTTP,
+  #      "HTTPS"=>URI::HTTPS,
+  #      "LDAP"=>URI::LDAP,
+  #      "FILE"=>URI::File,
+  #      "FTP"=>URI::FTP}
+  #
+  # Related: URI.register_scheme.
+  #
+  def self.scheme_list: () -> Hash[String, Class]
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - for(scheme, *arguments, default: Generic)
+  # -->
+  # Returns a new object constructed from the given `scheme`, `arguments`, and
+  # `default`:
+  #
+  # *   The new object is an instance of `URI.scheme_list[scheme.upcase]`.
+  # *   The object is initialized by calling the class initializer using `scheme`
+  #     and `arguments`. See URI::Generic.new.
+  #
+  # Examples:
+  #
+  #     values = ['john.doe', 'www.example.com', '123', nil, '/forum/questions/', nil, 'tag=networking&order=newest', 'top']
+  #     URI.for('https', *values)
+  #     # => #<URI::HTTPS https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top>
+  #     URI.for('foo', *values, default: URI::HTTP)
+  #     # => #<URI::HTTP foo://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top>
+  #
+  def self.for: (String scheme, *untyped arguments, ?default: Class) -> (File | FTP | HTTP | HTTPS | LDAP | LDAPS | MailTo | WS | WSS | Generic)
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - split(uri)
+  # -->
+  # Returns a 9-element array representing the parts of the URI formed from the
+  # string `uri`; each array element is a string or `nil`:
+  #
+  #     names = %w[scheme userinfo host port registry path opaque query fragment]
+  #     values = URI.split('https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top')
+  #     names.zip(values)
+  #     # =>
+  #     [["scheme", "https"],
+  #      ["userinfo", "john.doe"],
+  #      ["host", "www.example.com"],
+  #      ["port", "123"],
+  #      ["registry", nil],
+  #      ["path", "/forum/questions/"],
+  #      ["opaque", nil],
+  #      ["query", "tag=networking&order=newest"],
+  #      ["fragment", "top"]]
+  #
+  def self.split: (_ToStr uri) -> [ String?, String?, String?, String?, nil, String?, String?, String?, String? ]
+end
+
+URI::ABS_PATH: Regexp
+
+URI::ABS_URI: Regexp
+
+URI::ABS_URI_REF: Regexp
+
+# <!-- rdoc-file=lib/uri/common.rb -->
+# The default parser instance.
+#
+URI::DEFAULT_PARSER: URI::RFC2396_Parser
+
+URI::ESCAPED: Regexp
+
+URI::FRAGMENT: Regexp
+
+URI::HOST: Regexp
+
+URI::OPAQUE: Regexp
+
+URI::PORT: Regexp
+
+URI::QUERY: Regexp
+
+URI::REGISTRY: Regexp
+
+URI::REL_PATH: Regexp
+
+URI::REL_URI: Regexp
+
+URI::REL_URI_REF: Regexp
+
+# <!-- rdoc-file=lib/uri/common.rb -->
+# The default parser instance for RFC 3986.
+#
+URI::RFC3986_PARSER: URI::RFC3986_Parser
+
+URI::SCHEME: Regexp
+
+URI::TBLDECWWWCOMP_: Hash[String, String]
+
+URI::TBLENCWWWCOMP_: Hash[String, String]
+
+URI::UNSAFE: Regexp
+
+URI::URI_REF: Regexp
+
+URI::USERINFO: Regexp
+
+URI::VERSION: String
+
+URI::VERSION_CODE: String
+
+URI::WEB_ENCODINGS_: Hash[String, String]
+
+%a{annotate:rdoc:skip}
+module Kernel
+  private
+
+  # <!--
+  #   rdoc-file=lib/uri/common.rb
+  #   - URI(uri)
+  # -->
+  # Returns a URI object derived from the given `uri`, which may be a URI string
+  # or an existing URI object:
+  #
+  #     require 'uri'
+  #     # Returns a new URI.
+  #     uri = URI('http://github.com/ruby/ruby')
+  #     # => #<URI::HTTP http://github.com/ruby/ruby>
+  #     # Returns the given URI.
+  #     URI(uri)
+  #     # => #<URI::HTTP http://github.com/ruby/ruby>
+  #
+  # You must require 'uri' to use this method.
+  #
+  def self?.URI: (URI::Generic | String uri) -> URI::Generic
+end

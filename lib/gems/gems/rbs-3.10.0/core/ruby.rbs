@@ -1,0 +1,53 @@
+# <!-- rdoc-file=version.c -->
+# The [Ruby](rdoc-ref:Ruby) module that contains portable information among
+# implementations.
+#
+# The constants defined here are aliased in the toplevel with `RUBY_` prefix.
+#
+module Ruby
+  # <!-- rdoc-file=version.c -->
+  # The copyright string for ruby
+  #
+  COPYRIGHT: ::String
+
+  # <!-- rdoc-file=version.c -->
+  # The full ruby version string, like `ruby -v` prints
+  #
+  DESCRIPTION: ::String
+
+  # <!-- rdoc-file=version.c -->
+  # The engine or interpreter this ruby uses.
+  #
+  ENGINE: ::String
+
+  # <!-- rdoc-file=version.c -->
+  # The version of the engine or interpreter this ruby uses.
+  #
+  ENGINE_VERSION: ::String
+
+  # <!-- rdoc-file=version.c -->
+  # The patchlevel for this ruby.  If this is a development build of ruby the
+  # patchlevel will be -1
+  #
+  PATCHLEVEL: ::Integer
+
+  # <!-- rdoc-file=version.c -->
+  # The platform for this ruby
+  #
+  PLATFORM: ::String
+
+  # <!-- rdoc-file=version.c -->
+  # The date this ruby was released
+  #
+  RELEASE_DATE: ::String
+
+  # <!-- rdoc-file=version.c -->
+  # The GIT commit hash for this ruby.
+  #
+  REVISION: ::String
+
+  # <!-- rdoc-file=version.c -->
+  # The running version of ruby
+  #
+  VERSION: ::String
+end

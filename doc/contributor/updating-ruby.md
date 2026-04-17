@@ -170,7 +170,7 @@ cp -R lib/ruby/gems/*.0/gems $TRUFFLERUBY/lib/gems
 cp -R lib/ruby/gems/*.0/specifications $TRUFFLERUBY/lib/gems
 
 cd $TRUFFLERUBY
-rm -f lib/gems/gems/**/*.{o,a,so,bundle}(N) lib/gems/gems/**/{Makefile,extconf.h,mkmf.log} lib/gems/gems/**/*.mk
+rm -f lib/gems/gems/**/*.{o,a,so,bundle,mk}(N) lib/gems/gems/**/{Makefile,extconf.h,mkmf.log,depend}(N)
 rm -rf lib/gems/gems/typeprof-* lib/gems/specifications/typeprof-*.gemspec
 rm -f lib/gems/gems/rbs-*/Gemfile.lock(N)
 ruby tool/patch-default-gemspecs.rb
@@ -178,6 +178,10 @@ ruby tool/patch-default-gemspecs.rb
 
 Then review bundled gems with extensions like `lib/gems/gems/debug-*` and `lib/gems/gems/rbs-*`
 to ensure no build artifacts/generated files are committed, only "sources".
+This can be done with e.g.
+```
+git log --stat -1 --color | grep -Ev '\.(rb|gemspec|md|c|h|rdoc|txt|ja|png|gif|ttf|rhtml|js|css|yaml|yml|json|rake|rbs|erb)\s|/(COPYING|BSDL|LICENSE|LEGAL|MIT-LICENSE|PSFL|Gemfile|Rakefile|console|setup)\s'
+```
 
 Update the `ruby/prism` default gem with `tool/import-prism.sh` script.
 See the "Update Prism" section in the [Prism](prism.md) document.

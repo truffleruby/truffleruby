@@ -1,0 +1,48 @@
+%a{annotate:rdoc:skip}
+module RDoc
+  # <!-- rdoc-file=lib/rdoc/store.rb -->
+  # A set of rdoc data for a single project (gem, path, etc.).
+  #
+  # The store manages reading and writing ri data for a project and maintains a
+  # cache of methods, classes and ancestors in the store.
+  #
+  # The store maintains a #cache of its contents for faster lookup.  After adding
+  # items to the store it must be flushed using #save_cache.  The cache contains
+  # the following structures:
+  #
+  #     @cache = {
+  #       :ancestors        => {}, # class name => ancestor names
+  #       :attributes       => {}, # class name => attributes
+  #       :class_methods    => {}, # class name => class methods
+  #       :instance_methods => {}, # class name => instance methods
+  #       :modules          => [], # classes and modules in this store
+  #       :pages            => [], # page names
+  #     }
+  #
+  class Store
+    # <!--
+    #   rdoc-file=lib/rdoc/store.rb
+    #   - new(path = nil, type = nil)
+    # -->
+    # Creates a new Store of `type` that will load or save to `path`
+    #
+    def initialize: (Options, ?path: String? , ?type: Symbol?) -> void
+
+    # <!--
+    #   rdoc-file=lib/rdoc/store.rb
+    #   - find_class_or_module(name)
+    # -->
+    # Finds the class or module with `name`
+    #
+    def find_class_or_module: (String) -> ClassModule?
+
+    # <!--
+    #   rdoc-file=lib/rdoc/store.rb
+    #   - load_all()
+    # -->
+    # Loads all items from this store into memory.  This recreates a documentation
+    # tree for use by a generator
+    #
+    def load_all: () -> void
+  end
+end

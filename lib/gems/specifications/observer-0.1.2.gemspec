@@ -10,13 +10,13 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Yukihiro Matsumoto".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-03-11"
+  s.date = "2026-03-17"
   s.description = "Implementation of the Observer object-oriented design pattern.".freeze
   s.email = ["matz@ruby-lang.org".freeze]
   s.homepage = "https://github.com/ruby/observer".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
-  s.rubygems_version = "3.6.9".freeze
+  s.rubygems_version = "4.0.6".freeze
   s.summary = "Implementation of the Observer object-oriented design pattern.".freeze
 
-  s.installed_by_version = "3.6.9".freeze
+  s.installed_by_version = "4.0.6".freeze
 end

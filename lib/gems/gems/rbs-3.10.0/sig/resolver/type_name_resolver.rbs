@@ -1,0 +1,66 @@
+module RBS
+  module Resolver
+    # TypeNameResolver resolves given relative type name to absolute type name under a module nesting context.
+    #
+    # The type name resolution doesn't take account of ancestors of modules.
+    # It just ignores included modules and super classes.
+    #
+    class TypeNameResolver
+      type query = [TypeName, context]
+
+      def initialize: (Set[TypeName] all_names, Hash[TypeName, [TypeName, context]] aliases) -> void
+
+      def self.new: %a{deprecated: Use `build` to build TypeNameResolver from Environment} (Environment) -> instance
+                  | (Set[TypeName] all_names, Hash[TypeName, [TypeName, context]] aliases) -> instance
+
+      def self.build: (Environment) -> instance
+
+      # Translates given type name to absolute type name
+      #
+      # Returns `nil` if cannot find associated type name.
+      # Module names in the type name are normalized.
+      #
+      def resolve: (TypeName, context: context) -> TypeName?
+
+      # Translates given type name to absolute type name
+      #
+      # Returns `false` if a cycle is detected while resolving aliases.
+      # Returns `nil` if the type name cannot be resolved.
+      #
+      def resolve_namespace: (TypeName, context: context) -> (TypeName | false | nil)
+
+      private
+
+      attr_reader all_names: Set[TypeName]
+
+      attr_reader aliases: Hash[TypeName, [TypeName, context]]
+
+      attr_reader cache: Hash[query, TypeName?]
+
+      # Returns the type name if it exists in `all_names` (normalized)
+      #
+      def has_type_name?: (TypeName) -> TypeName?
+
+      # Returns the type name if it is an alias (not normalized)
+      #
+      def aliased_name?: (TypeName) -> TypeName?
+
+      def try_cache: (query) { () -> TypeName? } -> TypeName?
+
+      # Translates the head module name in the context and returns an absolute type name
+      #
+      # Returns `nil` if cannot find associated type name.
+      # The returned namespace may be an alias
+      #
+      def resolve_head_namespace: (Symbol, context) -> TypeName?
+
+      # Resolves the type name in the given context
+      #
+      def resolve_type_name: (Symbol, context) -> TypeName?
+
+      def resolve_namespace0: (TypeName, context, Set[TypeName]) -> (TypeName | false | nil)
+
+      def normalize_namespace: (TypeName, TypeName rhs, context, Set[TypeName]) -> (TypeName | false | nil)
+    end
+  end
+end

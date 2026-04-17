@@ -1,0 +1,196 @@
+module RBS
+  module UnitTest
+    # TypeAssertions provides assertions to test RBS type definitions in unit test
+    #
+    # ```ruby
+    # class FooInstanceTest < Test::Unit::TestCase
+    #   include RBS::UnitTest::TypeAssertions
+    #
+    #   testing "::Foo"
+    #
+    #   def test_foo
+    #     assert_send_type(
+    #       "(String) -> Integer",
+    #       Foo.new, :foo, "hello"
+    #     )
+    #   end
+    # end
+    # ```
+    #
+    # The module provides four assertions:
+    #
+    # * `assert_send_type` to confirm if a method call has the expected method type
+    # * `refute_send_type` to confirm if a method call doesn't have the method type
+    # * `assert_const_type` to confirm if a constant has an expected type
+    # * `assert_type` to confirm a Ruby value has a RBS type
+    #
+    # See `.testing` and `.library` methods to set up RBS type testing.
+    #
+    module TypeAssertions : _BaseAssertions
+      type target_type = Types::ClassInstance | Types::ClassSingleton
+
+      interface _BaseAssertions
+        def assert: (untyped, ?String?) -> void
+
+        def refute: (untyped, ?String?) -> void
+
+        def assert_empty: (untyped, ?String?) -> void
+
+        def assert_operator: (untyped, Symbol, *untyped) -> void
+
+        def notify: (untyped) -> void
+
+        def assert_predicate: (untyped, Symbol, ?String?) -> void
+
+        def refute_predicate: (untyped, Symbol, ?String?) -> void
+      end
+
+      module ClassMethods
+        attr_reader target: [target_type, Definition]?
+
+        @libs: Array[String]
+
+        @env: Environment?
+
+        @@env_cache: Hash[Array[String], Environment]
+
+        # `testing` is to tell the framework which class is being tested
+        #
+        # ```ruby
+        # testing "::String"
+        # testing "::Array[Integer]"
+        #
+        # testing "singleton(::Integer)"
+        # ```
+        #
+        def testing: (String | target_type) -> void
+
+        # `library` is to load RBS type definition of dependencies
+        #
+        # The test or implementation already `require` dependencies, but the RBS type definition of the dependencies are also required for testing.
+        #
+        # ```ruby
+        # library "pathname", "securerandom"
+        # ```
+        #
+        def library: (*String) -> void
+
+        def env: () -> Environment
+
+        @builder: DefinitionBuilder
+
+        def builder: () -> DefinitionBuilder
+      end
+
+      def self.included: (Module) -> void
+
+      def env: () -> Environment
+
+      def builder: () -> DefinitionBuilder
+
+      @targets: Array[[target_type, Definition]]
+
+      def targets: () -> Array[[target_type, Definition]]
+
+      def target: () -> [target_type, Definition]
+
+      def testing: (String | target_type) ?{ () -> void } -> void
+
+      # The class object that is associated to the `instance` type of the testing type
+      #
+      def instance_class: () -> Class
+
+      # The singleton class object that is associated to the `class` type of the testing type
+      #
+      def class_class: () -> Class
+
+      def method_defs: (Symbol) -> Array[Definition::Method::TypeDef]
+
+      def method_types: (Symbol) -> Array[MethodType]
+
+      def allows_error: (*Exception) { () -> void } -> void
+
+      # Calls a method `method_name` and validates if it's compatible with RBS type definition
+      #
+      # 1. It calls `method_name` with `receiver` passing `args` and given block,
+      # 2. Validates if it's compatible with given `method_type`, and
+      # 3. Validates if it's also compatible with one of the overloads defined in RBS type definition
+      #
+      # ```ruby
+      # assert_send_type(
+      #   "(::Integer) -> ::Integer",
+      #   [], :sum, 8
+      # )
+      # ```
+      #
+      # To test methods that takes a block, pass a block to `assert_send_type`.
+      # We recommend using `&proc { ... }` syntax for textual representation and prevent from using `break` from the block.
+      #
+      # ```ruby
+      # assert_send_type(
+      #   "() { () -> void } -> void",
+      #   self, :loop, &proc { break_from_block }
+      # )
+      # ```
+      #
+      # Exiting from the block using `break` and `return` skips assertions.
+      # Use `break_from_block` instead.
+      #
+      # `method_type` must be _simple_.
+      # It raises an exception if it's not _simple_.
+      # When you really need _non-simple_ `method_type`, wrap the calls inside `allow_non_simple_method_type`.
+      # See `docs/stdlib.md` for the details.
+      #
+      def assert_send_type: (String | MethodType method_type, untyped receiver, Symbol method_name, *untyped args) ?{ () -> untyped } -> void
+
+      # Calls a method `method_name` and validates if it's **not** compatible with RBS type definition
+      #
+      # 1. It calls `method_name` with `receiver` passing `args` and given block,
+      # 2. Validates if it's compatible with given `method_type`, and
+      # 3. Validates if it's not compatible with **none** of the overloads defined in RBS type definition
+      #
+      # See `assert_send_type` for the details.
+      #
+      def refute_send_type: (String | MethodType method_type, untyped receiver, Symbol method_name, *untyped args) ?{ () -> untyped } -> void
+
+      # Asserts if the constant `constant_name` has `constant_type`, and the RBS definition has compatible type
+      #
+      # ```ruby
+      # assert_const_type("Array[String]", "::Foo::Bar")
+      # ```
+      #
+      # The assertion above succeeds if `::Foo::Bar` is `["foo"]` and RBS contains `::Foo::Bar: [untyped]`.
+      # It fails if `::Foo::Bar` is `[2]`, or the RBS definition is `::Foo::Bar: String`.
+      #
+      def assert_const_type: (String | Types::t constant_type, String constant_name) -> void
+
+      # Asserts if given `value` has a type of `value_type`
+      #
+      def assert_type: (String | Types::t value_type, untyped value) -> void
+
+      # Allow non _simple-type_ method types given to `assert_send_type` and `refute_send_type`
+      #
+      # ```ruby
+      # allow_non_simple_method_type do
+      #   assert_send_type("() -> self", ...)
+      # end
+      # ```
+      #
+      def allow_non_simple_method_type: () { () -> void } -> void
+
+      @allows_non_simple_method_type: boolish
+
+      def validate_simple_method_type: (MethodType) -> void
+
+      # Break from `assert_send_type` or `refute_send_type`
+      #
+      def break_from_block: (?untyped value) -> void
+
+      @break_tag: untyped
+
+      def send_setup: [T] (String | RBS::MethodType method_type, untyped receiver, Symbol method_name, Array[untyped] args, Proc?) { (RBS::MethodType, Test::CallTrace, untyped, Exception?) -> T } -> T
+
+      def pass: (?String? message) -> void
+    end
+  end
+end
