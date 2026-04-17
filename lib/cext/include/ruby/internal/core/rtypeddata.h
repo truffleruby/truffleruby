@@ -37,6 +37,7 @@
 #include "ruby/internal/dllexport.h"
 #include "ruby/internal/error.h"
 #include "ruby/internal/fl_type.h"
+#include "ruby/internal/static_assert.h"
 #include "ruby/internal/stdbool.h"
 #include "ruby/internal/value_type.h"
 
@@ -91,11 +92,7 @@
  * @param   obj  An object, which is in fact an ::RTypedData.
  * @return  The passed object casted to ::RTypedData.
  */
-#ifdef TRUFFLERUBY
-#define RTYPEDDATA(obj)              rb_tr_rtypeddata(obj)
-#else
 #define RTYPEDDATA(obj)              RBIMPL_CAST((struct RTypedData *)(obj))
-#endif
 
 /**
  * Convenient getter macro.
@@ -118,7 +115,8 @@
 #define RUBY_TYPED_PROMOTED1         RUBY_TYPED_PROMOTED1
 /** @endcond */
 
-#define TYPED_DATA_EMBEDDED 2
+#define TYPED_DATA_EMBEDDED ((VALUE)1)
+#define TYPED_DATA_PTR_MASK (~(TYPED_DATA_EMBEDDED))
 
 /**
  * @private
@@ -159,6 +157,12 @@ rbimpl_typeddata_flags {
      */
     RUBY_TYPED_FROZEN_SHAREABLE = RUBY_FL_SHAREABLE,
 
+    // experimental flag
+    // Similar to RUBY_TYPED_FROZEN_SHAREABLE, but doesn't make shareable
+    // reachable objects from this T_DATA object on the Ractor.make_shareable.
+    // If it refers to unshareable objects, simply raise an error.
+    // RUBY_TYPED_FROZEN_SHAREABLE_NO_REC = RUBY_FL_FINALIZE,
+
     /**
      * This flag  has something to do  with our garbage collector.   These days
      * ruby  objects are  "generational".  There  are those  who are  young and
@@ -181,9 +185,9 @@ rbimpl_typeddata_flags {
     RUBY_TYPED_WB_PROTECTED     = RUBY_FL_WB_PROTECTED, /* THIS FLAG DEPENDS ON Ruby version */
 
     /**
-     * This flag no longer in use
+     * This flag is used to distinguish RTypedData from deprecated RData objects.
      */
-    RUBY_TYPED_UNUSED           = RUBY_FL_UNUSED6,
+    RUBY_TYPED_FL_IS_TYPED_DATA = RUBY_FL_USERPRIV0,
 
     /**
      * This flag determines whether marking and compaction should be carried out
@@ -353,42 +357,32 @@ struct rb_data_type_struct {
  */
 struct RTypedData {
 
-#ifndef TRUFFLERUBY
     /** The part that all ruby objects have in common. */
     struct RBasic basic;
-#endif
+
+    /** Direct reference to the slots that holds instance variables, if any **/
+    VALUE fields_obj;
 
     /**
+     * This is a `const rb_data_type_t *const` value, with the low bits set:
+     *
+     * 1: Set if object is embedded.
+     *
      * This field  stores various  information about how  Ruby should  handle a
      * data.   This roughly  resembles a  Ruby level  class (apart  from method
      * definition etc.)
      */
-#ifdef TRUFFLERUBY
-    const rb_data_type_t *type;
-#else
-    const rb_data_type_t *const type;
-#endif
-
-    /**
-     * This has to be always 1.
-     *
-     * @internal
-     */
-#ifdef TRUFFLERUBY
-    VALUE typed_flag;
-#else
-    const VALUE typed_flag;
-#endif
+    const VALUE type;
 
     /** Pointer to the actual C level struct that you want to wrap. */
     void *data;
 };
 
-RBIMPL_SYMBOL_EXPORT_BEGIN()
-#ifdef TRUFFLERUBY
-struct RTypedData* rb_tr_rtypeddata(VALUE object);
+#if !defined(__cplusplus) || __cplusplus >= 201103L
+RBIMPL_STATIC_ASSERT(data_in_rtypeddata, offsetof(struct RData, data) == offsetof(struct RTypedData, data));
 #endif
 
+RBIMPL_SYMBOL_EXPORT_BEGIN()
 RBIMPL_ATTR_NONNULL((3))
 /**
  * This is the primitive way to wrap an existing C struct into ::RTypedData.
@@ -452,10 +446,6 @@ int rb_typeddata_is_kind_of(VALUE obj, const rb_data_type_t *data_type);
  * @post       Upon successful return `obj`'s type is guaranteed `data_type`.
  */
 void *rb_check_typeddata(VALUE obj, const rb_data_type_t *data_type);
-#ifdef TRUFFLERUBY
-VALUE rb_data_typed_object_make(VALUE ruby_class, const rb_data_type_t *type, void **data_pointer, size_t size);
-bool rb_tr_rtypeddata_p(VALUE obj);
-#endif
 RBIMPL_SYMBOL_EXPORT_END()
 
 /**
@@ -492,8 +482,7 @@ RBIMPL_SYMBOL_EXPORT_END()
 /**
  * Identical to #TypedData_Wrap_Struct,  except it allocates a  new data region
  * internally instead of taking an existing  one.  The allocation is done using
- * ruby_calloc().  Hence  it makes no sense  for `data_type->function.dfree` to
- * be anything other than ::RUBY_TYPED_DEFAULT_FREE.
+ * ruby_calloc().
  *
  * @param      klass          Ruby level class of the object.
  * @param      type           Type name of the C struct.
@@ -524,19 +513,6 @@ RBIMPL_SYMBOL_EXPORT_END()
         sizeof(type))
 #endif
 
-/**
- * Obtains a C struct from inside of a wrapper Ruby object.
- *
- * @param      obj            An instance of ::RTypedData.
- * @param      type           Type name of the C struct.
- * @param      data_type      The data type describing `type`.
- * @param      sval           Variable name of obtained C struct.
- * @exception  rb_eTypeError  `obj` is not a kind of `data_type`.
- * @return     Unwrapped C struct that `obj` holds.
- */
-#define TypedData_Get_Struct(obj,type,data_type,sval) \
-    ((sval) = RBIMPL_CAST((type *)rb_check_typeddata((obj), (data_type))))
-
 static inline bool
 RTYPEDDATA_EMBEDDED_P(VALUE obj)
 {
@@ -547,7 +523,7 @@ RTYPEDDATA_EMBEDDED_P(VALUE obj)
     }
 #endif
 
-    return RTYPEDDATA(obj)->typed_flag & TYPED_DATA_EMBEDDED;
+    return (RTYPEDDATA(obj)->type) & TYPED_DATA_EMBEDDED;
 }
 
 static inline void *
@@ -560,11 +536,10 @@ RTYPEDDATA_GET_DATA(VALUE obj)
     }
 #endif
 
-    /* We reuse the data pointer in embedded TypedData. We can't use offsetof
-     * since RTypedData a non-POD type in C++. */
-    const size_t embedded_typed_data_size = sizeof(struct RTypedData) - sizeof(void *);
-
-    return RTYPEDDATA_EMBEDDED_P(obj) ? (char *)obj + embedded_typed_data_size : RTYPEDDATA(obj)->data;
+    /* We reuse the data pointer in embedded TypedData. */
+    return RTYPEDDATA_EMBEDDED_P(obj) ?
+        RBIMPL_CAST((void *)&(RTYPEDDATA(obj)->data)) :
+        RTYPEDDATA(obj)->data;
 }
 
 RBIMPL_ATTR_PURE()
@@ -583,8 +558,7 @@ RBIMPL_ATTR_ARTIFICIAL()
 static inline bool
 rbimpl_rtypeddata_p(VALUE obj)
 {
-    VALUE typed_flag = RTYPEDDATA(obj)->typed_flag;
-    return typed_flag != 0 && typed_flag <= 3;
+    return FL_TEST_RAW(obj, RUBY_TYPED_FL_IS_TYPED_DATA);
 }
 
 RBIMPL_ATTR_PURE_UNLESS_DEBUG()
@@ -607,11 +581,7 @@ RTYPEDDATA_P(VALUE obj)
     }
 #endif
 
-#ifdef TRUFFLERUBY
-    return rb_tr_rtypeddata_p(obj);
-#else
     return rbimpl_rtypeddata_p(obj);
-#endif
 }
 
 RBIMPL_ATTR_PURE_UNLESS_DEBUG()
@@ -634,10 +604,51 @@ RTYPEDDATA_TYPE(VALUE obj)
     }
 #endif
 
-    return RTYPEDDATA(obj)->type;
+    return (const struct rb_data_type_struct *)(RTYPEDDATA(obj)->type & TYPED_DATA_PTR_MASK);
 }
 
-#ifndef TRUFFLERUBY
+RBIMPL_ATTR_ARTIFICIAL()
+/**
+ * @private
+ *
+ * This  is an  implementation detail  of  TypedData_Get_Struct().  Don't use  it
+ * directly.
+ */
+static inline void *
+rbimpl_check_typeddata(VALUE obj, const rb_data_type_t *expected_type)
+{
+    if (RB_LIKELY(RB_TYPE_P(obj, T_DATA) && RTYPEDDATA_P(obj))) {
+        const rb_data_type_t *actual_type = RTYPEDDATA_TYPE(obj);
+        void *data = RTYPEDDATA_GET_DATA(obj);
+        if (RB_LIKELY(actual_type == expected_type)) {
+            return data;
+        }
+
+        while (actual_type) {
+            actual_type = actual_type->parent;
+            if (actual_type == expected_type) {
+                return data;
+            }
+        }
+    }
+
+    return rb_check_typeddata(obj, expected_type);
+}
+
+
+/**
+ * Obtains a C struct from inside of a wrapper Ruby object.
+ *
+ * @param      obj            An instance of ::RTypedData.
+ * @param      type           Type name of the C struct.
+ * @param      data_type      The data type describing `type`.
+ * @param      sval           Variable name of obtained C struct.
+ * @exception  rb_eTypeError  `obj` is not a kind of `data_type`.
+ * @return     Unwrapped C struct that `obj` holds.
+ */
+#define TypedData_Get_Struct(obj,type,data_type,sval) \
+    ((sval) = RBIMPL_CAST((type *)rbimpl_check_typeddata((obj), (data_type))))
+
 /**
  * While  we don't  stop  you from  using  this  function, it  seems  to be  an
  * implementation  detail of  #TypedData_Make_Struct, which  is preferred  over
@@ -658,7 +669,6 @@ rb_data_typed_object_make(VALUE klass, const rb_data_type_t *type, void **datap,
     TypedData_Make_Struct0(result, klass, void, size, type, *datap);
     return result;
 }
-#endif
 
 RBIMPL_ATTR_DEPRECATED(("by: rb_data_typed_object_wrap"))
 /** @deprecated  This function was renamed to rb_data_typed_object_wrap(). */

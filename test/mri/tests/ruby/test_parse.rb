@@ -352,6 +352,21 @@ class TestParse < Test::Unit::TestCase
     assert_equal("foobar", b)
   end
 
+  def test_call_command
+    a = b = nil
+    o = Object.new
+    def o.m(*arg); proc {|a| arg.join + a }; end
+
+    assert_nothing_raised do
+      o.instance_eval <<-END, __FILE__, __LINE__+1
+        a = o.m "foo", "bar" do end.("buz")
+        b = o.m "foo", "bar" do end::("buz")
+      END
+    end
+    assert_equal("foobarbuz", a)
+    assert_equal("foobarbuz", b)
+  end
+
   def test_xstring
     assert_raise(Errno::ENOENT) do
       eval("``")
@@ -475,6 +490,12 @@ class TestParse < Test::Unit::TestCase
     assert_parse_error(%q[def (:"#{42}").foo; end], msg)
     assert_parse_error(%q[def ([]).foo; end], msg)
     assert_parse_error(%q[def ([1]).foo; end], msg)
+    assert_parse_error(%q[def (__FILE__).foo; end], msg)
+    assert_parse_error(%q[def (__LINE__).foo; end], msg)
+    assert_parse_error(%q[def (__ENCODING__).foo; end], msg)
+    assert_parse_error(%q[def __FILE__.foo; end], msg)
+    assert_parse_error(%q[def __LINE__.foo; end], msg)
+    assert_parse_error(%q[def __ENCODING__.foo; end], msg)
   end
 
   def test_flip_flop
@@ -1538,7 +1559,7 @@ x = __ENCODING__
   end
 
   def test_shareable_constant_value_simple
-    obj = [['unsharable_value']]
+    obj = [['unshareable_value']]
     a, b, c = eval_separately("#{<<~"begin;"}\n#{<<~'end;'}")
     begin;
       # shareable_constant_value: experimental_everything
@@ -1730,6 +1751,15 @@ x = __ENCODING__
       def o.freeze; self; end
       C = [o]
     end;
+  end
+
+  def test_shareable_constant_value_massign
+    a = eval_separately("#{<<~"begin;"}\n#{<<~'end;'}")
+    begin;
+      # shareable_constant_value: experimental_everything
+      A, = 1
+    end;
+    assert_equal(1, a)
   end
 
   def test_if_after_class

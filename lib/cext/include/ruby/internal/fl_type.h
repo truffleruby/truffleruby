@@ -36,9 +36,6 @@
 #include "ruby/internal/stdbool.h"
 #include "ruby/internal/value.h"
 #include "ruby/internal/value_type.h"
-#ifdef TRUFFLERUBY
-#include "ruby/internal/intern/object.h" /* for rb_obj_taint, etc */
-#endif
 #include "ruby/assert.h"
 #include "ruby/defines.h"
 
@@ -65,7 +62,6 @@
 #define FL_TAINT        RBIMPL_CAST((VALUE)RUBY_FL_TAINT)                /**< @old{RUBY_FL_TAINT} */
 #define FL_SHAREABLE    RBIMPL_CAST((VALUE)RUBY_FL_SHAREABLE)            /**< @old{RUBY_FL_SHAREABLE} */
 #define FL_UNTRUSTED    RBIMPL_CAST((VALUE)RUBY_FL_UNTRUSTED)            /**< @old{RUBY_FL_UNTRUSTED} */
-#define FL_SEEN_OBJ_ID  RBIMPL_CAST((VALUE)RUBY_FL_SEEN_OBJ_ID)          /**< @old{RUBY_FL_SEEN_OBJ_ID} */
 #define FL_EXIVAR       RBIMPL_CAST((VALUE)RUBY_FL_EXIVAR)               /**< @old{RUBY_FL_EXIVAR} */
 #define FL_FREEZE       RBIMPL_CAST((VALUE)RUBY_FL_FREEZE)               /**< @old{RUBY_FL_FREEZE} */
 
@@ -93,11 +89,7 @@
 #define FL_USER19       RBIMPL_CAST((VALUE)(unsigned int)RUBY_FL_USER19) /**< @old{RUBY_FL_USER19} */
 
 #define ELTS_SHARED          RUBY_ELTS_SHARED     /**< @old{RUBY_ELTS_SHARED} */
-#ifdef TRUFFLERUBY
-#define RB_OBJ_FREEZE        rb_obj_freeze
-#else
 #define RB_OBJ_FREEZE        rb_obj_freeze_inline /**< @alias{rb_obj_freeze_inline} */
-#endif
 
 /** @cond INTERNAL_MACRO */
 #define RUBY_ELTS_SHARED     RUBY_ELTS_SHARED
@@ -225,11 +217,11 @@ ruby_fl_type {
     RUBY_FL_PROMOTED    = (1<<5),
 
     /**
-     * This flag is no longer in use
+     * This flag meaning is type dependent, currently only used by T_DATA.
      *
      * @internal
      */
-    RUBY_FL_UNUSED6    = (1<<6),
+    RUBY_FL_USERPRIV0    = (1<<6),
 
     /**
      * This flag has  something to do with finalisers.  A  ruby object can have
@@ -261,6 +253,21 @@ ruby_fl_type {
                          = 0,
 
     /**
+     * @deprecated  This flag was an implementation detail that should never have
+     *              no been exposed. Exists  here for  backwards
+     *              compatibility only.  You can safely forget about it.
+     */
+    RUBY_FL_EXIVAR
+
+#if defined(RBIMPL_HAVE_ENUM_ATTRIBUTE)
+    RBIMPL_ATTR_DEPRECATED(("FL_EXIVAR is an outdated implementation detail, it should not be used."))
+#elif defined(_MSC_VER)
+# pragma deprecated(RUBY_FL_EXIVAR)
+#endif
+
+                         = 0,
+
+    /**
      * This flag has something to do with Ractor.  Multiple Ractors run without
      * protecting each  other.  Sharing an  object among Ractors  are basically
      * dangerous,  disabled by  default.   This  flag is  used  to bypass  that
@@ -287,37 +294,19 @@ ruby_fl_type {
 
                          = 0,
 
-    /**
-     * This flag has something to do with  object IDs.  Unlike in the old days,
-     * an object's object  ID (that a user can  query using `Object#object_id`)
-     * is no longer its physical address represented using Ruby level integers.
-     * It is  now a  monotonic-increasing integer  unrelated to  the underlying
-     * memory arrangement.  Object IDs are assigned when necessary; objects are
-     * born without one,  and will eventually have such  property when queried.
-     * The interpreter has to manage which one is which.  This is the flag that
-     * helps the  management.  Objects  with this  flag set  are the  ones with
-     * object IDs assigned.
-     *
-     * @internal
-     *
-     * But honestly, @shyouhei  doesn't think this flag should  be visible from
-     * 3rd parties.  It must be an implementation detail that they should never
-     * know.  Might better be hidden.
-     */
-    RUBY_FL_SEEN_OBJ_ID  = (1<<9),
+   /**
+    * This flag is no longer in use
+    *
+    * @internal
+    */
+    RUBY_FL_UNUSED9  = (1<<9),
 
-    /**
-     * This flag has something to do with instance variables.  3rd parties need
-     * not  know, but  there are  several ways  to store  an object's  instance
-     * variables.   Objects  with this  flag  use  so-called "generic"  backend
-     * storage.  This  distinction is purely an  implementation detail.  People
-     * need not be aware of this working behind-the-scene.
-     *
-     * @internal
-     *
-     * As of writing everything except ::RObject and RModule use this scheme.
-     */
-    RUBY_FL_EXIVAR       = (1<<10),
+   /**
+    * This flag is no longer in use
+    *
+    * @internal
+    */
+    RUBY_FL_UNUSED10 = (1<<10),
 
     /**
      * This flag has something to do with data immutability.  When this flag is
@@ -419,7 +408,7 @@ enum {
 # pragma deprecated(RUBY_FL_DUPPED)
 #endif
 
-    = (int)RUBY_T_MASK | (int)RUBY_FL_EXIVAR
+    = (int)RUBY_T_MASK
 };
 
 #undef RBIMPL_HAVE_ENUM_ATTRIBUTE
@@ -453,10 +442,8 @@ RB_FL_ABLE(VALUE obj)
     if (RB_SPECIAL_CONST_P(obj)) {
         return false;
     }
-    else if (RB_TYPE_P(obj, RUBY_T_NODE)) {
-        return false;
-    }
     else {
+        RBIMPL_ASSERT_OR_ASSUME(!RB_TYPE_P(obj, RUBY_T_NODE));
         return true;
     }
 }
@@ -476,11 +463,7 @@ static inline VALUE
 RB_FL_TEST_RAW(VALUE obj, VALUE flags)
 {
     RBIMPL_ASSERT_OR_ASSUME(RB_FL_ABLE(obj));
-#ifdef TRUFFLERUBY
-    return RBASIC_FLAGS(obj) & flags;
-#else
     return RBASIC(obj)->flags & flags;
-#endif
 }
 
 RBIMPL_ATTR_PURE_UNLESS_DEBUG()
@@ -581,7 +564,6 @@ RB_FL_ALL(VALUE obj, VALUE flags)
     return RB_FL_TEST(obj, flags) == flags;
 }
 
-#ifndef TRUFFLERUBY
 RBIMPL_ATTR_NOALIAS()
 RBIMPL_ATTR_ARTIFICIAL()
 /**
@@ -604,7 +586,6 @@ rbimpl_fl_set_raw_raw(struct RBasic *obj, VALUE flags)
 {
     obj->flags |= flags;
 }
-#endif
 
 RBIMPL_ATTR_ARTIFICIAL()
 /**
@@ -619,11 +600,7 @@ static inline void
 RB_FL_SET_RAW(VALUE obj, VALUE flags)
 {
     RBIMPL_ASSERT_OR_ASSUME(RB_FL_ABLE(obj));
-#ifdef TRUFFLERUBY
-    rb_tr_set_flags(obj, RBASIC_FLAGS(obj) | flags);
-#else
     rbimpl_fl_set_raw_raw(RBASIC(obj), flags);
-#endif
 }
 
 RBIMPL_ATTR_ARTIFICIAL()
@@ -647,7 +624,6 @@ RB_FL_SET(VALUE obj, VALUE flags)
     }
 }
 
-#ifndef TRUFFLERUBY
 RBIMPL_ATTR_NOALIAS()
 RBIMPL_ATTR_ARTIFICIAL()
 /**
@@ -670,7 +646,6 @@ rbimpl_fl_unset_raw_raw(struct RBasic *obj, VALUE flags)
 {
     obj->flags &= ~flags;
 }
-#endif
 
 RBIMPL_ATTR_ARTIFICIAL()
 /**
@@ -685,11 +660,7 @@ static inline void
 RB_FL_UNSET_RAW(VALUE obj, VALUE flags)
 {
     RBIMPL_ASSERT_OR_ASSUME(RB_FL_ABLE(obj));
-#ifdef TRUFFLERUBY
-    rb_tr_set_flags(obj, RBASIC_FLAGS(obj) & ~flags);
-#else
     rbimpl_fl_unset_raw_raw(RBASIC(obj), flags);
-#endif
 }
 
 RBIMPL_ATTR_ARTIFICIAL()
@@ -708,7 +679,6 @@ RB_FL_UNSET(VALUE obj, VALUE flags)
     }
 }
 
-#ifndef TRUFFLERUBY
 RBIMPL_ATTR_NOALIAS()
 RBIMPL_ATTR_ARTIFICIAL()
 /**
@@ -731,7 +701,6 @@ rbimpl_fl_reverse_raw_raw(struct RBasic *obj, VALUE flags)
 {
     obj->flags ^= flags;
 }
-#endif
 
 RBIMPL_ATTR_ARTIFICIAL()
 /**
@@ -746,11 +715,7 @@ static inline void
 RB_FL_REVERSE_RAW(VALUE obj, VALUE flags)
 {
     RBIMPL_ASSERT_OR_ASSUME(RB_FL_ABLE(obj));
-#ifdef TRUFFLERUBY
-    rb_tr_set_flags(obj, RBASIC_FLAGS(obj) ^ flags);
-#else
     rbimpl_fl_reverse_raw_raw(RBASIC(obj), flags);
-#endif
 }
 
 RBIMPL_ATTR_ARTIFICIAL()
@@ -769,11 +734,6 @@ RB_FL_REVERSE(VALUE obj, VALUE flags)
         RB_FL_REVERSE_RAW(obj, flags);
     }
 }
-
-#ifdef TRUFFLERUBY
-RBIMPL_WARNING_PUSH()
-RBIMPL_WARNING_IGNORED(-Wunused-parameter)
-#endif
 
 RBIMPL_ATTR_PURE_UNLESS_DEBUG()
 RBIMPL_ATTR_ARTIFICIAL()
@@ -897,10 +857,6 @@ RB_OBJ_INFECT(VALUE dst, VALUE src)
     return;
 }
 
-#ifdef TRUFFLERUBY
-RBIMPL_WARNING_POP()
-#endif
-
 RBIMPL_ATTR_PURE_UNLESS_DEBUG()
 RBIMPL_ATTR_ARTIFICIAL()
 /**
@@ -920,11 +876,7 @@ RBIMPL_ATTR_ARTIFICIAL()
 static inline VALUE
 RB_OBJ_FROZEN_RAW(VALUE obj)
 {
-#ifdef TRUFFLERUBY
-    return rb_obj_frozen_p(obj);
-#else
     return RB_FL_TEST_RAW(obj, RUBY_FL_FREEZE);
-#endif
 }
 
 RBIMPL_ATTR_PURE_UNLESS_DEBUG()
@@ -939,20 +891,15 @@ RBIMPL_ATTR_ARTIFICIAL()
 static inline bool
 RB_OBJ_FROZEN(VALUE obj)
 {
-#ifdef TRUFFLERUBY
-    return rb_obj_frozen_p(obj);
-#else
     if (! RB_FL_ABLE(obj)) {
         return true;
     }
     else {
         return RB_OBJ_FROZEN_RAW(obj);
     }
-#endif
 }
 
 RUBY_SYMBOL_EXPORT_BEGIN
-#ifndef TRUFFLERUBY
 /**
  * Prevents further modifications to the given object.  ::rb_eFrozenError shall
  * be raised if modification is attempted.
@@ -962,7 +909,6 @@ RUBY_SYMBOL_EXPORT_BEGIN
  *                              representation of the object.
  */
 void rb_obj_freeze_inline(VALUE obj);
-#endif
 RUBY_SYMBOL_EXPORT_END
 
 RBIMPL_ATTR_ARTIFICIAL()
@@ -975,11 +921,7 @@ RBIMPL_ATTR_ARTIFICIAL()
 static inline void
 RB_OBJ_FREEZE_RAW(VALUE obj)
 {
-#ifdef TRUFFLERUBY
-    rb_obj_freeze(obj);
-#else
     rb_obj_freeze_inline(obj);
-#endif
 }
 
 #endif /* RBIMPL_FL_TYPE_H */

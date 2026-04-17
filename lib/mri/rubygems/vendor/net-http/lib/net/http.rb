@@ -46,7 +46,7 @@ module Gem::Net   #:nodoc:
   # == Strategies
   #
   # - If you will make only a few GET requests,
-  #   consider using {OpenURI}[rdoc-ref:OpenURI].
+  #   consider using {OpenURI}[https://docs.ruby-lang.org/en/master/OpenURI.html].
   # - If you will make only a few requests of all kinds,
   #   consider using the various singleton convenience methods in this class.
   #   Each of the following methods automatically starts and finishes
@@ -102,14 +102,14 @@ module Gem::Net   #:nodoc:
   #
   # == URIs
   #
-  # On the internet, a URI
+  # On the internet, a Gem::URI
   # ({Universal Resource Identifier}[https://en.wikipedia.org/wiki/Uniform_Resource_Identifier])
   # is a string that identifies a particular resource.
   # It consists of some or all of: scheme, hostname, path, query, and fragment;
-  # see {URI syntax}[https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Syntax].
+  # see {Gem::URI syntax}[https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Syntax].
   #
-  # A Ruby {Gem::URI::Generic}[rdoc-ref:Gem::URI::Generic] object
-  # represents an internet URI.
+  # A Ruby {Gem::URI::Generic}[https://docs.ruby-lang.org/en/master/Gem::URI/Generic.html] object
+  # represents an internet Gem::URI.
   # It provides, among others, methods
   # +scheme+, +hostname+, +path+, +query+, and +fragment+.
   #
@@ -144,7 +144,7 @@ module Gem::Net   #:nodoc:
   #
   # === Queries
   #
-  # A host-specific query adds name/value pairs to the URI:
+  # A host-specific query adds name/value pairs to the Gem::URI:
   #
   #   _uri = uri.dup
   #   params = {userId: 1, completed: false}
@@ -154,7 +154,7 @@ module Gem::Net   #:nodoc:
   #
   # === Fragments
   #
-  # A {URI fragment}[https://en.wikipedia.org/wiki/URI_fragment] has no effect
+  # A {Gem::URI fragment}[https://en.wikipedia.org/wiki/URI_fragment] has no effect
   # in \Gem::Net::HTTP;
   # the same data is returned, regardless of whether a fragment is included.
   #
@@ -327,9 +327,9 @@ module Gem::Net   #:nodoc:
   #     res = http.request(req)
   #   end
   #
-  # Or if you simply want to make a GET request, you may pass in a URI
+  # Or if you simply want to make a GET request, you may pass in a Gem::URI
   # object that has an \HTTPS URL. \Gem::Net::HTTP automatically turns on TLS
-  # verification if the URI object has a 'https' :URI scheme:
+  # verification if the Gem::URI object has a 'https' Gem::URI scheme:
   #
   #   uri # => #<Gem::URI::HTTPS https://jsonplaceholder.typicode.com/>
   #   Gem::Net::HTTP.get(uri)
@@ -374,7 +374,7 @@ module Gem::Net   #:nodoc:
   #
   # When environment variable <tt>'http_proxy'</tt>
   # is set to a \Gem::URI string,
-  # the returned +http+ will have the server at that URI as its proxy;
+  # the returned +http+ will have the server at that Gem::URI as its proxy;
   # note that the \Gem::URI string must have a protocol
   # such as <tt>'http'</tt> or <tt>'https'</tt>:
   #
@@ -460,7 +460,7 @@ module Gem::Net   #:nodoc:
   #
   # First, what's elsewhere. Class Gem::Net::HTTP:
   #
-  # - Inherits from {class Object}[rdoc-ref:Object@What-27s+Here].
+  # - Inherits from {class Object}[https://docs.ruby-lang.org/en/master/Object.html#class-Object-label-What-27s+Here].
   #
   # This is a categorized summary of methods and attributes.
   #
@@ -475,8 +475,7 @@ module Gem::Net   #:nodoc:
   #
   # - {::start}[rdoc-ref:Gem::Net::HTTP.start]:
   #   Begins a new session in a new \Gem::Net::HTTP object.
-  # - {#started?}[rdoc-ref:Gem::Net::HTTP#started?]
-  #   (aliased as {#active?}[rdoc-ref:Gem::Net::HTTP#active?]):
+  # - {#started?}[rdoc-ref:Gem::Net::HTTP#started?]:
   #   Returns whether in a session.
   # - {#finish}[rdoc-ref:Gem::Net::HTTP#finish]:
   #   Ends an active session.
@@ -556,18 +555,15 @@ module Gem::Net   #:nodoc:
   #   Sends a PUT request and returns a response object.
   # - {#request}[rdoc-ref:Gem::Net::HTTP#request]:
   #   Sends a request and returns a response object.
-  # - {#request_get}[rdoc-ref:Gem::Net::HTTP#request_get]
-  #   (aliased as {#get2}[rdoc-ref:Gem::Net::HTTP#get2]):
+  # - {#request_get}[rdoc-ref:Gem::Net::HTTP#request_get]:
   #   Sends a GET request and forms a response object;
   #   if a block given, calls the block with the object,
   #   otherwise returns the object.
-  # - {#request_head}[rdoc-ref:Gem::Net::HTTP#request_head]
-  #   (aliased as {#head2}[rdoc-ref:Gem::Net::HTTP#head2]):
+  # - {#request_head}[rdoc-ref:Gem::Net::HTTP#request_head]:
   #   Sends a HEAD request and forms a response object;
   #   if a block given, calls the block with the object,
   #   otherwise returns the object.
-  # - {#request_post}[rdoc-ref:Gem::Net::HTTP#request_post]
-  #   (aliased as {#post2}[rdoc-ref:Gem::Net::HTTP#post2]):
+  # - {#request_post}[rdoc-ref:Gem::Net::HTTP#request_post]:
   #   Sends a POST request and forms a response object;
   #   if a block given, calls the block with the object,
   #   otherwise returns the object.
@@ -605,8 +601,7 @@ module Gem::Net   #:nodoc:
   #   Returns whether +self+ is a proxy class.
   # - {#proxy?}[rdoc-ref:Gem::Net::HTTP#proxy?]:
   #   Returns whether +self+ has a proxy.
-  # - {#proxy_address}[rdoc-ref:Gem::Net::HTTP#proxy_address]
-  #   (aliased as {#proxyaddr}[rdoc-ref:Gem::Net::HTTP#proxyaddr]):
+  # - {#proxy_address}[rdoc-ref:Gem::Net::HTTP#proxy_address]:
   #   Returns the proxy address.
   # - {#proxy_from_env?}[rdoc-ref:Gem::Net::HTTP#proxy_from_env?]:
   #   Returns whether the proxy is taken from an environment variable.
@@ -718,8 +713,7 @@ module Gem::Net   #:nodoc:
   # === \HTTP Version
   #
   # - {::version_1_2?}[rdoc-ref:Gem::Net::HTTP.version_1_2?]
-  #   (aliased as {::is_version_1_2?}[rdoc-ref:Gem::Net::HTTP.is_version_1_2?]
-  #   and {::version_1_2}[rdoc-ref:Gem::Net::HTTP.version_1_2]):
+  #   (aliased as {::version_1_2}[rdoc-ref:Gem::Net::HTTP.version_1_2]):
   #   Returns true; retained for compatibility.
   #
   # === Debugging
@@ -730,7 +724,7 @@ module Gem::Net   #:nodoc:
   class HTTP < Protocol
 
     # :stopdoc:
-    VERSION = "0.6.0"
+    VERSION = "0.7.0"
     HTTPVersion = '1.1'
     begin
       require 'zlib'
@@ -796,7 +790,7 @@ module Gem::Net   #:nodoc:
     #     "completed": false
     #   }
     #
-    # With URI object +uri+ and optional hash argument +headers+:
+    # With Gem::URI object +uri+ and optional hash argument +headers+:
     #
     #   uri = Gem::URI('https://jsonplaceholder.typicode.com/todos/1')
     #   headers = {'Content-type' => 'application/json; charset=UTF-8'}
@@ -869,7 +863,7 @@ module Gem::Net   #:nodoc:
 
     # Posts data to a host; returns a Gem::Net::HTTPResponse object.
     #
-    # Argument +url+ must be a URI;
+    # Argument +url+ must be a Gem::URI;
     # argument +data+ must be a hash:
     #
     #   _uri = uri.dup
@@ -1293,7 +1287,7 @@ module Gem::Net   #:nodoc:
     # - The name of an encoding.
     # - An alias for an encoding name.
     #
-    # See {Encoding}[rdoc-ref:Encoding].
+    # See {Encoding}[https://docs.ruby-lang.org/en/master/Encoding.html].
     #
     # Examples:
     #
@@ -1535,7 +1529,7 @@ module Gem::Net   #:nodoc:
       :verify_hostname,
     ] # :nodoc:
 
-    SSL_IVNAMES = SSL_ATTRIBUTES.map { |a| "@#{a}".to_sym } # :nodoc:
+    SSL_IVNAMES = SSL_ATTRIBUTES.map { |a| "@#{a}".to_sym }.freeze # :nodoc:
 
     # Sets or returns the path to a CA certification file in PEM format.
     attr_accessor :ca_file
@@ -1552,11 +1546,11 @@ module Gem::Net   #:nodoc:
     attr_accessor :cert_store
 
     # Sets or returns the available SSL ciphers.
-    # See {OpenSSL::SSL::SSLContext#ciphers=}[rdoc-ref:OpenSSL::SSL::SSLContext#ciphers-3D].
+    # See {OpenSSL::SSL::SSLContext#ciphers=}[OpenSSL::SSL::SSL::Context#ciphers=].
     attr_accessor :ciphers
 
     # Sets or returns the extra X509 certificates to be added to the certificate chain.
-    # See {OpenSSL::SSL::SSLContext#add_certificate}[rdoc-ref:OpenSSL::SSL::SSLContext#add_certificate].
+    # See {OpenSSL::SSL::SSLContext#add_certificate}[OpenSSL::SSL::SSL::Context#add_certificate].
     attr_accessor :extra_chain_cert
 
     # Sets or returns the OpenSSL::PKey::RSA or OpenSSL::PKey::DSA object.
@@ -1566,15 +1560,15 @@ module Gem::Net   #:nodoc:
     attr_accessor :ssl_timeout
 
     # Sets or returns the SSL version.
-    # See {OpenSSL::SSL::SSLContext#ssl_version=}[rdoc-ref:OpenSSL::SSL::SSLContext#ssl_version-3D].
+    # See {OpenSSL::SSL::SSLContext#ssl_version=}[OpenSSL::SSL::SSL::Context#ssl_version=].
     attr_accessor :ssl_version
 
     # Sets or returns the minimum SSL version.
-    # See {OpenSSL::SSL::SSLContext#min_version=}[rdoc-ref:OpenSSL::SSL::SSLContext#min_version-3D].
+    # See {OpenSSL::SSL::SSLContext#min_version=}[OpenSSL::SSL::SSL::Context#min_version=].
     attr_accessor :min_version
 
     # Sets or returns the maximum SSL version.
-    # See {OpenSSL::SSL::SSLContext#max_version=}[rdoc-ref:OpenSSL::SSL::SSLContext#max_version-3D].
+    # See {OpenSSL::SSL::SSLContext#max_version=}[OpenSSL::SSL::SSL::Context#max_version=].
     attr_accessor :max_version
 
     # Sets or returns the callback for the server certification verification.
@@ -1590,7 +1584,7 @@ module Gem::Net   #:nodoc:
 
     # Sets or returns whether to verify that the server certificate is valid
     # for the hostname.
-    # See {OpenSSL::SSL::SSLContext#verify_hostname=}[rdoc-ref:OpenSSL::SSL::SSLContext#attribute-i-verify_mode].
+    # See {OpenSSL::SSL::SSLContext#verify_hostname=}[OpenSSL::SSL::SSL::Context#verify_hostname=].
     attr_accessor :verify_hostname
 
     # Returns the X509 certificate chain (an array of strings)
@@ -1866,7 +1860,7 @@ module Gem::Net   #:nodoc:
       @proxy_from_env
     end
 
-    # The proxy URI determined from the environment for this connection.
+    # The proxy Gem::URI determined from the environment for this connection.
     def proxy_uri # :nodoc:
       return if @proxy_uri == false
       @proxy_uri ||= Gem::URI::HTTP.new(
@@ -1923,7 +1917,8 @@ module Gem::Net   #:nodoc:
     private
 
     def unescape(value)
-      require 'cgi/util'
+      require 'cgi/escape'
+      require 'cgi/util' unless defined?(CGI::EscapeExt)
       CGI.unescape(value)
     end
 

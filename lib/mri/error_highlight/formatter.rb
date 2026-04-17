@@ -37,13 +37,13 @@ module ErrorHighlight
     end
 
     def self.max_snippet_width
-      return if Thread.current[:__error_highlight_max_snippet_width__] == :disabled
+      return if Ractor.current[:__error_highlight_max_snippet_width__] == :disabled
 
-      Thread.current[:__error_highlight_max_snippet_width__] ||= terminal_width
+      Ractor.current[:__error_highlight_max_snippet_width__] ||= terminal_width
     end
 
     def self.max_snippet_width=(width)
-      return Thread.current[:__error_highlight_max_snippet_width__] = :disabled if width.nil?
+      return Ractor.current[:__error_highlight_max_snippet_width__] = :disabled if width.nil?
 
       width = width.to_i
 
@@ -52,23 +52,23 @@ module ErrorHighlight
         width = MIN_SNIPPET_WIDTH
       end
 
-      Thread.current[:__error_highlight_max_snippet_width__] = width
+      Ractor.current[:__error_highlight_max_snippet_width__] = width
     end
 
     def self.terminal_width
-      # lazy load io/console, so it's not loaded when 'max_snippet_width' is set
+      # lazy load io/console to avoid loading it when 'max_snippet_width' is manually set
       require "io/console"
-      STDERR.winsize[1] if STDERR.tty?
+      $stderr.winsize[1] if $stderr.tty?
     rescue LoadError, NoMethodError, SystemCallError
-      # do not truncate when window size is not available
+      # skip truncation when terminal window size is unavailable
     end
   end
 
   def self.formatter
-    Thread.current[:__error_highlight_formatter__] || DefaultFormatter
+    Ractor.current[:__error_highlight_formatter__] || DefaultFormatter
   end
 
   def self.formatter=(formatter)
-    Thread.current[:__error_highlight_formatter__] = formatter
+    Ractor.current[:__error_highlight_formatter__] = formatter
   end
 end

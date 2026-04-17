@@ -1599,7 +1599,7 @@ m_ajd(union DateData *x)
 
     if (simple_dat_p(x)) {
 	r = m_real_jd(x);
-	if (FIXNUM_P(r) && FIX2LONG(r) <= (FIXNUM_MAX / 2)) {
+	if (FIXNUM_P(r) && FIX2LONG(r) <= (FIXNUM_MAX / 2) && FIX2LONG(r) >= (FIXNUM_MIN + 1) / 2) {
 	    long ir = FIX2LONG(r);
 	    ir = ir * 2 - 1;
 	    return rb_rational_new2(LONG2FIX(ir), INT2FIX(2));
@@ -2498,7 +2498,7 @@ date_s__valid_jd_p(int argc, VALUE *argv, VALUE klass)
  *
  *   Date.valid_jd?(2451944) # => true
  *
- * See argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * See argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  *
  * Related: Date.jd.
  */
@@ -2592,7 +2592,7 @@ date_s__valid_civil_p(int argc, VALUE *argv, VALUE klass)
  *   Date.valid_date?(2001, 2, 29) # => false
  *   Date.valid_date?(2001, 2, -1) # => true
  *
- * See argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * See argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  *
  * Related: Date.jd, Date.new.
  */
@@ -2680,7 +2680,7 @@ date_s__valid_ordinal_p(int argc, VALUE *argv, VALUE klass)
  *   Date.valid_ordinal?(2001, 34)  # => true
  *   Date.valid_ordinal?(2001, 366) # => false
  *
- * See argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * See argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  *
  * Related: Date.jd, Date.ordinal.
  */
@@ -2770,7 +2770,7 @@ date_s__valid_commercial_p(int argc, VALUE *argv, VALUE klass)
  *
  * See Date.commercial.
  *
- * See argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * See argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  *
  * Related: Date.jd, Date.commercial.
  */
@@ -3350,7 +3350,7 @@ static VALUE d_lite_plus(VALUE, VALUE);
  *
  *     Date.jd(Date::ITALY - 1).julian?    # => true
  *
- * See argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * See argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  *
  * Related: Date.new.
  */
@@ -3415,7 +3415,7 @@ date_s_jd(int argc, VALUE *argv, VALUE klass)
  *
  * Raises an exception if +yday+ is zero or out of range.
  *
- * See argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * See argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  *
  * Related: Date.jd, Date.new.
  */
@@ -3492,7 +3492,7 @@ date_s_civil(int argc, VALUE *argv, VALUE klass)
  * where +n+ is the number of days in the month;
  * when the argument is negative, counts backward from the end of the month.
  *
- * See argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * See argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  *
  * Related: Date.jd.
  */
@@ -3598,7 +3598,7 @@ date_initialize(int argc, VALUE *argv, VALUE self)
  *     Date.commercial(2020, 1, 1).to_s # => "2019-12-30"
        Date.commercial(2020, 1, 7).to_s # => "2020-01-05"
  *
- * See argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * See argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  *
  * Related: Date.jd, Date.new, Date.ordinal.
  */
@@ -3783,7 +3783,7 @@ static void set_sg(union DateData *, double);
  *
  *   Date.today.to_s # => "2022-07-06"
  *
- * See argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * See argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  *
  */
 static VALUE
@@ -3878,7 +3878,6 @@ static VALUE
 rt_complete_frags(VALUE klass, VALUE hash)
 {
     static VALUE tab = Qnil;
-    int g;
     long e;
     VALUE k, a, d;
 
@@ -3975,9 +3974,13 @@ rt_complete_frags(VALUE klass, VALUE hash)
 	rb_gc_register_mark_object(tab);
     }
 
-    {
-	long i, eno = 0, idx = 0;
+    k = a = Qnil;
 
+    {
+	long i, eno = 0;
+	VALUE t = Qnil;
+
+	e = 0;
 	for (i = 0; i < RARRAY_LEN(tab); i++) {
 	    VALUE x, a;
 
@@ -3992,23 +3995,20 @@ rt_complete_frags(VALUE klass, VALUE hash)
 			n++;
 		if (n > eno) {
 		    eno = n;
-		    idx = i;
+		    t = x;
 		}
 	    }
 	}
-	if (eno == 0)
-	    g = 0;
-	else {
-	    g = 1;
-	    k = RARRAY_AREF(RARRAY_AREF(tab, idx), 0);
-	    a = RARRAY_AREF(RARRAY_AREF(tab, idx), 1);
-	    e =	eno;
+	if (eno > 0) {
+	    k = RARRAY_AREF(t, 0);
+	    a = RARRAY_AREF(t, 1);
 	}
+	e = eno;
     }
 
     d = Qnil;
 
-    if (g && !NIL_P(k) && (RARRAY_LEN(a) - e)) {
+    if (!NIL_P(k) && (RARRAY_LEN(a) > e)) {
 	if (k == sym("ordinal")) {
 	    if (NIL_P(ref_hash("year"))) {
 		if (NIL_P(d))
@@ -4095,7 +4095,7 @@ rt_complete_frags(VALUE klass, VALUE hash)
 	}
     }
 
-    if (g && k == sym("time")) {
+    if (k == sym("time")) {
 	if (f_le_p(klass, cDateTime)) {
 	    if (NIL_P(d))
 		d = date_s_today(0, (VALUE *)0, cDate);
@@ -4383,7 +4383,7 @@ date_s__strptime_internal(int argc, VALUE *argv, VALUE klass,
  *   Date._strptime('2001-02-03', '%Y-%m-%d') # => {:year=>2001, :mon=>2, :mday=>3}
  *
  * For other formats, see
- * {Formats for Dates and Times}[rdoc-ref:strftime_formatting.rdoc].
+ * {Formats for Dates and Times}[rdoc-ref:language/strftime_formatting.rdoc].
  * (Unlike Date.strftime, does not support flags and width.)
  *
  * See also {strptime(3)}[https://man7.org/linux/man-pages/man3/strptime.3.html].
@@ -4412,10 +4412,10 @@ date_s__strptime(int argc, VALUE *argv, VALUE klass)
  *   Date.strptime('sat3feb01', '%a%d%b%y')   # => #<Date: 2001-02-03>
  *
  * For other formats, see
- * {Formats for Dates and Times}[rdoc-ref:strftime_formatting.rdoc].
+ * {Formats for Dates and Times}[rdoc-ref:language/strftime_formatting.rdoc].
  * (Unlike Date.strftime, does not support flags and width.)
  *
- * See argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * See argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  *
  * See also {strptime(3)}[https://man7.org/linux/man-pages/man3/strptime.3.html].
  *
@@ -4464,11 +4464,10 @@ get_limit(VALUE opt)
 #define rb_category_warn(category, fmt) rb_warn(fmt)
 #endif
 
-static void
+static VALUE
 check_limit(VALUE str, VALUE opt)
 {
     size_t slen, limit;
-    if (NIL_P(str)) return;
     StringValue(str);
     slen = RSTRING_LEN(str);
     limit = get_limit(opt);
@@ -4476,6 +4475,7 @@ check_limit(VALUE str, VALUE opt)
 	rb_raise(rb_eArgError,
 		 "string length (%"PRI_SIZE_PREFIX"u) exceeds the limit %"PRI_SIZE_PREFIX"u", slen, limit);
     }
+    return str;
 }
 
 static VALUE
@@ -4484,8 +4484,7 @@ date_s__parse_internal(int argc, VALUE *argv, VALUE klass)
     VALUE vstr, vcomp, hash, opt;
 
     argc = rb_scan_args(argc, argv, "11:", &vstr, &vcomp, &opt);
-    check_limit(vstr, opt);
-    StringValue(vstr);
+    vstr = check_limit(vstr, opt);
     if (!rb_enc_str_asciicompat_p(vstr))
 	rb_raise(rb_eArgError,
 		 "string should have ASCII compatible encoding");
@@ -4505,7 +4504,7 @@ date_s__parse_internal(int argc, VALUE *argv, VALUE klass)
  * This method recognizes many forms in +string+,
  * but it is not a validator.
  * For formats, see
- * {"Specialized Format Strings" in Formats for Dates and Times}[rdoc-ref:strftime_formatting.rdoc@Specialized+Format+Strings]
+ * {"Specialized Format Strings" in Formats for Dates and Times}[rdoc-ref:language/strftime_formatting.rdoc@Specialized+Format+Strings]
  *
  * If +string+ does not specify a valid date,
  * the result is unpredictable;
@@ -4540,7 +4539,7 @@ date_s__parse(int argc, VALUE *argv, VALUE klass)
  * This method recognizes many forms in +string+,
  * but it is not a validator.
  * For formats, see
- * {"Specialized Format Strings" in Formats for Dates and Times}[rdoc-ref:strftime_formatting.rdoc@Specialized+Format+Strings]
+ * {"Specialized Format Strings" in Formats for Dates and Times}[rdoc-ref:language/strftime_formatting.rdoc@Specialized+Format+Strings]
  * If +string+ does not specify a valid date,
  * the result is unpredictable;
  * consider using Date._strptime instead.
@@ -4560,7 +4559,7 @@ date_s__parse(int argc, VALUE *argv, VALUE klass)
  *
  * See:
  *
- * - Argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * - Argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  * - Argument {limit}[rdoc-ref:Date@Argument+limit].
  *
  * Related: Date._parse (returns a hash).
@@ -4604,7 +4603,7 @@ VALUE date__jisx0301(VALUE);
  *   Date._iso8601(string, limit: 128) -> hash
  *
  * Returns a hash of values parsed from +string+, which should contain
- * an {ISO 8601 formatted date}[rdoc-ref:strftime_formatting.rdoc@ISO+8601+Format+Specifications]:
+ * an {ISO 8601 formatted date}[rdoc-ref:language/strftime_formatting.rdoc@ISO+8601+Format+Specifications]:
  *
  *   d = Date.new(2001, 2, 3)
  *   s = d.iso8601    # => "2001-02-03"
@@ -4620,7 +4619,7 @@ date_s__iso8601(int argc, VALUE *argv, VALUE klass)
     VALUE str, opt;
 
     rb_scan_args(argc, argv, "1:", &str, &opt);
-    check_limit(str, opt);
+    if (!NIL_P(str)) str = check_limit(str, opt);
 
     return date__iso8601(str);
 }
@@ -4631,7 +4630,7 @@ date_s__iso8601(int argc, VALUE *argv, VALUE klass)
  *
  * Returns a new \Date object with values parsed from +string+,
  * which should contain
- * an {ISO 8601 formatted date}[rdoc-ref:strftime_formatting.rdoc@ISO+8601+Format+Specifications]:
+ * an {ISO 8601 formatted date}[rdoc-ref:language/strftime_formatting.rdoc@ISO+8601+Format+Specifications]:
  *
  *   d = Date.new(2001, 2, 3)
  *   s = d.iso8601   # => "2001-02-03"
@@ -4639,7 +4638,7 @@ date_s__iso8601(int argc, VALUE *argv, VALUE klass)
  *
  * See:
  *
- * - Argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * - Argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  * - Argument {limit}[rdoc-ref:Date@Argument+limit].
  *
  * Related: Date._iso8601 (returns a hash).
@@ -4673,7 +4672,7 @@ date_s_iso8601(int argc, VALUE *argv, VALUE klass)
  *   Date._rfc3339(string, limit: 128) -> hash
  *
  * Returns a hash of values parsed from +string+, which should be a valid
- * {RFC 3339 format}[rdoc-ref:strftime_formatting.rdoc@RFC+3339+Format]:
+ * {RFC 3339 format}[rdoc-ref:language/strftime_formatting.rdoc@RFC+3339+Format]:
  *
  *   d = Date.new(2001, 2, 3)
  *   s = d.rfc3339     # => "2001-02-03T00:00:00+00:00"
@@ -4690,7 +4689,7 @@ date_s__rfc3339(int argc, VALUE *argv, VALUE klass)
     VALUE str, opt;
 
     rb_scan_args(argc, argv, "1:", &str, &opt);
-    check_limit(str, opt);
+    if (!NIL_P(str)) str = check_limit(str, opt);
 
     return date__rfc3339(str);
 }
@@ -4701,7 +4700,7 @@ date_s__rfc3339(int argc, VALUE *argv, VALUE klass)
  *
  * Returns a new \Date object with values parsed from +string+,
  * which should be a valid
- * {RFC 3339 format}[rdoc-ref:strftime_formatting.rdoc@RFC+3339+Format]:
+ * {RFC 3339 format}[rdoc-ref:language/strftime_formatting.rdoc@RFC+3339+Format]:
  *
  *   d = Date.new(2001, 2, 3)
  *   s = d.rfc3339   # => "2001-02-03T00:00:00+00:00"
@@ -4709,7 +4708,7 @@ date_s__rfc3339(int argc, VALUE *argv, VALUE klass)
  *
  * See:
  *
- * - Argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * - Argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  * - Argument {limit}[rdoc-ref:Date@Argument+limit].
  *
  * Related: Date._rfc3339 (returns a hash).
@@ -4759,7 +4758,7 @@ date_s__xmlschema(int argc, VALUE *argv, VALUE klass)
     VALUE str, opt;
 
     rb_scan_args(argc, argv, "1:", &str, &opt);
-    check_limit(str, opt);
+    if (!NIL_P(str)) str = check_limit(str, opt);
 
     return date__xmlschema(str);
 }
@@ -4777,7 +4776,7 @@ date_s__xmlschema(int argc, VALUE *argv, VALUE klass)
  *
  * See:
  *
- * - Argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * - Argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  * - Argument {limit}[rdoc-ref:Date@Argument+limit].
  *
  * Related: Date._xmlschema (returns a hash).
@@ -4811,7 +4810,7 @@ date_s_xmlschema(int argc, VALUE *argv, VALUE klass)
  *   Date._rfc2822(string, limit: 128) -> hash
  *
  * Returns a hash of values parsed from +string+, which should be a valid
- * {RFC 2822 date format}[rdoc-ref:strftime_formatting.rdoc@RFC+2822+Format]:
+ * {RFC 2822 date format}[rdoc-ref:language/strftime_formatting.rdoc@RFC+2822+Format]:
  *
  *   d = Date.new(2001, 2, 3)
  *   s = d.rfc2822 # => "Sat, 3 Feb 2001 00:00:00 +0000"
@@ -4828,7 +4827,7 @@ date_s__rfc2822(int argc, VALUE *argv, VALUE klass)
     VALUE str, opt;
 
     rb_scan_args(argc, argv, "1:", &str, &opt);
-    check_limit(str, opt);
+    if (!NIL_P(str)) str = check_limit(str, opt);
 
     return date__rfc2822(str);
 }
@@ -4839,7 +4838,7 @@ date_s__rfc2822(int argc, VALUE *argv, VALUE klass)
  *
  * Returns a new \Date object with values parsed from +string+,
  * which should be a valid
- * {RFC 2822 date format}[rdoc-ref:strftime_formatting.rdoc@RFC+2822+Format]:
+ * {RFC 2822 date format}[rdoc-ref:language/strftime_formatting.rdoc@RFC+2822+Format]:
  *
  *   d = Date.new(2001, 2, 3)
  *   s = d.rfc2822   # => "Sat, 3 Feb 2001 00:00:00 +0000"
@@ -4847,7 +4846,7 @@ date_s__rfc2822(int argc, VALUE *argv, VALUE klass)
  *
  * See:
  *
- * - Argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * - Argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  * - Argument {limit}[rdoc-ref:Date@Argument+limit].
  *
  * Related: Date._rfc2822 (returns a hash).
@@ -4881,7 +4880,7 @@ date_s_rfc2822(int argc, VALUE *argv, VALUE klass)
  *   Date._httpdate(string, limit: 128) -> hash
  *
  * Returns a hash of values parsed from +string+, which should be a valid
- * {HTTP date format}[rdoc-ref:strftime_formatting.rdoc@HTTP+Format]:
+ * {HTTP date format}[rdoc-ref:language/strftime_formatting.rdoc@HTTP+Format]:
  *
  *   d = Date.new(2001, 2, 3)
  *   s = d.httpdate # => "Sat, 03 Feb 2001 00:00:00 GMT"
@@ -4896,7 +4895,7 @@ date_s__httpdate(int argc, VALUE *argv, VALUE klass)
     VALUE str, opt;
 
     rb_scan_args(argc, argv, "1:", &str, &opt);
-    check_limit(str, opt);
+    if (!NIL_P(str)) str = check_limit(str, opt);
 
     return date__httpdate(str);
 }
@@ -4907,7 +4906,7 @@ date_s__httpdate(int argc, VALUE *argv, VALUE klass)
  *
  * Returns a new \Date object with values parsed from +string+,
  * which should be a valid
- * {HTTP date format}[rdoc-ref:strftime_formatting.rdoc@HTTP+Format]:
+ * {HTTP date format}[rdoc-ref:language/strftime_formatting.rdoc@HTTP+Format]:
  *
  *   d = Date.new(2001, 2, 3)
      s = d.httpdate   # => "Sat, 03 Feb 2001 00:00:00 GMT"
@@ -4915,7 +4914,7 @@ date_s__httpdate(int argc, VALUE *argv, VALUE klass)
  *
  * See:
  *
- * - Argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * - Argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  * - Argument {limit}[rdoc-ref:Date@Argument+limit].
  *
  * Related: Date._httpdate (returns a hash).
@@ -4949,7 +4948,7 @@ date_s_httpdate(int argc, VALUE *argv, VALUE klass)
  *   Date._jisx0301(string, limit: 128) -> hash
  *
  * Returns a hash of values parsed from +string+, which should be a valid
- * {JIS X 0301 date format}[rdoc-ref:strftime_formatting.rdoc@JIS+X+0301+Format]:
+ * {JIS X 0301 date format}[rdoc-ref:language/strftime_formatting.rdoc@JIS+X+0301+Format]:
  *
  *   d = Date.new(2001, 2, 3)
  *   s = d.jisx0301    # => "H13.02.03"
@@ -4965,7 +4964,7 @@ date_s__jisx0301(int argc, VALUE *argv, VALUE klass)
     VALUE str, opt;
 
     rb_scan_args(argc, argv, "1:", &str, &opt);
-    check_limit(str, opt);
+    if (!NIL_P(str)) str = check_limit(str, opt);
 
     return date__jisx0301(str);
 }
@@ -4975,7 +4974,7 @@ date_s__jisx0301(int argc, VALUE *argv, VALUE klass)
  *   Date.jisx0301(string = '-4712-01-01', start = Date::ITALY, limit: 128) -> date
  *
  * Returns a new \Date object with values parsed from +string+,
- * which should be a valid {JIS X 0301 format}[rdoc-ref:strftime_formatting.rdoc@JIS+X+0301+Format]:
+ * which should be a valid {JIS X 0301 format}[rdoc-ref:language/strftime_formatting.rdoc@JIS+X+0301+Format]:
  *
  *   d = Date.new(2001, 2, 3)
  *   s = d.jisx0301   # => "H13.02.03"
@@ -4987,7 +4986,7 @@ date_s__jisx0301(int argc, VALUE *argv, VALUE klass)
  *
  * See:
  *
- * - Argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * - Argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  * - Argument {limit}[rdoc-ref:Date@Argument+limit].
  *
  * Related: Date._jisx0301 (returns a hash).
@@ -5745,7 +5744,7 @@ d_lite_leap_p(VALUE self)
  *   Date.new(2001, 2, 3, Date::GREGORIAN).start # => -Infinity
  *   Date.new(2001, 2, 3, Date::JULIAN).start    # => Infinity
  *
- * See argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * See argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  *
  */
 static VALUE
@@ -5820,7 +5819,7 @@ dup_obj_with_new_start(VALUE obj, double sg)
  *   d1 = d0.new_start(Date::JULIAN)
  *   d1.julian? # => true
  *
- * See argument {start}[rdoc-ref:date/calendars.rdoc@Argument+start].
+ * See argument {start}[rdoc-ref:language/calendars.rdoc@Argument+start].
  *
  */
 static VALUE
@@ -6968,7 +6967,7 @@ static VALUE strftimev(const char *, VALUE,
  *   to_s -> string
  *
  * Returns a string representation of the date in +self+
- * in {ISO 8601 extended date format}[rdoc-ref:strftime_formatting.rdoc@ISO+8601+Format+Specifications]
+ * in {ISO 8601 extended date format}[rdoc-ref:language/strftime_formatting.rdoc@ISO+8601+Format+Specifications]
  * (<tt>'%Y-%m-%d'</tt>):
  *
  *   Date.new(2001, 2, 3).to_s # => "2001-02-03"
@@ -7249,7 +7248,7 @@ date_strftime_internal(int argc, VALUE *argv, VALUE self,
  *   Date.new(2001, 2, 3).strftime # => "2001-02-03"
  *
  * For other formats, see
- * {Formats for Dates and Times}[rdoc-ref:strftime_formatting.rdoc].
+ * {Formats for Dates and Times}[rdoc-ref:language/strftime_formatting.rdoc].
  *
  */
 static VALUE
@@ -7281,7 +7280,7 @@ strftimev(const char *fmt, VALUE self,
  *   asctime -> string
  *
  * Equivalent to #strftime with argument <tt>'%a %b %e %T %Y'</tt>
- * (or its {shorthand form}[rdoc-ref:strftime_formatting.rdoc@Shorthand+Conversion+Specifiers]
+ * (or its {shorthand form}[rdoc-ref:language/strftime_formatting.rdoc@Shorthand+Conversion+Specifiers]
  * <tt>'%c'</tt>):
  *
  *   Date.new(2001, 2, 3).asctime # => "Sat Feb  3 00:00:00 2001"
@@ -7300,7 +7299,7 @@ d_lite_asctime(VALUE self)
  *   iso8601    ->  string
  *
  * Equivalent to #strftime with argument <tt>'%Y-%m-%d'</tt>
- * (or its {shorthand form}[rdoc-ref:strftime_formatting.rdoc@Shorthand+Conversion+Specifiers]
+ * (or its {shorthand form}[rdoc-ref:language/strftime_formatting.rdoc@Shorthand+Conversion+Specifiers]
  * <tt>'%F'</tt>);
  *
  *   Date.new(2001, 2, 3).iso8601 # => "2001-02-03"
@@ -7317,7 +7316,7 @@ d_lite_iso8601(VALUE self)
  *   rfc3339 -> string
  *
  * Equivalent to #strftime with argument <tt>'%FT%T%:z'</tt>;
- * see {Formats for Dates and Times}[rdoc-ref:strftime_formatting.rdoc]:
+ * see {Formats for Dates and Times}[rdoc-ref:language/strftime_formatting.rdoc]:
  *
  *   Date.new(2001, 2, 3).rfc3339 # => "2001-02-03T00:00:00+00:00"
  *
@@ -7333,7 +7332,7 @@ d_lite_rfc3339(VALUE self)
  *   rfc2822 -> string
  *
  * Equivalent to #strftime with argument <tt>'%a, %-d %b %Y %T %z'</tt>;
- * see {Formats for Dates and Times}[rdoc-ref:strftime_formatting.rdoc]:
+ * see {Formats for Dates and Times}[rdoc-ref:language/strftime_formatting.rdoc]:
  *
  *   Date.new(2001, 2, 3).rfc2822 # => "Sat, 3 Feb 2001 00:00:00 +0000"
  *
@@ -7349,7 +7348,7 @@ d_lite_rfc2822(VALUE self)
  *   httpdate -> string
  *
  * Equivalent to #strftime with argument <tt>'%a, %d %b %Y %T GMT'</tt>;
- * see {Formats for Dates and Times}[rdoc-ref:strftime_formatting.rdoc]:
+ * see {Formats for Dates and Times}[rdoc-ref:language/strftime_formatting.rdoc]:
  *
  *   Date.new(2001, 2, 3).httpdate # => "Sat, 03 Feb 2001 00:00:00 GMT"
  *
@@ -7528,10 +7527,7 @@ d_lite_marshal_dump_old(VALUE self)
 		    m_of_in_day(dat),
 		    DBL2NUM(m_sg(dat)));
 
-    if (FL_TEST(self, FL_EXIVAR)) {
-	rb_copy_generic_ivar(a, self);
-	FL_SET(a, FL_EXIVAR);
-    }
+    rb_copy_generic_ivar(a, self);
 
     return a;
 }
@@ -7553,10 +7549,8 @@ d_lite_marshal_dump(VALUE self)
 		    INT2FIX(m_of(dat)),
 		    DBL2NUM(m_sg(dat)));
 
-    if (FL_TEST(self, FL_EXIVAR)) {
-	rb_copy_generic_ivar(a, self);
-	FL_SET(a, FL_EXIVAR);
-    }
+
+    rb_copy_generic_ivar(a, self);
 
     return a;
 }
@@ -7629,10 +7623,7 @@ d_lite_marshal_load(VALUE self, VALUE a)
 		       HAVE_JD | HAVE_DF);
     }
 
-    if (FL_TEST(a, FL_EXIVAR)) {
-	rb_copy_generic_ivar(self, a);
-	FL_SET(self, FL_EXIVAR);
-    }
+    rb_copy_generic_ivar(self, a);
 
     return self;
 }
@@ -8726,7 +8717,7 @@ dt_lite_to_s(VALUE self)
  *   DateTime.now.strftime # => "2022-07-01T11:03:19-05:00"
  *
  * For other formats,
- * see {Formats for Dates and Times}[rdoc-ref:strftime_formatting.rdoc]:
+ * see {Formats for Dates and Times}[rdoc-ref:language/strftime_formatting.rdoc]:
  *
  */
 static VALUE
@@ -9505,6 +9496,7 @@ Init_date_core(void)
     sym_zone = ID2SYM(rb_intern_const("zone"));
 
     half_days_in_day = rb_rational_new2(INT2FIX(1), INT2FIX(2));
+    rb_gc_register_mark_object(half_days_in_day);
 
 #if (LONG_MAX / DAY_IN_SECONDS) > SECOND_IN_NANOSECONDS
     day_in_nanoseconds = LONG2NUM((long)DAY_IN_SECONDS *
@@ -9516,8 +9508,6 @@ Init_date_core(void)
     day_in_nanoseconds = f_mul(INT2FIX(DAY_IN_SECONDS),
 			       INT2FIX(SECOND_IN_NANOSECONDS));
 #endif
-
-    rb_gc_register_mark_object(half_days_in_day);
     rb_gc_register_mark_object(day_in_nanoseconds);
 
     positive_inf = +INFINITY;
@@ -9533,7 +9523,7 @@ Init_date_core(void)
      *
      * - You need both dates and times; \Date handles only dates.
      * - You need only Gregorian dates (and not Julian dates);
-     *   see {Julian and Gregorian Calendars}[rdoc-ref:date/calendars.rdoc].
+     *   see {Julian and Gregorian Calendars}[rdoc-ref:language/calendars.rdoc].
      *
      * A \Date object, once created, is immutable, and cannot be modified.
      *
@@ -9580,7 +9570,7 @@ Init_date_core(void)
      *     Date.strptime('fri31dec99', '%a%d%b%y')  # => #<Date: 1999-12-31>
      *
      * See also the specialized methods in
-     * {"Specialized Format Strings" in Formats for Dates and Times}[rdoc-ref:strftime_formatting.rdoc@Specialized+Format+Strings]
+     * {"Specialized Format Strings" in Formats for Dates and Times}[rdoc-ref:language/strftime_formatting.rdoc@Specialized+Format+Strings]
      *
      * == Argument +limit+
      *

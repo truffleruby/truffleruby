@@ -321,6 +321,8 @@ class OpenSSL::TestBN < OpenSSL::TestCase
   end
 
   def test_get_flags_and_set_flags
+    return if aws_lc? # AWS-LC does not support BN::CONSTTIME.
+
     e = OpenSSL::BN.new(999)
 
     assert_equal(0, e.get_flags(OpenSSL::BN::CONSTTIME))
@@ -372,7 +374,9 @@ class OpenSSL::TestBN < OpenSSL::TestCase
       assert_equal(true, Ractor.new(@e2) { _1.negative? }.value)
       assert_include(128..255, Ractor.new { OpenSSL::BN.rand(8)}.value)
       assert_include(0...2**32, Ractor.new { OpenSSL::BN.generate_prime(32) }.value)
-      assert_equal(0, Ractor.new { OpenSSL::BN.new(999).get_flags(OpenSSL::BN::CONSTTIME) }.value)
+      if !aws_lc? # AWS-LC does not support BN::CONSTTIME.
+        assert_equal(0, Ractor.new { OpenSSL::BN.new(999).get_flags(OpenSSL::BN::CONSTTIME) }.value)
+      end
       # test if shareable when frozen
       assert Ractor.shareable?(@e1.freeze)
     end

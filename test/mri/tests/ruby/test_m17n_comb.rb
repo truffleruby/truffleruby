@@ -58,8 +58,7 @@ class TestM17NComb < Test::Unit::TestCase
   WSTRINGS = [
     "aa".force_encoding("utf-16be"),
     "aaaa".force_encoding("utf-32be"),
-    # TruffleString: UTF-32 string byte length is not a multiple of 4
-    # "aaa".force_encoding("utf-32be"),
+    "aaa".force_encoding("utf-32be"),
   ]
 
   def combination(*args, &b)

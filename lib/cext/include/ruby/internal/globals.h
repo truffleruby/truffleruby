@@ -68,11 +68,11 @@ RUBY_EXTERN VALUE rb_cBasicObject;            /**< `BasicObject` class. */
 RUBY_EXTERN VALUE rb_cObject;                 /**< `Object` class. */
 RUBY_EXTERN VALUE rb_cArray;                  /**< `Array` class. */
 RUBY_EXTERN VALUE rb_cBinding;                /**< `Binding` class. */
+RUBY_EXTERN VALUE rb_cBox;                    /**< `Ruby::Box` class. */
 RUBY_EXTERN VALUE rb_cClass;                  /**< `Class` class. */
 RUBY_EXTERN VALUE rb_cDir;                    /**< `Dir` class. */
 RUBY_EXTERN VALUE rb_cEncoding;               /**< `Encoding` class. */
 RUBY_EXTERN VALUE rb_cEnumerator;             /**< `Enumerator` class. */
-RUBY_EXTERN VALUE rb_cArithSeq;               /**< `Enumerator::ArithmeticSequence` class. */
 RUBY_EXTERN VALUE rb_cFalseClass;             /**< `FalseClass` class. */
 RUBY_EXTERN VALUE rb_cFile;                   /**< `File` class. */
 RUBY_EXTERN VALUE rb_cComplex;                /**< `Complex` class. */
@@ -92,6 +92,7 @@ RUBY_EXTERN VALUE rb_cRandom;                 /**< `Random` class. */
 RUBY_EXTERN VALUE rb_cRange;                  /**< `Range` class. */
 RUBY_EXTERN VALUE rb_cRational;               /**< `Rational` class. */
 RUBY_EXTERN VALUE rb_cRegexp;                 /**< `Regexp` class. */
+RUBY_EXTERN VALUE rb_cSet;                    /**< `Set` class. */
 RUBY_EXTERN VALUE rb_cStat;                   /**< `File::Stat` class. */
 RUBY_EXTERN VALUE rb_cString;                 /**< `String` class. */
 RUBY_EXTERN VALUE rb_cStruct;                 /**< `Struct` class. */
@@ -146,7 +147,6 @@ RUBY_EXTERN VALUE rb_eLoadError;                 /**< `LoadError` exception. */
 
 RUBY_EXTERN VALUE rb_eMathDomainError;           /**< `Math::DomainError` exception. */
 
-#ifndef TRUFFLERUBY
 /**
  * @}
  * @addtogroup object
@@ -156,11 +156,7 @@ RUBY_EXTERN VALUE rb_eMathDomainError;           /**< `Math::DomainError` except
 RUBY_EXTERN VALUE rb_stdin;                      /**< `STDIN` constant. */
 RUBY_EXTERN VALUE rb_stdout;                     /**< `STDOUT` constant. */
 RUBY_EXTERN VALUE rb_stderr;                     /**< `STDERR` constant. */
-#endif
 
-#ifdef TRUFFLERUBY
-VALUE rb_class_of(VALUE object);
-#else
 RBIMPL_ATTR_PURE()
 /**
  * Object  to class  mapping  function.   Every object  have  its class.   This
@@ -205,7 +201,6 @@ rb_class_of(VALUE obj)
     RUBY_ASSERT_FAIL("unexpected type");
 #endif
 }
-#endif
 
 #define CLASS_OF rb_class_of /**< @old{rb_class_of} */
 
