@@ -196,8 +196,6 @@ rm -f exe/ruby exe/typeprof
 ruby tool/patch_launchers.rb
 ```
 
-Also update the list of `provided_executables` in `mx_truffleruby.py` if some launchers were added or removed.
-
 ## Make other changes
 
 Update all of these:
