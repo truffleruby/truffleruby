@@ -32,8 +32,6 @@ topdir=$(cd "$RUBY_SOURCE_DIR" && pwd -P)
 # lib/
 rm -r lib/mri
 cp -R "$RUBY_SOURCE_DIR/lib" lib/mri
-# CRuby-specific
-rm -r lib/mri/ruby_vm
 # We have our own version under lib/truffle
 rm lib/mri/weakref.rb
 # Files not actually installed in MRI
@@ -48,8 +46,6 @@ cp "$RUBY_SOURCE_DIR/missing/strlcpy.c" src/main/c/cext-trampoline
 mkdir lib/mri/digest
 cp "$RUBY_SOURCE_DIR/ext/date/lib/date.rb" lib/mri
 cp -R "$RUBY_SOURCE_DIR/ext/digest/sha2/lib"/* lib/mri/digest
-cp -R "$RUBY_SOURCE_DIR/ext/fiddle/lib/fiddle" lib/mri
-cp -R "$RUBY_SOURCE_DIR/ext/fiddle/lib/fiddle.rb" lib/mri
 cp "$RUBY_SOURCE_DIR/ext/monitor/lib"/*.rb lib/mri
 mkdir lib/mri/objspace
 cp -R "$RUBY_SOURCE_DIR/ext/objspace/lib/objspace" lib/mri
