@@ -98,9 +98,9 @@ git clone --branch v4.0.2 https://github.com/ruby/ruby.git ../ruby
 Then create the reference branch in the TruffleRuby repository
 
 ```bash
-git checkout -b vNN
+git checkout -b ruby-n.n.n
 tool/import-mri-files.sh
-git commit -am 'vNN'
+git commit -am 'Import files from MRI n.n.n'
 ```
 
 You can then compare between these two branches and yours. For example to see
@@ -200,8 +200,8 @@ ruby tool/patch_launchers.rb
 
 Update all of these:
 
-* Re-apply the patch for the `debug` gem, see `git log -p lib/gems/gems/debug-*/ext/debug/extconf.rb`.
-* Re-apply the patch for the `rbs` gem, see `git log -p lib/gems/gems/rbs-*/ext/rbs_extension/extconf.rb`.
+* Re-apply the patch for the `debug` gem, see `git log --follow -p 'lib/gems/gems/debug-*/ext/debug/extconf.rb'`.
+* Re-apply the patch for the `rbs` gem, see `git log --follow -p 'lib/gems/gems/rbs-*/ext/rbs_extension/extconf.rb'`.
 * Update `.ruby-version`, `TruffleRuby.LANGUAGE_VERSION`
 * IMPORTANT: switch to CRuby n.n.n in the current terminal, e.g., `chruby $(cat .ruby-version)`
 * Update the `SyntaxVersion` in `YARPTranslatorDriver`

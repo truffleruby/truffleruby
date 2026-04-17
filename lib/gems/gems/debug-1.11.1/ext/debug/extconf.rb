@@ -1,8 +1,8 @@
 require 'mkmf'
 if defined?(::TruffleRuby)
-  # hardcode the version here to avoid depending on version.rb which is not copied to src/main/c/debug
-  # note that this file is copied from lib/gems/gems/debug-*/ext/debug/extconf.rb
-  # Avoid depending on JSON here since JSON needs a C extension
+  # Get the version from versions.json to avoid depending on version.rb which is not copied to src/main/c/debug.
+  # Note that this file is copied from lib/gems/gems/debug-*/ext/debug/extconf.rb.
+  # Avoid depending on JSON here since JSON needs a C extension.
   filename = File.expand_path("../../../../versions.json", __dir__)
   version = File.read(filename)[/"debug": "([^"]+)"/, 1]
 
