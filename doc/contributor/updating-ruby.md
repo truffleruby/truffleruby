@@ -82,9 +82,6 @@ Re-install the target MRI version using the commands, to have a clean set of gem
 ```
 rm -rf ~/.rubies/ruby-$VERSION
 ruby-build $VERSION ~/.rubies/ruby-$VERSION
-# OR
-rm -rf ~/.rubies/ruby-$VERSION
-ruby-install ruby $VERSION
 ```
 
 ## Create reference branches
