@@ -34,8 +34,10 @@ struct rb_io;
  */
 struct RFile {
 
+#ifndef TRUFFLERUBY
     /** Basic part, including flags and class. */
     struct RBasic basic;
+#endif
 
     /** IO's specific fields. */
     struct rb_io *fptr;
@@ -47,5 +49,10 @@ struct RFile {
  * @param   obj  An object, which is in fact an ::RFile.
  * @return  The passed object casted to ::RFile.
  */
+#ifdef TRUFFLERUBY
+struct RFile* rb_tr_io_get_rfile(VALUE io);
+#define RFILE(obj) rb_tr_io_get_rfile(obj)
+#else
 #define RFILE(obj) RBIMPL_CAST((struct RFile *)(obj))
+#endif
 #endif /* RBIMPL_RFILE_H */

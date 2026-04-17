@@ -125,6 +125,10 @@ module Timeout
 
         Sync.synchronize @timeout_thread_mutex do
           unless @timeout_thread&.alive?
+            if defined?(::TruffleRuby) && Truffle::Boot.single_threaded?
+              Truffle::Debug.log_warning 'threads are disabled, so timeout is being ignored'
+              return
+            end
             @timeout_thread = create_timeout_thread
           end
         end

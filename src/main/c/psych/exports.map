@@ -1,0 +1,6 @@
+{
+  global:
+    Init_psych;
+    rb_tr_abi_version;
+  local: *;
+};

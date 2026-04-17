@@ -1,3 +1,4 @@
+// For lib/cext/include/stubs/internal/string.h
 #ifndef INTERNAL_BITS_H                                  /*-*-C-*-vi:se ft=c:*/
 #define INTERNAL_BITS_H
 /**

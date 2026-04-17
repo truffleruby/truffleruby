@@ -1,3 +1,4 @@
+// For lib/cext/include/internal/bits.h
 #ifndef INTERNAL_STATIC_ASSERT_H                         /*-*-C-*-vi:se ft=c:*/
 #define INTERNAL_STATIC_ASSERT_H
 /**

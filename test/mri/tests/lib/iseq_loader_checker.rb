@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 begin
-  require '-test-/iseq_load/iseq_load'
+  # require '-test-/iseq_load/iseq_load'
 rescue LoadError
 end
 require 'tempfile'

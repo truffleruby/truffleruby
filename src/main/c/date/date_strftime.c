@@ -16,6 +16,11 @@
 #include <sys/time.h>
 #endif
 
+// TruffleRuby: strspn is a macro on old glibc, and was removed in https://sourceware.org/legacy-ml/libc-alpha/2016-03/msg00772.html
+// undef the macro so the function is always used instead, and builds on older glibc work with newer glibc.
+// See https://github.com/truffleruby/truffleruby/issues/2406
+#undef strspn
+
 #undef strchr	/* avoid AIX weirdness */
 
 #define range(low, item, hi)	(item)

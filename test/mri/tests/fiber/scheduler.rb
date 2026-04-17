@@ -19,13 +19,14 @@ rescue LoadError
 end
 
 class Scheduler
-  experimental = Warning[:experimental]
-  begin
-    Warning[:experimental] = false
-    IO::Buffer.new(0)
-  ensure
-    Warning[:experimental] = experimental
-  end
+  # TruffleRuby: no IO::Buffer yet
+  # experimental = Warning[:experimental]
+  # begin
+  #   Warning[:experimental] = false
+  #   IO::Buffer.new(0)
+  # ensure
+  #   Warning[:experimental] = experimental
+  # end
 
   def initialize(fiber = Fiber.current)
     @fiber = fiber

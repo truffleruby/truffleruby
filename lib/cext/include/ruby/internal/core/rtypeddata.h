@@ -92,7 +92,11 @@
  * @param   obj  An object, which is in fact an ::RTypedData.
  * @return  The passed object casted to ::RTypedData.
  */
+#ifdef TRUFFLERUBY
+#define RTYPEDDATA(obj)              rb_tr_rtypeddata(obj)
+#else
 #define RTYPEDDATA(obj)              RBIMPL_CAST((struct RTypedData *)(obj))
+#endif
 
 /**
  * Convenient getter macro.
@@ -357,8 +361,10 @@ struct rb_data_type_struct {
  */
 struct RTypedData {
 
+#ifndef TRUFFLERUBY
     /** The part that all ruby objects have in common. */
     struct RBasic basic;
+#endif
 
     /** Direct reference to the slots that holds instance variables, if any **/
     VALUE fields_obj;
@@ -372,7 +378,11 @@ struct RTypedData {
      * data.   This roughly  resembles a  Ruby level  class (apart  from method
      * definition etc.)
      */
+#ifdef TRUFFLERUBY
+    const rb_data_type_t *type;
+#else
     const VALUE type;
+#endif
 
     /** Pointer to the actual C level struct that you want to wrap. */
     void *data;
@@ -383,6 +393,10 @@ RBIMPL_STATIC_ASSERT(data_in_rtypeddata, offsetof(struct RData, data) == offseto
 #endif
 
 RBIMPL_SYMBOL_EXPORT_BEGIN()
+#ifdef TRUFFLERUBY
+struct RTypedData* rb_tr_rtypeddata(VALUE object);
+#endif
+
 RBIMPL_ATTR_NONNULL((3))
 /**
  * This is the primitive way to wrap an existing C struct into ::RTypedData.
@@ -446,6 +460,10 @@ int rb_typeddata_is_kind_of(VALUE obj, const rb_data_type_t *data_type);
  * @post       Upon successful return `obj`'s type is guaranteed `data_type`.
  */
 void *rb_check_typeddata(VALUE obj, const rb_data_type_t *data_type);
+#ifdef TRUFFLERUBY
+VALUE rb_data_typed_object_make(VALUE ruby_class, const rb_data_type_t *type, void **data_pointer, size_t size);
+bool rb_tr_rtypeddata_p(VALUE obj);
+#endif
 RBIMPL_SYMBOL_EXPORT_END()
 
 /**
@@ -581,7 +599,11 @@ RTYPEDDATA_P(VALUE obj)
     }
 #endif
 
+#ifdef TRUFFLERUBY
+    return rb_tr_rtypeddata_p(obj);
+#else
     return rbimpl_rtypeddata_p(obj);
+#endif
 }
 
 RBIMPL_ATTR_PURE_UNLESS_DEBUG()
@@ -607,6 +629,7 @@ RTYPEDDATA_TYPE(VALUE obj)
     return (const struct rb_data_type_struct *)(RTYPEDDATA(obj)->type & TYPED_DATA_PTR_MASK);
 }
 
+#ifndef TRUFFLERUBY
 RBIMPL_ATTR_ARTIFICIAL()
 /**
  * @private
@@ -634,6 +657,7 @@ rbimpl_check_typeddata(VALUE obj, const rb_data_type_t *expected_type)
 
     return rb_check_typeddata(obj, expected_type);
 }
+#endif
 
 
 /**
@@ -646,9 +670,16 @@ rbimpl_check_typeddata(VALUE obj, const rb_data_type_t *expected_type)
  * @exception  rb_eTypeError  `obj` is not a kind of `data_type`.
  * @return     Unwrapped C struct that `obj` holds.
  */
+#ifdef TRUFFLERUBY
+// TruffleRuby: rb_check_typeddata() is more efficient than rbimpl_check_typeddata()
+#define TypedData_Get_Struct(obj,type,data_type,sval) \
+    ((sval) = RBIMPL_CAST((type *)rb_check_typeddata((obj), (data_type))))
+#else
 #define TypedData_Get_Struct(obj,type,data_type,sval) \
     ((sval) = RBIMPL_CAST((type *)rbimpl_check_typeddata((obj), (data_type))))
+#endif
 
+#ifndef TRUFFLERUBY
 /**
  * While  we don't  stop  you from  using  this  function, it  seems  to be  an
  * implementation  detail of  #TypedData_Make_Struct, which  is preferred  over
@@ -669,6 +700,7 @@ rb_data_typed_object_make(VALUE klass, const rb_data_type_t *type, void **datap,
     TypedData_Make_Struct0(result, klass, void, size, type, *datap);
     return result;
 }
+#endif
 
 RBIMPL_ATTR_DEPRECATED(("by: rb_data_typed_object_wrap"))
 /** @deprecated  This function was renamed to rb_data_typed_object_wrap(). */
