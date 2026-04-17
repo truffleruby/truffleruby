@@ -364,10 +364,10 @@ struct RTypedData {
 #ifndef TRUFFLERUBY
     /** The part that all ruby objects have in common. */
     struct RBasic basic;
-#endif
 
     /** Direct reference to the slots that holds instance variables, if any **/
     VALUE fields_obj;
+#endif
 
     /**
      * This is a `const rb_data_type_t *const` value, with the low bits set:
@@ -378,11 +378,7 @@ struct RTypedData {
      * data.   This roughly  resembles a  Ruby level  class (apart  from method
      * definition etc.)
      */
-#ifdef TRUFFLERUBY
-    const rb_data_type_t *type;
-#else
     const VALUE type;
-#endif
 
     /** Pointer to the actual C level struct that you want to wrap. */
     void *data;
@@ -628,6 +624,17 @@ RTYPEDDATA_TYPE(VALUE obj)
 
     return (const struct rb_data_type_struct *)(RTYPEDDATA(obj)->type & TYPED_DATA_PTR_MASK);
 }
+
+#ifdef TRUFFLERUBY
+RBIMPL_ATTR_PURE()
+RBIMPL_ATTR_ARTIFICIAL()
+// Same as above but takes a struct RTypedData*
+static inline const struct rb_data_type_struct *
+RB_TR_RTYPEDDATA_STRUCT_TYPE(struct RTypedData* rtypeddata)
+{
+    return (const struct rb_data_type_struct *)(rtypeddata->type & TYPED_DATA_PTR_MASK);
+}
+#endif
 
 #ifndef TRUFFLERUBY
 RBIMPL_ATTR_ARTIFICIAL()

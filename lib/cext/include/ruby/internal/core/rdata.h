@@ -139,6 +139,11 @@ struct RData {
      */
     RUBY_DATA_FUNC dmark;
 
+#ifdef TRUFFLERUBY
+    // TruffleRuby: data must be here to have the same offset as in struct RTypedData
+    void *data;
+#endif
+
     /**
      * This function is called when the object  is no longer used.  You need to
      * do whatever necessary to avoid memory leaks.
@@ -148,11 +153,13 @@ struct RData {
      */
     RUBY_DATA_FUNC dfree;
 
+#ifndef TRUFFLERUBY
     /** Pointer to the actual C level struct that you want to wrap.
       * This is after dmark and dfree to allow DATA_PTR to continue to work for
       * both RData and non-embedded RTypedData.
       */
     void *data;
+#endif
 };
 
 RBIMPL_SYMBOL_EXPORT_BEGIN()
