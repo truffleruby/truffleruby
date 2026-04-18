@@ -105,13 +105,17 @@ Script to get the data:
 Dir["lib/gems/specifications/*.gemspec"].sort.map { |f| [File.basename(f)[/^(.+?)-\d/, 1], eval(File.read(f)[/licenses = (.+)/, 1]) - %w[Ruby]] }.group_by(&:last).to_h { |k,v| [k, v.map(&:first).join(", ")] }
 -->
 
-### abbrev, base64, bigdecimal, csv, debug, drb, getoptlong, matrix, mutex_m, net-ftp, net-imap, net-pop, net-smtp, nkf, observer, power_assert, prime, racc, rbs, resolv-replace, rexml, rinda, rss, syslog
+### abbrev, base64, benchmark, bigdecimal, csv, debug, drb, fiddle, getoptlong, irb, logger, matrix, mutex_m, net-ftp, net-imap, net-pop, net-smtp, nkf, observer, ostruct, power_assert, prime, pstore, racc, rbs, resolv-replace, rexml, rinda, rss, syslog
 
 These gems are available under the 2-clause BSD licence (see `ruby-bsdl.txt`).
 
 ### minitest, rake, repl_type_completor
 
 These gems are available under an MIT licence (see `mit.txt`).
+
+### rdoc, readline, reline
+
+These gems are available under the same custom licence as MRI (see `ruby-licence.txt`).
 
 ### test-unit
 
@@ -123,14 +127,6 @@ and is available under the 2-clause BSD licence (see `ruby-bsdl.txt`).
 ### json
 
 The json gem is available under the same licence as MRI (see `ruby-bsdl.txt`).
-
-### RDoc
-
-It's part of the standard library, not a bundled gem. RDoc is copyright
-Dave Thomas and Eric Hodel and is available under the terms of the GPL 2 (see
-`gpl-2.txt`), or the same custom licence as MRI (see `ruby-licence.txt`). Some
-other files in RDoc have different, but compatible, licences detailed in the
-files.
 
 ### FFI
 
