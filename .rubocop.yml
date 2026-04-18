@@ -17,6 +17,7 @@ AllCops:
     - 'lib/truffle/socket/mri.rb' # taken from MRI
     - 'lib/truffle/ffi/**/*.rb' # taken from FFI gem
     - 'src/main/ruby/truffleruby/core/truffle/ffi/pointer_extra.rb' # taken from FFI gem
+    - 'src/main/ruby/truffleruby/core/set.rb' # from the set gem
     - 'src/test-internal/ruby/types.rb' # deliberately strange code for debugging purposes
     - 'src/tck/ruby/lexical-context.rb' # deliberately strange code for debugging purposes
 

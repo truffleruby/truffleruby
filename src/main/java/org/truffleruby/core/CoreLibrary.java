@@ -1051,6 +1051,7 @@ public final class CoreLibrary {
             "/core/argf.rb",
             "/core/exception.rb",
             "/core/hash.rb",
+            "/core/set.rb",
             "/core/comparable.rb",
             "/core/numeric.rb",
             "/core/truffle/ctype.rb",
