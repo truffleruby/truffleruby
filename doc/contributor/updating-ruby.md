@@ -150,7 +150,8 @@ rm -f lib/json/lib/json/ext/.keep
 
 rm -rf src/main/c/json
 mkdir src/main/c/json
-cp -R ../../json/ext/json/ext/{fbuffer,parser} src/main/c/json
+cp -R ../../json/ext/json/ext/* src/main/c/json
+rm -rf src/main/c/json/generator
 rm -f src/main/c/json/parser/depend
 ```
 
