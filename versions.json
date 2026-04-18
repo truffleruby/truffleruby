@@ -87,8 +87,7 @@
       "rss": "0.3.2",
       "syslog": "0.3.0",
       "test-unit": "3.7.5",
-      "typeprof": "0.31.1",
-      "win32ole": "1.9.2"
+      "typeprof": "0.31.1"
     }
   }
 }
