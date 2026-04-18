@@ -843,11 +843,3 @@ class Set
     pp.text sprintf('#<%s: {%s}>', self.class.name, empty? ? '' : '...')
   end
 end
-
-module Enumerable
-  # Makes a set from the enumerable object with given arguments.
-  # Needs to `require "set"` to use this method.
-  def to_set(klass = Set, *args, &block)
-    klass.new(self, *args, &block)
-  end unless method_defined?(:to_set)
-end
