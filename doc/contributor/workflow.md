@@ -274,16 +274,15 @@ exception.
 When the spec is fixed the `untag` command will remove the tag and you can
 commit the fix and the removal of the tag.
 
-## Running specs for Ruby 4.0 features
+## Running specs for Ruby 4.1 features
 
-TruffleRuby currently targets Ruby 3.4. However, we welcome pull requests for
-Ruby 4.0 features as long as they don't conflict significantly with
-Ruby 3.4 semantics.
+TruffleRuby currently targets Ruby 4.0. However, we welcome pull requests for
+Ruby 4.1 features as long as they don't conflict significantly with Ruby 4.0 semantics.
 
-It is possible to run specs for Ruby 4.0 features by setting `PRETEND_RUBY_VERSION`:
+It is possible to run specs for Ruby 4.1 features by setting `PRETEND_RUBY_VERSION`:
 
 ```bash
-PRETEND_RUBY_VERSION=4.0.0 jt test spec/ruby/.../some_spec.rb
+PRETEND_RUBY_VERSION=4.1.0 jt test spec/ruby/.../some_spec.rb
 ```
 
 This also works for `jt tag`/`jt untag`.
