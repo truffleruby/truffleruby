@@ -851,5 +851,3 @@ module Enumerable
     klass.new(self, *args, &block)
   end unless method_defined?(:to_set)
 end
-
-autoload :SortedSet, "#{__dir__}/set/sorted_set"
