@@ -9,15 +9,15 @@ Usage: truffleruby [options] [--] [filepath] [arguments]
   -a              Split each input line ($_) into fields ($F).
   -c              Check syntax (no execution).
   -Cdirpath       Execute program in specified directory.
-  -d, --debug     Set debugging flag ($DEBUG) to true.
+  -d, --debug     Set debugging flag ($DEBUG) and $VERBOSE to true.
   -e 'code'       Execute given Ruby code; multiple -e allowed.
   -Eex[:in], --encoding=ex[:in]
                   Set default external and internal encodings.
   -Fpattern       Set input field separator ($;); used with -a.
   -i[extension]   Set ARGF in-place mode;
                   create backup files with given extension.
-  -Idirpath       Add specified directory to load paths ($LOAD_PATH);
-                  multiple -I allowed.
+  -Idirpath       Prepend specified directory to load paths ($LOAD_PATH);
+                  relative paths are expanded; multiple -I are allowed.
   -l              Set output record separator ($\) to $/;
                   used for line-oriented output.
   -n              Run program in gets loop.
