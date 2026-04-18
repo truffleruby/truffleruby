@@ -63,8 +63,10 @@ Warning categories:
                   Warning unused block strictly
 
 Runtime options:
-  --native                                     Ensure to run in Native mode.
-  --jvm                                        Ensure to run in JVM mode.
+  --polyglot                                   Run with all other guest languages accessible.
+  --native                                     Run using the native launcher with limited access to Java libraries
+                                               (default).
+  --jvm                                        Run on the Java Virtual Machine with access to Java libraries.
   --vm.[option]                                Pass options to the host VM. To see available options, use '--help:vm'.
   --log.file=<String>                          Redirect guest languages logging into a given file.
   --log.[logger].level=<String>                Set language log level to OFF, SEVERE, WARNING, INFO, CONFIG, FINE,
@@ -79,7 +81,7 @@ Runtime options:
 
 Languages:
   [id]        [name]                  [website]
-  llvm        LLVM                    https://www.graalvm.org/dev/reference-manual/llvm/
+  llvm        LLVM                    https://www.graalvm.org/25.0/reference-manual/llvm/
   ruby        Ruby                    https://github.com/truffleruby/truffleruby
 
 Tools:
