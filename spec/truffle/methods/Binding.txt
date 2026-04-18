@@ -1,6 +1,9 @@
 clone
 dup
 eval
+implicit_parameter_defined?
+implicit_parameter_get
+implicit_parameters
 irb
 local_variable_defined?
 local_variable_get

@@ -27,6 +27,7 @@ deconstruct
 delete
 delete_at
 delete_if
+detect
 difference
 dig
 drop
@@ -40,6 +41,7 @@ fetch_values
 fill
 filter
 filter!
+find
 find_index
 first
 flatten
@@ -78,6 +80,7 @@ replace
 reverse
 reverse!
 reverse_each
+rfind
 rindex
 rotate
 rotate!

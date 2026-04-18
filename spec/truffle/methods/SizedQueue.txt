@@ -2,13 +2,10 @@
 clear
 close
 deq
-empty?
 enq
-length
 max
 max=
 num_waiting
 pop
 push
 shift
-size
