@@ -270,30 +270,11 @@ public final class ModuleFields extends ModuleChain implements ObjectGraphNode {
 
     public void checkFrozen(RubyContext context, Node currentNode) {
         if (context.getCoreLibrary() != null && IsFrozenNodeGen.getUncached().execute(rubyModule)) {
-            String name;
-            Object receiver = rubyModule;
-            if (rubyModule instanceof RubyClass) {
-                final RubyClass cls = (RubyClass) rubyModule;
-                name = "object";
-                if (cls.isSingleton) {
-                    receiver = cls.attached;
-                    if (cls.attached instanceof RubyClass) {
-                        name = "Class";
-                    } else if (cls.attached instanceof RubyModule) {
-                        name = "Module";
-                    }
-                } else {
-                    name = "class";
-                }
-            } else {
-                name = "module";
+            if (rubyModule instanceof RubyClass singletonClass && singletonClass.isSingleton) {
+                throw new RaiseException(context,
+                        context.getCoreExceptions().frozenError(singletonClass.attached, currentNode));
             }
-            throw new RaiseException(
-                    context,
-                    context.getCoreExceptions().frozenError(
-                            receiver,
-                            name,
-                            currentNode));
+            throw new RaiseException(context, context.getCoreExceptions().frozenError(rubyModule, currentNode));
         }
     }
 
