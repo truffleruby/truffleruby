@@ -36,6 +36,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class Encoding
+  UNICODE_VERSION = Primitive.encoding_unicode_version
+
   Truffle::EncodingOperations.build_encoding_map
   EncodingMap = Truffle::EncodingOperations::EncodingMap
 
