@@ -242,6 +242,21 @@ Calling Ruby code from Java is supported by the
 
 Using Java extensions written for JRuby is not supported.
 
+## Some GUI frameworks need `--vm.XstartOnFirstThread` on macOS
+
+When running GUI applications on macOS using e.g. SDL2, SWT, LWJGL, GLFW you will see an error like:
+
+```
+*** Terminating app due to uncaught exception 'NSInternalInconsistencyException', reason: 'API misuse: setting the main menu on a non-main thread. Main menu contents should only be modified from the main thread.'
+*** First throw call stack:
+...
+```
+
+The solution is to pass `--vm.XstartOnFirstThread` like `ruby --vm.XstartOnFirstThread my_program.rb`, or via `export TRUFFLERUBYOPT=--vm.XstartOnFirstThread`.
+
+It would be tempting to have this flag always set, but that breaks other GUI libraries like Swing, AWT, JavaFX which do not work with that flag (e.g. the GUI window won't even appear with the flag).
+This feels like a bug of those GUI frameworks, but nevertheless we don't want to prevent using them entirely.
+
 ## Features Not Yet Supported in Native Configuration
 
 Running TruffleRuby in the native configuration is mostly the same as running
