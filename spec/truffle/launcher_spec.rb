@@ -90,7 +90,7 @@ describe "The launcher" do
     unless [:ruby, :truffleruby].include?(launcher)
       it "runs #{launcher} as an -S command" do
         redirect = launcher == :erb ? (touch @stderr; '2>&1') : @redirect
-        out = ruby_exe(nil, options: "-S #{launcher} --version", args: redirect)
+        out = `#{RbConfig.ruby} -S #{launcher} --version #{redirect}`
         check_status_and_empty_stderr
         out.should =~ test
       end if test
