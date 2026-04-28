@@ -17,6 +17,7 @@ begin
   require 'fiber'
   require 'rational'
   require 'complex'
+  require 'set'
 rescue LoadError => e
   Truffle::Debug.log_warning "#{File.basename(__FILE__)}:#{__LINE__} #{e.message}"
 end
