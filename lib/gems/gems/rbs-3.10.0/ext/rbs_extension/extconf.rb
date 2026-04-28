@@ -1,10 +1,11 @@
 require 'mkmf'
 
 if defined?(::TruffleRuby)
-  # On TruffleRuby, all .c files are copied to the same directory (src/main/c/rbs)
+  # On TruffleRuby, all .c files are copied under the same parent directory (src/main/c/rbs)
   # and include files are copied to an include/ subdirectory
   $INCFLAGS << " -I$(srcdir)/include"
-  $srcs = Dir.glob("#{__dir__}/*.c")
+  $VPATH << "$(srcdir)/util"
+  $srcs = Dir.glob("#{__dir__}/**/*.c")
 else
 # original code, not indented to make diff nicer and re-applying patches easier
 $INCFLAGS << " -I$(top_srcdir)" if $extmk
