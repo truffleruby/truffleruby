@@ -35,10 +35,10 @@ glob("#{RbConfig::CONFIG['rubylibdir']}/net/*.rb").each { |file|
 
 stdlibs += %w[json]
 
-# 'continuation' warns on being required, as MRI
-# Others fail to load
+# 'continuation' and 'cgi' warn when required, same on CRuby
 ignore = %w[
   continuation
+  cgi
 ]
 
 stdlibs -= ignore
