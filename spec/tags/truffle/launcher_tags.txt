@@ -74,3 +74,6 @@ slow:The launcher supports running truffleruby in bin/
 slow:The launcher runs syntax_suggest as an -S command
 slow:The launcher supports running syntax_suggest in bin/
 slow:The launcher supports running syntax_suggest symlinked
+slow:The launcher runs test-unit as an -S command
+slow:The launcher supports running test-unit in bin/
+slow:The launcher supports running test-unit symlinked
