@@ -11,6 +11,7 @@
 
 # These files are loaded during context pre-initialization to save startup time
 # Always provided features: ruby --disable-gems -e 'puts $"'
+# Also see LOADED_FEATURES in src/main/ruby/truffleruby/core/truffle/kernel_operations.rb
 begin
   require 'enumerator'
   require 'thread'

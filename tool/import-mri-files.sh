@@ -42,6 +42,9 @@ find lib/mri -name '.document' -delete
 cp "$RUBY_SOURCE_DIR/st.c" src/main/c/cext-trampoline
 cp "$RUBY_SOURCE_DIR/missing/strlcpy.c" src/main/c/cext-trampoline
 
+# Copy core library Ruby files
+cp "$RUBY_SOURCE_DIR/pathname_builtin.rb" src/main/ruby/truffleruby/core/pathname.rb
+
 # Copy Ruby files in ext/, sorted alphabetically
 mkdir lib/mri/digest
 cp "$RUBY_SOURCE_DIR/ext/date/lib/date.rb" lib/mri
