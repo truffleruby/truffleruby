@@ -51,7 +51,48 @@ describe "Polyglot::InnerContext" do
     end
   end
 
-  it "raise RuntimeError for if the InnerContext is closed" do
+  it "treats exceptions from the inner context as foreign" do
+    Polyglot::InnerContext.new do |context|
+      -> {
+        context.eval('ruby', "raise 'foo'")
+      }.should.raise(Polyglot::ForeignException, "foo")
+    end
+  end
+
+  it "correctly unwraps an object from the outer context passed to the inner context and back" do
+    Polyglot::InnerContext.new do |context|
+      get, set = context.eval('ruby', "var = nil; [-> { var }, -> value { var = value }]")
+      obj = Object.new
+      set.call(obj)
+      get.call.class.should.equal?(obj.class)
+      get.call.should.equal?(obj)
+    end
+  end
+
+  it "correctly unwraps an exception from the outer context passed to the inner context and back" do
+    outer_context_exception = Class.new(RuntimeError)
+
+    Polyglot::InnerContext.new do |context|
+      callback = context.eval('ruby', "-> callback { callback.call }")
+      -> {
+        callback.call(-> { raise outer_context_exception, "outer context exception" })
+      }.should.raise(outer_context_exception, "outer context exception")
+    end
+  end
+
+  it "raises RuntimeError when trying to access an inner context exception if the inner context is closed" do
+    -> {
+      begin
+        Polyglot::InnerContext.new do |context|
+          context.eval('ruby', "raise 'foo'")
+        end
+      rescue Polyglot::ForeignException # This accesses the inner context exception, which raises the RuntimeError below
+        raise "should not reach here"
+      end
+    }.should.raise(RuntimeError, 'This Polyglot::InnerContext has been closed, cannot use it anymore')
+  end
+
+  it "raises RuntimeError for if the InnerContext is closed" do
     context = nil
     obj = nil
     Polyglot::InnerContext.new do |c|
