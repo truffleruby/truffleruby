@@ -187,6 +187,8 @@ public abstract class PolyglotNodes {
                 RubyArray languageOptions,
                 boolean inheritAllAccess,
                 Object codeSharing,
+                RubyProc onClosedCallback,
+                RubyProc onExitedCallback,
                 RubyProc onCancelledCallback) {
             String[] permittedLanguages = new String[languages.size];
             int i = 0;
@@ -209,6 +211,8 @@ public abstract class PolyglotNodes {
                     .initializeCreatorContext(false)
                     .inheritAllAccess(inheritAllAccess)
                     .forceSharing(codeSharingBoolean)
+                    .onClosed(() -> CallBlockNode.yieldUncached(onClosedCallback))
+                    .onExited((exitCode) -> CallBlockNode.yieldUncached(onExitedCallback, exitCode))
                     .onCancelled(() -> CallBlockNode.yieldUncached(onCancelledCallback))
                     .build();
 
@@ -280,17 +284,6 @@ public abstract class PolyglotNodes {
             final Object result;
             try {
                 result = rubyInnerContext.innerContext.evalPublic(node, source);
-            } catch (IllegalStateException closed) {
-                errorProfile.enter(node);
-                throw new RaiseException(
-                        getContext(node),
-                        coreExceptions(node).runtimeError("This Polyglot::InnerContext is closed", node));
-            } catch (ThreadDeath closed) {
-                errorProfile.enter(node);
-                throw new RaiseException(
-                        getContext(node),
-                        coreExceptions(node).runtimeError("Polyglot::InnerContext was terminated forcefully",
-                                node));
             } catch (IllegalArgumentException unknownLanguage) {
                 errorProfile.enter(node);
                 throw new RaiseException(

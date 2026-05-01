@@ -15,18 +15,24 @@ module Polyglot
   end
 
   class InnerContext
-    DEFAULT_ON_CANCELLED = -> { raise RuntimeError, 'Polyglot::InnerContext was terminated forcefully' }
-    private_constant :DEFAULT_ON_CANCELLED
+    DEFAULT_ON_CLOSED = -> { raise RuntimeError, 'This Polyglot::InnerContext has been closed, cannot use it anymore' }
+    DEFAULT_ON_EXITED = -> exit_code {
+      raise RuntimeError, "This Polyglot::InnerContext has exited with exit code #{exit_code}, cannot use it anymore"
+    }
+    DEFAULT_ON_CANCELLED = -> { raise RuntimeError, 'This Polyglot::InnerContext was terminated forcefully, cannot use it anymore' }
+    private_constant :DEFAULT_ON_CLOSED, :DEFAULT_ON_EXITED, :DEFAULT_ON_CANCELLED
 
     # Create a new isolated inner context to eval code in any available public language
     # (those languages can be listed with +Polyglot.languages+).
     # Automatically closes the context when given a block.
-    def self.new(languages: [], language_options: {}, inherit_all_access: true, code_sharing: true, on_cancelled: DEFAULT_ON_CANCELLED)
+    def self.new(languages: [], language_options: {}, inherit_all_access: true, code_sharing: true,
+                 on_closed: DEFAULT_ON_CLOSED, on_exited: DEFAULT_ON_EXITED, on_cancelled: DEFAULT_ON_CANCELLED)
       languages = languages.map { |language| Primitive.convert_with_to_str(language) }
       language_options = language_options.flat_map { |k, v| [Primitive.convert_with_to_str(k), Primitive.convert_with_to_str(v)] }
       code_sharing = code_sharing == :inherit ? nil : Primitive.as_boolean(code_sharing)
 
-      inner_context = Primitive.inner_context_new(self, languages, language_options, inherit_all_access, code_sharing, on_cancelled)
+      inner_context = Primitive.inner_context_new(self, languages, language_options, inherit_all_access, code_sharing,
+        on_closed, on_exited, on_cancelled)
       if block_given?
         begin
           yield inner_context
