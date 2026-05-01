@@ -5,6 +5,7 @@ New features:
 
 Bug fixes:
 
+* Raise a `RuntimeError` when using an object from a `Polyglot::InnerContext` after it has been closed (#4061, @eregon).
 
 Compatibility:
 

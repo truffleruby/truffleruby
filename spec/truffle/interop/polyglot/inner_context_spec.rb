@@ -59,9 +59,13 @@ describe "Polyglot::InnerContext" do
       obj = context.eval('ruby', 'Object.new')
     end
 
-    -> { context.eval('ruby', '42') }.should raise_error(RuntimeError, 'This Polyglot::InnerContext is closed')
+    -> {
+      context.eval('ruby', '42')
+    }.should raise_error(RuntimeError, 'This Polyglot::InnerContext has been closed, cannot use it anymore')
 
-    # obj.object_id # throws a IllegalStateException which cannot be caught: GR-45031
+    -> {
+      obj.object_id
+    }.should raise_error(RuntimeError, 'This Polyglot::InnerContext has been closed, cannot use it anymore')
   end
 
   it "raises ArgumentError for an unknown language" do
@@ -82,7 +86,7 @@ describe "Polyglot::InnerContext" do
     -> {
       in_synchronize = true
       context.eval('ruby', 'loop { }')
-    }.should raise_error(RuntimeError, 'Polyglot::InnerContext was terminated forcefully')
+    }.should raise_error(RuntimeError, 'This Polyglot::InnerContext was terminated forcefully, cannot use it anymore')
     th.join
   end
 
