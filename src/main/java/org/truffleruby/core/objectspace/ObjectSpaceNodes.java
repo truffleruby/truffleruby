@@ -122,13 +122,8 @@ public abstract class ObjectSpaceNodes {
 
     }
 
-    @CoreMethod(
-            names = "each_object",
-            isModuleFunction = true,
-            needsBlock = true,
-            optional = 1,
-            returnsEnumeratorIfNoBlock = true)
-    public abstract static class EachObjectNode extends CoreMethodArrayArgumentsNode {
+    @Primitive(name = "objectspace_each_object")
+    public abstract static class EachObjectNode extends PrimitiveArrayArgumentsNode {
 
         @TruffleBoundary // for the iterator
         @Specialization
