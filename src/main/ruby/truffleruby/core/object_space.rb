@@ -27,7 +27,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 module ObjectSpace
-  def self.garbage_collect(...)
+  module_function
+
+  def _id2ref(id)
+    warn 'ObjectSpace._id2ref is deprecated', uplevel: 1, category: :deprecated
+    Primitive.objectspace_id2ref(id)
+  end
+
+  def garbage_collect(...)
     GC.start(...)
   end
 end
