@@ -1,0 +1,1 @@
+fails:Proc#ruby2_keywords prints warning when a proc accepts post arguments

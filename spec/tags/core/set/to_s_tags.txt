@@ -1,0 +1,2 @@
+fails:Set#to_s does include the elements of the set
+fails:Set#to_s correctly handles cyclic-references

@@ -9,3 +9,6 @@ fails:Marshal.dump with a Time uses object links for objects repeatedly dumped
 fails:Marshal.dump with a Time adds instance variables before the object itself into the objects table
 fails:Marshal.dump with a Regexp dumps a Regexp subclass with instance variables
 fails:Marshal.dump with a Regexp dumps an extended Regexp subclass
+fails:Marshal.dump with a Class dumps a class with multibyte characters in name
+fails:Marshal.dump with a Module dumps a module with multibyte characters in name
+fails:Marshal.dump with a Time dumps a Time subclass with multibyte characters in name
