@@ -52,6 +52,7 @@
 #define HAVE_MALLOC_H 1
 #define HAVE_PWD_H 1
 #define HAVE_SANITIZER_ASAN_INTERFACE_H 1
+#define HAVE_SANITIZER_TSAN_INTERFACE_H 1
 #define HAVE_STDALIGN_H 1
 #define HAVE_STDIO_H 1
 #define HAVE_SYS_EVENTFD_H 1
@@ -172,7 +173,6 @@
 #define WARNINGFUNC(mesg,x) __attribute__ ((__warning__ mesg)) x
 #define WEAK(x) __attribute__ ((__weak__)) x
 #define HAVE_FUNC_WEAK 1
-#define RUBY_CXX_DEPRECATED(msg) __attribute__((__deprecated__(msg)))
 #define HAVE_NULLPTR 1
 #define FUNC_UNOPTIMIZED(x) __attribute__ ((__optimize__("O0"))) x
 #define FUNC_MINIMIZED(x) __attribute__ ((__optimize__("-Os","-fomit-frame-pointer"))) x
@@ -180,6 +180,7 @@
 #define RUBY_ALIAS_FUNCTION_TYPE(type, prot, name, args) type prot __attribute__((alias(#name)));
 #define RUBY_ALIAS_FUNCTION_VOID(prot, name, args) RUBY_ALIAS_FUNCTION_TYPE(void, prot, name, args)
 #define HAVE_GCC_ATOMIC_BUILTINS 1
+#define HAVE_GCC_ATOMIC_BUILTINS_64 1
 #define HAVE_GCC_SYNC_BUILTINS 1
 #define HAVE___BUILTIN_UNREACHABLE 1
 #define RUBY_FUNC_EXPORTED __attribute__ ((__visibility__("default"))) extern
@@ -486,7 +487,7 @@
 #define RUBY_LONGJMP(env,val) __builtin_longjmp((env),val)
 #define USE_MODULAR_GC 0
 #define USE_YJIT 1
-#define USE_RJIT 1
+#define USE_ZJIT 1
 #define RUBY_PLATFORM "x86_64-linux"
 #define RB_DEFAULT_PARSER RB_DEFAULT_PARSER_PRISM
 #endif /* INCLUDE_RUBY_CONFIG_H */
