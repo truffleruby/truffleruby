@@ -81,7 +81,7 @@ module Truffle
 
     def self.prepare_before_raise_exception(exc)
       # Set internal backtrace if not already set
-      Primitive.exception_capture_backtrace(exc, 1) unless backtrace?(exc)
+      Primitive.exception_capture_backtrace(exc, 1) unless Primitive.exception_backtrace?(exc)
 
       # Print exception if $DEBUG
       show_exception_for_debug(exc, 1) if $DEBUG
@@ -321,15 +321,6 @@ module Truffle
                  end.join
                end
       result + (limit != -1 ? "\t ... #{bt.size - limit - 1} levels...\n" : '') + (reverse ? "#{bt[0]}: #{message}" : '')
-    end
-
-    def self.backtrace?(exc)
-      result = Primitive.exception_backtrace? exc
-      if Primitive.undefined?(result)
-        exc.backtrace ? true : false
-      else
-        result
-      end
     end
 
     def self.append_causes(str, err, causes, reverse, highlight, options)
