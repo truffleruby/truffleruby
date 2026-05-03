@@ -15,7 +15,6 @@ import java.util.concurrent.CountDownLatch;
 
 import com.oracle.truffle.api.TruffleSafepoint.Interrupter;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
-import org.truffleruby.core.VMPrimitiveNodes.VMRaiseExceptionNode;
 import org.truffleruby.core.fiber.RubyFiber.FiberStatus;
 
 import com.oracle.truffle.api.TruffleSafepoint;
@@ -29,6 +28,7 @@ import org.truffleruby.core.thread.RubyThread;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.thread.ThreadManager;
 import org.truffleruby.core.thread.ThreadManager.BlockingAction;
+import org.truffleruby.core.thread.ThreadNodes.ThreadRaisePrimitiveNode;
 import org.truffleruby.language.SafepointAction;
 import org.truffleruby.language.arguments.ArgumentsDescriptor;
 import org.truffleruby.language.arguments.NoKeywordArgumentsDescriptor;
@@ -256,7 +256,7 @@ public final class FiberManager {
 
             if (operation == FiberOperation.RAISE) {
                 var exception = (RubyException) resumeMessage.getArgs()[0];
-                throw VMRaiseExceptionNode.reRaiseException(context, exception);
+                ThreadRaisePrimitiveNode.raiseExceptionInTargetFiberOrThread(currentNode, exception);
             }
 
             return resumeMessage.getDescriptorAndArgs();

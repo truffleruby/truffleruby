@@ -1,4 +1,2 @@
-keep(assert fails):Fiber#raise re-raises a previously rescued exception without overwriting the backtrace
 fails:Fiber#raise raises on the resumed fiber
-fails:Fiber#raise raises on itself
 fails:Fiber#raise should raise on parent fiber

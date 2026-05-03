@@ -1338,7 +1338,7 @@ module Truffle::CExt
   end
 
   def rb_make_exception(args)
-    Truffle::ExceptionOperations.make_exception(args)
+    Truffle::ExceptionOperations.make_exception(*args)
   end
 
   def rb_errinfo

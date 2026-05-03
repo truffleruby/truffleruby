@@ -189,19 +189,13 @@ class Thread
   end
   alias_method :to_s, :inspect
 
-  def raise(exc = undefined, msg = undefined, ctx = nil)
+  def raise(exc = undefined, msg = undefined, backtrace = nil, **)
     return nil unless alive?
 
-    exc = Truffle::ExceptionOperations.build_exception_for_raise(exc, msg)
-
-    exc.set_backtrace(ctx) if ctx
-    Primitive.exception_capture_backtrace(exc, 1) unless Truffle::ExceptionOperations.backtrace?(exc)
-
-    Truffle::ExceptionOperations.show_exception_for_debug(exc, 1) if $DEBUG
-
-    if self == Thread.current
-      Primitive.vm_raise_exception exc
+    if self == Thread.current && !Primitive.undefined?(exc)
+      super
     else
+      exc = Truffle::ExceptionOperations.build_exception_for_raise(exc, msg, backtrace, **)
       Primitive.thread_raise self, exc
     end
   end

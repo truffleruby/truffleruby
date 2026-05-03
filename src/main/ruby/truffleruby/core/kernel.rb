@@ -674,47 +674,15 @@ module Kernel
   end
   module_function :warn
 
-  def raise(exc = undefined, msg = undefined, ctx = nil, cause: undefined, **kwargs)
-    cause_given = !Primitive.undefined?(cause)
-
-    if Primitive.undefined?(exc) && cause_given
-      raise ArgumentError, 'only cause is given with no arguments'
-    end
-
+  def raise(exc = undefined, msg = undefined, backtrace = nil, **)
     if Primitive.undefined?(exc) && $!
+      # Special behavior of Kernel#raise, use $! if no arguments
       exc = $!
     else
-      if Primitive.undefined?(msg) && !kwargs.empty?
-        msg = kwargs
-      end
-
-      exc = Truffle::ExceptionOperations.build_exception_for_raise(exc, msg)
-      exc.set_backtrace(ctx) if ctx
-      Primitive.exception_capture_backtrace(exc, 1) unless Truffle::ExceptionOperations.backtrace?(exc)
-
-      if cause_given
-        unless Primitive.is_a?(cause, ::Exception) || Primitive.nil?(cause)
-          Truffle::ExceptionOperations.exception_object_expected!
-        end
-      else
-        if Primitive.nil?(exc.cause) && !Primitive.exception_used_as_a_cause?(exc)
-          cause = $!
-        else
-          cause = nil
-        end
-      end
-
-      if !Primitive.nil?(cause) && (cause_given || Primitive.nil?(exc.cause)) && !Primitive.equal?(cause, exc)
-        if Truffle::ExceptionOperations.circular_cause?(cause, exc)
-          raise ArgumentError, 'circular causes'
-        end
-
-        Primitive.exception_set_cause exc, cause
-        Primitive.exception_used_as_a_cause!(cause)
-      end
+      exc = Truffle::ExceptionOperations.build_exception_for_raise(exc, msg, backtrace, **)
     end
 
-    Truffle::ExceptionOperations.show_exception_for_debug(exc, 1) if $DEBUG
+    Truffle::ExceptionOperations.prepare_before_raise_exception(exc)
     Primitive.vm_raise_exception exc
   end
   module_function :raise
