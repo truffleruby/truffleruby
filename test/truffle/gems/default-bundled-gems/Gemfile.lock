@@ -104,7 +104,7 @@ GEM
     shellwords (0.2.2)
     singleton (0.3.0)
     stringio (3.2.0)
-    strscan (3.1.6)
+    strscan (3.1.8)
     syntax_suggest (2.0.3)
     syslog (0.3.0)
       logger
@@ -197,7 +197,7 @@ DEPENDENCIES
   shellwords (= 0.2.2)
   singleton (= 0.3.0)
   stringio (= 3.2.0)
-  strscan (= 3.1.6)
+  strscan (= 3.1.8)
   syntax_suggest (= 2.0.3)
   syslog (= 0.3.0)
   tempfile (= 0.3.1)
