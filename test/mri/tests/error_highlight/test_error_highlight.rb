@@ -1446,6 +1446,7 @@ undefined method `foo' for #{ NIL_RECV_MESSAGE }
     ->{}.call(1)
   rescue ArgumentError => exc
     MethodDefLocationSupported =
+      defined?(RubyVM::AbstractSyntaxTree) &&
       RubyVM::AbstractSyntaxTree.respond_to?(:node_id_for_backtrace_location) &&
       RubyVM::AbstractSyntaxTree.node_id_for_backtrace_location(exc.backtrace_locations.first)
   end
