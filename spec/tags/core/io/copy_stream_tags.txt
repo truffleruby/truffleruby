@@ -1,1 +1,2 @@
 slow:IO.copy_stream does not use buffering when writing to STDOUT
+fails:IO.copy_stream with non-IO Objects does not call #read on the source or #write on the destination if zero length is given
