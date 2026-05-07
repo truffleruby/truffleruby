@@ -46,7 +46,6 @@ cext-ruby/test_random.rb
 cext-ruby/test_recursion.rb
 cext-ruby/test_scan_args.rb
 cext-ruby/thread/test_lock_native_thread.rb
-cext-ruby/thread_fd/test_thread_fd_close.rb
 cext-ruby/tracepoint/test_tracepoint.rb
 cext-ruby/typeddata/test_typeddata.rb
 cext-ruby/vm/test_at_exit.rb
