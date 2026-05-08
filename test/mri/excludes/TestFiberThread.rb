@@ -1,4 +1,5 @@
 exclude :test_broken_unblock, "[RuntimeError] exception expected, not #<NoMethodError: undefined method `scheduler' for class Fiber>."
+exclude :test_spurious_unblock_during_thread_join, "Test::Unit::ProxyError: undefined method 'set_scheduler' for class Fiber"
 exclude :test_thread_join, "NoMethodError: undefined method `set_scheduler' for class Fiber"
 exclude :test_thread_join_blocking, "NoMethodError: undefined method `set_scheduler' for class Fiber"
 exclude :test_thread_join_hang, "NoMethodError: undefined method `set_scheduler' for class Fiber"

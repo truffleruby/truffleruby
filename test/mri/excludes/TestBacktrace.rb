@@ -1,3 +1,5 @@
+exclude :test_backtrace_internal_frame, "<\"/home/runner/work/truffleruby/truffleruby/test/mri/tests/ruby/test_backtrace.rb\"> expected but was <\"<internal:core> core/kernel.rb\">."
+exclude :test_backtrace_on_argument_error, "<\"/home/runner/work/truffleruby/truffleruby/test/mri/tests/ruby/test_backtrace.rb:465:in 'Kernel#tap'\"> expected but was <\"<internal:core> core/kernel.rb:510:in 'Kernel#tap'\">."
 exclude :test_caller_lev, "NoMethodError: undefined method `map' for nil"
 exclude :test_caller_lev_and_n, "NoMethodError: undefined method `map' for nil"
 exclude :test_caller_limit_cfunc_iseq_no_pc, "<{[\"each\", \"group_by\"] => [1]}> expected but was <{[\"group_by\", \"each\"] => [1]}>."

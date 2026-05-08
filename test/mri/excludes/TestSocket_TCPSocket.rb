@@ -11,3 +11,4 @@ exclude :test_initialize_with_connection_failure_after_hostname_resolution_failu
 exclude :test_initialize_with_hostname_resolution_failure_after_connection_failure, "[Errno::ECONNREFUSED] exception expected, not #<ArgumentError: unknown keyword: :test_mode_settings>."
 exclude :test_inspect, "Expected /AF_INET/ to match \"#<TCPServer:fd 38>\"."
 exclude :test_recvfrom, "SocketError: need IPv4 or IPv6 address"
+exclude :test_tcp_initialize_open_timeout, "[IO::TimeoutError] exception expected, not #<ArgumentError: unknown keywords: :open_timeout, :test_mode_settings>."

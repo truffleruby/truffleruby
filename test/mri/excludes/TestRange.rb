@@ -7,6 +7,7 @@ exclude :test_duckrange, "TypeError: no implicit conversion of TestRange::DuckRa
 exclude :test_each, "NoMethodError: undefined method `<' for nil"
 exclude :test_each_with_succ, "NoMethodError: undefined method `i' for nil"
 exclude :test_eqq, "Expected 0..10 to not be === 0..10."
+exclude :test_first_last, "Test::Unit::ProxyError: can't iterate from NilClass"
 exclude :test_frozen_initialize, "FrozenError expected but nothing was raised."
 exclude :test_include, "hangs"
 exclude :test_initialize_twice, "[FrozenError] exception expected, not #<NameError: `initialize' called twice>."

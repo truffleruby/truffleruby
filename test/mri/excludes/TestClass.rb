@@ -1,5 +1,6 @@
 exclude :test_attached_object, "Expected Exception(TypeError) was raised, but the message doesn't match. Expected /'NilClass' is not a singleton class/ to match \"`NilClass' is not a singleton class\"."
 exclude :test_check_inheritable, "TypeError expected but nothing was raised."
+exclude :test_class_hierarchy_inside_initialize_dup_bug_21538, "<[#<Class:0x165308>,"
 exclude :test_clone_when_method_exists_on_singleton_class_of_singleton_class, "NoMethodError: undefined method `s2_method' for #<Class:#<#<Class:0x5a8>:0x5c8>>"
 exclude :test_constant_access_from_method_in_cloned_class, "NameError: uninitialized constant TestClass::CloneTest::TEST"
 exclude :test_invalid_superclass, "Expected Exception(TypeError) was raised, but the message doesn't match. Expected /M🗿/ to match \"superclass must be a Class\"."

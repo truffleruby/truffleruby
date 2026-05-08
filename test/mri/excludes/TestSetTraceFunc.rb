@@ -63,6 +63,7 @@ exclude :test_tracepoint_enable_target, "ArgumentError: wrong number of argument
 exclude :test_tracepoint_enable_with_target_line, "ArgumentError: wrong number of arguments (given 1, expected 0)"
 exclude :test_tracepoint_enable_with_target_line_two_times, "ArgumentError: wrong number of arguments (given 1, expected 0)"
 exclude :test_tracepoint_enabled, "ArgumentError: unknown event: call"
+exclude :test_tracepoint_garbage_collected_when_disable, "Test::Unit::ProxyError: undefined method 'stat' for class TracePoint"
 exclude :test_tracepoint_inspect, "Expected / in / to match \"#<TracePoint:line /b/b/e/main/test/mri/tests/ruby/test_settracefunc.rb:1116>\"."
 exclude :test_tracepoint_nested_enabled_with_target, "<\"can't nest-enable a targeting TracePoint\"> expected but was <\"wrong number of arguments (given 1, expected 0)\">."
 exclude :test_tracepoint_opt_invokebuiltin_delegate_leave, "Expected /^0000 opt_invokebuiltin_delegate_leave / to match \"\"."

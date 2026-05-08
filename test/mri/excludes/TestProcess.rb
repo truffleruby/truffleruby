@@ -33,6 +33,7 @@ exclude :test_maxgroups, "[ArgumentError] exception expected, not #<Errno::EPERM
 exclude :test_no_curdir, "needs investigation"
 exclude :test_overwrite_ENV, "assert_separately failed with error message"
 exclude :test_process_detach, "NotImplementedError: fork is not available"
+exclude :test_rlimit_nofile, "Test::Unit::ProxyError: uninitialized constant Test::Sanitizers"
 exclude :test_rlimit_value, "[ArgumentError] exception expected, not #<TypeError: wrong argument type Symbol (expected Integer)>."
 exclude :test_sh_exec, "Errno::ENOENT: No such file or directory - No such file or directory - exec"
 exclude :test_signals_work_after_exec_fail, "NotImplementedError: fork is not available"
