@@ -811,8 +811,6 @@ class Set
     to_a.join(separator)
   end
 
-  InspectKey = :__inspect_key__         # :nodoc:
-
   # Returns a string containing a human-readable representation of the
   # set ("#<Set: {element1, element2, ...}>").
   def inspect
@@ -824,17 +822,8 @@ class Set
       suffix = '}>'
     end
 
-    ids = (Thread.current[InspectKey] ||= [])
-
-    if ids.include?(object_id)
-      return "#{prefix}...#{suffix}"
-    end
-
-    ids << object_id
-    begin
+    "#{prefix}...#{suffix}" if Truffle::ThreadOperations.detect_recursion self do
       return "#{prefix}#{to_a.inspect[1..-2]}#{suffix}"
-    ensure
-      ids.pop
     end
   end
 
