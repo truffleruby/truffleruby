@@ -48,3 +48,62 @@ require 'ffi/variadic'
 require 'ffi/enum'
 require 'ffi/version'
 require 'ffi/function'
+
+module FFI
+  module ModernForkTracking
+    def _fork
+      pid = super
+      if pid == 0
+        FFI._async_cb_dispatcher_atfork_child
+      end
+      pid
+    end
+  end
+
+  module LegacyForkTracking
+    module KernelExt
+      def fork
+        if block_given?
+          super do
+            FFI._async_cb_dispatcher_atfork_child
+            yield
+          end
+        else
+          pid = super
+          FFI._async_cb_dispatcher_atfork_child if pid.nil?
+          pid
+        end
+      end
+    end
+
+    module KernelExtPrivate
+      include KernelExt
+      private :fork
+    end
+
+    module IOExt
+      def popen(*args)
+        return super unless args[0] == '-'
+
+        super(*args) do |pipe|
+          FFI._async_cb_dispatcher_atfork_child if pipe.nil?
+          yield pipe
+        end
+      end
+      ruby2_keywords :popen if respond_to?(:ruby2_keywords)
+    end
+  end
+
+  if Process.respond_to?(:_fork)
+    # The nice Ruby 3.1+ way of doing things
+    ::Process.singleton_class.prepend(ModernForkTracking)
+  elsif Process.respond_to?(:fork)
+    # Barf. Old CRuby.
+    # Most of the inspiration for how to do this was stolen from ActiveSupport.
+    ::Object.prepend(LegacyForkTracking::KernelExtPrivate)
+    ::Object.singleton_class.prepend(LegacyForkTracking::KernelExt)
+    ::Kernel.prepend(LegacyForkTracking::KernelExtPrivate)
+    ::Kernel.singleton_class.prepend(LegacyForkTracking::KernelExt)
+    ::IO.singleton_class.prepend(LegacyForkTracking::IOExt)
+  end
+end

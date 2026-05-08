@@ -45,14 +45,6 @@ module FFI
     #   @note WARNING: passing a proc _may_ cause your pointer to never be
     #     GC'd, unless you're careful to avoid trapping a reference to the
     #     pointer in the proc. See the test specs for examples.
-    # @overload initialize(pointer) { |p| ... }
-    #   @param pointer [Pointer]
-    #   @yieldparam [Pointer] p +pointer+ passed to the block
-    #   @return [self]
-    #   The passed block will be invoked at GC time.
-    #   @note
-    #     WARNING: passing a block will cause your pointer to never be GC'd.
-    #     This is bad.
     # @overload initialize(pointer)
     #   @param pointer [Pointer]
     #   @return [self]
@@ -75,7 +67,7 @@ module FFI
     #  The last calling idiom (only one parameter) is generally only
     #  going to be useful if you subclass {AutoPointer}, and override
     #  #release, which by default does nothing.
-    def initialize(ptr, proc=nil, &block)
+    def initialize(ptr, proc=nil)
       raise TypeError, "Invalid pointer" if ptr.nil? || !ptr.kind_of?(Pointer) ||
           ptr.kind_of?(MemoryPointer) || ptr.kind_of?(AutoPointer)
       super(ptr.type_size, ptr)
@@ -96,6 +88,12 @@ module FFI
       ObjectSpace.define_finalizer(self, @releaser)
       self
     end
+
+    def dup
+      raise RuntimeError, "cannot duplicate FFI::AutoPointer"
+    end
+
+    alias clone dup
 
     # @return [nil]
     # Free the pointer.

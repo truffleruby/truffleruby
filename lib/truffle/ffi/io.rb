@@ -42,9 +42,9 @@ module FFI
 
     # @param [#read] io io to read from
     # @param [AbstractMemory] buf destination for data read from +io+
-    # @param [nil, Numeric] len maximul number of bytes to read from +io+. If +nil+,
+    # @param [nil, Integer] len maximul number of bytes to read from +io+. If +nil+,
     #  read until end of file.
-    # @return [Numeric] length really read, in bytes
+    # @return [Integer] length really read, in bytes
     #
     # A version of IO#read that reads data from an IO and put then into a native buffer.
     #

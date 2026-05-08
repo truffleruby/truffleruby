@@ -64,7 +64,7 @@ void testBlockingClose(struct testBlockingData *self) {
 }
 
 static int sum_varargs(va_list args) {
-    char sum = 0;
+    int sum = 0;
     int arg;
     while ((arg = va_arg(args, int)) != 0) {
         sum += arg;
@@ -76,19 +76,19 @@ static int sum_varargs(va_list args) {
 /* Write c to pipe1 and return the value read from pipe2, or 0 if there’s
  * an error such as a timeout, or if c does not equal the sum of the
  * zero-terminated list of char arguments. */
-char testBlockingWRva(struct testBlockingData *self, char c, ...) {
+char testBlockingWRva(struct testBlockingData *self, int c, ...) {
     va_list args;
     va_start(args, c);
     if (sum_varargs(args) != c) {
         return 0;
     }
 
-    if( pipeHelperWriteChar(self->pipe1[1], c) != 1)
+    if( pipeHelperWriteChar(self->pipe1[1], (char)c) != 1)
         return 0;
     return pipeHelperReadChar(self->pipe2[0], 10);
 }
 
-char testBlockingRWva(struct testBlockingData *self, char c, ...) {
+char testBlockingRWva(struct testBlockingData *self, int c, ...) {
     va_list args;
     va_start(args, c);
     if (sum_varargs(args) != c) {
@@ -96,7 +96,7 @@ char testBlockingRWva(struct testBlockingData *self, char c, ...) {
     }
 
     char d = pipeHelperReadChar(self->pipe1[0], 10);
-    if( pipeHelperWriteChar(self->pipe2[1], c) != 1)
+    if( pipeHelperWriteChar(self->pipe2[1], (char)c) != 1)
         return 0;
     return d;
 }
@@ -150,3 +150,14 @@ void __stdcall testStdcallManyParams(long *a1, char a2, short int a3, int a4, __
             struct StructUCDP a6, struct StructUCDP *a7, float a8, double a9) {
 }
 #endif
+
+static void (*testAsyncCallbackDelayedCb)(int);
+void testAsyncCallbackDelayedRegister(void (*fn)(int))
+{
+  testAsyncCallbackDelayedCb = fn;
+}
+
+void testAsyncCallbackDelayedTrigger(int value)
+{
+  testAsyncCallback(testAsyncCallbackDelayedCb, value);
+}

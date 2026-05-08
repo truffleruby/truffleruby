@@ -19,6 +19,7 @@ module TestEnum1
   enum [:c13, 42, :c14, 4242, :c15, 424242, :c16, 42424242]
 
   attach_function :test_untagged_enum, [:int], :int
+  freeze
 end
 
 module TestEnum3
@@ -449,7 +450,7 @@ describe "All enums" do
         TestEnum4.enum_type(:enum_type6)[0x4242424242424242],
         TestEnum4.enum_value(:c3)
       ]
-    end.take
+    end.value
     expect( res ).to eq( [0, :c1, :c20, :c1, :c28, 2] )
   end
 end

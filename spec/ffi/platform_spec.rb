@@ -143,7 +143,7 @@ describe "FFI::Platform.unix?" do
         FFI::Platform::ARCH,
         FFI::Platform::OS,
       ]
-    end.take
+    end.value
 
     expect( res.size ).to be > 0
   end

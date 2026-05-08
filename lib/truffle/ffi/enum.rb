@@ -35,7 +35,6 @@ module FFI
   # An instance of this class permits to manage {Enum}s. In fact, Enums is a collection of {Enum}s.
   class Enums
 
-    # @return [nil]
     def initialize
       @all_enums = Array.new
       @tagged_enums = Hash.new

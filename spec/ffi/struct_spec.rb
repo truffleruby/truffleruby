@@ -62,6 +62,7 @@ module StructSpecsStructTests
       [ 's8', 's16', 's32', 's64', 'f32', 'f64', 'long' ].each do |t|
         attach_function "struct_align_#{t}", [ :pointer ], StructTypes[t]
       end
+      freeze
     end
     class PointerMember < FFI::Struct
       layout :pointer, :pointer
@@ -467,6 +468,7 @@ module StructSpecsStructTests
       end
       attach_function :struct_call_add_cb, [TestStruct.in, :int, :int], :int
       attach_function :struct_call_sub_cb, [TestStruct.in, :int, :int], :int
+      freeze
     end
 
     it "Can have CallbackInfo struct field" do
@@ -485,7 +487,7 @@ module StructSpecsStructTests
         add_proc = lambda { |a, b| a + b }
         s[:add] = add_proc
         CallbackMember.struct_call_add_cb(s, 40, 2)
-      end.take
+      end.value
 
       expect( res ).to eq(42)
     end
@@ -567,7 +569,7 @@ module StructSpecsStructTests
 
       res = Ractor.new(a) do |a2|
         a2[:a]
-      end.take
+      end.value
 
       expect( res ).to eq(-34)
     end
@@ -581,7 +583,7 @@ module StructSpecsStructTests
         s = TestStructRactor.new
         s[:i] = 0x14
         LibTest.ptr_ret_int32_t(s, 0)
-      end.take
+      end.value
 
       expect( res ).to eq(0x14)
     end
@@ -599,6 +601,13 @@ describe FFI::Struct, ".layout" do
         # NetBSD uses #define instead of typedef for these
         attach_function :ptr_ret_int32_t, :ptr_ret___int32_t, [ :pointer, :int ], :int
       end
+
+      typedef :uint, :custom_int
+      class TestStructCustomInt < FFI::Struct
+        layout :number, :custom_int
+      end
+
+      freeze
     end
   end
 
@@ -625,15 +634,7 @@ describe FFI::Struct, ".layout" do
     end
 
     it "resolves a type from the enclosing module" do
-      module FFISpecs::LibTest
-        typedef :uint, :custom_int
-
-        class TestStruct < FFI::Struct
-          layout :number, :custom_int
-        end
-      end
-
-      instance = FFISpecs::LibTest::TestStruct.new
+      instance = FFISpecs::LibTest::TestStructCustomInt.new
       instance[:number] = 0xA1
       expect(FFISpecs::LibTest.ptr_ret_int32_t(instance, 0)).to eq(0xA1)
     end

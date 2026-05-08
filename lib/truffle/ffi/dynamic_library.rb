@@ -30,12 +30,41 @@
 
 module FFI
   class DynamicLibrary
-    SEARCH_PATH = %w[/usr/lib /usr/local/lib /opt/local/lib]
-    if FFI::Platform::ARCH == 'aarch64' && FFI::Platform.mac?
-      SEARCH_PATH << '/opt/homebrew/lib'
+    SEARCH_PATH = []
+
+    # The following search paths are tried, if the library could not be loaded in the first attempt.
+    # They are only executed on Macos in the following order:
+    if FFI::Platform.mac?
+
+      # 1. Try library paths possibly defined in LD_LIBRARY_PATH DYLD_LIBRARY_PATH first.
+      # This is because dlopen doesn't respect LD_LIBRARY_PATH and DYLD_LIBRARY_PATH is deleted by SIP-protected binaries.
+      # See here for details: https://github.com/ffi/ffi/issues/923#issuecomment-1872565313
+      %w[LD_LIBRARY_PATH DYLD_LIBRARY_PATH].each do |custom_path|
+        SEARCH_PATH.concat ENV.fetch(custom_path,"").split(File::PATH_SEPARATOR)
+      end
+
+      # 2. Then on macos/arm64 try /opt/homebrew/lib, since this is a typical standard directory.
+      # FFI is often used together with homebrew, so that we hardcode the path for arm64 here.
+      if FFI::Platform::ARCH == 'aarch64'
+        SEARCH_PATH << '/opt/homebrew/lib'
+      end
+
+      # 3. Then try typical system directories starting with the /local/ directory first.
+      #
+      # /usr/local/lib is used by homebrow on x86_64.
+      # /opt/local/lib is used by MacPorts and Fink.
+      # /usr/lib is there, because it was always there.
+      SEARCH_PATH.concat %w[/opt/local/lib /usr/local/lib /usr/lib]
     end
 
-    SEARCH_PATH_MESSAGE = "Searched in <system library path>, #{SEARCH_PATH.join(', ')}".freeze
+    # On Linux the library lookup paths are usually defined through /etc/ld.so.conf, which can be changed at will with root permissions.
+    # Also LD_LIBRARY_PATH is respected by the dynamic loader, so that there's usually no need and no advantage to do a fallback handling.
+    #
+    # Windows has it's own library lookup logic, very different to what we do here.
+    # See: https://github.com/oneclick/rubyinstaller2/wiki/For-gem-developers#user-content-dll-loading
+
+    FFI.make_shareable(SEARCH_PATH)
+    SEARCH_PATH_MESSAGE = "Searched in <system library path>#{ SEARCH_PATH.map{|a| ', ' + a}.join }".freeze
 
     def self.load_library(name, flags)
       if name == FFI::CURRENT_PROCESS
@@ -51,7 +80,7 @@ module FFI
           lib = try_load(libname, flags, errors)
           return lib if lib
 
-          unless libname.start_with?("/") || FFI::Platform.windows?
+          unless libname.start_with?("/")
             SEARCH_PATH.each do |prefix|
               path = "#{prefix}/#{libname}"
               if File.exist?(path)
