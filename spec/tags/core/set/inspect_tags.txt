@@ -1,2 +1,0 @@
-fails:Set#inspect does include the elements of the set
-fails:Set#inspect correctly handles cyclic-references

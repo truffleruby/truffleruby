@@ -816,15 +816,23 @@ class Set
   # Returns a string containing a human-readable representation of the
   # set ("#<Set: {element1, element2, ...}>").
   def inspect
+    if self.class.equal?(Set) || self.class < CoreSet
+      prefix = "#{self.class}["
+      suffix = ']'
+    else
+      prefix = "#<#{self.class}: {"
+      suffix = '}>'
+    end
+
     ids = (Thread.current[InspectKey] ||= [])
 
     if ids.include?(object_id)
-      return sprintf('#<%s: {...}>', self.class.name)
+      return "#{prefix}...#{suffix}"
     end
 
     ids << object_id
     begin
-      return sprintf('#<%s: {%s}>', self.class, to_a.inspect[1..-2])
+      return "#{prefix}#{to_a.inspect[1..-2]}#{suffix}"
     ensure
       ids.pop
     end
