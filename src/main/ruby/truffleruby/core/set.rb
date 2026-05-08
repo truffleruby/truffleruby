@@ -218,6 +218,10 @@
 class Set
   VERSION = "1.1.1"
 
+  # For compatibility with CRuby
+  class CoreSet < Set
+  end
+
   include Enumerable
 
   # Creates a new set containing the given objects.
