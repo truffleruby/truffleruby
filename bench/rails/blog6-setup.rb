@@ -6,8 +6,8 @@ module Blog6Setup
 
   def self.setup_bundler
     Dir.chdir(BLOG6_DIR) do
-      JT.ruby(*%w[-S bundle config --local without postgresql mysql])
-      JT.ruby(*%w[-S bundle config --local path vendor/bundle])
+      JT.ruby(*%w[-S bundle config set --local without postgresql mysql])
+      JT.ruby(*%w[-S bundle config set --local path vendor/bundle])
     end
   end
 
