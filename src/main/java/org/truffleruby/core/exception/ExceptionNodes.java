@@ -37,7 +37,6 @@ import org.truffleruby.annotations.Visibility;
 import org.truffleruby.language.backtrace.Backtrace;
 import org.truffleruby.language.backtrace.BacktraceFormatter;
 import org.truffleruby.language.control.RaiseException;
-import org.truffleruby.language.dispatch.DispatchConfiguration;
 import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.language.methods.LookupMethodOnSelfNode;
 
@@ -203,20 +202,17 @@ public abstract class ExceptionNodes {
     @Primitive(name = "exception_backtrace?")
     public abstract static class BacktraceQueryPrimitiveNode extends PrimitiveArrayArgumentsNode {
 
-        protected static final String METHOD = "backtrace";
-
         @Specialization
         boolean backtraceQuery(VirtualFrame frame, RubyException exception,
                 @Cached LookupMethodOnSelfNode lookupNode,
                 @Cached DispatchNode callBacktrace,
                 @Cached BooleanCastNode booleanCastNode) {
             // If exc.backtrace is the standard Exception#backtrace we can do a quick check, otherwise we must call the #backtrace method
-            if (lookupNode.lookupProtected(frame, exception,
-                    METHOD) == getContext().getCoreMethods().EXCEPTION_BACKTRACE) {
+            if (lookupNode.lookupIgnoringVisibility(frame, exception,
+                    "backtrace") == getContext().getCoreMethods().EXCEPTION_BACKTRACE) {
                 return !(exception.customBacktrace == null && exception.backtrace == null);
             } else {
-                return booleanCastNode.execute(this,
-                        callBacktrace.callWithFrame(DispatchConfiguration.PROTECTED, frame, exception, "backtrace"));
+                return booleanCastNode.execute(this, callBacktrace.call(exception, "backtrace"));
             }
         }
 
