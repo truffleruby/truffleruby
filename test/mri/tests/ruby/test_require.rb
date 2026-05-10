@@ -532,7 +532,7 @@ class TestRequire < Test::Unit::TestCase
 
   def test_frozen_loaded_features
     bug3756 = '[ruby-core:31913]'
-    assert_in_out_err(['-e', '$LOADED_FEATURES.freeze; require "ostruct"'], "",
+    assert_in_out_err(['-e', '$LOADED_FEATURES.freeze; require "erb"'], "",
                       [], /\$LOADED_FEATURES is frozen; cannot append feature \(RuntimeError\)$/,
                       bug3756)
   end
@@ -857,7 +857,13 @@ class TestRequire < Test::Unit::TestCase
         def to_path = @path
       end
 
-      def create_ruby_file = Tempfile.create(["test", ".rb"]).path
+      FILES = []
+
+      def create_ruby_file
+        file = Tempfile.open(["test", ".rb"])
+        FILES << file
+        file.path
+      end
 
       require MyString.new(create_ruby_file)
       $LOADED_FEATURES.unshift(create_ruby_file)

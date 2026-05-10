@@ -23,10 +23,13 @@ class Fiber
     Primitive.fiber_initialize(self, Primitive.as_boolean(blocking), storage, block)
   end
 
-  def raise(*args)
-    exc = Truffle::ExceptionOperations.make_exception(args)
-    exc = RuntimeError.new('') unless exc
-    Primitive.fiber_raise(self, exc)
+  def raise(exc = undefined, msg = undefined, backtrace = nil, **)
+    if self == Fiber.current && !Primitive.undefined?(exc)
+      super
+    else
+      exc = Truffle::ExceptionOperations.build_exception_for_raise(exc, msg, backtrace, **)
+      Primitive.fiber_raise self, exc
+    end
   end
 
   def inspect

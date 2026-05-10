@@ -1,0 +1,110 @@
+module RBS
+  module AST
+    class TypeParam
+      # Key
+      # ^^^ name
+      #
+      # unchecked out Elem < _ToJson = untyped
+      # ^^^^^^^^^                                 unchecked
+      #           ^^^                             variance
+      #               ^^^^                        name
+      #                    ^^^^^^^^^              upper_bound
+      #                              ^^^^^^^^^    default
+      type loc = Location[:name, :variance | :unchecked | :upper_bound | :default]
+
+      type variance = :invariant | :covariant | :contravariant
+
+      type bound = Types::ClassInstance | Types::ClassSingleton | Types::Interface
+
+      attr_reader name: Symbol
+      attr_reader variance: variance
+      attr_reader location: loc?
+
+      %a{pure} def upper_bound: () -> bound?
+
+      attr_reader upper_bound_type: Types::t?
+
+      attr_reader default_type: Types::t?
+
+      def initialize: (name: Symbol, variance: variance, upper_bound: Types::t?, location: loc?, ?default_type: Types::t?, ?unchecked: bool) -> void
+
+      include _ToJson
+
+      def ==: (untyped) -> bool
+
+      def eql?: (untyped) -> bool
+
+      def hash: () -> Integer
+
+      @unchecked: bool
+
+      def unchecked!: (?boolish) -> self
+
+      def unchecked?: () -> bool
+
+      def map_type: () { (Types::t) -> Types::t } -> TypeParam
+
+      # Helper function to resolve _class instance types_ to _type variables_.
+      #
+      # We need this step because RBS language has an identical syntax for both unqualified class instance types and type variables.
+      # `String` may be an instance of `::String` class or type variable depending on the list of bound type variables.
+      #
+      # So, we need second pass to parse the following generics parameter declaration.
+      #
+      # ```rbs
+      # class Foo[X < _Each[Y], Y]
+      #                   # ^ We want this `Y` to be a type variable.
+      # end
+      # ```
+      #
+      def self.resolve_variables: (Array[TypeParam]) -> void
+
+      def self.subst_var: (Set[Symbol], Types::t) -> Types::t
+
+      # Rename type parameter name.
+      #
+      # The renaming cannot be done separately because a set of `TypeParam` decls may be mutual recursive.
+      #
+      # Example:
+      #
+      # * Renaming `A -> X, B -> Y`
+      # * Input `[A, B < _Pushable[A]]`
+      # * Result `[X, Y < _Pushable[X]]`
+      #
+      def self.rename: (Array[TypeParam], new_names: Array[Symbol]) -> Array[TypeParam]
+
+      def to_s: () -> String
+
+      # Validates TypeParams if it refers another optional type params
+      #
+      # * Returns array of TypeParam objects that refers other optional type params
+      # * Returns `nil` if all type params are valid
+      #
+      def self.validate: (Array[TypeParam]) -> Array[TypeParam]?
+
+      # Returns an application with respect to type params' default
+      #
+      def self.application: (Array[TypeParam], Array[Types::t]) -> Substitution?
+
+      # Returns an array of type args, that fills omitted types with the defaults
+      #
+      # ```rbs
+      # interface _Foo[T, S = untyped]
+      # end
+      # ```
+      #
+      # Normalizing type args with `_Foo` works as following:
+      #
+      # ```rbs
+      # _Foo[String]                   # => _Foo[String, untyped]
+      # _Foo[String, Integer]          # => _Foo[String, Integer]
+      # _Foo                           # => _Foo                            (Omitting missing args)
+      # _Foo[String, Integer, untyped] # => _Foo[String, Integer, untyped]  (Keeping extra args)
+      # ```
+      #
+      # Note that it allows invalid arities, returning the `args` immediately.
+      #
+      def self.normalize_args: (Array[TypeParam], Array[Types::t]) -> Array[Types::t]
+    end
+  end
+end

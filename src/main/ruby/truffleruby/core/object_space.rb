@@ -27,7 +27,21 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 module ObjectSpace
-  def self.garbage_collect(...)
+  module_function
+
+  def _id2ref(id)
+    warn 'ObjectSpace._id2ref is deprecated', uplevel: 1, category: :deprecated
+    warn 'ObjectSpace._id2ref is deprecated, very slow on TruffleRuby and should not be used', uplevel: 1, category: :performance
+    Primitive.objectspace_id2ref(id)
+  end
+
+  def each_object(of_class = undefined, &block)
+    return to_enum(:each_object, of_class) unless block
+    warn 'ObjectSpace.each_object is very slow on all Ruby implementations and should not be used', uplevel: 1, category: :performance
+    Primitive.objectspace_each_object(of_class, block)
+  end
+
+  def garbage_collect(...)
     GC.start(...)
   end
 end

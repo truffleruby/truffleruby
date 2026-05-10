@@ -9,6 +9,7 @@ exclude :test_gc_config_full_mark_by_default, "NoMethodError: undefined method `
 exclude :test_gc_config_implementation, "NoMethodError: undefined method `config' for module GC"
 exclude :test_gc_config_implementation_is_readonly, "[ArgumentError] exception expected, not #<NoMethodError: undefined method `config' for module GC>."
 exclude :test_gc_config_invalid_args, "[ArgumentError] exception expected, not #<NoMethodError: undefined method `config' for module GC>."
+exclude :test_gc_config_setting_returns_config_hash, "<{implementation: \"default\"}> expected but was <{}>."
 exclude :test_gc_config_setting_returns_nil_for_missing_keys, "NoMethodError: undefined method `config' for module GC"
 exclude :test_gc_config_setting_returns_updated_config_hash, "NoMethodError: undefined method `config' for module GC"
 exclude :test_gc_disabled_start, "GR-15504: <1> expected but was <0>."

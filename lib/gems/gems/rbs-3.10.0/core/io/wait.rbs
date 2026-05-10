@@ -1,0 +1,48 @@
+%a{annotate:rdoc:skip}
+class IO
+  # <!--
+  #   rdoc-file=io.c
+  #   - io.wait(events, timeout) -> event mask, false or nil
+  #   - io.wait(*event_symbols[, timeout]) -> self, true, or false
+  # -->
+  # Waits until the IO becomes ready for the specified events and returns the
+  # subset of events that become ready, or a falsy value when times out.
+  #
+  # The events can be a bit mask of `IO::READABLE`, `IO::WRITABLE` or
+  # `IO::PRIORITY`.
+  #
+  # Returns an event mask (truthy value) immediately when buffered data is
+  # available.
+  #
+  # The second form: if one or more event symbols (`:read`, `:write`, or
+  # `:read_write`) are passed, the event mask is the bit OR of the bitmask
+  # corresponding to those symbols.  In this form, `timeout` is optional, the
+  # order of the arguments is arbitrary, and returns `io` if any of the events is
+  # ready.
+  #
+  def wait: (Integer events, ?Time::_Timeout timeout) -> (Integer | false | nil)
+          | (?Time::_Timeout? timeout, *wait_mode mode) -> (self | true | false)
+
+  type wait_mode = :read | :r | :readable | :write | :w | :writable | :read_write | :rw | :readable_writable
+
+  # <!--
+  #   rdoc-file=io.c
+  #   - io.wait_readable          -> truthy or falsy
+  #   - io.wait_readable(timeout) -> truthy or falsy
+  # -->
+  # Waits until IO is readable and returns a truthy value, or a falsy value when
+  # times out.  Returns a truthy value immediately when buffered data is
+  # available.
+  #
+  def wait_readable: (?Time::_Timeout? timeout) -> boolish
+
+  # <!--
+  #   rdoc-file=io.c
+  #   - io.wait_writable          -> truthy or falsy
+  #   - io.wait_writable(timeout) -> truthy or falsy
+  # -->
+  # Waits until IO is writable and returns a truthy value or a falsy value when
+  # times out.
+  #
+  def wait_writable: (?Time::_Timeout? timeout) -> boolish
+end

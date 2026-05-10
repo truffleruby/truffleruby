@@ -1,7 +1,7 @@
 suite = {
     "mxversion": "7.69.1",
     "name": "truffleruby",
-    "version": "34.0.0",
+    "version": "40.0.0",
     "release": False,
     "url": "https://github.com/truffleruby/truffleruby",
     "developer": {
@@ -888,6 +888,7 @@ suite = {
                 # Create the complete files for bundled gems to let RubyGems know the gems are fully built and can be activated
                 "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/bigdecimal-<gem_version:bigdecimal>/gem.build_complete": "string:",
                 "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/debug-<gem_version:debug>/gem.build_complete": "string:",
+                "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/fiddle-<gem_version:fiddle>/gem.build_complete": "string:",
                 "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/nkf-<gem_version:nkf>/gem.build_complete": "string:",
                 "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/racc-<gem_version:racc>/gem.build_complete": "string:", # actually we do not build the C extension because the pure-Ruby fallback is enough
                 "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/rbs-<gem_version:rbs>/gem.build_complete": "string:",

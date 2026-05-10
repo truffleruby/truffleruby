@@ -1,0 +1,187 @@
+# <!-- rdoc-file=lib/delegate.rb -->
+# This library provides three different ways to delegate method calls to an
+# object.  The easiest to use is SimpleDelegator.  Pass an object to the
+# constructor and all methods supported by the object will be delegated.  This
+# object can be changed later.
+#
+# Going a step further, the top level DelegateClass method allows you to easily
+# setup delegation through class inheritance.  This is considerably more
+# flexible and thus probably the most common use for this library.
+#
+# Finally, if you need full control over the delegation scheme, you can inherit
+# from the abstract class Delegator and customize as needed.  (If you find
+# yourself needing this control, have a look at Forwardable which is also in the
+# standard library.  It may suit your needs better.)
+#
+# SimpleDelegator's implementation serves as a nice example of the use of
+# Delegator:
+#
+#     require 'delegate'
+#
+#     class SimpleDelegator < Delegator
+#       def __getobj__
+#         @delegate_sd_obj # return object we are delegating to, required
+#       end
+#
+#       def __setobj__(obj)
+#         @delegate_sd_obj = obj # change delegation object,
+#                                # a feature we're providing
+#       end
+#     end
+#
+# ## Notes
+#
+# Be advised, RDoc will not detect delegated methods.
+#
+class Delegator < BasicObject
+  def self.const_missing: (Symbol n) -> untyped
+
+  def self.delegating_block: (Symbol mid) -> Proc
+
+  def self.public_api: () -> untyped
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - !()
+  # -->
+  # Delegates ! to the `__getobj__`
+  #
+  def !: () -> untyped
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - !=(obj)
+  # -->
+  # Returns true if two objects are not considered of equal value.
+  #
+  def !=: (untyped obj) -> bool
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - ==(obj)
+  # -->
+  # Returns true if two objects are considered of equal value.
+  #
+  def ==: (untyped obj) -> bool
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - __getobj__()
+  # -->
+  # This method must be overridden by subclasses and should return the object
+  # method calls are being delegated to.
+  #
+  def __getobj__: () -> untyped
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - __setobj__(obj)
+  # -->
+  # This method must be overridden by subclasses and change the object delegate to
+  # *obj*.
+  #
+  def __setobj__: (untyped obj) -> untyped
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - eql?(obj)
+  # -->
+  # Returns true if two objects are considered of equal value.
+  #
+  def eql?: (untyped obj) -> bool
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - freeze()
+  # -->
+  # :method: freeze Freeze both the object returned by `__getobj__` and self.
+  #
+  def freeze: () -> self
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - marshal_dump()
+  # -->
+  # Serialization support for the object returned by `__getobj__`.
+  #
+  def marshal_dump: () -> untyped
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - marshal_load(data)
+  # -->
+  # Reinitializes delegation from a serialized object.
+  #
+  def marshal_load: (untyped data) -> void
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - method_missing(m, *args, &block)
+  # -->
+  #
+  def method_missing: (Symbol m, *untyped args, **untyped) { (*untyped, **untyped) -> untyped } -> untyped
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - methods(all=true)
+  # -->
+  # Returns the methods available to this delegate object as the union of this
+  # object's and `__getobj__` methods.
+  #
+  def methods: (?boolish all) -> Array[Symbol]
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - protected_methods(all=true)
+  # -->
+  # Returns the methods available to this delegate object as the union of this
+  # object's and `__getobj__` protected methods.
+  #
+  def protected_methods: (?boolish all) -> Array[Symbol]
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - public_methods(all=true)
+  # -->
+  # Returns the methods available to this delegate object as the union of this
+  # object's and `__getobj__` public methods.
+  #
+  def public_methods: (?untyped all) -> Array[Symbol]
+
+  private
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - new(obj)
+  # -->
+  # Pass in the *obj* to delegate method calls to.  All methods supported by *obj*
+  # will be delegated to.
+  #
+  def initialize: (untyped obj) -> void
+
+  def initialize_clone: (self obj, ?freeze: bool?) -> self
+
+  def initialize_dup: (self obj) -> self
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - respond_to_missing?(m, include_private)
+  # -->
+  # Checks for a method provided by this the delegate object by forwarding the
+  # call through `__getobj__`.
+  #
+  def respond_to_missing?: (Symbol m, bool include_private) -> bool
+
+  # <!--
+  #   rdoc-file=lib/delegate.rb
+  #   - target_respond_to?(target, m, include_private)
+  # -->
+  # Handle BasicObject instances
+  #
+  def target_respond_to?: (untyped target, Symbol m, bool include_private) -> bool
+
+  # <!-- rdoc-file=lib/delegate.rb -->
+  # The version string
+  #
+  VERSION: String
+end

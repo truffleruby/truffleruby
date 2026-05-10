@@ -866,6 +866,13 @@ module CallbackInteropSpecs
       extern 'void testClosureVrV(void *fp)'
     end
 
+    after :all do
+      if Process.respond_to?(:fork)
+        GC.start
+        expect(ObjectSpace.each_object(Fiddle::Closure) {}).to eq(0)
+      end
+    end
+
     def assert_callback_in_same_thread_called_once
       called = 0
       thread = nil
@@ -928,7 +935,12 @@ module CallbackInteropSpecs
       it "C outside ffi call stack does not deadlock [#527]" do
         skip "not yet supported on TruffleRuby" if RUBY_ENGINE == "truffleruby"
 
-        out = external_run(RbConfig.ruby, "embed-test/embed-test.rb")
+        begin
+          out = external_run(RbConfig.ruby, "embed-test/embed-test.rb")
+        rescue => err
+          skip "missing ruby development headers" if /can't find header files for ruby/ =~ err.to_s
+          raise
+        end
         expect(out).to match(/callback called with \["hello", 5, 0\]/)
       end
     end

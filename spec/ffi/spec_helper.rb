@@ -7,9 +7,18 @@ require_relative 'fixtures/compile'
 require 'timeout'
 require 'objspace'
 
+if defined? Ractor
+  class Ractor
+    # compat with Ruby-3.4 and older
+    alias value take unless method_defined? :value
+  end
+end
+
 RSpec.configure do |c|
   c.filter_run_excluding gc_dependent: true unless ENV['FFI_TEST_GC'] == 'true'
-  c.filter_run_excluding( :ractor ) unless defined?(Ractor) && RUBY_VERSION >= "3.1"
+
+  # Ractor is only usable on ruby-3.1+, but it hangs on Windows on ruby-3.3+
+  c.filter_run_excluding( :ractor ) unless defined?(Ractor) && RUBY_VERSION >= "3.1" && (RUBY_VERSION !~ /^3.[34].|^4.[01]./ || RUBY_PLATFORM !~ /mingw|mswin/)
 end
 
 module TestLibrary
@@ -24,12 +33,7 @@ module TestLibrary
   end
 end
 
-module LibTest
-  extend FFI::Library
-  ffi_lib TestLibrary::PATH
-end
-
-def external_run(cmd, rb_file, options: [], timeout: 10)
+def external_run(cmd, rb_file, options: [], timeout: 60)
   path = File.join(File.dirname(__FILE__), rb_file)
   log = "#{path}.log"
   pid = spawn(cmd, "-Ilib", path, { [:out, :err] => log })
@@ -56,5 +60,16 @@ module OrderHelper
     OTHER_ORDER = :little
   else
     raise
+  end
+end
+
+if ENV['FFI_GC_STRESS'] == 'true'
+  RSpec.configure do |config|
+    config.before :each do
+      GC.stress=true
+    end
+    config.after :each do
+      GC.stress=false
+    end
   end
 end

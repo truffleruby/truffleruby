@@ -55,6 +55,7 @@
 #define HAVE_PWD_H 1
 #define HAVE_SANITIZER_ASAN_INTERFACE_H 1
 #define HAVE_SANITIZER_MSAN_INTERFACE_H 1
+#define HAVE_SANITIZER_TSAN_INTERFACE_H 1
 #define HAVE_STDALIGN_H 1
 #define HAVE_STDIO_H 1
 #define HAVE_SYS_ATTR_H 1
@@ -166,10 +167,10 @@
 #define WARNINGFUNC(mesg,x) __attribute__ ((__warning__ mesg)) x
 #define WEAK(x) __attribute__ ((__weak__)) x
 #define HAVE_FUNC_WEAK 1
-#define RUBY_CXX_DEPRECATED(msg) __attribute__((__deprecated__(msg)))
 #define HAVE_NULLPTR 1
 #define FUNC_CDECL(x) __attribute__ ((__cdecl__)) x
 #define HAVE_GCC_ATOMIC_BUILTINS 1
+#define HAVE_GCC_ATOMIC_BUILTINS_64 1
 #define HAVE_GCC_SYNC_BUILTINS 1
 #define HAVE___BUILTIN_UNREACHABLE 1
 #define RUBY_FUNC_EXPORTED __attribute__ ((__visibility__("default"))) extern
@@ -457,7 +458,7 @@
 #define RUBY_JMP_BUF jmp_buf
 #define USE_MODULAR_GC 0
 #define USE_YJIT 1
-#define USE_RJIT 1
+#define USE_ZJIT 1
 #define RUBY_PLATFORM "arm64-darwin23"
 #define RB_DEFAULT_PARSER RB_DEFAULT_PARSER_PRISM
 #endif /* INCLUDE_RUBY_CONFIG_H */

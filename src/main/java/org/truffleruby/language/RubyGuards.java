@@ -238,7 +238,7 @@ public abstract class RubyGuards {
     // Composite
 
     public static boolean isSingletonClass(Object value) {
-        return value instanceof RubyClass && ((RubyClass) value).isSingleton;
+        return value instanceof RubyClass rubyClass && rubyClass.isSingleton;
     }
 
     public static boolean isMetaClass(RubyModule value) {

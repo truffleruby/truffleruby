@@ -28,6 +28,7 @@ exclude :test_repeated_combination_with_callcc, "RuntimeError: Continuations are
 exclude :test_repeated_permutation_with_callcc, "RuntimeError: Continuations are unsupported on TruffleRuby"
 exclude :test_replace_wb_variable_width_alloc, "NoMethodError: undefined method `verify_internal_consistency' for module GC"
 exclude :test_reverse_each2, "<[5, 3, 1]> expected but was <[5, nil, nil, nil, nil, nil]>."
+exclude :test_rfind, "Test::Unit::ProxyError: undefined method 'rfind' for an instance of Array"
 exclude :test_sample_random_generator, "<[]> expected but was <[nil]>."
 exclude :test_sample_random_invalid_generator, "NoMethodError expected but nothing was raised."
 exclude :test_shrink_shared_array, "hangs"

@@ -34,15 +34,14 @@ if str
   str = str.b[/\A_(.*)_\z/, 1]
   if str and Gem::Version.correct?(str)
     version = str
-    ENV['BUNDLER_VERSION'] = str
+ENV['BUNDLER_VERSION'] = str
 
     ARGV.shift
   end
 end
 
-if Gem.respond_to?(:activate_bin_path)
-load Gem.activate_bin_path('bundler', 'bundler', version)
+if Gem.respond_to?(:activate_and_load_bin_path)
+  Gem.activate_and_load_bin_path('bundler', 'bundler', version)
 else
-gem "bundler", version
-load Gem.bin_path("bundler", "bundler", version)
+  load Gem.activate_bin_path('bundler', 'bundler', version)
 end

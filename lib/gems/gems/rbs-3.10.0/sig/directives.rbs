@@ -1,0 +1,77 @@
+module RBS
+  module AST
+    module Directives
+      type t = Use | ResolveTypeNames
+
+      class Base
+      end
+
+      # ```
+      # use Foo, Foo::Bar as FBar, Foo:Baz::*
+      # ```
+      #
+      class Use < Base
+        type clause = SingleClause | WildcardClause
+
+        class SingleClause
+          # Foo::Bar
+          # ^^^^^^^^       type_name
+          #
+          # Foo::Bar as X
+          #          ^^    keyword
+          #             ^  new_name
+          #
+          type loc = Location[:type_name, :keyword | :new_name]
+
+          attr_reader type_name: TypeName
+
+          attr_reader new_name: Symbol?
+
+          attr_reader location: loc?
+
+          def initialize: (type_name: TypeName, new_name: Symbol?, location: loc?) -> void
+        end
+
+        class WildcardClause
+          # Foo::Bar::*
+          # ^^^^^^^^^^    namespace
+          #           ^   star
+          #
+          type loc = Location[:namespace | :star, bot]
+
+          attr_reader namespace: Namespace
+
+          attr_reader location: loc?
+
+          def initialize: (namespace: Namespace, location: loc?) -> void
+        end
+
+        # use Foo
+        # ^^^       keyword
+        type loc = Location[:keyword, bot]
+
+        attr_reader clauses: Array[clause]
+
+        attr_reader location: loc?
+
+        def initialize: (clauses: Array[clause], location: loc?) -> void
+      end
+
+      class ResolveTypeNames < Base
+        # ```
+        # # resolve-type-names: false
+        #   ^^^^^^^^^^^^^^^^^^          keyword
+        #                     ^         colon
+        #                       ^^^^^   value
+        # ```
+        type loc = Location[:keyword | :colon | :value, bot]
+
+        attr_reader location: loc?
+
+        attr_reader value: bool
+
+        def initialize: (value: bool, location: loc?) -> void
+      end
+    end
+  end
+end

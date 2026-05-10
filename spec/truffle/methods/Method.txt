@@ -4,6 +4,7 @@
 >>
 []
 arity
+box
 call
 clone
 curry

@@ -1,0 +1,2158 @@
+# <!-- rdoc-file=hash.c -->
+# A Hash object maps each of its unique keys to a specific value.
+#
+# A hash has certain similarities to an Array, but:
+#
+# *   An array index is always an integer.
+# *   A hash key can be (almost) any object.
+#
+# ### Hash Data Syntax
+#
+# The original syntax for a hash entry uses the "hash rocket," `=>`:
+#
+#     h = {:foo => 0, :bar => 1, :baz => 2}
+#     h # => {foo: 0, bar: 1, baz: 2}
+#
+# Alternatively, but only for a key that's a symbol, you can use a newer
+# JSON-style syntax, where each bareword becomes a symbol:
+#
+#     h = {foo: 0, bar: 1, baz: 2}
+#     h # => {foo: 0, bar: 1, baz: 2}
+#
+# You can also use a string in place of a bareword:
+#
+#     h = {'foo': 0, 'bar': 1, 'baz': 2}
+#     h # => {foo: 0, bar: 1, baz: 2}
+#
+# And you can mix the styles:
+#
+#     h = {foo: 0, :bar => 1, 'baz': 2}
+#     h # => {foo: 0, bar: 1, baz: 2}
+#
+# But it's an error to try the JSON-style syntax for a key that's not a bareword
+# or a string:
+#
+#     # Raises SyntaxError (syntax error, unexpected ':', expecting =>):
+#     h = {0: 'zero'}
+#
+# The value can be omitted, meaning that value will be fetched from the context
+# by the name of the key:
+#
+#     x = 0
+#     y = 100
+#     h = {x:, y:}
+#     h # => {x: 0, y: 100}
+#
+# ### Common Uses
+#
+# You can use a hash to give names to objects:
+#
+#     person = {name: 'Matz', language: 'Ruby'}
+#     person # => {name: "Matz", language: "Ruby"}
+#
+# You can use a hash to give names to method arguments:
+#
+#     def some_method(hash)
+#       p hash
+#     end
+#     some_method({foo: 0, bar: 1, baz: 2}) # => {foo: 0, bar: 1, baz: 2}
+#
+# Note: when the last argument in a method call is a hash, the curly braces may
+# be omitted:
+#
+#     some_method(foo: 0, bar: 1, baz: 2) # => {foo: 0, bar: 1, baz: 2}
+#
+# You can use a hash to initialize an object:
+#
+#     class Dev
+#       attr_accessor :name, :language
+#       def initialize(hash)
+#         self.name = hash[:name]
+#         self.language = hash[:language]
+#       end
+#     end
+#     matz = Dev.new(name: 'Matz', language: 'Ruby')
+#     matz # => #<Dev: @name="Matz", @language="Ruby">
+#
+# ### Creating a Hash
+#
+# You can create a Hash object explicitly with:
+#
+# *   A [hash literal](rdoc-ref:syntax/literals.rdoc@Hash+Literals).
+#
+# You can convert certain objects to hashes with:
+#
+# *   Method Kernel#Hash.
+#
+# You can create a hash by calling method Hash.new:
+#
+#     # Create an empty hash.
+#     h = Hash.new
+#     h # => {}
+#     h.class # => Hash
+#
+# You can create a hash by calling method Hash.[]:
+#
+#     # Create an empty hash.
+#     h = Hash[]
+#     h # => {}
+#     # Create a hash with initial entries.
+#     h = Hash[foo: 0, bar: 1, baz: 2]
+#     h # => {foo: 0, bar: 1, baz: 2}
+#
+# You can create a hash by using its literal form (curly braces):
+#
+#     # Create an empty hash.
+#     h = {}
+#     h # => {}
+#     # Create a +Hash+ with initial entries.
+#     h = {foo: 0, bar: 1, baz: 2}
+#     h # => {foo: 0, bar: 1, baz: 2}
+#
+# ### Hash Value Basics
+#
+# The simplest way to retrieve a hash value (instance method #[]):
+#
+#     h = {foo: 0, bar: 1, baz: 2}
+#     h[:foo] # => 0
+#
+# The simplest way to create or update a hash value (instance method #[]=):
+#
+#     h = {foo: 0, bar: 1, baz: 2}
+#     h[:bat] = 3 # => 3
+#     h # => {foo: 0, bar: 1, baz: 2, bat: 3}
+#     h[:foo] = 4 # => 4
+#     h # => {foo: 4, bar: 1, baz: 2, bat: 3}
+#
+# The simplest way to delete a hash entry (instance method #delete):
+#
+#     h = {foo: 0, bar: 1, baz: 2}
+#     h.delete(:bar) # => 1
+#     h # => {foo: 0, baz: 2}
+#
+# ### Entry Order
+#
+# A Hash object presents its entries in the order of their creation. This is
+# seen in:
+#
+# *   Iterative methods such as `each`, `each_key`, `each_pair`, `each_value`.
+# *   Other order-sensitive methods such as `shift`, `keys`, `values`.
+# *   The string returned by method `inspect`.
+#
+# A new hash has its initial ordering per the given entries:
+#
+#     h = Hash[foo: 0, bar: 1]
+#     h # => {foo: 0, bar: 1}
+#
+# New entries are added at the end:
+#
+#     h[:baz] = 2
+#     h # => {foo: 0, bar: 1, baz: 2}
+#
+# Updating a value does not affect the order:
+#
+#     h[:baz] = 3
+#     h # => {foo: 0, bar: 1, baz: 3}
+#
+# But re-creating a deleted entry can affect the order:
+#
+#     h.delete(:foo)
+#     h[:foo] = 5
+#     h # => {bar: 1, baz: 3, foo: 5}
+#
+# ### `Hash` Keys
+#
+# #### `Hash` Key Equivalence
+#
+# Two objects are treated as the same hash key when their `hash` value is
+# identical and the two objects are `eql?` to each other.
+#
+# #### Modifying an Active `Hash` Key
+#
+# Modifying a `Hash` key while it is in use damages the hash's index.
+#
+# This `Hash` has keys that are Arrays:
+#
+#     a0 = [ :foo, :bar ]
+#     a1 = [ :baz, :bat ]
+#     h = {a0 => 0, a1 => 1}
+#     h.include?(a0) # => true
+#     h[a0] # => 0
+#     a0.hash # => 110002110
+#
+# Modifying array element `a0[0]` changes its hash value:
+#
+#     a0[0] = :bam
+#     a0.hash # => 1069447059
+#
+# And damages the `Hash` index:
+#
+#     h.include?(a0) # => false
+#     h[a0] # => nil
+#
+# You can repair the hash index using method `rehash`:
+#
+#     h.rehash # => {[:bam, :bar]=>0, [:baz, :bat]=>1}
+#     h.include?(a0) # => true
+#     h[a0] # => 0
+#
+# A String key is always safe. That's because an unfrozen String passed as a key
+# will be replaced by a duplicated and frozen String:
+#
+#     s = 'foo'
+#     s.frozen? # => false
+#     h = {s => 0}
+#     first_key = h.keys.first
+#     first_key.frozen? # => true
+#
+# #### User-Defined `Hash` Keys
+#
+# To be usable as a `Hash` key, objects must implement the methods `hash` and
+# `eql?`. Note: this requirement does not apply if the `Hash` uses
+# #compare_by_identity since comparison will then rely on the keys' object id
+# instead of `hash` and `eql?`.
+#
+# Object defines basic implementation for `hash` and `eq?` that makes each
+# object a distinct key. Typically, user-defined classes will want to override
+# these methods to provide meaningful behavior, or for example inherit Struct
+# that has useful definitions for these.
+#
+# A typical implementation of `hash` is based on the object's data while `eql?`
+# is usually aliased to the overridden `==` method:
+#
+#     class Book
+#       attr_reader :author, :title
+#
+#       def initialize(author, title)
+#         @author = author
+#         @title = title
+#       end
+#
+#       def ==(other)
+#         self.class === other &&
+#           other.author == @author &&
+#           other.title == @title
+#       end
+#
+#       alias eql? ==
+#
+#       def hash
+#         [self.class, @author, @title].hash
+#       end
+#     end
+#
+#     book1 = Book.new 'matz', 'Ruby in a Nutshell'
+#     book2 = Book.new 'matz', 'Ruby in a Nutshell'
+#
+#     reviews = {}
+#
+#     reviews[book1] = 'Great reference!'
+#     reviews[book2] = 'Nice and compact!'
+#
+#     reviews.length #=> 1
+#
+# ### Key Not Found?
+#
+# When a method tries to retrieve and return the value for a key and that key
+# *is found*, the returned value is the value associated with the key.
+#
+# But what if the key *is not found*? In that case, certain methods will return
+# a default value while other will raise a KeyError.
+#
+# #### Nil Return Value
+#
+# If you want `nil` returned for a not-found key, you can call:
+#
+# *   #[](key) (usually written as `#[key]`.
+# *   #assoc(key).
+# *   #dig(key, *identifiers).
+# *   #values_at(*keys).
+#
+# You can override these behaviors for #[], #dig, and #values_at (but not
+# #assoc); see [Hash Default](rdoc-ref:Hash@Hash+Default).
+#
+# #### KeyError
+#
+# If you want KeyError raised for a not-found key, you can call:
+#
+# *   #fetch(key).
+# *   #fetch_values(*keys).
+#
+# #### Hash Default
+#
+# For certain methods (#[], #dig, and #values_at), the return value for a
+# not-found key is determined by two hash properties:
+#
+# *   *default value*: returned by method #default.
+# *   *default proc*: returned by method #default_proc.
+#
+# In the simple case, both values are `nil`, and the methods return `nil` for a
+# not-found key; see [Nil Return Value](rdoc-ref:Hash@Nil+Return+Value) above.
+#
+# Note that this entire section ("Hash Default"):
+#
+# *   Applies *only* to methods #[], #dig, and #values_at.
+# *   Does *not* apply to methods #assoc, #fetch, or #fetch_values, which are
+#     not affected by the default value or default proc.
+#
+# ##### Any-Key Default
+#
+# You can define an any-key default for a hash; that is, a value that will be
+# returned for *any* not-found key:
+#
+# *   The value of #default_proc *must be* `nil`.
+# *   The value of #default (which may be any object, including `nil`) will be
+#     returned for a not-found key.
+#
+# You can set the default value when the hash is created with Hash.new and
+# option `default_value`, or later with method #default=.
+#
+# Note: although the value of #default may be any object, it may not be a good
+# idea to use a mutable object.
+#
+# ##### Per-Key Defaults
+#
+# You can define a per-key default for a hash; that is, a Proc that will return
+# a value based on the key itself.
+#
+# You can set the default proc when the hash is created with Hash.new and a
+# block, or later with method #default_proc=.
+#
+# Note that the proc can modify `self`, but modifying `self` in this way is not
+# thread-safe; multiple threads can concurrently call into the default proc for
+# the same key.
+#
+# #### Method Default
+#
+# For two methods, you can specify a default value for a not-found key that has
+# effect only for a single method call (and not for any subsequent calls):
+#
+# *   For method #fetch, you can specify an any-key default:
+# *   For either method #fetch or method #fetch_values, you can specify a
+#     per-key default via a block.
+#
+# ### What's Here
+#
+# First, what's elsewhere. Class `Hash`:
+#
+# *   Inherits from [class Object](rdoc-ref:Object@What-27s+Here).
+# *   Includes [module Enumerable](rdoc-ref:Enumerable@What-27s+Here), which
+#     provides dozens of additional methods.
+#
+# Here, class `Hash` provides methods that are useful for:
+#
+# *   [Creating a Hash](rdoc-ref:Hash@Methods+for+Creating+a+Hash)
+# *   [Setting Hash State](rdoc-ref:Hash@Methods+for+Setting+Hash+State)
+# *   [Querying](rdoc-ref:Hash@Methods+for+Querying)
+# *   [Comparing](rdoc-ref:Hash@Methods+for+Comparing)
+# *   [Fetching](rdoc-ref:Hash@Methods+for+Fetching)
+# *   [Assigning](rdoc-ref:Hash@Methods+for+Assigning)
+# *   [Deleting](rdoc-ref:Hash@Methods+for+Deleting)
+# *   [Iterating](rdoc-ref:Hash@Methods+for+Iterating)
+# *   [Converting](rdoc-ref:Hash@Methods+for+Converting)
+# *   [Transforming Keys and
+#     Values](rdoc-ref:Hash@Methods+for+Transforming+Keys+and+Values)
+#
+# Class `Hash` also includes methods from module Enumerable.
+#
+# #### Methods for Creating a `Hash`
+#
+# *   ::[]: Returns a new hash populated with given objects.
+# *   ::new: Returns a new empty hash.
+# *   ::try_convert: Returns a new hash created from a given object.
+#
+# #### Methods for Setting `Hash` State
+#
+# *   #compare_by_identity: Sets `self` to consider only identity in comparing
+#     keys.
+# *   #default=: Sets the default to a given value.
+# *   #default_proc=: Sets the default proc to a given proc.
+# *   #rehash: Rebuilds the hash table by recomputing the hash index for each
+#     key.
+#
+# #### Methods for Querying
+#
+# *   #any?: Returns whether any element satisfies a given criterion.
+# *   #compare_by_identity?: Returns whether the hash considers only identity
+#     when comparing keys.
+# *   #default: Returns the default value, or the default value for a given key.
+# *   #default_proc: Returns the default proc.
+# *   #empty?: Returns whether there are no entries.
+# *   #eql?: Returns whether a given object is equal to `self`.
+# *   #hash: Returns the integer hash code.
+# *   #has_value? (aliased as #value?): Returns whether a given object is a
+#     value in `self`.
+# *   #include? (aliased as #has_key?, #member?, #key?): Returns whether a given
+#     object is a key in `self`.
+# *   #size (aliased as #length): Returns the count of entries.
+#
+# #### Methods for Comparing
+#
+# *   #<: Returns whether `self` is a proper subset of a given object.
+# *   #<=: Returns whether `self` is a subset of a given object.
+# *   #==: Returns whether a given object is equal to `self`.
+# *   #>: Returns whether `self` is a proper superset of a given object
+# *   #>=: Returns whether `self` is a superset of a given object.
+#
+# #### Methods for Fetching
+#
+# *   #[]: Returns the value associated with a given key.
+# *   #assoc: Returns a 2-element array containing a given key and its value.
+# *   #dig: Returns the object in nested objects that is specified by a given
+#     key and additional arguments.
+# *   #fetch: Returns the value for a given key.
+# *   #fetch_values: Returns array containing the values associated with given
+#     keys.
+# *   #key: Returns the key for the first-found entry with a given value.
+# *   #keys: Returns an array containing all keys in `self`.
+# *   #rassoc: Returns a 2-element array consisting of the key and value of the
+#     first-found entry having a given value.
+# *   #values: Returns an array containing all values in `self`.
+# *   #values_at: Returns an array containing values for given keys.
+#
+# #### Methods for Assigning
+#
+# *   #[]= (aliased as #store): Associates a given key with a given value.
+# *   #merge: Returns the hash formed by merging each given hash into a copy of
+#     `self`.
+# *   #update (aliased as #merge!): Merges each given hash into `self`.
+# *   #replace (aliased as #initialize_copy): Replaces the entire contents of
+#     `self` with the contents of a given hash.
+#
+# #### Methods for Deleting
+#
+# These methods remove entries from `self`:
+#
+# *   #clear: Removes all entries from `self`.
+# *   #compact!: Removes all `nil`-valued entries from `self`.
+# *   #delete: Removes the entry for a given key.
+# *   #delete_if: Removes entries selected by a given block.
+# *   #select! (aliased as #filter!): Keep only those entries selected by a
+#     given block.
+# *   #keep_if: Keep only those entries selected by a given block.
+# *   #reject!: Removes entries selected by a given block.
+# *   #shift: Removes and returns the first entry.
+#
+# These methods return a copy of `self` with some entries removed:
+#
+# *   #compact: Returns a copy of `self` with all `nil`-valued entries removed.
+# *   #except: Returns a copy of `self` with entries removed for specified keys.
+# *   #select (aliased as #filter): Returns a copy of `self` with only those
+#     entries selected by a given block.
+# *   #reject: Returns a copy of `self` with entries removed as specified by a
+#     given block.
+# *   #slice: Returns a hash containing the entries for given keys.
+#
+# #### Methods for Iterating
+# *   #each_pair (aliased as #each): Calls a given block with each key-value
+#     pair.
+# *   #each_key: Calls a given block with each key.
+# *   #each_value: Calls a given block with each value.
+#
+# #### Methods for Converting
+#
+# *   #flatten: Returns an array that is a 1-dimensional flattening of `self`.
+# *   #inspect (aliased as #to_s): Returns a new String containing the hash
+#     entries.
+# *   #to_a: Returns a new array of 2-element arrays; each nested array contains
+#     a key-value pair from `self`.
+# *   #to_h: Returns `self` if a `Hash`; if a subclass of `Hash`, returns a
+#     `Hash` containing the entries from `self`.
+# *   #to_hash: Returns `self`.
+# *   #to_proc: Returns a proc that maps a given key to its value.
+#
+# #### Methods for Transforming Keys and Values
+#
+# *   #invert: Returns a hash with the each key-value pair inverted.
+# *   #transform_keys: Returns a copy of `self` with modified keys.
+# *   #transform_keys!: Modifies keys in `self`
+# *   #transform_values: Returns a copy of `self` with modified values.
+# *   #transform_values!: Modifies values in `self`.
+#
+class Hash[unchecked out K, unchecked out V] < Object
+  include Enumerable[[ K, V ]]
+
+  interface _Key
+    def hash: () -> Integer
+
+    def eql?: (untyped rhs) -> boolish
+  end
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - Hash[] -> new_empty_hash
+  #   - Hash[other_hash] -> new_hash
+  #   - Hash[ [*2_element_arrays] ] -> new_hash
+  #   - Hash[*objects] -> new_hash
+  # -->
+  # Returns a new Hash object populated with the given objects, if any. See
+  # Hash::new.
+  #
+  # With no argument given, returns a new empty hash.
+  #
+  # With a single argument `other_hash` given that is a hash, returns a new hash
+  # initialized with the entries from that hash (but not with its `default` or
+  # `default_proc`):
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     Hash[h] # => {foo: 0, bar: 1, baz: 2}
+  #
+  # With a single argument `2_element_arrays` given that is an array of 2-element
+  # arrays, returns a new hash wherein each given 2-element array forms a
+  # key-value entry:
+  #
+  #     Hash[ [ [:foo, 0], [:bar, 1] ] ] # => {foo: 0, bar: 1}
+  #
+  # With an even number of arguments `objects` given, returns a new hash wherein
+  # each successive pair of arguments is a key-value entry:
+  #
+  #     Hash[:foo, 0, :bar, 1] # => {foo: 0, bar: 1}
+  #
+  # Raises ArgumentError if the argument list does not conform to any of the
+  # above.
+  #
+  # See also [Methods for Creating a
+  # Hash](rdoc-ref:Hash@Methods+for+Creating+a+Hash).
+  #
+  def self.[]: [U, V] (_ToHash[U, V]) -> ::Hash[U, V]
+             | [U, V] (Array[[ U, V ]]) -> ::Hash[U, V]
+             | (*untyped) -> ::Hash[untyped, untyped]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - Hash.try_convert(object) -> object, new_hash, or nil
+  # -->
+  # If `object` is a hash, returns `object`.
+  #
+  # Otherwise if `object` responds to `:to_hash`, calls `object.to_hash`; returns
+  # the result if it is a hash, or raises TypeError if not.
+  #
+  # Otherwise if `object` does not respond to `:to_hash`, returns `nil`.
+  #
+  def self.try_convert: [U, V] (_ToHash[U, V]) -> ::Hash[U, V]
+                      | (untyped) -> (::Hash[untyped, untyped] | nil)
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - self < other_hash -> true or false
+  # -->
+  # Returns `true` if the entries of `self` are a proper subset of the entries of
+  # `other_hash`, `false` otherwise:
+  #
+  #     h = {foo: 0, bar: 1}
+  #     h < {foo: 0, bar: 1, baz: 2} # => true   # Proper subset.
+  #     h < {baz: 2, bar: 1, foo: 0} # => true   # Order may differ.
+  #     h < h                        # => false  # Not a proper subset.
+  #     h < {bar: 1, foo: 0}         # => false  # Not a proper subset.
+  #     h < {foo: 0, bar: 1, baz: 2} # => false  # Different key.
+  #     h < {foo: 0, bar: 1, baz: 2} # => false  # Different value.
+  #
+  # See [Hash Inclusion](rdoc-ref:language/hash_inclusion.rdoc).
+  #
+  # Raises TypeError if `other_hash` is not a hash and cannot be converted to a
+  # hash.
+  #
+  # Related: see [Methods for Comparing](rdoc-ref:Hash@Methods+for+Comparing).
+  #
+  def <: [A, B] (::Hash[A, B]) -> bool
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - self <= other_hash -> true or false
+  # -->
+  # Returns `true` if the entries of `self` are a subset of the entries of
+  # `other_hash`, `false` otherwise:
+  #
+  #     h0 = {foo: 0, bar: 1}
+  #     h1 = {foo: 0, bar: 1, baz: 2}
+  #     h0 <= h0 # => true
+  #     h0 <= h1 # => true
+  #     h1 <= h0 # => false
+  #
+  # See [Hash Inclusion](rdoc-ref:language/hash_inclusion.rdoc).
+  #
+  # Raises TypeError if `other_hash` is not a hash and cannot be converted to a
+  # hash.
+  #
+  # Related: see [Methods for Comparing](rdoc-ref:Hash@Methods+for+Comparing).
+  #
+  def <=: [A, B] (::Hash[A, B]) -> bool
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - self == object -> true or false
+  # -->
+  # Returns whether `self` and `object` are equal.
+  #
+  # Returns `true` if all of the following are true:
+  #
+  # *   `object` is a `Hash` object (or can be converted to one).
+  # *   `self` and `object` have the same keys (regardless of order).
+  # *   For each key `key`, `self[key] == object[key]`.
+  #
+  # Otherwise, returns `false`.
+  #
+  # Examples:
+  #
+  #     h =  {foo: 0, bar: 1}
+  #     h == {foo: 0, bar: 1} # => true   # Equal entries (same order)
+  #     h == {bar: 1, foo: 0} # => true   # Equal entries (different order).
+  #     h == 1                            # => false  # Object not a hash.
+  #     h == {}                           # => false  # Different number of entries.
+  #     h == {foo: 0, bar: 1} # => false  # Different key.
+  #     h == {foo: 0, bar: 1} # => false  # Different value.
+  #
+  # Related: see [Methods for Comparing](rdoc-ref:Hash@Methods+for+Comparing).
+  #
+  def ==: (untyped other) -> bool
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - self > other_hash -> true or false
+  # -->
+  # Returns `true` if the entries of `self` are a proper superset of the entries
+  # of `other_hash`, `false` otherwise:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h > {foo: 0, bar: 1}         # => true   # Proper superset.
+  #     h > {bar: 1, foo: 0}         # => true   # Order may differ.
+  #     h > h                        # => false  # Not a proper superset.
+  #     h > {baz: 2, bar: 1, foo: 0} # => false  # Not a proper superset.
+  #     h > {foo: 0, bar: 1}         # => false  # Different key.
+  #     h > {foo: 0, bar: 1}         # => false  # Different value.
+  #
+  # See [Hash Inclusion](rdoc-ref:language/hash_inclusion.rdoc).
+  #
+  # Raises TypeError if `other_hash` is not a hash and cannot be converted to a
+  # hash.
+  #
+  # Related: see [Methods for Comparing](rdoc-ref:Hash@Methods+for+Comparing).
+  #
+  def >: [A, B] (::Hash[A, B]) -> bool
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - self >= other_hash -> true or false
+  # -->
+  # Returns `true` if the entries of `self` are a superset of the entries of
+  # `other_hash`, `false` otherwise:
+  #
+  #     h0 = {foo: 0, bar: 1, baz: 2}
+  #     h1 = {foo: 0, bar: 1}
+  #     h0 >= h1 # => true
+  #     h0 >= h0 # => true
+  #     h1 >= h0 # => false
+  #
+  # See [Hash Inclusion](rdoc-ref:language/hash_inclusion.rdoc).
+  #
+  # Raises TypeError if `other_hash` is not a hash and cannot be converted to a
+  # hash.
+  #
+  # Related: see [Methods for Comparing](rdoc-ref:Hash@Methods+for+Comparing).
+  #
+  def >=: [A, B] (::Hash[A, B]) -> bool
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - self[key] -> object
+  # -->
+  # Searches for a hash key equivalent to the given `key`; see [Hash Key
+  # Equivalence](rdoc-ref:Hash@Hash+Key+Equivalence).
+  #
+  # If the key is found, returns its value:
+  #
+  #     {foo: 0, bar: 1, baz: 2}
+  #     h[:bar] # => 1
+  #
+  # Otherwise, returns a default value (see [Hash
+  # Default](rdoc-ref:Hash@Hash+Default)).
+  #
+  # Related: #[]=; see also [Methods for
+  # Fetching](rdoc-ref:Hash@Methods+for+Fetching).
+  #
+  def []: %a{implicitly-returns-nil} (K arg0) -> V
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - self[key] = object -> object
+  # -->
+  # Associates the given `object` with the given `key`; returns `object`.
+  #
+  # Searches for a hash key equivalent to the given `key`; see [Hash Key
+  # Equivalence](rdoc-ref:Hash@Hash+Key+Equivalence).
+  #
+  # If the key is found, replaces its value with the given `object`; the ordering
+  # is not affected (see [Entry Order](rdoc-ref:Hash@Entry+Order)):
+  #
+  #     h = {foo: 0, bar: 1}
+  #     h[:foo] = 2 # => 2
+  #     h[:foo]     # => 2
+  #
+  # If `key` is not found, creates a new entry for the given `key` and `object`;
+  # the new entry is last in the order (see [Entry
+  # Order](rdoc-ref:Hash@Entry+Order)):
+  #
+  #     h = {foo: 0, bar: 1}
+  #     h[:baz] = 2 # => 2
+  #     h[:baz]     # => 2
+  #     h           # => {:foo=>0, :bar=>1, :baz=>2}
+  #
+  # Related: #[]; see also [Methods for
+  # Assigning](rdoc-ref:Hash@Methods+for+Assigning).
+  #
+  def []=: (K arg0, V arg1) -> V
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - any? -> true or false
+  #   - any?(entry) -> true or false
+  #   - any? {|key, value| ... } -> true or false
+  # -->
+  # Returns `true` if any element satisfies a given criterion; `false` otherwise.
+  #
+  # If `self` has no element, returns `false` and argument or block are not used;
+  # otherwise behaves as below.
+  #
+  # With no argument and no block, returns `true` if `self` is non-empty, `false`
+  # otherwise.
+  #
+  # With argument `entry` and no block, returns `true` if for any key `key`
+  # `self.assoc(key) == entry`, `false` otherwise:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.assoc(:bar)     # => [:bar, 1]
+  #     h.any?([:bar, 1]) # => true
+  #     h.any?([:bar, 0]) # => false
+  #
+  # With no argument and a block given, calls the block with each key-value pair;
+  # returns `true` if the block returns a truthy value, `false` otherwise:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.any? {|key, value| value < 3 } # => true
+  #     h.any? {|key, value| value > 3 } # => false
+  #
+  # With both argument `entry` and a block given, issues a warning and ignores the
+  # block.
+  #
+  # Related: Enumerable#any? (which this method overrides); see also [Methods for
+  # Fetching](rdoc-ref:Hash@Methods+for+Fetching).
+  #
+  def any?: () -> bool
+          | (untyped pattern) -> bool
+          | () { (K, V) -> boolish } -> bool
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - assoc(key) -> entry or nil
+  # -->
+  # If the given `key` is found, returns its entry as a 2-element array containing
+  # that key and its value:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.assoc(:bar) # => [:bar, 1]
+  #
+  # Returns `nil` if the key is not found.
+  #
+  # Related: see [Methods for Fetching](rdoc-ref:Hash@Methods+for+Fetching).
+  #
+  def assoc: (K arg0) -> [ K, V ]?
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - clear -> self
+  # -->
+  # Removes all entries from `self`; returns emptied `self`.
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  def clear: () -> self
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - compact -> new_hash
+  # -->
+  # Returns a copy of `self` with all `nil`-valued entries removed:
+  #
+  #     h = {foo: 0, bar: nil, baz: 2, bat: nil}
+  #     h.compact # => {foo: 0, baz: 2}
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  def compact: () -> ::Hash[K, V]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - compact! -> self or nil
+  # -->
+  # If `self` contains any `nil`-valued entries, returns `self` with all
+  # `nil`-valued entries removed; returns `nil` otherwise:
+  #
+  #     h = {foo: 0, bar: nil, baz: 2, bat: nil}
+  #     h.compact!
+  #     h          # => {foo: 0, baz: 2}
+  #     h.compact! # => nil
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  def compact!: () -> self?
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - compare_by_identity -> self
+  # -->
+  # Sets `self` to compare keys using *identity* (rather than mere *equality*);
+  # returns `self`:
+  #
+  # By default, two keys are considered to be the same key if and only if they are
+  # *equal* objects (per method #eql?):
+  #
+  #     h = {}
+  #     h['x'] = 0
+  #     h['x'] = 1 # Overwrites.
+  #     h # => {"x"=>1}
+  #
+  # When this method has been called, two keys are considered to be the same key
+  # if and only if they are the *same* object:
+  #
+  #     h.compare_by_identity
+  #     h['x'] = 2 # Does not overwrite.
+  #     h # => {"x"=>1, "x"=>2}
+  #
+  # Related: #compare_by_identity?; see also [Methods for
+  # Comparing](rdoc-ref:Hash@Methods+for+Comparing).
+  #
+  def compare_by_identity: () -> self
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - compare_by_identity? -> true or false
+  # -->
+  # Returns whether #compare_by_identity has been called:
+  #
+  #     h = {}
+  #     h.compare_by_identity? # => false
+  #     h.compare_by_identity
+  #     h.compare_by_identity? # => true
+  #
+  # Related: #compare_by_identity; see also [Methods for
+  # Comparing](rdoc-ref:Hash@Methods+for+Comparing).
+  #
+  def compare_by_identity?: () -> bool
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - deconstruct_keys(p1)
+  # -->
+  #
+  def deconstruct_keys: (Array[K] | nil) -> self
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - default -> object
+  #   - default(key) -> object
+  # -->
+  # Returns the default value for the given `key`. The returned value will be
+  # determined either by the default proc or by the default value. See [Hash
+  # Default](rdoc-ref:Hash@Hash+Default).
+  #
+  # With no argument, returns the current default value:
+  #     h = {}
+  #     h.default # => nil
+  #
+  # If `key` is given, returns the default value for `key`, regardless of whether
+  # that key exists:
+  #     h = Hash.new { |hash, key| hash[key] = "No key #{key}"}
+  #     h[:foo] = "Hello"
+  #     h.default(:foo) # => "No key foo"
+  #
+  def default: (?K arg0) -> V?
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - default = value -> object
+  # -->
+  # Sets the default value to `value`; returns `value`:
+  #     h = {}
+  #     h.default # => nil
+  #     h.default = false # => false
+  #     h.default # => false
+  #
+  # See [Hash Default](rdoc-ref:Hash@Hash+Default).
+  #
+  def default=: (V arg0) -> V
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - default_proc -> proc or nil
+  # -->
+  # Returns the default proc for `self` (see [Hash
+  # Default](rdoc-ref:Hash@Hash+Default)):
+  #     h = {}
+  #     h.default_proc # => nil
+  #     h.default_proc = proc {|hash, key| "Default value for #{key}" }
+  #     h.default_proc.class # => Proc
+  #
+  def default_proc: () -> (Proc | nil)
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - default_proc = proc -> proc
+  # -->
+  # Sets the default proc for `self` to `proc` (see [Hash
+  # Default](rdoc-ref:Hash@Hash+Default)):
+  #     h = {}
+  #     h.default_proc # => nil
+  #     h.default_proc = proc { |hash, key| "Default value for #{key}" }
+  #     h.default_proc.class # => Proc
+  #     h.default_proc = nil
+  #     h.default_proc # => nil
+  #
+  def default_proc=: (Proc | _ToProc | nil) -> (Proc | _ToProc | nil)
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - delete(key) -> value or nil
+  #   - delete(key) {|key| ... } -> object
+  # -->
+  # If an entry for the given `key` is found, deletes the entry and returns its
+  # associated value; otherwise returns `nil` or calls the given block.
+  #
+  # With no block given and `key` found, deletes the entry and returns its value:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.delete(:bar) # => 1
+  #     h # => {foo: 0, baz: 2}
+  #
+  # With no block given and `key` not found, returns `nil`.
+  #
+  # With a block given and `key` found, ignores the block, deletes the entry, and
+  # returns its value:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.delete(:baz) { |key| raise 'Will never happen'} # => 2
+  #     h # => {foo: 0, bar: 1}
+  #
+  # With a block given and `key` not found, calls the block and returns the
+  # block's return value:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.delete(:nosuch) { |key| "Key #{key} not found" } # => "Key nosuch not found"
+  #     h # => {foo: 0, bar: 1, baz: 2}
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  def delete: (K arg0) -> V?
+            | [U] (K arg0) { (K arg0) -> U } -> (U | V)
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - delete_if {|key, value| ... } -> self
+  #   - delete_if -> new_enumerator
+  # -->
+  # With a block given, calls the block with each key-value pair, deletes each
+  # entry for which the block returns a truthy value, and returns `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.delete_if {|key, value| value > 0 } # => {foo: 0}
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  def delete_if: () { (K, V) -> boolish } -> self
+               | () -> ::Enumerator[[ K, V ], self]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - dig(key, *identifiers) -> object
+  # -->
+  # Finds and returns an object found in nested objects, as specified by `key` and
+  # `identifiers`.
+  #
+  # The nested objects may be instances of various classes. See [Dig
+  # Methods](rdoc-ref:dig_methods.rdoc).
+  #
+  # Nested hashes:
+  #
+  #     h = {foo: {bar: {baz: 2}}}
+  #     h.dig(:foo) # => {bar: {baz: 2}}
+  #     h.dig(:foo, :bar) # => {baz: 2}
+  #     h.dig(:foo, :bar, :baz) # => 2
+  #     h.dig(:foo, :bar, :BAZ) # => nil
+  #
+  # Nested hashes and arrays:
+  #
+  #     h = {foo: {bar: [:a, :b, :c]}}
+  #     h.dig(:foo, :bar, 2) # => :c
+  #
+  # If no such object is found, returns the [hash
+  # default](rdoc-ref:Hash@Hash+Default):
+  #
+  #     h = {foo: {bar: [:a, :b, :c]}}
+  #     h.dig(:hello) # => nil
+  #     h.default_proc = -> (hash, _key) { hash }
+  #     h.dig(:hello, :world)
+  #     # => {:foo=>{:bar=>[:a, :b, :c]}}
+  #
+  # Related: [Methods for Fetching](rdoc-ref:Hash@Methods+for+Fetching).
+  #
+  def dig: (K, *untyped) -> untyped
+
+  # <!-- rdoc-file=hash.c -->
+  # With a block given, calls the block with each key-value pair; returns `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.each_pair {|key, value| puts "#{key}: #{value}"} # => {foo: 0, bar: 1, baz: 2}
+  #
+  # Output:
+  #
+  #     foo: 0
+  #     bar: 1
+  #     baz: 2
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Iterating](rdoc-ref:Hash@Methods+for+Iterating).
+  #
+  def each: () { ([ K, V ] arg0) -> untyped } -> self
+          | () -> ::Enumerator[[ K, V ], self]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - each_key {|key| ... } -> self
+  #   - each_key -> new_enumerator
+  # -->
+  # With a block given, calls the block with each key; returns `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.each_key {|key| puts key }  # => {foo: 0, bar: 1, baz: 2}
+  #
+  # Output:
+  #     foo
+  #     bar
+  #     baz
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Iterating](rdoc-ref:Hash@Methods+for+Iterating).
+  #
+  def each_key: () { (K arg0) -> untyped } -> ::Hash[K, V]
+              | () -> ::Enumerator[K, self]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - each_pair {|key, value| ... } -> self
+  #   - each_pair -> new_enumerator
+  # -->
+  # With a block given, calls the block with each key-value pair; returns `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.each_pair {|key, value| puts "#{key}: #{value}"} # => {foo: 0, bar: 1, baz: 2}
+  #
+  # Output:
+  #
+  #     foo: 0
+  #     bar: 1
+  #     baz: 2
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Iterating](rdoc-ref:Hash@Methods+for+Iterating).
+  #
+  alias each_pair each
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - each_value {|value| ... } -> self
+  #   - each_value -> new_enumerator
+  # -->
+  # With a block given, calls the block with each value; returns `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.each_value {|value| puts value } # => {foo: 0, bar: 1, baz: 2}
+  #
+  # Output:
+  #     0
+  #     1
+  #     2
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Iterating](rdoc-ref:Hash@Methods+for+Iterating).
+  #
+  def each_value: () { (V arg0) -> untyped } -> self
+                | () -> ::Enumerator[V, self]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - empty? -> true or false
+  # -->
+  # Returns `true` if there are no hash entries, `false` otherwise:
+  #
+  #     {}.empty? # => true
+  #     {foo: 0}.empty? # => false
+  #
+  # Related: see [Methods for Querying](rdoc-ref:Hash@Methods+for+Querying).
+  #
+  def empty?: () -> bool
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - eql?(object) -> true or false
+  # -->
+  # Returns `true` if all of the following are true:
+  #
+  # *   The given `object` is a `Hash` object.
+  # *   `self` and `object` have the same keys (regardless of order).
+  # *   For each key `key`, `self[key].eql?(object[key])`.
+  #
+  # Otherwise, returns `false`.
+  #
+  #     h1 = {foo: 0, bar: 1, baz: 2}
+  #     h2 = {foo: 0, bar: 1, baz: 2}
+  #     h1.eql? h2 # => true
+  #     h3 = {baz: 2, bar: 1, foo: 0}
+  #     h1.eql? h3 # => true
+  #
+  # Related: see [Methods for Querying](rdoc-ref:Hash@Methods+for+Querying).
+  #
+  def eql?: (untyped) -> bool
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - except(*keys) -> new_hash
+  # -->
+  # Returns a copy of `self` that excludes entries for the given `keys`; any
+  # `keys` that are not found are ignored:
+  #
+  #     h = {foo:0, bar: 1, baz: 2} # => {:foo=>0, :bar=>1, :baz=>2}
+  #     h.except(:baz, :foo)        # => {:bar=>1}
+  #     h.except(:bar, :nosuch)     # => {:foo=>0, :baz=>2}
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  def except: (*K) -> ::Hash[K, V]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - fetch(key) -> object
+  #   - fetch(key, default_value) -> object
+  #   - fetch(key) {|key| ... } -> object
+  # -->
+  # With no block given, returns the value for the given `key`, if found;
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.fetch(:bar)  # => 1
+  #
+  # If the key is not found, returns `default_value`, if given, or raises KeyError
+  # otherwise:
+  #
+  #     h.fetch(:nosuch, :default) # => :default
+  #     h.fetch(:nosuch)           # Raises KeyError.
+  #
+  # With a block given, calls the block with `key` and returns the block's return
+  # value:
+  #
+  #     {}.fetch(:nosuch) {|key| "No key #{key}"} # => "No key nosuch"
+  #
+  # Note that this method does not use the values of either #default or
+  # #default_proc.
+  #
+  # Related: see [Methods for Fetching](rdoc-ref:Hash@Methods+for+Fetching).
+  #
+  def fetch: (K arg0) -> V
+           | [X] (K arg0, X arg1) -> (V | X)
+           | [X] (K arg0) { (K arg0) -> X } -> (V | X)
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - fetch_values(*keys) -> new_array
+  #   - fetch_values(*keys) {|key| ... } -> new_array
+  # -->
+  # When all given `keys` are found, returns a new array containing the values
+  # associated with the given `keys`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.fetch_values(:baz, :foo) # => [2, 0]
+  #
+  # When any given `keys` are not found and a block is given, calls the block with
+  # each unfound key and uses the block's return value as the value for that key:
+  #
+  #     h.fetch_values(:bar, :foo, :bad, :bam) {|key| key.to_s}
+  #     # => [1, 0, "bad", "bam"]
+  #
+  # When any given `keys` are not found and no block is given, raises KeyError.
+  #
+  # Related: see [Methods for Fetching](rdoc-ref:Hash@Methods+for+Fetching).
+  #
+  def fetch_values: (*K) -> ::Array[V]
+                  | [X] (*K) { (K) -> X } -> ::Array[V | X]
+
+  # <!-- rdoc-file=hash.c -->
+  # With a block given, calls the block with each entry's key and value; returns a
+  # new hash whose entries are those for which the block returns a truthy value:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.select {|key, value| value < 2 } # => {foo: 0, bar: 1}
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  def filter: () { (K, V) -> boolish } -> ::Hash[K, V]
+            | () -> ::Enumerator[[ K, V ], ::Hash[K, V]]
+
+  # <!-- rdoc-file=hash.c -->
+  # With a block given, calls the block with each entry's key and value; removes
+  # from `self` each entry for which the block returns `false` or `nil`.
+  #
+  # Returns `self` if any entries were removed, `nil` otherwise:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.select! {|key, value| value < 2 } # => {foo: 0, bar: 1}
+  #     h.select! {|key, value| value < 2 } # => nil
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  def filter!: () { (K, V) -> boolish } -> self?
+             | () -> ::Enumerator[[ K, V ], self?]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - flatten(depth = 1) -> new_array
+  # -->
+  # With positive integer `depth`, returns a new array that is a recursive
+  # flattening of `self` to the given `depth`.
+  #
+  # At each level of recursion:
+  #
+  # *   Each element whose value is an array is "flattened" (that is, replaced by
+  #     its individual array elements); see Array#flatten.
+  # *   Each element whose value is not an array is unchanged. even if the value
+  #     is an object that has instance method flatten (such as a hash).
+  #
+  # Examples; note that entry `foo: {bar: 1, baz: 2}` is never flattened.
+  #
+  #     h = {foo: {bar: 1, baz: 2}, bat: [:bam, [:bap, [:bah]]]}
+  #     h.flatten(1) # => [:foo, {:bar=>1, :baz=>2}, :bat, [:bam, [:bap, [:bah]]]]
+  #     h.flatten(2) # => [:foo, {:bar=>1, :baz=>2}, :bat, :bam, [:bap, [:bah]]]
+  #     h.flatten(3) # => [:foo, {:bar=>1, :baz=>2}, :bat, :bam, :bap, [:bah]]
+  #     h.flatten(4) # => [:foo, {:bar=>1, :baz=>2}, :bat, :bam, :bap, :bah]
+  #     h.flatten(5) # => [:foo, {:bar=>1, :baz=>2}, :bat, :bam, :bap, :bah]
+  #
+  # With negative integer `depth`, flattens all levels:
+  #
+  #     h.flatten(-1) # => [:foo, {:bar=>1, :baz=>2}, :bat, :bam, :bap, :bah]
+  #
+  # With `depth` zero, returns the equivalent of #to_a:
+  #
+  #     h.flatten(0) # => [[:foo, {:bar=>1, :baz=>2}], [:bat, [:bam, [:bap, [:bah]]]]]
+  #
+  # Related: see [Methods for Converting](rdoc-ref:Hash@Methods+for+Converting).
+  #
+  def flatten: () -> ::Array[K | V]
+             | (1 level) -> ::Array[K | V]
+             | (Integer level) -> Array[untyped]
+
+  # <!-- rdoc-file=hash.c -->
+  # Returns whether `key` is a key in `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.include?(:bar) # => true
+  #     h.include?(:BAR) # => false
+  #
+  # Related: [Methods for Querying](rdoc-ref:Hash@Methods+for+Querying).
+  #
+  def has_key?: (K arg0) -> bool
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - has_value?(value) -> true or false
+  # -->
+  # Returns whether `value` is a value in `self`.
+  #
+  # Related: [Methods for Querying](rdoc-ref:Hash@Methods+for+Querying).
+  #
+  def has_value?: (V arg0) -> bool
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - hash -> an_integer
+  # -->
+  # Returns the integer hash-code for the hash.
+  #
+  # Two hashes have the same hash-code if their content is the same (regardless of
+  # order):
+  #
+  #     h1 = {foo: 0, bar: 1, baz: 2}
+  #     h2 = {baz: 2, bar: 1, foo: 0}
+  #     h2.hash == h1.hash # => true
+  #     h2.eql? h1 # => true
+  #
+  # Related: see [Methods for Querying](rdoc-ref:Hash@Methods+for+Querying).
+  #
+  def hash: () -> Integer
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - include?(key) -> true or false
+  # -->
+  # Returns whether `key` is a key in `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.include?(:bar) # => true
+  #     h.include?(:BAR) # => false
+  #
+  # Related: [Methods for Querying](rdoc-ref:Hash@Methods+for+Querying).
+  #
+  alias include? has_key?
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - inspect -> new_string
+  # -->
+  # Returns a new string containing the hash entries:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.inspect # => "{foo: 0, bar: 1, baz: 2}"
+  #
+  # Related: see [Methods for Converting](rdoc-ref:Hash@Methods+for+Converting).
+  #
+  def inspect: () -> String
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - invert -> new_hash
+  # -->
+  # Returns a new hash with each key-value pair inverted:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h1 = h.invert
+  #     h1 # => {0=>:foo, 1=>:bar, 2=>:baz}
+  #
+  # Overwrites any repeated new keys (see [Entry
+  # Order](rdoc-ref:Hash@Entry+Order)):
+  #
+  #     h = {foo: 0, bar: 0, baz: 0}
+  #     h.invert # => {0=>:baz}
+  #
+  # Related: see [Methods for Transforming Keys and
+  # Values](rdoc-ref:Hash@Methods+for+Transforming+Keys+and+Values).
+  #
+  def invert: () -> ::Hash[V, K]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - keep_if {|key, value| ... } -> self
+  #   - keep_if -> new_enumerator
+  # -->
+  # With a block given, calls the block for each key-value pair; retains the entry
+  # if the block returns a truthy value; otherwise deletes the entry; returns
+  # `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.keep_if { |key, value| key.start_with?('b') } # => {bar: 1, baz: 2}
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  def keep_if: () { (K, V) -> boolish } -> self
+             | () -> ::Enumerator[[ K, V ], self]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - key(value) -> key or nil
+  # -->
+  # Returns the key for the first-found entry with the given `value` (see [Entry
+  # Order](rdoc-ref:Hash@Entry+Order)):
+  #
+  #     h = {foo: 0, bar: 2, baz: 2}
+  #     h.key(0) # => :foo
+  #     h.key(2) # => :bar
+  #
+  # Returns `nil` if no such value is found.
+  #
+  # Related: see [Methods for Fetching](rdoc-ref:Hash@Methods+for+Fetching).
+  #
+  def key: (V) -> K?
+
+  # <!-- rdoc-file=hash.c -->
+  # Returns whether `key` is a key in `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.include?(:bar) # => true
+  #     h.include?(:BAR) # => false
+  #
+  # Related: [Methods for Querying](rdoc-ref:Hash@Methods+for+Querying).
+  #
+  alias key? has_key?
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - keys -> new_array
+  # -->
+  # Returns a new array containing all keys in `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.keys # => [:foo, :bar, :baz]
+  #
+  # Related: see [Methods for Fetching](rdoc-ref:Hash@Methods+for+Fetching).
+  #
+  def keys: () -> ::Array[K]
+
+  # <!-- rdoc-file=hash.c -->
+  # Returns the count of entries in `self`:
+  #
+  #     {foo: 0, bar: 1, baz: 2}.size # => 3
+  #
+  # Related: see [Methods for Querying](rdoc-ref:Hash@Methods+for+Querying).
+  #
+  def length: () -> Integer
+
+  # <!-- rdoc-file=hash.c -->
+  # Returns whether `key` is a key in `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.include?(:bar) # => true
+  #     h.include?(:BAR) # => false
+  #
+  # Related: [Methods for Querying](rdoc-ref:Hash@Methods+for+Querying).
+  #
+  alias member? has_key?
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - merge(*other_hashes) -> new_hash
+  #   - merge(*other_hashes) { |key, old_value, new_value| ... } -> new_hash
+  # -->
+  # Each argument `other_hash` in `other_hashes` must be a hash.
+  #
+  # With arguments `other_hashes` given and no block, returns the new hash formed
+  # by merging each successive `other_hash` into a copy of `self`; returns that
+  # copy; for each successive entry in `other_hash`:
+  #
+  # *   For a new key, the entry is added at the end of `self`.
+  # *   For duplicate key, the entry overwrites the entry in `self`, whose
+  #     position is unchanged.
+  #
+  # Example:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h1 = {bat: 3, bar: 4}
+  #     h2 = {bam: 5, bat:6}
+  #     h.merge(h1, h2) # => {foo: 0, bar: 4, baz: 2, bat: 6, bam: 5}
+  #
+  # With arguments `other_hashes` and a block given, behaves as above except that
+  # for a duplicate key the overwriting entry takes it value not from the entry in
+  # `other_hash`, but instead from the block:
+  #
+  # *   The block is called with the duplicate key and the values from both `self`
+  #     and `other_hash`.
+  # *   The block's return value becomes the new value for the entry in `self`.
+  #
+  # Example:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h1 = {bat: 3, bar: 4}
+  #     h2 = {bam: 5, bat:6}
+  #     h.merge(h1, h2) { |key, old_value, new_value| old_value + new_value }
+  #     # => {foo: 0, bar: 5, baz: 2, bat: 9, bam: 5}
+  #
+  # With no arguments, returns a copy of `self`; the block, if given, is ignored.
+  #
+  # Related: see [Methods for Assigning](rdoc-ref:Hash@Methods+for+Assigning).
+  #
+  def merge: [A, B] (*::Hash[A, B] other_hashes) -> ::Hash[A | K, B | V]
+           | [A, B, C] (*::Hash[A, B] other_hashes) { (K key, V oldval, B newval) -> C } -> ::Hash[A | K, B | V | C]
+
+  # <!-- rdoc-file=hash.c -->
+  # Updates values and/or adds entries to `self`; returns `self`.
+  #
+  # Each argument `other_hash` in `other_hashes` must be a hash.
+  #
+  # With no block given, for each successive entry `key`/`new_value` in each
+  # successive `other_hash`:
+  #
+  # *   If `key` is in `self`, sets `self[key] = new_value`, whose position is
+  #     unchanged:
+  #
+  #         h0 = {foo: 0, bar: 1, baz: 2}
+  #         h1 = {bar: 3, foo: -1}
+  #         h0.update(h1) # => {foo: -1, bar: 3, baz: 2}
+  #
+  # *   If `key` is not in `self`, adds the entry at the end of `self`:
+  #
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.update({bam: 3, bah: 4}) # => {foo: 0, bar: 1, baz: 2, bam: 3, bah: 4}
+  #
+  # With a block given, for each successive entry `key`/`new_value` in each
+  # successive `other_hash`:
+  #
+  # *   If `key` is in `self`, fetches `old_value` from `self[key]`, calls the
+  #     block with `key`, `old_value`, and `new_value`, and sets `self[key] =
+  #     new_value`, whose position is unchanged  :
+  #
+  #         season = {AB: 75, H: 20, HR: 3, SO: 17, W: 11, HBP: 3}
+  #         today = {AB: 3, H: 1, W: 1}
+  #         yesterday = {AB: 4, H: 2, HR: 1}
+  #         season.update(yesterday, today) {|key, old_value, new_value| old_value + new_value }
+  #         # => {AB: 82, H: 23, HR: 4, SO: 17, W: 12, HBP: 3}
+  #
+  # *   If `key` is not in `self`, adds the entry at the end of `self`:
+  #
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.update({bat: 3}) { fail 'Cannot happen' }
+  #         # => {foo: 0, bar: 1, baz: 2, bat: 3}
+  #
+  # Related: see [Methods for Assigning](rdoc-ref:Hash@Methods+for+Assigning).
+  #
+  def merge!: (*::Hash[K, V] other_hashes) -> self
+            | (*::Hash[K, V] other_hashes) { (K key, V oldval, V newval) -> V } -> self
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - rassoc(value) -> new_array or nil
+  # -->
+  # Searches `self` for the first entry whose value is `==` to the given `value`;
+  # see [Entry Order](rdoc-ref:Hash@Entry+Order).
+  #
+  # If the entry is found, returns its key and value as a 2-element array; returns
+  # `nil` if not found:
+  #
+  #     h = {foo: 0, bar: 1, baz: 1}
+  #     h.rassoc(1) # => [:bar, 1]
+  #
+  # Related: see [Methods for Fetching](rdoc-ref:Hash@Methods+for+Fetching).
+  #
+  def rassoc: (V) -> [ K, V ]?
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - rehash -> self
+  # -->
+  # Rebuilds the hash table for `self` by recomputing the hash index for each key;
+  # returns `self`. Calling this method ensures that the hash table is valid.
+  #
+  # The hash table becomes invalid if the hash value of a key has changed after
+  # the entry was created. See [Modifying an Active Hash
+  # Key](rdoc-ref:Hash@Modifying+an+Active+Hash+Key).
+  #
+  def rehash: () -> self
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - reject {|key, value| ... } -> new_hash
+  #   - reject -> new_enumerator
+  # -->
+  # With a block given, returns a copy of `self` with zero or more entries
+  # removed; calls the block with each key-value pair; excludes the entry in the
+  # copy if the block returns a truthy value, includes it otherwise:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.reject {|key, value| key.start_with?('b') }
+  #     # => {foo: 0}
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  def reject: () -> ::Enumerator[[ K, V ], ::Hash[K, V]]
+            | () { (K, V) -> boolish } -> ::Hash[K, V]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - reject! {|key, value| ... } -> self or nil
+  #   - reject! -> new_enumerator
+  # -->
+  # With a block given, calls the block with each entry's key and value; removes
+  # the entry from `self` if the block returns a truthy value.
+  #
+  # Return `self` if any entries were removed, `nil` otherwise:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.reject! {|key, value| value < 2 } # => {baz: 2}
+  #     h.reject! {|key, value| value < 2 } # => nil
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  def reject!: () -> ::Enumerator[[ K, V ], self?]
+             | () { (K, V) -> boolish } -> self?
+
+  # <!-- rdoc-file=hash.c -->
+  # Replaces the entire contents of `self` with the contents of `other_hash`;
+  # returns `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.replace({bat: 3, bam: 4}) # => {bat: 3, bam: 4}
+  #
+  # Also replaces the default value or proc of `self` with the default value or
+  # proc of `other_hash`.
+  #
+  #     h = {}
+  #     other = Hash.new(:ok)
+  #     h.replace(other)
+  #     h.default # => :ok
+  #
+  # Related: see [Methods for Assigning](rdoc-ref:Hash@Methods+for+Assigning).
+  #
+  def replace: (Hash[K, V]) -> self
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - select {|key, value| ... } -> new_hash
+  #   - select -> new_enumerator
+  # -->
+  # With a block given, calls the block with each entry's key and value; returns a
+  # new hash whose entries are those for which the block returns a truthy value:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.select {|key, value| value < 2 } # => {foo: 0, bar: 1}
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  alias select filter
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - select! {|key, value| ... } -> self or nil
+  #   - select! -> new_enumerator
+  # -->
+  # With a block given, calls the block with each entry's key and value; removes
+  # from `self` each entry for which the block returns `false` or `nil`.
+  #
+  # Returns `self` if any entries were removed, `nil` otherwise:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.select! {|key, value| value < 2 } # => {foo: 0, bar: 1}
+  #     h.select! {|key, value| value < 2 } # => nil
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  alias select! filter!
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - shift -> [key, value] or nil
+  # -->
+  # Removes and returns the first entry of `self` as a 2-element array; see [Entry
+  # Order](rdoc-ref:Hash@Entry+Order):
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.shift # => [:foo, 0]
+  #     h       # => {bar: 1, baz: 2}
+  #
+  # Returns `nil` if `self` is empty.
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  def shift: () -> [ K, V ]?
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - size -> integer
+  # -->
+  # Returns the count of entries in `self`:
+  #
+  #     {foo: 0, bar: 1, baz: 2}.size # => 3
+  #
+  # Related: see [Methods for Querying](rdoc-ref:Hash@Methods+for+Querying).
+  #
+  alias size length
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - slice(*keys) -> new_hash
+  # -->
+  # Returns a new hash containing the entries from `self` for the given `keys`;
+  # ignores any keys that are not found:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.slice(:baz, :foo, :nosuch) # => {baz: 2, foo: 0}
+  #
+  # Related: see [Methods for Deleting](rdoc-ref:Hash@Methods+for+Deleting).
+  #
+  def slice: (*K) -> ::Hash[K, V]
+
+  # <!-- rdoc-file=hash.c -->
+  # Associates the given `object` with the given `key`; returns `object`.
+  #
+  # Searches for a hash key equivalent to the given `key`; see [Hash Key
+  # Equivalence](rdoc-ref:Hash@Hash+Key+Equivalence).
+  #
+  # If the key is found, replaces its value with the given `object`; the ordering
+  # is not affected (see [Entry Order](rdoc-ref:Hash@Entry+Order)):
+  #
+  #     h = {foo: 0, bar: 1}
+  #     h[:foo] = 2 # => 2
+  #     h[:foo]     # => 2
+  #
+  # If `key` is not found, creates a new entry for the given `key` and `object`;
+  # the new entry is last in the order (see [Entry
+  # Order](rdoc-ref:Hash@Entry+Order)):
+  #
+  #     h = {foo: 0, bar: 1}
+  #     h[:baz] = 2 # => 2
+  #     h[:baz]     # => 2
+  #     h           # => {:foo=>0, :bar=>1, :baz=>2}
+  #
+  # Related: #[]; see also [Methods for
+  # Assigning](rdoc-ref:Hash@Methods+for+Assigning).
+  #
+  alias store []=
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - to_a -> new_array
+  # -->
+  # Returns all elements of `self` as an array of 2-element arrays; each nested
+  # array contains a key-value pair from `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.to_a # => [[:foo, 0], [:bar, 1], [:baz, 2]]
+  #
+  # Related: see [Methods for Converting](rdoc-ref:Hash@Methods+for+Converting).
+  #
+  def to_a: () -> ::Array[[ K, V ]]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - to_h {|key, value| ... } -> new_hash
+  #   - to_h -> self or new_hash
+  # -->
+  # With a block given, returns a new hash whose content is based on the block;
+  # the block is called with each entry's key and value; the block should return a
+  # 2-element array containing the key and value to be included in the returned
+  # array:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.to_h {|key, value| [value, key] }
+  #     # => {0 => :foo, 1 => :bar, 2 => :baz}
+  #
+  # With no block given, returns `self` if `self` is an instance of `Hash`; if
+  # `self` is a subclass of `Hash`, returns a new hash containing the content of
+  # `self`.
+  #
+  # Related: see [Methods for Converting](rdoc-ref:Hash@Methods+for+Converting).
+  #
+  def to_h: () -> Hash[K, V]
+          | [A, B] () { (K, V) -> [ A, B ] } -> Hash[A, B]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - to_hash -> self
+  # -->
+  # Returns `self`.
+  #
+  # Related: see [Methods for Converting](rdoc-ref:Hash@Methods+for+Converting).
+  #
+  def to_hash: () -> self
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - to_proc -> proc
+  # -->
+  # Returns a Proc object that maps a key to its value:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     proc = h.to_proc
+  #     proc.class # => Proc
+  #     proc.call(:foo) # => 0
+  #     proc.call(:bar) # => 1
+  #     proc.call(:nosuch) # => nil
+  #
+  # Related: see [Methods for Converting](rdoc-ref:Hash@Methods+for+Converting).
+  #
+  def to_proc: () -> ^(K) -> V?
+
+  # <!-- rdoc-file=hash.c -->
+  # Returns a new string containing the hash entries:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.inspect # => "{foo: 0, bar: 1, baz: 2}"
+  #
+  # Related: see [Methods for Converting](rdoc-ref:Hash@Methods+for+Converting).
+  #
+  alias to_s inspect
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - transform_keys {|old_key| ... } -> new_hash
+  #   - transform_keys(other_hash) -> new_hash
+  #   - transform_keys(other_hash) {|old_key| ...} -> new_hash
+  #   - transform_keys -> new_enumerator
+  # -->
+  # With an argument, a block, or both given, derives a new hash `new_hash` from
+  # `self`, the argument, and/or the block; all, some, or none of its keys may be
+  # different from those in `self`.
+  #
+  # With a block given and no argument, `new_hash` has keys determined only by the
+  # block.
+  #
+  # For each key/value pair `old_key/value` in `self`, calls the block with
+  # `old_key`; the block's return value becomes `new_key`; sets `new_hash[new_key]
+  # = value`; a duplicate key overwrites:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.transform_keys {|old_key| old_key.to_s }
+  #     # => {"foo" => 0, "bar" => 1, "baz" => 2}
+  #     h.transform_keys {|old_key| 'xxx' }
+  #     # => {"xxx" => 2}
+  #
+  # With argument `other_hash` given and no block, `new_hash` may have new keys
+  # provided by `other_hash` and unchanged keys provided by `self`.
+  #
+  # For each key/value pair `old_key/old_value` in `self`, looks for key `old_key`
+  # in `other_hash`:
+  #
+  # *   If `old_key` is found, its value `other_hash[old_key]` is taken as
+  #     `new_key`; sets `new_hash[new_key] = value`; a duplicate key overwrites:
+  #
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.transform_keys(baz: :BAZ, bar: :BAR, foo: :FOO)
+  #         # => {FOO: 0, BAR: 1, BAZ: 2}
+  #         h.transform_keys(baz: :FOO, bar: :FOO, foo: :FOO)
+  #         # => {FOO: 2}
+  #
+  # *   If `old_key` is not found, sets `new_hash[old_key] = value`; a duplicate
+  #     key overwrites:
+  #
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.transform_keys({})
+  #         # => {foo: 0, bar: 1, baz: 2}
+  #         h.transform_keys(baz: :foo)
+  #         # => {foo: 2, bar: 1}
+  #
+  # Unused keys in `other_hash` are ignored:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.transform_keys(bat: 3)
+  #     # => {foo: 0, bar: 1, baz: 2}
+  #
+  # With both argument `other_hash` and a block given, `new_hash` has new keys
+  # specified by `other_hash` or by the block, and unchanged keys provided by
+  # `self`.
+  #
+  # For each pair `old_key` and `value` in `self`:
+  #
+  # *   If `other_hash` has key `old_key` (with value `new_key`), does not call
+  #     the block for that key; sets `new_hash[new_key] = value`; a duplicate key
+  #     overwrites:
+  #
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.transform_keys(baz: :BAZ, bar: :BAR, foo: :FOO) {|key| fail 'Not called' }
+  #         # => {FOO: 0, BAR: 1, BAZ: 2}
+  #
+  # *   If `other_hash` does not have key `old_key`, calls the block with
+  #     `old_key` and takes its return value as `new_key`; sets `new_hash[new_key]
+  #     = value`; a duplicate key overwrites:
+  #
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.transform_keys(baz: :BAZ) {|key| key.to_s.reverse }
+  #         # => {"oof" => 0, "rab" => 1, BAZ: 2}
+  #         h.transform_keys(baz: :BAZ) {|key| 'ook' }
+  #         # => {"ook" => 1, BAZ: 2}
+  #
+  # With no argument and no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Transforming Keys and
+  # Values](rdoc-ref:Hash@Methods+for+Transforming+Keys+and+Values).
+  #
+  def transform_keys: () -> Enumerator[K, Hash[untyped, V]]
+                    | [A] () { (K) -> A } -> Hash[A, V]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - transform_keys! {|old_key| ... } -> self
+  #   - transform_keys!(other_hash) -> self
+  #   - transform_keys!(other_hash) {|old_key| ...} -> self
+  #   - transform_keys! -> new_enumerator
+  # -->
+  # With an argument, a block, or both given, derives keys from the argument, the
+  # block, and `self`; all, some, or none of the keys in `self` may be changed.
+  #
+  # With a block given and no argument, derives keys only from the block; all,
+  # some, or none of the keys in `self` may be changed.
+  #
+  # For each key/value pair `old_key/value` in `self`, calls the block with
+  # `old_key`; the block's return value becomes `new_key`; removes the entry for
+  # `old_key`: `self.delete(old_key)`; sets `self[new_key] = value`; a duplicate
+  # key overwrites:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.transform_keys! {|old_key| old_key.to_s }
+  #     # => {"foo" => 0, "bar" => 1, "baz" => 2}
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.transform_keys! {|old_key| 'xxx' }
+  #     # => {"xxx" => 2}
+  #
+  # With argument `other_hash` given and no block, derives keys for `self` from
+  # `other_hash` and `self`; all, some, or none of the keys in `self` may be
+  # changed.
+  #
+  # For each key/value pair `old_key/old_value` in `self`, looks for key `old_key`
+  # in `other_hash`:
+  #
+  # *   If `old_key` is found, takes value `other_hash[old_key]` as `new_key`;
+  #     removes the entry for `old_key`: `self.delete(old_key)`; sets
+  #     `self[new_key] = value`; a duplicate key overwrites:
+  #
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.transform_keys!(baz: :BAZ, bar: :BAR, foo: :FOO)
+  #         # => {FOO: 0, BAR: 1, BAZ: 2}
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.transform_keys!(baz: :FOO, bar: :FOO, foo: :FOO)
+  #         # => {FOO: 2}
+  #
+  # *   If `old_key` is not found, does nothing:
+  #
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.transform_keys!({})
+  #         # => {foo: 0, bar: 1, baz: 2}
+  #         h.transform_keys!(baz: :foo)
+  #         # => {foo: 2, bar: 1}
+  #
+  # Unused keys in `other_hash` are ignored:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.transform_keys!(bat: 3)
+  #     # => {foo: 0, bar: 1, baz: 2}
+  #
+  # With both argument `other_hash` and a block given, derives keys from
+  # `other_hash`, the block, and `self`; all, some, or none of the keys in `self`
+  # may be changed.
+  #
+  # For each pair `old_key` and `value` in `self`:
+  #
+  # *   If `other_hash` has key `old_key` (with value `new_key`), does not call
+  #     the block for that key; removes the entry for `old_key`:
+  #     `self.delete(old_key)`; sets `self[new_key] = value`; a duplicate key
+  #     overwrites:
+  #
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.transform_keys!(baz: :BAZ, bar: :BAR, foo: :FOO) {|key| fail 'Not called' }
+  #         # => {FOO: 0, BAR: 1, BAZ: 2}
+  #
+  # *   If `other_hash` does not have key `old_key`, calls the block with
+  #     `old_key` and takes its return value as `new_key`; removes the entry for
+  #     `old_key`: `self.delete(old_key)`; sets `self[new_key] = value`; a
+  #     duplicate key overwrites:
+  #
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.transform_keys!(baz: :BAZ) {|key| key.to_s.reverse }
+  #         # => {"oof" => 0, "rab" => 1, BAZ: 2}
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.transform_keys!(baz: :BAZ) {|key| 'ook' }
+  #         # => {"ook" => 1, BAZ: 2}
+  #
+  # With no argument and no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Transforming Keys and
+  # Values](rdoc-ref:Hash@Methods+for+Transforming+Keys+and+Values).
+  #
+  def transform_keys!: () -> Enumerator[K, self]
+                     | () { (K) -> K } -> self
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - transform_values {|value| ... } -> new_hash
+  #   - transform_values -> new_enumerator
+  # -->
+  # With a block given, returns a new hash `new_hash`; for each pair `key`/`value`
+  # in `self`, calls the block with `value` and captures its return as
+  # `new_value`; adds to `new_hash` the entry `key`/`new_value`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h1 = h.transform_values {|value| value * 100}
+  #     h1 # => {foo: 0, bar: 100, baz: 200}
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Transforming Keys and
+  # Values](rdoc-ref:Hash@Methods+for+Transforming+Keys+and+Values).
+  #
+  def transform_values: () -> Enumerator[V, Hash[K, untyped]]
+                      | [A] () { (V) -> A } -> Hash[K, A]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - transform_values! {|old_value| ... } -> self
+  #   - transform_values! -> new_enumerator
+  # -->
+  # With a block given, changes the values of `self` as determined by the block;
+  # returns `self`.
+  #
+  # For each entry `key`/`old_value` in `self`, calls the block with `old_value`,
+  # captures its return value as `new_value`, and sets `self[key] = new_value`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.transform_values! {|value| value * 100} # => {foo: 0, bar: 100, baz: 200}
+  #
+  # With no block given, returns a new Enumerator.
+  #
+  # Related: see [Methods for Transforming Keys and
+  # Values](rdoc-ref:Hash@Methods+for+Transforming+Keys+and+Values).
+  #
+  def transform_values!: () -> Enumerator[V, self]
+                       | () { (V) -> V } -> self
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - update(*other_hashes) -> self
+  #   - update(*other_hashes) { |key, old_value, new_value| ... } -> self
+  # -->
+  # Updates values and/or adds entries to `self`; returns `self`.
+  #
+  # Each argument `other_hash` in `other_hashes` must be a hash.
+  #
+  # With no block given, for each successive entry `key`/`new_value` in each
+  # successive `other_hash`:
+  #
+  # *   If `key` is in `self`, sets `self[key] = new_value`, whose position is
+  #     unchanged:
+  #
+  #         h0 = {foo: 0, bar: 1, baz: 2}
+  #         h1 = {bar: 3, foo: -1}
+  #         h0.update(h1) # => {foo: -1, bar: 3, baz: 2}
+  #
+  # *   If `key` is not in `self`, adds the entry at the end of `self`:
+  #
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.update({bam: 3, bah: 4}) # => {foo: 0, bar: 1, baz: 2, bam: 3, bah: 4}
+  #
+  # With a block given, for each successive entry `key`/`new_value` in each
+  # successive `other_hash`:
+  #
+  # *   If `key` is in `self`, fetches `old_value` from `self[key]`, calls the
+  #     block with `key`, `old_value`, and `new_value`, and sets `self[key] =
+  #     new_value`, whose position is unchanged  :
+  #
+  #         season = {AB: 75, H: 20, HR: 3, SO: 17, W: 11, HBP: 3}
+  #         today = {AB: 3, H: 1, W: 1}
+  #         yesterday = {AB: 4, H: 2, HR: 1}
+  #         season.update(yesterday, today) {|key, old_value, new_value| old_value + new_value }
+  #         # => {AB: 82, H: 23, HR: 4, SO: 17, W: 12, HBP: 3}
+  #
+  # *   If `key` is not in `self`, adds the entry at the end of `self`:
+  #
+  #         h = {foo: 0, bar: 1, baz: 2}
+  #         h.update({bat: 3}) { fail 'Cannot happen' }
+  #         # => {foo: 0, bar: 1, baz: 2, bat: 3}
+  #
+  # Related: see [Methods for Assigning](rdoc-ref:Hash@Methods+for+Assigning).
+  #
+  alias update merge!
+
+  # <!-- rdoc-file=hash.c -->
+  # Returns whether `value` is a value in `self`.
+  #
+  # Related: [Methods for Querying](rdoc-ref:Hash@Methods+for+Querying).
+  #
+  alias value? has_value?
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - values -> new_array
+  # -->
+  # Returns a new array containing all values in `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.values # => [0, 1, 2]
+  #
+  # Related: see [Methods for Fetching](rdoc-ref:Hash@Methods+for+Fetching).
+  #
+  def values: () -> ::Array[V]
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - values_at(*keys) -> new_array
+  # -->
+  # Returns a new array containing values for the given `keys`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.values_at(:baz, :foo) # => [2, 0]
+  #
+  # The [hash default](rdoc-ref:Hash@Hash+Default) is returned for each key that
+  # is not found:
+  #
+  #     h.values_at(:hello, :foo) # => [nil, 0]
+  #
+  # Related: see [Methods for Fetching](rdoc-ref:Hash@Methods+for+Fetching).
+  #
+  def values_at: (*K arg0) -> ::Array[V?]
+
+  private
+
+  # <!--
+  #   rdoc-file=hash.rb
+  #   - Hash.new(default_value = nil, capacity: 0) -> new_hash
+  #   - Hash.new(capacity: 0) {|self, key| ... } -> new_hash
+  # -->
+  # Returns a new empty Hash object.
+  #
+  # Initializes the values of Hash#default and Hash#default_proc, which determine
+  # the behavior when a given key is not found; see [Key Not
+  # Found?](rdoc-ref:Hash@Key+Not+Found-3F).
+  #
+  # By default, a hash has `nil` values for both `default` and `default_proc`:
+  #
+  #     h = Hash.new        # => {}
+  #     h.default           # => nil
+  #     h.default_proc      # => nil
+  #
+  # With argument `default_value` given, sets the `default` value for the hash:
+  #
+  #     h = Hash.new(false) # => {}
+  #     h.default           # => false
+  #     h.default_proc      # => nil
+  #
+  # With a block given, sets the `default_proc` value:
+  #
+  #     h = Hash.new {|hash, key| "Hash #{hash}: Default value for #{key}" }
+  #     h.default      # => nil
+  #     h.default_proc # => #<Proc:0x00000289b6fa7048 (irb):185>
+  #     h[:nosuch]     # => "Hash {}: Default value for nosuch"
+  #
+  # Raises ArgumentError if both `default_value` and a block are given.
+  #
+  # If optional keyword argument `capacity` is given with a positive integer value
+  # `n`, initializes the hash with enough capacity to accommodate `n` entries
+  # without resizing.
+  #
+  # See also [Methods for Creating a
+  # Hash](rdoc-ref:Hash@Methods+for+Creating+a+Hash).
+  #
+  def initialize: (?capacity: int) -> void
+                | (V default, ?capacity: int) -> void
+                | (?capacity: int) { (Hash[K, V] hash, K key) -> V } -> void
+
+  # <!--
+  #   rdoc-file=hash.c
+  #   - replace(other_hash) -> self
+  # -->
+  # Replaces the entire contents of `self` with the contents of `other_hash`;
+  # returns `self`:
+  #
+  #     h = {foo: 0, bar: 1, baz: 2}
+  #     h.replace({bat: 3, bam: 4}) # => {bat: 3, bam: 4}
+  #
+  # Also replaces the default value or proc of `self` with the default value or
+  # proc of `other_hash`.
+  #
+  #     h = {}
+  #     other = Hash.new(:ok)
+  #     h.replace(other)
+  #     h.default # => :ok
+  #
+  # Related: see [Methods for Assigning](rdoc-ref:Hash@Methods+for+Assigning).
+  #
+  def initialize_copy: (self object) -> self
+end

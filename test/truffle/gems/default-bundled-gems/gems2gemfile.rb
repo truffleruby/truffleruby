@@ -19,10 +19,6 @@ gems = []
   versions = versions.chomp(')')
   versions = versions.split(', ')
 
-  # TODO: remove after upgrading Rubygems
-  # See https://github.com/rubygems/rubygems/issues/8178
-  versions = versions.map { |s| s.chomp(' ruby') }
-
   versions.each { |version|
     if version.include?('default: ')
       gems << [gem, version.sub('default: ', '')]

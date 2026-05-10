@@ -98,9 +98,9 @@ git clone --branch v4.0.2 https://github.com/ruby/ruby.git ../ruby
 Then create the reference branch in the TruffleRuby repository
 
 ```bash
-git checkout -b vNN
+git checkout -b ruby-n.n.n
 tool/import-mri-files.sh
-git commit -am 'vNN'
+git commit -am 'Import files from MRI n.n.n'
 ```
 
 You can then compare between these two branches and yours. For example to see
@@ -150,7 +150,8 @@ rm -f lib/json/lib/json/ext/.keep
 
 rm -rf src/main/c/json
 mkdir src/main/c/json
-cp -R ../../json/ext/json/ext/{fbuffer,parser} src/main/c/json
+cp -R ../../json/ext/json/ext/* src/main/c/json
+rm -rf src/main/c/json/generator
 rm -f src/main/c/json/parser/depend
 ```
 
@@ -170,7 +171,7 @@ cp -R lib/ruby/gems/*.0/gems $TRUFFLERUBY/lib/gems
 cp -R lib/ruby/gems/*.0/specifications $TRUFFLERUBY/lib/gems
 
 cd $TRUFFLERUBY
-rm -f lib/gems/gems/**/*.{o,a,so,bundle}(N) lib/gems/gems/**/{Makefile,extconf.h,mkmf.log} lib/gems/gems/**/*.mk
+rm -f lib/gems/gems/**/*.{o,a,so,bundle,mk}(N) lib/gems/gems/**/{Makefile,extconf.h,mkmf.log,depend}(N)
 rm -rf lib/gems/gems/typeprof-* lib/gems/specifications/typeprof-*.gemspec
 rm -f lib/gems/gems/rbs-*/Gemfile.lock(N)
 ruby tool/patch-default-gemspecs.rb
@@ -178,6 +179,10 @@ ruby tool/patch-default-gemspecs.rb
 
 Then review bundled gems with extensions like `lib/gems/gems/debug-*` and `lib/gems/gems/rbs-*`
 to ensure no build artifacts/generated files are committed, only "sources".
+This can be done with e.g.
+```
+git log --stat -1 --color | grep -Ev '\.(rb|gemspec|md|c|h|rdoc|txt|ja|png|gif|ttf|rhtml|js|css|yaml|yml|json|rake|rbs|erb)\s|/(COPYING|BSDL|LICENSE|LEGAL|MIT-LICENSE|PSFL|Gemfile|Rakefile|console|setup)\s'
+```
 
 Update the `ruby/prism` default gem with `tool/import-prism.sh` script.
 See the "Update Prism" section in the [Prism](prism.md) document.
@@ -192,16 +197,14 @@ rm -f exe/ruby exe/typeprof
 ruby tool/patch_launchers.rb
 ```
 
-Also update the list of `provided_executables` in `mx_truffleruby.py` if some launchers were added or removed.
-
 ## Make other changes
 
 Update all of these:
 
-* Re-apply the patch for the `debug` gem, see `git log -p lib/gems/gems/debug-*/ext/debug/extconf.rb`.
-* Re-apply the patch for the `rbs` gem, see `git log -p lib/gems/gems/rbs-*/ext/rbs_extension/extconf.rb`.
+* Re-apply the patch for the `debug` gem, see `git log --follow -p 'lib/gems/gems/debug-*/ext/debug/extconf.rb'`.
+* Re-apply the patch for the `rbs` gem, see `git log --follow -p 'lib/gems/gems/rbs-*/ext/rbs_extension/extconf.rb'`.
 * Update `.ruby-version`, `TruffleRuby.LANGUAGE_VERSION`
-* IMPORTANT: switch to CRuby n.n.n in the current terminal, e.g., `chruby $(cat .ruby-version)`
+* IMPORTANT: switch to CRuby n.n.n in the current terminal, e.g., `chruby ruby-$(cat .ruby-version)`
 * Update the `SyntaxVersion` in `YARPTranslatorDriver`
 * Given a Ruby version `A.B.C`, update the TruffleRuby version in `mx.truffleruby/suite.py` to `AB.0.0`.
 * Reset `truffleruby-abi-version.h` to `$RUBY_VERSION.1` and `lib/cext/ABI_check.txt` to `1` if `RUBY_VERSION` was updated.

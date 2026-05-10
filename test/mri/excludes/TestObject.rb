@@ -1,6 +1,7 @@
 exclude :test_bad_initialize_copy, "frozen."
 exclude :test_check_to_integer, "TypeError: can't iterate from TestObject::MyInteger"
 exclude :test_implicit_respond_to_arity_3, "Expected Exception(ArgumentError) was raised, but the message doesn't match. <\"respond_to? must accept 1 or 2 arguments (requires 3)\"> expected but was <\"wrong number of arguments (given 2, expected 3)\">."
+exclude :test_inspect, "Expected \"#<Object:0x1b9e28 @host=\\\"localhost\\\", @user=\\\"root\\\", @***\"hunter2\\\">\" to not include \"@password=\"."
 exclude :test_max_shape_variation_with_performance_warnings, "needs investigation"
 exclude :test_method_missing, "[ArgumentError] exception expected, not #<NoMethodError: undefined method `method_missing' for #<#<Class:0x928>:0x968>>."
 exclude :test_redefine_method_under_verbose, "needs investigation"

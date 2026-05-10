@@ -1,0 +1,8 @@
+%a{annotate:rdoc:skip}
+module TSort[Node]
+  # <!-- rdoc-file=lib/tsort.rb -->
+  # Exception class to be raised when a cycle is found.
+  #
+  class Cyclic < StandardError
+  end
+end

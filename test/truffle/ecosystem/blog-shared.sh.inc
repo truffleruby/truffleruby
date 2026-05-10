@@ -6,7 +6,7 @@ source "$truffle/common.sh.inc"
 
 alias truffleruby="jt ruby -S"
 
-truffleruby bundle config --local without postgresql mysql
+truffleruby bundle config set --local without postgresql mysql
 
 truffleruby bundle install
 

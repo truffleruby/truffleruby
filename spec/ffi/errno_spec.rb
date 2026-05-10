@@ -5,12 +5,14 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), "spec_helper"))
 
+module ErrnoSpec
 describe "FFI.errno" do
   module LibTest
     extend FFI::Library
     ffi_lib TestLibrary::PATH
     attach_function :setLastError, [ :int ], :void
     attach_function :setErrno, [ :int ], :void
+    freeze
   end
 
   it "FFI.errno contains errno from last function, FFI::LastError.winapi_error works differently per OS" do
@@ -39,7 +41,8 @@ describe "FFI.errno" do
     res = Ractor.new do
       LibTest.setLastError(0x12345678)
       FFI.errno
-    end.take
+    end.value
     expect(res).to eq(0x12345678)
   end
+end
 end

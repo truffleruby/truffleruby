@@ -40,4 +40,15 @@ module FFI
       obj.freeze
     end
   end
+
+  if defined?(Ractor.shareable_proc)
+    # This is for FFI internal use only.
+    def self.shareable_proc(**kwargs, &block)
+      Ractor.shareable_proc(**kwargs, &block)
+    end
+  else
+    def self.shareable_proc(**_kwargs, &block)
+      block
+    end
+  end
 end

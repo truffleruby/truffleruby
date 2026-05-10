@@ -1,0 +1,1 @@
+fails:Module#ruby2_keywords prints warning when a method accepts post arguments

@@ -548,6 +548,13 @@ class Range
   Primitive.always_split self, :map
   alias_method :collect, :map
 
+  def to_set(...)
+    if Primitive.nil?(self.end)
+      raise RangeError, 'cannot convert endless range to a set'
+    end
+    super
+  end
+
   private def to_a_internal # MODIFIED called from java to_a
     return to_a_from_enumerable unless Primitive.is_a?(self.begin, Integer) and Primitive.is_a?(self.end, Integer)
 

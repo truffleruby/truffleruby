@@ -8,4 +8,5 @@ gem 'hashie', '3.4.4'
 gem 'psd-enginedata', '1.1.1'
 gem 'psd', '2.1.2'
 
+gem 'logger'
 gem 'sorted_set'

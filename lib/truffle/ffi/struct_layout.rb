@@ -35,13 +35,13 @@ module FFI
 
   class StructLayout
 
-    # @return [Array<Array(Symbol, Numeric)>
+    # @return [Array<Array(Symbol, Integer)>
     # Get an array of tuples (field name, offset of the field).
     def offsets
       members.map { |m| [ m, self[m].offset ] }
     end
 
-    # @return [Numeric]
+    # @return [Integer]
     # Get the offset of a field.
     def offset_of(field_name)
       self[field_name].offset

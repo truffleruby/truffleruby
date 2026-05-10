@@ -5,6 +5,7 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), "spec_helper"))
 
+module NumberSpec
 describe "Function with primitive integer arguments" do
   module LibTest
     extend FFI::Library
@@ -245,4 +246,5 @@ describe "Three different size Integer arguments" do
       end
     end
   end
+end
 end

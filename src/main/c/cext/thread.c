@@ -77,3 +77,7 @@ void rb_nativethread_lock_unlock(rb_nativethread_lock_t *lock) {
 int ruby_native_thread_p(void) {
   return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("ruby_native_thread_p"));
 }
+
+int ruby_thread_has_gvl_p(void) {
+  return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("rb_tr_cext_lock_owned_p")) ? 1 : 0;
+}

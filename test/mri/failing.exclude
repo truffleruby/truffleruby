@@ -5,8 +5,11 @@ ruby/test_compile_prism.rb # tests RubyVM::InstructionSequence
 ruby/test_iseq.rb # tests RubyVM::InstructionSequence
 ruby/test_mjit.rb
 ruby/test_mjit_debug.rb
+ruby/test_box.rb # tests Ruby::Box
+ruby/test_ractor.rb # tests Ractor
 ruby/test_rubyvm.rb # tests RubyVM
 dbm/test_dbm.rb
+error_highlight/test_error_highlight.rb # requires RubyVM
 gdbm/test_gdbm.rb
 test_pty.rb
 win32ole/test_err_in_callback.rb

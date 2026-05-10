@@ -5,11 +5,13 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), "spec_helper"))
 
+module FunctionSpec
 describe FFI::Function do
   module LibTest
     extend FFI::Library
     ffi_lib TestLibrary::PATH
     attach_function :testFunctionAdd, [:int, :int, :pointer], :int
+    freeze
   end
   before do
     @libtest = FFI::DynamicLibrary.open(TestLibrary::PATH,
@@ -26,7 +28,9 @@ describe FFI::Function do
       skip 'this is MRI-specific' if RUBY_ENGINE == 'truffleruby' || RUBY_ENGINE == 'jruby'
       FFI::Function.new(:int, []) { 5 } # Trigger initialization
 
-      expect(Thread.list.map(&:name)).to include('FFI Callback Dispatcher')
+      thread = Thread.list.find { |t| t.name == 'FFI Callback Dispatcher' }
+      expect(thread).to_not be_nil
+      expect(thread.thread_variable_get(:fork_safe)).to be true
     end
   end
 
@@ -39,26 +43,32 @@ describe FFI::Function do
   end
 
   it 'can be used as callback from C passing to it a block' do
+    skip 'this segfaults on JRuby on Macos on ARM64, see https://github.com/ffi/ffi/pull/1180#issuecomment-4108036804' if RUBY_ENGINE == 'jruby' && RbConfig::CONFIG['host'] =~ /darwin.*(aarch64|arm64)/
+
     function_add = FFI::Function.new(:int, [:int, :int]) { |a, b| a + b }
     expect(LibTest.testFunctionAdd(10, 10, function_add)).to eq(20)
   end
 
   it 'can be used as callback from C passing to it a Proc object' do
+    skip 'this segfaults on JRuby on Macos on ARM64, see https://github.com/ffi/ffi/pull/1180#issuecomment-4108036804' if RUBY_ENGINE == 'jruby' && RbConfig::CONFIG['host'] =~ /darwin.*(aarch64|arm64)/
+
     function_add = FFI::Function.new(:int, [:int, :int], Proc.new { |a, b| a + b })
     expect(LibTest.testFunctionAdd(10, 10, function_add)).to eq(20)
   end
 
-  def adder(a, b)
-    a + b
+  module TestShareable
+    def self.call(a, b)
+      a + b
+    end
   end
 
   it "can be made shareable for Ractor", :ractor do
-    add = FFI::Function.new(:int, [:int, :int], &method(:adder))
+    add = FFI::Function.new(:int, [:int, :int], TestShareable)
     Ractor.make_shareable(add)
 
     res = Ractor.new(add) do |add2|
       LibTest.testFunctionAdd(10, 10, add2)
-    end.take
+    end.value
 
     expect( res ).to eq(20)
   end
@@ -67,7 +77,7 @@ describe FFI::Function do
     res = Ractor.new do
       function_add = FFI::Function.new(:int, [:int, :int]) { |a, b| a + b }
       LibTest.testFunctionAdd(10, 10, function_add)
-    end.take
+    end.value
 
     expect( res ).to eq(20)
   end
@@ -145,4 +155,5 @@ describe FFI::Function do
     size = ObjectSpace.memsize_of(function)
     expect(size).to be > base_size
   end
+end
 end

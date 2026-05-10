@@ -5,6 +5,7 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), "spec_helper"))
 
+module BoolSpec
 describe "Function with primitive boolean arguments and return values" do
   module LibTest
     extend FFI::Library
@@ -29,4 +30,5 @@ describe "Function with primitive boolean arguments and return values" do
   it "raise error on invalid types" do
     expect { LibTest.bool_return_val(nil) }.to raise_error(::TypeError)
   end
+end
 end

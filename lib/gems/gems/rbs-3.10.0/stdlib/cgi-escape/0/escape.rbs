@@ -1,0 +1,153 @@
+# <!-- rdoc-file=lib/cgi/escape.rb -->
+# :stopdoc
+#
+class CGI
+  include Escape
+
+  extend Escape
+
+  # <!-- rdoc-file=lib/cgi/escape.rb -->
+  # Escape/unescape for CGI, HTML, URI.
+  #
+  module Escape
+    # <!--
+    #   rdoc-file=lib/cgi/escape.rb
+    #   - escape(string)
+    # -->
+    # URL-encode a string into application/x-www-form-urlencoded. Space characters
+    # (+" "+) are encoded with plus signs (+"+"+)
+    #     url_encoded_string = CGI.escape("'Stop!' said Fred")
+    #        # => "%27Stop%21%27+said+Fred"
+    #
+    def escape: (string str) -> String
+
+    # <!--
+    #   rdoc-file=lib/cgi/escape.rb
+    #   - escapeElement(string, *elements)
+    # -->
+    # Escape only the tags of certain HTML elements in `string`.
+    #
+    # Takes an element or elements or array of elements.  Each element is specified
+    # by the name of the element, without angle brackets. This matches both the
+    # start and the end tag of that element. The attribute list of the open tag will
+    # also be escaped (for instance, the double-quotes surrounding attribute
+    # values).
+    #
+    #     print CGI.escapeElement('<BR><A HREF="url"></A>', "A", "IMG")
+    #       # "<BR>&lt;A HREF=&quot;url&quot;&gt;&lt;/A&gt"
+    #
+    #     print CGI.escapeElement('<BR><A HREF="url"></A>', ["A", "IMG"])
+    #       # "<BR>&lt;A HREF=&quot;url&quot;&gt;&lt;/A&gt"
+    #
+    def escapeElement: (string string, *String | Array[String] elements) -> String
+
+    # <!--
+    #   rdoc-file=lib/cgi/escape.rb
+    #   - escapeHTML(string)
+    # -->
+    # Escape special characters in HTML, namely '&"<>
+    #     CGI.escapeHTML('Usage: foo "bar" <baz>')
+    #        # => "Usage: foo &quot;bar&quot; &lt;baz&gt;"
+    #
+    def escapeHTML: (string str) -> String
+
+    # <!--
+    #   rdoc-file=lib/cgi/escape.rb
+    #   - escapeURIComponent(string)
+    # -->
+    # URL-encode a string following RFC 3986 Space characters (+" "+) are encoded
+    # with (+"%20"+)
+    #     url_encoded_string = CGI.escapeURIComponent("'Stop!' said Fred")
+    #        # => "%27Stop%21%27%20said%20Fred"
+    #
+    def escapeURIComponent: (string) -> String
+
+    # <!-- rdoc-file=lib/cgi/escape.rb -->
+    # Synonym for CGI.escapeElement(str)
+    #
+    alias escape_element escapeElement
+
+    # <!-- rdoc-file=lib/cgi/escape.rb -->
+    # Synonym for CGI.escapeHTML(str)
+    #
+    alias escape_html escapeHTML
+
+    # <!--
+    #   rdoc-file=lib/cgi/escape.rb
+    #   - escape_uri_component(string)
+    # -->
+    #
+    alias escape_uri_component escapeURIComponent
+
+    # <!--
+    #   rdoc-file=lib/cgi/escape.rb
+    #   - h(string)
+    # -->
+    #
+    alias h escapeHTML
+
+    # <!--
+    #   rdoc-file=lib/cgi/escape.rb
+    #   - unescape(string, encoding = @@accept_charset)
+    # -->
+    # URL-decode an application/x-www-form-urlencoded string with
+    # encoding(optional).
+    #     string = CGI.unescape("%27Stop%21%27+said+Fred")
+    #        # => "'Stop!' said Fred"
+    #
+    def unescape: (string str, ?encoding encoding) -> String
+
+    # <!--
+    #   rdoc-file=lib/cgi/escape.rb
+    #   - unescapeElement(string, *elements)
+    # -->
+    # Undo escaping such as that done by CGI.escapeElement()
+    #
+    #     print CGI.unescapeElement(
+    #             CGI.escapeHTML('<BR><A HREF="url"></A>'), "A", "IMG")
+    #       # "&lt;BR&gt;<A HREF="url"></A>"
+    #
+    #     print CGI.unescapeElement(
+    #             CGI.escapeHTML('<BR><A HREF="url"></A>'), ["A", "IMG"])
+    #       # "&lt;BR&gt;<A HREF="url"></A>"
+    #
+    def unescapeElement: (string string, *String | Array[String] elements) -> String
+
+    # <!--
+    #   rdoc-file=lib/cgi/escape.rb
+    #   - unescapeHTML(string)
+    # -->
+    # Unescape a string that has been HTML-escaped
+    #     CGI.unescapeHTML("Usage: foo &quot;bar&quot; &lt;baz&gt;")
+    #        # => "Usage: foo \"bar\" <baz>"
+    #
+    def unescapeHTML: (string str) -> String
+
+    # <!--
+    #   rdoc-file=lib/cgi/escape.rb
+    #   - unescapeURIComponent(string, encoding = @@accept_charset)
+    # -->
+    # URL-decode a string following RFC 3986 with encoding(optional).
+    #     string = CGI.unescapeURIComponent("%27Stop%21%27+said%20Fred")
+    #        # => "'Stop!'+said Fred"
+    #
+    def unescapeURIComponent: (string) -> String
+
+    # <!-- rdoc-file=lib/cgi/escape.rb -->
+    # Synonym for CGI.unescapeElement(str)
+    #
+    alias unescape_element unescapeElement
+
+    # <!-- rdoc-file=lib/cgi/escape.rb -->
+    # Synonym for CGI.unescapeHTML(str)
+    #
+    alias unescape_html unescapeHTML
+
+    # <!--
+    #   rdoc-file=lib/cgi/escape.rb
+    #   - unescape_uri_component(string, encoding = @@accept_charset)
+    # -->
+    #
+    alias unescape_uri_component unescapeURIComponent
+  end
+end

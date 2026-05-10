@@ -40,7 +40,8 @@ require 'socket'
 #   p ipaddr3                   #=> #<IPAddr: IPv4:192.168.2.0/255.255.255.0>
 
 class IPAddr
-  VERSION = "1.2.7"
+  # The version string
+  VERSION = "1.2.8"
 
   # 32 bit mask for IPv4
   IN4MASK = 0xffffffff
@@ -149,6 +150,16 @@ class IPAddr
   # Returns a new ipaddr built by bitwise negation.
   def ~
     return self.clone.set(addr_mask(~@addr))
+  end
+
+  # Returns a new ipaddr greater than the original address by offset
+  def +(offset)
+    self.clone.set(@addr + offset, @family)
+  end
+
+  # Returns a new ipaddr less than the original address by offset
+  def -(offset)
+    self.clone.set(@addr - offset, @family)
   end
 
   # Returns true if two ipaddrs are equal.
@@ -343,7 +354,7 @@ class IPAddr
     _ipv4_compat?
   end
 
-  def _ipv4_compat?
+  def _ipv4_compat?             # :nodoc:
     if !ipv6? || (@addr >> 32) != 0
       return false
     end
@@ -371,7 +382,9 @@ class IPAddr
     if !ipv4?
       raise InvalidAddressError, "not an IPv4 address: #{@addr}"
     end
-    return self.clone.set(@addr, Socket::AF_INET6)
+    clone = self.clone.set(@addr, Socket::AF_INET6)
+    clone.instance_variable_set(:@mask_addr, @mask_addr | 0xffffffffffffffffffffffff00000000)
+    clone
   end
 
   # Returns a new ipaddr built by converting the IPv6 address into a
@@ -533,6 +546,7 @@ class IPAddr
   end
 
   protected
+  # :stopdoc:
 
   def begin_addr
     @addr & @mask_addr
@@ -548,6 +562,7 @@ class IPAddr
       raise AddressFamilyError, "unsupported address family"
     end
   end
+  #:startdoc:
 
   # Set +@addr+, the internal stored ip address, to given +addr+. The
   # parameter +addr+ is validated using the first +family+ member,
@@ -689,6 +704,7 @@ class IPAddr
     end
   end
 
+  # :stopdoc:
   def coerce_other(other)
     case other
     when IPAddr
@@ -709,8 +725,8 @@ class IPAddr
       octets = addr.split('.')
     end
     octets.inject(0) { |i, s|
-      (n = s.to_i) < 256 or raise InvalidAddressError, "invalid address: #{@addr}"
-      (s != '0') && s.start_with?('0') and raise InvalidAddressError, "zero-filled number in IPv4 address is ambiguous: #{@addr}"
+      (n = s.to_i) < 256 or raise InvalidAddressError, "invalid address: #{addr}"
+      (s != '0') && s.start_with?('0') and raise InvalidAddressError, "zero-filled number in IPv4 address is ambiguous: #{addr}"
       i << 8 | n
     }
   end
@@ -800,7 +816,7 @@ unless Socket.const_defined? :AF_INET6
   class << IPSocket
     private
 
-    def valid_v6?(addr)
+    def valid_v6?(addr) # :nodoc:
       case addr
       when IPAddr::RE_IPV6ADDRLIKE_FULL
         if $2

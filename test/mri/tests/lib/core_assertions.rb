@@ -77,9 +77,18 @@ module Test
       require_relative 'envutil'
       require 'pp'
       begin
-        # require '-test-/asan'
+        require '-test-/sanitizers'
       rescue LoadError
+        # in test-unit-ruby-core gem
+        def sanitizers
+          nil
+        end
+      else
+        def sanitizers
+          Test::Sanitizers
+        end
       end
+      module_function :sanitizers
 
       nil.pretty_inspect
 
@@ -99,13 +108,16 @@ module Test
       end
 
       def assert_in_out_err(args, test_stdin = "", test_stdout = [], test_stderr = [], message = nil,
-                            success: nil, **opt)
+                            success: nil, failed: nil, gems: false, **opt)
         omit 'assert_in_out_err is too slow on TruffleRuby' unless ALLOW_SUBPROCESSES
 
         args = Array(args).dup
-        args.insert((Hash === args[0] ? 1 : 0), '--disable=gems')
+        unless gems.nil?
+          args.insert((Hash === args[0] ? 1 : 0), "--#{gems ? 'enable' : 'disable'}=gems")
+        end
         stdout, stderr, status = EnvUtil.invoke_ruby(args, test_stdin, true, true, **opt)
-        desc = FailDesc[status, message, stderr]
+        desc = failed[status, message, stderr] if failed
+        desc ||= FailDesc[status, message, stderr]
         if block_given?
           raise "test_stdout ignored, use block only or without block" if test_stdout != []
           raise "test_stderr ignored, use block only or without block" if test_stderr != []
@@ -164,7 +176,7 @@ module Test
         pend 'assert_no_memory_leak may consider MJIT memory usage as leak' if defined?(RubyVM::MJIT) && RubyVM::MJIT.enabled?
         # ASAN has the same problem - its shadow memory greatly increases memory usage
         # (plus asan has better ways to detect memory leaks than this assertion)
-        pend 'assert_no_memory_leak may consider ASAN memory usage as leak' if defined?(Test::ASAN) && Test::ASAN.enabled?
+        pend 'assert_no_memory_leak may consider ASAN memory usage as leak' if sanitizers&.asan_enabled?
 
         require_relative 'memory_status'
         raise Test::Unit::PendedError, "unsupported platform" unless defined?(Memory::Status)
@@ -338,7 +350,16 @@ eom
         args = args.dup
         args.insert((Hash === args.first ? 1 : 0), "-w", "--disable=gems", *$:.map {|l| "-I#{l}"})
         args << "--debug" if RUBY_ENGINE == 'jruby' # warning: tracing (e.g. set_trace_func) will not capture all events without --debug flag
+        # power_assert 3 requires ruby 3.1 or later
+        args << "-W:no-experimental" if RUBY_VERSION < "3.1."
         stdout, stderr, status = EnvUtil.invoke_ruby(args, src, capture_stdout, true, **opt)
+
+        if sanitizers&.lsan_enabled?
+          # LSAN may output messages like the following line into stderr. We should ignore it.
+          #   ==276855==Running thread 276851 was not suspended. False leaks are possible.
+          # See https://github.com/google/sanitizers/issues/1479
+          stderr.gsub!(/==\d+==Running thread \d+ was not suspended\. False leaks are possible\.\n/, "")
+        end
       ensure
         if res_c
           res_c.close
@@ -388,9 +409,17 @@ eom
 
       # Run Ractor-related test without influencing the main test suite
       def assert_ractor(src, args: [], require: nil, require_relative: nil, file: nil, line: nil, ignore_stderr: nil, **opt)
-        return unless defined?(Ractor)
+        omit unless defined?(Ractor)
 
-        require = "require #{require.inspect}" if require
+        # https://bugs.ruby-lang.org/issues/21262
+        shim_value = "class Ractor; alias value take; end" unless Ractor.method_defined?(:value)
+        shim_join = "class Ractor; alias join take; end" unless Ractor.method_defined?(:join)
+
+        if require
+          require = [require] unless require.is_a?(Array)
+          require = require.map {|r| "require #{r.inspect}"}.join("\n")
+        end
+
         if require_relative
           dir = File.dirname(caller_locations[0,1][0].absolute_path)
           full_path = File.expand_path(require_relative, dir)
@@ -398,6 +427,8 @@ eom
         end
 
         assert_separately(args, file, line, <<~RUBY, ignore_stderr: ignore_stderr, **opt)
+          #{shim_value}
+          #{shim_join}
           #{require}
           previous_verbose = $VERBOSE
           $VERBOSE = nil
@@ -508,19 +539,15 @@ eom
         case expected
         when String
           assert = :assert_equal
-        when Regexp
-          assert = :assert_match
         else
-          raise TypeError, "Expected #{expected.inspect} to be a kind of String or Regexp, not #{expected.class}"
+          assert_respond_to(expected, :===)
+          assert = :assert_match
         end
 
-        ex = m = nil
-        EnvUtil.with_default_internal(expected.encoding) do
-          ex = assert_raise(exception, msg || proc {"Exception(#{exception}) with message matches to #{expected.inspect}"}) do
-            yield
-          end
-          m = ex.message
+        ex = assert_raise(exception, msg || proc {"Exception(#{exception}) with message matches to #{expected.inspect}"}) do
+          yield
         end
+        m = ex.message
         msg = message(msg, "") {"Expected Exception(#{exception}) was raised, but the message doesn't match"}
 
         if assert == :assert_equal
@@ -531,6 +558,43 @@ eom
           block.binding.eval("proc{|_|$~=_}").call($~)
         end
         ex
+      end
+
+      # :call-seq:
+      #   assert_raise_kind_of(*args, &block)
+      #
+      #Tests if the given block raises one of the given exceptions or
+      #sub exceptions of the given exceptions.  If the last argument
+      #is a String, it will be used as the error message.
+      #
+      #    assert_raise do #Fails, no Exceptions are raised
+      #    end
+      #
+      #    assert_raise SystemCallErr do
+      #      Dir.chdir(__FILE__) #Raises Errno::ENOTDIR, so assertion succeeds
+      #    end
+      def assert_raise_kind_of(*exp, &b)
+        case exp.last
+        when String, Proc
+          msg = exp.pop
+        end
+
+        begin
+          yield
+        rescue Test::Unit::PendedError => e
+          raise e unless exp.include? Test::Unit::PendedError
+        rescue *exp => e
+          pass
+        rescue Exception => e
+          flunk(message(msg) {"#{mu_pp(exp)} family exception expected, not #{mu_pp(e)}"})
+        ensure
+          unless e
+            exp = exp.first if exp.size == 1
+
+            flunk(message(msg) {"#{mu_pp(exp)} family expected but nothing was raised"})
+          end
+        end
+        e
       end
 
       TEST_DIR = File.join(__dir__, "test/unit") #:nodoc:
@@ -652,7 +716,7 @@ eom
 
       def assert_warning(pat, msg = nil)
         result = nil
-        stderr = EnvUtil.with_default_internal(pat.encoding) {
+        stderr = EnvUtil.with_default_internal(of: pat) {
           EnvUtil.verbose_warning {
             result = yield
           }
@@ -666,17 +730,15 @@ eom
         assert_warning(*args) {$VERBOSE = false; yield}
       end
 
-      def assert_deprecated_warning(mesg = /deprecated/)
+      def assert_deprecated_warning(mesg = /deprecated/, &block)
         assert_warning(mesg) do
-          Warning[:deprecated] = true if Warning.respond_to?(:[]=)
-          yield
+          EnvUtil.deprecation_warning(&block)
         end
       end
 
-      def assert_deprecated_warn(mesg = /deprecated/)
+      def assert_deprecated_warn(mesg = /deprecated/, &block)
         assert_warn(mesg) do
-          Warning[:deprecated] = true if Warning.respond_to?(:[]=)
-          yield
+          EnvUtil.deprecation_warning(&block)
         end
       end
 
@@ -813,6 +875,9 @@ eom
             rescue
               # Constants may be defined but not implemented, e.g., mingw.
             else
+              unless Process.clock_getres(clk) < 1.0e-03
+                next # needs msec precision
+              end
               PERFORMANCE_CLOCK = clk
             end
           end

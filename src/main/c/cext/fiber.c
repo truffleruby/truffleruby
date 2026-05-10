@@ -41,6 +41,6 @@ VALUE rb_fiber_new(rb_block_call_func_t function, VALUE value) {
   return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_fiber_new", function, rb_tr_unwrap(value)));
 }
 
-VALUE rb_fiber_raise(VALUE fiber, int argc, const VALUE *argv) {
+VALUE rb_fiber_raise(VALUE fiber, int argc, VALUE *argv) {
   return rb_funcallv(fiber, rb_intern("raise"), argc, argv);
 }

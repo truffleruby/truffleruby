@@ -866,16 +866,21 @@ public abstract class ThreadNodes {
                     new SafepointAction("Thread#raise", rubyThread, true, false) {
                         @Override
                         public void run(RubyThread rubyThread, Node currentNode) {
-                            final TruffleSafepoint safepoint = TruffleSafepoint.getCurrent();
-                            boolean sideEffects = safepoint.setAllowSideEffects(false);
-                            try {
-                                RubyContext.send(currentNode, rubyThread, "raise", exception);
-                            } finally {
-                                safepoint.setAllowSideEffects(sideEffects);
-                            }
-                            throw CompilerDirectives.shouldNotReachHere("#raise did not throw?");
+                            raiseExceptionInTargetFiberOrThread(currentNode, exception);
                         }
                     });
+        }
+
+        public static void raiseExceptionInTargetFiberOrThread(Node currentNode, RubyException exception) {
+            final TruffleSafepoint safepoint = TruffleSafepoint.getCurrent();
+            boolean sideEffects = safepoint.setAllowSideEffects(false);
+            try {
+                RubyContext.send(currentNode, coreLibrary(currentNode).truffleExceptionOperationsModule,
+                        "raise_exception_in_target_fiber_or_thread", exception);
+            } finally {
+                safepoint.setAllowSideEffects(sideEffects);
+            }
+            throw CompilerDirectives.shouldNotReachHere("#raise did not throw?");
         }
 
     }

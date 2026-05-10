@@ -6,17 +6,18 @@ require:
   - ./tool/rubocop-truffleruby/cop/replace_with_primitive_true_and_false_predicates.rb
 
 AllCops:
-  TargetRubyVersion: 3.4
+  TargetRubyVersion: 4.0
   DisabledByDefault: true
   DisplayCopNames: true
   ExtraDetails: true
   Exclude:
     - 'lib/truffle/date/format.rb' # crashes Rubocop in VariableForce
     - 'lib/truffle/date/delta/parser.rb' # generated code
-    - 'lib/truffle/pathname.rb' # from upstream and should be upstreamed
     - 'lib/truffle/socket/mri.rb' # taken from MRI
     - 'lib/truffle/ffi/**/*.rb' # taken from FFI gem
     - 'src/main/ruby/truffleruby/core/truffle/ffi/pointer_extra.rb' # taken from FFI gem
+    - 'src/main/ruby/truffleruby/core/pathname.rb' # from upstream
+    - 'src/main/ruby/truffleruby/core/set.rb' # from the set gem
     - 'src/test-internal/ruby/types.rb' # deliberately strange code for debugging purposes
     - 'src/tck/ruby/lexical-context.rb' # deliberately strange code for debugging purposes
 

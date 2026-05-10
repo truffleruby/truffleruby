@@ -27,6 +27,7 @@ import org.truffleruby.builtins.PrimitiveNode;
 import org.truffleruby.core.array.ArrayGuards;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.array.library.ArrayStoreLibrary;
+import org.truffleruby.core.cast.BooleanCastNode;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.thread.RubyBacktraceLocation;
@@ -36,6 +37,7 @@ import org.truffleruby.annotations.Visibility;
 import org.truffleruby.language.backtrace.Backtrace;
 import org.truffleruby.language.backtrace.BacktraceFormatter;
 import org.truffleruby.language.control.RaiseException;
+import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.language.methods.LookupMethodOnSelfNode;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -200,24 +202,18 @@ public abstract class ExceptionNodes {
     @Primitive(name = "exception_backtrace?")
     public abstract static class BacktraceQueryPrimitiveNode extends PrimitiveArrayArgumentsNode {
 
-        protected static final String METHOD = "backtrace";
-
-        /* We can cheaply determine if an Exception has a backtrace via object inspection. However, if
-         * `Exception#backtrace` is redefined, then `Exception#backtrace?` needs to follow along to be consistent. So,
-         * we check if the method has been redefined here and if so, fall back to the Ruby code for the method by
-         * returning `FAILURE` in the fallback specialization. */
-        @Specialization(
-                guards = {
-                        "lookupNode.lookupProtected(frame, exception, METHOD) == getContext().getCoreMethods().EXCEPTION_BACKTRACE", },
-                limit = "1")
-        boolean backtraceQuery(VirtualFrame frame, RubyException exception,
-                @Cached LookupMethodOnSelfNode lookupNode) {
-            return !(exception.customBacktrace == null && exception.backtrace == null);
-        }
-
         @Specialization
-        Object fallback(RubyException exception) {
-            return FAILURE;
+        boolean backtraceQuery(VirtualFrame frame, RubyException exception,
+                @Cached LookupMethodOnSelfNode lookupNode,
+                @Cached DispatchNode callBacktrace,
+                @Cached BooleanCastNode booleanCastNode) {
+            // If exc.backtrace is the standard Exception#backtrace we can do a quick check, otherwise we must call the #backtrace method
+            if (lookupNode.lookupIgnoringVisibility(frame, exception,
+                    "backtrace") == getContext().getCoreMethods().EXCEPTION_BACKTRACE) {
+                return !(exception.customBacktrace == null && exception.backtrace == null);
+            } else {
+                return booleanCastNode.execute(this, callBacktrace.call(exception, "backtrace"));
+            }
         }
 
         @Specialization(guards = "!isRubyException(exception)", limit = "getInteropCacheLimit()")

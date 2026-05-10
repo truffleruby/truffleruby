@@ -1,0 +1,76 @@
+%a{annotate:rdoc:skip}
+module RDoc
+  # <!-- rdoc-file=lib/rdoc/options.rb -->
+  # RDoc::Options handles the parsing and storage of options
+  #
+  # ## Saved Options
+  #
+  # You can save some options like the markup format in the `.rdoc_options` file
+  # in your gem.  The easiest way to do this is:
+  #
+  #     rdoc --markup tomdoc --write-options
+  #
+  # Which will automatically create the file and fill it with the options you
+  # specified.
+  #
+  # The following options will not be saved since they interfere with the user's
+  # preferences or with the normal operation of RDoc:
+  #
+  # *   `--coverage-report`
+  # *   `--dry-run`
+  # *   `--encoding`
+  # *   `--force-update`
+  # *   `--format`
+  # *   `--pipe`
+  # *   `--quiet`
+  # *   `--template`
+  # *   `--verbose`
+  #
+  # ## Custom Options
+  #
+  # Generators can hook into RDoc::Options to add generator-specific command line
+  # options.
+  #
+  # When `--format` is encountered in ARGV, RDoc calls ::setup_options on the
+  # generator class to add extra options to the option parser.  Options for custom
+  # generators must occur after `--format`.  `rdoc --help` will list options for
+  # all installed generators.
+  #
+  # Example:
+  #
+  #     class RDoc::Generator::Spellcheck
+  #       RDoc::RDoc.add_generator self
+  #
+  #       def self.setup_options rdoc_options
+  #         op = rdoc_options.option_parser
+  #
+  #         op.on('--spell-dictionary DICTIONARY',
+  #               RDoc::Options::Path) do |dictionary|
+  #           rdoc_options.spell_dictionary = dictionary
+  #         end
+  #       end
+  #     end
+  #
+  # Of course, RDoc::Options does not respond to `spell_dictionary` by default so
+  # you will need to add it:
+  #
+  #     class RDoc::Options
+  #
+  #       ##
+  #       # The spell dictionary used by the spell-checking plugin.
+  #
+  #       attr_accessor :spell_dictionary
+  #
+  #     end
+  #
+  # ## Option Validators
+  #
+  # OptionParser validators will validate and cast user input values.  In addition
+  # to the validators that ship with OptionParser (String, Integer, Float,
+  # TrueClass, FalseClass, Array, Regexp, Date, Time, URI, etc.), RDoc::Options
+  # adds Path, PathArray and Template.
+  #
+  class Options
+    def initialize: (?untyped loaded_options) -> void
+  end
+end

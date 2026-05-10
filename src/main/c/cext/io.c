@@ -357,7 +357,7 @@ VALUE rb_get_path(VALUE object) {
   return RUBY_INVOKE(rb_cFile, "path", object);
 }
 
-int rb_io_extract_encoding_option(VALUE opt, rb_encoding **enc_p, rb_encoding **enc2_p, int *fmode_p) {
+int rb_io_extract_encoding_option(VALUE opt, rb_encoding **enc_p, rb_encoding **enc2_p, enum rb_io_mode *fmode_p) {
   // TODO (pitr-ch 12-Jun-2017): review, just approximate implementation
   VALUE encoding = rb_cEncoding;
   VALUE external_encoding = RUBY_INVOKE(encoding, "default_external");

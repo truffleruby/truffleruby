@@ -134,6 +134,7 @@ C
     ['rb_tr_setjmp_wrapper_void_to_void', '(void):void'],
     ['rb_tr_setjmp_wrapper_pointer1_to_void', '(VALUE arg):void'],
     ['rb_tr_setjmp_wrapper_pointer2_to_void', '(VALUE tracepoint, void *data):void'],
+    ['rb_tr_setjmp_wrapper_pointer2_to_int', '(VALUE element, VALUE arg):int'],
     ['rb_tr_setjmp_wrapper_pointer3_to_void', '(VALUE val, ID id, VALUE *data):void'],
     ['rb_tr_setjmp_wrapper_pointer3_to_int', '(VALUE key, VALUE val, VALUE arg):int'],
     ['rb_tr_setjmp_wrapper_pointer1_to_size_t', '(const void *arg):size_t'],

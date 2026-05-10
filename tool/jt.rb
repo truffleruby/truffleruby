@@ -1661,14 +1661,8 @@ module Commands
   private def test_bundle(*args)
     require 'tmpdir'
 
-    bundle_install_flags = [
-      %w[],
-      %w[--standalone],
-      %w[--deployment]
-    ]
-
-    bundle_install_flags.each do |install_flags|
-      puts "\n\nTesting Bundler with install flags: #{install_flags}"
+    %i[default standalone deployment].each do |mode|
+      puts "\n\nTesting Bundler in mode #{mode}"
       temp_dir = Dir.mktmpdir('algebrick')
       begin
         gem_home = "#{temp_dir}/gems"
@@ -1689,11 +1683,23 @@ module Commands
 
           options = %w[--experimental-options --exceptions-print-java]
 
-          run_ruby(environment, *args, *options,
-            '-Sbundle', 'install', '-V', *install_flags)
+          install_flags = []
+
+          case mode
+          when :standalone
+            install_flags << '--standalone'
+            # Bundler 4 requires the path to be set or it fails
+            environment['BUNDLE_PATH'] = 'bundle'
+          when :deployment
+            # Bundler 4 requires deployment to be set in config and not as a flag
+            environment['BUNDLE_DEPLOYMENT'] = 'true'
+          end
 
           run_ruby(environment, *args, *options,
-            '-Sbundle', 'exec', '-V', 'rake')
+            '-S', *%w[bundle install -V], *install_flags)
+
+          run_ruby(environment, *args, *options,
+            '-S', *%w[bundle exec -V rake])
         end
       ensure
         STDERR.puts 'Removing temp dir'

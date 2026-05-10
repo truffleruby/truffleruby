@@ -81,7 +81,7 @@ class Array # :nodoc:
 end
 
 ##
-# mkmf.rb is used by Ruby C extensions to generate a Makefile which will
+# \Module \MakeMakefile is used by Ruby C extensions to generate a Makefile which will
 # correctly compile and link the C extension to Ruby and a third-party
 # library.
 module MakeMakefile
@@ -488,7 +488,7 @@ MESSAGE
 
     # disable ASAN leak reporting - conftest programs almost always don't bother
     # to free their memory.
-    envs['ASAN_OPTIONS'] = "detect_leaks=0" unless ENV.key?('ASAN_OPTIONS')
+    envs['LSAN_OPTIONS'] = "detect_leaks=0" unless ENV.key?('LSAN_OPTIONS')
 
     return envs, expand[commands]
   end
@@ -936,7 +936,7 @@ int main() {printf("%"PRI_CONFTEST_PREFIX"#{neg ? 'd' : 'u'}\\n", conftest_const
         v
       }
       unless strvars.empty?
-        prepare << "char " << strvars.map {|v| "#{v}[1024]"}.join(", ") << "; "
+        prepare << "char " << strvars.map {|v| %[#{v}[1024] = ""]}.join(", ") << "; "
       end
     when nil
       call = ""
@@ -2464,6 +2464,19 @@ RULES
   # directory, i.e. the current directory.  It is included as part of the
   # +VPATH+ and added to the list of +INCFLAGS+.
   #
+  # Yields the configuration part of the makefile to be generated, as an array
+  # of strings, if the block is given.  The returned value will be used the
+  # new configuration part.
+  #
+  #   create_makefile('foo') {|conf|
+  #     [
+  #       *conf,
+  #       "MACRO_YOU_NEED = something",
+  #     ]
+  #   }
+  #
+  # If "depend" file exist in the source directory, that content will be
+  # included in the generated makefile, with formatted by depend_rules method.
   def create_makefile(target, srcprefix = nil)
     $target = target
     libpath = $DEFLIBPATH|$LIBPATH
@@ -2580,16 +2593,19 @@ TIMESTAMP_DIR = #{$extout && $extmk ? '$(extout)/.timestamp' : '.'}
     sodir = $extout ? '$(TARGET_SO_DIR)' : '$(RUBYARCHDIR)'
     n = '$(TARGET_SO_DIR)$(TARGET)'
     cleanobjs = ["$(OBJS)"]
+    cleanlibs = []
     if $extmk
       %w[bc i s].each {|ex| cleanobjs << "$(OBJS:.#{$OBJEXT}=.#{ex})"}
     end
     if target
       config_string('cleanobjs') {|t| cleanobjs << t.gsub(/\$\*/, "$(TARGET)#{deffile ? '-$(arch)': ''}")}
+      cleanlibs << '$(TARGET_SO)'
     end
+    config_string('cleanlibs') {|t| cleanlibs << t.gsub(/\$\*/) {n}}
     conf << "\
 TARGET_SO_DIR =#{$extout ? " $(RUBYARCHDIR)/" : ''}
 TARGET_SO     = $(TARGET_SO_DIR)$(DLLIB)
-CLEANLIBS     = #{'$(TARGET_SO) ' if target}#{config_string('cleanlibs') {|t| t.gsub(/\$\*/) {n}}}
+CLEANLIBS     = #{cleanlibs.join(' ')}
 CLEANOBJS     = #{cleanobjs.join(' ')} *.bak
 TARGET_SO_DIR_TIMESTAMP = #{timestamp_file(sodir, target_prefix)}
 " #"

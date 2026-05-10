@@ -9,7 +9,11 @@ class TestABI < Test::Unit::TestCase
     assert_separately [], <<~RUBY
       err = assert_raise(LoadError) { require "c/abi" }
       assert_match(/incompatible ABI version/, err.message)
-      assert_include err.message, "/c/abi."
+      if Ruby::Box.enabled?
+        assert_include err.message, "_c+abi."
+      else
+        assert_include err.message, "/c/abi."
+      end
     RUBY
   end
 
@@ -27,7 +31,11 @@ class TestABI < Test::Unit::TestCase
     assert_separately [{ "RUBY_ABI_CHECK" => "1" }], <<~RUBY
       err = assert_raise(LoadError) { require "c/abi" }
       assert_match(/incompatible ABI version/, err.message)
-      assert_include err.message, "/c/abi."
+      if Ruby::Box.enabled?
+        assert_include err.message, "_c+abi."
+      else
+        assert_include err.message, "/c/abi."
+      end
     RUBY
   end
 

@@ -28,6 +28,7 @@ import org.truffleruby.core.thread.RubyThread;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.thread.ThreadManager;
 import org.truffleruby.core.thread.ThreadManager.BlockingAction;
+import org.truffleruby.core.thread.ThreadNodes.ThreadRaisePrimitiveNode;
 import org.truffleruby.language.SafepointAction;
 import org.truffleruby.language.arguments.ArgumentsDescriptor;
 import org.truffleruby.language.arguments.NoKeywordArgumentsDescriptor;
@@ -254,7 +255,8 @@ public final class FiberManager {
             }
 
             if (operation == FiberOperation.RAISE) {
-                throw new RaiseException(context, (RubyException) resumeMessage.getArgs()[0]);
+                var exception = (RubyException) resumeMessage.getArgs()[0];
+                ThreadRaisePrimitiveNode.raiseExceptionInTargetFiberOrThread(currentNode, exception);
             }
 
             return resumeMessage.getDescriptorAndArgs();

@@ -1,0 +1,1 @@
+fails:Range#to_set given positional arguments instantiates an object of provided as the first argument set class and warns

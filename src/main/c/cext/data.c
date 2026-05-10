@@ -24,8 +24,7 @@ struct RData* rb_tr_rdata_create(RUBY_DATA_FUNC dmark, RUBY_DATA_FUNC dfree, voi
 
 struct RTypedData* rb_tr_rtypeddata_create(const rb_data_type_t *data_type, void *data) {
   struct RTypedData* result = calloc(1, sizeof(struct RTypedData));
-  result->type = data_type;
-  result->typed_flag = 1;
+  *(VALUE *)&result->type = (VALUE) data_type;
   result->data = data;
   return result;
 }
@@ -43,7 +42,7 @@ void rb_tr_rdata_run_marker(struct RData* rdata) {
 
 void rb_tr_rtypeddata_run_marker(struct RTypedData* rtypeddata) {
   void* data = rtypeddata->data;
-  RUBY_DATA_FUNC dmark = rtypeddata->type->function.dmark;
+  RUBY_DATA_FUNC dmark = RB_TR_RTYPEDDATA_STRUCT_TYPE(rtypeddata)->function.dmark;
   if (data != NULL && dmark != NULL) {
     rb_tr_setjmp_wrapper_pointer1_to_void(dmark, data);
   }
@@ -51,7 +50,7 @@ void rb_tr_rtypeddata_run_marker(struct RTypedData* rtypeddata) {
 
 size_t rb_tr_rtypeddata_run_memsizer(struct RTypedData* rtypeddata) {
   void* data = rtypeddata->data;
-  size_t (*dsize)(const void *) = rtypeddata->type->function.dsize;
+  size_t (*dsize)(const void *) = RB_TR_RTYPEDDATA_STRUCT_TYPE(rtypeddata)->function.dsize;
   if (data != NULL && dsize != NULL) {
     return rb_tr_setjmp_wrapper_pointer1_to_size_t(dsize, data);
   } else {
@@ -75,7 +74,7 @@ void rb_tr_rdata_run_finalizer(struct RData* rdata) {
 
 void rb_tr_rtypeddata_run_finalizer(struct RTypedData* rtypeddata) {
   void* data = rtypeddata->data;
-  RUBY_DATA_FUNC dfree = rtypeddata->type->function.dfree;
+  RUBY_DATA_FUNC dfree = RB_TR_RTYPEDDATA_STRUCT_TYPE(rtypeddata)->function.dfree;
   if (data != NULL) {
     if (dfree == RUBY_DEFAULT_FREE) {
       ruby_xfree(data);
@@ -96,7 +95,7 @@ struct RData* rb_tr_rdata(VALUE object) {
 
 struct RTypedData* rb_tr_rtypeddata(VALUE object) {
   struct RTypedData* rtypeddata = polyglot_invoke(RUBY_CEXT, "RTYPEDDATA", rb_tr_unwrap(object));
-  if (rtypeddata->type->function.dmark) {
+  if (RB_TR_RTYPEDDATA_STRUCT_TYPE(rtypeddata)->function.dmark) {
     polyglot_invoke(RUBY_CEXT, "mark_object_on_call_exit", rb_tr_unwrap(object));
   }
   return rtypeddata;
@@ -142,13 +141,18 @@ VALUE rb_data_typed_object_make(VALUE ruby_class, const rb_data_type_t *type, vo
   return result;
 }
 
-void *rb_check_typeddata(VALUE value, const rb_data_type_t *data_type) {
+void *rb_check_typeddata(VALUE value, const rb_data_type_t *expected_type) {
   struct RTypedData* typed_data = RTYPEDDATA(value);
   // NOTE: this function is used on every access to typed data so it should remain fast.
   // RB_TYPE_P(value, T_DATA) is already checked by `RTYPEDDATA(value)`, see Truffle::CExt.RTYPEDDATA().
   // RTYPEDDATA_P(value) is already checked implicitly by `typed_data->type` which would return `nil` if not `RTYPEDDATA_P`.
-  if (!rb_typeddata_inherited_p(typed_data->type, data_type)) {
-    rb_raise(rb_eTypeError, "wrong argument type %"PRIsVALUE" (expected %s)", rb_obj_class(value), data_type->wrap_struct_name);
+  const rb_data_type_t *actual_type = RB_TR_RTYPEDDATA_STRUCT_TYPE(typed_data);
+  if (RB_LIKELY(actual_type == expected_type)) {
+    return typed_data->data;
+  }
+
+  if (!rb_typeddata_inherited_p(actual_type->parent, expected_type)) {
+    rb_raise(rb_eTypeError, "wrong argument type %"PRIsVALUE" (expected %s)", rb_obj_class(value), expected_type->wrap_struct_name);
   }
   return typed_data->data;
 }

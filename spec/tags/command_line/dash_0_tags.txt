@@ -1,2 +1,4 @@
 slow:The -0 command line option sets $/ and $-0
 fails:The -0 command line option sets $/ and $-0
+slow:The -0 command line option sets $/ and $-0 as a frozen string
+fails:The -0 command line option sets $/ and $-0 as a frozen string

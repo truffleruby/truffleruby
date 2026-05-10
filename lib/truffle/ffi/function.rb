@@ -51,11 +51,34 @@ module FFI
       end
     end
 
+    if RUBY_PLATFORM == 'aarch64-mingw-ucrt'
+      # Use a workaround for https://github.com/libffi/libffi/issues/905
+      def attach(mod, name)
+        this = self
+        body = proc do |*args, &block|
+          this.call(*args, &block)
+        end
+
+        mod.define_method(name, body)
+        mod.define_singleton_method(name, body)
+
+        # Store function Proc's for re-definition as Ractor-shareable in Library#freeze
+        funcs = mod.instance_variable_get("@ffi_function_procs")
+        unless funcs
+          funcs = {}
+          mod.instance_variable_set("@ffi_function_procs", funcs)
+        end
+        funcs[name] = self
+
+        self
+      end
+    end
+
     # Stash the Function in a module variable so it can be inspected by attached_functions.
     # On CRuby it also ensures that it does not get garbage collected.
     module RegisterAttach
       def attach(mod, name)
-        funcs = mod.instance_variable_get("@ffi_functions")
+        funcs = mod.instance_variable_defined?("@ffi_functions") && mod.instance_variable_get("@ffi_functions")
         unless funcs
           funcs = {}
           mod.instance_variable_set("@ffi_functions", funcs)

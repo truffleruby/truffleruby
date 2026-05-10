@@ -1,0 +1,7 @@
+fails:Math.expm1 calculates Math.exp(arg) - 1
+fails:Math.expm1 preserves precision that can be lost otherwise
+fails:Math.expm1 raises a TypeError if the argument cannot be coerced with Float()
+fails:Math.expm1 returns NaN given NaN
+fails:Math.expm1 raises a TypeError if the argument is nil
+fails:Math.expm1 accepts any argument that can be coerced with Float()
+fails:Math#expm1 is accessible as a private instance method

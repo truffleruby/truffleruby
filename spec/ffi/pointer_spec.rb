@@ -56,7 +56,7 @@ describe "Pointer" do
     expect(PointerTestLib.ptr_ret_int32_t(ptr, 0)).to eq(magic)
   end
 
-  it "Fixnum cannot be used as a Pointer argument" do
+  it "Integer cannot be used as a Pointer argument" do
     expect { PointerTestLib.ptr_ret_int32_t(0, 0) }.to raise_error(ArgumentError)
   end
 
@@ -74,6 +74,16 @@ describe "Pointer" do
     expect(memory.to_ptr).to eq(memory)
 
     expect(FFI::Pointer::NULL.to_ptr).to eq(FFI::Pointer::NULL)
+  end
+
+  it "equals itself" do
+    memory = FFI::MemoryPointer.new :pointer
+    expect(memory == memory).to be true
+  end
+
+  it "does not equal non pointers" do
+    memory = FFI::MemoryPointer.new :pointer
+    expect(memory == Hash.new).to be false
   end
 
   describe "pointer type methods" do
@@ -160,6 +170,9 @@ describe "Pointer" do
     end
     it 'returns true when compared with nil' do
       expect((FFI::Pointer::NULL == nil)).to be true
+    end
+    it 'returns false when compared with a non-pointer object' do
+      expect((FFI::Pointer::NULL == Array.new)).to be false
     end
     it 'should not raise an error when attempting read/write zero length array' do
       null_ptr = FFI::Pointer::NULL
@@ -266,15 +279,15 @@ describe "Pointer" do
 
   describe "#inspect" do
     it "should include the address" do
-      FFI::Pointer.new(1234).inspect.should =~ /address=0x0*4d2/
+      expect(FFI::Pointer.new(1234).inspect).to match(/address=0x0*4d2/)
     end
 
     it "should not include the size if the pointer is unsized" do
-      FFI::Pointer.new(1234).inspect.should_not =~ /size=/
+      expect(FFI::Pointer.new(1234).inspect).not_to match(/size=/)
     end
 
     it "should include the size if there is one" do
-      FFI::MemoryPointer.new(:char, 16).inspect.should =~ /size=16/
+      expect(FFI::MemoryPointer.new(:char, 16).inspect).to match(/size=16/)
     end
   end
 end
@@ -421,6 +434,30 @@ describe "AutoPointer" do
       aptr[1].write_uint(0xcafebabe)
       expect(mptr[0].read_uint).to eq(0xfee1dead)
       expect(mptr[1].read_uint).to eq(0xcafebabe)
+    end
+  end
+
+  module AutoPointerSpec
+    class CPtr < FFI::AutoPointer
+      def self.release(ptr)
+        C.free(ptr)
+      end
+    end
+
+    module C
+      extend FFI::Library
+      ffi_lib FFI::Library::LIBC
+
+      attach_function :malloc, [:size_t], CPtr
+      attach_function :free, [CPtr], :void
+    end
+  end
+
+  describe "#dup" do
+    it "denies duplication" do
+      aptr = AutoPointerSpec::C.malloc(4)
+      expect{ aptr.dup }.to raise_error(RuntimeError, /cannot duplicate/)
+      expect{ aptr.clone }.to raise_error(RuntimeError, /cannot duplicate/)
     end
   end
 

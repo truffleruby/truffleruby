@@ -9,14 +9,14 @@ Gem::Specification.new do |s|
   s.metadata = { "changelog_uri" => "https://github.com/ruby/net-protocol/releases", "homepage_uri" => "https://github.com/ruby/net-protocol", "source_code_uri" => "https://github.com/ruby/net-protocol" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Yukihiro Matsumoto".freeze]
-  s.date = "2026-03-11"
+  s.date = "2026-03-17"
   s.description = "The abstract interface for net-* client.".freeze
   s.email = ["matz@ruby-lang.org".freeze]
-  s.files = ["net/protocol.rb".freeze]
+  s.files = ["lib/net/protocol.rb".freeze]
   s.homepage = "https://github.com/ruby/net-protocol".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.6.0".freeze)
-  s.rubygems_version = "3.6.9".freeze
+  s.rubygems_version = "4.0.6".freeze
   s.summary = "The abstract interface for net-* client.".freeze
 
   s.specification_version = 4

@@ -135,7 +135,7 @@ module FFI
     #   ffi_lib_flags(:lazy, :local) # => 5
     #
     # @param [Symbol, …] flags (see {FlagsMap})
-    # @return [Fixnum] the new value
+    # @return [Integer] the new value
     def ffi_lib_flags(*flags)
       @ffi_lib_flags = flags.inject(0) { |result, f| result | FlagsMap[f] }
     end
@@ -287,7 +287,7 @@ module FFI
       if type.is_a?(Class) && type < FFI::Struct
         # If it is a global struct, just attach directly to the pointer
         s = s = type.new(address) # Assigning twice to suppress unused variable warning
-        self.module_eval <<-code, __FILE__, __LINE__
+        self.module_eval(<<-code, __FILE__, __LINE__)
           @ffi_gsvars = {} unless defined?(@ffi_gsvars)
           @ffi_gsvars[#{mname.inspect}] = s
           def self.#{mname}
@@ -302,7 +302,7 @@ module FFI
         #
         # Attach to this module as mname/mname=
         #
-        self.module_eval <<-code, __FILE__, __LINE__
+        self.module_eval(<<-code, __FILE__, __LINE__)
           @ffi_gvars = {} unless defined?(@ffi_gvars)
           @ffi_gvars[#{mname.inspect}] = s
           def self.#{mname}
@@ -393,6 +393,26 @@ module FFI
       else
         FFI.find_type(old)
       end
+    end
+
+    # @param [DataConverter, Type, Struct, Symbol] t type to find
+    # @return [Type]
+    # Find a type definition.
+    def find_type(t)
+      if t.kind_of?(Type)
+        t
+
+      elsif defined?(@ffi_typedefs) && @ffi_typedefs.has_key?(t)
+        @ffi_typedefs[t]
+
+      elsif t.is_a?(Class) && t < Struct
+        Type::POINTER
+
+      elsif t.is_a?(DataConverter)
+        # Add a typedef so next time the converter is used, it hits the cache
+        typedef Type::Mapped.new(t), t
+
+      end || FFI.find_type(t)
     end
 
     private
@@ -515,26 +535,6 @@ module FFI
       @ffi_enums.__map_symbol(symbol)
     end
 
-    # @param [DataConverter, Type, Struct, Symbol] t type to find
-    # @return [Type]
-    # Find a type definition.
-    def find_type(t)
-      if t.kind_of?(Type)
-        t
-
-      elsif defined?(@ffi_typedefs) && @ffi_typedefs.has_key?(t)
-        @ffi_typedefs[t]
-
-      elsif t.is_a?(Class) && t < Struct
-        Type::POINTER
-
-      elsif t.is_a?(DataConverter)
-        # Add a typedef so next time the converter is used, it hits the cache
-        typedef Type::Mapped.new(t), t
-
-      end || FFI.find_type(t)
-    end
-
     # Retrieve all attached functions and their function signature
     #
     # This method returns a Hash of method names of attached functions connected by #attach_function and the corresponding function type.
@@ -552,10 +552,10 @@ module FFI
     # @return [Hash< Symbol => ffi_type >]
     def attached_variables
       (
-        (@ffi_gsvars || {}).map do |name, gvar|
+        (defined?(@ffi_gsvars) ? @ffi_gsvars : {}).map do |name, gvar|
           [name, gvar.class]
         end +
-        (@ffi_gvars || {}).map do |name, gvar|
+        (defined?(@ffi_gvars) ? @ffi_gvars : {}).map do |name, gvar|
           [name, gvar.layout[:gvar].type]
         end
       ).to_h
@@ -564,12 +564,28 @@ module FFI
     # Freeze all definitions of the module
     #
     # This freezes the module's definitions, so that it can be used in a Ractor.
-    # No further methods or variables can be attached and no further enums or typedefs can be created in this module afterwards.
+    # No further functions or variables can be attached and no further enums or typedefs can be created in this module afterwards.
     def freeze
+      # @ffi_function_procs is only used on aarch64-mingw-ucrt
+      instance_variable_get("@ffi_function_procs")&.each do |name, func|
+        # Redefine attached functions as Ractor-shareable.
+        # The function Proc can't be shareable from the beginning, since it references enums and typedefs.
+        this = FFI.make_shareable(func)
+        body = FFI.shareable_proc(self: nil) do |*args, &block|
+          this.call(*args, &block)
+        end
+        undef_method(name)
+        singleton_class.undef_method(name)
+
+        define_method(name, body)
+        define_singleton_method(name, body)
+      end
+
       instance_variables.each do |name|
         var = instance_variable_get(name)
         FFI.make_shareable(var)
       end
+      super
       nil
     end
   end

@@ -5,6 +5,7 @@
 
 require File.expand_path(File.join(File.dirname(__FILE__), "spec_helper"))
 
+module VariadicSpec
 describe "Function with variadic arguments" do
   module LibTest
     extend FFI::Library
@@ -18,8 +19,8 @@ describe "Function with variadic arguments" do
     callback :cbVrL, [:long], :long
 
     attach_function :testBlockingOpen, [ ], :pointer
-    attach_function :testBlockingRWva, [ :pointer, :char, :varargs ], :char, :blocking => true
-    attach_function :testBlockingWRva, [ :pointer, :char, :varargs ], :char, :blocking => true
+    attach_function :testBlockingRWva, [ :pointer, :int, :varargs ], :char, :blocking => true
+    attach_function :testBlockingWRva, [ :pointer, :int, :varargs ], :char, :blocking => true
     attach_function :testBlockingClose, [ :pointer ], :void
     attach_function :testCallbackVrDva, :testClosureVrDva, [ :double, :varargs ], :double
     attach_function :testCallbackVrILva, :testClosureVrILva, [ :int, :long, :varargs ], :long
@@ -44,7 +45,7 @@ describe "Function with variadic arguments" do
     skip 'this is not yet implemented on Truffleruby' if RUBY_ENGINE == 'truffleruby'
 
     fun = LibTest.attached_functions[:testBlockingWRva]
-    expect(fun.param_types).to eq([FFI::Type::POINTER, FFI::Type::CHAR, FFI::Type::VARARGS])
+    expect(fun.param_types).to eq([FFI::Type::POINTER, FFI::Type::INT, FFI::Type::VARARGS])
     expect(fun.return_type).to eq(FFI::Type::INT8)
   end
 
@@ -119,7 +120,7 @@ describe "Function with variadic arguments" do
     res = Ractor.new do
       pr = proc { 42.0 }
       LibTest.testCallbackVrDva(3.0, :cbVrD, pr)
-    end.take
+    end.value
 
     expect(res).to be_within(0.0000001).of(45.0)
   end
@@ -176,4 +177,5 @@ describe "Function with variadic arguments" do
       end
     end
   end
+end
 end

@@ -45,6 +45,8 @@ exclude :test_unescape, "[ArgumentError] exception expected, not #<RegexpError: 
 exclude :test_unicode_age, "RegexpError: invalid character property name <ag>: /\\A\\p{age=6.0}+\\z/"
 exclude :test_unicode_age_14_0, "RegexpError: invalid character property name <age>: /\\A\\p{age=14.0}+\\z/"
 exclude :test_unicode_age_15_0, "RegexpError: invalid character property name <age>: /\\A\\p{age=15.0}+\\z/"
+exclude :test_unicode_age_15_1, "Test::Unit::ProxyError: invalid character property name <age>: /\\A\\p{age=15.1}+\\z/"
+exclude :test_unicode_age_16_0, "Test::Unit::ProxyError: invalid character property name <age>: /\\A\\p{age=16.0}+\\z/"
 exclude :test_uninitialized, "TypeError: allocator undefined for Regexp"
 exclude :test_union, "<\"(?-mix:\\\\/)|\"> expected but was <\"(?-mix:/)|\">."
 exclude :test_union2, "</(?-mix:\\u3042)|(?-mix:\\u3042)/> expected but was </(?-mix:あ)|(?-mix:あ)/>."

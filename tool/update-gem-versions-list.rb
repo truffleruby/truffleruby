@@ -84,8 +84,9 @@ class GemVersionManifestGenerator
       line = line.strip
       next if line.empty? || line.start_with?('#')
       # Format: gem-name version repository-url [revision]
-      parts = line.split
-      bundled_gems[parts[0]] = parts[1]
+      name, version = line.split
+      next if EXCLUDED_GEMS.include?(name)
+      bundled_gems[name] = version
     end
     bundled_gems
   end

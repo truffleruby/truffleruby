@@ -44,7 +44,7 @@ module FFI
     end
 
     # Always get {FFI::Type}::POINTER.
-    def native_type
+    def native_type(_type = nil)
       FFI::Type::POINTER
     end
 

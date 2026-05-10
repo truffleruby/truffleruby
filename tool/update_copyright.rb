@@ -103,7 +103,6 @@ excludes = %w[
   lib/truffle/ffi
   lib/truffle/ffi.rb
   lib/truffle/io/console/size.rb
-  lib/truffle/pathname.rb
   lib/truffle/securerandom
   src/main/c/bigdecimal
   src/main/c/date
@@ -118,6 +117,8 @@ excludes = %w[
   src/main/c/syslog
   src/main/c/yarp
   src/main/c/zlib
+  src/main/ruby/truffleruby/core/pathname.rb
+  src/main/ruby/truffleruby/core/set.rb
   src/yarp
   spec/truffle/fixtures/hello-world
   test/truffle/pack-real-usage.rb

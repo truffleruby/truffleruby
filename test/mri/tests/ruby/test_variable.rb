@@ -388,27 +388,77 @@ class TestVariable < Test::Unit::TestCase
     end
   end
 
+  class RemoveIvar
+    class << self
+      attr_reader :ivar
+
+      def add_ivar
+        @ivar = 1
+      end
+    end
+
+    attr_reader :ivar
+
+    def add_ivar
+      @ivar = 1
+    end
+  end
+
+  def add_and_remove_ivar(obj)
+    assert_nil obj.ivar
+    assert_equal 1, obj.add_ivar
+    assert_equal 1, obj.instance_variable_get(:@ivar)
+    assert_equal 1, obj.ivar
+
+    obj.remove_instance_variable(:@ivar)
+    assert_nil obj.ivar
+
+    assert_raise NameError do
+      obj.remove_instance_variable(:@ivar)
+    end
+  end
+
+  def test_remove_instance_variables_object
+    obj = RemoveIvar.new
+    add_and_remove_ivar(obj)
+    add_and_remove_ivar(obj)
+  end
+
+  def test_remove_instance_variables_class
+    add_and_remove_ivar(RemoveIvar)
+    add_and_remove_ivar(RemoveIvar)
+  end
+
+  class RemoveIvarGeneric < Array
+    attr_reader :ivar
+
+    def add_ivar
+      @ivar = 1
+    end
+  end
+
+  def test_remove_instance_variables_generic
+    obj = RemoveIvarGeneric.new
+    add_and_remove_ivar(obj)
+    add_and_remove_ivar(obj)
+  end
+
   class ExIvar < Hash
     def initialize
       @a = 1
       @b = 2
       @c = 3
-      @d = 4
-      @e = 5
-      @f = 6
-      @g = 7
-      @h = 8
     end
 
     def ivars
-      [@a, @b, @c, @d, @e, @f, @g, @h]
+      [@a, @b, @c]
     end
   end
 
   def test_external_ivars
     3.times{
       # check inline cache for external ivar access
-      assert_equal [1, 2, 3, 4, 5, 6, 7, 8], ExIvar.new.ivars
+      assert_equal [1, 2, 3], ExIvar.new.ivars
     }
   end
 
@@ -424,6 +474,7 @@ class TestVariable < Test::Unit::TestCase
         x
       end
     end
+    objs or flunk
   end
 
   def test_local_variables_with_kwarg
@@ -445,10 +496,53 @@ class TestVariable < Test::Unit::TestCase
   end
 
   def test_local_variables_encoding
-    α = 1
+    α = 1 or flunk
     b = binding
     b.eval("".encode("us-ascii"))
     assert_equal(%i[α b], b.local_variables)
+  end
+
+  def test_genivar_cache
+    bug21547 = '[Bug #21547]'
+    klass = Class.new(Array)
+    instance = klass.new
+    instance.instance_variable_set(:@a1, 1)
+    instance.instance_variable_set(:@a2, 2)
+    Fiber.new do
+      instance.instance_variable_set(:@a3, 3)
+      instance.instance_variable_set(:@a4, 4)
+    end.resume
+    assert_equal 4, instance.instance_variable_get(:@a4), bug21547
+  end
+
+  def test_genivar_cache_free
+    str = +"hello"
+    str.instance_variable_set(:@x, :old_value)
+
+    str.instance_variable_get(:@x) # populate cache
+
+    Fiber.new {
+      str.remove_instance_variable(:@x)
+      str.instance_variable_set(:@x, :new_value)
+    }.resume
+
+    assert_equal :new_value, str.instance_variable_get(:@x)
+  end
+
+  def test_genivar_cache_invalidated_by_gc
+    str = +"hello"
+    str.instance_variable_set(:@x, :old_value)
+
+    str.instance_variable_get(:@x) # populate cache
+
+    Fiber.new {
+      str.remove_instance_variable(:@x)
+      str.instance_variable_set(:@x, :new_value)
+    }.resume
+
+    GC.start
+
+    assert_equal :new_value, str.instance_variable_get(:@x)
   end
 
   private

@@ -40,9 +40,8 @@ if str
   end
 end
 
-if Gem.respond_to?(:activate_bin_path)
-load Gem.activate_bin_path('rake', 'rake', version)
+if Gem.respond_to?(:activate_and_load_bin_path)
+  Gem.activate_and_load_bin_path('rake', 'rake', version)
 else
-gem "rake", version
-load Gem.bin_path("rake", "rake", version)
+  load Gem.activate_bin_path('rake', 'rake', version)
 end

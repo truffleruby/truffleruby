@@ -25,3 +25,4 @@ size
 step
 to_a
 to_s
+to_set

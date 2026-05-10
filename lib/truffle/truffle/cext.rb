@@ -58,6 +58,7 @@ module Truffle::CExt
     VOID_TO_VOID_WRAPPER = Primitive.interop_eval_nfi('(pointer):void').bind(lib[:rb_tr_setjmp_wrapper_void_to_void])
     POINTER_TO_VOID_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer):void').bind(lib[:rb_tr_setjmp_wrapper_pointer1_to_void])
     POINTER2_TO_VOID_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer,pointer):void').bind(lib[:rb_tr_setjmp_wrapper_pointer2_to_void])
+    POINTER2_TO_INT_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer,pointer):sint32').bind(lib[:rb_tr_setjmp_wrapper_pointer2_to_int])
     POINTER3_TO_VOID_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer,pointer,pointer):void').bind(lib[:rb_tr_setjmp_wrapper_pointer3_to_void])
     POINTER3_TO_INT_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer,pointer,pointer):sint32').bind(lib[:rb_tr_setjmp_wrapper_pointer3_to_int])
     POINTER_TO_SIZE_T_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer):uint64').bind(lib[:rb_tr_setjmp_wrapper_pointer1_to_size_t])
@@ -1200,6 +1201,22 @@ module Truffle::CExt
   end
   Primitive.always_split self, :rb_hash_foreach
 
+  def rb_set_foreach(set, func, farg)
+    set.each do |element|
+      st_result = Primitive.interop_execute(POINTER2_TO_INT_WRAPPER,
+        [func, Primitive.cext_wrap(element), farg])
+
+      case st_result
+      when ST_CONTINUE
+      when ST_CHECK
+      when ST_STOP then break
+      when ST_DELETE then set.delete(element)
+      else raise ArgumentError, "Unknown 'func' return value: #{st_result}"
+      end
+    end
+  end
+  Primitive.always_split self, :rb_hash_foreach
+
   def rb_path_to_class(path)
     begin
       const = Object.const_get(path, false)
@@ -1338,7 +1355,7 @@ module Truffle::CExt
   end
 
   def rb_make_exception(args)
-    Truffle::ExceptionOperations.make_exception(args)
+    Truffle::ExceptionOperations.make_exception(*args)
   end
 
   def rb_errinfo
@@ -2467,5 +2484,9 @@ module Truffle::CExt
 
   def rb_str_sublen(string, index)
     Primitive.string_byte_index_to_character_index(string, index)
+  end
+
+  def rb_set_new
+    Set.new
   end
 end

@@ -46,13 +46,13 @@ module FFI
     end
 
     # Set size attribute with +size+ only if +size+ is greater than attribute value.
-    # @param [Numeric] size
+    # @param [Integer] size
     def size=(size)
       @size = size if size > @size
     end
 
     # Set alignment attribute with +align+ only if it is greater than attribute value.
-    # @param [Numeric] align
+    # @param [Integer] align
     def alignment=(align)
       @alignment = align if align > @alignment
       @min_alignment = align
@@ -78,7 +78,7 @@ module FFI
     # @overload packed=(packed) Set alignment and packed attributes to
     #   +packed+.
     #
-    #   @param [Fixnum] packed
+    #   @param [Integer] packed
     #
     #   @return [packed]
     # @overload packed=(packed) Set packed attribute.
@@ -116,7 +116,7 @@ module FFI
 
     # @param [String, Symbol] name name of the field
     # @param [Array, DataConverter, Struct, StructLayout::Field, Symbol, Type] type type of the field
-    # @param [Numeric, nil] offset
+    # @param [Integer, nil] offset
     # @return [self]
     # Add a field to the builder.
     # @note Setting +offset+ to +nil+ or +-1+ is equivalent to +0+.
@@ -154,7 +154,7 @@ module FFI
 
     # @param name (see #add)
     # @param type (see #add)
-    # @param [Numeric] count array length
+    # @param [Integer] count array length
     # @param offset (see #add)
     # @return (see #add)
     # Add an array as a field to the builder.
@@ -175,9 +175,9 @@ module FFI
 
     private
 
-    # @param [Numeric] offset
-    # @param [Numeric] align
-    # @return [Numeric]
+    # @param [Integer] offset
+    # @param [Integer] align
+    # @return [Integer]
     def align(offset, align)
       align + ((offset - 1) & ~(align - 1));
     end

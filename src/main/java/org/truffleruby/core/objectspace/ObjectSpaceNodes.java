@@ -53,9 +53,9 @@ import org.truffleruby.language.yield.CallBlockNode;
 @CoreModule("ObjectSpace")
 public abstract class ObjectSpaceNodes {
 
-    @CoreMethod(names = "_id2ref", isModuleFunction = true, required = 1)
+    @Primitive(name = "objectspace_id2ref")
     @ImportStatic(ObjectIDOperations.class)
-    public abstract static class ID2RefNode extends CoreMethodArrayArgumentsNode {
+    public abstract static class ID2RefNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization(guards = "id == NIL")
         Object id2RefNil(long id) {
@@ -122,13 +122,8 @@ public abstract class ObjectSpaceNodes {
 
     }
 
-    @CoreMethod(
-            names = "each_object",
-            isModuleFunction = true,
-            needsBlock = true,
-            optional = 1,
-            returnsEnumeratorIfNoBlock = true)
-    public abstract static class EachObjectNode extends CoreMethodArrayArgumentsNode {
+    @Primitive(name = "objectspace_each_object")
+    public abstract static class EachObjectNode extends PrimitiveArrayArgumentsNode {
 
         @TruffleBoundary // for the iterator
         @Specialization

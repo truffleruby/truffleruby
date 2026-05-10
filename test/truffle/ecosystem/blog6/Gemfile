@@ -51,7 +51,14 @@ gem 'asciidoctor'
 # Use a more recent mail gem to have the correct dependencies
 gem 'mail', '>= 2.8.0.rc1'
 
+# Became bundled gems
+gem 'benchmark'
 gem 'bigdecimal'
 gem 'drb'
 gem 'mutex_m'
+gem 'tsort'
 
+# Must match the default gem version
+filename = File.expand_path("../../../../versions.json", __dir__)
+timeout_version = File.read(filename)[/"timeout": "([^"]+)"/, 1]
+gem 'timeout', timeout_version

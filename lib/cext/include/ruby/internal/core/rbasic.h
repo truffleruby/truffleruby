@@ -66,6 +66,12 @@ enum ruby_rvalue_flags {
 };
 #endif
 
+#if (SIZEOF_VALUE < SIZEOF_UINT64_T)
+#define RBASIC_SHAPE_ID_FIELD 1
+#else
+#define RBASIC_SHAPE_ID_FIELD 0
+#endif
+
 /**
  * Ruby object's base components. All Ruby objects have them in common.
  */
@@ -98,6 +104,10 @@ RBasic {
      */
     const VALUE klass;
 
+#if RBASIC_SHAPE_ID_FIELD
+    VALUE shape_id;
+#endif
+
 #ifdef __cplusplus
   public:
     RBIMPL_ATTR_CONSTEXPR(CXX11)
@@ -113,6 +123,9 @@ RBasic {
     RBasic() :
         flags(RBIMPL_VALUE_NULL),
         klass(RBIMPL_VALUE_NULL)
+#if RBASIC_SHAPE_ID_FIELD
+        , shape_id(RBIMPL_VALUE_NULL)
+#endif
     {
     }
 # define RBASIC_INIT RBasic()

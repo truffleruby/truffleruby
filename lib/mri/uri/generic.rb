@@ -73,7 +73,7 @@ module URI
     #
     # At first, tries to create a new URI::Generic instance using
     # URI::Generic::build. But, if exception URI::InvalidComponentError is raised,
-    # then it does URI::Escape.escape all URI components and tries again.
+    # then it does URI::RFC2396_PARSER.escape all URI components and tries again.
     #
     def self.build2(args)
       begin
@@ -126,9 +126,9 @@ module URI
           end
         end
       else
-        component = self.class.component rescue ::URI::Generic::COMPONENT
+        component = self.component rescue ::URI::Generic::COMPONENT
         raise ArgumentError,
-        "expected Array of or Hash of components of #{self.class} (#{component.join(', ')})"
+              "expected Array of or Hash of components of #{self} (#{component.join(', ')})"
       end
 
       tmp << nil
@@ -284,7 +284,7 @@ module URI
 
     # Returns the parser to be used.
     #
-    # Unless a URI::Parser is defined, DEFAULT_PARSER is used.
+    # Unless the +parser+ is defined, DEFAULT_PARSER is used.
     #
     def parser
       if !defined?(@parser) || !@parser
@@ -315,7 +315,7 @@ module URI
     end
 
     #
-    # Checks the scheme +v+ component against the URI::Parser Regexp for :SCHEME.
+    # Checks the scheme +v+ component against the +parser+ Regexp for :SCHEME.
     #
     def check_scheme(v)
       if v && parser.regexp[:SCHEME] !~ v
@@ -385,7 +385,7 @@ module URI
 
     #
     # Checks the user +v+ component for RFC2396 compliance
-    # and against the URI::Parser Regexp for :USERINFO.
+    # and against the +parser+ Regexp for :USERINFO.
     #
     # Can not have a registry or opaque component defined,
     # with a user component defined.
@@ -409,7 +409,7 @@ module URI
 
     #
     # Checks the password +v+ component for RFC2396 compliance
-    # and against the URI::Parser Regexp for :USERINFO.
+    # and against the +parser+ Regexp for :USERINFO.
     #
     # Can not have a registry or opaque component defined,
     # with a user component defined.
@@ -466,7 +466,7 @@ module URI
     #
     #   uri = URI.parse("http://john:S3nsit1ve@my.example.com")
     #   uri.user = "sam"
-    #   uri.to_s  #=> "http://sam:V3ry_S3nsit1ve@my.example.com"
+    #   uri.to_s  #=> "http://sam@my.example.com"
     #
     def user=(user)
       check_user(user)
@@ -592,7 +592,7 @@ module URI
 
     #
     # Checks the host +v+ component for RFC2396 compliance
-    # and against the URI::Parser Regexp for :HOST.
+    # and against the +parser+ Regexp for :HOST.
     #
     # Can not have a registry or opaque component defined,
     # with a host component defined.
@@ -689,7 +689,7 @@ module URI
 
     #
     # Checks the port +v+ component for RFC2396 compliance
-    # and against the URI::Parser Regexp for :PORT.
+    # and against the +parser+ Regexp for :PORT.
     #
     # Can not have a registry or opaque component defined,
     # with a port component defined.
@@ -763,7 +763,7 @@ module URI
 
     #
     # Checks the path +v+ component for RFC2396 compliance
-    # and against the URI::Parser Regexp
+    # and against the +parser+ Regexp
     # for :ABS_PATH and :REL_PATH.
     #
     # Can not have a opaque component defined,
@@ -868,7 +868,7 @@ module URI
 
     #
     # Checks the opaque +v+ component for RFC2396 compliance and
-    # against the URI::Parser Regexp for :OPAQUE.
+    # against the +parser+ Regexp for :OPAQUE.
     #
     # Can not have a host, port, user, or path component defined,
     # with an opaque component defined.
@@ -920,7 +920,7 @@ module URI
     end
 
     #
-    # Checks the fragment +v+ component against the URI::Parser Regexp for :FRAGMENT.
+    # Checks the fragment +v+ component against the +parser+ Regexp for :FRAGMENT.
     #
     #
     # == Args
@@ -1540,7 +1540,7 @@ module URI
         else
           unless proxy_uri = env[name]
             if proxy_uri = env[name.upcase]
-              warn 'The environment variable HTTP_PROXY is discouraged.  Use http_proxy.', uplevel: 1
+              warn 'The environment variable HTTP_PROXY is discouraged.  Please use http_proxy instead.', uplevel: 1
             end
           end
         end

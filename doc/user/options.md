@@ -9,15 +9,15 @@ Usage: truffleruby [options] [--] [filepath] [arguments]
   -a              Split each input line ($_) into fields ($F).
   -c              Check syntax (no execution).
   -Cdirpath       Execute program in specified directory.
-  -d, --debug     Set debugging flag ($DEBUG) to true.
+  -d, --debug     Set debugging flag ($DEBUG) and $VERBOSE to true.
   -e 'code'       Execute given Ruby code; multiple -e allowed.
   -Eex[:in], --encoding=ex[:in]
                   Set default external and internal encodings.
   -Fpattern       Set input field separator ($;); used with -a.
   -i[extension]   Set ARGF in-place mode;
                   create backup files with given extension.
-  -Idirpath       Add specified directory to load paths ($LOAD_PATH);
-                  multiple -I allowed.
+  -Idirpath       Prepend specified directory to load paths ($LOAD_PATH);
+                  relative paths are expanded; multiple -I are allowed.
   -l              Set output record separator ($\) to $/;
                   used for line-oriented output.
   -n              Run program in gets loop.
@@ -63,8 +63,10 @@ Warning categories:
                   Warning unused block strictly
 
 Runtime options:
-  --native                                     Ensure to run in Native mode.
-  --jvm                                        Ensure to run in JVM mode.
+  --polyglot                                   Run with all other guest languages accessible.
+  --native                                     Run using the native launcher with limited access to Java libraries
+                                               (default).
+  --jvm                                        Run on the Java Virtual Machine with access to Java libraries.
   --vm.[option]                                Pass options to the host VM. To see available options, use '--help:vm'.
   --log.file=<String>                          Redirect guest languages logging into a given file.
   --log.[logger].level=<String>                Set language log level to OFF, SEVERE, WARNING, INFO, CONFIG, FINE,
@@ -79,7 +81,7 @@ Runtime options:
 
 Languages:
   [id]        [name]                  [website]
-  llvm        LLVM                    https://www.graalvm.org/dev/reference-manual/llvm/
+  llvm        LLVM                    https://www.graalvm.org/25.0/reference-manual/llvm/
   ruby        Ruby                    https://github.com/truffleruby/truffleruby
 
 Tools:

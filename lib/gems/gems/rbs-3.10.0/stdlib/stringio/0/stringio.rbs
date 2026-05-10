@@ -1,0 +1,1658 @@
+# <!-- rdoc-file=ext/stringio/stringio.c -->
+# Class StringIO supports accessing a string as a stream,
+# similar in some ways to [class
+# IO](https://docs.ruby-lang.org/en/master/IO.html).
+# You can create a StringIO instance using:
+# *   StringIO.new: returns a new StringIO object containing the given string.
+# *   StringIO.open: passes a new StringIO object to the given block.
+# Like an IO stream, a StringIO stream has certain properties:
+# *   **Read/write mode**: whether the stream may be read, written, appended to,
+#     etc.;
+#      see [Read/Write Mode](rdoc-ref:StringIO@Read-2FWrite+Mode).
+# *   **Data mode**: text-only or binary;
+#      see [Data Mode](rdoc-ref:StringIO@Data+Mode).
+# *   **Encodings**: internal and external encodings;
+#      see [Encodings](rdoc-ref:StringIO@Encodings).
+# *   **Position**: where in the stream the next read or write is to occur;
+#      see [Position](rdoc-ref:StringIO@Position).
+# *   **Line number**: a special, line-oriented, "position" (different from the
+#     position mentioned above);
+#      see [Line Number](rdoc-ref:StringIO@Line+Number).
+# *   **Open/closed**: whether the stream is open or closed, for reading or
+#     writing.
+#      see [Open/Closed Streams](rdoc-ref:StringIO@Open-2FClosed+Streams).
+# *   **BOM**: byte mark order;
+#      see [Byte Order Mark](rdoc-ref:StringIO@BOM+-28Byte+Order+Mark-29).
+# ## About the Examples
+# Examples on this page assume that StringIO has been required:
+#     require 'stringio'
+#
+# And that this constant has been defined:
+#     TEXT = <<EOT
+# First line
+# Second line
+#
+# Fourth line
+# Fifth line
+# EOT
+#
+# ## Stream Properties
+# ### Read/Write Mode
+# #### Summary
+#        Mode        |Initial Clear?|  Read  | Write
+# -------------------|--------------|--------|--------
+#  `'r'`: read-only  |      No      |Anywhere| Error
+#  `'w'`: write-only |     Yes      | Error  |Anywhere
+# `'a'`: append-only |      No      | Error  |End only
+# `'r+'`: read/write |      No      |Anywhere|Anywhere
+# `'w+'`: read-write |     Yes      |Anywhere|Anywhere
+# `'a+'`: read/append|      No      |Anywhere|End only
+# Each section below describes a read/write mode.
+# Any of the modes may be given as a string or as file constants;
+# example:
+#     strio = StringIO.new('foo', 'a')
+# strio = StringIO.new('foo', File::WRONLY | File::APPEND)
+#
+# #### `'r'`: Read-Only
+# Mode specified as one of:
+# *   String: `'r'`.
+# *   Constant: `File::RDONLY`.
+# Initial state:
+#     strio = StringIO.new('foobarbaz', 'r')
+# strio.pos    # => 0            # Beginning-of-stream.
+# strio.string # => "foobarbaz"  # Not cleared.
+#
+# May be read anywhere:
+#     strio.gets(3) # => "foo"
+# strio.gets(3) # => "bar"
+# strio.pos = 9
+# strio.gets(3) # => nil
+#
+# May not be written:
+#     strio.write('foo')  # Raises IOError: not opened for writing
+#
+# #### `'w'`: Write-Only
+# Mode specified as one of:
+# *   String: `'w'`.
+# *   Constant: `File::WRONLY`.
+# Initial state:
+#     strio = StringIO.new('foo', 'w')
+# strio.pos    # => 0   # Beginning of stream.
+# strio.string # => ""  # Initially cleared.
+#
+# May be written anywhere (even past end-of-stream):
+#     strio.write('foobar')
+# strio.string # => "foobar"
+# strio.rewind
+# strio.write('FOO')
+# strio.string # => "FOObar"
+# strio.pos = 3
+# strio.write('BAR')
+# strio.string # => "FOOBAR"
+# strio.pos = 9
+# strio.write('baz')
+# strio.string # => "FOOBAR\u0000\u0000\u0000baz"  # Null-padded.
+#
+# May not be read:
+#     strio.read  # Raises IOError: not opened for reading
+#
+# #### `'a'`: Append-Only
+# Mode specified as one of:
+# *   String: `'a'`.
+# *   Constant: `File::WRONLY | File::APPEND`.
+# Initial state:
+#     strio = StringIO.new('foo', 'a')
+# strio.pos    # => 0      # Beginning-of-stream.
+# strio.string # => "foo"  # Not cleared.
+#
+# May be written only at the end; position does not affect writing:
+#     strio.write('bar')
+# strio.string # => "foobar"
+# strio.write('baz')
+# strio.string # => "foobarbaz"
+# strio.pos = 400
+# strio.write('bat')
+# strio.string # => "foobarbazbat"
+#
+# May not be read:
+#     strio.gets  # Raises IOError: not opened for reading
+#
+# #### `'r+'`: Read/Write
+# Mode specified as one of:
+# *   String: `'r+'`.
+# *   Constant: `File::RDRW`.
+# Initial state:
+#     strio = StringIO.new('foobar', 'r+')
+# strio.pos    # => 0         # Beginning-of-stream.
+# strio.string # => "foobar"  # Not cleared.
+#
+# May be written anywhere (even past end-of-stream):
+#     strio.write('FOO')
+# strio.string # => "FOObar"
+# strio.write('BAR')
+# strio.string # => "FOOBAR"
+# strio.write('BAZ')
+# strio.string # => "FOOBARBAZ"
+# strio.pos = 12
+# strio.write('BAT')
+# strio.string # => "FOOBARBAZ\u0000\u0000\u0000BAT"  # Null padded.
+#
+# May be read anywhere:
+#     strio.pos = 0
+# strio.gets(3) # => "FOO"
+# strio.pos = 6
+# strio.gets(3) # => "BAZ"
+# strio.pos = 400
+# strio.gets(3) # => nil
+#
+# #### `'w+'`: Read/Write (Initially Clear)
+# Mode specified as one of:
+# *   String: `'w+'`.
+# *   Constant: `File::RDWR | File::TRUNC`.
+# Initial state:
+#     strio = StringIO.new('foo', 'w+')
+# strio.pos    # => 0   # Beginning-of-stream.
+# strio.string # => ""  # Truncated.
+#
+# May be written anywhere (even past end-of-stream):
+#     strio.write('foobar')
+# strio.string # => "foobar"
+# strio.rewind
+# strio.write('FOO')
+# strio.string # => "FOObar"
+# strio.write('BAR')
+# strio.string # => "FOOBAR"
+# strio.write('BAZ')
+# strio.string # => "FOOBARBAZ"
+# strio.pos = 12
+# strio.write('BAT')
+# strio.string # => "FOOBARBAZ\u0000\u0000\u0000BAT"  # Null-padded.
+#
+# May be read anywhere:
+#     strio.rewind
+# strio.gets(3) # => "FOO"
+# strio.gets(3) # => "BAR"
+# strio.pos = 12
+# strio.gets(3) # => "BAT"
+# strio.pos = 400
+# strio.gets(3) # => nil
+#
+# #### `'a+'`: Read/Append
+# Mode specified as one of:
+# *   String: `'a+'`.
+# *   Constant: `File::RDWR | File::APPEND`.
+# Initial state:
+#     strio = StringIO.new('foo', 'a+')
+# strio.pos    # => 0      # Beginning-of-stream.
+# strio.string # => "foo"  # Not cleared.
+#
+# May be written only at the end; #rewind; position does not affect writing:
+#     strio.write('bar')
+# strio.string # => "foobar"
+# strio.write('baz')
+# strio.string # => "foobarbaz"
+# strio.pos = 400
+# strio.write('bat')
+# strio.string # => "foobarbazbat"
+#
+# May be read anywhere:
+#     strio.rewind
+# strio.gets(3) # => "foo"
+# strio.gets(3) # => "bar"
+# strio.pos = 9
+# strio.gets(3) # => "bat"
+# strio.pos = 400
+# strio.gets(3) # => nil
+#
+# ### Data Mode
+# To specify whether the stream is to be treated as text or as binary data,
+# either of the following may be suffixed to any of the string read/write modes
+# above:
+# *   `'t'`: Text;
+#      initializes the encoding as Encoding::UTF_8.
+# *   `'b'`: Binary;
+#      initializes the encoding as Encoding::ASCII_8BIT.
+# If neither is given, the stream defaults to text data.
+# Examples:
+#     strio = StringIO.new('foo', 'rt')
+# strio.external_encoding # => #<Encoding:UTF-8>
+# data = "\u9990\u9991\u9992\u9993\u9994"
+# strio = StringIO.new(data, 'rb')
+# strio.external_encoding # => #<Encoding:BINARY (ASCII-8BIT)>
+#
+# When the data mode is specified, the read/write mode may not be omitted:
+#     StringIO.new(data, 'b')  # Raises ArgumentError: invalid access mode b
+#
+# A text stream may be changed to binary by calling instance method #binmode;
+# a binary stream may not be changed to text.
+# ### Encodings
+# A stream has an encoding; see
+# [Encodings](https://docs.ruby-lang.org/en/master/language/encodings_rdoc.html)
+# .
+# The initial encoding for a new or re-opened stream depends on its [data
+# mode](rdoc-ref:StringIO@Data+Mode):
+# *   Text: `Encoding::UTF_8`.
+# *   Binary: `Encoding::ASCII_8BIT`.
+# These instance methods are relevant:
+# *   #external_encoding: returns the current encoding of the stream as an
+#     `Encoding` object.
+# *   #internal_encoding: returns `nil`; a stream does not have an internal
+#     encoding.
+# *   #set_encoding: sets the encoding for the stream.
+# *   #set_encoding_by_bom: sets the encoding for the stream to the stream's BOM
+#     (byte order mark).
+# Examples:
+#     strio = StringIO.new('foo', 'rt')  # Text mode.
+# strio.external_encoding # => #<Encoding:UTF-8>
+# data = "\u9990\u9991\u9992\u9993\u9994"
+# strio = StringIO.new(data, 'rb') # Binary mode.
+# strio.external_encoding # => #<Encoding:BINARY (ASCII-8BIT)>
+# strio = StringIO.new('foo')
+# strio.external_encoding # => #<Encoding:UTF-8>
+# strio.set_encoding('US-ASCII')
+# strio.external_encoding # => #<Encoding:US-ASCII>
+#
+# ### Position
+# A stream has a *position*, and integer offset (in bytes) into the stream.
+# The initial position of a stream is zero.
+# #### Getting and Setting the Position
+# Each of these methods initializes (to zero) the position of a new or re-opened
+# stream:
+# *   ::new: returns a new stream.
+# *   ::open: passes a new stream to the block.
+# *   #reopen: re-initializes the stream.
+# Each of these methods queries, gets, or sets the position, without otherwise
+# changing the stream:
+# *   #eof?: returns whether the position is at end-of-stream.
+# *   #pos: returns the position.
+# *   #pos=: sets the position.
+# *   #rewind: sets the position to zero.
+# *   #seek: sets the position.
+# Examples:
+#     strio = StringIO.new('foobar')
+# strio.pos  # => 0
+# strio.pos = 3
+# strio.pos  # => 3
+# strio.eof? # => false
+# strio.rewind
+# strio.pos  # => 0
+# strio.seek(0, IO::SEEK_END)
+# strio.pos  # => 6
+# strio.eof? # => true
+#
+# #### Position Before and After Reading
+# Except for #pread, a stream reading method (see [Basic
+# Reading](rdoc-ref:StringIO@Basic+Reading))
+# begins reading at the current position.
+# Except for #pread, a read method advances the position past the read
+# substring.
+# Examples:
+#     strio = StringIO.new(TEXT)
+# strio.string # => "First line\nSecond line\n\nFourth line\nFifth line\n"
+# strio.pos    # => 0
+# strio.getc   # => "F"
+# strio.pos    # => 1
+# strio.gets   # => "irst line\n"
+# strio.pos    # => 11
+# strio.pos = 24
+# strio.gets   # => "Fourth line\n"
+# strio.pos    # => 36
+#
+# strio = StringIO.new('тест') # Four 2-byte characters.
+# strio.pos = 0 # At first byte of first character.
+# strio.read    # => "тест"
+# strio.pos = 1 # At second byte of first character.
+# strio.read    # => "\x82ест"
+# strio.pos = 2 # At first of second character.
+# strio.read    # => "ест"
+#
+# strio = StringIO.new(TEXT)
+# strio.pos = 15
+# a = []
+# strio.each_line {|line| a.push(line) }
+# a         # => ["nd line\n", "\n", "Fourth line\n", "Fifth line\n"]
+# strio.pos # => 47  ## End-of-stream.
+#
+# #### Position Before and After Writing
+# Each of these methods begins writing at the current position,
+# and advances the position to the end of the written substring:
+# *   #putc: writes the given character.
+# *   #write: writes the given objects as strings.
+# *   [Kernel#puts](https://docs.ruby-lang.org/en/master/Kernel.html#method-i-pu
+#     ts): writes given objects as strings, each followed by newline.
+# Examples:
+#     strio = StringIO.new('foo')
+# strio.pos    # => 0
+# strio.putc('b')
+# strio.string # => "boo"
+# strio.pos    # => 1
+# strio.write('r')
+# strio.string # => "bro"
+# strio.pos    # => 2
+# strio.puts('ew')
+# strio.string # => "brew\n"
+# strio.pos    # => 5
+# strio.pos = 8
+# strio.write('foo')
+# strio.string # => "brew\n\u0000\u0000\u0000foo"
+# strio.pos    # => 11
+#
+# Each of these methods writes *before* the current position, and decrements the
+# position
+# so that the written data is next to be read:
+# *   #ungetbyte: unshifts the given byte.
+# *   #ungetc: unshifts the given character.
+# Examples:
+#     strio = StringIO.new('foo')
+# strio.pos = 2
+# strio.ungetc('x')
+# strio.pos    # => 1
+# strio.string # => "fxo"
+# strio.ungetc('x')
+# strio.pos    # => 0
+# strio.string # => "xxo"
+#
+# This method does not affect the position:
+# *   #truncate: truncates the stream's string to the given size.
+# Examples:
+#     strio = StringIO.new('foobar')
+# strio.pos    # => 0
+# strio.truncate(3)
+# strio.string # => "foo"
+# strio.pos    # => 0
+# strio.pos = 500
+# strio.truncate(0)
+# strio.string # => ""
+# strio.pos    # => 500
+#
+# ### Line Number
+# A stream has a line number, which initially is zero:
+# *   Method #lineno returns the line number.
+# *   Method #lineno= sets the line number.
+# The line number can be affected by reading (but never by writing);
+# in general, the line number is incremented each time the record separator
+# (default: `"\n"`) is read.
+# Examples:
+#     strio = StringIO.new(TEXT)
+# strio.string # => "First line\nSecond line\n\nFourth line\nFifth line\n"
+# strio.lineno # => 0
+# strio.gets   # => "First line\n"
+# strio.lineno # => 1
+# strio.getc   # => "S"
+# strio.lineno # => 1
+# strio.gets   # => "econd line\n"
+# strio.lineno # => 2
+# strio.gets   # => "\n"
+# strio.lineno # => 3
+# strio.gets   # => "Fourth line\n"
+# strio.lineno # => 4
+#
+# Setting the position does not affect the line number:
+#     strio.pos = 0
+# strio.lineno # => 4
+# strio.gets   # => "First line\n"
+# strio.pos    # => 11
+# strio.lineno # => 5
+#
+# And setting the line number does not affect the position:
+#     strio.lineno = 10
+# strio.pos    # => 11
+# strio.gets   # => "Second line\n"
+# strio.lineno # => 11
+# strio.pos    # => 23
+#
+# ### Open/Closed Streams
+# A new stream is open for either reading or writing, and may be open for both;
+# see [Read/Write Mode](rdoc-ref:StringIO@Read-2FWrite+Mode).
+# Each of these methods initializes the read/write mode for a new or re-opened
+# stream:
+# *   ::new: returns a new stream.
+# *   ::open: passes a new stream to the block.
+# *   #reopen: re-initializes the stream.
+# Other relevant methods:
+# *   #close: closes the stream for both reading and writing.
+# *   #close_read: closes the stream for reading.
+# *   #close_write: closes the stream for writing.
+# *   #closed?: returns whether the stream is closed for both reading and
+#     writing.
+# *   #closed_read?: returns whether the stream is closed for reading.
+# *   #closed_write?: returns whether the stream is closed for writing.
+# ### BOM (Byte Order Mark)
+# The string provided for ::new, ::open, or #reopen
+# may contain an optional [BOM](https://en.wikipedia.org/wiki/Byte_order_mark)
+# (byte order mark) at the beginning of the string;
+# the BOM can affect the stream's encoding.
+# The BOM (if provided):
+# *   Is stored as part of the stream's string.
+# *   Does *not* immediately affect the encoding.
+# *   Is *initially* considered part of the stream.
+#     utf8_bom = "\xEF\xBB\xBF"
+# string = utf8_bom + 'foo'
+# string.bytes               # => [239, 187, 191, 102, 111, 111]
+# strio.string.bytes.take(3) # => [239, 187, 191]                  # The BOM.
+# strio = StringIO.new(string, 'rb')
+# strio.string.bytes         # => [239, 187, 191, 102, 111, 111]   # BOM is part of the stored string.
+# strio.external_encoding    # => #<Encoding:BINARY (ASCII-8BIT)>  # Default for a binary stream.
+# strio.gets                 # => "\xEF\xBB\xBFfoo"                # BOM is part of the stream.
+#
+# You can call instance method #set_encoding_by_bom to "activate" the stored
+# BOM;
+# after doing so the BOM:
+# *   Is *still* stored as part of the stream's string.
+# *   *Determines* (and may have changed) the stream's encoding.
+# *   Is *no longer* considered part of the stream.
+#     strio.set_encoding_by_bom
+# strio.string.bytes      # => [239, 187, 191, 102, 111, 111]  # BOM is still part of the stored string.
+# strio.external_encoding # => #<Encoding:UTF-8>               # The new encoding.
+# strio.rewind            # => 0
+# strio.gets              # => "foo"                           # BOM is not part of the stream.
+#
+# ## Basic Stream IO
+# ### Basic Reading
+# You can read from the stream using these instance methods:
+# *   #getbyte: reads and returns the next byte.
+# *   #getc: reads and returns the next character.
+# *   #gets: reads and returns all or part of the next line.
+# *   #read: reads and returns all or part of the remaining data in the stream.
+# *   #readlines: reads the remaining data the stream and returns an array of
+#     its lines.
+# *   [Kernel#readline](https://docs.ruby-lang.org/en/master/Kernel.html#method-
+#     i-readline): like #gets, but raises an exception if at end-of-stream.
+# You can iterate over the stream using these instance methods:
+# *   #each_byte: reads each remaining byte, passing it to the block.
+# *   #each_char: reads each remaining character, passing it to the block.
+# *   #each_codepoint: reads each remaining codepoint, passing it to the block.
+# *   #each_line: reads all or part of each remaining line, passing the read
+#     string to the block
+# This instance method is useful in a multi-threaded application:
+# *   #pread: reads and returns all or part of the stream.
+# ### Basic Writing
+# You can write to the stream, advancing the position, using these instance
+# methods:
+# *   #putc: writes a given character.
+# *   #write: writes the given objects as strings.
+# *   [Kernel#puts](https://docs.ruby-lang.org/en/master/Kernel.html#method-i-pu
+#     ts) writes given objects as strings, each followed by newline.
+# You can "unshift" to the stream using these instance methods;
+# each writes *before* the current position, and decrements the position
+# so that the written data is next to be read.
+# *   #ungetbyte: unshifts the given byte.
+# *   #ungetc: unshifts the given character.
+# One more writing method:
+# *   #truncate: truncates the stream's string to the given size.
+# ## Line IO
+# Reading:
+# *   #gets: reads and returns the next line.
+# *   [Kernel#readline](https://docs.ruby-lang.org/en/master/Kernel.html#method-
+#     i-readline): like #gets, but raises an exception if at end-of-stream.
+# *   #readlines: reads the remaining data the stream and returns an array of
+#     its lines.
+# *   #each_line: reads each remaining line, passing it to the block
+# Writing:
+# *   [Kernel#puts](https://docs.ruby-lang.org/en/master/Kernel.html#method-i-pu
+#     ts): writes given objects, each followed by newline.
+# ## Character IO
+# Reading:
+# *   #each_char: reads each remaining character, passing it to the block.
+# *   #getc: reads and returns the next character.
+# Writing:
+# *   #putc: writes the given character.
+# *   #ungetc.: unshifts the given character.
+# ## Byte IO
+# Reading:
+# *   #each_byte: reads each remaining byte, passing it to the block.
+# *   #getbyte: reads and returns the next byte.
+# Writing:
+# *   #ungetbyte: unshifts the given byte.
+# ## Codepoint IO
+# Reading:
+# *   #each_codepoint: reads each remaining codepoint, passing it to the block.
+#
+class StringIO
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - StringIO.new(string = '', mode = 'r+') -> new_stringio
+  # -->
+  # Returns a new StringIO instance formed from `string` and `mode`; the instance
+  # should be closed when no longer needed:
+  #
+  #     strio = StringIO.new
+  #     strio.string        # => ""
+  #     strio.closed_read?  # => false
+  #     strio.closed_write? # => false
+  #     strio.close
+  #
+  # If `string` is frozen, the default `mode` is `'r'`:
+  #
+  #     strio = StringIO.new('foo'.freeze)
+  #     strio.string        # => "foo"
+  #     strio.closed_read?  # => false
+  #     strio.closed_write? # => true
+  #     strio.close
+  #
+  # Argument `mode` must be a valid [Access Mode](rdoc-ref:File@Access+Modes),
+  # which may be a string or an integer constant:
+  #
+  #     StringIO.new('foo', 'w+')
+  #     StringIO.new('foo', File::RDONLY)
+  #
+  # Related: StringIO.open (passes the StringIO object to the block; closes the
+  # object automatically on block exit).
+  #
+  def initialize: (?String string, ?String? mode) -> void
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - StringIO.open(string = '', mode = 'r+') -> new_stringio
+  #   - StringIO.open(string = '', mode = 'r+') {|strio| ... } -> object
+  # -->
+  # Creates new StringIO instance by calling `StringIO.new(string, mode)`.
+  #
+  # With no block given, returns the new instance:
+  #
+  #     strio = StringIO.open # => #<StringIO>
+  #
+  # With a block given, calls the block with the new instance and returns the
+  # block's value; closes the instance on block exit:
+  #
+  #     StringIO.open('foo') {|strio| strio.string.upcase } # => "FOO"
+  #
+  # Related: StringIO.new.
+  #
+  def self.open: [U] (?String string, ?String? mode) { (StringIO arg) -> U } -> U
+
+  def <<: (untyped arg0) -> self
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - binmode -> self
+  # -->
+  # Sets the data mode in `self` to binary mode; see [Data
+  # Mode](rdoc-ref:StringIO@Data+Mode).
+  #
+  def binmode: () -> self
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - close -> nil
+  # -->
+  # Closes `self` for both reading and writing; returns `nil`:
+  #
+  #     strio = StringIO.new
+  #     strio.closed? # => false
+  #     strio.close   # => nil
+  #     strio.closed? # => true
+  #     strio.read    # Raises IOError: not opened for reading
+  #     strio.write   # Raises IOError: not opened for writing
+  #
+  # Related: StringIO#close_read, StringIO#close_write, StringIO.closed?.
+  #
+  def close: () -> nil
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - close_read -> nil
+  # -->
+  # Closes `self` for reading; closed-write setting remains unchanged; returns
+  # `nil`:
+  #
+  #     strio = StringIO.new
+  #     strio.closed_read?  # => false
+  #     strio.close_read    # => nil
+  #     strio.closed_read?  # => true
+  #     strio.closed_write? # => false
+  #     strio.read          # Raises IOError: not opened for reading
+  #
+  # Related: StringIO#close, StringIO#close_write.
+  #
+  def close_read: () -> nil
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - close_write -> nil
+  # -->
+  # Closes `self` for writing; closed-read setting remains unchanged; returns
+  # `nil`:
+  #
+  #     strio = StringIO.new
+  #     strio.closed_write? # => false
+  #     strio.close_write   # => nil
+  #     strio.closed_write? # => true
+  #     strio.closed_read?  # => false
+  #     strio.write('foo')  # Raises IOError: not opened for writing
+  #
+  # Related: StringIO#close, StringIO#close_read, StringIO#closed_write?.
+  #
+  def close_write: () -> nil
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - closed? -> true or false
+  # -->
+  # Returns whether `self` is closed for both reading and writing:
+  #
+  #     strio = StringIO.new
+  #     strio.closed?     # => false  # Open for reading and writing.
+  #     strio.close_read
+  #     strio.closed?     # => false  # Still open for writing.
+  #     strio.close_write
+  #     strio.closed?     # => true   # Now closed for both.
+  #
+  # Related: StringIO.closed_read?, StringIO.closed_write?.
+  #
+  def closed?: () -> bool
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - closed_read? -> true or false
+  # -->
+  # Returns whether `self` is closed for reading:
+  #
+  #     strio = StringIO.new
+  #     strio.closed_read?   # => false
+  #     strio.close_read
+  #     strio.closed_read?   # => true
+  #
+  # Related: StringIO#closed?, StringIO#closed_write?, StringIO#close_read.
+  #
+  def closed_read?: () -> bool
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - closed_write? -> true or false
+  # -->
+  # Returns whether `self` is closed for writing:
+  #
+  #     strio = StringIO.new
+  #     strio.closed_write? # => false
+  #     strio.close_write
+  #     strio.closed_write? # => true
+  #
+  # Related: StringIO#close_write, StringIO#closed?, StringIO#closed_read?.
+  #
+  def closed_write?: () -> bool
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - each_line(sep = $/, chomp: false) {|line| ... }   -> self
+  #   - each_line(limit, chomp: false) {|line| ... }      -> self
+  #   - each_line(sep, limit, chomp: false) {|line| ... } -> self
+  # -->
+  # With a block given calls the block with each remaining line (see "Position"
+  # below) in the stream;
+  # returns `self`.
+  # Leaves stream position at end-of-stream.
+  # **No Arguments**
+  # With no arguments given,
+  # reads lines using the default record separator
+  # (global variable `$/`, whose initial value is `"\n"`).
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line {|line| p line }
+  # strio.eof? # => true
+  #
+  # Output:
+  #     "First line\n"
+  # "Second line\n"
+  # "\n"
+  # "Fourth line\n"
+  # "Fifth line\n"
+  #
+  # **Argument `sep`**
+  # With only string argument `sep` given,
+  # reads lines using that string as the record separator:
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line(' ') {|line| p line }
+  #
+  # Output:
+  #     "First "
+  # "line\nSecond "
+  # "line\n\nFourth "
+  # "line\nFifth "
+  # "line\n"
+  #
+  # **Argument `limit`**
+  # With only integer argument `limit` given,
+  # reads lines using the default record separator;
+  # also limits the size (in characters) of each line to the given limit:
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line(10) {|line| p line }
+  #
+  # Output:
+  #     "First line"
+  # "\n"
+  # "Second lin"
+  # "e\n"
+  # "\n"
+  # "Fourth lin"
+  # "e\n"
+  # "Fifth line"
+  # "\n"
+  #
+  # **Arguments `sep` and `limit`**
+  # With arguments `sep` and `limit` both given,
+  # honors both:
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line(' ', 10) {|line| p line }
+  #
+  # Output:
+  #     "First "
+  # "line\nSecon"
+  # "d "
+  # "line\n\nFour"
+  # "th "
+  # "line\nFifth"
+  # " "
+  # "line\n"
+  #
+  # **Position**
+  # As stated above, method `each` *remaining* line in the stream.
+  # In the examples above each `strio` object starts with its position at
+  # beginning-of-stream;
+  # but in other cases the position may be anywhere (see StringIO#pos):
+  #     strio = StringIO.new(TEXT)
+  # strio.pos = 30 # Set stream position to character 30.
+  # strio.each_line {|line| p line }
+  #
+  # Output:
+  #     " line\n"
+  # "Fifth line\n"
+  #
+  # In all the examples above, the stream position is at the beginning of a
+  # character;
+  # in other cases, that need not be so:
+  #     s = 'こんにちは'  # Five 3-byte characters.
+  # strio = StringIO.new(s)
+  # strio.pos = 3   # At beginning of second character.
+  # strio.each_line {|line| p line }
+  # strio.pos = 4   # At second byte of second character.
+  # strio.each_line {|line| p line }
+  # strio.pos = 5   # At third byte of second character.
+  # strio.each_line {|line| p line }
+  #
+  # Output:
+  #     "んにちは"
+  # "\x82\x93にちは"
+  # "\x93にちは"
+  #
+  # **Special Record Separators**
+  # Like some methods in class `IO`, StringIO.each honors two special record
+  # separators;
+  # see [Special Line
+  # Separators](https://docs.ruby-lang.org/en/master/IO.html#class-IO-label-Specia
+  # l+Line+Separator+Values).
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line('') {|line| p line } # Read as paragraphs (separated by blank lines).
+  #
+  # Output:
+  #     "First line\nSecond line\n\n"
+  # "Fourth line\nFifth line\n"
+  #
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line(nil) {|line| p line } # "Slurp"; read it all.
+  #
+  # Output:
+  #     "First line\nSecond line\n\nFourth line\nFifth line\n"
+  #
+  # **Keyword Argument `chomp`**
+  # With keyword argument `chomp` given as `true` (the default is `false`),
+  # removes trailing newline (if any) from each line:
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line(chomp: true) {|line| p line }
+  #
+  # Output:
+  #     "First line"
+  # "Second line"
+  # ""
+  # "Fourth line"
+  # "Fifth line"
+  #
+  # With no block given, returns a new
+  # [Enumerator](https://docs.ruby-lang.org/en/master/Enumerator.html).
+  # Related: StringIO.each_byte, StringIO.each_char, StringIO.each_codepoint.
+  #
+  def each: (?String sep, ?Integer limit, ?chomp: boolish) { (String) -> untyped } -> self
+          | (?String sep, ?Integer limit, ?chomp: boolish) -> ::Enumerator[String, self]
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - each_byte {|byte| ... } -> self
+  # -->
+  # With a block given, calls the block with each remaining byte in the stream;
+  # positions the stream at end-of-file; returns `self`:
+  #
+  #     bytes = []
+  #     strio = StringIO.new('hello')     #  Five 1-byte characters.
+  #     strio.each_byte {|byte| bytes.push(byte) }
+  #     strio.eof? # => true
+  #     bytes # => [104, 101, 108, 108, 111]
+  #     bytes = []
+  #     strio = StringIO.new('тест')      # Four 2-byte characters.
+  #     strio.each_byte {|byte| bytes.push(byte) }
+  #     bytes # => [209, 130, 208, 181, 209, 129, 209, 130]
+  #     bytes = []
+  #     strio = StringIO.new('こんにちは')  # Five 3-byte characters.
+  #     strio.each_byte {|byte| bytes.push(byte) }
+  #     bytes # => [227, 129, 147, 227, 130, 147, 227, 129, 171, 227, 129, 161, 227, 129, 175]
+  #
+  # The position in the stream matters:
+  #
+  #     bytes = []
+  #     strio = StringIO.new('こんにちは')
+  #     strio.getc # => "こ"
+  #     strio.pos  # => 3  # 3-byte character was read.
+  #     strio.each_byte {|byte| bytes.push(byte) }
+  #     bytes      # => [227, 130, 147, 227, 129, 171, 227, 129, 161, 227, 129, 175]
+  #
+  # If at end-of-file, does not call the block:
+  #
+  #     strio.eof? # => true
+  #     strio.each_byte {|byte| fail 'Boo!' }
+  #     strio.eof? # => true
+  #
+  # With no block given, returns a new [Enumerator](rdoc-ref:Enumerator).
+  #
+  # Related: StringIO#each_char, StringIO#each_codepoint, StringIO#each_line.
+  #
+  def each_byte: () { (Integer arg0) -> untyped } -> self
+               | () -> ::Enumerator[Integer, self]
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - each_char {|char| ... } -> self
+  # -->
+  # With a block given, calls the block with each remaining character in the
+  # stream; positions the stream at end-of-file; returns `self`:
+  #
+  #     chars = []
+  #     strio = StringIO.new('hello')
+  #     strio.each_char {|char| chars.push(char) }
+  #     strio.eof? # => true
+  #     chars      # => ["h", "e", "l", "l", "o"]
+  #     chars = []
+  #     strio = StringIO.new('тест')
+  #     strio.each_char {|char| chars.push(char) }
+  #     chars      # => ["т", "е", "с", "т"]
+  #     chars = []
+  #     strio = StringIO.new('こんにちは')
+  #     strio.each_char {|char| chars.push(char) }
+  #     chars      # => ["こ", "ん", "に", "ち", "は"]
+  #
+  # Stream position matters:
+  #
+  #     chars = []
+  #     strio = StringIO.new('こんにちは')
+  #     strio.getc # => "こ"
+  #     strio.pos  # => 3  # 3-byte character was read.
+  #     strio.each_char {|char| chars.push(char) }
+  #     chars      # => ["ん", "に", "ち", "は"]
+  #
+  # When at end-of-stream does not call the block:
+  #
+  #     strio.eof? # => true
+  #     strio.each_char {|char| fail 'Boo!' }
+  #     strio.eof? # => true
+  #
+  # With no block given, returns a new [Enumerator](rdoc-ref:Enumerator).
+  #
+  # Related: StringIO#each_byte, StringIO#each_codepoint, StringIO#each_line.
+  #
+  def each_char: () { (String arg0) -> untyped } -> self
+               | () -> ::Enumerator[String, self]
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - each_codepoint {|codepoint| ... } -> self
+  # -->
+  # With a block given, calls the block with each successive codepoint from self;
+  # sets the position to end-of-stream; returns `self`.
+  #
+  # Each codepoint is the integer value for a character; returns self:
+  #
+  #     codepoints = []
+  #     strio = StringIO.new('hello')
+  #     strio.each_codepoint {|codepoint| codepoints.push(codepoint) }
+  #     strio.eof? # => true
+  #     codepoints # => [104, 101, 108, 108, 111]
+  #     codepoints = []
+  #     strio = StringIO.new('тест')
+  #     strio.each_codepoint {|codepoint| codepoints.push(codepoint) }
+  #     codepoints # => [1090, 1077, 1089, 1090]
+  #     codepoints = []
+  #     strio = StringIO.new('こんにちは')
+  #     strio.each_codepoint {|codepoint| codepoints.push(codepoint) }
+  #     codepoints # => [12371, 12435, 12395, 12385, 12399]
+  #
+  # Position in the stream matters:
+  #
+  #     codepoints = []
+  #     strio = StringIO.new('こんにちは')
+  #     strio.getc # => "こ"
+  #     strio.pos  # => 3
+  #     strio.each_codepoint {|codepoint| codepoints.push(codepoint) }
+  #     codepoints # => [12435, 12395, 12385, 12399]
+  #
+  # When at end-of-stream, the block is not called:
+  #
+  #     strio.eof? # => true
+  #     strio.each_codepoint {|codepoint| fail 'Boo!' }
+  #     strio.eof? # => true
+  #
+  # With no block given, returns a new [Enumerator](rdoc-ref:Enumerator).
+  #
+  # Related: StringIO#each_byte, StringIO#each_char, StringIO#each_line.
+  #
+  def each_codepoint: () { (Integer arg0) -> untyped } -> self
+                    | () -> ::Enumerator[Integer, self]
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - eof? -> true or false
+  # -->
+  # Returns whether `self` is positioned at end-of-stream:
+  #
+  #     strio = StringIO.new('foo')
+  #     strio.pos  # => 0
+  #     strio.eof? # => false
+  #     strio.read # => "foo"
+  #     strio.pos  # => 3
+  #     strio.eof? # => true
+  #     strio.close_read
+  #     strio.eof? # Raises IOError: not opened for reading
+  #
+  # Related: StringIO#pos.
+  #
+  def eof: () -> bool
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - fcntl(*args)
+  # -->
+  # Raises NotImplementedError.
+  #
+  def fcntl: (Integer integer_cmd, String | Integer arg) -> Integer
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - fileno()
+  # -->
+  # Returns `nil`; for compatibility with IO.
+  #
+  def fileno: () -> nil
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - flush()
+  # -->
+  # Returns `self`; for compatibility with IO.
+  #
+  def flush: () -> self
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - fsync()
+  # -->
+  # Returns 0; for compatibility with IO.
+  #
+  def fsync: () -> Integer?
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - getbyte -> integer or nil
+  # -->
+  # Reads and returns the next integer byte (not character) from the stream:
+  #
+  #     s = 'foo'
+  #     s.bytes       # => [102, 111, 111]
+  #     strio = StringIO.new(s)
+  #     strio.getbyte # => 102
+  #     strio.getbyte # => 111
+  #     strio.getbyte # => 111
+  #
+  # Returns `nil` if at end-of-stream:
+  #
+  #     strio.eof?    # => true
+  #     strio.getbyte # => nil
+  #
+  # Returns a byte, not a character:
+  #
+  #     s = 'Привет'
+  #     s.bytes
+  #     # => [208, 159, 209, 128, 208, 184, 208, 178, 208, 181, 209, 130]
+  #     strio = StringIO.new(s)
+  #     strio.getbyte # => 208
+  #     strio.getbyte # => 159
+  #
+  #     s = 'こんにちは'
+  #     s.bytes
+  #     # => [227, 129, 147, 227, 130, 147, 227, 129, 171, 227, 129, 161, 227, 129, 175]
+  #     strio = StringIO.new(s)
+  #     strio.getbyte # => 227
+  #     strio.getbyte # => 129
+  #
+  # Related: #each_byte, #ungetbyte, #getc.
+  #
+  def getbyte: () -> Integer?
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - getc -> character, byte, or nil
+  # -->
+  # Reads and returns the next character (or byte; see below) from the stream:
+  #
+  #     strio = StringIO.new('foo')
+  #     strio.getc # => "f"
+  #     strio.getc # => "o"
+  #     strio.getc # => "o"
+  #
+  # Returns `nil` if at end-of-stream:
+  #
+  #     strio.eof? # => true
+  #     strio.getc # => nil
+  #
+  # Returns characters, not bytes:
+  #
+  #     strio = StringIO.new('Привет')
+  #     strio.getc # => "П"
+  #     strio.getc # => "р"
+  #
+  #     strio = StringIO.new('こんにちは')
+  #     strio.getc # => "こ"
+  #     strio.getc # => "ん"
+  #
+  # In each of the examples above, the stream is positioned at the beginning of a
+  # character; in other cases that need not be true:
+  #
+  #     strio = StringIO.new('こんにちは')  # Five 3-byte characters.
+  #     strio.pos = 3 # => 3     # At beginning of second character; returns character.
+  #     strio.getc    # => "ん"
+  #     strio.pos = 4 # => 4     # At second byte of second character; returns byte.
+  #     strio.getc    # => "\x82"
+  #     strio.pos = 5 # => 5     # At third byte of second character; returns byte.
+  #     strio.getc    # => "\x93"
+  #
+  # Related: #getbyte, #putc, #ungetc.
+  #
+  def getc: () -> String?
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - gets(sep = $/, chomp: false) -> string or nil
+  #   - gets(limit, chomp: false) -> string or nil
+  #   - gets(sep, limit, chomp: false) -> string or nil
+  # -->
+  # Reads and returns a line from the stream; returns `nil` if at end-of-stream.
+  #
+  # Side effects:
+  #
+  # *   Increments stream position by the number of bytes read.
+  # *   Assigns the return value to global variable `$_`.
+  #
+  # With no arguments given, reads a line using the default record separator
+  # (global variable `$/`,* whose initial value is `"\n"`):
+  #
+  #     strio = StringIO.new(TEXT)
+  #     strio.pos  # => 0
+  #     strio.gets # => "First line\n"
+  #     strio.pos  # => 11
+  #     $_         # => "First line\n"
+  #     strio.gets # => "Second line\n"
+  #     strio.read # => "\nFourth line\nFifth line\n"
+  #     strio.eof? # => true
+  #     strio.gets # => nil
+  #
+  #     strio = StringIO.new('Привет')  # Six 2-byte characters
+  #     strio.pos  # => 0
+  #     strio.gets # => "Привет"
+  #     strio.pos  # => 12
+  #
+  # **Argument `sep`**
+  #
+  # With only string argument `sep` given, reads a line using that string as the
+  # record separator:
+  #
+  #     strio = StringIO.new(TEXT)
+  #     strio.gets(' ') # => "First "
+  #     strio.gets(' ') # => "line\nSecond "
+  #     strio.gets(' ') # => "line\n\nFourth "
+  #
+  # **Argument `limit`**
+  #
+  # With only integer argument `limit` given, reads a line using the default
+  # record separator; limits the size (in characters) of each line to the given
+  # limit:
+  #
+  #     strio = StringIO.new(TEXT)
+  #     strio.gets(10) # => "First line"
+  #     strio.gets(10) # => "\n"
+  #     strio.gets(10) # => "Second lin"
+  #     strio.gets(10) # => "e\n"
+  #
+  # **Arguments `sep` and `limit`**
+  #
+  # With arguments `sep` and `limit` both given, honors both:
+  #
+  #     strio = StringIO.new(TEXT)
+  #     strio.gets(' ', 10) # => "First "
+  #     strio.gets(' ', 10) # => "line\nSecon"
+  #     strio.gets(' ', 10) # => "d "
+  #
+  # **Position**
+  #
+  # As stated above, method `gets` reads and returns the next line in the stream.
+  #
+  # In the examples above each `strio` object starts with its position at
+  # beginning-of-stream; but in other cases the position may be anywhere:
+  #
+  #     strio = StringIO.new(TEXT)
+  #     strio.pos = 12
+  #     strio.gets # => "econd line\n"
+  #
+  # The position need not be at a character boundary:
+  #
+  #     strio = StringIO.new('Привет') # Six 2-byte characters.
+  #     strio.pos = 2                  # At beginning of second character.
+  #     strio.gets # => "ривет"
+  #     strio.pos = 3                  # In middle of second character.
+  #     strio.gets # => "\x80ивет"
+  #
+  # **Special Record Separators**
+  #
+  # Like some methods in class IO, method `gets` honors two special record
+  # separators; see [Special Line
+  # Separators](https://docs.ruby-lang.org/en/master/IO.html#class-IO-label-Specia
+  # l+Line+Separator+Values):
+  #
+  #     strio = StringIO.new(TEXT)
+  #     strio.gets('')  # Read "paragraph" (up to empty line).
+  #     # => "First line\nSecond line\n\n"
+  #
+  #     strio = StringIO.new(TEXT)
+  #     strio.gets(nil) # "Slurp": read all.
+  #     # => "First line\nSecond line\n\nFourth line\nFifth line\n"
+  #
+  # **Keyword Argument `chomp`**
+  #
+  # With keyword argument `chomp` given as `true` (the default is `false`),
+  # removes the trailing newline (if any) from the returned line:
+  #
+  #     strio = StringIO.new(TEXT)
+  #     strio.gets              # => "First line\n"
+  #     strio.gets(chomp: true) # => "Second line"
+  #
+  # Related: #each_line, #readlines, [Kernel#puts](rdoc-ref:Kernel#puts).
+  #
+  def gets: (?String sep, ?Integer limit, ?chomp: boolish) -> String?
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - internal_encoding -> nil
+  # -->
+  # Returns `nil`; for compatibility with IO.
+  #
+  def internal_encoding: () -> Encoding
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - external_encoding -> encoding or nil
+  # -->
+  # Returns an Encoding object that represents the encoding of the string; see
+  # [Encodings](rdoc-ref:StringIO@Encodings):
+  #
+  #     strio = StringIO.new('foo')
+  #     strio.external_encoding # => #<Encoding:UTF-8>
+  #
+  # Returns `nil` if `self` has no string and is in write mode:
+  #
+  #     strio = StringIO.new(nil, 'w+')
+  #     strio.external_encoding # => nil
+  #
+  def external_encoding: () -> Encoding
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - isatty()
+  # -->
+  # Returns `false`; for compatibility with IO.
+  #
+  def isatty: () -> bool
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - lineno -> current_line_number
+  # -->
+  # Returns the current line number in `self`; see [Line
+  # Number](rdoc-ref:StringIO@Line+Number).
+  #
+  def lineno: () -> Integer
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - lineno = new_line_number -> new_line_number
+  # -->
+  # Sets the current line number in `self` to the given `new_line_number`; see
+  # [Line Number](rdoc-ref:StringIO@Line+Number).
+  #
+  def lineno=: (Integer arg0) -> Integer
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - pid()
+  # -->
+  # Returns `nil`; for compatibility with IO.
+  #
+  def pid: () -> nil
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - pos -> stream_position
+  # -->
+  # Returns the current position (in bytes); see
+  # [Position](rdoc-ref:StringIO@Position).
+  #
+  def pos: () -> Integer
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - pos = new_position -> new_position
+  # -->
+  # Sets the current position (in bytes); see
+  # [Position](rdoc-ref:StringIO@Position).
+  #
+  def pos=: (Integer arg0) -> Integer
+
+  def print: (*untyped arg0) -> nil
+
+  def printf: (String format_string, *untyped arg0) -> nil
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - strio.putc(obj)    -> obj
+  # -->
+  # See IO#putc.
+  #
+  def putc: (Numeric | String arg0) -> untyped
+
+  def puts: (*untyped arg0) -> nil
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - strio.read([length [, outbuf]])    -> string, outbuf, or nil
+  # -->
+  # See IO#read.
+  #
+  def read: (?int? length, ?string outbuf) -> String?
+
+  def read_nonblock: (int len, ?string buf) -> String
+
+  def readbyte: () -> Integer
+
+  def readchar: () -> String
+
+  def readline: (?String sep, ?Integer limit, ?chomp: boolish) -> String
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - strio.readlines(sep=$/, chomp: false)     ->   array
+  #   - strio.readlines(limit, chomp: false)      ->   array
+  #   - strio.readlines(sep, limit, chomp: false) ->   array
+  # -->
+  # See IO#readlines.
+  #
+  def readlines: (?String sep, ?Integer limit, ?chomp: boolish) -> ::Array[String]
+
+  def readpartial: (int maxlen, ?string outbuf) -> String
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - reopen(other, mode = 'r+') -> self
+  # -->
+  # Reinitializes the stream with the given `other` (string or StringIO) and
+  # `mode`; see IO.new:
+  #
+  #     StringIO.open('foo') do |strio|
+  #       p strio.string
+  #       strio.reopen('bar')
+  #       p strio.string
+  #       other_strio = StringIO.new('baz')
+  #       strio.reopen(other_strio)
+  #       p strio.string
+  #       other_strio.close
+  #     end
+  #
+  # Output:
+  #
+  #     "foo"
+  #     "bar"
+  #     "baz"
+  #
+  def reopen: (StringIO other) -> self
+            | (String other, ?String mode_str) -> self
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - rewind -> 0
+  # -->
+  # Sets the current position and line number to zero; see
+  # [Position](rdoc-ref:IO@Position) and [Line Number](rdoc-ref:IO@Line+Number).
+  #
+  def rewind: () -> Integer
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - seek(offset, whence = SEEK_SET) -> 0
+  # -->
+  # Sets the position to the given integer `offset` (in bytes), with respect to a
+  # given constant `whence`; see [IO#seek](rdoc-ref:IO#seek).
+  #
+  def seek: (Integer amount, ?Integer whence) -> Integer
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - strio.set_encoding(ext_enc, [int_enc[, opt]])  => strio
+  # -->
+  # Specify the encoding of the StringIO as *ext_enc*. Use the default external
+  # encoding if *ext_enc* is nil. 2nd argument *int_enc* and optional hash *opt*
+  # argument are ignored; they are for API compatibility to IO.
+  #
+  def set_encoding: (?String | Encoding ext_or_ext_int_enc) -> self
+                  | (?String | Encoding ext_or_ext_int_enc, ?String | Encoding int_enc) -> self
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - string -> string
+  # -->
+  # Returns underlying string:
+  #
+  #     StringIO.open('foo') do |strio|
+  #       p strio.string
+  #       strio.string = 'bar'
+  #       p strio.string
+  #     end
+  #
+  # Output:
+  #
+  #     "foo"
+  #     "bar"
+  #
+  # Related: StringIO#string= (assigns the underlying string).
+  #
+  def string: () -> String
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - string = other_string -> other_string
+  # -->
+  # Replaces the stored string with `other_string`, and sets the position to zero;
+  # returns `other_string`:
+  #
+  #     StringIO.open('foo') do |strio|
+  #       p strio.string
+  #       strio.string = 'bar'
+  #       p strio.string
+  #     end
+  #
+  # Output:
+  #
+  #     "foo"
+  #     "bar"
+  #
+  # Related: StringIO#string (returns the stored string).
+  #
+  def string=: (String str) -> String
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - size -> integer
+  # -->
+  # Returns the number of bytes in the string in `self`:
+  #
+  #     StringIO.new('hello').size     # => 5  # Five 1-byte characters.
+  #     StringIO.new('тест').size      # => 8  # Four 2-byte characters.
+  #     StringIO.new('こんにちは').size # => 15 # Five 3-byte characters.
+  #
+  def size: () -> Integer
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - sync -> true
+  # -->
+  # Returns `true`; implemented only for compatibility with other stream classes.
+  #
+  def sync: () -> bool
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - sync=(p1)
+  # -->
+  # Returns the argument unchanged.  Just for compatibility to IO.
+  #
+  def sync=: (boolish) -> bool
+
+  def sysread: (Integer maxlen, String outbuf) -> String
+
+  def syswrite: (String arg0) -> Integer
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - pos -> stream_position
+  # -->
+  # Returns the current position (in bytes); see
+  # [Position](rdoc-ref:StringIO@Position).
+  #
+  def tell: () -> Integer
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - strio.truncate(integer)    -> 0
+  # -->
+  # Truncates the buffer string to at most *integer* bytes. The stream must be
+  # opened for writing.
+  #
+  def truncate: (Integer) -> 0
+
+  # <!-- rdoc-file=ext/stringio/stringio.c -->
+  # Returns `false`; for compatibility with IO.
+  #
+  def tty?: () -> bool
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - ungetbyte(byte) -> nil
+  # -->
+  # Pushes back ("unshifts") an 8-bit byte onto the stream; see [Byte
+  # IO](rdoc-ref:IO@Byte+IO).
+  #
+  def ungetbyte: (String | Integer arg0) -> nil
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - ungetc(character) -> nil
+  # -->
+  # Pushes back ("unshifts") a character or integer onto the stream; see
+  # [Character IO](rdoc-ref:IO@Character+IO).
+  #
+  def ungetc: (String arg0) -> nil
+
+  # <!--
+  #   rdoc-file=ext/stringio/stringio.c
+  #   - strio.write(string, ...) -> integer
+  #   - strio.syswrite(string)   -> integer
+  # -->
+  # Appends the given string to the underlying buffer string. The stream must be
+  # opened for writing.  If the argument is not a string, it will be converted to
+  # a string using `to_s`. Returns the number of bytes written.  See IO#write.
+  #
+  def write: (*_ToS) -> Integer
+
+  # This is a deprecated alias for #each_byte.
+  #
+  def bytes: () { (Integer arg0) -> untyped } -> self
+           | () -> ::Enumerator[Integer, self]
+
+  # This is a deprecated alias for #each_char.
+  #
+  def chars: () { (String arg0) -> untyped } -> self
+           | () -> ::Enumerator[String, self]
+
+  # This is a deprecated alias for #each_codepoint.
+  #
+  def codepoints: () { (Integer arg0) -> untyped } -> self
+                | () -> ::Enumerator[Integer, self]
+
+  # <!-- rdoc-file=ext/stringio/stringio.c -->
+  # With a block given calls the block with each remaining line (see "Position"
+  # below) in the stream;
+  # returns `self`.
+  # Leaves stream position at end-of-stream.
+  # **No Arguments**
+  # With no arguments given,
+  # reads lines using the default record separator
+  # (global variable `$/`, whose initial value is `"\n"`).
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line {|line| p line }
+  # strio.eof? # => true
+  #
+  # Output:
+  #     "First line\n"
+  # "Second line\n"
+  # "\n"
+  # "Fourth line\n"
+  # "Fifth line\n"
+  #
+  # **Argument `sep`**
+  # With only string argument `sep` given,
+  # reads lines using that string as the record separator:
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line(' ') {|line| p line }
+  #
+  # Output:
+  #     "First "
+  # "line\nSecond "
+  # "line\n\nFourth "
+  # "line\nFifth "
+  # "line\n"
+  #
+  # **Argument `limit`**
+  # With only integer argument `limit` given,
+  # reads lines using the default record separator;
+  # also limits the size (in characters) of each line to the given limit:
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line(10) {|line| p line }
+  #
+  # Output:
+  #     "First line"
+  # "\n"
+  # "Second lin"
+  # "e\n"
+  # "\n"
+  # "Fourth lin"
+  # "e\n"
+  # "Fifth line"
+  # "\n"
+  #
+  # **Arguments `sep` and `limit`**
+  # With arguments `sep` and `limit` both given,
+  # honors both:
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line(' ', 10) {|line| p line }
+  #
+  # Output:
+  #     "First "
+  # "line\nSecon"
+  # "d "
+  # "line\n\nFour"
+  # "th "
+  # "line\nFifth"
+  # " "
+  # "line\n"
+  #
+  # **Position**
+  # As stated above, method `each` *remaining* line in the stream.
+  # In the examples above each `strio` object starts with its position at
+  # beginning-of-stream;
+  # but in other cases the position may be anywhere (see StringIO#pos):
+  #     strio = StringIO.new(TEXT)
+  # strio.pos = 30 # Set stream position to character 30.
+  # strio.each_line {|line| p line }
+  #
+  # Output:
+  #     " line\n"
+  # "Fifth line\n"
+  #
+  # In all the examples above, the stream position is at the beginning of a
+  # character;
+  # in other cases, that need not be so:
+  #     s = 'こんにちは'  # Five 3-byte characters.
+  # strio = StringIO.new(s)
+  # strio.pos = 3   # At beginning of second character.
+  # strio.each_line {|line| p line }
+  # strio.pos = 4   # At second byte of second character.
+  # strio.each_line {|line| p line }
+  # strio.pos = 5   # At third byte of second character.
+  # strio.each_line {|line| p line }
+  #
+  # Output:
+  #     "んにちは"
+  # "\x82\x93にちは"
+  # "\x93にちは"
+  #
+  # **Special Record Separators**
+  # Like some methods in class `IO`, StringIO.each honors two special record
+  # separators;
+  # see [Special Line
+  # Separators](https://docs.ruby-lang.org/en/master/IO.html#class-IO-label-Specia
+  # l+Line+Separator+Values).
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line('') {|line| p line } # Read as paragraphs (separated by blank lines).
+  #
+  # Output:
+  #     "First line\nSecond line\n\n"
+  # "Fourth line\nFifth line\n"
+  #
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line(nil) {|line| p line } # "Slurp"; read it all.
+  #
+  # Output:
+  #     "First line\nSecond line\n\nFourth line\nFifth line\n"
+  #
+  # **Keyword Argument `chomp`**
+  # With keyword argument `chomp` given as `true` (the default is `false`),
+  # removes trailing newline (if any) from each line:
+  #     strio = StringIO.new(TEXT)
+  # strio.each_line(chomp: true) {|line| p line }
+  #
+  # Output:
+  #     "First line"
+  # "Second line"
+  # ""
+  # "Fourth line"
+  # "Fifth line"
+  #
+  # With no block given, returns a new
+  # [Enumerator](https://docs.ruby-lang.org/en/master/Enumerator.html).
+  # Related: StringIO.each_byte, StringIO.each_char, StringIO.each_codepoint.
+  #
+  def each_line: (?String sep, ?Integer limit, ?chomp: boolish) { (String) -> untyped } -> self
+               | (?String sep, ?Integer limit, ?chomp: boolish) -> ::Enumerator[String, self]
+
+  # <!-- rdoc-file=ext/stringio/stringio.c -->
+  # Returns whether `self` is positioned at end-of-stream:
+  #
+  #     strio = StringIO.new('foo')
+  #     strio.pos  # => 0
+  #     strio.eof? # => false
+  #     strio.read # => "foo"
+  #     strio.pos  # => 3
+  #     strio.eof? # => true
+  #     strio.close_read
+  #     strio.eof? # Raises IOError: not opened for reading
+  #
+  # Related: StringIO#pos.
+  #
+  def eof?: () -> bool
+
+  # This is a deprecated alias for #each_line.
+  #
+  def lines: (?String sep, ?Integer limit) { (String arg0) -> untyped } -> self
+           | (?String sep, ?Integer limit) -> ::Enumerator[String, self]
+end

@@ -33,7 +33,8 @@
 # see {file:README}
 module FFI
 
-  unless defined?(self.custom_typedefs)
+  # Unless custom_typedefs already defined in the C-ext?
+  unless defined?(custom_typedefs)
     # Truffleruby and JRuby don't support Ractor so far.
     # So they don't need separation between builtin and custom types.
     def self.custom_typedefs
@@ -42,55 +43,63 @@ module FFI
     writable_typemap = true
   end
 
-  # @param [Type, DataConverter, Symbol] old type definition used by {FFI.find_type}
-  # @param [Symbol] add new type definition's name to add
-  # @return [Type]
-  # Add a definition type to type definitions.
-  #
-  # The type definition is local per Ractor.
-  def self.typedef(old, add)
-    tm = custom_typedefs
-    tm[add] = self.find_type(old)
-  end
-
-  # (see FFI.typedef)
-  def self.add_typedef(old, add)
-    typedef old, add
-  end
-
   class << self
-    private def __typedef(old, add)
-      TypeDefs[add] = self.find_type(old)
-    end
 
     private :custom_typedefs
-  end
 
+    # @param [Type, DataConverter, Symbol] old type definition used by {FFI.find_type}
+    # @param [Symbol] add new type definition's name to add
+    # @return [Type]
+    # Add a definition type to type definitions.
+    #
+    # The type definition is local per Ractor.
+    def typedef(old, add)
+      tm = custom_typedefs
+      tm[add] = find_type(old)
+    end
 
-  # @param [Type, DataConverter, Symbol] name
-  # @param [Hash] type_map if nil, {FFI::TypeDefs} is used
-  # @return [Type]
-  # Find a type in +type_map+ ({FFI::TypeDefs}, by default) from
-  # a type objet, a type name (symbol). If +name+ is a {DataConverter},
-  # a new {Type::Mapped} is created.
-  def self.find_type(name, type_map = nil)
-    if name.is_a?(Type)
-      name
+    # (see FFI.typedef)
+    def add_typedef(old, add)
+      typedef old, add
+    end
 
-    elsif type_map&.has_key?(name)
-      type_map[name]
+    private def __typedef(old, add)
+      TypeDefs[add] = find_type(old, TypeDefs)
+    end
 
-    elsif (tm=custom_typedefs).has_key?(name)
-      tm[name]
+    # @param [Type, DataConverter, Symbol] name
+    # @param [Hash] type_map if nil, {FFI::TypeDefs} is used
+    # @return [Type]
+    # Find a type in +type_map+ ({FFI::TypeDefs}, by default) from
+    # a type objet, a type name (symbol). If +name+ is a {DataConverter},
+    # a new {Type::Mapped} is created.
+    def find_type(name, type_map = nil)
+      if name.is_a?(Type)
+        name
 
-    elsif TypeDefs.has_key?(name)
-      TypeDefs[name]
+      elsif type_map&.has_key?(name)
+        type_map[name]
 
-    elsif name.is_a?(DataConverter)
-      tm = (type_map || custom_typedefs)
-      tm[name] = Type::Mapped.new(name)
-    else
-      raise TypeError, "unable to resolve type '#{name}'"
+      elsif (tm=custom_typedefs).has_key?(name)
+        tm[name]
+
+      elsif TypeDefs.has_key?(name)
+        TypeDefs[name]
+
+      elsif name.is_a?(DataConverter)
+        # Add a typedef so next time the converter is used, it hits the cache
+        tm = (type_map || custom_typedefs)
+        tm[name] = Type::Mapped.new(name)
+      else
+        raise TypeError, "unable to resolve type '#{name}'"
+      end
+    end
+
+    # @param type +type+ is an instance of class accepted by {FFI.find_type}
+    # @return [Integer]
+    # Get +type+ size, in bytes.
+    def type_size(type)
+      find_type(type).size
     end
   end
 
@@ -193,13 +202,6 @@ module FFI
   end
 
   __typedef(StrPtrConverter, :strptr)
-
-  # @param type +type+ is an instance of class accepted by {FFI.find_type}
-  # @return [Numeric]
-  # Get +type+ size, in bytes.
-  def self.type_size(type)
-    find_type(type).size
-  end
 
   # Load all the platform dependent types
   begin

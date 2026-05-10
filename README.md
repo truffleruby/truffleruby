@@ -119,7 +119,7 @@ See the [contributor workflow](doc/contributor/workflow.md) document if you wish
 We recommend that people trying TruffleRuby on their gems and applications [get in touch with us](#contact) for any help they might need.
 
 TruffleRuby runs Rails and is compatible with many gems, including C extensions.
-TruffleRuby is not 100% compatible with MRI 3.4 yet. Please [report](https://github.com/truffleruby/truffleruby/issues) any compatibility issues you might find.
+TruffleRuby is not 100% compatible with MRI 4.0 yet. Please [report](https://github.com/truffleruby/truffleruby/issues) any compatibility issues you might find.
 TruffleRuby [passes around 97% of ruby/spec](https://eregon.me/rubyspec-stats/),
 more than any other alternative Ruby implementation.
 
@@ -145,6 +145,7 @@ It is, however, relevant when doing interop with other Truffle languages, as the
 
 | TruffleRuby version | Truffle version | GraalVM versions |
 | --- | --- | --- |
+| 40.0.0 | 25.0.2 | 21.0.x, 25.0.x |
 | 34.0.0 | 25.0.2 | 21.0.x, 25.0.x |
 | 33.0.0 | 25.0.1 | 21.0.x, 25.0.x |
 | 25.0.0 | 25.0.0 | 21.0.x, 25.0.x |

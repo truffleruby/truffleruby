@@ -30,7 +30,7 @@ describe "Library" do
     it "should be queryable in Ractor", :ractor do
       res = Ractor.new do
         TestEnumValueRactor.enum_value(:one)
-      end.take
+      end.value
 
       expect( res ).to eq(0)
     end
@@ -102,7 +102,7 @@ describe "Library" do
       }.to raise_error(LoadError)
     end
 
-    it "interprets INPUT() in linker scripts", unless: FFI::Platform.windows? || FFI::Platform.mac? do
+    it "interprets INPUT() in linker scripts", if: FFI::Platform::IS_GNU && !FFI::Platform.windows? && !FFI::Platform.mac? do
       path = File.dirname(TestLibrary::PATH)
       file = File.basename(TestLibrary::PATH)
       script = File.join(path, "ldscript.so")
@@ -397,7 +397,7 @@ describe "Library" do
         FFI::CURRENT_PROCESS,
         FFI::USE_THIS_PROCESS_AS_LIBRARY,
       ]
-    end.take
+    end.value
 
     expect( res.size ).to be > 0
   end

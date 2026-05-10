@@ -1,3 +1,4 @@
+require 'sorted_set'
 require 'psd_native'
 
 module PSDNative::Util

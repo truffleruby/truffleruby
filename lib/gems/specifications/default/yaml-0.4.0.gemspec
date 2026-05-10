@@ -10,12 +10,12 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Aaron Patterson".freeze, "SHIBATA Hiroshi".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-03-11"
+  s.date = "2026-03-17"
   s.description = "YAML Ain't Markup Language".freeze
   s.email = ["aaron@tenderlovemaking.com".freeze, "hsbt@ruby-lang.org".freeze]
-  s.files = ["yaml.rb".freeze, "yaml/dbm.rb".freeze, "yaml/store.rb".freeze]
+  s.files = ["lib/yaml.rb".freeze, "lib/yaml/dbm.rb".freeze, "lib/yaml/store.rb".freeze]
   s.homepage = "https://github.com/ruby/yaml".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
-  s.rubygems_version = "3.6.9".freeze
+  s.rubygems_version = "4.0.6".freeze
   s.summary = "YAML Ain't Markup Language".freeze
 end

@@ -20,19 +20,21 @@ describe "The launcher" do
 
   escape = -> string { /^#{Regexp.escape string}$/ }
   @launchers = {
-    bundle: escape["Bundler version #{@default_gems['bundler']}"],
-    bundler: escape["Bundler version #{@default_gems['bundler']}"],
-    erb: escape[@default_gems['erb']],
+    bundle: escape[@default_gems.fetch('bundler')],
+    bundler: escape[@default_gems.fetch('bundler')],
+    erb: escape[@default_gems.fetch('erb')],
     gem: escape[@rubygems_version],
-    irb: /^irb #{Regexp.escape @default_gems['irb']} \(\d+-\d+-\d+\)$/,
-    racc: escape["racc version #{@bundled_gems['racc']}"],
-    rake: escape["rake, version #{@bundled_gems['rake']}"],
-    rbs: escape["rbs #{@bundled_gems['rbs']}"],
-    rdbg: escape["rdbg #{@bundled_gems['debug']}"],
-    rdoc: escape[@default_gems['rdoc']],
-    ri: escape["ri #{@default_gems['rdoc']}"],
+    irb: /^irb #{Regexp.escape @bundled_gems.fetch('irb')} \(\d+-\d+-\d+\)$/,
+    minitest: nil, # `minitest --version` runs tests
+    racc: escape["racc version #{@bundled_gems.fetch('racc')}"],
+    rake: escape["rake, version #{@bundled_gems.fetch('rake')}"],
+    rbs: escape["rbs #{@bundled_gems.fetch('rbs')}"],
+    rdbg: escape["rdbg #{@bundled_gems.fetch('debug')}"],
+    rdoc: escape[@bundled_gems.fetch('rdoc')],
+    ri: escape["ri #{@bundled_gems.fetch('rdoc')}"],
     ruby: /^truffleruby .* like ruby #{Regexp.escape RUBY_VERSION}/,
-    syntax_suggest: escape["syntax_suggest #{@default_gems['syntax_suggest']}"],
+    syntax_suggest: escape["syntax_suggest #{@default_gems.fetch('syntax_suggest')}"],
+    "test-unit": escape["test-unit #{@bundled_gems.fetch('test-unit')}"],
     truffleruby: /^truffleruby .* like ruby #{Regexp.escape RUBY_VERSION}/,
   }
 
@@ -88,10 +90,10 @@ describe "The launcher" do
     unless [:ruby, :truffleruby].include?(launcher)
       it "runs #{launcher} as an -S command" do
         redirect = launcher == :erb ? (touch @stderr; '2>&1') : @redirect
-        out = ruby_exe(nil, options: "-S #{launcher} --version", args: redirect)
+        out = `#{RbConfig.ruby} -S #{launcher} --version #{redirect}`
         check_status_and_empty_stderr
         out.should =~ test
-      end
+      end if test
     end
   end
 
@@ -101,7 +103,7 @@ describe "The launcher" do
       out = `#{@bindir}/#{launcher} --version #{redirect}`
       check_status_and_empty_stderr
       out.should =~ test
-    end
+    end if test
   end
 
   @launchers.each do |launcher, test|
@@ -118,7 +120,7 @@ describe "The launcher" do
           out.should =~ test
         end
       end
-    end
+    end if test
   end
 
   it "for gem can install and uninstall the hello-world gem" do

@@ -1,0 +1,179 @@
+module RBS
+  # DefinitionBuilder translates TypeName to Definition of the type
+  #
+  # It also provides semantic utilities that depends on Environment.
+  #
+  class DefinitionBuilder
+    attr_reader env: Environment
+    attr_reader ancestor_builder: AncestorBuilder
+    attr_reader method_builder: MethodBuilder
+
+    attr_reader instance_cache: Hash[TypeName, Definition | false | nil]
+    attr_reader singleton_cache: Hash[TypeName, Definition | false | nil]
+    attr_reader singleton0_cache: Hash[TypeName, Definition | false | nil]
+    attr_reader interface_cache: Hash[TypeName, Definition | false | nil]
+
+    def initialize: (env: Environment, ?ancestor_builder: AncestorBuilder?, ?method_builder: MethodBuilder?) -> void
+
+    # Returns a Definition of a interface
+    #
+    def build_interface: (TypeName) -> Definition
+
+    # Returns a Definition of an instance type
+    #
+    # If TypeName is a module and `no_self_types` is `true`, it won't have methods of _self type constraints_.
+    # This typically happens when definition is being calculated for mixin.
+    #
+    def build_instance: (TypeName) -> Definition
+
+    # Returns a Definition of a singleton type
+    def build_singleton: (TypeName) -> Definition
+
+    # Validates the given Namespace and its ancestor namespaces exists
+    #
+    # Raises NoTypeFoundError
+    #
+    def ensure_namespace!: (Namespace, location: Location[untyped, untyped]?) -> void
+
+    # Expand a type alias of given name without type arguments.
+    # Raises an error if the type alias requires arguments.
+    #
+    # Assume `type foo[T] = [T, T]`:
+    #
+    # ```
+    # expand_alias("::foo")   # => error
+    # ```
+    #
+    def expand_alias: (TypeName) -> Types::t
+
+    # Expand a type alias of given name with arguments of `untyped`.
+    #
+    # Assume `type foo[T] = [T, T]`:
+    #
+    # ```
+    # expand_alias1("::foo")   # => [untyped, untyped]
+    # ```
+    #
+    def expand_alias1: (TypeName) -> Types::t
+
+    # Expand a type alias of given name with `args`.
+    #
+    # Assume `type foo[T] = [T, T]`:
+    #
+    # ```
+    # expand_alias2("::foo", ["::Integer"])   # => [::Integer, ::Integer]
+    # ```
+    #
+    def expand_alias2: (TypeName, Array[Types::t] args) -> Types::t
+
+    # Validates presence of type names recursively
+    #
+    # Assumes the type names are already resolved.
+    # Raises NoTypeFoundError in case of failure.
+    #
+    # Normalizes type names in the given type automatically.
+    #
+    def validate_type_presence: (Types::t) -> void
+
+    # Validates presence of an absolute type name
+    #
+    # Raises NoTypeFoundError in case of error.
+    #
+    # Normalizes the given type name automatically.
+    #
+    def validate_type_name: (TypeName, Location[untyped, untyped]?) -> void
+
+    # Returns a new DefinitionBuilder with updated Environment, AncestorBuilder, and exceptions
+    #
+    def update: (env: Environment, ancestor_builder: AncestorBuilder, except: _Each[TypeName]) -> DefinitionBuilder
+
+    private
+
+    def validate_super_class!: (TypeName, Environment::ClassEntry) -> void
+
+    def build_singleton0: (TypeName) -> Definition
+
+    # Returns `interface_methods` from given array of interface ancestors
+    #
+    def interface_methods: (Array[Definition::Ancestor::Instance] interface_ancestors) -> interface_methods
+
+    def try_cache: (TypeName, cache: Hash[TypeName, Definition | false | nil]) { () -> Definition } -> Definition
+
+    def validate_params_with: (Array[AST::TypeParam], result: VarianceCalculator::Result) { (AST::TypeParam) -> void } -> void
+
+    def validate_type_params: (Definition, ancestors: AncestorBuilder::OneAncestors, methods: MethodBuilder::Methods) -> void
+
+    def source_location: (Definition::Ancestor::Instance::source, AST::Declarations::t) -> Location[untyped, untyped]?
+
+    def validate_variable: (Definition::Variable) -> void
+
+    def insert_variable: (
+      TypeName,
+      Hash[Symbol, Definition::Variable],
+      name: Symbol,
+      type: Types::t,
+      source: Definition::Variable::source
+    ) -> void
+
+    # Add method definition to `methods`, which will be merged to `class_definition` after defining all methods at this *level* -- class, module, or interface
+    #
+    # `class_definition` is a definition of given type, but it has definitions of prior levels.
+    #
+    def define_method: (
+      Hash[Symbol, Definition::Method] methods,
+      Definition class_definition,
+      MethodBuilder::Methods::Definition method_definition,
+      Substitution subst,
+      Hash[Symbol, Definition::Method]? self_type_methods,
+      defined_in: TypeName,
+      ?implemented_in: TypeName?
+    ) -> void
+
+    # The `interface_methods` type describes the association between the interface name to its name and the *mixin* to a module
+    #
+    type interface_methods = Hash[
+      Definition::Ancestor::Instance,
+      [MethodBuilder::Methods, AST::Members::Include | AST::Members::Extend]
+    ]
+
+    # Add method definitions from `module_methods` to `definition`
+    #
+    # It also processes interface mixins, with duplication detection.
+    # It doesn't process module mixins.
+    #
+    def import_methods: (
+      Definition definition,
+      TypeName module_name,
+      MethodBuilder::Methods module_methods,
+      interface_methods interface_methods,
+      Substitution subst,
+      Hash[Symbol, Definition::Method]? self_type_methods,
+    ) -> void
+
+    # Updates `definition` with methods and instance variables of `type_name` that can be a module or a class
+    #
+    # It processes includes and prepends recursively.
+    # If `define_class_vars:` is falsy, it skips inserting class variables.
+    #
+    def define_instance: (
+      Definition definition,
+      TypeName type_name,
+      Substitution subst,
+      define_class_vars: bool
+    ) -> void
+
+    # Updates `definition` with methods defined in an interface `type_name`
+    #
+    # It processes includes recursively
+    #
+    def define_interface: (Definition definition, TypeName type_name, Substitution subst) -> void
+
+    # Returns a substitution that corresponds to type application
+    #
+    # ```
+    # tapp_subst(`::Array`, [`::Integer`]) # => Substitution.build([:Elem], [`::Integer`])
+    # ```
+    #
+    def tapp_subst: (TypeName, Array[Types::t]) -> Substitution
+  end
+end

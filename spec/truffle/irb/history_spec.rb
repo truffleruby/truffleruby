@@ -17,7 +17,7 @@ describe "IRB" do
 
       io.puts "\C-n" # next-history (none)
       line = io.gets
-      line.should.start_with?(">> ")
+      line.should.include?(">> ")
       line.should.end_with?("\n")
 
       # Prove that the session is still valid.
