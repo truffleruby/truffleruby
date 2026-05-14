@@ -15321,12 +15321,22 @@ parse_block_exit(pm_parser_t *parser, pm_node_t *node) {
             case PM_CONTEXT_LAMBDA_ENSURE:
             case PM_CONTEXT_LAMBDA_RESCUE:
             case PM_CONTEXT_LOOP_PREDICATE:
-            case PM_CONTEXT_POSTEXE:
             case PM_CONTEXT_UNTIL:
             case PM_CONTEXT_WHILE:
                 // These are the good cases. We're allowed to have a block exit
                 // in these contexts.
                 return;
+            case PM_CONTEXT_POSTEXE:
+                // https://bugs.ruby-lang.org/issues/20409
+                if (context_node->context == PM_CONTEXT_POSTEXE) {
+                    if (parser->version < PM_OPTIONS_VERSION_CRUBY_4_1) {
+                        return;
+                    }
+                    if (PM_NODE_TYPE_P(node, PM_NEXT_NODE)) {
+                        return;
+                    }
+                }
+            PRISM_FALLTHROUGH
             case PM_CONTEXT_DEF:
             case PM_CONTEXT_DEF_PARAMS:
             case PM_CONTEXT_DEF_ELSE:
@@ -19684,6 +19694,15 @@ parse_expression_prefix(pm_parser_t *parser, pm_binding_power_t binding_power, u
                     if (!(flags & PM_PARSE_ACCEPTS_COMMAND_CALL) && arguments.arguments != NULL) {
                         PM_PARSER_ERR_TOKEN_FORMAT(parser, &next, PM_ERR_EXPECT_EOL_AFTER_STATEMENT, pm_token_str(next.type));
                     }
+                }
+
+                // It's possible that we've parsed a block argument through our
+                // call to parse_arguments. If we found one, we should mark it
+                // as invalid and destroy it, as we don't have a place for it.
+                if (arguments.block != NULL) {
+                    pm_parser_err_node(parser, arguments.block, PM_ERR_UNEXPECTED_BLOCK_ARGUMENT);
+                    pm_node_unreference(parser, arguments.block);
+                    arguments.block = NULL;
                 }
             }
 
