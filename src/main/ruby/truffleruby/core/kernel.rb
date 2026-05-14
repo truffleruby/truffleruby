@@ -349,10 +349,10 @@ module Kernel
     ivars = Primitive.object_ivars self
 
     to_inspect = Truffle::Type.check_funcall(self, :instance_variables_to_inspect)
-    if Primitive.is_a?(to_inspect, Array)
+    if Primitive.undefined?(to_inspect) || Primitive.nil?(to_inspect)
+      # Use all ivars
+    elsif Primitive.is_a?(to_inspect, Array)
       ivars = to_inspect.intersection(ivars)
-    elsif Primitive.nil?(to_inspect) || Primitive.undefined?(to_inspect)
-      # Do nothing
     else
       raise TypeError, "Expected #instance_variables_to_inspect to return an Array or nil, but it returned #{Primitive.class(to_inspect)}"
     end
