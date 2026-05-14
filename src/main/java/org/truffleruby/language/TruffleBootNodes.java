@@ -29,6 +29,7 @@ import org.truffleruby.builtins.CoreMethodNode;
 import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.encoding.Encodings;
+import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.core.string.StringUtils;
@@ -166,7 +167,8 @@ public abstract class TruffleBootNodes {
         private RubySource loadMainSourceSettingDollarZero(String kind, String toExecute) {
             final RubySource rubySource;
             final String mainScriptName;
-            final MainLoader mainLoader = new MainLoader(getContext(), getLanguage());
+            RubyEncoding mainScriptEncoding = Encodings.getBuiltInEncoding(getContext().getOptions().SOURCE_ENCODING);
+            final MainLoader mainLoader = new MainLoader(getContext(), getLanguage(), mainScriptEncoding);
             try {
                 switch (kind) {
                     case "FILE":

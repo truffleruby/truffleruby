@@ -16,6 +16,7 @@ import java.io.IOException;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.encoding.Encodings;
+import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.encoding.TStringUtils;
 import org.truffleruby.core.string.TStringWithEncoding;
 import org.truffleruby.parser.MagicCommentParser;
@@ -34,14 +35,17 @@ public final class MainLoader {
 
     private final RubyContext context;
     private final RubyLanguage language;
+    private final RubyEncoding mainScriptEncoding;
 
-    public MainLoader(RubyContext context, RubyLanguage language) {
+    public MainLoader(RubyContext context, RubyLanguage language, RubyEncoding mainScriptEncoding) {
         this.context = context;
         this.language = language;
+        this.mainScriptEncoding = mainScriptEncoding;
     }
 
     public RubySource loadFromCommandLineArgument(String code) {
         var sourceCode = new TStringWithEncoding(TStringUtils.fromJavaString(code, Encodings.UTF_8), Encodings.UTF_8);
+        sourceCode = sourceCode.forceEncoding(mainScriptEncoding);
         final Source source = Source
                 .newBuilder(TruffleRuby.LANGUAGE_ID, new ByteBasedCharSequence(sourceCode), "-e")
                 .option("ruby.MainScript", "true")
@@ -67,7 +71,7 @@ public final class MainLoader {
             sourceBytes = embeddedScript.transformForExecution(currentNode, sourceBytes, path);
         }
 
-        return MagicCommentParser.createSourceTStringBasedOnMagicEncodingComment(sourceBytes, Encodings.UTF_8);
+        return MagicCommentParser.createSourceTStringBasedOnMagicEncodingComment(sourceBytes, mainScriptEncoding);
     }
 
     private byte[] readAllOfStandardIn() throws IOException {
