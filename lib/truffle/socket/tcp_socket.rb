@@ -44,8 +44,12 @@ class TCPSocket < IPSocket
     [hostname, alternatives, family, *addresses]
   end
 
-  def initialize(host, port, local_host = nil, local_port = nil, connect_timeout: nil, resolv_timeout: nil, fast_fallback: Socket.tcp_fast_fallback)
-    socket = Socket.tcp(host, port, local_host, local_port, connect_timeout:, resolv_timeout:, fast_fallback:)
+  def initialize(host, port, local_host = nil, local_port = nil, connect_timeout: nil, resolv_timeout: nil, open_timeout: nil, fast_fallback: Socket.tcp_fast_fallback)
+    begin
+      socket = Socket.tcp(host, port, local_host, local_port, connect_timeout:, resolv_timeout:, open_timeout:, fast_fallback:)
+    rescue Errno::ETIMEDOUT
+      raise IO::TimeoutError
+    end
     fd = socket.fileno
     socket.autoclose = false
     socket.close
