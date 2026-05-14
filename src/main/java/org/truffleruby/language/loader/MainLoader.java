@@ -10,14 +10,12 @@
  */
 package org.truffleruby.language.loader;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
-import org.truffleruby.core.encoding.Encodings;
-import org.truffleruby.core.encoding.TStringUtils;
-import org.truffleruby.core.string.TStringWithEncoding;
+import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.parser.MagicCommentParser;
 import org.truffleruby.parser.RubySource;
 import org.truffleruby.shared.TruffleRuby;
@@ -34,58 +32,33 @@ public final class MainLoader {
 
     private final RubyContext context;
     private final RubyLanguage language;
+    private final RubyEncoding mainScriptEncoding;
 
-    public MainLoader(RubyContext context, RubyLanguage language) {
+    public MainLoader(RubyContext context, RubyLanguage language, RubyEncoding mainScriptEncoding) {
         this.context = context;
         this.language = language;
+        this.mainScriptEncoding = mainScriptEncoding;
     }
 
     public RubySource loadFromCommandLineArgument(String code) {
-        var sourceCode = new TStringWithEncoding(TStringUtils.fromJavaString(code, Encodings.UTF_8), Encodings.UTF_8);
-        final Source source = Source
-                .newBuilder(TruffleRuby.LANGUAGE_ID, new ByteBasedCharSequence(sourceCode), "-e")
-                .option("ruby.MainScript", "true")
-                .build();
-        return new RubySource(source, "-e");
+        byte[] sourceBytes = code.getBytes(StandardCharsets.UTF_8);
+        return loadFromBytes("-e", sourceBytes);
     }
 
-    public RubySource loadFromStandardIn(Node currentNode, String path) throws IOException {
-        byte[] sourceBytes = readAllOfStandardIn();
-        var sourceTString = transformScript(currentNode, path, sourceBytes);
+    public RubySource loadFromStandardIn() throws IOException {
+        byte[] sourceBytes = System.in.readAllBytes();
+        return loadFromBytes("-", sourceBytes);
+    }
+
+    private RubySource loadFromBytes(String path, byte[] sourceBytes) {
+        var sourceTString = MagicCommentParser.createSourceTStringBasedOnMagicEncodingComment(sourceBytes,
+                mainScriptEncoding);
 
         final Source source = Source
                 .newBuilder(TruffleRuby.LANGUAGE_ID, new ByteBasedCharSequence(sourceTString), path)
                 .option("ruby.MainScript", "true")
                 .build();
         return new RubySource(source, path, sourceTString);
-    }
-
-    private TStringWithEncoding transformScript(Node currentNode, String path, byte[] sourceBytes) {
-        final EmbeddedScript embeddedScript = new EmbeddedScript(context);
-
-        if (embeddedScript.shouldTransform(sourceBytes)) {
-            sourceBytes = embeddedScript.transformForExecution(currentNode, sourceBytes, path);
-        }
-
-        return MagicCommentParser.createSourceTStringBasedOnMagicEncodingComment(sourceBytes, Encodings.UTF_8);
-    }
-
-    private byte[] readAllOfStandardIn() throws IOException {
-        final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(4096);
-
-        final byte[] buffer = new byte[4096];
-
-        while (true) {
-            final int read = System.in.read(buffer);
-
-            if (read == -1) {
-                break;
-            }
-
-            byteStream.write(buffer, 0, read);
-        }
-
-        return byteStream.toByteArray();
     }
 
     public RubySource loadFromFile(Env env, Node currentNode, String mainPath) throws IOException {
@@ -99,7 +72,8 @@ public final class MainLoader {
          * and pass them down to the lexer and to the Source. */
 
         byte[] sourceBytes = file.readAllBytes();
-        var sourceTString = transformScript(currentNode, mainPath, sourceBytes);
+        var sourceTString = MagicCommentParser.createSourceTStringBasedOnMagicEncodingComment(sourceBytes,
+                mainScriptEncoding);
 
         final Source mainSource = fileLoader.buildSource(file, mainPath, sourceTString, false, true);
 
