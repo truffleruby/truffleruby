@@ -360,28 +360,28 @@ public final class YARPTranslatorDriver {
         final boolean partialScript = false;
 
         // Prism handles command line options (-n, -l, -a, -p) on its own
-        final EnumSet<ParsingOptions.CommandLine> commandline;
+        final var yarpCliOptions = EnumSet.noneOf(ParsingOptions.CommandLine.class);
 
-        if (cliOptions != null && cliOptions.GETS_LOOP) {
-            List<ParsingOptions.CommandLine> yarpCliOptions = new ArrayList<>();
-            yarpCliOptions.add(ParsingOptions.CommandLine.N);
-
-            if (cliOptions.PRINT_LOOP) {
-                yarpCliOptions.add(ParsingOptions.CommandLine.P);
+        if (cliOptions != null) {
+            if (cliOptions.IGNORE_LINES_BEFORE_RUBY_SHEBANG) {
+                yarpCliOptions.add(ParsingOptions.CommandLine.X);
             }
 
-            if (cliOptions.SPLIT_LOOP) {
-                yarpCliOptions.add(ParsingOptions.CommandLine.A);
-            }
+            if (cliOptions.GETS_LOOP) {
+                yarpCliOptions.add(ParsingOptions.CommandLine.N);
 
-            if (cliOptions.CHOMP_LOOP) {
-                yarpCliOptions.add(ParsingOptions.CommandLine.L);
-            }
+                if (cliOptions.PRINT_LOOP) {
+                    yarpCliOptions.add(ParsingOptions.CommandLine.P);
+                }
 
-            commandline = EnumSet.copyOf(yarpCliOptions);
-        } else {
-            // EnumSet.copyOf method requires a collection to be non-empty
-            commandline = EnumSet.noneOf(ParsingOptions.CommandLine.class);
+                if (cliOptions.SPLIT_LOOP) {
+                    yarpCliOptions.add(ParsingOptions.CommandLine.A);
+                }
+
+                if (cliOptions.CHOMP_LOOP) {
+                    yarpCliOptions.add(ParsingOptions.CommandLine.L);
+                }
+            }
         }
 
         ParsingOptions.Scope[] scopes;
@@ -430,7 +430,7 @@ public final class YARPTranslatorDriver {
             scopes = EMPTY_SCOPE_ARRAY;
         }
 
-        byte[] parsingOptions = ParsingOptions.serialize(filepath, line, encoding, frozenStringLiteral, commandline,
+        byte[] parsingOptions = ParsingOptions.serialize(filepath, line, encoding, frozenStringLiteral, yarpCliOptions,
                 version, encodingLocked, mainScript, partialScript, scopes);
         byte[] serializedBytes = YARPJNIBindings.parseAndSerialize(sourceBytes, parsingOptions);
 
