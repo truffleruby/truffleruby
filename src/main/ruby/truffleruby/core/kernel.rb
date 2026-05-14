@@ -348,6 +348,15 @@ module Kernel
 
     ivars = Primitive.object_ivars self
 
+    to_inspect = Truffle::Type.check_funcall(self, :instance_variables_to_inspect)
+    if Primitive.is_a?(to_inspect, Array)
+      ivars = to_inspect.intersection(ivars)
+    elsif Primitive.nil?(to_inspect) || Primitive.undefined?(to_inspect)
+      # Do nothing
+    else
+      raise TypeError, "Expected #instance_variables_to_inspect to return an Array or nil, but it returned #{Primitive.class(to_inspect)}"
+    end
+
     if ivars.empty?
       return "#{prefix}>"
     end
@@ -363,6 +372,8 @@ module Kernel
     # If it's already been inspected, return the ...
     "#{prefix} ...>"
   end
+
+  private def instance_variables_to_inspect = nil
 
   def load(filename, wrap = false)
     filename = Truffle::Type.coerce_to_path filename

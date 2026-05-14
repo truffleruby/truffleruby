@@ -1,2 +1,0 @@
-fails:Kernel#inspect calls #instance_variables_to_inspect private method to know which variables to display
-fails:Kernel#inspect raises an error if #instance_variables_to_inspect returns an invalid value
