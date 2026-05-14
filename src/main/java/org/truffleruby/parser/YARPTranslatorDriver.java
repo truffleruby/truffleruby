@@ -363,6 +363,10 @@ public final class YARPTranslatorDriver {
         final var yarpCliOptions = EnumSet.noneOf(ParsingOptions.CommandLine.class);
 
         if (cliOptions != null) {
+            if (sourcePath.equals("-e")) {
+                yarpCliOptions.add(ParsingOptions.CommandLine.E);
+            }
+
             if (cliOptions.IGNORE_LINES_BEFORE_RUBY_SHEBANG) {
                 yarpCliOptions.add(ParsingOptions.CommandLine.X);
             }
