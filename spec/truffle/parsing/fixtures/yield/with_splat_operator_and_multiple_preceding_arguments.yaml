@@ -168,7 +168,7 @@ ast: |
                                                                   conversionMethod = :to_a
                                                                   copy = true
                                                                   flags = 0
-                                                                  nilBehavior = CONVERT
+                                                                  nilBehavior = EMPTY_ARRAY
                                                                   sourceCharIndex = 24
                                                                   sourceLength = 4
                                                               children:
