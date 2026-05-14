@@ -10,14 +10,12 @@
  */
 package org.truffleruby.language.loader;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
-import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.RubyEncoding;
-import org.truffleruby.core.encoding.TStringUtils;
 import org.truffleruby.core.string.TStringWithEncoding;
 import org.truffleruby.parser.MagicCommentParser;
 import org.truffleruby.parser.RubySource;
@@ -43,18 +41,17 @@ public final class MainLoader {
         this.mainScriptEncoding = mainScriptEncoding;
     }
 
-    public RubySource loadFromCommandLineArgument(String code) {
-        var sourceCode = new TStringWithEncoding(TStringUtils.fromJavaString(code, Encodings.UTF_8), Encodings.UTF_8);
-        sourceCode = sourceCode.forceEncoding(mainScriptEncoding);
-        final Source source = Source
-                .newBuilder(TruffleRuby.LANGUAGE_ID, new ByteBasedCharSequence(sourceCode), "-e")
-                .option("ruby.MainScript", "true")
-                .build();
-        return new RubySource(source, "-e");
+    public RubySource loadFromCommandLineArgument(Node currentNode, String code) {
+        byte[] sourceBytes = code.getBytes(StandardCharsets.UTF_8);
+        return loadFromBytes(currentNode, "-e", sourceBytes);
     }
 
-    public RubySource loadFromStandardIn(Node currentNode, String path) throws IOException {
-        byte[] sourceBytes = readAllOfStandardIn();
+    public RubySource loadFromStandardIn(Node currentNode) throws IOException {
+        byte[] sourceBytes = System.in.readAllBytes();
+        return loadFromBytes(currentNode, "-", sourceBytes);
+    }
+
+    private RubySource loadFromBytes(Node currentNode, String path, byte[] sourceBytes) {
         var sourceTString = transformScript(currentNode, path, sourceBytes);
 
         final Source source = Source
@@ -72,24 +69,6 @@ public final class MainLoader {
         }
 
         return MagicCommentParser.createSourceTStringBasedOnMagicEncodingComment(sourceBytes, mainScriptEncoding);
-    }
-
-    private byte[] readAllOfStandardIn() throws IOException {
-        final ByteArrayOutputStream byteStream = new ByteArrayOutputStream(4096);
-
-        final byte[] buffer = new byte[4096];
-
-        while (true) {
-            final int read = System.in.read(buffer);
-
-            if (read == -1) {
-                break;
-            }
-
-            byteStream.write(buffer, 0, read);
-        }
-
-        return byteStream.toByteArray();
     }
 
     public RubySource loadFromFile(Env env, Node currentNode, String mainPath) throws IOException {
