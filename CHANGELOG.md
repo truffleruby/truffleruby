@@ -12,6 +12,7 @@ Compatibility:
 
 * Support  `--vm.XstartOnFirstThread` on macOS, which is required for some UI libraries like `SDL` (#4228, @timfel).
 * Support `instance_variables_to_inspect` to control which variables to show in `inspect` output (#4239, @earlopain)
+* Add top-level `Ruby` module (#4240, @earlopain)
 
 Performance:
 
