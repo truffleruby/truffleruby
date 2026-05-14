@@ -16,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.encoding.RubyEncoding;
-import org.truffleruby.core.string.TStringWithEncoding;
 import org.truffleruby.parser.MagicCommentParser;
 import org.truffleruby.parser.RubySource;
 import org.truffleruby.shared.TruffleRuby;
@@ -41,34 +40,25 @@ public final class MainLoader {
         this.mainScriptEncoding = mainScriptEncoding;
     }
 
-    public RubySource loadFromCommandLineArgument(Node currentNode, String code) {
+    public RubySource loadFromCommandLineArgument(String code) {
         byte[] sourceBytes = code.getBytes(StandardCharsets.UTF_8);
-        return loadFromBytes(currentNode, "-e", sourceBytes);
+        return loadFromBytes("-e", sourceBytes);
     }
 
-    public RubySource loadFromStandardIn(Node currentNode) throws IOException {
+    public RubySource loadFromStandardIn() throws IOException {
         byte[] sourceBytes = System.in.readAllBytes();
-        return loadFromBytes(currentNode, "-", sourceBytes);
+        return loadFromBytes("-", sourceBytes);
     }
 
-    private RubySource loadFromBytes(Node currentNode, String path, byte[] sourceBytes) {
-        var sourceTString = transformScript(currentNode, path, sourceBytes);
+    private RubySource loadFromBytes(String path, byte[] sourceBytes) {
+        var sourceTString = MagicCommentParser.createSourceTStringBasedOnMagicEncodingComment(sourceBytes,
+                mainScriptEncoding);
 
         final Source source = Source
                 .newBuilder(TruffleRuby.LANGUAGE_ID, new ByteBasedCharSequence(sourceTString), path)
                 .option("ruby.MainScript", "true")
                 .build();
         return new RubySource(source, path, sourceTString);
-    }
-
-    private TStringWithEncoding transformScript(Node currentNode, String path, byte[] sourceBytes) {
-        final EmbeddedScript embeddedScript = new EmbeddedScript(context);
-
-        if (embeddedScript.shouldTransform(sourceBytes)) {
-            sourceBytes = embeddedScript.transformForExecution(currentNode, sourceBytes, path);
-        }
-
-        return MagicCommentParser.createSourceTStringBasedOnMagicEncodingComment(sourceBytes, mainScriptEncoding);
     }
 
     public RubySource loadFromFile(Env env, Node currentNode, String mainPath) throws IOException {
@@ -82,7 +72,8 @@ public final class MainLoader {
          * and pass them down to the lexer and to the Source. */
 
         byte[] sourceBytes = file.readAllBytes();
-        var sourceTString = transformScript(currentNode, mainPath, sourceBytes);
+        var sourceTString = MagicCommentParser.createSourceTStringBasedOnMagicEncodingComment(sourceBytes,
+                mainScriptEncoding);
 
         final Source mainSource = fileLoader.buildSource(file, mainPath, sourceTString, false, true);
 

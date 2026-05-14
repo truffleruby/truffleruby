@@ -177,12 +177,12 @@ public abstract class TruffleBootNodes {
                         break;
 
                     case "STDIN":
-                        rubySource = mainLoader.loadFromStandardIn(this);
+                        rubySource = mainLoader.loadFromStandardIn();
                         mainScriptName = "-";
                         break;
 
                     case "INLINE":
-                        rubySource = mainLoader.loadFromCommandLineArgument(this, toExecute);
+                        rubySource = mainLoader.loadFromCommandLineArgument(toExecute);
                         mainScriptName = "-e";
                         break;
 
