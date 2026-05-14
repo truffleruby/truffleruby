@@ -20,7 +20,7 @@ ast: |
                       conversionMethod = :to_a
                       copy = true
                       flags = 0
-                      nilBehavior = CONVERT
+                      nilBehavior = EMPTY_ARRAY
                       sourceCharIndex = 20
                       sourceLength = 5
                   children:

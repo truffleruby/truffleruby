@@ -31,7 +31,7 @@ ast: |
                       conversionMethod = :to_a
                       copy = false
                       flags = 0
-                      nilBehavior = CONVERT
+                      nilBehavior = EMPTY_ARRAY
                       sourceCharIndex = 4
                       sourceLength = 4
                   children:

@@ -35,8 +35,7 @@ public abstract class SplatCastNode extends RubyContextSourceNode {
     public enum NilBehavior {
         EMPTY_ARRAY,
         ARRAY_WITH_NIL,
-        NIL,
-        CONVERT
+        NIL
     }
 
     private final NilBehavior nilBehavior;
@@ -44,7 +43,6 @@ public abstract class SplatCastNode extends RubyContextSourceNode {
     @CompilationFinal private boolean copy = true;
 
     @Child private ArrayDupNode dup;
-    @Child private DispatchNode toA;
 
     public SplatCastNode(RubyLanguage language, NilBehavior nilBehavior, boolean useToAry) {
         this.nilBehavior = nilBehavior;
@@ -73,9 +71,6 @@ public abstract class SplatCastNode extends RubyContextSourceNode {
 
             case ARRAY_WITH_NIL:
                 return createArray(new Object[]{ nil });
-
-            case CONVERT:
-                return callToA(nil);
 
             case NIL:
                 return nil;
@@ -114,14 +109,6 @@ public abstract class SplatCastNode extends RubyContextSourceNode {
                 return (RubyArray) array;
             }
         }
-    }
-
-    private Object callToA(Object nil) {
-        if (toA == null) {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            toA = insert(DispatchNode.create());
-        }
-        return toA.call(nil, "to_a");
     }
 
     private RubyArray executeDup(RubyArray array) {

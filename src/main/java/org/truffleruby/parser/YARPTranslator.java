@@ -3154,7 +3154,7 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         if (node.expression != null) {
             final RubyNode valueNode = node.expression.accept(this);
-            rubyNode = SplatCastNodeGen.create(language, SplatCastNode.NilBehavior.CONVERT, false,
+            rubyNode = SplatCastNodeGen.create(language, SplatCastNode.NilBehavior.EMPTY_ARRAY, false,
                     valueNode);
         } else {
             // forwarding * in a method call, e.g.
@@ -3414,7 +3414,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                 }
                 // Relies on ... being only valid as a method parameter and not a block parameter
                 arraysToConcat.add(
-                        SplatCastNodeGen.create(language, SplatCastNode.NilBehavior.CONVERT, false,
+                        SplatCastNodeGen.create(language, SplatCastNode.NilBehavior.EMPTY_ARRAY, false,
                                 environment.readFromMethodFrameNode(FORWARDED_REST_NAME)));
 
                 current.add(HashCastNodeGen.HashCastASTNodeGen.create(

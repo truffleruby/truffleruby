@@ -61,7 +61,7 @@ ast: |
                                                           conversionMethod = :to_a
                                                           copy = true
                                                           flags = 0
-                                                          nilBehavior = CONVERT
+                                                          nilBehavior = EMPTY_ARRAY
                                                           sourceCharIndex = 6
                                                           sourceLength = 2
                                                       children:
@@ -150,7 +150,7 @@ ast: |
                                                                       conversionMethod = :to_a
                                                                       copy = true
                                                                       flags = 0
-                                                                      nilBehavior = CONVERT
+                                                                      nilBehavior = EMPTY_ARRAY
                                                                       sourceCharIndex = 4
                                                                       sourceLength = 5
                                                                   children:
@@ -202,7 +202,7 @@ ast: |
                                                                                                           conversionMethod = :to_a
                                                                                                           copy = false
                                                                                                           flags = 0
-                                                                                                          nilBehavior = CONVERT
+                                                                                                          nilBehavior = EMPTY_ARRAY
                                                                                                           sourceCharIndex = 4
                                                                                                           sourceLength = 5
                                                                                                       children:
