@@ -218,10 +218,10 @@ class Enumerator
     Enumerator::Chain.new(self, other)
   end
 
-  def self.produce(initial = nil)
+  def self.produce(initial = nil, size: Float::INFINITY)
     # Taken from https://github.com/zverok/enumerator_generate
-    raise ArgumentError, 'No block given' unless block_given?
-    Enumerator.new(Float::INFINITY) do |y|
+    raise ArgumentError, 'no block given' unless block_given?
+    Enumerator.new(size) do |y|
       val = Primitive.nil?(initial) ? yield() : initial
 
       loop do
