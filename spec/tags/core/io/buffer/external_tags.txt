@@ -1,3 +1,0 @@
-fails:IO::Buffer#external? is true for a buffer with externally-managed memory
-fails:IO::Buffer#external? is false for a buffer with self-managed memory
-fails:IO::Buffer#external? is false for a null buffer

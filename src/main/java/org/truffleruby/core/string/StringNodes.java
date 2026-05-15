@@ -1695,7 +1695,6 @@ public abstract class StringNodes {
     }
 
     @CoreMethod(names = "setbyte", required = 2, raiseIfNotMutableSelf = true, lowerFixnum = { 1, 2 })
-    @ImportStatic(StringGuards.class)
     public abstract static class StringSetByteNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization

@@ -1,3 +1,0 @@
-fails:IO::Buffer#internal? is true for an internally-allocated buffer
-fails:IO::Buffer#internal? is false for an externally-allocated buffer
-fails:IO::Buffer#internal? is false for a null buffer

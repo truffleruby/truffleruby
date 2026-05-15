@@ -1458,6 +1458,47 @@ public abstract class StringPrimitiveNodes {
 
     }
 
+    /** Like String#byteslice (which doesn't copy for TruffleString) but also does not copy for MutableTruffleString */
+    @Primitive(name = "string_byteslice_without_copying", lowerFixnum = { 1, 2 })
+    public abstract static class StringBytesliceWihtoutCopyingNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization(guards = "tstring.isImmutable()")
+        Object immutable(Object string, int byteOffset, int byteLength,
+                @Cached @Shared RubyStringLibrary libString,
+                @Bind("libString.getTString($node, string)") AbstractTruffleString tstring,
+                @Cached TruffleString.SubstringByteIndexNode substringNode) {
+            var encoding = libString.getEncoding(this, string);
+            return createSubString(this, substringNode, tstring, encoding, byteOffset, byteLength);
+        }
+
+        @Specialization(guards = { "tstring.isMutable()", "tstring.isNative()" })
+        Object mutableNative(Object string, int byteOffset, int byteLength,
+                @Cached @Shared RubyStringLibrary libString,
+                @Bind("libString.getTString($node, string)") AbstractTruffleString tstring,
+                @Cached TruffleString.GetInternalNativePointerNode getInternalNativePointerNode,
+                @Cached MutableTruffleString.FromNativePointerNode fromNativePointerNode) {
+            var encoding = libString.getEncoding(this, string);
+            var tencoding = encoding.tencoding;
+            var pointer = getInternalNativePointerNode.execute(tstring, tencoding);
+            var noCopySlice = fromNativePointerNode.execute(pointer, byteOffset, byteLength, tencoding, false);
+            return createMutableString(noCopySlice, encoding);
+        }
+
+        @Specialization(guards = { "tstring.isMutable()", "tstring.isManaged()" })
+        Object mutableManaged(Object string, int byteOffset, int byteLength,
+                @Cached @Shared RubyStringLibrary libString,
+                @Bind("libString.getTString($node, string)") AbstractTruffleString tstring,
+                @Cached TruffleString.GetInternalByteArrayNode getInternalByteArrayNode,
+                @Cached MutableTruffleString.FromByteArrayNode fromByteArrayNode) {
+            var encoding = libString.getEncoding(this, string);
+            var tencoding = encoding.tencoding;
+            var internalByteArray = getInternalByteArrayNode.execute(tstring, tencoding);
+            var noCopySlice = fromByteArrayNode.execute(internalByteArray.getArray(),
+                    internalByteArray.getOffset() + byteOffset, byteLength, tencoding, false);
+            return createMutableString(noCopySlice, encoding);
+        }
+    }
+
     /** Like {@code string.byteslice(byteIndex)} but returns nil if the character is broken. */
     @Primitive(name = "string_chr_at", lowerFixnum = 1)
     @ImportStatic(StringGuards.class)
@@ -2118,6 +2159,16 @@ public abstract class StringPrimitiveNodes {
             }
 
             return result;
+        }
+    }
+
+    /** Same as String#setbyte but does not check for {@link RubyString#locked locked} Strings */
+    @Primitive(name = "string_setbyte", raiseIfFrozen = 0, lowerFixnum = { 1, 2 })
+    public abstract static class PrimitiveStringSetByteNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        int doSetByte(RubyString string, int index, int value,
+                @Cached StringNodes.SetByteNode setByteNode) {
+            return setByteNode.execute(this, string, index, value);
         }
     }
 

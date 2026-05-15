@@ -42,6 +42,7 @@ package org.truffleruby.core;
 import java.io.IOException;
 import java.lang.invoke.VarHandle;
 import java.lang.management.ManagementFactory;
+import java.nio.ByteOrder;
 import java.nio.file.NoSuchFileException;
 import java.util.Set;
 
@@ -57,6 +58,7 @@ import org.truffleruby.builtins.CoreMethodNode;
 import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.annotations.Primitive;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
+import org.truffleruby.builtins.PrimitiveNode;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.RubyEncoding;
@@ -255,6 +257,14 @@ public abstract class TruffleSystemNodes {
             }
 
             return bean.getCurrentThreadAllocatedBytes();
+        }
+    }
+
+    @Primitive(name = "little_endian?")
+    public abstract static class IsLittleEndian extends PrimitiveNode {
+        @Specialization
+        boolean isLittleEndian() {
+            return ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
         }
     }
 }

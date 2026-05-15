@@ -1,4 +1,0 @@
-fails:IO::Buffer#shared? is true for a buffer created with SHARED flag
-fails:IO::Buffer#shared? is true for a non-private buffer created with .map
-fails:IO::Buffer#shared? is false for an unshared buffer
-fails:IO::Buffer#shared? is false for a null buffer

@@ -1,4 +1,0 @@
-fails:IO::Buffer#readonly? is true for a buffer created with READONLY flag
-fails:IO::Buffer#readonly? is true for a buffer that is non-writable
-fails:IO::Buffer#readonly? is false for a modifiable buffer
-fails:IO::Buffer#readonly? is false for a null buffer
