@@ -206,7 +206,7 @@ module Truffle
 
     def self.check_last_line(line)
       unless Primitive.is_a? line, String
-        raise TypeError, "$_ value need to be String (#{Truffle::ExceptionOperations.to_class_name(line)} given)"
+        raise TypeError, "$_ value need to be String (#{Truffle::Type.to_class_name(line)} given)"
       end
       line
     end

@@ -223,16 +223,36 @@ module Truffle
     # MRI: Check_Type / rb_check_type
     def self.rb_check_type(obj, cls)
       unless Primitive.is_a?(obj, cls)
-        raise TypeError, "wrong argument type #{Primitive.class(obj)} (expected #{cls})"
+        raise TypeError, "wrong argument type #{to_class_name(obj)} (expected #{cls})"
       end
       obj
+    end
+
+    def self.to_class_name(object)
+      case object
+      when nil
+        'nil'
+      when true
+        'true'
+      when false
+        'false'
+      else
+        Primitive.class(object).name
+      end
+    end
+
+    IMPLICIT_CONVERSION_METHODS = [:to_int, :to_ary, :to_str, :to_sym, :to_hash, :to_proc, :to_io]
+
+    def self.conversion_error_message(obj, cls, meth)
+      message = IMPLICIT_CONVERSION_METHODS.include?(meth) ? 'no implicit conversion of' : "can't convert"
+      "#{message} #{to_class_name(obj)} into #{cls}"
     end
 
     def self.convert_type(obj, cls, meth, raise_on_error)
       r = check_funcall(obj, meth)
       if Primitive.undefined?(r)
         if raise_on_error
-          raise TypeError, Truffle::ExceptionOperations.conversion_error_message(obj, cls, meth)
+          raise TypeError, conversion_error_message(obj, cls, meth)
         else
           nil
         end
@@ -350,7 +370,7 @@ module Truffle
       when Numeric
         Primitive.convert_type obj, Float, :to_f
       else
-        raise TypeError, ExceptionOperations.conversion_error_message(obj, Float, :to_f)
+        raise TypeError, conversion_error_message(obj, Float, :to_f)
       end
     end
 
