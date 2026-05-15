@@ -1102,6 +1102,7 @@ public final class CoreLibrary {
             "/core/truffle/polyglot.rb",
             "/core/truffle/polyglot_methods.rb",
             "/core/posix.rb",
+            "/core/io_buffer.rb",
             "/core/data.rb",
             "/core/truffle/queue_operations.rb",
             "/core/pathname.rb",
