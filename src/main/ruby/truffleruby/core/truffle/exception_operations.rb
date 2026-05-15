@@ -362,27 +362,6 @@ module Truffle
       message
     end
 
-    IMPLICIT_CONVERSION_METHODS = [:to_int, :to_ary, :to_str, :to_sym, :to_hash, :to_proc, :to_io]
-
-    def self.conversion_error_message(obj, cls, meth)
-      message = IMPLICIT_CONVERSION_METHODS.include?(meth) ? 'no implicit conversion of' : "can't convert"
-      type_name = to_class_name(obj)
-      "#{message} #{type_name} into #{cls}"
-    end
-
-    def self.to_class_name(val)
-      case val
-      when nil
-        'nil'
-      when true
-        'true'
-      when false
-        'false'
-      else
-        Primitive.class(val).name
-      end
-    end
-
     def self.get_formatted_backtrace(exception)
       full_message(exception, highlight: nil, order: :top)
     end
