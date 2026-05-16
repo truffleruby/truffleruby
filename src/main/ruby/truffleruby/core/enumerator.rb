@@ -289,12 +289,15 @@ class Enumerator
         return nil unless enum.respond_to?(:size)
 
         size = enum.size
+        return size if Primitive.is_a?(size, Integer) && size.zero?
 
+        size
+      end.reduce(1) do |sum, size|
         return size if Primitive.is_a?(size, Float) && size.infinite?
         return nil unless Primitive.is_a?(size, Integer)
 
-        size
-      end.reduce(1, &:*)
+        sum * size
+      end
     end
   end
 

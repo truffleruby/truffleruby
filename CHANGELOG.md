@@ -15,6 +15,7 @@ Compatibility:
 * Add top-level `Ruby` module (#4240, @earlopain).
 * Splatting `nil` no longer calls `#to_a` like Ruby 4.0 (#4240, @eregon).
 * `Enumerator.produce` now accepts the optional `size` keyword parameter (#4246, @earlopain)
+* Fix `Enumerator.product` size for empty enumerators (#4249, @earlopain)
 
 Performance:
 
