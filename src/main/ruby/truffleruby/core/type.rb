@@ -83,7 +83,7 @@ module Truffle
     end
 
     def self.rb_num2ulong(val)
-      raise TypeError, 'no implicit conversion from nil to integer' if Primitive.nil? val
+      raise TypeError, 'no implicit conversion from nil into Integer' if Primitive.nil? val
 
       if Primitive.is_a?(val, Integer)
         if Primitive.integer_fits_into_long?(val)
@@ -100,7 +100,7 @@ module Truffle
     end
 
     def self.rb_num2dbl(val)
-      raise TypeError, 'no implicit conversion from nil to float' if Primitive.nil? val
+      raise TypeError, 'no implicit conversion from nil into Float' if Primitive.nil? val
 
       if Primitive.is_a?(val, Float)
         val
@@ -147,7 +147,7 @@ module Truffle
 
     def self.conversion_mismatch(obj, cls, meth, res)
       oc = Primitive.class(obj)
-      raise TypeError, "can't convert #{oc} to #{cls} (#{oc}##{meth} gives #{Primitive.class(res)})"
+      raise TypeError, "can't convert #{oc} into #{cls} (#{oc}##{meth} gives #{Primitive.class(res)})"
     end
 
     def self.fits_into_int?(val)

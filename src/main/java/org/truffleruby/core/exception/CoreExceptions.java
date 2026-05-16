@@ -576,7 +576,7 @@ public final class CoreExceptions {
             Node currentNode) {
         String fromClass = LogicalClassNode.getUncached().execute(from).fields.getName();
         return typeError(StringUtils.format(
-                "can't convert %s to %s (%s#%s gives %s)",
+                "can't convert %s into %s (%s#%s gives %s)",
                 fromClass,
                 toClass,
                 fromClass,
@@ -629,7 +629,7 @@ public final class CoreExceptions {
         String badClassName = LogicalClassNode.getUncached().execute(from).fields.getName();
         return typeError(
                 StringUtils.format(
-                        "can't convert %s to %s (%s#%s gives %s)",
+                        "can't convert %s into %s (%s#%s gives %s)",
                         badClassName,
                         to,
                         badClassName,

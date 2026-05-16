@@ -18,7 +18,6 @@ import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import org.truffleruby.core.CoreLibrary;
 import org.truffleruby.core.numeric.IntegerNodes.IntegerLowerNode;
 import org.truffleruby.core.numeric.RubyBignum;
-import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.dispatch.DispatchNode;
@@ -88,15 +87,6 @@ public abstract class ToIntNode extends RubyBaseNode {
             throw new RaiseException(getContext(), coreExceptions()
                     .rangeError(Utils.concat("float ", value, " out of range of integer"), this));
         }
-    }
-
-    @Specialization
-    int coerceNil(Nil value) {
-        // MRI hardcodes this specific error message, which is slightly different from the one we would get in the
-        // catch-all case.
-        throw new RaiseException(
-                getContext(),
-                coreExceptions().typeError("no implicit conversion from nil to integer", this));
     }
 
     @Fallback

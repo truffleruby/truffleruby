@@ -72,7 +72,7 @@ public abstract class ToLongNode extends FormatNode {
     @Specialization(
             guards = { "errorIfNeedsConversion", "!isBoolean(object)", "!isRubyInteger(object)", "!isNil(object)" })
     long toLong(VirtualFrame frame, Object object) {
-        throw new CantConvertException("can't convert Object to Integer");
+        throw new CantConvertException("can't convert Object into Integer");
     }
 
     @Specialization(
@@ -86,7 +86,7 @@ public abstract class ToLongNode extends FormatNode {
         Object result = toIntNode.call(PRIVATE_RETURN_MISSING, object, "to_int");
         if (result == DispatchNode.MISSING) {
             noConversionAvailable.enter(node);
-            throw new CantConvertException("can't convert Object to Integer");
+            throw new CantConvertException("can't convert Object into Integer");
         }
         return redoNode.executeToLong(frame, result);
     }

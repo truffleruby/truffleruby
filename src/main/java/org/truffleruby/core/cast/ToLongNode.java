@@ -18,7 +18,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import org.truffleruby.core.numeric.RubyBignum;
-import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.dispatch.DispatchNode;
@@ -66,15 +65,6 @@ public abstract class ToLongNode extends RubyBaseNode {
                     getContext(node),
                     coreExceptions(node).rangeError(Utils.concat("float ", value, " out of range of integer"), node));
         }
-    }
-
-    @Specialization
-    static long coerceNil(Node node, Nil nil) {
-        // MRI hardcodes this specific error message, which is slightly different from the one we would get in the
-        // catch-all case.
-        throw new RaiseException(
-                getContext(node),
-                coreExceptions(node).typeError("no implicit conversion from nil to integer", node));
     }
 
     @Fallback
