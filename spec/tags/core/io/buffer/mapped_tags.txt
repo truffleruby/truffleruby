@@ -1,3 +1,0 @@
-fails:IO::Buffer#mapped? is true for a buffer with mapped memory
-fails:IO::Buffer#mapped? is false for a buffer with non-mapped memory
-fails:IO::Buffer#mapped? is false for a null buffer

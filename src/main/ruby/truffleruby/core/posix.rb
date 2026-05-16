@@ -208,6 +208,8 @@ module Truffle::POSIX
   attach_function :truffleposix_minor, [:dev_t], :uint, LIBTRUFFLEPOSIX
   attach_function :mkdir, [:string, :mode_t], :int
   attach_function :mkfifo, [:string, :mode_t], :int
+  attach_function :mmap, [:pointer, :size_t, :int, :int, :int, :off_t], :pointer
+  attach_function :munmap, [:pointer, :size_t], :int
   attach_function :open, [:string, :int, varargs(:mode_t)], :int
   attach_function :opendir, [:string], :pointer
   attach_function :pipe, [:pointer], :int
@@ -305,6 +307,7 @@ module Truffle::POSIX
   attach_function :truffleposix_get_current_user_home, [], :pointer, LIBTRUFFLEPOSIX
   attach_function :truffleposix_get_user_home, [:string], :pointer, LIBTRUFFLEPOSIX
   attach_function :truffleposix_free, [:pointer], :void, LIBTRUFFLEPOSIX
+  attach_function :truffleposix_page_size, [], :long, LIBTRUFFLEPOSIX
 
   # Errno-related
   if Truffle::Platform.linux?

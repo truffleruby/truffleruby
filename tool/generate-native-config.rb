@@ -616,11 +616,15 @@ constants 'file' do |cg|
   ]
 end
 
-
 constants 'io' do |cg|
   cg.include 'stdio.h'
   cg.include 'unistd.h'
   cg.consts %w[SEEK_SET SEEK_CUR SEEK_END SEEK_DATA SEEK_HOLE]
+end
+
+constants 'mmap' do |cg|
+  cg.include 'sys/mman.h'
+  cg.consts %w[PROT_READ PROT_WRITE MAP_SHARED MAP_PRIVATE]
 end
 
 constants 'fcntl' do |cg|

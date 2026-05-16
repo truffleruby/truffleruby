@@ -1,3 +1,0 @@
-fails:IO::Buffer#private? is true for a buffer created with PRIVATE flag
-fails:IO::Buffer#private? is false for a buffer created without PRIVATE flag
-fails:IO::Buffer#private? is false for a null buffer
