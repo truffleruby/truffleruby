@@ -75,7 +75,7 @@ static char *out_of_range_float(char (*pbuf)[24], VALUE val) {
 
 LONG_LONG rb_num2ll(VALUE val) {
   if (NIL_P(val)) {
-    rb_raise(rb_eTypeError, "no implicit conversion from nil");
+    rb_raise(rb_eTypeError, "no implicit conversion of nil into Integer");
   }
 
   if (FIXNUM_P(val)) {
@@ -91,9 +91,11 @@ LONG_LONG rb_num2ll(VALUE val) {
   else if (RB_TYPE_P(val, T_BIGNUM)) {
     return rb_big2ll(val);
   } else if (RB_TYPE_P(val, T_STRING)) {
-    rb_raise(rb_eTypeError, "no implicit conversion from string");
-  } else if (RB_TYPE_P(val, T_TRUE) || RB_TYPE_P(val, T_FALSE)) {
-    rb_raise(rb_eTypeError, "no implicit conversion from boolean");
+    rb_raise(rb_eTypeError, "no implicit conversion of String into Integer");
+  } else if (RB_TYPE_P(val, T_TRUE)) {
+    rb_raise(rb_eTypeError, "no implicit conversion of true into Integer");
+  } else if (RB_TYPE_P(val, T_FALSE)) {
+    rb_raise(rb_eTypeError, "no implicit conversion of false into Integer");
   }
 
   val = rb_to_int(val);
@@ -102,7 +104,7 @@ LONG_LONG rb_num2ll(VALUE val) {
 
 unsigned LONG_LONG rb_num2ull(VALUE val) {
   if (NIL_P(val)) {
-    rb_raise(rb_eTypeError, "no implicit conversion from nil");
+    rb_raise(rb_eTypeError, "no implicit conversion of nil into Integer");
   }
 
   if (FIXNUM_P(val)) {
@@ -121,9 +123,11 @@ unsigned LONG_LONG rb_num2ull(VALUE val) {
   else if (RB_TYPE_P(val, T_BIGNUM)) {
     return rb_big2ull(val);
   } else if (RB_TYPE_P(val, T_STRING)) {
-    rb_raise(rb_eTypeError, "no implicit conversion from string");
-  } else if (RB_TYPE_P(val, T_TRUE) || RB_TYPE_P(val, T_FALSE)) {
-    rb_raise(rb_eTypeError, "no implicit conversion from boolean");
+    rb_raise(rb_eTypeError, "no implicit conversion of String into Integer");
+  } else if (RB_TYPE_P(val, T_TRUE)) {
+    rb_raise(rb_eTypeError, "no implicit conversion of true into Integer");
+  } else if (RB_TYPE_P(val, T_FALSE)) {
+    rb_raise(rb_eTypeError, "no implicit conversion of false into Integer");
   }
 
   val = rb_to_int(val);
