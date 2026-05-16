@@ -292,11 +292,11 @@ class Enumerator
         return size if Primitive.is_a?(size, Integer) && size.zero?
 
         size
-      end.reduce(1) do |sum, size|
+      end.reduce(1) do |product, size|
         return size if Primitive.is_a?(size, Float) && size.infinite?
         return nil unless Primitive.is_a?(size, Integer)
 
-        sum * size
+        product * size
       end
     end
   end
