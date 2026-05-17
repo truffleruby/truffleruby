@@ -17,6 +17,7 @@ Compatibility:
 * `Enumerator.produce` now accepts the optional `size` keyword parameter (#4246, @earlopain)
 * Fix `Enumerator.product` size for empty enumerators (#4249, @earlopain)
 * Consistent coercion error messages (#4250, @earlopain)
+* `IO.select` now accepts `Float::INFINITY` as a timeout argument (#4252, @haukot)
 
 Performance:
 
