@@ -66,7 +66,6 @@ exclude :test_seek, "NameError: uninitialized constant TestIO::Bug" if RUBY_PLAT
 exclude :test_seek_symwhence, "TypeError: unsupported type [:SET]"
 exclude :test_select_exceptfds, "Truffle::IOOperations.poll(acc, Truffle::IOOperations::POLLIN_SET | Truffle::IOOperations::POLLEX_SET, nil) returns POLLRDNORM|POLLPRI|POLLIN on Linux (correct) but POLLRDNORM|POLLIN on macOS (bug). With events=POLLPRI it hangs on macOS. It seems a bug of macOS poll() not handling TCP MSG_OOB. MSG_OOB is poorly supported across platforms anyway." if RUBY_PLATFORM.include?('darwin')
 exclude :test_select_memory_leak, "hangs"
-exclude :test_select_timeout, "[RangeError] exception expected, not #<FloatDomainError: NaN>."
 exclude :test_sysread_locktmp, "Exception(RuntimeError) with message matches to /can't modify string; temporarily locked/."
 exclude :test_sysread_with_negative_length, "[ArgumentError] exception expected, not #<Errno::EFAULT: Bad address>."
 exclude :test_ungetbyte, "Errno::EINVAL: Invalid argument"

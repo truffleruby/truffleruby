@@ -734,7 +734,8 @@ class IO
         raise TypeError, 'Timeout must be numeric'
       end
 
-      raise ArgumentError, 'timeout must be positive' if timeout < 0
+      raise ArgumentError, 'time interval must not be negative' if timeout < 0
+      raise RangeError, "#{timeout} out of Time range" if Primitive.is_a?(timeout, Float) && timeout.nan?
 
       # Milliseconds, rounded down
       timeout = Integer(timeout * 1_000)
