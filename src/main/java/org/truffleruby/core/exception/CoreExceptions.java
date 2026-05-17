@@ -422,6 +422,11 @@ public final class CoreExceptions {
     }
 
     @TruffleBoundary
+    public RubyException mathDomainErrorLog1p(Node currentNode) {
+        return mathDomainError("log1p", currentNode);
+    }
+
+    @TruffleBoundary
     public RubyException mathDomainErrorLog10(Node currentNode) {
         return mathDomainError("log10", currentNode);
     }
@@ -435,7 +440,7 @@ public final class CoreExceptions {
     public RubyException mathDomainError(String method, Node currentNode) {
         RubyClass exceptionClass = context.getCoreLibrary().mathDomainErrorClass;
         RubyString errorMessage = StringOperations.createUTF8String(context, language,
-                StringUtils.format("Numerical argument is out of domain - \"%s\"", method));
+                StringUtils.format("Numerical argument is out of domain - %s", method));
         final Backtrace backtrace = context.getCallStack().getBacktrace(currentNode);
 
         return ExceptionOperations
@@ -588,8 +593,19 @@ public final class CoreExceptions {
     public RubyException typeErrorCantConvertInto(Object from, String toClass, Node currentNode) {
         return typeError(StringUtils.format(
                 "can't convert %s into %s",
-                LogicalClassNode.getUncached().execute(from).fields.getName(),
+                toClassName(from),
                 toClass), currentNode);
+    }
+
+    // Like Truffle::Type.to_class_name
+    public static String toClassName(Object object) {
+        if (object == Nil.INSTANCE) {
+            return "nil";
+        } else if (object instanceof Boolean b) {
+            return b ? "true" : "false";
+        } else {
+            return LogicalClassNode.getUncached().execute(object).fields.getName();
+        }
     }
 
     @TruffleBoundary

@@ -258,6 +258,16 @@ public abstract class MathNodes {
 
     }
 
+    @CoreMethod(names = "expm1", isModuleFunction = true, required = 1)
+    public abstract static class ExpM1Node extends SimpleMonadicMathNode {
+
+        @Override
+        protected double doFunction(double a) {
+            return Math.expm1(a);
+        }
+
+    }
+
     @Primitive(name = "math_frexp")
     public abstract static class FrExpNode extends PrimitiveArrayArgumentsNode {
 
@@ -508,6 +518,21 @@ public abstract class MathNodes {
             }
 
             return Math.log(a) / LOG2;
+        }
+
+    }
+
+    @CoreMethod(names = "log1p", isModuleFunction = true, required = 1)
+    public abstract static class Log1PNode extends SimpleMonadicMathNode {
+
+        @Override
+        protected double doFunction(double a) {
+            if (a < -1.0) {
+                exceptionProfile.enter();
+                throw new RaiseException(getContext(), coreExceptions().mathDomainErrorLog1p(this));
+            }
+
+            return Math.log1p(a);
         }
 
     }
