@@ -716,8 +716,8 @@ class IO
   # A +timeout+ of 0 indicates that each descriptor should be
   # checked once only, effectively polling the sets.
   #
-  # Leaving the +timeout+ to +nil+ causes +select+ to block
-  # infinitely until an event transpires.
+  # Leaving the +timeout+ to +nil+ or passing +Float::INFINITY+ causes
+  # +select+ to block infinitely until an event transpires.
   #
   # If the timeout expires without events, +nil+ is returned.
   # Otherwise, an [readable, writable, errors] Array of Arrays
@@ -727,6 +727,8 @@ class IO
   #                 Rubinius does not.
   #
   def self.select(readables = nil, writables = nil, errorables = nil, timeout = nil)
+    timeout = nil if timeout == Float::INFINITY
+
     if timeout
       unless Primitive.is_a? timeout, Numeric
         raise TypeError, 'Timeout must be numeric'
