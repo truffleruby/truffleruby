@@ -1,4 +1,3 @@
-exclude :test_lgamma, "Expected Exception(Math::DomainError) was raised, but the message doesn't match. Expected /\\blgamma\\b/ to match \"Numerical argument is out of domain - \\\"log2\\\"\"."
 exclude :test_log, "Math::DomainError expected but nothing was raised."
 exclude :test_override_bignum_to_f, "Expected |0.9988862206605801 - -0.9997215163885841| (1.9986077370491642) to be <= 5.682758890023843e-14."
 exclude :test_override_integer_to_f, "Expected |0.5403023058681398 - 1.0| (0.45969769413186023) to be <= 5.6843418860808015e-14."
