@@ -1,4 +1,1 @@
 fails:The defined? keyword for a scoped constant returns nil when a constant is defined on top-level but not on the class
-fails:The defined? keyword for an expression &&= returns 'expression' for assigning a fully qualified constant with '&&='
-fails:The defined? keyword for an expression ||= returns 'expression' for assigning a fully qualified constant with '||='
-fails:The defined? keyword for an expression returns 'assignment' for an assigning a fully qualified constant with '+='

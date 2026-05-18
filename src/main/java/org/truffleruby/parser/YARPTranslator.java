@@ -1362,9 +1362,10 @@ public class YARPTranslator extends YARPBaseTranslator {
 
         final RubyNode rubyNode;
 
+        // defined?(A::B += 1) should return 'assignment'
         if (writeParentNode != null) {
-            // defined?(A::B += 1) returns 'expression' so don't use DefinedWrapperNode here
-            rubyNode = sequence(writeParentNode, writeNode.accept(this));
+            RubyNode sequence = sequence(writeParentNode, writeNode.accept(this));
+            rubyNode = new DefinedWrapperNode(language.coreStrings.ASSIGNMENT, sequence);
 
             // rubyNode may be already assigned source code in case writeParentNode is null
             assignPositionAndFlagsIfMissing(node, rubyNode);
