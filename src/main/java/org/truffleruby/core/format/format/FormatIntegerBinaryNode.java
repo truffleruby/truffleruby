@@ -48,28 +48,20 @@ public abstract class FormatIntegerBinaryNode extends FormatNode {
     }
 
     @Specialization
-    byte[] format(int width, int precision, int value) {
-        final boolean isNegative = value < 0;
-        final boolean negativeAndPadded = isNegative && (this.hasSpaceFlag || this.hasPlusFlag);
-        final String formatted = negativeAndPadded ? Integer.toBinaryString(-value) : Integer.toBinaryString(value);
-        return getFormattedString(
-                formatted,
-                width,
-                precision,
-                isNegative,
-                this.hasSpaceFlag,
-                this.hasPlusFlag,
-                this.hasZeroFlag,
-                this.useAlternativeFormat,
-                this.hasMinusFlag,
-                this.format);
-    }
-
-    @Specialization
     byte[] format(int width, int precision, long value) {
+        final boolean isZero = value == 0;
         final boolean isNegative = value < 0;
         final boolean negativeAndPadded = isNegative && (this.hasSpaceFlag || this.hasPlusFlag);
-        final String formatted = negativeAndPadded ? Long.toBinaryString(-value) : Long.toBinaryString(value);
+
+        final String formatted;
+        if (isZero && precision == 0) {
+            formatted = "";
+        } else if (negativeAndPadded) {
+            formatted = Long.toBinaryString(-value);
+        } else {
+            formatted = Long.toBinaryString(value);
+        }
+
         return getFormattedString(
                 formatted,
                 width,
@@ -87,11 +79,14 @@ public abstract class FormatIntegerBinaryNode extends FormatNode {
     @Specialization
     byte[] format(int width, int precision, RubyBignum value) {
         final BigInteger bigInteger = value.value;
+        final boolean isZero = bigInteger.signum() == 0;
         final boolean isNegative = bigInteger.signum() == -1;
         final boolean negativeAndPadded = isNegative && (this.hasSpaceFlag || this.hasPlusFlag);
 
         final String formatted;
-        if (negativeAndPadded) {
+        if (isZero && precision == 0) {
+            formatted = "";
+        } else if (negativeAndPadded) {
             formatted = bigInteger.abs().toString(2);
         } else if (!isNegative) {
             formatted = bigInteger.toString(2);

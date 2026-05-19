@@ -12,9 +12,3 @@ fails:Kernel#sprintf other formats c displays only the first character if argume
 fails:Kernel#sprintf other formats c displays no characters if argument is an empty string
 fails:Kernel.sprintf other formats c displays only the first character if argument is a string of several characters
 fails:Kernel.sprintf other formats c displays no characters if argument is an empty string
-fails:Kernel#sprintf integer formats d converts to the empty string if precision is 0 and value is 0
-fails:Kernel#sprintf integer formats i converts to the empty string if precision is 0 and value is 0
-fails:Kernel#sprintf integer formats u converts to the empty string if precision is 0 and value is 0
-fails:Kernel.sprintf integer formats d converts to the empty string if precision is 0 and value is 0
-fails:Kernel.sprintf integer formats i converts to the empty string if precision is 0 and value is 0
-fails:Kernel.sprintf integer formats u converts to the empty string if precision is 0 and value is 0
