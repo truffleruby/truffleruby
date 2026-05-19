@@ -71,12 +71,6 @@ public abstract class FormatIntegerNode extends FormatNode {
 
     @TruffleBoundary
     @Specialization
-    byte[] format(int width, int precision, int arg) {
-        return format(width, precision, (long) arg);
-    }
-
-    @TruffleBoundary
-    @Specialization
     byte[] format(int width, int precision, long arg) {
 
         final char fchar = this.getFormatCharacter();

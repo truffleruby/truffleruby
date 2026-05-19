@@ -48,11 +48,6 @@ public abstract class FormatIntegerBinaryNode extends FormatNode {
     }
 
     @Specialization
-    byte[] format(int width, int precision, int value) {
-        return format(width, precision, (long) value);
-    }
-
-    @Specialization
     byte[] format(int width, int precision, long value) {
         final boolean isZero = value == 0;
         final boolean isNegative = value < 0;
