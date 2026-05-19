@@ -71,7 +71,7 @@ public abstract class MathNodes {
         protected double doFunction(double a) {
             if (a < -1.0 || a > 1.0) {
                 exceptionProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().mathDomainErrorAcos(this));
+                throw new RaiseException(getContext(), coreExceptions().mathDomainError("acos", this));
             }
 
             return Math.acos(a);
@@ -86,7 +86,7 @@ public abstract class MathNodes {
         protected double doFunction(double a) {
             if (a < 1) {
                 exceptionProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().mathDomainErrorAcosh(this));
+                throw new RaiseException(getContext(), coreExceptions().mathDomainError("acosh", this));
             }
             return MathUtils.acosh(a);
         }
@@ -100,7 +100,7 @@ public abstract class MathNodes {
         protected double doFunction(double a) {
             if (a < -1.0 || a > 1.0) {
                 exceptionProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().mathDomainErrorAsin(this));
+                throw new RaiseException(getContext(), coreExceptions().mathDomainError("asin", this));
             }
 
             return Math.asin(a);
@@ -145,7 +145,7 @@ public abstract class MathNodes {
         protected double doFunction(double a) {
             if (a < -1.0 || a > 1.0) {
                 exceptionProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().mathDomainErrorAtanh(this));
+                throw new RaiseException(getContext(), coreExceptions().mathDomainError("atanh", this));
             }
 
             return MathUtils.atanh(a);
@@ -258,6 +258,16 @@ public abstract class MathNodes {
 
     }
 
+    @CoreMethod(names = "expm1", isModuleFunction = true, required = 1)
+    public abstract static class ExpM1Node extends SimpleMonadicMathNode {
+
+        @Override
+        protected double doFunction(double a) {
+            return Math.expm1(a);
+        }
+
+    }
+
     @Primitive(name = "math_frexp")
     public abstract static class FrExpNode extends PrimitiveArrayArgumentsNode {
 
@@ -314,7 +324,7 @@ public abstract class MathNodes {
         protected double doFunction(double a) {
             if (a == -1) {
                 exceptionProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().mathDomainErrorGamma(this));
+                throw new RaiseException(getContext(), coreExceptions().mathDomainError("gamma", this));
             }
 
             if (Double.isNaN(a)) {
@@ -326,7 +336,7 @@ public abstract class MathNodes {
                     return Double.POSITIVE_INFINITY;
                 } else {
                     exceptionProfile.enter();
-                    throw new RaiseException(getContext(), coreExceptions().mathDomainErrorGamma(this));
+                    throw new RaiseException(getContext(), coreExceptions().mathDomainError("gamma", this));
                 }
             }
 
@@ -346,7 +356,7 @@ public abstract class MathNodes {
 
             if (Double.isNaN(a)) {
                 exceptionProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().mathDomainErrorGamma(this));
+                throw new RaiseException(getContext(), coreExceptions().mathDomainError("gamma", this));
             }
 
             return result;
@@ -403,7 +413,7 @@ public abstract class MathNodes {
         RubyArray lgamma(double a) {
             if (a < 0 && Double.isInfinite(a)) {
                 exceptionProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().mathDomainErrorLog2(this));
+                throw new RaiseException(getContext(), coreExceptions().mathDomainError("lgamma", this));
             }
 
             final NemesLogGamma l = new NemesLogGamma(a);
@@ -462,7 +472,7 @@ public abstract class MathNodes {
         private double doFunction(double a) {
             if (a < 0) {
                 exceptionProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().mathDomainErrorLog(this));
+                throw new RaiseException(getContext(), coreExceptions().mathDomainError("log", this));
             }
 
             return Math.log(a);
@@ -472,7 +482,7 @@ public abstract class MathNodes {
         protected double doFunction(double a, double b) {
             if (a < 0) {
                 exceptionProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().mathDomainErrorLog(this));
+                throw new RaiseException(getContext(), coreExceptions().mathDomainError("log", this));
             }
 
             return Math.log(a) / Math.log(b);
@@ -487,7 +497,7 @@ public abstract class MathNodes {
         protected double doFunction(double a) {
             if (a < 0) {
                 exceptionProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().mathDomainErrorLog10(this));
+                throw new RaiseException(getContext(), coreExceptions().mathDomainError("log10", this));
             }
 
             return Math.log10(a);
@@ -504,10 +514,25 @@ public abstract class MathNodes {
         protected double doFunction(double a) {
             if (a < 0) {
                 exceptionProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().mathDomainErrorLog2(this));
+                throw new RaiseException(getContext(), coreExceptions().mathDomainError("log2", this));
             }
 
             return Math.log(a) / LOG2;
+        }
+
+    }
+
+    @CoreMethod(names = "log1p", isModuleFunction = true, required = 1)
+    public abstract static class Log1PNode extends SimpleMonadicMathNode {
+
+        @Override
+        protected double doFunction(double a) {
+            if (a < -1.0) {
+                exceptionProfile.enter();
+                throw new RaiseException(getContext(), coreExceptions().mathDomainError("log1p", this));
+            }
+
+            return Math.log1p(a);
         }
 
     }

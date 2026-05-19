@@ -392,50 +392,10 @@ public final class CoreExceptions {
     // Errno
 
     @TruffleBoundary
-    public RubyException mathDomainErrorAcos(Node currentNode) {
-        return mathDomainError("acos", currentNode);
-    }
-
-    @TruffleBoundary
-    public RubyException mathDomainErrorAcosh(Node currentNode) {
-        return mathDomainError("acosh", currentNode);
-    }
-
-    @TruffleBoundary
-    public RubyException mathDomainErrorAsin(Node currentNode) {
-        return mathDomainError("asin", currentNode);
-    }
-
-    @TruffleBoundary
-    public RubyException mathDomainErrorAtanh(Node currentNode) {
-        return mathDomainError("atanh", currentNode);
-    }
-
-    @TruffleBoundary
-    public RubyException mathDomainErrorGamma(Node currentNode) {
-        return mathDomainError("gamma", currentNode);
-    }
-
-    @TruffleBoundary
-    public RubyException mathDomainErrorLog2(Node currentNode) {
-        return mathDomainError("log2", currentNode);
-    }
-
-    @TruffleBoundary
-    public RubyException mathDomainErrorLog10(Node currentNode) {
-        return mathDomainError("log10", currentNode);
-    }
-
-    @TruffleBoundary
-    public RubyException mathDomainErrorLog(Node currentNode) {
-        return mathDomainError("log", currentNode);
-    }
-
-    @TruffleBoundary
     public RubyException mathDomainError(String method, Node currentNode) {
         RubyClass exceptionClass = context.getCoreLibrary().mathDomainErrorClass;
         RubyString errorMessage = StringOperations.createUTF8String(context, language,
-                StringUtils.format("Numerical argument is out of domain - \"%s\"", method));
+                StringUtils.format("Numerical argument is out of domain - %s", method));
         final Backtrace backtrace = context.getCallStack().getBacktrace(currentNode);
 
         return ExceptionOperations
@@ -588,8 +548,19 @@ public final class CoreExceptions {
     public RubyException typeErrorCantConvertInto(Object from, String toClass, Node currentNode) {
         return typeError(StringUtils.format(
                 "can't convert %s into %s",
-                LogicalClassNode.getUncached().execute(from).fields.getName(),
+                toClassName(from),
                 toClass), currentNode);
+    }
+
+    // Like Truffle::Type.to_class_name
+    public static String toClassName(Object object) {
+        if (object == Nil.INSTANCE) {
+            return "nil";
+        } else if (object instanceof Boolean b) {
+            return b ? "true" : "false";
+        } else {
+            return LogicalClassNode.getUncached().execute(object).fields.getName();
+        }
     }
 
     @TruffleBoundary
