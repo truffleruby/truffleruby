@@ -80,7 +80,7 @@ module Truffle
         if v && !Primitive.is_a?(v, String)
           raise TypeError, "value of #{name} must be String"
         end
-        Primitive.global_variable_set :$/, v
+        Primitive.global_variable_set :$/, v ? -v.to_s : v
       })
 
     $/ = "\n".freeze

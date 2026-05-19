@@ -9,7 +9,3 @@ slow:Global variable $0 actually sets the program name
 fails:Predefined global $/ warns if assigned non-nil
 fails:Predefined global $-0 warns if assigned non-nil
 fails:Predefined global $\ warns if assigned non-nil
-fails:Predefined global $/ makes a new frozen String from the assigned String
-fails:Predefined global $/ makes a new frozen String if it's not frozen
-fails:Predefined global $-0 makes a new frozen String from the assigned String
-fails:Predefined global $-0 makes a new frozen String if it's not frozen
