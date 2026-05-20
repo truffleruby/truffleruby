@@ -1142,10 +1142,12 @@ module Commands
 
     chdir(ext_dir) do
       ext_file = "#{name}.#{DLEXT}"
+      abi_file = "#{TRUFFLERUBY_DIR}/#{ABI_VERSION_FILE}"
 
       destination = target ? "#{target}/#{ext_file}" : ext_file
       if File.exist?(destination)
-        max_mtime_sources = (Dir.glob('*.{c,h.rb}') - [ext_file]).map { |file| File.mtime(file) }.max
+        sources = Dir.glob('*.{c,h.rb}') + [abi_file] - [ext_file]
+        max_mtime_sources = sources.map { |file| File.mtime(file) }.max
         if File.mtime(destination) > max_mtime_sources
           STDERR.puts "#{destination} already up-to-date"
           return
