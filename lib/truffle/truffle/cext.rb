@@ -2263,16 +2263,6 @@ module Truffle::CExt
     Truffle::Interop.to_string(object)
   end
 
-  def rb_sprintf(format, *args)
-    # TODO (kjmenard 19-May-17) We shouldn't just ignore the '+' modifier. This is a hack to just get things running, even if it produces bad data.
-    f = format.gsub(/%(?:\+)?l.\v/, '%s')
-
-    # TODO (kjmenard 30-Oct-17) Deal with this hack better. Ruby's `sprintf` doesn't understand the '%l' modifier. But Ruby also doesn't delineate between 32-bit and 64-bit integers, so stripping out the modifier should be fine.
-    f = f.gsub('%ld', '%d')
-
-    sprintf(f, *args) rescue raise ArgumentError, "Bad format string #{f}."
-  end
-
   def test_cext_wrap(value)
     Primitive.cext_wrap(value)
   end
