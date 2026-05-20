@@ -58,11 +58,6 @@ describe :kernel_sprintf, shared: true do
         it "works well with large numbers" do
           @method.call("%#{f}", 1234567890987654321).should == "1234567890987654321"
         end
-
-        it "converts to the empty string if precision is 0 and value is 0" do
-          @method.call("%.#{f}", 0).should == ""
-          @method.call("%.0#{f}", 0).should == ""
-        end
       end
     end
 
@@ -108,6 +103,20 @@ describe :kernel_sprintf, shared: true do
       it "collapse negative number representation if it equals F" do
         @method.call("%X", -1).should_not == "..FF"
         @method.call("%X", -1).should == "..F"
+      end
+    end
+
+    %w[b B d i u o x X].each do |f|
+      describe f do
+        it "converts to the empty string if precision is 0 and value is 0" do
+          @method.call("%.#{f}", 0).should == ""
+          @method.call("%.0#{f}", 0).should == ""
+        end
+
+        it "pads the empty string if precision is 0 and value is 0" do
+          @method.call("%2.#{f}", 0).should == "  "
+          @method.call("%2.0#{f}", 0).should == "  "
+        end
       end
     end
   end

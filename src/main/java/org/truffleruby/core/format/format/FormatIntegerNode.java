@@ -21,6 +21,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.truffleruby.collections.ByteArrayBuilder;
+import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.format.FormatNode;
 import org.truffleruby.core.format.printf.PrintfSimpleTreeBuilder;
 import org.truffleruby.core.numeric.RubyBignum;
@@ -70,12 +71,6 @@ public abstract class FormatIntegerNode extends FormatNode {
 
     @TruffleBoundary
     @Specialization
-    byte[] format(int width, int precision, int arg) {
-        return format(width, precision, (long) arg);
-    }
-
-    @TruffleBoundary
-    @Specialization
     byte[] format(int width, int precision, long arg) {
 
         final char fchar = this.getFormatCharacter();
@@ -85,7 +80,9 @@ public abstract class FormatIntegerNode extends FormatNode {
         final boolean negative = arg < 0;
 
         final byte[] bytes;
-        if (negative && fchar == 'u') {
+        if (zero && precision == 0) {
+            bytes = ArrayUtils.EMPTY_BYTES;
+        } else if (negative && fchar == 'u') {
             bytes = getUnsignedNegativeBytes(arg);
         } else {
             bytes = getFixnumBytes(arg, base, sign, fchar == 'X');
@@ -105,7 +102,9 @@ public abstract class FormatIntegerNode extends FormatNode {
         final int base = getBase(fchar);
 
         final byte[] bytes;
-        if (negative && fchar == 'u') {
+        if (zero && precision == 0) {
+            bytes = ArrayUtils.EMPTY_BYTES;
+        } else if (negative && fchar == 'u') {
             bytes = getUnsignedNegativeBytes(bigInteger);
         } else {
             bytes = getBignumBytes(bigInteger, base, sign, fchar == 'X');

@@ -3,6 +3,3 @@ fails:StringIO#printf formatting flags # applies to format o does nothing for ne
 fails:StringIO#printf formatting flags # applies to formats bBxX does nothing for zero argument
 fails:StringIO#printf formatting other formats c displays only the first character if argument is a string of several characters
 fails:StringIO#printf formatting other formats c displays no characters if argument is an empty string
-fails:StringIO#printf formatting integer formats d converts to the empty string if precision is 0 and value is 0
-fails:StringIO#printf formatting integer formats i converts to the empty string if precision is 0 and value is 0
-fails:StringIO#printf formatting integer formats u converts to the empty string if precision is 0 and value is 0

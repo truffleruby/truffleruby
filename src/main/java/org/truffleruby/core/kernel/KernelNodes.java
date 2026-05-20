@@ -1781,11 +1781,6 @@ public abstract class KernelNodes {
             return KernelNodesFactory.ToHexStringNodeGen.getUncached().execute(null, value);
         }
 
-        @Specialization
-        static String toHexString(int value) {
-            return toHexString((long) value);
-        }
-
         @TruffleBoundary
         @Specialization
         static String toHexString(long value) {

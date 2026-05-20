@@ -8,9 +8,3 @@ fails:Kernel.printf formatting io is specified other formats c displays only the
 fails:Kernel.printf formatting io is specified other formats c displays no characters if argument is an empty string
 fails:Kernel.printf formatting io is not specified other formats c displays only the first character if argument is a string of several characters
 fails:Kernel.printf formatting io is not specified other formats c displays no characters if argument is an empty string
-fails:Kernel.printf formatting io is specified integer formats d converts to the empty string if precision is 0 and value is 0
-fails:Kernel.printf formatting io is specified integer formats i converts to the empty string if precision is 0 and value is 0
-fails:Kernel.printf formatting io is specified integer formats u converts to the empty string if precision is 0 and value is 0
-fails:Kernel.printf formatting io is not specified integer formats d converts to the empty string if precision is 0 and value is 0
-fails:Kernel.printf formatting io is not specified integer formats i converts to the empty string if precision is 0 and value is 0
-fails:Kernel.printf formatting io is not specified integer formats u converts to the empty string if precision is 0 and value is 0
