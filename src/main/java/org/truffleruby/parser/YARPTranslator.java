@@ -424,8 +424,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         // with ensure section
         if (node.ensure_clause != null && node.ensure_clause.statements != null) {
             final RubyNode ensureBlock = node.ensure_clause.accept(this);
-            rubyNode = EnsureNodeGen.create(rubyNode, ensureBlock);
-            assignPositionOnly(node, rubyNode);
+            rubyNode = assignPositionOnly(node, EnsureNodeGen.create(rubyNode, ensureBlock));
         }
 
         return rubyNode;
@@ -971,12 +970,10 @@ public class YARPTranslator extends YARPBaseTranslator {
             elseNode = ifNode;
         }
 
-        final RubyNode ifNode = elseNode;
+        final RubyNode ifNode = assignPositionAndFlags(node, elseNode);
 
         // A top-level block assigns the temp then runs the if
-        final RubyNode ret = sequence(writePredicateNode, ifNode);
-
-        return assignPositionAndFlags(node, ret);
+        return sequence(writePredicateNode, ifNode);
     }
 
     @Override

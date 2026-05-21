@@ -188,12 +188,15 @@ public abstract class YARPBaseTranslator extends AbstractNodeVisitor<RubyNode> {
         return rubyNode;
     }
 
-    protected static void assignPositionOnly(Nodes.Node yarpNode, RubyNode rubyNode) {
+    /* TODO: this should never be called on a SequenceNode, otherwise the position might be lost when the SequenceNode
+     * is flattened in another SequenceNode. */
+    protected static RubyNode assignPositionOnly(Nodes.Node yarpNode, RubyNode rubyNode) {
         if (yarpNode.length == 0 && yarpNode.startOffset == 0) {
             // (0, 0) means unknown location, so do not set the source section and keep the node as !hasSource()
         } else {
             rubyNode.unsafeSetSourceSection(yarpNode.startOffset, yarpNode.length);
         }
+        return rubyNode;
     }
 
     // assign position based on a list of nodes (arguments list, exception classes list in a rescue section, etc)
@@ -206,6 +209,8 @@ public abstract class YARPBaseTranslator extends AbstractNodeVisitor<RubyNode> {
         rubyNode.unsafeSetSourceSection(first.startOffset, length);
     }
 
+    /* TODO: this should never be called on a SequenceNode, otherwise the position might be lost when the SequenceNode
+     * is flattened in another SequenceNode. */
     protected final void copyNewlineFlag(Nodes.Node yarpNode, RubyNode rubyNode) {
         if (yarpNode.hasNewLineFlag()) {
             if (parseEnvironment.isCoverageEnabled()) {
