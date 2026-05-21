@@ -13,7 +13,7 @@ Compatibility:
 * Support  `--vm.XstartOnFirstThread` on macOS, which is required for some UI libraries like `SDL` (#4228, @timfel).
 * Support `instance_variables_to_inspect` to control which variables to show in `inspect` output (#4239, @earlopain).
 * Add top-level `Ruby` module (#4240, @earlopain).
-* Splatting `nil` no longer calls `#to_a` like Ruby 4.0 (#4240, @eregon).
+* Splatting `nil` no longer calls `#to_a` like Ruby 4.0 (#4242, @eregon).
 * `Enumerator.produce` now accepts the optional `size` keyword parameter (#4246, @earlopain)
 * Fix `Enumerator.product` size for empty enumerators (#4249, @earlopain)
 * Consistent coercion error messages (#4250, @earlopain)
