@@ -18,6 +18,7 @@ import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import org.truffleruby.language.RubyBaseNode;
+import org.truffleruby.language.Nil;
 import org.truffleruby.language.NotProvided;
 import org.truffleruby.language.control.RaiseException;
 
@@ -34,6 +35,11 @@ public abstract class DurationToNanoSecondsNode extends RubyBaseNode {
 
     @Specialization
     static long noDuration(NotProvided duration) {
+        return Long.MAX_VALUE;
+    }
+
+    @Specialization
+    static long nilDuration(Nil duration) {
         return Long.MAX_VALUE;
     }
 
