@@ -269,8 +269,8 @@ class Complex < Numeric
     stringify(real.to_s, imag.abs.to_s)
   end
 
-  private def stringify(real_s, imag_s)
-    result = real_s
+  private def stringify(real_str, imag_abs_str)
+    result = real_str
 
     if imag < 0 || Primitive.equal?(imag, -0.0)
       result << '-'
@@ -278,9 +278,9 @@ class Complex < Numeric
       result << '+'
     end
 
-    result << imag_s
+    result << imag_abs_str
 
-    unless imag_s[-1] =~ /\d/
+    unless imag_abs_str[-1] =~ /\d/
       result << '*'
     end
 
