@@ -83,7 +83,7 @@ module Truffle
     end
 
     def self.rb_num2ulong(val)
-      raise TypeError, 'no implicit conversion from nil into Integer' if Primitive.nil? val
+      raise TypeError, 'no implicit conversion of nil into Integer' if Primitive.nil? val
 
       if Primitive.is_a?(val, Integer)
         if Primitive.integer_fits_into_long?(val)
@@ -100,7 +100,7 @@ module Truffle
     end
 
     def self.rb_num2dbl(val)
-      raise TypeError, 'no implicit conversion from nil into Float' if Primitive.nil? val
+      raise TypeError, 'no implicit conversion of nil into Float' if Primitive.nil? val
 
       if Primitive.is_a?(val, Float)
         val
@@ -108,12 +108,8 @@ module Truffle
         val.to_f
       elsif Primitive.is_a?(val, Rational)
         val.to_f
-      elsif Primitive.true?(val)
-        raise TypeError, 'no implicit conversion to float from true'
-      elsif Primitive.false?(val)
-        raise TypeError, 'no implicit conversion to float from false'
-      elsif Primitive.is_a?(val, String)
-        raise TypeError, 'no implicit conversion to float from string'
+      elsif Primitive.true?(val) || Primitive.false?(val) || Primitive.is_a?(val, String)
+        raise TypeError, "no implicit conversion of #{to_class_name(val)} into Float"
       else
         rb_num2dbl(rb_to_f(val))
       end

@@ -1,3 +1,0 @@
-fails:Queue#shift with a timeout raise TypeError if timeout is not a valid numeric
-fails:Queue operations with timeout fails if string is provided
-fails:Queue operations with timeout fails if boolean is provided
