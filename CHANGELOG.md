@@ -19,6 +19,7 @@ Compatibility:
 * Consistent coercion error messages (#4250, @earlopain)
 * `IO.select` now accepts `Float::INFINITY` as a timeout argument (#4252, @haukot)
 * Implement `Math.log1p` and `Math.expm1` (#4255, @haukot).
+* Accept `nil` as an argument to `Kernel#sleep` and `Mutex#sleep` (#4260, @earlopain).
 
 Performance:
 
