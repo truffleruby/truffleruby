@@ -270,7 +270,7 @@ class Complex < Numeric
   end
 
   private def stringify(real_str, imag_abs_str)
-    result = real_str
+    result = real_str.dup
 
     if imag < 0 || Primitive.equal?(imag, -0.0)
       result << '-'
