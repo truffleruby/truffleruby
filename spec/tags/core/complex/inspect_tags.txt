@@ -1,2 +1,0 @@
-fails:Complex#inspect calls #inspect on real and imaginary
-fails:Complex#inspect adds an `*' before the `i' if the last character of the imaginary part is not numeric

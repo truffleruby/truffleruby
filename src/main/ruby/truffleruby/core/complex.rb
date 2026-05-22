@@ -266,7 +266,11 @@ class Complex < Numeric
   end
 
   def to_s
-    result = real.to_s
+    stringify(real.to_s, imag.abs.to_s)
+  end
+
+  private def stringify(real_s, imag_s)
+    result = real_s
 
     if imag < 0 || Primitive.equal?(imag, -0.0)
       result << '-'
@@ -274,7 +278,6 @@ class Complex < Numeric
       result << '+'
     end
 
-    imag_s = imag.abs.to_s
     result << imag_s
 
     unless imag_s[-1] =~ /\d/
@@ -301,7 +304,7 @@ class Complex < Numeric
   end
 
   def inspect
-    "(#{self})"
+    "(#{stringify(real.inspect, imag.abs.inspect)})"
   end
 
   def fdiv(other)
