@@ -15,6 +15,7 @@ import com.oracle.truffle.api.strings.TruffleString;
 import com.oracle.truffle.api.strings.TruffleString.CodePointLengthNode;
 import com.oracle.truffle.api.strings.TruffleString.FromCodePointNode;
 import com.oracle.truffle.api.strings.TruffleString.ForceEncodingNode;
+import com.oracle.truffle.api.strings.TruffleString.SubstringNode;
 import org.truffleruby.core.cast.ToIntNode;
 import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.format.FormatNode;
@@ -41,6 +42,7 @@ public abstract class FormatCharacterNode extends FormatNode {
     @Child private FromCodePointNode fromCodePointNode;
     @Child private CodePointLengthNode codePointLengthNode;
     @Child private ForceEncodingNode forceEncodingNode;
+    @Child private SubstringNode substringNode;
 
     public FormatCharacterNode(RubyEncoding encoding) {
         this.encoding = encoding;
@@ -78,14 +80,14 @@ public abstract class FormatCharacterNode extends FormatNode {
             /* This implementation follows the CRuby approach. CRuby ignores encoding of argument and interprets binary
              * representation of a character as if it's in the format sequence's encoding. */
             final AbstractTruffleString originalCharacter = strings.getTString(this, stringArgument);
-            character = forceEncodingNode().execute(originalCharacter, strings.getTEncoding(this, stringArgument),
-                    encoding.tencoding);
+            final TruffleString encodedCharacter = forceEncodingNode().execute(originalCharacter,
+                    strings.getTEncoding(this, stringArgument), encoding.tencoding);
+            final int size = codePointLengthNode().execute(encodedCharacter, encoding.tencoding);
 
-            final int size = codePointLengthNode().execute(character, encoding.tencoding);
-            if (size != 1) {
-                throw new RaiseException(
-                        getContext(),
-                        getContext().getCoreExceptions().argumentErrorCharacterRequired(this));
+            if (size > 1) {
+                character = substringNode().execute(encodedCharacter, 0, 1, encoding.tencoding, true);
+            } else {
+                character = encodedCharacter;
             }
         } else {
             throw CompilerDirectives.shouldNotReachHere();
@@ -127,6 +129,15 @@ public abstract class FormatCharacterNode extends FormatNode {
         }
 
         return forceEncodingNode;
+    }
+
+    private SubstringNode substringNode() {
+        if (substringNode == null) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            substringNode = insert(SubstringNode.create());
+        }
+
+        return substringNode;
     }
 
 }

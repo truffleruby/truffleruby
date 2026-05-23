@@ -8,7 +8,3 @@ fails:Kernel.sprintf raises Encoding::CompatibilityError if both encodings are A
 fails:Kernel.sprintf other formats s does not try to convert with to_str
 fails:Kernel.sprintf flags # applies to format o does nothing for negative argument
 fails:Kernel.sprintf flags # applies to formats bBxX does nothing for zero argument
-fails:Kernel#sprintf other formats c displays only the first character if argument is a string of several characters
-fails:Kernel#sprintf other formats c displays no characters if argument is an empty string
-fails:Kernel.sprintf other formats c displays only the first character if argument is a string of several characters
-fails:Kernel.sprintf other formats c displays no characters if argument is an empty string

@@ -170,10 +170,6 @@ public final class CoreExceptions {
                 currentNode, null);
     }
 
-    public RubyException argumentErrorCharacterRequired(Node currentNode) {
-        return argumentError("%c requires a character", currentNode);
-    }
-
     @TruffleBoundary
     public RubyException argumentErrorUnknownKeywords(Object[] keys, Node currentNode) {
         if (keys.length == 1) {
