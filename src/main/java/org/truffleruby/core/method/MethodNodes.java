@@ -209,30 +209,6 @@ public abstract class MethodNodes {
 
     }
 
-    @CoreMethod(names = "private?")
-    public abstract static class IsPrivateNode extends CoreMethodArrayArgumentsNode {
-        @Specialization
-        boolean isPrivate(RubyMethod method) {
-            return method.method.isPrivate();
-        }
-    }
-
-    @CoreMethod(names = "protected?")
-    public abstract static class IsProtectedNode extends CoreMethodArrayArgumentsNode {
-        @Specialization
-        boolean isProtected(RubyMethod method) {
-            return method.method.isProtected();
-        }
-    }
-
-    @CoreMethod(names = "public?")
-    public abstract static class IsPublicNode extends CoreMethodArrayArgumentsNode {
-        @Specialization
-        boolean isPublic(RubyMethod method) {
-            return method.method.isPublic();
-        }
-    }
-
     @CoreMethod(names = "receiver")
     public abstract static class ReceiverNode extends CoreMethodArrayArgumentsNode {
 

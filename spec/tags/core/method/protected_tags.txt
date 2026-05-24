@@ -1,1 +1,0 @@
-fails:Method#protected? has been removed
