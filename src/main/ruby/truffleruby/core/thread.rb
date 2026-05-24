@@ -78,12 +78,6 @@ class Thread
     nil
   end
 
-  MUTEX_FOR_THREAD_EXCLUSIVE = Mutex.new
-
-  def self.exclusive
-    MUTEX_FOR_THREAD_EXCLUSIVE.synchronize { yield }
-  end
-
   def self.handle_interrupt(config, &block)
     unless Primitive.is_a?(config, Hash)
       raise ArgumentError, 'unknown mask signature'
