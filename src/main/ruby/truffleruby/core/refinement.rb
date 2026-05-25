@@ -11,6 +11,8 @@
 
 class Refinement < Module
 
+  undef_method :append_features
+  undef_method :prepend_features
   undef_method :extend_object
 
   def import_methods(*modules)

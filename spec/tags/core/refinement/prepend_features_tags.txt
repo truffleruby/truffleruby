@@ -1,1 +1,0 @@
-fails:Refinement#prepend_features is not defined
