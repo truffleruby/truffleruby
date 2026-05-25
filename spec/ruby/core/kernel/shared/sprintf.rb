@@ -308,6 +308,10 @@ describe :kernel_sprintf, shared: true do
         @method.call("%c", "abc").should == "a"
       end
 
+      it "displays only the first character if argument is a string of several multibyte characters" do
+        @method.call("%c", "あいうえお").should == "あ"
+      end
+
       it "displays no characters if argument is an empty string" do
         @method.call("%c", "").should == ""
       end

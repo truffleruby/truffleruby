@@ -244,14 +244,10 @@ public final class RBSprintfSimpleTreeBuilder {
                                         encoding,
                                         valueNode);
 
-                                if (config.getWidth() != null || config.isWidthStar()) {
-                                    final FormatNode characterPrecisionNode = new LiteralFormatNode(DEFAULT);
-                                    node = WritePaddedBytesNodeGen
-                                            .create(config.isMinus(), widthNode, characterPrecisionNode,
-                                                    characterConversionNode);
-                                } else {
-                                    node = WriteBytesNodeGen.create(characterConversionNode);
-                                }
+                                final FormatNode characterPrecisionNode = new LiteralFormatNode(1);
+                                node = WritePaddedBytesNodeGen
+                                        .create(config.isMinus(), widthNode, characterPrecisionNode,
+                                                characterConversionNode);
                                 break;
                             case 's':
                                 final FormatNode conversionNode;

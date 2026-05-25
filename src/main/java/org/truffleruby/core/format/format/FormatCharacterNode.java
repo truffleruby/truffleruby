@@ -12,7 +12,6 @@ package org.truffleruby.core.format.format;
 
 import com.oracle.truffle.api.strings.AbstractTruffleString;
 import com.oracle.truffle.api.strings.TruffleString;
-import com.oracle.truffle.api.strings.TruffleString.CodePointLengthNode;
 import com.oracle.truffle.api.strings.TruffleString.FromCodePointNode;
 import com.oracle.truffle.api.strings.TruffleString.ForceEncodingNode;
 import org.truffleruby.core.cast.ToIntNode;
@@ -39,7 +38,6 @@ public abstract class FormatCharacterNode extends FormatNode {
 
     @Child private ToStrNode toStrNode;
     @Child private FromCodePointNode fromCodePointNode;
-    @Child private CodePointLengthNode codePointLengthNode;
     @Child private ForceEncodingNode forceEncodingNode;
 
     public FormatCharacterNode(RubyEncoding encoding) {
@@ -50,12 +48,12 @@ public abstract class FormatCharacterNode extends FormatNode {
     RubyString format(Object value,
             @Cached ToIntNode toIntNode,
             @Cached RubyStringLibrary strings) {
-        final TruffleString character = getCharacter(value, strings, toIntNode);
+        final TruffleString character = coerce(value, strings, toIntNode);
         return createString(character, encoding);
     }
 
     @TruffleBoundary
-    protected TruffleString getCharacter(Object value, RubyStringLibrary strings, ToIntNode toIntNode) {
+    protected TruffleString coerce(Object value, RubyStringLibrary strings, ToIntNode toIntNode) {
         final TruffleString character;
 
         Object stringArgument;
@@ -78,15 +76,8 @@ public abstract class FormatCharacterNode extends FormatNode {
             /* This implementation follows the CRuby approach. CRuby ignores encoding of argument and interprets binary
              * representation of a character as if it's in the format sequence's encoding. */
             final AbstractTruffleString originalCharacter = strings.getTString(this, stringArgument);
-            character = forceEncodingNode().execute(originalCharacter, strings.getTEncoding(this, stringArgument),
-                    encoding.tencoding);
-
-            final int size = codePointLengthNode().execute(character, encoding.tencoding);
-            if (size != 1) {
-                throw new RaiseException(
-                        getContext(),
-                        getContext().getCoreExceptions().argumentErrorCharacterRequired(this));
-            }
+            character = forceEncodingNode().execute(originalCharacter,
+                    strings.getTEncoding(this, stringArgument), encoding.tencoding);
         } else {
             throw CompilerDirectives.shouldNotReachHere();
         }
@@ -109,15 +100,6 @@ public abstract class FormatCharacterNode extends FormatNode {
         }
 
         return fromCodePointNode;
-    }
-
-    private CodePointLengthNode codePointLengthNode() {
-        if (codePointLengthNode == null) {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            codePointLengthNode = insert(CodePointLengthNode.create());
-        }
-
-        return codePointLengthNode;
     }
 
     private ForceEncodingNode forceEncodingNode() {
