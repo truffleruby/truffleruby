@@ -280,7 +280,7 @@ class Range
     return to_enum { size } unless block_given?
     first, last = self.begin, self.end
 
-    unless first.respond_to?(:succ) && !Primitive.is_a?(first, Time)
+    unless first.respond_to?(:succ)
       raise TypeError, "can't iterate from #{Primitive.class(first)}"
     end
 
