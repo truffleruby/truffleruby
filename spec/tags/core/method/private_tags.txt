@@ -1,1 +1,0 @@
-fails:Method#private? has been removed

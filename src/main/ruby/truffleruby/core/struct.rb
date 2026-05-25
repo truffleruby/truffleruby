@@ -99,10 +99,6 @@ class Struct
     klass
   end
 
-  def self.make_struct(name, attrs)
-    new name, *attrs
-  end
-
   private def _attrs # :nodoc:
     Primitive.class(self)::STRUCT_ATTRS
   end

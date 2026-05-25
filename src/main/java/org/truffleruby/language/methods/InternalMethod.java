@@ -489,18 +489,6 @@ public final class InternalMethod implements ObjectGraphNode {
         return false;
     }
 
-    public boolean isPublic() {
-        return visibility == Visibility.PUBLIC;
-    }
-
-    public boolean isPrivate() {
-        return visibility == Visibility.PRIVATE;
-    }
-
-    public boolean isProtected() {
-        return visibility == Visibility.PROTECTED;
-    }
-
     @Override
     public String toString() {
         return sharedMethodInfo.toString();
