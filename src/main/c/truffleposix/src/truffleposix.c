@@ -260,7 +260,7 @@ static unsigned char dirent_type(DIR *dirp, const struct dirent *entry, int reso
   return entry->d_type;
 }
 
-int truffleposix_readdir_multiple(DIR *dirp, int buffer_size, int resolve_type, int exclude_self_and_parent, char *buffer) {
+int truffleposix_readdir_multiple(DIR *dirp, int buffer_size, int resolve_type, int exclude_self, char *buffer) {
   errno = 0;
   int offset = sizeof(int); /* The start of the buffer will contain the total number of entries, so leave space for that. */
   int entcount = 0;
@@ -268,10 +268,12 @@ int truffleposix_readdir_multiple(DIR *dirp, int buffer_size, int resolve_type, 
     long pos = telldir(dirp);
     struct dirent *entry = readdir(dirp);
     if (entry) {
-      if (exclude_self_and_parent) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+      if (exclude_self && strcmp(entry->d_name, ".") == 0) {
           continue;
-        }
+      }
+      // The parent directory is never considered for globbing, even with FNM_DOTMATCH
+      if (strcmp(entry->d_name, "..") == 0) {
+          continue;
       }
       int name_len = strlen(entry->d_name) + 1;
       int ent_len = name_len + sizeof(int) + 1; /* Name length + null byte + int for length + int */
