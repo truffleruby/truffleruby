@@ -532,7 +532,7 @@ class String
       char = Primitive.string_chr_at(self, index)
 
       if char
-        index += inspect_char(enc, result_encoding, ascii, unicode, index, char, result)
+        index += Truffle::StringOperations.inspect_char(self, enc, result_encoding, ascii, unicode, index, char, result)
       else
         result << "\\x#{getbyte(index).to_s(16).upcase}"
         index += 1
@@ -542,84 +542,6 @@ class String
     result << '"'
 
     result.force_encoding(result_encoding)
-  end
-
-  private def inspect_char(enc, result_encoding, ascii, unicode, index, char, result)
-    consumed = char.bytesize
-    codepoint = char.ord
-
-    if (ascii or unicode) and (codepoint >= 7 and codepoint <= 92)
-      escaped = nil
-
-      case codepoint
-      when 7  # \a
-        escaped = '\a'
-      when 8  # \b
-        escaped = '\b'
-      when 9  # \t
-        escaped = '\t'
-      when 10 # \n
-        escaped = '\n'
-      when 11 # \v
-        escaped = '\v'
-      when 12 # \f
-        escaped = '\f'
-      when 13 # \r
-        escaped = '\r'
-      when 27 # \e
-        escaped = '\e'
-      when 34 # \"
-        escaped = '\"'
-      when 35 # #
-        case getbyte(index + 1)
-        when 36   # $
-          escaped = '\#$'
-          consumed += 1
-        when 64   # @
-          escaped = '\#@'
-          consumed += 1
-        when 123  # {
-          escaped = '\#{'
-          consumed += 1
-        end
-      when 92 # \\
-        escaped = '\\\\'
-      end
-
-      if escaped
-        result << escaped
-        return consumed
-      end
-    end
-
-    printable = Primitive.character_printable?(codepoint, enc)
-    if printable && (enc == result_encoding || (ascii && char.ascii_only?))
-      result << char
-    # < 0x7F from https://github.com/ruby/ruby/blob/12f7ba5ed4a07855d6a9429aa627211db3655ca7/string.c#L6049-L6050
-    # Exclude UTF-8 (unicode && ascii) because it was already checked just above
-    elsif printable && unicode && !ascii && codepoint < 0x7F
-      result << codepoint
-    else
-      escaped = codepoint.to_s(16).upcase
-
-      if unicode
-        if codepoint < 0x10000
-          pad = '0' * (4 - escaped.bytesize)
-          result << "\\u#{pad}#{escaped}"
-        else
-          result << "\\u{#{escaped}}"
-        end
-      else
-        if codepoint < 0x100
-          pad = '0' * (2 - escaped.bytesize)
-          result << "\\x#{pad}#{escaped}"
-        else
-          result << "\\x{#{escaped}}"
-        end
-      end
-    end
-
-    consumed
   end
 
   def prepend(*others)
@@ -861,11 +783,11 @@ class String
     # normal line breaking.
     if sep.empty?
       while pos < bytesize
-        nxt = index_after_consecutive_newlines(str, pos) || break
+        nxt = Truffle::StringOperations.index_after_consecutive_newlines(str, pos) || break
         match_size = nxt - pos
 
         while nxt < bytesize
-          nxt += newline_length(str, nxt) || break
+          nxt += Truffle::StringOperations.newline_length(str, nxt) || break
         end
 
         # string ends with \n's
@@ -901,30 +823,6 @@ class String
     end
 
     self
-  end
-
-  private def index_after_consecutive_newlines(str, index)
-    while true
-      # First newline
-      index = Primitive.find_string(str, "\n", index)
-      break unless index
-      index += 1
-      # Second newline
-      if (next_newline_length = newline_length(str, index))
-        return index + next_newline_length
-      end
-    end
-  end
-
-  private def newline_length(str, index)
-    case str.getbyte(index)
-    when 10
-      1
-    when 13
-      2 if str.getbyte(index + 1) == 10
-    else
-      nil
-    end
   end
 
   def lines(sep = $/, chomp: false, &block)
