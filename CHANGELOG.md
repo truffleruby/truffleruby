@@ -20,6 +20,7 @@ Compatibility:
 * `IO.select` now accepts `Float::INFINITY` as a timeout argument (#4252, @haukot)
 * Implement `Math.log1p` and `Math.expm1` (#4255, @haukot).
 * Accept `nil` as an argument to `Kernel#sleep` and `Mutex#sleep` (#4260, @earlopain).
+* Better compatibility for `String#each_line`/`String#lines` with an empty string argument (#4267, @earlopain).
 
 Performance:
 

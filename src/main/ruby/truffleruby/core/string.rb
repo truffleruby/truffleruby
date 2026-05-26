@@ -860,17 +860,13 @@ class String
     # is used so infrequently, we'll handle it completely separately from
     # normal line breaking.
     if sep.empty?
-      sep = "\n\n"
-
       while pos < bytesize
-        nxt = Primitive.find_string(str, sep, pos)
-        break unless nxt
-
-        while Primitive.string_chr_at(str, nxt)&.ord == 10 and nxt < bytesize
-          nxt += 1
-        end
-
+        nxt = index_after_consecutive_newlines(str, pos) || break
         match_size = nxt - pos
+
+        while nxt < bytesize
+          nxt += newline_length(str, nxt) || break
+        end
 
         # string ends with \n's
         break if pos == bytesize
@@ -905,6 +901,30 @@ class String
     end
 
     self
+  end
+
+  private def index_after_consecutive_newlines(str, index)
+    while true
+      # First newline
+      index = Primitive.find_string(str, "\n", index)
+      break unless index
+      index += 1
+      # Second newline
+      if (next_newline_length = newline_length(str, index))
+        return index + next_newline_length
+      end
+    end
+  end
+
+  private def newline_length(str, index)
+    case str.getbyte(index)
+    when 10
+      1
+    when 13
+      2 if str.getbyte(index + 1) == 10
+    else
+      nil
+    end
   end
 
   def lines(sep = $/, chomp: false, &block)
