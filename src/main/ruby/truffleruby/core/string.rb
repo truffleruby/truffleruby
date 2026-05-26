@@ -532,7 +532,7 @@ class String
       char = Primitive.string_chr_at(self, index)
 
       if char
-        index += inspect_char(enc, result_encoding, ascii, unicode, index, char, result)
+        index += Truffle::StringOperations.inspect_char(self, enc, result_encoding, ascii, unicode, index, char, result)
       else
         result << "\\x#{getbyte(index).to_s(16).upcase}"
         index += 1
@@ -542,84 +542,6 @@ class String
     result << '"'
 
     result.force_encoding(result_encoding)
-  end
-
-  private def inspect_char(enc, result_encoding, ascii, unicode, index, char, result)
-    consumed = char.bytesize
-    codepoint = char.ord
-
-    if (ascii or unicode) and (codepoint >= 7 and codepoint <= 92)
-      escaped = nil
-
-      case codepoint
-      when 7  # \a
-        escaped = '\a'
-      when 8  # \b
-        escaped = '\b'
-      when 9  # \t
-        escaped = '\t'
-      when 10 # \n
-        escaped = '\n'
-      when 11 # \v
-        escaped = '\v'
-      when 12 # \f
-        escaped = '\f'
-      when 13 # \r
-        escaped = '\r'
-      when 27 # \e
-        escaped = '\e'
-      when 34 # \"
-        escaped = '\"'
-      when 35 # #
-        case getbyte(index + 1)
-        when 36   # $
-          escaped = '\#$'
-          consumed += 1
-        when 64   # @
-          escaped = '\#@'
-          consumed += 1
-        when 123  # {
-          escaped = '\#{'
-          consumed += 1
-        end
-      when 92 # \\
-        escaped = '\\\\'
-      end
-
-      if escaped
-        result << escaped
-        return consumed
-      end
-    end
-
-    printable = Primitive.character_printable?(codepoint, enc)
-    if printable && (enc == result_encoding || (ascii && char.ascii_only?))
-      result << char
-    # < 0x7F from https://github.com/ruby/ruby/blob/12f7ba5ed4a07855d6a9429aa627211db3655ca7/string.c#L6049-L6050
-    # Exclude UTF-8 (unicode && ascii) because it was already checked just above
-    elsif printable && unicode && !ascii && codepoint < 0x7F
-      result << codepoint
-    else
-      escaped = codepoint.to_s(16).upcase
-
-      if unicode
-        if codepoint < 0x10000
-          pad = '0' * (4 - escaped.bytesize)
-          result << "\\u#{pad}#{escaped}"
-        else
-          result << "\\u{#{escaped}}"
-        end
-      else
-        if codepoint < 0x100
-          pad = '0' * (2 - escaped.bytesize)
-          result << "\\x#{pad}#{escaped}"
-        else
-          result << "\\x{#{escaped}}"
-        end
-      end
-    end
-
-    consumed
   end
 
   def prepend(*others)
@@ -853,60 +775,50 @@ class String
 
     pos = 0
 
-    duped = dup
+    str = Primitive.dup_as_string_instance(self)
+    bytesize = str.bytesize
 
     # If the separator is empty, we're actually in paragraph mode. This
     # is used so infrequently, we'll handle it completely separately from
     # normal line breaking.
     if sep.empty?
-      sep = "\n\n"
-      data = bytes
-
       while pos < bytesize
-        nxt = Primitive.find_string(self, sep, pos)
-        break unless nxt
-
-        while data[nxt] == 10 and nxt < bytesize
-          nxt += 1
-        end
-
+        nxt = Truffle::StringOperations.index_after_consecutive_newlines(str, pos) || break
         match_size = nxt - pos
+
+        while nxt < bytesize
+          nxt += Truffle::StringOperations.newline_length(str, nxt) || break
+        end
 
         # string ends with \n's
         break if pos == bytesize
 
-        str = byteslice pos, match_size
-        yield Primitive.dup_as_string_instance(maybe_chomp.call(str)) unless str.empty?
-
-        # detect mutation within the block
-        if duped != self
-          raise RuntimeError, 'string modified while iterating'
-        end
+        slice = str.byteslice pos, match_size
+        yield Primitive.dup_as_string_instance(maybe_chomp.call(slice)) unless slice.empty?
 
         pos = nxt
       end
 
       # No more separates, but we need to grab the last part still.
-      fin = byteslice pos, bytesize - pos
+      fin = str.byteslice pos, bytesize - pos
       yield Primitive.dup_as_string_instance(maybe_chomp.call(fin)) if fin and !fin.empty?
     else
       # This is the normal case.
       pat_size = sep.bytesize
-      unmodified_self = Primitive.dup_as_string_instance(self)
 
       while pos < bytesize
-        nxt = Primitive.find_string(unmodified_self, sep, pos)
+        nxt = Primitive.find_string(str, sep, pos)
         break unless nxt
 
         match_size = nxt - pos
-        str = unmodified_self.byteslice pos, match_size + pat_size
-        yield Primitive.dup_as_string_instance(maybe_chomp.call(str)) unless str.empty?
+        slice = str.byteslice pos, match_size + pat_size
+        yield Primitive.dup_as_string_instance(maybe_chomp.call(slice)) unless slice.empty?
 
         pos = nxt + pat_size
       end
 
       # No more separates, but we need to grab the last part still.
-      fin = unmodified_self.byteslice pos, bytesize - pos
+      fin = str.byteslice pos, bytesize - pos
       yield Primitive.dup_as_string_instance(maybe_chomp.call(fin)) unless fin.empty?
     end
 
