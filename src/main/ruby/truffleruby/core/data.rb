@@ -11,16 +11,29 @@
 
 module Truffle
   module DataOperations
-    def self.unknown_keywords_message(given, object)
-      unknowns = given - Primitive.class(object)::CLASS_MEMBERS
+    def self.unknown_keywords(members_hash, kwargs, unknown_member, unknown_coerced_member)
+      unknowns = kwargs.keys.filter_map do |member|
+        if Primitive.equal?(member, unknown_member)
+          coerced_member = unknown_coerced_member
+        else
+          coerced_member = Truffle::Type.coerce_to_symbol(member)
+        end
+        unless members_hash.include?(coerced_member)
+          (Primitive.is_a?(member, Symbol) || Primitive.is_a?(member, String)) ? member : coerced_member.name
+        end
+      end
+
       s = 's' if unknowns.size > 1
-      "unknown keyword#{s}: #{unknowns.map(&:inspect).join ', '}"
+      raise ArgumentError, "unknown keyword#{s}: #{unknowns.map(&:inspect).join ', '}"
     end
 
-    def self.missing_keywords_message(given, object)
-      missing = Primitive.class(object)::CLASS_MEMBERS - given
-      s = 's' if missing.size > 1
-      "missing keyword#{s}: #{missing.map(&:inspect).join ', '}"
+    def self.check_missing_keywords(members_hash, kwargs, coerced_args)
+      missing_args = members_hash.keys - kwargs.keys
+      missing_args -= coerced_args if coerced_args
+      unless missing_args.empty?
+        s = 's' if missing_args.size > 1
+        raise ArgumentError, "missing keyword#{s}: #{missing_args.map(&:inspect).join ', '}"
+      end
     end
   end
 end
@@ -30,17 +43,26 @@ class Data
   # Keep in sync with #initialize below
   def initialize(**kwargs)
     members_hash = Primitive.class(self)::CLASS_MEMBERS_HASH
+    coerced_args = nil
+
     kwargs.each do |member, value|
-      member = member.to_sym
-      if members_hash.include?(member)
-        Primitive.object_hidden_var_set(self, member, value)
+      if Primitive.is_a?(member, Symbol)
+        coerced_member = member
       else
-        raise ArgumentError, Truffle::DataOperations.unknown_keywords_message(kwargs.keys, self)
+        coerced_member = Truffle::Type.coerce_to_symbol(member)
+        coerced_args ||= []
+        coerced_args << coerced_member
+      end
+
+      if members_hash.include?(coerced_member)
+        Primitive.object_hidden_var_set(self, coerced_member, value)
+      else
+        Truffle::DataOperations.unknown_keywords(members_hash, kwargs, member, coerced_member)
       end
     end
 
-    if kwargs.size < members_hash.size
-      raise ArgumentError, Truffle::DataOperations.missing_keywords_message(kwargs.keys, self)
+    if kwargs.size != members_hash.size || coerced_args
+      Truffle::DataOperations.check_missing_keywords(members_hash, kwargs, coerced_args)
     end
     Primitive.freeze(self)
   end
@@ -121,17 +143,26 @@ class Data
       # Keep in sync with #initialize above
       def initialize(**kwargs)
         members_hash = Primitive.class(self)::CLASS_MEMBERS_HASH
+        coerced_args = nil
+
         kwargs.each do |member, value|
-          member = member.to_sym
-          if members_hash.include?(member)
-            Primitive.object_hidden_var_set(self, member, value)
+          if Primitive.is_a?(member, Symbol)
+            coerced_member = member
           else
-            raise ArgumentError, Truffle::DataOperations.unknown_keywords_message(kwargs.keys, self)
+            coerced_member = Truffle::Type.coerce_to_symbol(member)
+            coerced_args ||= []
+            coerced_args << coerced_member
+          end
+
+          if members_hash.include?(coerced_member)
+            Primitive.object_hidden_var_set(self, coerced_member, value)
+          else
+            Truffle::DataOperations.unknown_keywords(members_hash, kwargs, member, coerced_member)
           end
         end
 
-        if kwargs.size < members_hash.size
-          raise ArgumentError, Truffle::DataOperations.missing_keywords_message(kwargs.keys, self)
+        if kwargs.size != members_hash.size || coerced_args
+          Truffle::DataOperations.check_missing_keywords(members_hash, kwargs, coerced_args)
         end
         Primitive.freeze(self)
       end
@@ -195,7 +226,6 @@ class Data
         return {} if members_hash.size < keys.size
 
         h = {}
-        members = Primitive.class(self)::CLASS_MEMBERS
         keys.each do |requested_key|
           case requested_key
           when Symbol
@@ -203,10 +233,11 @@ class Data
           when String
             symbolized_key = requested_key.to_sym
           else
-            symbolized_key = members[requested_key]
+            symbolized_key = Truffle::Type.coerce_to_symbol(requested_key)
+            requested_key = symbolized_key.name
           end
 
-          if symbolized_key && members_hash.include?(symbolized_key)
+          if members_hash.include?(symbolized_key)
             h[requested_key] = Primitive.object_hidden_var_get(self, symbolized_key)
           else
             return h
