@@ -853,20 +853,20 @@ class String
 
     pos = 0
 
-    duped = dup
+    str = Primitive.dup_as_string_instance(self)
+    bytesize = str.bytesize
 
     # If the separator is empty, we're actually in paragraph mode. This
     # is used so infrequently, we'll handle it completely separately from
     # normal line breaking.
     if sep.empty?
       sep = "\n\n"
-      data = bytes
 
       while pos < bytesize
-        nxt = Primitive.find_string(self, sep, pos)
+        nxt = Primitive.find_string(str, sep, pos)
         break unless nxt
 
-        while data[nxt] == 10 and nxt < bytesize
+        while Primitive.string_chr_at(str, nxt)&.ord == 10 and nxt < bytesize
           nxt += 1
         end
 
@@ -875,38 +875,32 @@ class String
         # string ends with \n's
         break if pos == bytesize
 
-        str = byteslice pos, match_size
-        yield Primitive.dup_as_string_instance(maybe_chomp.call(str)) unless str.empty?
-
-        # detect mutation within the block
-        if duped != self
-          raise RuntimeError, 'string modified while iterating'
-        end
+        slice = str.byteslice pos, match_size
+        yield Primitive.dup_as_string_instance(maybe_chomp.call(slice)) unless slice.empty?
 
         pos = nxt
       end
 
       # No more separates, but we need to grab the last part still.
-      fin = byteslice pos, bytesize - pos
+      fin = str.byteslice pos, bytesize - pos
       yield Primitive.dup_as_string_instance(maybe_chomp.call(fin)) if fin and !fin.empty?
     else
       # This is the normal case.
       pat_size = sep.bytesize
-      unmodified_self = Primitive.dup_as_string_instance(self)
 
       while pos < bytesize
-        nxt = Primitive.find_string(unmodified_self, sep, pos)
+        nxt = Primitive.find_string(str, sep, pos)
         break unless nxt
 
         match_size = nxt - pos
-        str = unmodified_self.byteslice pos, match_size + pat_size
-        yield Primitive.dup_as_string_instance(maybe_chomp.call(str)) unless str.empty?
+        slice = str.byteslice pos, match_size + pat_size
+        yield Primitive.dup_as_string_instance(maybe_chomp.call(slice)) unless slice.empty?
 
         pos = nxt + pat_size
       end
 
       # No more separates, but we need to grab the last part still.
-      fin = unmodified_self.byteslice pos, bytesize - pos
+      fin = str.byteslice pos, bytesize - pos
       yield Primitive.dup_as_string_instance(maybe_chomp.call(fin)) unless fin.empty?
     end
 
