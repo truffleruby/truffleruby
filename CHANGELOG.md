@@ -21,6 +21,7 @@ Compatibility:
 * Implement `Math.log1p` and `Math.expm1` (#4255, @haukot).
 * Accept `nil` as an argument to `Kernel#sleep` and `Mutex#sleep` (#4260, @earlopain).
 * Better compatibility for `String#each_line`/`String#lines` with an empty string argument (#4267, @earlopain).
+* Remove `..` from `Dir.glob` when `File::FNM_DOTMATCH` is given (#4269, @earlopain).
 
 Performance:
 

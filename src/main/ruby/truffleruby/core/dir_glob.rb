@@ -77,18 +77,17 @@ class Dir
         raise 'invalid call to Node base method'
       end
 
-      def dir_entries(dir, resolve_type, exclude_self_and_parent)
+      def dir_entries(dir, resolve_type, exclude_self)
         # Internal method used by nodes to retrieve the entries for a
-        # directory, sorting them if required. The dir argument should
-        # be an already open directory object, while resolve_type and
-        # exclude_self_and_parent indicate whether the file type
-        # should be resolved while scanning the directory, and the '.'
-        # and '..' entries should be returned.
+        # directory, sorting them if required.
+        # The dir argument should be an already open directory object,
+        # resolve_type indicate whether the file type should be resolved while scanning the directory,
+        # and exclude_self whether the '.' entry should be returned.
         res = []
         if dir
           begin
             begin
-              read_res = Truffle::DirOperations.readdir_multiple(dir, resolve_type, exclude_self_and_parent, res)
+              read_res = Truffle::DirOperations.readdir_multiple(dir, resolve_type, exclude_self, res)
             end until read_res == 0;
             res.sort! if sorted?
           ensure

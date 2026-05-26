@@ -1,7 +1,1 @@
 fails:Dir.glob raises an ArgumentError if sort: is not true or false
-fails:Dir.glob matches dotfiles except .. with '.*'
-fails:Dir.glob matches dotfiles in the current directory except .. with '.**'
-fails:Dir.glob recursively matches any subdirectories including ./ with '.**/'
-fails:Dir.glob matches dot or non-dotfiles with '{,.}*'
-fails:Dir.glob matches both dot and non-dotfiles with '*' and option File::FNM_DOTMATCH
-fails:Dir.glob matches any files in the current directory with '**' and option File::FNM_DOTMATCH
