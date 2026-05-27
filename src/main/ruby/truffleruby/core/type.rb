@@ -143,7 +143,7 @@ module Truffle
 
     def self.conversion_mismatch(obj, cls, meth, res)
       oc = Primitive.class(obj)
-      raise TypeError, "can't convert #{oc} into #{cls} (#{oc}##{meth} gives #{Primitive.class(res)})"
+      raise TypeError, "can't convert #{oc} into #{cls} (#{oc}##{meth} gives #{to_class_name(res)})"
     end
 
     def self.fits_into_int?(val)

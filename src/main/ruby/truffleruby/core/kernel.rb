@@ -103,8 +103,7 @@ module Kernel
 
   def Integer(obj, base = 0, exception: true)
     obj = Truffle::Interop.unbox_if_needed(obj)
-    converted_base = Truffle::Type.rb_check_to_integer(base, :to_int)
-    base = Primitive.nil?(converted_base) ? 0 : converted_base
+    base = Primitive.convert_with_to_int(base)
     raise_exception = !Primitive.false?(exception)
 
     if Primitive.is_a?(obj, String)
@@ -113,7 +112,7 @@ module Kernel
       bad_base_check = Proc.new do
         if base != 0
           return nil unless raise_exception
-          raise ArgumentError, 'base is only valid for String values'
+          raise ArgumentError, 'base specified for non string value'
         end
       end
       case obj
@@ -132,17 +131,23 @@ module Kernel
         return nil unless raise_exception
         raise TypeError, "can't convert nil into Integer"
       else
-        if base != 0
-          converted_to_str_obj = Truffle::Type.rb_check_convert_type(obj, String, :to_str)
-          return Primitive.string_to_inum(converted_to_str_obj, base, true, raise_exception) unless Primitive.nil? converted_to_str_obj
-          return nil unless raise_exception
-          raise ArgumentError, 'base is only valid for String values'
-        end
         converted_to_int_obj = Truffle::Type.rb_check_to_integer(obj, :to_int)
-        return converted_to_int_obj unless Primitive.nil? converted_to_int_obj
+        unless Primitive.nil? converted_to_int_obj
+          bad_base_check.call
+          return converted_to_int_obj
+        end
 
-        return Truffle::Type.rb_check_to_integer(obj, :to_i) unless raise_exception
-        Primitive.convert_type(obj, Integer, :to_i)
+        converted_to_str_obj = Truffle::Type.rb_check_convert_type(obj, String, :to_str)
+        unless Primitive.nil? converted_to_str_obj
+          return Primitive.string_to_inum(converted_to_str_obj, base, true, raise_exception)
+        end
+
+        bad_base_check.call
+        if raise_exception
+          Primitive.convert_type(obj, Integer, :to_i)
+        else
+          Truffle::Type.rb_check_to_integer(obj, :to_i)
+        end
       end
     end
   end
