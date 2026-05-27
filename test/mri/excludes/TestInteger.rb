@@ -1,6 +1,4 @@
 exclude :test_Integer, "[Encoding::CompatibilityError] exception expected, not #<ArgumentError: invalid value for Integer(): 0>."
-exclude :test_Integer_when_to_str, "TypeError: can't convert Object into Integer"
-exclude :test_Integer_with_base, "TypeError expected but nothing was raised."
 exclude :test_Integer_with_exception_keyword, "RuntimeError: "
 exclude :test_Integer_with_invalid_exception, "ArgumentError expected but nothing was raised."
 exclude :test_bitwise_and_with_integer_coercion, "TypeError: #<Class:0x4c8> can't be coerced into Integer"

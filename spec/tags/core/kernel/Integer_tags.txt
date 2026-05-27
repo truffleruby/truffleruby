@@ -1,2 +1,0 @@
-fails:Kernel.Integer raises a TypeError if it is not an integer and does not respond to #to_i
-fails:Kernel#Integer raises a TypeError if it is not an integer and does not respond to #to_i
