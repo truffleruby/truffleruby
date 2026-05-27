@@ -1,1 +1,0 @@
-fails:Enumerator::Yielder#<< when multiple arguments passed raises an ArgumentError

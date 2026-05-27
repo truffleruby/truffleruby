@@ -317,8 +317,8 @@ class Enumerator
       @proc.call(*args, **kwargs)
     end
 
-    def <<(*args, **kwargs)
-      self.yield(*args, **kwargs)
+    def <<(arg)
+      self.yield(arg)
 
       self
     end

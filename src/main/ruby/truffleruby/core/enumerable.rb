@@ -180,7 +180,7 @@ module Enumerable
 
   def lazy
     Enumerator::Lazy.new(self, enumerator_size) do |yielder, *args|
-      yielder.<<(*args)
+      yielder.yield(*args)
     end
   end
 
