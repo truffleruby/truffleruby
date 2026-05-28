@@ -56,13 +56,15 @@ class Complex < Numeric
   end
 
   def Complex.rect(real, imag = 0)
-    raise TypeError, 'not a real' unless Primitive.check_real?(real) && Primitive.check_real?(imag)
+    real = Truffle::ComplexOperations.extract_real(real)
+    imag = Truffle::ComplexOperations.extract_real(imag)
     new(real, imag)
   end
   class << self; alias_method :rectangular, :rect end
 
   def Complex.polar(r, theta = 0)
-    raise TypeError, 'not a real' unless Primitive.check_real?(r) && Primitive.check_real?(theta)
+    r = Truffle::ComplexOperations.extract_real(r)
+    theta = Truffle::ComplexOperations.extract_real(theta)
 
     Complex(r*Math.cos(theta), r*Math.sin(theta))
   end
