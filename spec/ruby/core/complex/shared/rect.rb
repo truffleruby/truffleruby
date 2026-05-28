@@ -85,6 +85,24 @@ describe :complex_rect_class, shared: true do
     end
   end
 
+  describe "when passed a Complex" do
+    it "raises a TypeError when the imaginary part is not zero" do
+      -> {
+        Complex.send(@method, 1.0+1i, 2)
+      }.should.raise(TypeError)
+
+      -> {
+        Complex.send(@method, 1.0, 2i)
+      }.should.raise(TypeError)
+    end
+
+    it "ignores the imaginary part if it is zero" do
+      result = Complex.send(@method, 1.0+0i, 2+0.0i)
+      result.real.should == 1.0
+      result.imag.should == 2
+    end
+  end
+
   describe "passed a non-Numeric" do
     it "raises TypeError" do
       -> { Complex.send(@method, :sym) }.should.raise(TypeError)

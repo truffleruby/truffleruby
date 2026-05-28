@@ -64,5 +64,17 @@ module Truffle
 
       Complex.rect(real, imag)
     end
+
+    def self.extract_real(numeric)
+      case numeric
+      when Integer, Float, Rational
+        return numeric
+      when Complex
+        return numeric.real if numeric.imag.zero?
+      when Numeric
+        return numeric if numeric.real?
+      end
+      raise TypeError, 'not a real'
+    end
   end
 end
