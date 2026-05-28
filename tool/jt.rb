@@ -3322,7 +3322,7 @@ module Commands
   end
 
   def docker(*args)
-    raise 'Ruby 3+ needed for "jt docker"' unless RUBY_VERSION.start_with?('3.')
+    raise 'Ruby 3+ needed for "jt docker"' unless RUBY_VERSION >= '3.0'
     require_relative 'docker'
     JT::Docker.new.docker(*args)
   end
