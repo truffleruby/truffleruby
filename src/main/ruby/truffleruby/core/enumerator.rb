@@ -358,6 +358,9 @@ class Enumerator
     end
     private(*aliases)
 
+    alias_method :_enumerable_each, :each
+    private :_enumerable_each
+
     class StopLazyError < Exception # rubocop:disable Lint/InheritException
     end
 
@@ -367,7 +370,7 @@ class Enumerator
 
       super(size) do |yielder, *each_args|
         begin
-          receiver.each(*each_args) do |*args|
+          iterate_chain(receiver, *each_args) do |*args|
             yield yielder, *args
           end
         rescue StopLazyError
@@ -376,6 +379,32 @@ class Enumerator
       end
 
       self
+    end
+
+    # Pack source args for the consumer (rb_enum_values_pack in enum.c):
+    # 0 -> nil, 1 -> value, N -> Array.
+    # Prepended so it doesn't appear in Lazy.public_instance_methods(false)
+    # Chain-internal stages bypass via iterate_chain.
+    module ConsumerPacking
+      def each(*args, **kwargs, &user_block)
+        return super unless user_block
+
+        super(*args, **kwargs) do
+          user_block.call(Primitive.single_block_arg)
+        end
+      end
+    end
+    private_constant :ConsumerPacking
+    prepend ConsumerPacking
+
+    # For Lazy receivers, use _enumerable_each so stage blocks see raw args
+    # (CRuby equivalent: lazyenum_yield_values unpacking LAZY_MEMO_PACKED in enumerator.c).
+    private def iterate_chain(receiver, *args, **kwargs, &block)
+      if Primitive.is_a?(receiver, Lazy)
+        receiver.__send__(:_enumerable_each, *args, **kwargs, &block)
+      else
+        receiver.each(*args, **kwargs, &block)
+      end
     end
 
     def to_enum(method_name = :each, *method_args, **method_kwargs, &block)
