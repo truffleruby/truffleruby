@@ -2247,6 +2247,16 @@ module Truffle::CExt
     RbEncoding.get_encoding_from_native(rb_encoding)
   end
 
+  def rb_enc_check(str1, str2)
+    enc = Encoding.compatible?(str1, str2);
+    if !enc
+      a = Truffle::EncodingOperations.name_for_inspect(rb_enc_get(str1))
+      b = Truffle::EncodingOperations.name_for_inspect(rb_enc_get(str2))
+      raise Encoding::CompatibilityError, "incompatible character encodings: #{a} and #{b}"
+    end
+    enc
+  end
+
   def native_string?(string)
     Primitive.string_is_native?(string)
   end

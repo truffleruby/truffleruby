@@ -128,7 +128,7 @@ class Encoding
   end
 
   def inspect
-    "#<Encoding:#{name}#{" (dummy)" if dummy?}>"
+    "#<Encoding:#{Truffle::EncodingOperations.name_for_inspect(self)}#{" (dummy)" if dummy?}>"
   end
 
   def names

@@ -1126,7 +1126,8 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyException encodingCompatibilityErrorIncompatible(RubyEncoding a, RubyEncoding b, Node currentNode) {
         return encodingCompatibilityError(
-                StringUtils.format("incompatible character encodings: %s and %s", a, b),
+                StringUtils.format("incompatible character encodings: %s and %s",
+                        nameForInspect(a), nameForInspect(b)),
                 currentNode);
     }
 
@@ -1134,13 +1135,15 @@ public final class CoreExceptions {
     public RubyException encodingCompatibilityErrorRegexpIncompatible(RubyEncoding a, RubyEncoding b,
             Node currentNode) {
         return encodingCompatibilityError(
-                StringUtils.format("incompatible encoding regexp match (%s regexp with %s string)", a, b),
+                StringUtils.format("incompatible encoding regexp match (%s regexp with %s string)",
+                        nameForInspect(a), nameForInspect(b)),
                 currentNode);
     }
 
 
     @TruffleBoundary
     public RubyException encodingCompatibilityErrorIncompatibleWithOperation(RubyEncoding encoding, Node currentNode) {
+        assert encoding.isDummy;
         return encodingCompatibilityError(
                 StringUtils.format("incompatible encoding with this operation: %s", encoding),
                 currentNode);
@@ -1278,5 +1281,10 @@ public final class CoreExceptions {
 
     private CoreStrings coreStrings() {
         return language.coreStrings;
+    }
+
+    private Object nameForInspect(RubyEncoding encoding) {
+        final RubyModule module = context.getCoreLibrary().truffleEncodingOperationsModule;
+        return DispatchNode.getUncached().call(module, "name_for_inspect", encoding);
     }
 }

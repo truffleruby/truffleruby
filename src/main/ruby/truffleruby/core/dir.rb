@@ -298,7 +298,8 @@ class Dir
         pat = Truffle::Type.coerce_to_path pat
         enc = Primitive.encoding_compatible? pat, Encoding::US_ASCII
         unless enc
-          raise Encoding::CompatibilityError, "incompatible character encodings: #{pat.encoding.name} and US-ASCII"
+          enc_name = Truffle::EncodingOperations.name_for_inspect(pat.encoding)
+          raise Encoding::CompatibilityError, "incompatible character encodings: #{enc_name} and US-ASCII"
         end
         Dir::Glob.glob normalized_base, pat, flags, matches
 
