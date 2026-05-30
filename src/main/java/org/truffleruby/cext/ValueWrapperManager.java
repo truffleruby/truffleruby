@@ -232,7 +232,8 @@ public final class ValueWrapperManager {
 
         public ValueWrapper getWrapper(long handle) {
             int offset = (int) (handle & OFFSET_MASK) >> ADDRESS_ALIGN_BITS;
-            return wrappers[offset].get();
+            ValueWrapperWeakReference wrapperRef = wrappers[offset];
+            return wrapperRef == null ? null : wrapperRef.get();
         }
 
         public boolean isFull() {
