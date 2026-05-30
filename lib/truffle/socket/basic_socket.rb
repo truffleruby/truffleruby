@@ -30,6 +30,8 @@
 class BasicSocket < IO
   undef_method :initialize
 
+  @do_not_reverse_lookup = true
+
   def self.for_fd(fd)
     sock = allocate
 
@@ -43,12 +45,11 @@ class BasicSocket < IO
   end
 
   def self.do_not_reverse_lookup=(setting)
-    @no_reverse_lookup = setting
+    BasicSocket.instance_variable_set(:@do_not_reverse_lookup, setting)
   end
 
   def self.do_not_reverse_lookup
-    @no_reverse_lookup = true unless defined?(@no_reverse_lookup)
-    @no_reverse_lookup
+    BasicSocket.instance_variable_get(:@do_not_reverse_lookup)
   end
 
   def do_not_reverse_lookup=(setting)

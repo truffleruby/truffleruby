@@ -54,7 +54,7 @@ class TCPSocket < IPSocket
     socket.autoclose = false
     socket.close
 
-    @no_reverse_lookup = Primitive.class(self).do_not_reverse_lookup
+    @no_reverse_lookup = BasicSocket.do_not_reverse_lookup
     setup(fd, nil, true)
     binmode
   end
