@@ -171,25 +171,8 @@ rb_encoding* rb_enc_compatible(VALUE str1, VALUE str2) {
   return NULL;
 }
 
-static const char* rb_enc_inspect_name(rb_encoding *enc) {
-  if (enc == rb_binary_encoding()) {
-    return "BINARY (ASCII-8BIT)";
-  }
-  return enc->name;
-}
-
-static rb_encoding* rb_encoding_check(rb_encoding* enc, VALUE str1, VALUE str2) {
-  if (!enc) {
-    rb_raise(rb_eEncCompatError, "incompatible character encodings: %s and %s",
-      rb_enc_inspect_name(rb_enc_get(str1)),
-      rb_enc_inspect_name(rb_enc_get(str2)));
-  }
-  return enc;
-}
-
 rb_encoding* rb_enc_check(VALUE str1, VALUE str2) {
-  rb_encoding *enc = rb_enc_compatible(str1, str2);
-  return rb_encoding_check(enc, str1, str2);
+  return rb_to_encoding(RUBY_CEXT_INVOKE("rb_enc_check", str1, str2));
 }
 
 void rb_enc_copy(VALUE obj1, VALUE obj2) {

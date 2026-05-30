@@ -55,5 +55,13 @@ module Truffle
       EncodingMap[key] = [alias_name, encoding]
       Primitive.encoding_define_alias(encoding, key)
     end
+
+    def self.name_for_inspect(encoding)
+      if encoding == Encoding::BINARY
+        'BINARY (ASCII-8BIT)'
+      else
+        encoding.name
+      end
+    end
   end
 end

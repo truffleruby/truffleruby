@@ -212,6 +212,7 @@ public final class CoreLibrary {
     public final RubyModule truffleStringOperationsModule;
     public final RubyModule truffleThreadOperationsModule;
     public final RubyModule truffleWarningOperationsModule;
+    public final RubyModule truffleEncodingOperationsModule;
     public final RubyClass encodingCompatibilityErrorClass;
     public final RubyClass encodingUndefinedConversionErrorClass;
     public final RubyClass methodClass;
@@ -524,6 +525,7 @@ public final class CoreLibrary {
         truffleStringOperationsModule = defineModule(truffleModule, "StringOperations");
         truffleThreadOperationsModule = defineModule(truffleModule, "ThreadOperations");
         truffleWarningOperationsModule = defineModule(truffleModule, "WarningOperations");
+        truffleEncodingOperationsModule = defineModule(truffleModule, "EncodingOperations");
         defineModule(truffleModule, "WeakRefOperations");
 
         truffleBootModule = defineModule(truffleModule, "Boot");
