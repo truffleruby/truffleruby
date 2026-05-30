@@ -86,6 +86,7 @@ import com.oracle.truffle.api.profiles.InlinedLoopConditionProfile;
 import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import com.oracle.truffle.api.strings.AbstractTruffleString;
 import com.oracle.truffle.api.strings.InternalByteArray;
+import com.oracle.truffle.api.strings.MutableTruffleString;
 import com.oracle.truffle.api.strings.TruffleString;
 import com.oracle.truffle.api.strings.TruffleString.AsTruffleStringNode;
 import com.oracle.truffle.api.strings.TruffleString.CodePointLengthNode;
@@ -116,6 +117,7 @@ import org.truffleruby.core.format.unpack.ArrayResult;
 import org.truffleruby.core.format.unpack.UnpackCompiler;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.string.StringHelperNodes.SingleByteOptimizableNode;
+import org.truffleruby.core.string.StringHelperNodes.ToMutableTruffleStringNode;
 import org.truffleruby.core.support.RubyByteArray;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.interop.ToJavaStringNode;
@@ -2123,16 +2125,52 @@ public abstract class StringPrimitiveNodes {
     @ImportStatic(StringGuards.class)
     public abstract static class StringSplicePrimitiveNode extends PrimitiveArrayArgumentsNode {
 
-        @Specialization(guards = "spliceByteIndex == 0")
-        Object splicePrepend(
+        @Specialization(guards = "byteCountToReplace == otherByteLength", limit = "1")
+        static RubyString spliceSameNumberOfBytes(
                 RubyString string, Object other, int spliceByteIndex, int byteCountToReplace, RubyEncoding rubyEncoding,
+                @Bind Node node,
                 @Cached @Exclusive RubyStringLibrary libString,
                 @Cached @Exclusive RubyStringLibrary libOther,
+                @Cached @Exclusive RubyStringLibrary profileEncoding,
+                @Bind("libOther.byteLength(node, other)") int otherByteLength,
+                @Cached ToMutableTruffleStringNode toMutableTruffleStringNode,
+                @Cached MutableTruffleString.ForceEncodingNode forceEncodingNode,
+                @Cached TruffleString.MaterializeNode materializeNode,
+                @Cached TruffleString.ReadByteNode readByteNode,
+                @Cached MutableTruffleString.WriteByteNode writeByteNode) {
+            var resultEncoding = profileEncoding.profileEncoding(node, rubyEncoding);
+
+            var originalTEncoding = libString.getTEncoding(node, string);
+            MutableTruffleString mutable = toMutableTruffleStringNode.execute(node, string);
+            if (originalTEncoding != resultEncoding.tencoding) {
+                mutable = forceEncodingNode.execute(mutable, originalTEncoding, resultEncoding.tencoding);
+                string.setTString(mutable, resultEncoding);
+            }
+
+            var otherTString = libOther.getTString(node, other);
+            var otherTEncoding = libOther.getTEncoding(node, other);
+
+            materializeNode.execute(otherTString, otherTEncoding);
+            for (int i = 0; i < byteCountToReplace; i++) {
+                byte value = (byte) readByteNode.execute(otherTString, i, otherTEncoding);
+                writeByteNode.execute(mutable, spliceByteIndex + i, value, resultEncoding.tencoding);
+            }
+
+            return string;
+        }
+
+        @Specialization(guards = { "byteCountToReplace != otherByteLength", "spliceByteIndex == 0" }, limit = "1")
+        static RubyString splicePrepend(
+                RubyString string, Object other, int spliceByteIndex, int byteCountToReplace, RubyEncoding rubyEncoding,
+                @Bind Node node,
+                @Cached @Exclusive RubyStringLibrary libString,
+                @Cached @Exclusive RubyStringLibrary libOther,
+                @Bind("libOther.byteLength(node, other)") int otherByteLength,
                 @Cached @Exclusive TruffleString.SubstringByteIndexNode prependSubstringNode,
                 @Cached @Shared TruffleString.ConcatNode concatNode) {
             var original = string.tstring;
-            var originalTEncoding = libString.getTEncoding(this, string);
-            var left = libOther.getTString(this, other);
+            var originalTEncoding = libString.getTEncoding(node, string);
+            var left = libOther.getTString(node, other);
             var right = prependSubstringNode.execute(original, byteCountToReplace,
                     original.byteLength(originalTEncoding) - byteCountToReplace, originalTEncoding, true);
 
@@ -2142,14 +2180,16 @@ public abstract class StringPrimitiveNodes {
             return string;
         }
 
-        @Specialization(guards = "spliceByteIndex == byteLength", limit = "1")
-        static Object spliceAppend(
+        @Specialization(guards = { "byteCountToReplace != otherByteLength", "spliceByteIndex == byteLength" },
+                limit = "1")
+        static RubyString spliceAppend(
                 RubyString string, Object other, int spliceByteIndex, int byteCountToReplace, RubyEncoding rubyEncoding,
                 @Bind Node node,
                 @Cached @Exclusive RubyStringLibrary libString,
                 @Cached @Exclusive RubyStringLibrary libOther,
-                @Cached @Shared TruffleString.ConcatNode concatNode,
-                @Bind("libString.byteLength(node, string)") int byteLength) {
+                @Bind("libString.byteLength(node, string)") int byteLength,
+                @Bind("libOther.byteLength(node, other)") int otherByteLength,
+                @Cached @Shared TruffleString.ConcatNode concatNode) {
             var left = string.tstring;
             var right = libOther.getTString(node, other);
 
@@ -2159,19 +2199,23 @@ public abstract class StringPrimitiveNodes {
             return string;
         }
 
-        @Specialization(guards = { "spliceByteIndex != 0", "spliceByteIndex != byteLength" }, limit = "1")
+        @Specialization(guards = {
+                "byteCountToReplace != otherByteLength",
+                "spliceByteIndex != 0",
+                "spliceByteIndex != byteLength" }, limit = "1")
         static RubyString splice(
                 RubyString string, Object other, int spliceByteIndex, int byteCountToReplace, RubyEncoding rubyEncoding,
+                @Bind Node node,
                 @Cached @Exclusive RubyStringLibrary libString,
                 @Cached @Exclusive RubyStringLibrary libOther,
+                @Bind("libString.byteLength(node, string)") int byteLength,
+                @Bind("libOther.byteLength(node, other)") int otherByteLength,
                 @Cached InlinedConditionProfile insertStringIsEmptyProfile,
                 @Cached InlinedConditionProfile splitRightIsEmptyProfile,
                 @Cached @Exclusive TruffleString.SubstringByteIndexNode leftSubstringNode,
                 @Cached @Exclusive TruffleString.SubstringByteIndexNode rightSubstringNode,
                 @Cached @Shared TruffleString.ConcatNode concatNode,
-                @Cached TruffleString.ForceEncodingNode forceEncodingNode,
-                @Bind("libString.byteLength($node, string)") int byteLength,
-                @Bind Node node) {
+                @Cached TruffleString.ForceEncodingNode forceEncodingNode) {
             var sourceTEncoding = libString.getTEncoding(node, string);
             var resultTEncoding = rubyEncoding.tencoding;
             var source = string.tstring;
