@@ -120,7 +120,9 @@ public abstract class FormatIntegerNode extends FormatNode {
             width = -width;
         }
 
-        if (precision < 0) {
+        if (hasFSharp && fchar == 'o' && zero && precision < 1) {
+            precision = 1;
+        } else if (precision < 0) {
             precision = PrintfSimpleTreeBuilder.DEFAULT;
         }
 
@@ -136,7 +138,9 @@ public abstract class FormatIntegerNode extends FormatNode {
             if (!zero) {
                 switch (fchar) {
                     case 'o':
-                        prefix = PREFIX_OCTAL;
+                        if (!negative) {
+                            prefix = PREFIX_OCTAL;
+                        }
                         break;
                     case 'x':
                     case 'p':

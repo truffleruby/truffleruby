@@ -1,2 +1,1 @@
 fails:StringIO#printf formatting other formats s does not try to convert with to_str
-fails:StringIO#printf formatting flags # applies to format o does nothing for negative argument

@@ -1,2 +1,1 @@
 fails:File#printf other formats s does not try to convert with to_str
-fails:File#printf flags # applies to format o does nothing for negative argument
