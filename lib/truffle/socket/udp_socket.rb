@@ -29,7 +29,7 @@
 
 class UDPSocket < IPSocket
   def initialize(family = Socket::AF_INET)
-    @no_reverse_lookup = Primitive.class(self).do_not_reverse_lookup
+    @no_reverse_lookup = BasicSocket.do_not_reverse_lookup
     @family            = Truffle::Socket.address_family(family)
 
     descriptor = Truffle::Socket::Foreign
