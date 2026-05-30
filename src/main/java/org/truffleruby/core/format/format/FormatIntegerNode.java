@@ -37,8 +37,6 @@ public abstract class FormatIntegerNode extends FormatNode {
     private static final byte[] PREFIX_OCTAL = { '0' };
     private static final byte[] PREFIX_HEX_LC = { '0', 'x' };
     private static final byte[] PREFIX_HEX_UC = { '0', 'X' };
-    private static final byte[] PREFIX_BINARY_LC = { '0', 'b' };
-    private static final byte[] PREFIX_BINARY_UC = { '0', 'B' };
 
     private static final byte[] PREFIX_NEGATIVE = { '.', '.' };
 
@@ -147,12 +145,6 @@ public abstract class FormatIntegerNode extends FormatNode {
                     case 'X':
                         prefix = PREFIX_HEX_UC;
                         break;
-                    case 'b':
-                        prefix = PREFIX_BINARY_LC;
-                        break;
-                    case 'B':
-                        prefix = PREFIX_BINARY_UC;
-                        break;
                 }
             }
             if (prefix != null) {
@@ -184,10 +176,6 @@ public abstract class FormatIntegerNode extends FormatNode {
 
                 first = skipSignBits(bytes, base);
                 switch (fchar) {
-                    case 'b':
-                    case 'B':
-                        leadChar = '1';
-                        break;
                     case 'o':
                         leadChar = '7';
                         break;
@@ -278,10 +266,6 @@ public abstract class FormatIntegerNode extends FormatNode {
             case 'X':
             case 'p':
                 base = 16;
-                break;
-            case 'b':
-            case 'B':
-                base = 2;
                 break;
             case 'u':
             case 'd':

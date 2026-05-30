@@ -4,6 +4,5 @@ fails:String#% returns a String in the argument's encoding if format encoding is
 fails:String#% raises Encoding::CompatibilityError if both encodings are ASCII compatible and there are not ASCII characters
 fails:String#% other formats s does not try to convert with to_str
 fails:String#% flags # applies to format o does nothing for negative argument
-fails:String#% flags # applies to formats bBxX does nothing for zero argument
 fails:String#% raises an ArgumentError if % is not followed by a conversion specifier
 fails:String#% raises an ArgumentError if absolute argument specifier is followed by a conversion specifier

@@ -612,6 +612,14 @@ describe :kernel_sprintf, shared: true do
           @method.call("%#x", 0).should == "0"
           @method.call("%#X", 0).should == "0"
         end
+
+        it "does nothing for zero argument when combined with zero precision" do
+          @method.call("%#.0b", 0).should == ""
+          @method.call("%#.0B", 0).should == ""
+
+          @method.call("%#.0x", 0).should == ""
+          @method.call("%#.0X", 0).should == ""
+        end
       end
 
       context "applies to formats aAeEfgG" do
