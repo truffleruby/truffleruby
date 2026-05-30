@@ -1901,13 +1901,9 @@ public abstract class CExtNodes {
         @Specialization
         Object addToMarkList(Object guardedObject,
                 @Cached MarkingServiceNodes.KeepAliveNode keepAliveNode,
-                @Cached InlinedBranchProfile noExceptionProfile,
-                @Cached UnwrapNode.ToWrapperNode toWrapperNode) {
-            ValueWrapper wrappedValue = toWrapperNode.execute(this, guardedObject);
-            if (wrappedValue != null) {
-                noExceptionProfile.enter(this);
-                keepAliveNode.execute(this, wrappedValue);
-            }
+                @Cached WrapNode wrapNode) {
+            ValueWrapper wrappedValue = wrapNode.execute(guardedObject);
+            keepAliveNode.execute(this, wrappedValue);
             return nil;
         }
 

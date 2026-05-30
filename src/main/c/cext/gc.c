@@ -13,7 +13,7 @@
 // GC, rb_gc_*
 
 VALUE rb_tr_gc_guard(VALUE value) {
-  polyglot_invoke(RUBY_CEXT, "rb_tr_gc_guard", value);
+  polyglot_invoke(RUBY_CEXT, "rb_tr_gc_guard", rb_tr_unwrap(value));
   return value;
 }
 
