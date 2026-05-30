@@ -29,6 +29,7 @@ import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.strings.AbstractTruffleString;
 import com.oracle.truffle.api.strings.InternalByteArray;
+import com.oracle.truffle.api.strings.MutableTruffleString;
 import com.oracle.truffle.api.strings.TruffleString;
 import com.oracle.truffle.api.strings.TruffleString.ErrorHandling;
 import com.oracle.truffle.api.strings.TruffleStringIterator;
@@ -647,6 +648,29 @@ public abstract class StringHelperNodes {
             TruffleString tstring = asTruffleStringNode.execute(string.tstring, libString.getTEncoding(node, string));
             string.setTString(tstring);
             return tstring;
+        }
+    }
+
+    @GenerateInline
+    @GenerateCached(false)
+    public abstract static class ToMutableTruffleStringNode extends RubyBaseNode {
+
+        public abstract MutableTruffleString execute(Node node, RubyString string);
+
+        @Specialization
+        static MutableTruffleString toMutable(Node node, RubyString string,
+                @Cached RubyStringLibrary libString,
+                @Cached InlinedConditionProfile isMutableProfile,
+                @Cached(inline = false) MutableTruffleString.AsMutableTruffleStringNode asMutableTruffleStringNode) {
+            var tstring = string.tstring;
+            if (isMutableProfile.profile(node, tstring instanceof MutableTruffleString)) {
+                return (MutableTruffleString) tstring;
+            } else {
+                MutableTruffleString mutable = asMutableTruffleStringNode.execute(tstring,
+                        libString.getTEncoding(node, string));
+                string.setTString(mutable);
+                return mutable;
+            }
         }
     }
 

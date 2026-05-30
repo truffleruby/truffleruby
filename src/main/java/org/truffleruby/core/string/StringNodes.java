@@ -115,6 +115,7 @@ import org.truffleruby.core.range.RangeNodes;
 import org.truffleruby.core.regexp.RubyRegexp;
 import org.truffleruby.core.string.StringHelperNodes.DeleteBangStringsNode;
 import org.truffleruby.core.string.StringHelperNodes.SingleByteOptimizableNode;
+import org.truffleruby.core.string.StringHelperNodes.ToMutableTruffleStringNode;
 import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.interop.ToJavaStringNode;
 import org.truffleruby.language.Nil;
@@ -1714,32 +1715,18 @@ public abstract class StringNodes {
 
         public abstract int execute(Node node, RubyString string, int index, int value);
 
-        @Specialization(guards = "tstring.isMutable()")
-        static int mutable(Node node, RubyString string, int index, int value,
-                @Cached @Shared StringHelperNodes.CheckIndexNode checkIndexNode,
-                @Cached @Shared RubyStringLibrary libString,
+        @Specialization
+        static int setByte(Node node, RubyString string, int index, int value,
+                @Cached StringHelperNodes.CheckIndexNode checkIndexNode,
+                @Cached RubyStringLibrary libString,
                 @Bind("string.tstring") AbstractTruffleString tstring,
-                @Cached(inline = false) @Shared MutableTruffleString.WriteByteNode writeByteNode) {
+                @Cached ToMutableTruffleStringNode toMutableTruffleStringNode,
+                @Cached(inline = false) MutableTruffleString.WriteByteNode writeByteNode) {
             var tencoding = libString.getTEncoding(node, string);
             final int normalizedIndex = checkIndexNode.execute(node, index, tstring.byteLength(tencoding));
 
-            writeByteNode.execute((MutableTruffleString) tstring, normalizedIndex, (byte) value, tencoding);
-            return value;
-        }
-
-        @Specialization(guards = "!tstring.isMutable()")
-        static int immutable(Node node, RubyString string, int index, int value,
-                @Cached @Shared StringHelperNodes.CheckIndexNode checkIndexNode,
-                @Cached @Shared RubyStringLibrary libString,
-                @Bind("string.tstring") AbstractTruffleString tstring,
-                @Cached(inline = false) MutableTruffleString.AsMutableTruffleStringNode asMutableTruffleStringNode,
-                @Cached(inline = false) @Shared MutableTruffleString.WriteByteNode writeByteNode) {
-            var tencoding = libString.getTEncoding(node, string);
-            final int normalizedIndex = checkIndexNode.execute(node, index, tstring.byteLength(tencoding));
-
-            MutableTruffleString mutableTString = asMutableTruffleStringNode.execute(tstring, tencoding);
-            writeByteNode.execute(mutableTString, normalizedIndex, (byte) value, tencoding);
-            string.setTString(mutableTString);
+            MutableTruffleString mutable = toMutableTruffleStringNode.execute(node, string);
+            writeByteNode.execute(mutable, normalizedIndex, (byte) value, tencoding);
             return value;
         }
     }
