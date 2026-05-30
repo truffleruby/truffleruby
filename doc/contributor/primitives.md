@@ -28,6 +28,8 @@ Non-public Primitives cannot be used outside the TruffleRuby core library and wi
 
 We document every public Primitive here.
 
+Public Primitives must always check for `frozen?` (and `locked` for `String`s) if they mutate anything.
+
 ### Primitive.as_boolean(object)
 
 Converts `object` to `true` or `false`.
