@@ -81,8 +81,4 @@ class UDPSocket < IPSocket
 
     internal_recvfrom(maxlen, flags | Socket::MSG_DONTWAIT, buffer, exception)
   end
-
-  def inspect
-    "#<#{Primitive.class(self)}:fd #{fileno}>"
-  end
 end
