@@ -2,6 +2,5 @@ fails:String#% output's encoding negotiates a compatible encoding if necessary
 fails:String#% output's encoding raises if a compatible encoding can't be found
 fails:String#% returns a String in the argument's encoding if format encoding is more restrictive
 fails:String#% raises Encoding::CompatibilityError if both encodings are ASCII compatible and there are not ASCII characters
-fails:String#% other formats s does not try to convert with to_str
 fails:String#% raises an ArgumentError if % is not followed by a conversion specifier
 fails:String#% raises an ArgumentError if absolute argument specifier is followed by a conversion specifier

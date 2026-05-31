@@ -1,1 +1,0 @@
-fails:File#printf other formats s does not try to convert with to_str

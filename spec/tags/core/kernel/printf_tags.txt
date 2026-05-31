@@ -1,2 +1,0 @@
-fails:Kernel.printf formatting io is specified other formats s does not try to convert with to_str
-fails:Kernel.printf formatting io is not specified other formats s does not try to convert with to_str
