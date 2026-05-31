@@ -1,3 +1,4 @@
 slow:CApiGCSpecs rb_gc increases gc count
 slow:CApiGCSpecs rb_gc_register_address keeps the value alive even if the value is assigned after rb_gc_register_address() is called
 native-g1:CApiGCSpecs rb_gc increases gc count
+slow:CApiGCSpecs RB_GC_GUARD forces an object to on stack so it cannot be GC'd early

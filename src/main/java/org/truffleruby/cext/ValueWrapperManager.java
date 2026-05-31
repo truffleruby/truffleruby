@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
@@ -101,33 +102,39 @@ public final class ValueWrapperManager {
         return map;
     }
 
-    public ValueWrapper getWrapperFromHandleMap(long handle, RubyLanguage language) {
-        final int index = HandleBlock.getHandleIndex(handle);
-        final HandleBlock block = getBlockFromMap(index, language);
+    public ValueWrapper getWrapperFromHandleMap(long handle, boolean allowUnregisteredHandle, RubyLanguage language) {
+        if (handle < ALLOCATION_BASE || handle > MAX_HANDLE) {
+            return null;
+        }
+        final long index = HandleBlock.getBlockIndex(handle);
+
+        final HandleBlock block = getBlockFromMap((int) index, language);
         if (block == null) {
             return null;
         }
-        return block.getWrapper(handle);
+
+        return block.getWrapper(handle, allowUnregisteredHandle);
     }
 
     private HandleBlock getBlockFromMap(int index, RubyLanguage language) {
+        assert index >= 0;
         final HandleBlockWeakReference[] blockMap = this.blockMap;
         final HandleBlockWeakReference[] sharedMap = language.handleBlockSharedMap;
         HandleBlockWeakReference ref = null;
+
         // First try getting the block from the context's map
-        if (index >= 0 && index < blockMap.length) {
+        if (index < blockMap.length) {
             ref = blockMap[index];
         }
+
         // If no block was found in the context's map then look in the
         // shared map. If there is a block in a context's map then the
         // same block will not be in the shared map and vice versa.
-        if (ref == null && index >= 0 && index < sharedMap.length) {
+        if (ref == null && index < sharedMap.length) {
             ref = sharedMap[index];
         }
-        if (ref == null) {
-            return null;
-        }
-        return ref.get();
+
+        return ref == null ? null : ref.get();
     }
 
     public void freeAllBlocksInMap() {
@@ -168,6 +175,17 @@ public final class ValueWrapperManager {
         return counter.get();
     }
 
+    /** A valid handle is of the form, bits (MSB first):
+     * <ul>
+     * <li>0-16: "0bad" in hexadecimal, "0000101110101101" in binary. We keep the sign bit as 0 to keep it positive</li>
+     * <li>16-49: 33-bit block index</li>
+     * <li>49-61: 12-bit offset within block</li>
+     * <li>61-64: all 0, to differentiate from tagged fixnums, etc</li>
+     * </ul>
+     *
+     * We use an address > 2^48 because those are not valid memory pointers on 64-bit machines. Trying to dereference
+     * them would immediately segfault, which is good because it would be an error as we don't actually use memory at
+     * those addresses. */
     private static final long ADDRESS_ALIGN_BITS = 3;
     private static final int BLOCK_BITS = 15;
     private static final int BLOCK_SIZE = 1 << (BLOCK_BITS - ADDRESS_ALIGN_BITS);
@@ -175,6 +193,9 @@ public final class ValueWrapperManager {
     private static final long BLOCK_MASK = -1L << BLOCK_BITS;
     private static final long OFFSET_MASK = ~BLOCK_MASK;
     public static final long ALLOCATION_BASE = 0x0badL << 48;
+    // The max handle to keep a "0bad" prefix would be `(0x0baeL << 48) - 1`, but that means a 33-bit block index.
+    // Since we use `int` for block index we instead cap the max handle at:
+    private static final long MAX_HANDLE = ALLOCATION_BASE + (((long) Integer.MAX_VALUE) << BLOCK_BITS);
 
     public static final class HandleBlockAllocator {
 
@@ -217,7 +238,7 @@ public final class ValueWrapperManager {
 
         private static Runnable makeCleaner(ValueWrapperManager manager, long base, HandleBlockAllocator allocator) {
             return () -> {
-                manager.blockMap[(int) ((base - ALLOCATION_BASE) >> BLOCK_BITS)] = null;
+                manager.blockMap[getBlockIndex(base)] = null;
                 allocator.addFreeBlock(base);
             };
         }
@@ -227,12 +248,26 @@ public final class ValueWrapperManager {
         }
 
         public int getIndex() {
-            return (int) ((base - ALLOCATION_BASE) >> BLOCK_BITS);
+            return getBlockIndex(base);
         }
 
-        public ValueWrapper getWrapper(long handle) {
+        public ValueWrapper getWrapper(long handle, boolean allowUnregisteredHandle) {
             int offset = (int) (handle & OFFSET_MASK) >> ADDRESS_ALIGN_BITS;
-            return wrappers[offset].get();
+            ValueWrapperWeakReference reference = wrappers[offset];
+            if (allowUnregisteredHandle) {
+                return reference == null ? null : reference.get();
+            } else {
+                if (reference == null) {
+                    CompilerDirectives.transferToInterpreterAndInvalidate();
+                    throw unregisteredHandle(handle);
+                }
+                return reference.get();
+            }
+        }
+
+        @TruffleBoundary
+        private static RuntimeException unregisteredHandle(long handle) {
+            return CompilerDirectives.shouldNotReachHere("unregistered handle 0x" + Long.toHexString(handle));
         }
 
         public boolean isFull() {
@@ -247,7 +282,8 @@ public final class ValueWrapperManager {
             return handle;
         }
 
-        public static int getHandleIndex(long handle) {
+        public static int getBlockIndex(long handle) {
+            assert handle >= ALLOCATION_BASE && handle <= MAX_HANDLE : handle;
             return (int) ((handle - ALLOCATION_BASE) >> BLOCK_BITS);
         }
     }

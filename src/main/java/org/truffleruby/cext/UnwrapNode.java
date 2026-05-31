@@ -83,28 +83,25 @@ public abstract class UnwrapNode extends RubyBaseNode {
         }
 
         @Specialization(guards = "isTaggedObject(handle)")
-        static Object unwrapTaggedObject(Node node, long handle,
-                @Cached InlinedBranchProfile noHandleProfile) {
+        static Object unwrapTaggedObject(Node node, long handle) {
             final ValueWrapper wrapper = getContext(node)
                     .getValueWrapperManager()
-                    .getWrapperFromHandleMap(handle, getLanguage(node));
+                    .getWrapperFromHandleMap(handle, false, getLanguage(node));
             if (wrapper == null) {
-                noHandleProfile.enter(node);
-                raiseError(handle);
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                deadHandle(handle);
             }
             return wrapper.getObject();
         }
 
         @Fallback
         static ValueWrapper unWrapUnexpectedHandle(long handle) {
-            // Avoid throwing a specialization exception when given an uninitialized or corrupt
-            // handle.
             CompilerDirectives.transferToInterpreterAndInvalidate();
             throw CompilerDirectives.shouldNotReachHere("corrupt handle 0x" + Long.toHexString(handle));
         }
 
         @TruffleBoundary
-        private static void raiseError(long handle) {
+        private static void deadHandle(long handle) {
             throw CompilerDirectives.shouldNotReachHere("dead handle 0x" + Long.toHexString(handle));
         }
     }
@@ -115,6 +112,7 @@ public abstract class UnwrapNode extends RubyBaseNode {
     @ImportStatic(ValueWrapperManager.class)
     public abstract static class NativeToWrapperNode extends RubyBaseNode {
 
+        /** Returns null for invalid handles */
         public abstract ValueWrapper execute(Node node, long handle);
 
         @Specialization(guards = "handle == FALSE_HANDLE")
@@ -144,13 +142,11 @@ public abstract class UnwrapNode extends RubyBaseNode {
 
         @Specialization(guards = "isTaggedObject(handle)")
         static ValueWrapper unwrapTaggedObject(Node node, long handle) {
-            return getContext(node).getValueWrapperManager().getWrapperFromHandleMap(handle, getLanguage(node));
+            return getContext(node).getValueWrapperManager().getWrapperFromHandleMap(handle, true, getLanguage(node));
         }
 
         @Fallback
         static ValueWrapper unWrapUnexpectedHandle(long handle) {
-            // Avoid throwing a specialization exception when given an uninitialized or corrupt
-            // handle.
             return null;
         }
     }
@@ -160,6 +156,7 @@ public abstract class UnwrapNode extends RubyBaseNode {
     @ImportStatic(ValueWrapperManager.class)
     public abstract static class ToWrapperNode extends RubyBaseNode {
 
+        /** Returns null for invalid handles */
         public abstract ValueWrapper execute(Node node, Object value);
 
         @Specialization
