@@ -103,9 +103,7 @@ public final class ValueWrapperManager {
     }
 
     public ValueWrapper getWrapperFromHandleMap(long handle, boolean allowUnregisteredHandle, RubyLanguage language) {
-        if (handle < ALLOCATION_BASE || handle > MAX_HANDLE) {
-            return null;
-        }
+        assert isTaggedObject(handle);
         final long index = HandleBlock.getBlockIndex(handle);
 
         final HandleBlock block = getBlockFromMap((int) index, language);
@@ -195,6 +193,9 @@ public final class ValueWrapperManager {
     public static final long ALLOCATION_BASE = 0x0badeL << 44;
     private static final long MAX_HANDLE = (0x0badfL << 44) - 1;
 
+    private static final long OBJECT_HANDLE_MASK = (-1L << 44) | 0b111;
+    private static final long OBJECT_HANDLE_MASK_EXPECTED = ALLOCATION_BASE | OBJECT_TAG;
+
     public static final class HandleBlockAllocator {
 
         private long nextBlock = ALLOCATION_BASE;
@@ -282,6 +283,7 @@ public final class ValueWrapperManager {
 
         public static int getBlockIndex(long handle) {
             assert handle >= ALLOCATION_BASE && handle <= MAX_HANDLE : handle;
+            assert isTaggedObject(handle) : handle;
             return (int) ((handle - ALLOCATION_BASE) >> BLOCK_BITS);
         }
     }
@@ -393,7 +395,7 @@ public final class ValueWrapperManager {
     }
 
     public static boolean isTaggedObject(long handle) {
-        return handle != FALSE_HANDLE && (handle & IMMEDIATE_MASK) == OBJECT_TAG;
+        return (handle & OBJECT_HANDLE_MASK) == OBJECT_HANDLE_MASK_EXPECTED;
     }
 
     public static boolean isMallocAligned(long handle) {
