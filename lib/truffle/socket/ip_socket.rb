@@ -71,4 +71,9 @@ class IPSocket < BasicSocket
     flags = 0 if Primitive.nil?(flags)
     internal_recvfrom(maxlen, flags, nil, true)
   end
+
+  def inspect
+    family, port, _host, ip = addr
+    "#<#{Primitive.class(self)}:fd #{fileno}, #{family}, #{ip}, #{port}>"
+  end
 end
