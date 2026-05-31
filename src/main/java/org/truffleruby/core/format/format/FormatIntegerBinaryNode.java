@@ -67,6 +67,7 @@ public abstract class FormatIntegerBinaryNode extends FormatNode {
                 width,
                 precision,
                 isNegative,
+                isZero,
                 this.hasSpaceFlag,
                 this.hasPlusFlag,
                 this.hasZeroFlag,
@@ -103,6 +104,7 @@ public abstract class FormatIntegerBinaryNode extends FormatNode {
                 width,
                 precision,
                 isNegative,
+                isZero,
                 this.hasSpaceFlag,
                 this.hasPlusFlag,
                 this.hasZeroFlag,
@@ -113,7 +115,7 @@ public abstract class FormatIntegerBinaryNode extends FormatNode {
 
     @TruffleBoundary
     private static byte[] getFormattedString(String formatted, int width, int precision, boolean isNegative,
-            boolean isSpacePadded, boolean hasPlusFlag, boolean hasZeroFlag,
+            boolean isZero, boolean isSpacePadded, boolean hasPlusFlag, boolean hasZeroFlag,
             boolean useAlternativeFormat, boolean hasMinusFlag,
             char format) {
         if (width < 0 && width != PrintfSimpleTreeBuilder.DEFAULT) {
@@ -156,7 +158,7 @@ public abstract class FormatIntegerBinaryNode extends FormatNode {
         }
 
 
-        if (useAlternativeFormat) {
+        if (useAlternativeFormat && !isZero) {
             if (format == 'B') {
                 formatted = "0B" + formatted;
             } else {

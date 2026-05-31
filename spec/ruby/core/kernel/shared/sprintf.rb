@@ -607,10 +607,27 @@ describe :kernel_sprintf, shared: true do
           @method.call("%#b", 0).should == "0"
           @method.call("%#B", 0).should == "0"
 
-          @method.call("%#o", 0).should == "0"
-
           @method.call("%#x", 0).should == "0"
           @method.call("%#X", 0).should == "0"
+        end
+
+        it "does nothing for zero argument when combined with zero precision" do
+          @method.call("%#.0b", 0).should == ""
+          @method.call("%#.0B", 0).should == ""
+
+          @method.call("%#.0x", 0).should == ""
+          @method.call("%#.0X", 0).should == ""
+        end
+      end
+
+      context "applies to format o" do
+        it "does nothing for zero argument" do
+          @method.call("%#o", 0).should == "0"
+          @method.call("%#.1o", 0).should == "0"
+        end
+
+        it "increases the precision if precision zero is requested with zero argument" do
+          @method.call("%#.0o", 0).should == "0"
         end
       end
 

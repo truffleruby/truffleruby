@@ -10,6 +10,7 @@
  */
 package org.truffleruby.core.format.convert;
 
+import static org.truffleruby.language.dispatch.DispatchConfiguration.PRIVATE;
 import static org.truffleruby.language.dispatch.DispatchConfiguration.PRIVATE_RETURN_MISSING;
 
 import java.nio.charset.StandardCharsets;
@@ -22,6 +23,7 @@ import org.truffleruby.core.kernel.KernelNodes;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.string.TStringConstants;
+import org.truffleruby.language.dispatch.DispatchConfiguration;
 import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.language.library.RubyStringLibrary;
 
@@ -41,6 +43,7 @@ public abstract class ToStringNode extends FormatNode {
     private final String conversionMethod;
     private final boolean inspectOnConversionFailure;
     protected final boolean specialClassBehaviour;
+    private final DispatchConfiguration dispatchConfiguration;
 
     @Child private DispatchNode toStrNode;
     @Child private DispatchNode toSNode;
@@ -62,6 +65,9 @@ public abstract class ToStringNode extends FormatNode {
         this.conversionMethod = conversionMethod;
         this.inspectOnConversionFailure = inspectOnConversionFailure;
         this.specialClassBehaviour = specialClassBehaviour;
+        // sprintf uses to_s/inspect and must give NoMethodError if no method,
+        // while pack uses to_str and must give a "no implicit conversion" TypeError
+        this.dispatchConfiguration = conversionMethod.equals("to_str") ? PRIVATE_RETURN_MISSING : PRIVATE;
     }
 
     public abstract Object executeToString(Object object);
@@ -100,7 +106,7 @@ public abstract class ToStringNode extends FormatNode {
             @Cached @Shared RubyStringLibrary libString,
             @Cached @Exclusive RubyStringLibrary argLibString) {
         if ("inspect".equals(conversionMethod)) {
-            final Object value = getToStrNode().call(PRIVATE_RETURN_MISSING, string, conversionMethod);
+            final Object value = getToStrNode().call(dispatchConfiguration, string, conversionMethod);
 
             if (libString.isRubyString(this, value)) {
                 return value;
@@ -119,7 +125,7 @@ public abstract class ToStringNode extends FormatNode {
             toSNode = insert(DispatchNode.create());
         }
 
-        final Object value = toSNode.call(PRIVATE_RETURN_MISSING, array, "to_s");
+        final Object value = toSNode.call(dispatchConfiguration, array, "to_s");
 
         if (libString.isRubyString(this, value)) {
             return value;
@@ -132,7 +138,7 @@ public abstract class ToStringNode extends FormatNode {
             guards = { "isNotRubyString(object)", "!isRubyArray(object)", "!isForeignObject(object)" })
     Object toString(Object object,
             @Cached @Shared RubyStringLibrary libString) {
-        final Object value = getToStrNode().call(PRIVATE_RETURN_MISSING, object, conversionMethod);
+        final Object value = getToStrNode().call(dispatchConfiguration, object, conversionMethod);
 
         if (libString.isRubyString(this, value)) {
             return value;

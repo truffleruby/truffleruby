@@ -37,8 +37,6 @@ public abstract class FormatIntegerNode extends FormatNode {
     private static final byte[] PREFIX_OCTAL = { '0' };
     private static final byte[] PREFIX_HEX_LC = { '0', 'x' };
     private static final byte[] PREFIX_HEX_UC = { '0', 'X' };
-    private static final byte[] PREFIX_BINARY_LC = { '0', 'b' };
-    private static final byte[] PREFIX_BINARY_UC = { '0', 'B' };
 
     private static final byte[] PREFIX_NEGATIVE = { '.', '.' };
 
@@ -122,7 +120,9 @@ public abstract class FormatIntegerNode extends FormatNode {
             width = -width;
         }
 
-        if (precision < 0) {
+        if (hasFSharp && fchar == 'o' && zero && precision < 1) {
+            precision = 1;
+        } else if (precision < 0) {
             precision = PrintfSimpleTreeBuilder.DEFAULT;
         }
 
@@ -138,7 +138,9 @@ public abstract class FormatIntegerNode extends FormatNode {
             if (!zero) {
                 switch (fchar) {
                     case 'o':
-                        prefix = PREFIX_OCTAL;
+                        if (!negative) {
+                            prefix = PREFIX_OCTAL;
+                        }
                         break;
                     case 'x':
                     case 'p':
@@ -146,12 +148,6 @@ public abstract class FormatIntegerNode extends FormatNode {
                         break;
                     case 'X':
                         prefix = PREFIX_HEX_UC;
-                        break;
-                    case 'b':
-                        prefix = PREFIX_BINARY_LC;
-                        break;
-                    case 'B':
-                        prefix = PREFIX_BINARY_UC;
                         break;
                 }
             }
@@ -184,10 +180,6 @@ public abstract class FormatIntegerNode extends FormatNode {
 
                 first = skipSignBits(bytes, base);
                 switch (fchar) {
-                    case 'b':
-                    case 'B':
-                        leadChar = '1';
-                        break;
                     case 'o':
                         leadChar = '7';
                         break;
@@ -278,10 +270,6 @@ public abstract class FormatIntegerNode extends FormatNode {
             case 'X':
             case 'p':
                 base = 16;
-                break;
-            case 'b':
-            case 'B':
-                base = 2;
                 break;
             case 'u':
             case 'd':

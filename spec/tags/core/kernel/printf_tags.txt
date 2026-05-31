@@ -1,6 +1,0 @@
-fails:Kernel.printf formatting io is specified other formats s does not try to convert with to_str
-fails:Kernel.printf formatting io is specified flags # applies to format o does nothing for negative argument
-fails:Kernel.printf formatting io is specified flags # applies to formats bBxX does nothing for zero argument
-fails:Kernel.printf formatting io is not specified other formats s does not try to convert with to_str
-fails:Kernel.printf formatting io is not specified flags # applies to format o does nothing for negative argument
-fails:Kernel.printf formatting io is not specified flags # applies to formats bBxX does nothing for zero argument
