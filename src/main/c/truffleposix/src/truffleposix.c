@@ -91,6 +91,10 @@ struct truffleposix_stat {
 
 static void copy_stat(struct stat *stat, struct truffleposix_stat* buffer);
 
+long truffleposix_page_size(void) {
+  return sysconf(_SC_PAGESIZE);
+}
+
 int truffleposix_poll_single_fd(int fd, int events, int timeout_ms) {
   struct pollfd fds;
 

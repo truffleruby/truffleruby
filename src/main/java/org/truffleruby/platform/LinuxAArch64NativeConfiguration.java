@@ -401,6 +401,10 @@ public final class LinuxAArch64NativeConfiguration extends DefaultNativeConfigur
         configuration.config("platform.io.SEEK_END", 2);
         configuration.config("platform.io.SEEK_DATA", 3);
         configuration.config("platform.io.SEEK_HOLE", 4);
+        configuration.config("platform.mmap.PROT_READ", 1);
+        configuration.config("platform.mmap.PROT_WRITE", 2);
+        configuration.config("platform.mmap.MAP_SHARED", 1);
+        configuration.config("platform.mmap.MAP_PRIVATE", 2);
         configuration.config("platform.fcntl.F_GETFL", 3);
         configuration.config("platform.fcntl.F_SETFL", 4);
         configuration.config("platform.fcntl.F_DUPFD", 0);
