@@ -104,9 +104,9 @@ public final class ValueWrapperManager {
 
     public ValueWrapper getWrapperFromHandleMap(long handle, boolean allowUnregisteredHandle, RubyLanguage language) {
         assert isTaggedObject(handle);
-        final long index = HandleBlock.getBlockIndex(handle);
+        final int index = HandleBlock.getBlockIndex(handle);
 
-        final HandleBlock block = getBlockFromMap((int) index, language);
+        final HandleBlock block = getBlockFromMap(index, language);
         if (block == null) {
             return null;
         }
