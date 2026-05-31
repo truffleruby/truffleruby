@@ -103,12 +103,10 @@ public final class ValueWrapperManager {
     }
 
     public ValueWrapper getWrapperFromHandleMap(long handle, boolean allowUnregisteredHandle, RubyLanguage language) {
-        if (handle < ALLOCATION_BASE || handle > MAX_HANDLE) {
-            return null;
-        }
-        final long index = HandleBlock.getBlockIndex(handle);
+        assert isTaggedObject(handle);
+        final int index = HandleBlock.getBlockIndex(handle);
 
-        final HandleBlock block = getBlockFromMap((int) index, language);
+        final HandleBlock block = getBlockFromMap(index, language);
         if (block == null) {
             return null;
         }
@@ -177,8 +175,8 @@ public final class ValueWrapperManager {
 
     /** A valid handle is of the form, bits (MSB first):
      * <ul>
-     * <li>0-16: "0bad" in hexadecimal, "0000101110101101" in binary. We keep the sign bit as 0 to keep it positive</li>
-     * <li>16-49: 33-bit block index</li>
+     * <li>0-20: "0bade" in hexadecimal, "00001011101011011110" in binary. The sign bit is 0 to stay positive</li>
+     * <li>20-49: 29-bit block index</li>
      * <li>49-61: 12-bit offset within block</li>
      * <li>61-64: all 0, to differentiate from tagged fixnums, etc</li>
      * </ul>
@@ -192,10 +190,11 @@ public final class ValueWrapperManager {
     private static final int BLOCK_BYTE_SIZE = BLOCK_SIZE << ADDRESS_ALIGN_BITS;
     private static final long BLOCK_MASK = -1L << BLOCK_BITS;
     private static final long OFFSET_MASK = ~BLOCK_MASK;
-    public static final long ALLOCATION_BASE = 0x0badL << 48;
-    // The max handle to keep a "0bad" prefix would be `(0x0baeL << 48) - 1`, but that means a 33-bit block index.
-    // Since we use `int` for block index we instead cap the max handle at:
-    private static final long MAX_HANDLE = ALLOCATION_BASE + (((long) Integer.MAX_VALUE) << BLOCK_BITS);
+    public static final long ALLOCATION_BASE = 0x0badeL << 44;
+    private static final long MAX_HANDLE = (0x0badfL << 44) - 1;
+
+    private static final long OBJECT_HANDLE_MASK = (-1L << 44) | 0b111;
+    private static final long OBJECT_HANDLE_MASK_EXPECTED = ALLOCATION_BASE | OBJECT_TAG;
 
     public static final class HandleBlockAllocator {
 
@@ -284,6 +283,7 @@ public final class ValueWrapperManager {
 
         public static int getBlockIndex(long handle) {
             assert handle >= ALLOCATION_BASE && handle <= MAX_HANDLE : handle;
+            assert isTaggedObject(handle) : handle;
             return (int) ((handle - ALLOCATION_BASE) >> BLOCK_BITS);
         }
     }
@@ -395,7 +395,7 @@ public final class ValueWrapperManager {
     }
 
     public static boolean isTaggedObject(long handle) {
-        return handle != FALSE_HANDLE && (handle & IMMEDIATE_MASK) == OBJECT_TAG;
+        return (handle & OBJECT_HANDLE_MASK) == OBJECT_HANDLE_MASK_EXPECTED;
     }
 
     public static boolean isMallocAligned(long handle) {
