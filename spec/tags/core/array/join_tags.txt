@@ -1,1 +1,2 @@
 fails:Array#join when $, is not nil warns
+fails:Array#join with default separator when $, is not nil warns
