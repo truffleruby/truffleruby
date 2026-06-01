@@ -47,7 +47,8 @@ module Enumerable
         duplicated_initial_state = initial_state.dup
         block = Proc.new { |val| original_block.yield(val, duplicated_initial_state) }
       end
-      each do |val|
+      each do
+        val = Primitive.single_block_arg
         key = block.yield(val)
         if Primitive.nil?(key) || (Primitive.is_a?(key, Symbol) && key.to_s[0, 1] == '_')
           yielder.yield [previous, accumulate] unless accumulate.empty?
