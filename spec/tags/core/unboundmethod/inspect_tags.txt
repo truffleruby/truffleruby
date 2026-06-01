@@ -1,0 +1,3 @@
+fails:UnboundMethod#inspect shows the original name in parentheses for an aliased method
+fails:UnboundMethod#inspect shows the source UnboundMethod's name in parentheses for a define_method'd method
+fails:UnboundMethod#inspect shows the source name when aliasing a define_method'd Kernel method
