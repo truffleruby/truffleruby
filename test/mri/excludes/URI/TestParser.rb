@@ -1,0 +1,1 @@
+exclude :test_rfc3986_port_check, "transient timeout: [URI::InvalidComponentError] exception expected, not #<Timeout::Error: [100]: in 0.04099279999962846s (tmin: 0.00024966399999471, tmax: 0.00040992799999628, tbase: 0.00409927999996285)>."
