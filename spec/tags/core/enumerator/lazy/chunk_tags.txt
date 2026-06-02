@@ -1,2 +1,0 @@
-fails:Enumerator::Lazy#chunk calls the block with gathered values when yield with multiple arguments
-fails:Enumerator::Lazy#chunk returns an Enumerator if called without a block

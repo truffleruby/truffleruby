@@ -25,6 +25,7 @@ Compatibility:
 * Better compatibility for `Data#initialize` and `Data#deconstruct_keys` with convertable keys (#4251, @earlopain)
 * Tolerate uninitialized variables for `RB_GC_GUARD()` (#4274, @eregon).
 * Implement `IO::Buffer` (#4248, @eregon).
+* Fix `Enumerable#chunk` to pack multi-argument source yields to match CRuby (0-arg yield → `nil`, 1-arg → value, multi-arg → `Array`) (#4286, @sampokuokkanen).
 
 Performance:
 
