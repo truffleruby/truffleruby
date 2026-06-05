@@ -22,6 +22,9 @@ module Truffle
         end
       end
 
+      is_alias = meth.name != meth.original_name
+      meth_name = is_alias ? "#{meth.name}(#{meth.original_name})" : meth.name
+
       params = meth.parameters.map.with_index do |(type, name), i|
         case type
         when :req then "#{name || "param#{i+1}"}"
@@ -36,10 +39,10 @@ module Truffle
       end.join(', ').prepend('(') << ')'
 
       if !Primitive.undefined?(receiver) && owner.singleton_class?
-        "#<#{Primitive.class(meth)}: #{receiver.inspect}.#{meth.name}#{params}#{extra}>"
+        "#<#{Primitive.class(meth)}: #{receiver.inspect}.#{meth_name}#{params}#{extra}>"
       else
         origin_owner = origin == owner ? origin : "#{origin}(#{owner})"
-        "#<#{Primitive.class(meth)}: #{origin_owner}##{meth.name}#{params}#{extra}>"
+        "#<#{Primitive.class(meth)}: #{origin_owner}##{meth_name}#{params}#{extra}>"
       end
     end
   end
