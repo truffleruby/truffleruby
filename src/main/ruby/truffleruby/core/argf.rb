@@ -576,6 +576,7 @@ module Truffle
       +'ARGF'
     end
 
+    alias_method :inspect, :to_s
 
     # Internals
 

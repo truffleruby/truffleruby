@@ -1,1 +1,0 @@
-fails:ARGF.inspect is an alias of ARGF.to_s
