@@ -46,6 +46,8 @@ bin/jt build --env native-ee # Native Image build (slower to build)
 
 The built distribution is placed respectively in `mxbuild/truffleruby-jvm`, `mxbuild/truffleruby-jvm-ee` and `mxbuild/truffleruby-native-ee`.
 
+When only files under `src/main/ruby/truffleruby/core/` are modified, there is no need to rebuild, those are files are always read from the repository.
+
 ### Running TruffleRuby
 
 ```bash
