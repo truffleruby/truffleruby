@@ -5,3 +5,6 @@ Style/StringLiterals:
 
 Style/FrozenStringLiteralComment:
   Enabled: false
+
+Style/BlockDelimiters:
+  Enabled: false

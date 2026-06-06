@@ -21,14 +21,14 @@ describe "Truffle::Interop iterator messages" do
       Truffle::Interop.iterator_next_element(iterator).should == value
     end
     Truffle::Interop.has_iterator_next_element?(iterator).should == false
-    -> { Truffle::Interop.iterator_next_element(iterator) }.should raise_error(StopIteration)
+    -> { Truffle::Interop.iterator_next_element(iterator) }.should.raise(StopIteration)
 
     iterator = Truffle::Interop.iterator(obj)
     Truffle::Interop.should.iterator?(iterator)
     expected_values.each do |value|
       Truffle::Interop.iterator_next_element(iterator).should == value
     end
-    -> { Truffle::Interop.iterator_next_element(iterator) }.should raise_error(StopIteration)
+    -> { Truffle::Interop.iterator_next_element(iterator) }.should.raise(StopIteration)
   end
 
   it "allow to iterate an array" do

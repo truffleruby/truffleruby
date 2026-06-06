@@ -35,6 +35,6 @@ describe "The --embedded option" do
   end
 
   it "when enabled will warn about signals" do
-    ruby_exe("Signal.trap('ALRM') { }", options: "--experimental-options --embedded", args: "2>&1").should include("trapping signal ALRM in embedded mode")
+    ruby_exe("Signal.trap('ALRM') { }", options: "--experimental-options --embedded", args: "2>&1").should.include?("trapping signal ALRM in embedded mode")
   end
 end

@@ -12,11 +12,11 @@ require_relative '../../ruby/spec_helper'
 describe "Truffle::Interop.pointer?" do
 
   it "returns false for nil" do
-    Truffle::Interop.pointer?(nil).should be_false
+    Truffle::Interop.pointer?(nil).should == false
   end
 
   it "returns true for Truffle::FFI::Pointer" do
-    Truffle::Interop.pointer?(Truffle::FFI::Pointer.new(0x123)).should be_true
+    Truffle::Interop.pointer?(Truffle::FFI::Pointer.new(0x123)).should == true
   end
 
 end

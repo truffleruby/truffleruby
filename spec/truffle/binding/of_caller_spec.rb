@@ -23,7 +23,7 @@ describe "Truffle::Binding.of_caller" do
   #end
 
   it "returns a Binding" do
-    binding_of_caller.should be_kind_of(Binding)
+    binding_of_caller.should.is_a?(Binding)
   end
 
   it "gives read access to local variables at the call site" do

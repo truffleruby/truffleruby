@@ -23,7 +23,7 @@ describe "Truffle::Boot.source_of_caller" do
   #end
 
   it "returns a String" do
-    source_of_caller.should be_kind_of(String)
+    source_of_caller.should.is_a?(String)
   end
 
   it "returns the name of the file at the call site" do

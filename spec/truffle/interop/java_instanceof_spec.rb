@@ -15,48 +15,48 @@ guard -> { !TruffleRuby.native? } do
     it "returns true for a directly matching Java object and class" do
       big_integer_class = Truffle::Interop.java_type("java.math.BigInteger")
       big_integer = big_integer_class.new("14")
-      Truffle::Interop.java_instanceof?(big_integer, big_integer_class).should be_true
+      Truffle::Interop.java_instanceof?(big_integer, big_integer_class).should == true
     end
 
     it "returns true for a matching Java object and superclass" do
       big_integer_class = Truffle::Interop.java_type("java.math.BigInteger")
       big_integer = big_integer_class.new("14")
       number_class = Truffle::Interop.java_type("java.lang.Number")
-      Truffle::Interop.java_instanceof?(big_integer, number_class).should be_true
+      Truffle::Interop.java_instanceof?(big_integer, number_class).should == true
     end
 
     it "returns true for a matching Java object and interface" do
       big_integer_class = Truffle::Interop.java_type("java.math.BigInteger")
       big_integer = big_integer_class.new("14")
       serializable_interface = Truffle::Interop.java_type("java.io.Serializable")
-      Truffle::Interop.java_instanceof?(big_integer, serializable_interface).should be_true
+      Truffle::Interop.java_instanceof?(big_integer, serializable_interface).should == true
     end
 
     it "returns false for an unrelated Java object and Java class" do
       big_integer_class = Truffle::Interop.java_type("java.math.BigInteger")
       big_integer = big_integer_class.new("14")
       big_decimal_class = Truffle::Interop.java_type("java.math.BigDecimal")
-      Truffle::Interop.java_instanceof?(big_integer, big_decimal_class).should be_false
+      Truffle::Interop.java_instanceof?(big_integer, big_decimal_class).should == false
     end
 
     it "returns false for an unrelated Ruby object and Java class" do
       big_integer_class = Truffle::Interop.java_type("java.math.BigInteger")
-      Truffle::Interop.java_instanceof?(Object.new, big_integer_class).should be_false
+      Truffle::Interop.java_instanceof?(Object.new, big_integer_class).should == false
     end
 
     guard -> { !Truffle::Boot.get_option('chaos-data') } do
       it "handles boxing of primitives like Java does" do
         integer_class = Truffle::Interop.java_type("java.lang.Integer")
-        Truffle::Interop.java_instanceof?(14, integer_class).should be_true
+        Truffle::Interop.java_instanceof?(14, integer_class).should == true
         double_class = Truffle::Interop.java_type("java.lang.Double")
-        Truffle::Interop.java_instanceof?(14.2, double_class).should be_true
+        Truffle::Interop.java_instanceof?(14.2, double_class).should == true
       end
     end
 
     it "raises a type error if passed something that is not a Java class" do
-      -> { Truffle::Interop.java_instanceof?(14, nil) }.should raise_error(TypeError)
-      -> { Truffle::Interop.java_instanceof?(14, String) }.should raise_error(TypeError)
-      -> { Truffle::Interop.java_instanceof?(14, Truffle::Debug.java_object) }.should raise_error(TypeError)
+      -> { Truffle::Interop.java_instanceof?(14, nil) }.should.raise(TypeError)
+      -> { Truffle::Interop.java_instanceof?(14, String) }.should.raise(TypeError)
+      -> { Truffle::Interop.java_instanceof?(14, Truffle::Debug.java_object) }.should.raise(TypeError)
     end
 
   end

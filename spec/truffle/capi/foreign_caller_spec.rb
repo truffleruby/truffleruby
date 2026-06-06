@@ -19,13 +19,13 @@ describe "Calling a method needing the caller frame" do
   it "directly from C code raises a RuntimeError" do
     -> {
       @s.call_binding
-    }.should raise_error(RuntimeError, 'Kernel#binding needs the caller frame but it was not passed (cannot be called directly from a foreign language)')
+    }.should.raise(RuntimeError, 'Kernel#binding needs the caller frame but it was not passed (cannot be called directly from a foreign language)')
   end
 
   it "using rb_funcall() yields the Binding of rb_funcallv()" do
     caller_variable = nil
     binding = @s.call_binding_rb_funcall
-    binding.should be_kind_of(Binding)
+    binding.should.is_a?(Binding)
 
     # On CRuby it would instead return the Binding of the caller Ruby frame
     binding.local_variables.should.include?(:argv)

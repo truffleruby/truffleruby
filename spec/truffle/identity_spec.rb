@@ -31,7 +31,7 @@ describe "Identifying features such as" do
   end
 
   it "RUBY_ENGINE_VERSION can be parsed as a Gem::Version" do
-    Gem::Version.new(RUBY_ENGINE_VERSION).should be_kind_of(Gem::Version)
+    Gem::Version.new(RUBY_ENGINE_VERSION).should.is_a?(Gem::Version)
   end
 
   it "RUBY_PATCHLEVEL is 0" do
@@ -49,15 +49,15 @@ describe "Identifying features such as" do
   guard -> { !TruffleRuby.native? } do
     it "RUBY_DESCRIPTION indicates TruffleRuby runs on JVM and which edition" do
       RUBY_DESCRIPTION.should =~ /\b(Interpreted|GraalVM CE|Oracle GraalVM) JVM\b/
-      RUBY_DESCRIPTION.should_not include("Native")
-      RUBY_DESCRIPTION.should_not include("native")
+      RUBY_DESCRIPTION.should_not.include?("Native")
+      RUBY_DESCRIPTION.should_not.include?("native")
     end
   end
 
   guard -> { TruffleRuby.native? } do
     it "RUBY_DESCRIPTION indicates TruffleRuby runs on SVM and which edition" do
       RUBY_DESCRIPTION.should =~ /\b(GraalVM CE|Oracle GraalVM) Native\b/
-      RUBY_DESCRIPTION.should_not include("JVM")
+      RUBY_DESCRIPTION.should_not.include?("JVM")
     end
   end
 
@@ -98,7 +98,7 @@ describe "Identifying features such as" do
   describe "the Rubinius module" do
 
     it "is not defined" do
-      defined?(Rubinius).should be_nil
+      defined?(Rubinius).should == nil
     end
 
   end
@@ -111,7 +111,7 @@ describe "Identifying features such as" do
     end
 
     it "is not defined" do
-      defined?(RubySL).should be_nil
+      defined?(RubySL).should == nil
     end
 
   end

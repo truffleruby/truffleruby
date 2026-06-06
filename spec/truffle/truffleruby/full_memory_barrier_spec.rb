@@ -12,7 +12,7 @@ require_relative '../../ruby/spec_helper'
 describe "TruffleRuby.full_memory_barrier" do
 
   it "can be called" do
-    TruffleRuby.full_memory_barrier.should be_nil
+    TruffleRuby.full_memory_barrier.should == nil
   end
 
 end

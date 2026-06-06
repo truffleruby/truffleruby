@@ -11,10 +11,10 @@ require_relative '../../ruby/spec_helper'
 
 describe "Truffle::Boot.ruby_home" do
   it "returns a String" do
-    Truffle::Boot.ruby_home.should be_kind_of(String)
+    Truffle::Boot.ruby_home.should.is_a?(String)
   end
 
   it "returns a path to a directory" do
-    Dir.exist?(Truffle::Boot.ruby_home).should be_true
+    Dir.exist?(Truffle::Boot.ruby_home).should == true
   end
 end

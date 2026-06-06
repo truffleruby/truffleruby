@@ -21,7 +21,7 @@ guard -> { Truffle::Interop.polyglot_bindings_access? } do
     it "raises NameError if not found" do
       -> {
         Truffle::Interop.import(:not_registered_export_test)
-      }.should raise_error(NameError, "import 'not_registered_export_test' not found")
+      }.should.raise(NameError, "import 'not_registered_export_test' not found")
     end
 
   end

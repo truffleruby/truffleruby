@@ -27,18 +27,18 @@ describe "Truffle::Interop.unbox" do
   end
 
   it "is not supported for a Ruby String" do
-    -> { Truffle::Interop.unbox('test') }.should raise_error(ArgumentError)
+    -> { Truffle::Interop.unbox('test') }.should.raise(ArgumentError)
   end
 
   it "is not supported for a Ruby Symbol" do
-    -> { Truffle::Interop.unbox(:test) }.should raise_error(ArgumentError)
+    -> { Truffle::Interop.unbox(:test) }.should.raise(ArgumentError)
   end
 
   it "is not supported for nil" do
-    -> { Truffle::Interop.unbox(nil) }.should raise_error(ArgumentError)
+    -> { Truffle::Interop.unbox(nil) }.should.raise(ArgumentError)
   end
 
   it "is not supported for objects which cannot be unboxed" do
-    -> { Truffle::Interop.unbox(Object.new) }.should raise_error(ArgumentError)
+    -> { Truffle::Interop.unbox(Object.new) }.should.raise(ArgumentError)
   end
 end

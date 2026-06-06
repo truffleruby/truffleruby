@@ -12,19 +12,19 @@ require_relative '../../ruby/spec_helper'
 describe "Truffle::Interop.null?" do
 
   it "returns true for nil" do
-    Truffle::Interop.null?(nil).should be_true
+    Truffle::Interop.null?(nil).should == true
   end
 
   it "returns false for strings" do
-    Truffle::Interop.null?('').should be_false
+    Truffle::Interop.null?('').should == false
   end
 
   it "returns false for zero" do
-    Truffle::Interop.null?(0).should be_false
+    Truffle::Interop.null?(0).should == false
   end
 
   it "returns false for false" do
-    Truffle::Interop.null?(false).should be_false
+    Truffle::Interop.null?(false).should == false
   end
 
 end

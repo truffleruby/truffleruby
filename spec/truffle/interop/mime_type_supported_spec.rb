@@ -12,11 +12,11 @@ require_relative '../../ruby/spec_helper'
 describe "Truffle::Interop.mime_type_supported?" do
 
   it "returns true for application/x-ruby" do
-    Truffle::Interop.mime_type_supported?('application/x-ruby').should be_true
+    Truffle::Interop.mime_type_supported?('application/x-ruby').should == true
   end
 
   it "returns false for application/x-this-language-does-not-exist" do
-    Truffle::Interop.mime_type_supported?('application/x-this-language-does-not-exist').should be_false
+    Truffle::Interop.mime_type_supported?('application/x-this-language-does-not-exist').should == false
   end
 
 end

@@ -19,7 +19,7 @@ describe "Truffle::Interop.to_java_string" do
   end
 
   it "raises when given a non-Symbol non-String" do
-    -> { Truffle::Interop.to_java_string(14) }.should raise_error(TypeError)
-    -> { Truffle::Interop.to_java_string(Object.new) }.should raise_error(TypeError)
+    -> { Truffle::Interop.to_java_string(14) }.should.raise(TypeError)
+    -> { Truffle::Interop.to_java_string(Object.new) }.should.raise(TypeError)
   end
 end

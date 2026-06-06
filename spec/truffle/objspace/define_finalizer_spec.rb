@@ -34,7 +34,7 @@ describe "ObjectSpace.define_finalizer" do
     }
     Object.new.tap do |object|
       ObjectSpace.define_finalizer object, finalizer
-      ObjectSpace.reachable_objects_from(object).should include(finalizer)
+      ObjectSpace.reachable_objects_from(object).should.include?(finalizer)
     end
     Primitive.gc_force
     Truffle::Debug.drain_finalization_queue   # Not needed for correctness

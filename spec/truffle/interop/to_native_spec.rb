@@ -13,13 +13,13 @@ describe "Truffle::Interop.to_native" do
 
   it "is not supported for nil" do
     Truffle::Interop.to_native(nil)
-    Truffle::Interop.pointer?(nil).should be_false
+    Truffle::Interop.pointer?(nil).should == false
   end
 
   it "is not supported for objects which cannot be converted to a pointer" do
     object = Object.new
     Truffle::Interop.to_native(object)
-    Truffle::Interop.pointer?(object).should be_false
+    Truffle::Interop.pointer?(object).should == false
   end
 
   it "calls #to_native does internal conversion to support as_pointer" do
@@ -37,9 +37,9 @@ describe "Truffle::Interop.to_native" do
       @pointer.address
     end
 
-    Truffle::Interop.pointer?(obj).should be_false
+    Truffle::Interop.pointer?(obj).should == false
     Truffle::Interop.to_native(obj)
-    Truffle::Interop.pointer?(obj).should be_true
+    Truffle::Interop.pointer?(obj).should == true
     Truffle::Interop.as_pointer(obj).should == 0x123
   end
 

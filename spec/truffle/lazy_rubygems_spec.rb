@@ -11,7 +11,7 @@ require_relative '../ruby/spec_helper'
 
 describe "RubyGems" do
   it "is not loaded until needed" do
-    ruby_exe('puts $"').should_not include('/rubygems.rb')
+    ruby_exe('puts $"').should_not.include?('/rubygems.rb')
     ruby_exe('p autoload? :Gem').should == "\"rubygems\"\n"
   end
 
@@ -52,13 +52,13 @@ describe "RubyGems" do
   end
 
   it "is loaded when accessing Gem" do
-    ruby_exe('Gem; puts $"').should include('/rubygems.rb')
+    ruby_exe('Gem; puts $"').should.include?('/rubygems.rb')
     ruby_exe('Gem; p autoload? :Gem').should == "nil\n"
   end
 
   it "is loaded by a failing require" do
     code = 'begin; require "lrg-does-not-exist"; rescue LoadError; puts $"; end'
-    ruby_exe(code).should include('/rubygems.rb')
+    ruby_exe(code).should.include?('/rubygems.rb')
     $?.success?.should == true
   end
 end

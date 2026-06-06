@@ -15,7 +15,7 @@ describe "Primitive.compiler_bailout" do
 
   guard -> { !TruffleRuby.jit? } do
     it "returns nil" do
-      Primitive.compiler_bailout("message").should be_nil
+      Primitive.compiler_bailout("message").should == nil
     end
   end
 

@@ -30,7 +30,7 @@ describe "Polyglot::ForeignString" do
   end
 
   it "are not boxed" do
-    Truffle::Interop.boxed?(@foreign_string).should be_false
+    Truffle::Interop.boxed?(@foreign_string).should == false
   end
 
   it "are converted to Ruby automatically on the LHS of string concatenation" do
@@ -90,10 +90,10 @@ describe "Polyglot::ForeignString" do
   end
 
   it "cannot be mutated" do
-    -> { @java_character.capitalize! }.should raise_error(FrozenError)
-    -> { @java_string.capitalize! }.should raise_error(FrozenError)
-    -> { @truffle_string.capitalize! }.should raise_error(FrozenError)
-    -> { @foreign_string.capitalize! }.should raise_error(FrozenError)
+    -> { @java_character.capitalize! }.should.raise(FrozenError)
+    -> { @java_string.capitalize! }.should.raise(FrozenError)
+    -> { @truffle_string.capitalize! }.should.raise(FrozenError)
+    -> { @foreign_string.capitalize! }.should.raise(FrozenError)
 
     @java_character.should == "C"
     @java_string.should == "abc"

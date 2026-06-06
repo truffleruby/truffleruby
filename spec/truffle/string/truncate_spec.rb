@@ -23,12 +23,12 @@ describe "Primitive.string_truncate" do
   it "should raise an error if the new byte length is greater than the current length" do
     -> do
       Primitive.string_truncate("abc", 10)
-    end.should raise_error(ArgumentError)
+    end.should.raise(ArgumentError)
   end
 
   it "should raise an error if the new byte length is negative" do
     -> do
       Primitive.string_truncate("abc", -1)
-    end.should raise_error(ArgumentError)
+    end.should.raise(ArgumentError)
   end
 end

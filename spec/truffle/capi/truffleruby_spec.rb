@@ -17,6 +17,6 @@ describe "C-API TRUFFLERUBY macro" do
   end
 
   it "is defined" do
-    @s.truffleruby.should be_true
+    @s.truffleruby.should == true
   end
 end

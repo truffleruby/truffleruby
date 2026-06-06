@@ -12,11 +12,11 @@ require_relative '../../ruby/spec_helper'
 describe "Truffle::Interop.instantiable?" do
 
   it "returns true for objects that can be instantiated" do
-    Truffle::Interop.instantiable?(Object).should be_true
+    Truffle::Interop.instantiable?(Object).should == true
   end
 
   it "returns false for objects that cannot be instantiated" do
-    Truffle::Interop.instantiable?(14).should be_false
+    Truffle::Interop.instantiable?(14).should == false
   end
 
 end

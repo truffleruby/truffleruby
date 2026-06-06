@@ -177,14 +177,14 @@ describe "The launcher" do
 
   it "does not create context on --version and -v" do
     v = ruby_exe(nil, options: "--log.level=FINE -v", args: "2>&1")
-    v.should_not include("createContext()")
-    v.should_not include("patchContext()")
-    v.should include("truffleruby ")
+    v.should_not.include?("createContext()")
+    v.should_not.include?("patchContext()")
+    v.should.include?("truffleruby ")
 
     version = ruby_exe(nil, options: "--log.level=FINE --version", args: "2>&1")
-    version.should_not include("createContext()")
-    version.should_not include("patchContext()")
-    version.should include("truffleruby ")
+    version.should_not.include?("createContext()")
+    version.should_not.include?("patchContext()")
+    version.should.include?("truffleruby ")
   end
 
   it "preserve spaces in options" do
@@ -246,58 +246,58 @@ describe "The launcher" do
     it "'--vm.cp=' or '--vm.classpath=' add the jar" do
       out = ruby_exe("puts Truffle::System.get_java_property('java.class.path')", options: "--vm.cp=does-not-exist.jar", args: @redirect)
       check_status_and_empty_stderr
-      out.lines[0].should include("does-not-exist.jar")
+      out.lines[0].should.include?("does-not-exist.jar")
 
       out = ruby_exe("puts Truffle::System.get_java_property('java.class.path')", options: "--vm.classpath=does-not-exist.jar", args: @redirect)
       check_status_and_empty_stderr
-      out.lines[0].should include("does-not-exist.jar")
+      out.lines[0].should.include?("does-not-exist.jar")
     end
   end
 
   it "prints available user options for --help:languages" do
     out = ruby_exe(nil, options: "--help:languages", args: @redirect)
     check_status_and_empty_stderr
-    out.should include("--ruby.verbose")
+    out.should.include?("--ruby.verbose")
   end
 
   it "prints available expert options for --help:languages --help:expert" do
     out = ruby_exe(nil, options: "--help:languages --help:expert", args: @redirect)
     check_status_and_empty_stderr
-    out.should include("--ruby.cexts-log-load")
+    out.should.include?("--ruby.cexts-log-load")
   end
 
   it "prints available internal options for --help:languages --help:internal" do
     out = ruby_exe(nil, options: "--help:languages --help:internal", args: @redirect)
     check_status_and_empty_stderr
-    out.should include("--ruby.default-cache")
+    out.should.include?("--ruby.default-cache")
   end
 
   it "logs options if --options-log is set" do
     out = ruby_exe("14", options: "--experimental-options --log.level=CONFIG --options-log", args: "2>&1")
     check_status_or_print(out)
-    out.should include("[ruby] CONFIG")
+    out.should.include?("[ruby] CONFIG")
   end
 
   it "prints an error for an unknown option" do
     out = ruby_exe(nil, options: "--unknown=value", args: "2>&1", exit_status: 2)
     $?.success?.should == false
-    out.should include("invalid option --unknown=value")
+    out.should.include?("invalid option --unknown=value")
 
     out = ruby_exe(nil, options: "--ruby.unknown=value", args: "2>&1", exit_status: 2)
     $?.success?.should == false
-    out.should include("invalid option --ruby.unknown=value")
+    out.should.include?("invalid option --ruby.unknown=value")
   end
 
   it "sets the log level using --log.level=" do
     out = ruby_exe("14", options: "--experimental-options --options-log --log.level=CONFIG", args: "2>&1")
     check_status_or_print(out)
-    out.should include("CONFIG: option default-cache=")
+    out.should.include?("CONFIG: option default-cache=")
   end
 
   it "sets the log level using --log.ruby.level=" do
     out = ruby_exe("14", options: "--experimental-options --options-log --log.ruby.level=CONFIG", args: "2>&1")
     check_status_or_print(out)
-    out.should include("CONFIG: option default-cache=")
+    out.should.include?("CONFIG: option default-cache=")
   end
 
   describe 'StringArray option' do
@@ -328,8 +328,8 @@ describe "The launcher" do
   it "enables deterministic hashing if --hashing-deterministic is set" do
     out = ruby_exe("puts 14.hash", options: "--experimental-options --hashing-deterministic", args: "2>&1")
     check_status_or_print(out)
-    out.should include("SEVERE: deterministic hashing is enabled - this may make you vulnerable to denial of service attacks")
-    out.should include("3412061130696242594")
+    out.should.include?("SEVERE: deterministic hashing is enabled - this may make you vulnerable to denial of service attacks")
+    out.should.include?("3412061130696242594")
   end
 
   it "prints help containing runtime options" do
@@ -337,9 +337,9 @@ describe "The launcher" do
     check_status_and_empty_stderr
 
     if TruffleRuby.native?
-      out.should include("--native")
+      out.should.include?("--native")
     else
-      out.should include("--jvm")
+      out.should.include?("--jvm")
     end
   end
 
@@ -355,35 +355,35 @@ describe "The launcher" do
   it "prints the version with --version" do
     out = ruby_exe(nil, options: "--version", args: @redirect)
     check_status_and_empty_stderr
-    out.should include(RUBY_DESCRIPTION)
+    out.should.include?(RUBY_DESCRIPTION)
   end
 
   it "understands ruby polyglot options" do
     out = ruby_exe("p Truffle::Boot.get_option('rubygems')", options: "--experimental-options --ruby.rubygems=false", args: @redirect)
     check_status_and_empty_stderr
-    out.should include('false')
+    out.should.include?('false')
   end
 
   it "understands ruby polyglot options without ruby. prefix" do
     out = ruby_exe("p Truffle::Boot.get_option('rubygems')", options: "--experimental-options --rubygems=false", args: @redirect)
     check_status_and_empty_stderr
-    out.should include('false')
+    out.should.include?('false')
   end
 
   it "does not print a Java backtrace for an -S file that's not found" do
     out = ruby_exe(nil, options: "-S does_not_exist", args: "2>&1", exit_status: 1)
     $?.success?.should == false
-    out.should include('truffleruby: No such file or directory -- does_not_exist (LoadError)')
-    out.should_not include('boot.rb')
-    out.should_not include('RubyLauncher.main')
+    out.should.include?('truffleruby: No such file or directory -- does_not_exist (LoadError)')
+    out.should_not.include?('boot.rb')
+    out.should_not.include?('RubyLauncher.main')
   end
 
   it "ignores --jit... options with a warning and a hint to look at Graal documentation" do
     jit_options = %w[--jit --jit-warnings --jit-debug --jit-wait --jit-save-temps --jit-verbose --jit-max-cache --jit-min-calls]
     out = ruby_exe("p 14", options: jit_options.join(' '), args: "2>&1")
     check_status_or_print(out)
-    out.should include("JIT options are not supported - see the Graal documentation instead")
-    out.should include("14")
+    out.should.include?("JIT options are not supported - see the Graal documentation instead")
+    out.should.include?("14")
   end
 
   it "warns on ignored options" do
@@ -395,8 +395,8 @@ describe "The launcher" do
     ].each do |option|
       out = ruby_exe("p 14", options: option, args: "2>&1")
       check_status_or_print(out)
-      out.should include("[ruby] WARNING the #{option} switch is silently ignored as it is an internal development tool")
-      out.should include("14")
+      out.should.include?("[ruby] WARNING the #{option} switch is silently ignored as it is an internal development tool")
+      out.should.include?("14")
     end
   end
 

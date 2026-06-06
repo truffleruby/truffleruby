@@ -13,7 +13,7 @@ require_relative 'fixtures/classes'
 describe "Truffle::Interop.has_array_elements?" do
 
   it "array has size" do
-    Truffle::Interop.has_array_elements?([1, 2, 3]).should be_true
+    Truffle::Interop.has_array_elements?([1, 2, 3]).should == true
   end
 
   { hash: {},
@@ -25,7 +25,7 @@ describe "Truffle::Interop.has_array_elements?" do
     struct: Struct.new(:a).new(:v)
   }.each do |name, v|
     it "#{name} does not have size" do
-      Truffle::Interop.has_array_elements?(v).should be_false
+      Truffle::Interop.has_array_elements?(v).should == false
     end
   end
 end

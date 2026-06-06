@@ -22,7 +22,7 @@ describe "ObjectSpace.reachable_objects_from" do
     klass.include included
     prepended = Module.new
     klass.prepend prepended
-    ObjectSpace.reachable_objects_from(klass).should include(prepended, included, superclass)
+    ObjectSpace.reachable_objects_from(klass).to_set.should >= Set[prepended, included, superclass]
   end
 
   it "finds a variable captured by a block captured by #define_method" do
@@ -35,10 +35,10 @@ describe "ObjectSpace.reachable_objects_from" do
 
     meth = obj.method(:capturing_method)
     reachable = ObjectSpace.reachable_objects_from(meth)
-    reachable.should include(Method, obj)
+    reachable.to_set.should >= Set[Method, obj]
 
     reachable = reachable + reachable.flat_map { |r| ObjectSpace.reachable_objects_from(r) }
-    reachable.should include(captured)
+    reachable.should.include?(captured)
   end
 
   it "finds finalizers" do
@@ -46,7 +46,7 @@ describe "ObjectSpace.reachable_objects_from" do
     finalizer = proc { }
     ObjectSpace.define_finalizer object, finalizer
     reachable = ObjectSpace.reachable_objects_from(object)
-    reachable.should include(finalizer)
+    reachable.should.include?(finalizer)
   end
 
 end

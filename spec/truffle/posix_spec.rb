@@ -18,7 +18,7 @@ describe "Truffle::POSIX" do
     Truffle::POSIX.attach_function :test_missing_function, [], :int
 
     Truffle::POSIX.should.respond_to?(:test_missing_function) # not ideal but cannot be fixed while remaining lazy
-    -> { Truffle::POSIX.test_missing_function(0) }.should raise_error(NotImplementedError)
+    -> { Truffle::POSIX.test_missing_function(0) }.should.raise(NotImplementedError)
     Truffle::POSIX.should_not.respond_to?(:test_missing_function)
   end
 end

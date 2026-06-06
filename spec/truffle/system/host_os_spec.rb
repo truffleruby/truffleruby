@@ -12,7 +12,7 @@ require_relative '../../ruby/spec_helper'
 describe "Truffle::System.host_os" do
 
   it "returns a String" do
-    Truffle::System.host_os.should be_kind_of(String)
+    Truffle::System.host_os.should.is_a?(String)
   end
 
 end

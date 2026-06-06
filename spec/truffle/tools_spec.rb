@@ -21,7 +21,7 @@ describe "Tools" do
         err = tmp("err.txt")
         begin
           ruby_exe("2000.times {}", options: options, args: "2>#{err}")
-          File.read(err).should include "[engine] opt done"
+          File.read(err).should.include? "[engine] opt done"
         ensure
           rm_r err
         end

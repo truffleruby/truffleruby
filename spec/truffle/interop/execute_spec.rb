@@ -28,11 +28,11 @@ describe "Truffle::Interop.execute" do
   end
 
   it "doesn't call nil" do
-    -> { Truffle::Interop.execute(nil) }.should raise_error Polyglot::UnsupportedMessageError
+    -> { Truffle::Interop.execute(nil) }.should.raise Polyglot::UnsupportedMessageError
   end
 
   it "doesn't call strings" do
-    -> { Truffle::Interop.execute('hello') }.should raise_error Polyglot::UnsupportedMessageError
+    -> { Truffle::Interop.execute('hello') }.should.raise Polyglot::UnsupportedMessageError
   end
 
 end

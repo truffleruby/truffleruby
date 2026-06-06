@@ -74,9 +74,9 @@ guard -> { !TruffleRuby.native? } do
       java_array[2] = big_integer[:TEN]
 
       ruby_array = Truffle::Interop.from_java_array(java_array)
-      ruby_array[0].equal?(big_integer[:ZERO]).should be_true
-      ruby_array[1].equal?(big_integer[:ONE]).should be_true
-      ruby_array[2].equal?(big_integer[:TEN]).should be_true
+      ruby_array[0].equal?(big_integer[:ZERO]).should == true
+      ruby_array[1].equal?(big_integer[:ONE]).should == true
+      ruby_array[2].equal?(big_integer[:TEN]).should == true
       ruby_array.size.should == 3
     end
 

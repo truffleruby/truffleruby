@@ -53,7 +53,7 @@ describe "Truffle::Interop.write" do
     it "calls the index set method" do
       object = TruffleInteropSpecs::PolyglotMember.new
       Truffle::Interop.write_member(object, :foo, 14)
-      object.log.should include([:polyglot_write_member, "foo", 14])
+      object.log.should.include?([:polyglot_write_member, "foo", 14])
       Truffle::Interop.read_member(object, :foo).should == 14
     end
 
@@ -65,7 +65,7 @@ describe "Truffle::Interop.write" do
       object = Object.new
       -> {
         Truffle::Interop.write_member(object, :foo, 14)
-      }.should raise_error(NameError, /Unknown identifier: foo/)
+      }.should.raise(NameError, /Unknown identifier: foo/)
     end
 
   end
