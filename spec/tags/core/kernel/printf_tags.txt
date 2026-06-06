@@ -1,0 +1,2 @@
+fails(the cache does not re-emit warnings):Kernel.printf formatting io is specified when $VERBOSE is true warns if too many arguments are passed
+fails(the cache does not re-emit warnings):Kernel.printf formatting io is not specified when $VERBOSE is true warns if too many arguments are passed

@@ -2,3 +2,5 @@ fails:Kernel#sprintf returns a String in the argument's encoding if format encod
 fails:Kernel#sprintf raises Encoding::CompatibilityError if both encodings are ASCII compatible and there are not ASCII characters
 fails:Kernel.sprintf returns a String in the argument's encoding if format encoding is more restrictive
 fails:Kernel.sprintf raises Encoding::CompatibilityError if both encodings are ASCII compatible and there are not ASCII characters
+fails(the cache does not re-emit warnings):Kernel#sprintf when $VERBOSE is true warns if too many arguments are passed
+fails(the cache does not re-emit warnings):Kernel.sprintf when $VERBOSE is true warns if too many arguments are passed

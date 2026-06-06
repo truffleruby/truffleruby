@@ -1,0 +1,1 @@
+fails(the cache does not re-emit warnings):StringIO#printf formatting when $VERBOSE is true warns if too many arguments are passed
