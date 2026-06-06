@@ -1,6 +1,1 @@
-fails:OpenSSL::KDF.scrypt treats salt as a required keyword
-fails:OpenSSL::KDF.scrypt treats N as a required keyword
-fails:OpenSSL::KDF.scrypt treats r as a required keyword
-fails:OpenSSL::KDF.scrypt treats p as a required keyword
-fails:OpenSSL::KDF.scrypt treats length as a required keyword
 fails:OpenSSL::KDF.scrypt treats all keywords as required

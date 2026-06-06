@@ -1,2 +1,0 @@
-slow:Kernel.format when $VERBOSE is true does not warns if too many keyword arguments are passed
-slow:Kernel.format when $VERBOSE is true doesn't warns if keyword arguments are passed and none are used

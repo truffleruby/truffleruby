@@ -1,4 +1,3 @@
-fails:A method assigns local variables from method parameters for definition 'def m(a, **nil); a end;'
 fails:warning about not used block argument warns when passing a block argument to a method that never uses it
 fails:warning about not used block argument warns when passing a block argument to a method that calls #block_given?
 fails:warning about not used block argument warns only once per call site

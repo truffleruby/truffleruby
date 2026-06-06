@@ -1,5 +1,1 @@
-fails:OpenSSL::KDF.pbkdf2_hmac treats salt as a required keyword
-fails:OpenSSL::KDF.pbkdf2_hmac treats iterations as a required keyword
-fails:OpenSSL::KDF.pbkdf2_hmac treats length as a required keyword
-fails:OpenSSL::KDF.pbkdf2_hmac treats hash as a required keyword
 fails:OpenSSL::KDF.pbkdf2_hmac treats all keywords as required
