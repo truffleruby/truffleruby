@@ -13,12 +13,10 @@ fails:Public methods on IO should not include nonblock
 fails:Public methods on IO should not include nonblock=
 fails:Public methods on IO should not include nonblock?
 fails:Public methods on Numeric should include dup
-fails:Public methods on Range should include entries
 fails:Public methods on Range should not include collect
 fails:Public methods on Range should not include map
 fails:Public methods on Rational should include -@
 fails:Public methods on Rational should include fdiv
-fails:Public methods on Rational should include magnitude
 fails:Public methods on Rational should include negative?
 fails:Public methods on Rational should include positive?
 fails:Public methods on Rational should not include divide
@@ -43,8 +41,6 @@ fails:Public methods on TracePoint should include parameters
 fails:Public methods on TracePoint should include raised_exception
 fails:Public methods on TracePoint should include return_value
 fails:Public methods on ENV.singleton_class should include freeze
-fails:Public methods on IPSocket should include inspect
-fails:Public methods on UDPSocket should not include inspect
 fails:Public methods on UNIXServer should not include inspect
 fails:Public methods on Socket::AncillaryData should include inspect
 fails:Public methods on Socket::AncillaryData should include timestamp
@@ -64,7 +60,6 @@ fails:Public methods on GC.singleton_class should include latest_compact_info
 fails:Public methods on GC.singleton_class should include latest_gc_info
 fails:Public methods on GC.singleton_class should include verify_compaction_references
 fails:Public methods on GC.singleton_class should include verify_internal_consistency
-fails:Public methods on Pathname should include birthtime
 fails:Public methods on StringIO should not include __data__
 fails:Public methods on StringIO should not include encode_with
 fails:Public methods on StringIO should not include init_with
@@ -76,13 +71,7 @@ fails:Public methods on Process.singleton_class should include getsid
 fails:Public methods on GC.singleton_class should include stat_heap
 fails:Public methods on IO should include timeout
 fails:Public methods on IO should include timeout=
-fails:Public methods on Method should not include private?
-fails:Public methods on Method should not include protected?
-fails:Public methods on Method should not include public?
 fails:Public methods on Regexp should include timeout
-fails:Public methods on UnboundMethod should not include private?
-fails:Public methods on UnboundMethod should not include protected?
-fails:Public methods on UnboundMethod should not include public?
 fails(we defined these methods on the generated Data subclasses):Public methods on Data should include ==
 fails(we defined these methods on the generated Data subclasses):Public methods on Data should include deconstruct
 fails(we defined these methods on the generated Data subclasses):Public methods on Data should include deconstruct_keys
@@ -104,7 +93,6 @@ fails:Public methods on Hash should include freeze
 fails:Public methods on SizedQueue should not include freeze
 fails:Public methods on BasicSocket should include read_nonblock
 fails:Public methods on BasicSocket should include write_nonblock
-fails:Public methods on Pathname.singleton_class should include mktmpdir
 fails:Public methods on Array should include detect
 fails:Public methods on Array should include find
 fails:Public methods on Array should include rfind
@@ -112,7 +100,6 @@ fails:Public methods on Binding should include implicit_parameter_defined?
 fails:Public methods on Binding should include implicit_parameter_get
 fails:Public methods on Binding should include implicit_parameters
 fails:Public methods on Method should include box
-fails:Public methods on Range should include to_set
 fails:Public methods on SizedQueue should not include empty?
 fails:Public methods on SizedQueue should not include length
 fails:Public methods on SizedQueue should not include size
