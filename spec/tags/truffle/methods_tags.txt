@@ -103,5 +103,3 @@ fails:Public methods on Method should include box
 fails:Public methods on SizedQueue should not include empty?
 fails:Public methods on SizedQueue should not include length
 fails:Public methods on SizedQueue should not include size
-fails:Public methods on Process::Status should not include &
-fails:Public methods on Process::Status should not include >>
