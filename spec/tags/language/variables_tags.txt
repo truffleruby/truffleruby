@@ -1,1 +1,0 @@
-fails:Multiple assignment with a single splatted RHS value converts nil to empty array without calling a method
