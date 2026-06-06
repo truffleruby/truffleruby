@@ -56,7 +56,7 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
     /** Extra information. If blockDepth > 0 then it is the name of the method containing this block. */
     private final String notes;
     /** An optional object to make two different SharedMethodInfo considered equal for Method#== */
-    private final Object identity;
+    private Object identity;
     private final ArgumentDescriptor[] argumentDescriptors;
 
     public static SharedMethodInfo forMethod(
@@ -354,6 +354,10 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
 
     public Object getIdentity() {
         return identity;
+    }
+
+    public void setIdentity(Object newIdentity) {
+        this.identity = newIdentity;
     }
 
     @Override

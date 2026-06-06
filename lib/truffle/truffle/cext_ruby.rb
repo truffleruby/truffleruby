@@ -45,6 +45,8 @@ module Truffle::CExt
     arity = argc == -2 ? -1 : argc
 
     method_body_with_arity = Primitive.proc_specify_arity(method_body, arity)
+    address = Truffle::Interop.as_pointer(function)
+    Primitive.proc_set_identity(method_body_with_arity, address)
     mod.define_method(name, method_body_with_arity)
   end
 end
