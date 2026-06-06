@@ -456,16 +456,9 @@ class IO
     limit = nil if limit && limit < 0
     chomp = Primitive.as_boolean(options[:chomp])
 
-    if name[0] == ?|
-      io = IO.popen(name[1..-1], 'r')
-      return nil unless io
-    else
-      options[:mode] = 'r' unless options.key? :mode
-      io = File.open(name, **options)
-    end
-
+    options[:mode] = 'r' unless options.key? :mode
+    io = File.open(name, **options)
     each_reader = io.__send__ :create_each_reader, separator, limit, chomp, true
-
     begin
       each_reader&.each(&block)
     ensure
@@ -540,15 +533,7 @@ class IO
       file_new_options = Primitive.is_a?(file_new_args.last, Hash) ? file_new_args.pop : {}
     end
 
-    # Detect pipe mode
-    if name[0] == ?|
-      io = IO.popen(name[1..-1], 'r')
-      return nil unless io # child process
-    else
-      io = File.new(*file_new_args, **file_new_options)
-    end
-
-    str = nil
+    io = File.new(*file_new_args, **file_new_options)
     begin
       io.seek(offset) unless offset == 0
 

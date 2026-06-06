@@ -26,7 +26,7 @@ modules = %w[
   Encoding Enumerable Enumerator Enumerator::Lazy Exception FalseClass Fiber
   File FileTest Float GC GC.singleton_class Hash IO Integer Kernel Marshal MatchData Math Method
   Module Mutex NilClass Numeric Object ObjectSpace ObjectSpace::WeakKeyMap ObjectSpace::WeakMap
-  Proc Process Process.singleton_class Queue Random
+  Proc Process Process.singleton_class Process::Status Queue Random
   Random::Formatter Random.singleton_class Range Rational Regexp Signal
   SizedQueue String Struct Symbol SystemExit Thread Time TracePoint TrueClass
   UnboundMethod Warning

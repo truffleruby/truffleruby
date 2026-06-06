@@ -1,0 +1,13 @@
+==
+coredump?
+exited?
+exitstatus
+inspect
+pid
+signaled?
+stopped?
+stopsig
+success?
+termsig
+to_i
+to_s

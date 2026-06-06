@@ -670,14 +670,6 @@ module Process
       @raw_status
     end
 
-    def &(num)
-      @raw_status & num
-    end
-
-    def >>(num)
-      @raw_status >> num
-    end
-
     def ==(other)
       other = other.to_i if Primitive.is_a?(other, Process::Status)
       @raw_status == other
