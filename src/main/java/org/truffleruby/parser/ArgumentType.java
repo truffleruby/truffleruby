@@ -47,8 +47,10 @@ public enum ArgumentType {
     req("req", false),
 
     /* Parameters declared in a method/proc explicitly without name, e.g. anonymous *, ** , and &. Required parameter
-     * can be anonymous only in case of parameters nesting (e.g. `def foo(a, (b, c)) end`) */
+     * can be anonymous only in case of parameters nesting (e.g. `def foo(a, (b, c)) end`). Similarly, an optional
+     * parameter can be anonymous only in case of parameter nesting in a proc (e.g. proc {|a, (b)|}) */
     anonreq("req", true),
+    anonopt("opt", true),
     anonrest("rest", true),
     anonkeyrest("keyrest", true),
     anonblock("block", true),
