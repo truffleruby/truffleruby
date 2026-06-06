@@ -689,14 +689,10 @@ class Set
       false
     end
   end
+  alias_method :eql?, :==
 
   def hash      # :nodoc:
     @hash.hash
-  end
-
-  def eql?(o)   # :nodoc:
-    return false unless o.is_a?(Set)
-    @hash.eql?(o.instance_variable_get(:@hash))
   end
 
   # Resets the internal state after modification to existing elements

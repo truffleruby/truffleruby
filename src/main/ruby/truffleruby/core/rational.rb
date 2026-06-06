@@ -184,6 +184,7 @@ class Rational < Numeric
 
     Rational.__send__(:new_already_canonical, -@numerator, @denominator)
   end
+  alias_method :magnitude, :abs
 
   def ceil(precision = 0)
     if precision == 0

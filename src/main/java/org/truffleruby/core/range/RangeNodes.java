@@ -278,7 +278,7 @@ public abstract class RangeNodes {
         }
     }
 
-    @CoreMethod(names = "to_a")
+    @CoreMethod(names = { "to_a", "entries" })
     public abstract static class ToANode extends CoreMethodArrayArgumentsNode {
 
         private final BranchProfile overflow = BranchProfile.create();

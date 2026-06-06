@@ -52,7 +52,6 @@ class << self
   def to_s
     'main'
   end
-
   alias_method :inspect, :to_s
 end
 

@@ -150,11 +150,7 @@ class Symbol
       to_s[index, other]
     end
   end
-
   alias_method :slice, :[]
-
-  # Use equal? for ===
-  alias_method :===, :equal?
 
   class << self
     undef_method :new

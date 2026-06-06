@@ -74,7 +74,7 @@ public abstract class SymbolNodes {
         }
     }
 
-    @CoreMethod(names = { "==", "eql?" }, required = 1)
+    @CoreMethod(names = { "==", "eql?", "===" }, required = 1)
     public abstract static class EqualNode extends CoreMethodArrayArgumentsNode {
         @Specialization
         boolean equal(RubySymbol a, Object b) {
