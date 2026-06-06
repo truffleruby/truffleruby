@@ -22,5 +22,3 @@ slow:Kernel.system raises RuntimeError when `exception: true` is given and the c
 slow:Kernel.system raises Errno::ENOENT when `exception: true` is given and the specified command does not exist
 slow:Kernel#system executes with `sh` if the command is executable but not binary and there is no shebang
 slow:Kernel.system executes with `sh` if the command is executable but not binary and there is no shebang
-fails(in some CI jobs):Kernel#system executes with `sh` if the command is executable but not binary and there is no shebang
-fails(in some CI jobs):Kernel.system executes with `sh` if the command is executable but not binary and there is no shebang
