@@ -176,7 +176,6 @@ module Enumerable
 
     array
   end
-
   alias_method :collect_concat, :flat_map
 
   def lazy
@@ -712,7 +711,6 @@ module Enumerable
 
     ifnone.call if ifnone
   end
-
   alias_method :detect, :find
 
   def find_all
@@ -725,7 +723,6 @@ module Enumerable
     end
     ary
   end
-
   alias_method :select, :find_all
   alias_method :filter, :find_all
 

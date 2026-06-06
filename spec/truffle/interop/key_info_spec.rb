@@ -39,31 +39,31 @@ describe "key_info" do
       describe "set" do
 
         it "for an integer in bounds" do
-          key_info(@array, 1).should include(:readable)
+          key_info(@array, 1).should.include?(:readable)
         end
 
         it "for instance variables that exist" do
           @array.instance_variable_set :@foo, 14
-          key_info(@array, :@foo).should include(:readable)
+          key_info(@array, :@foo).should.include?(:readable)
         end
 
         it "for a method" do
-          key_info(@array, :to_s).should include(:readable)
+          key_info(@array, :to_s).should.include?(:readable)
         end
       end
 
       describe "not set" do
 
         it "for an integer out of bounds" do
-          key_info(@array, 100).should_not include(:readable)
+          key_info(@array, 100).should_not.include?(:readable)
         end
 
         it "for instance variables that don't exist" do
-          key_info(@array, :@foo).should_not include(:readable)
+          key_info(@array, :@foo).should_not.include?(:readable)
         end
 
         it "for something other than an integer" do
-          key_info(@array, :foo).should_not include(:readable)
+          key_info(@array, :foo).should_not.include?(:readable)
         end
 
       end
@@ -75,16 +75,16 @@ describe "key_info" do
       describe "set" do
 
         it "for an integer in bounds" do
-          key_info(@array, 1).should include(:modifiable)
+          key_info(@array, 1).should.include?(:modifiable)
         end
 
         it "for instance variables that exist" do
           @array.instance_variable_set :@foo, 14
-          key_info(@array, :@foo).should include(:modifiable)
+          key_info(@array, :@foo).should.include?(:modifiable)
         end
 
         it "for instance variables that don't exist" do
-          key_info(@array, :@foo).should include(:insertable)
+          key_info(@array, :@foo).should.include?(:insertable)
         end
 
       end
@@ -160,26 +160,26 @@ describe "key_info" do
       describe "set" do
 
         it "for a method" do
-          key_info(@hash, :to_s).should include(:readable)
+          key_info(@hash, :to_s).should.include?(:readable)
         end
 
         it "for instance variables that exist" do
           @hash.instance_variable_set :@foo, 14
-          key_info(@hash, :@foo).should include(:readable)
+          key_info(@hash, :@foo).should.include?(:readable)
         end
       end
 
       describe "not set" do
         it "if the key is not found" do
-          key_info(@hash, 'b').should_not include(:readable)
+          key_info(@hash, 'b').should_not.include?(:readable)
         end
 
         it "if the key is not found" do
-          key_info(@hash, 'foo').should_not include(:readable)
+          key_info(@hash, 'foo').should_not.include?(:readable)
         end
 
         it "for instance variables that don't exist" do
-          key_info(@hash, :@foo).should_not include(:readable)
+          key_info(@hash, :@foo).should_not.include?(:readable)
         end
       end
 
@@ -190,7 +190,7 @@ describe "key_info" do
       describe "set" do
 
         it "for instance variables that don't exist" do
-          key_info(@hash, :@foo).should include(:insertable)
+          key_info(@hash, :@foo).should.include?(:insertable)
         end
       end
 
@@ -199,24 +199,24 @@ describe "key_info" do
         it "for instance variables that exist" do
           @hash.instance_variable_set :@foo, 14
           # since the key is not there
-          key_info(@hash, :@foo).should_not include(:insertable)
+          key_info(@hash, :@foo).should_not.include?(:insertable)
         end
 
         it "if the key is not found" do
-          key_info(@hash, 'foo').should_not include(:insertable)
+          key_info(@hash, 'foo').should_not.include?(:insertable)
         end
 
         it "if the key is found and the hash is frozen" do
           @hash.freeze
-          key_info(@hash, 'b').should_not include(:insertable)
+          key_info(@hash, 'b').should_not.include?(:insertable)
         end
 
         it "if the key is found" do
-          key_info(@hash, 'b').should_not include(:insertable)
+          key_info(@hash, 'b').should_not.include?(:insertable)
         end
 
         it "for a method" do
-          key_info(@hash, :to_s).should_not include(:insertable)
+          key_info(@hash, :to_s).should_not.include?(:insertable)
         end
 
       end
@@ -236,7 +236,7 @@ describe "key_info" do
       describe "not set" do
 
         it "if the key not found" do
-          key_info(@hash, 'b').should_not include(:modifiable, :removable)
+          key_info(@hash, 'b').should_not include_any_of(:modifiable, :removable)
         end
 
         it "if the key is found and the hash is frozen" do
@@ -305,14 +305,14 @@ describe "key_info" do
         describe "set" do
 
           it "if the variable exists" do
-            key_info(@object, :@a).should include(:readable)
+            key_info(@object, :@a).should.include?(:readable)
           end
 
         end
 
         describe "not set" do
           it "if the variable does not exist" do
-            key_info(@object, :@foo).should_not include(:readable)
+            key_info(@object, :@foo).should_not.include?(:readable)
           end
         end
 
@@ -323,7 +323,7 @@ describe "key_info" do
         describe "set" do
 
           it "if the object is not frozen" do
-            key_info(@object, :@new).should include(:insertable)
+            key_info(@object, :@new).should.include?(:insertable)
           end
 
         end
@@ -332,7 +332,7 @@ describe "key_info" do
 
           it "if the object is frozen" do
             @object.freeze
-            key_info(@object, :@new).should_not include(:insertable)
+            key_info(@object, :@new).should_not.include?(:insertable)
           end
 
         end
@@ -344,7 +344,7 @@ describe "key_info" do
         describe "set" do
 
           it "if the variable exists and the object is not frozen" do
-            key_info(@object, :@a).should include(:modifiable, :removable)
+            key_info(@object, :@a).to_set.should >= Set[:modifiable, :removable]
           end
 
         end
@@ -374,21 +374,21 @@ describe "key_info" do
         describe "not set" do
 
           it "if the variable exists and the object is not frozen" do
-            key_info(@object, :@a).should_not include(:invocable)
+            key_info(@object, :@a).should_not.include?(:invocable)
           end
 
           it "if the variable exists and the object is frozen" do
             @object.freeze
-            key_info(@object, :@a).should_not include(:invocable)
+            key_info(@object, :@a).should_not.include?(:invocable)
           end
 
           it "if the variable does not exist and the object is not frozen" do
-            key_info(@object, :@foo).should_not include(:invocable)
+            key_info(@object, :@foo).should_not.include?(:invocable)
           end
 
           it "if the variable does not exist and the object is frozen" do
             @object.freeze
-            key_info(@object, :@foo).should_not include(:invocable)
+            key_info(@object, :@foo).should_not.include?(:invocable)
           end
 
         end
@@ -400,24 +400,24 @@ describe "key_info" do
         describe "not set" do
 
           it "if the variable does not exist and the object is not frozen" do
-            key_info(@object, :@foo).should_not include(:internal)
+            key_info(@object, :@foo).should_not.include?(:internal)
           end
 
           it "if the variable does not exist and the object is frozen" do
             @object.freeze
-            key_info(@object, :@foo).should_not include(:internal)
+            key_info(@object, :@foo).should_not.include?(:internal)
           end
         end
 
         describe "set" do
 
           it "if the variable exists and the object is not frozen" do
-            key_info(@object, :@a).should include(:internal)
+            key_info(@object, :@a).should.include?(:internal)
           end
 
           it "if the variable exists and the object is frozen" do
             @object.freeze
-            key_info(@object, :@a).should include(:internal)
+            key_info(@object, :@a).should.include?(:internal)
           end
 
         end
@@ -434,7 +434,7 @@ describe "key_info" do
 
           it "if the object has a method of that name" do
             @object = TruffleInteropSpecs::ReadHasMethod.new
-            key_info(@object, :foo).should include(:readable)
+            key_info(@object, :foo).should.include?(:readable)
           end
 
         end
@@ -443,7 +443,7 @@ describe "key_info" do
 
           it "if the object does not have a method of that name" do
             @object = Object.new
-            key_info(@object, :foo).should_not include(:readable)
+            key_info(@object, :foo).should_not.include?(:readable)
           end
 
         end
@@ -492,7 +492,7 @@ describe "key_info" do
 
           it "if the object has a method of that name" do
             @object = TruffleInteropSpecs::ReadHasMethod.new
-            key_info(@object, :foo).should include(:invocable)
+            key_info(@object, :foo).should.include?(:invocable)
           end
 
         end
@@ -501,7 +501,7 @@ describe "key_info" do
 
           it "if the object does not have a method of that name" do
             @object = Object.new
-            key_info(@object, :foo).should_not include(:invocable)
+            key_info(@object, :foo).should_not.include?(:invocable)
           end
 
         end
@@ -525,7 +525,7 @@ describe "key_info" do
         describe "set" do
 
           it "if the variable exists" do
-            key_info(@object, :@a).should include(:readable)
+            key_info(@object, :@a).should.include?(:readable)
           end
 
         end
@@ -533,7 +533,7 @@ describe "key_info" do
         describe "not set" do
 
           it "if the variable does not exist" do
-            key_info(@object, :@foo).should_not include(:readable)
+            key_info(@object, :@foo).should_not.include?(:readable)
           end
 
         end
@@ -545,7 +545,7 @@ describe "key_info" do
         describe "set" do
 
           it "if the object is not frozen" do
-            key_info(@object, :@new).should include(:insertable)
+            key_info(@object, :@new).should.include?(:insertable)
           end
 
         end
@@ -554,7 +554,7 @@ describe "key_info" do
 
           it "if the object is frozen" do
             @object.freeze
-            key_info(@object, :@new).should_not include(:insertable)
+            key_info(@object, :@new).should_not.include?(:insertable)
           end
 
         end
@@ -566,7 +566,7 @@ describe "key_info" do
         describe "set" do
 
           it "if the variable exists and the object is not frozen" do
-            key_info(@object, :@a).should include(:modifiable, :removable)
+            key_info(@object, :@a).to_set.should >= Set[:modifiable, :removable]
           end
 
         end
@@ -596,21 +596,21 @@ describe "key_info" do
         describe "not set" do
 
           it "if the variable exists and the object is not frozen" do
-            key_info(@object, :@a).should_not include(:invocable)
+            key_info(@object, :@a).should_not.include?(:invocable)
           end
 
           it "if the variable exists and the object is frozen" do
             @object.freeze
-            key_info(@object, :@a).should_not include(:invocable)
+            key_info(@object, :@a).should_not.include?(:invocable)
           end
 
           it "if the variable does not exist and the object is not frozen" do
-            key_info(@object, :@foo).should_not include(:invocable)
+            key_info(@object, :@foo).should_not.include?(:invocable)
           end
 
           it "if the variable does not exist and the object is frozen" do
             @object.freeze
-            key_info(@object, :@foo).should_not include(:invocable)
+            key_info(@object, :@foo).should_not.include?(:invocable)
           end
 
         end
@@ -622,12 +622,12 @@ describe "key_info" do
         describe "set" do
 
           it "if the variable exists and the object is not frozen" do
-            key_info(@object, :@a).should include(:internal)
+            key_info(@object, :@a).should.include?(:internal)
           end
 
           it "if the variable exists and the object is frozen" do
             @object.freeze
-            key_info(@object, :@a).should include(:internal)
+            key_info(@object, :@a).should.include?(:internal)
           end
 
         end
@@ -635,12 +635,12 @@ describe "key_info" do
         describe "not set" do
 
           it "if the variable does not exist and the object is not frozen" do
-            key_info(@object, :@foo).should_not include(:internal)
+            key_info(@object, :@foo).should_not.include?(:internal)
           end
 
           it "if the variable does not exist and the object is frozen" do
             @object.freeze
-            key_info(@object, :@foo).should_not include(:internal)
+            key_info(@object, :@foo).should_not.include?(:internal)
 
           end
         end
@@ -656,7 +656,7 @@ describe "key_info" do
         it "set" do
           @object = TruffleInteropSpecs::PolyglotMember.new
           Truffle::Interop.write_member @object, :foo, :val
-          key_info(@object, :foo).should include(:readable)
+          key_info(@object, :foo).should.include?(:readable)
         end
 
       end
@@ -668,7 +668,7 @@ describe "key_info" do
           it "if the object has a index set method" do
             @object = TruffleInteropSpecs::PolyglotMember.new
             Truffle::Interop.write_member @object, :foo, :val
-            key_info(@object, :foo).should include(:modifiable)
+            key_info(@object, :foo).should.include?(:modifiable)
           end
 
         end
@@ -692,7 +692,7 @@ describe "key_info" do
 
         it "not set" do
           @object = TruffleInteropSpecs::ReadHasIndex.new
-          key_info(@object, :foo).should_not include(:invocable)
+          key_info(@object, :foo).should_not.include?(:invocable)
         end
 
       end

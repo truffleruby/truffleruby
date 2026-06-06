@@ -19,7 +19,7 @@ describe "Truffle::Interop.eval" do
   it "raises an ArgumentError if the language is not found" do
     -> {
       Truffle::Interop.eval("application/language-not-exist", "code")
-    }.should raise_error(ArgumentError, /No language for id application\/language-not-exist found/)
+    }.should.raise(ArgumentError, /No language for id application\/language-not-exist found/)
   end
 
 end

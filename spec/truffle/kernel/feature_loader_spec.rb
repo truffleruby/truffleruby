@@ -60,21 +60,21 @@ describe "Truffle::FeatureLoader.feature_path_loaded?" do
     loaded_feature = "/path/ruby/lib/ruby/2.6.0/benchmark.rb"
     feature = "benchmark"
     path = Truffle::FeatureLoader.feature_path_loaded?(loaded_feature, feature, load_path)
-    path.should be_true
+    path.should == true
 
     feature = "benchmark.rb"
     path = Truffle::FeatureLoader.feature_path_loaded?(loaded_feature, feature, load_path)
-    path.should be_true
+    path.should == true
   end
 
   it "returns false for missing features" do
     load_path = ["/path/ruby/lib/ruby/2.6.0"]
     path = Truffle::FeatureLoader.feature_path_loaded?("/path/ruby/lib/ruby/2.6.0/benchmark.rb", "missing", load_path)
-    path.should be_false
+    path.should == false
 
     long_feature = "/path/ruby/lib/ruby/2.6.0/extra-path/benchmark.rb"
     path = Truffle::FeatureLoader.feature_path_loaded?("/path/ruby/lib/ruby/2.6.0/benchmark.rb", long_feature, load_path)
-    path.should be_false
+    path.should == false
   end
 
   it "returns correct paths for non-rb paths" do
@@ -83,15 +83,15 @@ describe "Truffle::FeatureLoader.feature_path_loaded?" do
 
     feature = "benchmark"
     path = Truffle::FeatureLoader.feature_path_loaded?(loaded_feature, feature, load_path)
-    path.should be_true
+    path.should == true
 
     feature = "benchmark.so"
     path = Truffle::FeatureLoader.feature_path_loaded?(loaded_feature, feature, load_path)
-    path.should be_true
+    path.should == true
 
     feature = "benchmark.rb"
     path = Truffle::FeatureLoader.feature_path_loaded?(loaded_feature, feature, load_path)
-    path.should be_false
+    path.should == false
   end
 
 end
@@ -103,16 +103,16 @@ describe "Truffle::FeatureLoaderFeatureEntry" do
     hash[stored_entry.base] = [stored_entry]
 
     short_lookup_entry = Truffle::FeatureLoader::FeatureEntry.new("to/feature")
-    hash['feature'].any? { |fe| fe.include?(short_lookup_entry) }.should be_true
+    hash['feature'].any? { |fe| fe.include?(short_lookup_entry) }.should == true
 
     exact_lookup_entry = Truffle::FeatureLoader::FeatureEntry.new("path/to/feature")
-    hash['feature'].any? { |fe| fe.include?(exact_lookup_entry) }.should be_true
+    hash['feature'].any? { |fe| fe.include?(exact_lookup_entry) }.should == true
 
     longer_lookup_entry = Truffle::FeatureLoader::FeatureEntry.new("long/path/to/feature")
-    hash['feature'].any? { |fe| fe.include?(longer_lookup_entry) }.should be_false
+    hash['feature'].any? { |fe| fe.include?(longer_lookup_entry) }.should == false
 
     prefix_lookup_entry = Truffle::FeatureLoader::FeatureEntry.new("path/to")
-    hash['feature'].any? { |fe| fe.include?(prefix_lookup_entry) }.should be_false
+    hash['feature'].any? { |fe| fe.include?(prefix_lookup_entry) }.should == false
   end
 
   describe "when stored has an extension" do
@@ -122,13 +122,13 @@ describe "Truffle::FeatureLoaderFeatureEntry" do
       hash['feature'] = [stored_entry]
 
       lookup_entry_no_ext = Truffle::FeatureLoader::FeatureEntry.new("to/feature")
-      hash['feature'].any? { |fe| fe.include?(lookup_entry_no_ext) }.should be_true
+      hash['feature'].any? { |fe| fe.include?(lookup_entry_no_ext) }.should == true
 
       lookup_entry_ext = Truffle::FeatureLoader::FeatureEntry.new("to/feature.so")
-      hash['feature'].any? { |fe| fe.include?(lookup_entry_ext) }.should be_true
+      hash['feature'].any? { |fe| fe.include?(lookup_entry_ext) }.should == true
 
       lookup_entry_wrong_ext = Truffle::FeatureLoader::FeatureEntry.new("to/feature.rb")
-      hash['feature'].any? { |fe| fe.include?(lookup_entry_wrong_ext) }.should be_false
+      hash['feature'].any? { |fe| fe.include?(lookup_entry_wrong_ext) }.should == false
     end
   end
 end

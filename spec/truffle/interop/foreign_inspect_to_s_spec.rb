@@ -50,7 +50,7 @@ describe "#inspect and #to_s on a foreign" do
         integer_class = Truffle::Interop.java_type("java.lang.Integer")
         -> {
           integer_class.valueOf("abc")
-        }.should raise_error(Polyglot::ForeignException) { |exc|
+        }.should.raise(Polyglot::ForeignException) { |exc|
           exc.inspect.should =~ /\A#<Polyglot::ForeignException\[Java\] java\.lang\.NumberFormatException:0x\h+: For input string: "abc">\z/
           exc.to_s.should == '#<Polyglot::ForeignException[Java] java.lang.NumberFormatException: For input string: "abc">'
         }

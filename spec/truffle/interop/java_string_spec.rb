@@ -12,11 +12,11 @@ require_relative '../../ruby/spec_helper'
 describe "Java strings" do
 
   it "is Interop.string?" do
-    Truffle::Interop.string?(Truffle::Interop.to_java_string('test')).should be_true
+    Truffle::Interop.string?(Truffle::Interop.to_java_string('test')).should == true
   end
 
   it "is Interop.java_string?" do
-    Truffle::Interop.java_string?(Truffle::Interop.to_java_string('test')).should be_true
+    Truffle::Interop.java_string?(Truffle::Interop.to_java_string('test')).should == true
   end
 
   it "are converted to Ruby automatically on the LHS of string concatenation" do

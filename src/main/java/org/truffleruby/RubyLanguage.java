@@ -361,6 +361,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
             "<empty-declaration-descriptor>",
             "<empty-declaration-descriptor>",
             null,
+            null,
             null);
 
     private static final SharedMethodInfo EMPTY_BINDING_SHARED_METHOD_INFO = SharedMethodInfo.forMethod(
@@ -369,6 +370,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
             Arity.MODULE_BODY, // Primitive.create_empty_binding is only used in module-body methods
             "<empty-binding>",
             "<empty-binding>",
+            null,
             null,
             null);
 

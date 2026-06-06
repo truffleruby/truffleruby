@@ -14,18 +14,18 @@ describe "TruffleRuby::AtomicReference" do
 
   it ".new creates new instance with a value and get reads it" do
     r = TruffleRuby::AtomicReference.new(:value)
-    r.get.should equal :value
+    r.get.should.equal? :value
   end
 
   it ".new creates new instance with a nil value by default" do
     r = TruffleRuby::AtomicReference.new
-    r.get.should equal nil
+    r.get.should.equal? nil
   end
 
   it "#set changes the value" do
     r = TruffleRuby::AtomicReference.new(:v1)
     r.set :v2
-    r.get.should equal :v2
+    r.get.should.equal? :v2
   end
 
   describe "#compare_and_set sets a new value if it is set to an expected value" do
@@ -38,10 +38,10 @@ describe "TruffleRuby::AtomicReference" do
       r = TruffleRuby::AtomicReference.new(v1)
 
       r.compare_and_set(bad, v2).should == false
-      r.get.should equal v1
+      r.get.should.equal? v1
 
       r.compare_and_set(v1, v2).should == true
-      r.get.should equal v2
+      r.get.should.equal? v2
     end
 
     it "comparing numeric objects with equality " do
@@ -55,10 +55,10 @@ describe "TruffleRuby::AtomicReference" do
         r = TruffleRuby::AtomicReference.new v1
 
         r.compare_and_set(bad, v2).should == false
-        r.get.should equal v1
+        r.get.should.equal? v1
 
         r.compare_and_set(numeric_source.call, v2).should == true
-        r.get.should equal v2
+        r.get.should.equal? v2
       end
     end
   end

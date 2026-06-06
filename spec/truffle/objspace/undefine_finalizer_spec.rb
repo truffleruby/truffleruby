@@ -24,9 +24,9 @@ describe "ObjectSpace.undefine_finalizer" do
         queue << :finalized
       }
       ObjectSpace.define_finalizer object, finalizer
-      ObjectSpace.reachable_objects_from(object).should include(finalizer)
+      ObjectSpace.reachable_objects_from(object).should.include?(finalizer)
       ObjectSpace.undefine_finalizer object
-      ObjectSpace.reachable_objects_from(object).should_not include(finalizer)
+      ObjectSpace.reachable_objects_from(object).should_not.include?(finalizer)
     end
     Primitive.gc_force
     Truffle::Debug.drain_finalization_queue               # Not needed for correctness

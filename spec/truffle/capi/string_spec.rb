@@ -24,7 +24,7 @@ describe "TruffleRuby RSTRING_PTR" do
 
   it "stores the String to native memory if the address is returned" do
     str = "foobar"
-    @s.string_ptr_return_address(str).should be_kind_of(Integer)
+    @s.string_ptr_return_address(str).should.is_a?(Integer)
     Truffle::CExt.native_string?(str).should == true
   end
 end

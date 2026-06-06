@@ -256,7 +256,6 @@ class Regexp
     return false unless source == other.source
     (options & ~NOENCODING) == (other.options & ~NOENCODING)
   end
-
   alias_method :==, :eql?
 
   def inspect

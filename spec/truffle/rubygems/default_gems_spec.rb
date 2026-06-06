@@ -19,7 +19,7 @@ describe "Default gem specs" do
     dlext = ".#{RbConfig::CONFIG['DLEXT']}"
     Dir.glob("#{Gem.default_dir}/specifications/default/*.gemspec").sort.each do |spec|
       contents = File.read(spec)
-      contents.should_not include(dlext)
+      contents.should_not.include?(dlext)
     end
   end
 end

@@ -233,12 +233,12 @@ describe "Arguments descriptors" do
     info.descriptor.should == [:keywords] if truffleruby?
     info.arguments.should == ['A', :a, :b, {c: 1}] if truffleruby?
 
-    -> { struct_new_like('A', :a, :b, d: 1) }.should raise_error(ArgumentError)
+    -> { struct_new_like('A', :a, :b, d: 1) }.should.raise(ArgumentError)
 
-    -> { struct_new_like('A', :a, :b, **{d: 1}) }.should raise_error(ArgumentError)
+    -> { struct_new_like('A', :a, :b, **{d: 1}) }.should.raise(ArgumentError)
 
     distant = {d: 1}
-    -> { struct_new_like('A', :a, :b, **distant) }.should raise_error(ArgumentError)
+    -> { struct_new_like('A', :a, :b, **distant) }.should.raise(ArgumentError)
   end
 
   it "work for a call like a Struct's new" do
@@ -344,7 +344,7 @@ describe "Arguments descriptors" do
   it "work through an inlined call abstraction" do
     foo = -> (a:) { a }
     foo.(a: 1).should == 1
-    -> { foo.() }.should raise_error(ArgumentError)
+    -> { foo.() }.should.raise(ArgumentError)
   end
 
   guard -> { truffleruby? } do

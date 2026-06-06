@@ -518,6 +518,7 @@ public abstract class ModuleNodes {
                     accessorName,
                     parseName,
                     ivar, // notes
+                    null,
                     null);
 
             final NodeFactory<? extends RubyBaseNode> alwaysInlinedNodeFactory = accessor == READER

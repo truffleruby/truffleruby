@@ -12,15 +12,15 @@ require_relative '../../ruby/spec_helper'
 describe "Truffle::Interop.java_string?" do
 
   it "returns false for a Ruby String" do
-    Truffle::Interop.java_string?("foo").should be_false
+    Truffle::Interop.java_string?("foo").should == false
   end
 
   it "returns true for a Java String" do
-    Truffle::Interop.java_string?(Truffle::Interop.to_java_string("foo")).should be_true
+    Truffle::Interop.java_string?(Truffle::Interop.to_java_string("foo")).should == true
   end
 
   it "returns false for other objects" do
-    Truffle::Interop.java_string?(Object.new).should be_false
+    Truffle::Interop.java_string?(Object.new).should == false
   end
 
 end

@@ -21,6 +21,6 @@ describe "The --backtraces-rescue option" do
   end
 
   it "can be used to print backtraces in silent rescues" do
-    ruby_exe("1/0 rescue nil", options: "--experimental-options --backtraces-rescue", args: "2>&1").should include("divided by 0 (ZeroDivisionError)")
+    ruby_exe("1/0 rescue nil", options: "--experimental-options --backtraces-rescue", args: "2>&1").should.include?("divided by 0 (ZeroDivisionError)")
   end
 end

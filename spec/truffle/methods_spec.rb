@@ -90,12 +90,12 @@ guard -> { !defined?(SKIP_SLOW_SPECS) } do
       else
         (methods - expected).each do |extra|
           it "should not include #{extra}" do
-            methods.should_not include(extra)
+            methods.should_not.include?(extra)
           end
         end
         (expected - methods).each do |missing|
           it "should include #{missing}" do
-            methods.should include(missing)
+            methods.should.include?(missing)
           end
         end
       end

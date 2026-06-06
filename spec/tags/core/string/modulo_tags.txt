@@ -4,3 +4,4 @@ fails:String#% returns a String in the argument's encoding if format encoding is
 fails:String#% raises Encoding::CompatibilityError if both encodings are ASCII compatible and there are not ASCII characters
 fails:String#% raises an ArgumentError if % is not followed by a conversion specifier
 fails:String#% raises an ArgumentError if absolute argument specifier is followed by a conversion specifier
+fails(the cache does not re-emit warnings):String#% when $VERBOSE is true warns if too many arguments are passed

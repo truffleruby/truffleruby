@@ -74,7 +74,7 @@ describe "Polyglot::ForeignNumber" do
 
   it "does not support odd? yet" do
     @numbers.each do |foreign, _ruby|
-      -> { foreign.odd? }.should raise_error(Polyglot::UnsupportedMessageError)
+      -> { foreign.odd? }.should.raise(Polyglot::UnsupportedMessageError)
     end
   end
 end

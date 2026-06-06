@@ -346,7 +346,7 @@ describe 'Interop:' do
   def unsupported_test(precise = true, &action)
     Test.new("fails with `UnsupportedMessageError`") do |subject|
       error_matcher = precise ? Polyglot::UnsupportedMessageError : -> v { Polyglot::UnsupportedMessageError === v || RuntimeError === v || TypeError === v }
-      -> { action.call(subject) }.should raise_error(error_matcher, /Message not supported|unsupported message/)
+      -> { action.call(subject) }.should.raise(error_matcher, /Message not supported|unsupported message/)
     end
   end
 
@@ -413,7 +413,7 @@ describe 'Interop:' do
               end,
               Test.new("fails with `ArityException` when the number of arguments is wrong", :lambda, :method) do |subject|
                 value = Object.new
-                -> { Truffle::Interop.execute(subject, value, value) }.should raise_error(ArgumentError)
+                -> { Truffle::Interop.execute(subject, value, value) }.should.raise(ArgumentError)
               end,
               Test.new("returns the result of the execution even though the number of arguments is wrong (Ruby behavior)", :proc) do |subject|
                 value = Object.new
@@ -435,20 +435,20 @@ describe 'Interop:' do
                        :pointer, :polyglot_pointer) do |subject|
                 case subject
                 when Truffle::FFI::Pointer
-                  Truffle::Interop.pointer?(subject).should be_true
+                  Truffle::Interop.pointer?(subject).should == true
                 when TruffleInteropSpecs::PolyglotPointer
-                  Truffle::Interop.pointer?(subject).should_not be_true
+                  Truffle::Interop.pointer?(subject).should == false
                 else
                   raise "unsupported subject"
                 end
                 Truffle::Interop.to_native(subject)
-                Truffle::Interop.pointer?(subject).should be_true
-                Truffle::Interop.as_pointer(subject).should be_kind_of(Integer)
+                Truffle::Interop.pointer?(subject).should == true
+                Truffle::Interop.as_pointer(subject).should.is_a?(Integer)
               end,
               Test.new('does nothing') do |subject|
-                Truffle::Interop.pointer?(subject).should_not be_true
+                Truffle::Interop.pointer?(subject).should == false
                 Truffle::Interop.to_native(subject)
-                Truffle::Interop.pointer?(subject).should_not be_true
+                Truffle::Interop.pointer?(subject).should == false
               end],
 
       Delimiter["Array related messages"],
@@ -471,8 +471,8 @@ describe 'Interop:' do
                 Truffle::Interop.read_array_element(subject, 0).should polyglot_match value
               end,
               Test.new("fails with `InvalidArrayIndexException` when a value is not present at the index or the index is invalid", :array, :polyglot_array) do |subject|
-                -> { Truffle::Interop.read_array_element(subject, 0) }.should raise_error(IndexError)
-                -> { Truffle::Interop.read_array_element(subject, -1) }.should raise_error(IndexError)
+                -> { Truffle::Interop.read_array_element(subject, 0) }.should.raise(IndexError)
+                -> { Truffle::Interop.read_array_element(subject, -1) }.should.raise(IndexError)
               end,
               unsupported_test { |subject| Truffle::Interop.read_array_element(subject, 0) }],
       Message[:writeArrayElement,
@@ -483,12 +483,12 @@ describe 'Interop:' do
                 Truffle::Interop.read_array_element(subject, 10).should polyglot_match value
               end,
               Test.new("fails with `InvalidArrayIndexException` when a index is invalid", :array, :polyglot_array) do |subject|
-                -> { Truffle::Interop.write_array_element(subject, -1, Object.new) }.should raise_error(IndexError)
+                -> { Truffle::Interop.write_array_element(subject, -1, Object.new) }.should.raise(IndexError)
               end,
               Test.new("fails with `UnsupportedTypeException` when the value is invalid", :polyglot_int_array) do |subject|
                 Truffle::Interop.write_array_element(subject, 0, 42)
                 Truffle::Interop.read_array_element(subject, 0).should == 42
-                -> { Truffle::Interop.write_array_element(subject, 1, Object.new) }.should raise_error(TypeError)
+                -> { Truffle::Interop.write_array_element(subject, 1, Object.new) }.should.raise(TypeError)
               end,
               unsupported_test { |subject| Truffle::Interop.write_array_element(subject, 0, Object.new) }],
       Message[:removeArrayElement,
@@ -496,10 +496,10 @@ describe 'Interop:' do
                 value = Object.new
                 Truffle::Interop.write_array_element(subject, 0, value)
                 Truffle::Interop.remove_array_element(subject, 0)
-                Truffle::Interop.array_element_readable?(subject, 0).should be_false
+                Truffle::Interop.array_element_readable?(subject, 0).should == false
               end,
               Test.new("fails with `InvalidArrayIndexException` when the value is not present at a valid index", :array, :polyglot_array) do |subject|
-                -> { Truffle::Interop.remove_array_element(subject, 0) }.should raise_error(IndexError)
+                -> { Truffle::Interop.remove_array_element(subject, 0) }.should.raise(IndexError)
               end,
               unsupported_test { |subject| Truffle::Interop.remove_array_element(subject, 0) }],
       array_element_predicate(:isArrayElementReadable, :array_element_readable?, true),
@@ -570,7 +570,7 @@ describe 'Interop:' do
                 Truffle::Interop.read_hash_value(subject, key).should polyglot_match key
               end,
               Test.new("fails with KeyError if the entry does not exist", :hash, :polyglot_hash, mode: :values) do |subject, key|
-                -> { Truffle::Interop.read_hash_value(subject, key) }.should raise_error(KeyError)
+                -> { Truffle::Interop.read_hash_value(subject, key) }.should.raise(KeyError)
               end,
               unsupported_test { |subject| Truffle::Interop.read_hash_value(subject, 0) }],
       Message[:writeHashEntry,
@@ -588,7 +588,7 @@ describe 'Interop:' do
                 Truffle::Interop.hash_entry_existing?(subject, key).should == false
               end,
               Test.new("fails with KeyError if the entry does not exist", :hash, :polyglot_hash, mode: :values) do |subject, key|
-                -> { Truffle::Interop.read_hash_value(subject, key) }.should raise_error(KeyError)
+                -> { Truffle::Interop.read_hash_value(subject, key) }.should.raise(KeyError)
               end,
               unsupported_test { |subject| Truffle::Interop.remove_hash_entry(subject, 0) }],
       Message[:getHashEntriesIterator,
@@ -604,7 +604,7 @@ describe 'Interop:' do
               end,
               Test.new("fails with StopIterationException if the hash is empty", :hash, :polyglot_hash) do |subject|
                 iterator = Truffle::Interop.hash_entries_iterator(subject)
-                -> { Truffle::Interop.iterator_next_element(iterator) }.should raise_error(StopIteration)
+                -> { Truffle::Interop.iterator_next_element(iterator) }.should.raise(StopIteration)
               end,
               unsupported_test { |subject| Truffle::Interop.hash_entries_iterator(subject) }],
       Message[:getHashKeysIterator,
@@ -620,7 +620,7 @@ describe 'Interop:' do
               end,
               Test.new("fails with StopIterationException if the hash is empty", :hash, :polyglot_hash) do |subject|
                 iterator = Truffle::Interop.hash_keys_iterator(subject)
-                -> { Truffle::Interop.iterator_next_element(iterator) }.should raise_error(StopIteration)
+                -> { Truffle::Interop.iterator_next_element(iterator) }.should.raise(StopIteration)
               end,
               unsupported_test { |subject| Truffle::Interop.hash_entries_iterator(subject) }],
       Message[:getHashValuesIterator,
@@ -636,7 +636,7 @@ describe 'Interop:' do
               end,
               Test.new("fails with StopIterationException if the hash is empty", :hash, :polyglot_hash) do |subject|
                 iterator = Truffle::Interop.hash_values_iterator(subject)
-                -> { Truffle::Interop.iterator_next_element(iterator) }.should raise_error(StopIteration)
+                -> { Truffle::Interop.iterator_next_element(iterator) }.should.raise(StopIteration)
               end,
               unsupported_test { |subject| Truffle::Interop.hash_entries_iterator(subject) }],
 
@@ -648,7 +648,7 @@ describe 'Interop:' do
               end,
               Test.new("fails with `UnknownIdentifierException` when the method is not defined", "any non-immediate `Object`",
                        *non_immediate_subjects - [:polyglot_object]) do |subject|
-                -> { Truffle::Interop.read_member(subject, '__non_existing__') }.should raise_error(NameError)
+                -> { Truffle::Interop.read_member(subject, '__non_existing__') }.should.raise(NameError)
               end,
               Test.new("reads the given instance variable", "any non-immediate `Object`",
                        *SUBJECTS.keys - immediate_subjects - frozen_subjects - [:polyglot_object]) do |subject|
@@ -685,7 +685,7 @@ describe 'Interop:' do
                 subject.value.should == value
               end,
               Test.new("fails with `UnsupportedMessageError` when the receiver is frozen", *frozen_subjects) do |subject|
-                -> { Truffle::Interop.write_member(subject, '@ivar', Object.new) }.should raise_error(Polyglot::UnsupportedMessageError)
+                -> { Truffle::Interop.write_member(subject, '@ivar', Object.new) }.should.raise(Polyglot::UnsupportedMessageError)
               end,
               unsupported_test { |subject| Truffle::Interop.write_member(subject, :something, 'val') }],
 
@@ -695,7 +695,7 @@ describe 'Interop:' do
               Test.new("returns false", &predicate(:exception?, false))],
       Message[:throwException,
               Test.new("throws the exception", *exception_subjects) do |subject|
-                -> { Truffle::Interop.throw_exception(subject) }.should raise_error { |e| e.should.equal?(subject) }
+                -> { Truffle::Interop.throw_exception(subject) }.should.raise { |e| e.should.equal?(subject) }
               end,
               unsupported_test { |subject| Truffle::Interop.throw_exception(subject) }],
       Message[:getExceptionType,

@@ -214,7 +214,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         var body = node.accept(this);
         var sourceSection = CoreLibrary.JAVA_CORE_SOURCE_SECTION;
         var sharedMethodInfo = SharedMethodInfo.forMethod(sourceSection, null, Arity.MODULE_BODY, "<main>", "<main>",
-                null, null);
+                null, null, null);
         var frameDescriptor = TranslatorEnvironment.newFrameDescriptorBuilderForMethod(sharedMethodInfo).build();
         return new RubyTopLevelRootNode(language, sourceSection, frameDescriptor, sharedMethodInfo, body,
                 Split.HEURISTIC, null, Arity.MODULE_BODY);
@@ -1515,6 +1515,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                 arity,
                 node.name,
                 parseName,
+                null,
                 null,
                 argumentDescriptors);
 
@@ -3507,6 +3508,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                 methodName,
                 methodName,
                 null,
+                null,
                 null);
 
         final TranslatorEnvironment newEnvironment = new TranslatorEnvironment(
@@ -3884,8 +3886,7 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     private Arity createArity(Nodes.ParametersNode parametersNode) {
         if (parametersNode == ZERO_PARAMETERS_NODE) {
-            // Arity.NO_ARGUMENTS would be tempting here but that would affect method identity
-            return new Arity(0, 0, false);
+            return Arity.NO_ARGUMENTS;
         }
 
         final String[] keywordArguments;

@@ -55,6 +55,8 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
     private final SharedMethodInfo methodSharedMethodInfo;
     /** Extra information. If blockDepth > 0 then it is the name of the method containing this block. */
     private final String notes;
+    /** An optional object to make two different SharedMethodInfo considered equal for Method#== */
+    private Object identity;
     private final ArgumentDescriptor[] argumentDescriptors;
 
     public static SharedMethodInfo forMethod(
@@ -64,9 +66,10 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
             String methodName,
             String parseName,
             String notes,
+            Object identity,
             ArgumentDescriptor[] argumentDescriptors) {
-        return new SharedMethodInfo(sourceSection, staticLexicalScope, arity, methodName, parseName, notes, 0, null,
-                argumentDescriptors);
+        return new SharedMethodInfo(sourceSection, staticLexicalScope, arity, methodName, parseName, notes, identity,
+                0, null, argumentDescriptors);
     }
 
     public static SharedMethodInfo forBlock(
@@ -79,8 +82,8 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
             int blockDepth,
             SharedMethodInfo methodSharedMethodInfo,
             ArgumentDescriptor[] argumentDescriptors) {
-        return new SharedMethodInfo(sourceSection, staticLexicalScope, arity, methodName, parseName, notes, blockDepth,
-                methodSharedMethodInfo, argumentDescriptors);
+        return new SharedMethodInfo(sourceSection, staticLexicalScope, arity, methodName, parseName, notes, null,
+                blockDepth, methodSharedMethodInfo, argumentDescriptors);
     }
 
     private SharedMethodInfo(
@@ -90,6 +93,7 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
             String methodName,
             String parseName,
             String notes,
+            Object identity,
             int blockDepth,
             SharedMethodInfo methodSharedMethodInfo,
             ArgumentDescriptor[] argumentDescriptors) {
@@ -100,6 +104,7 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         this.methodName = methodName;
         this.parseName = parseName;
         this.notes = notes;
+        this.identity = identity;
         this.blockDepth = blockDepth;
         this.methodSharedMethodInfo = methodSharedMethodInfo;
         this.argumentDescriptors = argumentDescriptors;
@@ -114,6 +119,7 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
                 methodName,
                 moduleAndMethodNameIfModuleIsFullyNamed(declaringModule, methodName, proc.arity),
                 null,
+                identity,
                 proc.argumentDescriptors);
     }
 
@@ -126,6 +132,7 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
                 methodName,
                 moduleAndMethodNameIfModuleIsFullyNamed(declaringModule, methodName, effectiveArity),
                 notes,
+                identity,
                 ArgumentDescriptor.ANY_UNNAMED);
     }
 
@@ -343,6 +350,14 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
     public String getNotes() {
         assert hasNotes();
         return notes;
+    }
+
+    public Object getIdentity() {
+        return identity;
+    }
+
+    public void setIdentity(Object newIdentity) {
+        this.identity = newIdentity;
     }
 
     @Override

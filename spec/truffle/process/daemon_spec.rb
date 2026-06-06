@@ -13,8 +13,8 @@ describe "Process.daemon" do
   it "is not implemented" do
     Process.respond_to?(:daemon).should == false
 
-    -> { Process.daemon }.should raise_error(NotImplementedError) { |e|
-      e.message.should include('daemon')
+    -> { Process.daemon }.should.raise(NotImplementedError) { |e|
+      e.message.should.include?('daemon')
     }
   end
 end

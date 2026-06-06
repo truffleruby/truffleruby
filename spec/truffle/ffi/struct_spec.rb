@@ -21,7 +21,7 @@ describe "FFI::Struct#[]" do
     it "returns a Pointer with address 0 if the field contains a null pointer" do
       ptr = @struct.new[:next]
       # Note that Rubinius::FFI::Struct returns nil in such a case!
-      ptr.should be_kind_of(FFI::Pointer)
+      ptr.should.is_a?(FFI::Pointer)
       ptr.address.should == 0
     end
   end

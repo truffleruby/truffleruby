@@ -259,6 +259,15 @@ public abstract class ProcNodes {
         }
     }
 
+    @Primitive(name = "proc_set_identity", lowerFixnum = 1)
+    public abstract static class ProcSetIdentityNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        Nil setIdentity(RubyProc block, Object identity) {
+            block.getSharedMethodInfo().setIdentity(identity);
+            return nil;
+        }
+    }
+
     @Primitive(name = "proc_symbol_to_proc_symbol")
     public abstract static class ProcSymbolToProcSymbolNode extends PrimitiveArrayArgumentsNode {
 

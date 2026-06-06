@@ -23,14 +23,14 @@ describe "Truffle::Interop.remove" do
     end
 
     it "raises when the index is out of bounds" do
-      -> { Truffle::Interop.remove_array_element(@array, 10) }.should raise_error IndexError
+      -> { Truffle::Interop.remove_array_element(@array, 10) }.should.raise IndexError
       @array.should == [:a, :b, :c, :d]
     end
 
     it "raises a IndexError when the index is not valid" do
       -> {
         Truffle::Interop.remove_array_element(@array, -1)
-      }.should raise_error(IndexError)
+      }.should.raise(IndexError)
     end
   end
 
@@ -42,20 +42,19 @@ describe "Truffle::Interop.remove" do
 
       it "removes an instance variable that exists" do
         Truffle::Interop.remove_member(@object, :@a).should == nil
-        @object.instance_variable_defined?(:@a).should be_false
+        @object.instance_variable_defined?(:@a).should == false
       end
 
       it "raises an error when the instance variable doesn't exist" do
         -> {
           Truffle::Interop.remove_member(@object, :@foo)
-        }.should raise_error(NameError)
+        }.should.raise(NameError)
       end
     end
 
     describe "with a name that doesn't start with @" do
       it "raises an unsupported message error" do
-        -> { Truffle::Interop.remove_array_element("abc", 1) }.
-            should raise_error(Polyglot::UnsupportedMessageError)
+        -> { Truffle::Interop.remove_array_element("abc", 1) }.should.raise(Polyglot::UnsupportedMessageError)
       end
     end
   end

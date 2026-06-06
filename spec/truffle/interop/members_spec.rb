@@ -14,7 +14,7 @@ describe "Truffle::Interop.members" do
 
   it "returns an array" do
     keys = Truffle::Interop.members({'a' => 1, 'b' => 2, 'c' => 3})
-    keys.should be_an_instance_of(Array)
+    keys.should.instance_of?(Array)
   end
 
   it "returns an array of interop strings" do
@@ -33,26 +33,26 @@ describe "Truffle::Interop.members" do
   end
 
   it "returns an array of public methods for an array" do
-    Truffle::Interop.members([1, 2, 3]).should include(*([].public_methods.map(&:to_s)))
+    Truffle::Interop.members([1, 2, 3]).to_set.should >= [].public_methods.map(&:to_s).to_set
   end
 
   it "returns an empty array for a big integer" do
-    Truffle::Interop.members(bignum_value).should include(*bignum_value.public_methods.map!(&:to_s))
+    Truffle::Interop.members(bignum_value).to_set.should >= bignum_value.public_methods.map!(&:to_s).to_set
   end
 
   it "returns an empty array for a proc" do
     proc = proc { }
-    Truffle::Interop.members(proc).should include(*proc.public_methods.map!(&:to_s))
+    Truffle::Interop.members(proc).to_set.should >= proc.public_methods.map!(&:to_s).to_set
   end
 
   it "returns an empty array for a lambda" do
     lambda = -> { }
-    Truffle::Interop.members(lambda).should include(*lambda.public_methods.map!(&:to_s))
+    Truffle::Interop.members(lambda).to_set.should >= lambda.public_methods.map!(&:to_s).to_set
   end
 
   it "returns methods of a method" do
     method = Object.new.method :to_s
-    Truffle::Interop.members(method).should include(*method.public_methods.map!(&:to_s))
+    Truffle::Interop.members(method).to_set.should >= method.public_methods.map!(&:to_s).to_set
   end
 
   it "returns an empty array for an object with a custom #[] method" do
@@ -61,22 +61,25 @@ describe "Truffle::Interop.members" do
   end
 
   it "does not return the keys of a hash" do
-    Truffle::Interop.members({'a' => 1, 'b' => 2, 'c' => 3}).should_not include('a', 'b', 'c')
+    members = Truffle::Interop.members({'a' => 1, 'b' => 2, 'c' => 3})
+    members.should_not.include?('a')
+    members.should_not.include?('b')
+    members.should_not.include?('c')
   end
 
   it "returns the methods of an object" do
     object = Object.new
-    Truffle::Interop.members(object).should include(*object.public_methods.map(&:to_s))
+    Truffle::Interop.members(object).to_set.should >= object.public_methods.map(&:to_s).to_set
   end
 
   it "returns the methods of a user-defined method" do
     object = TruffleInteropSpecs::InteropKeysClass.new
-    Truffle::Interop.members(object).should include(*object.public_methods.map(&:to_s))
+    Truffle::Interop.members(object).to_set.should >= object.public_methods.map(&:to_s).to_set
   end
 
   it "returns a user-defined method" do
     object = TruffleInteropSpecs::InteropKeysClass.new
-    Truffle::Interop.members(object).should include('foo')
+    Truffle::Interop.members(object).should.include?('foo')
   end
 
   describe "without internal set" do
@@ -84,11 +87,14 @@ describe "Truffle::Interop.members" do
     it "does return the instance variables of a hash" do
       hash = {a: 1, b: 2, c: 3}
       hash.instance_variable_set(:@foo, 14)
-      Truffle::Interop.members(hash, true).should include('@foo')
+      Truffle::Interop.members(hash, true).should.include?('@foo')
     end
 
     it "does not return instance variables of an object" do
-      Truffle::Interop.members(TruffleInteropSpecs::InteropKeysClass.new).should_not include('@a', '@b', '@c')
+      members = Truffle::Interop.members(TruffleInteropSpecs::InteropKeysClass.new)
+      members.should_not.include?('@a')
+      members.should_not.include?('@b')
+      members.should_not.include?('@c')
     end
 
   end
@@ -98,11 +104,11 @@ describe "Truffle::Interop.members" do
     it "does return the instance variables of a hash" do
       hash = {a: 1, b: 2, c: 3}
       hash.instance_variable_set(:@foo, 14)
-      Truffle::Interop.members(hash, true).should include('@foo')
+      Truffle::Interop.members(hash, true).should.include?('@foo')
     end
 
     it "returns instance variables of an object" do
-      Truffle::Interop.members(TruffleInteropSpecs::InteropKeysClass.new, true).should include('@a', '@b', '@c')
+      Truffle::Interop.members(TruffleInteropSpecs::InteropKeysClass.new, true).to_set.should >= Set['@a', '@b', '@c']
     end
 
   end

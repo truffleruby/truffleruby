@@ -14,28 +14,28 @@ guard -> { !TruffleRuby.native? } do
     it "can be rescued with Polyglot::ForeignException" do
       integer_class = Java.type("java.lang.Integer")
 
-      -> { integer_class.valueOf("abc") }.should raise_error(Polyglot::ForeignException)
+      -> { integer_class.valueOf("abc") }.should.raise(Polyglot::ForeignException)
     end
 
     it "can be rescued with java.lang.NumberFormatException" do
       integer_class = Java.type("java.lang.Integer")
       number_format_exception = Java.type("java.lang.NumberFormatException")
 
-      -> { integer_class.valueOf("abc") }.should raise_error(number_format_exception)
+      -> { integer_class.valueOf("abc") }.should.raise(number_format_exception)
     end
 
     it "can be rescued with java.lang.RuntimeException" do
       integer_class = Java.type("java.lang.Integer")
       runtime_exception = Java.type("java.lang.RuntimeException")
 
-      -> { integer_class.valueOf("abc") }.should raise_error(runtime_exception)
+      -> { integer_class.valueOf("abc") }.should.raise(runtime_exception)
     end
 
     it "can be rescued with java.lang.Throwable" do
       integer_class = Java.type("java.lang.Integer")
       throwable = Java.type("java.lang.Throwable")
 
-      -> { integer_class.valueOf("abc") }.should raise_error(throwable)
+      -> { integer_class.valueOf("abc") }.should.raise(throwable)
     end
   end
 end

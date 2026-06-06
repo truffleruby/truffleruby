@@ -40,7 +40,7 @@ guard -> { !TruffleRuby.native? } do
         BigInteger = '14'
         -> {
           Java.import 'java.math.BigInteger'
-        }.should raise_error(NameError, "constant BigInteger already set")
+        }.should.raise(NameError, "constant BigInteger already set")
       end
     end
   end

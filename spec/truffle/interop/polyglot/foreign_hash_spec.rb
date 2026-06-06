@@ -33,7 +33,7 @@ describe "Polyglot::ForeignHash" do
     @hash.fetch(:a) { flunk }.should == 1
     @hash.fetch(:a, 0).should == 1
 
-    -> { @hash.fetch(:c) }.should raise_error(KeyError)
+    -> { @hash.fetch(:c) }.should.raise(KeyError)
     @hash.fetch(:c, :default).should == :default
     @hash.fetch(:c) { |key| [key, :block] }.should == [:c, :block]
   end

@@ -18,7 +18,7 @@ describe "Strings going through NFI" do
     it "for a 7-bit String" do
       s = "abc"
       r = Truffle::POSIX.strdup(s)
-      r.encoding.should equal Encoding::BINARY
+      r.encoding.should.equal? Encoding::BINARY
       r.bytes.should == s.bytes
     end
 
@@ -72,7 +72,7 @@ describe "NFI with callbacks to Ruby" do
       array.write_array_of_int32([1, 3, 4, 2])
       -> {
         @libc.qsort(array, 4, 32/8, compare_function)
-      }.should raise_error(RuntimeError, "error in callback from native code!")
+      }.should.raise(RuntimeError, "error in callback from native code!")
     end
   end
 end

@@ -61,6 +61,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 @CoreModule(value = "Method", isClass = true)
 public abstract class MethodNodes {
 
+    @TruffleBoundary
     public static boolean areInternalMethodEqual(InternalMethod a, InternalMethod b) {
         if (a == b || a.getSharedMethodInfo() == b.getSharedMethodInfo()) {
             return true;
@@ -68,7 +69,8 @@ public abstract class MethodNodes {
 
         // For builtin aliases to be == such as String#size and String#length, even though they have
         // different CallTarget, InternalMethod and SharedMethodInfo.
-        return a.getSharedMethodInfo().getArity() == b.getSharedMethodInfo().getArity();
+        return a.getSharedMethodInfo().getIdentity() != null &&
+                a.getSharedMethodInfo().getIdentity().equals(b.getSharedMethodInfo().getIdentity());
     }
 
     public static int hashInternalMethod(InternalMethod internalMethod) {

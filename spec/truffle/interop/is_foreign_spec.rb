@@ -12,23 +12,23 @@ require_relative '../../ruby/spec_helper'
 describe "Truffle::Interop.foreign?" do
 
   it "returns false for a Ruby object" do
-    Truffle::Interop.foreign?(Object.new).should be_false
+    Truffle::Interop.foreign?(Object.new).should == false
   end
 
   it "returns true for a Java class" do
-    Truffle::Interop.foreign?(Truffle::Debug.java_class).should be_true
+    Truffle::Interop.foreign?(Truffle::Debug.java_class).should == true
   end
 
   it "returns true for a Java object" do
-    Truffle::Interop.foreign?(Truffle::Debug.java_object).should be_true
+    Truffle::Interop.foreign?(Truffle::Debug.java_object).should == true
   end
 
   it "returns true for some other foreign object" do
-    Truffle::Interop.foreign?(Truffle::Debug.foreign_object).should be_true
+    Truffle::Interop.foreign?(Truffle::Debug.foreign_object).should == true
   end
 
   it "returns false for primitives" do
-    Truffle::Interop.foreign?(14).should be_false
+    Truffle::Interop.foreign?(14).should == false
   end
 
 end

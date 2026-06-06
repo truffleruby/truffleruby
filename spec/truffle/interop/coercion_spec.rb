@@ -14,10 +14,10 @@ describe "Interop coercion" do
   describe "in a numerical operation" do
 
     it "does't interfere with normal coercion" do
-      -> { 14 + true }.should raise_error(TypeError, /can't be coerced into Integer/)
-      -> { 14 * true }.should raise_error(TypeError, /can't be coerced into Integer/)
-      -> { 14.2 + true }.should raise_error(TypeError, /can't be coerced into Float/)
-      -> { 14.2 * true }.should raise_error(TypeError, /can't be coerced into Float/)
+      -> { 14 + true }.should.raise(TypeError, /can't be coerced into Integer/)
+      -> { 14 * true }.should.raise(TypeError, /can't be coerced into Integer/)
+      -> { 14.2 + true }.should.raise(TypeError, /can't be coerced into Float/)
+      -> { 14.2 * true }.should.raise(TypeError, /can't be coerced into Float/)
       (14 + 2.0).should == 16.0
       (14.0 + 2.0).should == 16.0
     end
@@ -41,7 +41,7 @@ describe "Interop coercion" do
 
     it "coerce null as falsy value" do
       foreign_null = Truffle::Debug.foreign_null ? true : false
-      foreign_null.should be_false
+      foreign_null.should == false
 
       [Object.new, foreign_null].map { |x| x ? true : false }.should == [true, false]
     end

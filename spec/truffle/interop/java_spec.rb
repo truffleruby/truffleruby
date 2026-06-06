@@ -33,7 +33,7 @@ describe "Java" do
       end
 
       it "throws RuntimeError for unknown class names" do
-        -> { Java.type("does.not.Exist") }.should raise_error(Polyglot::ForeignException)
+        -> { Java.type("does.not.Exist") }.should.raise(Polyglot::ForeignException)
       end
 
       it "works with symbols" do

@@ -38,7 +38,6 @@ describe "JFR event streaming" do
     # Verify we received the expected ThreadStart event
     # NOTE: it's possible that the received event comes from a different thread,
     # but that is fine, as it still shows that runtime supports streaming JFR events.
-    received.should_not be_nil
     received.getEventType.getName.should == thread_start_event
   end
 end

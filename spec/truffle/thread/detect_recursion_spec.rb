@@ -59,7 +59,7 @@ describe "Thread#detect_recursion" do
     it "returns false" do
       a = []
       10.times do |i|
-        TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should be_false
+        TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should == false
       end
     end
   end
@@ -68,7 +68,7 @@ describe "Thread#detect_recursion" do
     it "returns false" do
       a = {}
       10.times do |i|
-        TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should be_false
+        TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should == false
       end
     end
   end
@@ -78,7 +78,7 @@ describe "Thread#detect_recursion" do
       a = [1,[2,[3], 4],[[[5,6,7]]]]
 
       10.times do |i|
-        TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should be_false
+        TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should == false
       end
     end
 
@@ -91,11 +91,11 @@ describe "Thread#detect_recursion" do
 
       10.times do |i|
         if i < 5
-          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should be_false
-          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(b, i).should be_false
+          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should == false
+          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(b, i).should == false
         else
-          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should be_true
-          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(b, i).should be_true
+          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should == true
+          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(b, i).should == true
         end
       end
     end
@@ -106,7 +106,7 @@ describe "Thread#detect_recursion" do
       a = {:q => {:w => "qwe" }, :t => {:q => {:w => "qwe" }, :t => {:q => {:w => "qwe" }}}}
 
       10.times do |i|
-        TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should be_false
+        TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should == false
       end
     end
 
@@ -116,9 +116,9 @@ describe "Thread#detect_recursion" do
 
       10.times do |i|
         if i < 3
-          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should be_false
+          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should == false
         else
-          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should be_true
+          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should == true
         end
       end
     end
@@ -132,9 +132,9 @@ describe "Thread#detect_recursion" do
 
       10.times do |i|
         if i < 2
-          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should be_false
+          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should == false
         else
-          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should be_true
+          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should == true
         end
       end
     end
@@ -148,9 +148,9 @@ describe "Thread#detect_recursion" do
 
       10.times do |i|
         if i < 8
-          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should be_false
+          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should == false
         else
-          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should be_true
+          TruffleThreadDetectRecursionSpecFixtures.check_recursion_to_depth(a, i).should == true
         end
       end
     end
@@ -164,7 +164,7 @@ describe "Thread#detect_recursion" do
       c = [[[[[[[[[a,1]]]]]]]]]
 
       10.times do |i|
-        TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, c, i).should be_false
+        TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, c, i).should == false
       end
     end
 
@@ -177,9 +177,9 @@ describe "Thread#detect_recursion" do
 
       10.times do |i|
         if i < 8
-          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should be_false
+          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should == false
         else
-          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should be_true
+          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should == true
         end
       end
     end
@@ -193,7 +193,7 @@ describe "Thread#detect_recursion" do
       b = {:q => {:w => "qwe" }, :t => {:t => {:w => "qwe" }, :q => a}}
 
       10.times do |i|
-        TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should be_false
+        TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should == false
       end
     end
 
@@ -205,9 +205,9 @@ describe "Thread#detect_recursion" do
 
       10.times do |i|
         if i < 4
-          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should be_false
+          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should == false
         else
-          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should be_true
+          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should == true
         end
       end
     end
@@ -222,9 +222,9 @@ describe "Thread#detect_recursion" do
 
       10.times do |i|
         if i < 3
-          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should be_false
+          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should == false
         else
-          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should be_true
+          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should == true
         end
       end
     end
@@ -239,9 +239,9 @@ describe "Thread#detect_recursion" do
 
       20.times do |i|
         if i < 11
-          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should be_false
+          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should == false
         else
-          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should be_true
+          TruffleThreadDetectRecursionSpecFixtures.check_double_recursion_equality_to_depth(a, b, i).should == true
         end
       end
     end

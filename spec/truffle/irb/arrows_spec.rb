@@ -24,17 +24,17 @@ describe "IRB" do
       io.puts "\e[B" # down arrow
       # JLine adds a bell character (since there is no history)
       echo = io.gets
-      [">> \n", ">> [B\n"].should include(echo)
+      [">> \n", ">> [B\n"].should.include?(echo)
 
       if echo == ">> [B\n" # "[B" (echo'd by JLine) looks like a legal expression to IRB so we need to complete it
         io.puts "]"
-        [">>   ]\n", "?>   ]\n"].should include(io.gets)
+        [">>   ]\n", "?>   ]\n"].should.include?(io.gets)
         io.gets.should == "=> [42]\n"
       end
 
       io.puts "22 + 33"
       # The extra bell character causes a continuation line
-      [">> 22 + 33\n", "?> 22 + 33\n"].should include(io.gets)
+      [">> 22 + 33\n", "?> 22 + 33\n"].should.include?(io.gets)
       io.gets.should == "=> 55\n"
 
       io.puts "exit"

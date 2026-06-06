@@ -11,21 +11,21 @@ require_relative '../../ruby/spec_helper'
 
 describe "Truffle::Interop.boxed?" do
   it "returns true for numbers" do
-    Truffle::Interop.boxed?(1).should be_true
-    Truffle::Interop.boxed?(1.2).should be_true
-    Truffle::Interop.boxed?(Truffle::Debug.foreign_boxed_value(2)).should be_true
-    Truffle::Interop.boxed?(Truffle::Debug.foreign_boxed_value(2.3)).should be_true
+    Truffle::Interop.boxed?(1).should == true
+    Truffle::Interop.boxed?(1.2).should == true
+    Truffle::Interop.boxed?(Truffle::Debug.foreign_boxed_value(2)).should == true
+    Truffle::Interop.boxed?(Truffle::Debug.foreign_boxed_value(2.3)).should == true
   end
 
   it "returns false for strings" do
-    Truffle::Interop.boxed?('test').should be_false
+    Truffle::Interop.boxed?('test').should == false
   end
 
   it "returns false for symbols" do
-    Truffle::Interop.boxed?(:test).should be_false
+    Truffle::Interop.boxed?(:test).should == false
   end
 
   it "returns false for other objects" do
-    Truffle::Interop.boxed?(Object.new).should be_false
+    Truffle::Interop.boxed?(Object.new).should == false
   end
 end

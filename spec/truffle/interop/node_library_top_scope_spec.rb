@@ -25,7 +25,7 @@ describe "NodeLibrary top scope" do
 
     top_scope["top_scope_spec_var"].should == :top_scope_spec
     top_scope["$stdout"].should == $stdout
-    top_scope["is_a?"].should be_kind_of(Method)
+    top_scope["is_a?"].should.is_a?(Method)
   end
 
   it "is separate from TOPLEVEL_BINDING" do

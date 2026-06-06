@@ -35,7 +35,7 @@ describe "TruffleRuby.synchronized" do
     [true, 14, 14.2].each do |primitive|
       -> {
         TruffleRuby.synchronized(primitive) { }
-      }.should raise_error(TypeError)
+      }.should.raise(TypeError)
     end
   end
 

@@ -38,7 +38,7 @@ describe "Polyglot::ForeignException" do
   it "supports #full_message" do
     -> {
       raise @foreign
-    }.should raise_error(Polyglot::ForeignException) { |e|
+    }.should.raise(Polyglot::ForeignException) { |e|
       full_message = e.full_message(highlight: false, order: :top).lines
       full_message[0].should == "#{__FILE__}:#{__LINE__-3}:in 'Kernel#raise': exception message (Polyglot::ForeignException)\n"
     }
@@ -49,7 +49,7 @@ describe "Polyglot::ForeignException" do
       integer = Java.type("java.lang.Integer")
       -> {
         integer.parseInt("abc")
-      }.should raise_error(Polyglot::ForeignException) { |e|
+      }.should.raise(Polyglot::ForeignException) { |e|
         full_message = e.full_message(highlight: false, order: :top).gsub(/:\d+:/, ':LINE:')
         full_message.should.start_with?(<<~EXCEPTION)
         NumberFormatException.java:LINE:in 'forInputString': For input string: "abc" (Polyglot::ForeignException: java.lang.NumberFormatException)
@@ -94,7 +94,7 @@ describe "Polyglot::ForeignException" do
   end
 
   it "supports #raise" do
-    -> { raise @foreign }.should raise_error(Polyglot::ForeignException) { |e|
+    -> { raise @foreign }.should.raise(Polyglot::ForeignException) { |e|
       e.should.equal?(@foreign)
     }
   end
@@ -119,7 +119,7 @@ describe "Polyglot::ForeignException" do
   it 'cannot be marshaled' do
     -> {
       Marshal.dump(@foreign)
-    }.should raise_error(TypeError)
+    }.should.raise(TypeError)
   end
 
   describe "when reaching the top-level" do

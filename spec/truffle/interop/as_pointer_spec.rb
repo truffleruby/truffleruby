@@ -13,11 +13,11 @@ require_relative 'fixtures/classes'
 describe "Truffle::Interop.as_pointer" do
 
   it "is not supported for nil" do
-    -> { Truffle::Interop.as_pointer(nil) }.should raise_error(Polyglot::UnsupportedMessageError)
+    -> { Truffle::Interop.as_pointer(nil) }.should.raise(Polyglot::UnsupportedMessageError)
   end
 
   it "is not supported for objects which cannot be converted to a pointer" do
-    -> { Truffle::Interop.as_pointer(Object.new) }.should raise_error(Polyglot::UnsupportedMessageError)
+    -> { Truffle::Interop.as_pointer(Object.new) }.should.raise(Polyglot::UnsupportedMessageError)
   end
 
   it "works on Truffle::FFI::Pointer" do

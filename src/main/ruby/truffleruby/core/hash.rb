@@ -333,7 +333,6 @@ class Hash
 
     selected
   end
-
   alias_method :filter, :select
 
   def select!
@@ -349,7 +348,6 @@ class Hash
 
     self
   end
-
   alias_method :filter!, :select!
 
   def slice(*keys)

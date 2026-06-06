@@ -24,22 +24,22 @@ guard -> { TruffleRuby.native? } do
 
     it "is used when passing no incompatible options" do
       out = ruby_exe("p Truffle::Boot.was_preinitialized?", options: "--log.level=FINE", args: "2>&1")
-      out.should include("patchContext()")
-      out.should_not include("createContext()")
-      out.should_not include("initializeContext()")
-      out.should include("\ntrue\n")
+      out.should.include?("patchContext()")
+      out.should_not.include?("createContext()")
+      out.should_not.include?("initializeContext()")
+      out.should.include?("\ntrue\n")
     end
 
     it "is not used when passing incompatible options" do
       no_native = "--experimental-options --patching=false --disable-gems"
       out = ruby_exe("p Truffle::Boot.was_preinitialized?", options: "--log.level=FINE #{no_native}", args: "2>&1")
-      out.should include("patchContext()")
-      out.should include("not reusing pre-initialized context: loading patching is false")
-      out.should include("finalizeContext()")
-      out.should include("disposeContext()")
-      out.should include("createContext()")
-      out.should include("initializeContext()")
-      out.should include("\nfalse\n")
+      out.should.include?("patchContext()")
+      out.should.include?("not reusing pre-initialized context: loading patching is false")
+      out.should.include?("finalizeContext()")
+      out.should.include?("disposeContext()")
+      out.should.include?("createContext()")
+      out.should.include?("initializeContext()")
+      out.should.include?("\nfalse\n")
     end
 
     it "is used when $VERBOSE changes" do
@@ -50,7 +50,7 @@ guard -> { TruffleRuby.native? } do
       ruby_exe(code, env: env).should == "[false, true]\n"
       ruby_exe(code, options: "-w", env: env).should == "[true, true]\n"
       ruby_exe(code, options: "-W0", env: env).should == "[nil, true]\n"
-      ruby_exe(code, options: "-v", env: env).should include "[true, true]\n"
+      ruby_exe(code, options: "-v", env: env).should.include? "[true, true]\n"
     end
 
     it "is used with --disable-gems so startup with --disable-gems is not slower" do

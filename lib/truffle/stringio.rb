@@ -446,6 +446,7 @@ class StringIO
   def pos
     @__data__.pos
   end
+  alias_method :tell, :pos
 
   def pos=(pos)
     raise Errno::EINVAL if pos < 0
@@ -590,10 +591,6 @@ class StringIO
 
   def sync=(val)
     val
-  end
-
-  def tell
-    @__data__.pos
   end
 
   def truncate(length)

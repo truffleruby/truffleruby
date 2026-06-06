@@ -12,7 +12,7 @@ require 'rbconfig'
 
 describe "RbConfig.ruby" do
   it "returns a String" do
-    RbConfig.ruby.should be_kind_of(String)
+    RbConfig.ruby.should.is_a?(String)
   end
 
   it "returns a path to an executable" do

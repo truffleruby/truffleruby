@@ -207,7 +207,6 @@ class << ENV
     each { |_k, v| return true if v == value }
     false
   end
-
   alias_method :value?, :has_value?
 
   def values_at(*params)

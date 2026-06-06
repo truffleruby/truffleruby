@@ -23,10 +23,10 @@ describe "Truffle::VersionedArray" do
     else
       # if the fast check fails, do a slower check to determine why
       expected_methods.each do |m|
-        versioned_methods.should include(m)
+        versioned_methods.should.include?(m)
       end
       versioned_methods.each do |m|
-        expected_methods.should include(m)
+        expected_methods.should.include?(m)
       end
     end
   end

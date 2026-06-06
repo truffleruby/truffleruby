@@ -15,19 +15,19 @@ guard -> { !TruffleRuby.native? } do
     it "produces the same class as java_type for objects" do
       big_integer_class = Truffle::Interop.java_type("java.math.BigInteger")
       big_integer = big_integer_class.new("14")
-      big_integer.getClass.equal?(big_integer_class[:class]).should be_true
+      big_integer.getClass.equal?(big_integer_class[:class]).should == true
     end
 
     it "produces the same class as java_type for arrays of objects" do
       big_integer_array_class = Truffle::Interop.java_type("java.math.BigInteger[]")
       big_integer_array = big_integer_array_class.new(3)
-      big_integer_array.getClass.equal?(big_integer_array_class[:class]).should be_true
+      big_integer_array.getClass.equal?(big_integer_array_class[:class]).should == true
     end
 
     it "produces the same class as java_type for arrays of primitives" do
       int_array_class = Truffle::Interop.java_type("int[]")
       int_array = int_array_class.new(3)
-      int_array.getClass.equal?(int_array_class[:class]).should be_true
+      int_array.getClass.equal?(int_array_class[:class]).should == true
     end
 
   end

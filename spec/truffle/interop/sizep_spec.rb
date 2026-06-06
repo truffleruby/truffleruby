@@ -12,19 +12,19 @@ require_relative '../../ruby/spec_helper'
 describe "Truffle::Interop.has_array_elements?" do
 
   it "returns true for arrays" do
-    Truffle::Interop.has_array_elements?([]).should be_true
+    Truffle::Interop.has_array_elements?([]).should == true
   end
 
   it "returns false for hashes" do
-    Truffle::Interop.has_array_elements?({}).should be_false
+    Truffle::Interop.has_array_elements?({}).should == false
   end
 
   it "returns false for strings" do
-    Truffle::Interop.has_array_elements?('').should be_false
+    Truffle::Interop.has_array_elements?('').should == false
   end
 
   it "returns false for nil" do
-    Truffle::Interop.has_array_elements?(nil).should be_false
+    Truffle::Interop.has_array_elements?(nil).should == false
   end
 
 end

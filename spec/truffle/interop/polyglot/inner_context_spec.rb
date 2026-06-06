@@ -61,16 +61,16 @@ describe "Polyglot::InnerContext" do
 
     -> {
       context.eval('ruby', '42')
-    }.should raise_error(RuntimeError, 'This Polyglot::InnerContext has been closed, cannot use it anymore')
+    }.should.raise(RuntimeError, 'This Polyglot::InnerContext has been closed, cannot use it anymore')
 
     -> {
       obj.object_id
-    }.should raise_error(RuntimeError, 'This Polyglot::InnerContext has been closed, cannot use it anymore')
+    }.should.raise(RuntimeError, 'This Polyglot::InnerContext has been closed, cannot use it anymore')
   end
 
   it "raises ArgumentError for an unknown language" do
     Polyglot::InnerContext.new do |context|
-      -> { context.eval('does_not_exist', '') }.should raise_error(ArgumentError, 'Unknown language: does_not_exist')
+      -> { context.eval('does_not_exist', '') }.should.raise(ArgumentError, 'Unknown language: does_not_exist')
     end
   end
 
@@ -86,7 +86,7 @@ describe "Polyglot::InnerContext" do
     -> {
       in_synchronize = true
       context.eval('ruby', 'loop { }')
-    }.should raise_error(RuntimeError, 'This Polyglot::InnerContext was terminated forcefully, cannot use it anymore')
+    }.should.raise(RuntimeError, 'This Polyglot::InnerContext was terminated forcefully, cannot use it anymore')
     th.join
   end
 
@@ -103,7 +103,7 @@ describe "Polyglot::InnerContext" do
     -> {
       in_synchronize = true
       context.eval('ruby', 'loop { }')
-    }.should raise_error(custom_error, 'error message')
+    }.should.raise(custom_error, 'error message')
     th.join
   end
 end

@@ -27,6 +27,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 module FileTest
+  module_function
+
   def blockdev?(path)
     File.blockdev? path
   end
@@ -119,27 +121,6 @@ module FileTest
     File.zero? path
   end
 
-  module_function :blockdev?,
-                  :chardev?,
-                  :directory?,
-                  :executable?,
-                  :executable_real?,
-                  :exist?,
-                  :file?,
-                  :grpowned?,
-                  :identical?,
-                  :owned?,
-                  :pipe?,
-                  :readable?,
-                  :readable_real?,
-                  :setgid?,
-                  :setuid?,
-                  :size,
-                  :size?,
-                  :socket?,
-                  :sticky?,
-                  :symlink?,
-                  :writable?,
-                  :writable_real?,
-                  :zero?
+  alias_method :empty?,   :zero?
+  module_function :empty?
 end

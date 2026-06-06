@@ -15,23 +15,23 @@ describe "Truffle::Interop.executable?" do
   end
 
   it "returns true for methods" do
-    Truffle::Interop.executable?(method(:test_method)).should be_true
+    Truffle::Interop.executable?(method(:test_method)).should == true
   end
 
   it "returns true for procs" do
-    Truffle::Interop.executable?(proc { }).should be_true
+    Truffle::Interop.executable?(proc { }).should == true
   end
 
   it "returns true for lambdas" do
-    Truffle::Interop.executable?(-> { }).should be_true
+    Truffle::Interop.executable?(-> { }).should == true
   end
 
   it "returns false for nil" do
-    Truffle::Interop.executable?(nil).should be_false
+    Truffle::Interop.executable?(nil).should == false
   end
 
   it "returns false for strings" do
-    Truffle::Interop.executable?('hello').should be_false
+    Truffle::Interop.executable?('hello').should == false
   end
 
 end

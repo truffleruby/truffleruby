@@ -52,7 +52,7 @@ describe "Truffle::Interop.scope" do
     parent_scope = Truffle::Interop.scope_parent(scope)
     Truffle::Interop.members(parent_scope).should == ["value", "b", "self", "scope", "a", "self"]
     parent_scope["b"].should == :b
-    -> { parent_scope["missing"] }.should raise_error(NameError)
+    -> { parent_scope["missing"] }.should.raise(NameError)
     parent_parent_scope = Truffle::Interop.scope_parent(parent_scope)
     Truffle::Interop.members(parent_parent_scope).should == ["scope", "a", "self"]
   end
@@ -83,7 +83,7 @@ describe "Truffle::Interop.scope" do
     scope["a"] = :b
     scope["a"].should == :b
 
-    -> { scope["missing"] = "missing" }.should raise_error(NameError)
+    -> { scope["missing"] = "missing" }.should.raise(NameError)
   end
 
 

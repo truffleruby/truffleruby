@@ -264,7 +264,8 @@ public final class CoreMethodNodeManager {
                     moduleName,
                     onSingleton,
                     name,
-                    arity);
+                    arity,
+                    arity /* use the Arity object as the identity */);
 
             final RootCallTarget callTarget;
             final CachedLazyCallTargetSupplier callTargetSupplier;
@@ -303,7 +304,7 @@ public final class CoreMethodNodeManager {
     }
 
     private static SharedMethodInfo makeSharedMethodInfo(String moduleName, boolean onSingleton, String name,
-            Arity arity) {
+            Arity arity, Object identity) {
         final String parseName;
         if (onSingleton || moduleName.equals("main")) {
             parseName = moduleName + "." + name;
@@ -318,6 +319,7 @@ public final class CoreMethodNodeManager {
                 name,
                 parseName,
                 "builtin",
+                identity,
                 null);
     }
 
