@@ -1,3 +1,0 @@
-fails:Module#class_eval activates refinements from the eval scope
-fails:Module#class_eval raises an ArgumentError when more than 3 arguments are given
-fails:Module#class_eval uses the caller location as default filename
