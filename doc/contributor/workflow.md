@@ -67,13 +67,15 @@ It is also possible to use a `pre-push` hook instead (`cp tool/hooks/lint-check.
 That way the lint check runs only before `git push`.
 However, that might result in extra "Fix style" commits, which sometimes can be `git rebase -i` away, but sometimes not.
 
+One of the checks requires installing `shellcheck` in advance (https://www.shellcheck.net/).
+
 ## Building
 
 ```bash
 jt build
 ```
 
-By default the `jt build` command builds a small JVM-only (no native images)
+By default, the `jt build` command builds a small JVM-only (no native images)
 GraalVM containing only the Ruby language. The built GraalVM can be found in the
 `mxbuild/truffleruby-jvm` directory.
 
