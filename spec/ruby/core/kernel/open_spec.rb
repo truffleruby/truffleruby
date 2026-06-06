@@ -81,10 +81,15 @@ describe "Kernel#open" do
 
     # https://bugs.ruby-lang.org/issues/19630
     it "warns about deprecation given a path with a pipe" do
-      cmd = "|echo ok"
       -> {
-        open(cmd) { |f| f.read }
+        open("|echo ok") { |f| f.read }
       }.should complain(/Kernel#open with a leading '\|'/)
+    end
+  end
+
+  ruby_version_is "4.0" do
+    it "raises Errno::ENOENT when path starts with a pipe" do
+      -> { open("|echo ok") { } }.should.raise(Errno::ENOENT)
     end
   end
 

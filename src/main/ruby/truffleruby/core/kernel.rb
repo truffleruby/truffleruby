@@ -441,11 +441,6 @@ module Kernel
     end
 
     path = Truffle::Type.coerce_to_path obj
-
-    if Primitive.is_a?(path, String) and path.start_with? '|'
-      return IO.popen(path[1..-1], *(rest + [options]), &block)
-    end
-
     File.open(path, *rest, **options, &block)
   end
   module_function :open
