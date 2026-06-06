@@ -9,7 +9,7 @@ Ruby code to the corresponding Java class in IntelliJ.
 ## The Preferences/Settings Menu
 
 Note that the global IntelliJ settings are accessed differently based on the platform.
-* On macOS, it's under `IntelliJ` -> `Preferences`
+* On macOS, it's under `IntelliJ IDEA` -> `Settings`
 * On Linux, it's under `File` -> `Settings`.
 
 We refer to these global settings as `Preferences` in the rest of the document.
@@ -45,8 +45,8 @@ You can also format the whole codebase on the command line with `jt format`.
 These settings should be set to avoid unwanted formatting changes to the codebase.
 
 In `Preferences` -> `Editor` -> `Code Style` -> `Java`:
-- In `Imports` set the count to use import * to a large value to disable import *, e.g. `999`
-- In `Wrapping and Braces` -> `Field Annotations` select the option `Do not wrap after a single annotation`.
+- In `Imports` tab set "Class count to use import '*'" to a large value to disable import *, e.g. `999`
+- In `Wrapping and Braces` tab -> `Field Annotations` select the option `Do not wrap after a single annotation`.
 
 ## Install Ruby and Python Plugins
 
@@ -92,19 +92,19 @@ Checkstyle style checks for Java code can be imported into IntelliJ via the
 [CheckStyle-IDEA](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea)
 plugin.
 
-This is optional and you can choose to just use `jt checkstyle` and
+This is optional, and you can choose to just use `jt checkstyle` and
 `tool/cleanup-imports.rb` instead.
 
 ### Installation
 1. Select `Preferences`, then `Plugins`.
-2. Select `Browse Repositories` and search for `Checkstyle`
+2. Select `Marketplace` and search for `Checkstyle`
 3. Select `Checkstyle-IDEA`, then `Install`.
 
 ### Configuration
-1. Select `Preferences`, `Other Settings`, then `Checkstyle`.
+1. Select `Preferences`, `Tools`, then `Checkstyle`.
 2. Select `+` to add a local Checkstyle Configuration.
 3. Enter a description, e.g. `TruffleRuby Checkstyle`
-4. Enter the location of the configuration file, e.g. `/Users/myuser/Documents/truffleruby/src/main/.checkstyle_checks.xml`
+4. Enter the location of the configuration file, e.g. `src/main/.checkstyle_checks.xml`
 5. Complete the import, then check the `Active` checkbox next to the new configuration, then select `OK`.
 
 ### Scan Usage
@@ -126,4 +126,4 @@ errors. Optionally, you can import Checkstyle styles into your code formatting a
 The `Wrap to Column` plugin is useful to conveniently wrap to a given max number
 of characters per line, for instance in Markdown files. Install it from
 `Preferences` -> `Plugins`. You then need to configure the width to `80` in
-`Preferences` -> `Tools` -> `Wrap to Column` -> `Right margin override`.
+`Preferences` -> `Tools` -> `Wrap to Column` -> `Override right margin`.
