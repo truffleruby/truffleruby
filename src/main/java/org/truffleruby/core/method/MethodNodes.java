@@ -68,7 +68,8 @@ public abstract class MethodNodes {
 
         // For builtin aliases to be == such as String#size and String#length, even though they have
         // different CallTarget, InternalMethod and SharedMethodInfo.
-        return a.getSharedMethodInfo().getArity() == b.getSharedMethodInfo().getArity();
+        return a.getSharedMethodInfo().getIdentity() != null &&
+                a.getSharedMethodInfo().getIdentity() == b.getSharedMethodInfo().getIdentity();
     }
 
     public static int hashInternalMethod(InternalMethod internalMethod) {
