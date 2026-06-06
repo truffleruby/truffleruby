@@ -1,1 +1,2 @@
 slow:Process.wait2 returns nil if the child process is still running when given the WNOHANG flag
+slow:Process.wait2 returns the pid and status of child process

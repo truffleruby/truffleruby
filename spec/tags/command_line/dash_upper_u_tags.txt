@@ -5,3 +5,4 @@ slow:ruby -U does nothing different if specified multiple times
 slow:ruby -U is overruled by Encoding.default_internal=
 slow:ruby -U does not affect the default external encoding
 slow:ruby -U sets Encoding.default_internal to UTF-8 when RUBYOPT is empty or only spaces
+slow:ruby -U does not affect the source encoding
