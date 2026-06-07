@@ -44,14 +44,12 @@ jobs:
     - run: jt install eclipse
     - name: Install RuboCop
       run: gem install --no-document rubocop:0.66.0
-    - name: Build with --warning-as-error to ensure there are no non-deprecation warnings
+    - name: Build with --warning-as-error to ensure there are no warnings
       # We build with Eclipse JDT to ensure it builds fine with that Java compiler since some GraalVM devs use that.
       # This ensures both JDT itself and the Truffle DSL annotation processor work for truffleruby sources.
       # As a note, JDT is sometimes useful to get better error messages than with javac.
-      # We use --warning-as-error --force-deprecation-as-warning to notice and address Truffle and Java compilation warnings.
-      # We keep deprecations as warnings and not errors to not prevent updating Truffle when there
-      # are many deprecations that cannot be addressed right away in the graal import update PR.
-      run: jt build -- --jdt builtin --warning-as-error --force-deprecation-as-warning
+      # We use --warning-as-error to notice and address Truffle and Java compilation warnings.
+      run: jt build -- --jdt builtin --warning-as-error
     - run: jt lint
 
   build: # ~5min
@@ -78,7 +76,7 @@ jobs:
     - uses: ./build/.github/actions/setup-jvmci-graal
 
     - name: Build TruffleRuby
-      run: jt build
+      run: jt build -- --warning-as-error
 
     - name: Create archive
       run: |
