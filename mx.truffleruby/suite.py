@@ -1,5 +1,5 @@
 suite = {
-    "mxversion": "7.69.1",
+    "mxversion": "7.82.0",
     "name": "truffleruby",
     "version": "40.0.0",
     "release": False,
@@ -21,7 +21,7 @@ suite = {
             {
                 "name": "regex",
                 "subdir": True,
-                "version": "5a4fef49929c7ab237d5af2d4003cd11066a5f5d",
+                "version": "0de05e16441b4814e0bffe74a58043784ceb99a8",
                 "urls": [
                     {"url": "https://github.com/truffleruby/graal.git", "kind": "git"},
                     {"url": "https://curio.ssw.jku.at/nexus/content/repositories/snapshots", "kind": "binary"},
@@ -30,7 +30,7 @@ suite = {
             {
                 "name": "sulong",
                 "subdir": True,
-                "version": "5a4fef49929c7ab237d5af2d4003cd11066a5f5d",
+                "version": "0de05e16441b4814e0bffe74a58043784ceb99a8",
                 "urls": [
                     {"url": "https://github.com/truffleruby/graal.git", "kind": "git"},
                     {"url": "https://curio.ssw.jku.at/nexus/content/repositories/snapshots", "kind": "binary"},
