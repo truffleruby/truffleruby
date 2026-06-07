@@ -213,10 +213,7 @@ module Truffle
 
     # Will throw an exception if the arguments are invalid, and potentially convert a range to [omit, length] format.
     def self.normalize_backtrace_args(omit, length)
-      if Primitive.is_a?(length, Integer) && length < 0
-        raise ArgumentError, "negative size (#{length})"
-      end
-      if Primitive.is_a?(omit, Range)
+      if Primitive.is_a?(omit, Range) && Primitive.undefined?(length)
         range = omit
         if Primitive.nil? range.begin
           omit = 0
@@ -231,6 +228,16 @@ module Truffle
             end_index += (range.exclude_end? ? 0 : 1)
             length = omit > end_index ? 0 : end_index - omit
           end
+        end
+      else
+        omit = Primitive.convert_with_to_int(omit)
+        length = undefined if Primitive.nil?(length)
+        length = Primitive.convert_with_to_int(length) unless Primitive.undefined?(length)
+        if Primitive.is_a?(omit, Integer) && omit < 0
+          raise ArgumentError, "negative level (#{omit})"
+        end
+        if Primitive.is_a?(length, Integer) && length < 0
+          raise ArgumentError, "negative size (#{length})"
         end
       end
       [omit, length]

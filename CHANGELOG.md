@@ -27,6 +27,7 @@ Compatibility:
 * Implement `IO::Buffer` (#4248, @eregon).
 * Fix `Enumerable#chunk` to pack multi-argument source yields to match CRuby (0-arg yield → `nil`, 1-arg → value, multi-arg → `Array`) (#4286, @sampokuokkanen).
 * Update `Proc#parameters` and return `[:opt]` instead of `[:opt, nil]` for destructured parameters (#4231, @andrykonchin).
+* Better compatibility for `Kernel#caller` with `Range` argument (#4295, @earlopain)
 
 Performance:
 
