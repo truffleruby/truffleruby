@@ -211,10 +211,6 @@ module Utilities
     "#{GRAAL_DIR}/common.json"
   end
 
-  def truffleruby_common_json
-    "#{TRUFFLERUBY_DIR}/common.json"
-  end
-
   def jvmci_version
     @jvmci_version ||= begin
       sforceimports unless File.directory?(GRAAL_DIR)
@@ -3240,8 +3236,6 @@ module Commands
     command_format(changed['.java']) if changed['.java']
     shellcheck if changed['.sh'] or changed['.inc']
     check_lockfiles(changed['.lock']) if changed['.lock']
-
-    mx 'verify-ci' if changed['.py'] and !ENV['JT_IMPORTS_DONT_ASK']
 
     check_abi(fail: !compare_to)
 
