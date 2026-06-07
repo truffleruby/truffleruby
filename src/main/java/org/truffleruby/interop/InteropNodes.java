@@ -450,6 +450,42 @@ public abstract class InteropNodes {
         }
     }
 
+    // The 3 following messages are actually about stack trace element objects
+
+    @CoreMethod(names = "internal?", onSingleton = true, required = 1, split = Split.ALWAYS)
+    public abstract static class IsInternalNode extends CoreMethodArrayArgumentsNode {
+        @Specialization(limit = "getInteropCacheLimit()")
+        boolean isInternal(Object receiver,
+                @CachedLibrary("receiver") InteropLibrary interop) {
+            return interop.isInternal(receiver);
+        }
+    }
+
+    @CoreMethod(names = "has_bytecode_index?", onSingleton = true, required = 1, split = Split.ALWAYS)
+    public abstract static class HasBytecodeIndexNode extends CoreMethodArrayArgumentsNode {
+        @Specialization(limit = "getInteropCacheLimit()")
+        boolean hasBytecodeIndex(Object receiver,
+                @CachedLibrary("receiver") InteropLibrary interop) {
+            return interop.hasBytecodeIndex(receiver);
+        }
+    }
+
+    @CoreMethod(names = "bytecode_index", onSingleton = true, required = 1, split = Split.ALWAYS)
+    public abstract static class BytecodeIndexNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization(limit = "getInteropCacheLimit()")
+        static int getBytecodeIndex(Object receiver,
+                @Cached TranslateInteropExceptionNode translateInteropException,
+                @CachedLibrary("receiver") InteropLibrary receivers,
+                @Bind Node node) {
+            try {
+                return receivers.getBytecodeIndex(receiver);
+            } catch (UnsupportedMessageException e) {
+                throw translateInteropException.execute(node, e);
+            }
+        }
+    }
+
     @CoreMethod(names = "exception_type", onSingleton = true, required = 1, split = Split.ALWAYS)
     public abstract static class ExceptionTypeNode extends CoreMethodArrayArgumentsNode {
 
@@ -1570,6 +1606,38 @@ public abstract class InteropNodes {
     // endregion
 
     // region Language
+    @CoreMethod(names = "has_language_id?", onSingleton = true, required = 1, split = Split.ALWAYS)
+    public abstract static class HasLanguageIDNode extends CoreMethodArrayArgumentsNode {
+        @Specialization(limit = "getInteropCacheLimit()")
+        boolean hasLanguageID(Object receiver,
+                @CachedLibrary("receiver") InteropLibrary interop) {
+            return interop.hasLanguageId(receiver);
+        }
+    }
+
+    @CoreMethod(names = "language_id", onSingleton = true, required = 1, split = Split.ALWAYS)
+    public abstract static class GetLanguageIDNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization(limit = "getInteropCacheLimit()")
+        static Object getLanguageID(Object receiver,
+                @CachedLibrary("receiver") InteropLibrary receivers,
+                @Cached FromJavaStringNode fromJavaStringNode,
+                @Bind Node node) {
+            if (!receivers.hasLanguageId(receiver)) {
+                return nil;
+            }
+
+            String id;
+            try {
+                id = receivers.getLanguageId(receiver);
+            } catch (UnsupportedMessageException e) {
+                return nil;
+            }
+
+            return fromJavaStringNode.executeFromJavaString(node, id);
+        }
+    }
+
     @CoreMethod(names = "has_language?", onSingleton = true, required = 1, split = Split.ALWAYS)
     public abstract static class HasLanguageNode extends CoreMethodArrayArgumentsNode {
         @Specialization(limit = "getInteropCacheLimit()")
@@ -1632,20 +1700,44 @@ public abstract class InteropNodes {
     // endregion
 
     // region Java
-    @CoreMethod(names = "java?", onSingleton = true, required = 1)
+    @CoreMethod(names = { "java?", "host_object?" }, onSingleton = true, required = 1)
     public abstract static class InteropIsJavaNode extends CoreMethodArrayArgumentsNode {
-        @Specialization
-        boolean isJava(Object value) {
-            return getContext().getEnv().isHostObject(value);
+        @Specialization(limit = "getInteropCacheLimit()")
+        boolean isJava(Object value,
+                @CachedLibrary("value") InteropLibrary interop) {
+            return interop.isHostObject(value);
+        }
+    }
+
+    // Not really useful, but for completeness of having a method for each interop message
+    @CoreMethod(names = "as_host_object", onSingleton = true, required = 1)
+    public abstract static class AsHostObjectNode extends CoreMethodArrayArgumentsNode {
+        @Specialization(limit = "getInteropCacheLimit()")
+        static Object asHostObject(Object value,
+                @CachedLibrary("value") InteropLibrary interop,
+                @Cached TranslateInteropExceptionNode translateInteropException,
+                @Bind Node node) {
+            try {
+                return interop.asHostObject(value);
+            } catch (InteropException e) {
+                throw translateInteropException.execute(node, e);
+            }
         }
     }
 
     @CoreMethod(names = "java_class?", onSingleton = true, required = 1)
     public abstract static class InteropIsJavaClassNode extends CoreMethodArrayArgumentsNode {
-        @Specialization
-        boolean isJavaClass(Object value) {
-            return getContext().getEnv().isHostObject(value) &&
-                    getContext().getEnv().asHostObject(value) instanceof Class;
+        @Specialization(limit = "getInteropCacheLimit()")
+        static boolean isJavaClass(Object value,
+                @CachedLibrary("value") InteropLibrary interop,
+                @Cached TranslateInteropExceptionNode translateInteropException,
+                @Bind Node node) {
+            try {
+                return interop.isHostObject(value) &&
+                        interop.asHostObject(value) instanceof Class;
+            } catch (InteropException e) {
+                throw translateInteropException.execute(node, e);
+            }
         }
     }
 
@@ -1913,6 +2005,36 @@ public abstract class InteropNodes {
                 return interop.getMetaParents(value);
             } catch (UnsupportedMessageException e) {
                 throw translateInteropException.execute(node, e);
+            }
+        }
+    }
+
+
+    @CoreMethod(names = "has_static_scope?", onSingleton = true, required = 1, split = Split.ALWAYS)
+    public abstract static class HasStaticScopeNode extends CoreMethodArrayArgumentsNode {
+        @Specialization(limit = "getInteropCacheLimit()")
+        boolean hasStaticScope(Object receiver,
+                @CachedLibrary("receiver") InteropLibrary interop) {
+            return interop.hasStaticScope(receiver);
+        }
+    }
+
+    @CoreMethod(names = "static_scope", onSingleton = true, required = 1, split = Split.ALWAYS)
+    public abstract static class StaticScopeNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization(limit = "getInteropCacheLimit()")
+        static Object staticScope(Object receiver,
+                @CachedLibrary("receiver") InteropLibrary interop,
+                @Cached TranslateInteropExceptionNode translateInteropException,
+                @Bind Node node) {
+            if (interop.hasStaticScope(receiver)) {
+                try {
+                    return interop.getStaticScope(receiver);
+                } catch (UnsupportedMessageException e) {
+                    throw translateInteropException.execute(node, e);
+                }
+            } else {
+                return nil;
             }
         }
     }
