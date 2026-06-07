@@ -29,10 +29,10 @@
 class Enumerator
   include Enumerable
 
-  attr_writer :args, :kwargs, :size
-  private :args=, :kwargs=, :size=
+  attr_writer :args, :kwargs
+  private :args=, :kwargs=
 
-  private def initialize_enumerator(receiver, size, method_name, *method_args, **method_kwargs)
+  private def initialize_internal(receiver, size, method_name, *method_args, **method_kwargs)
     @object = receiver
     @size = size
     @iter = method_name
@@ -45,27 +45,9 @@ class Enumerator
     self
   end
 
-  private def initialize(receiver_or_size = undefined, method_name = :each, *method_args, **method_kwargs, &block)
-    size = nil
-
-    if block_given?
-      unless Primitive.undefined? receiver_or_size
-        size = receiver_or_size
-      end
-
-      receiver = Generator.new(&block)
-    else
-      if Primitive.undefined? receiver_or_size
-        raise ArgumentError, 'Enumerator#initialize requires a block when called without arguments'
-      end
-
-      receiver = receiver_or_size
-    end
-
-    method_name = Primitive.convert_type method_name, Symbol, :to_sym
-
-    initialize_enumerator receiver, size, method_name, *method_args, **method_kwargs
-
+  private def initialize(size = nil, &block)
+    raise ArgumentError, 'tried to create Proc object without a block' unless block
+    initialize_internal(Generator.new(&block), size, :each)
     self
   end
 
@@ -383,7 +365,7 @@ class Enumerator
       ret = Lazy.allocate
       method_name = Truffle::EnumeratorOperations.lazy_method(method_name)
 
-      ret.__send__ :initialize_enumerator, self, size, method_name, *method_args, **method_kwargs
+      ret.__send__(:initialize_internal, self, size, method_name, *method_args, **method_kwargs)
 
       ret
     end
@@ -720,13 +702,12 @@ class Enumerator
 end
 
 class Enumerator::ArithmeticSequence < Enumerator
-
-  def initialize(obj, method_name, enum_begin, enum_end, step, exclude_end)
+  private def initialize_internal(obj, method_name, enum_begin, enum_end, step, exclude_end)
     @begin = enum_begin
     @end =  enum_end
     @step = step
     @exclude_end = exclude_end
-    super(obj, method_name)
+    super(obj, nil, method_name)
   end
 
   attr_reader :begin, :end, :step

@@ -563,9 +563,9 @@ module Kernel
   module_function :test
 
   def to_enum(method = :each, *args, **kwargs, &block)
-    Enumerator.new(self, method, *args, **kwargs).tap do |enum|
-      enum.__send__ :size=, block if block_given?
-    end
+    method = Primitive.convert_type method, Symbol, :to_sym
+    enum = Enumerator.allocate
+    enum.__send__(:initialize_internal, self, block, method, *args, **kwargs)
   end
   alias_method :enum_for, :to_enum
 
