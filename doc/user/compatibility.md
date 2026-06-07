@@ -5,7 +5,7 @@ Ruby, MRI, version 4.0.2, [including C extensions](#c-extension-compatibility).
 TruffleRuby is still in development, so it is not 100% compatible yet.
 
 TruffleRuby can run Rails and is compatible with many gems, including C extensions.
-TruffleRuby [passes around 97% of ruby/spec](https://eregon.me/blog/2020/06/27/ruby-spec-compatibility-report.html),
+TruffleRuby [passes around 98% of ruby/spec](https://eregon.me/rubyspec-stats/),
 more than any other alternative Ruby implementation.
 
 Any incompatibility with MRI is considered a bug, except for rare cases detailed below.
