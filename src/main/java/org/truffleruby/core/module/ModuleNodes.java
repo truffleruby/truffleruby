@@ -139,6 +139,7 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.source.SourceSection;
+import org.truffleruby.parser.TranslatorEnvironment;
 
 import static org.truffleruby.builtins.PrimitiveNode.FAILURE;
 import static org.truffleruby.core.module.ModuleNodes.GenerateAccessorNode.Accessor.BOTH;
@@ -525,10 +526,11 @@ public abstract class ModuleNodes {
                     ? ModuleNodesFactory.GeneratedReaderNodeFactory.getInstance()
                     : ModuleNodesFactory.GeneratedWriterNodeFactory.getInstance();
 
+            var frameDescriptor = TranslatorEnvironment.newFrameDescriptorBuilderForMethod(sharedMethodInfo).build();
             final RubyRootNode reRaiseRootNode = new RubyRootNode(
                     getLanguage(),
                     sourceSection,
-                    null,
+                    frameDescriptor,
                     sharedMethodInfo,
                     new ReRaiseInlinedExceptionNode(alwaysInlinedNodeFactory),
                     Split.NEVER,

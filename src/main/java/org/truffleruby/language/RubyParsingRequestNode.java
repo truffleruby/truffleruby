@@ -39,7 +39,7 @@ public final class RubyParsingRequestNode extends RubyBaseRootNode implements In
     @Child private DirectCallNode callNode;
 
     public RubyParsingRequestNode(RubyLanguage language, RubyContext context, Source source, String[] argumentNames) {
-        super(language, null, null);
+        super(language, language.EMPTY_DECLARATION_DESCRIPTOR, null);
 
         final RubySource rubySource = new RubySource(source, RubyLanguage.getPath(source));
 

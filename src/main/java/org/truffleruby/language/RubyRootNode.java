@@ -53,6 +53,7 @@ public class RubyRootNode extends RubyBaseRootNode {
             Split split,
             ReturnID returnID) {
         super(language, frameDescriptor, sourceSection);
+        assert frameDescriptor != null && FrameDescriptorInfo.of(frameDescriptor) != null;
         assert sourceSection != null;
         assert body != null;
 
