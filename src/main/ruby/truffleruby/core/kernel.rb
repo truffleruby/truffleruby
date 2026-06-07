@@ -728,7 +728,7 @@ module Kernel
 
   def caller(start = 1, length = undefined)
     start, length = Truffle::KernelOperations.normalize_backtrace_args(start, length)
-    Primitive.kernel_caller_locations(start, length).map(&:to_s)
+    Primitive.kernel_caller_locations(start, length)&.map(&:to_s)
   end
   module_function :caller
 

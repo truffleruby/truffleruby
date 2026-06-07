@@ -1,2 +1,1 @@
 slow:Kernel#caller returns an Array with the block given to #at_exit at the base of the stack
-fails:Kernel#caller must return nil if omitting more locations than available
