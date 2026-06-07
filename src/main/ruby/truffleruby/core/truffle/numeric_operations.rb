@@ -41,7 +41,8 @@ module Truffle
       step = 1 if Primitive.nil?(step)
 
       if (Primitive.undefined?(to) || Primitive.nil?(to) || Primitive.is_a?(to, Numeric)) && Primitive.is_a?(step, Numeric)
-        return Enumerator::ArithmeticSequence.new(from, :step, from, limit, step, false)
+        enum = Enumerator::ArithmeticSequence.allocate
+        return enum.__send__(:initialize_internal, from, :step, from, limit, step, false)
       end
 
       kwargs = {}

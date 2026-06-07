@@ -151,7 +151,8 @@ module Truffle
         check_step_zero(step_size) if Primitive.is_a?(from, Numeric)
 
         if arithmetic_range?(from, to)
-          return Enumerator::ArithmeticSequence.new(range, :step, from, to, step_size, range.exclude_end?)
+          enum = Enumerator::ArithmeticSequence.allocate
+          return enum.send(:initialize_internal, range, :step, from, to, step_size, range.exclude_end?)
         end
       end
 
