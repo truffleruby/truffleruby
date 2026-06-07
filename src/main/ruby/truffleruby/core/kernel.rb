@@ -726,25 +726,9 @@ module Kernel
     pp(*args)
   end
 
-  def caller(start = 1, limit = nil)
-    args =  if Primitive.is_a?(start, Range)
-              if Primitive.nil?(start.begin) and Primitive.nil?(start.end)
-                [1]
-              elsif Primitive.nil? start.begin
-                size = start.end + 1
-                size -= 1 if start.exclude_end?
-                [1, size]
-              elsif Primitive.nil? start.end
-                [start.begin + 1]
-              else
-                [start.begin + 1, start.size]
-              end
-            elsif Primitive.nil? limit
-              [start + 1]
-            else
-              [start + 1, limit]
-            end
-    Kernel.caller_locations(*args).map(&:to_s)
+  def caller(start = 1, length = undefined)
+    start, length = Truffle::KernelOperations.normalize_backtrace_args(start, length)
+    Primitive.kernel_caller_locations(start, length).map(&:to_s)
   end
   module_function :caller
 

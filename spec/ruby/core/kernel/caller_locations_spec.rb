@@ -22,6 +22,18 @@ describe 'Kernel#caller_locations' do
     locations.length.should == 1
   end
 
+  it "raises for negative start" do
+    -> { caller_locations(-1) }.should.raise(ArgumentError, "negative level (-1)")
+  end
+
+  it "raises for negative length" do
+    -> { caller_locations(0, -1) }.should.raise(ArgumentError, "negative size (-1)")
+  end
+
+  it "can be called with `nil` length" do
+    caller_locations(0, nil).map(&:to_s).should == caller_locations(0).map(&:to_s)
+  end
+
   it "can be called with a range" do
     locations1 = caller_locations(0)
     locations2 = caller_locations(2..4)
@@ -68,6 +80,11 @@ describe 'Kernel#caller_locations' do
 
   it "must return the same locations when called with 1..-1 and when called with no arguments" do
     caller_locations.map(&:to_s).should == caller_locations(1..-1).map(&:to_s)
+  end
+
+  it "coerces the arguments to integers" do
+    caller_locations(1.1, 1.1).map(&:to_s).should == caller(1, 1).map(&:to_s)
+    caller_locations(1.1..1.1).map(&:to_s).should == caller(1..1).map(&:to_s)
   end
 
   guard -> { Kernel.instance_method(:tap).source_location } do

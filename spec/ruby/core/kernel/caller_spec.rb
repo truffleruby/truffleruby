@@ -43,6 +43,18 @@ describe 'Kernel#caller' do
     lines[1].should =~ /\A#{path}:2:in [`']block in <main>'\n\z/
   end
 
+  it "raises for negative start" do
+    -> { caller(-1) }.should.raise(ArgumentError, "negative level (-1)")
+  end
+
+  it "raises for negative length" do
+    -> { caller(0, -1) }.should.raise(ArgumentError, "negative size (-1)")
+  end
+
+  it "can be called with `nil` length" do
+    caller(0, nil).should == caller(0)
+  end
+
   it "can be called with a range" do
     locations1 = caller(0)
     locations2 = caller(2..4)
@@ -81,6 +93,11 @@ describe 'Kernel#caller' do
 
   it "must return the same locations when called with 1..-1 and when called with no arguments" do
     caller.should == caller(1..-1)
+  end
+
+  it "coerces the arguments to integers" do
+    caller(1.1, 1.1).should == caller(1, 1)
+    caller(1.1..1.1).should == caller(1..1)
   end
 
   guard -> { Kernel.instance_method(:tap).source_location } do
