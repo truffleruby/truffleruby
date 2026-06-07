@@ -28,7 +28,7 @@ public final class RubyEvalInteractiveRootNode extends RubyBaseRootNode implemen
     @Child DispatchNode callEvalNode = DispatchNode.create();
 
     public RubyEvalInteractiveRootNode(RubyLanguage language, Source source) {
-        super(language, null, null);
+        super(language, language.EMPTY_DECLARATION_DESCRIPTOR, null);
         this.sourceString = TStringUtils.utf8TString(source.getCharacters().toString());
     }
 

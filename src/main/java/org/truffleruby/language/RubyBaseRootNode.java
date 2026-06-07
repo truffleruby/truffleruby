@@ -18,12 +18,15 @@ import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.CoreLibrary;
 
+import java.util.Objects;
+
 public abstract class RubyBaseRootNode extends RootNode {
 
     private final SourceSection sourceSection;
 
     public RubyBaseRootNode(TruffleLanguage<?> language, FrameDescriptor frameDescriptor, SourceSection sourceSection) {
-        super(language, frameDescriptor);
+        // We always want an explicit descriptor, the default of `new FrameDescriptor(null) is no good for Ruby
+        super(language, Objects.requireNonNull(frameDescriptor));
         this.sourceSection = sourceSection;
     }
 

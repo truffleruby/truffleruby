@@ -347,10 +347,11 @@ public final class CoreMethodNodeManager {
                 throw new Error("Always-inlined methods do not support all @CoreMethod attributes for " + nodeClass);
             }
 
+            var frameDescriptor = TranslatorEnvironment.newFrameDescriptorBuilderForMethod(sharedMethodInfo).build();
             RubyRootNode reRaiseRootNode = new RubyRootNode(
                     language,
                     sharedMethodInfo.getSourceSection(),
-                    null,
+                    frameDescriptor,
                     sharedMethodInfo,
                     new ReRaiseInlinedExceptionNode(nodeFactory),
                     Split.NEVER,
