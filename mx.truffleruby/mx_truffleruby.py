@@ -532,10 +532,6 @@ def ruby_spotbugs(args):
         spotbugsArgs.append('-progress')
     sys.exit(mx_spotbugs.spotbugs(['--primary', *args], spotbugsArgs))
 
-def verify_ci(args):
-    """Verify CI configuration"""
-    mx.verify_ci(args, mx.suite('truffle'), _suite, ['common.json', 'ci/common.jsonnet'])
-
 # Similar to mx_sdk.maven_deploy_public but that forces the version to be the SDK version for all artifacts
 def ruby_maven_deploy_public(args):
     mx.command_function('build')(['--dependencies', 'RUBY_POM'])
@@ -570,7 +566,6 @@ mx.update_commands(_suite, {
     'ruby_testdownstream_aot': [ruby_testdownstream_aot, 'aot_bin'],
     'ruby_testdownstream_hello': [ruby_testdownstream_hello, ''],
     'ruby_spotbugs': [ruby_spotbugs, ''],
-    'verify-ci': [verify_ci, '[options]'],
     'ruby_jacoco_args': [ruby_jacoco_args, ''],
     'ruby_maven_deploy_public': [ruby_maven_deploy_public, ''],
     'ruby_maven_deploy_public_repo_dir': [ruby_maven_deploy_public_repo_dir, ''],

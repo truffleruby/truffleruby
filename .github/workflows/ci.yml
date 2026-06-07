@@ -1,4 +1,4 @@
-# Differences to ci.jsonnet (the old internal CI):
+# Differences to the old internal CI:
 # * In general most tests are run on a single platform rather than all platforms
 # * ubuntu-22.04-arm is chosen as the default platform because it is the fastest on GitHub Actions
 # * Test on a single JDK instead of stable + latest
@@ -45,7 +45,12 @@ jobs:
     - name: Install RuboCop
       run: gem install --no-document rubocop:0.66.0
     - name: Build with --warning-as-error to ensure there are no non-deprecation warnings
-      # See comment in ci.jsonnet about --jdt
+      # We build with Eclipse JDT to ensure it builds fine with that Java compiler since some GraalVM devs use that.
+      # This ensures both JDT itself and the Truffle DSL annotation processor work for truffleruby sources.
+      # As a note, JDT is sometimes useful to get better error messages than with javac.
+      # We use --warning-as-error --force-deprecation-as-warning to notice and address Truffle and Java compilation warnings.
+      # We keep deprecations as warnings and not errors to not prevent updating Truffle when there
+      # are many deprecations that cannot be addressed right away in the graal import update PR.
       run: jt build -- --jdt builtin --warning-as-error --force-deprecation-as-warning
     - run: jt lint
 
