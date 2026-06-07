@@ -38,6 +38,8 @@ public final class ArgumentDescriptorUtils {
             boolean isLambda) {
         if ((argDesc.type == ArgumentType.req) && !isLambda) {
             return toArray(language, context, ArgumentType.opt, argDesc.name);
+        } else if ((argDesc.type == ArgumentType.anonreq) && !isLambda) {
+            return toArray(language, context, ArgumentType.anonopt, argDesc.name);
         }
 
         return toArray(language, context, argDesc.type, argDesc.name);
