@@ -727,7 +727,7 @@ public abstract class KernelNodes {
         @Specialization(
                 guards = {
                         "codeEqualNode.execute(node, libSource, source, cachedSource, cachedSourceEnc)",
-                        "fileEqualNode.execute(libFile, file, cachedFile, cachedFileEnc)",
+                        "fileEqualNode.execute(node, libFile, file, cachedFile, cachedFileEnc)",
                         "line == cachedLine",
                         "bindingDescriptor == getBindingDescriptor(binding)" },
                 limit = "getCacheLimit()")
