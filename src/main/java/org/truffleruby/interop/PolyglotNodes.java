@@ -58,19 +58,19 @@ public abstract class PolyglotNodes {
 
         @Specialization(
                 guards = {
-                        "stringsId.isRubyString(this, langId)",
-                        "stringsSource.isRubyString(this, code)",
-                        "idEqualNode.execute(stringsId, langId, cachedLangId, cachedLangIdEnc)",
-                        "codeEqualNode.execute(stringsSource, code, cachedCode, cachedCodeEnc)" },
+                        "stringsId.isRubyString(node, langId)",
+                        "stringsSource.isRubyString(node, code)",
+                        "idEqualNode.execute(node, stringsId, langId, cachedLangId, cachedLangIdEnc)",
+                        "codeEqualNode.execute(node, stringsSource, code, cachedCode, cachedCodeEnc)" },
                 limit = "getCacheLimit()")
         static Object evalCached(Object langId, Object code,
+                @Bind Node node,
                 @Cached @Exclusive RubyStringLibrary stringsId,
                 @Cached @Exclusive RubyStringLibrary stringsSource,
                 @Cached("asTruffleStringUncached(langId)") TruffleString cachedLangId,
                 @Cached("stringsId.getEncoding($node, langId)") RubyEncoding cachedLangIdEnc,
                 @Cached("asTruffleStringUncached(code)") TruffleString cachedCode,
                 @Cached("stringsSource.getEncoding($node, code)") RubyEncoding cachedCodeEnc,
-                @Bind Node node,
                 @Cached("create(parse(node, getJavaString(langId), getJavaString(code)))") DirectCallNode callNode,
                 @Cached StringHelperNodes.EqualNode idEqualNode,
                 @Cached StringHelperNodes.EqualNode codeEqualNode) {
@@ -78,15 +78,15 @@ public abstract class PolyglotNodes {
         }
 
         @Specialization(
-                guards = { "stringsId.isRubyString(this, langId)", "stringsSource.isRubyString(this, code)" },
+                guards = { "stringsId.isRubyString(node, langId)", "stringsSource.isRubyString(node, code)" },
                 replaces = "evalCached", limit = "1")
         static Object evalUncached(Object langId, Object code,
+                @Bind Node node,
                 @Cached @Exclusive RubyStringLibrary stringsId,
                 @Cached @Exclusive RubyStringLibrary stringsSource,
                 @Cached ToJavaStringNode toJavaStringLandNode,
                 @Cached ToJavaStringNode toJavaStringCodeNode,
-                @Cached IndirectCallNode callNode,
-                @Bind Node node) {
+                @Cached IndirectCallNode callNode) {
             return callNode.call(parse(node, toJavaStringLandNode.execute(node, langId),
                     toJavaStringCodeNode.execute(node, code)), EMPTY_ARGUMENTS);
         }
@@ -233,9 +233,9 @@ public abstract class PolyglotNodes {
                 "idLib.isRubyString(node, langId)",
                 "codeLib.isRubyString(node, code)",
                 "filenameLib.isRubyString(node, filename)",
-                "idEqualNode.execute(idLib, langId, cachedLangId, cachedLangIdEnc)",
-                "codeEqualNode.execute(codeLib, code, cachedCode, cachedCodeEnc)",
-                "filenameEqualNode.execute(filenameLib, filename, cachedFilename, cachedFilenameEnc)" },
+                "idEqualNode.execute(node, idLib, langId, cachedLangId, cachedLangIdEnc)",
+                "codeEqualNode.execute(node, codeLib, code, cachedCode, cachedCodeEnc)",
+                "filenameEqualNode.execute(node, filenameLib, filename, cachedFilename, cachedFilenameEnc)" },
                 limit = "getCacheLimit()")
         static Object evalCached(RubyInnerContext rubyInnerContext, Object langId, Object code, Object filename,
                 @Bind Node node,

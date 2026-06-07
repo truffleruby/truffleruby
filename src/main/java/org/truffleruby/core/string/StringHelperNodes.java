@@ -102,9 +102,9 @@ public abstract class StringHelperNodes {
      */
     public abstract static class EqualNode extends RubyBaseNode {
 
-        public final boolean execute(RubyStringLibrary libString, Object rubyString,
+        public final boolean execute(Node node, RubyStringLibrary libString, Object rubyString,
                 TruffleString cachedString, RubyEncoding cachedEncoding) {
-            return execute(libString.getTString(this, rubyString), libString.getEncoding(this, rubyString),
+            return execute(libString.getTString(node, rubyString), libString.getEncoding(node, rubyString),
                     cachedString, cachedEncoding);
         }
 

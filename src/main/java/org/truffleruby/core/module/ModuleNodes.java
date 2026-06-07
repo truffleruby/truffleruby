@@ -990,7 +990,7 @@ public abstract class ModuleNodes {
                 guards = {
                         "stringsName.isRubyString(node, name)",
                         "inherit",
-                        "equalNode.execute(stringsName, name, cachedTString, cachedEncoding)",
+                        "equalNode.execute(node, stringsName, name, cachedTString, cachedEncoding)",
                         "!scoped",
                         "checkName == cachedCheckName" },
                 limit = "getLimit()")

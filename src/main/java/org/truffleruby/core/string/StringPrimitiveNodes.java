@@ -856,7 +856,8 @@ public abstract class StringPrimitiveNodes {
     @ImportStatic(StringOperations.class)
     public abstract static class UnpackPrimitiveNode extends PrimitiveArrayArgumentsNode {
 
-        @Specialization(guards = "equalNode.execute(libFormat, format, cachedFormat, cachedEncoding)", limit = "1")
+        @Specialization(guards = "equalNode.execute($node, libFormat, format, cachedFormat, cachedEncoding)",
+                limit = "1")
         RubyArray unpackCached(Object string, Object format, Object offsetObject,
                 @Cached @Shared InlinedBranchProfile exceptionProfile,
                 @Cached @Shared InlinedBranchProfile negativeOffsetProfile,

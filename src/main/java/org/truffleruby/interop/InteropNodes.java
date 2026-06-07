@@ -240,10 +240,10 @@ public abstract class InteropNodes {
 
         @Specialization(
                 guards = {
-                        "stringsMimeType.isRubyString(this, mimeType)",
-                        "stringsSource.isRubyString(this, source)",
-                        "mimeTypeEqualNode.execute(stringsMimeType, mimeType, cachedMimeType, cachedMimeTypeEnc)",
-                        "sourceEqualNode.execute(stringsSource, source, cachedSource, cachedSourceEnc)" },
+                        "stringsMimeType.isRubyString(node, mimeType)",
+                        "stringsSource.isRubyString(node, source)",
+                        "mimeTypeEqualNode.execute(node, stringsMimeType, mimeType, cachedMimeType, cachedMimeTypeEnc)",
+                        "sourceEqualNode.execute(node, stringsSource, source, cachedSource, cachedSourceEnc)" },
                 limit = "getEvalCacheLimit()")
         static Object evalCached(Object mimeType, Object source,
                 @Bind Node node,
@@ -260,15 +260,15 @@ public abstract class InteropNodes {
         }
 
         @Specialization(
-                guards = { "stringsMimeType.isRubyString(this, mimeType)", "stringsSource.isRubyString(this, source)" },
+                guards = { "stringsMimeType.isRubyString(node, mimeType)", "stringsSource.isRubyString(node, source)" },
                 replaces = "evalCached", limit = "1")
         static Object evalUncached(Object mimeType, RubyString source,
+                @Bind Node node,
                 @Cached @Exclusive RubyStringLibrary stringsMimeType,
                 @Cached @Exclusive RubyStringLibrary stringsSource,
                 @Cached ToJavaStringNode toJavaStringMimeNode,
                 @Cached ToJavaStringNode toJavaStringSourceNode,
-                @Cached IndirectCallNode callNode,
-                @Bind Node node) {
+                @Cached IndirectCallNode callNode) {
             return callNode.call(parse(node, toJavaStringMimeNode.execute(node, mimeType),
                     toJavaStringSourceNode.execute(node, source)), EMPTY_ARGUMENTS);
         }

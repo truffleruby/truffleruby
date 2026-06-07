@@ -1531,9 +1531,9 @@ public abstract class ArrayNodes {
 
         @Specialization(
                 guards = {
-                        "libFormat.isRubyString(this, format)",
-                        "libBuffer.isRubyString(this, buffer)",
-                        "equalNode.execute(libFormat, format, cachedFormat, cachedEncoding)" },
+                        "libFormat.isRubyString(node, format)",
+                        "libBuffer.isRubyString(node, buffer)",
+                        "equalNode.execute(node, libFormat, format, cachedFormat, cachedEncoding)" },
                 limit = "getCacheLimit()")
         static RubyString packCached(Node node, RubyArray array, Object format, Object buffer,
                 @Cached @Shared InlinedBranchProfile exceptionProfile,
