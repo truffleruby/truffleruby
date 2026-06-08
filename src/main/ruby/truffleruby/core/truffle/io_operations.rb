@@ -413,6 +413,16 @@ module Truffle
       ret
     end
 
+    def self.parse_whence(mode)
+      case mode
+      when :CUR then IO::SEEK_CUR
+      when :END then IO::SEEK_END
+      when :SET then IO::SEEK_SET
+      else
+        mode
+      end
+    end
+
     BOM = /\Abom\|/i
 
     def self.parse_external_enc(io, external, mode)
