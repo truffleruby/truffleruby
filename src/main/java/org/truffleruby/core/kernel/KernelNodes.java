@@ -112,7 +112,6 @@ import org.truffleruby.language.RubyGuards;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.RubyRootNode;
 import org.truffleruby.language.WarnNode;
-import org.truffleruby.language.WarningNode;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.backtrace.Backtrace;
 import org.truffleruby.language.backtrace.BacktraceFormatter;
@@ -1676,12 +1675,11 @@ public abstract class KernelNodes {
                 limit = "3")
         static BytesResult formatCached(
                 Node node, AbstractTruffleString format, RubyEncoding encoding, Object[] arguments, boolean isDebug,
-                @Cached(inline = false) @Shared WarningNode warnNode,
                 @Cached("isDebug") boolean cachedIsDebug,
                 @Cached("format.asTruffleStringUncached(encoding.tencoding)") TruffleString cachedFormat,
                 @Cached("encoding") RubyEncoding cachedEncoding,
                 @Cached("arguments.length") int cachedArgumentsLength,
-                @Cached(value = "create(compileFormat(cachedFormat, cachedEncoding, arguments, isDebug, warnNode, node))",
+                @Cached(value = "create(compileFormat(cachedFormat, cachedEncoding, arguments, isDebug, node))",
                         inline = false) DirectCallNode callPackNode,
                 @Cached StringHelperNodes.EqualSameEncodingNode equalNode) {
             return (BytesResult) callPackNode.call(new Object[]{ arguments, arguments.length, null });
@@ -1690,16 +1688,15 @@ public abstract class KernelNodes {
         @Specialization(replaces = "formatCached")
         static BytesResult formatUncached(
                 Node node, AbstractTruffleString format, RubyEncoding encoding, Object[] arguments, boolean isDebug,
-                @Cached(inline = false) @Shared WarningNode warnNode,
                 @Cached(inline = false) IndirectCallNode callPackNode) {
             return (BytesResult) callPackNode.call(
-                    compileFormat(format, encoding, arguments, isDebug, warnNode, node),
+                    compileFormat(format, encoding, arguments, isDebug, node),
                     new Object[]{ arguments, arguments.length, null });
         }
 
         @TruffleBoundary
         static RootCallTarget compileFormat(AbstractTruffleString tstring, RubyEncoding encoding, Object[] arguments,
-                boolean isDebug, WarningNode warnNode, Node node) {
+                boolean isDebug, Node node) {
             try {
                 var byteArray = tstring.getInternalByteArrayUncached(encoding.tencoding);
 
@@ -1710,10 +1707,6 @@ public abstract class KernelNodes {
                 final PrintfSimpleTreeBuilder builder = new PrintfSimpleTreeBuilder(getLanguage(node), configs,
                         encoding);
 
-                if (warnNode.shouldWarn()) {
-                    warn(configs, arguments, warnNode, node);
-                }
-
                 return new FormatRootNode(
                         getLanguage(node),
                         node.getEncapsulatingSourceSection(),
@@ -1723,33 +1716,6 @@ public abstract class KernelNodes {
                         false).getCallTarget();
             } catch (InvalidFormatException e) {
                 throw new RaiseException(getContext(node), coreExceptions(node).argumentError(e.getMessage(), node));
-            }
-        }
-
-        private static void warn(List<SprintfConfig> configs, Object[] arguments, WarningNode warnNode, Node node) {
-            // don't warn if arguments are passed as a Hash:
-            //   format("%<foo>d : %<bar>f", { :foo => 1, :bar => 2 })
-            if (arguments.length == 1 && arguments[0] instanceof RubyHash) {
-                return;
-            }
-
-            int modifiersCount = 0;
-            for (var config : configs) {
-                if (config.getAbsoluteArgumentIndex() != null) {
-                    return; // no warnings if there is an absolute argument index
-                }
-                if (!config.isLiteral()) {
-                    modifiersCount++;
-                    if (config.isWidthStar() || config.isPrecisionStar()) {
-                        modifiersCount++;
-                    }
-                }
-            }
-
-            if (modifiersCount < arguments.length) {
-                warnNode.warningMessage(
-                        RubyContext.get(node).getCallStack().getTopMostUserSourceSection(),
-                        "too many arguments for format string");
             }
         }
     }

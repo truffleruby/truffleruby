@@ -260,10 +260,27 @@ public final class PrintfSimpleTreeBuilder {
 
     }
 
+    private int expectedArguments() {
+        int modifiersCount = 0;
+        for (var config : configs) {
+            if (config.getAbsoluteArgumentIndex() != null) {
+                return -1; // no warnings if there is an absolute argument index
+            }
+            if (!config.isLiteral()) {
+                modifiersCount++;
+                if (config.isWidthStar() || config.isPrecisionStar()) {
+                    modifiersCount++;
+                }
+            }
+        }
+        return modifiersCount;
+    }
 
     public FormatNode getNode() {
         buildTree();
-        return SharedTreeBuilder.createSequence(sequence.toArray(FormatNode.EMPTY_ARRAY));
+
+        return new CheckTooManyArgumentsNode(expectedArguments(),
+                SharedTreeBuilder.createSequence(sequence.toArray(FormatNode.EMPTY_ARRAY)));
     }
 
 }
