@@ -2032,6 +2032,7 @@ class IO
     flush
     reset_buffering
 
+    whence = Truffle::IOOperations.parse_whence(whence)
     r = Truffle::POSIX.lseek(Primitive.io_fd(self), Primitive.rb_num2long(amount), whence)
     Errno.handle if r == -1
     0
@@ -2196,6 +2197,7 @@ class IO
     ensure_open
     raise IOError unless buffer_empty?
 
+    whence = Truffle::IOOperations.parse_whence(whence)
     r = Truffle::POSIX.lseek(Primitive.io_fd(self), Primitive.rb_num2long(amount), whence)
     Errno.handle if r == -1
     r
