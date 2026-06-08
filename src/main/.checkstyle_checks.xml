@@ -327,7 +327,7 @@
     <property name="message" value="Lazily initialized child nodes must be explicitly inserted into the AST."/>
   </module>
   <module name="RegexpHeader">
-    <property name="header" value='/\*\n (\* Copyright \(c\) (20[0-9][0-9]-)?20[0-9][0-9] TruffleRuby contributors\.|\*\*\*\*\* BEGIN LICENSE BLOCK \*\*\*\*\*)\n (\* Copyright \(c\) (20[0-9][0-9]-)?20[0-9][0-9] Oracle and/or its affiliates\.|\* Version: EPL 2\.0/GPL 2\.0/LGPL 2\.1)\n (\* This code is released under a tri EPL/GPL/LGPL license\.|\*)\n (\* You can use it, redistribute it and/or modify it under the terms of the:|\* The contents of this file are subject to the Eclipse Public)\n (\*|\* License Version 2\.0 \(the "License"\); you may not use this file)\n (\* Eclipse Public License version 2\.0|\* except in compliance with the License\. You may obtain a copy of)\n (\* GNU General Public License version 2|\* the License at http://www.eclipse.org/legal/epl-v20.html)\n (\* GNU Lesser General Public License version 2\.1|\*)\n (\*/|\*|\* Software distributed under the License is distributed on an "AS)\n'/>
+    <property name="header" value='/\*\n(\* Copyright \(c\) (20(2[6-9]|[3-9][0-9])-)?20(2[6-9]|[3-9][0-9]) TruffleRuby contributors\.|\* Copyright \(c\) (20([0-1][0-9]|2[0-5])-)?20([0-1][0-9]|2[0-5]) Oracle and/or its affiliates\.|\*\*\*\*\* BEGIN LICENSE BLOCK \*\*\*\*\*)\n'/>
     <property name="fileExtensions" value="java"/>
   </module>
   <module name="FileTabCharacter">
