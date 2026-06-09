@@ -2252,8 +2252,6 @@ class IO
       str = obj
     when Integer
       str = obj.chr(external_encoding || Encoding.default_external)
-    when nil
-      return
     else
       str = Primitive.convert_with_to_str(obj)
     end
