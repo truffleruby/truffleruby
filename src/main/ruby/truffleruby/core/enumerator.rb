@@ -398,7 +398,7 @@ class Enumerator
       Lazy.new(self, set_size) do |yielder, *args|
         taken = yielder.memo || 0
         if taken < n
-          yielder.yield(*args)
+          yielder.yield(Truffle::EnumerableOperations.pack_values(args))
           taken += 1
           yielder.memo = taken
           raise StopLazyError unless taken < n
@@ -424,7 +424,7 @@ class Enumerator
         if dropped < n
           yielder.memo = dropped + 1
         else
-          yielder.yield(*args)
+          yielder.yield(Truffle::EnumerableOperations.pack_values(args))
         end
       end
     end
@@ -434,7 +434,7 @@ class Enumerator
 
       Lazy.new(self, nil) do |yielder, *args|
         if yield(*args)
-          yielder.yield(*args)
+          yielder.yield(Truffle::EnumerableOperations.pack_values(args))
         else
           raise StopLazyError
         end
@@ -449,10 +449,10 @@ class Enumerator
         if succeeding
           unless yield(*args)
             yielder.memo = false
-            yielder.yield(*args)
+            yielder.yield(Truffle::EnumerableOperations.pack_values(args))
           end
         else
-          yielder.yield(*args)
+          yielder.yield(Truffle::EnumerableOperations.pack_values(args))
         end
       end
     end
@@ -470,8 +470,8 @@ class Enumerator
       raise ArgumentError, 'Lazy#{select,find_all} requires a block' unless block_given?
 
       Lazy.new(self, nil) do |yielder, *args|
-        val = args.length >= 2 ? args : args.first
-        yielder.yield(*args) if yield(val)
+        val = Truffle::EnumerableOperations.pack_values(args)
+        yielder.yield(val) if yield(val)
       end
     end
     alias_method :find_all, :select
@@ -481,8 +481,8 @@ class Enumerator
       raise ArgumentError, 'Lazy#reject requires a block' unless block_given?
 
       Lazy.new(self, nil) do |yielder, *args|
-        val = args.length >= 2 ? args : args.first
-        yielder.yield(*args) unless yield(val)
+        val = Truffle::EnumerableOperations.pack_values(args)
+        yielder.yield(val) unless yield(val)
       end
     end
 
@@ -491,7 +491,7 @@ class Enumerator
 
       Lazy.new(self, nil) do |yielder, *args|
         Primitive.share_special_variables(sv)
-        val = args.length >= 2 ? args : args.first
+        val = Truffle::EnumerableOperations.pack_values(args)
         matches = pattern === val
 
         if matches
@@ -508,7 +508,7 @@ class Enumerator
       s = block ? Primitive.proc_special_variables(block) : Primitive.caller_special_variables
 
       Lazy.new(self, nil) do |yielder, *args|
-        val = args.length >= 2 ? args : args.first
+        val = Truffle::EnumerableOperations.pack_values(args)
         matches = pattern === val
         Primitive.regexp_last_match_set(s, $~)
 
@@ -565,10 +565,11 @@ class Enumerator
 
       Lazy.new(self, enumerator_size) do |yielder, *args|
         memo = yielder.memo || offset
+        val = Truffle::EnumerableOperations.pack_values(args)
         if block
-          yielder.yield yield(*args, memo)
+          yielder.yield yield(val, memo)
         else
-          yielder.yield(*args, memo)
+          yielder.yield [val, memo]
         end
         yielder.memo = Primitive.rb_num2long(memo) + 1
       end
@@ -592,7 +593,7 @@ class Enumerator
 
       Lazy.new(self, enumerator_size) do |yielder, *args|
         index = yielder.memo || 0
-        val = args.length >= 2 ? args : args.first
+        val = Truffle::EnumerableOperations.pack_values(args)
         rests = lists.map do |list|
           case list
           when Array
@@ -619,8 +620,9 @@ class Enumerator
     end
 
     def compact
-      Lazy.new(self, nil) do |yielder, e|
-        yielder.yield(e) unless Primitive.nil?(e)
+      Lazy.new(self, nil) do |yielder, *args|
+        val = Truffle::EnumerableOperations.pack_values(args)
+        yielder.yield(val) unless Primitive.nil?(val)
       end
     end
 
@@ -641,9 +643,9 @@ class Enumerator
         Lazy.new(self, nil) do |yielder, *args|
           memo = yielder.memo || Set.new
 
-          val = args.length >= 2 ? args : args.first
+          val = Truffle::EnumerableOperations.pack_values(args)
           comp = yield(val)
-          yielder.yield(*args) if memo.add?(comp)
+          yielder.yield(val) if memo.add?(comp)
 
           yielder.memo = memo
         end
@@ -651,8 +653,8 @@ class Enumerator
         Lazy.new(self, nil) do |yielder, *args|
           memo = yielder.memo || Set.new
 
-          val = args.length >= 2 ? args : args.first
-          yielder.yield(*args) if memo.add?(val)
+          val = Truffle::EnumerableOperations.pack_values(args)
+          yielder.yield(val) if memo.add?(val)
 
           yielder.memo = memo
         end
