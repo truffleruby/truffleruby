@@ -1,1 +1,0 @@
-fails:IO#print writes each obj.to_s to the stream separated by $, (if any) and appends $\ (if any) given multiple objects
