@@ -1,2 +1,0 @@
-fails:IO#close_write does nothing on subsequent invocations
-fails:IO#close_write does nothing on closed stream

@@ -33,7 +33,10 @@ module Truffle
         raise 'last_line_binding is required' if Primitive.nil? last_line_storage
         io.write Primitive.io_last_line_get(last_line_storage).to_s
       else
-        args.each { |o| io.write o.to_s }
+        args.each_with_index do |o, index|
+          io.write o.to_s
+          io.write $,.to_s unless index == args.length - 1
+        end
       end
 
       io.write $\.to_s

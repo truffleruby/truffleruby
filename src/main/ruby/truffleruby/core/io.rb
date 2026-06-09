@@ -1122,7 +1122,6 @@ class IO
       end
 
       str << @buffer.shift
-      str.chomp!(@separator) if @chomp
       yield prepare_read_string(str) unless str.empty?
     end
 
@@ -1176,7 +1175,6 @@ class IO
         str << tmp_str
       end
 
-      str.chomp!(DEFAULT_RECORD_SEPARATOR) if @chomp
       yield prepare_read_string(str) unless str.empty?
     end
 
@@ -1350,7 +1348,6 @@ class IO
   end
 
   def external_encoding
-    ensure_open
     if @mode.anybits?(FMODE_WRITABLE)
       @external
     else
@@ -1384,7 +1381,6 @@ class IO
   end
 
   def internal_encoding
-    ensure_open
     @internal
   end
 
@@ -2254,8 +2250,6 @@ class IO
       str = obj
     when Integer
       str = obj.chr(external_encoding || Encoding.default_external)
-    when nil
-      return
     else
       str = Primitive.convert_with_to_str(obj)
     end
@@ -2428,12 +2422,10 @@ class IO::BidirectionalPipe < IO
   end
 
   def close_read
-    raise IOError, 'closed stream' if closed?
     close
   end
 
   def close_write
-    raise IOError, 'closed stream' if @write.closed?
     @write.close
   end
 

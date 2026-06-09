@@ -1,1 +1,0 @@
-fails:IO#each_line when passed chomp and nil as a separator yields self's content
