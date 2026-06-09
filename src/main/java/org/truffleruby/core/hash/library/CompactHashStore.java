@@ -12,7 +12,6 @@ package org.truffleruby.core.hash.library;
 
 import static com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
-import static com.oracle.truffle.api.dsl.Cached.Exclusive;
 import static org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryCallback;
 
 import java.util.Set;
@@ -40,6 +39,7 @@ import org.truffleruby.language.objects.ObjectGraph;
 
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
