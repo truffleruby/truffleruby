@@ -1122,7 +1122,6 @@ class IO
       end
 
       str << @buffer.shift
-      str.chomp!(@separator) if @chomp
       yield prepare_read_string(str) unless str.empty?
     end
 
@@ -1176,7 +1175,6 @@ class IO
         str << tmp_str
       end
 
-      str.chomp!(DEFAULT_RECORD_SEPARATOR) if @chomp
       yield prepare_read_string(str) unless str.empty?
     end
 
