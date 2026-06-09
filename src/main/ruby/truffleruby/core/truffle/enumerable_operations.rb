@@ -28,6 +28,12 @@
 
 module Truffle
   module EnumerableOperations
+    # Packs values yielded by a source like rb_enum_values_pack() in CRuby:
+    # no values -> nil, a single value -> the value, multiple values -> an Array.
+    def self.pack_values(values)
+      values.length >= 2 ? values : values.first
+    end
+
     def self.cycle_size(enum_size, many)
       if many
         many = Primitive.rb_num2int many

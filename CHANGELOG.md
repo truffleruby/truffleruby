@@ -31,6 +31,7 @@ Compatibility:
 * Better compatibility for `Kernel#caller` with `Range` argument (#4295, @earlopain)
 * Support symbols as arguments for `IO#seek` and `IO#sysseek` (#4306, @earlopain)
 * Fix `IPSocket#inspect` to return `#<TCPSocket:(closed)>` for closed sockets like CRuby instead of raising `IOError` (#4312, @rubiii).
+* Fix `Enumerator::Lazy` methods and `Enumerable#take_while` to pack multi-argument source yields like CRuby (0-arg yield → `nil`, 1-arg → value, multi-arg → `Array`) (#4310, @sampokuokkanen).
 
 Performance:
 
