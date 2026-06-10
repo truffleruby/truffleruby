@@ -81,12 +81,8 @@ public final class DoubleConverter {
         return bytes[index++];
     }
 
-    /** Shift back to previous character in the incoming bytes
-     *
-     * @return false to indicate we are not in an EOS condition */
-    private boolean previous() {
-        index--;
-        return false;
+    private byte peek() {
+        return bytes[index];
     }
 
     private boolean isEOS() {
@@ -123,14 +119,14 @@ public final class DoubleConverter {
 
     private boolean eatUnderscores() {
         while (!isEOS()) {
-            byte value = next();
+            byte value = peek();
 
             if (value != '_') {
-                previous();
                 return isEOS();
             } else if (isStrict) {
                 strictError();
             }
+            next();
         }
 
         return true;
@@ -195,30 +191,29 @@ public final class DoubleConverter {
         return completeCalculation();
     }
 
-    /** Consume initial whitespace and underscores so that next character examined is not whitespace. 1.9 and strict do
-     * not allow leading underscores. Returns whether next position is at the end of the string or not.
-     * <p>
-     * Trivia: " _ _ _ _ 1".to_f == 1.0 in Ruby 1.8 */
+    /** Consume initial whitespace so that next character examined is not whitespace. Returns whether next position is
+     * at the end of the string or not. */
     private boolean skipWhitespace() {
         while (!isEOS()) {
-            byte value = next();
-
-            if (isWhitespace(value)) {
+            if (isWhitespace(peek())) {
+                next();
                 continue;
             }
-            return previous();
+            return false;
         }
 
         return true;
     }
 
     private boolean parseOptionalSign() {
-        byte sign = next();
-
-        if (sign == '-') {
-            addToResult(sign);
-        } else if (sign != '+') {
-            previous();  // backup...not a sign-char
+        switch (peek()) {
+            case '-':
+                addToResult((byte) '-');
+                next();
+                break;
+            case '+':
+                next();
+                break;
         }
 
         return isEOS();
@@ -343,20 +338,22 @@ public final class DoubleConverter {
             return isEOS();
         }
 
-        byte value = next();
-
         int exponent = 0;
         int digits = 0;
         boolean negative = false;
 
-        if (value == '-') {
-            negative = true;
-        } else if (value != '+') {
-            previous(); // backup...not a sign-char
+        switch (peek()) {
+            case '-':
+                negative = true;
+                next();
+                break;
+            case '+':
+                next();
+                break;
         }
 
         while (!isEOS()) {
-            value = next();
+            byte value = next();
 
             if (isDigit(value)) {
                 if (digits < EXPONENT_DIGITS_LIMIT) {
