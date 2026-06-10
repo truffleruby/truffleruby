@@ -73,6 +73,8 @@ class IPSocket < BasicSocket
   end
 
   def inspect
+    return "#<#{Primitive.class(self)}:(closed)>" if closed?
+
     family, port, _host, ip = addr
     "#<#{Primitive.class(self)}:fd #{fileno}, #{family}, #{ip}, #{port}>"
   end

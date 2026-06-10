@@ -30,6 +30,7 @@ Compatibility:
 * Update `Proc#parameters` and return `[:opt]` instead of `[:opt, nil]` for destructured parameters (#4231, @andrykonchin).
 * Better compatibility for `Kernel#caller` with `Range` argument (#4295, @earlopain)
 * Support symbols as arguments for `IO#seek` and `IO#sysseek` (#4306, @earlopain)
+* Fix `IPSocket#inspect` to return `#<TCPSocket:(closed)>` for closed sockets like CRuby instead of raising `IOError` (#4312, @rubiii).
 
 Performance:
 
