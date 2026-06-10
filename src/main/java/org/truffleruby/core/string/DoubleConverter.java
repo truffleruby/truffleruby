@@ -89,9 +89,8 @@ public final class DoubleConverter {
         return index >= endIndex;
     }
 
-    private boolean stopParsing() {
+    private void stopParsing() {
         index = endIndex;
-        return true;
     }
 
     private boolean isDigit(byte b) {
@@ -162,11 +161,9 @@ public final class DoubleConverter {
         }
     }
 
-    private boolean strictError() {
+    private void strictError() {
         if (isStrict) {
             throw new LightweightNumberFormatException("does not meet strict criteria");
-        } else {
-            return true; // means EOS for non-strict
         }
     }
 
@@ -175,10 +172,12 @@ public final class DoubleConverter {
     public double parse(AbstractTruffleString tstring, RubyEncoding encoding, boolean strict, boolean is19) {
         init(tstring, encoding, strict);
 
-        if (skipWhitespace()) {
+        skipWhitespace();
+        if (isEOS()) {
             return completeCalculation();
         }
-        if (parseOptionalSign()) {
+        parseOptionalSign();
+        if (isEOS()) {
             return completeCalculation();
         }
 
@@ -191,21 +190,18 @@ public final class DoubleConverter {
         return completeCalculation();
     }
 
-    /** Consume initial whitespace so that next character examined is not whitespace. Returns whether next position is
-     * at the end of the string or not. */
-    private boolean skipWhitespace() {
+    /** Consume initial whitespace so that next character examined is not whitespace. */
+    private void skipWhitespace() {
         while (!isEOS()) {
             if (isWhitespace(peek())) {
                 next();
                 continue;
             }
-            return false;
+            return;
         }
-
-        return true;
     }
 
-    private boolean parseOptionalSign() {
+    private void parseOptionalSign() {
         switch (peek()) {
             case '-':
                 addToResult((byte) '-');
@@ -215,11 +211,9 @@ public final class DoubleConverter {
                 next();
                 break;
         }
-
-        return isEOS();
     }
 
-    private boolean parseDigits() {
+    private void parseDigits() {
         if (!isEOS()) {
             byte value = next();
 
@@ -231,9 +225,11 @@ public final class DoubleConverter {
                 addToResult(value);
             } else if (value == '.') {
                 addToResult(value);
-                return parseDecimalDigits();
+                parseDecimalDigits();
+                return;
             } else {
-                return isEOS();
+                isEOS();
+                return;
             }
         } else {
             strictError();
@@ -254,27 +250,31 @@ public final class DoubleConverter {
                 }
             } else if (value == '.') {
                 addToResult(value);
-                return parseDecimalDigits();
+                parseDecimalDigits();
+                return;
             } else if (value == '_') {
                 verifyNumberAfterUnderscore();
             } else if (isExponent(value)) {
                 addToResult(value);
-                return parseExponent();
+                parseExponent();
+                return;
             } else if (isWhitespace(value)) {
-                return skipWhitespace();
+                skipWhitespace();
+                return;
             } else {
-                return strictError();
+                strictError();
+                return;
             }
 
         }
 
-        return true;
+        return;
     }
 
-    private boolean parseDecimalDigits() {
+    private void parseDecimalDigits() {
         // Allow decimal point with omitted fractional part (e.g., "1.")
         if (isEOS()) {
-            return true;
+            return;
         }
 
         byte value = next();
@@ -283,7 +283,7 @@ public final class DoubleConverter {
         if (value == '_') {
             strictError();
             if (isEOS()) {
-                return strictError();
+                return;
             }
             value = next();
         }
@@ -301,9 +301,11 @@ public final class DoubleConverter {
         } else if (isExponent(value)) {
             // Allow "1.e+0" (exponent immediately after decimal point)
             addToResult(value);
-            return parseExponent();
+            parseExponent();
+            return;
         } else {
-            return strictError();
+            strictError();
+            return;
         }
 
         while (!isEOS()) {
@@ -320,22 +322,25 @@ public final class DoubleConverter {
                 } // otherwise ignore it
             } else if (isExponent(value)) {
                 addToResult(value);
-                return parseExponent();
+                parseExponent();
+                return;
             } else if (value == '_') {
                 verifyNumberAfterUnderscore();
             } else if (isWhitespace(value)) {
-                return skipWhitespace();
+                skipWhitespace();
+                return;
             } else {
-                return strictError();
+                strictError();
+                return;
             }
         }
 
-        return true;
+        return;
     }
 
-    private boolean parseExponent() {
+    private void parseExponent() {
         if (eatUnderscores()) {
-            return isEOS();
+            return;
         }
 
         int exponent = 0;
@@ -363,7 +368,8 @@ public final class DoubleConverter {
                         exponent = 10 * exponent + (value - '0');
                     }
                 } else {
-                    return tooLargeExponent(chars[0] == '-', negative);
+                    tooLargeExponent(chars[0] == '-', negative);
+                    return;
                 }
             } else if (isWhitespace(value)) {
                 skipWhitespace();
@@ -386,13 +392,12 @@ public final class DoubleConverter {
         if (-MAX_EXPONENT <= exponent && exponent <= MAX_EXPONENT) {
             addExponentToResult(exponent);
             wroteExponent = true;
-            return isEOS(); // Exponent end of double...let's finish.
         } else {
-            return tooLargeExponent(chars[0] == '-', negative);
+            tooLargeExponent(chars[0] == '-', negative);
         }
     }
 
-    private boolean tooLargeExponent(boolean negativeFloat, boolean negativeExponent) {
+    private void tooLargeExponent(boolean negativeFloat, boolean negativeExponent) {
         if (negativeExponent) {
             if (negativeFloat) {
                 result = -0.0;
@@ -406,7 +411,7 @@ public final class DoubleConverter {
                 result = Double.POSITIVE_INFINITY;
             }
         }
-        return stopParsing();
+        stopParsing();
     }
 
     private void verifyNumberAfterUnderscore() {
