@@ -152,9 +152,9 @@ public abstract class BindingNodes {
         return false;
     }
 
-    public static boolean isHiddenVariable(Object name) {
-        if (name instanceof String) {
-            return isHiddenVariable((String) name);
+    public static boolean isHiddenVariable(Object object) {
+        if (object instanceof String name) {
+            return isHiddenVariable(name);
         } else {
             return true;
         }
@@ -166,6 +166,20 @@ public abstract class BindingNodes {
         final char first = name.charAt(0);
         return first == '$' /* Frame-local global variable */ ||
                 first == '%' /* temporary variable */;
+    }
+
+    @Idempotent
+    static boolean isNumberedParameter(String name) {
+        return name.length() == 2 && name.charAt(0) == '_' && name.charAt(1) >= '1' && name.charAt(1) <= '9';
+    }
+
+    @Idempotent
+    static boolean isNumberedParameter(Object object) {
+        if (!(object instanceof String name)) {
+            return false;
+        }
+
+        return isNumberedParameter(name);
     }
 
     @CoreMethod(names = { "dup", "clone" })
@@ -240,6 +254,7 @@ public abstract class BindingNodes {
                 guards = {
                         "name == cachedName",
                         "!isHiddenVariable(cachedName)",
+                        "!isNumberedParameter(cachedName)",
                         "getFrameDescriptor(binding) == descriptor" },
                 limit = "getCacheLimit()")
         static boolean localVariableDefinedCached(RubyBinding binding, String name,
@@ -250,13 +265,15 @@ public abstract class BindingNodes {
         }
 
         @TruffleBoundary
-        @Specialization(guards = "!isHiddenVariable(name)", replaces = "localVariableDefinedCached")
+        @Specialization(
+                guards = { "!isHiddenVariable(name)", "!isNumberedParameter(name)" },
+                replaces = "localVariableDefinedCached")
         static boolean localVariableDefinedUncached(RubyBinding binding, String name) {
             return FindDeclarationVariableNodes.findFrameSlotOrNull(name, binding.getFrame()) != null;
         }
 
         @TruffleBoundary
-        @Specialization(guards = "isHiddenVariable(name)")
+        @Specialization(guards = "isHiddenVariable(name) || isNumberedParameter(name)")
         static boolean localVariableDefinedLastLine(Node node, RubyBinding binding, String name) {
             throw new RaiseException(
                     getContext(node),
@@ -279,6 +296,7 @@ public abstract class BindingNodes {
             final var name = nameToJavaStringNode.execute(this, nameObject);
             return localVariableGetNode.execute(this, binding, name);
         }
+
     }
 
     @GenerateUncached
@@ -289,7 +307,8 @@ public abstract class BindingNodes {
 
         public abstract Object execute(Node node, RubyBinding binding, String name);
 
-        @Specialization(guards = "!isHiddenVariable(name)")
+        @Specialization(
+                guards = { "!isHiddenVariable(name)", "!isNumberedParameter(name)" })
         static Object localVariableGet(Node node, RubyBinding binding, String name,
                 @Cached FindAndReadDeclarationVariableNode readNode) {
             MaterializedFrame frame = binding.getFrame();
@@ -303,12 +322,14 @@ public abstract class BindingNodes {
         }
 
         @TruffleBoundary
-        @Specialization(guards = "isHiddenVariable(name)")
+        @Specialization(
+                guards = "isHiddenVariable(name) || isNumberedParameter(name)")
         static Object localVariableGetLastLine(Node node, RubyBinding binding, String name) {
             throw new RaiseException(
                     getContext(node),
                     coreExceptions(node).nameError("Bad local variable name", binding, name, node));
         }
+
     }
 
     @CoreMethod(names = "local_variable_set", required = 2)
@@ -337,6 +358,7 @@ public abstract class BindingNodes {
                 guards = {
                         "name == cachedName",
                         "!isHiddenVariable(cachedName)",
+                        "!isNumberedParameter(cachedName)",
                         "getFrameDescriptor(binding) == cachedFrameDescriptor",
                         "cachedFrameSlot != null" },
                 limit = "getCacheLimit()")
@@ -355,6 +377,7 @@ public abstract class BindingNodes {
                 guards = {
                         "name == cachedName",
                         "!isHiddenVariable(cachedName)",
+                        "!isNumberedParameter(cachedName)",
                         "getFrameDescriptor(binding) == cachedFrameDescriptor",
                         "cachedFrameSlot == null" },
                 limit = "getCacheLimit()")
@@ -372,7 +395,7 @@ public abstract class BindingNodes {
 
         @TruffleBoundary
         @Specialization(
-                guards = "!isHiddenVariable(name)",
+                guards = { "!isHiddenVariable(name)", "!isNumberedParameter(name)" },
                 replaces = { "localVariableSetCached", "localVariableSetNewCached" })
         static Object localVariableSetUncached(RubyBinding binding, String name, Object value) {
             MaterializedFrame frame = binding.getFrame();
@@ -393,7 +416,7 @@ public abstract class BindingNodes {
         }
 
         @TruffleBoundary
-        @Specialization(guards = "isHiddenVariable(name)")
+        @Specialization(guards = "isHiddenVariable(name) || isNumberedParameter(name)")
         static Object localVariableSetLastLine(Node node, RubyBinding binding, String name, Object value) {
             throw new RaiseException(
                     getContext(node),
@@ -433,7 +456,7 @@ public abstract class BindingNodes {
 
         private void addNamesFromFrame(Frame frame, Set<Object> names) {
             for (Object identifier : FrameDescriptorNamesIterator.iterate(frame.getFrameDescriptor())) {
-                if (!isHiddenVariable(identifier)) {
+                if (!isHiddenVariable(identifier) && !isNumberedParameter(identifier)) {
                     names.add(getSymbol((String) identifier));
                 }
             }

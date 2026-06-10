@@ -18,7 +18,6 @@ exclude :test_implicit_parameters_for_it_and_numparams, "Test::Unit::ProxyError:
 exclude :test_implicit_parameters_for_it_complex, "Test::Unit::ProxyError: undefined method 'implicit_parameters' for an instance of Binding"
 exclude :test_implicit_parameters_for_numparams, "[NameError] exception expected, not #<NoMethodError: undefined method 'implicit_parameter_get' for an instance of Binding>."
 exclude :test_localjump_error, "NoMethodError: undefined method `exit_value' for an instance of LocalJumpError"
-exclude :test_numparam_is_not_local_variables, "<[]> expected but was <[:_1, :_2, :_3, :_4, :_5, :_6, :_7, :_8, :_9]>."
 exclude :test_orphan_return, "LocalJumpError expected but nothing was raised."
 exclude :test_parameters, "<[[:opt, nil], [:block, :b]]> expected but was <[[:req], [:block, :b]]>."
 exclude :test_parameters_lambda, "<[[:req]]> expected but was <[[:req, :\"%it\"]]>."
