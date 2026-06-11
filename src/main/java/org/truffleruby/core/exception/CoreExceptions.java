@@ -797,6 +797,12 @@ public final class CoreExceptions {
     }
 
     @TruffleBoundary
+    public RubyNameError nameErrorNumberedParameterIsNotALocalVariable(String name, Node currentNode) {
+        return nameError(StringUtils.format("numbered parameter '%s' is not a local variable", name), null, name,
+                currentNode);
+    }
+
+    @TruffleBoundary
     public RubyNameError nameErrorUnknownIdentifierException(
             UnknownIdentifierException exception, Object receiver, Node currentNode) {
         return nameError(

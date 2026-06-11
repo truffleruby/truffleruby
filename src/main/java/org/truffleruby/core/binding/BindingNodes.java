@@ -273,11 +273,19 @@ public abstract class BindingNodes {
         }
 
         @TruffleBoundary
-        @Specialization(guards = "isHiddenVariable(name) || isNumberedParameter(name)")
+        @Specialization(guards = "isHiddenVariable(name)")
         static boolean localVariableDefinedLastLine(Node node, RubyBinding binding, String name) {
             throw new RaiseException(
                     getContext(node),
                     coreExceptions(node).nameError("Bad local variable name", binding, name, node));
+        }
+
+        @TruffleBoundary
+        @Specialization(guards = "isNumberedParameter(name)")
+        static boolean numberedParameter(Node node, RubyBinding binding, String name) {
+            throw new RaiseException(
+                    getContext(node),
+                    coreExceptions(node).nameErrorNumberedParameterIsNotALocalVariable(name, node));
         }
 
         protected int getCacheLimit() {
@@ -322,12 +330,19 @@ public abstract class BindingNodes {
         }
 
         @TruffleBoundary
-        @Specialization(
-                guards = "isHiddenVariable(name) || isNumberedParameter(name)")
+        @Specialization(guards = "isHiddenVariable(name)")
         static Object localVariableGetLastLine(Node node, RubyBinding binding, String name) {
             throw new RaiseException(
                     getContext(node),
                     coreExceptions(node).nameError("Bad local variable name", binding, name, node));
+        }
+
+        @TruffleBoundary
+        @Specialization(guards = "isNumberedParameter(name)")
+        static Object numberedParameter(Node node, RubyBinding binding, String name) {
+            throw new RaiseException(
+                    getContext(node),
+                    coreExceptions(node).nameErrorNumberedParameterIsNotALocalVariable(name, node));
         }
 
     }
@@ -416,11 +431,19 @@ public abstract class BindingNodes {
         }
 
         @TruffleBoundary
-        @Specialization(guards = "isHiddenVariable(name) || isNumberedParameter(name)")
+        @Specialization(guards = "isHiddenVariable(name)")
         static Object localVariableSetLastLine(Node node, RubyBinding binding, String name, Object value) {
             throw new RaiseException(
                     getContext(node),
                     coreExceptions(node).nameError("Bad local variable name", binding, name, node));
+        }
+
+        @TruffleBoundary
+        @Specialization(guards = "isNumberedParameter(name)")
+        static Object numberedParameter(Node node, RubyBinding binding, String name, Object value) {
+            throw new RaiseException(
+                    getContext(node),
+                    coreExceptions(node).nameErrorNumberedParameterIsNotALocalVariable(name, node));
         }
 
         protected int getCacheLimit() {
