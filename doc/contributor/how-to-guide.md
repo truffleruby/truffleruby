@@ -14,7 +14,7 @@
   * [How to call Ruby method in Java](#how-to-call-ruby-method-in-java)
   * [How to declare an optional method argument in Ruby](#how-to-declare-an-optional-method-argument-in-ruby)
   * [How to accept keyword arguments in Core Method in Java](#how-to-accept-keyword-arguments-in-core-method-in-java)
-  * [How to create Ruby Array in Java](#how-to-create-ruby-array-in-java-)
+  * [How to create Ruby Array in Java](#how-to-create-ruby-array-in-java)
   * [How to call original class method in Ruby](#how-to-call-original-class-method-in-ruby)
   * [How to call original instance method in Ruby](#how-to-call-original-instance-method-in-ruby)
   * [How to get a list of all the Primitives](#how-to-get-a-list-of-all-the-primitives)
@@ -87,7 +87,7 @@ directory. File names follow the same pattern: `<RubyClass>Nodes`, e.g.
 represented by a Java class named after it, e.g.
 `StringNodes.SizeNode` implements Ruby `String#size` method.
 
-Let's consider and example - the implementation of the `Hash#clear` Core Method:
+Let's consider an example - the implementation of the `Hash#clear` Core Method:
 
 ```java
 // HashNodes.java
@@ -575,7 +575,7 @@ module.
 C extensions related *primitives* are located in
 `org/truffleruby/cext/CExtNodes.java` file.
 
-More details about writing a C extensions are provided in the [C Extensions Guide](cexts.md).
+More details about writing C extensions are provided in the [C Extensions Guide](cexts.md).
 
 ## How to define and expose a POSIX system call to Ruby code
 
@@ -1604,7 +1604,7 @@ whole suit pass successfully as well:
 If the new feature breaks existing behavior and some specs fail - disable them temporary (until TruffleRuby
 is switched to the next CRuby version completely) with tagging as failed (use `jt tag <path-to-spec-file>`)
 
-Look for additional details in [The "Running specs for the next Ruby version" section of the Contributor Workflow document](workflow.md#running-specs-for-ruby-40-features).
+Look for additional details in [The "Running specs for Ruby 4.1 features" section of the Contributor Workflow document](workflow.md#running-specs-for-ruby-41-features).
 
 ## How to use jt CLI tool
 
