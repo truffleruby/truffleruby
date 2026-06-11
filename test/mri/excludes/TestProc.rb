@@ -20,7 +20,6 @@ exclude :test_implicit_parameters_for_numparams, "[NameError] exception expected
 exclude :test_localjump_error, "NoMethodError: undefined method `exit_value' for an instance of LocalJumpError"
 exclude :test_orphan_return, "LocalJumpError expected but nothing was raised."
 exclude :test_parameters, "<[[:opt, nil], [:block, :b]]> expected but was <[[:req], [:block, :b]]>."
-exclude :test_parameters_lambda, "<[[:req]]> expected but was <[[:req, :\"%it\"]]>."
 exclude :test_proc_args_opt_rest, "<[:a, :b, :c, []]> expected but was <[[], :b, :c, []]>."
 exclude :test_proc_autosplat, "<[[1, 2], [[1, 2, 3], 0], [[1, 2, 3], {}]]> expected but was <[[1, 2], [1, 2], [[1, 2, 3], {}]]>."
 exclude :test_proc_autosplat_with_multiple_args_with_ruby2_keywords_splat_bug_19759, "<[[:a, :b], nil]> expected but was <[:a, :b]>."
