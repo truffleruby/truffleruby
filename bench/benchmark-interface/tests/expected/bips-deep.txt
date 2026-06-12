@@ -1,2 +1,0 @@
-This benchmark set contains blocks that want a number of iterations - running all iterations XXX times 
-XXX 

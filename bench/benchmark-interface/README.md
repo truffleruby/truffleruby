@@ -153,7 +153,6 @@ Supported backends are:
 * `bmbm`, via `--bmbm`
 * `benchmark-ips`, via `--bips`
 * Bench9000, via `--bench9000`
-* Deep-Bench, via `--deep`
 
 ### Notes on specific backends
 
@@ -212,19 +211,6 @@ You'll need to manually install the Bench9000 gem.
 
 ```
 $ gem install bench9000
-```
-
-#### Deep-Bench
-
-`--tag`, `--prop`, `--time`, `--freq` and `--log` options are available as
-described in the Deep-Bench documentation.
-
-You'll need to manually install the Deep-Bench gem. If you're using an early
-version of Ruby you might also need to put it on your load path manually, using
-something like `-I deep-bench/lib`.
-
-```
-$ gem install deep-bench
 ```
 
 ## Other Commands

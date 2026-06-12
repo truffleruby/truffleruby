@@ -64,8 +64,6 @@ module BenchmarkInterface
             backend = BenchmarkInterface::Backends::BmBm
           when '--bench9000'
             backend = BenchmarkInterface::Backends::Bench9000
-          when '--deep'
-            backend = BenchmarkInterface::Backends::Deep
           when '-e'
             options[arg] = args[n + 1]
             n += 1
@@ -175,7 +173,6 @@ module BenchmarkInterface
     puts '  --bm'
     puts '  --bmbm'
     puts '  --bench9000'
-    puts '  --deep'
     puts
     puts 'Options:'
     puts '  -e CODE           Run inlined script as a benchmark'
