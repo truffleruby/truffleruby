@@ -11,6 +11,8 @@ ast: |
           sourceCharIndex = 0
           sourceLength = 4
       children:
+          getNode =
+              DynamicObjectFactory$GetNodeGen
           readSelfSlotNode =
               ReadFrameSlotNodeGen
                   attributes:

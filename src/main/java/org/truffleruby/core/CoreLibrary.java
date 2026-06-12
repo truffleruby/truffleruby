@@ -77,7 +77,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -430,8 +430,8 @@ public final class CoreLibrary {
         symbolClass = defineClass("Symbol");
 
         threadClass = defineClass("Thread");
-        DynamicObjectLibrary.getUncached().put(threadClass, "@report_on_exception", true);
-        DynamicObjectLibrary.getUncached().put(threadClass, "@abort_on_exception", false);
+        DynamicObject.PutNode.getUncached().execute(threadClass, "@report_on_exception", true);
+        DynamicObject.PutNode.getUncached().execute(threadClass, "@abort_on_exception", false);
 
         RubyClass threadBacktraceClass = defineClass(threadClass, objectClass, "Backtrace");
         threadBacktraceLocationClass = defineClass(

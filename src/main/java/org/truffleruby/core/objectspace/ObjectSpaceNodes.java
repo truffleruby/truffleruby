@@ -10,7 +10,7 @@
  */
 package org.truffleruby.core.objectspace;
 
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.Layouts;
 import org.truffleruby.annotations.CoreMethod;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
@@ -45,7 +45,6 @@ import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import org.truffleruby.language.objects.shared.WriteBarrierNode;
 import org.truffleruby.language.yield.CallBlockNode;
@@ -80,14 +79,14 @@ public abstract class ObjectSpaceNodes {
         @TruffleBoundary
         @Specialization(guards = "isBasicObjectID(id)")
         Object id2Ref(long id) {
-            final DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
+            final DynamicObject.GetNode getNode = DynamicObject.GetNode.getUncached();
 
             for (Object object : ObjectGraph.stopAndGetAllObjects("ObjectSpace._id2ref", getContext(), this)) {
                 assert ObjectGraph.isRubyObject(object);
 
                 long objectID = 0L;
                 if (object instanceof RubyDynamicObject) {
-                    objectID = ObjectSpaceManager.readObjectID((RubyDynamicObject) object, objectLibrary);
+                    objectID = ObjectSpaceManager.readObjectID((RubyDynamicObject) object, getNode);
                 } else if (object instanceof ImmutableRubyObject) {
                     objectID = ((ImmutableRubyObject) object).getObjectId();
                 }
@@ -235,16 +234,16 @@ public abstract class ObjectSpaceNodes {
                     ? (RubyDynamicObject) finalizer
                     : null;
             final CallableFinalizer action = new CallableFinalizer(finalizer);
-            final DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
+            final DynamicObject.GetNode getNode = DynamicObject.GetNode.getUncached();
+            final DynamicObject.PutNode putNode = DynamicObject.PutNode.getUncached();
 
             synchronized (object) {
-                final FinalizerReference ref = (FinalizerReference) objectLibrary
-                        .getOrDefault(object, Layouts.FINALIZER_REF_IDENTIFIER, null);
+                var ref = (FinalizerReference) getNode.execute(object, Layouts.FINALIZER_REF_IDENTIFIER, null);
                 if (ref == null) {
                     final FinalizerReference newRef = getContext()
                             .getFinalizationService()
                             .addFinalizer(getContext(), object, ObjectSpaceManager.class, action, root);
-                    objectLibrary.put(object, Layouts.FINALIZER_REF_IDENTIFIER, newRef);
+                    putNode.execute(object, Layouts.FINALIZER_REF_IDENTIFIER, newRef);
                 } else {
                     getContext()
                             .getFinalizationService()
@@ -261,12 +260,12 @@ public abstract class ObjectSpaceNodes {
         @Specialization
         Object defineFinalizer(
                 RubyDynamicObject object, Object finalizerCFunction, Object dataStruct, boolean useCExtLock,
-                @CachedLibrary(limit = "1") DynamicObjectLibrary objectLibrary) {
+                @Cached DynamicObject.PutNode putNode) {
             DataObjectFinalizerReference newRef = getContext()
                     .getDataObjectFinalizationService()
                     .addFinalizer(getContext(), object, finalizerCFunction, dataStruct, useCExtLock);
 
-            objectLibrary.put(object, Layouts.DATA_OBJECT_FINALIZER_REF_IDENTIFIER, newRef);
+            putNode.execute(object, Layouts.DATA_OBJECT_FINALIZER_REF_IDENTIFIER, newRef);
 
             return nil;
         }
@@ -279,18 +278,19 @@ public abstract class ObjectSpaceNodes {
         @Specialization
         Object undefineFinalizer(RubyDynamicObject object,
                 @Cached TypeNodes.CheckFrozenNode raiseIfFrozenNode) {
-            final DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
+            final DynamicObject.GetNode getNode = DynamicObject.GetNode.getUncached();
+            final DynamicObject.PutNode putNode = DynamicObject.PutNode.getUncached();
             synchronized (object) {
                 raiseIfFrozenNode.execute(this, object);
 
-                FinalizerReference ref = (FinalizerReference) objectLibrary
-                        .getOrDefault(object, Layouts.FINALIZER_REF_IDENTIFIER, null);
+                FinalizerReference ref = (FinalizerReference) getNode.execute(object,
+                        Layouts.FINALIZER_REF_IDENTIFIER, null);
                 if (ref != null) {
                     FinalizerReference newRef = getContext()
                             .getFinalizationService()
                             .removeFinalizers(object, ref, ObjectSpaceManager.class);
                     if (ref != newRef) {
-                        objectLibrary.put(object, Layouts.FINALIZER_REF_IDENTIFIER, newRef);
+                        putNode.execute(object, Layouts.FINALIZER_REF_IDENTIFIER, newRef);
                     }
                 }
             }

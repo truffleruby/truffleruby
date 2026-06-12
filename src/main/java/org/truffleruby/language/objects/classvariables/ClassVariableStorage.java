@@ -11,7 +11,6 @@
 package org.truffleruby.language.objects.classvariables;
 
 import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import org.truffleruby.RubyLanguage;
 
 import java.lang.invoke.MethodHandles;
@@ -34,9 +33,9 @@ public final class ClassVariableStorage extends DynamicObject {
         super(language.classVariableShape);
     }
 
-    public Object read(String name, DynamicObjectLibrary objectLibrary) {
-        final Object value = objectLibrary.getOrDefault(this, name, null);
-        if (objectLibrary.isShared(this)) {
+    public Object read(String name, DynamicObject.GetNode getNode, DynamicObject.IsSharedNode isSharedNode) {
+        final Object value = getNode.execute(this, name, null);
+        if (isSharedNode.execute(this)) {
             // This extra fence is to ensure acquire-release semantics for class variables, so the read above behaves
             // like a load-acquire. There is a corresponding store-release barrier for class variables writes.
             // See https://preshing.com/20120913/acquire-and-release-semantics/ for where to put the memory fences.
@@ -45,27 +44,28 @@ public final class ClassVariableStorage extends DynamicObject {
         return value;
     }
 
-    public void put(String name, Object value, DynamicObjectLibrary objectLibrary) {
+    public void put(String name, Object value, DynamicObject.PutNode putNode) {
         VarHandle.releaseFence(); // store-release
         synchronized (this) {
-            objectLibrary.put(this, name, value);
+            putNode.execute(this, name, value);
         }
     }
 
-    public boolean putIfPresent(String name, Object value, DynamicObjectLibrary objectLibrary) {
+    public boolean putIfPresent(String name, Object value, DynamicObject.PutNode putNode) {
         VarHandle.releaseFence(); // store-release
         synchronized (this) {
-            return objectLibrary.putIfPresent(this, name, value);
+            return putNode.executeIfPresent(this, name, value);
         }
     }
 
-    public Object remove(String name, DynamicObjectLibrary objectLibrary) {
+    public Object remove(String name, DynamicObject.RemoveKeyNode removeKeyNode, DynamicObject.GetNode getNode,
+            DynamicObject.IsSharedNode isSharedNode) {
         final Object prev;
         synchronized (this) {
-            prev = read(name, objectLibrary);
+            prev = read(name, getNode, isSharedNode);
             if (prev != null) {
                 VarHandle.releaseFence(); // store-release
-                objectLibrary.removeKey(this, name);
+                removeKeyNode.execute(this, name);
             }
         }
         return prev;

@@ -50,7 +50,6 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.object.DynamicObject;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.profiles.ConditionProfile;
@@ -572,7 +571,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
 
     @ExportMessage
     public Object readMember(String name,
-            @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
+            @Cached @Shared DynamicObject.GetNode getNode,
             @Cached @Shared InternalRespondToNode definedNode,
             @Cached GetMethodObjectNode getMethodObjectNode,
             @Cached @Exclusive DispatchNode dispatchNode,
@@ -589,7 +588,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
         }
 
         if (dynamicProfile.profile(dynamic == DispatchNode.MISSING)) {
-            Object iVar = objectLibrary.getOrDefault(this, name, null);
+            Object iVar = getNode.execute(this, name, null);
             if (ivarFoundProfile.profile(iVar != null)) {
                 return iVar;
             } else if (definedNode.execute(null, this, name)) {
@@ -697,7 +696,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
 
     @ExportMessage
     public boolean isMemberReadable(String name,
-            @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
+            @Cached @Shared DynamicObject.ContainsKeyNode containsKeyNode,
             @Cached @Shared InternalRespondToNode definedNode,
             @Cached @Exclusive DispatchNode dispatchNode,
             @Cached @Exclusive BooleanCastNode booleanCastNode,
@@ -706,7 +705,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
             @Bind Node node) {
         Object dynamic = dispatchNode.call(PRIVATE_RETURN_MISSING, this, "polyglot_member_readable?", name);
         if (dynamicProfile.profile(dynamic == DispatchNode.MISSING)) {
-            if (ivarFoundProfile.profile(objectLibrary.containsKey(this, name))) {
+            if (ivarFoundProfile.profile(containsKeyNode.execute(this, name))) {
                 return true;
             } else {
                 return definedNode.execute(null, this, name);
@@ -719,7 +718,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
     @ExportMessage
     public boolean isMemberModifiable(String name,
             @Cached @Shared IsFrozenNode isFrozenNode,
-            @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
+            @Cached @Shared DynamicObject.ContainsKeyNode containsKeyNode,
             @Cached @Exclusive DispatchNode dispatchNode,
             @Cached @Exclusive BooleanCastNode booleanCastNode,
             @Cached @Shared ConditionProfile dynamicProfile,
@@ -730,7 +729,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
                 dynamic,
                 name,
                 isFrozenNode,
-                objectLibrary,
+                containsKeyNode,
                 booleanCastNode,
                 dynamicProfile);
     }
@@ -738,7 +737,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
     @ExportMessage
     public boolean isMemberRemovable(String name,
             @Cached @Shared IsFrozenNode isFrozenNode,
-            @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
+            @Cached @Shared DynamicObject.ContainsKeyNode containsKeyNode,
             @Cached @Exclusive DispatchNode dispatchNode,
             @Cached @Exclusive BooleanCastNode booleanCastNode,
             @Cached @Shared ConditionProfile dynamicProfile,
@@ -749,7 +748,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
                 dynamic,
                 name,
                 isFrozenNode,
-                objectLibrary,
+                containsKeyNode,
                 booleanCastNode,
                 dynamicProfile);
     }
@@ -757,14 +756,14 @@ public abstract class RubyDynamicObject extends DynamicObject {
     private boolean isMemberModifiableRemovable(Node node, Object dynamic,
             String name,
             IsFrozenNode isFrozenNode,
-            DynamicObjectLibrary objectLibrary,
+            DynamicObject.ContainsKeyNode containsKeyNode,
             BooleanCastNode booleanCastNode,
             ConditionProfile dynamicProfile) {
         if (dynamicProfile.profile(dynamic == DispatchNode.MISSING)) {
             if (isFrozenNode.execute(this)) {
                 return false;
             } else {
-                return objectLibrary.containsKey(this, name);
+                return containsKeyNode.execute(this, name);
             }
         } else {
             return booleanCastNode.execute(node, dynamic);
@@ -774,7 +773,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
     @ExportMessage
     public boolean isMemberInsertable(String name,
             @Cached @Shared IsFrozenNode isFrozenNode,
-            @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
+            @Cached @Shared DynamicObject.ContainsKeyNode containsKeyNode,
             @Cached @Exclusive DispatchNode dispatchNode,
             @Cached @Exclusive BooleanCastNode booleanCastNode,
             @Cached @Shared ConditionProfile dynamicProfile,
@@ -784,7 +783,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
             if (isFrozenNode.execute(this) || !isIVar(name)) {
                 return false;
             } else {
-                return !objectLibrary.containsKey(this, name);
+                return !containsKeyNode.execute(this, name);
             }
         } else {
             return booleanCastNode.execute(node, dynamic);
@@ -793,7 +792,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
 
     @ExportMessage
     public boolean isMemberInvocable(String name,
-            @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
+            @Cached @Shared DynamicObject.GetNode getNode,
             @Cached @Shared InternalRespondToNode definedNode,
             @Cached @Exclusive DispatchNode dispatchNode,
             @Cached @Exclusive BooleanCastNode booleanCastNode,
@@ -802,7 +801,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
             @Bind Node node) {
         Object dynamic = dispatchNode.call(PRIVATE_RETURN_MISSING, this, "polyglot_member_invocable?", name);
         if (dynamicProfile.profile(dynamic == DispatchNode.MISSING)) {
-            Object iVar = objectLibrary.getOrDefault(this, name, null);
+            Object iVar = getNode.execute(this, name, null);
             if (ivarFoundProfile.profile(iVar != null)) {
                 return false;
             } else {
@@ -815,7 +814,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
 
     @ExportMessage
     public boolean isMemberInternal(String name,
-            @CachedLibrary("this") DynamicObjectLibrary objectLibrary,
+            @Cached @Shared DynamicObject.GetNode getNode,
             @Cached @Shared InternalRespondToNode definedNode,
             @Cached(parameters = "PUBLIC") @Exclusive InternalRespondToNode definedPublicNode,
             @Cached @Exclusive DispatchNode dispatchNode,
@@ -825,7 +824,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
             @Bind Node node) {
         Object dynamic = dispatchNode.call(PRIVATE_RETURN_MISSING, this, "polyglot_member_internal?", name);
         if (dynamicProfile.profile(dynamic == DispatchNode.MISSING)) {
-            Object result = objectLibrary.getOrDefault(this, name, null);
+            Object result = getNode.execute(this, name, null);
             if (ivarFoundProfile.profile(result != null)) {
                 return true;
             } else {

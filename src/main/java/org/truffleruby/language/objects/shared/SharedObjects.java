@@ -29,7 +29,7 @@ import org.truffleruby.language.RubyDynamicObject;
 import org.truffleruby.language.objects.ObjectGraph;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.language.objects.classvariables.ClassVariableStorage;
 
 public final class SharedObjects {
@@ -159,8 +159,8 @@ public final class SharedObjects {
         }
 
         // GR-49349: we must updateShape() before markShared()
-        DynamicObjectLibrary.getUncached().updateShape(object);
-        DynamicObjectLibrary.getUncached().markShared(object);
+        DynamicObject.UpdateShapeNode.getUncached().execute(object);
+        DynamicObject.MarkSharedNode.getUncached().execute(object);
 
         onShareHook(object);
         return true;
@@ -176,8 +176,8 @@ public final class SharedObjects {
             // We want to share ClassVariableStorage but not expose it to ObjectSpace.reachable_objects_from
             final ClassVariableStorage classVariables = ((RubyModule) object).fields.getClassVariables();
             // GR-49349: we must updateShape() before markShared()
-            DynamicObjectLibrary.getUncached().updateShape(classVariables);
-            DynamicObjectLibrary.getUncached().markShared(classVariables);
+            DynamicObject.UpdateShapeNode.getUncached().execute(classVariables);
+            DynamicObject.MarkSharedNode.getUncached().execute(classVariables);
         } else if (object instanceof RubyArray array) {
             array.setStore(ArrayStoreLibrary.getUncached().makeShared(array.getStore(), array.size));
         } else if (object instanceof RubyHash hash) {

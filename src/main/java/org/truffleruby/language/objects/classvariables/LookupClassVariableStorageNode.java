@@ -12,13 +12,13 @@ package org.truffleruby.language.objects.classvariables;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.dsl.ReportPolymorphism;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.core.module.ModuleOperations;
 import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.language.RubyBaseNode;
@@ -30,10 +30,10 @@ public abstract class LookupClassVariableStorageNode extends RubyBaseNode {
 
     public abstract ClassVariableStorage execute(Node node, RubyModule module, String name);
 
-    @Specialization(guards = "objectLibrary.containsKey(classVariableStorage, name)")
+    @Specialization(guards = "containsKeyNode.execute(classVariableStorage, name)", limit = "1")
     static ClassVariableStorage lookupClassVariable(RubyModule module, String name,
             @Bind("module.fields.getClassVariables()") ClassVariableStorage classVariableStorage,
-            @CachedLibrary(limit = "getDynamicObjectCacheLimit()") DynamicObjectLibrary objectLibrary) {
+            @Cached DynamicObject.ContainsKeyNode containsKeyNode) {
         return classVariableStorage;
     }
 

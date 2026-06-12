@@ -12,7 +12,7 @@ package org.truffleruby.stdlib;
 
 import java.util.Set;
 
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
@@ -258,9 +258,8 @@ public abstract class ObjSpaceNodes {
 
     @TruffleBoundary
     private static AllocationTrace getAllocationTrace(RubyContext context, RubyDynamicObject object) {
-        final AllocationTrace trace = (AllocationTrace) DynamicObjectLibrary
-                .getUncached()
-                .getOrDefault(object, Layouts.ALLOCATION_TRACE_IDENTIFIER, null);
+        final AllocationTrace trace = (AllocationTrace) DynamicObject.GetNode.getUncached().execute(
+                object, Layouts.ALLOCATION_TRACE_IDENTIFIER, null);
         if (trace != null && trace.tracingGeneration == context.getObjectSpaceManager().getTracingGeneration()) {
             return trace;
         } else {

@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.collections.Memo;
@@ -617,7 +617,7 @@ public abstract class ModuleOperations {
         if (!trySetClassVariable(module, name, value)) {
             synchronized (context.getClassVariableDefinitionLock()) {
                 if (!trySetClassVariable(module, name, value)) {
-                    moduleFields.getClassVariables().put(name, value, DynamicObjectLibrary.getUncached());
+                    moduleFields.getClassVariables().put(name, value, DynamicObject.PutNode.getUncached());
                 }
             }
         }
@@ -630,7 +630,7 @@ public abstract class ModuleOperations {
                 module -> module.fields.getClassVariables().putIfPresent(
                         name,
                         value,
-                        DynamicObjectLibrary.getUncached()) ? module : null) != null;
+                        DynamicObject.PutNode.getUncached()) ? module : null) != null;
     }
 
     @TruffleBoundary
@@ -638,7 +638,8 @@ public abstract class ModuleOperations {
         fields.checkFrozen(context, currentNode);
 
         final ClassVariableStorage classVariables = fields.getClassVariables();
-        final Object found = classVariables.remove(name, DynamicObjectLibrary.getUncached());
+        final Object found = classVariables.remove(name, DynamicObject.RemoveKeyNode.getUncached(),
+                DynamicObject.GetNode.getUncached(), DynamicObject.IsSharedNode.getUncached());
         if (found == null) {
             throw new RaiseException(
                     context,

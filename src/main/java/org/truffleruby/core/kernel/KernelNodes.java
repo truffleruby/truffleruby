@@ -27,6 +27,7 @@ import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.PropertyGetter;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
@@ -167,7 +168,6 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.object.Property;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.SourceSection;
@@ -429,7 +429,7 @@ public abstract class KernelNodes {
     @ReportPolymorphism // inline cache
     public abstract static class CopyInstanceVariablesNode extends RubyBaseNode {
 
-        public static final DynamicObjectLibrary[] EMPTY_DYNAMIC_OBJECT_LIBRARY_ARRAY = new DynamicObjectLibrary[0];
+        public static final DynamicObject.PutNode[] EMPTY_PUT_NODE_ARRAY = new DynamicObject.PutNode[0];
         public static final PropertyGetter[] EMPTY_PROPERTY_GETTER_ARRAY = new PropertyGetter[0];
 
         public abstract RubyDynamicObject execute(Node node, RubyDynamicObject newObject, RubyDynamicObject from);
@@ -441,11 +441,11 @@ public abstract class KernelNodes {
         static RubyDynamicObject copyCached(RubyDynamicObject newObject, RubyDynamicObject from,
                 @Cached("from.getShape()") Shape cachedShape,
                 @Cached(value = "getCopiedProperties(cachedShape)", dimensions = 1) PropertyGetter[] propertyGetters,
-                @Cached("createWriteFieldNodes(propertyGetters)") DynamicObjectLibrary[] writeFieldNodes) {
+                @Cached("createWriteFieldNodes(propertyGetters)") DynamicObject.PutNode[] putNodes) {
             for (int i = 0; i < propertyGetters.length; i++) {
                 final PropertyGetter propertyGetter = propertyGetters[i];
                 final Object value = propertyGetter.get(from);
-                writeFieldNodes[i].putWithFlags(newObject, propertyGetter.getKey(), value, propertyGetter.getFlags());
+                putNodes[i].executeWithFlags(newObject, propertyGetter.getKey(), value, propertyGetter.getFlags());
             }
 
             return newObject;
@@ -469,14 +469,14 @@ public abstract class KernelNodes {
             return copiedProperties.toArray(EMPTY_PROPERTY_GETTER_ARRAY);
         }
 
-        protected DynamicObjectLibrary[] createWriteFieldNodes(PropertyGetter[] propertyGetters) {
+        protected DynamicObject.PutNode[] createWriteFieldNodes(PropertyGetter[] propertyGetters) {
             if (propertyGetters.length == 0) {
-                return EMPTY_DYNAMIC_OBJECT_LIBRARY_ARRAY;
+                return EMPTY_PUT_NODE_ARRAY;
             }
 
-            final DynamicObjectLibrary[] nodes = new DynamicObjectLibrary[propertyGetters.length];
+            final DynamicObject.PutNode[] nodes = new DynamicObject.PutNode[propertyGetters.length];
             for (int i = 0; i < propertyGetters.length; i++) {
-                nodes[i] = DynamicObjectLibrary.getFactory().createDispatched(1);
+                nodes[i] = DynamicObject.PutNode.create();
             }
             return nodes;
         }
@@ -487,7 +487,7 @@ public abstract class KernelNodes {
             // Only copy user-level instance variables, hidden ones are initialized later with #initialize_copy.
             Shape shape = from.getShape();
             for (PropertyGetter propertyGetter : getCopiedProperties(shape)) {
-                DynamicObjectLibrary.getUncached().putWithFlags(
+                DynamicObject.PutNode.getUncached().executeWithFlags(
                         to,
                         propertyGetter.getKey(),
                         propertyGetter.get(from),
@@ -975,11 +975,11 @@ public abstract class KernelNodes {
         @Specialization
         boolean isInstanceVariableDefined(RubyDynamicObject object, Object name,
                 @Cached CheckIVarNameNode checkIVarNameNode,
-                @CachedLibrary(limit = "getDynamicObjectCacheLimit()") DynamicObjectLibrary objectLibrary,
+                @Cached DynamicObject.ContainsKeyNode containsKeyNode,
                 @Cached NameToJavaStringNode nameToJavaStringNode) {
             final String nameString = nameToJavaStringNode.execute(this, name);
             checkIVarNameNode.execute(this, object, nameString, name);
-            return objectLibrary.containsKey(object, nameString);
+            return containsKeyNode.execute(object, nameString);
         }
 
         @Fallback
@@ -994,11 +994,11 @@ public abstract class KernelNodes {
         @Specialization
         Object instanceVariableGetSymbol(RubyDynamicObject object, Object name,
                 @Cached @Shared CheckIVarNameNode checkIVarNameNode,
-                @CachedLibrary(limit = "getDynamicObjectCacheLimit()") DynamicObjectLibrary objectLibrary,
+                @Cached DynamicObject.GetNode getNode,
                 @Cached @Shared NameToJavaStringNode nameToJavaStringNode) {
             final String nameString = nameToJavaStringNode.execute(this, name);
             checkIVarNameNode.execute(this, object, nameString, name);
-            return objectLibrary.getOrDefault(object, nameString, nil);
+            return getNode.execute(object, nameString, nil);
         }
 
         @Fallback
@@ -1062,7 +1062,7 @@ public abstract class KernelNodes {
 
         @TruffleBoundary
         private Object removeIVar(RubyDynamicObject object, String name) {
-            final Object value = DynamicObjectLibrary.getUncached().getOrDefault(object, name, nil);
+            final Object value = DynamicObject.GetNode.getUncached().execute(object, name, nil);
 
             if (SharedObjects.isShared(object)) {
                 synchronized (object) {
@@ -1075,7 +1075,7 @@ public abstract class KernelNodes {
         }
 
         private void removeField(RubyDynamicObject object, String name) {
-            if (!DynamicObjectLibrary.getUncached().removeKey(object, name)) {
+            if (!DynamicObject.RemoveKeyNode.getUncached().execute(object, name)) {
                 throw new RaiseException(
                         getContext(),
                         coreExceptions().nameErrorInstanceVariableNotDefined(name, object, this));
@@ -1096,18 +1096,16 @@ public abstract class KernelNodes {
     @Primitive(name = "any_instance_variable?")
     public abstract static class AnyInstanceVariableNode extends PrimitiveArrayArgumentsNode {
 
-        @Specialization(limit = "getDynamicObjectCacheLimit()")
+        @Specialization
         static boolean any(RubyDynamicObject self,
-                @CachedLibrary("self") DynamicObjectLibrary objectLibrary,
+                @Cached DynamicObject.GetKeyArrayNode getKeyArrayNode,
                 @Cached InlinedConditionProfile noPropertiesProfile,
                 @Bind Node node) {
-            var shape = objectLibrary.getShape(self);
-
-            if (noPropertiesProfile.profile(node, shape.getPropertyCount() == 0)) {
+            if (noPropertiesProfile.profile(node, self.getShape().getPropertyCount() == 0)) {
                 return false;
             }
 
-            Object[] keys = objectLibrary.getKeyArray(self);
+            Object[] keys = getKeyArrayNode.execute(self);
 
             for (Object key : keys) {
                 if (key instanceof String) {

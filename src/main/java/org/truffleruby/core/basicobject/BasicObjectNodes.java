@@ -90,7 +90,7 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import static org.truffleruby.language.dispatch.DispatchConfiguration.PRIVATE;
 
 @CoreModule(value = "BasicObject", isClass = true)
@@ -212,28 +212,30 @@ public abstract class BasicObjectNodes {
             return id;
         }
 
-        @Specialization(limit = "getDynamicObjectCacheLimit()")
+        @Specialization
         long objectID(RubyDynamicObject object,
-                @CachedLibrary("object") DynamicObjectLibrary objectLibrary) {
+                @Cached DynamicObject.GetNode getNode,
+                @Cached DynamicObject.IsSharedNode isSharedNode,
+                @Cached DynamicObject.PutNode putNode) {
             // Using the context here has the desirable effect that it checks the context is entered on this thread,
             // which is necessary to safely mutate DynamicObjects.
-            final long id = ObjectSpaceManager.readObjectID(object, objectLibrary);
+            final long id = ObjectSpaceManager.readObjectID(object, getNode);
 
             if (id == 0L) {
-                if (objectLibrary.isShared(object)) {
+                if (isSharedNode.execute(object)) {
                     synchronized (object) {
-                        final long existingID = ObjectSpaceManager.readObjectID(object, objectLibrary);
+                        final long existingID = ObjectSpaceManager.readObjectID(object, getNode);
                         if (existingID != 0L) {
                             return existingID;
                         } else {
                             final long newId = getContext().getObjectSpaceManager().getNextObjectID();
-                            objectLibrary.putLong(object, Layouts.OBJECT_ID_IDENTIFIER, newId);
+                            putNode.execute(object, Layouts.OBJECT_ID_IDENTIFIER, newId);
                             return newId;
                         }
                     }
                 } else {
                     final long newId = getContext().getObjectSpaceManager().getNextObjectID();
-                    objectLibrary.putLong(object, Layouts.OBJECT_ID_IDENTIFIER, newId);
+                    putNode.execute(object, Layouts.OBJECT_ID_IDENTIFIER, newId);
                     return newId;
                 }
             }

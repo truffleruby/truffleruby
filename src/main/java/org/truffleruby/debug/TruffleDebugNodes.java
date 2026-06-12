@@ -30,7 +30,7 @@ import com.oracle.truffle.api.interop.UnknownKeyException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.strings.TruffleString;
@@ -1249,8 +1249,8 @@ public abstract class TruffleDebugNodes {
         @TruffleBoundary
         @Specialization
         RubyArray associated(RubyString string) {
-            final DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
-            Pointer[] associated = (Pointer[]) objectLibrary.getOrDefault(string, Layouts.ASSOCIATED_IDENTIFIER, null);
+            Pointer[] associated = (Pointer[]) DynamicObject.GetNode.getUncached().execute(
+                    string, Layouts.ASSOCIATED_IDENTIFIER, null);
 
             if (associated == null) {
                 associated = Pointer.EMPTY_ARRAY;

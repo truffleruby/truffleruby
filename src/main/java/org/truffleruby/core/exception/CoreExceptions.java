@@ -43,7 +43,7 @@ import com.oracle.truffle.api.interop.InvalidArrayIndexException;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.language.library.RubyStringLibrary;
@@ -457,8 +457,8 @@ public final class CoreExceptions {
         RubyString errorMessage = StringOperations.createUTF8String(context, language, message);
         var keyError = ExceptionOperations.createRubyException(context, exceptionClass, errorMessage, currentNode,
                 null);
-        DynamicObjectLibrary.getUncached().put(keyError, "@receiver", hash);
-        DynamicObjectLibrary.getUncached().put(keyError, "@key", key);
+        DynamicObject.PutNode.getUncached().execute(keyError, "@receiver", hash);
+        DynamicObject.PutNode.getUncached().execute(keyError, "@key", key);
         return keyError;
     }
 
@@ -955,7 +955,7 @@ public final class CoreExceptions {
             path = "openssl";
         }
 
-        DynamicObjectLibrary.getUncached().put(loadError, "@path",
+        DynamicObject.PutNode.getUncached().execute(loadError, "@path",
                 StringOperations.createUTF8String(context, language, path));
 
         return loadError;

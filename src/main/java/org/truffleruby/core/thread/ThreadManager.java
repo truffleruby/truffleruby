@@ -27,7 +27,7 @@ import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.TruffleSafepoint.Interrupter;
 import com.oracle.truffle.api.TruffleSafepoint.InterruptibleFunction;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.SourceSection;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -249,12 +249,12 @@ public final class ThreadManager {
 
     private boolean getGlobalReportOnException() {
         final RubyClass threadClass = context.getCoreLibrary().threadClass;
-        return (boolean) DynamicObjectLibrary.getUncached().getOrDefault(threadClass, "@report_on_exception", null);
+        return (boolean) DynamicObject.GetNode.getUncached().execute(threadClass, "@report_on_exception", null);
     }
 
     private boolean getGlobalAbortOnException() {
         final RubyClass threadClass = context.getCoreLibrary().threadClass;
-        return (boolean) DynamicObjectLibrary.getUncached().getOrDefault(threadClass, "@abort_on_exception", null);
+        return (boolean) DynamicObject.GetNode.getUncached().execute(threadClass, "@abort_on_exception", null);
     }
 
     public void initialize(RubyThread rubyThread, Node currentNode, String info, String sharingReason,

@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.Layouts;
 import org.truffleruby.RubyLanguage;
 
@@ -111,9 +111,9 @@ public final class ObjectSpaceManager {
         return tracingGeneration.get();
     }
 
-    public static long readObjectID(RubyDynamicObject object, DynamicObjectLibrary objectLibrary) {
+    public static long readObjectID(RubyDynamicObject object, DynamicObject.GetNode getNode) {
         try {
-            return objectLibrary.getLongOrDefault(object, Layouts.OBJECT_ID_IDENTIFIER, 0L);
+            return getNode.executeLong(object, Layouts.OBJECT_ID_IDENTIFIER, 0L);
         } catch (UnexpectedResultException e) {
             throw CompilerDirectives.shouldNotReachHere(e);
         }
