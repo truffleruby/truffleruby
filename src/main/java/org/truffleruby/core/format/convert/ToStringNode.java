@@ -100,7 +100,7 @@ public abstract class ToStringNode extends FormatNode {
         }
     }
 
-    @Specialization(guards = "argLibString.isRubyString(this, string)", limit = "1")
+    @Specialization(guards = "argLibString.isRubyString(this, string)")
     Object toStringString(Object string,
             @Cached @Shared RubyStringLibrary libString,
             @Cached @Shared RubyStringLibrary argLibString) {

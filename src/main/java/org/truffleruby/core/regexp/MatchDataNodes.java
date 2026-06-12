@@ -350,7 +350,7 @@ public abstract class MatchDataNodes {
                     NotProvided.INSTANCE);
         }
 
-        @Specialization(guards = "libIndex.isRubyString(this, index)", limit = "1")
+        @Specialization(guards = "libIndex.isRubyString(this, index)")
         Object getIndexString(RubyMatchData matchData, Object index, NotProvided length,
                 @Cached @Shared RubyStringLibrary libIndex,
                 @Cached @Shared InlinedConditionProfile lazyProfile,

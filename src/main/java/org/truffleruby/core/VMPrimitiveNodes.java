@@ -273,9 +273,9 @@ public abstract class VMPrimitiveNodes {
     public abstract static class VMWatchSignalNode extends PrimitiveArrayArgumentsNode {
 
         @TruffleBoundary
-        @Specialization(
-                guards = { "libSignalString.isRubyString(this, signalString)", "libAction.isRubyString(this, action)" },
-                limit = "1")
+        @Specialization(guards = {
+                "libSignalString.isRubyString(this, signalString)",
+                "libAction.isRubyString(this, action)" })
         boolean watchSignalString(Object signalString, boolean isRubyDefaultHandler, Object action,
                 @Cached @Shared RubyStringLibrary libSignalString,
                 @Cached @Shared RubyStringLibrary libAction) {
