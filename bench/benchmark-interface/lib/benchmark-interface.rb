@@ -19,7 +19,6 @@ require 'benchmark-interface/backends/fixed-iterations'
 require 'benchmark-interface/backends/benchmark'
 require 'benchmark-interface/backends/bips'
 require 'benchmark-interface/backends/bench9000'
-require 'benchmark-interface/backends/deep'
 require 'benchmark-interface/require'
 require 'benchmark-interface/run'
 
