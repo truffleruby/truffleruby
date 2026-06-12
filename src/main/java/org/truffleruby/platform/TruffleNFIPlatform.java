@@ -11,6 +11,7 @@
 package org.truffleruby.platform;
 
 import org.truffleruby.RubyContext;
+import org.truffleruby.core.cast.ToPointerAddressNode;
 import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.interop.TranslateInteropExceptionNode;
 
@@ -61,11 +62,7 @@ public final class TruffleNFIPlatform {
     }
 
     public long asPointer(Object object) {
-        try {
-            return InteropLibrary.getFactory().getUncached(object).asPointer(object);
-        } catch (UnsupportedMessageException e) {
-            throw TranslateInteropExceptionNode.executeUncached(e);
-        }
+        return ToPointerAddressNode.executeUncached(object);
     }
 
     public Object resolveTypeRaw(NativeConfiguration nativeConfiguration, String type) {

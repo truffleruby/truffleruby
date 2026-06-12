@@ -488,9 +488,13 @@ public final class ValueWrapperManager {
 
         @ExportMessage
         protected long execute(Object[] arguments,
-                @CachedLibrary(limit = "1") InteropLibrary values) throws UnsupportedMessageException {
+                @CachedLibrary(limit = "1") InteropLibrary values) {
             values.toNative(arguments[0]);
-            return values.asPointer(arguments[0]);
+            try {
+                return values.asPointer(arguments[0]);
+            } catch (UnsupportedMessageException e) {
+                throw CompilerDirectives.shouldNotReachHere(e);
+            }
         }
     }
 

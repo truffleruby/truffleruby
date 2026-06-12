@@ -30,6 +30,7 @@ import org.truffleruby.collections.ConcurrentOperations;
 import org.truffleruby.core.array.ArrayOperations;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.array.RubyArray;
+import org.truffleruby.core.cast.ToPointerAddressNode;
 import org.truffleruby.core.encoding.TStringUtils;
 import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.core.mutex.MutexOperations;
@@ -556,12 +557,7 @@ public final class FeatureLoader {
                 interop,
                 TranslateInteropExceptionNodeGen.getUncached());
 
-        long address;
-        try {
-            address = interop.asPointer(abiVersionNativeString);
-        } catch (UnsupportedMessageException e) {
-            throw CompilerDirectives.shouldNotReachHere(e);
-        }
+        long address = ToPointerAddressNode.executeUncached(abiVersionNativeString);
 
         var pointer = new Pointer(context, address);
         byte[] bytes = pointer.readZeroTerminatedByteArray(context, interop, 0);
