@@ -147,7 +147,7 @@ public abstract class PolyglotNodes {
                 limit = "1")
         Object evalFile(Object id, Object fileName,
                 @Cached @Shared RubyStringLibrary stringsId,
-                @Cached @Exclusive RubyStringLibrary stringsFileName) {
+                @Cached @Shared RubyStringLibrary stringsFileName) {
             final String idString = StringOperations.getJavaString(id);
             final Source source = getSource(idString, StringOperations.getJavaString(fileName));
             return eval(source);

@@ -155,7 +155,7 @@ public abstract class StringPrimitiveNodes {
                 @Cached @Shared RubyStringLibrary libB,
                 @Bind("libA.getTString($node, a)") AbstractTruffleString first,
                 @Bind("libB.getTString($node, b)") AbstractTruffleString second,
-                @Cached @Exclusive InlinedConditionProfile bothEmpty) {
+                @Cached @Shared InlinedConditionProfile bothEmpty) {
             if (bothEmpty.profile(this, first.isEmpty() && second.isEmpty())) {
                 return 0;
             } else {
@@ -195,7 +195,7 @@ public abstract class StringPrimitiveNodes {
                 @Cached TruffleString.ForceEncodingNode forceEncoding2Node,
                 @Cached @Shared InlinedConditionProfile equalProfile,
                 @Cached @Shared InlinedConditionProfile positiveProfile,
-                @Cached @Exclusive InlinedConditionProfile encodingIndexGreaterThanProfile) {
+                @Cached @Shared InlinedConditionProfile encodingIndexGreaterThanProfile) {
             var first = libA.getTString(this, a);
             var firstEncoding = libA.getEncoding(this, a);
             var second = libB.getTString(this, b);
@@ -448,7 +448,7 @@ public abstract class StringPrimitiveNodes {
                 @Cached GetByteCodeRangeNode codeRangeNode,
                 @Cached TruffleString.FromByteArrayNode fromByteArrayNode,
                 @Cached TruffleString.GetInternalByteArrayNode byteArrayNode,
-                @Cached InlinedConditionProfile modifiedProfile,
+                @Cached @Shared InlinedConditionProfile modifiedProfile,
                 @Bind("string.tstring") AbstractTruffleString tstring,
                 @Bind("libString.getEncoding($node, string)") RubyEncoding encoding) {
             if (dummyEncodingProfile.profile(encoding.isDummy)) {
@@ -777,7 +777,7 @@ public abstract class StringPrimitiveNodes {
                 @Cached GetByteCodeRangeNode codeRangeNode,
                 @Cached TruffleString.FromByteArrayNode fromByteArrayNode,
                 @Cached TruffleString.GetInternalByteArrayNode byteArrayNode,
-                @Cached InlinedConditionProfile modifiedProfile,
+                @Cached @Shared InlinedConditionProfile modifiedProfile,
                 @Bind("string.tstring") AbstractTruffleString tstring,
                 @Bind("libString.getEncoding($node, string)") RubyEncoding encoding) {
             // Taken from org.jruby.RubyString#swapcase_bang19.
@@ -914,7 +914,7 @@ public abstract class StringPrimitiveNodes {
                 @Cached @Shared InlinedBranchProfile tooLargeOffsetProfile,
                 @Cached @Shared RubyStringLibrary libString,
                 @Cached @Shared RubyStringLibrary libFormat,
-                @Cached ToJavaStringNode toJavaStringNode,
+                @Cached @Shared ToJavaStringNode toJavaStringNode,
                 @Cached IndirectCallNode callUnpackNode,
                 @Cached @Shared StringHelperNodes.StringGetAssociatedNode stringGetAssociatedNode,
                 @Cached @Shared TruffleString.GetInternalByteArrayNode byteArrayNode,
@@ -1007,7 +1007,7 @@ public abstract class StringPrimitiveNodes {
                 @Cached GetByteCodeRangeNode codeRangeNode,
                 @Cached TruffleString.FromByteArrayNode fromByteArrayNode,
                 @Cached TruffleString.GetInternalByteArrayNode byteArrayNode,
-                @Cached InlinedConditionProfile modifiedProfile,
+                @Cached @Shared InlinedConditionProfile modifiedProfile,
                 @Bind("string.tstring") AbstractTruffleString tstring,
                 @Bind("libString.getEncoding($node, string)") RubyEncoding encoding) {
             var tencoding = encoding.tencoding;
@@ -1055,8 +1055,8 @@ public abstract class StringPrimitiveNodes {
                 @Cached("createUpperToLower()") StringHelperNodes.InvertAsciiCaseHelperNode invertAsciiCaseNode,
                 @Cached CreateCodePointIteratorNode createCodePointIteratorNode,
                 @Cached TruffleStringIterator.NextNode nextNode,
-                @Cached @Exclusive InlinedConditionProfile firstCharIsLowerProfile,
-                @Cached @Exclusive InlinedConditionProfile modifiedProfile,
+                @Cached @Shared InlinedConditionProfile firstCharIsLowerProfile,
+                @Cached @Shared InlinedConditionProfile modifiedProfile,
                 @Bind("string.tstring") AbstractTruffleString tstring,
                 @Bind("libString.getEncoding($node, string)") RubyEncoding encoding) {
             var tencoding = encoding.tencoding;
@@ -1095,7 +1095,7 @@ public abstract class StringPrimitiveNodes {
         Object capitalizeMultiByteComplex(RubyString string, int caseMappingOptions,
                 @Cached @Shared RubyStringLibrary libString,
                 @Cached @Shared SingleByteOptimizableNode singleByteOptimizableNode,
-                @Cached @Exclusive InlinedConditionProfile modifiedProfile,
+                @Cached @Shared InlinedConditionProfile modifiedProfile,
                 @Cached TruffleString.GetInternalByteArrayNode byteArrayNode,
                 @Bind("string.tstring") AbstractTruffleString tstring,
                 @Bind("libString.getEncoding($node, string)") RubyEncoding encoding) {
@@ -1408,7 +1408,7 @@ public abstract class StringPrimitiveNodes {
 
         @Specialization
         Object stringByteSubstring(Object string, int index, NotProvided length,
-                @Cached @Exclusive InlinedConditionProfile indexOutOfBoundsProfile,
+                @Cached @Shared InlinedConditionProfile indexOutOfBoundsProfile,
                 @Cached @Shared RubyStringLibrary libString,
                 @Cached @Shared TruffleString.SubstringByteIndexNode substringNode,
                 @Cached @Shared StringHelperNodes.NormalizeIndexNode normalizeIndexNode) {
@@ -1426,9 +1426,9 @@ public abstract class StringPrimitiveNodes {
 
         @Specialization
         Object stringByteSubstring(Object string, int index, int length,
-                @Cached @Exclusive InlinedConditionProfile negativeLengthProfile,
-                @Cached @Exclusive InlinedConditionProfile indexOutOfBoundsProfile,
-                @Cached @Exclusive InlinedConditionProfile lengthTooLongProfile,
+                @Cached @Shared InlinedConditionProfile negativeLengthProfile,
+                @Cached @Shared InlinedConditionProfile indexOutOfBoundsProfile,
+                @Cached @Shared InlinedConditionProfile lengthTooLongProfile,
                 @Cached @Shared RubyStringLibrary libString,
                 @Cached @Shared TruffleString.SubstringByteIndexNode substringNode,
                 @Cached @Shared StringHelperNodes.NormalizeIndexNode normalizeIndexNode) {
@@ -2073,7 +2073,7 @@ public abstract class StringPrimitiveNodes {
         int fixedWidthEncoding(Object string, int index,
                 @Cached @Shared RubyStringLibrary strings,
                 @Cached @Shared SingleByteOptimizableNode singleByteOptimizableNode,
-                @Cached InlinedConditionProfile firstCharacterProfile) {
+                @Cached @Shared InlinedConditionProfile firstCharacterProfile) {
             final Encoding encoding = strings.getEncoding(this, string).jcoding;
 
             // TODO (nirvdrum 11-Apr-16) Determine whether we need to be bug-for-bug compatible with Rubinius.
@@ -2321,7 +2321,7 @@ public abstract class StringPrimitiveNodes {
                 @Cached @Shared RubyStringLibrary libString,
                 @Cached @Shared TruffleString.ParseLongNode parseLongNode,
                 @Cached TruffleString.CodePointAtByteIndexNode codePointNode,
-                @Cached InlinedConditionProfile notEmptyProfile,
+                @Cached @Shared InlinedConditionProfile notEmptyProfile,
                 @Cached @Shared InlinedBranchProfile notLazyLongProfile,
                 @Cached @Shared InlinedBranchProfile exceptionProfile) {
             var tstring = libString.getTString(this, string);

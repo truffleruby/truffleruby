@@ -1574,7 +1574,7 @@ public abstract class ArrayNodes {
                 @Cached @Shared WriteObjectFieldNode writeAssociatedNode,
                 @Cached @Shared TruffleString.FromByteArrayNode fromByteArrayNode,
                 @Cached @Shared TruffleString.CopyToByteArrayNode copyToByteArrayNode,
-                @Cached ToJavaStringNode toJavaStringNode,
+                @Cached @Shared ToJavaStringNode toJavaStringNode,
                 @Cached IndirectCallNode callPackNode) {
             final String formatString = toJavaStringNode.execute(node, format);
             final RootCallTarget formatCallTarget = compileFormat(node, formatString);

@@ -214,7 +214,7 @@ public abstract class StringHelperNodes {
 
         @Specialization(guards = "!libString.getTString(this, string).isEmpty()")
         int count(Object string, TStringWithEncoding[] tstringsWithEncs,
-                @Cached InlinedBranchProfile errorProfile,
+                @Cached @Shared InlinedBranchProfile errorProfile,
                 @Cached @Shared EncodingNodes.CheckStringEncodingNode checkEncodingNode,
                 @Cached @Shared RubyStringLibrary libString,
                 @Cached @Shared TruffleString.GetInternalByteArrayNode byteArrayNode,

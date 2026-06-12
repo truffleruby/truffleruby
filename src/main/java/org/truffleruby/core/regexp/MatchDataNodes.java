@@ -254,9 +254,9 @@ public abstract class MatchDataNodes {
         @Specialization
         Object getIndex(RubyMatchData matchData, int index, NotProvided length,
                 @Cached @Exclusive RubyStringLibrary strings,
-                @Cached @Shared InlinedConditionProfile normalizedIndexProfile,
+                @Cached @Exclusive InlinedConditionProfile normalizedIndexProfile,
                 @Cached @Exclusive InlinedConditionProfile indexOutOfBoundsProfile,
-                @Cached @Shared InlinedConditionProfile lazyProfile,
+                @Cached @Exclusive InlinedConditionProfile lazyProfile,
                 @CachedLibrary(limit = "getInteropCacheLimit()") @Shared InteropLibrary libInterop,
                 @Cached @Exclusive InlinedConditionProfile hasValueProfile,
                 @Cached TruffleString.SubstringByteIndexNode substringNode) {
@@ -284,7 +284,7 @@ public abstract class MatchDataNodes {
         @Specialization
         Object getIndex(RubyMatchData matchData, int index, int length,
                 @Cached @Exclusive InlinedConditionProfile negativeLengthProfile,
-                @Cached @Shared InlinedConditionProfile normalizedIndexProfile,
+                @Cached @Exclusive InlinedConditionProfile normalizedIndexProfile,
                 @Cached @Exclusive InlinedConditionProfile negativeIndexProfile,
                 @Cached @Exclusive InlinedConditionProfile tooLargeIndexProfile,
                 @Cached @Exclusive InlinedConditionProfile tooLargeTotalProfile) {
@@ -352,7 +352,7 @@ public abstract class MatchDataNodes {
 
         @Specialization(guards = "libIndex.isRubyString(this, index)", limit = "1")
         Object getIndexString(RubyMatchData matchData, Object index, NotProvided length,
-                @Cached @Exclusive RubyStringLibrary libIndex,
+                @Cached @Shared RubyStringLibrary libIndex,
                 @Cached @Shared InlinedConditionProfile lazyProfile,
                 @CachedLibrary(limit = "getInteropCacheLimit()") @Shared InteropLibrary libInterop) {
             return executeGetIndex(

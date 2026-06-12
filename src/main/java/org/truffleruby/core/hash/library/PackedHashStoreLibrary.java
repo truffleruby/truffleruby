@@ -194,7 +194,7 @@ public final class PackedHashStoreLibrary {
                 @Cached @Shared HashingNodes.ToHash hashNode,
                 @Cached @Shared CompareHashKeysNode compareHashKeys,
                 @CachedLibrary(limit = "hashStrategyLimit()") HashStoreLibrary hashes,
-                @Cached InlinedConditionProfile withinCapacity,
+                @Cached @Shared InlinedConditionProfile withinCapacity,
                 @Bind Node node) {
             assert verify(store, hash);
 

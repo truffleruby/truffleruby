@@ -920,21 +920,19 @@ public abstract class KernelNodes {
     @CoreMethod(names = "initialize_copy", required = 1, alwaysInlined = true)
     public abstract static class InitializeCopyNode extends AlwaysInlinedMethodNode {
 
-        @Specialization(guards = "equalNode.execute(this, self, from)")
-        Object initializeCopySame(Frame callerFrame, Object self, Object[] rubyArgs, RootCallTarget target,
-                @Bind("getArgument(rubyArgs, 0)") Object from,
-                @Cached @Shared ReferenceEqualNode equalNode) {
-            return self;
-        }
-
-        @Specialization(guards = "!equalNode.execute(this, self, from)")
+        @Specialization
         Object initializeCopy(Frame callerFrame, Object self, Object[] rubyArgs, RootCallTarget target,
                 @Bind("getArgument(rubyArgs, 0)") Object from,
-                @Cached @Shared ReferenceEqualNode equalNode,
+                @Cached ReferenceEqualNode equalNode,
+                @Cached InlinedConditionProfile isSameProfile,
                 @Cached CheckFrozenNode checkFrozenNode,
                 @Cached LogicalClassNode lhsClassNode,
                 @Cached LogicalClassNode rhsClassNode,
                 @Cached InlinedBranchProfile errorProfile) {
+            if (isSameProfile.profile(this, equalNode.execute(this, self, from))) {
+                return self;
+            }
+
             checkFrozenNode.execute(this, self);
 
             if (lhsClassNode.execute(self) != rhsClassNode.execute(from)) {
@@ -1019,9 +1017,9 @@ public abstract class KernelNodes {
         @Specialization
         Object instanceVariableSet(RubyDynamicObject object, Object name, Object value,
                 @Cached @Shared CheckIVarNameNode checkIVarNameNode,
-                @Cached WriteObjectFieldNode writeNode,
+                @Cached @Shared WriteObjectFieldNode writeNode,
                 @Cached @Shared NameToJavaStringNode nameToJavaStringNode,
-                @Cached TypeNodes.CheckFrozenNode raiseIfFrozenNode) {
+                @Cached @Shared TypeNodes.CheckFrozenNode raiseIfFrozenNode) {
             final String nameString = nameToJavaStringNode.execute(this, name);
             checkIVarNameNode.execute(this, object, nameString, name);
             raiseIfFrozenNode.execute(this, object);
@@ -1046,7 +1044,7 @@ public abstract class KernelNodes {
         Object removeInstanceVariable(RubyDynamicObject object, Object name,
                 @Cached @Shared CheckIVarNameNode checkIVarNameNode,
                 @Cached @Shared NameToJavaStringNode nameToJavaStringNode,
-                @Cached TypeNodes.CheckFrozenNode raiseIfFrozenNode) {
+                @Cached @Shared TypeNodes.CheckFrozenNode raiseIfFrozenNode) {
             final String nameString = nameToJavaStringNode.execute(this, name);
             checkIVarNameNode.execute(this, object, nameString, name);
             raiseIfFrozenNode.execute(this, object);

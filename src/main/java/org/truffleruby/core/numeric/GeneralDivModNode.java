@@ -14,7 +14,6 @@ import java.math.BigInteger;
 
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Shared;
-import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -37,9 +36,9 @@ public abstract class GeneralDivModNode extends RubyBaseNode {
     @Specialization
     static RubyArray doLongs(Node node, long a, long b,
             @Cached @Shared InlinedBranchProfile bZeroProfile,
-            @Cached @Exclusive InlinedBranchProfile bMinusOneProfile,
-            @Cached @Exclusive InlinedBranchProfile useFixnumPairProfile,
-            @Cached @Exclusive InlinedBranchProfile useObjectPairProfile,
+            @Cached @Shared InlinedBranchProfile bMinusOneProfile,
+            @Cached @Shared InlinedBranchProfile useFixnumPairProfile,
+            @Cached @Shared InlinedBranchProfile useObjectPairProfile,
             @Cached @Shared FixnumOrBignumNode fixnumOrBignumQuotient) {
         if (b == 0) {
             bZeroProfile.enter(node);
