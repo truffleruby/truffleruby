@@ -157,8 +157,9 @@ public abstract class ByteArrayNodes {
     @Primitive(name = "bytearray_locate", lowerFixnum = { 2, 3 })
     public abstract static class LocateNode extends PrimitiveArrayArgumentsNode {
 
-        @Specialization(guards = "isSingleBytePattern(patternTString, patternEncoding)")
-        Object getByteSingleByte(RubyByteArray byteArray, Object pattern, int start, int length,
+        @Specialization(guards = "isSingleBytePattern(patternTString, patternEncoding)", limit = "1")
+        static Object getByteSingleByte(RubyByteArray byteArray, Object pattern, int start, int length,
+                @Bind Node node,
                 @Cached TruffleString.ReadByteNode readByteNode,
                 @Cached InlinedBranchProfile tooSmallStartProfile,
                 @Cached InlinedBranchProfile tooLargeStartProfile,
@@ -170,12 +171,12 @@ public abstract class ByteArrayNodes {
             int searchByte = readByteNode.execute(patternTString, 0, patternEncoding);
 
             if (start >= length) {
-                tooLargeStartProfile.enter(this);
+                tooLargeStartProfile.enter(node);
                 return nil;
             }
 
             if (start < 0) {
-                tooSmallStartProfile.enter(this);
+                tooSmallStartProfile.enter(node);
                 start = 0;
             }
 
@@ -184,8 +185,9 @@ public abstract class ByteArrayNodes {
             return index == -1 ? nil : index + 1;
         }
 
-        @Specialization(guards = "!isSingleBytePattern(patternTString, patternEncoding)")
-        Object getByte(RubyByteArray byteArray, Object pattern, int start, int length,
+        @Specialization(guards = "!isSingleBytePattern(patternTString, patternEncoding)", limit = "1")
+        static Object getByte(RubyByteArray byteArray, Object pattern, int start, int length,
+                @Bind Node node,
                 @Cached TruffleString.CodePointLengthNode codePointLengthNode,
                 @Cached TruffleString.GetInternalByteArrayNode getInternalByteArrayNode,
                 @Cached InlinedConditionProfile noCopyProfile,
@@ -195,12 +197,12 @@ public abstract class ByteArrayNodes {
                 @Bind("libPattern.getTEncoding($node, pattern)") TruffleString.Encoding patternEncoding) {
             // TODO (nirvdrum 09-June-2022): Copying the byte array here is wasteful, but ArrayUtils.indexOfWithOrMask does not accept an offset or length for the needle.
             // Another possibility would be to create a MutableTruffleString for the RubyByteArray and use ByteIndexOfStringNode, but that would force computation of the coderange of the byte[]
-            final byte[] patternBytes = TStringUtils.getBytesOrCopy(this, patternTString, patternEncoding,
+            final byte[] patternBytes = TStringUtils.getBytesOrCopy(node, patternTString, patternEncoding,
                     getInternalByteArrayNode, noCopyProfile);
 
             final int index = ArrayUtils.indexOfWithOrMask(byteArray.bytes, start, length, patternBytes, null);
 
-            if (notFoundProfile.profile(this, index == -1)) {
+            if (notFoundProfile.profile(node, index == -1)) {
                 return nil;
             } else {
                 return index + codePointLengthNode.execute(patternTString, patternEncoding);
