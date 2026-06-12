@@ -10,8 +10,6 @@
  */
 package org.truffleruby.language;
 
-import org.truffleruby.RubyLanguage;
-
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.library.ExportLibrary;
@@ -27,13 +25,13 @@ public final class NotProvided implements TruffleObject {
     }
 
     @ExportMessage
-    protected boolean hasLanguage() {
+    protected boolean hasLanguageId() {
         return true;
     }
 
     @ExportMessage
-    protected Class<RubyLanguage> getLanguage() {
-        return RubyLanguage.class;
+    protected String getLanguageId() {
+        return "ruby";
     }
 
     @ExportMessage

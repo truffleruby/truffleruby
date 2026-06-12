@@ -13,7 +13,6 @@ package org.truffleruby.cext;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
-import org.truffleruby.RubyLanguage;
 import org.truffleruby.cext.ValueWrapperManager.AllocateHandleNode;
 import org.truffleruby.cext.ValueWrapperManager.HandleBlock;
 import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
@@ -62,13 +61,13 @@ public final class ValueWrapper implements TruffleObject {
     }
 
     @ExportMessage
-    protected boolean hasLanguage() {
+    protected boolean hasLanguageId() {
         return true;
     }
 
     @ExportMessage
-    protected Class<RubyLanguage> getLanguage() {
-        return RubyLanguage.class;
+    protected String getLanguageId() {
+        return "ruby";
     }
 
     @TruffleBoundary

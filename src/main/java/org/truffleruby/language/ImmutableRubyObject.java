@@ -16,7 +16,6 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import com.oracle.truffle.api.utilities.TriState;
 import org.truffleruby.RubyContext;
-import org.truffleruby.RubyLanguage;
 import org.truffleruby.cext.ValueWrapper;
 import org.truffleruby.interop.ForeignToRubyArgumentsNode;
 import org.truffleruby.language.dispatch.DispatchNode;
@@ -69,13 +68,13 @@ public abstract class ImmutableRubyObject implements TruffleObject {
     // region InteropLibrary messages
     // Specs for these messages are in spec/truffle/interop/matrix_spec.rb
     @ExportMessage
-    public boolean hasLanguage() {
+    public boolean hasLanguageId() {
         return true;
     }
 
     @ExportMessage
-    public Class<RubyLanguage> getLanguage() {
-        return RubyLanguage.class;
+    public String getLanguageId() {
+        return "ruby";
     }
 
     @TruffleBoundary

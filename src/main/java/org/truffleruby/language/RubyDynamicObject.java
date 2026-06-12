@@ -15,7 +15,6 @@ import com.oracle.truffle.api.interop.StopIterationException;
 import com.oracle.truffle.api.interop.UnknownKeyException;
 import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.RubyContext;
-import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.cast.BooleanCastNode;
 import org.truffleruby.core.cast.IntegerCastNode;
@@ -106,13 +105,13 @@ public abstract class RubyDynamicObject extends DynamicObject {
     // region InteropLibrary messages
     // Specs for these messages are in spec/truffle/interop/matrix_spec.rb
     @ExportMessage
-    public boolean hasLanguage() {
+    public boolean hasLanguageId() {
         return true;
     }
 
     @ExportMessage
-    public Class<RubyLanguage> getLanguage() {
-        return RubyLanguage.class;
+    public String getLanguageId() {
+        return "ruby";
     }
 
     @ExportMessage
