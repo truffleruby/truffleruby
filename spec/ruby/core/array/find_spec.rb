@@ -38,7 +38,7 @@ ruby_version_is "4.0" do
     end
 
     it "raises a NoMethodError if the ifnone argument does not respond to #call and no element is found" do
-      -> { [1, 2, 3].find(42) { |x| false } }.should raise_error(NoMethodError)
+      -> { [1, 2, 3].find(42) { |x| false } }.should.raise(NoMethodError)
     end
 
     it "stops iterating as soon as an element is found" do

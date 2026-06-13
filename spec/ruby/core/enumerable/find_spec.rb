@@ -55,7 +55,7 @@ describe "Enumerable#find" do
   end
 
   it "raises a NoMethodError if the ifnone argument does not respond to #call and no element is found" do
-    -> { @numerous.find(42) {|e| false } }.should raise_error(NoMethodError)
+    -> { @numerous.find(42) {|e| false } }.should.raise(NoMethodError)
   end
 
   it "passes through the values yielded by #each_with_index" do
