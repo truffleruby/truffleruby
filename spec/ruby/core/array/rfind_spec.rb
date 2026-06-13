@@ -8,22 +8,41 @@ require_relative '../enumerable/shared/enumeratorized'
 
 ruby_version_is "4.0" do
   describe "Array#rfind" do
-    it "returns the last element for which the block returns a truthy value" do
+    it "returns the last element for which the block is not false" do
       [1, 2, 3, 4, 5].rfind { |x| x % 2 == 0 }.should == 4
     end
 
-    it "returns nil when no element matches and no ifnone proc is given" do
+    it "returns nil when the block is false and there is no ifnone proc given" do
       [1, 2, 3].rfind { |x| false }.should == nil
     end
 
-    it "calls the ifnone proc and returns its value when no element matches" do
+    it "returns the value of the ifnone proc if the block is false" do
       fail_proc = -> { "cheeseburgers" }
       [1, 2, 3].rfind(fail_proc) { |x| false }.should == "cheeseburgers"
     end
 
-    it "does not call the ifnone proc when an element is found" do
+    it "doesn't call the ifnone proc if an element is found" do
       fail_proc = -> { raise "This shouldn't have been called" }
       [1, 2, 3].rfind(fail_proc) { |x| x == 3 }.should == 3
+    end
+
+    it "calls the ifnone proc only once when the block is false" do
+      times = 0
+      fail_proc = -> { times += 1; raise if times > 1; "cheeseburgers" }
+      [1, 2, 3].rfind(fail_proc) { |x| false }.should == "cheeseburgers"
+    end
+
+    it "calls the ifnone proc when there are no elements" do
+      fail_proc = -> { "yay" }
+      [].rfind(fail_proc) { |x| true }.should == "yay"
+    end
+
+    it "ignores the ifnone argument when nil" do
+      [1, 2, 3].rfind(nil) { |x| false }.should == nil
+    end
+
+    it "raises a NoMethodError if the ifnone argument does not respond to #call and no element is found" do
+      -> { [1, 2, 3].rfind(42) { |x| false } }.should raise_error(NoMethodError)
     end
 
     it "iterates elements in reverse order" do
@@ -38,8 +57,14 @@ ruby_version_is "4.0" do
       visited.should == [5, 4, 3]
     end
 
-    it "returns an Enumerator when no block is given" do
+    it "returns an enumerator when no block given" do
       [1, 2, 3].rfind.should.instance_of?(Enumerator)
+    end
+
+    it "passes the ifnone proc to the enumerator" do
+      times = 0
+      fail_proc = -> { times += 1; raise if times > 1; "cheeseburgers" }
+      [1, 2, 3].rfind(fail_proc).each { |x| false }.should == "cheeseburgers"
     end
 
     it "rechecks the array size during iteration" do
