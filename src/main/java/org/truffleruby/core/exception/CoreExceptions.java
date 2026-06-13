@@ -803,6 +803,18 @@ public final class CoreExceptions {
     }
 
     @TruffleBoundary
+    public RubyNameError nameErrorNotAnImplicitParameter(String name, RubyBinding binding, Node currentNode) {
+        return nameError(StringUtils.format("'%s' is not an implicit parameter", name), binding, name,
+                currentNode);
+    }
+
+    @TruffleBoundary
+    public RubyNameError nameErrorImplicitParameterNotDefined(String name, RubyBinding binding, Node currentNode) {
+        return nameError(StringUtils.format("implicit parameter '%s' is not defined for %s", name, binding),
+                binding, name, currentNode);
+    }
+
+    @TruffleBoundary
     public RubyNameError nameErrorUnknownIdentifierException(
             UnknownIdentifierException exception, Object receiver, Node currentNode) {
         return nameError(

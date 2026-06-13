@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.dsl.GenerateUncached;
@@ -36,6 +37,7 @@ import org.truffleruby.core.array.ArrayHelpers;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.cast.NameToJavaStringNode;
 import org.truffleruby.core.klass.RubyClass;
+import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.control.RaiseException;
@@ -58,9 +60,14 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.truffleruby.language.locals.WriteFrameSlotNode;
 import org.truffleruby.parser.FrameDescriptorInfo;
 import org.truffleruby.parser.TranslatorEnvironment;
+import org.truffleruby.parser.YARPTranslator;
 
 @CoreModule(value = "Binding", isClass = true)
 public abstract class BindingNodes {
+    static final String IT_PARAMETER_NAME = "it";
+    /** The "it" implicit parameter is stored in a frame as a hidden variable to distinguish it from an ordinal local
+     * variable */
+    static final String IT_HIDDEN_VARIABLE_NAME = YARPTranslator.IT_PARAMETER_NAME;
 
     /** Creates a Binding without a SourceSection, only for Binding used internally and not exposed to the user. */
     public static RubyBinding createBinding(RubyContext context, RubyLanguage language, MaterializedFrame frame) {
@@ -174,6 +181,18 @@ public abstract class BindingNodes {
         return isNumberedParameter(name);
     }
 
+    @Idempotent
+    static boolean isImplicitParameter(String name) {
+        return name.equals(IT_PARAMETER_NAME) || isNumberedParameter(name);
+    }
+
+    static String resolveImplicitParameterName(String name) {
+        if (name.equals(IT_PARAMETER_NAME)) {
+            return IT_HIDDEN_VARIABLE_NAME;
+        }
+        return name;
+    }
+
     @CoreMethod(names = { "dup", "clone" })
     public abstract static class DupNode extends CoreMethodArrayArgumentsNode {
         @Specialization
@@ -183,6 +202,178 @@ public abstract class BindingNodes {
                     getLanguage().bindingShape,
                     binding.getFrame(),
                     binding.sourceSection);
+        }
+    }
+
+    @CoreMethod(names = "implicit_parameter_defined?", required = 1, split = Split.ALWAYS)
+    public abstract static class BindingImplicitParameterDefinedNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization
+        boolean isDefined(RubyBinding binding, Object nameObject,
+                @Cached NameToJavaStringNode nameToJavaStringNode,
+                @Cached ImplicitParameterDefinedNode implicitParameterDefinedNode) {
+            var name = nameToJavaStringNode.execute(this, nameObject);
+            return implicitParameterDefinedNode.execute(this, binding, name);
+        }
+    }
+
+    @ImportStatic(BindingNodes.class)
+    @GenerateCached(false)
+    @GenerateInline
+    @ReportPolymorphism // inline cache
+    public abstract static class ImplicitParameterDefinedNode extends RubyBaseNode {
+
+        public abstract boolean execute(Node node, RubyBinding binding, String name);
+
+        @Specialization(
+                guards = {
+                        "name == cachedName",
+                        "isImplicitParameter(cachedName)",
+                        "getFrameDescriptor(binding) == descriptor" },
+                limit = "getDefaultCacheLimit()")
+        static boolean isDefinedCached(RubyBinding binding, String name,
+                @Cached("name") String cachedName,
+                @Cached("getFrameDescriptor(binding)") FrameDescriptor descriptor,
+                @Cached("isDefined(name, binding.getFrame())") boolean isDefined) {
+            return isDefined;
+        }
+
+        @TruffleBoundary
+        @Specialization(
+                guards = "isImplicitParameter(name)",
+                replaces = "isDefinedCached")
+        static boolean isDefinedUncached(RubyBinding binding, String name) {
+            return isDefined(name, binding.getFrame());
+        }
+
+        @TruffleBoundary
+        @Specialization(guards = "!isImplicitParameter(name)")
+        static boolean notImplicitParameter(Node node, RubyBinding binding, String name) {
+            throw new RaiseException(
+                    getContext(node),
+                    coreExceptions(node).nameErrorNotAnImplicitParameter(name, binding, node));
+        }
+
+        protected static boolean isDefined(String name, Frame frame) {
+            String effectiveName = resolveImplicitParameterName(name);
+            int slot = FindDeclarationVariableNodes.findSlot(effectiveName, frame);
+            return slot != -1;
+        }
+    }
+
+    @CoreMethod(names = "implicit_parameter_get", required = 1)
+    public abstract static class BindingImplicitParameterGetNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization
+        Object get(RubyBinding binding, Object nameObject,
+                @Cached NameToJavaStringNode nameToJavaStringNode,
+                @Cached ImplicitParameterGetNode implicitParameterGetNode) {
+            final var name = nameToJavaStringNode.execute(this, nameObject);
+            return implicitParameterGetNode.execute(this, binding, name);
+        }
+
+    }
+
+    @GenerateUncached
+    @ImportStatic({ BindingNodes.class, FindDeclarationVariableNodes.class })
+    @GenerateInline
+    @GenerateCached(false)
+    public abstract static class ImplicitParameterGetNode extends RubyBaseNode {
+
+        public abstract Object execute(Node node, RubyBinding binding, String name);
+
+        @Specialization(
+                guards = {
+                        "name == cachedName",
+                        "isImplicitParameter(cachedName)",
+                        "getFrameDescriptor(binding) == descriptor" },
+                limit = "getDefaultCacheLimit()")
+        static Object getCached(Node node, RubyBinding binding, String name,
+                @Cached("name") String cachedName,
+                @Cached("getFrameDescriptor(binding)") FrameDescriptor descriptor,
+                @Cached("findSlot(resolveImplicitParameterName(name), binding.getFrame())") int slot) {
+            if (slot == -1) {
+                throw notDefined(node, name, binding);
+            }
+            Object value = binding.getFrame().getValue(slot);
+            assert value != null : "no value for a defined implicit parameter '" + name + "'";
+            return value;
+        }
+
+        @TruffleBoundary
+        @Specialization(
+                guards = "isImplicitParameter(name)",
+                replaces = "getCached")
+        static Object getUncached(Node node, RubyBinding binding, String name) {
+            String nameEffective = resolveImplicitParameterName(name);
+            MaterializedFrame frame = binding.getFrame();
+
+            int slot = FindDeclarationVariableNodes.findSlot(nameEffective, frame);
+            if (slot == -1) {
+                throw notDefined(node, name, binding);
+            }
+
+            Object value = frame.getValue(slot);
+            assert value != null : "no value for a defined implicit parameter '" + name + "'";
+            return value;
+        }
+
+        @TruffleBoundary
+        @Fallback
+        static Object notImplicitParameter(Node node, RubyBinding binding, String name) {
+            throw new RaiseException(
+                    getContext(node),
+                    coreExceptions(node).nameErrorNotAnImplicitParameter(name, binding, node));
+        }
+
+        @TruffleBoundary
+        static RaiseException notDefined(Node node, String name, RubyBinding binding) {
+            return new RaiseException(
+                    getContext(node),
+                    coreExceptions(node).nameErrorImplicitParameterNotDefined(name, binding, node));
+        }
+
+    }
+
+    @Primitive(name = "implicit_parameter_names")
+    @ImportStatic(BindingNodes.class)
+    public abstract static class ImplicitParametersNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization(guards = "getFrameDescriptor(binding) == cachedFrameDescriptor", limit = "getCacheLimit()")
+        RubyArray namesCached(RubyBinding binding,
+                @Cached("getFrameDescriptor(binding)") FrameDescriptor cachedFrameDescriptor,
+                @Cached("listImplicitParametersAsSymbols(getContext(), binding.getFrame())") RubyArray names) {
+            return names;
+        }
+
+        @Specialization(replaces = "namesCached")
+        RubyArray names(RubyBinding binding) {
+            return listImplicitParametersAsSymbols(getContext(), binding.getFrame());
+        }
+
+        @TruffleBoundary
+        public RubyArray listImplicitParametersAsSymbols(RubyContext context, MaterializedFrame frame) {
+            final Set<RubySymbol> names = new LinkedHashSet<>();
+            addNamesFromFrame(frame, names);
+            return ArrayHelpers.createArray(context, getLanguage(), names.toArray());
+        }
+
+        private void addNamesFromFrame(Frame frame, Set<RubySymbol> names) {
+            for (Object identifier : FrameDescriptorNamesIterator.iterate(frame.getFrameDescriptor())) {
+                if (!(identifier instanceof String name)) {
+                    continue;
+                }
+
+                if (isNumberedParameter(name)) {
+                    names.add(getSymbol(name));
+                } else if (name.equals(IT_HIDDEN_VARIABLE_NAME)) {
+                    names.add(getSymbol(IT_PARAMETER_NAME));
+                }
+            }
+        }
+
+        protected int getCacheLimit() {
+            return getLanguage().options.BINDING_LOCAL_VARIABLE_CACHE;
         }
     }
 
@@ -461,7 +652,7 @@ public abstract class BindingNodes {
 
         @TruffleBoundary
         public RubyArray listLocalVariablesAsSymbols(RubyContext context, MaterializedFrame frame) {
-            final Set<Object> names = new LinkedHashSet<>();
+            final Set<RubySymbol> names = new LinkedHashSet<>();
             while (frame != null) {
                 addNamesFromFrame(frame, names);
                 frame = RubyArguments.getDeclarationFrame(frame);
@@ -469,7 +660,7 @@ public abstract class BindingNodes {
             return ArrayHelpers.createArray(context, getLanguage(), names.toArray());
         }
 
-        private void addNamesFromFrame(Frame frame, Set<Object> names) {
+        private void addNamesFromFrame(Frame frame, Set<RubySymbol> names) {
             for (Object identifier : FrameDescriptorNamesIterator.iterate(frame.getFrameDescriptor())) {
                 if (!isHiddenVariable(identifier) && !isNumberedParameter(identifier)) {
                     names.add(getSymbol((String) identifier));

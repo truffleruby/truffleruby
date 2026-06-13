@@ -140,4 +140,8 @@ describe "Numbered parameters" do
 
     -> { obj.foo("a") }.should.raise(ArgumentError, /wrong number of arguments/)
   end
+
+  it "cannot be accessed using eval()" do
+    -> { proc { binding.eval('_1') }.call(1) }.should.raise(NameError, /undefined local variable or method ._1'/)
+  end
 end

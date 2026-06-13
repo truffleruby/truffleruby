@@ -62,6 +62,10 @@ public abstract class FindDeclarationVariableNodes {
         return -1;
     }
 
+    public static int findSlot(String identifier, Frame frame) {
+        return findSlot(frame.getFrameDescriptor(), identifier);
+    }
+
     public static FrameSlotAndDepth findFrameSlotOrNull(String identifier, Frame frame) {
         CompilerAsserts.neverPartOfCompilation("Must not be called in PE code as the frame would escape");
         int depth = 0;
