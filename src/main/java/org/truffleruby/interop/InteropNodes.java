@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.GenerateCached;
@@ -1606,7 +1607,7 @@ public abstract class InteropNodes {
     // endregion
 
     // region Language
-    @CoreMethod(names = "has_language_id?", onSingleton = true, required = 1, split = Split.ALWAYS)
+    @CoreMethod(names = { "has_language_id?", "has_language?" }, onSingleton = true, required = 1, split = Split.ALWAYS)
     public abstract static class HasLanguageIDNode extends CoreMethodArrayArgumentsNode {
         @Specialization(limit = "getInteropCacheLimit()")
         boolean hasLanguageID(Object receiver,
@@ -1638,15 +1639,6 @@ public abstract class InteropNodes {
         }
     }
 
-    @CoreMethod(names = "has_language?", onSingleton = true, required = 1, split = Split.ALWAYS)
-    public abstract static class HasLanguageNode extends CoreMethodArrayArgumentsNode {
-        @Specialization(limit = "getInteropCacheLimit()")
-        boolean hasLanguage(Object receiver,
-                @CachedLibrary("receiver") InteropLibrary interop) {
-            return interop.hasLanguage(receiver);
-        }
-    }
-
     @CoreMethod(names = "language", onSingleton = true, required = 1, split = Split.ALWAYS)
     public abstract static class GetLanguageNode extends CoreMethodArrayArgumentsNode {
 
@@ -1655,29 +1647,32 @@ public abstract class InteropNodes {
                 @CachedLibrary("receiver") InteropLibrary receivers,
                 @Cached FromJavaStringNode fromJavaStringNode,
                 @Bind Node node) {
-            if (!receivers.hasLanguage(receiver)) {
+            if (!receivers.hasLanguageId(receiver)) {
                 return nil;
             }
 
-            final Class<? extends TruffleLanguage<?>> languageClass;
+            String languageId;
             try {
-                languageClass = receivers.getLanguage(receiver);
+                languageId = receivers.getLanguageId(receiver);
             } catch (UnsupportedMessageException e) {
                 return nil;
             }
 
-            final String name = languageClassToLanguageName(getContext(node), languageClass);
+            final String name = languageIdToLanguageName(getContext(node), languageId);
             return fromJavaStringNode.executeFromJavaString(node, name);
         }
 
         @TruffleBoundary
-        private static String languageClassToLanguageName(RubyContext context,
-                Class<? extends TruffleLanguage<?>> languageClass) {
-            String name = context.getEnv().getLanguageInfo(languageClass).getName();
-            if (name.equals("Host")) {
-                name = "Java";
+        private static String languageIdToLanguageName(RubyContext context, String languageId) {
+            if (languageId.equals("host")) {
+                return "Java";
             }
-            return name;
+
+            var languageInfo = context.getEnv().getInternalLanguages().get(languageId);
+            if (languageInfo == null) {
+                throw CompilerDirectives.shouldNotReachHere("Could not find language with id " + languageId);
+            }
+            return languageInfo.getName();
         }
     }
 
