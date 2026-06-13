@@ -54,6 +54,10 @@ describe "Enumerable#find" do
     @numerous.find(nil) {|e| false }.should == nil
   end
 
+  it "raises a NoMethodError if the ifnone argument does not respond to #call and no element is found" do
+    -> { @numerous.find(42) {|e| false } }.should raise_error(NoMethodError)
+  end
+
   it "passes through the values yielded by #each_with_index" do
     [:a, :b].each_with_index.find { |x, i| ScratchPad << [x, i]; nil }
     ScratchPad.recorded.should == [[:a, 0], [:b, 1]]
