@@ -41,6 +41,18 @@ ruby_version_is "4.0" do
       -> { [1, 2, 3].find(42) { |x| false } }.should.raise(NoMethodError)
     end
 
+    it "iterates elements in forward order" do
+      visited = []
+      [1, 2, 3].find { |element| visited << element; false }
+      visited.should == [1, 2, 3]
+    end
+
+    it "passes through the values yielded by #each_with_index" do
+      ScratchPad.record []
+      [:a, :b].each_with_index.to_a.find { |x, i| ScratchPad << [x, i]; nil }
+      ScratchPad.recorded.should == [[:a, 0], [:b, 1]]
+    end
+
     it "stops iterating as soon as an element is found" do
       visited = []
       [1, 2, 3, 4, 5].find { |x| visited << x; x == 3 }
@@ -52,10 +64,21 @@ ruby_version_is "4.0" do
     end
 
     it "passes the ifnone proc to the enumerator" do
-      times = 0
-      fail_proc = -> { times += 1; raise if times > 1; "cheeseburgers" }
-      [1, 2, 3].find(fail_proc).each { |x| false }.should == "cheeseburgers"
+      fail_proc = -> { "cheeseburgers" }
+      enum = [1, 2, 3].find(fail_proc)
+      enum.each { |x| false }.should == "cheeseburgers"
     end
+
+    it "does not destructure elements" do
+      multi = [[1, 2], [3, 4, 5], [6, 7, 8, 9]]
+      multi.find { |e| e == [1, 2] }.should == [1, 2]
+    end
+
+    # Modifying a collection while the contents are being iterated
+    # gives undefined behavior. See
+    # https://blade.ruby-lang.org/ruby-core/23633
+    # it "rechecks the array size during iteration" do
+    # end
 
     it_behaves_like :enumeratorized_with_unknown_size, :find, [1, 2, 3]
   end
