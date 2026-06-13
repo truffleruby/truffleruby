@@ -576,6 +576,20 @@ class Array
   end
   Primitive.always_split self, :hash
 
+  def find(ifnone = nil)
+    return to_enum(:find, ifnone) unless block_given?
+
+    i = 0
+    while i < size
+      elem = at(i)
+      return elem if yield(elem)
+      i += 1
+    end
+
+    ifnone.call if ifnone
+  end
+  alias_method :detect, :find
+
   def find_index(obj = undefined)
     super
   end
@@ -1014,6 +1028,23 @@ class Array
       i -= 1
     end
     self
+  end
+
+  def rfind(ifnone = nil)
+    return to_enum(:rfind, ifnone) unless block_given?
+
+    i = size - 1
+    while i >= 0
+      elem = at(i)
+      return elem if yield(elem)
+
+      # Compensate for the array being modified by the block during iteration
+      i = size if i > size
+
+      i -= 1
+    end
+
+    ifnone.call if ifnone
   end
 
   def rindex(obj = undefined)

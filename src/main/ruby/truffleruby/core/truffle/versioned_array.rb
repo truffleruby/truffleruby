@@ -561,6 +561,11 @@ class Truffle::VersionedArray < Array
     copy.reverse_each(*args, &block)
   end
 
+  def rfind(*args, &block)
+    copy = TruffleRuby.synchronized(@lock) { Array.new self }
+    copy.rfind(*args, &block)
+  end
+
   def rindex(*args, &block)
     copy = TruffleRuby.synchronized(@lock) { Array.new self }
     copy.rindex(*args, &block)

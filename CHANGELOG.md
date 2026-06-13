@@ -3,6 +3,8 @@
 New features:
 
 * Updated to Ruby 4.0.2 (#4231, @eregon).
+* Add `Array#find` and `Array#detect` as faster overrides of `Enumerable#find` (#4231, @komarovb).
+* Add `Array#rfind` as a more efficient alternative to `array.reverse_each.find` (#4231, @komarovb).
 
 Bug fixes:
 
