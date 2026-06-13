@@ -63,19 +63,13 @@ public abstract class MethodNodes {
 
     @TruffleBoundary
     public static boolean areInternalMethodEqual(InternalMethod a, InternalMethod b) {
-        if (a == b || a.getSharedMethodInfo() == b.getSharedMethodInfo()) {
-            return true;
-        }
-
-        // For builtin aliases to be == such as String#size and String#length, even though they have
-        // different CallTarget, InternalMethod and SharedMethodInfo.
-        return a.getSharedMethodInfo().getIdentity() != null &&
-                a.getSharedMethodInfo().getIdentity().equals(b.getSharedMethodInfo().getIdentity());
+        boolean equal = a.getSharedMethodInfo().equals(b.getSharedMethodInfo());
+        assert !equal || hashInternalMethod(a) == hashInternalMethod(b);
+        return equal;
     }
 
     public static int hashInternalMethod(InternalMethod internalMethod) {
-        // Hash the Arity object to guarantee same hash values for areInternalMethodEqual() methods.
-        return internalMethod.getSharedMethodInfo().getArity().hashCode();
+        return internalMethod.getSharedMethodInfo().hashCode();
     }
 
     @Primitive(name = "same_methods?")

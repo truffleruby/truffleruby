@@ -55,7 +55,9 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
     private final SharedMethodInfo methodSharedMethodInfo;
     /** Extra information. If blockDepth > 0 then it is the name of the method containing this block. */
     private final String notes;
-    /** An optional object to make two different SharedMethodInfo considered equal for Method#== */
+    /** An optional object to make two different SharedMethodInfo considered equal for Method#==. Notably used
+     * for @CoreMethod aliases to be == such as String#size and String#length, even though they have different
+     * CallTarget, InternalMethod and SharedMethodInfo. */
     private Object identity;
     private final ArgumentDescriptor[] argumentDescriptors;
 
@@ -104,10 +106,10 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         this.methodName = methodName;
         this.parseName = parseName;
         this.notes = notes;
-        this.identity = identity;
         this.blockDepth = blockDepth;
         this.methodSharedMethodInfo = methodSharedMethodInfo;
         this.argumentDescriptors = argumentDescriptors;
+        setIdentity(identity);
     }
 
     public SharedMethodInfo forDefineMethod(RubyModule declaringModule, String methodName, RubyProc proc) {
@@ -352,12 +354,36 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         return notes;
     }
 
-    public Object getIdentity() {
-        return identity;
+    public void setIdentity(Object identity) {
+        assert identity == null || identity instanceof Arity || identity instanceof Long;
+        this.identity = identity;
     }
 
-    public void setIdentity(Object newIdentity) {
-        this.identity = newIdentity;
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof SharedMethodInfo other)) {
+            return false;
+        }
+        if (this == other) {
+            return true;
+        }
+
+        Object a = identity;
+        Object b = other.identity;
+        if (a == null || b == null) {
+            return false;
+        } else {
+            if (a instanceof Long && b instanceof Long) {
+                return a.equals(b);
+            } else {
+                return a == b;
+            }
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return identity != null ? identity.hashCode() : super.hashCode();
     }
 
     @Override
