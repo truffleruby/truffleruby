@@ -25,6 +25,7 @@ import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.interop.ArityException;
+import com.oracle.truffle.api.interop.InteropException;
 import com.oracle.truffle.api.interop.StopIterationException;
 import com.oracle.truffle.api.interop.UnknownKeyException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
@@ -68,6 +69,7 @@ import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.interop.BoxedValue;
 import org.truffleruby.interop.FromJavaStringNode;
 import org.truffleruby.interop.ToJavaStringNode;
+import org.truffleruby.interop.TranslateInteropExceptionNode;
 import org.truffleruby.language.CallStackManager;
 import org.truffleruby.language.ImmutableRubyObject;
 import org.truffleruby.core.string.ImmutableRubyString;
@@ -1383,7 +1385,12 @@ public abstract class TruffleDebugNodes {
         @TruffleBoundary
         @Specialization
         Object createPolyglotThread(Object hostRunnable) {
-            Runnable runnable = (Runnable) getContext().getEnv().asHostObject(hostRunnable);
+            Runnable runnable;
+            try {
+                runnable = (Runnable) InteropLibrary.getUncached().asHostObject(hostRunnable);
+            } catch (InteropException e) {
+                throw TranslateInteropExceptionNode.executeUncached(e);
+            }
             final Thread thread = getContext().getEnv().newTruffleThreadBuilder(runnable).build();
             return getContext().getEnv().asGuestValue(thread);
         }
