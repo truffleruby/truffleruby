@@ -1037,9 +1037,9 @@ module Enumerable
     return to_enum(:take_while) unless block_given?
 
     array = []
-    each do |elem|
-      return array unless yield(elem)
-      array << elem
+    each do |*args|
+      return array unless yield(*args)
+      array << Truffle::EnumerableOperations.pack_values(args)
     end
 
     array
