@@ -76,14 +76,6 @@ public abstract class BindingNodes {
                 sourceSection);
     }
 
-    @TruffleBoundary
-    public static FrameDescriptor newFrameDescriptor(FrameDescriptor parentDescriptor) {
-        var parentInfo = FrameDescriptorInfo.of(parentDescriptor);
-        var info = new FrameDescriptorInfo(parentDescriptor,
-                parentInfo.getSharedMethodInfo().addOneBlockDepthButKeepParseNameAndRuntimeName());
-        return TranslatorEnvironment.newFrameDescriptorBuilderForBlock(info).build();
-    }
-
     static final int NEW_VAR_INDEX = 1;
 
     @TruffleBoundary
