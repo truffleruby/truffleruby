@@ -33,6 +33,7 @@ Compatibility:
 * Better compatibility for `Kernel#caller` with `Range` argument (#4295, @earlopain)
 * Support symbols as arguments for `IO#seek` and `IO#sysseek` (#4306, @earlopain)
 * Fix `IPSocket#inspect` to return `#<TCPSocket:(closed)>` for closed sockets like CRuby instead of raising `IOError` (#4312, @rubiii).
+* Don't expose numbered parameters in `Binding`'s local variable methods (#4231, @andrykonchin).
 
 Performance:
 

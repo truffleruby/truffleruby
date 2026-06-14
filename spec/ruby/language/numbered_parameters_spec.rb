@@ -95,12 +95,42 @@ describe "Numbered parameters" do
       -> { _1; binding.local_variables }.call("a").should == [:_1]
       -> { _2; binding.local_variables }.call("a", "b").should == [:_1, :_2]
     end
+
+    it "affects binding local variables getting" do
+      -> { _1; binding.local_variable_get(:_1) }.call("a").should == "a"
+    end
+
+    it "affects binding local variables setting" do
+      -> { _1; binding.local_variable_set(:_1, "b"); _1 }.call("a").should == "b"
+    end
+
+    it "affects binding local variables definition check" do
+      -> { _1; binding.local_variable_defined?(:_1) }.call("a").should == true
+    end
   end
 
   ruby_version_is "4.0" do
     it "does not affect binding local variables" do
       -> { _1; binding.local_variables }.call("a").should == []
       -> { _2; binding.local_variables }.call("a", "b").should == []
+    end
+
+    it "does not affect binding local variables getting" do
+      -> {
+        -> { _1; binding.local_variable_get(:_1) }.call("a")
+      }.should.raise(NameError, "numbered parameter '_1' is not a local variable")
+    end
+
+    it "does not affect binding local variables setting" do
+      -> {
+        -> { _1; binding.local_variable_set(:_1, "b") }.call("a")
+      }.should.raise(NameError, "numbered parameter '_1' is not a local variable")
+    end
+
+    it "does not affect binding local variables definition check" do
+      -> {
+        -> { _1; binding.local_variable_defined?(:_1) }.call("a")
+      }.should.raise(NameError, "numbered parameter '_1' is not a local variable")
     end
   end
 

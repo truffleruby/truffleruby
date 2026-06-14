@@ -196,7 +196,7 @@ public class YARPTranslator extends YARPBaseTranslator {
             "_9"
     };
 
-    static final String IT_PARAMETER_NAME = "%it";
+    public static final String IT_PARAMETER_NAME = "%it";
 
     /** all the encountered BEGIN {} blocks; they will be added finally at the beginning of the program AST */
     private final ArrayList<RubyNode> beginBlocks = new ArrayList<>();

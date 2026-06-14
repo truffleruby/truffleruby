@@ -21,8 +21,11 @@ import org.truffleruby.parser.ArgumentDescriptor;
 import org.truffleruby.parser.ArgumentType;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import org.truffleruby.parser.YARPTranslator;
 
 public final class ArgumentDescriptorUtils {
+
+    static final String IT_PARAMETER_NAME = YARPTranslator.IT_PARAMETER_NAME;
 
     @TruffleBoundary
     public static RubyArray argumentDescriptorsToParameters(RubyLanguage language, RubyContext context,
@@ -56,6 +59,8 @@ public final class ArgumentDescriptorUtils {
         } else if (argType == ArgumentType.anonblock) {
             store = new Object[]{ typeSymbol, language.coreSymbols.AMPERSAND };
         } else if (argType.anonymous || name == null) {
+            store = new Object[]{ typeSymbol };
+        } else if (name.equals(IT_PARAMETER_NAME)) {
             store = new Object[]{ typeSymbol };
         } else {
             store = new Object[]{ typeSymbol, language.getSymbol(name) };
