@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.lang.ProcessBuilder.Redirect;
 
+import org.graalvm.home.Version;
 import org.graalvm.launcher.AbstractLanguageLauncher;
 import org.graalvm.maven.downloader.Main;
 import org.graalvm.nativeimage.ProcessProperties;
@@ -56,8 +57,16 @@ public class RubyLauncher extends AbstractLanguageLauncher {
         List<String> args = new ArrayList<>();
         args.add("-o");
         args.add(outputDir);
+
         args.add("-v");
-        args.add(getPropertyOrFail("org.graalvm.version"));
+        Version graalVMVersion = Version.getCurrent();
+        if (!graalVMVersion.isRelease() && graalVMVersion.toString().equals("25.1.0-dev")) {
+            // TODO: temporary workaround while we don't use a GraalVM release
+            args.add("25.0.0");
+        } else {
+            args.add(graalVMVersion.toString());
+        }
+
         if (originalArgs.size() == 1 && !originalArgs.get(0).startsWith("-")) {
             args.add("-a");
         }
