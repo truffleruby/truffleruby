@@ -223,7 +223,6 @@ public abstract class SymbolNodes {
                     symbol.getString(),
                     "&:" + symbol.getString(),
                     "Symbol#to_proc",
-                    null,
                     ArgumentDescriptor.AT_LEAST_ONE_UNNAMED);
 
             // ModuleNodes.DefineMethodNode relies on the lambda CallTarget to always use a RubyLambdaRootNode,
