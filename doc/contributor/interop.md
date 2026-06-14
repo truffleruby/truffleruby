@@ -168,8 +168,6 @@ type is supported for interop.
 
 `Truffle::Interop.java_class?(object)`
 
-`Truffle::Interop.java_instanceof?(object, class)`
-
 `Truffle::Interop.java_string?(object)`
 
 `Truffle::Interop.to_java_string(ruby_string)`

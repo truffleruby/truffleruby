@@ -47,6 +47,7 @@ Performance:
 
 Incompatible Changes:
 
+* Remove `Truffle::Interop.java_instanceof?`, it is redundant with `Truffle::Interop.meta_instance?` (@eregon).
 
 Memory Footprint:
 

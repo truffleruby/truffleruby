@@ -1745,37 +1745,6 @@ public abstract class InteropNodes {
         }
     }
 
-    @CoreMethod(names = "java_instanceof?", onSingleton = true, required = 2)
-    public abstract static class InteropJavaInstanceOfNode extends CoreMethodArrayArgumentsNode {
-
-        @Specialization(guards = { "isJavaObject(object)", "isJavaClassOrInterface(boxedJavaClass)" })
-        boolean javaInstanceOfJava(Object object, Object boxedJavaClass) {
-            final Object hostInstance = getContext().getEnv().asHostObject(object);
-            if (hostInstance == null) {
-                return false;
-            } else {
-                final Class<?> javaClass = (Class<?>) getContext().getEnv().asHostObject(boxedJavaClass);
-                return javaClass.isAssignableFrom(hostInstance.getClass());
-            }
-        }
-
-        @Specialization(guards = { "!isJavaObject(object)", "isJavaClassOrInterface(boxedJavaClass)" })
-        boolean javaInstanceOfNotJava(Object object, Object boxedJavaClass) {
-            final Class<?> javaClass = (Class<?>) getContext().getEnv().asHostObject(boxedJavaClass);
-            return javaClass.isInstance(object);
-        }
-
-        protected boolean isJavaObject(Object object) {
-            return getContext().getEnv().isHostObject(object);
-        }
-
-        protected boolean isJavaClassOrInterface(Object object) {
-            return getContext().getEnv().isHostObject(object) &&
-                    getContext().getEnv().asHostObject(object) instanceof Class<?>;
-        }
-
-    }
-
     @Primitive(name = "to_java_string")
     public abstract static class ToJavaStringPrimitiveNode extends PrimitiveArrayArgumentsNode {
         @Specialization
