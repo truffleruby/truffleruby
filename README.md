@@ -145,7 +145,7 @@ It is, however, relevant when doing interop with other Truffle languages, as the
 
 | TruffleRuby version | Truffle version | GraalVM versions |
 | --- | --- | --- |
-| 40.0.0 | 25.0.2 | 21.0.x, 25.0.x |
+| 40.0.0 | 25.1.3 | 25.1.x |
 | 34.0.0 | 25.0.2 | 21.0.x, 25.0.x |
 | 33.0.0 | 25.0.1 | 21.0.x, 25.0.x |
 | 25.0.0 | 25.0.0 | 21.0.x, 25.0.x |
