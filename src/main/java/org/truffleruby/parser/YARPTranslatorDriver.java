@@ -200,7 +200,6 @@ public final class YARPTranslatorDriver {
                     methodName,
                     methodName,
                     null,
-                    null,
                     null);
         } else {
             sharedMethodInfo = SharedMethodInfo.forBlock(

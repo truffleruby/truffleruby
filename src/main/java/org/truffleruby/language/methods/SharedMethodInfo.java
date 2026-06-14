@@ -55,9 +55,7 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
     private final SharedMethodInfo methodSharedMethodInfo;
     /** Extra information. If blockDepth > 0 then it is the name of the method containing this block. */
     private final String notes;
-    /** An optional object to make two different SharedMethodInfo considered equal for Method#==. Notably used
-     * for @CoreMethod aliases to be == such as String#size and String#length, even though they have different
-     * CallTarget, InternalMethod and SharedMethodInfo. */
+    /** An optional object to make two different SharedMethodInfo considered equal for UnboundMethod#== */
     private Object identity;
     private final ArgumentDescriptor[] argumentDescriptors;
 
@@ -68,9 +66,8 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
             String methodName,
             String parseName,
             String notes,
-            Object identity,
             ArgumentDescriptor[] argumentDescriptors) {
-        return new SharedMethodInfo(sourceSection, staticLexicalScope, arity, methodName, parseName, notes, identity,
+        return new SharedMethodInfo(sourceSection, staticLexicalScope, arity, methodName, parseName, notes,
                 0, null, argumentDescriptors);
     }
 
@@ -84,7 +81,7 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
             int blockDepth,
             SharedMethodInfo methodSharedMethodInfo,
             ArgumentDescriptor[] argumentDescriptors) {
-        return new SharedMethodInfo(sourceSection, staticLexicalScope, arity, methodName, parseName, notes, null,
+        return new SharedMethodInfo(sourceSection, staticLexicalScope, arity, methodName, parseName, notes,
                 blockDepth, methodSharedMethodInfo, argumentDescriptors);
     }
 
@@ -95,7 +92,6 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
             String methodName,
             String parseName,
             String notes,
-            Object identity,
             int blockDepth,
             SharedMethodInfo methodSharedMethodInfo,
             ArgumentDescriptor[] argumentDescriptors) {
@@ -109,20 +105,20 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
         this.blockDepth = blockDepth;
         this.methodSharedMethodInfo = methodSharedMethodInfo;
         this.argumentDescriptors = argumentDescriptors;
-        setIdentity(identity);
     }
 
     public SharedMethodInfo forDefineMethod(RubyModule declaringModule, String methodName, RubyProc proc) {
         // no longer a block
-        return forMethod(
+        var sharedMethodInfo = forMethod(
                 sourceSection,
                 staticLexicalScope,
                 proc.arity,
                 methodName,
                 moduleAndMethodNameIfModuleIsFullyNamed(declaringModule, methodName, proc.arity),
                 null,
-                identity,
                 proc.argumentDescriptors);
+        sharedMethodInfo.setIdentity(identity);
+        return sharedMethodInfo;
     }
 
     public SharedMethodInfo convertMethodMissingToMethod(RubyModule declaringModule, String methodName) {
@@ -134,7 +130,6 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
                 methodName,
                 moduleAndMethodNameIfModuleIsFullyNamed(declaringModule, methodName, effectiveArity),
                 notes,
-                identity,
                 ArgumentDescriptor.ANY_UNNAMED);
     }
 
