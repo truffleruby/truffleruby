@@ -8,8 +8,14 @@ describe "Thread#to_s" do
     thread.to_s.should =~ /^#<Thread:([^ ]*?) #{Regexp.escape __FILE__}:#{line} \w+>$/
   end
 
+  it "returns a description including a class name" do
+    thread = Thread.new { "hello" }.join
+    thread.to_s.should.include?("Thread")
+  end
+
   it "has a binary encoding" do
-    ThreadSpecs.status_of_current_thread.to_s.encoding.should == Encoding::BINARY
+    thread = Thread.new { "hello" }.join
+    thread.to_s.encoding.should == Encoding::BINARY
   end
 
   it "can check it's own status" do
