@@ -2,6 +2,10 @@ require_relative '../../spec_helper'
 require_relative 'fixtures/classes'
 require_relative '../enumerable/shared/enumeratorized'
 
+# Modifying a collection while the contents are being iterated
+# gives undefined behavior. See
+# https://blade.ruby-lang.org/ruby-core/23633
+
 ruby_version_is "4.0" do
   describe "Array#rfind" do
     it "returns the last element for which the block is not false" do
@@ -74,11 +78,12 @@ ruby_version_is "4.0" do
       multi.rfind { |e| e == [1, 2] }.should == [1, 2]
     end
 
-    # Modifying a collection while the contents are being iterated
-    # gives undefined behavior. See
-    # https://blade.ruby-lang.org/ruby-core/23633
-    # it "rechecks the array size during iteration" do
-    # end
+    it "rechecks the array size during iteration" do
+      ary = [4, 2, 1, 5, 1, 3]
+      seen = []
+      ary.rfind { |x| seen << x; ary.clear; false }
+      seen.should == [3]
+    end
 
     it_behaves_like :enumeratorized_with_unknown_size, :rfind, [1, 2, 3]
   end
