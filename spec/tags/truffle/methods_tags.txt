@@ -96,9 +96,6 @@ fails:Public methods on BasicSocket should include write_nonblock
 fails:Public methods on Array should include detect
 fails:Public methods on Array should include find
 fails:Public methods on Array should include rfind
-fails:Public methods on Binding should include implicit_parameter_defined?
-fails:Public methods on Binding should include implicit_parameter_get
-fails:Public methods on Binding should include implicit_parameters
 fails:Public methods on Method should include box
 fails:Public methods on SizedQueue should not include empty?
 fails:Public methods on SizedQueue should not include length

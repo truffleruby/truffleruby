@@ -14,6 +14,11 @@ class Binding
     Kernel.eval(code, self, file, line)
   end
 
+  def implicit_parameters
+    Primitive.implicit_parameter_names(self).dup
+  end
+  Primitive.always_split self, :implicit_parameters
+
   def local_variables
     Primitive.local_variable_names(self).dup
   end
