@@ -662,6 +662,8 @@ public abstract class BindingNodes {
 
         private void addNamesFromFrame(Frame frame, Set<RubySymbol> names) {
             for (Object identifier : FrameDescriptorNamesIterator.iterate(frame.getFrameDescriptor())) {
+                // the "it" parameter is stored in a frame as a hidden variable
+                // so is filtered out by `!isHiddenVariable()` without additional checks
                 if (!isHiddenVariable(identifier) && !isNumberedParameter(identifier)) {
                     names.add(getSymbol((String) identifier));
                 }
