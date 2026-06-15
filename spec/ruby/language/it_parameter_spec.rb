@@ -85,6 +85,25 @@ ruby_version_is "3.4" do
     it "does not affect binding local variables" do
       -> { it; binding.local_variables }.call("a").should == []
     end
+    
+    it "does not affect binding local variables getting" do
+      proc {
+        a = it; binding.local_variable_get(:it)
+      }.should.raise(NameError, /local variable 'it' is not defined for/)
+    end
+    
+    it "affects binding local variables setting and shadows a local variable" do
+      -> {
+       a = it
+       binding.local_variable_set(:it, :b)
+       [a, it]
+      }.call(:a).should == [:a, :a]
+    end
+
+    it "does not affect binding local variables definition check" do
+      a = it
+      binding.local_variable_defined?(:it).should == false
+    end
 
     it "does not work in methods" do
       obj = Object.new

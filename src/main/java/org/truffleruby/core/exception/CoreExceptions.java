@@ -777,7 +777,7 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyNameError nameErrorLocalVariableNotDefined(String name, RubyBinding binding, Node currentNode) {
         return nameError(
-                StringUtils.format("local variable '%s' not defined for %s", name, binding.toString()),
+                StringUtils.format("local variable '%s' is not defined for %s", name, binding.toString()),
                 binding,
                 name,
                 currentNode);
