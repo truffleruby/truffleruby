@@ -1,1 +1,0 @@
-fails:Thread#to_s has a binary encoding
