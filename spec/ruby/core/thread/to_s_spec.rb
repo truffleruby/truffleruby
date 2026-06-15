@@ -13,6 +13,13 @@ describe "Thread#to_s" do
     thread.to_s.should.include?("Thread")
   end
 
+  it "returns a description including a thread name if given any" do
+    thread = Thread.new { "hello" }.join
+    thread.name = "平仮名"
+    thread.to_s.should.include?("@平仮名")
+    thread.to_s.encoding.should == Encoding::UTF_8
+  end
+
   it "has a binary encoding" do
     thread = Thread.new { "hello" }.join
     thread.to_s.encoding.should == Encoding::BINARY

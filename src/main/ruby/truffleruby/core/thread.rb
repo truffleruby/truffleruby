@@ -178,9 +178,13 @@ class Thread
   end
 
   def inspect
-    result = ''.b
-    loc = Primitive.thread_source_location(self)
-    result << "#{super.delete_suffix('>')} #{loc} #{status || 'dead'}>"
+    source_location = Primitive.thread_source_location(self)
+
+    s = ''.b
+    s << "#<#{Primitive.class(self)}:0x#{__id__.to_s(16)}"
+    s << "@#{name}" if name
+    s << " #{source_location} #{status || 'dead'}>"
+    s
   end
   alias_method :to_s, :inspect
 
