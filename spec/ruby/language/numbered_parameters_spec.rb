@@ -116,20 +116,20 @@ describe "Numbered parameters" do
     end
 
     it "does not affect binding local variables getting" do
-      -> {
-        -> { _1; binding.local_variable_get(:_1) }.call("a")
+      proc {
+        _1; binding.local_variable_get(:_1)
       }.should.raise(NameError, "numbered parameter '_1' is not a local variable")
     end
 
     it "does not affect binding local variables setting" do
-      -> {
-        -> { _1; binding.local_variable_set(:_1, "b") }.call("a")
+      proc {
+        _1; binding.local_variable_set(:_1, "b")
       }.should.raise(NameError, "numbered parameter '_1' is not a local variable")
     end
 
     it "does not affect binding local variables definition check" do
-      -> {
-        -> { _1; binding.local_variable_defined?(:_1) }.call("a")
+      proc {
+        _1; binding.local_variable_defined?(:_1)
       }.should.raise(NameError, "numbered parameter '_1' is not a local variable")
     end
   end
