@@ -178,8 +178,9 @@ class Thread
   end
 
   def inspect
+    result = ''.b
     loc = Primitive.thread_source_location(self)
-    "#{super.delete_suffix('>')} #{loc} #{status || 'dead'}>"
+    result << "#{super.delete_suffix('>')} #{loc} #{status || 'dead'}>"
   end
   alias_method :to_s, :inspect
 
