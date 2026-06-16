@@ -256,7 +256,7 @@ public abstract class BindingNodes {
 
         protected static boolean isDefined(String name, Frame frame) {
             String effectiveName = resolveImplicitParameterName(name);
-            int slot = FindDeclarationVariableNodes.findSlot(effectiveName, frame);
+            int slot = FindDeclarationVariableNodes.findSlot(frame.getFrameDescriptor(), effectiveName);
             return slot != -1;
         }
     }
@@ -291,7 +291,7 @@ public abstract class BindingNodes {
         static Object getCached(Node node, RubyBinding binding, String name,
                 @Cached("name") String cachedName,
                 @Cached("getFrameDescriptor(binding)") FrameDescriptor descriptor,
-                @Cached("findSlot(resolveImplicitParameterName(name), binding.getFrame())") int slot) {
+                @Cached("findSlot(descriptor, resolveImplicitParameterName(name))") int slot) {
             if (slot == -1) {
                 throw notDefined(node, name, binding);
             }
@@ -308,7 +308,7 @@ public abstract class BindingNodes {
             String nameEffective = resolveImplicitParameterName(name);
             MaterializedFrame frame = binding.getFrame();
 
-            int slot = FindDeclarationVariableNodes.findSlot(nameEffective, frame);
+            int slot = FindDeclarationVariableNodes.findSlot(frame.getFrameDescriptor(), nameEffective);
             if (slot == -1) {
                 throw notDefined(node, name, binding);
             }

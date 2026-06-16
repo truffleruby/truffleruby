@@ -50,7 +50,7 @@ public abstract class FindDeclarationVariableNodes {
         return frame;
     }
 
-    private static int findSlot(FrameDescriptor descriptor, String name) {
+    public static int findSlot(FrameDescriptor descriptor, String name) {
         assert descriptor.getNumberOfAuxiliarySlots() == 0;
         int slots = descriptor.getNumberOfSlots();
         for (int slot = 0; slot < slots; slot++) {
@@ -60,10 +60,6 @@ public abstract class FindDeclarationVariableNodes {
         }
 
         return -1;
-    }
-
-    public static int findSlot(String identifier, Frame frame) {
-        return findSlot(frame.getFrameDescriptor(), identifier);
     }
 
     public static FrameSlotAndDepth findFrameSlotOrNull(String identifier, Frame frame) {
