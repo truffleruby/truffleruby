@@ -92,7 +92,7 @@ ruby_version_is "3.4" do
       }.should.raise(NameError, /local variable 'it' is not defined for/)
     end
     
-    it "does not affect binding local variables setting but shadows a local variable" do
+    it "does not affect binding local variables setting" do
       -> {
        a = it
        binding.local_variable_set(:it, :b)
