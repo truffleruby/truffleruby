@@ -70,10 +70,15 @@ SUCH DAMAGE.
 #include <sys/sysmacros.h>
 #endif
 
+// Birthtime is not supported by the standard POSIX stat(2) system call (or similar POSIX functions).
+// On Darwin, it is returned by stat(2) (along with other additional struct members)
+// since Mac OS X 10.5 when the _DARWIN_USE_64_BIT_INODE macro is defined.
+// On Linux, it is returned by the Linux-specific statx(2) system call (since Linux 4.11).
 struct truffleposix_stat {
   uint64_t atime;
   uint64_t mtime;
   uint64_t ctime;
+  uint64_t btime; // time of file creation (birth), seconds
   uint64_t nlink;
   uint64_t rdev;
   uint64_t blksize;
@@ -87,6 +92,7 @@ struct truffleposix_stat {
   uint32_t atime_nsec;
   uint32_t mtime_nsec;
   uint32_t ctime_nsec;
+  uint32_t btime_nsec;
 };
 
 static void copy_stat(struct stat *stat, struct truffleposix_stat* buffer);
@@ -475,6 +481,11 @@ static void copy_stat(struct stat *native_stat, struct truffleposix_stat* buffer
   buffer->atime   = native_stat->st_atime;
   buffer->mtime   = native_stat->st_mtime;
   buffer->ctime   = native_stat->st_ctime;
+#if defined(HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC)
+  buffer->btime   = native_stat->st_birthtimespec.tv_sec;
+#else
+  buffer->btime   = 0;
+#endif
   buffer->nlink   = native_stat->st_nlink;
   buffer->rdev    = native_stat->st_rdev;
   buffer->blksize = native_stat->st_blksize;
@@ -512,6 +523,11 @@ static void copy_stat(struct stat *native_stat, struct truffleposix_stat* buffer
   buffer->ctime_nsec = (long)native_stat->st_ctimensec;
 #else
   buffer->ctime_nsec = 0;
+#endif
+#if defined(HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC)
+  buffer->btime_nsec = native_stat->st_birthtimespec.tv_nsec;
+#else
+  buffer->btime_nsec = 0;
 #endif
 }
 
