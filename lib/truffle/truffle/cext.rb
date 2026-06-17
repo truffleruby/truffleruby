@@ -1484,6 +1484,10 @@ module Truffle::CExt
     Primitive.io_fd(io)
   end
 
+  def rb_io_get_io(io)
+    Primitive.convert_type(io, IO, :to_io)
+  end
+
   def rb_equal(a, b)
     Primitive.same_or_equal?(a, b)
   end

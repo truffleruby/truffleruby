@@ -190,6 +190,45 @@ describe "C-API IO function" do
     end
   end
 
+  describe "rb_io_get_io" do
+    it "returns the passed object and does not call #to_io if the object is already an IO" do
+      @io.should_not_receive(:to_io)
+
+      @o.rb_io_get_io(@io).should equal(@io)
+    end
+
+    it "returns the passed object and does not call #to_io if the object is a subclass of IO" do
+      file = File.open(@name)
+
+      begin
+        file.should_not_receive(:to_io)
+
+        @o.rb_io_get_io(file).should equal(file)
+      ensure
+        file.close
+      end
+    end
+
+    it "calls #to_io to convert the object to an IO" do
+      wrapper = Object.new
+      io = @io
+      wrapper.define_singleton_method(:to_io) { io }
+
+      @o.rb_io_get_io(wrapper).should equal(@io)
+    end
+
+    it "raises a TypeError if #to_io does not return an IO" do
+      wrapper = Object.new
+      wrapper.define_singleton_method(:to_io) { Object.new }
+
+      -> { @o.rb_io_get_io(wrapper) }.should.raise(TypeError)
+    end
+
+    it "raises a TypeError if the object does not respond to #to_io" do
+      -> { @o.rb_io_get_io(Object.new) }.should.raise(TypeError)
+    end
+  end
+
   describe "rb_io_binmode" do
     it "returns self" do
       @o.rb_io_binmode(@io).should == @io

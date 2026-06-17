@@ -35,6 +35,10 @@ VALUE io_spec_GetOpenFile_fd(VALUE self, VALUE io) {
   return INT2NUM(io_spec_get_fd(io));
 }
 
+VALUE io_spec_rb_io_get_io(VALUE self, VALUE io) {
+  return rb_io_get_io(io);
+}
+
 VALUE io_spec_rb_io_addstr(VALUE self, VALUE io, VALUE str) {
   return rb_io_addstr(io, str);
 }
@@ -379,6 +383,7 @@ void Init_io_spec(void) {
   rb_define_method(cls, "rb_io_check_readable", io_spec_rb_io_check_readable, 1);
   rb_define_method(cls, "rb_io_check_writable", io_spec_rb_io_check_writable, 1);
   rb_define_method(cls, "rb_io_check_closed", io_spec_rb_io_check_closed, 1);
+  rb_define_method(cls, "rb_io_get_io", io_spec_rb_io_get_io, 1);
   rb_define_method(cls, "rb_io_set_nonblock", io_spec_rb_io_set_nonblock, 1);
   rb_define_method(cls, "rb_io_taint_check", io_spec_rb_io_taint_check, 1);
   rb_define_method(cls, "rb_io_wait_readable", io_spec_rb_io_wait_readable, 2);

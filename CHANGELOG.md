@@ -35,6 +35,7 @@ Compatibility:
 * Fix `IPSocket#inspect` to return `#<TCPSocket:(closed)>` for closed sockets like CRuby instead of raising `IOError` (#4312, @rubiii).
 * Don't expose numbered parameters in `Binding`'s local variable methods (#4231, @andrykonchin).
 * Add methods `Binding#{implicit_parameters,implicit_parameter_defined?,implicit_parameter_get}` (#4231, @andrykonchin).
+* Implement `rb_io_get_io` (@nirvdrum).
 
 Performance:
 
