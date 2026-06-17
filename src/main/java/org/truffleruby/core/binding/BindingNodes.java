@@ -41,7 +41,7 @@ import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.control.RaiseException;
-import org.truffleruby.language.locals.FindDeclarationVariableNodes;
+import org.truffleruby.language.locals.DeclarationVariables;
 import org.truffleruby.language.locals.FindDeclarationVariableNodes.FindAndReadDeclarationVariableNode;
 import org.truffleruby.language.locals.FrameSlotAndDepth;
 import org.truffleruby.language.locals.FrameDescriptorNamesIterator;
@@ -256,7 +256,7 @@ public abstract class BindingNodes {
 
         protected static boolean isDefined(String name, Frame frame) {
             String effectiveName = resolveImplicitParameterName(name);
-            int slot = FindDeclarationVariableNodes.findSlot(frame.getFrameDescriptor(), effectiveName);
+            int slot = DeclarationVariables.findSlot(frame.getFrameDescriptor(), effectiveName);
             return slot != -1;
         }
     }
@@ -275,7 +275,7 @@ public abstract class BindingNodes {
     }
 
     @GenerateUncached
-    @ImportStatic({ BindingNodes.class, FindDeclarationVariableNodes.class })
+    @ImportStatic({ BindingNodes.class, DeclarationVariables.class })
     @GenerateInline
     @GenerateCached(false)
     public abstract static class ImplicitParameterGetNode extends RubyBaseNode {
@@ -308,7 +308,7 @@ public abstract class BindingNodes {
             String nameEffective = resolveImplicitParameterName(name);
             MaterializedFrame frame = binding.getFrame();
 
-            int slot = FindDeclarationVariableNodes.findSlot(frame.getFrameDescriptor(), nameEffective);
+            int slot = DeclarationVariables.findSlot(frame.getFrameDescriptor(), nameEffective);
             if (slot == -1) {
                 throw notDefined(node, name, binding);
             }
@@ -379,7 +379,7 @@ public abstract class BindingNodes {
 
     /** Same as {@link LocalVariableDefinedNode} but returns false instead of raising an exception for hidden
      * variables. */
-    @ImportStatic({ BindingNodes.class, FindDeclarationVariableNodes.class })
+    @ImportStatic({ BindingNodes.class, DeclarationVariables.class })
     @GenerateUncached
     @GenerateInline
     @GenerateCached(false)
@@ -402,7 +402,7 @@ public abstract class BindingNodes {
         @TruffleBoundary
         @Specialization(replaces = "localVariableDefinedCached")
         static boolean localVariableDefinedUncached(RubyBinding binding, String name) {
-            return FindDeclarationVariableNodes.findFrameSlotOrNull(name, binding.getFrame()) != null;
+            return DeclarationVariables.findFrameSlotOrNull(name, binding.getFrame()) != null;
         }
 
         protected int getCacheLimit() {
@@ -411,7 +411,7 @@ public abstract class BindingNodes {
 
     }
 
-    @ImportStatic({ BindingNodes.class, FindDeclarationVariableNodes.class })
+    @ImportStatic({ BindingNodes.class, DeclarationVariables.class })
     @CoreMethod(names = "local_variable_defined?", required = 1, split = Split.ALWAYS)
     public abstract static class BindingLocalVariableDefinedNode extends CoreMethodArrayArgumentsNode {
 
@@ -425,7 +425,7 @@ public abstract class BindingNodes {
     }
 
 
-    @ImportStatic({ BindingNodes.class, FindDeclarationVariableNodes.class })
+    @ImportStatic({ BindingNodes.class, DeclarationVariables.class })
     @GenerateCached(false)
     @GenerateInline
     @ReportPolymorphism // inline cache
@@ -452,7 +452,7 @@ public abstract class BindingNodes {
                 guards = { "!isHiddenVariable(name)", "!isNumberedParameter(name)" },
                 replaces = "localVariableDefinedCached")
         static boolean localVariableDefinedUncached(RubyBinding binding, String name) {
-            return FindDeclarationVariableNodes.findFrameSlotOrNull(name, binding.getFrame()) != null;
+            return DeclarationVariables.findFrameSlotOrNull(name, binding.getFrame()) != null;
         }
 
         @TruffleBoundary
@@ -545,7 +545,7 @@ public abstract class BindingNodes {
 
     @ReportPolymorphism // inline cache
     @GenerateUncached
-    @ImportStatic({ BindingNodes.class, FindDeclarationVariableNodes.class })
+    @ImportStatic({ BindingNodes.class, DeclarationVariables.class })
     @GenerateCached(false)
     @GenerateInline
     public abstract static class LocalVariableSetNode extends RubyBaseNode {
@@ -597,7 +597,7 @@ public abstract class BindingNodes {
                 replaces = { "localVariableSetCached", "localVariableSetNewCached" })
         static Object localVariableSetUncached(RubyBinding binding, String name, Object value) {
             MaterializedFrame frame = binding.getFrame();
-            final FrameSlotAndDepth frameSlot = FindDeclarationVariableNodes.findFrameSlotOrNull(name, frame);
+            final FrameSlotAndDepth frameSlot = DeclarationVariables.findFrameSlotOrNull(name, frame);
             final int slot;
             if (frameSlot != null) {
                 frame = RubyArguments.getDeclarationFrame(frame, frameSlot.depth);

@@ -10,7 +10,6 @@
  */
 package org.truffleruby.language.locals;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.dsl.GenerateUncached;
@@ -29,49 +28,11 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 
 public abstract class FindDeclarationVariableNodes {
 
-    public static MaterializedFrame getOuterDeclarationFrame(MaterializedFrame topFrame) {
-        MaterializedFrame frame = topFrame;
-        MaterializedFrame nextFrame;
-
-        while ((nextFrame = RubyArguments.getDeclarationFrame(frame)) != null) {
-            frame = nextFrame;
-        }
-
-        return frame;
-    }
-
-    public static int findSlot(FrameDescriptor descriptor, String name) {
-        assert descriptor.getNumberOfAuxiliarySlots() == 0;
-        int slots = descriptor.getNumberOfSlots();
-        for (int slot = 0; slot < slots; slot++) {
-            if (name.equals(descriptor.getSlotName(slot))) {
-                return slot;
-            }
-        }
-
-        return -1;
-    }
-
-    public static FrameSlotAndDepth findFrameSlotOrNull(String identifier, Frame frame) {
-        CompilerAsserts.neverPartOfCompilation("Must not be called in PE code as the frame would escape");
-        int depth = 0;
-        do {
-            int slot = findSlot(frame.getFrameDescriptor(), identifier);
-            if (slot != -1) {
-                return new FrameSlotAndDepth(slot, depth);
-            }
-
-            frame = RubyArguments.getDeclarationFrame(frame);
-            depth++;
-        } while (frame != null);
-        return null;
-    }
-
     @ReportPolymorphism // inline cache
     @GenerateUncached
     @GenerateInline
     @GenerateCached(false)
-    @ImportStatic(FindDeclarationVariableNodes.class)
+    @ImportStatic(DeclarationVariables.class)
     public abstract static class FindAndReadDeclarationVariableNode extends RubyBaseNode {
 
         public abstract Object execute(Frame frame, Node node, String name, Object defaultValue);
@@ -99,7 +60,7 @@ public abstract class FindDeclarationVariableNodes {
 
         @TruffleBoundary
         private static Object getVariableSlowBoundary(MaterializedFrame frame, String name, Object defaultValue) {
-            final FrameSlotAndDepth slotAndDepth = findFrameSlotOrNull(name, frame);
+            final FrameSlotAndDepth slotAndDepth = DeclarationVariables.findFrameSlotOrNull(name, frame);
             if (slotAndDepth == null) {
                 return defaultValue;
             } else {
