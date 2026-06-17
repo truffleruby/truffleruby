@@ -28,16 +28,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 
 public abstract class FindDeclarationVariableNodes {
-    public static final class FrameSlotAndDepth {
-        public final int slot;
-        public final int depth;
-
-        public FrameSlotAndDepth(int slot, int depth) {
-            assert slot >= 0;
-            this.slot = slot;
-            this.depth = depth;
-        }
-    }
 
     public static MaterializedFrame getOuterDeclarationFrame(MaterializedFrame topFrame) {
         MaterializedFrame frame = topFrame;

@@ -43,7 +43,7 @@ import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.locals.FindDeclarationVariableNodes;
 import org.truffleruby.language.locals.FindDeclarationVariableNodes.FindAndReadDeclarationVariableNode;
-import org.truffleruby.language.locals.FindDeclarationVariableNodes.FrameSlotAndDepth;
+import org.truffleruby.language.locals.FrameSlotAndDepth;
 import org.truffleruby.language.locals.FrameDescriptorNamesIterator;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;

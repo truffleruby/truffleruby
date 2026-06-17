@@ -121,7 +121,7 @@ import org.truffleruby.language.literal.ObjectClassLiteralNode;
 import org.truffleruby.language.literal.ObjectLiteralNode;
 import org.truffleruby.language.literal.StringLiteralNode;
 import org.truffleruby.language.literal.TruffleInternalModuleLiteralNode;
-import org.truffleruby.language.locals.FindDeclarationVariableNodes.FrameSlotAndDepth;
+import org.truffleruby.language.locals.FrameSlotAndDepth;
 import org.truffleruby.language.locals.FlipFlopNodeGen;
 import org.truffleruby.language.locals.InitFlipFlopSlotNode;
 import org.truffleruby.language.locals.ReadLocalNode;
