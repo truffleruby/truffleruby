@@ -125,7 +125,7 @@ import org.truffleruby.language.globals.ReadGlobalVariableNode;
 import org.truffleruby.language.loader.EvalLoader;
 import org.truffleruby.language.library.RubyStringLibrary;
 import org.truffleruby.language.loader.RequireNode;
-import org.truffleruby.language.locals.FindDeclarationVariableNodes.FindAndReadDeclarationVariableNode;
+import org.truffleruby.language.locals.FindAndReadDeclarationVariableNode;
 import org.truffleruby.language.methods.GetMethodObjectNode;
 import org.truffleruby.language.methods.InternalMethod;
 import org.truffleruby.annotations.Split;

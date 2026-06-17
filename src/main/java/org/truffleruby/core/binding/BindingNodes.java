@@ -42,7 +42,7 @@ import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.locals.DeclarationVariables;
-import org.truffleruby.language.locals.FindDeclarationVariableNodes.FindAndReadDeclarationVariableNode;
+import org.truffleruby.language.locals.FindAndReadDeclarationVariableNode;
 import org.truffleruby.language.locals.FrameSlotAndDepth;
 import org.truffleruby.language.locals.FrameDescriptorNamesIterator;
 
