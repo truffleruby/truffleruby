@@ -162,6 +162,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import static org.truffleruby.parser.TranslatorEnvironment.IT_HIDDEN_VARIABLE_NAME;
 import static org.truffleruby.parser.TranslatorEnvironment.CURRENT_FRAME_DEPTH;
 import static org.truffleruby.parser.TranslatorEnvironment.DEFAULT_BLOCK_NAME;
 import static org.truffleruby.parser.TranslatorEnvironment.DEFAULT_KEYWORD_REST_NAME;
@@ -195,8 +196,6 @@ public class YARPTranslator extends YARPBaseTranslator {
             "_8",
             "_9"
     };
-
-    public static final String IT_PARAMETER_NAME = "%it";
 
     /** all the encountered BEGIN {} blocks; they will be added finally at the beginning of the program AST */
     private final ArrayList<RubyNode> beginBlocks = new ArrayList<>();
@@ -491,7 +490,7 @@ public class YARPTranslator extends YARPBaseTranslator {
                     EMPTY_NODE_ARRAY, EMPTY_NODE_ARRAY, null, null);
         } else if (parametersNode instanceof Nodes.ItParametersNode) {
             var requireds = new Nodes.RequiredParameterNode[]{
-                    new Nodes.RequiredParameterNode(0, 0, NO_FLAGS, IT_PARAMETER_NAME)
+                    new Nodes.RequiredParameterNode(0, 0, NO_FLAGS, IT_HIDDEN_VARIABLE_NAME)
             };
             parameters = new Nodes.ParametersNode(0, 0, requireds, EMPTY_OPTIONAL_PARAMETER_NODE_ARRAY, null,
                     EMPTY_NODE_ARRAY, EMPTY_NODE_ARRAY, null, null);
@@ -2527,7 +2526,7 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     @Override
     public RubyNode visitItLocalVariableReadNode(Nodes.ItLocalVariableReadNode node) {
-        return assignPositionAndFlags(node, environment.readNode(IT_PARAMETER_NAME, 0));
+        return assignPositionAndFlags(node, environment.readNode(IT_HIDDEN_VARIABLE_NAME, 0));
     }
 
     @Override

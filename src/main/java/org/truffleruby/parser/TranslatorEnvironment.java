@@ -63,6 +63,10 @@ public final class TranslatorEnvironment {
     /** local variable name for & parameter caused by desugaring ... parameter (forward-everything) */
     public static final String FORWARDED_BLOCK_NAME = "%forward_block";
 
+    /** The "it" implicit parameter is stored in a frame as a hidden variable to distinguish it from an ordinal local
+     * variable */
+    public static final String IT_HIDDEN_VARIABLE_NAME = "%it";
+
     /** This should be 0, but because Prism does not increase the depth inside the `for` loop body and `END` body we
      * need to not add depthOffset to the depth for temporary variables which must always be read from the current
      * frame. So we work around by using a negative depth to handle this case. */

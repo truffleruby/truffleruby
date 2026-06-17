@@ -60,14 +60,12 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.truffleruby.language.locals.WriteFrameSlotNode;
 import org.truffleruby.parser.FrameDescriptorInfo;
 import org.truffleruby.parser.TranslatorEnvironment;
-import org.truffleruby.parser.YARPTranslator;
+
+import static org.truffleruby.parser.TranslatorEnvironment.IT_HIDDEN_VARIABLE_NAME;
 
 @CoreModule(value = "Binding", isClass = true)
 public abstract class BindingNodes {
     static final String IT_PARAMETER_NAME = "it";
-    /** The "it" implicit parameter is stored in a frame as a hidden variable to distinguish it from an ordinal local
-     * variable */
-    static final String IT_HIDDEN_VARIABLE_NAME = YARPTranslator.IT_PARAMETER_NAME;
 
     /** Creates a Binding without a SourceSection, only for Binding used internally and not exposed to the user. */
     public static RubyBinding createBinding(RubyContext context, RubyLanguage language, MaterializedFrame frame) {
