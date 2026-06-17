@@ -734,16 +734,16 @@ helpers:
 
 Main helper methods for implicit type conversion are:
 
-- `Truffle::Type.rb_convert_type`
+- `Primitive.convert_type`
 - `Truffle::Type.rb_check_convert_type`
 
-Example for `rb_convert_type`
+Example for `Primitive.convert_type`
 
 ```ruby
-pid = Truffle::Type.rb_convert_type(pid, Integer, :to_int)
+pid = Primitive.convert_type(pid, Integer, :to_int)
 ```
 
-The main difference between `rb_convert_type` and
+The main difference between `Primitive.convert_type` and
 `rb_check_convert_type` is that the last one doesn't raise exception
 if object doesn't respond to specified method (e.g. `#to_str`) and
 returns `nil` instead. It's useful if there are several expected
@@ -757,7 +757,7 @@ Example for `rb_check_convert_type`:
 def String(obj)
   str = Truffle::Type.rb_check_convert_type(obj, String, :to_str)
   if Primitive.nil? str
-    str = Truffle::Type.rb_convert_type(obj, String, :to_s)
+    str = Primitive.convert_type(obj, String, :to_s)
   end
   str
 end
@@ -775,7 +775,9 @@ The most common are the following:
 - `Primitive.convert_type`
 - `Primitive.as_boolean`
 
-These primitives are preferred to `rb_convert_type`/`rb_check_convert_type` since they are more efficient (for execution speed and footprint).
+These primitives are preferred to `rb_check_convert_type` and custom
+Ruby code since they are more efficient (for execution speed and
+footprint).
 
 ## How to cast type implicitly in Java
 
@@ -952,7 +954,7 @@ then use that instead for best readability.
 
 ## How to accept keyword arguments in Core Method in Java
 
-Currently there is no way to accept directly keyword arguments in Java
+Currently, there is no way to accept directly keyword arguments in Java
 Core Method implementations, to simplify various aspects of the implementation.
 
 There is a workaround:
@@ -965,7 +967,7 @@ There is a workaround:
 ```ruby
 # core/string.rb
 def unpack(format, offset: undefined)
-  format = Truffle::Type.rb_convert_type(format, String, :to_str)
+  format = Primitive.convert_type(format, String, :to_str)
   unless Primitive.undefined?(offset)
     offset = Primitive.rb_num2int(offset) # to guarantee it's `int` finally
   end
@@ -1186,7 +1188,7 @@ jt -q ruby -e 'puts Truffle::Debug.ast_size([].method(:to_ary))'
 We rely on [JCodings](https://github.com/jruby/jcodings) for Unicode/Encoding stuff.
 So basically updating  Unicode version is just as upgrade of this library
 
-Steps to do:
+Steps to take:
 
 - choose a proper jcodings version (probably the latest one)
   - Unicode version is hardcoded [here](https://github.com/jruby/jcodings/blob/jcodings-1.0.58/src/org/jcodings/Config.java)
