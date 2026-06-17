@@ -10,6 +10,7 @@ Bug fixes:
 
 * Raise a `RuntimeError` when using an object from a `Polyglot::InnerContext` after it has been closed (#4061, @eregon).
 * Fix `object.method(:send).to_proc.call(some_method)` (#4299, @eregon).
+* Fix `TruffleRuby::AtomicReference#compare_and_set` to work with NaN values like `Float::NAN` (@eregon).
 
 Compatibility:
 

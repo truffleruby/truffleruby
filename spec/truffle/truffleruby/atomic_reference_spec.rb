@@ -44,7 +44,7 @@ describe "TruffleRuby::AtomicReference" do
       r.get.should.equal? v2
     end
 
-    it "comparing numeric objects with equality " do
+    it "comparing numeric objects with equality" do
       [-> { 1 },
        -> { 1.1 },
        -> { 1000 }
@@ -60,6 +60,23 @@ describe "TruffleRuby::AtomicReference" do
         r.compare_and_set(numeric_source.call, v2).should == true
         r.get.should.equal? v2
       end
+    end
+
+    it "handles NaN correctly" do
+      r = TruffleRuby::AtomicReference.new Float::NAN
+      r.compare_and_set(0.0, 1.0).should == false
+      r.get.should.equal? Float::NAN
+
+
+      r.compare_and_set(Float::NAN, 42.0).should == true
+      r.get.should == 42.0
+
+      r.set Float::NAN
+
+      another_nan = 0.0 / 0.0
+      [another_nan].pack('D').should_not.equal?([Float::NAN].pack('D')) # different bit pattern
+      r.compare_and_set(another_nan, 43.0).should == true
+      r.get.should == 43.0
     end
   end
 

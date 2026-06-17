@@ -91,6 +91,8 @@ public abstract class AtomicReferenceNodes {
         }
     }
 
+    // Note that concurrent-ruby uses this directly:
+    // https://github.com/ruby-concurrency/concurrent-ruby/blob/4c8fc28ab6/lib/concurrent-ruby/concurrent/atomic/atomic_reference.rb#L38
     @CoreMethod(names = "compare_and_set_reference", required = 2, visibility = Visibility.PRIVATE)
     public abstract static class CompareAndSetReferenceNode extends CoreMethodArrayArgumentsNode {
 

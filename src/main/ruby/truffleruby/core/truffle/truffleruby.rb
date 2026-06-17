@@ -17,19 +17,24 @@ module TruffleRuby
 
   class AtomicReference
 
+    # Same logic as https://github.com/ruby-concurrency/concurrent-ruby/blob/4c8fc28ab6/lib/concurrent-ruby/concurrent/atomic_reference/numeric_cas_wrapper.rb
+    # We handle the Numeric case here so TruffleRuby::AtomicReference can be used without needing concurrent-ruby
     def compare_and_set(expected_value, new_value)
       if Primitive.is_a?(expected_value, Numeric)
-        loop do
-          current_value = get
+        # NaN is never == to itself, so match it explicitly
+        expected_nan = Primitive.is_a?(expected_value, Float) && expected_value.nan?
 
-          if Primitive.is_a?(current_value, Numeric) && current_value == expected_value
-            if compare_and_set_reference(current_value, new_value)
-              return true
-            end
+        begin
+          current_value = get
+          return false unless Primitive.is_a?(current_value, Numeric)
+
+          if expected_nan
+            return false unless Primitive.is_a?(current_value, Float) && current_value.nan?
           else
-            return false
+            return false unless current_value == expected_value
           end
-        end
+        end until compare_and_set_reference(current_value, new_value)
+        true
       else
         compare_and_set_reference(expected_value, new_value)
       end
