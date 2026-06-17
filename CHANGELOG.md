@@ -37,6 +37,7 @@ Compatibility:
 * Don't expose numbered parameters in `Binding`'s local variable methods (#4231, @andrykonchin).
 * Add methods `Binding#{implicit_parameters,implicit_parameter_defined?,implicit_parameter_get}` (#4231, @andrykonchin).
 * Implement `rb_io_get_io` (@nirvdrum).
+* Implement `File.birthtime`, `File#birthtime`, and `File::Stat#birthtime` (@andrykonchin, @eregon).
 
 Performance:
 

@@ -266,60 +266,70 @@ class File
 
     # These indices are from truffleposix.c
 
-    UINT64_BUFFER_ELEMENTS = 13
-    UINT32_BUFFER_ELEMENTS = 3
+    UINT64_BUFFER_ELEMENTS = 14
+    UINT32_BUFFER_ELEMENTS = 4
     BUFFER_SIZE = (UINT64_BUFFER_ELEMENTS * 2) + UINT32_BUFFER_ELEMENTS
+    UNAVAILABLE_BIRTHTIME = 2000000000
+    private_constant :UINT64_BUFFER_ELEMENTS, :UINT32_BUFFER_ELEMENTS, :BUFFER_SIZE, :UNAVAILABLE_BIRTHTIME
 
     def atime
-      Time.at(@buffer[0], @buffer[13], :nanosecond)
+      Time.at(@buffer[0], @buffer[14], :nanosecond)
     end
 
     def mtime
-      Time.at(@buffer[1], @buffer[14], :nanosecond)
+      Time.at(@buffer[1], @buffer[15], :nanosecond)
     end
 
     def ctime
-      Time.at(@buffer[2], @buffer[15], :nanosecond)
+      Time.at(@buffer[2], @buffer[16], :nanosecond)
+    end
+
+    def birthtime
+      if @buffer[17] == UNAVAILABLE_BIRTHTIME
+        raise NotImplementedError, 'birthtime is unimplemented on this filesystem'
+      end
+
+      Time.at(@buffer[3], @buffer[17], :nanosecond)
     end
 
     def nlink
-      @buffer[3]
-    end
-
-    def rdev
       @buffer[4]
     end
 
-    def blksize
+    def rdev
       @buffer[5]
     end
 
-    def blocks
+    def blksize
       @buffer[6]
     end
 
-    def dev
+    def blocks
       @buffer[7]
     end
 
-    def ino
+    def dev
       @buffer[8]
     end
 
-    def size
+    def ino
       @buffer[9]
     end
 
-    def mode
+    def size
       @buffer[10]
     end
 
-    def gid
+    def mode
       @buffer[11]
     end
 
-    def uid
+    def gid
       @buffer[12]
+    end
+
+    def uid
+      @buffer[13]
     end
 
     def inspect

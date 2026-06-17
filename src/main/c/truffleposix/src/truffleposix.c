@@ -34,7 +34,8 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
 */
 
-/* For clock_gettime(), lstat() and strdup() on Linux */
+/* For statx(), clock_gettime(), lstat() and strdup() on Linux */
+#define _GNU_SOURCE 1
 #define _XOPEN_SOURCE 600
 /* For minor()/major() on Linux */
 #define _BSD_SOURCE
@@ -70,10 +71,15 @@ SUCH DAMAGE.
 #include <sys/sysmacros.h>
 #endif
 
+// Birthtime is not supported by the standard POSIX stat(2) system call (or similar POSIX functions).
+// On Darwin, it is returned by stat(2) (along with other additional struct members)
+// since Mac OS X 10.5 when the _DARWIN_USE_64_BIT_INODE macro is defined.
+// On Linux, it is returned by the Linux-specific statx(2) system call (since Linux 4.11).
 struct truffleposix_stat {
   uint64_t atime;
   uint64_t mtime;
   uint64_t ctime;
+  uint64_t btime; // time of file creation (birth), seconds
   uint64_t nlink;
   uint64_t rdev;
   uint64_t blksize;
@@ -87,9 +93,18 @@ struct truffleposix_stat {
   uint32_t atime_nsec;
   uint32_t mtime_nsec;
   uint32_t ctime_nsec;
+  uint32_t btime_nsec;
 };
 
-static void copy_stat(struct stat *stat, struct truffleposix_stat* buffer);
+#ifdef HAVE_STATX
+#define NATIVE_STAT_STRUCT struct statx
+#else
+#define NATIVE_STAT_STRUCT struct stat
+#endif
+
+#define UNAVAILABLE_BIRTHTIME 2000000000
+
+static void copy_stat(NATIVE_STAT_STRUCT *stat, struct truffleposix_stat* buffer);
 
 long truffleposix_page_size(void) {
   return sysconf(_SC_PAGESIZE);
@@ -365,8 +380,12 @@ pid_t truffleposix_waitpid(pid_t pid, int options, int result[4]) {
 }
 
 int truffleposix_stat(const char *path, struct truffleposix_stat *buffer) {
-  struct stat native_stat;
+  NATIVE_STAT_STRUCT native_stat;
+#ifdef HAVE_STATX
+  int result = statx(AT_FDCWD, path, 0, STATX_BASIC_STATS | STATX_BTIME, &native_stat);
+#else
   int result = stat(path, &native_stat);
+#endif
   if (result == 0) {
     copy_stat(&native_stat, buffer);
   }
@@ -392,8 +411,12 @@ int64_t truffleposix_stat_size(const char *path) {
 }
 
 int truffleposix_fstat(int fd, struct truffleposix_stat *buffer) {
-  struct stat native_stat;
+  NATIVE_STAT_STRUCT native_stat;
+#ifdef HAVE_STATX
+  int result = statx(fd, "", AT_EMPTY_PATH, STATX_BASIC_STATS | STATX_BTIME, &native_stat);
+#else
   int result = fstat(fd, &native_stat);
+#endif
   if (result == 0) {
     copy_stat(&native_stat, buffer);
   }
@@ -419,8 +442,12 @@ int64_t truffleposix_fstat_size(int fd) {
 }
 
 int truffleposix_fstatat(int dirfd, char *path, struct truffleposix_stat *buffer, int flags) {
-  struct stat native_stat;
+  NATIVE_STAT_STRUCT native_stat;
+#ifdef HAVE_STATX
+  int result = statx(dirfd, path, flags, STATX_BASIC_STATS | STATX_BTIME, &native_stat);
+#else
   int result = fstatat(dirfd, path, &native_stat, flags);
+#endif
   if (result == 0) {
     copy_stat(&native_stat, buffer);
   }
@@ -446,8 +473,12 @@ int64_t truffleposix_fstatat_size(int dirfd, char *path, int flags) {
 }
 
 int truffleposix_lstat(const char *path, struct truffleposix_stat *buffer) {
-  struct stat native_stat;
+  NATIVE_STAT_STRUCT native_stat;
+#ifdef HAVE_STATX
+  int result = statx(AT_FDCWD, path, AT_SYMLINK_NOFOLLOW, STATX_BASIC_STATS | STATX_BTIME, &native_stat);
+#else
   int result = lstat(path, &native_stat);
+#endif
   if (result == 0) {
     copy_stat(&native_stat, buffer);
   }
@@ -471,10 +502,42 @@ unsigned int truffleposix_minor(dev_t dev) {
   return minor(dev);
 }
 
+#ifdef HAVE_STATX
+static void copy_stat(struct statx *native_stat, struct truffleposix_stat* buffer) {
+  buffer->atime   = native_stat->stx_atime.tv_sec;
+  buffer->mtime   = native_stat->stx_mtime.tv_sec;
+  buffer->ctime   = native_stat->stx_ctime.tv_sec;
+  if (native_stat->stx_mask & STATX_BTIME) {
+    buffer->btime = native_stat->stx_btime.tv_sec;
+  } else {
+    buffer->btime = 0;
+  }
+  buffer->nlink   = native_stat->stx_nlink;
+  buffer->rdev    = makedev(native_stat->stx_rdev_major, native_stat->stx_rdev_minor);
+  buffer->blksize = native_stat->stx_blksize;
+  buffer->blocks  = native_stat->stx_blocks;
+  buffer->dev     = makedev(native_stat->stx_dev_major, native_stat->stx_dev_minor);
+  buffer->ino     = native_stat->stx_ino;
+  buffer->size    = native_stat->stx_size;
+  buffer->mode    = native_stat->stx_mode;
+  buffer->gid     = native_stat->stx_gid;
+  buffer->uid     = native_stat->stx_uid;
+
+  buffer->atime_nsec = native_stat->stx_atime.tv_nsec;
+  buffer->mtime_nsec = native_stat->stx_mtime.tv_nsec;
+  buffer->ctime_nsec = native_stat->stx_ctime.tv_nsec;
+  if (native_stat->stx_mask & STATX_BTIME) {
+    buffer->btime_nsec = native_stat->stx_btime.tv_nsec;
+  } else {
+    buffer->btime_nsec = UNAVAILABLE_BIRTHTIME;
+  }
+}
+#else
 static void copy_stat(struct stat *native_stat, struct truffleposix_stat* buffer) {
   buffer->atime   = native_stat->st_atime;
   buffer->mtime   = native_stat->st_mtime;
   buffer->ctime   = native_stat->st_ctime;
+  buffer->btime   = native_stat->st_birthtimespec.tv_sec;
   buffer->nlink   = native_stat->st_nlink;
   buffer->rdev    = native_stat->st_rdev;
   buffer->blksize = native_stat->st_blksize;
@@ -513,7 +576,9 @@ static void copy_stat(struct stat *native_stat, struct truffleposix_stat* buffer
 #else
   buffer->ctime_nsec = 0;
 #endif
+  buffer->btime_nsec = native_stat->st_birthtimespec.tv_nsec;
 }
+#endif
 
 int64_t truffleposix_clock_gettime(int clock) {
   struct timespec timespec;

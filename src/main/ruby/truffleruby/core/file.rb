@@ -222,6 +222,14 @@ class File < IO
   private_class_method :query_stat_mode
 
   ##
+  # Returns the birth time for the named file.
+  #
+  #  File.birthtime("testfile")   #=> Wed Apr 09 08:51:48 CDT 2003
+  def self.birthtime(path)
+    Stat.new(path).birthtime
+  end
+
+  ##
   # Returns true if the named file is a block device.
   def self.blockdev?(path)
     Truffle::StatOperations.blockdev?(query_stat_mode(path))
@@ -1194,6 +1202,10 @@ class File < IO
 
   def atime
     Stat.new(@path).atime
+  end
+
+  def birthtime
+    Stat.new(@path).birthtime
   end
 
   def ctime

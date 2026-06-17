@@ -1,1 +1,0 @@
-fails:Pathname#birthtime returns the birth time for self

@@ -1,4 +1,3 @@
-fails:Public methods on File should include birthtime
 fails:Public methods on File should not include inspect
 fails:Public methods on File should not include stat
 fails:Public methods on Float should include hash
@@ -93,9 +92,6 @@ fails:Public methods on Hash should include freeze
 fails:Public methods on SizedQueue should not include freeze
 fails:Public methods on BasicSocket should include read_nonblock
 fails:Public methods on BasicSocket should include write_nonblock
-fails:Public methods on Array should include detect
-fails:Public methods on Array should include find
-fails:Public methods on Array should include rfind
 fails:Public methods on Method should include box
 fails:Public methods on SizedQueue should not include empty?
 fails:Public methods on SizedQueue should not include length
