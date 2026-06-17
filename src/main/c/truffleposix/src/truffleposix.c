@@ -537,11 +537,7 @@ static void copy_stat(struct stat *native_stat, struct truffleposix_stat* buffer
   buffer->atime   = native_stat->st_atime;
   buffer->mtime   = native_stat->st_mtime;
   buffer->ctime   = native_stat->st_ctime;
-#if defined(HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC)
   buffer->btime   = native_stat->st_birthtimespec.tv_sec;
-#else
-  buffer->btime   = 0;
-#endif
   buffer->nlink   = native_stat->st_nlink;
   buffer->rdev    = native_stat->st_rdev;
   buffer->blksize = native_stat->st_blksize;
@@ -580,11 +576,7 @@ static void copy_stat(struct stat *native_stat, struct truffleposix_stat* buffer
 #else
   buffer->ctime_nsec = 0;
 #endif
-#if defined(HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC)
   buffer->btime_nsec = native_stat->st_birthtimespec.tv_nsec;
-#else
-  buffer->btime_nsec = UNAVAILABLE_BIRTHTIME;
-#endif
 }
 #endif
 
