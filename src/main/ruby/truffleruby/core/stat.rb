@@ -269,6 +269,8 @@ class File
     UINT64_BUFFER_ELEMENTS = 14
     UINT32_BUFFER_ELEMENTS = 4
     BUFFER_SIZE = (UINT64_BUFFER_ELEMENTS * 2) + UINT32_BUFFER_ELEMENTS
+    UNAVAILABLE_BIRTHTIME = 2000000000
+    private_constant :UINT64_BUFFER_ELEMENTS, :UINT32_BUFFER_ELEMENTS, :BUFFER_SIZE, :UNAVAILABLE_BIRTHTIME
 
     def atime
       Time.at(@buffer[0], @buffer[14], :nanosecond)
@@ -283,9 +285,8 @@ class File
     end
 
     def birthtime
-      if @buffer[3] == 0 && @buffer[17] == 0
-        # zero values indicate that an underlying syscall doesn't return birthtime
-        raise NotImplementedError, 'birthtime() function is unimplemented on this machine'
+      if @buffer[17] == UNAVAILABLE_BIRTHTIME
+        raise NotImplementedError, 'birthtime is unimplemented on this filesystem'
       end
 
       Time.at(@buffer[3], @buffer[17], :nanosecond)

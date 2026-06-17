@@ -102,6 +102,8 @@ struct truffleposix_stat {
 #define NATIVE_STAT_STRUCT struct stat
 #endif
 
+#define UNAVAILABLE_BIRTHTIME 2000000000
+
 static void copy_stat(NATIVE_STAT_STRUCT *stat, struct truffleposix_stat* buffer);
 
 long truffleposix_page_size(void) {
@@ -527,7 +529,7 @@ static void copy_stat(struct statx *native_stat, struct truffleposix_stat* buffe
   if (native_stat->stx_mask & STATX_BTIME) {
     buffer->btime_nsec = native_stat->stx_btime.tv_nsec;
   } else {
-    buffer->btime_nsec = 0;
+    buffer->btime_nsec = UNAVAILABLE_BIRTHTIME;
   }
 }
 #else
@@ -581,7 +583,7 @@ static void copy_stat(struct stat *native_stat, struct truffleposix_stat* buffer
 #if defined(HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC)
   buffer->btime_nsec = native_stat->st_birthtimespec.tv_nsec;
 #else
-  buffer->btime_nsec = 0;
+  buffer->btime_nsec = UNAVAILABLE_BIRTHTIME;
 #endif
 }
 #endif
