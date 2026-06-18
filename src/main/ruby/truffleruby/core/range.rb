@@ -399,9 +399,9 @@ class Range
     if exclude_end?
       if !Primitive.is_a?(self.end, Integer)
         raise TypeError, 'cannot exclude non Integer end value'
-      elsif !Primitive.is_a?(self.begin, Integer)
+      elsif !Primitive.nil?(self.begin) && !Primitive.is_a?(self.begin, Integer)
         raise TypeError, 'cannot exclude end value with non Integer begin value'
-      elsif self.end <= self.begin
+      elsif !Primitive.nil?(self.begin) && self.end <= self.begin
         return nil
       end
 
