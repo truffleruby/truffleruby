@@ -385,7 +385,7 @@ class Range
     to_a.last(n)
   end
 
-  def max
+  def max(n = undefined)
     raise RangeError, 'cannot get the maximum of endless range' if Primitive.nil? self.end
 
     if block_given? || (exclude_end? && !Primitive.is_a?(self.end, Numeric))
@@ -394,6 +394,13 @@ class Range
       end
 
       return super
+    end
+
+    unless Primitive.undefined?(n)
+      n = Primitive.convert_with_to_int(n)
+      raise ArgumentError, "negative size #{n}" if n < 0
+
+      return reverse_each.take(n)
     end
 
     if exclude_end?

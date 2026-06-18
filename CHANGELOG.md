@@ -39,6 +39,7 @@ Compatibility:
 * Implement `rb_io_get_io` (@nirvdrum).
 * Implement `File.birthtime`, `File#birthtime`, and `File::Stat#birthtime` (@andrykonchin, @eregon).
 * Fix `Range#max` for Integer beginless ranges with excluded end and return a proper maximum value instead of raising `TypeError` (#4231, @andrykonchin).
+* Adjust `Range#max` and support Integer argument (#4231, @andrykonchin).
 
 Performance:
 
