@@ -210,6 +210,7 @@ module Truffle
       end
     end
 
+    # Fallback for Primitive.convert_type
     def self.rb_convert_type_fallback(obj, cls, meth)
       v = convert_type(obj, cls, meth, true)
       conversion_mismatch(obj, cls, meth, v) unless Primitive.is_a?(v, cls)

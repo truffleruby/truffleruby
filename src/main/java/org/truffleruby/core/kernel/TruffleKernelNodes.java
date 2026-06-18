@@ -45,7 +45,7 @@ import org.truffleruby.language.globals.WriteSimpleGlobalVariableNode;
 import org.truffleruby.language.library.RubyStringLibrary;
 import org.truffleruby.language.loader.CodeLoader;
 import org.truffleruby.language.loader.FileLoader;
-import org.truffleruby.language.locals.FindDeclarationVariableNodes;
+import org.truffleruby.language.locals.DeclarationVariables;
 import org.truffleruby.language.methods.DeclarationContext;
 import org.truffleruby.language.threadlocal.SpecialVariableStorage;
 import org.truffleruby.parser.ParserContext;
@@ -270,7 +270,7 @@ public abstract class TruffleKernelNodes {
 
         @TruffleBoundary
         private static SpecialVariableStorage getSlow(MaterializedFrame aFrame) {
-            MaterializedFrame frame = FindDeclarationVariableNodes.getOuterDeclarationFrame(aFrame);
+            MaterializedFrame frame = DeclarationVariables.getOuterDeclarationFrame(aFrame);
             Object variables = SpecialVariableStorage.get(frame);
             if (variables == Nil.INSTANCE) {
                 variables = initializeSpecialVariablesSlot(frame);
@@ -382,7 +382,7 @@ public abstract class TruffleKernelNodes {
 
         @TruffleBoundary
         public Object shareSlow(MaterializedFrame aFrame, SpecialVariableStorage storage) {
-            MaterializedFrame frame = FindDeclarationVariableNodes.getOuterDeclarationFrame(aFrame);
+            MaterializedFrame frame = DeclarationVariables.getOuterDeclarationFrame(aFrame);
             SpecialVariableStorage.set(frame, storage);
             // TODO: should invalidate here?
             return nil;

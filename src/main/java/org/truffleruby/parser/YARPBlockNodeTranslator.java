@@ -40,6 +40,8 @@ import org.truffleruby.language.methods.BlockDefinitionNodeGen;
 
 import java.util.function.Supplier;
 
+import static org.truffleruby.parser.TranslatorEnvironment.IT_HIDDEN_VARIABLE_NAME;
+
 public final class YARPBlockNodeTranslator extends YARPTranslator {
 
     private final Arity arity;
@@ -55,7 +57,7 @@ public final class YARPBlockNodeTranslator extends YARPTranslator {
 
         declareLocalVariables(locals);
         if (parametersNode instanceof Nodes.ItParametersNode) {
-            environment.declareVar(IT_PARAMETER_NAME);
+            environment.declareVar(IT_HIDDEN_VARIABLE_NAME);
         }
 
         final RubyNode loadArguments = new YARPLoadArgumentsTranslator(
