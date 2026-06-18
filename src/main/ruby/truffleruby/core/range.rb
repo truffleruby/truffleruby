@@ -419,13 +419,28 @@ class Range
     end
   end
 
-  def min
+  def min(n = undefined)
     raise RangeError, 'cannot get the minimum of beginless range' if Primitive.nil? self.begin
+
+    if block_given?
+      if Primitive.nil? self.end
+        raise RangeError, 'cannot get the minimum of endless range with custom comparison method'
+      end
+
+      return super
+    end
+
+    unless Primitive.undefined?(n)
+      n = Primitive.convert_with_to_int(n)
+      raise ArgumentError, "negative size #{n}" if n < 0
+
+      return take(n)
+    end
+
     if Primitive.nil? self.end
-      raise RangeError, 'cannot get the minimum of endless range with custom comparison method' if block_given?
       return self.begin
     end
-    return super if block_given?
+
     if Comparable.compare_int(self.end <=> self.begin) < 0
       return nil
     elsif exclude_end? && self.end == self.begin
