@@ -58,8 +58,57 @@ module RangeSpecs
     end
 
     def <=>(other)
+      return nil unless other.is_a?(WithoutSucc)
       @n <=> other.n
     end
+  end
+
+  class WithSucc
+    attr_reader :value
+
+    def initialize(value)
+      @value = value
+    end
+
+    def <=>(other)
+      return nil unless other.is_a?(WithSucc)
+      @value <=> other.value
+    end
+
+    def succ
+      WithSucc.new(@value + 1)
+    end
+
+    def ==(other)
+      return false unless other.is_a?(WithSucc)
+      @value == other.value
+    end
+  end
+
+  class Number < Numeric
+    attr_reader :value
+
+    def initialize(value)
+      @value = value
+    end
+
+    def <=>(other)
+      return nil unless other.is_a?(Number)
+      @value <=> other.value
+    end
+
+    def +(other)
+      raise "supported Integer only" unless other.is_a?(Integer)
+      Number.new(@value + other)
+    end
+
+    def ==(other)
+      return false unless other.is_a?(Number)
+      @value == other.value
+    end
+
+    # to prevent type conversion
+    undef_method :coerce
   end
 
   class Xs < Custom # represent a string of 'x's

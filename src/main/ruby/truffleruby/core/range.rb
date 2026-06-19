@@ -352,16 +352,32 @@ class Range
   end
 
   def include?(value)
-    if self.begin.respond_to?(:to_int) ||
-        self.end.respond_to?(:to_int) ||
-        Primitive.is_a?(self.begin, Numeric) ||
-        Primitive.is_a?(self.end, Numeric) ||
-        Primitive.is_a?(self.begin, Time) ||
-        Primitive.is_a?(self.end, Time)
-      cover? value
-    else
-      super
+    if Primitive.is_a?(self.begin, Numeric) ||
+       Primitive.is_a?(self.end, Numeric) ||
+       Primitive.is_a?(self.begin, Time) ||
+       Primitive.is_a?(self.end, Time) ||
+       Truffle::Type.rb_check_to_integer(self.begin, :to_int) ||
+       Truffle::Type.rb_check_to_integer(self.end, :to_int)
+      return cover?(value)
     end
+
+    if Primitive.is_a?(self.begin, String) && Primitive.is_a?(self.end, String)
+      value = Truffle::Type.rb_check_convert_type(value, String, :to_str)
+      return false if Primitive.nil?(value)
+      return false if self.begin > self.end || (self.exclude_end? && self.begin == self.end)
+      return super(value)
+    end
+
+    if Primitive.nil?(self.begin) && Primitive.nil?(self.end) &&
+       (Primitive.is_a?(value, Numeric) || Primitive.is_a?(value, Time) || Truffle::Type.rb_check_to_integer(value, :to_int))
+      return true
+    end
+
+    if Primitive.nil?(self.begin) || Primitive.nil?(self.end)
+      raise TypeError, 'cannot determine inclusion in beginless/endless ranges'
+    end
+
+    super
   end
   alias_method :member?, :include?
 
