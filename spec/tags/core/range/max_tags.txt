@@ -1,1 +1,0 @@
-fails:Range#max returns the end point for exclusive beginless Integer ranges

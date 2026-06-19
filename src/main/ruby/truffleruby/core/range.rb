@@ -385,7 +385,7 @@ class Range
     to_a.last(n)
   end
 
-  def max
+  def max(n = undefined)
     raise RangeError, 'cannot get the maximum of endless range' if Primitive.nil? self.end
 
     if block_given? || (exclude_end? && !Primitive.is_a?(self.end, Numeric))
@@ -396,12 +396,19 @@ class Range
       return super
     end
 
+    unless Primitive.undefined?(n)
+      n = Primitive.convert_with_to_int(n)
+      raise ArgumentError, "negative size #{n}" if n < 0
+
+      return reverse_each.take(n)
+    end
+
     if exclude_end?
       if !Primitive.is_a?(self.end, Integer)
         raise TypeError, 'cannot exclude non Integer end value'
-      elsif !Primitive.is_a?(self.begin, Integer)
+      elsif !Primitive.nil?(self.begin) && !Primitive.is_a?(self.begin, Integer)
         raise TypeError, 'cannot exclude end value with non Integer begin value'
-      elsif self.end <= self.begin
+      elsif !Primitive.nil?(self.begin) && self.end <= self.begin
         return nil
       end
 
@@ -412,13 +419,28 @@ class Range
     end
   end
 
-  def min
+  def min(n = undefined)
     raise RangeError, 'cannot get the minimum of beginless range' if Primitive.nil? self.begin
+
+    if block_given?
+      if Primitive.nil? self.end
+        raise RangeError, 'cannot get the minimum of endless range with custom comparison method'
+      end
+
+      return super
+    end
+
+    unless Primitive.undefined?(n)
+      n = Primitive.convert_with_to_int(n)
+      raise ArgumentError, "negative size #{n}" if n < 0
+
+      return take(n)
+    end
+
     if Primitive.nil? self.end
-      raise RangeError, 'cannot get the minimum of endless range with custom comparison method' if block_given?
       return self.begin
     end
-    return super if block_given?
+
     if Comparable.compare_int(self.end <=> self.begin) < 0
       return nil
     elsif exclude_end? && self.end == self.begin
