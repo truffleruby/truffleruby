@@ -63,13 +63,13 @@ public final class PrintfSimpleParser {
             boolean finished = false;
             boolean argTypeSet = false;
 
-            while (!finished) {
-                /* MRI's parser will accept a format specifier such as %1$ even though it doesn't actually include a
-                 * type, but will raise an exception for a format specifier such as %1. */
-                if (i >= this.source.length && config.getAbsoluteArgumentIndex() == null) {
-                    throw new InvalidFormatException("incomplete format specifier; use %% (double %) instead");
-                }
+            /* MRI's parser will accept a format specifier such as %1$ even though it doesn't actually include a type,
+             * but will raise an exception for a format specifier such as %1. */
+            if (i >= this.source.length && config.getAbsoluteArgumentIndex() == null) {
+                throw new InvalidFormatException("incomplete format specifier; use %% (double %) instead");
+            }
 
+            while (!finished) {
                 char p = i >= this.source.length ? '\0' : this.source[i];
 
                 switch (p) {
@@ -198,8 +198,6 @@ public final class PrintfSimpleParser {
                         config.setPrecision(re.getNumber() == null ? 0 : re.getNumber());
                         i = re.getNextI();
                         break;
-                    case '\n':
-                    case '\0':
                     case '%':
                         if (config.hasFlags()) {
                             throw new InvalidFormatException("invalid format character - %");
