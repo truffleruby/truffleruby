@@ -222,6 +222,12 @@ describe :kernel_float, shared: true do
     it "raises an ArgumentError if there's a decimal point on the right side of the '#{e}'" do
       -> { @object.send(:Float, "20#{e}2.0") }.should.raise(ArgumentError)
     end
+
+    it "raises an ArgumentError if there's a trailing _ after '#{e}'" do
+      -> { @object.send(:Float, "20#{e}_") }.should.raise(ArgumentError)
+      -> { @object.send(:Float, "20#{e}+_") }.should.raise(ArgumentError)
+      -> { @object.send(:Float, "20#{e}-_") }.should.raise(ArgumentError)
+    end
   end
 
   context "for hexadecimal literals" do

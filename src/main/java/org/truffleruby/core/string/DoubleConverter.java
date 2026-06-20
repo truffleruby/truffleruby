@@ -116,21 +116,6 @@ public final class DoubleConverter {
         }
     }
 
-    private boolean eatUnderscores() {
-        while (!isEOS()) {
-            byte value = peek();
-
-            if (value != '_') {
-                return isEOS();
-            } else if (isStrict) {
-                strictError();
-            }
-            next();
-        }
-
-        return true;
-    }
-
     private double completeCalculation() {
         if (charsIndex == 0 || (charsIndex == 1 && chars[0] == '-')) { // "" or "-"
             strictError(); // Strict requires at least one digit.
@@ -253,7 +238,7 @@ public final class DoubleConverter {
                 parseDecimalDigits();
                 return;
             } else if (value == '_') {
-                verifyNumberAfterUnderscore();
+                verifyNumber();
             } else if (isExponent(value)) {
                 addToResult(value);
                 parseExponent();
@@ -278,15 +263,6 @@ public final class DoubleConverter {
         }
 
         byte value = next();
-
-        // Wonky, but 12._2e2 is 1200.0 and 12.__e2 is 12.0
-        if (value == '_') {
-            strictError();
-            if (isEOS()) {
-                return;
-            }
-            value = next();
-        }
 
         if (isDigit(value)) {
             if (significantDigitsProcessed < SIGNIFICANT_DIGITS_LIMIT) {
@@ -325,7 +301,7 @@ public final class DoubleConverter {
                 parseExponent();
                 return;
             } else if (value == '_') {
-                verifyNumberAfterUnderscore();
+                verifyNumber();
             } else if (isWhitespace(value)) {
                 skipWhitespace();
                 return;
@@ -339,7 +315,8 @@ public final class DoubleConverter {
     }
 
     private void parseExponent() {
-        if (eatUnderscores()) {
+        if (isEOS()) {
+            strictError();
             return;
         }
 
@@ -356,6 +333,8 @@ public final class DoubleConverter {
                 next();
                 break;
         }
+
+        verifyNumber();
 
         while (!isEOS()) {
             byte value = next();
@@ -375,7 +354,7 @@ public final class DoubleConverter {
                 skipWhitespace();
                 break;
             } else if (value == '_') {
-                verifyNumberAfterUnderscore();
+                verifyNumber();
             } else {
                 strictError();
                 stopParsing();
@@ -414,9 +393,10 @@ public final class DoubleConverter {
         stopParsing();
     }
 
-    private void verifyNumberAfterUnderscore() {
-        if (isStrict && (isEOS() || !isDigit(bytes[index]))) {
+    private void verifyNumber() {
+        if (isEOS() || !isDigit(bytes[index])) {
             strictError();
+            stopParsing();
         }
     }
 }
