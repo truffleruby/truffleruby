@@ -1231,16 +1231,16 @@ module Truffle::CExt
 
   def rb_proc_new(function, value)
     use_cext_lock = Primitive.use_cext_lock?
-    Proc.new do |*args, &block|
+    Primitive.cext_wrap(Proc.new do |*args, &block|
       Primitive.call_with_cext_lock_and_frame_and_unwrap(RB_BLOCK_CALL_FUNC_WRAPPER, [
         function,
         Primitive.cext_wrap(args.first), # yieldarg
-        Primitive.cext_wrap(value), # procarg,
+        value, # procarg,
         args.size, # argc
         Truffle::CExt.RARRAY_PTR(args), # argv
         Primitive.cext_wrap(block), # blockarg
       ], Primitive.caller_special_variables_if_available, nil, use_cext_lock)
-    end
+    end)
   end
 
   def rb_proc_call(prc, args)
@@ -1957,16 +1957,24 @@ module Truffle::CExt
   def rb_catch_obj(tag, func, data)
     use_cext_lock = Primitive.use_cext_lock?
 
-    catch tag do |caught|
-      Primitive.cext_unwrap(Primitive.call_with_cext_lock(RB_BLOCK_CALL_FUNC_WRAPPER, [
+    # func returns a VALUE, and we must not assume it can be unwrap'd.
+    # #catch if it caught a #throw returns a Ruby object, which we must wrap.
+    # So we track which case it is and wrap as needed.
+    threw = true
+    result = catch tag do |caught|
+      func_result = Primitive.call_with_cext_lock(RB_BLOCK_CALL_FUNC_WRAPPER, [
         func,
         Primitive.cext_wrap(caught),
-        Primitive.cext_wrap(data),
+        data,
         0, # argc
         nil, # argv
         nil, # blockarg
-      ], use_cext_lock))
+      ], use_cext_lock)
+      threw = false
+      func_result
     end
+
+    threw ? Primitive.cext_wrap(result) : result
   end
 
   def rb_memerror

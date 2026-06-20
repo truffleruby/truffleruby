@@ -12,8 +12,10 @@
 
 // Proc, rb_proc_*
 
-VALUE rb_proc_new(VALUE (*function)(ANYARGS), VALUE value) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_proc_new", function, rb_tr_unwrap(value)));
+VALUE (*cext_rb_proc_new)(rb_block_call_func_t func, void* callback_arg);
+
+VALUE rb_proc_new(rb_block_call_func_t func, VALUE callback_arg) {
+  return cext_rb_proc_new(func, callback_arg);
 }
 
 VALUE rb_proc_call(VALUE self, VALUE args) {
@@ -38,4 +40,8 @@ int rb_proc_arity(VALUE self) {
 
 VALUE rb_obj_is_proc(VALUE proc) {
   return rb_obj_is_kind_of(proc, rb_cProc);
+}
+
+void rb_tr_init_proc(void) {
+  cext_rb_proc_new = polyglot_get_member(rb_tr_cext, "rb_proc_new");
 }

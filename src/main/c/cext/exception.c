@@ -150,12 +150,14 @@ void rb_throw_obj(VALUE tag, VALUE value) {
   UNREACHABLE;
 }
 
-VALUE rb_catch(const char *tag, VALUE (*func)(ANYARGS), VALUE data) {
+VALUE rb_catch(const char *tag, rb_block_call_func_t func, VALUE data) {
   return rb_catch_obj(rb_intern(tag), func, data);
 }
 
+VALUE (*cext_rb_catch_obj)(VALUE tag, rb_block_call_func_t func, void* data);
+
 VALUE rb_catch_obj(VALUE tag, rb_block_call_func_t func, VALUE data) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_catch_obj", rb_tr_unwrap(tag), func, rb_tr_unwrap(data)));
+  return cext_rb_catch_obj(rb_tr_unwrap(tag), func, data);
 }
 
 void rb_memerror(void) {
@@ -193,4 +195,5 @@ void rb_tr_init_exception(void) {
   cext_rb_ensure = polyglot_get_member(rb_tr_cext, "rb_ensure");
   cext_rb_rescue = polyglot_get_member(rb_tr_cext, "rb_rescue");
   cext_rb_rescue2 = polyglot_get_member(rb_tr_cext, "rb_rescue2");
+  cext_rb_catch_obj = polyglot_get_member(rb_tr_cext, "rb_catch_obj");
 }

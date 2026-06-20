@@ -38,6 +38,7 @@ static VALUE sulong_get_constant(const char* name) {
 }
 
 void rb_tr_init_exception(void);
+void rb_tr_init_proc(void);
 
 // ensure it for the fiddle gem and its TruffleRuby-specific implementation
 RBIMPL_STATIC_ASSERT("sizeof(bool) is 1", sizeof(bool) == 1);
@@ -55,6 +56,7 @@ void rb_tr_init(void *ruby_cext) {
 
   polyglot_invoke(rb_tr_cext, "cext_start_new_handle_block");
   rb_tr_init_exception();
+  rb_tr_init_proc();
   rb_tr_init_global_constants(sulong_get_constant);
 
   // In CRuby some core classes have custom allocation function.
