@@ -150,7 +150,7 @@ void rb_throw_obj(VALUE tag, VALUE value) {
   UNREACHABLE;
 }
 
-VALUE rb_catch(const char *tag, VALUE (*func)(ANYARGS), VALUE data) {
+VALUE rb_catch(const char *tag, rb_block_call_func_t func, VALUE data) {
   return rb_catch_obj(rb_intern(tag), func, data);
 }
 

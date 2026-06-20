@@ -12,8 +12,8 @@
 
 // Proc, rb_proc_*
 
-VALUE rb_proc_new(VALUE (*function)(ANYARGS), VALUE value) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_proc_new", function, rb_tr_unwrap(value)));
+VALUE rb_proc_new(rb_block_call_func_t func, VALUE callback_arg) {
+  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_proc_new", func, rb_tr_unwrap(callback_arg)));
 }
 
 VALUE rb_proc_call(VALUE self, VALUE args) {
