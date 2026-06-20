@@ -147,9 +147,8 @@ import static org.truffleruby.language.dispatch.DispatchConfiguration.PUBLIC;
 @CoreModule("Truffle::CExt")
 public abstract class CExtNodes {
 
-    /* These tag values are derived from MRI source and from the Tk gem and are used to represent different control flow
-     * states under which code may exit an `rb_protect` block. The fatal tag is defined but I could not find a point
-     * where it is assigned, and am not sure if it maps to anything we would use in TruffleRuby. */
+    /* These tag values are copied from MRI source and are used to represent different control flow states under which
+     * code may exit an `rb_protect` block. */
     public static final int RUBY_TAG_RETURN = 0x1;
     public static final int RUBY_TAG_BREAK = 0x2;
     public static final int RUBY_TAG_NEXT = 0x3;
@@ -157,6 +156,7 @@ public abstract class CExtNodes {
     public static final int RUBY_TAG_REDO = 0x5;
     public static final int RUBY_TAG_RAISE = 0x6;
     public static final int RUBY_TAG_THROW = 0x7;
+    public static final int RUBY_TAG_FATAL = 0x8;
 
     /** We need up to 4 \0 bytes for UTF-32. Always use 4 for speed rather than checking the encoding min length.
      * Corresponds to TERM_LEN() in MRI. */
@@ -1633,8 +1633,8 @@ public abstract class CExtNodes {
 
         // Object instead of Throwable to workaround Truffle DSL bug GR-46797
         @Fallback
-        static int noTag(Object e) {
-            return 0;
+        static int other(Object e) {
+            return RUBY_TAG_FATAL;
         }
     }
 
