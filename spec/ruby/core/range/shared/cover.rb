@@ -90,6 +90,48 @@ describe :range_cover, shared: true do
       end
     end
   end
+
+  describe "with non-Range argument" do
+    it "returns false if the object is smaller than self.begin" do
+      (0..6).send(@method, -5).should == false
+    end
+
+    it "returns false if the object is greater than self.end" do
+      (0..6).send(@method, 10).should == false
+    end
+
+    it "returns false if the range is empty" do
+      (0...0).send(@method, 0).should == false
+    end
+
+    it "returns false if the argument is not comparable with the range elements (returns nil from <=>)" do
+      (0..6).send(@method, Object.new).should == false
+    end
+
+    it "returns false if the argument is greater than self.end on a beginless range" do
+      (...6).send(@method, 10).should == false
+    end
+
+    it "returns true if the argument is smaller than self.end on a beginless range" do
+      (...6).send(@method, 0).should == true
+    end
+
+    it "returns true if the argument is greater than self.begin on an endless range" do
+      (0..).send(@method, 10).should == true
+    end
+
+    it "returns false if the argument is smaller than self.begin on an endless range" do
+      (0..).send(@method, -10).should == false
+    end
+
+    it "returns true on any value for (nil..nil)" do
+      (nil..nil).send(@method, Object.new).should == true
+    end
+
+    it "returns true on any value for (nil...nil)" do
+      (nil...nil).send(@method, Object.new).should == true
+    end
+  end
 end
 
 describe :range_cover_subrange, shared: true do
@@ -149,45 +191,260 @@ describe :range_cover_subrange, shared: true do
       (0...11.1).send(@method, (0..10.1)).should == true
       (0..10.1).send(@method, (0...11.1)).should == false
     end
-  end
 
-  it "allows self to be a beginless range" do
-    (...10).send(@method, (3..7)).should == true
-    (...10).send(@method, (3..15)).should == false
+    context "when other range is completely inside self" do
+      it "returns true if self.begin < other.begin and self.end > other.end" do
+        (0..10).send(@method, 4..6).should == true
+      end
 
-    (..7.9).send(@method, (2.5..6.5)).should == true
-    (..7.9).send(@method, (2.5..8.5)).should == false
+      it "returns true if self.begin == other.begin and self.end > other.end" do
+        (0..10).send(@method, 0..6).should == true
+      end
 
-    (..'i').send(@method, ('d'..'f')).should == true
-    (..'i').send(@method, ('d'..'z')).should == false
-  end
+      it "returns true if self.begin < other.begin and self.end == other.end" do
+        (0..10).send(@method, 4..10).should == true
+      end
 
-  it "allows self to be a endless range" do
-    eval("(0...)").send(@method, (3..7)).should == true
-    eval("(5...)").send(@method, (3..15)).should == false
+      it "returns true if self.begin < other.begin and self.end < other.end but other.exclude_end? is true and the rightmost other value <= self.end" do
+        (0..10).send(@method, 4...11).should == true
+      end
 
-    eval("(1.1..)").send(@method, (2.5..6.5)).should == true
-    eval("(3.3..)").send(@method, (2.5..8.5)).should == false
+      it "returns true if self.begin == other.begin and self.end == other.end" do
+        (0..10).send(@method, 0..10).should == true
+      end
 
-    eval("('a'..)").send(@method, ('d'..'f')).should == true
-    eval("('p'..)").send(@method, ('d'..'z')).should == false
-  end
+      it "returns true if self.begin == other.begin and self.end == other.end and self.exclude_end? is true and other.exclude_end? is true" do
+        (0...10).send(@method, 0...10).should == true
+      end
 
-  it "accepts beginless range argument" do
-    (..10).send(@method, (...10)).should == true
-    (0..10).send(@method, (...10)).should == false
+      it "returns true if self is beginless and self.end > other.end" do
+        (...10).send(@method, 4..6).should == true
+      end
 
-    (1.1..7.9).send(@method, (...10.5)).should == false
+      it "returns true if self is beginless and self.end == other.end" do
+        (..10).send(@method, 4..10).should == true
+      end
 
-    ('c'..'i').send(@method, (..'i')).should == false
-  end
+      it "returns true if self is beginless and self.end == other.end and self.exclude_end? is true and other.exclude_end? is true" do
+        (...10).send(@method, 4...10).should == true
+      end
 
-  it "accepts endless range argument" do
-    eval("(0..)").send(@method, eval("(0...)")).should == true
-    (0..10).send(@method, eval("(0...)")).should == false
+      it "returns true if self and other are beginless and self.end > other.end" do
+        (...10).send(@method, (...6)).should == true
+      end
 
-    (1.1..7.9).send(@method, eval("(0.8...)")).should == false
+      it "returns true if self and other are beginless and self.end == other.end and self.exclude_end? is true and other.exclude_end? is true" do
+        (...10).send(@method, (...10)).should == true
+      end
 
-    ('c'..'i').send(@method, eval("('a'..)")).should == false
+      it "returns true if self is beginless and self.end < other.end but other.exclude_end? is true and the rightmost other value <= self.end" do
+        (..10).send(@method, 4...11).should == true
+      end
+
+      it "returns true if self is endless and self.begin < other.begin" do
+        (0..).send(@method, 4..6).should == true
+      end
+
+      it "returns true if self is endless and self.begin == other.begin" do
+        (0..).send(@method, 0..6).should == true
+      end
+
+      it "returns true if self and other are endless and self.begin < other.begin" do
+        (0..).send(@method, (4..)).should == true
+      end
+
+      it "returns true if self and other are endless and self.begin == other.begin" do
+        (0..).send(@method, (0..)).should == true
+      end
+
+      it "returns true if self and other are endless and self.begin < other.begin and self.exclude_end? is true and other.exclude_end? is true" do
+        (0...).send(@method, (4...)).should == true
+      end
+
+      it "returns true if self and other are endless and self.begin == other.begin and self.exclude_end? is true and other.exclude_end? is true" do
+        (0...).send(@method, (0...)).should == true
+      end
+
+      it "returns true if self is (nil..nil) and other is finite" do
+        (nil..nil).send(@method, 4..6).should == true
+      end
+
+      it "returns true if self is (nil..nil) and other is beginless" do
+        (nil..nil).send(@method, (...6)).should == true
+      end
+
+      it "returns true if self is (nil..nil) and other is endless" do
+        (nil..nil).send(@method, (4..)).should == true
+      end
+
+      it "returns true if self is (nil...nil) and other is finite" do
+        (nil...nil).send(@method, 4..6).should == true
+      end
+
+      it "returns true if self is (nil...nil) and other is beginless" do
+        (nil...nil).send(@method, (...6)).should == true
+      end
+
+      it "returns true if self is (nil...nil) and other is endless and other.exclude_end? is true" do
+        (nil...nil).send(@method, (4...)).should == true
+      end
+    end
+
+    context "when other range is partially interleaved" do
+      it "returns false if self.begin > other.begin, self.begin < other.end and self.end > other.end" do
+        (4..10).send(@method, 0..6).should == false
+      end
+
+      it "returns false if self.begin > other.begin, self.begin < other.end and self.end == other.end" do
+        (4..10).send(@method, 0..10).should == false
+      end
+
+      it "returns false if self.begin > other.begin, self.begin < other.end and self.end < other.end" do
+        (4..6).send(@method, 0..10).should == false
+      end
+
+      it "returns false if self.begin < other.begin and self.end > other.begin, self.end < other.end" do
+        (0..6).send(@method, 4..10).should == false
+      end
+
+      it "returns false if self.begin < other.begin and self.end == other.end and self.exclude_end? is true" do
+        (0...10).send(@method, 6..10).should == false
+      end
+
+      it "returns false if self.begin < other.begin and self.end == other.begin" do
+        (0..4).send(@method, 4..10).should == false
+      end
+
+      it "returns false if self is beginless and self.end > other.begin but self.end < other.end" do
+        (...6).send(@method, 4..10).should == false
+      end
+
+      it "returns false if self is beginless and self.end == other.end but self.exclude_end? is true" do
+        (...6).send(@method, 4..6).should == false
+      end
+
+      it "returns false if self and other are beginless but self.end < other.end" do
+        (...6).send(@method, (...10)).should == false
+      end
+
+      it "returns false if self and other are beginless and self.end == other.end but self.exclude_end? is true" do
+        (...10).send(@method, (..10)).should == false
+      end
+
+      it "returns false if self is endless and self.begin > other.begin" do
+        (4..).send(@method, 0..6).should == false
+      end
+
+      it "returns false if self and other are endless and self.begin > other.begin" do
+        (4..).send(@method, (0..)).should == false
+      end
+
+      it "returns false if self and other are endless and self.begin == other.begin but self.exclude_end? is true" do
+        (0...).send(@method, (0..)).should == false
+      end
+
+      it "returns false if self and other are endless and self.begin < other.begin but self.exclude_end? is true" do
+        (0...).send(@method, (4..)).should == false
+      end
+
+      it "returns false if self is (nil...nil) and other is endless" do
+        (nil...nil).send(@method, (4..)).should == false
+      end
+
+      it "returns false if self is beginless and other is endless and self.end == other.begin" do
+        (..10).send(@method, (10..)).should == false
+      end
+
+      it "returns false if other is beginless and self is endless and other.end == self.begin" do
+        (10..).send(@method, (..10)).should == false
+      end
+
+      it "returns false if self is finite and other is beginless and they overlap" do
+        (0..10).send(@method, ...10).should == false
+      end
+
+      it "returns false if self is finite and other is endless and they overlap" do
+        (0..10).send(@method, 0..).should == false
+      end
+    end
+
+    context "when other range does not interleave" do
+      it "returns false if self.begin > other.end" do
+        (6..10).send(@method, 0..4).should == false
+      end
+
+      it "returns false if self.end < other.begin" do
+        (0..4).send(@method, 6..10).should == false
+      end
+
+      it "returns false if self is beginless but self.end < other.begin" do
+        (...4).send(@method, 6..10).should == false
+      end
+
+      it "returns false if self is beginless and self.end == other.begin but self.exclude_end? is true" do
+        (...4).send(@method, 4..10).should == false
+      end
+
+      it "returns false if self is beginless and other is endless but self.end < other.begin" do
+        (...0).send(@method, (10..)).should == false
+      end
+
+      it "returns false if self is beginless and other is endless and self.end == other.begin but self.exclude_end? is true" do
+        (...10).send(@method, (10..)).should == false
+      end
+
+      it "returns false if self is endless but self.begin > other.end" do
+        (10..).send(@method, 0..6).should == false
+      end
+
+      it "returns false if self is endless but self.begin == other.end but other.exclude_end? is true" do
+        (6..).send(@method, (0...6)).should == false
+      end
+
+      it "returns false if other is beginless but self.begin > other.end" do
+        (4..10).send(@method, (...0)).should == false
+      end
+
+      it "returns false if other is beginless and self.begin == other.end but other.exclude_end? is true" do
+        (6..10).send(@method, (...6)).should == false
+      end
+
+      it "returns false if other is beginless and self is endless and other.end == self.begin but other.exclude_end? is true" do
+        (10..).send(@method, (...10)).should == false
+      end
+
+      it "returns false if other is endless but self.end < other.begin" do
+        (0..4).send(@method, (10..)).should == false
+      end
+
+      it "returns false if other is endless and self.end == other.begin but self.exclude_end? is true" do
+        (0...10).send(@method, (10..)).should == false
+      end
+    end
+
+    context "when comparing with backward ranges" do
+      it "returns false if other is backward and fits into self" do
+        (0..10).send(@method, 6..4).should == false
+      end
+
+      it "returns false if self is backward and other fits into self" do
+        (10..0).send(@method, 4..6).should == false
+      end
+    end
+
+    context "when comparing with empty ranges" do
+      it "returns false if other is empty and fits into self" do
+        (0..10).send(@method, 4...4).should == false
+      end
+
+      it "returns false if self is empty and equals other" do
+        (0...0).send(@method, 0...0).should == false
+      end
+    end
+
+    it "returns false if other boundaries are not comparable with self boundaries" do
+      (0..10).send(@method, ("a".."z")).should == false
+    end
+
   end
 end

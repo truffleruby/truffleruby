@@ -186,12 +186,16 @@ module Truffle
 
       return false if Primitive.nil?(b2) && !Primitive.nil?(b1)
       return false if Primitive.nil?(e2) && !Primitive.nil?(e1)
+      # other is empty or backward
+      return false if !Primitive.nil?(b2) && !Primitive.nil?(e2) &&
+                      (other.exclude_end? ? (b2 <=> e2) >= 0 : (b2 <=> e2) > 0)
+      return false unless Primitive.nil?(b2) || cover?(range, b2)
 
-      return false unless (Primitive.nil?(b2) || cover?(range, b2))
+      # here we know that other.begin is covered by range and if other is endless
+      # then range is endless too
+      return true if Primitive.nil?(e2) && !range.exclude_end?
 
-      return true if Primitive.nil?(e2)
-
-      if e1 == e2
+      if (e1 <=> e2) == 0
         !(range.exclude_end? && !other.exclude_end?)
       else
         if Primitive.is_a?(e2, Integer) && other.exclude_end?
