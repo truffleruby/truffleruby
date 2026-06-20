@@ -1957,16 +1957,24 @@ module Truffle::CExt
   def rb_catch_obj(tag, func, data)
     use_cext_lock = Primitive.use_cext_lock?
 
-    catch tag do |caught|
-      Primitive.cext_unwrap(Primitive.call_with_cext_lock(RB_BLOCK_CALL_FUNC_WRAPPER, [
+    # func returns a VALUE, and we must not assume it can be unwrap'd.
+    # #catch if it caught a #throw returns a Ruby object, which we must wrap.
+    # So we track which case it is and wrap as needed.
+    threw = true
+    result = catch tag do |caught|
+      func_result = Primitive.call_with_cext_lock(RB_BLOCK_CALL_FUNC_WRAPPER, [
         func,
         Primitive.cext_wrap(caught),
-        Primitive.cext_wrap(data),
+        data,
         0, # argc
         nil, # argv
         nil, # blockarg
-      ], use_cext_lock))
+      ], use_cext_lock)
+      threw = false
+      func_result
     end
+
+    threw ? Primitive.cext_wrap(result) : result
   end
 
   def rb_memerror

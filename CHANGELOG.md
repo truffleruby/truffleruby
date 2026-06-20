@@ -12,6 +12,7 @@ Bug fixes:
 * Fix `object.method(:send).to_proc.call(some_method)` (#4299, @eregon).
 * Fix `TruffleRuby::AtomicReference#compare_and_set` to work with NaN values like `Float::NAN` (@eregon).
 * Fix `rb_protect()` to return non-zero when it caught an internal error (#4329, @eregon).
+* Fix `rb_catch_obj()` to pass the `data` argument as-is and not assume it's a Ruby object (#4329, @eregon).
 
 Compatibility:
 
