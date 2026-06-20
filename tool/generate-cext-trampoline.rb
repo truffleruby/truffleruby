@@ -69,7 +69,7 @@ end
 
 functions.each do |declaration, return_type, function_name, argument_types|
   raise declaration if /\bstatic\b/ =~ declaration
-  raise declaration if function_name.start_with?('rb_tr_init') and function_name != 'rb_tr_init_exception'
+  raise declaration if function_name.start_with?('rb_tr_init') and !%w[rb_tr_init_exception rb_tr_init_proc].include?(function_name)
   if declaration.include? "\n"
     abort "This declaration includes newlines but should not:\n#{declaration}\n\n"
   end

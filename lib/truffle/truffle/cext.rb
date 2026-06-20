@@ -1231,16 +1231,16 @@ module Truffle::CExt
 
   def rb_proc_new(function, value)
     use_cext_lock = Primitive.use_cext_lock?
-    Proc.new do |*args, &block|
+    Primitive.cext_wrap(Proc.new do |*args, &block|
       Primitive.call_with_cext_lock_and_frame_and_unwrap(RB_BLOCK_CALL_FUNC_WRAPPER, [
         function,
         Primitive.cext_wrap(args.first), # yieldarg
-        Primitive.cext_wrap(value), # procarg,
+        value, # procarg,
         args.size, # argc
         Truffle::CExt.RARRAY_PTR(args), # argv
         Primitive.cext_wrap(block), # blockarg
       ], Primitive.caller_special_variables_if_available, nil, use_cext_lock)
-    end
+    end)
   end
 
   def rb_proc_call(prc, args)
