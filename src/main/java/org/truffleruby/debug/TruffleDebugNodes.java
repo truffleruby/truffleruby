@@ -25,12 +25,13 @@ import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.interop.ArityException;
+import com.oracle.truffle.api.interop.InteropException;
 import com.oracle.truffle.api.interop.StopIterationException;
 import com.oracle.truffle.api.interop.UnknownKeyException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.strings.TruffleString;
@@ -68,6 +69,7 @@ import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.interop.BoxedValue;
 import org.truffleruby.interop.FromJavaStringNode;
 import org.truffleruby.interop.ToJavaStringNode;
+import org.truffleruby.interop.TranslateInteropExceptionNode;
 import org.truffleruby.language.CallStackManager;
 import org.truffleruby.language.ImmutableRubyObject;
 import org.truffleruby.core.string.ImmutableRubyString;
@@ -1249,8 +1251,8 @@ public abstract class TruffleDebugNodes {
         @TruffleBoundary
         @Specialization
         RubyArray associated(RubyString string) {
-            final DynamicObjectLibrary objectLibrary = DynamicObjectLibrary.getUncached();
-            Pointer[] associated = (Pointer[]) objectLibrary.getOrDefault(string, Layouts.ASSOCIATED_IDENTIFIER, null);
+            Pointer[] associated = (Pointer[]) DynamicObject.GetNode.getUncached().execute(
+                    string, Layouts.ASSOCIATED_IDENTIFIER, null);
 
             if (associated == null) {
                 associated = Pointer.EMPTY_ARRAY;
@@ -1383,7 +1385,12 @@ public abstract class TruffleDebugNodes {
         @TruffleBoundary
         @Specialization
         Object createPolyglotThread(Object hostRunnable) {
-            Runnable runnable = (Runnable) getContext().getEnv().asHostObject(hostRunnable);
+            Runnable runnable;
+            try {
+                runnable = (Runnable) InteropLibrary.getUncached().asHostObject(hostRunnable);
+            } catch (InteropException e) {
+                throw TranslateInteropExceptionNode.executeUncached(e);
+            }
             final Thread thread = getContext().getEnv().newTruffleThreadBuilder(runnable).build();
             return getContext().getEnv().asGuestValue(thread);
         }

@@ -12,7 +12,6 @@ package org.truffleruby.core.hash.library;
 
 import static com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import static com.oracle.truffle.api.CompilerDirectives.shouldNotReachHere;
-import static com.oracle.truffle.api.dsl.Cached.Exclusive;
 import static org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryCallback;
 
 import java.util.Set;
@@ -40,6 +39,7 @@ import org.truffleruby.language.objects.ObjectGraph;
 
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -166,7 +166,7 @@ public final class CompactHashStore {
     Object lookupOrDefault(Frame frame, RubyHash hash, Object key, PEBiFunction defaultNode,
             @Cached @Shared GetIndexPosForKeyNode getIndexPosForKeyNode,
             @Cached @Shared HashingNodes.ToHash hashFunction,
-            @Cached @Exclusive InlinedConditionProfile keyNotFound,
+            @Cached @Shared InlinedConditionProfile keyNotFound,
             @Bind Node node) {
         int keyHash = hashFunction.execute(key, hash.compareByIdentity);
 
@@ -183,8 +183,8 @@ public final class CompactHashStore {
     boolean set(RubyHash hash, Object key, Object value, boolean byIdentity,
             @Cached @Shared HashingNodes.ToHash hashFunction,
             @Cached @Shared GetIndexPosForKeyNode getIndexPosForKeyNode,
-            @Cached FreezeHashKeyIfNeededNode freezeKey,
-            @Cached SetKvAtNode setKv,
+            @Cached @Shared FreezeHashKeyIfNeededNode freezeKey,
+            @Cached @Shared SetKvAtNode setKv,
             @Bind Node node) {
         assert verify(hash);
         var frozenKey = freezeKey.executeFreezeIfNeeded(node, key, byIdentity);
@@ -199,7 +199,7 @@ public final class CompactHashStore {
     Object delete(RubyHash hash, Object key,
             @Cached @Shared GetIndexPosForKeyNode getIndexPosForKeyNode,
             @Cached @Shared HashingNodes.ToHash hashFunction,
-            @Cached @Exclusive InlinedConditionProfile keyNotFound,
+            @Cached @Shared InlinedConditionProfile keyNotFound,
             @Bind Node node) {
         int keyHash = hashFunction.execute(key, hash.compareByIdentity);
         int indexPos = getIndexPosForKeyNode.execute(node, key, keyHash, hash.compareByIdentity, index, kvStore, false);

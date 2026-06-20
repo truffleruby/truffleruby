@@ -21,10 +21,9 @@ import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.strings.AbstractTruffleString;
@@ -214,7 +213,7 @@ public abstract class StringHelperNodes {
 
         @Specialization(guards = "!libString.getTString(this, string).isEmpty()")
         int count(Object string, TStringWithEncoding[] tstringsWithEncs,
-                @Cached InlinedBranchProfile errorProfile,
+                @Cached @Shared InlinedBranchProfile errorProfile,
                 @Cached @Shared EncodingNodes.CheckStringEncodingNode checkEncodingNode,
                 @Cached @Shared RubyStringLibrary libString,
                 @Cached @Shared TruffleString.GetInternalByteArrayNode byteArrayNode,
@@ -409,10 +408,10 @@ public abstract class StringHelperNodes {
 
         public abstract Object execute(Node node, Object string);
 
-        @Specialization(limit = "getDynamicObjectCacheLimit()")
+        @Specialization
         static Object getAssociated(RubyString string,
-                @CachedLibrary("string") DynamicObjectLibrary objectLibrary) {
-            return objectLibrary.getOrDefault(string, Layouts.ASSOCIATED_IDENTIFIER, null);
+                @Cached DynamicObject.GetNode getNode) {
+            return getNode.execute(string, Layouts.ASSOCIATED_IDENTIFIER, null);
         }
 
         @Specialization

@@ -235,7 +235,7 @@ public abstract class StringNodes {
 
         @Specialization(guards = { "times > 0", "!libString.getTString(this, string).isEmpty()" })
         static RubyString multiply(Node node, Object string, int times,
-                @Cached InlinedBranchProfile tooBigProfile,
+                @Cached @Shared InlinedBranchProfile tooBigProfile,
                 @Cached @Shared RubyStringLibrary libString,
                 @Cached(inline = false) TruffleString.RepeatNode repeatNode) {
             var tstring = libString.getTString(node, string);
@@ -504,7 +504,7 @@ public abstract class StringNodes {
         Object sliceRange(Object string, Object range, NotProvided other,
                 @Cached @Shared RubyStringLibrary strings,
                 @Cached RangeNodes.NormalizedStartLengthNode startLengthNode,
-                @Cached @Exclusive InlinedConditionProfile negativeStart) {
+                @Cached @Shared InlinedConditionProfile negativeStart) {
             final int stringLength = codePointLength(strings.getTString(this, string),
                     strings.getEncoding(this, string));
             final int[] startLength = startLengthNode.execute(range, stringLength);
@@ -1372,22 +1372,19 @@ public abstract class StringNodes {
     @CoreMethod(names = "ord")
     @ImportStatic(StringGuards.class)
     public abstract static class OrdNode extends CoreMethodArrayArgumentsNode {
-
-        @Specialization(guards = "strings.getTString(this, string).isEmpty()")
-        int ordEmpty(Object string,
-                @Cached @Shared RubyStringLibrary strings) {
-            throw new RaiseException(getContext(), coreExceptions().argumentError("empty string", this));
-        }
-
-        @Specialization(guards = "!strings.getTString(this, string).isEmpty()")
+        @Specialization
         int ord(Object string,
-                @Cached @Shared RubyStringLibrary strings,
-                @Cached StringHelperNodes.GetCodePointNode getCodePointNode) {
-            return getCodePointNode.executeGetCodePoint(this, strings.getTString(this, string),
-                    strings.getEncoding(this, string),
-                    0);
-        }
+                @Cached RubyStringLibrary strings,
+                @Cached StringHelperNodes.GetCodePointNode getCodePointNode,
+                @Cached InlinedBranchProfile errorProfile) {
+            var tstring = strings.getTString(this, string);
+            if (tstring.isEmpty()) {
+                errorProfile.enter(this);
+                throw new RaiseException(getContext(), coreExceptions().argumentError("empty string", this));
+            }
 
+            return getCodePointNode.executeGetCodePoint(this, tstring, strings.getEncoding(this, string), 0);
+        }
     }
 
     @GenerateInline

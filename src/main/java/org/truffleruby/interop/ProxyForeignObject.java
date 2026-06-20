@@ -32,10 +32,14 @@ public final class ProxyForeignObject implements TruffleObject {
     final Object delegate;
     private final Object logger;
 
-    private static final Message EXECUTABLE = Message.resolve(InteropLibrary.class, "execute");
-    private static final Message INVOKE = Message.resolve(InteropLibrary.class, "invokeMember");
-    private static final Message INSTANTIATE = Message.resolve(InteropLibrary.class, "instantiate");
-    private static final Message IS_META_INSTANCE = Message.resolve(InteropLibrary.class, "isMetaInstance");
+    private static final Message EXECUTABLE = Message.resolveExact(
+            InteropLibrary.class, "execute", Object.class, Object[].class);
+    private static final Message INVOKE = Message.resolveExact(
+            InteropLibrary.class, "invokeMember", Object.class, String.class, Object[].class);
+    private static final Message INSTANTIATE = Message.resolveExact(
+            InteropLibrary.class, "instantiate", Object.class, Object[].class);
+    private static final Message IS_META_INSTANCE = Message.resolveExact(
+            InteropLibrary.class, "isMetaInstance", Object.class, Object.class);
 
     public ProxyForeignObject(Object delegate) {
         this(delegate, null);

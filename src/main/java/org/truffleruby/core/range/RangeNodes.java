@@ -102,7 +102,7 @@ public abstract class RangeNodes {
         @Specialization
         RubyIntRange eachInt(RubyIntRange range, RubyProc block,
                 @Cached @Shared InlinedConditionProfile excludedEndProfile,
-                @Cached @Exclusive InlinedLoopConditionProfile loopProfile,
+                @Cached @Shared InlinedLoopConditionProfile loopProfile,
                 @Cached @Shared CallBlockNode yieldNode) {
             final int exclusiveEnd;
             if (excludedEndProfile.profile(this, range.excludedEnd)) {
@@ -126,7 +126,7 @@ public abstract class RangeNodes {
         @Specialization
         RubyLongRange eachLong(RubyLongRange range, RubyProc block,
                 @Cached @Shared InlinedConditionProfile excludedEndProfile,
-                @Cached @Exclusive InlinedLoopConditionProfile loopProfile,
+                @Cached @Shared InlinedLoopConditionProfile loopProfile,
                 @Cached @Shared CallBlockNode yieldNode) {
             final long exclusiveEnd;
             if (excludedEndProfile.profile(this, range.excludedEnd)) {

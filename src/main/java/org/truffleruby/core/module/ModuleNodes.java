@@ -28,8 +28,7 @@ import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.ReportPolymorphism;
-import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.profiles.InlinedLoopConditionProfile;
@@ -424,14 +423,14 @@ public abstract class ModuleNodes {
     @GenerateUncached
     public abstract static class GeneratedReaderNode extends AlwaysInlinedMethodNode {
 
-        @Specialization(limit = "getDynamicObjectCacheLimit()")
+        @Specialization
         Object reader(Frame callerFrame, RubyDynamicObject self, Object[] rubyArgs, RootCallTarget target,
-                @CachedLibrary("self") DynamicObjectLibrary objectLibrary) {
+                @Cached DynamicObject.GetNode getNode) {
             // Or a subclass of RubyRootNode with an extra field?
             final String ivarName = RubyRootNode.of(target).getSharedMethodInfo().getNotes();
             CompilerAsserts.partialEvaluationConstant(ivarName);
 
-            return objectLibrary.getOrDefault(self, ivarName, nil);
+            return getNode.execute(self, ivarName, nil);
         }
 
         @Specialization(guards = "!isRubyDynamicObject(self)")

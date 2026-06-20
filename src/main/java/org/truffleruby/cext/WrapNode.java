@@ -32,8 +32,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.language.objects.ObjectIDOperations;
 
 import java.lang.invoke.VarHandle;
@@ -109,22 +108,23 @@ public abstract class WrapNode extends RubyBaseNode {
         return wrapper;
     }
 
-    @Specialization(limit = "getDynamicObjectCacheLimit()")
+    @Specialization
     static ValueWrapper wrapValue(RubyDynamicObject value,
-            @CachedLibrary("value") DynamicObjectLibrary objectLibrary,
+            @Cached DynamicObject.GetNode getNode,
+            @Cached DynamicObject.PutNode putNode,
             @Cached @Shared InlinedBranchProfile noHandleProfile,
             @Bind Node node) {
-        ValueWrapper wrapper = (ValueWrapper) objectLibrary.getOrDefault(value, Layouts.VALUE_WRAPPER_IDENTIFIER, null);
+        ValueWrapper wrapper = (ValueWrapper) getNode.execute(value, Layouts.VALUE_WRAPPER_IDENTIFIER, null);
         if (wrapper == null) {
             noHandleProfile.enter(node);
             synchronized (value) {
-                wrapper = (ValueWrapper) objectLibrary.getOrDefault(value, Layouts.VALUE_WRAPPER_IDENTIFIER, null);
+                wrapper = (ValueWrapper) getNode.execute(value, Layouts.VALUE_WRAPPER_IDENTIFIER, null);
                 if (wrapper == null) {
                     /* This is double-checked locking, but it's safe because the object that we create, the
                      * ValueWrapper, is not published until after a memory store fence. */
                     wrapper = new ValueWrapper(value, UNSET_HANDLE, null);
                     VarHandle.storeStoreFence();
-                    objectLibrary.put(value, Layouts.VALUE_WRAPPER_IDENTIFIER, wrapper);
+                    putNode.execute(value, Layouts.VALUE_WRAPPER_IDENTIFIER, wrapper);
                 }
             }
         }

@@ -10,13 +10,14 @@
  */
 package org.truffleruby.language.objects;
 
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import org.truffleruby.core.range.RubyObjectRange;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.language.ImmutableRubyObject;
@@ -42,16 +43,17 @@ public abstract class FreezeNode extends RubyBaseNode {
         return object.frozen = true;
     }
 
-    @Specialization(guards = { "!isRubyObjectRange(object)", "isNotRubyString(object)" },
-            limit = "getDynamicObjectCacheLimit()")
+    @Specialization(guards = { "!isRubyObjectRange(object)", "isNotRubyString(object)" })
     static Object freeze(Node node, RubyDynamicObject object,
-            @CachedLibrary("object") DynamicObjectLibrary objectLibrary) {
-        if (objectLibrary.isShared(object)) {
+            @Cached DynamicObject.IsSharedNode isSharedNode,
+            @Cached InlinedConditionProfile isSharedProfile,
+            @Cached DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
+        if (isSharedProfile.profile(node, isSharedNode.execute(object))) {
             synchronized (object) {
-                objectLibrary.setShapeFlags(object, objectLibrary.getShapeFlags(object) | FROZEN_FLAG);
+                setShapeFlagsNode.executeAdd(object, FROZEN_FLAG);
             }
         } else {
-            objectLibrary.setShapeFlags(object, objectLibrary.getShapeFlags(object) | FROZEN_FLAG);
+            setShapeFlagsNode.executeAdd(object, FROZEN_FLAG);
         }
 
         return object;

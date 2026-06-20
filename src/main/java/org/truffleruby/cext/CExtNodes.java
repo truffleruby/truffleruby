@@ -19,7 +19,7 @@ import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.strings.AbstractTruffleString;
@@ -1864,12 +1864,12 @@ public abstract class CExtNodes {
     @CoreMethod(names = "create_mark_list", onSingleton = true, required = 1)
     public abstract static class NewMarkerList extends CoreMethodArrayArgumentsNode {
 
-        @Specialization(limit = "getDynamicObjectCacheLimit()")
+        @Specialization
         Object createNewMarkList(RubyDynamicObject object,
-                @CachedLibrary("object") DynamicObjectLibrary objectLibrary) {
+                @Cached DynamicObject.GetNode getNode) {
             getContext().getMarkingService().startMarking(
                     getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack,
-                    (Object[]) objectLibrary.getOrDefault(object, Layouts.MARKED_OBJECTS_IDENTIFIER, null));
+                    (Object[]) getNode.execute(object, Layouts.MARKED_OBJECTS_IDENTIFIER, null));
             return nil;
         }
     }

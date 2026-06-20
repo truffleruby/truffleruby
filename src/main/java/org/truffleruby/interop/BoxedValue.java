@@ -25,8 +25,10 @@ import org.truffleruby.language.control.RaiseException;
 @ExportLibrary(ReflectionLibrary.class)
 public final class BoxedValue implements TruffleObject {
 
-    private static final Message READ_MEMBER = Message.resolve(InteropLibrary.class, "readMember");
-    private static final Message INVOKE_MEMBER = Message.resolve(InteropLibrary.class, "invokeMember");
+    private static final Message READ_MEMBER = Message.resolveExact(
+            InteropLibrary.class, "readMember", Object.class, String.class);
+    private static final Message INVOKE_MEMBER = Message.resolveExact(
+            InteropLibrary.class, "invokeMember", Object.class, String.class, Object[].class);
 
     private final Object value;
 

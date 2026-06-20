@@ -179,7 +179,7 @@ public abstract class SizedQueueNodes {
         static RubySizedQueue pushNonBlock(
                 Node node, RubySizedQueue self, final Object value, boolean nonBlocking, Nil timeoutMilliseconds,
                 @Cached @Shared PropagateSharingNode propagateSharingNode,
-                @Cached InlinedBranchProfile errorProfile) {
+                @Cached @Shared InlinedBranchProfile errorProfile) {
             final SizedQueue queue = self.queue;
 
             propagateSharingNode.execute(node, self, value);

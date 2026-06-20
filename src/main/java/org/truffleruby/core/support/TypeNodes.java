@@ -61,8 +61,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.HiddenKey;
 
 /** All nodes in this class should be Primitive for efficiency (avoiding an extra call and constant lookup) */
@@ -276,18 +275,16 @@ public abstract class TypeNodes {
 
         public abstract RubyArray executeGetIVars(Object self);
 
-        @Specialization(limit = "getDynamicObjectCacheLimit()")
+        @Specialization
         static RubyArray instanceVariables(RubyDynamicObject object,
-                @CachedLibrary("object") DynamicObjectLibrary objectLibrary,
+                @Cached DynamicObject.GetKeyArrayNode getKeyArrayNode,
                 @Cached InlinedConditionProfile noPropertiesProfile,
                 @Bind Node node) {
-            var shape = objectLibrary.getShape(object);
-
-            if (noPropertiesProfile.profile(node, shape.getPropertyCount() == 0)) {
+            if (noPropertiesProfile.profile(node, object.getShape().getPropertyCount() == 0)) {
                 return createEmptyArray(node);
             }
 
-            return createIVarNameArray(node, objectLibrary.getKeyArray(object));
+            return createIVarNameArray(node, getKeyArrayNode.execute(object));
         }
 
         @Specialization(guards = "!isRubyDynamicObject(object)")
@@ -319,10 +316,10 @@ public abstract class TypeNodes {
     @Primitive(name = "object_ivar_defined?")
     public abstract static class ObjectIVarIsDefinedNode extends PrimitiveArrayArgumentsNode {
 
-        @Specialization(limit = "getDynamicObjectCacheLimit()")
+        @Specialization
         boolean ivarIsDefined(RubyDynamicObject object, RubySymbol name,
-                @CachedLibrary("object") DynamicObjectLibrary objectLibrary) {
-            return objectLibrary.containsKey(object, name.getString());
+                @Cached DynamicObject.ContainsKeyNode containsKeyNode) {
+            return containsKeyNode.execute(object, name.getString());
         }
 
         @Fallback
@@ -335,10 +332,10 @@ public abstract class TypeNodes {
     @Primitive(name = "object_ivar_get")
     public abstract static class ObjectIVarGetPrimitiveNode extends PrimitiveArrayArgumentsNode {
 
-        @Specialization(limit = "getDynamicObjectCacheLimit()")
+        @Specialization
         Object ivarGet(RubyDynamicObject object, RubySymbol name,
-                @CachedLibrary("object") DynamicObjectLibrary objectLibrary) {
-            return objectLibrary.getOrDefault(object, name.getString(), nil);
+                @Cached DynamicObject.GetNode getNode) {
+            return getNode.execute(object, name.getString(), nil);
         }
     }
 
@@ -368,10 +365,10 @@ public abstract class TypeNodes {
     @Primitive(name = "object_hidden_var_defined?")
     public abstract static class ObjectHiddenVarDefinedNode extends PrimitiveArrayArgumentsNode {
 
-        @Specialization(limit = "getDynamicObjectCacheLimit()")
+        @Specialization
         boolean objectHiddenVarDefined(RubyDynamicObject object, Object identifier,
-                @CachedLibrary("object") DynamicObjectLibrary objectLibrary) {
-            return objectLibrary.containsKey(object, identifier);
+                @Cached DynamicObject.ContainsKeyNode containsKeyNode) {
+            return containsKeyNode.execute(object, identifier);
         }
 
         @Fallback
@@ -383,10 +380,10 @@ public abstract class TypeNodes {
     @Primitive(name = "object_hidden_var_get")
     public abstract static class ObjectHiddenVarGetNode extends PrimitiveArrayArgumentsNode {
 
-        @Specialization(limit = "getDynamicObjectCacheLimit()")
+        @Specialization
         Object objectHiddenVarGet(RubyDynamicObject object, Object identifier,
-                @CachedLibrary("object") DynamicObjectLibrary objectLibrary) {
-            return objectLibrary.getOrDefault(object, identifier, nil);
+                @Cached DynamicObject.GetNode getNode) {
+            return getNode.execute(object, identifier, nil);
         }
 
         @Fallback

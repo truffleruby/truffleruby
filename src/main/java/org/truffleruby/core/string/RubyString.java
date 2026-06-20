@@ -149,7 +149,7 @@ public final class RubyString extends RubyDynamicObject {
                 @Cached @Shared RubyStringLibrary libString,
                 @Cached TruffleString.GetByteCodeRangeNode codeRangeNode,
                 @Cached TruffleString.ToJavaStringNode toJavaStringNode,
-                @Cached InlinedConditionProfile binaryNonAsciiProfile,
+                @Cached @Shared InlinedConditionProfile binaryNonAsciiProfile,
                 @Bind Node node) {
             var encoding = libString.getEncoding(node, string);
             if (binaryNonAsciiProfile.profile(node, encoding == Encodings.BINARY &&

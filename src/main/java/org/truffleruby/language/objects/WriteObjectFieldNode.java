@@ -16,11 +16,11 @@ import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyDynamicObject;
 
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.ReportPolymorphism;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.language.objects.shared.WriteBarrierNode;
 
 import java.lang.invoke.VarHandle;
@@ -32,15 +32,17 @@ public abstract class WriteObjectFieldNode extends RubyBaseNode {
 
     public abstract void execute(Node node, RubyDynamicObject object, Object name, Object value);
 
-    @Specialization(guards = "!objectLibrary.isShared(object)", limit = "getDynamicObjectCacheLimit()")
+    @Specialization(guards = "!isSharedNode.execute(object)")
     static void writeLocal(RubyDynamicObject object, Object name, Object value,
-            @CachedLibrary("object") DynamicObjectLibrary objectLibrary) {
-        objectLibrary.put(object, name, value);
+            @Cached @Shared DynamicObject.IsSharedNode isSharedNode,
+            @Cached @Shared DynamicObject.PutNode putNode) {
+        putNode.execute(object, name, value);
     }
 
-    @Specialization(guards = "objectLibrary.isShared(object)")
+    @Specialization(guards = "isSharedNode.execute(object)")
     static void writeShared(Node node, RubyDynamicObject object, Object name, Object value,
-            @CachedLibrary(limit = "getDynamicObjectCacheLimit()") DynamicObjectLibrary objectLibrary,
+            @Cached @Shared DynamicObject.IsSharedNode isSharedNode,
+            @Cached @Shared DynamicObject.PutNode putNode,
             @Cached WriteBarrierNode writeBarrierNode) {
 
         // Share `value` before it becomes reachable through `object`
@@ -53,7 +55,7 @@ public abstract class WriteObjectFieldNode extends RubyBaseNode {
         VarHandle.storeStoreFence();
 
         synchronized (object) {
-            objectLibrary.put(object, name, value);
+            putNode.execute(object, name, value);
         }
     }
 }

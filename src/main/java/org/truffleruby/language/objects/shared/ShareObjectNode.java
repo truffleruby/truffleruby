@@ -27,9 +27,8 @@ import org.truffleruby.language.objects.ObjectGraph;
 
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.Property;
 import com.oracle.truffle.api.object.Shape;
 import org.truffleruby.utils.RunTwiceBranchProfile;
@@ -60,14 +59,14 @@ public abstract class ShareObjectNode extends RubyBaseNode {
     static void shareCached(Node node, RubyDynamicObject object, int depth,
             @Cached("object.getShape()") Shape cachedShape,
             @Cached("createSharedShape(cachedShape)") Shape sharedShape,
-            @CachedLibrary(limit = "1") DynamicObjectLibrary objectLibrary,
+            @Cached DynamicObject.MarkSharedNode markSharedNode,
             @Cached("new()") RunTwiceBranchProfile shareMetaClassProfile,
             @Cached ShareInternalFieldsNode shareInternalFieldsNode,
             @Cached(value = "getObjectProperties(sharedShape)", dimensions = 1) PropertyGetter[] propertyGetters,
             @Cached("createWriteBarrierNodes(propertyGetters)") WriteBarrierNode[] writeBarrierNodes) {
         // Mark the object as shared first to avoid recursion
         assert object.getShape() == cachedShape;
-        objectLibrary.markShared(object);
+        markSharedNode.execute(object);
         assert object.getShape() == sharedShape;
 
         // Share the metaclass. This will also the share the logical class, which is the same or its superclass.

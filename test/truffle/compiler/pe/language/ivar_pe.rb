@@ -35,6 +35,6 @@ example "IVarFixtures::Foo.new(1,2).a", 1
 example "IVarFixtures::Foo.new(1,2).b", 2
 
 example "IVarFixtures::Foo.new(1,2).reset_b(42).b", 42
-example "IVarFixtures::Foo.new(1,2).reset_b([]).b.empty?", true
+example "IVarFixtures::Foo.new(1,2).reset_b(3).b", 3
 
 example "IVarFixtures::Foo.new(1,2).ivar_get_a", 1

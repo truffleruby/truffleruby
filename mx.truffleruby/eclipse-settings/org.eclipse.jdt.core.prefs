@@ -33,3 +33,14 @@ org.eclipse.jdt.core.formatter.alignment_for_superclass_in_type_declaration=48
 org.eclipse.jdt.core.formatter.alignment_for_selector_in_method_invocation=16
 org.eclipse.jdt.core.formatter.alignment_for_conditional_expression=48
 org.eclipse.jdt.core.formatter.lineSplit=120
+# Override problematic eclipse settings changes between mx 7.69.1 and mx 7.82.0 which break our formatting
+org.eclipse.jdt.core.formatter.comment.format_html=true
+org.eclipse.jdt.core.formatter.comment.format_source_code=true
+org.eclipse.jdt.core.formatter.comment.indent_parameter_description=true
+org.eclipse.jdt.core.formatter.comment.indent_root_tags=true
+org.eclipse.jdt.core.formatter.comment.insert_new_line_before_root_tags=insert
+org.eclipse.jdt.core.formatter.comment.count_line_length_from_starting_position=false
+org.eclipse.jdt.core.formatter.format_line_comment_starting_on_first_column=true
+org.eclipse.jdt.core.formatter.join_lines_in_comments=true
+org.eclipse.jdt.core.formatter.wrap_before_or_operator_multicatch=true
+org.eclipse.jdt.core.formatter.wrap_outer_expressions_when_nested=true

@@ -44,9 +44,11 @@ Compatibility:
 Performance:
 
 * Convert to a `MutableTruffleString` and write inplace for `String#bytesplice` when writing the same number of bytes as the value (#2336, #2599, @eregon).
+* Migrate to `DynamicObject` nodes, which are faster in interpreter and use less memory than `DynamicObjectLibrary`.
 
 Incompatible Changes:
 
+* Remove `Truffle::Interop.java_instanceof?`, it is redundant with `Truffle::Interop.meta_instance?` (@eregon).
 
 Memory Footprint:
 

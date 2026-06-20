@@ -18,7 +18,7 @@ import java.util.IdentityHashMap;
 import java.util.Set;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.proc.RubyProc;
@@ -139,7 +139,7 @@ public abstract class ObjectGraph {
         }
 
         for (Property property : object.getShape().getPropertyListInternal(false)) {
-            final Object value = DynamicObjectLibrary.getUncached().getOrDefault(object, property.getKey(), null);
+            final Object value = DynamicObject.GetNode.getUncached().execute(object, property.getKey(), null);
             addProperty(reachable, value);
         }
 

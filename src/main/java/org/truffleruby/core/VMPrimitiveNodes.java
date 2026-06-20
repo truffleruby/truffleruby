@@ -96,7 +96,6 @@ import org.truffleruby.platform.Signals;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -274,12 +273,12 @@ public abstract class VMPrimitiveNodes {
     public abstract static class VMWatchSignalNode extends PrimitiveArrayArgumentsNode {
 
         @TruffleBoundary
-        @Specialization(
-                guards = { "libSignalString.isRubyString(this, signalString)", "libAction.isRubyString(this, action)" },
-                limit = "1")
+        @Specialization(guards = {
+                "libSignalString.isRubyString(this, signalString)",
+                "libAction.isRubyString(this, action)" })
         boolean watchSignalString(Object signalString, boolean isRubyDefaultHandler, Object action,
                 @Cached @Shared RubyStringLibrary libSignalString,
-                @Cached @Exclusive RubyStringLibrary libAction) {
+                @Cached @Shared RubyStringLibrary libAction) {
             final String actionString = StringOperations.getJavaString(action);
             final String signalName = StringOperations.getJavaString(signalString);
 

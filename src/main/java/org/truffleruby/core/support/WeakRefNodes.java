@@ -11,8 +11,7 @@
 package org.truffleruby.core.support;
 
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.annotations.Primitive;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
@@ -44,11 +43,10 @@ public abstract class WeakRefNodes {
     @Primitive(name = "weakref_object")
     public abstract static class WeakRefObjectPrimitiveNode extends PrimitiveArrayArgumentsNode {
 
-        @Specialization(limit = "getDynamicObjectCacheLimit()")
+        @Specialization
         Object weakRefObject(RubyDynamicObject weakRef,
-                @CachedLibrary("weakRef") DynamicObjectLibrary objectLibrary) {
-            final TruffleWeakReference<?> ref = (TruffleWeakReference<?>) objectLibrary
-                    .getOrDefault(weakRef, FIELD_NAME, EMPTY_WEAK_REF);
+                @Cached DynamicObject.GetNode getNode) {
+            var ref = (TruffleWeakReference<?>) getNode.execute(weakRef, FIELD_NAME, EMPTY_WEAK_REF);
             final Object object = ref.get();
             return object == null ? nil : object;
         }

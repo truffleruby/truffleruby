@@ -7,6 +7,8 @@
 # GNU General Public License version 2, or
 # GNU Lesser General Public License version 2.1.
 
+example "[].empty?", true
+
 example "[3, 1, 2][1]", 1
 
 example "[3, 1, 2].sort[1]", 2

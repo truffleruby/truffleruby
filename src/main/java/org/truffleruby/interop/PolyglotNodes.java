@@ -143,11 +143,10 @@ public abstract class PolyglotNodes {
         }
 
         @TruffleBoundary
-        @Specialization(guards = { "stringsId.isRubyString(this, id)", "stringsFileName.isRubyString(this, fileName)" },
-                limit = "1")
+        @Specialization(guards = { "stringsId.isRubyString(this, id)", "stringsFileName.isRubyString(this, fileName)" })
         Object evalFile(Object id, Object fileName,
                 @Cached @Shared RubyStringLibrary stringsId,
-                @Cached @Exclusive RubyStringLibrary stringsFileName) {
+                @Cached @Shared RubyStringLibrary stringsFileName) {
             final String idString = StringOperations.getJavaString(id);
             final Source source = getSource(idString, StringOperations.getJavaString(fileName));
             return eval(source);

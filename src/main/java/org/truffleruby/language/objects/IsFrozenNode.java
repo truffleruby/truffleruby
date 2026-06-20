@@ -10,10 +10,10 @@
  */
 package org.truffleruby.language.objects;
 
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.core.range.RubyObjectRange;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.language.ImmutableRubyObject;
@@ -38,17 +38,10 @@ public abstract class IsFrozenNode extends RubyBaseNode {
         return object.frozen;
     }
 
-    @Specialization(guards = { "!isRubyObjectRange(object)", "isNotRubyString(object)" },
-            limit = "getDynamicObjectCacheLimit()")
-    boolean isFrozenCached(RubyDynamicObject object,
-            @CachedLibrary("object") DynamicObjectLibrary objectLibrary) {
-        return (objectLibrary.getShapeFlags(object) & FROZEN_FLAG) != 0;
-    }
-
-    // Avoid the uncached DynamicObjectLibrary: this is much faster as it does not have any Shape check/library overhead
-    @Specialization(guards = { "!isRubyObjectRange(object)", "isNotRubyString(object)" }, replaces = "isFrozenCached")
-    boolean isFrozenUncached(RubyDynamicObject object) {
-        return (object.getShape().getFlags() & FROZEN_FLAG) != 0;
+    @Specialization(guards = { "!isRubyObjectRange(object)", "isNotRubyString(object)" })
+    boolean isFrozen(RubyDynamicObject object,
+            @Cached DynamicObject.GetShapeFlagsNode getShapeFlagsNode) {
+        return (getShapeFlagsNode.execute(object) & FROZEN_FLAG) != 0;
     }
 
     @Specialization

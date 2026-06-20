@@ -19,7 +19,7 @@ import org.truffleruby.language.RubyNode;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import org.truffleruby.language.locals.ReadFrameSlotNode;
 
@@ -28,7 +28,8 @@ public final class ReadInstanceVariableNode extends RubyContextSourceNode {
     private final String name;
 
     @Child private ReadFrameSlotNode readSelfSlotNode;
-    @Child private DynamicObjectLibrary objectLibrary;
+    @Child private DynamicObject.GetNode getNode = DynamicObject.GetNode.create();
+    @Child private DynamicObject.ContainsKeyNode containsKeyNode;
 
     private final ConditionProfile objectProfile = ConditionProfile.create();
 
@@ -42,9 +43,7 @@ public final class ReadInstanceVariableNode extends RubyContextSourceNode {
         final Object self = SelfNode.readSelf(frame, readSelfSlotNode);
 
         if (objectProfile.profile(self instanceof RubyDynamicObject)) {
-            final DynamicObjectLibrary objectLibrary = getObjectLibrary();
-            final RubyDynamicObject dynamicObject = (RubyDynamicObject) self;
-            return objectLibrary.getOrDefault(dynamicObject, name, nil);
+            return getNode.execute((RubyDynamicObject) self, name, nil);
         } else {
             return nil;
         }
@@ -55,9 +54,7 @@ public final class ReadInstanceVariableNode extends RubyContextSourceNode {
         final Object self = SelfNode.readSelf(frame, readSelfSlotNode);
 
         if (objectProfile.profile(self instanceof RubyDynamicObject)) {
-            final DynamicObjectLibrary objectLibrary = getObjectLibrary();
-            final RubyDynamicObject dynamicObject = (RubyDynamicObject) self;
-            if (objectLibrary.containsKey(dynamicObject, name)) {
+            if (hasInstanceVariable((RubyDynamicObject) self)) {
                 return FrozenStrings.INSTANCE_VARIABLE;
             } else {
                 return nil;
@@ -67,15 +64,13 @@ public final class ReadInstanceVariableNode extends RubyContextSourceNode {
         }
     }
 
-    private DynamicObjectLibrary getObjectLibrary() {
-        if (objectLibrary == null) {
+    private boolean hasInstanceVariable(RubyDynamicObject object) {
+        if (containsKeyNode == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
-            objectLibrary = insert(
-                    DynamicObjectLibrary
-                            .getFactory()
-                            .createDispatched(getLanguage().options.INSTANCE_VARIABLE_CACHE));
+            containsKeyNode = insert(DynamicObject.ContainsKeyNode.create());
         }
-        return objectLibrary;
+
+        return containsKeyNode.execute(object, name);
     }
 
     @Override

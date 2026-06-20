@@ -10,7 +10,7 @@
  */
 package org.truffleruby.language.objects;
 
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -155,7 +155,7 @@ public abstract class AllocationTracing {
                 context.getObjectSpaceManager().getTracingGeneration());
 
         // The object was just allocated and is not published/shared yet
-        DynamicObjectLibrary.getUncached().put(object, Layouts.ALLOCATION_TRACE_IDENTIFIER, trace);
+        DynamicObject.PutNode.getUncached().execute(object, Layouts.ALLOCATION_TRACE_IDENTIFIER, trace);
     }
 
 }

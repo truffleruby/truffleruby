@@ -14,9 +14,8 @@ import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
@@ -126,23 +125,24 @@ public abstract class TruffleRubyNodes {
 
         public abstract ReentrantLock execute(Node node, RubyDynamicObject object);
 
-        @Specialization(limit = "getDynamicObjectCacheLimit()")
+        @Specialization
         static ReentrantLock getLock(Node node, RubyDynamicObject object,
-                @CachedLibrary("object") DynamicObjectLibrary objectLibrary,
+                @Cached DynamicObject.GetNode getNode,
+                @Cached DynamicObject.PutNode putNode,
                 @Cached InlinedBranchProfile initializeLockProfile) {
-            ReentrantLock lock = (ReentrantLock) objectLibrary.getOrDefault(object, Layouts.OBJECT_LOCK, null);
+            ReentrantLock lock = (ReentrantLock) getNode.execute(object, Layouts.OBJECT_LOCK, null);
             if (lock != null) {
                 return lock;
             }
 
             initializeLockProfile.enter(node);
             synchronized (object) {
-                lock = (ReentrantLock) objectLibrary.getOrDefault(object, Layouts.OBJECT_LOCK, null);
+                lock = (ReentrantLock) getNode.execute(object, Layouts.OBJECT_LOCK, null);
                 if (lock != null) {
                     return lock;
                 } else {
                     lock = new ReentrantLock();
-                    objectLibrary.put(object, Layouts.OBJECT_LOCK, lock);
+                    putNode.execute(object, Layouts.OBJECT_LOCK, lock);
                     return lock;
                 }
             }

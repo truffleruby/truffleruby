@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Bind;
@@ -29,6 +28,7 @@ import org.truffleruby.cext.WrapNode;
 import org.truffleruby.core.array.ArrayGuards;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.array.library.ArrayStoreLibrary.ArrayAllocator;
+import org.truffleruby.core.cast.ToPointerAddressNode;
 import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.objects.ObjectGraph;
@@ -41,7 +41,6 @@ import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
@@ -104,21 +103,14 @@ public final class NativeArrayStorage implements ObjectGraphNode {
             @CachedLibrary(limit = "1") InteropLibrary wrappers,
             @Cached WrapNode wrapNode,
             @Cached InlinedConditionProfile isPointerProfile,
+            @Cached ToPointerAddressNode toPointerAddressNode,
             @Bind Node node) {
         final ValueWrapper wrapper = wrapNode.execute(value);
         if (!isPointerProfile.profile(node, wrappers.isPointer(wrapper))) {
             wrappers.toNative(wrapper);
         }
 
-        final long address;
-        try {
-            assert wrappers.isPointer(wrapper);
-            address = wrappers.asPointer(wrapper);
-        } catch (UnsupportedMessageException e) {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            throw new UnsupportedOperationException();
-        }
-
+        final long address = toPointerAddressNode.execute(node, wrapper);
         writeElement(index, address);
     }
 

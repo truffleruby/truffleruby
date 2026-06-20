@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.collections.ConcurrentOperations;
@@ -254,9 +254,10 @@ public final class ModuleFields extends ModuleChain implements ObjectGraphNode {
         }
 
         for (Object key : fromFields.classVariables.getShape().getKeys()) {
-            final Object value = fromFields.classVariables.read((String) key, DynamicObjectLibrary.getUncached());
+            final Object value = fromFields.classVariables.read((String) key, DynamicObject.GetNode.getUncached(),
+                    DynamicObject.IsSharedNode.getUncached());
             if (value != null) { // do not copy if it was removed concurrently
-                this.classVariables.put((String) key, value, DynamicObjectLibrary.getUncached());
+                this.classVariables.put((String) key, value, DynamicObject.PutNode.getUncached());
             }
         }
 
@@ -1164,7 +1165,8 @@ public final class ModuleFields extends ModuleChain implements ObjectGraphNode {
         }
 
         for (Object key : classVariables.getShape().getKeys()) {
-            final Object value = classVariables.read((String) key, DynamicObjectLibrary.getUncached());
+            final Object value = classVariables.read((String) key, DynamicObject.GetNode.getUncached(),
+                    DynamicObject.IsSharedNode.getUncached());
             if (value != null) {
                 ObjectGraph.addProperty(adjacent, value);
             }

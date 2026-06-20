@@ -89,6 +89,7 @@ IGV_JDK_VERSION = '21'
 DEFAULT_JDK_VERSION = 'latest'
 
 BOOTSTRAP_GRAALVM_VERSION = '25.0.2'
+BOOTSTRAP_GRAALVM_EA_BUILD_TAG = 'jdk-25e1-25.0.3-ea.32'
 
 # Not yet 'jdk.graal' as we test against 21 and 21 does not know 'jdk.graal'
 GRAAL_OPTION_PREFIX = 'graal'
@@ -2393,18 +2394,28 @@ module Commands
   end
 
   private def install_graalvm
-    version = BOOTSTRAP_GRAALVM_VERSION
-    major = version[/^(\d+)/, 1]
-    archive_version = version.sub(/\.0\.0$/, '')
     os = { 'linux' => 'linux', 'darwin' => 'macos' }.fetch(mx_os)
     arch = { 'amd64' => 'x64', 'aarch64' => 'aarch64' }.fetch(mx_arch)
-    if ee?
-      url = "https://download.oracle.com/graalvm/#{major}/archive/graalvm-jdk-#{archive_version}_#{os}-#{arch}_bin.tar.gz"
-      dir = "#{JDKS_CACHE_DIR}/graalvm-#{version}"
+
+    if tag = BOOTSTRAP_GRAALVM_EA_BUILD_TAG
+      # For dev builds we use EA builds (EE) for both because:
+      # 1) Builds at https://github.com/graalvm/graalvm-ce-dev-builds are only kept for ~2 weeks (EA builds are forever)
+      # 2) We want to have truffleruby-head builds with EE
+      url = "https://github.com/graalvm/oracle-graalvm-ea-builds/releases/download/#{tag}/graalvm-#{tag}_#{os}-#{arch}_bin.tar.gz"
+      dir = "#{JDKS_CACHE_DIR}/graalvm-#{tag}"
     else
-      url = "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-#{version}/graalvm-community-jdk-#{version}_#{os}-#{arch}_bin.tar.gz"
-      dir = "#{JDKS_CACHE_DIR}/graalvm-community-#{version}"
+      version = BOOTSTRAP_GRAALVM_VERSION
+      major = version[/^(\d+)/, 1]
+      archive_version = version.sub(/\.0\.0$/, '')
+      if ee?
+        url = "https://download.oracle.com/graalvm/#{major}/archive/graalvm-jdk-#{archive_version}_#{os}-#{arch}_bin.tar.gz"
+        dir = "#{JDKS_CACHE_DIR}/graalvm-#{version}"
+      else
+        url = "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-#{version}/graalvm-community-jdk-#{version}_#{os}-#{arch}_bin.tar.gz"
+        dir = "#{JDKS_CACHE_DIR}/graalvm-community-#{version}"
+      end
     end
+
     archive = "#{dir || raise}.tar.gz"
     unless File.file?(archive)
       FileUtils.mkdir_p(File.dirname(archive))

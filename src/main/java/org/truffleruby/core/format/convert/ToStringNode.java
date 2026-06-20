@@ -30,7 +30,6 @@ import org.truffleruby.language.library.RubyStringLibrary;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -101,10 +100,10 @@ public abstract class ToStringNode extends FormatNode {
         }
     }
 
-    @Specialization(guards = "argLibString.isRubyString(this, string)", limit = "1")
+    @Specialization(guards = "argLibString.isRubyString(this, string)")
     Object toStringString(Object string,
             @Cached @Shared RubyStringLibrary libString,
-            @Cached @Exclusive RubyStringLibrary argLibString) {
+            @Cached @Shared RubyStringLibrary argLibString) {
         if ("inspect".equals(conversionMethod)) {
             final Object value = getToStrNode().call(dispatchConfiguration, string, conversionMethod);
 
