@@ -376,6 +376,10 @@ describe "C-API Array function" do
 
         s2.should == [1,2,3,4]
       end
+
+      it "passes non-Ruby pointers to the iteration and block callbacks" do
+        @s.rb_iterate_with_pointer.should == [14]
+      end
     end
   end
 

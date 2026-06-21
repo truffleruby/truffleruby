@@ -1941,13 +1941,13 @@ module Truffle::CExt
     recursive = Truffle::ThreadOperations.detect_recursion(obj) do
       result = Primitive.cext_unwrap(Primitive.interop_execute(
         POINTER2_INT_TO_POINTER_WRAPPER,
-        [func, Primitive.cext_wrap(obj), Primitive.cext_wrap(arg), 0]))
+        [func, obj, arg, 0]))
     end
 
     if recursive
       Primitive.cext_unwrap(Primitive.interop_execute(
         POINTER2_INT_TO_POINTER_WRAPPER,
-        [func, Primitive.cext_wrap(obj), Primitive.cext_wrap(arg), 1]))
+        [func, obj, arg, 1]))
     else
       result
     end
@@ -2103,7 +2103,7 @@ module Truffle::CExt
       Primitive.call_with_cext_lock_and_frame_and_unwrap(RB_BLOCK_CALL_FUNC_WRAPPER, [
         callback,
         Primitive.cext_wrap(block_arg),
-        Primitive.cext_wrap(callback_arg),
+        callback_arg,
         0, # argc
         nil, # argv
         nil, # blockarg
@@ -2112,7 +2112,7 @@ module Truffle::CExt
     Primitive.cext_unwrap(
       Primitive.call_with_cext_lock_and_frame(POINTER_TO_POINTER_WRAPPER, [
         iteration,
-        Primitive.cext_wrap(iterated_object)
+        iterated_object
       ], Primitive.cext_special_variables_from_stack, wrapped_callback, use_cext_lock))
   end
 
@@ -2337,7 +2337,7 @@ module Truffle::CExt
       Primitive.call_with_cext_lock_and_frame_and_unwrap(RB_BLOCK_CALL_FUNC_WRAPPER, [
         function,
         Primitive.cext_wrap(args.first), # yieldarg
-        nil, # procarg,
+        value, # procarg
         0, # argc
         nil, # argv
         nil, # blockarg

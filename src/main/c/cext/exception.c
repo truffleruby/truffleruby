@@ -43,7 +43,7 @@ static void rb_protect_write_status(int *status, int value) {
 VALUE (*cext_rb_protect)(VALUE (*function)(VALUE), void *data, void (*write_status)(int *status, int value), int *status);
 
 VALUE rb_protect(VALUE (*function)(VALUE), VALUE data, int *status) {
-  return cext_rb_protect(function, data, rb_protect_write_status, status);
+  return cext_rb_protect(function, (void*)data, rb_protect_write_status, status);
 }
 
 void rb_jump_tag(int status) {
@@ -117,13 +117,13 @@ void rb_sys_fail_str(VALUE mesg) {
 VALUE (*cext_rb_ensure)(VALUE (*b_proc)(VALUE), void* data1, VALUE (*e_proc)(VALUE), void* data2);
 
 VALUE rb_ensure(VALUE (*b_proc)(VALUE), VALUE data1, VALUE (*e_proc)(VALUE), VALUE data2) {
-  return cext_rb_ensure(b_proc, data1, e_proc, data2);
+  return cext_rb_ensure(b_proc, (void*)data1, e_proc, (void*)data2);
 }
 
 VALUE (*cext_rb_rescue)(VALUE (*b_proc)(VALUE data), void* data1, VALUE (*r_proc)(VALUE data, VALUE e), void* data2);
 
 VALUE rb_rescue(VALUE (*b_proc)(VALUE), VALUE data1, VALUE (*r_proc)(VALUE, VALUE), VALUE data2) {
-  return cext_rb_rescue(b_proc, data1, r_proc, data2);
+  return cext_rb_rescue(b_proc, (void*)data1, r_proc, (void*)data2);
 }
 
 VALUE (*cext_rb_rescue2)(VALUE (*b_proc)(VALUE data), void* data1, VALUE (*r_proc)(VALUE data, VALUE e), void* data2, void* rescued);
@@ -134,7 +134,7 @@ VALUE rb_tr_rescue2_va_list(VALUE (*b_proc)(VALUE), VALUE data1, VALUE (*r_proc)
   while ((arg = va_arg(args, VALUE)) != (VALUE)0) {
     rb_ary_push(rescued, arg);
   }
-  return cext_rb_rescue2(b_proc, data1, r_proc, data2, rb_tr_unwrap(rescued));
+  return cext_rb_rescue2(b_proc, (void*)data1, r_proc, (void*)data2, rb_tr_unwrap(rescued));
 }
 
 VALUE rb_make_backtrace(void) {
@@ -157,7 +157,7 @@ VALUE rb_catch(const char *tag, rb_block_call_func_t func, VALUE data) {
 VALUE (*cext_rb_catch_obj)(VALUE tag, rb_block_call_func_t func, void* data);
 
 VALUE rb_catch_obj(VALUE tag, rb_block_call_func_t func, VALUE data) {
-  return cext_rb_catch_obj(rb_tr_unwrap(tag), func, data);
+  return cext_rb_catch_obj(rb_tr_unwrap(tag), func, (void*)data);
 }
 
 void rb_memerror(void) {

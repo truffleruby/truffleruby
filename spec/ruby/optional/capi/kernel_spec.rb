@@ -695,6 +695,10 @@ describe "C-API Kernel function" do
       s = "hello"
       @s.rb_exec_recursive(s).should == s
     end
+
+    it "passes non-Ruby pointers to the recursive callback" do
+      @s.rb_exec_recursive_with_pointer.should == true
+    end
   end
 
   describe "rb_set_end_proc" do

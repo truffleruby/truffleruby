@@ -15,7 +15,7 @@
 VALUE (*cext_rb_proc_new)(rb_block_call_func_t func, void* callback_arg);
 
 VALUE rb_proc_new(rb_block_call_func_t func, VALUE callback_arg) {
-  return cext_rb_proc_new(func, callback_arg);
+  return cext_rb_proc_new(func, (void*)callback_arg);
 }
 
 VALUE rb_proc_call(VALUE self, VALUE args) {

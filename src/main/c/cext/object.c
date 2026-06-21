@@ -146,7 +146,7 @@ VALUE rb_require(const char *feature) {
 // at_exit
 
 void rb_set_end_proc(void (*func)(VALUE), VALUE data) {
-  polyglot_invoke(RUBY_CEXT, "rb_set_end_proc", func, data);
+  polyglot_invoke(RUBY_CEXT, "rb_set_end_proc", func, (void*)data);
 }
 
 // eval

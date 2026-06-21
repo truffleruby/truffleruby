@@ -329,6 +329,29 @@ static VALUE kernel_spec_rb_exec_recursive(VALUE self, VALUE obj) {
   return rb_exec_recursive(do_rec, obj, Qtrue);
 }
 
+struct rb_exec_recursive_pointer_data {
+  int magic;
+};
+
+static VALUE do_rec_pointer(VALUE obj, VALUE arg, int is_rec) {
+  struct rb_exec_recursive_pointer_data *obj_data = (struct rb_exec_recursive_pointer_data *)obj;
+  struct rb_exec_recursive_pointer_data *arg_data = (struct rb_exec_recursive_pointer_data *)arg;
+  if (obj_data->magic != 0x1234 || arg_data->magic != 0x1234) {
+    rb_raise(rb_eRuntimeError, "invalid recursive pointer");
+  }
+
+  if (is_rec) {
+    return Qtrue;
+  } else {
+    return rb_exec_recursive(do_rec_pointer, obj, arg);
+  }
+}
+
+static VALUE kernel_spec_rb_exec_recursive_with_pointer(VALUE self) {
+  struct rb_exec_recursive_pointer_data data = { 0x1234 };
+  return rb_exec_recursive(do_rec_pointer, (VALUE)&data, (VALUE)&data);
+}
+
 static void write_io(VALUE io) {
   rb_funcall(io, rb_intern("write"), 1, rb_str_new2("in write_io"));
 }
@@ -443,6 +466,7 @@ void Init_kernel_spec(void) {
   rb_define_method(cls, "rb_yield_values2", kernel_spec_rb_yield_values2, 1);
   rb_define_method(cls, "rb_yield_splat", kernel_spec_rb_yield_splat, 1);
   rb_define_method(cls, "rb_exec_recursive", kernel_spec_rb_exec_recursive, 1);
+  rb_define_method(cls, "rb_exec_recursive_with_pointer", kernel_spec_rb_exec_recursive_with_pointer, 0);
   rb_define_method(cls, "rb_set_end_proc", kernel_spec_rb_set_end_proc, 1);
   rb_define_method(cls, "ruby_vm_at_exit", kernel_spec_ruby_vm_at_exit, 0);
   rb_define_method(cls, "rb_f_sprintf", kernel_spec_rb_f_sprintf, 1);
