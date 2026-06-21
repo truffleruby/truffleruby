@@ -37,5 +37,5 @@ VALUE rb_mutex_sleep(VALUE mutex, VALUE timeout) {
 }
 
 VALUE rb_mutex_synchronize(VALUE mutex, VALUE (*func)(VALUE arg), VALUE arg) {
-  return (VALUE) polyglot_invoke(RUBY_CEXT, "rb_mutex_synchronize", rb_tr_unwrap(mutex), func, arg);
+  return (VALUE) polyglot_invoke(RUBY_CEXT, "rb_mutex_synchronize", rb_tr_unwrap(mutex), func, (void*)arg);
 }

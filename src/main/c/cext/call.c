@@ -18,7 +18,7 @@ void rb_error_arity(int argc, int min, int max) {
 }
 
 VALUE rb_iterate(VALUE (*function)(VALUE), VALUE arg1, rb_block_call_func_t block, VALUE arg2) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_iterate", function, rb_tr_unwrap(arg1), block, rb_tr_unwrap(arg2)));
+  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_iterate", function, (void*)arg1, block, (void*)arg2));
 }
 
 int rb_respond_to(VALUE object, ID name) {
@@ -214,7 +214,7 @@ int rb_method_boundp(VALUE klass, ID id, int ex) {
 }
 
 VALUE rb_exec_recursive(VALUE (*func) (VALUE, VALUE, int), VALUE obj, VALUE arg) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_exec_recursive", func, rb_tr_unwrap(obj), rb_tr_unwrap(arg)));
+  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_exec_recursive", func, (void*)obj, (void*)arg));
 }
 
 VALUE rb_eval_cmd_kw(VALUE cmd, VALUE args, int kw_splat) {
