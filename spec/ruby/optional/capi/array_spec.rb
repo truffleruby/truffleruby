@@ -343,7 +343,7 @@ describe "C-API Array function" do
     end
   end
 
-  ruby_version_is ""..."4.0" do
+  ruby_version_is ""..."4.1" do
     describe "rb_iterate" do
       it "calls an callback function as a block passed to an method" do
         s = [1,2,3,4]
