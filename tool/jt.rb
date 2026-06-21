@@ -257,7 +257,9 @@ module Utilities
 
     if mx = which('mx')
       mx_repo = File.dirname(mx)
-      sh 'git', 'checkout', '--quiet', @mx_version, chdir: mx_repo
+      unless git_tag(mx_repo) == @mx_version
+        sh 'git', 'checkout', '--quiet', @mx_version, chdir: mx_repo
+      end
       'mx'
     else
       mx_repo = find_or_clone_repo('https://github.com/graalvm/mx.git', @mx_version)
@@ -390,6 +392,10 @@ module Utilities
 
   def git_branch
     @git_branch ||= `GIT_DIR="#{TRUFFLERUBY_DIR}/.git" git rev-parse --abbrev-ref HEAD`.strip
+  end
+
+  def git_tag(repo = TRUFFLERUBY_DIR)
+    `GIT_DIR="#{repo}/.git" git describe --tags --exact-match HEAD 2>/dev/null`.strip
   end
 
   def no_gem_vars_env
@@ -2610,13 +2616,15 @@ module Commands
         next if File.exist?(link)
         target = File.readlink(link)
         next unless target.start_with?("#{TRUFFLERUBY_DIR}/mxbuild")
+        puts "Deleting broken link: #{link} -> #{target}"
         File.delete link
-        puts "Deleted broken link: #{link} -> #{target}"
       end
 
       link_path = "#{rubies_dir}/#{name}"
-      File.delete link_path if File.symlink? link_path or File.exist? link_path
-      File.symlink dest, link_path
+      unless File.symlink?(link_path) and File.readlink(link_path) == dest
+        File.delete(link_path) if File.symlink?(link_path) or File.exist?(link_path)
+        File.symlink(dest, link_path)
+      end
     end
   end
 
