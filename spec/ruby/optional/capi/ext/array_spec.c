@@ -240,11 +240,6 @@ static VALUE array_spec_rb_block_call_each_pair(VALUE self, VALUE obj) {
   return new_ary;
 }
 
-static VALUE iter_yield(RB_BLOCK_CALL_FUNC_ARGLIST(el, ary)) {
-  rb_yield(el);
-  return Qnil;
-}
-
 #ifndef RUBY_VERSION_IS_4_1
 struct rb_iterate_pointer_data {
   int magic;
@@ -284,6 +279,11 @@ static VALUE array_spec_rb_iterate_with_pointer(VALUE self) {
   return data.array;
 }
 #endif
+
+static VALUE iter_yield(RB_BLOCK_CALL_FUNC_ARGLIST(el, ary)) {
+  rb_yield(el);
+  return Qnil;
+}
 
 #ifndef RUBY_VERSION_IS_4_1
 static VALUE array_spec_rb_iterate_then_yield(VALUE self, VALUE obj) {
