@@ -114,6 +114,24 @@ VALUE kernel_spec_rb_catch_obj(VALUE self, VALUE obj, VALUE main_proc) {
   return rb_catch_obj(obj, kernel_spec_call_proc_with_catch_obj, main_proc);
 }
 
+struct rb_catch_obj_pointer_data {
+  int magic;
+};
+
+VALUE kernel_spec_catch_obj_pointer(RB_BLOCK_CALL_FUNC_ARGLIST(arg, data)) {
+  struct rb_catch_obj_pointer_data *pointer_data = (struct rb_catch_obj_pointer_data *)data;
+  if (pointer_data->magic != 0x1234) {
+    rb_raise(rb_eRuntimeError, "invalid catch pointer");
+  }
+
+  return Qtrue;
+}
+
+VALUE kernel_spec_rb_catch_obj_with_pointer(VALUE self, VALUE obj) {
+  struct rb_catch_obj_pointer_data data = { 0x1234 };
+  return rb_catch_obj(obj, kernel_spec_catch_obj_pointer, (VALUE)&data);
+}
+
 VALUE kernel_spec_rb_eval_string(VALUE self, VALUE str) {
   return rb_eval_string(RSTRING_PTR(str));
 }
@@ -455,6 +473,7 @@ void Init_kernel_spec(void) {
   rb_define_method(cls, "rb_eval_string_protect", kernel_spec_rb_eval_string_protect, 2);
   rb_define_method(cls, "rb_catch", kernel_spec_rb_catch, 2);
   rb_define_method(cls, "rb_catch_obj", kernel_spec_rb_catch_obj, 2);
+  rb_define_method(cls, "rb_catch_obj_with_pointer", kernel_spec_rb_catch_obj_with_pointer, 1);
   rb_define_method(cls, "rb_sys_fail", kernel_spec_rb_sys_fail, 1);
   rb_define_method(cls, "rb_syserr_fail", kernel_spec_rb_syserr_fail, 2);
   rb_define_method(cls, "rb_syserr_fail_str", kernel_spec_rb_syserr_fail_str, 2);
