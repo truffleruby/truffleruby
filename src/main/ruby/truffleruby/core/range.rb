@@ -352,10 +352,8 @@ class Range
   end
 
   def include?(value)
-    if Primitive.is_a?(self.begin, Numeric) ||
-       Primitive.is_a?(self.end, Numeric) ||
-       Primitive.is_a?(self.begin, Time) ||
-       Primitive.is_a?(self.end, Time) ||
+    if Truffle::RangeOperations.linear?(self.begin) ||
+       Truffle::RangeOperations.linear?(self.end) ||
        Truffle::Type.rb_check_to_integer(self.begin, :to_int) ||
        Truffle::Type.rb_check_to_integer(self.end, :to_int)
       return cover?(value)
@@ -368,8 +366,9 @@ class Range
       return super(value)
     end
 
+    # MRI: range_include_fallback
     if Primitive.nil?(self.begin) && Primitive.nil?(self.end) &&
-       (Primitive.is_a?(value, Numeric) || Primitive.is_a?(value, Time) || Truffle::Type.rb_check_to_integer(value, :to_int))
+       Truffle::RangeOperations.linear?(value)
       return true
     end
 

@@ -231,6 +231,11 @@ module Truffle
       true
     end
 
+    # MRI: linear_object_p
+    def self.linear?(object)
+      Primitive.is_a?(object, Numeric) || Primitive.is_a?(object, Time)
+    end
+
     # MRI: empty_region_p
     def self.greater_than?(from, to, to_exclusive)
       return false if Primitive.nil?(from)
