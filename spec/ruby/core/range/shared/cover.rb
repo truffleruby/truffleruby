@@ -135,63 +135,63 @@ describe :range_cover, shared: true do
 end
 
 describe :range_cover_subrange, shared: true do
-  context "range argument" do
-    it "accepts range argument" do
-      (0..10).send(@method, (3..7)).should == true
-      (0..10).send(@method, (3..15)).should == false
-      (0..10).send(@method, (-2..7)).should == false
+  it "accepts range argument" do
+    (0..10).send(@method, (3..7)).should == true
+    (0..10).send(@method, (3..15)).should == false
+    (0..10).send(@method, (-2..7)).should == false
 
-      (1.1..7.9).send(@method, (2.5..6.5)).should == true
-      (1.1..7.9).send(@method, (2.5..8.5)).should == false
-      (1.1..7.9).send(@method, (0.5..6.5)).should == false
+    (1.1..7.9).send(@method, (2.5..6.5)).should == true
+    (1.1..7.9).send(@method, (2.5..8.5)).should == false
+    (1.1..7.9).send(@method, (0.5..6.5)).should == false
 
-      ('c'..'i').send(@method, ('d'..'f')).should == true
-      ('c'..'i').send(@method, ('d'..'z')).should == false
-      ('c'..'i').send(@method, ('a'..'f')).should == false
+    ('c'..'i').send(@method, ('d'..'f')).should == true
+    ('c'..'i').send(@method, ('d'..'z')).should == false
+    ('c'..'i').send(@method, ('a'..'f')).should == false
 
-      range_10_100 = RangeSpecs::TenfoldSucc.new(10)..RangeSpecs::TenfoldSucc.new(100)
-      range_20_90 = RangeSpecs::TenfoldSucc.new(20)..RangeSpecs::TenfoldSucc.new(90)
-      range_20_110 = RangeSpecs::TenfoldSucc.new(20)..RangeSpecs::TenfoldSucc.new(110)
-      range_0_90 = RangeSpecs::TenfoldSucc.new(0)..RangeSpecs::TenfoldSucc.new(90)
+    range_10_100 = RangeSpecs::TenfoldSucc.new(10)..RangeSpecs::TenfoldSucc.new(100)
+    range_20_90 = RangeSpecs::TenfoldSucc.new(20)..RangeSpecs::TenfoldSucc.new(90)
+    range_20_110 = RangeSpecs::TenfoldSucc.new(20)..RangeSpecs::TenfoldSucc.new(110)
+    range_0_90 = RangeSpecs::TenfoldSucc.new(0)..RangeSpecs::TenfoldSucc.new(90)
 
-      range_10_100.send(@method, range_20_90).should == true
-      range_10_100.send(@method, range_20_110).should == false
-      range_10_100.send(@method, range_0_90).should == false
-    end
+    range_10_100.send(@method, range_20_90).should == true
+    range_10_100.send(@method, range_20_110).should == false
+    range_10_100.send(@method, range_0_90).should == false
+  end
 
-    it "supports boundaries of different comparable types" do
-      (0..10).send(@method, (3.1..7.9)).should == true
-      (0..10).send(@method, (3.1..15.9)).should == false
-      (0..10).send(@method, (-2.1..7.9)).should == false
-    end
+  it "supports boundaries of different comparable types" do
+    (0..10).send(@method, (3.1..7.9)).should == true
+    (0..10).send(@method, (3.1..15.9)).should == false
+    (0..10).send(@method, (-2.1..7.9)).should == false
+  end
 
-    it "returns false if types are not comparable" do
-      (0..10).send(@method, ('a'..'z')).should == false
-      (0..10).send(@method, (RangeSpecs::TenfoldSucc.new(0)..RangeSpecs::TenfoldSucc.new(100))).should == false
-    end
+  it "returns false if types are not comparable" do
+    (0..10).send(@method, ('a'..'z')).should == false
+    (0..10).send(@method, (RangeSpecs::TenfoldSucc.new(0)..RangeSpecs::TenfoldSucc.new(100))).should == false
+  end
 
-    it "honors exclusion of right boundary (:exclude_end option)" do
-      # Integer
-      (0..10).send(@method, (0..10)).should == true
-      (0...10).send(@method, (0...10)).should == true
+  it "honors exclusion of right boundary (:exclude_end option)" do
+    # Integer
+    (0..10).send(@method, (0..10)).should == true
+    (0...10).send(@method, (0...10)).should == true
 
-      (0..10).send(@method, (0...10)).should == true
-      (0...10).send(@method, (0..10)).should == false
+    (0..10).send(@method, (0...10)).should == true
+    (0...10).send(@method, (0..10)).should == false
 
-      (0...11).send(@method, (0..10)).should == true
-      (0..10).send(@method, (0...11)).should == true
+    (0...11).send(@method, (0..10)).should == true
+    (0..10).send(@method, (0...11)).should == true
 
-      # Float
-      (0..10.1).send(@method, (0..10.1)).should == true
-      (0...10.1).send(@method, (0...10.1)).should == true
+    # Float
+    (0..10.1).send(@method, (0..10.1)).should == true
+    (0...10.1).send(@method, (0...10.1)).should == true
 
-      (0..10.1).send(@method, (0...10.1)).should == true
-      (0...10.1).send(@method, (0..10.1)).should == false
+    (0..10.1).send(@method, (0...10.1)).should == true
+    (0...10.1).send(@method, (0..10.1)).should == false
 
-      (0...11.1).send(@method, (0..10.1)).should == true
-      (0..10.1).send(@method, (0...11.1)).should == false
-    end
+    (0...11.1).send(@method, (0..10.1)).should == true
+    (0..10.1).send(@method, (0...11.1)).should == false
+  end
 
+  context "range argument with Integer boundaries" do
     context "when other range is completely inside self" do
       it "returns true if self.begin < other.begin and self.end > other.end" do
         (0..10).send(@method, 4..6).should == true
@@ -445,6 +445,23 @@ describe :range_cover_subrange, shared: true do
     it "returns false if other boundaries are not comparable with self boundaries" do
       (0..10).send(@method, ("a".."z")).should == false
     end
+  end
 
+  context "range argument with boundaries of generic type (that implements only #<=>)" do
+    context "when other range is completely inside self" do
+      context "when a range can be iterated (that's it responds to #succ)" do
+        it "returns true if self.begin < other.begin and self.end < other.end but other.exclude_end? is true and the rightmost other value <= self.end" do
+          a = RangeSpecs::CoverElementWithSucc.new(0)..RangeSpecs::CoverElementWithSucc.new(10)
+          b = RangeSpecs::CoverElementWithSucc.new(4)...RangeSpecs::CoverElementWithSucc.new(11)
+          (a).send(@method, b).should == true
+        end
+
+        it "returns true if self is beginless and self.end < other.end but other.exclude_end? is true and the rightmost other value <= self.end" do
+          a = ..RangeSpecs::CoverElementWithSucc.new(10)
+          b = RangeSpecs::CoverElementWithSucc.new(4)...RangeSpecs::CoverElementWithSucc.new(11)
+          (a).send(@method, b).should == true
+        end
+      end
+    end
   end
 end

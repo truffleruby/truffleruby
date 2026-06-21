@@ -98,7 +98,7 @@ module Comparable
     self
   end
 
-  # A version of MRI's rb_cmpint (sort of)
+  # A version of MRI's rb_cmpint (sort of, not raising ArgumentError)
   def self.compare_int(int)
     return int if Primitive.is_a?(int, Integer)
 

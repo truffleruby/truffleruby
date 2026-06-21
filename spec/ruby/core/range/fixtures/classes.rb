@@ -111,6 +111,28 @@ module RangeSpecs
     undef_method :coerce
   end
 
+  # supports only interface required by Range#cover? + #succ
+  class CoverElementWithSucc
+    attr_reader :n
+
+    def initialize(n)
+      @n = n
+    end
+
+    def <=>(other)
+      return nil unless other.is_a?(CoverElementWithSucc)
+      @n <=> other.n
+    end
+
+    def succ
+      CoverElementWithSucc.new(@n + 1)
+    end
+
+    def inspect
+      "CoverElementWithSucc(#{@n})"
+    end
+  end
+
   class Xs < Custom # represent a string of 'x's
     def succ
       Xs.new(@length + 1)

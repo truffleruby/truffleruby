@@ -177,36 +177,60 @@ module Truffle
       end
     end
 
-    # MRI: r_cover_range_p
-    def self.range_cover?(range, other)
-      b1 = range.begin
-      b2 = other.begin
-      e1 = range.end
-      e2 = other.end
-
-      return false if Primitive.nil?(b2) && !Primitive.nil?(b1)
-      return false if Primitive.nil?(e2) && !Primitive.nil?(e1)
-      # other is empty or backward
-      return false if !Primitive.nil?(b2) && !Primitive.nil?(e2) &&
-                      (other.exclude_end? ? (b2 <=> e2) >= 0 : (b2 <=> e2) > 0)
-      return false unless Primitive.nil?(b2) || cover?(range, b2)
-
-      # here we know that other.begin is covered by range and if other is endless
-      # then range is endless too
-      return true if Primitive.nil?(e2) && !range.exclude_end?
-
-      if (e1 <=> e2) == 0
-        !(range.exclude_end? && !other.exclude_end?)
-      else
-        if Primitive.is_a?(e2, Integer) && other.exclude_end?
-          cover?(range, e2 - 1)
-        else
-          cover?(range, e2)
-        end
-      end
+    # MRI: r_less
+    def self.r_less(a, b)
+      cmp = (a <=> b)
+      return 1 if Primitive.nil?(cmp)
+      Comparable.compare_int(cmp)
     end
 
-    # # MRI: r_cover_p
+    # MRI: r_cover_range_p
+    def self.range_cover?(range, other)
+      range_begin = range.begin
+      range_end = range.end
+      other_begin = other.begin
+      other_end = other.end
+
+      return false if !Primitive.nil?(range_end) && Primitive.nil?(other_end)
+      return false if !Primitive.nil?(range_begin) && Primitive.nil?(other_begin)
+
+      if !Primitive.nil?(other_begin) && !Primitive.nil?(other_end)
+        if r_less(other_begin, other_end) > (other.exclude_end? ? -1 : 0)
+          return false
+        end
+      end
+
+      if !Primitive.nil?(other_begin) && !cover?(range, other_begin)
+        return false
+      end
+
+      if !Primitive.nil?(other_end) && !Primitive.nil?(range_end)
+        r_cmp_end = (range_end <=> other_end)
+        return false if Primitive.nil?(r_cmp_end)
+        cmp_end = Comparable.compare_int(r_cmp_end)
+      else
+        cmp_end = r_less(range_end, other_end)
+      end
+
+      if range.exclude_end? == other.exclude_end?
+        return cmp_end >= 0
+      elsif range.exclude_end?
+        return cmp_end > 0
+      elsif cmp_end >= 0
+        return true
+      end
+
+      begin
+        other_max = other.max
+      rescue TypeError
+        other_max = nil
+      end
+      return false if Primitive.nil?(other_max)
+
+      r_less(range_end, other_max) >= 0
+    end
+
+    # MRI: r_cover_p
     def self.cover?(range, value)
       # Check lower bound.
       if !Primitive.nil?(range.begin)
