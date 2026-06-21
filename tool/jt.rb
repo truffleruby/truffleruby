@@ -2616,13 +2616,15 @@ module Commands
         next if File.exist?(link)
         target = File.readlink(link)
         next unless target.start_with?("#{TRUFFLERUBY_DIR}/mxbuild")
+        puts "Deleting broken link: #{link} -> #{target}"
         File.delete link
-        puts "Deleted broken link: #{link} -> #{target}"
       end
 
       link_path = "#{rubies_dir}/#{name}"
-      File.delete link_path if File.symlink? link_path or File.exist? link_path
-      File.symlink dest, link_path
+      unless File.symlink?(link_path) and File.readlink(link_path) == dest
+        File.delete(link_path) if File.symlink?(link_path) or File.exist?(link_path)
+        File.symlink(dest, link_path)
+      end
     end
   end
 
