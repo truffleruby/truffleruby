@@ -161,10 +161,6 @@ short rb_fix2short(VALUE value) {
   return rb_num2short(value);
 }
 
-long rb_fix2int(VALUE value) {
-  return polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_fix2int", value));
-}
-
 unsigned long rb_fix2uint(VALUE value) {
   return polyglot_as_i64(RUBY_CEXT_INVOKE_NO_WRAP("rb_fix2uint", value));
 }

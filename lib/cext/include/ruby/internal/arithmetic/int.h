@@ -37,6 +37,9 @@
 #define RB_INT2NUM  rb_int2num_inline  /**< @alias{rb_int2num_inline} */
 #define RB_NUM2INT  rb_num2int_inline  /**< @alias{rb_num2int_inline} */
 #define RB_UINT2NUM rb_uint2num_inline /**< @alias{rb_uint2num_inline} */
+#ifdef TRUFFLERUBY
+#define rb_fix2int  rb_fix2int_inline  /**< @alias{rb_fix2int_inline} */
+#endif
 
 #define FIX2INT    RB_FIX2INT          /**< @old{RB_FIX2INT} */
 #define FIX2UINT   RB_FIX2UINT         /**< @old{RB_FIX2UINT} */
@@ -69,6 +72,7 @@ RBIMPL_SYMBOL_EXPORT_BEGIN()
  */
 long rb_num2int(VALUE num);
 
+#ifndef TRUFFLERUBY
 /**
  * Identical to rb_num2int().
  *
@@ -83,6 +87,7 @@ long rb_num2int(VALUE num);
  * idea why this is a different thing from rb_num2short().
  */
 long rb_fix2int(VALUE num);
+#endif
 
 /**
  * Converts an instance of ::rb_cNumeric into C's `unsigned long`.
@@ -116,6 +121,19 @@ unsigned long rb_num2uint(VALUE num);
  */
 unsigned long rb_fix2uint(VALUE num);
 RBIMPL_SYMBOL_EXPORT_END()
+
+#ifdef TRUFFLERUBY
+// A fast-path for FIX2INT and NUM2INT
+static inline long
+rb_fix2int_inline(VALUE x)
+{
+    if (RB_FIXNUM_P(x)) {
+        return rb_long2int(RB_FIX2LONG(x));
+    } else {
+        return rb_num2int(x);
+    }
+}
+#endif
 
 RBIMPL_ATTR_ARTIFICIAL()
 /**

@@ -431,10 +431,6 @@ module Truffle::CExt
     Primitive.convert_with_to_int(val)
   end
 
-  def rb_fix2int(value)
-    Primitive.rb_num2int(value)
-  end
-
   def rb_fix2uint(value)
     Truffle::Type.rb_num2uint(value)
   end
