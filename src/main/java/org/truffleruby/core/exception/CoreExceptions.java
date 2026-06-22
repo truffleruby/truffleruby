@@ -15,7 +15,6 @@ import static org.truffleruby.core.array.ArrayHelpers.createArray;
 import java.io.IOException;
 import java.util.EnumSet;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.interop.InvalidBufferOffsetException;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -1068,21 +1067,6 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyException charRangeError(int codepoint, Node currentNode) {
         return rangeError(StringUtils.format("%d out of char range", codepoint), currentNode);
-    }
-
-    @TruffleBoundary
-    public RubyException rangeErrorConvertToInt(long value, Node currentNode) {
-        final String direction;
-
-        if (value < Integer.MIN_VALUE) {
-            direction = "small";
-        } else if (value > Integer.MAX_VALUE) {
-            direction = "big";
-        } else {
-            throw CompilerDirectives.shouldNotReachHere("long fitting in int");
-        }
-
-        return rangeError(StringUtils.format("integer %d too %s to convert to 'int'", value, direction), currentNode);
     }
 
     @TruffleBoundary

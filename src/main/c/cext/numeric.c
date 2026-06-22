@@ -10,6 +10,7 @@
  */
 #include <truffleruby-impl.h>
 #include <ruby/util.h>
+#include <limits.h>
 
 // Numeric conversions, rb_*num*, rb_fix2*
 
@@ -33,6 +34,10 @@ VALUE rb_check_to_integer(VALUE object, const char *method) {
 
 void rb_num_zerodiv(void) {
   rb_raise(rb_eZeroDivError, "divided by 0");
+}
+
+void rb_out_of_int(SIGNED_VALUE num) {
+  rb_raise(rb_eRangeError, "integer %ld too %s to convert to 'int'", (long)num, num < INT_MIN ? "small" : "big");
 }
 
 // Conversions between numeric types and from/to String
@@ -156,16 +161,8 @@ short rb_fix2short(VALUE value) {
   return rb_num2short(value);
 }
 
-long rb_fix2int(VALUE value) {
-  return polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_fix2int", value));
-}
-
 unsigned long rb_fix2uint(VALUE value) {
   return polyglot_as_i64(RUBY_CEXT_INVOKE_NO_WRAP("rb_fix2uint", value));
-}
-
-int rb_long2int(long value) {
-  return polyglot_as_i64(polyglot_invoke(RUBY_CEXT, "rb_long2int", value));
 }
 
 VALUE rb_int2inum(intptr_t n) {

@@ -32,6 +32,7 @@ NO_RETURN_FUNCTIONS = %w[
   rb_tr_bug_va_list
   rb_gvar_readonly_setter
   rb_num_zerodiv
+  rb_out_of_int
   rb_tr_not_implemented
 ]
 
