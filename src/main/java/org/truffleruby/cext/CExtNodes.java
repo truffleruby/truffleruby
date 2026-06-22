@@ -696,25 +696,6 @@ public abstract class CExtNodes {
 
     }
 
-    @CoreMethod(names = "rb_long2int", onSingleton = true, required = 1)
-    public abstract static class Long2Int extends CoreMethodArrayArgumentsNode {
-
-        @Specialization
-        int long2fix(int num) {
-            return num;
-        }
-
-        @Specialization(guards = "fitsInInteger(num)")
-        int long2fixInRange(long num) {
-            return (int) num;
-        }
-
-        @Specialization(guards = "!fitsInInteger(num)")
-        int long2fixOutOfRange(long num) {
-            throw new RaiseException(getContext(), coreExceptions().rangeErrorConvertToInt(num, this));
-        }
-    }
-
     @CoreMethod(names = "rb_enc_coderange_clear", onSingleton = true, required = 1)
     public abstract static class RbEncCodeRangeClear extends CoreMethodArrayArgumentsNode {
 
