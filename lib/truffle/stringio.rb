@@ -29,9 +29,6 @@
 require 'truffle/cext'
 
 Truffle::CExt.rb_define_module_under(IO, 'generic_readable').module_eval do
-  # This is why we need undefined in Ruby
-  Undefined = Object.new
-
   def readchar
     raise EOFError, 'end of file reached' if eof?
     getc
@@ -41,7 +38,7 @@ Truffle::CExt.rb_define_module_under(IO, 'generic_readable').module_eval do
     readchar.getbyte(0)
   end
 
-  def readline(sep = $/, limit = ::Undefined, chomp: false)
+  def readline(sep = $/, limit = undefined, chomp: false)
     check_readable
     raise EOFError, 'end of file reached' if eof?
 
@@ -283,7 +280,7 @@ class StringIO
     self
   end
 
-  def each(sep = $/, limit = Undefined, chomp: false)
+  def each(sep = $/, limit = undefined, chomp: false)
     return to_enum :each, sep, limit, chomp: chomp unless block_given?
     check_readable
 
@@ -420,7 +417,7 @@ class StringIO
     end
   end
 
-  def gets(sep = $/, limit = Undefined, chomp: false)
+  def gets(sep = $/, limit = undefined, chomp: false)
     check_readable
 
     sep, limit = coerce_sep_and_limit(sep, limit, arg_error: false)
@@ -513,7 +510,7 @@ class StringIO
     end
   end
 
-  def readlines(sep = $/, limit = Undefined, chomp: false)
+  def readlines(sep = $/, limit = undefined, chomp: false)
     check_readable
     sep, limit = coerce_sep_and_limit(sep, limit, arg_error: true)
 
@@ -525,13 +522,13 @@ class StringIO
     ary
   end
 
-  def reopen(string = nil, mode = Undefined)
-    if string and not Primitive.is_a?(string, String) and Primitive.equal?(mode, Undefined)
+  def reopen(string = nil, mode = undefined)
+    if string and not Primitive.is_a?(string, String) and Primitive.undefined?(mode)
       stringio = Primitive.convert_type(string, StringIO, :to_strio)
 
       initialize_copy stringio
     else
-      mode = nil if Primitive.equal?(mode, Undefined)
+      mode = nil if Primitive.undefined?(mode)
       string = '' unless string
 
       initialize string, mode
@@ -730,10 +727,7 @@ class StringIO
   end
 
   private def coerce_sep_and_limit(sep, limit, arg_error:)
-    if limit != Undefined
-      limit = Primitive.convert_with_to_int limit if limit
-      sep = Primitive.convert_with_to_str sep if sep
-    else
+    if Primitive.undefined?(limit)
       limit = nil
 
       unless sep == $/ or Primitive.nil?(sep)
@@ -744,6 +738,9 @@ class StringIO
           sep = $/
         end
       end
+    else
+      limit = Primitive.convert_with_to_int limit if limit
+      sep = Primitive.convert_with_to_str sep if sep
     end
 
     raise ArgumentError if arg_error and limit == 0

@@ -650,7 +650,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         var argumentsAndBlock = translateArgumentsAndBlock(node.arguments, node.block, methodName, false);
         var translatedArguments = argumentsAndBlock.arguments;
 
-        if (parseEnvironment.inCore() && node.isVariableCall() && methodName.equals("undefined")) {
+        if (parseEnvironment.canUsePrivatePrimitives() && node.isVariableCall() && methodName.equals("undefined")) {
             // translate undefined
             final RubyNode rubyNode = new ObjectLiteralNode(NotProvided.INSTANCE);
             return assignPositionAndFlags(node, rubyNode);
