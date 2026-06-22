@@ -45,7 +45,8 @@ Truffle::CExt.rb_define_module_under(IO, 'generic_readable').module_eval do
     check_readable
     raise EOFError, 'end of file reached' if eof?
 
-    Primitive.io_last_line_set(Primitive.caller_special_variables, getline(false, sep, limit, chomp))
+    sep, limit = coerce_sep_and_limit(sep, limit, arg_error: false)
+    Primitive.io_last_line_set(Primitive.caller_special_variables, getline(sep, limit, chomp:))
   end
 
   def sysread(length = nil, buffer = nil)
@@ -141,7 +142,7 @@ class StringIO
 
   def initialize(string = nil, mode = nil, **options)
     if block_given?
-      warn 'StringIO::new() does not take block; use StringIO::open() instead'
+      warn 'StringIO::new() does not take block; use StringIO::open() instead', uplevel: 1
     end
 
     mode, _binary, _external, _internal, _autoclose, _perm = Truffle::IOOperations.normalize_options(mode, nil, options)
@@ -286,7 +287,8 @@ class StringIO
     return to_enum :each, sep, limit, chomp: chomp unless block_given?
     check_readable
 
-    while line = getline(true, sep, limit, chomp)
+    sep, limit = coerce_sep_and_limit(sep, limit, arg_error: true)
+    while line = getline(sep, limit, chomp:)
       yield line
     end
 
@@ -421,9 +423,10 @@ class StringIO
   def gets(sep = $/, limit = Undefined, chomp: false)
     check_readable
 
+    sep, limit = coerce_sep_and_limit(sep, limit, arg_error: false)
     # Truffle: $_ is thread and frame local, so we use a primitive to
     # set it in the caller's frame.
-    Primitive.io_last_line_set(Primitive.caller_special_variables, getline(false, sep, limit, chomp))
+    Primitive.io_last_line_set(Primitive.caller_special_variables, getline(sep, limit, chomp:))
   end
 
   def isatty
@@ -478,7 +481,7 @@ class StringIO
       # see https://bugs.ruby-lang.org/issues/20418
       if length
         length = Primitive.convert_with_to_int length
-        raise ArgumentError if length < 0
+        raise ArgumentError, "negative length #{length} given" if length < 0
 
         buffer = Primitive.convert_with_to_str(buffer) if buffer
 
@@ -512,9 +515,10 @@ class StringIO
 
   def readlines(sep = $/, limit = Undefined, chomp: false)
     check_readable
+    sep, limit = coerce_sep_and_limit(sep, limit, arg_error: true)
 
     ary = []
-    while line = getline(true, sep, limit, chomp)
+    while line = getline(sep, limit, chomp:)
       ary << line
     end
 
@@ -725,7 +729,7 @@ class StringIO
     @truncate = true if (mode & IO::TRUNC) != 0
   end
 
-  private def getline(arg_error, sep, limit, chomp = false)
+  private def coerce_sep_and_limit(sep, limit, arg_error:)
     if limit != Undefined
       limit = Primitive.convert_with_to_int limit if limit
       sep = Primitive.convert_with_to_str sep if sep
@@ -746,6 +750,10 @@ class StringIO
 
     limit = nil if limit && limit < 0
 
+    [sep, limit]
+  end
+
+  private def getline(sep, limit, chomp:)
     return nil if eof?
 
     line = nil

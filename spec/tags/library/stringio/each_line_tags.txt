@@ -1,3 +1,1 @@
 fails:StringIO#each_line when passed a separator yields each paragraph with all separation characters when passed an empty String as separator
-fails:StringIO#each when passed separator and limit tries to convert the passed separator to a String using #to_str
-fails:StringIO#each when passed separator and limit tries to convert the passed limit to an Integer using #to_int
