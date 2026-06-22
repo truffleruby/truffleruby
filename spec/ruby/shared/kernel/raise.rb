@@ -139,6 +139,28 @@ describe :kernel_raise, shared: true do
     raised_exception.should == exception
   end
 
+  it "re-raises a previously rescued exception with cleaned backtrace and sets a new backtrace" do
+    begin
+      raise "raised"
+    rescue => exception
+      # ignore
+    end
+
+    exception.set_backtrace(nil)
+
+    begin
+      @object.raise(exception)
+    rescue => reraised_exception
+      # ignore
+    end
+
+    # check only backtrace type (Array) because haven't figured out
+    # how to check exact value in a uniform way for Kernel#raise, Thread#raise
+    # and Fiber#raise at the same time
+    reraised_exception.should == exception
+    reraised_exception.backtrace.should.is_a?(Array)
+  end
+
   it "allows Exception, message, and backtrace parameters" do
     -> do
       @object.raise(ArgumentError, "message", caller)
