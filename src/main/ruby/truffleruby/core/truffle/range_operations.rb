@@ -210,9 +210,9 @@ module Truffle
 
       # compare end values
       if !Primitive.nil?(other_end) && !Primitive.nil?(range_end)
-        r_cmp_end = (range_end <=> other_end)
-        return false if Primitive.nil?(r_cmp_end)
-        cmp_end = Comparable.compare_int(r_cmp_end)
+        cmp_end = (range_end <=> other_end)
+        return false if Primitive.nil?(cmp_end)
+        cmp_end = Comparable.compare_int(cmp_end)
       else
         # end is nil, other.end is either nil or finite so could return immediately `true`,
         # but there is an edge cases with exclusive range and inclusive other,
