@@ -463,5 +463,17 @@ describe :range_cover_subrange, shared: true do
         end
       end
     end
+
+    context "when other range is partially interleaved" do
+      context "when a range cannot be iterated (that's it does not responds to #succ)" do
+        it "returns false if self.begin < other.begin, self.end < other.end but other.exclude_end? is true and the rightmost other value < self.end" do
+          (0..10.0).send(@method, 5...11.0).should == false
+        end
+
+        it "returns false if self is beginless and self.end < other.end but other.exclude_end? is true and the rightmost other value < self.end" do
+          (..10.0).send(@method, ...11.0).should == false
+        end
+      end
+    end
   end
 end
