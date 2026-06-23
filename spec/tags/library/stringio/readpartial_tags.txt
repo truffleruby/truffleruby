@@ -1,1 +1,0 @@
-fails:StringIO#readpartial reads after ungetc with multibyte characters in the buffer

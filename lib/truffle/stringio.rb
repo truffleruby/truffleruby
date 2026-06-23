@@ -630,13 +630,11 @@ class StringIO
       bytesize = string.bytesize
 
       if pos > bytesize
-        string[bytesize..pos] = "\000" * (pos - bytesize)
-        d.pos -= 1
-        string[d.pos] = char
-      elsif pos > 0
-        d.pos -= 1
-        string[d.pos] = char
+        string << "\000" * (pos - bytesize)
       end
+
+      d.pos = (d.pos - char.bytesize).clamp(0..)
+      string.bytesplice((d.pos...pos), char)
     end
 
     nil
