@@ -191,35 +191,47 @@ module Truffle
       other_begin = other.begin
       other_end = other.end
 
+      # finite end cannot cover endless end: (a..b).cover?(c..) is false
+      # finite begin cannot cover beginless begin: (a..b).cover?(..c) is false
       return false if !Primitive.nil?(range_end) && Primitive.nil?(other_end)
       return false if !Primitive.nil?(range_begin) && Primitive.nil?(other_begin)
 
+      # cannot cover an empty or backward range (e.g., 5...5 or 5..0)
       if !Primitive.nil?(other_begin) && !Primitive.nil?(other_end)
         if r_less(other_begin, other_end) > (other.exclude_end? ? -1 : 0)
           return false
         end
       end
 
+      # must cover other's begin value
       if !Primitive.nil?(other_begin) && !cover?(range, other_begin)
         return false
       end
 
+      # compare end values
       if !Primitive.nil?(other_end) && !Primitive.nil?(range_end)
         r_cmp_end = (range_end <=> other_end)
         return false if Primitive.nil?(r_cmp_end)
         cmp_end = Comparable.compare_int(r_cmp_end)
       else
+        # end is nil, other.end is either nil or finite so could return immediately `true`,
+        # but there is an edge cases with exclusive range and inclusive other,
+        # e.g. (a...).cover?(a..) => false
         cmp_end = r_less(range_end, other_end)
       end
 
       if range.exclude_end? == other.exclude_end?
         return cmp_end >= 0
       elsif range.exclude_end?
+        # exclusive range (a...b) covers inclusive (c..d) if end > other.end
         return cmp_end > 0
       elsif cmp_end >= 0
+        # inclusive range (a..b) covers exclusive (c...d) if end >= other.end
         return true
       end
 
+      # edge case: (a..b).cover?(c...d) where b < d;
+      # compare range.end with other.max to handle non-numeric types.
       begin
         other_max = other.max
       rescue TypeError
@@ -232,15 +244,14 @@ module Truffle
 
     # MRI: r_cover_p
     def self.cover?(range, value)
-      # Check lower bound.
+      # Check lower bound
       if !Primitive.nil?(range.begin)
-        # MRI uses <=> to compare, so must we.
         cmp = (range.begin <=> value)
         return false if Primitive.nil?(cmp)
         return false if Comparable.compare_int(cmp) > 0
       end
 
-      # Check upper bound.
+      # Check upper bound
       if !Primitive.nil?(range.end)
         cmp = (value <=> range.end)
         return false if Primitive.nil?(cmp)
