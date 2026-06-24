@@ -270,9 +270,6 @@ public class RubyLauncher extends AbstractLanguageLauncher {
             switch (config.defaultExecutionAction) {
                 case NONE:
                     return 0;
-                case STDIN:
-                    config.executionAction = ExecutionAction.STDIN;
-                    break;
                 case IRB:
                     config.executionAction = ExecutionAction.PATH;
                     if (isTTY()) {

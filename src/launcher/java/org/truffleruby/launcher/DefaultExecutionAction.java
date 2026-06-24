@@ -12,6 +12,5 @@ package org.truffleruby.launcher;
 
 public enum DefaultExecutionAction {
     NONE,
-    STDIN,
     IRB
 }
