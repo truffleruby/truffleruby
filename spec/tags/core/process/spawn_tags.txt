@@ -81,3 +81,4 @@ slow:Process.spawn closes STDERR in the child if :err => :close
 slow:Process.spawn returns the process ID of the new process as an Integer
 slow:Process.spawn redirects non-default file descriptor to itself
 slow:Process.spawn redirects default file descriptor to itself
+slow:Process.spawn when passed :chdir raises an Errno::ENOENT when a given path doesn't exist
