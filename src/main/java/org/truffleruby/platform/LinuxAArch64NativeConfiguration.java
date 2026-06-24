@@ -396,6 +396,12 @@ public final class LinuxAArch64NativeConfiguration extends DefaultNativeConfigur
         configuration.config("platform.file.DT_SOCK", 12);
         configuration.config("platform.file.DT_UNKNOWN", 0);
         configuration.config("platform.file.AT_SYMLINK_NOFOLLOW", 256);
+        configuration.config("platform.file.POSIX_FADV_NORMAL", 0);
+        configuration.config("platform.file.POSIX_FADV_SEQUENTIAL", 2);
+        configuration.config("platform.file.POSIX_FADV_RANDOM", 1);
+        configuration.config("platform.file.POSIX_FADV_NOREUSE", 5);
+        configuration.config("platform.file.POSIX_FADV_WILLNEED", 3);
+        configuration.config("platform.file.POSIX_FADV_DONTNEED", 4);
         configuration.config("platform.io.SEEK_SET", 0);
         configuration.config("platform.io.SEEK_CUR", 1);
         configuration.config("platform.io.SEEK_END", 2);

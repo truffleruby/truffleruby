@@ -192,6 +192,7 @@ module Truffle::POSIX
   attach_function :truffleposix_fstatat, [:int, :string, :pointer, :int], :int, LIBTRUFFLEPOSIX
   attach_function :truffleposix_fstatat_mode, [:int, :string, :int], :mode_t, LIBTRUFFLEPOSIX
   attach_function :truffleposix_fstatat_size, [:int, :string, :int], :long, LIBTRUFFLEPOSIX
+  attach_function :posix_fadvise, [:int, :off_t, :off_t, :int], :int
   attach_function :fsync, [:int], :int
   attach_function :ftruncate, [:int, :off_t], :int
   attach_function :getcwd, [:pointer, :size_t], :string
