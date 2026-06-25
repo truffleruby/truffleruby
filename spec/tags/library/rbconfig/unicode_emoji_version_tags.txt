@@ -1,2 +1,0 @@
-fails:RbConfig::CONFIG['UNICODE_EMOJI_VERSION'] is 15.0
-fails:RbConfig::CONFIG['UNICODE_EMOJI_VERSION'] is 17.0
