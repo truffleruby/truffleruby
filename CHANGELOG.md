@@ -44,6 +44,7 @@ Compatibility:
 * Fix `Range#max` for Integer beginless ranges with excluded end and return a proper maximum value instead of raising `TypeError` (#4231, @andrykonchin).
 * Adjust `Range#{max,min}` and support Integer argument (#4231, @andrykonchin).
 * Fix `StringIO#ungetc` for multibyte strings (#4340, @earlopain).
+* Fix precedence between `RUBYOPT` and CLI switches (#4342, @earlopain).
 
 Performance:
 

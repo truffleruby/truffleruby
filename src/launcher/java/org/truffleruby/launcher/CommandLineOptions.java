@@ -107,6 +107,10 @@ public class CommandLineOptions {
                 RubyOptionTypes.valueToString(descriptor.getKey().getDefaultValue()));
     }
 
+    public boolean containsOption(OptionDescriptor descriptor) {
+        return options.containsKey(descriptor.getName());
+    }
+
     public String[] getArguments() {
         return arguments;
     }

@@ -44,13 +44,10 @@ guard -> { TruffleRuby.native? } do
 
     it "is used when $VERBOSE changes" do
       code = "p [$VERBOSE, Truffle::Boot.was_preinitialized?]"
-      # -w/-W in RUBYOPT overrides -w on the command-line, like in MRI,
-      # so unset the RUBYOPT and TRUFFLERUBYOPT env vars
-      env = { "RUBYOPT" => nil, "TRUFFLERUBYOPT" => nil }
-      ruby_exe(code, env: env).should == "[false, true]\n"
-      ruby_exe(code, options: "-w", env: env).should == "[true, true]\n"
-      ruby_exe(code, options: "-W0", env: env).should == "[nil, true]\n"
-      ruby_exe(code, options: "-v", env: env).should.include? "[true, true]\n"
+      ruby_exe(code).should == "[false, true]\n"
+      ruby_exe(code, options: "-w").should == "[true, true]\n"
+      ruby_exe(code, options: "-W0").should == "[nil, true]\n"
+      ruby_exe(code, options: "-v").should.include? "[true, true]\n"
     end
 
     it "is used with --disable-gems so startup with --disable-gems is not slower" do

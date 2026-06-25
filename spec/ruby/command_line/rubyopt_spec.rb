@@ -59,6 +59,11 @@ describe "Processing RUBYOPT" do
     ruby_exe("p $VERBOSE").chomp.should == "true"
   end
 
+  it "is overwritten by a cli switch" do
+    ENV["RUBYOPT"] = "-W2"
+    ruby_exe("p $VERBOSE", options: "-W0").chomp.should == "nil"
+  end
+
   it "suppresses deprecation warnings for '-W:no-deprecated'" do
     ENV["RUBYOPT"] = '-W:no-deprecated'
     result = ruby_exe('$; = ""', args: '2>&1')
