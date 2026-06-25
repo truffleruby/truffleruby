@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 
 import org.graalvm.options.OptionDescriptor;
 import org.truffleruby.shared.options.OptionsCatalog;
+import org.truffleruby.shared.options.RubyOptionTypes;
 import org.truffleruby.shared.options.Verbosity;
 
 public class CommandLineParser {
@@ -97,13 +98,32 @@ public class CommandLineParser {
         }
     }
 
+    // RUBYOPT can be disabled through CLI with --disable=rubyopt. To accommodate
+    // that, we parse CLI args first and don't overwrite them when parsing env later.
+    private boolean ignoreOption(OptionDescriptor descriptor) {
+        return !processArgv && config.containsOption(descriptor);
+    }
+
     private <T> void setOption(OptionDescriptor descriptor, T value) {
-        // RUBYOPT can be disabled through CLI with --disable=rubyopt. To accommodate
-        // that, we parse CLI args first and don't overwrite them when parsing env later.
-        if (!processArgv && config.containsOption(descriptor)) {
+        if (ignoreOption(descriptor)) {
             return;
         }
         config.setOption(descriptor, value);
+    }
+
+    private <T> void setOptionOnce(OptionDescriptor descriptor, T value) throws CommandLineException {
+        if (ignoreOption(descriptor)) {
+            return;
+        }
+
+        if (config.containsOption(descriptor)) {
+            final String current = config.getOptions().get(descriptor.getName());
+            final String overwrite = RubyOptionTypes.valueToString(value);
+            if (!current.equalsIgnoreCase(overwrite)) {
+                throw new CommandLineException(descriptor.getName() + " already set to " + current + " (RuntimeError)");
+            }
+        }
+        setOption(descriptor, value);
     }
 
     private boolean endOfInterpreterArguments() {
@@ -297,8 +317,8 @@ public class CommandLineParser {
                             break;
                     }
                     if (sourceEncodingName != null) {
-                        setOption(OptionsCatalog.SOURCE_ENCODING, sourceEncodingName);
-                        setOption(OptionsCatalog.EXTERNAL_ENCODING, sourceEncodingName);
+                        setOptionOnce(OptionsCatalog.SOURCE_ENCODING, sourceEncodingName);
+                        setOptionOnce(OptionsCatalog.EXTERNAL_ENCODING, sourceEncodingName);
                     }
                     break;
                 case 'l':
@@ -341,7 +361,7 @@ public class CommandLineParser {
                 case 'T':
                     throw notImplemented("-T");
                 case 'U':
-                    setOption(OptionsCatalog.INTERNAL_ENCODING, "UTF-8");
+                    setOptionOnce(OptionsCatalog.INTERNAL_ENCODING, "UTF-8");
                     break;
                 case 'v':
                     setOption(OptionsCatalog.VERBOSITY, Verbosity.TRUE);
@@ -424,15 +444,15 @@ public class CommandLineParser {
                         final String encodingNames = argument.substring(argument.indexOf('=') + 1);
                         final int index = encodingNames.indexOf(':');
                         if (index == -1) {
-                            setOption(OptionsCatalog.EXTERNAL_ENCODING, encodingNames);
+                            setOptionOnce(OptionsCatalog.EXTERNAL_ENCODING, encodingNames);
                         } else {
                             final int secondIndex = encodingNames.indexOf(':', index + 1);
                             if (secondIndex != -1) {
                                 throw new CommandLineException(
                                         "extra argument for --encoding: " + encodingNames.substring(secondIndex + 1));
                             }
-                            setOption(OptionsCatalog.EXTERNAL_ENCODING, encodingNames.substring(0, index));
-                            setOption(OptionsCatalog.INTERNAL_ENCODING, encodingNames.substring(index + 1));
+                            setOptionOnce(OptionsCatalog.EXTERNAL_ENCODING, encodingNames.substring(0, index));
+                            setOptionOnce(OptionsCatalog.INTERNAL_ENCODING, encodingNames.substring(index + 1));
                         }
                         break FOR;
                     } else if (argument.equals("--external-encoding") || argument.equals("--internal-encoding")) {
@@ -587,11 +607,11 @@ public class CommandLineParser {
         }
 
         if (encodings.size() >= 2) {
-            setOption(OptionsCatalog.INTERNAL_ENCODING, encodings.get(1));
+            setOptionOnce(OptionsCatalog.INTERNAL_ENCODING, encodings.get(1));
         }
 
         if (encodings.size() >= 1) {
-            setOption(OptionsCatalog.EXTERNAL_ENCODING, encodings.get(0));
+            setOptionOnce(OptionsCatalog.EXTERNAL_ENCODING, encodings.get(0));
         }
     }
 
