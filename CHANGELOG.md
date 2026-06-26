@@ -46,6 +46,7 @@ Compatibility:
 * Fix `StringIO#ungetc` for multibyte strings (#4340, @earlopain).
 * Fix `Kernel#raise` and set backtrace when an exception to re-raise has backtrace explicitly set to `nil` (#4296, @andrykonchin).
 * Implement `IO#advise` (#4341, @earlopain).
+* Fix `Process.spawn` and raise `Errno::ENOENT` when called with `chdir` option and a directory doesn't exist (#3825, @andrykonchin).
 
 Performance:
 

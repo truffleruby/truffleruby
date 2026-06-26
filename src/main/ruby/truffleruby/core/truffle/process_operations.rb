@@ -297,7 +297,9 @@ module Truffle
             end
             @options[key] = value
           when :chdir
-            @options[key] = Truffle::Type.coerce_to_path(value)
+            path = Truffle::Type.coerce_to_path(value)
+            raise Errno::ENOENT, path unless Dir.exist?(path)
+            @options[key] = path
           when :umask
             @options[key] = value
           when :close_others
