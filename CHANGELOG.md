@@ -45,6 +45,7 @@ Compatibility:
 * Adjust `Range#{max,min}` and support Integer argument (#4231, @andrykonchin).
 * Fix `StringIO#ungetc` for multibyte strings (#4340, @earlopain).
 * Fix `Kernel#raise` and set backtrace when an exception to re-raise has backtrace explicitly set to `nil` (#4296, @andrykonchin).
+* Implement `IO#advise` (#4341, @earlopain).
 
 Performance:
 
