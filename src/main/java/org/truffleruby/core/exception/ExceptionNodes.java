@@ -210,6 +210,9 @@ public abstract class ExceptionNodes {
             // If exc.backtrace is the standard Exception#backtrace we can do a quick check, otherwise we must call the #backtrace method
             if (lookupNode.lookupIgnoringVisibility(frame, exception,
                     "backtrace") == getContext().getCoreMethods().EXCEPTION_BACKTRACE) {
+                if (exception.customBacktrace == nil) {
+                    return false;
+                }
                 return !(exception.customBacktrace == null && exception.backtrace == null);
             } else {
                 return booleanCastNode.execute(this, callBacktrace.call(exception, "backtrace"));
@@ -229,6 +232,7 @@ public abstract class ExceptionNodes {
         @Specialization
         Object captureBacktrace(RubyException exception, int offset) {
             exception.backtrace = getContext().getCallStack().getBacktrace(this, offset);
+            exception.customBacktrace = null;
             return nil;
         }
 
