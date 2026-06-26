@@ -1,5 +1,5 @@
-fails:ruby -U raises a RuntimeError if used with -Eext:int
-fails:ruby -U raises a RuntimeError if used with -E:int
+slow:ruby -U raises a RuntimeError if used with -Eext:int
+slow:ruby -U raises a RuntimeError if used with -E:int
 slow:ruby -U sets Encoding.default_internal to UTF-8
 slow:ruby -U does nothing different if specified multiple times
 slow:ruby -U is overruled by Encoding.default_internal=

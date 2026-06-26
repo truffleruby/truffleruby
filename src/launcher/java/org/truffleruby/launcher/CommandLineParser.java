@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 
 import org.graalvm.options.OptionDescriptor;
 import org.truffleruby.shared.options.OptionsCatalog;
+import org.truffleruby.shared.options.RubyOptionTypes;
 import org.truffleruby.shared.options.Verbosity;
 
 public class CommandLineParser {
@@ -95,6 +96,34 @@ public class CommandLineParser {
         if (processArgv) {
             processArgv();
         }
+    }
+
+    // RUBYOPT can be disabled through CLI with --disable=rubyopt. To accommodate
+    // that, we parse CLI args first and don't overwrite them when parsing env later.
+    private boolean ignoreOption(OptionDescriptor descriptor) {
+        return !processArgv && config.containsOption(descriptor);
+    }
+
+    private <T> void setOption(OptionDescriptor descriptor, T value) {
+        if (ignoreOption(descriptor)) {
+            return;
+        }
+        config.setOption(descriptor, value);
+    }
+
+    private <T> void setOptionOnce(OptionDescriptor descriptor, T value) throws CommandLineException {
+        if (ignoreOption(descriptor)) {
+            return;
+        }
+
+        if (config.containsOption(descriptor)) {
+            final String current = config.getOptions().get(descriptor.getName());
+            final String overwrite = RubyOptionTypes.valueToString(value);
+            if (!current.equalsIgnoreCase(overwrite)) {
+                throw new CommandLineException(descriptor.getName() + " already set to " + current + " (RuntimeError)");
+            }
+        }
+        setOption(descriptor, value);
     }
 
     private boolean endOfInterpreterArguments() {
@@ -190,11 +219,11 @@ public class CommandLineParser {
                 }
                 case 'a':
                     disallowedInRubyOpts(argument);
-                    config.setOption(OptionsCatalog.SPLIT_LOOP, true);
+                    setOption(OptionsCatalog.SPLIT_LOOP, true);
                     break;
                 case 'c':
                     disallowedInRubyOpts(argument);
-                    config.setOption(OptionsCatalog.SYNTAX_CHECK, true);
+                    setOption(OptionsCatalog.SYNTAX_CHECK, true);
                     break;
                 case 'C':
                 case 'X':
@@ -203,11 +232,11 @@ public class CommandLineParser {
                             getArgumentError(
                                     " -" + argument.charAt(characterIndex) +
                                             " must be followed by a directory expression"));
-                    config.setOption(OptionsCatalog.WORKING_DIRECTORY, dir);
+                    setOption(OptionsCatalog.WORKING_DIRECTORY, dir);
                     break FOR;
                 case 'd':
-                    config.setOption(OptionsCatalog.DEBUG, true);
-                    config.setOption(OptionsCatalog.VERBOSITY, Verbosity.TRUE);
+                    setOption(OptionsCatalog.DEBUG, true);
+                    setOption(OptionsCatalog.VERBOSITY, Verbosity.TRUE);
                     break;
                 case 'e':
                     disallowedInRubyOpts(argument);
@@ -288,22 +317,22 @@ public class CommandLineParser {
                             break;
                     }
                     if (sourceEncodingName != null) {
-                        config.setOption(OptionsCatalog.SOURCE_ENCODING, sourceEncodingName);
-                        config.setOption(OptionsCatalog.EXTERNAL_ENCODING, sourceEncodingName);
+                        setOptionOnce(OptionsCatalog.SOURCE_ENCODING, sourceEncodingName);
+                        setOptionOnce(OptionsCatalog.EXTERNAL_ENCODING, sourceEncodingName);
                     }
                     break;
                 case 'l':
                     disallowedInRubyOpts(argument);
-                    config.setOption(OptionsCatalog.CHOMP_LOOP, true);
+                    setOption(OptionsCatalog.CHOMP_LOOP, true);
                     break;
                 case 'n':
                     disallowedInRubyOpts(argument);
-                    config.setOption(OptionsCatalog.GETS_LOOP, true);
+                    setOption(OptionsCatalog.GETS_LOOP, true);
                     break;
                 case 'p':
                     disallowedInRubyOpts(argument);
-                    config.setOption(OptionsCatalog.PRINT_LOOP, true);
-                    config.setOption(OptionsCatalog.GETS_LOOP, true);
+                    setOption(OptionsCatalog.PRINT_LOOP, true);
+                    setOption(OptionsCatalog.GETS_LOOP, true);
                     break;
                 case 'r':
                     final String library = grabValue(getArgumentError("-r must be followed by a package to require"));
@@ -311,7 +340,7 @@ public class CommandLineParser {
                     break FOR;
                 case 's':
                     disallowedInRubyOpts(argument);
-                    config.setOption(OptionsCatalog.ARGV_GLOBALS, true);
+                    setOption(OptionsCatalog.ARGV_GLOBALS, true);
                     break;
                 case 'G':
                     throw notImplemented("-G");
@@ -332,15 +361,15 @@ public class CommandLineParser {
                 case 'T':
                     throw notImplemented("-T");
                 case 'U':
-                    config.setOption(OptionsCatalog.INTERNAL_ENCODING, "UTF-8");
+                    setOptionOnce(OptionsCatalog.INTERNAL_ENCODING, "UTF-8");
                     break;
                 case 'v':
-                    config.setOption(OptionsCatalog.VERBOSITY, Verbosity.TRUE);
+                    setOption(OptionsCatalog.VERBOSITY, Verbosity.TRUE);
                     config.showVersion = true;
                     config.defaultExecutionAction = DefaultExecutionAction.NONE;
                     break;
                 case 'w':
-                    config.setOption(OptionsCatalog.VERBOSITY, Verbosity.TRUE);
+                    setOption(OptionsCatalog.VERBOSITY, Verbosity.TRUE);
                     setAllWarningCategories(true);
                     break;
                 case 'W': {
@@ -351,22 +380,22 @@ public class CommandLineParser {
                     if (temp.startsWith(":")) {
                         switch (temp) {
                             case ":deprecated":
-                                config.setOption(OptionsCatalog.WARN_DEPRECATED, true);
+                                setOption(OptionsCatalog.WARN_DEPRECATED, true);
                                 break;
                             case ":no-deprecated":
-                                config.setOption(OptionsCatalog.WARN_DEPRECATED, false);
+                                setOption(OptionsCatalog.WARN_DEPRECATED, false);
                                 break;
                             case ":experimental":
-                                config.setOption(OptionsCatalog.WARN_EXPERIMENTAL, true);
+                                setOption(OptionsCatalog.WARN_EXPERIMENTAL, true);
                                 break;
                             case ":no-experimental":
-                                config.setOption(OptionsCatalog.WARN_EXPERIMENTAL, false);
+                                setOption(OptionsCatalog.WARN_EXPERIMENTAL, false);
                                 break;
                             case ":performance":
-                                config.setOption(OptionsCatalog.WARN_PERFORMANCE, true);
+                                setOption(OptionsCatalog.WARN_PERFORMANCE, true);
                                 break;
                             case ":no-performance":
-                                config.setOption(OptionsCatalog.WARN_PERFORMANCE, false);
+                                setOption(OptionsCatalog.WARN_PERFORMANCE, false);
                                 break;
                             default:
                                 LOGGER.warning("unknown warning category: `" + temp.substring(1) + "'");
@@ -375,17 +404,17 @@ public class CommandLineParser {
                     } else {
                         switch (temp) {
                             case "0":
-                                config.setOption(OptionsCatalog.VERBOSITY, Verbosity.NIL);
+                                setOption(OptionsCatalog.VERBOSITY, Verbosity.NIL);
                                 setAllWarningCategories(false);
                                 break;
                             case "2":
-                                config.setOption(OptionsCatalog.VERBOSITY, Verbosity.TRUE);
+                                setOption(OptionsCatalog.VERBOSITY, Verbosity.TRUE);
                                 setAllWarningCategories(true);
                                 break;
                             case "1":
                             default:
-                                config.setOption(OptionsCatalog.VERBOSITY, Verbosity.FALSE);
-                                config.setOption(OptionsCatalog.WARN_DEPRECATED, false);
+                                setOption(OptionsCatalog.VERBOSITY, Verbosity.FALSE);
+                                setOption(OptionsCatalog.WARN_DEPRECATED, false);
                                 break;
                         }
                     }
@@ -393,7 +422,7 @@ public class CommandLineParser {
                 }
                 case 'x':
                     disallowedInRubyOpts(argument);
-                    config.setOption(OptionsCatalog.IGNORE_LINES_BEFORE_RUBY_SHEBANG, true);
+                    setOption(OptionsCatalog.IGNORE_LINES_BEFORE_RUBY_SHEBANG, true);
                     String directory = grabOptionalValue();
                     if (directory != null) {
                         throw notImplemented("-x with directory");
@@ -415,15 +444,15 @@ public class CommandLineParser {
                         final String encodingNames = argument.substring(argument.indexOf('=') + 1);
                         final int index = encodingNames.indexOf(':');
                         if (index == -1) {
-                            config.setOption(OptionsCatalog.EXTERNAL_ENCODING, encodingNames);
+                            setOptionOnce(OptionsCatalog.EXTERNAL_ENCODING, encodingNames);
                         } else {
                             final int secondIndex = encodingNames.indexOf(':', index + 1);
                             if (secondIndex != -1) {
                                 throw new CommandLineException(
                                         "extra argument for --encoding: " + encodingNames.substring(secondIndex + 1));
                             }
-                            config.setOption(OptionsCatalog.EXTERNAL_ENCODING, encodingNames.substring(0, index));
-                            config.setOption(OptionsCatalog.INTERNAL_ENCODING, encodingNames.substring(index + 1));
+                            setOptionOnce(OptionsCatalog.EXTERNAL_ENCODING, encodingNames.substring(0, index));
+                            setOptionOnce(OptionsCatalog.INTERNAL_ENCODING, encodingNames.substring(index + 1));
                         }
                         break FOR;
                     } else if (argument.equals("--external-encoding") || argument.equals("--internal-encoding")) {
@@ -499,8 +528,8 @@ public class CommandLineParser {
     }
 
     private void setAllWarningCategories(boolean value) {
-        config.setOption(OptionsCatalog.WARN_DEPRECATED, value);
-        config.setOption(OptionsCatalog.WARN_EXPERIMENTAL, value);
+        setOption(OptionsCatalog.WARN_DEPRECATED, value);
+        setOption(OptionsCatalog.WARN_EXPERIMENTAL, value);
         // WARN_PERFORMANCE is excluded here, it is not set by -w/-W2 on CRuby
     }
 
@@ -578,11 +607,11 @@ public class CommandLineParser {
         }
 
         if (encodings.size() >= 2) {
-            config.setOption(OptionsCatalog.INTERNAL_ENCODING, encodings.get(1));
+            setOptionOnce(OptionsCatalog.INTERNAL_ENCODING, encodings.get(1));
         }
 
         if (encodings.size() >= 1) {
-            config.setOption(OptionsCatalog.EXTERNAL_ENCODING, encodings.get(0));
+            setOptionOnce(OptionsCatalog.EXTERNAL_ENCODING, encodings.get(0));
         }
     }
 
@@ -632,7 +661,7 @@ public class CommandLineParser {
 
         FEATURES.put(
                 "did_you_mean",
-                (processor, enable) -> processor.config.setOption(OptionsCatalog.DID_YOU_MEAN, enable));
+                (processor, enable) -> processor.setOption(OptionsCatalog.DID_YOU_MEAN, enable));
 
         FEATURES.put(
                 "did-you-mean",
@@ -640,7 +669,7 @@ public class CommandLineParser {
 
         FEATURES.put(
                 "gem",
-                (processor, enable) -> processor.config.setOption(OptionsCatalog.RUBYGEMS, enable));
+                (processor, enable) -> processor.setOption(OptionsCatalog.RUBYGEMS, enable));
 
         FEATURES.put(
                 "gems",
@@ -648,7 +677,7 @@ public class CommandLineParser {
 
         FEATURES.put(
                 "frozen-string-literal",
-                (processor, enable) -> processor.config.setOption(OptionsCatalog.FROZEN_STRING_LITERALS, enable));
+                (processor, enable) -> processor.setOption(OptionsCatalog.FROZEN_STRING_LITERALS, enable));
 
         FEATURES.put(
                 "frozen_string_literal",
