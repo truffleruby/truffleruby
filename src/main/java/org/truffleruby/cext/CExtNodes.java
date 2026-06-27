@@ -1250,13 +1250,14 @@ public abstract class CExtNodes {
             final Frame callingMethodFrame = findCallingMethodFrame();
             final InternalMethod callingMethod = RubyArguments.getMethod(callingMethodFrame);
             final Object callingSelf = RubyArguments.getSelf(callingMethodFrame);
+            final Object block = RubyArguments.getBlock(callingMethodFrame);
             final RubyClass callingMetaclass = metaClassNode.execute(this, callingSelf);
             final MethodLookupResult superMethodLookup = ModuleOperations
                     .lookupSuperMethod(callingMethod, callingMetaclass);
             final InternalMethod superMethod = superMethodLookup.getMethod();
             // This C API only passes positional arguments, but maybe it should be influenced by ruby2_keywords hashes?
             return callSuperMethodNode.execute(
-                    frame, callingSelf, superMethod, NoKeywordArgumentsDescriptor.INSTANCE, args, nil);
+                    frame, callingSelf, superMethod, NoKeywordArgumentsDescriptor.INSTANCE, args, block);
         }
 
         @TruffleBoundary

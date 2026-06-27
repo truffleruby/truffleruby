@@ -64,6 +64,10 @@ class CApiClassSpecs
     def call_super_method
       :super_method
     end
+
+    def call_super_method_block
+      yield
+    end
   end
 
   class Sub < Super

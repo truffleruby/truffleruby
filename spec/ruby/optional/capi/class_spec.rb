@@ -194,6 +194,27 @@ describe "C-API Class function" do
       obj = CApiClassSpecs::SubSub.new
       obj.call_super_method.should == :super_method
     end
+
+    it "passes block argument as is" do
+      @s.define_call_super_method CApiClassSpecs::Sub, "call_super_method_block"
+      obj = CApiClassSpecs::Sub.new
+      obj.call_super_method_block { :block_val }.should == :block_val
+    end
+
+    it "calls #method_missing if there is no super method and #method_missing is defined" do
+      @s.define_call_super_method CApiClassSpecs::Sub, "non_existent_method"
+      obj = CApiClassSpecs::Sub.new
+      def obj.method_missing(name, *args)
+        [name, args]
+      end
+      obj.non_existent_method(1, 2).should == [:non_existent_method, [1, 2]]
+    end
+
+    it "raises a NoMethodError if there is no super method and no #method_missing defined" do
+      @s.define_call_super_method CApiClassSpecs::Sub, "non_existent_method"
+      obj = CApiClassSpecs::Sub.new
+      -> { obj.non_existent_method }.should.raise(NoMethodError)
+    end
   end
 
   describe "rb_class2name" do
