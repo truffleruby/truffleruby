@@ -2147,6 +2147,18 @@ module Truffle::CExt
     rb_call_super_splatted(*args)
   end
 
+  def rb_call_super_kw(args)
+    # Assumes args is non-empty
+    *args, kwargs = args
+    kwargs = Primitive.convert_with_to_hash(kwargs)
+
+    if kwargs.empty?
+      rb_call_super(args)
+    else
+      rb_call_super_kw_splatted(*args, kwargs)
+    end
+  end
+
   def rb_any_to_s(object)
     Primitive.rb_any_to_s(object)
   end

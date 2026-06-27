@@ -83,6 +83,14 @@ VALUE rb_call_super(int args_count, const VALUE *args) {
   return RUBY_CEXT_INVOKE("rb_call_super", rb_ary_new4(args_count, args));
 }
 
+VALUE rb_call_super_kw(int argc, const VALUE *argv, int kw_splat) {
+  if (kw_splat && argc > 0) {
+    return RUBY_CEXT_INVOKE("rb_call_super_kw", rb_ary_new4(argc, argv));
+  } else {
+    return RUBY_CEXT_INVOKE("rb_call_super", rb_ary_new4(argc, argv));
+  }
+}
+
 int rb_keyword_given_p(void) {
   return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("rb_keyword_given_p")) ? RB_PASS_KEYWORDS : RB_NO_KEYWORDS;
 }

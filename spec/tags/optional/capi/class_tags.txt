@@ -1,1 +1,2 @@
 fails:C-API Class function rb_call_super calls #method_missing if there is no super method and #method_missing is defined
+fails:C-API Class function rb_call_super_kw calls #method_missing if there is no super method and #method_missing is defined

@@ -95,6 +95,28 @@ class CApiClassSpecs
   class SubSelf < SuperSelf
   end
 
+  # rb_call_super_kw
+  class SuperKw
+    def call_super_method(*, **)
+      :super_method
+    end
+
+    def call_super_method_self(*, **)
+      self
+    end
+
+    def call_super_method_args(*args, **kwargs)
+      [args, kwargs]
+    end
+
+    def call_super_method_block(*, **)
+      yield
+    end
+  end
+
+  class SubKw < SuperKw
+  end
+
   class A
     C = 1
     autoload :D, File.expand_path('../path_to_class.rb', __FILE__)
