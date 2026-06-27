@@ -8,12 +8,12 @@
 extern "C" {
 #endif
 
-static VALUE class_spec_call_super_method(VALUE self) {
-  return rb_call_super(0, 0);
+static VALUE class_spec_call_super_method(int argc, VALUE *argv, VALUE self) {
+  return rb_call_super(argc, argv);
 }
 
 static VALUE class_spec_define_call_super_method(VALUE self, VALUE obj, VALUE str_name) {
-  rb_define_method(obj, RSTRING_PTR(str_name), class_spec_call_super_method, 0);
+  rb_define_method(obj, RSTRING_PTR(str_name), class_spec_call_super_method, -1);
   return Qnil;
 }
 
