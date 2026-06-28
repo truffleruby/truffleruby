@@ -132,10 +132,25 @@ describe "C-API Class function" do
       obj.kwargs.should == {}
     end
 
-    it "raises TypeError if the last argument is not a Hash" do
+    it "coerces the last argument to a hash by calling #to_hash" do
+      h = mock('to_hash')
+      h.should_receive(:to_hash).and_return(kw: 2)
+      obj = @s.rb_class_new_instance_kw([h], CApiClassSpecs::KeywordAlloc)
+      obj.kwargs.should == {kw: 2}
+    end
+
+    it "raises a TypeError if the last argument does not respond to #to_hash" do
       -> {
         @s.rb_class_new_instance_kw([42], CApiClassSpecs::KeywordAlloc)
-      }.should.raise(TypeError, 'no implicit conversion of Integer into Hash')
+      }.should raise_consistent_error(TypeError, 'no implicit conversion of Integer into Hash')
+    end
+
+    it "raises a TypeError if #to_hash does not return a hash" do
+      h = mock('to_hash')
+      h.should_receive(:to_hash).and_return(42)
+      -> {
+        @s.rb_class_new_instance_kw([h], CApiClassSpecs::KeywordAlloc)
+      }.should raise_consistent_error(TypeError, "can't convert MockObject into Hash (MockObject#to_hash gives Integer)")
     end
   end
 
@@ -322,7 +337,10 @@ describe "C-API Class function" do
     it "raises a TypeError if the last argument does not respond to #to_hash when called with RB_PASS_KEYWORDS" do
       @s.define_call_super_kw_method CApiClassSpecs::SubKw, "call_super_method_args", :RB_PASS_KEYWORDS
       obj = CApiClassSpecs::SubKw.new
-      -> { obj.call_super_method_args(1, 2, 3) }.should raise_consistent_error(TypeError, 'no implicit conversion of Integer into Hash')
+
+      -> {
+        obj.call_super_method_args(1, 2, 3)
+      }.should raise_consistent_error(TypeError, 'no implicit conversion of Integer into Hash')
     end
 
     it "raises a TypeError if #to_hash does not return a hash when called with RB_PASS_KEYWORDS" do
@@ -330,7 +348,10 @@ describe "C-API Class function" do
       obj = CApiClassSpecs::SubKw.new
       h = mock('to_hash')
       h.should_receive(:to_hash).and_return(42)
-      -> { obj.call_super_method_args(1, 2, h) }.should raise_consistent_error(TypeError, "can't convert MockObject into Hash (MockObject#to_hash gives Integer)")
+      
+      -> {
+        obj.call_super_method_args(1, 2, h)
+      }.should raise_consistent_error(TypeError, "can't convert MockObject into Hash (MockObject#to_hash gives Integer)")
     end
   end
 
