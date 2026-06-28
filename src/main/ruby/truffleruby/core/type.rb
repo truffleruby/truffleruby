@@ -392,6 +392,12 @@ module Truffle
     end
 
     def self.coerce_to_path(obj, check_null = true)
+      path = coerce_to_path_keep_encoding(obj, check_null)
+      coerce_path_encoding(path)
+    end
+
+    # MRI: FilePathValue/rb_get_path
+    def self.coerce_to_path_keep_encoding(obj, check_null = true)
       if Primitive.is_a?(obj, String)
         path = obj
       else
@@ -407,6 +413,16 @@ module Truffle
       end
       check_null_safe(path) if check_null
       path
+    end
+
+    # MRI: rb_str_encode_ospath
+    def self.coerce_path_encoding(path)
+      return path unless Truffle::Platform.darwin?
+
+      encoding = path.encoding
+      return path if encoding == Encoding::UTF_8 || encoding == Encoding::BINARY
+
+      path.encode(Encoding::UTF_8)
     end
 
     # Convert an object to Symbol (e.g. a method name).

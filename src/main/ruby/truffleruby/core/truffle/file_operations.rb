@@ -18,7 +18,7 @@ module Truffle
     PrivateDir = ::Dir
 
     def self.expand_path(path, dir, expand_tilde)
-      path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_to_path_keep_encoding(path)
       str = ''.encode path.encoding
       first = path[0]
       if first == ?~ && expand_tilde
