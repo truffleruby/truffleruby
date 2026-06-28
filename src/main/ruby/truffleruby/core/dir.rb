@@ -42,7 +42,7 @@ class Dir
   alias_method :to_path, :path
 
   def initialize(path, options = undefined)
-    path = Truffle::Type.coerce_to_path path
+    path = Truffle::Type.coerce_to_path_keep_encoding path
     Errno.handle path unless initialize_internal(path, options)
   end
 
@@ -59,7 +59,8 @@ class Dir
 
     @encoding = enc || Encoding.filesystem
 
-    @ptr = Truffle::POSIX.opendir(path)
+    path_encoded = Truffle::Type.coerce_to_path path
+    @ptr = Truffle::POSIX.opendir(path_encoded)
     @ptr.null? ? nil : self
   end
 
@@ -337,13 +338,15 @@ class Dir
     end
 
     def chdir(path = ENV['HOME'])
-      path = Truffle::Type.coerce_to_path path
+      path = Truffle::Type.coerce_to_path_keep_encoding path
+      # To get a properly-encoded String for Primitive.dir_set_truffle_working_directory
       path = path.dup.force_encoding(Encoding::LOCALE) if path.encoding == Encoding::BINARY
+      path_encoded = Truffle::Type.coerce_path_encoding path
 
       if block_given?
         original_path = self.getwd
         Primitive.dir_set_truffle_working_directory(path)
-        ret = Truffle::POSIX.chdir path
+        ret = Truffle::POSIX.chdir(path_encoded)
         Errno.handle(path) if ret != 0
 
         begin
@@ -355,7 +358,7 @@ class Dir
         end
       else
         Primitive.dir_set_truffle_working_directory(path)
-        ret = Truffle::POSIX.chdir path
+        ret = Truffle::POSIX.chdir(path_encoded)
         Errno.handle path if ret != 0
         ret
       end
@@ -403,7 +406,8 @@ class Dir
     end
 
     def rmdir(path)
-      ret = Truffle::POSIX.rmdir(Truffle::Type.coerce_to_path(path))
+      path = Truffle::Type.coerce_to_path(path)
+      ret = Truffle::POSIX.rmdir(path)
       Errno.handle path if ret != 0
       ret
     end

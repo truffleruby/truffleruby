@@ -160,7 +160,7 @@ class File < IO
   #  File.basename("/home/gumby/work/ruby.rb")          #=> "ruby.rb"
   #  File.basename("/home/gumby/work/ruby.rb", ".rb")   #=> "ruby"
   def self.basename(path, ext = undefined)
-    path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_to_path_keep_encoding(path)
 
     slash = '/'
 
@@ -253,7 +253,8 @@ class File < IO
     mode = clamp_short mode
 
     paths.each do |path|
-      n = POSIX.chmod Truffle::Type.coerce_to_path(path), mode
+      path = Truffle::Type.coerce_to_path(path)
+      n = POSIX.chmod path, mode
       Errno.handle if n == -1
     end
     paths.size
@@ -269,7 +270,8 @@ class File < IO
       mode = Primitive.convert_with_to_int(mode)
 
       paths.each do |path|
-        n = POSIX.lchmod Truffle::Type.coerce_to_path(path), mode
+        path = Truffle::Type.coerce_to_path(path)
+        n = POSIX.lchmod path, mode
         Errno.handle if n == -1
       end
 
@@ -307,7 +309,8 @@ class File < IO
     end
 
     paths.each do |path|
-      n = POSIX.chown Truffle::Type.coerce_to_path(path), owner, group
+      path = Truffle::Type.coerce_to_path(path)
+      n = POSIX.chown path, owner, group
       Errno.handle if n == -1
     end
 
@@ -359,7 +362,8 @@ class File < IO
     end
 
     paths.each do |path|
-      n = POSIX.lchown Truffle::Type.coerce_to_path(path), owner, group
+      path = Truffle::Type.coerce_to_path(path)
+      n = POSIX.lchown path, owner, group
       Errno.handle if n == -1
     end
 
@@ -478,7 +482,7 @@ class File < IO
   #  File.extname("test")            #=> ""
   #  File.extname(".profile")        #=> ""
   def self.extname(path)
-    path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_to_path_keep_encoding(path)
     path_size = path.bytesize
 
     dot_idx = Primitive.find_string_reverse(path, '.', path_size)
@@ -741,8 +745,8 @@ class File < IO
       raise ArgumentError, 'recursive array' if recursion
     else
       # We need to use dup here, since it's possible that
-      # coerce_to_path() gives us a direct object we shouldn't mutate
-      first = Truffle::Type.coerce_to_path(first).dup
+      # coerce_to_path_keep_encoding() gives us a direct object we shouldn't mutate
+      first = Truffle::Type.coerce_to_path_keep_encoding(first).dup
     end
     Truffle::Type.check_null_safe(first)
 
@@ -761,7 +765,7 @@ class File < IO
 
         raise ArgumentError, 'recursive array' if recursion
       else
-        value = Truffle::Type.coerce_to_path(el)
+        value = Truffle::Type.coerce_to_path_keep_encoding(el)
       end
       Truffle::Type.check_null_safe(value)
 
@@ -784,7 +788,10 @@ class File < IO
   #  File.link("testfile", ".testfile")   #=> 0
   #  IO.readlines(".testfile")[0]         #=> "This is line one\n"
   def self.link(from, to)
-    n = POSIX.link Truffle::Type.coerce_to_path(from), Truffle::Type.coerce_to_path(to)
+    from = Truffle::Type.coerce_to_path(from)
+    to = Truffle::Type.coerce_to_path(to)
+
+    n = POSIX.link from, to
     Errno.handle if n == -1
     n
   end
@@ -835,7 +842,7 @@ class File < IO
   end
 
   def self.path(obj)
-    Truffle::Type.coerce_to_path(obj)
+    Truffle::Type.coerce_to_path_keep_encoding(obj)
   end
 
   ##
@@ -868,7 +875,8 @@ class File < IO
   #  File.readlink("link2test")              #=> "testfile"
   def self.readlink(path)
     Truffle::FFI::MemoryPointer.new(Truffle::Platform::PATH_MAX) do |ptr|
-      n = POSIX.readlink Truffle::Type.coerce_to_path(path), ptr, Truffle::Platform::PATH_MAX
+      path = Truffle::Type.coerce_to_path(path)
+      n = POSIX.readlink path, ptr, Truffle::Platform::PATH_MAX
       Errno.handle if n == -1
 
       ptr.read_string(n).force_encoding(Encoding.filesystem)
@@ -950,7 +958,10 @@ class File < IO
   #
   #  File.rename("afile", "afile.bak")   #=> 0
   def self.rename(from, to)
-    n = POSIX.rename Truffle::Type.coerce_to_path(from), Truffle::Type.coerce_to_path(to)
+    from = Truffle::Type.coerce_to_path(from)
+    to = Truffle::Type.coerce_to_path(to)
+
+    n = POSIX.rename from, to
     Errno.handle if n == -1
     n
   end
@@ -1006,7 +1017,7 @@ class File < IO
   #
   #  File.split("/home/gumby/.profile")   #=> ["/home/gumby", ".profile"]
   def self.split(path)
-    p = Truffle::Type.coerce_to_path(path)
+    p = Truffle::Type.coerce_to_path_keep_encoding(path)
     [dirname(p), basename(p)]
   end
 
@@ -1025,7 +1036,10 @@ class File < IO
   #
   #  File.symlink("testfile", "link2test")   #=> 0
   def self.symlink(from, to)
-    n = POSIX.symlink Truffle::Type.coerce_to_path(from), Truffle::Type.coerce_to_path(to)
+    from = Truffle::Type.coerce_to_path(from)
+    to = Truffle::Type.coerce_to_path(to)
+
+    n = POSIX.symlink from, to
     Errno.handle if n == -1
     n
   end
@@ -1088,7 +1102,8 @@ class File < IO
   # See also Dir.rmdir.
   def self.unlink(*paths)
     paths.each do |path|
-      n = POSIX.unlink Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_to_path(path)
+      n = POSIX.unlink path
       Errno.handle if n == -1
     end
 
@@ -1190,7 +1205,7 @@ class File < IO
     if Primitive.is_a?(path_or_fd, Integer)
       super(path_or_fd, mode, **options)
     else
-      path = Truffle::Type.coerce_to_path path_or_fd
+      path = Truffle::Type.coerce_to_path_keep_encoding path_or_fd
       nmode, _binary, _external, _internal, _autoclose, perm = Truffle::IOOperations.normalize_options(mode, perm, options)
       fd = IO.sysopen(path, nmode, perm)
 

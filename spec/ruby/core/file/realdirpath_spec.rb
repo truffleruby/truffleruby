@@ -79,6 +79,23 @@ platform_is_not :windows do
     it "raises Errno::ENOENT if the symlink points to an absent directory" do
       -> { File.realdirpath(@fake_link_to_fake_dir) }.should.raise(Errno::ENOENT)
     end
+
+    platform_is :darwin do
+      it "accepts a path in a non-UTF-8, ASCII-compatible encoding containing non-ASCII characters" do
+        dir = tmp("file_realdirpath_dir_\u{3042}")
+        utf8_file = File.join(dir, "file.txt")
+        # Can fail with UndefinedConversionError if tmp path has non-Shift_JIS chars (e.g. Emojis, Hangul, Cyrillic, accented letters)
+        non_utf8_file = utf8_file.encode(Encoding::Windows_31J)
+
+        begin
+          mkdir_p(dir)
+          touch(utf8_file)
+          File.realdirpath(non_utf8_file).should == File.realdirpath(utf8_file).encode(Encoding::Windows_31J)
+        ensure
+          rm_r dir
+        end
+      end
+    end
   end
 end
 
