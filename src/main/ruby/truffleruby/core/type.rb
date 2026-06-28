@@ -409,6 +409,16 @@ module Truffle
       path
     end
 
+    # MRI: rb_str_encode_ospath
+    def self.coerce_path_encoding(path)
+      return path unless Truffle::Platform.darwin?
+
+      encoding = path.encoding
+      return path if encoding == Encoding::UTF_8 || encoding == Encoding::BINARY
+
+      path.encode(Encoding::UTF_8)
+    end
+
     # Convert an object to Symbol (e.g. a method name).
     # Non-Symbol values are converted to String with #to_str. If it couldn't be converted - TypeError is raised.
     # Uses the logic of rb_check_id/rb_check_string_type/rb_check_convert_type_with_id

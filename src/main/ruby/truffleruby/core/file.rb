@@ -1191,8 +1191,9 @@ class File < IO
       super(path_or_fd, mode, **options)
     else
       path = Truffle::Type.coerce_to_path path_or_fd
+      encoded_path = Truffle::Type.coerce_path_encoding path
       nmode, _binary, _external, _internal, _autoclose, perm = Truffle::IOOperations.normalize_options(mode, perm, options)
-      fd = IO.sysopen(path, nmode, perm)
+      fd = IO.sysopen(encoded_path, nmode, perm)
 
       super(fd, mode, **options, path: path)
     end
