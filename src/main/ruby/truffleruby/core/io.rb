@@ -790,10 +790,11 @@ class IO
   #  IO.sysopen("testfile")   #=> 3
   def self.sysopen(path, mode = nil, perm = nil)
     path = Truffle::Type.coerce_to_path path
+    path_encoded = Truffle::Type.coerce_path_encoding path
     mode = Truffle::IOOperations.parse_mode(mode || 'r')
     perm ||= 0666
 
-    fd = Truffle::POSIX.open(path, mode, perm)
+    fd = Truffle::POSIX.open(path_encoded, mode, perm)
     Errno.handle(path) if fd == -1
     fd
   end

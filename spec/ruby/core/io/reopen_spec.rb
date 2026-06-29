@@ -116,6 +116,41 @@ describe "IO#reopen with a String" do
     obj.should_receive(:to_path).and_return(@other_name)
     @io.reopen(obj)
   end
+
+  platform_is :darwin do
+    it "opens a file when given a path in a non-UTF-8, ASCII-compatible encoding containing non-ASCII characters" do
+      utf8_path = tmp("io_reopen_utf8_path_\u{3042}.txt")
+      # Can fail with UndefinedConversionError if tmp path has non-Shift_JIS chars (e.g. Emojis, Hangul, Cyrillic, accented letters)
+      non_utf8_path = utf8_path.encode(Encoding::Windows_31J)
+
+      begin
+        File.write(utf8_path, "ok")
+        @io = new_io @other_name, "r"
+        @io.reopen(non_utf8_path, "r")
+        @io.read.should == "ok"
+      ensure
+        rm_r utf8_path
+        rm_r non_utf8_path
+      end
+    end
+
+    it "opens a file when given a path in a non-UTF-8, ASCII-compatible encoding containing non-ASCII characters when called on a closed stream" do
+      utf8_path = tmp("io_reopen_utf8_path_closed_\u{3042}.txt")
+      # Can fail with UndefinedConversionError if tmp path has non-Shift_JIS chars (e.g. Emojis, Hangul, Cyrillic, accented letters)
+      non_utf8_path = utf8_path.encode(Encoding::Windows_31J)
+
+      begin
+        File.write(utf8_path, "ok")
+        @io = new_io @other_name, "r"
+        @io.close
+        @io.reopen(non_utf8_path, "r")
+        @io.read.should == "ok"
+      ensure
+        rm_r utf8_path
+        rm_r non_utf8_path
+      end
+    end
+  end
 end
 
 describe "IO#reopen with a String" do
