@@ -794,7 +794,13 @@ class File < IO
   #  File.link("testfile", ".testfile")   #=> 0
   #  IO.readlines(".testfile")[0]         #=> "This is line one\n"
   def self.link(from, to)
-    n = POSIX.link Truffle::Type.coerce_to_path(from), Truffle::Type.coerce_to_path(to)
+    from = Truffle::Type.coerce_to_path(from)
+    from = Truffle::Type.coerce_path_encoding(from)
+
+    to = Truffle::Type.coerce_to_path(to)
+    to = Truffle::Type.coerce_path_encoding(to)
+
+    n = POSIX.link from, to
     Errno.handle if n == -1
     n
   end
