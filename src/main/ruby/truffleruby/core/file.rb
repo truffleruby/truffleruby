@@ -272,7 +272,9 @@ class File < IO
       mode = Primitive.convert_with_to_int(mode)
 
       paths.each do |path|
-        n = POSIX.lchmod Truffle::Type.coerce_to_path(path), mode
+        path = Truffle::Type.coerce_to_path(path)
+        path = Truffle::Type.coerce_path_encoding(path)
+        n = POSIX.lchmod path, mode
         Errno.handle if n == -1
       end
 
