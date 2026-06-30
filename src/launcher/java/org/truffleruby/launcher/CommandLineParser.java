@@ -342,8 +342,6 @@ public class CommandLineParser {
                     disallowedInRubyOpts(argument);
                     setOption(OptionsCatalog.ARGV_GLOBALS, true);
                     break;
-                case 'G':
-                    throw notImplemented("-G");
                 case 'S':
                     disallowedInRubyOpts(argument);
                     lastInterpreterArgumentIndex = argumentIndex; // set before grabValue increments index
@@ -358,8 +356,6 @@ public class CommandLineParser {
                     }
 
                     break FOR;
-                case 'T':
-                    throw notImplemented("-T");
                 case 'U':
                     setOptionOnce(OptionsCatalog.INTERNAL_ENCODING, "UTF-8");
                     break;
