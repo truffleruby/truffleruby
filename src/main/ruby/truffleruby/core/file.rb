@@ -1041,7 +1041,13 @@ class File < IO
   #
   #  File.symlink("testfile", "link2test")   #=> 0
   def self.symlink(from, to)
-    n = POSIX.symlink Truffle::Type.coerce_to_path(from), Truffle::Type.coerce_to_path(to)
+    from = Truffle::Type.coerce_to_path(from)
+    from = Truffle::Type.coerce_path_encoding(from)
+
+    to = Truffle::Type.coerce_to_path(to)
+    to = Truffle::Type.coerce_path_encoding(to)
+
+    n = POSIX.symlink from, to
     Errno.handle if n == -1
     n
   end
@@ -1050,6 +1056,7 @@ class File < IO
   # Returns true if the named file is a symbolic link.
   def self.symlink?(path)
     path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_path_encoding(path)
     mode = Truffle::POSIX.truffleposix_lstat_mode(path)
     Truffle::StatOperations.symlink?(mode)
   end
