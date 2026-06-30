@@ -1186,6 +1186,7 @@ class File < IO
   # Returns true if the named file exists and has a zero size.
   def self.zero?(path)
     path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_path_encoding(path)
     s = Truffle::POSIX.truffleposix_stat_size(path)
 
     s == 0
