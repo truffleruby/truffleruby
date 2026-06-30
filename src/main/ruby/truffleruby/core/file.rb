@@ -404,6 +404,7 @@ class File < IO
              Truffle::POSIX.truffleposix_fstat_mode(io.fileno)
            else
              path = Truffle::Type.coerce_to_path(io_or_path)
+             path = Truffle::Type.coerce_path_encoding(path)
              Truffle::POSIX.truffleposix_stat_mode(path)
            end
 
