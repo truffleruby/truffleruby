@@ -681,7 +681,8 @@ class File < IO
   #  File.ftype("/tmp/.X11-unix/X0")   #=> "socket"
   def self.ftype(path)
     path = Truffle::Type.coerce_to_path(path)
-    mode = Truffle::POSIX.truffleposix_lstat_mode(path)
+    path_encoded = Truffle::Type.coerce_path_encoding(path)
+    mode = Truffle::POSIX.truffleposix_lstat_mode(path_encoded)
 
     if mode == 0
       Errno.handle(path)
