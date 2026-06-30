@@ -64,6 +64,7 @@ class File
         @buffer.concat(path_or_buffer.get_array_of_uint32(UINT64_BUFFER_ELEMENTS * 8, UINT32_BUFFER_ELEMENTS))
       else
         path = Truffle::Type.coerce_to_path(path_or_buffer)
+        path = Truffle::Type.coerce_path_encoding path
         Truffle::FFI::MemoryPointer.new(:uint32, BUFFER_SIZE) do |ptr|
           result = Truffle::POSIX.truffleposix_stat(path, ptr)
           Errno.handle path unless result == 0
