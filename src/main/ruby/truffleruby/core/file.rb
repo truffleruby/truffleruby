@@ -1097,7 +1097,9 @@ class File < IO
   # See also Dir.rmdir.
   def self.unlink(*paths)
     paths.each do |path|
-      n = POSIX.unlink Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
+      n = POSIX.unlink path
       Errno.handle if n == -1
     end
 
