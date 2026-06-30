@@ -342,8 +342,6 @@ public class CommandLineParser {
                     disallowedInRubyOpts(argument);
                     setOption(OptionsCatalog.ARGV_GLOBALS, true);
                     break;
-                case 'G':
-                    throw notImplemented("-G");
                 case 'S':
                     disallowedInRubyOpts(argument);
                     lastInterpreterArgumentIndex = argumentIndex; // set before grabValue increments index
@@ -358,8 +356,6 @@ public class CommandLineParser {
                     }
 
                     break FOR;
-                case 'T':
-                    throw notImplemented("-T");
                 case 'U':
                     setOptionOnce(OptionsCatalog.INTERNAL_ENCODING, "UTF-8");
                     break;
@@ -425,7 +421,7 @@ public class CommandLineParser {
                     setOption(OptionsCatalog.IGNORE_LINES_BEFORE_RUBY_SHEBANG, true);
                     String directory = grabOptionalValue();
                     if (directory != null) {
-                        throw notImplemented("-x with directory");
+                        setOption(OptionsCatalog.WORKING_DIRECTORY, directory);
                     }
                     break FOR;
                 case '-':
