@@ -378,6 +378,7 @@ class File < IO
   def self.mkfifo(path, mode = 0666)
     mode = Primitive.convert_with_to_int mode
     path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_path_encoding(path)
     status = Truffle::POSIX.mkfifo(path, mode)
     Errno.handle path if status != 0
     status
