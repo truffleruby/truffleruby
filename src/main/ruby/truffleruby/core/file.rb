@@ -308,7 +308,9 @@ class File < IO
     end
 
     paths.each do |path|
-      n = POSIX.chown Truffle::Type.coerce_to_path(path), owner, group
+      path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
+      n = POSIX.chown path, owner, group
       Errno.handle if n == -1
     end
 
