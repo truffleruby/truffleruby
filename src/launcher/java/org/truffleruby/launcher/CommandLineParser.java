@@ -421,7 +421,7 @@ public class CommandLineParser {
                     setOption(OptionsCatalog.IGNORE_LINES_BEFORE_RUBY_SHEBANG, true);
                     String directory = grabOptionalValue();
                     if (directory != null) {
-                        throw notImplemented("-x with directory");
+                        setOption(OptionsCatalog.WORKING_DIRECTORY, directory);
                     }
                     break FOR;
                 case '-':

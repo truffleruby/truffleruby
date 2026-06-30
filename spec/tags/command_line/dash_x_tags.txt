@@ -1,3 +1,4 @@
 slow:The -x command line option runs code after the first /#!.*ruby.*/-ish line in target file
 slow:The -x command line option fails when /#!.*ruby.*/-ish line in target file is not found
 slow:The -x command line option behaves as -x was set when non-ruby shebang is encountered on first line
+slow:The -x command line option changes the working directory when given
