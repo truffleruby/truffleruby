@@ -254,7 +254,9 @@ class File < IO
     mode = clamp_short mode
 
     paths.each do |path|
-      n = POSIX.chmod Truffle::Type.coerce_to_path(path), mode
+      path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
+      n = POSIX.chmod path, mode
       Errno.handle if n == -1
     end
     paths.size
