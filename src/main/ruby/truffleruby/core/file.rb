@@ -1083,6 +1083,7 @@ class File < IO
   #  File.size("out")          #=> 5
   def self.truncate(path, length)
     path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_path_encoding(path)
 
     unless exist?(path)
       raise Errno::ENOENT, path
