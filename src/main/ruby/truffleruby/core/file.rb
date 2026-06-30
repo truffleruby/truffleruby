@@ -837,6 +837,7 @@ class File < IO
 
     paths.each do |path|
       path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
       n = POSIX.truffleposix_lutimes(path, atime.to_i, atime.nsec,
                                     mtime.to_i, mtime.nsec)
       Errno.handle unless n == 0
@@ -1149,6 +1150,7 @@ class File < IO
     mtime = Time.at(mtime) unless Primitive.is_a?(mtime, Time)
     paths.each do |path|
       path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
       n = POSIX.truffleposix_utimes(path, atime.to_i, atime.nsec,
                                           mtime.to_i, mtime.nsec)
       Errno.handle unless n == 0
