@@ -217,6 +217,7 @@ class File < IO
 
   def self.query_stat_mode(path)
     path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_path_encoding(path)
     Truffle::POSIX.truffleposix_stat_mode(path)
   end
   private_class_method :query_stat_mode
