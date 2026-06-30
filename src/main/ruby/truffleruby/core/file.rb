@@ -996,6 +996,7 @@ class File < IO
       end
     else
       path = Truffle::Type.coerce_to_path(io_or_path)
+      path = Truffle::Type.coerce_path_encoding(path)
       s = Truffle::POSIX.truffleposix_stat_size(path)
       if s >= 0
         s
@@ -1015,6 +1016,7 @@ class File < IO
           Truffle::POSIX.truffleposix_fstat_size(io.fileno)
         else
           path = Truffle::Type.coerce_to_path(io_or_path)
+          path = Truffle::Type.coerce_path_encoding(path)
           Truffle::POSIX.truffleposix_stat_size(path)
         end
 
