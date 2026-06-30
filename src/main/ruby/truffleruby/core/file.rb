@@ -971,7 +971,13 @@ class File < IO
   #
   #  File.rename("afile", "afile.bak")   #=> 0
   def self.rename(from, to)
-    n = POSIX.rename Truffle::Type.coerce_to_path(from), Truffle::Type.coerce_to_path(to)
+    from = Truffle::Type.coerce_to_path(from)
+    from = Truffle::Type.coerce_path_encoding(from)
+
+    to = Truffle::Type.coerce_to_path(to)
+    to = Truffle::Type.coerce_path_encoding(to)
+
+    n = POSIX.rename from, to
     Errno.handle if n == -1
     n
   end
