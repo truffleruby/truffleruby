@@ -887,7 +887,9 @@ class File < IO
   #  File.readlink("link2test")              #=> "testfile"
   def self.readlink(path)
     Truffle::FFI::MemoryPointer.new(Truffle::Platform::PATH_MAX) do |ptr|
-      n = POSIX.readlink Truffle::Type.coerce_to_path(path), ptr, Truffle::Platform::PATH_MAX
+      path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
+      n = POSIX.readlink path, ptr, Truffle::Platform::PATH_MAX
       Errno.handle if n == -1
 
       ptr.read_string(n).force_encoding(Encoding.filesystem)
