@@ -76,6 +76,7 @@ class File
 
     def self.stat(path)
       path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
       Truffle::FFI::MemoryPointer.new(:uint32, BUFFER_SIZE) do |ptr|
         if Truffle::POSIX.truffleposix_stat(path, ptr) == 0
           Stat.new ptr
