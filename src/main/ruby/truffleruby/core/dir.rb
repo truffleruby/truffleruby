@@ -339,11 +339,12 @@ class Dir
     def chdir(path = ENV['HOME'])
       path = Truffle::Type.coerce_to_path path
       path = path.dup.force_encoding(Encoding::LOCALE) if path.encoding == Encoding::BINARY
+      path_encoded = Truffle::Type.coerce_path_encoding path
 
       if block_given?
         original_path = self.getwd
         Primitive.dir_set_truffle_working_directory(path)
-        ret = Truffle::POSIX.chdir path
+        ret = Truffle::POSIX.chdir(path_encoded)
         Errno.handle(path) if ret != 0
 
         begin
@@ -355,7 +356,7 @@ class Dir
         end
       else
         Primitive.dir_set_truffle_working_directory(path)
-        ret = Truffle::POSIX.chdir path
+        ret = Truffle::POSIX.chdir(path_encoded)
         Errno.handle path if ret != 0
         ret
       end
