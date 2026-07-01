@@ -396,6 +396,7 @@ class Dir
 
     def mkdir(path, mode = 0777)
       path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
       if mode
         mode = Primitive.convert_with_to_int(mode)
       end
