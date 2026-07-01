@@ -15,7 +15,7 @@ jobs:
       BUNDLE_WITHOUT: "memcheck:types"
     steps:
     - name: Clone Prism
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         repository: ruby/prism
         path: prism
@@ -30,14 +30,14 @@ jobs:
     # has the correct relative path to the cloned prism repo.
     - run: mkdir truffleruby-ws
     - name: Clone TruffleRuby
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         path: truffleruby-ws/truffleruby
     - name: Setup jt
       run: echo "$PWD/truffleruby-ws/truffleruby/bin" >> $GITHUB_PATH
 
     - name: Restore ~/.mx/cache
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: ~/.mx/cache
         key: mx-cache-prism-${{ runner.os }}-${{ hashFiles('truffleruby-ws/truffleruby/common.json') }}

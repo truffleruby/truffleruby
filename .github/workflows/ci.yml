@@ -27,7 +27,7 @@ jobs:
     timeout-minutes: 30
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         fetch-depth: 0 # Necessary for jt check_abi
     - name: Setup system Ruby
@@ -63,7 +63,7 @@ jobs:
         working-directory: build
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         path: build
     - name: Setup system Ruby
@@ -100,7 +100,7 @@ jobs:
         working-directory: build
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         path: build
     - name: Setup system Ruby
@@ -136,7 +136,7 @@ jobs:
         os: [ubuntu-22.04, ubuntu-22.04-arm, macos-14]
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Setup system Ruby
       uses: ruby/setup-ruby@v1
     - name: Setup jt
@@ -154,7 +154,7 @@ jobs:
         working-directory: build
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         path: build
     - name: Setup system Ruby
@@ -197,7 +197,7 @@ jobs:
         - gems ecosystem # ~2min ~6min
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Setup system Ruby
       uses: ruby/setup-ruby@v1
     - name: Setup jt
@@ -217,7 +217,7 @@ jobs:
     timeout-minutes: 30
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Setup system Ruby
       uses: ruby/setup-ruby@v1
     - name: Setup jt
@@ -241,7 +241,7 @@ jobs:
     runs-on: ubuntu-22.04-arm
     steps:
     - name: Clone TruffleRuby
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Setup system Ruby
       uses: ruby/setup-ruby@v1
     - name: Setup jt
@@ -263,7 +263,7 @@ jobs:
     env:
       CHECK_LEAKS: 'true'
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Setup jt
       run: echo "$PWD/bin" >> $GITHUB_PATH
 
