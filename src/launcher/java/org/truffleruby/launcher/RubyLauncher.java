@@ -129,8 +129,6 @@ public class RubyLauncher extends AbstractLanguageLauncher {
         config = new CommandLineOptions(args);
 
         try {
-            config.executionAction = ExecutionAction.UNSET;
-
             final CommandLineParser argumentCommandLineParser = new CommandLineParser(args, config, true, false);
             argumentCommandLineParser.processArguments();
 
@@ -266,26 +264,20 @@ public class RubyLauncher extends AbstractLanguageLauncher {
     }
 
     private int runRubyMain(Context.Builder contextBuilder, CommandLineOptions config) {
-        if (config.executionAction == ExecutionAction.UNSET) {
-            switch (config.defaultExecutionAction) {
-                case NONE:
-                    return 0;
-                case IRB:
+        switch (config.executionAction) {
+            case UNSET:
+                config.executionAction = ExecutionAction.PATH;
+                if (isTTY()) {
+                    getError().println(
+                            "[ruby] WARNING: truffleruby starts IRB when stdin is a TTY instead of reading from stdin, use '-' to read from stdin");
                     config.executionAction = ExecutionAction.PATH;
-                    if (isTTY()) {
-                        getError().println(
-                                "[ruby] WARNING: truffleruby starts IRB when stdin is a TTY instead of reading from stdin, use '-' to read from stdin");
-                        config.executionAction = ExecutionAction.PATH;
-                        config.toExecute = "irb";
-                    } else {
-                        config.executionAction = ExecutionAction.STDIN;
-                    }
-                    break;
-            }
-        }
-
-        if (config.executionAction == ExecutionAction.NONE) {
-            return 0;
+                    config.toExecute = "irb";
+                } else {
+                    config.executionAction = ExecutionAction.STDIN;
+                }
+                break;
+            case NONE:
+                return 0;
         }
 
         if (config.isGemOrBundle() && getImplementationNameFromEngine().contains("Graal")) {

@@ -366,7 +366,7 @@ public class CommandLineParser {
                 case 'v':
                     setOption(OptionsCatalog.VERBOSITY, Verbosity.TRUE);
                     config.showVersion = true;
-                    config.defaultExecutionAction = DefaultExecutionAction.NONE;
+                    config.executionAction = ExecutionAction.NONE;
                     break;
                 case 'w':
                     setOption(OptionsCatalog.VERBOSITY, Verbosity.TRUE);
