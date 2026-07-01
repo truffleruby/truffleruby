@@ -404,7 +404,9 @@ class Dir
     end
 
     def rmdir(path)
-      ret = Truffle::POSIX.rmdir(Truffle::Type.coerce_to_path(path))
+      path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
+      ret = Truffle::POSIX.rmdir(path)
       Errno.handle path if ret != 0
       ret
     end
