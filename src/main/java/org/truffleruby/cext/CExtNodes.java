@@ -1250,13 +1250,14 @@ public abstract class CExtNodes {
             final Frame callingMethodFrame = findCallingMethodFrame();
             final InternalMethod callingMethod = RubyArguments.getMethod(callingMethodFrame);
             final Object callingSelf = RubyArguments.getSelf(callingMethodFrame);
+            final Object block = RubyArguments.getBlock(callingMethodFrame);
             final RubyClass callingMetaclass = metaClassNode.execute(this, callingSelf);
             final MethodLookupResult superMethodLookup = ModuleOperations
                     .lookupSuperMethod(callingMethod, callingMetaclass);
             final InternalMethod superMethod = superMethodLookup.getMethod();
             // This C API only passes positional arguments, but maybe it should be influenced by ruby2_keywords hashes?
             return callSuperMethodNode.execute(
-                    frame, callingSelf, superMethod, NoKeywordArgumentsDescriptor.INSTANCE, args, nil);
+                    frame, callingSelf, superMethod, NoKeywordArgumentsDescriptor.INSTANCE, args, block);
         }
 
         @TruffleBoundary
@@ -1269,8 +1270,56 @@ public abstract class CExtNodes {
                 if (method == null) {
                     return null;
                 } else if (method.getName().equals(/* Truffle::CExt. */ "rb_call_super") ||
+                        method.getName().equals(/* Truffle::CExt. */ "rb_call_super_kw") ||
                         method.getName().equals(/* Truffle::Interop. */ "execute_without_conversion") ||
-                        method.getName().equals(/* Truffle::CExt. */ "rb_call_super_splatted")) {
+                        method.getName().equals(/* Truffle::CExt. */ "rb_call_super_splatted") ||
+                        method.getName().equals(/* Truffle::CExt. */ "rb_call_super_kw_splatted")) {
+                    // TODO CS 11-Mar-17 must have a more precise check to skip these methods
+                    return null;
+                } else {
+                    return frame;
+                }
+            });
+        }
+
+    }
+
+    @CoreMethod(names = "rb_call_super_kw_splatted", onSingleton = true, rest = true)
+    public abstract static class CallSuperKwNode extends CoreMethodArrayArgumentsNode {
+
+        @Child private CallSuperMethodNode callSuperMethodNode = CallSuperMethodNode.create();
+
+        @Specialization
+        Object callSuper(VirtualFrame frame, Object[] args,
+                @Cached MetaClassNode metaClassNode) {
+            final Frame callingMethodFrame = findCallingMethodFrame();
+            final InternalMethod callingMethod = RubyArguments.getMethod(callingMethodFrame);
+            final Object callingSelf = RubyArguments.getSelf(callingMethodFrame);
+            final Object block = RubyArguments.getBlock(callingMethodFrame);
+            final RubyClass callingMetaclass = metaClassNode.execute(this, callingSelf);
+            final MethodLookupResult superMethodLookup = ModuleOperations
+                    .lookupSuperMethod(callingMethod, callingMetaclass);
+            final InternalMethod superMethod = superMethodLookup.getMethod();
+            final ArgumentsDescriptor descriptor = KeywordArgumentsDescriptor.EMPTY;
+
+            return callSuperMethodNode.execute(
+                    frame, callingSelf, superMethod, descriptor, args, block);
+        }
+
+        @TruffleBoundary
+        private static Frame findCallingMethodFrame() {
+            return Truffle.getRuntime().iterateFrames(frameInstance -> {
+                final Frame frame = frameInstance.getFrame(FrameAccess.READ_ONLY);
+
+                final InternalMethod method = RubyArguments.tryGetMethod(frame);
+
+                if (method == null) {
+                    return null;
+                } else if (method.getName().equals(/* Truffle::CExt. */ "rb_call_super") ||
+                        method.getName().equals(/* Truffle::CExt. */ "rb_call_super_kw") ||
+                        method.getName().equals(/* Truffle::Interop. */ "execute_without_conversion") ||
+                        method.getName().equals(/* Truffle::CExt. */ "rb_call_super_splatted") ||
+                        method.getName().equals(/* Truffle::CExt. */ "rb_call_super_kw_splatted")) {
                     // TODO CS 11-Mar-17 must have a more precise check to skip these methods
                     return null;
                 } else {
