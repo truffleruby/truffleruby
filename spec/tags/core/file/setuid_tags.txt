@@ -1,1 +1,2 @@
 slow:File.setuid? returns true when the gid bit is set
+slow:File.setuid? accepts a path in a non-UTF-8, ASCII-compatible encoding containing non-ASCII characters

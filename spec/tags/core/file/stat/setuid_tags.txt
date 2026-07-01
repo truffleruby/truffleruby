@@ -1,0 +1,1 @@
+slow:File::Stat#setuid? accepts a path in a non-UTF-8, ASCII-compatible encoding containing non-ASCII characters

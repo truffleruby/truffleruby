@@ -64,9 +64,6 @@ describe "IO.read" do
     IO.read(@fname, mode: "a+").should == @contents
   end
 
-  platform_is_not :windows do
-  end
-
   it "disregards other options if :open_args is given" do
     string = IO.read(@fname,mode: "w", encoding: Encoding::UTF_32LE, open_args: ["r", encoding: Encoding::UTF_8])
     string.encoding.should == Encoding::UTF_8
@@ -146,6 +143,22 @@ describe "IO.read" do
       # 0x1A is CTRL+Z and is EOF in Windows text mode.
       File.binwrite(@fname, "\x1Abbb")
       IO.read(@fname).should.empty?
+    end
+  end
+
+  platform_is :darwin do
+    it "reads a file when given a path in a non-UTF-8, ASCII-compatible encoding containing non-ASCII characters" do
+      utf8_path = tmp("io_read_utf8_path_\u{3042}.txt")
+      # Can fail with UndefinedConversionError if tmp path has non-Shift_JIS chars (e.g. Emojis, Hangul, Cyrillic, accented letters)
+      non_utf8_path = utf8_path.encode(Encoding::Windows_31J)
+
+      begin
+        File.write(utf8_path, "ok")
+        IO.read(non_utf8_path).should == "ok"
+      ensure
+        rm_r utf8_path
+        rm_r non_utf8_path
+      end
     end
   end
 end

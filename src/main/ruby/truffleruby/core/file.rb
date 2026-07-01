@@ -217,6 +217,7 @@ class File < IO
 
   def self.query_stat_mode(path)
     path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_path_encoding(path)
     Truffle::POSIX.truffleposix_stat_mode(path)
   end
   private_class_method :query_stat_mode
@@ -253,7 +254,9 @@ class File < IO
     mode = clamp_short mode
 
     paths.each do |path|
-      n = POSIX.chmod Truffle::Type.coerce_to_path(path), mode
+      path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
+      n = POSIX.chmod path, mode
       Errno.handle if n == -1
     end
     paths.size
@@ -269,7 +272,9 @@ class File < IO
       mode = Primitive.convert_with_to_int(mode)
 
       paths.each do |path|
-        n = POSIX.lchmod Truffle::Type.coerce_to_path(path), mode
+        path = Truffle::Type.coerce_to_path(path)
+        path = Truffle::Type.coerce_path_encoding(path)
+        n = POSIX.lchmod path, mode
         Errno.handle if n == -1
       end
 
@@ -307,7 +312,9 @@ class File < IO
     end
 
     paths.each do |path|
-      n = POSIX.chown Truffle::Type.coerce_to_path(path), owner, group
+      path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
+      n = POSIX.chown path, owner, group
       Errno.handle if n == -1
     end
 
@@ -359,7 +366,9 @@ class File < IO
     end
 
     paths.each do |path|
-      n = POSIX.lchown Truffle::Type.coerce_to_path(path), owner, group
+      path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
+      n = POSIX.lchown path, owner, group
       Errno.handle if n == -1
     end
 
@@ -369,6 +378,7 @@ class File < IO
   def self.mkfifo(path, mode = 0666)
     mode = Primitive.convert_with_to_int mode
     path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_path_encoding(path)
     status = Truffle::POSIX.mkfifo(path, mode)
     Errno.handle path if status != 0
     status
@@ -395,6 +405,7 @@ class File < IO
              Truffle::POSIX.truffleposix_fstat_mode(io.fileno)
            else
              path = Truffle::Type.coerce_to_path(io_or_path)
+             path = Truffle::Type.coerce_path_encoding(path)
              Truffle::POSIX.truffleposix_stat_mode(path)
            end
 
@@ -449,6 +460,7 @@ class File < IO
   # Return true if the named file exists.
   def self.exist?(path)
     path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_path_encoding(path)
     mode = Truffle::POSIX.truffleposix_stat_mode(path)
     mode > 0
   end
@@ -672,7 +684,8 @@ class File < IO
   #  File.ftype("/tmp/.X11-unix/X0")   #=> "socket"
   def self.ftype(path)
     path = Truffle::Type.coerce_to_path(path)
-    mode = Truffle::POSIX.truffleposix_lstat_mode(path)
+    path_encoded = Truffle::Type.coerce_path_encoding(path)
+    mode = Truffle::POSIX.truffleposix_lstat_mode(path_encoded)
 
     if mode == 0
       Errno.handle(path)
@@ -784,7 +797,13 @@ class File < IO
   #  File.link("testfile", ".testfile")   #=> 0
   #  IO.readlines(".testfile")[0]         #=> "This is line one\n"
   def self.link(from, to)
-    n = POSIX.link Truffle::Type.coerce_to_path(from), Truffle::Type.coerce_to_path(to)
+    from = Truffle::Type.coerce_to_path(from)
+    from = Truffle::Type.coerce_path_encoding(from)
+
+    to = Truffle::Type.coerce_to_path(to)
+    to = Truffle::Type.coerce_path_encoding(to)
+
+    n = POSIX.link from, to
     Errno.handle if n == -1
     n
   end
@@ -818,6 +837,7 @@ class File < IO
 
     paths.each do |path|
       path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
       n = POSIX.truffleposix_lutimes(path, atime.to_i, atime.nsec,
                                     mtime.to_i, mtime.nsec)
       Errno.handle unless n == 0
@@ -868,7 +888,9 @@ class File < IO
   #  File.readlink("link2test")              #=> "testfile"
   def self.readlink(path)
     Truffle::FFI::MemoryPointer.new(Truffle::Platform::PATH_MAX) do |ptr|
-      n = POSIX.readlink Truffle::Type.coerce_to_path(path), ptr, Truffle::Platform::PATH_MAX
+      path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
+      n = POSIX.readlink path, ptr, Truffle::Platform::PATH_MAX
       Errno.handle if n == -1
 
       ptr.read_string(n).force_encoding(Encoding.filesystem)
@@ -950,7 +972,13 @@ class File < IO
   #
   #  File.rename("afile", "afile.bak")   #=> 0
   def self.rename(from, to)
-    n = POSIX.rename Truffle::Type.coerce_to_path(from), Truffle::Type.coerce_to_path(to)
+    from = Truffle::Type.coerce_to_path(from)
+    from = Truffle::Type.coerce_path_encoding(from)
+
+    to = Truffle::Type.coerce_to_path(to)
+    to = Truffle::Type.coerce_path_encoding(to)
+
+    n = POSIX.rename from, to
     Errno.handle if n == -1
     n
   end
@@ -969,6 +997,7 @@ class File < IO
       end
     else
       path = Truffle::Type.coerce_to_path(io_or_path)
+      path = Truffle::Type.coerce_path_encoding(path)
       s = Truffle::POSIX.truffleposix_stat_size(path)
       if s >= 0
         s
@@ -988,6 +1017,7 @@ class File < IO
           Truffle::POSIX.truffleposix_fstat_size(io.fileno)
         else
           path = Truffle::Type.coerce_to_path(io_or_path)
+          path = Truffle::Type.coerce_path_encoding(path)
           Truffle::POSIX.truffleposix_stat_size(path)
         end
 
@@ -1025,7 +1055,13 @@ class File < IO
   #
   #  File.symlink("testfile", "link2test")   #=> 0
   def self.symlink(from, to)
-    n = POSIX.symlink Truffle::Type.coerce_to_path(from), Truffle::Type.coerce_to_path(to)
+    from = Truffle::Type.coerce_to_path(from)
+    from = Truffle::Type.coerce_path_encoding(from)
+
+    to = Truffle::Type.coerce_to_path(to)
+    to = Truffle::Type.coerce_path_encoding(to)
+
+    n = POSIX.symlink from, to
     Errno.handle if n == -1
     n
   end
@@ -1034,6 +1070,7 @@ class File < IO
   # Returns true if the named file is a symbolic link.
   def self.symlink?(path)
     path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_path_encoding(path)
     mode = Truffle::POSIX.truffleposix_lstat_mode(path)
     Truffle::StatOperations.symlink?(mode)
   end
@@ -1049,6 +1086,7 @@ class File < IO
   #  File.size("out")          #=> 5
   def self.truncate(path, length)
     path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_path_encoding(path)
 
     unless exist?(path)
       raise Errno::ENOENT, path
@@ -1088,7 +1126,9 @@ class File < IO
   # See also Dir.rmdir.
   def self.unlink(*paths)
     paths.each do |path|
-      n = POSIX.unlink Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
+      n = POSIX.unlink path
       Errno.handle if n == -1
     end
 
@@ -1110,6 +1150,7 @@ class File < IO
     mtime = Time.at(mtime) unless Primitive.is_a?(mtime, Time)
     paths.each do |path|
       path = Truffle::Type.coerce_to_path(path)
+      path = Truffle::Type.coerce_path_encoding(path)
       n = POSIX.truffleposix_utimes(path, atime.to_i, atime.nsec,
                                           mtime.to_i, mtime.nsec)
       Errno.handle unless n == 0
@@ -1145,6 +1186,7 @@ class File < IO
   # Returns true if the named file exists and has a zero size.
   def self.zero?(path)
     path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_path_encoding(path)
     s = Truffle::POSIX.truffleposix_stat_size(path)
 
     s == 0
@@ -1191,8 +1233,9 @@ class File < IO
       super(path_or_fd, mode, **options)
     else
       path = Truffle::Type.coerce_to_path path_or_fd
+      encoded_path = Truffle::Type.coerce_path_encoding path
       nmode, _binary, _external, _internal, _autoclose, perm = Truffle::IOOperations.normalize_options(mode, perm, options)
-      fd = IO.sysopen(path, nmode, perm)
+      fd = IO.sysopen(encoded_path, nmode, perm)
 
       super(fd, mode, **options, path: path)
     end
