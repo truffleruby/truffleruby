@@ -59,7 +59,8 @@ class Dir
 
     @encoding = enc || Encoding.filesystem
 
-    @ptr = Truffle::POSIX.opendir(path)
+    path_encoded = Truffle::Type.coerce_path_encoding path
+    @ptr = Truffle::POSIX.opendir(path_encoded)
     @ptr.null? ? nil : self
   end
 
