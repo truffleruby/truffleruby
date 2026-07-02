@@ -57,9 +57,7 @@ module FFI
       begin
         handle = Primitive.interop_eval_nfi code
       rescue Polyglot::ForeignException => e
-        # Translate to a Ruby exception as it needs to be rescue'd by
-        # `rescue Exception` in FFI::Library#ffi_lib (which is part of the ffi gem)
-        raise RuntimeError, e.message
+        raise LoadError, "Could not open library '#{libname || '[current process]'}': #{e.message}", cause: nil
       end
       DynamicLibrary.new(libname, handle)
     end
