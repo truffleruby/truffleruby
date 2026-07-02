@@ -349,3 +349,31 @@ describe "IO.copy_stream" do
     end
   end
 end
+
+describe "IO.copy_stream" do
+  context "given length" do
+    it "calls #read/#readpartial with remaining bytes count" do
+      input = +"abcdefghijklmnopqrstuvwxyz"
+      read_maxlens = []
+      from = Object.new
+      from.define_singleton_method(:read) do |maxlen, buf = nil|
+        read_maxlens << maxlen
+        bytes_to_read = read_maxlens.size == 1 ? 5 : maxlen
+        bytes = input.slice!(0, bytes_to_read)
+        buf.replace(bytes) if buf
+        bytes
+      end
+
+      output = +""
+      to = Object.new
+      to.define_singleton_method(:write) do |bytes|
+        output << bytes
+        bytes.bytesize
+      end
+
+      IO.copy_stream(from, to, 12).should == 12
+      read_maxlens.should == [12, 7]
+      output.should == "abcdefghijkl"
+    end
+  end
+end

@@ -15,6 +15,7 @@ Bug fixes:
 * Fix `rb_catch_obj()` to pass the `data` argument as-is and not assume it's a Ruby object (#4329, @eregon).
 * Fix `rb_proc_new()`, `rb_iterate()`, `rb_exec_recursive()` and `rb_fiber_new()` to pass the callback argument as-is and not assume it's a Ruby object (#4334, @eregon).
 * Fix infinite cause chain when a Ruby exception is raised inside another language and goes back to Ruby (#4233, @eregon).
+* Fix `IO.copy_stream()` when given optional length argument (#3947, @andrykonchin).
 
 Compatibility:
 
