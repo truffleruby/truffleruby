@@ -1,3 +1,1 @@
-fails:IO.new ignores the :encoding option when the :external_encoding option is present
-fails:IO.new ignores the :encoding option when the :internal_encoding option is present
 fails:IO.new raises an Errno::EINVAL if the new mode is not compatible with the descriptor's current mode

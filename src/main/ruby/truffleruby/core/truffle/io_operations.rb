@@ -559,6 +559,10 @@ module Truffle
         if !external and !internal
           external = options[:external_encoding]
           internal = options[:internal_encoding]
+          if options[:encoding] && (external || internal)
+            used = external ? 'external_encoding' : 'internal_encoding'
+            warn "Ignoring encoding parameter '#{options[:encoding]}': #{used} is used", uplevel: 1
+          end
         elsif options[:external_encoding] or options[:internal_encoding] or options[:encoding]
           raise ArgumentError, 'encoding specified twice'
         end
