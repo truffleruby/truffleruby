@@ -46,7 +46,6 @@ fails:Public methods on Socket::AncillaryData should include timestamp
 fails:Public methods on Socket::Option should include byte
 fails:Public methods on Socket::Option should include ipv4_multicast_loop
 fails:Public methods on Socket::Option should include ipv4_multicast_ttl
-fails:Public methods on ENV.singleton_class should not include index
 fails:Public methods on Fiber should include backtrace
 fails:Public methods on Fiber should include backtrace_locations
 fails:Public methods on Random should not include bytes

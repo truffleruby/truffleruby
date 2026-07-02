@@ -213,11 +213,6 @@ class << ENV
     params.map { |k| lookup(k) }
   end
 
-  def index(value)
-    warn 'ENV.index is deprecated; use ENV.key', uplevel: 1
-    key(value)
-  end
-
   def invert
     to_hash.invert
   end
