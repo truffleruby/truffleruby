@@ -639,23 +639,23 @@ class Enumerator
 
     def uniq
       if block_given?
-        h = {}
         Lazy.new(self, nil) do |yielder, *args|
+          memo = yielder.memo || Set.new
+
           val = args.length >= 2 ? args : args.first
           comp = yield(val)
-          unless h.key?(comp)
-            h[comp] = true
-            yielder.yield(*args)
-          end
+          yielder.yield(*args) if memo.add?(comp)
+
+          yielder.memo = memo
         end
       else
-        h = {}
         Lazy.new(self, nil) do |yielder, *args|
+          memo = yielder.memo || Set.new
+
           val = args.length >= 2 ? args : args.first
-          unless h.key?(val)
-            h[val] = true
-            yielder.yield(*args)
-          end
+          yielder.yield(*args) if memo.add?(val)
+
+          yielder.memo = memo
         end
       end
     end
