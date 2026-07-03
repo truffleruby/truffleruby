@@ -350,8 +350,8 @@ class IO
 
   class StreamCopier
     def initialize(from, to, length, offset)
-      @length = length
-      @offset = offset
+      @length = length && Primitive.convert_type(length, Integer, :to_int)
+      @offset = offset && Primitive.convert_type(offset, Integer, :to_int)
 
       @from_io, @from = to_io(from, 'rb')
       @to_io, @to = to_io(to, 'wb')

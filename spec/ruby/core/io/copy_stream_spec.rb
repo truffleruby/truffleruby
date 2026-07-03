@@ -24,6 +24,24 @@ describe :io_copy_stream_to_file, shared: true do
     File.read(@to_name).should == ""
   end
 
+  it "calls #to_int to convert length" do
+    length = mock("length")
+    length.should_receive(:to_int).and_return(8)
+    IO.copy_stream(@object.from, @to_name, length).should == 8
+    File.read(@to_name).should == "Line one"
+  end
+
+  it "raises a TypeError if #to_int does not return an Integer" do
+    length = mock("length")
+    length.should_receive(:to_int).and_return("8")
+    -> { IO.copy_stream(@object.from, @to_name, length) }.should.raise(TypeError)
+  end
+
+  it "raises a TypeError if passed an object that does not respond to #to_int" do
+    length = mock("length")
+    -> { IO.copy_stream(@object.from, @to_name, length) }.should.raise(TypeError)
+  end
+
   it "calls #to_path to convert on object to a file name" do
     obj = mock("io_copy_stream_to")
     obj.should_receive(:to_path).and_return(@to_name)
@@ -50,6 +68,24 @@ describe :io_copy_stream_to_file_with_offset, shared: true do
     it "copies nothing when given 0 bytes length to read" do
       IO.copy_stream(@object.from, @to_name, 0, 4).should == 0
       File.read(@to_name).should == ""
+    end
+
+    it "calls #to_int to convert the offset" do
+      offset = mock("offset")
+      offset.should_receive(:to_int).and_return(4)
+      IO.copy_stream(@object.from, @to_name, 8, offset).should == 8
+      File.read(@to_name).should == " one\n\nLi"
+    end
+
+    it "raises a TypeError if #to_int does not return an Integer" do
+      offset = mock("offset")
+      offset.should_receive(:to_int).and_return("4")
+      -> { IO.copy_stream(@object.from, @to_name, 8, offset) }.should.raise(TypeError)
+    end
+
+    it "raises a TypeError if passed an object that does not respond to #to_int" do
+      offset = mock("offset")
+      -> { IO.copy_stream(@object.from, @to_name, 8, offset) }.should.raise(TypeError)
     end
   end
 end
@@ -101,6 +137,24 @@ describe :io_copy_stream_to_io, shared: true do
     IO.copy_stream(@object.from, @to_io, 0).should == 0
     File.read(@to_name).should == ""
   end
+
+  it "calls #to_int to convert length" do
+    length = mock("length")
+    length.should_receive(:to_int).and_return(8)
+    IO.copy_stream(@object.from, @to_io, length).should == 8
+    File.read(@to_name).should == "Line one"
+  end
+
+  it "raises a TypeError if #to_int does not return an Integer" do
+    length = mock("length")
+    length.should_receive(:to_int).and_return("8")
+    -> { IO.copy_stream(@object.from, @to_io, length) }.should.raise(TypeError)
+  end
+
+  it "raises a TypeError if passed an object that does not respond to #to_int" do
+    length = mock("length")
+    -> { IO.copy_stream(@object.from, @to_io, length) }.should.raise(TypeError)
+  end
 end
 
 describe :io_copy_stream_to_io_with_offset, shared: true do
@@ -113,6 +167,24 @@ describe :io_copy_stream_to_io_with_offset, shared: true do
     it "copies nothing when given 0 bytes length to read" do
       IO.copy_stream(@object.from, @to_io, 0, 4).should == 0
       File.read(@to_name).should == ""
+    end
+
+    it "calls #to_int to convert the offset" do
+      offset = mock("offset")
+      offset.should_receive(:to_int).and_return(4)
+      IO.copy_stream(@object.from, @to_io, 8, offset).should == 8
+      File.read(@to_name).should == " one\n\nLi"
+    end
+
+    it "raises a TypeError if #to_int does not return an Integer" do
+      offset = mock("offset")
+      offset.should_receive(:to_int).and_return("4")
+      -> { IO.copy_stream(@object.from, @to_io, 8, offset) }.should.raise(TypeError)
+    end
+
+    it "raises a TypeError if passed an object that does not respond to #to_int" do
+      offset = mock("offset")
+      -> { IO.copy_stream(@object.from, @to_io, 8, offset) }.should.raise(TypeError)
     end
   end
 end
