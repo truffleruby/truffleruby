@@ -397,6 +397,8 @@ class IO
         @from.seek @offset, IO::SEEK_CUR
       end
 
+      return 0 if @length == 0
+
       size = @length || InternalBuffer::DEFAULT_READ_SIZE
       bytes = 0
 

@@ -19,6 +19,11 @@ describe :io_copy_stream_to_file, shared: true do
     File.read(@to_name).should == "Line one"
   end
 
+  it "copies nothing when given 0 bytes length to read" do
+    IO.copy_stream(@object.from, @to_name, 0).should == 0
+    File.read(@to_name).should == ""
+  end
+
   it "calls #to_path to convert on object to a file name" do
     obj = mock("io_copy_stream_to")
     obj.should_receive(:to_path).and_return(@to_name)
@@ -40,6 +45,11 @@ describe :io_copy_stream_to_file_with_offset, shared: true do
     it "copies only length bytes from the offset" do
       IO.copy_stream(@object.from, @to_name, 8, 4).should == 8
       File.read(@to_name).should == " one\n\nLi"
+    end
+
+    it "copies nothing when given 0 bytes length to read" do
+      IO.copy_stream(@object.from, @to_name, 0, 4).should == 0
+      File.read(@to_name).should == ""
     end
   end
 end
@@ -86,6 +96,11 @@ describe :io_copy_stream_to_io, shared: true do
     IO.copy_stream(@object.from, @to_io, 8).should == 8
     File.read(@to_name).should == "Line one"
   end
+
+  it "copies nothing when given 0 bytes length to read" do
+    IO.copy_stream(@object.from, @to_io, 0).should == 0
+    File.read(@to_name).should == ""
+  end
 end
 
 describe :io_copy_stream_to_io_with_offset, shared: true do
@@ -93,6 +108,11 @@ describe :io_copy_stream_to_io_with_offset, shared: true do
     it "copies only length bytes from the offset" do
       IO.copy_stream(@object.from, @to_io, 8, 4).should == 8
       File.read(@to_name).should == " one\n\nLi"
+    end
+
+    it "copies nothing when given 0 bytes length to read" do
+      IO.copy_stream(@object.from, @to_io, 0, 4).should == 0
+      File.read(@to_name).should == ""
     end
   end
 end
@@ -305,8 +325,9 @@ describe "IO.copy_stream" do
       from = mock("io_copy_stream_to_object_zero_length_read")
       to = mock("io_copy_stream_to_object_zero_length_write")
       from.should_not_receive(:read)
+      from.should_not_receive(:readpartial)
       to.should_not_receive(:write)
-      IO.copy_stream(from, to, 0)
+      IO.copy_stream(from, to, 0).should == 0
     end
   end
 
