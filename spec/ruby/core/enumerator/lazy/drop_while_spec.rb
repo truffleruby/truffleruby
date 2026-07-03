@@ -43,6 +43,14 @@ describe "Enumerator::Lazy#drop_while" do
     -> { @yieldsmixed.drop_while }.should.raise(ArgumentError)
   end
 
+  describe "when the returned lazy enumerator is evaluated by .force" do
+    it "return same value when called twice" do
+      lazy = [0, 1, 2, 3].lazy.drop_while { |v| v < 2 }
+      lazy.force.should == [2, 3]
+      lazy.force.should == [2, 3]
+    end
+  end
+
   describe "on a nested Lazy" do
     it "sets #size to nil" do
       Enumerator::Lazy.new(Object.new, 100) {}.take(20).drop_while { |v| v }.size.should == nil

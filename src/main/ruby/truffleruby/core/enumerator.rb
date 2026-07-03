@@ -379,8 +379,6 @@ class Enumerator
       Enumerator.instance_method(:enum_for).bind(self).call(:each) { size }
     end
 
-    # TODO: rewind and/or to_a/force behave improperly on outputs of take, drop, uniq, possibly more
-
     alias_method :force, :to_a
 
     def take(n)
@@ -397,11 +395,12 @@ class Enumerator
 
       return to_enum(:cycle, 0).lazy if n.zero?
 
-      taken = 0
       Lazy.new(self, set_size) do |yielder, *args|
+        taken = yielder.memo || 0
         if taken < n
           yielder.yield(*args)
           taken += 1
+          yielder.memo = taken
           raise StopLazyError unless taken < n
         else
           raise StopLazyError
@@ -420,10 +419,10 @@ class Enumerator
         set_size = current_size
       end
 
-      dropped = 0
       Lazy.new(self, set_size) do |yielder, *args|
+        dropped = yielder.memo || 0
         if dropped < n
-          dropped += 1
+          yielder.memo = dropped + 1
         else
           yielder.yield(*args)
         end
@@ -445,11 +444,11 @@ class Enumerator
     def drop_while
       raise ArgumentError, 'Lazy#drop_while requires a block' unless block_given?
 
-      succeeding = true
       Lazy.new(self, nil) do |yielder, *args|
+        succeeding = Primitive.nil?(yielder.memo) ? true : yielder.memo
         if succeeding
           unless yield(*args)
-            succeeding = false
+            yielder.memo = false
             yielder.yield(*args)
           end
         else
@@ -591,8 +590,8 @@ class Enumerator
         end
       end
 
-      index = 0
       Lazy.new(self, enumerator_size) do |yielder, *args|
+        index = yielder.memo || 0
         val = args.length >= 2 ? args : args.first
         rests = lists.map do |list|
           case list
@@ -607,7 +606,7 @@ class Enumerator
           end
         end
         yielder.yield [val, *rests]
-        index += 1
+        yielder.memo = index + 1
       end
     end
 

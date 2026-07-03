@@ -48,7 +48,7 @@ Compatibility:
 * Implement `IO#advise` (#4341, @earlopain).
 * Fix `Process.spawn` and raise `Errno::ENOENT` when called with `chdir` option and a directory doesn't exist (#3825, @andrykonchin).
 * Fix precedence between `RUBYOPT` and CLI switches (#4342, @earlopain).
-* Fix `Enumerator::Lazy#uniq` when doing multiple enumerations (#4357, @earlopain).
+* Fix `Enumerator::Lazy#{drop,drop_while,take,uniq,zip}` when doing multiple enumerations (#4357, @earlopain).
 
 Performance:
 

@@ -34,6 +34,14 @@ describe "Enumerator::Lazy#drop" do
     end
   end
 
+  describe "when the returned lazy enumerator is evaluated by .force" do
+    it "return same value when called twice" do
+      lazy = [0, 1].lazy.drop(1)
+      lazy.force.should == [1]
+      lazy.force.should == [1]
+    end
+  end
+
   describe "on a nested Lazy" do
     it "sets difference of given count with old size to new size" do
       Enumerator::Lazy.new(Object.new, 100) {}.drop(20).drop(50).size.should == 30
