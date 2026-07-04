@@ -80,10 +80,11 @@ module Truffle
         if v && !Primitive.is_a?(v, String)
           raise TypeError, "value of #{name} must be String"
         end
+        warn "non-nil '#{name}' is deprecated", uplevel: 1, category: :deprecated if !Primitive.nil?(v)
         Primitive.global_variable_set :$/, v ? -v.to_s : v
       })
 
-    $/ = "\n".freeze
+    Primitive.global_variable_set :$/, "\n".freeze
 
     define_hooked_variable(
       :$\,
@@ -92,6 +93,7 @@ module Truffle
         if v && !Primitive.is_a?(v, String)
           raise TypeError, "value of #{name} must be String"
         end
+        warn "non-nil '#{name}' is deprecated", uplevel: 1, category: :deprecated if !Primitive.nil?(v)
         Primitive.global_variable_set :$\, v
       })
 
@@ -99,7 +101,7 @@ module Truffle
 
     Truffle::Boot.delay do
       if Truffle::Boot.get_option 'chomp-loop'
-        $\ = $/
+        Primitive.global_variable_set :$\, $/
       end
     end
 
@@ -112,7 +114,7 @@ module Truffle
         if v && !Primitive.is_a?(v, String)
           raise TypeError, "value of #{name} must be String"
         end
-        warn "'#{name}' is deprecated", uplevel: 1 if !Primitive.nil?(v) && Warning[:deprecated]
+        warn "non-nil '#{name}' is deprecated", uplevel: 1, category: :deprecated if !Primitive.nil?(v)
         Primitive.global_variable_set :$,, v
       })
 
