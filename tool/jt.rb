@@ -258,6 +258,7 @@ module Utilities
     if mx = which('mx')
       mx_repo = File.dirname(mx)
       unless git_tag(mx_repo) == @mx_version
+        sh 'git', 'fetch', 'origin', chdir: mx_repo
         sh 'git', 'checkout', '--quiet', @mx_version, chdir: mx_repo
       end
       'mx'
