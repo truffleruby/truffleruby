@@ -142,11 +142,11 @@ class Hash
 
     return false unless other.size == size
 
-    Truffle::ThreadOperations.detect_pair_recursion self, other do
-      # {} == {}.compare_by_identity but not {a: 1} == {a: 1}.compare_by_identity
-      return true if other.empty? && empty?
-      return false if other.compare_by_identity? != compare_by_identity?
+    # {} == {}.compare_by_identity but not {a: 1} == {a: 1}.compare_by_identity
+    return true if other.empty? && empty?
+    return false if other.compare_by_identity? != compare_by_identity?
 
+    Truffle::ThreadOperations.detect_pair_recursion self, other do
       each_pair do |key, value|
         other_value = Primitive.hash_get_or_undefined(other, key)
 
