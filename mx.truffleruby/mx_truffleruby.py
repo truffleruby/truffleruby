@@ -424,7 +424,7 @@ def truffleruby_standalone_deps():
     return mx_truffle.resolve_truffle_dist_names(use_optimized_runtime=include_truffle_runtime)
 
 def librubyvm_build_args():
-    if mx_sdk_vm_ng.is_nativeimage_ee() and mx.get_os() == 'linux' and 'NATIVE_IMAGE_AUXILIARY_ENGINE_CACHE' not in os.environ:
+    if mx_sdk_vm_ng.is_nativeimage_ee() and 'NATIVE_IMAGE_AUXILIARY_ENGINE_CACHE' not in os.environ:
         return ['--gc=G1', '-H:-ProtectionKeys']
     else:
         return []
