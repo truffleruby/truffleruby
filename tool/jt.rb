@@ -278,6 +278,17 @@ module Utilities
     end
   end
 
+  def find_freebsd_openjdk_home
+    java_home = ENV['JAVA_HOME']
+    java_home ||= %w[
+      /usr/local/openjdk21
+      /usr/local/openjdk25
+      /usr/local/openjdk17
+    ].find { |path| File.executable?("#{path}/bin/java") }
+    abort 'Set JAVA_HOME to an OpenJDK 17+ installation to build on FreeBSD' unless java_home
+    java_home
+  end
+
   def env_path(env)
     "#{TRUFFLERUBY_DIR}/mx.truffleruby/#{env}"
   end
@@ -2515,7 +2526,9 @@ module Commands
   private def sforceimports?(mx_base_args)
     return true unless File.directory?(GRAAL_DIR)
 
-    scheckimports_output = mx(*mx_base_args, 'scheckimports', '--ignore-uncommitted', '--warn-only', java_home: :none, primary_suite: TRUFFLERUBY_DIR, capture: :both)
+    env_vars = freebsd? ? { 'JAVA_HOME' => find_freebsd_openjdk_home } : {}
+    java_home = freebsd? ? :use_env_java_home : :none
+    scheckimports_output = mx(env_vars, *mx_base_args, 'scheckimports', '--ignore-uncommitted', '--warn-only', java_home: java_home, primary_suite: TRUFFLERUBY_DIR, capture: :both)
 
     unless scheckimports_output.empty?
       # Don't ask to update, just warn.
@@ -2550,7 +2563,11 @@ module Commands
   end
 
   def sforceimports
-    mx('sforceimports', java_home: :none, primary_suite: TRUFFLERUBY_DIR)
+    if freebsd?
+      mx({ 'JAVA_HOME' => find_freebsd_openjdk_home }, 'sforceimports', java_home: :use_env_java_home, primary_suite: TRUFFLERUBY_DIR)
+    else
+      mx('sforceimports', java_home: :none, primary_suite: TRUFFLERUBY_DIR)
+    end
   end
 
   def show_available_memory
@@ -2589,7 +2606,10 @@ module Commands
     mx_base_args = ['--env', env]
 
     os_env = {}
-    unless freebsd? and !env.include?('native')
+    freebsd_jvm_build = freebsd? and !env.include?('native')
+    if freebsd_jvm_build
+      os_env['JAVA_HOME'] = find_freebsd_openjdk_home
+    else
       os_env['BOOTSTRAP_GRAALVM'] = install_graalvm
     end
 
@@ -2614,7 +2634,8 @@ module Commands
     mx_options, mx_build_options = args_split(options)
     mx_args = mx_base_args + mx_options
 
-    mx(os_env, *mx_args, 'build', *mx_build_options, primary_suite: TRUFFLERUBY_DIR)
+    java_home = freebsd_jvm_build ? :use_env_java_home : find_java_home
+    mx(os_env, *mx_args, 'build', *mx_build_options, java_home: java_home, primary_suite: TRUFFLERUBY_DIR)
 
     standalone_dist = env.include?('native') ? 'TRUFFLERUBY_NATIVE_STANDALONE' : 'TRUFFLERUBY_JVM_STANDALONE'
     build_dir = "#{TRUFFLERUBY_DIR}/mxbuild/#{mx_platform}/#{standalone_dist}"
