@@ -310,6 +310,10 @@ describe "C-API IO function" do
       @o.rb_io_maybe_wait_writable(0, @w_io, nil).should == 0
     end
 
+    it "returns 0 if given errno is neither EINTR nor EAGAIN" do
+      @o.rb_io_maybe_wait_writable(Errno::EBADF::Errno, @w_io, nil).should == 0
+    end
+
     it "raises an IOError if the IO is closed" do
       @w_io.close
       -> { @o.rb_io_maybe_wait_writable(0, @w_io, nil) }.should.raise(IOError, "closed stream")
@@ -428,6 +432,10 @@ describe "C-API IO function" do
 
       it "returns 0 if there is given no error" do
         @o.rb_io_maybe_wait_readable(0, @r_io, nil, false).should == 0
+      end
+
+      it "returns 0 if given errno is neither EINTR nor EAGAIN" do
+        @o.rb_io_maybe_wait_readable(Errno::EBADF::Errno, @r_io, nil, false).should == 0
       end
 
       it "blocks until the io is readable and returns events that actually occurred" do
