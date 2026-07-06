@@ -42,6 +42,7 @@ ALL_PLATFORMS = %w[
   linux-amd64
   linux-aarch64
   darwin-aarch64
+  freebsd-amd64
 ]
 
 JDEBUG = '--vm.agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=y'
@@ -152,6 +153,10 @@ module Utilities
 
   def darwin?
     @darwin ||= RbConfig::CONFIG['host_os'].include?('darwin')
+  end
+
+  def freebsd?
+    @freebsd ||= RbConfig::CONFIG['host_os'].include?('freebsd')
   end
 
   def amd64?
@@ -688,6 +693,8 @@ module Utilities
       'darwin'
     elsif linux?
       'linux'
+    elsif freebsd?
+      'freebsd'
     else
       abort 'Unknown OS'
     end
@@ -2400,6 +2407,9 @@ module Commands
   end
 
   private def install_graalvm
+    return ENV['BOOTSTRAP_GRAALVM'] if ENV['BOOTSTRAP_GRAALVM']
+    abort 'Downloading a bootstrap GraalVM is not supported on FreeBSD yet. Set BOOTSTRAP_GRAALVM to a local GraalVM home.' if freebsd?
+
     os = { 'linux' => 'linux', 'darwin' => 'macos' }.fetch(mx_os)
     arch = { 'amd64' => 'x64', 'aarch64' => 'aarch64' }.fetch(mx_arch)
 
@@ -2540,6 +2550,8 @@ module Commands
       STDERR.puts `free -m`
     elsif darwin?
       STDERR.puts `memory_pressure`.lines.grep(/The system has|System-wide memory free percentage/)
+    elsif freebsd?
+      STDERR.puts `sysctl hw.physmem hw.usermem vm.stats.vm.v_free_count vm.stats.vm.v_page_size`
     end
   end
 
@@ -2826,7 +2838,7 @@ module Commands
   end
 
   def native_configuration_file
-    os = mx_os.capitalize
+    os = { 'linux' => 'Linux', 'darwin' => 'Darwin', 'freebsd' => 'FreeBSD' }.fetch(mx_os)
     arch = { 'amd64' => 'AMD64', 'aarch64' => 'AArch64' }.fetch(mx_arch)
     puts "src/main/java/org/truffleruby/platform/#{os}#{arch}NativeConfiguration.java"
   end

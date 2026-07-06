@@ -7,6 +7,14 @@
 #error Unsupported platform
 #endif
 
+#elif defined(__FreeBSD__)
+
+#if defined(__x86_64__)
+#include <truffleruby/config_freebsd_amd64.h>
+#else
+#error Unsupported platform
+#endif
+
 #else
 
 #if defined(__x86_64__)

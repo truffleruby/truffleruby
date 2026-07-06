@@ -79,6 +79,13 @@ public final class NativeConfiguration {
                         return nativeConfiguration;
                 }
                 break;
+            case FREEBSD:
+                switch (Platform.ARCHITECTURE) {
+                    case AMD64:
+                        FreeBSDAMD64NativeConfiguration.load(nativeConfiguration, context);
+                        return nativeConfiguration;
+                }
+                break;
         }
 
         RubyLanguage.LOGGER.severe("no native configuration for platform " + TruffleRuby.RUBY_PLATFORM);

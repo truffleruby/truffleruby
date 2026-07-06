@@ -800,6 +800,7 @@ suite = {
                 "linux-amd64",
                 "linux-aarch64",
                 "darwin-aarch64",
+                "freebsd-amd64",
             ],
             "maven": False,
         },
