@@ -87,6 +87,7 @@ VALUE rb_eSystemExit;
 VALUE rb_eSysStackError;
 VALUE rb_eTypeError;
 VALUE rb_eThreadError;
+VALUE rb_eIOTimeoutError;
 VALUE rb_mWaitReadable;
 VALUE rb_mWaitWritable;
 VALUE rb_eZeroDivError;
@@ -168,6 +169,7 @@ void rb_tr_trampoline_init_global_constants(VALUE (*get_constant)(const char*)) 
   rb_eSysStackError = get_constant("rb_eSysStackError");
   rb_eTypeError = get_constant("rb_eTypeError");
   rb_eThreadError = get_constant("rb_eThreadError");
+  rb_eIOTimeoutError = get_constant("rb_eIOTimeoutError");
   rb_mWaitReadable = get_constant("rb_mWaitReadable");
   rb_mWaitWritable = get_constant("rb_mWaitWritable");
   rb_eZeroDivError = get_constant("rb_eZeroDivError");

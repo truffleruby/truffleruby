@@ -370,6 +370,10 @@ static VALUE io_spec_rb_io_open_descriptor_without_encoding(VALUE self, VALUE kl
   return rb_io_open_descriptor(klass, FIX2INT(descriptor), FIX2INT(mode), path, timeout, NULL);
 }
 
+static VALUE io_spec_rb_eIOTimeoutError(VALUE self) {
+  return rb_eIOTimeoutError;
+}
+
 void Init_io_spec(void) {
   VALUE cls = rb_define_class("CApiIOSpecs", rb_cObject);
   rb_define_method(cls, "GetOpenFile_fd", io_spec_GetOpenFile_fd, 1);
@@ -409,6 +413,7 @@ void Init_io_spec(void) {
   rb_define_method(cls, "rb_io_closed_p", io_spec_rb_io_closed_p, 1);
   rb_define_method(cls, "rb_io_open_descriptor", io_spec_rb_io_open_descriptor, 9);
   rb_define_method(cls, "rb_io_open_descriptor_without_encoding", io_spec_rb_io_open_descriptor_without_encoding, 5);
+  rb_define_method(cls, "rb_eIOTimeoutError", io_spec_rb_eIOTimeoutError, 0);
   rb_define_const(cls, "FMODE_READABLE", INT2FIX(FMODE_READABLE));
   rb_define_const(cls, "FMODE_WRITABLE", INT2FIX(FMODE_WRITABLE));
   rb_define_const(cls, "FMODE_BINMODE", INT2FIX(FMODE_BINMODE));
