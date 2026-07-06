@@ -88,6 +88,7 @@ constants = [
     [SystemStackError, 'SysStackError'],
     TypeError,
     ThreadError,
+    [IO::TimeoutError, "IOTimeoutError"],
     IO::WaitReadable,
     IO::WaitWritable,
     [ZeroDivisionError, 'ZeroDivError'],

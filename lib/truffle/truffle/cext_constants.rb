@@ -216,6 +216,10 @@ module Truffle::CExt
     IOError
   end
 
+  def rb_eIOTimeoutError
+    IO::TimeoutError
+  end
+
   def rb_eKeyError
     KeyError
   end
