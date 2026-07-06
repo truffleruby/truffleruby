@@ -2532,16 +2532,23 @@ module Commands
 
     unless scheckimports_output.empty?
       # Don't ask to update, just warn.
-      if ENV['JT_IMPORTS_DONT_ASK'] || !STDIN.tty?
+      if freebsd? || ENV['JT_IMPORTS_DONT_ASK'] || !STDIN.tty?
         with_color(TERM_COLOR_RED) do
           boxed do
             puts scheckimports_output
-            puts <<~MESSAGE
-              You might want to:
-              * use the version of graal in suite.py, then use "jt build --sforceimports", useful when building TruffleRuby and not changing graal at the same time (most common)
-              * update the graal version in suite.py, then use "mx scheckimports", useful when explicitly updating the default graal version of TruffleRuby (rare)
-              * test TruffleRuby with a different graal version with your own changes in graal, then you can ignore this warning
-            MESSAGE
+            if freebsd?
+              puts <<~MESSAGE
+                FreeBSD support in mx/graal is still incomplete, so `jt build` will not ask to run `mx sforceimports`.
+                Continuing with the existing imports.
+              MESSAGE
+            else
+              puts <<~MESSAGE
+                You might want to:
+                * use the version of graal in suite.py, then use "jt build --sforceimports", useful when building TruffleRuby and not changing graal at the same time (most common)
+                * update the graal version in suite.py, then use "mx scheckimports", useful when explicitly updating the default graal version of TruffleRuby (rare)
+                * test TruffleRuby with a different graal version with your own changes in graal, then you can ignore this warning
+              MESSAGE
+            end
           end
         end
         false
