@@ -88,8 +88,8 @@ LTS_JDK_VERSION = '21'
 IGV_JDK_VERSION = '21'
 DEFAULT_JDK_VERSION = 'latest'
 
-BOOTSTRAP_GRAALVM_VERSION = '25.0.2'
-BOOTSTRAP_GRAALVM_EA_BUILD_TAG = 'jdk-25e1-25.0.3-ea.32'
+BOOTSTRAP_GRAALVM_VERSION = '25.1.3'
+BOOTSTRAP_GRAALVM_EA_BUILD_TAG = nil
 
 # Not yet 'jdk.graal' as we test against 21 and 21 does not know 'jdk.graal'
 GRAAL_OPTION_PREFIX = 'graal'
@@ -2412,12 +2412,13 @@ module Commands
     else
       version = BOOTSTRAP_GRAALVM_VERSION
       major = version[/^(\d+)/, 1]
-      archive_version = version.sub(/\.0\.0$/, '')
+      archive_version = "#{major}i1"
+      jdk_version = version.sub(/^(\d+)\.\d+\.(\d+)$/, '\1.0.\2')
       if ee?
-        url = "https://download.oracle.com/graalvm/#{major}/archive/graalvm-jdk-#{archive_version}_#{os}-#{arch}_bin.tar.gz"
+        url = "https://gds.oracle.com/download/graal/#{archive_version}/archive/graalvm-jdk-#{archive_version}-#{jdk_version}_#{os}-#{arch}_bin.tar.gz"
         dir = "#{JDKS_CACHE_DIR}/graalvm-#{version}"
       else
-        url = "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-#{version}/graalvm-community-jdk-#{version}_#{os}-#{arch}_bin.tar.gz"
+        url = "https://github.com/graalvm/graalvm-ce-builds/releases/download/graal-#{version}/graalvm-community-jdk-#{archive_version}-#{jdk_version}_#{os}-#{arch}_bin.tar.gz"
         dir = "#{JDKS_CACHE_DIR}/graalvm-community-#{version}"
       end
     end
