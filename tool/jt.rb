@@ -272,6 +272,12 @@ module Utilities
     end
   end
 
+  def find_mx_python
+    which('python3') || which('python') || Dir['/usr/local/bin/python3.*'].sort.reverse.find do |path|
+      File.basename(path) =~ /\Apython3\.\d+\z/ and File.executable?(path)
+    end
+  end
+
   def env_path(env)
     "#{TRUFFLERUBY_DIR}/mx.truffleruby/#{env}"
   end
@@ -680,6 +686,8 @@ module Utilities
         mx_args.unshift '--java-home', java_home
       end
     end
+
+    env['MX_PYTHON'] ||= find_mx_python if freebsd?
 
     if primary_suite and Dir.pwd != primary_suite
       mx_args.unshift '-p', primary_suite
@@ -2580,9 +2588,10 @@ module Commands
     name = "truffleruby-#{@ruby_name}"
     mx_base_args = ['--env', env]
 
-    os_env = {
-      'BOOTSTRAP_GRAALVM' => install_graalvm
-    }
+    os_env = {}
+    unless freebsd? and !env.include?('native')
+      os_env['BOOTSTRAP_GRAALVM'] = install_graalvm
+    end
 
     if options.delete('--sforceimports') || sforceimports?(mx_base_args)
       sforceimports
