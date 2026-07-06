@@ -4,6 +4,7 @@ New features:
 
 * Updated to Ruby 4.0.2 (#4231, @eregon).
 * Updated to [GraalVM 25.1.3](https://medium.com/graalvm/graalvm-25-1-is-here-13829606982e) (#4363, @eregon).
+* TruffleRuby Native now uses the better G1 garbage collector also on macOS (@eregon).
 * Add `Array#find` and `Array#detect` as faster overrides of `Enumerable#find` (#4231, @komarovb).
 * Add `Array#rfind` as a more efficient alternative to `array.reverse_each.find` (#4231, @komarovb).
 
