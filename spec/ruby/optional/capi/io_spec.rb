@@ -356,7 +356,10 @@ describe "C-API IO function" do
       start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
       t = Thread.new do
-        @o.rb_io_maybe_wait_writable(0, @w_io, 10)
+        @o.rb_io_maybe_wait_writable(Errno::EAGAIN::Errno, @w_io, 10)
+
+        # ensure the call was blocking and was really interrupted
+        flunk "not reached"
       end
 
       Thread.pass until t.stop?
@@ -444,7 +447,10 @@ describe "C-API IO function" do
         start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
         t = Thread.new do
-          @o.rb_io_maybe_wait_readable(0, @r_io, 10, false)
+          @o.rb_io_maybe_wait_readable(Errno::EAGAIN::Errno, @r_io, 10, false)
+
+          # ensure the call was blocking and was really interrupted
+          flunk "not reached"
         end
 
         Thread.pass until t.stop?
@@ -545,7 +551,10 @@ describe "C-API IO function" do
       start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
       t = Thread.new do
-        @o.rb_io_maybe_wait(0, @r_io, IO::READABLE, 10)
+        @o.rb_io_maybe_wait(Errno::EAGAIN::Errno, @r_io, IO::READABLE, 10)
+
+        # ensure the call was blocking and was really interrupted
+        flunk "not reached"
       end
 
       Thread.pass until t.stop?
@@ -561,7 +570,10 @@ describe "C-API IO function" do
       start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
       t = Thread.new do
-        @o.rb_io_maybe_wait(0, @w_io, IO::WRITABLE, 10)
+        @o.rb_io_maybe_wait(Errno::EAGAIN::Errno, @w_io, IO::WRITABLE, 10)
+
+        # ensure the call was blocking and was really interrupted
+        flunk "not reached"
       end
 
       Thread.pass until t.stop?
