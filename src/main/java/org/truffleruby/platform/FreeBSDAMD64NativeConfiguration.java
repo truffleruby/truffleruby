@@ -20,7 +20,7 @@ import org.truffleruby.RubyContext;
 public final class FreeBSDAMD64NativeConfiguration extends DefaultNativeConfiguration {
 
     public static void load(NativeConfiguration configuration, RubyContext context) {
-        // Generated from tool/generate-native-config.rb on x86_64-freebsd15.0
+        // Generated from tool/generate-native-config.rb on x86_64-freebsd
         configuration.config("platform.sigaction.sizeof", 32);
         configuration.config("platform.sigaction.sa_handler.offset", 0);
         configuration.config("platform.sigaction.sa_handler.size", 8);
