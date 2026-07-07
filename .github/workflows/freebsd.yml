@@ -32,7 +32,7 @@ jobs:
       with:
         usesh: true
         prepare: |
-          pkg install -y bash ruby devel/ruby-gems python311 openjdk21 git libunwind
+          pkg install -y bash ruby devel/ruby-gems python311 openjdk21 git libunwind llvm pkgconf rust
 
         run: |
           set -eu
