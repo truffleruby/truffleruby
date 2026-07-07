@@ -55,8 +55,16 @@ describe "IO.binread" do
   end
 
   ruby_version_is "4.0" do
-    it "raises Errno::ENOENT when path starts with a pipe" do
-      -> { IO.binread("|echo ok") }.should.raise(Errno::ENOENT)
+    platform_is_not :windows do
+      it "raises Errno::ENOENT when path starts with a pipe" do
+        -> { IO.binread("|echo ok") }.should.raise(Errno::ENOENT)
+      end
+    end
+
+    platform_is :windows do
+      it "raises Errno::EINVAL when path starts with a pipe" do
+        -> { IO.binread("|echo ok") }.should.raise(Errno::EINVAL)
+      end
     end
   end
 end

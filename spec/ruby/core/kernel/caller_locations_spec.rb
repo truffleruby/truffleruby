@@ -128,3 +128,9 @@ describe 'Kernel#caller_locations' do
     end
   end
 end
+
+describe "Kernel.caller_locations" do
+  it "is a public method" do
+    Kernel.public_methods(false).should.include?(:caller_locations)
+  end
+end

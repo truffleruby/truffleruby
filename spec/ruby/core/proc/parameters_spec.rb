@@ -194,6 +194,6 @@ describe "Proc#parameters" do
   end
 
   it "regards a destructured parameter in lambda as an required" do
-    -> ((a)) { }.parameters.should == [[:req]]
+    -> ((a)) { }.parameters.should == [[:req]] # rubocop:disable Style/StabbyLambdaParentheses
   end
 end

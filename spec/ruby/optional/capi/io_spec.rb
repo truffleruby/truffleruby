@@ -320,10 +320,32 @@ describe "C-API IO function" do
     end
 
     ruby_version_is "3.4" do
-      it "raises a IO::TimeoutError if the timeout elapses" do
-        IOSpec.exhaust_write_buffer(@w_io)
-        -> { @o.rb_io_maybe_wait_writable(Errno::EAGAIN::Errno, @w_io, 0) }.
-          should.raise(IO::TimeoutError, "Timed out waiting for IO to become writable!")
+      platform_is_not :windows do
+        it "raises a IO::TimeoutError if the timeout elapses" do
+          IOSpec.exhaust_write_buffer(@w_io)
+          -> { @o.rb_io_maybe_wait_writable(Errno::EAGAIN::Errno, @w_io, 0) }.
+            should.raise(IO::TimeoutError, "Timed out waiting for IO to become writable!")
+        end
+      end
+
+      platform_is :windows do
+        # Windows select/poll wrapper (rb_w32_select) treats write descriptors of non-sockets
+        # (such as pipe writers) as always writable. Thus it immediately returns IO::WRITABLE
+        # instead of timing out. So use sockets instead.
+        it "raises a IO::TimeoutError if the timeout elapses" do
+          require 'socket'
+          r_sock, w_sock = Socket.pair(Socket::AF_INET, Socket::SOCK_STREAM, 0)
+          begin
+            r_sock.close_write
+            w_sock.close_read
+            IOSpec.exhaust_write_buffer(w_sock)
+            -> { @o.rb_io_maybe_wait_writable(Errno::EAGAIN::Errno, w_sock, 0) }.
+              should.raise(IO::TimeoutError, "Timed out waiting for IO to become writable!")
+          ensure
+            r_sock.close unless r_sock.closed?
+            w_sock.close unless w_sock.closed?
+          end
+        end
       end
     end
 

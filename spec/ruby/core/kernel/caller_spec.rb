@@ -136,3 +136,9 @@ describe 'Kernel#caller' do
     end
   end
 end
+
+describe "Kernel.caller" do
+  it "is a public method" do
+    Kernel.public_methods(false).should.include?(:caller)
+  end
+end
