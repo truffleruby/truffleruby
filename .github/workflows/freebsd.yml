@@ -44,11 +44,14 @@ jobs:
           ruby -c tool/generate-native-config.rb
           bash -n tool/generate-config-header.sh tool/import-ffi.sh
 
+          native_config="$(bin/jt native_configuration_file)"
+          test "$native_config" = "src/main/java/org/truffleruby/platform/FreeBSDAMD64NativeConfiguration.java"
+          cp "$native_config" /tmp/native-config.before
           ruby tool/generate-native-config.rb
-          test "$(bin/jt native_configuration_file)" = "src/main/java/org/truffleruby/platform/FreeBSDAMD64NativeConfiguration.java"
+          cmp /tmp/native-config.before "$native_config"
 
+          config_header="$(bin/jt config_header_file)"
+          test "$config_header" = "lib/cext/include/truffleruby/config_freebsd_amd64.h"
+          cp "$config_header" /tmp/config-header.before
           tool/generate-config-header.sh
-          test "$(bin/jt config_header_file)" = "lib/cext/include/truffleruby/config_freebsd_amd64.h"
-
-          bin/jt check_native_configuration
-          bin/jt check_config_header
+          cmp /tmp/config-header.before "$config_header"
