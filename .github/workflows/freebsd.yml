@@ -32,7 +32,7 @@ jobs:
       with:
         usesh: true
         prepare: |
-          pkg install -y bash ruby devel/ruby-gems python311 openjdk21 git
+          pkg install -y bash ruby devel/ruby-gems python311 openjdk21 git libunwind
 
         run: |
           set -eu
@@ -48,10 +48,10 @@ jobs:
           test "$native_config" = "src/main/java/org/truffleruby/platform/FreeBSDAMD64NativeConfiguration.java"
           cp "$native_config" /tmp/native-config.before
           ruby tool/generate-native-config.rb
-          cmp /tmp/native-config.before "$native_config"
+          diff -u /tmp/native-config.before "$native_config"
 
           config_header="$(bin/jt config_header_file)"
           test "$config_header" = "lib/cext/include/truffleruby/config_freebsd_amd64.h"
           cp "$config_header" /tmp/config-header.before
           tool/generate-config-header.sh
-          cmp /tmp/config-header.before "$config_header"
+          diff -u /tmp/config-header.before "$config_header"
