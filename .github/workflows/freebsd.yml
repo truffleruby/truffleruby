@@ -1,0 +1,52 @@
+name: FreeBSD
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths-ignore: ['**.md']
+  push:
+    branches: [master, 'release/**']
+    paths-ignore: ['**.md']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  smoke:
+    name: freebsd amd64 smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+    - name: Clone TruffleRuby
+      uses: actions/checkout@v6
+
+    - name: Check FreeBSD platform support
+      uses: vmactions/freebsd-vm@v1
+      with:
+        usesh: true
+        prepare: |
+          pkg install -y bash ruby devel/ruby-gems python311 openjdk21 git gmake cmake ninja pkgconf llvm
+
+        run: |
+          set -eu
+
+          export JAVA_HOME=/usr/local/openjdk21
+          export PATH="$JAVA_HOME/bin:/usr/local/bin:$PATH"
+
+          ruby -c tool/jt.rb
+          ruby -c tool/generate-native-config.rb
+          bash -n tool/generate-config-header.sh tool/import-ffi.sh
+          git diff --check
+
+          ruby tool/generate-native-config.rb
+          test "$(bin/jt native_configuration_file)" = "src/main/java/org/truffleruby/platform/FreeBSDAMD64NativeConfiguration.java"
+
+          tool/generate-config-header.sh
+          test "$(bin/jt config_header_file)" = "lib/cext/include/truffleruby/config_freebsd_amd64.h"
+
+          bin/jt check_native_configuration
+          bin/jt check_config_header
