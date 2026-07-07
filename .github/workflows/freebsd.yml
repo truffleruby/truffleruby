@@ -39,6 +39,8 @@ jobs:
 
           export JAVA_HOME=/usr/local/openjdk21
           export PATH="$JAVA_HOME/bin:/usr/local/bin:$PATH"
+          export CPPFLAGS="-I/usr/local/include ${CPPFLAGS:-}"
+          export LDFLAGS="-L/usr/local/lib ${LDFLAGS:-}"
 
           ruby -c tool/jt.rb
           ruby -c tool/generate-native-config.rb
