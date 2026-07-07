@@ -11,3 +11,5 @@ slow:Kernel#chomp removes the value of $/ from the end of $_
 slow:Kernel#chomp is a private method
 slow:Kernel.chomp removes the final carriage return, newline from a multi-byte $_
 slow:Kernel#chomp removes the final carriage return, newline from a multi-byte $_
+slow:Kernel#chomp is a private method only when -n is passed
+slow:Kernel.chomp is a public method only when -n is passed
