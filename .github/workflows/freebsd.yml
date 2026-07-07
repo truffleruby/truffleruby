@@ -24,12 +24,15 @@ jobs:
     - name: Clone TruffleRuby
       uses: actions/checkout@v6
 
+    - name: Check whitespace
+      run: git diff --check
+
     - name: Check FreeBSD platform support
       uses: vmactions/freebsd-vm@v1
       with:
         usesh: true
         prepare: |
-          pkg install -y bash ruby devel/ruby-gems python311 openjdk21 git gmake cmake ninja pkgconf llvm
+          pkg install -y bash ruby devel/ruby-gems python311 openjdk21 git
 
         run: |
           set -eu
@@ -40,7 +43,6 @@ jobs:
           ruby -c tool/jt.rb
           ruby -c tool/generate-native-config.rb
           bash -n tool/generate-config-header.sh tool/import-ffi.sh
-          git diff --check
 
           ruby tool/generate-native-config.rb
           test "$(bin/jt native_configuration_file)" = "src/main/java/org/truffleruby/platform/FreeBSDAMD64NativeConfiguration.java"
