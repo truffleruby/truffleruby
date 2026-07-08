@@ -45,11 +45,11 @@ describe "IO.read" do
   end
 
   it "raises an IOError if the options Hash specifies write mode" do
-    -> { IO.read(@fname, 3, 0, mode: "w") }.should.raise(IOError)
+    -> { IO.read(@fname, 3, 0, mode: "w") }.should.raise(IOError, "not opened for reading")
   end
 
   it "raises an IOError if the options Hash specifies append only mode" do
-    -> { IO.read(@fname, mode: "a") }.should.raise(IOError)
+    -> { IO.read(@fname, mode: "a") }.should.raise(IOError, "not opened for reading")
   end
 
   it "reads the file if the options Hash includes read mode" do
@@ -119,16 +119,16 @@ describe "IO.read" do
   end
 
   it "raises a TypeError when not passed a String type" do
-    -> { IO.read nil }.should.raise(TypeError)
+    -> { IO.read nil }.should raise_consistent_error(TypeError, "no implicit conversion of nil into String")
   end
 
   it "raises an ArgumentError when not passed a valid length" do
-    -> { IO.read @fname, -1 }.should.raise(ArgumentError)
+    -> { IO.read @fname, -1 }.should.raise(ArgumentError, "negative length -1 given")
   end
 
   it "raises an ArgumentError when not passed a valid offset" do
-    -> { IO.read @fname, 0, -1  }.should.raise(ArgumentError)
-    -> { IO.read @fname, -1, -1 }.should.raise(ArgumentError)
+    -> { IO.read @fname, 0, -1  }.should.raise(ArgumentError, "negative offset -1 given")
+    -> { IO.read @fname, -1, -1 }.should.raise(ArgumentError, "negative offset -1 given")
   end
 
   it "uses the external encoding specified via the :external_encoding option" do
@@ -283,29 +283,32 @@ describe "IO#read" do
   end
 
   it "raises an ArgumentError when not passed a valid length" do
-    -> { @io.read(-1) }.should.raise(ArgumentError)
+    -> { @io.read(-1) }.should.raise(ArgumentError, "negative length -1 given")
   end
 
   it "clears the output buffer if there is nothing to read" do
-    @io.pos = 10
-
     buf = +'non-empty string'
-
+    @io.pos = 10
     @io.read(10, buf).should == nil
 
     buf.should == ''
 
     buf = +'non-empty string'
-
+    @io.pos = 10
     @io.read(nil, buf).should == ""
 
     buf.should == ''
 
     buf = +'non-empty string'
-
+    @io.pos = 10
     @io.read(0, buf).should == ""
 
     buf.should == ''
+  end
+
+  it "returns the empty string when there is nothing to read and lenght=0 is given" do
+    @io.read(11)
+    @io.read(0).should == ""
   end
 
   it "raise FrozenError if the output buffer is frozen" do
@@ -436,11 +439,11 @@ describe "IO#read" do
   end
 
   it "raises IOError on closed stream" do
-    -> { IOSpecs.closed_io.read }.should.raise(IOError)
+    -> { IOSpecs.closed_io.read }.should.raise(IOError, "closed stream")
   end
 
   it "raises ArgumentError when length is less than 0" do
-    -> { @io.read(-1) }.should.raise(ArgumentError)
+    -> { @io.read(-1) }.should.raise(ArgumentError, "negative length -1 given")
   end
 
   platform_is_not :windows do
