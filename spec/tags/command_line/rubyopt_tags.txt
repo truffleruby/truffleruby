@@ -7,6 +7,7 @@ slow:Processing RUBYOPT sets $VERBOSE to nil for '-W0'
 slow:Processing RUBYOPT sets $VERBOSE to false for '-W1'
 slow:Processing RUBYOPT sets $VERBOSE to true for '-W2'
 slow:Processing RUBYOPT is overwritten by a cli switch
+slow:Processing RUBYOPT requires from CLI -r first and then from RUBYOPT -r
 slow:Processing RUBYOPT requires the file for '-r'
 slow:Processing RUBYOPT raises a RuntimeError for '-a'
 slow:Processing RUBYOPT raises a RuntimeError for '-p'

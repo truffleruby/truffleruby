@@ -1,2 +1,4 @@
 fails:Kernel.__method__ returns nil from inside a class body
 fails:Kernel.__method__ returns nil when not called from a method
+fails:Kernel#__method__ returns nil from inside a class body
+fails:Kernel#__method__ returns nil when not called from a method

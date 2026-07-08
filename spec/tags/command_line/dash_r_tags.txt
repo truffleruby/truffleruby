@@ -1,3 +1,4 @@
+slow:The -r command line option requires in order when given multiple times
 slow:The -r command line option requires the specified file
 slow:The -r command line option requires the file before parsing the main script
 slow:The -r command line option does not require the file if the main script file does not exist

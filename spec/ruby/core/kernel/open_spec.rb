@@ -88,8 +88,16 @@ describe "Kernel#open" do
   end
 
   ruby_version_is "4.0" do
-    it "raises Errno::ENOENT when path starts with a pipe" do
-      -> { open("|echo ok") { } }.should.raise(Errno::ENOENT)
+    platform_is_not :windows do
+      it "raises Errno::ENOENT when path starts with a pipe" do
+        -> { open("|echo ok") { } }.should.raise(Errno::ENOENT)
+      end
+    end
+
+    platform_is :windows do
+      it "raises Errno::EINVAL when path starts with a pipe" do
+        -> { open("|echo ok") { } }.should.raise(Errno::EINVAL)
+      end
     end
   end
 
@@ -193,5 +201,7 @@ describe "Kernel#open" do
 end
 
 describe "Kernel.open" do
-  it "needs to be reviewed for spec completeness"
+  it "is a public method" do
+    Kernel.public_methods(false).should.include?(:open)
+  end
 end

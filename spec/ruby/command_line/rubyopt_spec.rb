@@ -88,6 +88,12 @@ describe "Processing RUBYOPT" do
     ruby_exe("0", args: '2>&1').should =~ /^rubyopt.rb required/
   end
 
+  it "requires from CLI -r first and then from RUBYOPT -r" do
+    ENV["RUBYOPT"] = "-r#{fixture(__FILE__, "rubyopt.rb")}"
+    ruby_exe("", options: "-r#{fixture(__FILE__, "test_file.rb")}").
+      should == "REQUIRED\nrubyopt.rb required\n"
+  end
+
   it "raises a RuntimeError for '-a'" do
     ENV["RUBYOPT"] = '-a'
     ruby_exe("", args: '2>&1', exit_status: 1).should =~ /RuntimeError/

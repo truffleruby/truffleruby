@@ -1,10 +1,10 @@
-slow:Kernel.at_exit runs after all other code
-slow:Kernel.at_exit runs in reverse order of registration
-slow:Kernel.at_exit allows calling exit inside a handler
-slow:Kernel.at_exit gives access to the last raised exception - global variables $! and $@
-slow:Kernel.at_exit both exceptions in a handler and in the main script are printed
-slow:Kernel.at_exit decides the exit status if both at_exit and the main script raise SystemExit
-slow:Kernel.at_exit runs all handlers even if some raise exceptions
-slow:Kernel.at_exit runs handlers even if the main script fails to parse
-slow:Kernel.at_exit calls the nested handler right after the outer one if a handler is nested into another handler
-slow:Kernel.at_exit gives access to an exception raised in a previous handler
+slow:Kernel#at_exit runs after all other code
+slow:Kernel#at_exit runs in reverse order of registration
+slow:Kernel#at_exit allows calling exit inside a handler
+slow:Kernel#at_exit gives access to the last raised exception - global variables $! and $@
+slow:Kernel#at_exit both exceptions in a handler and in the main script are printed
+slow:Kernel#at_exit decides the exit status if both at_exit and the main script raise SystemExit
+slow:Kernel#at_exit runs all handlers even if some raise exceptions
+slow:Kernel#at_exit runs handlers even if the main script fails to parse
+slow:Kernel#at_exit calls the nested handler right after the outer one if a handler is nested into another handler
+slow:Kernel#at_exit gives access to an exception raised in a previous handler

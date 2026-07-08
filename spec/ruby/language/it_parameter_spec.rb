@@ -85,13 +85,13 @@ ruby_version_is "3.4" do
     it "does not affect binding local variables" do
       -> { it; binding.local_variables }.call("a").should == []
     end
-    
+
     it "does not affect binding local variables getting" do
       proc {
         a = it; binding.local_variable_get(:it)
       }.should.raise(NameError, /local variable 'it' is not defined for/)
     end
-    
+
     it "does not affect binding local variables setting" do
       -> {
        a = it
