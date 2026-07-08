@@ -51,6 +51,7 @@ Compatibility:
 * Fix precedence between `RUBYOPT` and CLI switches (#4342, @earlopain).
 * Fix `FFI::DynamicLibrary.open` and raise `LoadError` instead of `RuntimeError` with adjusted message (#4345, @andrykonchin).
 * Fix `Enumerator::Lazy#{drop,drop_while,take,uniq,zip}` when doing multiple enumerations (#4357, @earlopain).
+* Fix `Enumerator::Lazy` methods and `Enumerable#take_while` to pack multi-argument source yields like CRuby (0-arg yield → `nil`, 1-arg → value, multi-arg → `Array`) (#4310, @sampokuokkanen).
 
 Performance:
 
