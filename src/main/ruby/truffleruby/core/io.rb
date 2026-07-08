@@ -350,8 +350,8 @@ class IO
 
   class StreamCopier
     def initialize(from, to, length, offset)
-      @length = length
-      @offset = offset
+      @length = length && Primitive.convert_type(length, Integer, :to_int)
+      @offset = offset && Primitive.convert_type(offset, Integer, :to_int)
 
       @from_io, @from = to_io(from, 'rb')
       @to_io, @to = to_io(to, 'wb')
@@ -397,17 +397,25 @@ class IO
         @from.seek @offset, IO::SEEK_CUR
       end
 
+      return 0 if @length == 0
+
       size = @length || InternalBuffer::DEFAULT_READ_SIZE
       bytes = 0
 
       begin
         # Use the buffer form here like MRI, since read/readpartial might be defined by the user
+        # IO#read returns nil at the end of input, IO#readpartial raises EOFError.
         while data = @from.__send__(@method, size, +'')
           @to.write data
           @to.flush if Primitive.is_a?(@to, IO)
           bytes += data.bytesize
 
-          break if @length && bytes >= @length
+          if @length
+            break if bytes == @length
+            raise "read more bytes than expected with #{@method}" if bytes > @length
+
+            size = @length - bytes
+          end
         end
       rescue EOFError
         nil # done reading
