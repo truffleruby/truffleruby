@@ -518,11 +518,11 @@ class IO
     name = Truffle::Type.coerce_to_path name
 
     offset = Primitive.convert_with_to_int(offset || 0)
-    raise Errno::EINVAL, 'offset must not be negative' if offset < 0
+    raise ArgumentError, "negative offset #{offset} given" if offset < 0
 
     unless Primitive.nil?(length)
       length = Primitive.convert_with_to_int(length)
-      raise ArgumentError, 'length must not be negative' if length < 0
+      raise ArgumentError, "negative length #{length} given" if length < 0
     end
 
     if Primitive.nil?(options[:open_args])
@@ -1691,7 +1691,11 @@ class IO
     ensure_open_and_readable
     buffer = Primitive.convert_with_to_str(buffer) if buffer
 
-    unless length
+    case length
+    when 0
+      buffer&.clear
+      return ''.b
+    when nil
       str = IO.read_encode self, read_all
       return str unless buffer
 
@@ -1705,7 +1709,7 @@ class IO
       return nil
     end
 
-    raise ArgumentError, 'length must not be negative' if length < 0
+    raise ArgumentError, "negative length #{length} given" if length < 0
 
     str = +''
     needed = length
