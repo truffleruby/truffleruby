@@ -37,6 +37,12 @@ describe FFI::DynamicLibrary do
     expect(size).to be > base_size
   end
 
+  it "raises LoadError if the library isn't found" do
+    expect do
+      FFI::DynamicLibrary.open("not-exists.so", FFI::DynamicLibrary::RTLD_LAZY | FFI::DynamicLibrary::RTLD_LOCAL)
+    end.to raise_error(LoadError, /Could not open library 'not-exists.so'/)
+  end
+
   describe Symbol do
     before do
       @libtest = FFI::DynamicLibrary.open(
