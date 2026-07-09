@@ -273,6 +273,7 @@ module Truffle::POSIX
   attach_function :getpgid, [:pid_t], :pid_t
   attach_function :setpgid, [:pid_t, :pid_t], :int
   attach_function :setsid, [], :pid_t
+  attach_function :getsid, [:pid_t], :pid_t
 
   attach_function :getgroups, [:int, :pointer], :int
   attach_function :setgroups, [:size_t, :pointer], :int
