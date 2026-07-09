@@ -889,7 +889,7 @@ class File < IO
     buffer = Primitive.io_thread_buffer_allocate(Truffle::Platform::PATH_MAX)
     begin
       if ptr = Truffle::POSIX.realpath(path, buffer) and !ptr.null?
-        real = ptr.read_string
+        real = ptr.read_string.force_encoding(Encoding.find('filesystem'))
       else
         Errno.handle(path)
       end
@@ -901,12 +901,17 @@ class File < IO
       raise Errno::ENOENT, real
     end
 
-    real.encode(path_encoding)
+    begin
+      real.encode(path_encoding)
+    rescue EncodingError
+      real.force_encoding(path_encoding)
+    end
   end
 
   def self.realdirpath(path, basedir = nil)
     path = Truffle::Type.coerce_to_path_keep_encoding(path)
     path_encoding = path.encoding
+    path = Truffle::Type.coerce_path_encoding(path)
     real = basic_realpath path, basedir
     dir = dirname real
 
@@ -914,7 +919,11 @@ class File < IO
       raise Errno::ENOENT, real
     end
 
-    real.encode(path_encoding)
+    begin
+      real.encode(path_encoding)
+    rescue EncodingError
+      real
+    end
   end
 
   def self.basic_realpath(path, basedir = nil)

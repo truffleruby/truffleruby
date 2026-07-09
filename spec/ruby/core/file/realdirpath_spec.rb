@@ -127,4 +127,18 @@ describe "File.realdirpath" do
     dir = File.dirname(__FILE__).encode(Encoding::EUC_JP)
     File.realdirpath(File.basename(path), dir).encoding.should == Encoding::EUC_JP
   end
+
+  platform_is_not :windows do
+    it "retains the filesystem encoding when encoding conversion fails" do
+      dir = tmp("realdirpath_あ")
+      mkdir_p(dir)
+      begin
+        resolved = File.realdirpath(".".encode(Encoding::ISO_8859_1), dir)
+        resolved.encoding.should == Encoding.find("filesystem")
+        resolved.b.should.include?(dir.b)
+      ensure
+        rm_r dir
+      end
+    end
+  end
 end
