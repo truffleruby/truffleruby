@@ -236,9 +236,17 @@ module Process
   end
 
   def setsid
-    pgid = Truffle::POSIX.setsid
-    Errno.handle if pgid == -1
-    pgid
+    sid = Truffle::POSIX.setsid
+    Errno.handle if sid == -1
+    sid
+  end
+
+  def getsid(pid = Process.pid)
+    pid = Primitive.convert_with_to_int pid
+
+    sid = Truffle::POSIX.getsid(pid)
+    Errno.handle if sid == -1
+    sid
   end
 
   def self.fork
