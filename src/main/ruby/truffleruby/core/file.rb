@@ -160,7 +160,7 @@ class File < IO
   #  File.basename("/home/gumby/work/ruby.rb")          #=> "ruby.rb"
   #  File.basename("/home/gumby/work/ruby.rb", ".rb")   #=> "ruby"
   def self.basename(path, ext = undefined)
-    path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_to_path_keep_encoding(path)
 
     slash = '/'
 
@@ -478,7 +478,7 @@ class File < IO
   #  File.extname("test")            #=> ""
   #  File.extname(".profile")        #=> ""
   def self.extname(path)
-    path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_to_path_keep_encoding(path)
     path_size = path.bytesize
 
     dot_idx = Primitive.find_string_reverse(path, '.', path_size)
@@ -741,8 +741,8 @@ class File < IO
       raise ArgumentError, 'recursive array' if recursion
     else
       # We need to use dup here, since it's possible that
-      # coerce_to_path() gives us a direct object we shouldn't mutate
-      first = Truffle::Type.coerce_to_path(first).dup
+      # coerce_to_path_keep_encoding() gives us a direct object we shouldn't mutate
+      first = Truffle::Type.coerce_to_path_keep_encoding(first).dup
     end
     Truffle::Type.check_null_safe(first)
 
@@ -761,7 +761,7 @@ class File < IO
 
         raise ArgumentError, 'recursive array' if recursion
       else
-        value = Truffle::Type.coerce_to_path(el)
+        value = Truffle::Type.coerce_to_path_keep_encoding(el)
       end
       Truffle::Type.check_null_safe(value)
 
@@ -835,7 +835,7 @@ class File < IO
   end
 
   def self.path(obj)
-    Truffle::Type.coerce_to_path(obj)
+    Truffle::Type.coerce_to_path_keep_encoding(obj)
   end
 
   ##
@@ -1006,7 +1006,7 @@ class File < IO
   #
   #  File.split("/home/gumby/.profile")   #=> ["/home/gumby", ".profile"]
   def self.split(path)
-    p = Truffle::Type.coerce_to_path(path)
+    p = Truffle::Type.coerce_to_path_keep_encoding(path)
     [dirname(p), basename(p)]
   end
 
@@ -1190,7 +1190,7 @@ class File < IO
     if Primitive.is_a?(path_or_fd, Integer)
       super(path_or_fd, mode, **options)
     else
-      path = Truffle::Type.coerce_to_path path_or_fd
+      path = Truffle::Type.coerce_to_path_keep_encoding path_or_fd
       nmode, _binary, _external, _internal, _autoclose, perm = Truffle::IOOperations.normalize_options(mode, perm, options)
       fd = IO.sysopen(path, nmode, perm)
 

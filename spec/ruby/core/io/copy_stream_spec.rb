@@ -56,6 +56,22 @@ describe :io_copy_stream_to_file, shared: true do
 
     -> { IO.copy_stream(@object.from, obj) }.should.raise(TypeError)
   end
+
+  platform_is :darwin do
+    it "writes to a file when given a path in a non-UTF-8, ASCII-compatible encoding containing non-ASCII characters" do
+      utf8_path = tmp("io_read_utf8_path_\u{3042}.txt")
+      # Can fail with UndefinedConversionError if tmp path has non-Shift_JIS chars (e.g. Emojis, Hangul, Cyrillic, accented letters)
+      non_utf8_path = utf8_path.encode(Encoding::Windows_31J)
+
+      begin
+        IO.copy_stream(@object.from, non_utf8_path)
+        File.read(utf8_path).should == @content
+      ensure
+        rm_r utf8_path
+        rm_r non_utf8_path
+      end
+    end
+  end
 end
 
 describe :io_copy_stream_to_file_with_offset, shared: true do
@@ -299,6 +315,23 @@ describe "IO.copy_stream" do
       obj.should_receive(:to_path).and_return(1)
 
       -> { IO.copy_stream(obj, @to_name) }.should.raise(TypeError)
+    end
+
+    platform_is :darwin do
+      it "reads a file when given a path in a non-UTF-8, ASCII-compatible encoding containing non-ASCII characters" do
+        utf8_path = tmp("io_read_utf8_path_\u{3042}.txt")
+        # Can fail with UndefinedConversionError if tmp path has non-Shift_JIS chars (e.g. Emojis, Hangul, Cyrillic, accented letters)
+        non_utf8_path = utf8_path.encode(Encoding::Windows_31J)
+
+        begin
+          File.write(utf8_path, @content)
+          IO.copy_stream(non_utf8_path, @to_name)
+          File.read(@to_name).should == @content
+        ensure
+          rm_r utf8_path
+          rm_r non_utf8_path
+        end
+      end
     end
 
     describe "to a file name" do
