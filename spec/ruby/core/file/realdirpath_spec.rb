@@ -119,3 +119,12 @@ platform_is :windows do
     end
   end
 end
+
+describe "File.realdirpath" do
+  it "preserves the encoding of the path" do
+    path = __FILE__.encode(Encoding::EUC_JP)
+    File.realdirpath(path).encoding.should == Encoding::EUC_JP
+    dir = File.dirname(__FILE__).encode(Encoding::EUC_JP)
+    File.realdirpath(File.basename(path), dir).encoding.should == Encoding::EUC_JP
+  end
+end
