@@ -378,39 +378,32 @@ module Truffle
       when ?a
         ret |= WRONLY | CREAT | APPEND
       else
-        raise ArgumentError, "invalid mode -- #{mode}"
+        raise ArgumentError, "invalid access mode #{mode}"
       end
 
       return ret if mode.length == 1
 
-      case mode[1]
-      when ?+
-        ret &= ~(RDONLY | WRONLY)
-        ret |= RDWR
-      when ?b
-        ret |= BINARY
-      when ?t
-        ret &= ~BINARY
-      when ?:
-        return ret
-      else
-        raise ArgumentError, "invalid mode -- #{mode}"
-      end
-
-      return ret if mode.length == 2
-
-      case mode[2]
-      when ?+
-        ret &= ~(RDONLY | WRONLY)
-        ret |= RDWR
-      when ?b
-        ret |= BINARY
-      when ?t
-        ret &= ~BINARY
-      when ?:
-        return ret
-      else
-        raise ArgumentError, "invalid mode -- #{mode}"
+      i = 1
+      while (char = mode[i])
+        i += 1
+        case char
+        when ?+
+          ret &= ~(RDONLY | WRONLY)
+          ret |= RDWR
+        when ?b
+          ret |= BINARY
+        when ?t
+          ret &= ~BINARY
+        when ?x
+          if mode[0] != ?w
+            raise ArgumentError, "invalid access mode #{mode}"
+          end
+          ret |= EXCL
+        when ?:
+          return ret
+        else
+          raise ArgumentError, "invalid access mode #{mode}"
+        end
       end
 
       ret
