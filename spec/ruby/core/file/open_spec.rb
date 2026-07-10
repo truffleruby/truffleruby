@@ -241,7 +241,7 @@ describe "File.open" do
 
   # Check the grants associated to the different open modes combinations.
   it "raises an ArgumentError exception when call with an unknown mode" do
-    -> { File.open(@file, "q") }.should.raise(ArgumentError)
+    -> { File.open(@file, "q") }.should.raise(ArgumentError, "invalid access mode q")
   end
 
   it "can read in a block when call open with RDONLY mode" do
@@ -258,13 +258,13 @@ describe "File.open" do
 
   it "raises an IO exception when write in a block opened with RDONLY mode" do
     File.open(@file, File::RDONLY) do |f|
-      -> { f.puts "writing ..." }.should.raise(IOError)
+      -> { f.puts "writing ..." }.should.raise(IOError, "not opened for writing")
     end
   end
 
   it "raises an IO exception when write in a block opened with 'r' mode" do
     File.open(@file, "r") do |f|
-      -> { f.puts "writing ..." }.should.raise(IOError)
+      -> { f.puts "writing ..." }.should.raise(IOError, "not opened for writing")
     end
   end
 
@@ -279,7 +279,7 @@ describe "File.open" do
       File.open(@file, File::WRONLY|File::RDONLY ) do |f|
         f.gets.should == nil
       end
-    }.should.raise(IOError)
+    }.should.raise(IOError, "not opened for reading")
   end
 
   it "can write in a block when call open with WRONLY mode" do
@@ -296,39 +296,39 @@ describe "File.open" do
 
   it "raises an IOError when read in a block opened with WRONLY mode" do
     File.open(@file, File::WRONLY) do |f|
-      -> { f.gets  }.should.raise(IOError)
+      -> { f.gets  }.should.raise(IOError, "not opened for reading")
     end
   end
 
   it "raises an IOError when read in a block opened with 'w' mode" do
     File.open(@file, "w") do |f|
-      -> { f.gets   }.should.raise(IOError)
+      -> { f.gets   }.should.raise(IOError, "not opened for reading")
     end
   end
 
   it "raises an IOError when read in a block opened with 'a' mode" do
     File.open(@file, "a") do |f|
-      -> { f.gets  }.should.raise(IOError)
+      -> { f.gets  }.should.raise(IOError, "not opened for reading")
     end
   end
 
   it "raises an IOError when read in a block opened with 'a' mode" do
     File.open(@file, "a") do |f|
       f.puts("writing").should == nil
-      -> { f.gets }.should.raise(IOError)
+      -> { f.gets }.should.raise(IOError, "not opened for reading")
     end
   end
 
   it "raises an IOError when read in a block opened with 'a' mode" do
     File.open(@file, File::WRONLY|File::APPEND ) do |f|
-      -> { f.gets }.should.raise(IOError)
+      -> { f.gets }.should.raise(IOError, "not opened for reading")
     end
   end
 
   it "raises an IOError when read in a block opened with File::WRONLY|File::APPEND mode" do
     File.open(@file, File::WRONLY|File::APPEND ) do |f|
       f.puts("writing").should == nil
-      -> { f.gets }.should.raise(IOError)
+      -> { f.gets }.should.raise(IOError, "not opened for reading")
     end
   end
 
@@ -337,7 +337,7 @@ describe "File.open" do
       File.open(@file, File::RDONLY|File::APPEND ) do |f|
         f.puts("writing")
       end
-    }.should.raise(IOError)
+    }.should.raise(IOError, "not opened for writing")
   end
 
   it "can read and write in a block when call open with RDWR mode" do
@@ -354,7 +354,7 @@ describe "File.open" do
       File.open(@file, File::EXCL) do |f|
         f.puts("writing").should == nil
       end
-    }.should.raise(IOError)
+    }.should.raise(IOError, "not opened for writing")
   end
 
   it "can read in a block when call open with File::EXCL mode" do
@@ -404,7 +404,7 @@ describe "File.open" do
       File.open(@file, File::RDONLY|File::APPEND) do |f|
         f.puts("writing").should == nil
       end
-    }.should.raise(IOError)
+    }.should.raise(IOError, "not opened for writing")
   end
 
   platform_is_not :openbsd, :windows do
@@ -438,7 +438,7 @@ describe "File.open" do
         File.open(@file, File::TRUNC) do |f|
           f.puts("writing")
         end
-      }.should.raise(IOError)
+      }.should.raise(IOError, "not opened for writing")
     end
 
     it "raises an Errno::EEXIST if the file exists when open with File::RDONLY|File::TRUNC" do
@@ -446,7 +446,7 @@ describe "File.open" do
         File.open(@file, File::RDONLY|File::TRUNC) do |f|
           f.puts("writing").should == nil
         end
-      }.should.raise(IOError)
+      }.should.raise(IOError, "not opened for writing")
     end
   end
 
@@ -571,11 +571,11 @@ describe "File.open" do
   end
 
   it "raises an ArgumentError if passed the wrong number of arguments" do
-    -> { File.open(@file, File::CREAT, 0755, 'test') }.should.raise(ArgumentError)
+    -> { File.open(@file, File::CREAT, 0755, 'test') }.should.raise(ArgumentError, "wrong number of arguments (given 4, expected 1..3)")
   end
 
   it "raises an ArgumentError if passed an invalid string for mode" do
-    -> { File.open(@file, 'fake') }.should.raise(ArgumentError)
+    -> { File.open(@file, 'fake') }.should.raise(ArgumentError, "invalid access mode fake")
   end
 
   it "defaults external_encoding to BINARY for binary modes" do
