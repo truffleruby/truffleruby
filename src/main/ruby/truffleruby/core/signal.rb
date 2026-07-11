@@ -61,7 +61,9 @@ module Signal
   def self.trap(signal, handler = nil, &block)
     unless Primitive.is_a?(signal, Symbol) || Primitive.is_a?(signal, String) \
         || Primitive.is_a?(signal, Integer)
-      raise ArgumentError, "bad signal type #{Primitive.class(signal)}"
+      converted_signal = Truffle::Type.rb_check_convert_type(signal, String, :to_str)
+      raise ArgumentError, "bad signal type #{Primitive.class(signal)}" unless converted_signal
+      signal = converted_signal
     end
 
     signal = signal.to_s if Primitive.is_a?(signal, Symbol)
@@ -75,7 +77,7 @@ module Signal
         raise ArgumentError, "unsupported signal 'SIG#{signal}'"
       end
     else
-      number = Primitive.convert_with_to_int signal
+      number = signal
 
       unless Numbers.key? number
         raise ArgumentError, "invalid signal number (#{number})"
