@@ -4,4 +4,3 @@ slow:Signal.trap allows to register a handler for all known signals, except rese
 slow:Signal.trap returns 'DEFAULT' for the initial SIGINT handler
 slow:Signal.trap accepts 'SYSTEM_DEFAULT' and uses the OS handler for SIGPIPE
 slow:Signal.trap the special EXIT signal code can unset the handler
-fails:Signal.trap calls #to_str on an object to convert to a String
