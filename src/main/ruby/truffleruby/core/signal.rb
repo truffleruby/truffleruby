@@ -69,6 +69,10 @@ module Signal
     signal = signal.to_s if Primitive.is_a?(signal, Symbol)
 
     if Primitive.is_a?(signal, String)
+      if signal.start_with?('-')
+        raise ArgumentError, "negative signal name: #{signal}"
+      end
+
       if signal.start_with? 'SIG'
         signal = signal[3..-1]
       end
