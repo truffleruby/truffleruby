@@ -156,17 +156,17 @@ module GC
   end
 
   def self.config(hash = nil)
-    if Primitive.nil?(hash)
-      { implementation: 'default' }
-    else
-      raise ArgumentError unless Primitive.is_a?(hash, Hash)
+    if Primitive.is_a?(hash, Hash)
       hash.each_key do |key|
         if key == :implementation
           raise ArgumentError, 'Attempting to set read-only key "Implementation"'
         end
       end
-      {}
+    elsif !Primitive.nil?(hash)
+      raise ArgumentError
     end
+
+    { implementation: 'default' }
   end
 
   def garbage_collect(...)
