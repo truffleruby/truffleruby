@@ -65,6 +65,7 @@ Performance:
 
 Incompatible Changes:
 
+* The minimum Java version when embedding TruffleRuby is now Java 25 instead of Java 21 (#4378, @eregon).
 * Remove `Truffle::Interop.java_instanceof?`, it is redundant with `Truffle::Interop.meta_instance?` (@eregon).
 
 Memory Footprint:
