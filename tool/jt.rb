@@ -42,6 +42,7 @@ ALL_PLATFORMS = %w[
   linux-amd64
   linux-aarch64
   darwin-aarch64
+  freebsd-amd64
 ]
 
 JDEBUG = '--vm.agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=y'
@@ -152,6 +153,10 @@ module Utilities
 
   def darwin?
     @darwin ||= RbConfig::CONFIG['host_os'].include?('darwin')
+  end
+
+  def freebsd?
+    @freebsd ||= RbConfig::CONFIG['host_os'].include?('freebsd')
   end
 
   def amd64?
@@ -266,6 +271,23 @@ module Utilities
       mx_repo = find_or_clone_repo('https://github.com/graalvm/mx.git', @mx_version)
       "#{mx_repo}/mx"
     end
+  end
+
+  def find_mx_python
+    which('python3') || which('python') || Dir['/usr/local/bin/python3.*'].sort.reverse.find do |path|
+      File.basename(path) =~ /\Apython3\.\d+\z/ and File.executable?(path)
+    end
+  end
+
+  def find_freebsd_openjdk_home
+    java_home = ENV['JAVA_HOME']
+    java_home ||= %w[
+      /usr/local/openjdk21
+      /usr/local/openjdk25
+      /usr/local/openjdk17
+    ].find { |path| File.executable?("#{path}/bin/java") }
+    abort 'Set JAVA_HOME to an OpenJDK 17+ installation to build on FreeBSD' unless java_home
+    java_home
   end
 
   def env_path(env)
@@ -677,6 +699,8 @@ module Utilities
       end
     end
 
+    env['MX_PYTHON'] ||= find_mx_python if freebsd?
+
     if primary_suite and Dir.pwd != primary_suite
       mx_args.unshift '-p', primary_suite
     end
@@ -689,6 +713,8 @@ module Utilities
       'darwin'
     elsif linux?
       'linux'
+    elsif freebsd?
+      'freebsd'
     else
       abort 'Unknown OS'
     end
@@ -2401,6 +2427,9 @@ module Commands
   end
 
   private def install_graalvm
+    return ENV['BOOTSTRAP_GRAALVM'] if ENV['BOOTSTRAP_GRAALVM']
+    abort 'Downloading a bootstrap GraalVM is not supported on FreeBSD yet. Set BOOTSTRAP_GRAALVM to a local GraalVM home.' if freebsd?
+
     os = { 'linux' => 'linux', 'darwin' => 'macos' }.fetch(mx_os)
     arch = { 'amd64' => 'x64', 'aarch64' => 'aarch64' }.fetch(mx_arch)
 
@@ -2499,20 +2528,29 @@ module Commands
   private def sforceimports?(mx_base_args)
     return true unless File.directory?(GRAAL_DIR)
 
-    scheckimports_output = mx(*mx_base_args, 'scheckimports', '--ignore-uncommitted', '--warn-only', java_home: :none, primary_suite: TRUFFLERUBY_DIR, capture: :both)
+    env_vars = freebsd? ? { 'JAVA_HOME' => find_freebsd_openjdk_home } : {}
+    java_home = freebsd? ? :use_env_java_home : :none
+    scheckimports_output = mx(env_vars, *mx_base_args, 'scheckimports', '--ignore-uncommitted', '--warn-only', java_home: java_home, primary_suite: TRUFFLERUBY_DIR, capture: :both)
 
     unless scheckimports_output.empty?
       # Don't ask to update, just warn.
-      if ENV['JT_IMPORTS_DONT_ASK'] || !STDIN.tty?
+      if freebsd? || ENV['JT_IMPORTS_DONT_ASK'] || !STDIN.tty?
         with_color(TERM_COLOR_RED) do
           boxed do
             puts scheckimports_output
-            puts <<~MESSAGE
-              You might want to:
-              * use the version of graal in suite.py, then use "jt build --sforceimports", useful when building TruffleRuby and not changing graal at the same time (most common)
-              * update the graal version in suite.py, then use "mx scheckimports", useful when explicitly updating the default graal version of TruffleRuby (rare)
-              * test TruffleRuby with a different graal version with your own changes in graal, then you can ignore this warning
-            MESSAGE
+            if freebsd?
+              puts <<~MESSAGE
+                FreeBSD support in mx/graal is still incomplete, so `jt build` will not ask to run `mx sforceimports`.
+                Continuing with the existing imports.
+              MESSAGE
+            else
+              puts <<~MESSAGE
+                You might want to:
+                * use the version of graal in suite.py, then use "jt build --sforceimports", useful when building TruffleRuby and not changing graal at the same time (most common)
+                * update the graal version in suite.py, then use "mx scheckimports", useful when explicitly updating the default graal version of TruffleRuby (rare)
+                * test TruffleRuby with a different graal version with your own changes in graal, then you can ignore this warning
+              MESSAGE
+            end
           end
         end
         false
@@ -2534,7 +2572,11 @@ module Commands
   end
 
   def sforceimports
-    mx('sforceimports', java_home: :none, primary_suite: TRUFFLERUBY_DIR)
+    if freebsd?
+      mx({ 'JAVA_HOME' => find_freebsd_openjdk_home }, 'sforceimports', java_home: :use_env_java_home, primary_suite: TRUFFLERUBY_DIR)
+    else
+      mx('sforceimports', java_home: :none, primary_suite: TRUFFLERUBY_DIR)
+    end
   end
 
   def show_available_memory
@@ -2542,6 +2584,8 @@ module Commands
       STDERR.puts `free -m`
     elsif darwin?
       STDERR.puts `memory_pressure`.lines.grep(/The system has|System-wide memory free percentage/)
+    elsif freebsd?
+      STDERR.puts `sysctl hw.physmem hw.usermem vm.stats.vm.v_free_count vm.stats.vm.v_page_size`
     end
   end
 
@@ -2570,9 +2614,13 @@ module Commands
     name = "truffleruby-#{@ruby_name}"
     mx_base_args = ['--env', env]
 
-    os_env = {
-      'BOOTSTRAP_GRAALVM' => install_graalvm
-    }
+    os_env = {}
+    freebsd_jvm_build = freebsd? and !env.include?('native')
+    if freebsd_jvm_build
+      os_env['JAVA_HOME'] = find_freebsd_openjdk_home
+    else
+      os_env['BOOTSTRAP_GRAALVM'] = install_graalvm
+    end
 
     if options.delete('--sforceimports') || sforceimports?(mx_base_args)
       sforceimports
@@ -2595,7 +2643,8 @@ module Commands
     mx_options, mx_build_options = args_split(options)
     mx_args = mx_base_args + mx_options
 
-    mx(os_env, *mx_args, 'build', *mx_build_options, primary_suite: TRUFFLERUBY_DIR)
+    java_home = freebsd_jvm_build ? :use_env_java_home : find_java_home
+    mx(os_env, *mx_args, 'build', *mx_build_options, java_home: java_home, primary_suite: TRUFFLERUBY_DIR)
 
     standalone_dist = env.include?('native') ? 'TRUFFLERUBY_NATIVE_STANDALONE' : 'TRUFFLERUBY_JVM_STANDALONE'
     build_dir = "#{TRUFFLERUBY_DIR}/mxbuild/#{mx_platform}/#{standalone_dist}"
@@ -2828,7 +2877,7 @@ module Commands
   end
 
   def native_configuration_file
-    os = mx_os.capitalize
+    os = { 'linux' => 'Linux', 'darwin' => 'Darwin', 'freebsd' => 'FreeBSD' }.fetch(mx_os)
     arch = { 'amd64' => 'AMD64', 'aarch64' => 'AArch64' }.fetch(mx_arch)
     puts "src/main/java/org/truffleruby/platform/#{os}#{arch}NativeConfiguration.java"
   end

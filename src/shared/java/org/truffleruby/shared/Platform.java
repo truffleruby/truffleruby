@@ -42,7 +42,8 @@ public abstract class Platform {
 
     public enum OS_TYPE {
         LINUX("linux"),
-        DARWIN("darwin");
+        DARWIN("darwin"),
+        FREEBSD("freebsd");
 
         private final String rubyName;
 
@@ -67,6 +68,7 @@ public abstract class Platform {
                 switch (os) {
                     case LINUX -> "aarch64";
                     case DARWIN -> "arm64";
+                    case FREEBSD -> "aarch64";
                 };
         };
     }

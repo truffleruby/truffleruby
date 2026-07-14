@@ -42,6 +42,12 @@ SCRIPT = File.expand_path(__FILE__)[ROOT.size+1..-1]
 
 EXTRA_CFLAGS = ''
 
+def normalized_platform
+  RUBY_PLATFORM
+    .sub(/darwin\d+/, 'darwin')
+    .sub(/(?:x86_64|amd64)-freebsd[\d.]*/, 'x86_64-freebsd')
+end
+
 case RUBY_PLATFORM
 when /aarch64-linux/
   PLATFORM_FILE = 'org/truffleruby/platform/LinuxAArch64NativeConfiguration.java'
@@ -51,6 +57,8 @@ when /x86_64-linux/
   EXTRA_CFLAGS << ' -D_GNU_SOURCE'
 when /arm64.*-darwin/
   PLATFORM_FILE = 'org/truffleruby/platform/DarwinAArch64NativeConfiguration.java'
+when /(?:x86_64|amd64)-freebsd/
+  PLATFORM_FILE = 'org/truffleruby/platform/FreeBSDAMD64NativeConfiguration.java'
 else
   raise "Unsupported platform #{RUBY_PLATFORM}"
 end
@@ -84,7 +92,7 @@ class JavaHandler
 
     @file = File.open(java_file, 'wb')
     @file.puts contents[0...from+METHOD_START.length]
-    @file.puts "#{INDENT}// Generated from #{SCRIPT} on #{RUBY_PLATFORM.sub(/darwin\d+/, 'darwin')}"
+    @file.puts "#{INDENT}// Generated from #{SCRIPT} on #{normalized_platform}"
     at_exit do
       @file.puts contents[to..-1]
       @file.close

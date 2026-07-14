@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 set -x
@@ -10,6 +10,7 @@ url="https://cache.ruby-lang.org/pub/ruby/${VERSION%.*}/ruby-$VERSION.tar.gz"
 os=$(uname -s)
 os=${os/Linux/linux}
 os=${os/Darwin/darwin}
+os=${os/FreeBSD/freebsd}
 
 arch=$(uname -m)
 arch=${arch/x86_64/amd64}
