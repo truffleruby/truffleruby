@@ -2142,7 +2142,7 @@ module Truffle::CExt
   end
 
   def rb_call_super(args)
-    rb_call_super_splatted(*args)
+    rb_call_super_splatted(false, *args)
   end
 
   def rb_call_super_kw(args)
@@ -2151,9 +2151,9 @@ module Truffle::CExt
     kwargs = Primitive.convert_with_to_hash(kwargs)
 
     if kwargs.empty?
-      rb_call_super(args)
+      rb_call_super_splatted(false, *args)
     else
-      rb_call_super_kw_splatted(*args, kwargs)
+      rb_call_super_splatted(true, *args, kwargs)
     end
   end
 
