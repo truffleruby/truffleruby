@@ -282,7 +282,7 @@ class BasicSocket < IO
         if !exception and Errno.errno == Truffle::POSIX::EAGAIN_ERRNO
           return :wait_writable
         else
-          Truffle::Socket::Error.read_error('sendmsg(2)', self)
+          Truffle::Socket::Error.write_error('sendmsg(2)', self)
         end
       end
 

@@ -1,2 +1,0 @@
-fails:BasicSocket#sendmsg_nonblock using IPv4 using a connected TCP socket raises IO::WaitWritable when the underlying buffer is full
-fails:BasicSocket#sendmsg_nonblock using IPv6 using a connected TCP socket raises IO::WaitWritable when the underlying buffer is full
