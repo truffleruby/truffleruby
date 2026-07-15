@@ -65,19 +65,29 @@ int rb_get_kwargs(VALUE keyword_hash, const ID *table, int required, int optiona
     optional = -1-optional;
   }
 
-  for (int n = 0; n < required; n++) {
-    VALUE val = rb_tr_extract_keyword(keyword_hash, table[n], values);
-    if (values) {
-      values[n] = val;
-    }
-    if (val == Qundef) {
-      if (NIL_P(missing)) {
-        missing = rb_ary_new();
-      }
+  if (required && NIL_P(keyword_hash)) {
+    missing = rb_ary_new_capa(required);
+    for (int n = 0; n < required; n++) {
       rb_ary_push(missing, ID2SYM(table[n]));
-      rb_keyword_error("missing", missing);
     }
-    extracted++;
+  } else {
+    for (int n = 0; n < required; n++) {
+      VALUE val = rb_tr_extract_keyword(keyword_hash, table[n], values);
+      if (values) {
+        values[n] = val;
+      }
+      if (val == Qundef) {
+        if (NIL_P(missing)) {
+          missing = rb_ary_new();
+        }
+        rb_ary_push(missing, ID2SYM(table[n]));
+      }
+      extracted++;
+    }
+  }
+
+  if (!NIL_P(missing)) {
+    rb_keyword_error("missing", missing);
   }
 
   if (optional && !NIL_P(keyword_hash)) {

@@ -57,6 +57,7 @@ Compatibility:
 * Implement `x` mode for `File.open` (`File::EXCL` integer flag was already respected) (#4370, @earlopain).
 * Fix `rb_call_super()` and pass block argument to a super method (@andrykonchyn).
 * Implement `rb_call_super_kw()` (#4056, @andrykonchyn).
+* Fix `rb_get_kwargs` for nil `keyword_hash` with required keywords. (#4376, @earlopain)
 
 Performance:
 
