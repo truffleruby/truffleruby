@@ -55,7 +55,7 @@ jt docker test --standalone truffleruby-linux-amd64.tar.gz --test release_branch
 
 To run tests on a specific distribution:
 ```bash
-DOCKER=podman jt docker build --ubuntu1804 --standalone ~/Downloads/truffleruby-21.2.0-linux-amd64.tar.gz --test release/graal-vm/21.2
+DOCKER=podman jt docker build --ubuntu2004 --standalone ~/Downloads/truffleruby-21.2.0-linux-amd64.tar.gz --test release/graal-vm/21.2
 ```
 
 ## Distributions

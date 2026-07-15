@@ -55,11 +55,6 @@ fedora38:
   locale: glibc-langpack-en
   <<: *rpm
 
-ubuntu1804:
-  base: ubuntu:18.04
-  install: RUN apt-get update && apt-get install -y
-  <<: *deb
-
 ubuntu2004:
   base: ubuntu:20.04
   install: RUN apt-get update && apt-get install -y
