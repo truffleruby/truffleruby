@@ -168,6 +168,21 @@ module Truffle::POSIX
     end
   end
 
+  def self.nfi_labs_function(backend = nil)
+    prefix = backend ? "with #{backend} " : ''
+    library = Primitive.interop_eval_nfi "#{prefix}default"
+    signature = Primitive.interop_eval_nfi "#{prefix}(SINT64):SINT64"
+    signature.bind(library[:labs])
+  end
+
+  def self.nfi_default_labs_function
+    nfi_labs_function
+  end
+
+  def self.nfi_panama_labs_function
+    nfi_labs_function(:panama)
+  end
+
   # Filesystem-related
   attach_function :chdir, [:string], :int
   attach_function :chmod, [:string, :mode_t], :int

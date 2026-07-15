@@ -101,5 +101,13 @@
     {
       "glob": "truffleruby/post-boot/**/*.rb"
     }
-  ]
+  ],
+  "foreign": {
+    "downcalls": [
+      {
+        "returnType": "jlong",
+        "parameterTypes": ["jlong"]
+      }
+    ]
+  }
 }
