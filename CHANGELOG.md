@@ -55,6 +55,8 @@ Compatibility:
 * Fix `Enumerator::Lazy` methods and `Enumerable#take_while` to pack multi-argument source yields like CRuby (0-arg yield → `nil`, 1-arg → value, multi-arg → `Array`) (#4310, @sampokuokkanen).
 * Adjust `File.{write,read,open}` to accept a path parameter in any encoding on macOS (#4082, @andrykonchin).
 * Implement `x` mode for `File.open` (`File::EXCL` integer flag was already respected) (#4370, @earlopain).
+* Fix `rb_call_super()` and pass block argument to a super method (@andrykonchyn).
+* Implement `rb_call_super_kw()` (#4056, @andrykonchyn).
 
 Performance:
 

@@ -1449,8 +1449,6 @@ module Truffle::CExt
 
   def rb_class_new_instance_kw(klass, args)
     *args, kwargs = args
-    kwargs = Primitive.convert_with_to_hash kwargs
-
     obj = klass.send(:__allocate__)
     obj.send(:initialize, *args, **kwargs)
     obj
@@ -2144,7 +2142,19 @@ module Truffle::CExt
   end
 
   def rb_call_super(args)
-    rb_call_super_splatted(*args)
+    rb_call_super_splatted(false, *args)
+  end
+
+  def rb_call_super_kw(args)
+    # Assumes args is non-empty
+    *args, kwargs = args
+    kwargs = Primitive.convert_with_to_hash(kwargs)
+
+    if kwargs.empty?
+      rb_call_super_splatted(false, *args)
+    else
+      rb_call_super_splatted(true, *args, kwargs)
+    end
   end
 
   def rb_any_to_s(object)
