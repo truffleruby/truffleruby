@@ -1234,11 +1234,6 @@ class File < IO
     Stat.new(@path).mtime
   end
 
-  def stat
-    Stat.fstat Primitive.io_fd(self)
-  end
-
-
   def truncate(length)
     length = Primitive.convert_with_to_int length
 
