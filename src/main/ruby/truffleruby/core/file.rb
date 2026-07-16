@@ -1248,12 +1248,6 @@ class File < IO
     r
   end
 
-  def inspect
-    return_string = "#<#{Primitive.class(self)}:0x#{object_id.to_s(16)} path=#{@path}"
-    return_string << ' (closed)' if closed?
-    return_string << '>'
-  end
-
   def size
     raise IOError, 'closed stream' if closed?
     flush
