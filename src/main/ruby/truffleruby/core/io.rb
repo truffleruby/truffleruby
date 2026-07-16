@@ -1239,11 +1239,18 @@ class IO
   ##
   # Return a string describing this IO object.
   def inspect
-    if Primitive.io_fd(self) != -1
-      "#<#{Primitive.class(self)}:fd #{Primitive.io_fd(self)}>"
+    return_string = "#<#{Primitive.class(self)}:"
+    if @path
+      return_string << @path
+      return_string << ' (closed)' if closed?
     else
-      "#<#{Primitive.class(self)}:(closed)>"
+      if closed?
+        return_string << '(closed)'
+      else
+        return_string << "fd #{Primitive.io_fd(self)}"
+      end
     end
+    return_string << '>'
   end
 
   private def create_each_reader(sep_or_limit = $/, limit = nil, chomp = false, raise_error)

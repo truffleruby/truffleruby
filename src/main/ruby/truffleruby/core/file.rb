@@ -1234,11 +1234,6 @@ class File < IO
     Stat.new(@path).mtime
   end
 
-  def stat
-    Stat.fstat Primitive.io_fd(self)
-  end
-
-
   def truncate(length)
     length = Primitive.convert_with_to_int length
 
@@ -1251,12 +1246,6 @@ class File < IO
     r = Truffle::POSIX.ftruncate(Primitive.io_fd(self), length)
     Errno.handle(path) if r == -1
     r
-  end
-
-  def inspect
-    return_string = "#<#{Primitive.class(self)}:0x#{object_id.to_s(16)} path=#{@path}"
-    return_string << ' (closed)' if closed?
-    return_string << '>'
   end
 
   def size

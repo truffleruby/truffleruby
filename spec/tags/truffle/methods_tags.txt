@@ -1,5 +1,3 @@
-fails:Public methods on File should not include inspect
-fails:Public methods on File should not include stat
 fails:Public methods on Float should include hash
 fails:Public methods on Float should include negative?
 fails:Public methods on Float should include positive?
