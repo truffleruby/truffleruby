@@ -2252,7 +2252,7 @@ public abstract class ModuleNodes {
             final ConcurrentMap<RubyModule, RubyModule> refinements = namespace.fields
                     .getRefinements();
             final RubyModule refinement = ConcurrentOperations
-                    .getOrCompute(refinements, moduleToRefine, klass -> newRefinementModule(namespace, moduleToRefine));
+                    .getOrCompute(refinements, moduleToRefine, _ -> newRefinementModule(namespace, moduleToRefine));
 
             // Apply the existing refinements in this namespace and the new refinement inside the refine block
             final Map<RubyModule, RubyModule[]> refinementsInDeclarationContext = new HashMap<>();

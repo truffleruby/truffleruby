@@ -83,7 +83,7 @@ public final class ModuleBodyDefinition {
             return ConcurrentOperations.getOrCompute(
                     dynamicLexicalScopes,
                     module,
-                    k -> new LexicalScope(parentLexicalScope, module));
+                    _ -> new LexicalScope(parentLexicalScope, module));
         } else {
             return new LexicalScope(parentLexicalScope, module);
         }

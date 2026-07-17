@@ -176,7 +176,7 @@ public abstract class ConditionVariableNodes {
                         return BlockingAction.SUCCESS;
                     }
                 }
-            }, condLock::unlock, (t) -> {
+            }, condLock::unlock, _ -> {
                 /* Working with ConditionVariables is tricky because of safepoints. To call await or signal on a
                  * condition variable we must hold the lock, and that lock is released when we start waiting. However if
                  * the wait is interrupted then the lock will be reacquired before control returns to us. If we are

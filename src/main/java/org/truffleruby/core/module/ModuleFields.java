@@ -946,7 +946,7 @@ public final class ModuleFields extends ModuleChain implements ObjectGraphNode {
 
     @TruffleBoundary
     public ConstantEntry getOrComputeConstantEntry(String name) {
-        return ConcurrentOperations.getOrCompute(constants, name, (n) -> new ConstantEntry());
+        return ConcurrentOperations.getOrCompute(constants, name, _ -> new ConstantEntry());
     }
 
     @TruffleBoundary
@@ -1028,14 +1028,14 @@ public final class ModuleFields extends ModuleChain implements ObjectGraphNode {
 
     @TruffleBoundary
     public InternalMethod getMethodAndAssumption(String name, List<Assumption> assumptions) {
-        MethodEntry methodEntry = ConcurrentOperations.getOrCompute(methods, name, n -> new MethodEntry());
+        MethodEntry methodEntry = ConcurrentOperations.getOrCompute(methods, name, _ -> new MethodEntry());
         assumptions.add(methodEntry.getAssumption());
         return methodEntry.getMethod();
     }
 
     @TruffleBoundary
     public Assumption getOrCreateMethodAssumption(String name) {
-        return ConcurrentOperations.getOrCompute(methods, name, n -> new MethodEntry()).getAssumption();
+        return ConcurrentOperations.getOrCompute(methods, name, _ -> new MethodEntry()).getAssumption();
     }
 
     /** All write accesses to this object should use {@code synchronized (getClassVariables()) { ... }}, or check that

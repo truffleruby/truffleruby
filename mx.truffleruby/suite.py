@@ -1,5 +1,5 @@
 suite = {
-    "mxversion": "7.83.0",
+    "mxversion": "7.84.1",
     "name": "truffleruby",
     "version": "40.0.0",
     "release": False,
@@ -21,7 +21,7 @@ suite = {
             {
                 "name": "regex",
                 "subdir": True,
-                "version": "d9de8206fff02d7a99bf82043b5ba8b392aa09ee",
+                "version": "1d3ce3222e3a77a2115683e5f67547d4e724a2d4",
                 "urls": [
                     {"url": "https://github.com/truffleruby/graal.git", "kind": "git"},
                     {"url": "https://curio.ssw.jku.at/nexus/content/repositories/snapshots", "kind": "binary"},
@@ -30,7 +30,7 @@ suite = {
             {
                 "name": "sulong",
                 "subdir": True,
-                "version": "d9de8206fff02d7a99bf82043b5ba8b392aa09ee",
+                "version": "1d3ce3222e3a77a2115683e5f67547d4e724a2d4",
                 "urls": [
                     {"url": "https://github.com/truffleruby/graal.git", "kind": "git"},
                     {"url": "https://curio.ssw.jku.at/nexus/content/repositories/snapshots", "kind": "binary"},
@@ -130,7 +130,7 @@ suite = {
             "dir": "src/yarp",
             "sourceDirs": ["java"],
             "jacoco": "include",
-            "javaCompliance": "21+",
+            "javaCompliance": "21+", # same as upstream
             "workingSets": "TruffleRuby",
             "license": ["MIT"],
         },
@@ -139,7 +139,7 @@ suite = {
             "dir": "src/annotations",
             "sourceDirs": ["java"],
             "jacoco": "include",
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "checkstyle": "org.truffleruby",
             "workingSets": "TruffleRuby",
             "license": ["EPL-2.0"],
@@ -158,7 +158,7 @@ suite = {
                 "TRUFFLERUBY-PROCESSOR",
             ],
             "jacoco": "include",
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "checkstyle": "org.truffleruby",
             "workingSets": "TruffleRuby",
             "license": ["EPL-2.0"],
@@ -173,7 +173,7 @@ suite = {
                 "truffle:TRUFFLE_API",
             ],
             "jacoco": "include",
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "checkstyle": "org.truffleruby",
             "workingSets": "TruffleRuby",
             "license": ["EPL-2.0"],
@@ -189,7 +189,7 @@ suite = {
                 "truffle:TRUFFLE_DSL_PROCESSOR",
             ],
             "jacoco": "include",
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "checkstyle": "org.truffleruby",
             "workingSets": "TruffleRuby",
             "license": ["EPL-2.0"],
@@ -199,7 +199,7 @@ suite = {
             "dir": "src/signal",
             "sourceDirs": ["java"],
             "jniHeaders": True,
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "checkstyle": "org.truffleruby",
             "workingSets": "TruffleRuby",
             "license": ["EPL-2.0"],
@@ -282,7 +282,7 @@ suite = {
             "sourceDirs": ["java"],
             "jniHeaders": True,
             "jacoco": "include",
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "workingSets": "TruffleRuby",
             "license": ["EPL-2.0"],
         },
@@ -335,7 +335,7 @@ suite = {
                 "TRUFFLERUBY-PROCESSOR",
             ],
             "jacoco": "include",
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "checkstyleVersion": "10.7.0",
             "checkstyle": "org.truffleruby",
             "workingSets": "TruffleRuby",
@@ -351,7 +351,7 @@ suite = {
         "org.truffleruby.ruby": {
             "dir": "src/main/ruby",
             "sourceDirs": ["."],
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "license": [
                 "EPL-2.0",          # JRuby (we choose EPL out of EPL,GPL,LGPL)
                 "BSD-new",          # Rubinius
@@ -379,7 +379,7 @@ suite = {
                 "sdk:NATIVEIMAGE",
             ],
             "jacoco": "include",
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "checkstyle": "org.truffleruby",
             "workingSets": "TruffleRuby",
             "license": ["EPL-2.0"],
@@ -396,7 +396,7 @@ suite = {
                 # Libraries
                 "mx:JUNIT",
             ],
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "checkstyle": "org.truffleruby",
             "license": ["EPL-2.0"],
         },
@@ -414,7 +414,7 @@ suite = {
                 "mx:JUNIT",
                 "truffleruby:NETBEANS-LIB-PROFILER",
             ],
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "checkstyle": "org.truffleruby",
             "license": ["EPL-2.0"],
         },
@@ -428,7 +428,7 @@ suite = {
                 # Libraries
                 "mx:JUNIT",
             ],
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "checkstyle": "org.truffleruby",
             "license": ["EPL-2.0"],
         },
@@ -493,7 +493,7 @@ suite = {
             # Shadowed JONI library (org.jruby.joni:joni)
             "dir": "src/shadowed/joni",
             "sourceDirs": ["java"],
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "spotbugsIgnoresGenerated": True,
             "dependencies": [
                 "truffle:TRUFFLE_JCODINGS",
@@ -1212,7 +1212,7 @@ suite = {
                     "dev.truffleruby.shadowed.org.joni.exception to dev.truffleruby.runtime",
                 ],
             },
-            "javaCompliance": "21+",
+            "javaCompliance": "25+",
             "dependencies": [
                 "dev.truffleruby.shadowed.org.joni",
             ],

@@ -77,7 +77,7 @@ public final class MissingKeywordArgumentNode extends RubyContextSourceNode {
         hashes.eachEntry(
                 actualKeywords.store,
                 actualKeywords,
-                (index, key, value, state) -> ((ArrayList<Object>) state).add(key),
+                (_, key, _, state) -> ((ArrayList<Object>) state).add(key),
                 actualKeywordsAsList);
 
         return ArrayUtils.subtract(requiredKeywords, actualKeywordsAsList.toArray());

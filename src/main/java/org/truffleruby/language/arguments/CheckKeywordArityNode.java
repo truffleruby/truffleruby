@@ -120,7 +120,7 @@ public final class CheckKeywordArityNode extends RubyBaseNode {
             hashes.eachEntry(
                     keywordArguments.store,
                     keywordArguments,
-                    (index, key, value, state) -> ((ArrayList<Object>) state).add(key),
+                    (_, key, _, state) -> ((ArrayList<Object>) state).add(key),
                     actualKeywordsAsList);
 
             return ArrayUtils.subtract(actualKeywordsAsList.toArray(), allowedKeywords);

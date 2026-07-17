@@ -425,7 +425,7 @@ public final class ConcurrentHashStore {
         var tail = concurrentHash.tail;
 
         HashStoreLibrary.getUncached(from).eachEntryHashed(from.store, from,
-                (int i, int hashed, Object key, Object value, Object state) -> {
+                (int _, int hashed, Object key, Object value, Object _) -> {
                     SharedObjects.writeBarrier(language, key);
                     SharedObjects.writeBarrier(language, value);
 

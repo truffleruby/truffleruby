@@ -49,7 +49,7 @@ public final class CallStackManager {
 
     @TruffleBoundary
     public Frame getCurrentFrame(FrameAccess frameAccess) {
-        return iterateFrames(0, f -> true, f -> f.getFrame(frameAccess));
+        return iterateFrames(0, _ -> true, f -> f.getFrame(frameAccess));
     }
 
     @TruffleBoundary

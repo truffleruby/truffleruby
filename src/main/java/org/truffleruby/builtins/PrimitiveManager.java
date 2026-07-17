@@ -62,7 +62,7 @@ public final class PrimitiveManager {
         return ConcurrentOperations.getOrCompute(
                 primitives,
                 annotation.name(),
-                k -> new PrimitiveNodeConstructor(annotation, nodeFactory));
+                _ -> new PrimitiveNodeConstructor(annotation, nodeFactory));
     }
 
     public void loadCoreMethodNodes(LanguageOptions languageOptions) {

@@ -40,7 +40,7 @@ public final class SharedIndicesMap {
     public int lookup(String name) {
         // We need the semantics of ConcurrentHashMap#computeIfAbsent() here to ensure the lambda is only executed once per missing key.
         // Otherwise we could waste unused indices.
-        return ConcurrentOperations.getOrCompute(nameToIndex, name, k -> nextIndex.getAndIncrement());
+        return ConcurrentOperations.getOrCompute(nameToIndex, name, _ -> nextIndex.getAndIncrement());
     }
 
     public int size() {

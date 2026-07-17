@@ -402,7 +402,7 @@ public class RubyDebugTest {
             final DebugStackFrame frame = suspendedEvent.getTopStackFrame();
 
             final AtomicInteger numFrameVars = new AtomicInteger(0);
-            frame.getScope().getDeclaredValues().forEach(var -> {
+            frame.getScope().getDeclaredValues().forEach(_ -> {
                 numFrameVars.incrementAndGet();
             });
             assertEquals(expectedFrame.length / 2, numFrameVars.get());
