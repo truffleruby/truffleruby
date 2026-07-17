@@ -177,6 +177,8 @@ module Truffle
 
     # default implementation of Exception#detailed_message hook
     def self.detailed_message(exception, highlight)
+      Truffle::Type.rb_bool_expected(highlight, 'highlight') unless Primitive.nil?(highlight)
+
       message = Primitive.convert_with_to_str(exception.message.to_s)
 
       exception_class = Primitive.class(exception)
@@ -259,7 +261,7 @@ module Truffle
       highlight = if Primitive.nil?(highlight)
                     Exception.to_tty?
                   else
-                    raise ArgumentError, "expected true of false as highlight: #{highlight}" unless Primitive.true?(highlight) || Primitive.false?(highlight)
+                    Truffle::Type.rb_bool_expected(highlight, 'highlight')
                     !Primitive.false?(highlight)
                   end
 
