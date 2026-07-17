@@ -15,7 +15,7 @@ import org.truffleruby.core.thread.RubyThread;
 
 public interface SafepointPredicate {
 
-    SafepointPredicate ALL_THREADS_AND_FIBERS = (context, rubyThread, action) -> true;
+    SafepointPredicate ALL_THREADS_AND_FIBERS = (_, _, _) -> true;
 
     boolean test(RubyContext context, RubyThread currentThread, SafepointAction action);
 

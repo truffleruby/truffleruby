@@ -178,7 +178,7 @@ public abstract class SymbolNodes {
                 return ConcurrentOperations.getOrCompute(
                         context.cachedSymbolToProcTargetsWithRefinements,
                         Pair.create(symbol, refinements),
-                        key -> createCallTarget(language, symbol, refinements));
+                        _ -> createCallTarget(language, symbol, refinements));
             }
         }
 

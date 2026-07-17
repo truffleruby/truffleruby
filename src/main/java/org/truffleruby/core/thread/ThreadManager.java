@@ -176,7 +176,7 @@ public final class ThreadManager {
 
     private static Thread.UncaughtExceptionHandler uncaughtExceptionHandler(RubyFiber fiber) {
         assert fiber != null;
-        return (javaThread, throwable) -> {
+        return (_, throwable) -> {
             if (throwable instanceof KillException) {
                 // The exception killed the thread, as expected, do not print anything.
                 // We cannot just catch (KillException e) in threadMain() because it can also happen
@@ -548,7 +548,7 @@ public final class ThreadManager {
             sideEffects = safepoint.setAllowSideEffects(true);
         }
         try {
-            return safepoint.setBlockedFunction(currentNode, Interrupter.THREAD_INTERRUPT, arg -> {
+            return safepoint.setBlockedFunction(currentNode, Interrupter.THREAD_INTERRUPT, _ -> {
                 runningThread.status = ThreadStatus.SLEEP;
                 try {
                     return action.block();
@@ -625,7 +625,7 @@ public final class ThreadManager {
     @TruffleBoundary
     private void doKillOtherThreads() {
         final Thread initiatingJavaThread = Thread.currentThread();
-        SafepointPredicate predicate = (context, thread, action) -> Thread.currentThread() != initiatingJavaThread &&
+        SafepointPredicate predicate = (_, thread, _) -> Thread.currentThread() != initiatingJavaThread &&
                 language.getCurrentFiber() == thread.getCurrentFiber();
 
         context.getSafepointManager().pauseAllThreadsAndExecute(null,

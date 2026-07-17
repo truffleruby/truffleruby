@@ -107,11 +107,11 @@ public abstract class TruffleRegexpNodes {
     private static void instrumentMatch(ConcurrentHashMap<MatchInfo, AtomicInteger> metricsMap, RubyRegexp regexp,
             Object string, boolean fromStart, boolean collectDetailedStats) {
         TruffleRegexpNodes.MatchInfo matchInfo = new TruffleRegexpNodes.MatchInfo(regexp, fromStart);
-        ConcurrentOperations.getOrCompute(metricsMap, matchInfo, x -> new AtomicInteger()).incrementAndGet();
+        ConcurrentOperations.getOrCompute(metricsMap, matchInfo, _ -> new AtomicInteger()).incrementAndGet();
 
         if (collectDetailedStats) {
             final MatchInfoStats stats = ConcurrentOperations
-                    .getOrCompute(MATCHED_REGEXP_STATS, matchInfo, x -> new MatchInfoStats());
+                    .getOrCompute(MATCHED_REGEXP_STATS, matchInfo, _ -> new MatchInfoStats());
 
             final AbstractTruffleString tstring = RubyStringLibrary.getTStringUncached(string);
             final RubyEncoding encoding = RubyStringLibrary.getEncodingUncached(string);
@@ -1024,10 +1024,10 @@ public abstract class TruffleRegexpNodes {
             // Keep status as RUN because MRI has an uninterruptible Regexp engine
             if (onlyMatchAtStart) {
                 return getContext().getThreadManager().runUntilResultKeepStatus(this,
-                        unused -> matcher.matchInterruptible(from, to, Option.DEFAULT), null);
+                        _ -> matcher.matchInterruptible(from, to, Option.DEFAULT), null);
             } else {
                 return getContext().getThreadManager().runUntilResultKeepStatus(this,
-                        unused -> matcher.searchInterruptible(from, to, Option.DEFAULT), null);
+                        _ -> matcher.searchInterruptible(from, to, Option.DEFAULT), null);
             }
         }
 
@@ -1337,18 +1337,18 @@ public abstract class TruffleRegexpNodes {
 
         private void record(ATStringWithEncoding string) {
             ConcurrentOperations
-                    .getOrCompute(byteLengthFrequencies, string.byteLength(), x -> new AtomicLong())
+                    .getOrCompute(byteLengthFrequencies, string.byteLength(), _ -> new AtomicLong())
                     .incrementAndGet();
             ConcurrentOperations
-                    .getOrCompute(characterLengthFrequencies, string.characterLength(), x -> new AtomicLong())
+                    .getOrCompute(characterLengthFrequencies, string.characterLength(), _ -> new AtomicLong())
                     .incrementAndGet();
             ConcurrentOperations
-                    .getOrCompute(codeRangeFrequencies, string.getCodeRange(), x -> new AtomicLong())
+                    .getOrCompute(codeRangeFrequencies, string.getCodeRange(), _ -> new AtomicLong())
                     .incrementAndGet();
-            ConcurrentOperations.getOrCompute(encodingFrequencies, string.encoding, x -> new AtomicLong())
+            ConcurrentOperations.getOrCompute(encodingFrequencies, string.encoding, _ -> new AtomicLong())
                     .incrementAndGet();
             ConcurrentOperations
-                    .getOrCompute(tstringClassFrequencies, string.getClass().getSimpleName(), x -> new AtomicLong())
+                    .getOrCompute(tstringClassFrequencies, string.getClass().getSimpleName(), _ -> new AtomicLong())
                     .incrementAndGet();
         }
 

@@ -67,7 +67,7 @@ public final class FiberManager {
 
         var sourceSection = block.getSharedMethodInfo().getSourceSection();
 
-        context.getThreadManager().leaveAndEnter(currentNode, Interrupter.THREAD_INTERRUPT, (unused) -> {
+        context.getThreadManager().leaveAndEnter(currentNode, Interrupter.THREAD_INTERRUPT, _ -> {
             Thread thread = context.getThreadManager().createFiberJavaThread(fiber, sourceSection,
                     () -> beforeEnter(fiber, initializeNode),
                     () -> fiberMain(context, fiber, block, initializeNode),
@@ -310,7 +310,7 @@ public final class FiberManager {
         }
 
         var message = context.getThreadManager().leaveAndEnter(currentNode, Interrupter.THREAD_INTERRUPT,
-                (unused) -> {
+                _ -> {
                     resume(fromFiber, toFiber, operation, descriptor, args);
                     return waitMessage(fromFiber, currentNode);
                 }, null);
@@ -321,7 +321,7 @@ public final class FiberManager {
     @TruffleBoundary
     public void safepoint(RubyFiber fromFiber, RubyFiber fiber, SafepointAction action, Node currentNode) {
         var returnMessage = (FiberResumeMessage) context.getThreadManager().leaveAndEnter(currentNode,
-                Interrupter.THREAD_INTERRUPT, (unused) -> {
+                Interrupter.THREAD_INTERRUPT, _ -> {
                     addToMessageQueue(fiber, new FiberSafepointMessage(fromFiber, action));
                     return waitMessage(fromFiber, currentNode);
                 }, null);
@@ -373,7 +373,7 @@ public final class FiberManager {
         final TruffleSafepoint safepoint = TruffleSafepoint.getCurrent();
         boolean allowSideEffects = safepoint.setAllowSideEffects(false);
         try {
-            context.getThreadManager().leaveAndEnter(null, Interrupter.THREAD_INTERRUPT, (unused) -> {
+            context.getThreadManager().leaveAndEnter(null, Interrupter.THREAD_INTERRUPT, _ -> {
                 doKillOtherFibers(thread);
                 return BlockingAction.SUCCESS;
             }, null);

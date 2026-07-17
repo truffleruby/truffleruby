@@ -85,7 +85,7 @@ public class RubyFileTypeDetectorTest extends RubyTest {
     @Test
     public void testEncoding() {
         final RubyFileTypeDetector fileTypeDetector = new RubyFileTypeDetector();
-        testWithAST("", rootNode -> {
+        testWithAST("", _ -> {
             TruffleLanguage.Env env = RubyLanguage.getCurrentContext().getEnv();
             try {
                 for (TestCase testCase : getTestCases()) {

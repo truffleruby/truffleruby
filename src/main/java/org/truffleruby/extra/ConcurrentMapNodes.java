@@ -137,7 +137,7 @@ public abstract class ConcurrentMapNodes {
             final int hashCode = hashNode.execute(this, key);
             propagateSharingKey.execute(this, self, key);
             final Object returnValue = ConcurrentOperations.getOrCompute(self.getMap(), new Key(key, hashCode),
-                    (k) -> propagateSharingValue.propagate(this, self, yieldNode.yield(this, block)));
+                    _ -> propagateSharingValue.propagate(this, self, yieldNode.yield(this, block)));
             assert returnValue != null;
             return returnValue;
         }
@@ -153,7 +153,7 @@ public abstract class ConcurrentMapNodes {
                 @Cached PropagateSharingNode propagateSharingValue) {
             // The key does not need to be shared for computeIfPresent() because that never inserts the key in the map
             final int hashCode = hashNode.execute(this, key);
-            return nullToNil(computeIfPresent(self.getMap(), new Key(key, hashCode), (k, v) -> {
+            return nullToNil(computeIfPresent(self.getMap(), new Key(key, hashCode), (_, v) -> {
                 // TODO (Chris, 6 May 2021): It's unfortunate we're calling this behind a boundary! Can we do better?
                 Object value = yieldNode.yield(this, block, v);
                 return nilToNull(propagateSharingValue.propagate(this, self, value));
@@ -177,7 +177,7 @@ public abstract class ConcurrentMapNodes {
                 @Cached PropagateSharingNode propagateSharingValue) {
             final int hashCode = hashNode.execute(this, key);
             propagateSharingKey.execute(this, self, key);
-            return nullToNil(compute(self.getMap(), new Key(key, hashCode), (k, v) -> {
+            return nullToNil(compute(self.getMap(), new Key(key, hashCode), (_, v) -> {
                 Object value = yieldNode.yield(this, block, nullToNil(v));
                 return nilToNull(propagateSharingValue.propagate(this, self, value));
             }));
@@ -201,7 +201,7 @@ public abstract class ConcurrentMapNodes {
             final int hashCode = hashNode.execute(this, key);
             propagateSharingKey.execute(this, self, key);
             propagateSharingKey.execute(this, self, value);
-            return nullToNil(merge(self.getMap(), new Key(key, hashCode), value, (existingValue, newValue) -> nilToNull(
+            return nullToNil(merge(self.getMap(), new Key(key, hashCode), value, (existingValue, _) -> nilToNull(
                     propagateSharingValue.propagate(this, self, yieldNode.yield(this, block, existingValue)))));
         }
 

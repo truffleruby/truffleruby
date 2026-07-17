@@ -117,9 +117,9 @@ public final class FeatureLoader {
         registeredAutoloadsLock.lock();
         try {
             final Map<String, List<RubyConstant>> constants = ConcurrentOperations
-                    .getOrCompute(registeredAutoloads, basename, k -> new LinkedHashMap<>());
+                    .getOrCompute(registeredAutoloads, basename, _ -> new LinkedHashMap<>());
             final List<RubyConstant> list = ConcurrentOperations
-                    .getOrCompute(constants, autoloadPath, k -> new ArrayList<>());
+                    .getOrCompute(constants, autoloadPath, _ -> new ArrayList<>());
             list.add(autoloadConstant);
         } finally {
             registeredAutoloadsLock.unlock();

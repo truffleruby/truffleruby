@@ -40,7 +40,7 @@ public final class ReadUserKeywordsHashNode extends RubyBaseNode {
 
         for (String keyword : descriptor.getKeywords()) {
             final RubySymbol symbol = getSymbol(keyword);
-            final Object value = hashStoreLibrary.lookupOrDefault(hash.store, null, hash, symbol, (f, h, k) -> null);
+            final Object value = hashStoreLibrary.lookupOrDefault(hash.store, null, hash, symbol, (_, _, _) -> null);
             assert value != null : "descriptor claims " + keyword +
                     " was passed as a keyword argument but it's not in the hash";
         }
