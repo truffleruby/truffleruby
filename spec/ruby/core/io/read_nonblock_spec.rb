@@ -22,6 +22,12 @@ describe "IO#read_nonblock" do
     }
   end
 
+  it "raises an ArgumentError if exception: is not true or false" do
+    -> { @read.read_nonblock(5, exception: 0) }.should.raise ArgumentError, /expected true or false/
+    -> { @read.read_nonblock(5, exception: nil) }.should.raise ArgumentError, /expected true or false/
+    -> { @read.read_nonblock(5, exception: 'false') }.should.raise ArgumentError, /expected true or false/
+  end
+
   context "when exception option is set to false" do
     context "when there is no data" do
       it "returns :wait_readable" do

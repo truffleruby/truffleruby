@@ -50,18 +50,19 @@ module Kernel
   module_function :Array
 
   def Complex(real, imag = undefined, exception: true)
+    Truffle::Type.rb_bool_expected(exception, 'exception')
     Complex.__send__(:convert, real, imag, exception: exception)
   end
   module_function :Complex
 
   def Float(obj, exception: true)
-    raise_exception = !Primitive.false?(exception)
+    Truffle::Type.rb_bool_expected(exception, 'exception')
     obj = Truffle::Interop.unbox_if_needed(obj)
 
     case obj
     when String
       converted = Primitive.string_to_f obj
-      if Primitive.nil?(converted) && raise_exception
+      if Primitive.nil?(converted) && exception
         raise ArgumentError, "invalid value for Float(): #{obj.inspect}"
       else
         converted
@@ -69,7 +70,7 @@ module Kernel
     when Float
       obj
     when nil
-      if raise_exception
+      if exception
         raise TypeError, "can't convert nil into Float"
       else
         nil
@@ -81,7 +82,7 @@ module Kernel
         raise RangeError, "can't convert #{obj} into Float"
       end
     else
-      if raise_exception
+      if exception
         Primitive.convert_type(obj, Float, :to_f)
       else
         Truffle::Type.rb_check_convert_type(obj, Float, :to_f)
@@ -104,14 +105,14 @@ module Kernel
   def Integer(obj, base = 0, exception: true)
     obj = Truffle::Interop.unbox_if_needed(obj)
     base = Primitive.convert_with_to_int(base)
-    raise_exception = !Primitive.false?(exception)
+    Truffle::Type.rb_bool_expected(exception, 'exception')
 
     if Primitive.is_a?(obj, String)
-      Primitive.string_to_inum(obj, base, true, raise_exception)
+      Primitive.string_to_inum(obj, base, true, exception)
     else
       bad_base_check = Proc.new do
         if base != 0
-          return nil unless raise_exception
+          return nil unless exception
           raise ArgumentError, 'base specified for non string value'
         end
       end
@@ -122,13 +123,13 @@ module Kernel
       when Float
         bad_base_check.call
         if obj.nan? or obj.infinite?
-          return nil unless raise_exception
+          return nil unless exception
         end
         # TODO BJF 14-Jan-2020 Add fixable conversion logic
         obj.to_int
       when NilClass
         bad_base_check.call
-        return nil unless raise_exception
+        return nil unless exception
         raise TypeError, "can't convert nil into Integer"
       else
         converted_to_int_obj = Truffle::Type.rb_check_to_integer(obj, :to_int)
@@ -139,11 +140,11 @@ module Kernel
 
         converted_to_str_obj = Truffle::Type.rb_check_convert_type(obj, String, :to_str)
         unless Primitive.nil? converted_to_str_obj
-          return Primitive.string_to_inum(converted_to_str_obj, base, true, raise_exception)
+          return Primitive.string_to_inum(converted_to_str_obj, base, true, exception)
         end
 
         bad_base_check.call
-        if raise_exception
+        if exception
           Primitive.convert_type(obj, Integer, :to_i)
         else
           Truffle::Type.rb_check_to_integer(obj, :to_i)
@@ -154,6 +155,7 @@ module Kernel
   module_function :Integer
 
   def Rational(a, b = 1, exception: true)
+    Truffle::Type.rb_bool_expected(exception, 'exception')
     Rational.__send__ :convert, a, b, exception
   end
   module_function :Rational

@@ -283,6 +283,7 @@ class Dir
         raise ArgumentError, 'nul-separated glob pattern is deprecated' if pattern.include? "\0"
         patterns = [pattern]
       end
+      Truffle::Type.rb_bool_expected(sort, 'sort')
 
       matches = []
       index = 0

@@ -1782,6 +1782,7 @@ class IO
   # buffer like readpartial. In this case, read(2) is not called.
   def read_nonblock(size, buffer = nil, exception: true)
     raise ArgumentError, 'illegal read size' if size < 0
+    Truffle::Type.rb_bool_expected(exception, 'exception')
     ensure_open_and_readable
     self.nonblock = true
 
@@ -2370,6 +2371,7 @@ class IO
   end
 
   def write_nonblock(data, exception: true)
+    Truffle::Type.rb_bool_expected(exception, 'exception')
     ensure_open_and_writable
 
     data = String data

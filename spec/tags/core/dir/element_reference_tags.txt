@@ -1,3 +1,2 @@
-fails:Dir.[] raises an ArgumentError if sort: is not true or false
 fails:Dir.[] accepts a pattern in a non-UTF-8, ASCII-compatible encoding containing non-ASCII characters
 fails:Dir.[] accepts multiple patterns in a non-UTF-8, ASCII-compatible encoding containing non-ASCII characters

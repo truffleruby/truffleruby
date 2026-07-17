@@ -225,6 +225,12 @@ module Truffle
       obj
     end
 
+    def self.rb_bool_expected(value, arg_name)
+      return if Primitive.false?(value) || Primitive.true?(value)
+
+      raise ArgumentError, "expected true or false as #{arg_name}: #{value}"
+    end
+
     def self.to_class_name(object)
       case object
       when nil
