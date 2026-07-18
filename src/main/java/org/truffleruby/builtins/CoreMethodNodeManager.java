@@ -344,7 +344,7 @@ public final class CoreMethodNodeManager {
                     " must subclass AlwaysInlinedMethodNode";
 
             if (method.lowerFixnum().length > 0 || method.raiseIfFrozenSelf() || method.raiseIfNotMutableSelf() ||
-                    method.returnsEnumeratorIfNoBlock() || !method.enumeratorSize().isEmpty() ||
+                    !method.enumeratorSize().isEmpty() ||
                     method.split() != Split.DEFAULT) {
                 throw new Error("Always-inlined methods do not support all @CoreMethod attributes for " + nodeClass);
             }
@@ -456,16 +456,11 @@ public final class CoreMethodNodeManager {
 
     private static RubyNode transformResult(RubyLanguage language, CoreMethod method, RubyNode node) {
         if (!method.enumeratorSize().isEmpty()) {
-            assert !method
-                    .returnsEnumeratorIfNoBlock() : "Only one of enumeratorSize or returnsEnumeratorIfNoBlock can be specified";
             // TODO BF 6-27-2015 Handle multiple method names correctly
             node = new EnumeratorSizeNode(
                     language.getSymbol(method.enumeratorSize()),
                     language.getSymbol(method.names()[0]),
                     node);
-        } else if (method.returnsEnumeratorIfNoBlock()) {
-            // TODO BF 3-18-2015 Handle multiple method names correctly
-            node = new ReturnEnumeratorIfNoBlockNode(method.names()[0], node);
         }
 
         return node;

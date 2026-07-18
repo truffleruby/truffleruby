@@ -28,8 +28,6 @@ import com.oracle.truffle.api.dsl.ReportPolymorphism;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
-import com.oracle.truffle.api.profiles.InlinedLoopConditionProfile;
-import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.truffleruby.annotations.CoreMethod;
 import org.truffleruby.annotations.Split;
@@ -45,7 +43,6 @@ import org.truffleruby.core.cast.FloatToIntegerNode;
 import org.truffleruby.core.cast.ToRubyIntegerNode;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.inlined.AlwaysInlinedMethodNode;
-import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.language.NoImplicitCastsToLong;
 import org.truffleruby.language.NotProvided;
@@ -63,7 +60,6 @@ import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.ExplodeLoop.LoopExplosionKind;
 import com.oracle.truffle.api.profiles.BranchProfile;
-import org.truffleruby.language.yield.CallBlockNode;
 
 @CoreModule(value = "Integer", isClass = true)
 public abstract class IntegerNodes {
@@ -1981,69 +1977,6 @@ public abstract class IntegerNodes {
 
     }
 
-    @CoreMethod(names = "downto", needsBlock = true, required = 1, returnsEnumeratorIfNoBlock = true)
-    public abstract static class DownToNode extends CoreMethodArrayArgumentsNode {
-
-        @Child private DispatchNode downtoInternalCall;
-
-        @Specialization
-        Object downto(int from, int to, RubyProc block,
-                @Cached @Shared CallBlockNode yieldNode,
-                @Cached @Shared InlinedLoopConditionProfile loopProfile) {
-            int i = from;
-            try {
-                for (; loopProfile.inject(this, i >= to); i--) {
-                    yieldNode.yield(this, block, i);
-                }
-            } finally {
-                profileAndReportLoopCount(this, loopProfile, from - i + 1);
-            }
-
-            return nil;
-        }
-
-        @Specialization
-        Object downto(int from, double to, RubyProc block,
-                @Cached @Shared CallBlockNode yieldNode,
-                @Cached @Shared InlinedLoopConditionProfile loopProfile) {
-            return downto(from, (int) Math.ceil(to), block, yieldNode, loopProfile);
-        }
-
-        @Specialization
-        Object downto(long from, long to, RubyProc block,
-                @Cached @Shared CallBlockNode yieldNode,
-                @Cached @Shared InlinedLoopConditionProfile loopProfile) {
-            long i = from;
-            try {
-                for (; i >= to; i--) {
-                    yieldNode.yield(this, block, i);
-                }
-            } finally {
-                profileAndReportLoopCount(this, loopProfile, from - i + 1);
-            }
-
-            return nil;
-        }
-
-        @Specialization
-        Object downto(long from, double to, RubyProc block,
-                @Cached @Shared CallBlockNode yieldNode,
-                @Cached @Shared InlinedLoopConditionProfile loopProfile) {
-            return downto(from, (long) Math.ceil(to), block, yieldNode, loopProfile);
-        }
-
-        @Specialization(guards = "isRubyBignum(from) || !isImplicitLongOrDouble(to)")
-        Object downto(Object from, Object to, RubyProc block) {
-            if (downtoInternalCall == null) {
-                CompilerDirectives.transferToInterpreterAndInvalidate();
-                downtoInternalCall = insert(DispatchNode.create());
-            }
-
-            return downtoInternalCall.callWithBlock(from, "downto_internal", block, to);
-        }
-
-    }
-
     @CoreMethod(names = { "to_i", "to_int" })
     public abstract static class ToINode extends CoreMethodArrayArgumentsNode {
 
@@ -2060,66 +1993,6 @@ public abstract class IntegerNodes {
         @Specialization
         RubyBignum toI(RubyBignum n) {
             return n;
-        }
-
-    }
-
-    @CoreMethod(names = "upto", needsBlock = true, required = 1, returnsEnumeratorIfNoBlock = true)
-    public abstract static class UpToNode extends CoreMethodArrayArgumentsNode {
-
-        @Child private DispatchNode uptoInternalCall;
-        private final LoopConditionProfile loopProfile = LoopConditionProfile.create();
-
-        @Specialization
-        Object upto(int from, int to, RubyProc block,
-                @Cached @Shared CallBlockNode yieldNode) {
-            int i = from;
-            try {
-                for (; loopProfile.inject(i <= to); i++) {
-                    yieldNode.yield(this, block, i);
-                }
-            } finally {
-                profileAndReportLoopCount(loopProfile, i - from + 1);
-            }
-
-            return nil;
-        }
-
-        @Specialization
-        Object upto(int from, double to, RubyProc block,
-                @Cached @Shared CallBlockNode yieldNode) {
-            return upto(from, (int) Math.floor(to), block, yieldNode);
-        }
-
-        @Specialization
-        Object upto(long from, long to, RubyProc block,
-                @Cached @Shared CallBlockNode yieldNode) {
-            long i = from;
-            try {
-                for (; i <= to; i++) {
-                    yieldNode.yield(this, block, i);
-                }
-            } finally {
-                profileAndReportLoopCount(loopProfile, i - from + 1);
-            }
-
-            return nil;
-        }
-
-        @Specialization
-        Object upto(long from, double to, RubyProc block,
-                @Cached @Shared CallBlockNode yieldNode) {
-            return upto(from, (long) Math.floor(to), block, yieldNode);
-        }
-
-        @Specialization(guards = "isRubyBignum(from) || !isImplicitLongOrDouble(to)")
-        Object upto(Object from, Object to, RubyProc block) {
-            if (uptoInternalCall == null) {
-                CompilerDirectives.transferToInterpreterAndInvalidate();
-                uptoInternalCall = insert(DispatchNode.create());
-            }
-
-            return uptoInternalCall.callWithBlock(from, "upto_internal", block, to);
         }
 
     }
