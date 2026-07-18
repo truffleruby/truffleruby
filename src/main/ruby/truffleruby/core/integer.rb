@@ -164,6 +164,30 @@ class Integer < Numeric
   end
   Primitive.always_split self, :times
 
+  def upto(limit)
+    return to_enum(:upto, limit) { self <= limit ? limit - self + 1 : 0 } unless block_given?
+
+    i = self
+    while i <= limit
+      yield i
+      i += 1
+    end
+    self
+  end
+  Primitive.always_split self, :upto
+
+  def downto(limit)
+    return to_enum(:downto, limit) { self >= limit ? self - limit + 1 : 0 } unless block_given?
+
+    i = self
+    while i >= limit
+      yield i
+      i -= 1
+    end
+    self
+  end
+  Primitive.always_split self, :downto
+
   def truncate(precision = 0)
     if precision >= 0
       self
@@ -365,30 +389,6 @@ class Integer < Numeric
     end
     x
   end
-
-  private def upto_internal(val)
-    return to_enum(:upto, val) { self <= val ? val - self + 1 : 0 } unless block_given?
-
-    i = self
-    while i <= val
-      yield i
-      i += 1
-    end
-    self
-  end
-  Primitive.always_split self, :upto_internal
-
-  private def downto_internal(val)
-    return to_enum(:downto, val) { self >= val ? self - val + 1 : 0 } unless block_given?
-
-    i = self
-    while i >= val
-      yield i
-      i -= 1
-    end
-    self
-  end
-  Primitive.always_split self, :downto_internal
 
   class << self
     undef_method :new

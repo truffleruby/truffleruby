@@ -69,10 +69,7 @@ public @interface CoreMethod {
     /** Raise an error if the string/self's temporary lock is set to true or if it is frozen. */
     boolean raiseIfNotMutableSelf() default false;
 
-    boolean returnsEnumeratorIfNoBlock() default false;
-
-    /** Method to call to determine the size of the returned Enumerator. Implies {@link #returnsEnumeratorIfNoBlock()}
-     * . */
+    /** Method to call to determine the size of the returned Enumerator. */
     String enumeratorSize() default "";
 
     /** Use these names in Ruby core methods stubs, ignore argument names in Java specializations. */
