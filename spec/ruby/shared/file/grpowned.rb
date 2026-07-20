@@ -1,3 +1,5 @@
+require_relative '../../core/process/fixtures/common'
+
 describe :file_grpowned, shared: true do
   before :each do
     @file = tmp('i_exist')
@@ -36,6 +38,7 @@ describe :file_grpowned, shared: true do
     end
 
     it 'takes non primary groups into account' do
+      skip "Codex sandbox returns EINVAL instead of EPERM for uid/gid permission changes" if ProcessSpecs.codex_sandbox?
       group = (Process.groups - [Process.egid]).first
 
       if group
