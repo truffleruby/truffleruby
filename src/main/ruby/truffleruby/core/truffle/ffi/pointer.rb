@@ -50,6 +50,7 @@ module Truffle::FFI
 
     def initialize(type = nil, address)
       if Truffle::Interop.pointer?(address)
+        @parent = address # keep the original pointer alive
         address = Truffle::Interop.as_pointer(address)
       end
       self.address = address
@@ -112,15 +113,14 @@ module Truffle::FFI
     end
 
     def +(offset)
-      ptr = Pointer.new(address + offset)
-      if Primitive.pointer_size(self) != UNBOUNDED
-        ptr.total = Primitive.pointer_size(self) - offset
-      end
-      ptr
+      size = Primitive.pointer_size(self)
+      length = size == UNBOUNDED ? UNBOUNDED : size - offset
+      slice(offset, length)
     end
 
     def slice(offset, length)
-      ptr = Pointer.new(address + offset)
+      ptr = Pointer.new(self) # to keep self alive
+      ptr.address = address + offset
       ptr.total = length
       ptr
     end
