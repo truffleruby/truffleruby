@@ -58,6 +58,7 @@ Compatibility:
 * Fix `rb_call_super()` and pass block argument to a super method (@andrykonchyn).
 * Implement `rb_call_super_kw()` (#4056, @andrykonchyn).
 * Fix `rb_get_kwargs` for nil `keyword_hash` with required keywords. (#4376, @earlopain)
+* Run a signal handler immediately when `Process.kill(signal, Process.pid)` is called on the main Thread (#4383, @eregon).
 
 Performance:
 

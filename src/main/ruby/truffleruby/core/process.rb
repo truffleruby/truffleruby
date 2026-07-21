@@ -302,6 +302,10 @@ module Process
       pid = Primitive.convert_with_to_int pid
 
       if pid == Process.pid && signal != 0
+        if Thread.current == Thread.main and Signal.send(:run_handler_directly, signal)
+          next
+        end
+
         signal_name = Signal::Numbers[signal].to_sym
         result = Primitive.process_kill_raise signal_name
         if result == -1 # Try kill() if the java Signal.raise() failed
