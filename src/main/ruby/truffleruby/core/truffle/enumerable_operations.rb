@@ -35,12 +35,14 @@ module Truffle
     end
 
     def self.cycle_size(enum_size, many)
+      many = Primitive.rb_num2int(many) if many
+      return enum_size if Primitive.nil?(enum_size) || enum_size == 0
+
       if many
-        many = Primitive.rb_num2int many
         many = 0 if many < 0
-        Primitive.nil?(enum_size) ? nil : enum_size * many
+        enum_size * many
       else
-        Primitive.nil?(enum_size) ? nil : Float::INFINITY
+        Float::INFINITY
       end
     end
 
