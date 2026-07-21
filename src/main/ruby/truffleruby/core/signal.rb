@@ -151,4 +151,14 @@ module Signal
 
     Numbers[index]
   end
+
+  def self.run_handler_directly(signo)
+    if handler = @handlers[signo] and Primitive.is_a?(handler, Proc)
+      handler.call(signo)
+      true
+    else
+      false
+    end
+  end
+  private_class_method :run_handler_directly
 end
