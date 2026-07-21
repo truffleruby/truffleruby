@@ -419,16 +419,16 @@ class File < IO
 
     # fast path
     if level == 1
-      return '.'.encode(path_encoding) if path.empty?
-      return Truffle::FileOperations.dirname(path).encode(path_encoding)
+      return Primitive.string_with_encoding!(+'.', path_encoding) if path.empty?
+      return Primitive.string_with_encoding!(Truffle::FileOperations.dirname(path), path_encoding)
     end
 
     level.times do
-      return '.'.encode(path_encoding) if path.empty?
+      return Primitive.string_with_encoding!(+'.', path_encoding) if path.empty?
       path = Truffle::FileOperations.dirname(path)
     end
 
-    path.encode(path_encoding)
+    Primitive.string_with_encoding!(path, path_encoding)
   end
 
   ##
@@ -902,7 +902,7 @@ class File < IO
     end
 
     begin
-      real.encode(path_encoding)
+      Primitive.string_with_encoding!(real, path_encoding)
     rescue EncodingError
       real.force_encoding(path_encoding)
     end
@@ -920,7 +920,7 @@ class File < IO
     end
 
     begin
-      real.encode(path_encoding)
+      Primitive.string_with_encoding!(real, path_encoding)
     rescue EncodingError
       real
     end

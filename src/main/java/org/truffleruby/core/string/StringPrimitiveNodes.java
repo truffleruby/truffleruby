@@ -118,6 +118,7 @@ import org.truffleruby.core.format.unpack.UnpackCompiler;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.string.StringHelperNodes.SingleByteOptimizableNode;
 import org.truffleruby.core.string.StringHelperNodes.ToMutableTruffleStringNode;
+import org.truffleruby.core.string.StringNodes.ForceEncodingNode;
 import org.truffleruby.core.support.RubyByteArray;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.interop.ToJavaStringNode;
@@ -126,6 +127,8 @@ import org.truffleruby.language.NotProvided;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.control.DeferredRaiseException;
 import org.truffleruby.language.control.RaiseException;
+import org.truffleruby.language.dispatch.DispatchNode;
+import org.truffleruby.language.objects.IsFrozenNode;
 import org.truffleruby.language.library.RubyStringLibrary;
 import org.truffleruby.language.yield.CallBlockNode;
 
@@ -2583,6 +2586,63 @@ public abstract class StringPrimitiveNodes {
             var tstring = libString.getTString(this, string);
             return isCharacterHeadNode.execute(enc, tstring, byteOffset);
         }
+    }
+
+    /** Changes the encoding of a string. Tries to mutate the string in-place if mutable, otherwise allocates a new
+     * string copy with the target encoding. */
+    @Primitive(name = "string_with_encoding!")
+    public abstract static class StringWithEncodingPrimitiveNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization(guards = "!isFrozenNode.execute(string)")
+        static Object withEncoding(Object string, RubyEncoding toEncoding,
+                @Cached @Shared IsFrozenNode isFrozenNode,
+                @Cached @Shared RubyStringLibrary libString,
+                @Cached @Shared GetByteCodeRangeNode codeRangeNode,
+                @Cached(neverDefault = true) @Shared ForceEncodingNode forceEncodingNode,
+                @Cached @Shared DispatchNode stringEncodeNode,
+                @Bind Node node) {
+            var encoding = libString.getEncoding(node, string);
+
+            if (encoding == toEncoding) {
+                return string;
+            }
+
+            var tstring = libString.getTString(node, string);
+            boolean is7Bit = StringGuards.is7Bit(tstring, encoding, codeRangeNode);
+
+            if (is7Bit && toEncoding.isAsciiCompatible) {
+                return forceEncodingNode.execute(string, toEncoding);
+            }
+
+            return stringEncodeNode.call(string, "encode!", toEncoding);
+        }
+
+        @Specialization(guards = "isFrozenNode.execute(string)")
+        static Object withEncodingFrozen(Object string, RubyEncoding toEncoding,
+                @Cached @Shared IsFrozenNode isFrozenNode,
+                @Cached @Shared RubyStringLibrary libString,
+                @Cached AsTruffleStringNode asTruffleStringNode,
+                @Cached @Shared GetByteCodeRangeNode codeRangeNode,
+                @Cached(neverDefault = true) @Shared ForceEncodingNode forceEncodingNode,
+                @Cached @Shared DispatchNode stringEncodeNode,
+                @Bind Node node) {
+            var encoding = libString.getEncoding(node, string);
+
+            if (encoding == toEncoding) {
+                return string;
+            }
+
+            var tstring = libString.getTString(node, string);
+            boolean is7Bit = StringGuards.is7Bit(tstring, encoding, codeRangeNode);
+
+            if (is7Bit && toEncoding.isAsciiCompatible) {
+                var copy = createStringCopy(node, asTruffleStringNode, tstring, encoding);
+                return forceEncodingNode.execute(copy, toEncoding);
+            }
+
+            return stringEncodeNode.call(string, "encode", toEncoding);
+        }
+
     }
 
 }

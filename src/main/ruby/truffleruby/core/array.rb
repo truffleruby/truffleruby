@@ -615,7 +615,7 @@ class Array
   Primitive.always_split self, :insert
 
   def inspect
-    return '[]'.encode(Encoding::US_ASCII) if empty?
+    return Primitive.string_with_encoding!('[]', Encoding::US_ASCII) if empty?
     result = +'['
 
     return +'[...]' if Truffle::ThreadOperations.detect_recursion self do
@@ -669,7 +669,7 @@ class Array
   end
 
   def join(sep = nil)
-    return ''.encode(Encoding::US_ASCII) if size == 0
+    return Primitive.string_with_encoding!('', Encoding::US_ASCII) if size == 0
 
     out = +''
     raise ArgumentError, 'recursive array join' if Truffle::ThreadOperations.detect_recursion self do
