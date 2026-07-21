@@ -589,12 +589,14 @@ module Kernel
 
   def system(*args)
     options = Truffle::Type.try_convert(args.last, Hash, :to_hash)
-    exception = if options
-                  args[-1] = options
-                  options.delete(:exception)
-                else
-                  false
-                end
+    if options
+      args[-1] = options
+      exception = options.delete(:exception)
+    end
+    unless Primitive.boolean_or_nil?(exception)
+      Truffle::Type.rb_bool_expected(exception, 'exception')
+    end
+    exception = Primitive.as_boolean(exception)
 
     begin
       pid = Process.spawn(*args)

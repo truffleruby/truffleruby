@@ -283,9 +283,10 @@ module Truffle
             parent_fd = convert_to_fd value, fds.first
             fds.each { |fd| redirect fd, parent_fd }
           when :unsetenv_others
-            if value
-              @options[:unsetenv_others] = true
+            unless Primitive.boolean_or_nil?(value)
+              Truffle::Type.rb_bool_expected(value, 'unsetenv_others')
             end
+            @options[:unsetenv_others] = Primitive.as_boolean(value)
           when :pgroup
             if Primitive.true?(value)
               value = 0
@@ -303,7 +304,10 @@ module Truffle
           when :umask
             @options[key] = value
           when :close_others
-            @options[key] = value
+            unless Primitive.boolean_or_nil?(value)
+              Truffle::Type.rb_bool_expected(value, 'close_others')
+            end
+            @options[:close_others] = Primitive.as_boolean(value)
           else
             raise ArgumentError, "unknown exec option: #{key.inspect}"
           end
