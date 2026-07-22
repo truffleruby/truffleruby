@@ -82,7 +82,7 @@ public class RubyModule extends RubyDynamicObject implements ObjectGraphNode {
     @TruffleBoundary
     public void addMethodConsiderNameVisibility(RubyContext context, InternalMethod method, Visibility visibility,
             Node currentNode) {
-        if (ModuleOperations.isMethodPrivateFromName(method.getName())) {
+        if (visibility != Visibility.MODULE_FUNCTION && ModuleOperations.isMethodPrivateFromName(method.getName())) {
             visibility = Visibility.PRIVATE;
         }
 
