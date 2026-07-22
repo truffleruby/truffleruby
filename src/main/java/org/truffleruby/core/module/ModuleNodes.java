@@ -1403,8 +1403,16 @@ public abstract class ModuleNodes {
 
             final Visibility visibility = DeclarationContext
                     .findVisibilityCheckSelfAndDefaultDefinee(module, callerFrame);
-            module.addMethodConsiderNameVisibility(getContext(), method.withOwner(module).withDeclaringModule(module),
-                    visibility, this);
+
+            if (visibility == Visibility.MODULE_FUNCTION) {
+                module.addMethodIgnoreNameVisibility(getContext(), method.withOwner(module).withDeclaringModule(module),
+                        visibility, this);
+            } else {
+                module.addMethodConsiderNameVisibility(getContext(),
+                        method.withOwner(module).withDeclaringModule(module),
+                        visibility, this);
+            }
+
             return getSymbol(method.getName());
         }
 
