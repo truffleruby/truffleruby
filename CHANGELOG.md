@@ -60,6 +60,7 @@ Compatibility:
 * Implement `rb_call_super_kw()` (#4056, @andrykonchyn).
 * Fix `rb_get_kwargs` for nil `keyword_hash` with required keywords. (#4376, @earlopain)
 * Run a signal handler immediately when `Process.kill(signal, Process.pid)` is called on the main Thread (#4383, @eregon).
+* Fix `Module#module_function` and keep new Module methods public created from implicitly private callbacks (#4388, @andrykonchin).
 
 Performance:
 

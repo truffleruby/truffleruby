@@ -691,6 +691,8 @@ public abstract class ModuleOperations {
         return null;
     }
 
+    /** These lifecycle and hook methods automatically default to private visibility when defined as instance methods.
+     * This default does not apply to singleton/class methods or when using {@code module_function}. */
     @TruffleBoundary
     public static boolean isMethodPrivateFromName(String name) {
         return (name.equals("initialize") || name.equals("initialize_copy") ||
