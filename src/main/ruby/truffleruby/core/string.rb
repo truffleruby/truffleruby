@@ -437,55 +437,22 @@ class String
         raise Encoding::ConverterNotFoundError, "Encoding #{from} not found."
       end
     else
-      from_enc = encoding
+      from_enc = self.encoding
     end
 
-    if ascii_only? and from_enc.ascii_compatible? and to_enc and to_enc.ascii_compatible?
-      force_encoding to_enc
-    elsif to_enc
-      if from_enc != to_enc
-        ec = Encoding::Converter.new from_enc, to_enc, **options
-        dest = +''
-        src = self.dup
-        fallback = options[:fallback]
-        status = ec.primitive_convert src, dest, nil, nil
-        while status != :finished
-          raise ec.last_error unless fallback && status == :undefined_conversion
-          (_, fallback_enc_from, fallback_enc_to, error_bytes, _) = ec.primitive_errinfo
-          rep = fallback[error_bytes.force_encoding(fallback_enc_from)]
-          raise ec.last_error unless rep
-          rep = Primitive.convert_with_to_str(rep)
-          dest << rep.encode(fallback_enc_to)
-          status = ec.primitive_convert src, dest, nil, nil
-        end
-
-        return Primitive.string_replace(self, dest)
+    if to_enc
+      if from_enc == self.encoding && from_enc == to_enc
+        # nothing
+      elsif ascii_only? and from_enc.ascii_compatible? and to_enc.ascii_compatible?
+        self.force_encoding to_enc
+      elsif from_enc == to_enc
+        self.force_encoding to_enc
       else
-        force_encoding to_enc
+        return Primitive.string_replace(self, Truffle::EncodingOperations.transcode(self, from_enc, to_enc, **options))
       end
     end
 
-    case options[:invalid]
-    when :replace
-      replacement = options[:replace] || (Primitive.encoding_is_unicode?(from_enc) ? "\ufffd" : '?')
-      self.scrub!(replacement)
-    end
-    case xml = options[:xml]
-    when :text
-      gsub!(/[&><]/, '&' => '&amp;', '>' => '&gt;', '<' => '&lt;')
-    when :attr
-      gsub!(/[&><"]/, '&' => '&amp;', '>' => '&gt;', '<' => '&lt;', '"' => '&quot;')
-      insert(0, '"')
-      insert(-1, '"')
-    when nil
-    # nothing
-    else
-      raise ArgumentError, "unexpected value for xml option: #{xml.inspect}"
-    end
-
-    if options[:universal_newline]
-      gsub!(/\r\n|\r/, "\r\n" => "\n", "\r" => "\n")
-    end
+    Truffle::EncodingOperations.handle_encode_options(self, from_enc, **options) unless options.empty?
 
     self
   end

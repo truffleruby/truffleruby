@@ -359,4 +359,9 @@ describe "Dir.glob" do
       Dir.glob('**/*/nondotfile').sort.should == expected
     end
   end
+
+  it "preserves the encoding of the path" do
+    pattern = "file_one.ext".encode(Encoding::EUC_JP)
+    Dir.glob(pattern).first.encoding.should == Encoding::EUC_JP
+  end
 end

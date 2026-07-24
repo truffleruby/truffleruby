@@ -409,24 +409,26 @@ class File < IO
   #
   #  File.dirname("/home/gumby/work/ruby.rb")   #=> "/home/gumby/work"
   def self.dirname(path, level = 1)
-    path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_to_path_keep_encoding(path)
+    path_encoding = path.encoding
+    path = Truffle::Type.coerce_path_encoding(path)
     level = Primitive.rb_num2int(level)
 
     raise ArgumentError, "negative level: #{level}" if level < 0
-    return path if level == 0
+    return path.encode(path_encoding) if level == 0
 
     # fast path
     if level == 1
-      return +'.' if path.empty?
-      return Truffle::FileOperations.dirname(path)
+      return Primitive.string_with_encoding!(+'.', path_encoding) if path.empty?
+      return Primitive.string_with_encoding!(Truffle::FileOperations.dirname(path), path_encoding)
     end
 
     level.times do
-      return +'.' if path.empty?
+      return Primitive.string_with_encoding!(+'.', path_encoding) if path.empty?
       path = Truffle::FileOperations.dirname(path)
     end
 
-    path
+    Primitive.string_with_encoding!(path, path_encoding)
   end
 
   ##
@@ -876,7 +878,9 @@ class File < IO
   end
 
   def self.realpath(path, basedir = nil)
-    path = Truffle::Type.coerce_to_path(path)
+    path = Truffle::Type.coerce_to_path_keep_encoding(path)
+    path_encoding = path.encoding
+    path = Truffle::Type.coerce_path_encoding(path)
 
     unless absolute_path?(path)
       path = expand_path(path, basedir)
@@ -885,7 +889,7 @@ class File < IO
     buffer = Primitive.io_thread_buffer_allocate(Truffle::Platform::PATH_MAX)
     begin
       if ptr = Truffle::POSIX.realpath(path, buffer) and !ptr.null?
-        real = ptr.read_string
+        real = ptr.read_string.force_encoding(Encoding.find('filesystem'))
       else
         Errno.handle(path)
       end
@@ -897,10 +901,17 @@ class File < IO
       raise Errno::ENOENT, real
     end
 
-    real
+    begin
+      Primitive.string_with_encoding!(real, path_encoding)
+    rescue EncodingError
+      real.force_encoding(path_encoding)
+    end
   end
 
   def self.realdirpath(path, basedir = nil)
+    path = Truffle::Type.coerce_to_path_keep_encoding(path)
+    path_encoding = path.encoding
+    path = Truffle::Type.coerce_path_encoding(path)
     real = basic_realpath path, basedir
     dir = dirname real
 
@@ -908,7 +919,11 @@ class File < IO
       raise Errno::ENOENT, real
     end
 
-    real
+    begin
+      Primitive.string_with_encoding!(real, path_encoding)
+    rescue EncodingError
+      real
+    end
   end
 
   def self.basic_realpath(path, basedir = nil)

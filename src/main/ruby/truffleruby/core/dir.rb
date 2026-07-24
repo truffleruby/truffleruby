@@ -264,7 +264,7 @@ class Dir
 
     def [](*patterns, base: nil, sort: true)
       if patterns.size == 1
-        pattern = Truffle::Type.coerce_to_path(patterns[0], false)
+        pattern = Truffle::Type.coerce_to_path_keep_encoding(patterns[0], false)
         return [] if pattern.empty?
         raise ArgumentError, 'nul-separated glob pattern is deprecated' if pattern.include? "\0"
         patterns = [pattern]
@@ -277,7 +277,7 @@ class Dir
       if Primitive.is_a?(pattern, Array)
         patterns = pattern
       else
-        pattern = Truffle::Type.coerce_to_path(pattern, false)
+        pattern = Truffle::Type.coerce_to_path_keep_encoding(pattern, false)
 
         return [] if pattern.empty?
         raise ArgumentError, 'nul-separated glob pattern is deprecated' if pattern.include? "\0"
@@ -297,17 +297,24 @@ class Dir
                         end
 
       patterns.each do |pat|
-        pat = Truffle::Type.coerce_to_path pat
+        pat = Truffle::Type.coerce_to_path_keep_encoding pat
         enc = Primitive.encoding_compatible? pat, Encoding::US_ASCII
         unless enc
           enc_name = Truffle::EncodingOperations.name_for_inspect(pat.encoding)
           raise Encoding::CompatibilityError, "incompatible character encodings: #{enc_name} and US-ASCII"
         end
+        pat = Truffle::Type.coerce_path_encoding pat
         Dir::Glob.glob normalized_base, pat, flags, matches
 
         total = matches.size
         while index < total
-          matches[index] = matches[index].force_encoding(enc) unless matches[index].encoding == enc
+          unless matches[index].encoding == enc
+            begin
+              matches[index].encode!(enc)
+            rescue EncodingError
+              matches[index].force_encoding(enc)
+            end
+          end
           index += 1
         end
       end
