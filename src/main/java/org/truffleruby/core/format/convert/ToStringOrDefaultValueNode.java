@@ -23,7 +23,6 @@ public abstract class ToStringOrDefaultValueNode extends FormatNode {
     protected final boolean convertNumbersToStrings;
     private final String conversionMethod;
     private final boolean inspectOnConversionFailure;
-    private final Object valueOnNil;
     protected final boolean specialClassBehaviour;
 
     @Child private ToStringNode toStringNode;
@@ -31,22 +30,19 @@ public abstract class ToStringOrDefaultValueNode extends FormatNode {
     public ToStringOrDefaultValueNode(
             boolean convertNumbersToStrings,
             String conversionMethod,
-            boolean inspectOnConversionFailure,
-            Object valueOnNil) {
-        this(convertNumbersToStrings, conversionMethod, inspectOnConversionFailure, valueOnNil, false);
+            boolean inspectOnConversionFailure) {
+        this(convertNumbersToStrings, conversionMethod, inspectOnConversionFailure, false);
     }
 
     public ToStringOrDefaultValueNode(
             boolean convertNumbersToStrings,
             String conversionMethod,
             boolean inspectOnConversionFailure,
-            Object valueOnNil,
             boolean specialClassBehaviour) {
         this.convertNumbersToStrings = convertNumbersToStrings;
         this.conversionMethod = conversionMethod;
         this.inspectOnConversionFailure = inspectOnConversionFailure;
 
-        this.valueOnNil = valueOnNil;
         this.specialClassBehaviour = specialClassBehaviour;
     }
 
@@ -54,7 +50,7 @@ public abstract class ToStringOrDefaultValueNode extends FormatNode {
 
     @Specialization
     Object toStringNil(Nil nil) {
-        return valueOnNil;
+        return nil;
     }
 
     @Specialization(guards = "!isNil(value)")

@@ -49,13 +49,10 @@ import org.truffleruby.core.format.write.bytes.WriteHexStringNodeGen;
 import org.truffleruby.core.format.write.bytes.WriteMIMEStringNodeGen;
 import org.truffleruby.core.format.write.bytes.WriteUTF8CharacterNodeGen;
 import org.truffleruby.core.format.write.bytes.WriteUUStringNodeGen;
-import org.truffleruby.language.Nil;
 import org.truffleruby.language.WarningNode;
 import org.truffleruby.language.control.DeferredRaiseException;
 
 import com.oracle.truffle.api.nodes.Node;
-
-import static org.truffleruby.language.RubyBaseNode.nil;
 
 public final class SimplePackTreeBuilder implements SimplePackListener {
 
@@ -159,7 +156,6 @@ public final class SimplePackTreeBuilder implements SimplePackListener {
                         false,
                         "to_str",
                         false,
-                        Nil.INSTANCE,
                         new SourceNode())));
     }
 
@@ -185,7 +181,6 @@ public final class SimplePackTreeBuilder implements SimplePackListener {
                         true,
                         "to_s",
                         true,
-                        nil,
                         new SourceNode())));
     }
 
@@ -202,7 +197,6 @@ public final class SimplePackTreeBuilder implements SimplePackListener {
                         false,
                         "to_str",
                         false,
-                        Nil.INSTANCE,
                         new SourceNode())));
     }
 
@@ -388,7 +382,6 @@ public final class SimplePackTreeBuilder implements SimplePackListener {
                         false,
                         "to_str",
                         false,
-                        Nil.INSTANCE,
                         new SourceNode())));
 
     }
@@ -404,7 +397,6 @@ public final class SimplePackTreeBuilder implements SimplePackListener {
                         false,
                         "to_str",
                         false,
-                        Nil.INSTANCE,
                         new SourceNode())));
     }
 
@@ -426,7 +418,6 @@ public final class SimplePackTreeBuilder implements SimplePackListener {
                         false,
                         "to_str",
                         false,
-                        Nil.INSTANCE,
                         new SourceNode())));
 
     }

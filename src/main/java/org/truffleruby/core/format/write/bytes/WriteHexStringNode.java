@@ -58,7 +58,9 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import org.truffleruby.core.string.TStringConstants;
 import org.truffleruby.language.library.RubyStringLibrary;
+import org.truffleruby.language.Nil;
 
 @NodeChild("value")
 public abstract class WriteHexStringNode extends FormatNode {
@@ -72,6 +74,11 @@ public abstract class WriteHexStringNode extends FormatNode {
     }
 
     @Specialization
+    Object write(VirtualFrame frame, Nil nil) {
+        return write(frame, TStringConstants.EMPTY_INTERNAL_BYTE_ARRAY);
+    }
+
+    @Specialization(guards = "!isNil(string)")
     Object write(VirtualFrame frame, Object string,
             @Bind Node node,
             @Cached RubyStringLibrary libString,
