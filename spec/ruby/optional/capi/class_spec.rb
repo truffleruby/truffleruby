@@ -662,4 +662,12 @@ describe "C-API Class function" do
       @s.rb_class_get_superclass(Module.new).should == false
     end
   end
+
+  describe "a constant defined in C" do
+    it "raises TypeError if constant given as class name exists and is a Number" do
+      -> {
+         class CApiClassSpecs::CONST_DEFINED_IN_NATIVE_CODE; end
+      }.should.raise(TypeError, /CONST_DEFINED_IN_NATIVE_CODE is not a class/)
+    end
+  end
 end

@@ -33,10 +33,28 @@ import com.oracle.truffle.api.source.SourceSection;
 
 public abstract class GetConstantNode extends RubyBaseNode {
 
+    public final class ConstantAndResolvedValue {
+
+        public final RubyConstant constant;
+        public final Object value;
+
+        public ConstantAndResolvedValue(RubyConstant constant, Object value) {
+            this.constant = constant;
+            this.value = value;
+        }
+    }
 
     @NeverDefault
     public static GetConstantNode create() {
         return GetConstantNodeGen.create();
+    }
+
+    public ConstantAndResolvedValue constantAndResolvedValue(LexicalScope lexicalScope, RubyModule module, String name,
+            LookupConstantInterface lookupConstantNode, boolean callConstMissing) {
+        final RubyConstant constant = lookupConstantNode.lookupConstant(this, lexicalScope, module, name, true);
+        final Object value = executeGetConstant(lexicalScope, module, name, constant, lookupConstantNode,
+                callConstMissing);
+        return new ConstantAndResolvedValue(constant, value);
     }
 
     public Object lookupAndResolveConstant(LexicalScope lexicalScope, RubyModule module, String name,

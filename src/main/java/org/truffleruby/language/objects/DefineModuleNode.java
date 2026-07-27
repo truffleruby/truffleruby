@@ -14,6 +14,7 @@ import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.module.ModuleNodes;
 import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.language.RubyContextSourceNode;
+import org.truffleruby.language.constants.GetConstantNode.ConstantAndResolvedValue;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.control.RaiseException;
 
@@ -41,11 +42,11 @@ public abstract class DefineModuleNode extends RubyContextSourceNode {
 
     @Specialization
     RubyModule defineModule(VirtualFrame frame, RubyModule lexicalParentModule) {
-        final Object existing = lookupForExistingModule(frame, name, lexicalParentModule);
+        final ConstantAndResolvedValue existing = lookupForExistingModule(frame, name, lexicalParentModule);
 
         final RubyModule definingModule;
 
-        if (needToDefineProfile.profile(existing == null)) {
+        if (needToDefineProfile.profile(existing.value == null)) {
             definingModule = ModuleNodes.createModule(
                     getContext(),
                     getEncapsulatingSourceSection(),
@@ -54,12 +55,13 @@ public abstract class DefineModuleNode extends RubyContextSourceNode {
                     name,
                     this);
         } else {
-            if (!(existing instanceof RubyModule) || existing instanceof RubyClass) {
+            if (!(existing.value instanceof RubyModule) || existing.value instanceof RubyClass) {
                 errorProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().typeErrorIsNotA(name, "module", this));
+                throw new RaiseException(getContext(),
+                        coreExceptions().typeErrorIsNotAClassModule(existing.constant, "module", this));
             }
 
-            definingModule = (RubyModule) existing;
+            definingModule = (RubyModule) existing.value;
         }
 
         return definingModule;
@@ -67,10 +69,11 @@ public abstract class DefineModuleNode extends RubyContextSourceNode {
 
     @Specialization(guards = "!isRubyModule(lexicalParentObject)")
     RubyModule defineModuleWrongParent(VirtualFrame frame, Object lexicalParentObject) {
-        throw new RaiseException(getContext(), coreExceptions().typeErrorIsNotA(lexicalParentObject, "module", this));
+        throw new RaiseException(getContext(), coreExceptions().typeErrorIsNotAClassModule(lexicalParentObject, this));
     }
 
-    private Object lookupForExistingModule(VirtualFrame frame, String name, RubyModule lexicalParent) {
+    private ConstantAndResolvedValue lookupForExistingModule(VirtualFrame frame, String name,
+            RubyModule lexicalParent) {
         if (lookupForExistingModuleNode == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             lookupForExistingModuleNode = insert(new LookupForExistingModuleNode());

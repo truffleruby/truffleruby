@@ -18,6 +18,7 @@ import org.truffleruby.language.LexicalScope;
 import org.truffleruby.language.RubyConstant;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.constants.GetConstantNode;
+import org.truffleruby.language.constants.GetConstantNode.ConstantAndResolvedValue;
 import org.truffleruby.language.constants.LookupConstantBaseNode;
 import org.truffleruby.language.constants.LookupConstantInterface;
 import org.truffleruby.language.control.RaiseException;
@@ -29,9 +30,9 @@ public final class LookupForExistingModuleNode extends LookupConstantBaseNode im
 
     @Child GetConstantNode getConstantNode = GetConstantNode.create();
 
-    public Object lookupForExistingModule(VirtualFrame frame, String name, RubyModule lexicalParent) {
+    public ConstantAndResolvedValue lookupForExistingModule(VirtualFrame frame, String name, RubyModule lexicalParent) {
         final LexicalScope lexicalScope = RubyArguments.getMethod(frame).getLexicalScope();
-        return getConstantNode.lookupAndResolveConstant(lexicalScope, lexicalParent, name, this, false);
+        return getConstantNode.constantAndResolvedValue(lexicalScope, lexicalParent, name, this, false);
     }
 
     @Override

@@ -33,6 +33,7 @@ import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.core.fiber.FiberNodes.FiberGetExceptionNode;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
+import org.truffleruby.language.RubyConstant;
 import org.truffleruby.language.backtrace.Backtrace;
 import org.truffleruby.language.backtrace.BacktraceFormatter;
 import org.truffleruby.language.backtrace.BacktraceFormatter.FormattingFlags;
@@ -578,7 +579,21 @@ public final class CoreExceptions {
 
     @TruffleBoundary
     public RubyException typeErrorIsNotAClassModule(Object value, Node currentNode) {
-        return typeError(inspectReceiver(value) + " is not a class/module", currentNode);
+        return typeErrorIsNotA(inspect(value), "class/module", currentNode);
+    }
+
+    @TruffleBoundary
+    public RubyException typeErrorIsNotAClassModule(RubyConstant existing, String type,
+            Node currentNode) {
+        final String name = existing.getName();
+        final SourceSection sourceSection = existing.getSourceSection();
+        if (sourceSection != null) {
+            return typeError(StringUtils.format(
+                    "%s is not a %s\n%s: previous definition of %s was here",
+                    name, type, language.fileLine(sourceSection), name), currentNode);
+        } else {
+            return typeError(name + " is not a " + type, currentNode);
+        }
     }
 
     @TruffleBoundary
@@ -634,8 +649,11 @@ public final class CoreExceptions {
     }
 
     @TruffleBoundary
-    public RubyException typeErrorSuperclassMustBeClass(Node currentNode) {
-        return typeError("superclass must be a Class", currentNode);
+    public RubyException typeErrorSuperclassMustBeClass(Node currentNode, Object superclass) {
+        String given = LogicalClassNode.getUncached().execute(superclass).fields.getName();
+        return typeError(
+                StringUtils.format("superclass must be an instance of Class (given an instance of %s)", given),
+                currentNode);
     }
 
     @TruffleBoundary

@@ -16,6 +16,7 @@ import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.language.RubyContextSourceNode;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.control.RaiseException;
+import org.truffleruby.language.constants.GetConstantNode.ConstantAndResolvedValue;
 import org.truffleruby.language.dispatch.DispatchNode;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -54,16 +55,16 @@ public final class DefineClassNode extends RubyContextSourceNode {
             errorProfile.enter();
             throw new RaiseException(
                     getContext(),
-                    coreExceptions().typeErrorIsNotA(lexicalParentObject, "module", this));
+                    coreExceptions().typeErrorIsNotAClassModule(lexicalParentObject, this));
         }
 
         final RubyModule lexicalParentModule = (RubyModule) lexicalParentObject;
         final RubyClass suppliedSuperClass = executeSuperClass(frame);
-        final Object existing = lookupForExistingModule(frame, name, lexicalParentModule);
+        final ConstantAndResolvedValue existing = lookupForExistingModule(frame, name, lexicalParentModule);
 
         final RubyClass definedClass;
 
-        if (needToDefineProfile.profile(existing == null)) {
+        if (needToDefineProfile.profile(existing.value == null)) {
             final RubyClass superClass;
             if (noSuperClassSupplied.profile(suppliedSuperClass == null)) {
                 superClass = getContext().getCoreLibrary().objectClass;
@@ -79,18 +80,19 @@ public final class DefineClassNode extends RubyContextSourceNode {
                     this);
             callInherited(frame, superClass, definedClass);
         } else {
-            if (!(existing instanceof RubyClass)) {
+            if (!(existing.value instanceof RubyClass)) {
                 errorProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().typeErrorIsNotA(existing, "class", this));
+                throw new RaiseException(getContext(),
+                        coreExceptions().typeErrorIsNotAClassModule(existing.constant, "class", this));
             }
 
-            definedClass = (RubyClass) existing;
+            definedClass = (RubyClass) existing.value;
 
             final Object currentSuperClass = definedClass.superclass;
-            if (suppliedSuperClass != null && currentSuperClass != suppliedSuperClass) { // bug-compat with MRI https://bugs.ruby-lang.org/issues/12367
+            if (suppliedSuperClass != null && currentSuperClass != suppliedSuperClass) {
                 errorProfile.enter();
                 throw new RaiseException(getContext(), coreExceptions().superclassMismatch(
-                        definedClass.fields.getName(),
+                        definedClass.fields.getSimpleName(),
                         this));
             }
         }
@@ -106,16 +108,15 @@ public final class DefineClassNode extends RubyContextSourceNode {
 
         if (!(superClassObject instanceof RubyClass)) {
             errorProfile.enter();
-            throw new RaiseException(getContext(), coreExceptions().typeError("superclass must be a Class", this));
+            throw new RaiseException(getContext(),
+                    coreExceptions().typeErrorSuperclassMustBeClass(this, superClassObject));
         }
 
         final RubyClass superClass = (RubyClass) superClassObject;
 
         if (superClass.isSingleton) {
             errorProfile.enter();
-            throw new RaiseException(
-                    getContext(),
-                    coreExceptions().typeError("can't make subclass of virtual class", this));
+            throw new RaiseException(getContext(), coreExceptions().typeErrorSubclassSingletonClass(this));
         }
 
         return superClass;
@@ -129,7 +130,8 @@ public final class DefineClassNode extends RubyContextSourceNode {
         inheritedNode.call(superClass, "inherited", childClass);
     }
 
-    private Object lookupForExistingModule(VirtualFrame frame, String name, RubyModule lexicalParent) {
+    private ConstantAndResolvedValue lookupForExistingModule(VirtualFrame frame, String name,
+            RubyModule lexicalParent) {
         if (lookupForExistingModuleNode == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             lookupForExistingModuleNode = insert(new LookupForExistingModuleNode());
