@@ -1081,6 +1081,7 @@ public abstract class StringNodes {
 
         protected abstract RubyString execute(Object string, RubyEncoding other);
 
+        @NeverDefault
         public static ForceEncodingNode create() {
             return StringNodesFactory.ForceEncodingNodeFactory.create(null);
         }

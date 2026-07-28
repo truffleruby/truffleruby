@@ -409,13 +409,13 @@ class File < IO
   #
   #  File.dirname("/home/gumby/work/ruby.rb")   #=> "/home/gumby/work"
   def self.dirname(path, level = 1)
-    path = Truffle::Type.coerce_to_path_keep_encoding(path)
-    path_encoding = path.encoding
-    path = Truffle::Type.coerce_path_encoding(path)
+    original_path = Truffle::Type.coerce_to_path_keep_encoding(path)
+    path_encoding = original_path.encoding
+    path = Truffle::Type.coerce_path_encoding(original_path)
     level = Primitive.rb_num2int(level)
 
     raise ArgumentError, "negative level: #{level}" if level < 0
-    return path.encode(path_encoding) if level == 0
+    return original_path if level == 0
 
     # fast path
     if level == 1

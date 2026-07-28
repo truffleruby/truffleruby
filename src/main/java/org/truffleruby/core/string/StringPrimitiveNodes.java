@@ -118,7 +118,6 @@ import org.truffleruby.core.format.unpack.UnpackCompiler;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.string.StringHelperNodes.SingleByteOptimizableNode;
 import org.truffleruby.core.string.StringHelperNodes.ToMutableTruffleStringNode;
-import org.truffleruby.core.string.StringNodes.ForceEncodingNode;
 import org.truffleruby.core.support.RubyByteArray;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.interop.ToJavaStringNode;
@@ -2588,61 +2587,42 @@ public abstract class StringPrimitiveNodes {
         }
     }
 
-    /** Changes the encoding of a string. Tries to mutate the string in-place if mutable, otherwise allocates a new
-     * string copy with the target encoding. */
+    /** Changes the encoding of a string with String#encode semantics. Tries to mutate the string in-place if mutable,
+     * otherwise allocates a new string copy with the target encoding. */
     @Primitive(name = "string_with_encoding!")
     public abstract static class StringWithEncodingPrimitiveNode extends PrimitiveArrayArgumentsNode {
 
-        @Specialization(guards = "!isFrozenNode.execute(string)")
-        static Object withEncoding(Object string, RubyEncoding toEncoding,
-                @Cached @Shared IsFrozenNode isFrozenNode,
-                @Cached @Shared RubyStringLibrary libString,
-                @Cached @Shared GetByteCodeRangeNode codeRangeNode,
-                @Cached(neverDefault = true) @Shared ForceEncodingNode forceEncodingNode,
-                @Cached @Shared DispatchNode stringEncodeNode,
-                @Bind Node node) {
-            var encoding = libString.getEncoding(node, string);
-
-            if (encoding == toEncoding) {
-                return string;
-            }
-
-            var tstring = libString.getTString(node, string);
-            boolean is7Bit = StringGuards.is7Bit(tstring, encoding, codeRangeNode);
-
-            if (is7Bit && toEncoding.isAsciiCompatible) {
-                return forceEncodingNode.execute(string, toEncoding);
-            }
-
-            return stringEncodeNode.call(string, "encode!", toEncoding);
-        }
-
-        @Specialization(guards = "isFrozenNode.execute(string)")
-        static Object withEncodingFrozen(Object string, RubyEncoding toEncoding,
-                @Cached @Shared IsFrozenNode isFrozenNode,
-                @Cached @Shared RubyStringLibrary libString,
+        @Specialization
+        Object withEncoding(Object string, RubyEncoding toEncoding,
+                @Cached RubyStringLibrary libString,
+                @Cached InlinedConditionProfile isSameEncodingProfile,
+                @Cached GetByteCodeRangeNode codeRangeNode,
+                @Cached InlinedConditionProfile isAsciiOnlyProfile,
                 @Cached AsTruffleStringNode asTruffleStringNode,
-                @Cached @Shared GetByteCodeRangeNode codeRangeNode,
-                @Cached(neverDefault = true) @Shared ForceEncodingNode forceEncodingNode,
-                @Cached @Shared DispatchNode stringEncodeNode,
-                @Bind Node node) {
-            var encoding = libString.getEncoding(node, string);
+                @Cached IsFrozenNode isFrozenNode,
+                @Cached InlinedConditionProfile isFrozenProfile,
+                @Cached StringNodes.ForceEncodingNode forceEncodingNode,
+                @Cached DispatchNode stringEncodeNode) {
+            var encoding = libString.getEncoding(this, string);
 
-            if (encoding == toEncoding) {
+            if (isSameEncodingProfile.profile(this, encoding == toEncoding)) {
                 return string;
             }
 
-            var tstring = libString.getTString(node, string);
+            var tstring = libString.getTString(this, string);
             boolean is7Bit = StringGuards.is7Bit(tstring, encoding, codeRangeNode);
 
-            if (is7Bit && toEncoding.isAsciiCompatible) {
-                var copy = createStringCopy(node, asTruffleStringNode, tstring, encoding);
-                return forceEncodingNode.execute(copy, toEncoding);
+            if (isAsciiOnlyProfile.profile(this, is7Bit && toEncoding.isAsciiCompatible)) {
+                Object stringToModify = string;
+                if (isFrozenProfile.profile(this, isFrozenNode.execute(string))) {
+                    stringToModify = createStringCopy(asTruffleStringNode, tstring, encoding);
+                }
+                // Since the String is ASCII-only and toEncoding is ASCII-compatible, we can just use #force_encoding
+                return forceEncodingNode.execute(stringToModify, toEncoding);
             }
 
             return stringEncodeNode.call(string, "encode", toEncoding);
         }
-
     }
 
 }

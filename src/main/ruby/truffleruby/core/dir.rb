@@ -310,7 +310,7 @@ class Dir
         while index < total
           unless matches[index].encoding == enc
             begin
-              matches[index].encode!(enc)
+              matches[index] = Primitive.string_with_encoding!(matches[index], enc)
             rescue EncodingError
               matches[index].force_encoding(enc)
             end
