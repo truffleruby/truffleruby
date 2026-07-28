@@ -63,5 +63,50 @@ module Truffle
         encoding.name
       end
     end
+
+    def self.transcode(string, from_enc, to_enc, **options)
+      ec = Encoding::Converter.new from_enc, to_enc, **options
+      dest = +''
+      src = string.dup
+      fallback = options[:fallback]
+      status = ec.primitive_convert src, dest, nil, nil
+      while status != :finished
+        raise ec.last_error unless fallback && status == :undefined_conversion
+        (_, fallback_enc_from, fallback_enc_to, error_bytes, _) = ec.primitive_errinfo
+        rep = fallback[error_bytes.force_encoding(fallback_enc_from)]
+        raise ec.last_error unless rep
+        rep = Primitive.convert_with_to_str(rep)
+        dest << rep.encode(fallback_enc_to)
+        status = ec.primitive_convert src, dest, nil, nil
+      end
+
+      dest
+    end
+
+    def self.handle_encode_options(string, from_enc, invalid: nil, replace: nil, xml: nil, universal_newline: nil, **)
+      if invalid == :replace
+        replacement = replace || (Primitive.encoding_is_unicode?(from_enc) ? "\ufffd" : '?')
+        string.scrub!(replacement)
+      end
+
+      case xml
+      when :text
+        string.gsub!(/[&><]/, '&' => '&amp;', '>' => '&gt;', '<' => '&lt;')
+      when :attr
+        string.gsub!(/[&><"]/, '&' => '&amp;', '>' => '&gt;', '<' => '&lt;', '"' => '&quot;')
+        string.insert(0, '"')
+        string.insert(-1, '"')
+      when nil
+        # nothing
+      else
+        raise ArgumentError, "unexpected value for xml option: #{xml.inspect}"
+      end
+
+      if universal_newline
+        string.gsub!(/\r\n|\r/, "\r\n" => "\n", "\r" => "\n")
+      end
+
+      string
+    end
   end
 end

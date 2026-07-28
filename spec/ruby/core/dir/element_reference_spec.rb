@@ -31,6 +31,13 @@ describe "Dir.[]" do
     Dir[pat1, pat2].should == %w[file_one.ext file_two.ext]
   end
 
+  it "preserves the encoding of the path" do
+    pattern1 = "file_one.ext".encode(Encoding::EUC_JP)
+    pattern2 = "file_two.ext".encode(Encoding::EUC_JP)
+    results = Dir[pattern1, pattern2]
+    results.map(&:encoding).should == [Encoding::EUC_JP, Encoding::EUC_JP]
+  end
+
   platform_is :darwin do
     it "accepts multiple patterns in a non-UTF-8, ASCII-compatible encoding containing non-ASCII characters" do
       dir = tmp("dir_glob_\u{3042}")
