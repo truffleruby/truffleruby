@@ -3,7 +3,7 @@
 New features:
 
 * Updated to Ruby 4.0.2 (#4231, @eregon).
-* Updated to [GraalVM 25.1.3](https://medium.com/graalvm/graalvm-25-1-is-here-13829606982e) (#4363, @eregon).
+* Updated to GraalVM 25.2.4 (#4363, @eregon).
 * TruffleRuby Native now uses the better G1 garbage collector also on macOS (@eregon).
 
 Bug fixes:
