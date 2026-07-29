@@ -54,12 +54,14 @@ public final class DefineClassNode extends RubyContextSourceNode {
             errorProfile.enter();
             throw new RaiseException(
                     getContext(),
-                    coreExceptions().typeErrorIsNotA(lexicalParentObject, "module", this));
+                    coreExceptions().typeErrorIsNotAClassModule(lexicalParentObject, this));
         }
 
         final RubyModule lexicalParentModule = (RubyModule) lexicalParentObject;
         final RubyClass suppliedSuperClass = executeSuperClass(frame);
-        final Object existing = lookupForExistingModule(frame, name, lexicalParentModule);
+        final LookupForExistingModuleNode.ConstantAndResolvedValue existingPair = lookupForExistingModule(frame, name,
+                lexicalParentModule);
+        final Object existing = existingPair.value();
 
         final RubyClass definedClass;
 
@@ -81,16 +83,17 @@ public final class DefineClassNode extends RubyContextSourceNode {
         } else {
             if (!(existing instanceof RubyClass)) {
                 errorProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().typeErrorIsNotA(existing, "class", this));
+                throw new RaiseException(getContext(),
+                        coreExceptions().typeErrorIsNotAClassModule(existingPair.constant(), "class", this));
             }
 
             definedClass = (RubyClass) existing;
 
             final Object currentSuperClass = definedClass.superclass;
-            if (suppliedSuperClass != null && currentSuperClass != suppliedSuperClass) { // bug-compat with MRI https://bugs.ruby-lang.org/issues/12367
+            if (suppliedSuperClass != null && currentSuperClass != suppliedSuperClass) {
                 errorProfile.enter();
                 throw new RaiseException(getContext(), coreExceptions().superclassMismatch(
-                        definedClass.fields.getName(),
+                        definedClass.fields.getSimpleName(),
                         this));
             }
         }
@@ -106,16 +109,15 @@ public final class DefineClassNode extends RubyContextSourceNode {
 
         if (!(superClassObject instanceof RubyClass)) {
             errorProfile.enter();
-            throw new RaiseException(getContext(), coreExceptions().typeError("superclass must be a Class", this));
+            throw new RaiseException(getContext(),
+                    coreExceptions().typeErrorSuperclassMustBeClass(this, superClassObject));
         }
 
         final RubyClass superClass = (RubyClass) superClassObject;
 
         if (superClass.isSingleton) {
             errorProfile.enter();
-            throw new RaiseException(
-                    getContext(),
-                    coreExceptions().typeError("can't make subclass of virtual class", this));
+            throw new RaiseException(getContext(), coreExceptions().typeErrorSubclassSingletonClass(this));
         }
 
         return superClass;
@@ -129,7 +131,8 @@ public final class DefineClassNode extends RubyContextSourceNode {
         inheritedNode.call(superClass, "inherited", childClass);
     }
 
-    private Object lookupForExistingModule(VirtualFrame frame, String name, RubyModule lexicalParent) {
+    private LookupForExistingModuleNode.ConstantAndResolvedValue lookupForExistingModule(VirtualFrame frame,
+            String name, RubyModule lexicalParent) {
         if (lookupForExistingModuleNode == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             lookupForExistingModuleNode = insert(new LookupForExistingModuleNode());

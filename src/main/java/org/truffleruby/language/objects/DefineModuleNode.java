@@ -41,7 +41,9 @@ public abstract class DefineModuleNode extends RubyContextSourceNode {
 
     @Specialization
     RubyModule defineModule(VirtualFrame frame, RubyModule lexicalParentModule) {
-        final Object existing = lookupForExistingModule(frame, name, lexicalParentModule);
+        final LookupForExistingModuleNode.ConstantAndResolvedValue existingPair = lookupForExistingModule(frame, name,
+                lexicalParentModule);
+        final Object existing = existingPair.value();
 
         final RubyModule definingModule;
 
@@ -56,7 +58,8 @@ public abstract class DefineModuleNode extends RubyContextSourceNode {
         } else {
             if (!(existing instanceof RubyModule) || existing instanceof RubyClass) {
                 errorProfile.enter();
-                throw new RaiseException(getContext(), coreExceptions().typeErrorIsNotA(name, "module", this));
+                throw new RaiseException(getContext(),
+                        coreExceptions().typeErrorIsNotAClassModule(existingPair.constant(), "module", this));
             }
 
             definingModule = (RubyModule) existing;
@@ -67,10 +70,11 @@ public abstract class DefineModuleNode extends RubyContextSourceNode {
 
     @Specialization(guards = "!isRubyModule(lexicalParentObject)")
     RubyModule defineModuleWrongParent(VirtualFrame frame, Object lexicalParentObject) {
-        throw new RaiseException(getContext(), coreExceptions().typeErrorIsNotA(lexicalParentObject, "module", this));
+        throw new RaiseException(getContext(), coreExceptions().typeErrorIsNotAClassModule(lexicalParentObject, this));
     }
 
-    private Object lookupForExistingModule(VirtualFrame frame, String name, RubyModule lexicalParent) {
+    private LookupForExistingModuleNode.ConstantAndResolvedValue lookupForExistingModule(VirtualFrame frame,
+            String name, RubyModule lexicalParent) {
         if (lookupForExistingModuleNode == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             lookupForExistingModuleNode = insert(new LookupForExistingModuleNode());

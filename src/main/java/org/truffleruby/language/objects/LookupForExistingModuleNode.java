@@ -10,6 +10,7 @@
  */
 package org.truffleruby.language.objects;
 
+import com.oracle.truffle.api.CompilerDirectives.ValueType;
 import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.module.ModuleOperations;
@@ -27,11 +28,15 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class LookupForExistingModuleNode extends LookupConstantBaseNode implements LookupConstantInterface {
 
+    @ValueType
+    public record ConstantAndResolvedValue(RubyConstant constant, Object value) {
+    }
+
     @Child GetConstantNode getConstantNode = GetConstantNode.create();
 
-    public Object lookupForExistingModule(VirtualFrame frame, String name, RubyModule lexicalParent) {
+    public ConstantAndResolvedValue lookupForExistingModule(VirtualFrame frame, String name, RubyModule lexicalParent) {
         final LexicalScope lexicalScope = RubyArguments.getMethod(frame).getLexicalScope();
-        return getConstantNode.lookupAndResolveConstant(lexicalScope, lexicalParent, name, this, false);
+        return getConstantNode.constantAndResolvedValue(lexicalScope, lexicalParent, name, this, false);
     }
 
     @Override

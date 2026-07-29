@@ -1,5 +1,3 @@
 slow:Reopening a class does not reopen a class included in Object
 slow:Reopening a class does not reopen a class included in non-Object modules
-fails:A class definition raises TypeError if constant given as class name exists and is not a Module
-fails:A class definition raises TypeError if constant given as class name exists and is a Module but not a Class
 fails:Reopening a class does not reopen a class included in Object

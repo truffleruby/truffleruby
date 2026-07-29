@@ -172,6 +172,7 @@ static VALUE class_spec_include_module(VALUE self, VALUE klass, VALUE module) {
 
 void Init_class_spec(void) {
   VALUE cls = rb_define_class("CApiClassSpecs", rb_cObject);
+  rb_define_const(cls, "CONST_DEFINED_IN_NATIVE_CODE", INT2NUM(42));
   rb_define_method(cls, "define_call_super_method", class_spec_define_call_super_method, 2);
   rb_define_method(cls, "define_call_super_kw_method", class_spec_define_call_super_kw_method, 3);
   rb_define_method(cls, "rb_class_path", class_spec_rb_class_path, 1);

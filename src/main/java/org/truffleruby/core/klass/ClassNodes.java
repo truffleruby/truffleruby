@@ -246,7 +246,7 @@ public abstract class ClassNodes {
 
         @Specialization(guards = "!isRubyClass(superclass)")
         RubyClass newClass(Object superclass, boolean callInherited, Object maybeBlock) {
-            throw new RaiseException(getContext(), coreExceptions().typeErrorSuperclassMustBeClass(this));
+            throw new RaiseException(getContext(), coreExceptions().typeErrorSuperclassMustBeClass(this, superclass));
         }
     }
 
