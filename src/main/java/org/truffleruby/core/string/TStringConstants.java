@@ -11,6 +11,7 @@
 package org.truffleruby.core.string;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.strings.InternalByteArray;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.truffleruby.core.encoding.TStringUtils;
 
@@ -25,6 +26,9 @@ public final class TStringConstants {
     public static final TruffleString EMPTY_BINARY = TruffleString.Encoding.BYTES.getEmpty();
     public static final TruffleString EMPTY_US_ASCII = TruffleString.Encoding.US_ASCII.getEmpty();
     public static final TruffleString EMPTY_UTF8 = TruffleString.Encoding.UTF_8.getEmpty();
+
+    public static final InternalByteArray EMPTY_INTERNAL_BYTE_ARRAY = EMPTY_US_ASCII
+            .getInternalByteArrayUncached(TruffleString.Encoding.US_ASCII);
 
     @CompilationFinal(dimensions = 1) public static final byte[] EMPTY_BYTES = new byte[0];
     @CompilationFinal(dimensions = 1) public static final byte[] NEWLINE_BYTE_ARRAY = new byte[]{ '\n' };

@@ -31,7 +31,6 @@ public abstract class ReadStringOrDefaultValueNode extends FormatNode {
     private final boolean convertNumbersToStrings;
     private final String conversionMethod;
     private final boolean inspectOnConversionFailure;
-    private final Object valueOnNil;
     private final boolean specialClassBehaviour;
 
     @Child private ToStringOrDefaultValueNode toStringOrDefaultValueNode;
@@ -39,21 +38,18 @@ public abstract class ReadStringOrDefaultValueNode extends FormatNode {
     public ReadStringOrDefaultValueNode(
             boolean convertNumbersToStrings,
             String conversionMethod,
-            boolean inspectOnConversionFailure,
-            Object valueOnNil) {
-        this(convertNumbersToStrings, conversionMethod, inspectOnConversionFailure, valueOnNil, false);
+            boolean inspectOnConversionFailure) {
+        this(convertNumbersToStrings, conversionMethod, inspectOnConversionFailure, false);
     }
 
     public ReadStringOrDefaultValueNode(
             boolean convertNumbersToStrings,
             String conversionMethod,
             boolean inspectOnConversionFailure,
-            Object valueOnNil,
             boolean specialClassBehaviour) {
         this.convertNumbersToStrings = convertNumbersToStrings;
         this.conversionMethod = conversionMethod;
         this.inspectOnConversionFailure = inspectOnConversionFailure;
-        this.valueOnNil = valueOnNil;
         this.specialClassBehaviour = specialClassBehaviour;
     }
 
@@ -70,7 +66,6 @@ public abstract class ReadStringOrDefaultValueNode extends FormatNode {
                     convertNumbersToStrings,
                     conversionMethod,
                     inspectOnConversionFailure,
-                    valueOnNil,
                     specialClassBehaviour,
                     null));
         }
