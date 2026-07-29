@@ -30,19 +30,9 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
+import org.truffleruby.language.objects.LookupForExistingModuleNode.ConstantAndResolvedValue;
 
 public abstract class GetConstantNode extends RubyBaseNode {
-
-    public final class ConstantAndResolvedValue {
-
-        public final RubyConstant constant;
-        public final Object value;
-
-        public ConstantAndResolvedValue(RubyConstant constant, Object value) {
-            this.constant = constant;
-            this.value = value;
-        }
-    }
 
     @NeverDefault
     public static GetConstantNode create() {

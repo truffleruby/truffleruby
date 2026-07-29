@@ -14,7 +14,6 @@ import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.module.ModuleNodes;
 import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.language.RubyContextSourceNode;
-import org.truffleruby.language.constants.GetConstantNode.ConstantAndResolvedValue;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.control.RaiseException;
 
@@ -42,11 +41,13 @@ public abstract class DefineModuleNode extends RubyContextSourceNode {
 
     @Specialization
     RubyModule defineModule(VirtualFrame frame, RubyModule lexicalParentModule) {
-        final ConstantAndResolvedValue existing = lookupForExistingModule(frame, name, lexicalParentModule);
+        final LookupForExistingModuleNode.ConstantAndResolvedValue existingPair = lookupForExistingModule(frame, name,
+                lexicalParentModule);
+        final Object existing = existingPair.value();
 
         final RubyModule definingModule;
 
-        if (needToDefineProfile.profile(existing.value == null)) {
+        if (needToDefineProfile.profile(existing == null)) {
             definingModule = ModuleNodes.createModule(
                     getContext(),
                     getEncapsulatingSourceSection(),
@@ -55,13 +56,13 @@ public abstract class DefineModuleNode extends RubyContextSourceNode {
                     name,
                     this);
         } else {
-            if (!(existing.value instanceof RubyModule) || existing.value instanceof RubyClass) {
+            if (!(existing instanceof RubyModule) || existing instanceof RubyClass) {
                 errorProfile.enter();
                 throw new RaiseException(getContext(),
-                        coreExceptions().typeErrorIsNotAClassModule(existing.constant, "module", this));
+                        coreExceptions().typeErrorIsNotAClassModule(existingPair.constant(), "module", this));
             }
 
-            definingModule = (RubyModule) existing.value;
+            definingModule = (RubyModule) existing;
         }
 
         return definingModule;
@@ -72,8 +73,8 @@ public abstract class DefineModuleNode extends RubyContextSourceNode {
         throw new RaiseException(getContext(), coreExceptions().typeErrorIsNotAClassModule(lexicalParentObject, this));
     }
 
-    private ConstantAndResolvedValue lookupForExistingModule(VirtualFrame frame, String name,
-            RubyModule lexicalParent) {
+    private LookupForExistingModuleNode.ConstantAndResolvedValue lookupForExistingModule(VirtualFrame frame,
+            String name, RubyModule lexicalParent) {
         if (lookupForExistingModuleNode == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             lookupForExistingModuleNode = insert(new LookupForExistingModuleNode());

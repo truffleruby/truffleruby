@@ -10,6 +10,7 @@
  */
 package org.truffleruby.language.objects;
 
+import com.oracle.truffle.api.CompilerDirectives.ValueType;
 import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.module.ModuleOperations;
@@ -18,7 +19,6 @@ import org.truffleruby.language.LexicalScope;
 import org.truffleruby.language.RubyConstant;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.constants.GetConstantNode;
-import org.truffleruby.language.constants.GetConstantNode.ConstantAndResolvedValue;
 import org.truffleruby.language.constants.LookupConstantBaseNode;
 import org.truffleruby.language.constants.LookupConstantInterface;
 import org.truffleruby.language.control.RaiseException;
@@ -27,6 +27,10 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 public final class LookupForExistingModuleNode extends LookupConstantBaseNode implements LookupConstantInterface {
+
+    @ValueType
+    public record ConstantAndResolvedValue(RubyConstant constant, Object value) {
+    }
 
     @Child GetConstantNode getConstantNode = GetConstantNode.create();
 

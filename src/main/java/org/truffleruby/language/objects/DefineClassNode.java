@@ -16,7 +16,6 @@ import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.language.RubyContextSourceNode;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.control.RaiseException;
-import org.truffleruby.language.constants.GetConstantNode.ConstantAndResolvedValue;
 import org.truffleruby.language.dispatch.DispatchNode;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -60,11 +59,13 @@ public final class DefineClassNode extends RubyContextSourceNode {
 
         final RubyModule lexicalParentModule = (RubyModule) lexicalParentObject;
         final RubyClass suppliedSuperClass = executeSuperClass(frame);
-        final ConstantAndResolvedValue existing = lookupForExistingModule(frame, name, lexicalParentModule);
+        final LookupForExistingModuleNode.ConstantAndResolvedValue existingPair = lookupForExistingModule(frame, name,
+                lexicalParentModule);
+        final Object existing = existingPair.value();
 
         final RubyClass definedClass;
 
-        if (needToDefineProfile.profile(existing.value == null)) {
+        if (needToDefineProfile.profile(existing == null)) {
             final RubyClass superClass;
             if (noSuperClassSupplied.profile(suppliedSuperClass == null)) {
                 superClass = getContext().getCoreLibrary().objectClass;
@@ -80,13 +81,13 @@ public final class DefineClassNode extends RubyContextSourceNode {
                     this);
             callInherited(frame, superClass, definedClass);
         } else {
-            if (!(existing.value instanceof RubyClass)) {
+            if (!(existing instanceof RubyClass)) {
                 errorProfile.enter();
                 throw new RaiseException(getContext(),
-                        coreExceptions().typeErrorIsNotAClassModule(existing.constant, "class", this));
+                        coreExceptions().typeErrorIsNotAClassModule(existingPair.constant(), "class", this));
             }
 
-            definedClass = (RubyClass) existing.value;
+            definedClass = (RubyClass) existing;
 
             final Object currentSuperClass = definedClass.superclass;
             if (suppliedSuperClass != null && currentSuperClass != suppliedSuperClass) {
@@ -130,8 +131,8 @@ public final class DefineClassNode extends RubyContextSourceNode {
         inheritedNode.call(superClass, "inherited", childClass);
     }
 
-    private ConstantAndResolvedValue lookupForExistingModule(VirtualFrame frame, String name,
-            RubyModule lexicalParent) {
+    private LookupForExistingModuleNode.ConstantAndResolvedValue lookupForExistingModule(VirtualFrame frame,
+            String name, RubyModule lexicalParent) {
         if (lookupForExistingModuleNode == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             lookupForExistingModuleNode = insert(new LookupForExistingModuleNode());
