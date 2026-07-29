@@ -67,6 +67,14 @@ describe "Dir.glob" do
     Dir.glob('**', File::FNM_DOTMATCH).sort.should == DirSpecs.expected_glob_paths
   end
 
+  it "accepts the flags keyword argument as an alternative to the positional argument" do
+    Dir.glob('**', flags: File::FNM_DOTMATCH).sort.should == DirSpecs.expected_glob_paths
+  end
+
+  it "prefers the keyword argument over the positional flag argument" do
+    Dir.glob('**', :ignored, flags: File::FNM_DOTMATCH).sort.should == DirSpecs.expected_glob_paths
+  end
+
   it "recursively matches any subdirectories except './' or '../' with '**/' from the current directory and option File::FNM_DOTMATCH" do
     expected = %w[
       .dotsubdir/
