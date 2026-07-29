@@ -273,7 +273,7 @@ class Dir
       glob patterns, base: base, sort: sort
     end
 
-    def glob(pattern, flags = 0, base: nil, sort: true, &block)
+    def glob(pattern, flags_positional = 0, flags: flags_positional, base: nil, sort: true, &block)
       if Primitive.is_a?(pattern, Array)
         patterns = pattern
       else
