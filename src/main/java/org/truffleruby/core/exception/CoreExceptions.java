@@ -252,7 +252,7 @@ public final class CoreExceptions {
 
     @TruffleBoundary
     public RubyException argumentErrorWrongArgumentType(Object object, String expectedType, Node currentNode) {
-        String badClassName = LogicalClassNode.getUncached().execute(object).fields.getName();
+        String badClassName = getClassName(object);
         return argumentError(
                 StringUtils.format("wrong argument type %s (should be %s)", badClassName, expectedType),
                 currentNode);
@@ -286,7 +286,7 @@ public final class CoreExceptions {
 
     @TruffleBoundary
     public RubyException argumentErrorCantUnfreeze(Object self, Node currentNode) {
-        String className = LogicalClassNode.getUncached().execute(self).fields.getName();
+        String className = getClassName(self);
         return argumentError(StringUtils.format("can't unfreeze %s", className), currentNode);
     }
 
@@ -294,7 +294,7 @@ public final class CoreExceptions {
 
     @TruffleBoundary
     public RubyException frozenError(Object object, Node currentNode) {
-        String className = LogicalClassNode.getUncached().execute(object).fields.getName();
+        String className = getClassName(object);
         String string = inspectFrozenObject(object);
         return frozenError(StringUtils.format("can't modify frozen %s: %s", className, string), currentNode,
                 object);
@@ -530,7 +530,7 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyException typeErrorCantConvertTo(Object from, String toClass, String methodUsed, Object result,
             Node currentNode) {
-        String fromClass = LogicalClassNode.getUncached().execute(from).fields.getName();
+        String fromClass = getClassName(from);
         return typeError(StringUtils.format(
                 "can't convert %s into %s (%s#%s gives %s)",
                 fromClass,
@@ -546,17 +546,6 @@ public final class CoreExceptions {
                 "can't convert %s into %s",
                 toClassName(from),
                 toClass), currentNode);
-    }
-
-    // Like Truffle::Type.to_class_name
-    public static String toClassName(Object object) {
-        if (object == Nil.INSTANCE) {
-            return "nil";
-        } else if (object instanceof Boolean b) {
-            return b ? "true" : "false";
-        } else {
-            return LogicalClassNode.getUncached().execute(object).fields.getName();
-        }
     }
 
     @TruffleBoundary
@@ -607,7 +596,7 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyException typeErrorBadCoercion(Object from, String to, String coercionMethod, Object coercedTo,
             Node currentNode) {
-        String badClassName = LogicalClassNode.getUncached().execute(from).fields.getName();
+        String badClassName = getClassName(from);
         return typeError(
                 StringUtils.format(
                         "can't convert %s into %s (%s#%s gives %s)",
@@ -621,13 +610,13 @@ public final class CoreExceptions {
 
     @TruffleBoundary
     public RubyException typeErrorCantDump(Object object, Node currentNode) {
-        String logicalClass = LogicalClassNode.getUncached().execute(object).fields.getName();
+        String logicalClass = getClassName(object);
         return typeError(StringUtils.format("can't dump %s", logicalClass), currentNode);
     }
 
     @TruffleBoundary
     public RubyException typeErrorWrongArgumentType(Object object, String expectedType, Node currentNode) {
-        String badClassName = LogicalClassNode.getUncached().execute(object).fields.getName();
+        String badClassName = getClassName(object);
         return typeError(
                 StringUtils.format("wrong argument type %s (expected %s)", badClassName, expectedType),
                 currentNode);
@@ -650,7 +639,7 @@ public final class CoreExceptions {
 
     @TruffleBoundary
     public RubyException typeErrorSuperclassMustBeClass(Node currentNode, Object superclass) {
-        String given = LogicalClassNode.getUncached().execute(superclass).fields.getName();
+        String given = getClassName(superclass);
         return typeError(
                 StringUtils.format("superclass must be an instance of Class (given an instance of %s)", given),
                 currentNode);
@@ -668,7 +657,7 @@ public final class CoreExceptions {
 
     @TruffleBoundary
     public RubyException typeErrorExpectedProcOrMethodOrUnboundMethod(Object object, Node currentNode) {
-        String badClassName = LogicalClassNode.getUncached().execute(object).fields.getName();
+        String badClassName = getClassName(object);
         return typeError(
                 StringUtils.format("wrong argument type %s (expected Proc/Method/UnboundMethod)", badClassName),
                 currentNode);
@@ -765,7 +754,7 @@ public final class CoreExceptions {
 
     @TruffleBoundary
     public RubyNameError nameErrorUndefinedSingletonMethod(String name, Object receiver, Node currentNode) {
-        String className = LogicalClassNode.getUncached().execute(receiver).fields.getName();
+        String className = getClassName(receiver);
         return nameError(
                 StringUtils.format("undefined singleton method '%s' for %s", name, className),
                 receiver,
@@ -1301,6 +1290,22 @@ public final class CoreExceptions {
 
     private CoreStrings coreStrings() {
         return language.coreStrings;
+    }
+
+    // Like Truffle::Type.to_class_name
+    public static String toClassName(Object object) {
+        if (object == Nil.INSTANCE) {
+            return "nil";
+        } else if (object instanceof Boolean b) {
+            return b ? "true" : "false";
+        } else {
+            return getClassName(object);
+        }
+    }
+
+    /** In most cases {@link #toClassName(Object)} should be used instead */
+    private static String getClassName(Object from) {
+        return LogicalClassNode.getUncached().execute(from).fields.getName();
     }
 
     private Object nameForInspect(RubyEncoding encoding) {
