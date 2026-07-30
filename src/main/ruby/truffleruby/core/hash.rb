@@ -563,46 +563,46 @@ class Hash
     self
   end
 
-  def transform_keys(mapping = nil)
+  def transform_keys(mapping = undefined)
     has_block = block_given?
     h = {}
 
-    if mapping
+    if Primitive.undefined?(mapping)
+      return to_enum(:transform_keys) { size } unless has_block
+
+      each_pair do |key, value|
+        h[yield(key)] = value
+      end
+    else
       mapping = Primitive.convert_with_to_hash(mapping)
       each_pair do |key, value|
         k = Primitive.hash_get_or_undefined(mapping, key)
         k = has_block ? yield(key) : key if Primitive.undefined?(k)
         h[k] = value
       end
-    else
-      return to_enum(:transform_keys) { size } unless has_block
-
-      each_pair do |key, value|
-        h[yield(key)] = value
-      end
     end
 
     h
   end
 
-  def transform_keys!(mapping = nil)
+  def transform_keys!(mapping = undefined)
     has_block = block_given?
-    return to_enum(:transform_keys!) { size } unless mapping || has_block
+    return to_enum(:transform_keys!) { size } if Primitive.undefined?(mapping) && !has_block
 
     Primitive.check_frozen self
     h = {}
 
     begin
-      if mapping
+      if Primitive.undefined?(mapping)
+        each_pair do |key, value|
+          h[yield(key)] = value
+        end
+      else
         mapping = Primitive.convert_with_to_hash(mapping)
         each_pair do |key, value|
           k = Primitive.hash_get_or_undefined(mapping, key)
           k = has_block ? yield(key) : key if Primitive.undefined?(k)
           h[k] = value
-        end
-      else
-        each_pair do |key, value|
-          h[yield(key)] = value
         end
       end
     ensure
