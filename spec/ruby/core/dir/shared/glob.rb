@@ -321,6 +321,21 @@ describe :dir_glob, shared: true do
          subdir_two/nondotfile.ext]
   end
 
+  it "matches when ** is at start of pattern and next segment is at the base of the current directory" do
+    Dir.send(@method, "**/subdir_one/nondotfile").should == ["subdir_one/nondotfile"]
+    Dir.send(@method, "**/subdir_{one,two}/nondotfile").should == ["subdir_one/nondotfile", "subdir_two/nondotfile"]
+  end
+
+  it "matches when ** is at start of pattern and following segments are at different depths in the directory structure" do
+    Dir.send(@method, "**/{structure,subdir_one}/{bar,nondotfile}").should == ["deeply/nested/directory/structure/bar", "subdir_one/nondotfile"]
+  end
+
+  it "matches when ** is at start of pattern and followed by non-glob segments" do
+    Dir.send(@method, "**/deeply").should == ["deeply"]
+    Dir.send(@method, "**/deeply/nested").should == ["deeply/nested"]
+    Dir.send(@method, "**/deeply/nested/.dotfile.ext").should == ["deeply/nested/.dotfile.ext"]
+  end
+
   it "ignores matching through directories that doesn't exist" do
     Dir.send(@method, "deeply/notthere/blah*/whatever").should == []
   end
@@ -412,8 +427,12 @@ describe :dir_glob_recursive, shared: true do
     @mock_dir = File.expand_path tmp('dir_glob_mock')
 
     %w[
-      a/x/b/y/e
-      a/x/b/y/b/z/e
+      a/file.txt
+      a/1/file.txt
+      a/1/b/file.txt
+      a/1/b/2/file.txt
+      a/1/b/2/b/file.txt
+      a/1/b/2/b/3/file.txt
     ].each do |path|
       file = File.join @mock_dir, path
       mkdir_p File.dirname(file)
@@ -430,28 +449,53 @@ describe :dir_glob_recursive, shared: true do
 
   it "matches multiple recursives" do
     expected = %w[
-      a/x/b/y/b/z/e
-      a/x/b/y/e
+      a/1/b/2/b/3/file.txt
+      a/1/b/2/b/file.txt
+      a/1/b/2/file.txt
+      a/1/b/file.txt
     ]
 
-    Dir.send(@method, 'a/**/b/**/e').uniq.sort.should == expected
+    Dir.send(@method, 'a/**/b/**/file.txt').uniq.sort.should == expected
+  end
+
+  it "matches multiple recursives when a recursive is at start of pattern" do
+    expected = %w[
+      a/1/b/2/b/3/file.txt
+      a/1/b/2/b/file.txt
+      a/1/b/2/file.txt
+      a/1/b/file.txt
+      a/1/file.txt
+      a/file.txt
+    ]
+
+    Dir.send(@method, '**/a/**/file.txt').uniq.sort.should == expected
+
+    expected.pop
+    Dir.send(@method, '**/1/**/file.txt').uniq.sort.should == expected
+
+    expected.pop
+    Dir.send(@method, '**/b/**/file.txt').uniq.sort.should == expected
   end
 
   platform_is_not :windows do
     it "ignores symlinks" do
-      file = File.join @mock_dir, 'b/z/e'
-      link = File.join @mock_dir, 'a/y'
+      file = File.join @mock_dir, 'b/3/file.txt'
+      link = File.join @mock_dir, 'a/2'
 
       mkdir_p File.dirname(file)
       touch file
       File.symlink(File.dirname(file), link)
 
       expected = %w[
-        a/x/b/y/b/z/e
-        a/x/b/y/e
+        a/1/b/2/b/3/file.txt
+        a/1/b/2/b/file.txt
+        a/1/b/2/file.txt
+        a/1/b/file.txt
+        a/1/file.txt
+        a/file.txt
       ]
 
-      Dir.send(@method, 'a/**/e').uniq.sort.should == expected
+      Dir.send(@method, 'a/**/file.txt').uniq.sort.should == expected
     end
   end
 end
