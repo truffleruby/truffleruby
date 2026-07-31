@@ -36,9 +36,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Set up IO only now as it has lots of dependencies
-STDIN = IO.new(0, IO::RDONLY)
-STDOUT = IO.new(1, IO::WRONLY)
-STDERR = IO.new(2, IO::WRONLY)
+STDIN = IO.new(0, IO::RDONLY, path: '<STDIN>')
+STDOUT = IO.new(1, IO::WRONLY, path: '<STDOUT>')
+STDERR = IO.new(2, IO::WRONLY, path: '<STDERR>')
 
 $stdin = STDIN
 $stdout = STDOUT
