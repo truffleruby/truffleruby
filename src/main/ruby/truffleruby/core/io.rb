@@ -1506,7 +1506,7 @@ class IO
       break
     end
 
-    Primitive.io_last_line_set(Primitive.caller_special_variables, line) if line
+    Primitive.io_last_line_set(Primitive.caller_special_variables, line)
     line
   end
 
