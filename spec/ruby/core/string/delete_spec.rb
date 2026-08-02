@@ -95,6 +95,11 @@ describe "String#delete" do
   it "returns a String in the same encoding as self" do
     "hello".encode("US-ASCII").delete("lo").encoding.should == Encoding::US_ASCII
   end
+
+  it "raises an Encoding::CompatibilityError when the encodings are incompatible" do
+    -> { "hello".delete("e".encode("UTF-16LE")) }.should.raise(Encoding::CompatibilityError)
+    -> { "hello".encode("UTF-16LE").delete("e") }.should.raise(Encoding::CompatibilityError)
+  end
 end
 
 describe "String#delete!" do

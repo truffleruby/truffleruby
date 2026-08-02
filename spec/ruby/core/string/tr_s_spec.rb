@@ -16,6 +16,9 @@ describe "String#tr_s" do
     "123456789".tr_s("2-5", "abcdefg").should == "1abcd6789"
     "hello ^--^".tr_s("e-", "__").should == "h_llo ^_^"
     "hello ^--^".tr_s("---", "_").should == "hello ^_^"
+    "hello ^--^".tr_s("-e", "_a").should == "hallo ^_^"
+    "hel-001122".tr_s("--2", "a-f").should == "heladef"
+    "hel-(())".tr_s("(--", "a-f").should == "helfab"
   end
 
   it "accepts c1-c1 notation to denote range of one character" do
@@ -130,6 +133,16 @@ describe "String#tr_s" do
 
   it "returns a String in the same encoding as self" do
     "hello".encode("US-ASCII").tr_s("l", "r").encoding.should == Encoding::US_ASCII
+  end
+
+  it "raises an Encoding::CompatibilityError when the encodings are incompatible" do
+    -> { "hello".tr_s("e".encode("UTF-16LE"), "a") }.should.raise(Encoding::CompatibilityError)
+    -> { "hello".encode("UTF-16LE").tr_s("e", "a") }.should.raise(Encoding::CompatibilityError)
+  end
+
+  it "deletes the characters in from_str and does not squeeze the result if to_str is empty" do
+    "hello".tr_s("el", "").should == "ho"
+    "hellooo".tr_s("el", "").should == "hooo"
   end
 end
 

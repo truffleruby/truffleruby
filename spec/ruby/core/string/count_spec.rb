@@ -108,4 +108,9 @@ describe "String#count" do
     -> { "hello world".count([])        }.should.raise(TypeError)
     -> { "hello world".count(mock('x')) }.should.raise(TypeError)
   end
+
+  it "raises an Encoding::CompatibilityError when the encodings are incompatible" do
+    -> { "hello".count("e".encode("UTF-16LE")) }.should.raise(Encoding::CompatibilityError)
+    -> { "hello".encode("UTF-16LE").count("e") }.should.raise(Encoding::CompatibilityError)
+  end
 end

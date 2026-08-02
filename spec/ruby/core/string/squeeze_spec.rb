@@ -92,6 +92,11 @@ describe "String#squeeze" do
   it "returns String instances when called on a subclass" do
     StringSpecs::MyString.new("oh no!!!").squeeze("!").should.instance_of?(String)
   end
+
+  it "raises an Encoding::CompatibilityError when the encodings are incompatible" do
+    -> { "hello".squeeze("e".encode("UTF-16LE")) }.should.raise(Encoding::CompatibilityError)
+    -> { "hello".encode("UTF-16LE").squeeze("e") }.should.raise(Encoding::CompatibilityError)
+  end
 end
 
 describe "String#squeeze!" do

@@ -15,6 +15,9 @@ describe "String#tr" do
     "123456789".tr("2-5","abcdefg").should == "1abcd6789"
     "hello ^-^".tr("e-", "__").should == "h_llo ^_^"
     "hello ^-^".tr("---", "_").should == "hello ^_^"
+    "hello ^-^".tr("-e", "_a").should == "hallo ^_^"
+    "hel-012".tr("--2", "a-f").should == "heladef"
+    "hel-()".tr("(--", "a-f").should == "helfab"
   end
 
   it "accepts c1-c1 notation to denote range of one character" do
@@ -120,6 +123,14 @@ describe "String#tr" do
     "hello".encode("US-ASCII").tr("l", "r").encoding.should == Encoding::US_ASCII
   end
 
+  it "raises an Encoding::CompatibilityError when the encodings are incompatible" do
+    -> { "hello".tr("e".encode("UTF-16LE"), "a") }.should.raise(Encoding::CompatibilityError)
+    -> { "hello".encode("UTF-16LE").tr("e", "a") }.should.raise(Encoding::CompatibilityError)
+  end
+
+  it "deletes the characters in from_str if to_str is empty" do
+    "hello".tr("el", "").should == "ho"
+  end
 end
 
 describe "String#tr!" do
