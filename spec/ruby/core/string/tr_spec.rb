@@ -29,12 +29,24 @@ describe "String#tr" do
     "hello".tr("a-z", "A-H.").should == "HE..."
   end
 
-  it "raises an ArgumentError a descending range in the replacement as containing just the start character" do
+  it "raises an ArgumentError when given wrong number of arguments" do
+    -> { "hello".tr }.should.raise(ArgumentError)
+    -> { "hello".tr("a") }.should.raise(ArgumentError)
+    -> { "hello".tr("a", "b", "c") }.should.raise(ArgumentError)
+  end
+
+  it "raises an ArgumentError when the replacement contains a descending range" do
     -> { "hello".tr("a-y", "z-b") }.should.raise(ArgumentError)
   end
 
-  it "raises an ArgumentError a descending range in the source as empty" do
+  it "raises an ArgumentError when the source contains a descending range" do
     -> { "hello".tr("l-a", "z") }.should.raise(ArgumentError)
+  end
+
+  it "returns self (or a copy) when from_string or to_string is empty" do
+    "hello".tr("", "a").should == "hello"
+    "hello".tr("a", "").should == "hello"
+    "hello".tr("", "").should == "hello"
   end
 
   it "translates chars not in from_string when it starts with a ^" do
@@ -55,7 +67,7 @@ describe "String#tr" do
     "hello".tr("helo", "1212").should == "12112"
   end
 
-  it "tries to convert from_str and to_str to strings using to_str" do
+  it "tries to convert each argument to a string using to_str" do
     from_str = mock('ab')
     from_str.should_receive(:to_str).and_return("ab")
 
@@ -65,7 +77,7 @@ describe "String#tr" do
     "bla".tr(from_str, to_str).should == "BlA"
   end
 
-  it "returns Stringinstances when called on a subclass" do
+  it "returns String instances when called on a subclass" do
     StringSpecs::MyString.new("hello").tr("e", "a").should.instance_of?(String)
   end
 
@@ -91,6 +103,21 @@ describe "String#tr" do
     a = "\u0080\u0082\u0083\u0084\u0085\u0086\u0087\u0088\u0089\u008A\u008B\u008C\u008E\u0091\u0092\u0093\u0094\u0095\u0096\u0097\u0098\u0099\u009A\u009B\u009C\u009E\u009F"
     b = "€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ"
     str.tr(a, b).should == "椎名深夏"
+  end
+
+  it "respects backslash for escaping" do
+    "a-b".tr("a\\-b", "123").should == "123"
+    "^".tr("\\^", "1").should == "1"
+    "\\".tr("\\\\", "1").should == "1"
+  end
+
+  it "raises a TypeError when an argument can't be converted to a string" do
+    -> { "hello".tr(100, "a") }.should.raise(TypeError)
+    -> { "hello".tr("a", [])  }.should.raise(TypeError)
+  end
+
+  it "returns a String in the same encoding as self" do
+    "hello".encode("US-ASCII").tr("l", "r").encoding.should == Encoding::US_ASCII
   end
 
 end

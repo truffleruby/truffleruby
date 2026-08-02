@@ -29,6 +29,26 @@ describe "String#tr_s" do
     "this".tr_s("this", "x").should == "x"
   end
 
+  it "raises an ArgumentError when given wrong number of arguments" do
+    -> { "hello".tr_s }.should.raise(ArgumentError)
+    -> { "hello".tr_s("a") }.should.raise(ArgumentError)
+    -> { "hello".tr_s("a", "b", "c") }.should.raise(ArgumentError)
+  end
+
+  it "raises an ArgumentError when the replacement contains a descending range" do
+    -> { "hello".tr_s("a-y", "z-b") }.should.raise(ArgumentError)
+  end
+
+  it "raises an ArgumentError when the source contains a descending range" do
+    -> { "hello".tr_s("l-a", "z") }.should.raise(ArgumentError)
+  end
+
+  it "returns self (or a copy) when from_string or to_string is empty" do
+    "hello".tr_s("", "a").should == "hello"
+    "hello".tr_s("a", "").should == "hello"
+    "hello".tr_s("", "").should == "hello"
+  end
+
   it "translates chars not in from_string when it starts with a ^" do
     "hello".tr_s('^aeiou', '*').should == "*e*o"
     "123456789".tr_s("^345", "abc").should == "c345c"
@@ -43,7 +63,7 @@ describe "String#tr_s" do
     "hello ^-^".tr_s("^---l-o", "x").should == "xllox-x"
   end
 
-  it "tries to convert from_str and to_str to strings using to_str" do
+  it "tries to convert each argument to a string using to_str" do
     from_str = mock('ab')
     from_str.should_receive(:to_str).and_return("ab")
 
@@ -97,7 +117,20 @@ describe "String#tr_s" do
     str.tr_s(a, b).should == "椎名深夏"
   end
 
+  it "respects backslash for escaping" do
+    "aa--bb".tr_s("a\\-b", "123").should == "123"
+    "^^".tr_s("\\^", "1").should == "1"
+    "\\\\".tr_s("\\\\", "1").should == "1"
+  end
 
+  it "raises a TypeError when an argument can't be converted to a string" do
+    -> { "hello".tr_s(100, "a") }.should.raise(TypeError)
+    -> { "hello".tr_s("a", [])  }.should.raise(TypeError)
+  end
+
+  it "returns a String in the same encoding as self" do
+    "hello".encode("US-ASCII").tr_s("l", "r").encoding.should == Encoding::US_ASCII
+  end
 end
 
 describe "String#tr_s!" do
