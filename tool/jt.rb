@@ -399,6 +399,18 @@ module Utilities
     `GIT_DIR="#{repo}/.git" git describe --tags --exact-match HEAD 2>/dev/null`.strip
   end
 
+  # The linked worktree name of this checkout or `nil` if the checkout isn't
+  # inside a linked worktree.
+  def git_worktree_name
+    return @git_worktree_name if defined?(@git_worktree_name)
+
+    git_dir, common_dir =
+      `GIT_DIR="#{TRUFFLERUBY_DIR}/.git" git rev-parse --git-dir --git-common-dir 2>/dev/null`.lines.map(&:strip)
+
+    linked = git_dir && common_dir && git_dir != common_dir
+    @git_worktree_name = linked ? File.basename(TRUFFLERUBY_DIR) : nil
+  end
+
   def no_gem_vars_env
     {
       'GEM_HOME' => nil,
@@ -2611,19 +2623,56 @@ module Commands
     rubies_dir = chruby_versions if File.directory?(chruby_versions)
 
     if rubies_dir
+      # `mxbuild` lives inside the checkout, so builds in different checkouts never
+      # collide, but the version manager's directory is a single namespace shared
+      # by every checkout on the machine. Two git worktrees building the same
+      # `--env` would otherwise fight over one link, leaving it pointing at
+      # whichever of them built last. Qualify the link with the worktree name so
+      # each worktree gets its own entry.
+      #
+      # The unqualified name is reserved for the build someone would get without
+      # using worktrees at all, the main worktree of a repository, or whichever
+      # worktree has `master` checked out. Git allows a branch to be checked out
+      # in one worktree at a time, so at most one checkout can claim the name
+      # that way. This keeps instructions passed between contributors ("build it
+      # and then `chruby truffleruby-jvm-ce`") working the same for the reader
+      # whether or not they use worktrees.
+      qualify = git_worktree_name && git_branch != 'master'
+      link_name = qualify ? "#{name}-#{git_worktree_name}" : name
+
       Dir.glob(rubies_dir + '/truffleruby-*').each do |link|
         next unless File.symlink?(link)
         next if File.exist?(link)
         target = File.readlink(link)
-        next unless target.start_with?("#{TRUFFLERUBY_DIR}/mxbuild")
+
+        # Prune broken links left by any checkout, not just this one. A link
+        # created from a git worktree that has since been removed can never be
+        # cleaned up by the checkout that created it.
+        next unless target =~ %r{/mxbuild/truffleruby-[^/]+\z}
         puts "Deleting broken link: #{link} -> #{target}"
         File.delete link
       end
 
-      link_path = "#{rubies_dir}/#{name}"
+      link_path = "#{rubies_dir}/#{link_name}"
       unless File.symlink?(link_path) and File.readlink(link_path) == dest
         File.delete(link_path) if File.symlink?(link_path) or File.exist?(link_path)
         File.symlink(dest, link_path)
+        puts "Linked #{link_path} -> #{dest}"
+      end
+
+      # When using worktrees, the name of the symlink is dependent on the branch
+      # name. Notably, the worktree name is not integrated into the symlink name
+      # when building the 'master' branch. While this allows 'master' builds to
+      # work the same regardless of whether worktrees are being used, it creates
+      # a potential problem if a worktree builds 'master' and then switches to
+      # another branch. New builds will now include the worktree name because the
+      # branch isn't 'master', but the bare symlink names will still be present.
+      # This pass removes those old symlinks to avoid confusion.
+      Dir.glob(rubies_dir + '/truffleruby-*').each do |link|
+        next if link == link_path
+        next unless File.symlink?(link) and File.readlink(link) == dest
+        puts "Deleting superseded link: #{link} -> #{dest}"
+        File.delete link
       end
     end
   end

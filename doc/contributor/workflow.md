@@ -105,11 +105,49 @@ Builds are created in the `mxbuild/truffleruby-${BUILD_NAME}` directory. By defa
 name of the build configuration, but you can specify a different name with `--name BUILD_NAME`. This enables
 you to store multiple builds that use the same configuration. Note that if you want to compare multiple builds using
 the same `--env` then you need to use `--name` for all of them.
-Without `--name`, `mxbuild/truffleruby-${env}` is just a symlink and will be reused by any build of the same `--env`.
+Without `--name`, `mxbuild/truffleruby-${env}` is overwritten by any build of the same `--env`.
 
 Note that build information such as the date and Git revision hash will not be
 updated when you build for a second time. Releases should always be built from
 scratch.
+
+### Using git worktrees
+
+Each git worktree has its own `mxbuild` directory, so builds in different worktrees are isolated from
+each other. `jt --use BUILD_NAME` always resolves to a build of the worktree you run it from. Within
+that worktree, `jt build` with the optional `--env`, `--name`, and `--use` flags will function the same
+as if you weren't using worktrees.
+
+While `jt` can be scope builds per worktree, the Ruby version manager symlinks that `jt build` creates
+are necessarily global. To avoid conflicts, the symlink name is augmented to add the worktree name as a
+suffix. Whereas without worktrees the symlink name would be `truffleruby-${BUILD_NAME}`,
+with worktrees it will be `truffleruby-${BUILD_NAME}-${WORKTREE}`.
+
+Without worktrees:
+
+```bash
+cd master && jt build --env jvm-ce
+rbenv shell truffleruby-jvm-ce
+```
+
+With worktrees:
+
+```bash
+cd my-worktree && jt build --env jvm-ce
+rbenv shell truffleruby-jvm-ce-my-worktree
+```
+
+There is one exception to this rule: if a worktree has the default branch (master) checked out, you
+will get the same bare symlink name as you would if you weren't using worktrees at all. Since a branch
+can only be checked out in one worktree, there's no risk of a name clash. That makes adopting git
+worktrees very easy -- as long as you're building master nothing changes. It also helps with communication
+between two contributors, one of which may be using worktrees and the other not, because instructions
+such as "build it and then `chruby truffleruby-jvm-ce`" work the same in either case.
+
+Because each build type in each worktree will create a symlink in the Ruby version manager, the number
+of symlinks could grow quite large. Tools such as [Worktrunk](https://worktrunk.dev/) can be used to
+clean up these symlinks when a worktree is deleted. Otherwise, `jt build` will scan the symlinks on its
+next invocation and remove any that no longer point to a build.
 
 ### Using the correct version of the graal repository
 
