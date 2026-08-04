@@ -66,7 +66,7 @@ class Dir
         raise 'invalid call to Node base method'
       end
 
-      def process_entry(entry, entry_type, matches, parent, glob_base_dir)
+      def process_entry(matches, parent, entry, entry_type, glob_base_dir)
         # Process an entry within a directory. This differs from
         # process_directory in that in many cases only this entry need
         # be examined. For example a file name matching node need only
@@ -137,7 +137,7 @@ class Dir
         @next.process_directory matches, path_join(parent, entry), @dir, glob_base_dir
       end
 
-      def process_entry(entry, entry_type, matches, parent, glob_base_dir)
+      def process_entry(matches, parent, entry, entry_type, glob_base_dir)
         #Check an entry with the guarantee that the previous node has checked it exists.
         @next.process_directory matches, path_join(parent, entry), @dir, glob_base_dir
       end
@@ -158,7 +158,7 @@ class Dir
         end
       end
 
-      def process_entry(entry, entry_type, matches, parent, glob_base_dir)
+      def process_entry(matches, parent, entry, entry_type, glob_base_dir)
         if entry == @name
           matches << path_join(parent, entry)
         end
@@ -170,7 +170,7 @@ class Dir
         @next.process_directory matches, nil, '/', glob_base_dir
       end
 
-      def process_entry(entry, entry_type, matches, parent, glob_base_dir)
+      def process_entry(matches, parent, entry, entry_type, glob_base_dir)
         @next.process_directory matches, nil, '/', glob_base_dir
       end
     end
@@ -184,9 +184,9 @@ class Dir
         matched.separator = @separator
         case @next
         when Match
-          matched.process_entry('.', Truffle::DirOperations::DT_DIR, matches, start, glob_base_dir)
+          matched.process_entry(matches, start, '.', Truffle::DirOperations::DT_DIR, glob_base_dir)
         else
-          matched.process_entry(entry, Truffle::DirOperations::DT_DIR, matches, parent, glob_base_dir)
+          matched.process_entry(matches, parent, entry, Truffle::DirOperations::DT_DIR, glob_base_dir)
         end
 
         stack = [[matched, start, separator, subdir_entries(glob_base_dir, start)]]
@@ -201,7 +201,7 @@ class Dir
 
             full = Dir::Glob.path_join(path, ent, sep)
             if (type == Truffle::DirOperations::DT_DIR) and (allow_dots or ent.getbyte(0) != 46) # ?.
-              matched.process_entry ent, type, matches, path, glob_base_dir
+              matched.process_entry matches, path, ent, type, glob_base_dir
               stack << [matched, path, sep, dir_entries]
               path = full
               sep = '/'
@@ -209,13 +209,13 @@ class Dir
               matched.separator = sep
               dir_entries = subdir_entries(glob_base_dir, full)
             elsif (allow_dots or ent.getbyte(0) != 46) # ?.
-              matched.process_entry ent, type, matches, path, glob_base_dir
+              matched.process_entry matches, path, ent, type, glob_base_dir
             end
           end
         end
       end
 
-      def process_entry(entry, entry_type, matches, parent, glob_base_dir)
+      def process_entry(matches, parent, entry, entry_type, glob_base_dir)
         process_directory(matches, parent, entry, glob_base_dir) if is_directory(glob_base_dir, parent, entry, entry_type)
       end
     end
@@ -230,9 +230,9 @@ class Dir
 
         if glob_base_dir
           if Primitive.is_a?(@next, DirectoriesOnly)
-            @next.process_entry '', Truffle::DirOperations::DT_DIR, matches, parent, glob_base_dir
+            @next.process_entry matches, parent, '', Truffle::DirOperations::DT_DIR, glob_base_dir
           else
-            @next.process_entry '.', Truffle::DirOperations::DT_DIR, matches, parent, glob_base_dir if allow_dots
+            @next.process_entry matches, parent, '.', Truffle::DirOperations::DT_DIR, glob_base_dir if allow_dots
           end
         end
 
@@ -246,20 +246,20 @@ class Dir
             full = path_join(path, ent)
             if (type == Truffle::DirOperations::DT_DIR)
               if (allow_dots or ent.getbyte(0) != 46) # ?.
-                @next.process_entry ent, type, matches, path, glob_base_dir
+                @next.process_entry matches, path, ent, type, glob_base_dir
 
                 stack << [path, dir_entries]
                 path = full
                 dir_entries = subdir_entries(glob_base_dir, full)
               end
             else
-              @next.process_entry ent, type, matches, path, glob_base_dir
+              @next.process_entry matches, path, ent, type, glob_base_dir
             end
           end
         end
       end
 
-      def process_entry(entry, entry_type, matches, parent, glob_base_dir)
+      def process_entry(matches, parent, entry, entry_type, glob_base_dir)
         raise 'Invalid usage'
       end
     end
@@ -296,7 +296,7 @@ class Dir
         end
       end
 
-      def process_entry(entry, entry_type, matches, parent, glob_base_dir)
+      def process_entry(matches, parent, entry, entry_type, glob_base_dir)
         @next.process_directory matches, parent, entry, glob_base_dir if is_directory(glob_base_dir, parent, entry, entry_type) && match?(entry)
       end
     end
@@ -315,7 +315,7 @@ class Dir
         end
       end
 
-      def process_entry(entry, entry_type, matches, parent, glob_base_dir)
+      def process_entry(matches, parent, entry, entry_type, glob_base_dir)
         matches << path_join(parent, entry) if match? entry
       end
     end
@@ -347,7 +347,7 @@ class Dir
         end
       end
 
-      def process_entry(entry, entry_type, matches, parent, glob_base_dir)
+      def process_entry(matches, parent, entry, entry_type, glob_base_dir)
         matches << "#{path_join(parent, entry)}/" if entry_type == Truffle::DirOperations::DT_DIR
       end
     end

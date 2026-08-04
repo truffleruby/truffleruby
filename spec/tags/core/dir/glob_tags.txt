@@ -1,0 +1,4 @@
+fails:Dir.glob matches when ** is at start of pattern and next segment is at the base of the current directory
+fails:Dir.glob matches when ** is at start of pattern and following segments are at different depths in the directory structure
+fails:Dir.glob matches when ** is at start of pattern and followed by non-glob segments
+fails:Dir.glob matches multiple recursives when a recursive is at start of pattern
