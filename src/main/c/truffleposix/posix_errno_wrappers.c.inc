@@ -648,6 +648,12 @@ char* tpe_getenv(int* errno_ptr, char* a) {
   return result;
 }
 
+void* tpe_truffleposix_environ_address(int* errno_ptr) {
+  void* result = truffleposix_environ_address();
+  *errno_ptr = errno;
+  return result;
+}
+
 int tpe_setenv_native(int* errno_ptr, char* a, char* b, int c) {
   int result = setenv(a, b, c);
   *errno_ptr = errno;

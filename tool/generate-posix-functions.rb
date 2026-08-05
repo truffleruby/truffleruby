@@ -168,6 +168,7 @@ attach_function :truffleposix_waitpid, [:pid_t, :int, :pointer], :pid_t, blockin
 
 # ENV-related
 attach_function :getenv, [:string], :string
+attach_function :truffleposix_environ_address, [], :pointer
 attach_function :setenv, [:string, :string, :int], :int, method_name: :setenv_native
 attach_function :unsetenv, [:string], :int, method_name: :unsetenv_native
 
