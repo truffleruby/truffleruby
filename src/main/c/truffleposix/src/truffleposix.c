@@ -287,6 +287,21 @@ void truffleposix_free(void *pointer) {
   free(pointer);
 }
 
+#ifdef __APPLE__
+/* A shared library on Darwin cannot reference the `environ` symbol directly, so
+   its address must be obtained through _NSGetEnviron() instead. */
+#include <crt_externs.h>
+#define truffleposix_environ (*_NSGetEnviron())
+#else
+extern char **environ;
+#define truffleposix_environ environ
+#endif
+
+/* Essentially the same thing as `environ(7)`, but it works on both macOS and Linux. */
+char*** truffleposix_environ_address(void) {
+  return &truffleposix_environ;
+}
+
 static unsigned char dirent_type(DIR *dirp, const struct dirent *entry, int resolve_type) {
   if (resolve_type && entry->d_type == DT_UNKNOWN) {
     struct stat native_stat;

@@ -40,22 +40,54 @@ ENV = Object.new
 class << ENV
   include Enumerable
 
-  private def init
-    vars = Truffle::System.initial_environment_variables
-    @variables = vars.map { |name| set_encoding(name) }
-  end
-
   def size
-    @variables.size
+    environ_keys.size
   end
   alias_method :length, :size
 
   private def lookup(key)
-    value = Truffle::POSIX.getenv(Primitive.convert_with_to_str(key))
-    if value
-      value = set_encoding(value)
+    key = Primitive.convert_with_to_str(key)
+    value = Truffle::POSIX.getenv(key)
+    value && set_encoding(value)
+  end
+
+  private def environ_pointer
+    # The environ_pointer never changes, so it's safe to cache.
+    # Every thread would see the same value, so data races aren't a concern.
+    @environ_pointer ||= Truffle::POSIX.truffleposix_environ_address
+  end
+
+  # Walks environ and yields each "NAME=VALUE" entry along with the index of
+  # its '=', so that callers can take just the name or both parts.
+  private def each_environ_entry
+    array = environ_pointer.read_pointer
+
+    index = 0
+    until (entry = array.get_pointer(index * Truffle::FFI::Pointer::SIZE)).null?
+      string = entry.read_string_to_null
+      separator = string.index('=')
+
+      # An entry without a '=' is not a variable. Skip it like MRI's `env_each_pair` does.
+      yield string, separator if separator
+      index += 1
     end
-    value
+  end
+
+  private def environ_entries
+    entries = []
+    each_environ_entry do |string, separator|
+      entries << [environ_string(string[0...separator]), environ_string(string[(separator + 1)..-1])]
+    end
+    entries
+  end
+
+  # The equivalent of MRI's `env_keys`, for callers that do not need the values.
+  private def environ_keys
+    keys = []
+    each_environ_entry do |string, separator|
+      keys << environ_string(string[0...separator])
+    end
+    keys
   end
 
   def [](key)
@@ -64,20 +96,20 @@ class << ENV
 
   def []=(key, value)
     key = Primitive.convert_with_to_str(key)
+    env_set(key, value)
+    value
+  end
+  alias_method :store, :[]=
+
+  private def env_set(key, value)
     if Primitive.nil? value
       Truffle::POSIX.unsetenv(key)
-      @variables.delete(key)
     else
       if Truffle::POSIX.setenv(key, Primitive.convert_with_to_str(value), 1) != 0
         Errno.handle('setenv')
       end
-      unless @variables.include?(key)
-        @variables << set_encoding(key.dup)
-      end
     end
-    value
   end
-  alias_method :store, :[]=
 
   def clone
     raise TypeError, 'Cannot clone ENV, use ENV.to_h to get a copy of ENV as a hash'
@@ -85,11 +117,11 @@ class << ENV
 
   def delete(key)
     key = Primitive.convert_with_to_str(key)
-    existing_value = lookup(key)
+    existing_value = Truffle::POSIX.getenv(key)
+    Truffle::POSIX.unsetenv(key) if existing_value
+
     if existing_value
-      Truffle::POSIX.unsetenv(key)
-      @variables.delete(key)
-      existing_value
+      set_encoding(existing_value)
     elsif block_given?
       yield key
     end
@@ -100,23 +132,20 @@ class << ENV
   end
 
   def shift
-    key = @variables.first
+    key = environ_keys.first
     return nil unless key
-    value = delete key
 
-    key = set_encoding key
-    value = set_encoding value
+    value = Truffle::POSIX.getenv(key)
+    Truffle::POSIX.unsetenv(key)
 
-    [key, value]
+    [set_encoding(key), set_encoding(value)]
   end
 
   def each
     return to_enum(:each) { size } unless block_given?
 
-    @variables.each do |name|
-      key = set_encoding(name)
-      value = lookup(name)
-      yield key, value
+    environ_entries.each do |key, value|
+      yield set_encoding(key), set_encoding(value)
     end
 
     self
@@ -125,8 +154,8 @@ class << ENV
 
   def each_key
     return to_enum(:each_key) { size } unless block_given?
-    @variables.each do |name|
-      yield set_encoding(name)
+    environ_keys.each do |key|
+      yield set_encoding(key)
     end
     self
   end
@@ -184,19 +213,21 @@ class << ENV
   def reject!
     return to_enum(:reject!) { size } unless block_given?
 
-    # Avoid deleting from the environment while iterating.
+    # Collect all the keys before deleting any env vars, since the block may modify the environment.
     keys = []
     each { |k, v| keys << k if yield(k, v) }
-    keys.each { |k| delete k }
+
+    keys.each do |key|
+      Truffle::POSIX.unsetenv(key)
+    end
 
     keys.empty? ? nil : self
   end
 
   def clear
-    # Avoid deleting from the environment while iterating.
-    keys = []
-    each { |k, _v| keys << k }
-    keys.each { |k| delete k }
+    environ_keys.each do |key|
+      Truffle::POSIX.unsetenv(key)
+    end
 
     self
   end
@@ -249,12 +280,19 @@ class << ENV
   def replace(other)
     return self if Primitive.equal?(self, other)
     other = Primitive.convert_with_to_hash(other)
-    keys_to_delete = keys
+
+    keys_to_delete = environ_keys.map(&:b)
+
     other.each do |k, v|
-      self[k] = v
-      keys_to_delete.delete(k)
+      key = Primitive.convert_with_to_str(k)
+      env_set(key, v)
+      keys_to_delete.delete(key.b)
     end
-    keys_to_delete.each { |k| delete(k) }
+
+    keys_to_delete.each do |key|
+      Truffle::POSIX.unsetenv(key)
+    end
+
     self
   end
 
@@ -304,7 +342,9 @@ class << ENV
           end
         end
       else
-        other.each { |k, v| self[k] = v }
+        other.each do |k, v|
+          env_set(Primitive.convert_with_to_str(k), v)
+        end
       end
     end
 
@@ -356,6 +396,15 @@ class << ENV
     result
   end
 
+  # Equivalent of MRI's `env_str_new`.
+  private def environ_string(string)
+    if Encoding::LOCALE == Encoding::US_ASCII && !string.ascii_only?
+      string.force_encoding(Encoding::BINARY)
+    else
+      string.force_encoding(Encoding::LOCALE)
+    end
+  end
+
   def set_encoding(value)
     return unless Primitive.is_a?(value, String)
     if Encoding.default_internal && value.ascii_only?
@@ -370,10 +419,6 @@ class << ENV
     value.freeze
   end
   private :set_encoding
-end
-
-Truffle::Boot.delay do
-  ENV.send(:init)
 end
 
 # JRuby uses this for example to make proxy settings visible to stdlib/uri/common.rb

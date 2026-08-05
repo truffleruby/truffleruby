@@ -636,6 +636,10 @@ module Truffle::POSIX
     result == 0 ? nil : Primitive.pointer_read_string_to_null(result, nil)
   end
 
+  def self.truffleposix_environ_address
+    Truffle::FFI::Pointer.new(Primitive.posix_invoke_l(TRUFFLEPOSIX_ENVIRON_ADDRESS_FUNCTION))
+  end
+
   def self.setenv_native(a, b, c)
     posix_string_buffer, a_posix_string, b_posix_string = Truffle::FFI::Pool.stack_alloc(a.bytesize + 1, b.bytesize + 1)
     begin
@@ -1057,6 +1061,7 @@ module Truffle::POSIX
     generated_posix_resolve_function(:TRUFFLEPOSIX_POSIX_SPAWN_FUNCTION, :truffleposix_posix_spawn, :tpe_truffleposix_posix_spawn)
     generated_posix_resolve_function(:TRUFFLEPOSIX_WAITPID_FUNCTION, :truffleposix_waitpid, :tpe_truffleposix_waitpid)
     generated_posix_resolve_function(:GETENV_FUNCTION, :getenv, :tpe_getenv)
+    generated_posix_resolve_function(:TRUFFLEPOSIX_ENVIRON_ADDRESS_FUNCTION, :truffleposix_environ_address, :tpe_truffleposix_environ_address)
     generated_posix_resolve_function(:SETENV_NATIVE_FUNCTION, :setenv_native, :tpe_setenv_native)
     generated_posix_resolve_function(:UNSETENV_NATIVE_FUNCTION, :unsetenv_native, :tpe_unsetenv_native)
     generated_posix_resolve_function(:CRYPT_FUNCTION, :crypt, :tpe_crypt)

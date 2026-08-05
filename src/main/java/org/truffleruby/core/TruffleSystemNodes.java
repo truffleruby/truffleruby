@@ -44,7 +44,6 @@ import java.lang.invoke.VarHandle;
 import java.lang.management.ManagementFactory;
 import java.nio.ByteOrder;
 import java.nio.file.NoSuchFileException;
-import java.util.Set;
 
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
@@ -59,7 +58,6 @@ import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.annotations.Primitive;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveNode;
-import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.string.RubyString;
@@ -78,27 +76,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 @CoreModule("Truffle::System")
 public abstract class TruffleSystemNodes {
-
-    @CoreMethod(names = "initial_environment_variables", onSingleton = true)
-    public abstract static class InitEnvVarsNode extends CoreMethodNode {
-
-        @Child private TruffleString.FromJavaStringNode fromJavaStringNode = TruffleString.FromJavaStringNode.create();
-
-        @TruffleBoundary
-        @Specialization
-        RubyArray envVars() {
-            final Set<String> variables = System.getenv().keySet();
-            final int size = variables.size();
-            final RubyEncoding localeRubyEncoding = getContext().getEncodingManager().getLocaleEncoding();
-            final Object[] store = new Object[size];
-            int i = 0;
-            for (String variable : variables) {
-                store[i++] = createString(fromJavaStringNode, variable, localeRubyEncoding);
-            }
-            return createArray(store);
-        }
-
-    }
 
     @Primitive(name = "java_get_env")
     public abstract static class JavaGetEnv extends PrimitiveArrayArgumentsNode {
