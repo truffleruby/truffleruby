@@ -1,0 +1,1 @@
+slow:Array#sort uses the sign of Integer block results as the sort result
