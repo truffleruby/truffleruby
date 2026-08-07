@@ -688,6 +688,12 @@ describe "IO#read" do
         @io.read.encoding.should.equal?(Encoding::EUC_JP)
       end
 
+      it "reads after ungetc" do
+        c = @io.getc
+        @io.ungetc(c)
+        @io.read(2).should == [164, 162].pack('C*').force_encoding(Encoding::BINARY)
+      end
+
       it_behaves_like :io_read_size_internal_encoding, nil
     end
 

@@ -57,6 +57,10 @@ describe "IO#reopen" do
     @io.close
     -> { @io.reopen(STDOUT) }.should.raise(IOError)
   end
+
+  it "raises ArgumentError when too many arguments are given" do
+    -> { @io.reopen(@other_name, "r", "excess argument") }.should.raise(ArgumentError)
+  end
 end
 
 describe "IO#reopen with a String" do
@@ -204,6 +208,53 @@ describe "IO#reopen with a String" do
 
     @io.reopen(@other_name)
     File.should.exist?(@other_name)
+  end
+
+  it "opens the file in read mode if the IO is read-only" do
+    touch(@name) { |f| f.write "original data" }
+    touch(@other_name) { |f| f.write "new data" }
+    @io = new_io @name, "r"
+
+    @io.reopen(@other_name)
+    -> { @io.write("overwrite content") }.should.raise(IOError)
+    @io.read.should == "new data"
+  end
+
+  it "opens the file in write mode if the IO is write-only" do
+    touch(@name) { |f| f.write "original data" }
+    touch(@other_name) { |f| f.write "new data" }
+    @io = new_io @name, "w"
+
+    @io.reopen(@other_name)
+    -> { @io.read }.should.raise(IOError)
+    @io.write("overwrite content").should == 17
+    @io.close
+    File.read(@other_name).should == "overwrite content"
+  end
+
+  it "opens the file in read-write mode if the IO is read-write" do
+    touch(@name) { |f| f.write "original data" }
+    touch(@other_name) { |f| f.write "new data" }
+    @io = new_io @name, "r+"
+
+    @io.reopen(@other_name)
+    @io.read.should == "new data"
+    @io.rewind
+    @io.write("overwrite content").should == 17
+    @io.close
+    File.read(@other_name).should == "overwrite content"
+  end
+
+  it "opens the file in append mode if the IO appends" do
+    touch(@name) { |f| f.write "original data" }
+    touch(@other_name) { |f| f.write "new data" }
+    @io = new_io @name, "a"
+
+    @io.reopen(@other_name)
+    -> { @io.read }.should.raise(IOError)
+    @io.write("overwrite content").should == 17
+    @io.close
+    File.read(@other_name).should == "new dataoverwrite content"
   end
 end
 
