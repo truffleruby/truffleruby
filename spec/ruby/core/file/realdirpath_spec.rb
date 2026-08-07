@@ -129,13 +129,13 @@ describe "File.realdirpath" do
   end
 
   platform_is_not :windows do
-    it "retains the filesystem encoding when encoding conversion fails" do
+    it "retains the encoding of the resolved path when encoding conversion fails" do
       dir = tmp("realdirpath_あ")
       mkdir_p(dir)
       begin
         resolved = File.realdirpath(".".encode(Encoding::ISO_8859_1), dir)
-        resolved.encoding.should == Encoding.find("filesystem")
-        resolved.b.should.include?(dir.b)
+        resolved.encoding.should == dir.encoding
+        resolved.should.include?(dir)
       ensure
         rm_r dir
       end

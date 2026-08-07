@@ -355,23 +355,58 @@ describe "C-API IO function" do
       end
     end
 
-    it "can be interrupted" do
-      IOSpec.exhaust_write_buffer(@w_io)
-      start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    platform_is_not :windows do
+      it "can be interrupted" do
+        IOSpec.exhaust_write_buffer(@w_io)
+        start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-      t = Thread.new do
-        @o.rb_io_maybe_wait_writable(Errno::EAGAIN::Errno, @w_io, 10)
+        t = Thread.new do
+          @o.rb_io_maybe_wait_writable(Errno::EAGAIN::Errno, @w_io, 10)
 
-        # ensure the call was blocking and was really interrupted
-        flunk "not reached"
+          # ensure the call was blocking and was really interrupted
+          flunk "not reached"
+        end
+
+        Thread.pass until t.stop?
+        t.kill
+        t.join
+
+        finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        (finish - start).should < 9
       end
+    end
 
-      Thread.pass until t.stop?
-      t.kill
-      t.join
+    platform_is :windows do
+      # Windows select/poll wrapper (rb_w32_select) treats write descriptors of non-sockets
+      # (such as pipe writers) as always writable. Thus it immediately returns IO::WRITABLE
+      # instead of timing out or blocking. So use sockets instead.
+      it "can be interrupted" do
+        require 'socket'
+        r_sock, w_sock = Socket.pair(Socket::AF_INET, Socket::SOCK_STREAM, 0)
+        begin
+          r_sock.close_write
+          w_sock.close_read
+          IOSpec.exhaust_write_buffer(w_sock)
+          start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-      finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      (finish - start).should < 9
+          t = Thread.new do
+            @o.rb_io_maybe_wait_writable(Errno::EAGAIN::Errno, w_sock, 10)
+
+            # ensure the call was blocking and was really interrupted
+            flunk "not reached"
+          end
+
+          Thread.pass until t.stop?
+          t.kill
+          t.join
+
+          finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          (finish - start).should < 9
+        ensure
+          r_sock.close unless r_sock.closed?
+          w_sock.close unless w_sock.closed?
+        end
+      end
     end
   end
 
@@ -573,23 +608,58 @@ describe "C-API IO function" do
       (finish - start).should < 9
     end
 
-    it "can be interrupted when waiting for WRITABLE event" do
-      IOSpec.exhaust_write_buffer(@w_io)
-      start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    platform_is_not :windows do
+      it "can be interrupted when waiting for WRITABLE event" do
+        IOSpec.exhaust_write_buffer(@w_io)
+        start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-      t = Thread.new do
-        @o.rb_io_maybe_wait(Errno::EAGAIN::Errno, @w_io, IO::WRITABLE, 10)
+        t = Thread.new do
+          @o.rb_io_maybe_wait(Errno::EAGAIN::Errno, @w_io, IO::WRITABLE, 10)
 
-        # ensure the call was blocking and was really interrupted
-        flunk "not reached"
+          # ensure the call was blocking and was really interrupted
+          flunk "not reached"
+        end
+
+        Thread.pass until t.stop?
+        t.kill
+        t.join
+
+        finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        (finish - start).should < 9
       end
+    end
 
-      Thread.pass until t.stop?
-      t.kill
-      t.join
+    platform_is :windows do
+      # Windows select/poll wrapper (rb_w32_select) treats write descriptors of non-sockets
+      # (such as pipe writers) as always writable. Thus it immediately returns IO::WRITABLE
+      # instead of timing out or blocking. So use sockets instead.
+      it "can be interrupted when waiting for WRITABLE event" do
+        require 'socket'
+        r_sock, w_sock = Socket.pair(Socket::AF_INET, Socket::SOCK_STREAM, 0)
+        begin
+          r_sock.close_write
+          w_sock.close_read
+          IOSpec.exhaust_write_buffer(w_sock)
+          start = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-      finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      (finish - start).should < 9
+          t = Thread.new do
+            @o.rb_io_maybe_wait(Errno::EAGAIN::Errno, w_sock, IO::WRITABLE, 10)
+
+            # ensure the call was blocking and was really interrupted
+            flunk "not reached"
+          end
+
+          Thread.pass until t.stop?
+          t.kill
+          t.join
+
+          finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          (finish - start).should < 9
+        ensure
+          r_sock.close unless r_sock.closed?
+          w_sock.close unless w_sock.closed?
+        end
+      end
     end
   end
 
