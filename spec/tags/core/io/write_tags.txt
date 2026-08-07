@@ -1,3 +1,5 @@
 slow:IO.write on a FIFO writes correctly
 slow:IO#write on STDOUT raises SignalException SIGPIPE if the stream is closed instead of Errno::EPIPE like other IOs
 fails:IO.write warns about deprecation given a path with a pipe
+fails:IO#write on a file writes binary data with newline conversion if no encoding is given
+fails:IO#write on a file writes binary data with newline conversion if encoding is ASCII-8BIT

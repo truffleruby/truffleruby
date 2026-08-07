@@ -1,1 +1,2 @@
 fails:Pattern matching Array pattern calls #deconstruct once for multiple patterns, caching the result
+fails:Pattern matching Hash pattern raises NoMatchingPatternKeyError if the key does not match

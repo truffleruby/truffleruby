@@ -1,0 +1,1 @@
+fails:Set#^ retains compare_by_identity flag
