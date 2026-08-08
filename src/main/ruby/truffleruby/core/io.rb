@@ -1622,17 +1622,21 @@ class IO
     raise ArgumentError, 'negative string size (or size too big)' if length < 0
     raise Errno::EINVAL, 'offset must not be negative' if offset < 0
 
+    buffer = Primitive.convert_with_to_str(buffer) if buffer
+
     if length == 0
-      return buffer ? buffer : +''
+      return buffer || +''
     end
 
     str, errno = Truffle::POSIX.pread_string(self, length, offset)
     Errno.handle_errno(errno) unless errno == 0
 
-    raise EOFError if Primitive.nil? str
+    if Primitive.nil? str
+      buffer.clear if buffer
+      raise EOFError, 'end of file reached'
+    end
 
     if buffer
-      buffer = Primitive.convert_with_to_str(buffer)
       buffer.replace str.force_encoding(buffer.encoding)
     else
       str

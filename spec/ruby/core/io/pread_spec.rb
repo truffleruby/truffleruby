@@ -135,4 +135,22 @@ describe "IO#pread" do
     file.close
     -> { file.pread(1, 1) }.should.raise(IOError)
   end
+
+  it "clears the buffer if end-of-file is reached" do
+    buffer = +"existing content"
+    -> { @file.pread(1, 10, buffer) }.should.raise(EOFError)
+    buffer.should.empty?
+  end
+
+  it "does not modify the buffer if a read error (other than EOF) occurs" do
+    r, w = IO.pipe
+    IO.for_fd(r.fileno).close
+    buffer = +"existing content"
+    begin
+      -> { r.pread(1, 0, buffer) }.should.raise(SystemCallError)
+      buffer.should == "existing content"
+    ensure
+      w.close unless w.closed?
+    end
+  end
 end
