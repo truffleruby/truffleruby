@@ -1,2 +1,1 @@
 fails:IO#read_nonblock raises an exception after ungetc with data in the buffer and character conversion enabled
-fails:IO#read_nonblock discards the existing buffer content upon error

@@ -1808,6 +1808,8 @@ class IO
         str
       end
     else # EOF
+      buffer.clear if buffer
+
       if exception
         raise EOFError, 'end of file reached'
       else

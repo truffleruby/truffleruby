@@ -113,7 +113,7 @@ describe "IO#read_nonblock" do
     buffer.should == "hello world"
   end
 
-  it "discards the existing buffer content upon error" do
+  it "discards the existing buffer content upon EOFError" do
     buffer = +"existing content"
     @write.close
     -> { @read.read_nonblock(1, buffer) }.should.raise(EOFError)
