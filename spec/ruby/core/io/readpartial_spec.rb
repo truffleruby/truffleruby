@@ -70,13 +70,13 @@ describe "IO#readpartial" do
     @wr.write("abc")
     @wr.close
     @rd.readpartial(10).should == 'abc'
-    -> { @rd.readpartial(10) }.should.raise(EOFError)
+    -> { @rd.readpartial(10) }.should.raise(EOFError, "end of file reached")
   end
 
-  it "discards the existing buffer content upon error" do
+  it "discards the existing buffer content upon EOFError" do
     buffer = +'hello'
     @wr.close
-    -> { @rd.readpartial(1, buffer) }.should.raise(EOFError)
+    -> { @rd.readpartial(1, buffer) }.should.raise(EOFError, "end of file reached")
     buffer.should.empty?
   end
 
@@ -111,5 +111,17 @@ describe "IO#readpartial" do
     @rd.readpartial(10, buffer)
 
     buffer.encoding.should == Encoding::ISO_8859_1
+  end
+
+  it "does not modify the buffer if a read error (other than EOF) occurs" do
+    r, w = IO.pipe
+    IO.for_fd(r.fileno).close
+    buffer = +"existing content"
+    begin
+      -> { r.readpartial(1, buffer) }.should.raise(SystemCallError)
+      buffer.should == "existing content"
+    ensure
+      w.close unless w.closed?
+    end
   end
 end

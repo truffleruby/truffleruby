@@ -1912,15 +1912,18 @@ class IO
     if buffer
       buffer = Primitive.convert_with_to_str(buffer)
 
-      Truffle::StringOperations.shorten!(buffer, buffer.bytesize)
-
-      return buffer if size == 0
+      if size == 0
+        return buffer.clear
+      end
 
       if @ibuffer.size > 0
         data = @ibuffer.shift(size)
       else
         data = Truffle::POSIX.read_string_at_least_one_byte(self, size)
-        raise EOFError if Primitive.nil? data
+        if Primitive.nil? data
+          buffer.clear
+          raise EOFError, 'end of file reached'
+        end
       end
 
       buffer.replace data.force_encoding(buffer.encoding)
@@ -1932,7 +1935,7 @@ class IO
       end
 
       data = Truffle::POSIX.read_string_at_least_one_byte(self, size)
-      raise EOFError if Primitive.nil? data
+      raise EOFError, 'end of file reached' if Primitive.nil? data
       data
     end
   end
