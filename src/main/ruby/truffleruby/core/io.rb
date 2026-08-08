@@ -2205,6 +2205,10 @@ class IO
 
     buffer = Primitive.convert_with_to_str(buffer) if buffer
 
+    if number_of_bytes == 0
+      return buffer || ''.b
+    end
+
     str, errno = Truffle::POSIX.read_string(self, number_of_bytes)
     Errno.handle_errno(errno) unless errno == 0
 
