@@ -27,6 +27,8 @@ import org.truffleruby.core.TruffleSystemNodesBuiltins;
 import org.truffleruby.core.TruffleSystemNodesFactory;
 import org.truffleruby.core.VMPrimitiveNodesBuiltins;
 import org.truffleruby.core.VMPrimitiveNodesFactory;
+import org.truffleruby.core.ruby.SourceRangeNodesBuiltins;
+import org.truffleruby.core.ruby.SourceRangeNodesFactory;
 import org.truffleruby.core.string.StringPrimitiveNodesBuiltins;
 import org.truffleruby.core.string.StringPrimitiveNodesFactory;
 import org.truffleruby.core.array.ArrayIndexNodesBuiltins;
@@ -229,6 +231,7 @@ public abstract class BuiltinsClasses {
         SecureRandomizerNodesBuiltins.setup(coreManager);
         SizedQueueNodesBuiltins.setup(coreManager);
         SourceLocationNodesBuiltins.setup(coreManager);
+        SourceRangeNodesBuiltins.setup(coreManager);
         StringNodesBuiltins.setup(coreManager);
         SymbolNodesBuiltins.setup(coreManager);
         SyntaxErrorNodesBuiltins.setup(coreManager);
@@ -311,6 +314,7 @@ public abstract class BuiltinsClasses {
         SecureRandomizerNodesBuiltins.setupPrimitives(primitiveManager);
         SizedQueueNodesBuiltins.setupPrimitives(primitiveManager);
         SourceLocationNodesBuiltins.setupPrimitives(primitiveManager);
+        SourceRangeNodesBuiltins.setupPrimitives(primitiveManager);
         StringNodesBuiltins.setupPrimitives(primitiveManager);
         SymbolNodesBuiltins.setupPrimitives(primitiveManager);
         SyntaxErrorNodesBuiltins.setupPrimitives(primitiveManager);
@@ -394,6 +398,7 @@ public abstract class BuiltinsClasses {
                 SecureRandomizerNodesFactory.getFactories(),
                 SizedQueueNodesFactory.getFactories(),
                 SourceLocationNodesFactory.getFactories(),
+                SourceRangeNodesFactory.getFactories(),
                 StringNodesFactory.getFactories(),
                 SymbolNodesFactory.getFactories(),
                 SyntaxErrorNodesFactory.getFactories(),

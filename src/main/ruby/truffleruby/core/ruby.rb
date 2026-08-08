@@ -37,4 +37,11 @@ module Ruby
   PLATFORM = RUBY_PLATFORM
   RELEASE_DATE = RUBY_RELEASE_DATE
   REVISION = RUBY_REVISION
+
+  class SourceRange
+    def inspect
+      path = self.absolute_path || self.path
+      "#<Ruby::SourceRange #{path}:(#{start_line},#{start_column})-(#{end_line},#{end_column})>"
+    end
+  end
 end

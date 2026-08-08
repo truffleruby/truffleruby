@@ -27,6 +27,7 @@ import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.module.MethodLookupResult;
 import org.truffleruby.core.module.ModuleOperations;
 import org.truffleruby.core.module.RubyModule;
+import org.truffleruby.core.ruby.RubySourceRange;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.RubyGuards;
 import org.truffleruby.annotations.Visibility;
@@ -180,6 +181,22 @@ public abstract class UnboundMethodNodes {
                 @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
             var sourceSection = unboundMethod.method.getSharedMethodInfo().getSourceSection();
             return getLanguage().rubySourceLocation(sourceSection, fromJavaStringNode, this);
+        }
+    }
+
+    @CoreMethod(names = "source_range")
+    public abstract static class SourceRangeNode extends CoreMethodArrayArgumentsNode {
+
+        @TruffleBoundary
+        @Specialization
+        Object sourceRange(RubyUnboundMethod unboundMethod) {
+            var sourceSection = unboundMethod.method.getSharedMethodInfo().getSourceSection();
+            if (!sourceSection.isAvailable()) {
+                return nil;
+            } else {
+                return new RubySourceRange(coreLibrary().sourceRangeClass, getLanguage().sourceRangeShape,
+                        sourceSection);
+            }
         }
     }
 

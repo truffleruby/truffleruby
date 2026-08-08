@@ -31,6 +31,7 @@ import org.truffleruby.core.proc.ProcCallTargets;
 import org.truffleruby.core.proc.ProcOperations;
 import org.truffleruby.core.proc.ProcType;
 import org.truffleruby.core.proc.RubyProc;
+import org.truffleruby.core.ruby.RubySourceRange;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.RubyContextSourceNode;
 import org.truffleruby.language.RubyLambdaRootNode;
@@ -222,6 +223,22 @@ public abstract class MethodNodes {
                 @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
             var sourceSection = method.method.getSharedMethodInfo().getSourceSection();
             return getLanguage().rubySourceLocation(sourceSection, fromJavaStringNode, this);
+        }
+    }
+
+    @CoreMethod(names = "source_range")
+    public abstract static class SourceRangeNode extends CoreMethodArrayArgumentsNode {
+
+        @TruffleBoundary
+        @Specialization
+        Object sourceRange(RubyMethod method) {
+            var sourceSection = method.method.getSharedMethodInfo().getSourceSection();
+            if (!sourceSection.isAvailable()) {
+                return nil;
+            } else {
+                return new RubySourceRange(coreLibrary().sourceRangeClass, getLanguage().sourceRangeShape,
+                        sourceSection);
+            }
         }
     }
 

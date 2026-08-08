@@ -87,6 +87,7 @@ import org.truffleruby.core.regexp.RegexpCacheKey;
 import org.truffleruby.core.regexp.RegexpTable;
 import org.truffleruby.core.regexp.RubyMatchData;
 import org.truffleruby.core.regexp.RubyRegexp;
+import org.truffleruby.core.ruby.RubySourceRange;
 import org.truffleruby.core.string.ImmutableStrings;
 import org.truffleruby.core.string.PathToTStringCache;
 import org.truffleruby.core.string.TStringCache;
@@ -333,6 +334,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     public final Shape secureRandomizerShape = createShape(RubySecureRandomizer.class);
     public final Shape sizedQueueShape = createShape(RubySizedQueue.class);
     public final Shape sourceLocationShape = createShape(RubySourceLocation.class);
+    public final Shape sourceRangeShape = createShape(RubySourceRange.class);
     public final Shape stringShape = createShape(RubyString.class);
     public final Shape syntaxErrorShape = createShape(RubySyntaxError.class);
     public final Shape systemCallErrorShape = createShape(RubySystemCallError.class);
@@ -1001,6 +1003,12 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     public int getStartLineAdjusted(SourceSection sourceSection) {
         int lineOffset = sourceSection.getSource().getOptions(this).get(RubySourceOptions.LineOffset);
         return sourceSection.getStartLine() + lineOffset;
+    }
+
+    @TruffleBoundary
+    public int getEndLineAdjusted(SourceSection sourceSection) {
+        int lineOffset = sourceSection.getSource().getOptions(this).get(RubySourceOptions.LineOffset);
+        return sourceSection.getEndLine() + lineOffset;
     }
 
     /** Only use when no language/context is available (e.g. Node#toString). Prefer

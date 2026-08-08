@@ -3,6 +3,15 @@ def source_range_values(range)
 end
 
 def keep_source(value = true)
+  always_keeps_source = RUBY_ENGINE == "truffleruby"
+  if always_keeps_source
+    if value
+      yield
+    else
+      skip "This Ruby implementation always keeps the source in memory so cannot run specs which rely on not keeping it"
+    end
+  end
+
   return yield unless defined?(RubyVM.keep_script_lines)
 
   previous = RubyVM.keep_script_lines
@@ -59,7 +68,19 @@ def capture_backtrace_location_source_range(marked_source, frame: 0)
 
   raise "Expected source to raise an exception" unless exception
 
-  location = exception.backtrace_locations.fetch(frame)
+  total_frames = 0
+  user_frames = 0
+  while true
+    location = exception.backtrace_locations.fetch(total_frames)
+    if location.path.start_with?("<internal:")
+      total_frames += 1
+    else
+      break if user_frames == frame
+      user_frames += 1
+      total_frames += 1
+    end
+  end
+
   range = location.source_range
   range.should.instance_of?(Ruby::SourceRange)
   source_range_values(range).should == expected

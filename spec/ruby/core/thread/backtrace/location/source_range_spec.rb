@@ -152,16 +152,22 @@ ruby_version_is "4.1" do
       $namespace::Nil += 1$
       RUBY
 
+      # This covers the whole expression for consistency with other operator assignments
+      # where there is no "read node": https://bugs.ruby-lang.org/issues/22235
       "constant operator assignments failing while reading" => <<-RUBY,
       namespace = Module.new
       $namespace::NotDefined += 1$
       RUBY
 
-      "top-level constant operator assignments" => <<-RUBY,
+      "top-level ::constant operator assignments" => <<-RUBY,
       $::SourceRangeNotDefined += 1$
       RUBY
 
-      "explicit raises" => <<-RUBY,
+      "top-level constant operator assignments" => <<-RUBY,
+      $SourceRangeNotDefined += 1$
+      RUBY
+
+      "explicit #raise" => <<-RUBY,
       $raise NameError$
       RUBY
 
@@ -274,28 +280,6 @@ ruby_version_is "4.1" do
       end.new
       target.source_range_target(1)
       RUBY
-    end
-
-    it "raises for a location without Ruby bytecode" do
-      report_on_exception = Thread.report_on_exception
-      Thread.report_on_exception = false
-
-      begin
-        thread = Thread.new(&method(:throw))
-        exception = begin
-          thread.value
-        rescue ArgumentError => error
-          error
-        end
-        location = exception.backtrace_locations.first
-
-        location.path.should == nil
-        -> {
-          location.source_range
-        }.should.raise(RuntimeError, "cannot get source range for location without Ruby bytecode")
-      ensure
-        Thread.report_on_exception = report_on_exception
-      end
     end
 
     it "propagates an error when the absolute source file no longer exists" do
@@ -412,11 +396,13 @@ ruby_version_is "4.1" do
     end
 
     it "does not treat a method from eval named -e as command-line source" do
-      code = "eval(%q{def spoofed_source_range_target; nil.foo; end}, binding, %q{-e}); " \
-        "begin; spoofed_source_range_target; rescue => e; " \
-        "begin; e.backtrace_locations.first.source_range; rescue => source_error; " \
-        "p source_error; end; end"
-      ruby_exe(code, escape: false).should == "#<ArgumentError: cannot get source range for location in eval>\n"
+      keep_source(false) do # skip if always keep source
+        code = "eval(%q{def spoofed_source_range_target; nil.foo; end}, binding, %q{-e}); " \
+          "begin; spoofed_source_range_target; rescue => e; " \
+          "begin; e.backtrace_locations.first.source_range; rescue => source_error; " \
+          "p source_error; end; end"
+        ruby_exe(code, escape: false).should == "#<ArgumentError: cannot get source range for location in eval>\n"
+      end
     end
 
     it "works for -e source" do

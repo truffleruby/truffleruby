@@ -8,3 +8,9 @@
 
 # Use spec/ruby/core/nil/nil_spec.rb as a dummy file to avoid being empty (which causes mspec to error)
 spec/ruby/core/nil/nil_spec.rb
+
+spec/ruby/core/method/source_range_spec.rb
+spec/ruby/core/unboundmethod/source_range_spec.rb
+spec/ruby/core/proc/source_range_spec.rb
+spec/ruby/core/thread/backtrace/location/source_range_spec.rb
+spec/ruby/core/ruby/source_range/inspect_spec.rb

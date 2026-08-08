@@ -1332,25 +1332,26 @@ public class YARPTranslator extends YARPBaseTranslator {
         // don't check whether constant is initialized so warnings will be emitted if it isn't.
         // A module/class (A::) should be executed only once - that's why it is cached in a local variable.
 
-        final Nodes.ConstantPathNode target; // use instead of node.target
+        final Nodes.Node readParent;
         final RubyNode writeParentNode;
 
         if (node.target.parent != null) {
             // A::B += 1
             var parentExpression = new YARPExecutedOnceExpression("value", node.target.parent, this);
-            Nodes.Node readParent = parentExpression.getReadYARPNode();
-            target = new Nodes.ConstantPathNode(node.target.startOffset,
-                    node.target.length, readParent, node.target.name);
-
+            readParent = parentExpression.getReadYARPNode();
             writeParentNode = parentExpression.getWriteNode();
         } else {
             // ::A += 1
-            target = node.target;
+            readParent = null;
             writeParentNode = null;
         }
 
         int startOffset = node.startOffset;
         int length = node.length;
+
+        // use instead of node.target
+        // See https://bugs.ruby-lang.org/issues/22235 for why the ConstantPathNode should cover the whole node
+        var target = new Nodes.ConstantPathNode(startOffset, length, readParent, node.target.name);
 
         // Use Nodes.CallNode and translate it to produce inlined operator nodes
         final var operatorNode = callNode(node, target, node.binary_operator, node.value);
@@ -1758,7 +1759,8 @@ public class YARPTranslator extends YARPBaseTranslator {
         // and skip declaration of all the local variables defined in the block as they
         // are actually declared in the scope around the block
         String[] locals = new String[]{ parameterName };
-        var blockNode = new Nodes.BlockNode(bodyStartOffset, bodyLength, locals, blockParameters, body);
+        // The block section should cover the entire `for ... end`, spec'd in Proc#source_range
+        var blockNode = new Nodes.BlockNode(node.startOffset, node.length, locals, blockParameters, body);
 
         var argumentsAndBlock = translateArgumentsAndBlock(null, blockNode, "each", true);
 
