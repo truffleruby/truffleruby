@@ -1,2 +1,1 @@
-fails:IO#sysread raises ArgumentError when length is less than 0
 fails:IO#sysread on a file raises an error when called after buffered reads

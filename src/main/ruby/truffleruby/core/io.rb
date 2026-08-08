@@ -2199,6 +2199,7 @@ class IO
   #  @todo  Improve reading into provided buffer.
   #
   def sysread(number_of_bytes, buffer = nil)
+    raise ArgumentError, 'negative length given' if number_of_bytes < 0
     ensure_open_and_readable
     flush
     raise IOError unless @ibuffer.empty?
