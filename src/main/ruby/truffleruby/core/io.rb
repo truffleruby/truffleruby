@@ -2208,7 +2208,10 @@ class IO
     str, errno = Truffle::POSIX.read_string(self, number_of_bytes)
     Errno.handle_errno(errno) unless errno == 0
 
-    raise EOFError if Primitive.nil? str
+    if Primitive.nil? str
+      buffer.clear if buffer
+      raise EOFError, 'end of file reached'
+    end
 
     if buffer
       buffer.replace str.force_encoding(buffer.encoding)

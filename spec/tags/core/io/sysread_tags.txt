@@ -1,5 +1,4 @@
 fails:IO#sysread on a file immediately returns an empty string if the length argument is 0
 fails:IO#sysread on a file immediately returns the given buffer if the length argument is 0
-fails:IO#sysread on a file discards the existing buffer content upon error
 fails:IO#sysread raises ArgumentError when length is less than 0
 fails:IO#sysread on a file raises an error when called after buffered reads
