@@ -35,23 +35,39 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-module Truffle
-  module ProcOperations
+module Truffle::ProcOperations
+  def self.curry(executable, args, arity)
+    args.freeze
 
-    def self.curry(executable, args, arity)
-      args.freeze
+    name = executable.lambda? ? :lambda : :proc
 
-      name = executable.lambda? ? :lambda : :proc
-
-      Proc.__send__(name) do |*a|
-        all_args = args + a
-        if all_args.size < arity
-          curry executable, all_args, arity
-        else
-          executable[*all_args]
-        end
+    Proc.__send__(name) do |*a|
+      all_args = args + a
+      if all_args.size < arity
+        curry executable, all_args, arity
+      else
+        executable[*all_args]
       end
     end
+  end
 
+  # variant of Thread::Backtrace::Location#syntax_tree to handle returning the CallNode instead of BlockNode
+  def self.syntax_tree(receiver)
+    require 'prism'
+    range = receiver.source_range
+    return nil unless range&.absolute_path
+    result = Prism.parse_file(range.absolute_path, raise_error: true)
+    start_offset = result.source.byte_offset(range.start_line, range.start_column)
+    end_offset = result.source.byte_offset(range.end_line, range.end_column)
+    result.value.tunnel(range.start_line, range.start_column).rfind do |n|
+      case n
+      when Prism::BlockNode
+        nil
+      when Prism::CallNode
+        Primitive.is_a?(n.block, Prism::BlockNode) && n.block.start_offset == start_offset && n.block.end_offset == end_offset
+      else
+        n.start_offset == start_offset && n.end_offset == end_offset
+      end
+    end
   end
 end

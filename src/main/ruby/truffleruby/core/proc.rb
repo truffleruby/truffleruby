@@ -139,4 +139,8 @@ class Proc
 
     Primitive.proc_parameters(self, lambda)
   end
+
+  def syntax_tree
+    Truffle::ProcOperations.syntax_tree(self)
+  end
 end
