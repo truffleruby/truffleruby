@@ -1,1 +1,0 @@
-fails:IO#sysread on a file raises an error when called after buffered reads

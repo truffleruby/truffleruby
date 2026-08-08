@@ -2202,7 +2202,7 @@ class IO
     raise ArgumentError, 'negative length given' if number_of_bytes < 0
     ensure_open_and_readable
     flush
-    raise IOError unless @ibuffer.empty?
+    raise IOError, 'sysread for buffered IO' unless @ibuffer.empty?
 
     buffer = Primitive.convert_with_to_str(buffer) if buffer
 
