@@ -1758,7 +1758,8 @@ public class YARPTranslator extends YARPBaseTranslator {
         // and skip declaration of all the local variables defined in the block as they
         // are actually declared in the scope around the block
         String[] locals = new String[]{ parameterName };
-        var blockNode = new Nodes.BlockNode(bodyStartOffset, bodyLength, locals, blockParameters, body);
+        // The block section should cover the entire `for ... end`, spec'd in Proc#source_range
+        var blockNode = new Nodes.BlockNode(node.startOffset, node.length, locals, blockParameters, body);
 
         var argumentsAndBlock = translateArgumentsAndBlock(null, blockNode, "each", true);
 

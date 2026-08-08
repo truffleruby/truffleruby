@@ -19,6 +19,7 @@ import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.TStringUtils;
+import org.truffleruby.core.ruby.RubySourceRange;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.language.backtrace.Backtrace;
 
@@ -50,11 +51,11 @@ public abstract class ThreadBacktraceLocationNodes {
         Object absolutePath(RubyBacktraceLocation threadBacktraceLocation) {
             final SourceSection sourceSection = getAvailableSourceSection(getContext(), threadBacktraceLocation);
 
-            return getAbsolutePath(sourceSection, this);
+            return getAbsolutePath(sourceSection, false, this);
         }
 
         @TruffleBoundary
-        public static Object getAbsolutePath(SourceSection sourceSection, Node node) {
+        public static Object getAbsolutePath(SourceSection sourceSection, boolean nilForEval, Node node) {
             var context = RubyContext.get(node);
             var language = RubyLanguage.get(node);
 
@@ -71,8 +72,12 @@ public abstract class ThreadBacktraceLocationNodes {
                             Encodings.UTF_8);
                     return createString(node, cachedTString, Encodings.UTF_8);
                 } else { // eval()
-                    var cachedPath = language.getPathToTStringCache().getCachedPath(source);
-                    return createString(node, cachedPath, Encodings.UTF_8);
+                    if (nilForEval) {
+                        return nil;
+                    } else {
+                        var cachedPath = language.getPathToTStringCache().getCachedPath(source);
+                        return createString(node, cachedPath, Encodings.UTF_8);
+                    }
                 }
             }
         }
@@ -133,6 +138,22 @@ public abstract class ThreadBacktraceLocationNodes {
             return getLanguage().getStartLineAdjusted(sourceSection);
         }
 
+    }
+
+    @CoreMethod(names = "source_range")
+    public abstract static class SourceRangeNode extends CoreMethodArrayArgumentsNode {
+
+        @TruffleBoundary
+        @Specialization
+        Object sourceRange(RubyBacktraceLocation threadBacktraceLocation) {
+            final SourceSection sourceSection = getAvailableSourceSection(getContext(), threadBacktraceLocation);
+            if (sourceSection == null) {
+                return nil;
+            } else {
+                return new RubySourceRange(coreLibrary().sourceRangeClass, getLanguage().sourceRangeShape,
+                        sourceSection);
+            }
+        }
     }
 
     @CoreMethod(names = "to_s")

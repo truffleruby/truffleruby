@@ -23,6 +23,7 @@ import org.truffleruby.core.string.RubyString;
 import com.oracle.truffle.api.source.SourceSection;
 import org.truffleruby.core.thread.ThreadBacktraceLocationNodes;
 
+/** Similar to {@link org.truffleruby.core.ruby.SourceRangeNodes} but there are several differences */
 @CoreModule(value = "Truffle::Interop::SourceLocation", isClass = true)
 public abstract class SourceLocationNodes {
 
@@ -36,7 +37,7 @@ public abstract class SourceLocationNodes {
                 return coreStrings().UNKNOWN.createInstance(getContext());
             }
 
-            return ThreadBacktraceLocationNodes.AbsolutePathNode.getAbsolutePath(sourceSection, this);
+            return ThreadBacktraceLocationNodes.AbsolutePathNode.getAbsolutePath(sourceSection, false, this);
         }
     }
 
