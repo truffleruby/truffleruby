@@ -294,7 +294,7 @@ module Utilities
     @ruby_launcher = ruby_launcher
     @ruby_launcher_realpath = File.realpath(ruby_launcher)
 
-    unless @silent
+    if @verbose
       shortened_path = @ruby_launcher.sub(%r[^#{Regexp.escape TRUFFLERUBY_DIR}/], '')
       shortened_path = shortened_path.sub(%r[/bin/(ruby|truffleruby)$], '')
       tags = [*('Interpreted' if truffleruby? && !truffleruby_compiler?),
@@ -492,7 +492,7 @@ module Utilities
     use_exec = options.delete :use_exec
     timeout = options.delete :timeout
     capture = options.delete :capture
-    no_print_cmd = options.delete(:no_print_cmd) || @silent
+    no_print_cmd = options.delete(:no_print_cmd) || !@verbose
 
     unless no_print_cmd
       STDERR.puts bold "$ #{printable_cmd(args)}"
@@ -777,8 +777,7 @@ module Commands
                                     * 'ruby' which uses the current Ruby executable in the PATH
                                     Default value is --use jvm, therefore all commands run on truffleruby-jvm by default.
                                     The default can be changed with `export RUBY_BIN=RUBY_SELECTOR`
-          --silent|-q               Does not print the command and which Ruby is used
-          --verbose|-v              Print more details and commands
+          --verbose|-v              Print which Ruby is used and commands
           --jdk                     Specifies which version of the JDK should be used: #{JDK_VERSIONS.join(' or ')} (default: #{DEFAULT_JDK_VERSION})
 
       jt build [graalvm|options|core-symbols] ...   by default it builds graalvm
@@ -931,7 +930,6 @@ module Commands
 
   # Not `def ruby_home` because calls to `ruby_home` would then unintentionally print
   define_method(:'ruby-home') do
-    @silent = true
     puts ruby_home
   end
 
@@ -3359,7 +3357,6 @@ class JT
   end
 
   def initialize
-    @silent = false
     @verbose = false
     @jdk_version = ENV['JT_JDK'] || DEFAULT_JDK_VERSION
     @ruby_name = ENV['RUBY_BIN'] || ENV['JT_ENV'] || 'jvm'
@@ -3380,7 +3377,7 @@ class JT
       when '-u', '--use'
         @ruby_name = args.shift
       when '-q', '--silent'
-        @silent = true
+        @verbose = false # the default
       when '-v', '--verbose'
         @verbose = true
       when '--jdk'
