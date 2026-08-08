@@ -53,7 +53,7 @@ def check_source_range(marked_source)
   result.source_location[1].should == expected[0]
 end
 
-def capture_backtrace_location_source_range(marked_source, frame: 0)
+def capture_backtrace_location_source_range(marked_source, prism_class, frame: 0)
   source, expected = source_range_source(marked_source)
   path = tmp("backtrace_location_source_range.rb")
   File.binwrite(path, source)
@@ -84,6 +84,23 @@ def capture_backtrace_location_source_range(marked_source, frame: 0)
   range = location.source_range
   range.should.instance_of?(Ruby::SourceRange)
   source_range_values(range).should == expected
+
+  # Check the Prism node at that location is the one we expect
+  expected_class_name = "Prism::#{prism_class or raise "prism_class must be passed"}"
+
+  require "prism"
+  result = Prism.parse_file(absolute_path, raise_error: true)
+  start_offset = result.source.byte_offset(range.start_line, range.start_column)
+  end_offset = result.source.byte_offset(range.end_line, range.end_column)
+  node = result.value.tunnel(range.start_line, range.start_column).rfind { |n|
+    n.start_offset == start_offset && n.end_offset == end_offset
+  }
+  node.class.name.should == expected_class_name
+
+  # Also check #syntax_tree is consistent
+  if location.respond_to?(:syntax_tree)
+    location.syntax_tree.class.name.should == expected_class_name
+  end
 
   [location, range, path, absolute_path]
 ensure
