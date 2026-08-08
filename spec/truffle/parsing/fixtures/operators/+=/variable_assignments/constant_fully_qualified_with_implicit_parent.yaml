@@ -34,7 +34,7 @@ ast: |
                                   flags = 0
                                   name = "FOO"
                                   sourceCharIndex = 0
-                                  sourceLength = 5
+                                  sourceLength = 11
                               children:
                                   moduleNode =
                                       ObjectClassLiteralNode
