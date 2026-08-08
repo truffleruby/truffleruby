@@ -3,6 +3,7 @@
 #
 # set.rb - defines the Set class
 #
+# Copyright (c) 2026 TruffleRuby contributors.
 # Copyright (c) 2002-2024 Akinori MUSHA <knu@iDaemons.org>
 #
 # Documentation by Akinori MUSHA and Gavin Sinclair.
@@ -273,6 +274,7 @@ class Set
     @hash.respond_to?(:compare_by_identity?) && @hash.compare_by_identity?
   end
 
+  # MRI enum_method_id
   def do_with_enum(enum, &block) # :nodoc:
     if enum.respond_to?(:each_entry)
       enum.each_entry(&block) if block
@@ -666,7 +668,9 @@ class Set
   #     Set[1, 2] ^ Set[2, 3]                   #=> #<Set: {3, 1}>
   #     Set[1, 'b', 'c'] ^ ['b', 'd']           #=> #<Set: {"d", 1, "c"}>
   def ^(enum)
-    n = self.class.new(enum)
+    n = self.class.new
+    n.compare_by_identity if compare_by_identity?
+    n.merge(enum)
     each { |o| n.add(o) unless n.delete?(o) }
     n
   end
