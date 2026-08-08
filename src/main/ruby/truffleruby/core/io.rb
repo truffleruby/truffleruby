@@ -1788,7 +1788,9 @@ class IO
 
     buffer = Primitive.convert_with_to_str(buffer) if buffer
 
-    return ''.b if size == 0
+    if size == 0
+      return buffer ? buffer.clear : ''.b
+    end
 
     if @ibuffer.size > 0
       return @ibuffer.shift(size)
