@@ -149,4 +149,16 @@ describe "IO#read_nonblock" do
 
     buffer.encoding.should == Encoding::ISO_8859_1
   end
+
+  it "does not modify the buffer if a read error (other than EOF) occurs" do
+    r, w = IO.pipe
+    IO.for_fd(r.fileno).close
+    buffer = +"existing content"
+    begin
+      -> { r.read_nonblock(1, buffer) }.should.raise(SystemCallError)
+      buffer.should == "existing content"
+    ensure
+      w.close unless w.closed?
+    end
+  end
 end
