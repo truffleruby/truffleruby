@@ -818,11 +818,9 @@ class IO
 
     if mode
       mode = Truffle::IOOperations.parse_mode(mode)
-      mode &= ACCMODE
     elsif !Truffle::Boot.preinitializing? && Truffle::POSIX::NATIVE
       mode = Truffle::POSIX.fcntl(fd, F_GETFL, 0)
       Errno.handle if mode < 0
-      mode &= ACCMODE
     else
       raise 'No mode given for IO'
     end
@@ -834,7 +832,7 @@ class IO
     Primitive.object_ivar_set io, :@mode, Truffle::IOOperations.translate_omode_to_fmode(mode)
     io.sync = sync
     io.autoclose  = true
-    ibuffer = mode != WRONLY ? IO::InternalBuffer.new : nil
+    ibuffer = (mode & ACCMODE) != WRONLY ? IO::InternalBuffer.new : nil
     Primitive.object_ivar_set io, :@ibuffer, ibuffer
     Primitive.object_ivar_set io, :@lineno, 0
   end
@@ -2017,7 +2015,7 @@ class IO
       mode = Truffle::POSIX.fcntl(Primitive.io_fd(self), F_GETFL, 0)
       Errno.handle if mode < 0
 
-      @mode = Truffle::IOOperations.translate_omode_to_fmode((mode & ACCMODE))
+      @mode = Truffle::IOOperations.translate_omode_to_fmode(mode)
       @ibuffer = (@mode & FMODE_READABLE) != 0 ? IO::InternalBuffer.new : nil
     end
 
