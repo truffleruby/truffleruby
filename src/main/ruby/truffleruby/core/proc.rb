@@ -141,6 +141,6 @@ class Proc
   end
 
   def syntax_tree
-    Truffle::ProcOperations.syntax_tree(self)
+    Truffle::ProcOperations.syntax_tree(source_range, block_owner: true)
   end
 end
