@@ -10,7 +10,7 @@ describe "Set#^" do
     (@set ^ [3, 4, 5]).should == Set[1, 2, 5]
   end
 
-  it "correctly includes elements that are not in self but appear multiple times in the passed Enumerable" do
+  it "correctly excludes elements that appear multiple times in the passed Enumerable" do
     (@set ^ [3, 4, 5, 5]).should == Set[1, 2, 5]
   end
 
