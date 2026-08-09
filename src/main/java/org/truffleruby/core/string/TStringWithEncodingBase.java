@@ -93,6 +93,11 @@ abstract class TStringWithEncodingBase {
         return StringGuards.is7BitUncached(tstring, encoding);
     }
 
+    public boolean isBroken() {
+        CompilerAsserts.neverPartOfCompilation("Only behind @TruffleBoundary");
+        return StringGuards.isBrokenCodeRangeUncached(tstring, encoding);
+    }
+
     public int get(int index) {
         CompilerAsserts.neverPartOfCompilation("Only behind @TruffleBoundary");
         return tstring.readByteUncached(index, encoding.tencoding);

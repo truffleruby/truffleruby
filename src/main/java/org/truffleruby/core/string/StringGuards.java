@@ -50,6 +50,10 @@ public final class StringGuards {
         return codeRangeNode.execute(string, encoding.tencoding) == BROKEN;
     }
 
+    public static boolean isBrokenCodeRangeUncached(AbstractTruffleString string, RubyEncoding encoding) {
+        return string.getByteCodeRangeUncached(encoding.tencoding) == BROKEN;
+    }
+
     public static boolean isSingleByteOptimizable(Node node, AbstractTruffleString tString, RubyEncoding encoding,
             SingleByteOptimizableNode singleByteOptimizableNode) {
         return singleByteOptimizableNode.execute(node, tString, encoding);

@@ -32,7 +32,7 @@ import org.truffleruby.core.array.AssignableNode;
 import org.truffleruby.core.cast.HashCastNodeGen;
 import org.truffleruby.core.cast.SplatCastNode;
 import org.truffleruby.core.cast.SplatCastNodeGen;
-import org.truffleruby.core.cast.StringToSymbolNodeGen;
+import org.truffleruby.core.cast.InterpolatedStringToSymbolNodeGen;
 import org.truffleruby.core.cast.ToProcNodeGen;
 import org.truffleruby.core.cast.ToSNode;
 import org.truffleruby.core.cast.ToSNodeGen;
@@ -2415,7 +2415,7 @@ public class YARPTranslator extends YARPBaseTranslator {
         final ToSNode[] children = translateInterpolatedParts(node.parts);
         final RubyNode stringNode = new InterpolatedStringNode(children, sourceEncoding);
 
-        final RubyNode rubyNode = StringToSymbolNodeGen.create(stringNode);
+        final RubyNode rubyNode = InterpolatedStringToSymbolNodeGen.create(stringNode);
         return assignPositionAndFlags(node, rubyNode);
     }
 

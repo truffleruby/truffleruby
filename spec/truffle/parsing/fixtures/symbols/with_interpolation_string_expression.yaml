@@ -31,7 +31,7 @@ ast: |
                                               flags = 0
                                               sourceCharIndex = -1
                                               sourceLength = 0
-              StringToSymbolNodeGen
+              InterpolatedStringToSymbolNodeGen
                   attributes:
                       flags = 0
                       sourceCharIndex = 0

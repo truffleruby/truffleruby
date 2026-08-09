@@ -11,7 +11,7 @@ ast: |
           sourceLength = 17
       children:
           names = [
-              StringToSymbolNodeGen
+              InterpolatedStringToSymbolNodeGen
                   attributes:
                       flags = 0
                       sourceCharIndex = 6
