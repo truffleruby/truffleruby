@@ -26,4 +26,8 @@ class Method
   def <<(other)
     self.to_proc << other
   end
+
+  def syntax_tree
+    Truffle::ProcOperations.syntax_tree(self)
+  end
 end

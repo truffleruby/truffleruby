@@ -165,6 +165,7 @@ public final class CoreLibrary {
     public final RubyClass securityErrorClass;
     public final RubyClass standardErrorClass;
     public final RubyClass stopIterationClass;
+    public final RubyClass sourceRangeClass;
     public final RubyModule polyglotModule;
     public final RubyClass polyglotInnerContextClass;
     public final RubyClass polyglotForeignObjectClass;
@@ -438,6 +439,10 @@ public final class CoreLibrary {
                 threadBacktraceClass,
                 objectClass,
                 "Location");
+
+        RubyModule rubyModule = defineModule("Ruby");
+        sourceRangeClass = defineClass(rubyModule, objectClass, "SourceRange");
+
         defineClass("Time");
         trueClass = defineClass("TrueClass");
         unboundMethodClass = defineClass("UnboundMethod");

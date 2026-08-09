@@ -30,6 +30,7 @@ import org.truffleruby.core.binding.RubyBinding;
 import org.truffleruby.core.inlined.AlwaysInlinedMethodNode;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.method.UnboundMethodNodes.MethodRuby2KeywordsNode;
+import org.truffleruby.core.ruby.RubySourceRange;
 import org.truffleruby.language.Nil;
 import org.truffleruby.annotations.Visibility;
 import org.truffleruby.language.arguments.ArgumentDescriptorUtils;
@@ -186,7 +187,6 @@ public abstract class ProcNodes {
         boolean lambda(RubyProc proc) {
             return proc.type == ProcType.LAMBDA;
         }
-
     }
 
     @Primitive(name = "proc_parameters")
@@ -219,9 +219,23 @@ public abstract class ProcNodes {
                 return getLanguage().rubySourceLocation(sourceSection, fromJavaStringNode, this);
             }
         }
-
     }
 
+    @CoreMethod(names = "source_range")
+    public abstract static class SourceRangeNode extends CoreMethodArrayArgumentsNode {
+
+        @TruffleBoundary
+        @Specialization
+        Object sourceRange(RubyProc proc) {
+            var sourceSection = proc.getSharedMethodInfo().getSourceSection();
+            if (!sourceSection.isAvailable()) {
+                return nil;
+            } else {
+                return new RubySourceRange(coreLibrary().sourceRangeClass, getLanguage().sourceRangeShape,
+                        sourceSection);
+            }
+        }
+    }
 
     @Primitive(name = "proc_create_same_arity")
     public abstract static class ProcCreateSameArityNode extends PrimitiveArrayArgumentsNode {
@@ -279,7 +293,6 @@ public abstract class ProcNodes {
                 return nil;
             }
         }
-
     }
 
     @Primitive(name = "single_block_arg")

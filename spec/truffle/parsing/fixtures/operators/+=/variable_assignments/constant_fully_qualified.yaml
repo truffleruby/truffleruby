@@ -101,7 +101,7 @@ ast: |
                                                                       flags = 0
                                                                       name = "BAR"
                                                                       sourceCharIndex = 0
-                                                                      sourceLength = 8
+                                                                      sourceLength = 14
                                                                   children:
                                                                       moduleNode =
                                                                           ReadLocalVariableNode

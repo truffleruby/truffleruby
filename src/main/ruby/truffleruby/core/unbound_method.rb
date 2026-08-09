@@ -19,4 +19,8 @@ class UnboundMethod
     bind(recv).call(...)
   end
   Primitive.always_split self, :bind_call
+
+  def syntax_tree
+    Truffle::ProcOperations.syntax_tree(self)
+  end
 end
