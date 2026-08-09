@@ -5,7 +5,10 @@
 See the [Dependencies in the README](../../README.md#dependencies).
 
 The requirements include a [C compiler](../user/installing-llvm.md). Because it's a common issue, we remind macOS users
-they might need to add `export SDKROOT=$(xcrun --show-sdk-path)` to their shell profile.
+they might need to add `export SDKROOT=$(xcrun --show-sdk-path)` to their shell profile. The compiler shims in
+`/usr/bin` find the macOS SDK on their own, but the compilers they delegate to do not, so this is needed whenever
+something else comes first on the `PATH`, such as `/Library/Developer/CommandLineTools/usr/bin` or a compiler installed
+by a package manager. Without it the build fails with `'stdio.h' file not found`.
 
 Additionally, you will need:
 

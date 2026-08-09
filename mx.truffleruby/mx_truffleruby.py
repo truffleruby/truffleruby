@@ -424,10 +424,62 @@ def truffleruby_standalone_deps():
     return mx_truffle.resolve_truffle_dist_names(use_optimized_runtime=include_truffle_runtime)
 
 def librubyvm_build_args():
+    args = []
+
     if mx_sdk_vm_ng.is_nativeimage_ee() and 'NATIVE_IMAGE_AUXILIARY_ENGINE_CACHE' not in os.environ:
-        return ['--gc=G1', '-H:-ProtectionKeys']
-    else:
-        return []
+        args += ['--gc=G1', '-H:-ProtectionKeys']
+
+    args += native_image_toolchain_env_args()
+
+    return args
+
+def native_image_toolchain_env_args():
+    """Build the -E arguments the Native Image builder's C toolchain needs to find libraries and headers.
+
+    The Native Image driver sanitizes the builder's environment down to a small
+    allow-list, so variables that tell the C toolchain where to look are dropped
+    before the compiler driver ever sees them. On distributions that keep libraries
+    and headers in the usual places this goes unnoticed, because the toolchain's
+    built-in search paths are enough. On Nix there are no such built-in paths, so
+    the link fails with "cannot find -lz" unless the relevant variables are passed
+    through.
+
+    LIBRARY_PATH is what carries this in practice. It is the portable way to point a
+    compiler driver at libraries in a non-standard prefix, it is not specific to Nix,
+    and on a NixOS machine that builds without entering a development shell it is
+    typically the only one of these variables that is set at all.
+
+    SDKROOT matters on macOS because the builder compiles small query programs with
+    whatever C compiler it finds on the PATH. Only the shims in /usr/bin locate the
+    macOS SDK on their own; the compilers they delegate to, including the one under
+    /Library/Developer/CommandLineTools, cannot find even <stdio.h> without it. Any
+    PATH that puts one of those first therefore fails the query compilation seconds
+    into the build, which is why the contributor workflow asks macOS users to export
+    SDKROOT.
+
+    NIX_* covers the case where the build runs inside a Nix environment, such as
+    `nix develop`, `nix-shell`, or a nixpkgs derivation. Nix communicates library
+    locations to its compiler wrapper through these variables. NIX_LDFLAGS carries
+    the -L options, but the wrapper only applies them when its corresponding
+    NIX_CC_WRAPPER_TARGET_* variable is also present, and that name embeds the
+    platform triple. Rather than enumerate triples, re-export every NIX_* variable
+    when NIX_STORE shows we are inside such an environment.
+
+    Every branch is a no-op when the relevant variables are absent, so builds on
+    other systems are unaffected.
+    """
+    env_vars = []
+
+    if 'LIBRARY_PATH' in os.environ:
+        env_vars.append('LIBRARY_PATH')
+
+    if mx.is_darwin() and 'SDKROOT' in os.environ:
+        env_vars.append('SDKROOT')
+
+    if 'NIX_STORE' in os.environ:
+        env_vars += sorted(name for name in os.environ if name.startswith('NIX_'))
+
+    return ['-E' + name for name in env_vars]
 
 # Commands
 
