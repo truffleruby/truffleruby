@@ -320,15 +320,9 @@ describe "IO#read" do
   end
 
   it "does not modify the buffer if a read error occurs" do
-    r, w = IO.pipe
-    IO.for_fd(r.fileno).close
     buffer = +"existing content"
-    begin
-      -> { r.read(1, buffer) }.should.raise(SystemCallError)
-      buffer.should == "existing content"
-    ensure
-      w.close unless w.closed?
-    end
+    -> { IOSpecs.closed_io.read(1, buffer) }.should.raise(IOError)
+    buffer.should == "existing content"
   end
 
   it "returns the empty string when there is nothing to read and lenght=0 is given" do
