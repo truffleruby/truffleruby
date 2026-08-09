@@ -93,3 +93,9 @@ fails:Public methods on Method should include box
 fails:Public methods on SizedQueue should not include empty?
 fails:Public methods on SizedQueue should not include length
 fails:Public methods on SizedQueue should not include size
+fails:Public methods on Method should not include source_range
+fails:Public methods on Method should not include syntax_tree
+fails:Public methods on Proc should not include source_range
+fails:Public methods on Proc should not include syntax_tree
+fails:Public methods on UnboundMethod should not include source_range
+fails:Public methods on UnboundMethod should not include syntax_tree
