@@ -11,12 +11,15 @@
 package org.truffleruby.core.cast;
 
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.profiles.InlinedBranchProfile;
+import com.oracle.truffle.api.strings.TruffleString;
+import org.truffleruby.core.string.StringGuards;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.RubyContextSourceNode;
 import org.truffleruby.language.RubyNode;
-
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.Specialization;
+import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.library.RubyStringLibrary;
 
 /** Creates a symbol from a string. Must be a RubyNode because it's used in the translator. */
@@ -27,8 +30,16 @@ public abstract class StringToSymbolNode extends RubyContextSourceNode {
 
     @Specialization
     RubySymbol doString(Object string,
-            @Cached RubyStringLibrary libString) {
-        return getSymbol(libString.getTString(this, string), libString.getEncoding(this, string));
+            @Cached RubyStringLibrary libString,
+            @Cached TruffleString.GetByteCodeRangeNode codeRangeNode,
+            @Cached InlinedBranchProfile errorProfile) {
+        var tstring = libString.getTString(this, string);
+        var encoding = libString.getEncoding(this, string);
+        if (StringGuards.isBrokenCodeRange(tstring, encoding, codeRangeNode)) {
+            errorProfile.enter(this);
+            throw new RaiseException(getContext(), coreExceptions().encodingError(string, encoding, this));
+        }
+        return getSymbol(tstring, encoding);
     }
 
     @Override
