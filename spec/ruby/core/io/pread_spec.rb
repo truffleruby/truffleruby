@@ -132,9 +132,8 @@ describe "IO#pread" do
   end
 
   it "raises IOError when file is closed" do
-    file = File.open(@fname, "r+")
-    file.close
-    -> { file.pread(1, 1) }.should.raise(IOError)
+    @file.close
+    -> { @file.pread(1, 1) }.should.raise(IOError)
   end
 
   it "clears the buffer if end-of-file is reached" do
