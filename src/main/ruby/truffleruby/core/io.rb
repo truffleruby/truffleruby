@@ -1622,17 +1622,21 @@ class IO
     raise ArgumentError, 'negative string size (or size too big)' if length < 0
     raise Errno::EINVAL, 'offset must not be negative' if offset < 0
 
+    buffer = Primitive.convert_with_to_str(buffer) if buffer
+
     if length == 0
-      return buffer ? buffer : +''
+      return buffer || +''
     end
 
     str, errno = Truffle::POSIX.pread_string(self, length, offset)
     Errno.handle_errno(errno) unless errno == 0
 
-    raise EOFError if Primitive.nil? str
+    if Primitive.nil? str
+      buffer.clear if buffer
+      raise EOFError, 'end of file reached'
+    end
 
     if buffer
-      buffer = Primitive.convert_with_to_str(buffer)
       buffer.replace str.force_encoding(buffer.encoding)
     else
       str
@@ -1788,7 +1792,9 @@ class IO
 
     buffer = Primitive.convert_with_to_str(buffer) if buffer
 
-    return ''.b if size == 0
+    if size == 0
+      return buffer ? buffer.clear : ''.b
+    end
 
     if @ibuffer.size > 0
       return @ibuffer.shift(size)
@@ -1806,6 +1812,8 @@ class IO
         str
       end
     else # EOF
+      buffer.clear if buffer
+
       if exception
         raise EOFError, 'end of file reached'
       else
@@ -1908,15 +1916,18 @@ class IO
     if buffer
       buffer = Primitive.convert_with_to_str(buffer)
 
-      Truffle::StringOperations.shorten!(buffer, buffer.bytesize)
-
-      return buffer if size == 0
+      if size == 0
+        return buffer.clear
+      end
 
       if @ibuffer.size > 0
         data = @ibuffer.shift(size)
       else
         data = Truffle::POSIX.read_string_at_least_one_byte(self, size)
-        raise EOFError if Primitive.nil? data
+        if Primitive.nil? data
+          buffer.clear
+          raise EOFError, 'end of file reached'
+        end
       end
 
       buffer.replace data.force_encoding(buffer.encoding)
@@ -1928,7 +1939,7 @@ class IO
       end
 
       data = Truffle::POSIX.read_string_at_least_one_byte(self, size)
-      raise EOFError if Primitive.nil? data
+      raise EOFError, 'end of file reached' if Primitive.nil? data
       data
     end
   end
@@ -1945,8 +1956,6 @@ class IO
   #  f2.readlines[0]   #=> "This is line one\n"
   def reopen(other, mode = undefined)
     if other.respond_to?(:to_io) # reopen(IO)
-      flush
-
       if Primitive.is_a?(other, IO)
         io = other
       else
@@ -1955,6 +1964,8 @@ class IO
           raise TypeError, '#to_io must return an instance of IO'
         end
       end
+
+      flush
 
       if Primitive.io_fd(self) != io.fileno
         io.__send__ :ensure_open
@@ -2188,16 +2199,24 @@ class IO
   #  @todo  Improve reading into provided buffer.
   #
   def sysread(number_of_bytes, buffer = nil)
+    raise ArgumentError, 'negative length given' if number_of_bytes < 0
     ensure_open_and_readable
     flush
-    raise IOError unless @ibuffer.empty?
+    raise IOError, 'sysread for buffered IO' unless @ibuffer.empty?
 
     buffer = Primitive.convert_with_to_str(buffer) if buffer
+
+    if number_of_bytes == 0
+      return buffer || ''.b
+    end
 
     str, errno = Truffle::POSIX.read_string(self, number_of_bytes)
     Errno.handle_errno(errno) unless errno == 0
 
-    raise EOFError if Primitive.nil? str
+    if Primitive.nil? str
+      buffer.clear if buffer
+      raise EOFError, 'end of file reached'
+    end
 
     if buffer
       buffer.replace str.force_encoding(buffer.encoding)
