@@ -20,10 +20,36 @@ ruby_version_is "4.1" do
       node.should.is_a?(Prism::CallNode)
     end
 
+    it "currently returns a CallNode and not a BlockNode for a block with rescue" do
+      # Interesting because the BlockNode and the BeginNode are fully overlapping
+      node = proc do; rescue; end.syntax_tree
+      node.start_line.should == __LINE__ - 1
+      node.should.is_a?(Prism::CallNode)
+    end
+
     it "returns a LambdaNode for a stabby lambda" do
       node = -> { 42 }.syntax_tree
       node.start_line.should == __LINE__ - 1
       node.should.is_a?(Prism::LambdaNode)
+    end
+
+    it "does not return implicit parameter nodes" do
+      # Interesting because the BlockNode and the ItParametersNode/NumberedParametersNode are fully overlapping
+      node = -> { it }.syntax_tree
+      node.start_line.should == __LINE__ - 1
+      node.should.is_a?(Prism::LambdaNode)
+
+      node = -> { _1 }.syntax_tree
+      node.start_line.should == __LINE__ - 1
+      node.should.is_a?(Prism::LambdaNode)
+
+      node = proc { it }.syntax_tree
+      node.start_line.should == __LINE__ - 1
+      node.should.is_a?(Prism::CallNode)
+
+      node = proc { _1 }.syntax_tree
+      node.start_line.should == __LINE__ - 1
+      node.should.is_a?(Prism::CallNode)
     end
 
     it "returns a ForNode for a for-loop block" do
