@@ -815,20 +815,20 @@ public abstract class StringPrimitiveNodes {
 
         @Specialization(
                 guards = {
-                        "!isBrokenCodeRange(tstring, encoding, codeRangeNode)",
                         "equalNode.execute(node, tstring, encoding, cachedTString, cachedEncoding)",
-                        "preserveSymbol == cachedPreserveSymbol" },
+                        "preserveSymbol == cachedPreserveSymbol",
+                        "!isBrokenCodeRange(cachedTString, cachedEncoding, codeRangeNode)" },
                 limit = "getDefaultCacheLimit()")
         static RubySymbol toSymCached(Object string, boolean preserveSymbol,
                 @Bind Node node,
                 @Cached @Exclusive RubyStringLibrary strings,
+                @Cached StringHelperNodes.EqualSameEncodingNode equalNode,
+                @Bind("strings.getTString(node, string)") AbstractTruffleString tstring,
+                @Bind("strings.getEncoding(node, string)") RubyEncoding encoding,
                 @Cached("asTruffleStringUncached(string)") TruffleString cachedTString,
                 @Cached("strings.getEncoding(node, string)") RubyEncoding cachedEncoding,
                 @Cached("preserveSymbol") boolean cachedPreserveSymbol,
-                @Cached("getSymbol(cachedTString, cachedEncoding, cachedPreserveSymbol)") RubySymbol cachedSymbol,
-                @Cached StringHelperNodes.EqualSameEncodingNode equalNode,
-                @Bind("strings.getTString(node, string)") AbstractTruffleString tstring,
-                @Bind("strings.getEncoding(node, string)") RubyEncoding encoding) {
+                @Cached("getSymbol(cachedTString, cachedEncoding, cachedPreserveSymbol)") RubySymbol cachedSymbol) {
             return cachedSymbol;
         }
 
