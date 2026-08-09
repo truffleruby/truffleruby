@@ -12,6 +12,7 @@
 package org.truffleruby.core.string;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.AbstractTruffleString;
 import com.oracle.truffle.api.strings.TruffleString;
@@ -43,14 +44,14 @@ public final class StringGuards {
         return codeRangeNode.execute(tstring, encoding.tencoding) == VALID;
     }
 
+    @Idempotent
     public static boolean isBrokenCodeRange(AbstractTruffleString string, RubyEncoding encoding,
             TruffleString.GetByteCodeRangeNode codeRangeNode) {
         return codeRangeNode.execute(string, encoding.tencoding) == BROKEN;
     }
 
-    public static boolean isBrokenCodeRange(AbstractTruffleString string, TruffleString.Encoding encoding,
-            TruffleString.GetByteCodeRangeNode codeRangeNode) {
-        return codeRangeNode.execute(string, encoding) == BROKEN;
+    public static boolean isBrokenCodeRangeUncached(AbstractTruffleString string, RubyEncoding encoding) {
+        return string.getByteCodeRangeUncached(encoding.tencoding) == BROKEN;
     }
 
     public static boolean isSingleByteOptimizable(Node node, AbstractTruffleString tString, RubyEncoding encoding,

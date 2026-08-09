@@ -205,9 +205,178 @@ ruby_version_is "4.1" do
       "a missing final newline" => ["$1.time {}$", :CallNode],
 
       "very long source lines" => [("1" * 100) + " + $1.time {}$\n", :CallNode],
-    }.each_pair do |description, (source, prism_class)|
+
+      "-> { it } called with no arguments" => [<<-RUBY, :LambdaNode],
+      $-> { it }$.call()
+      RUBY
+
+      "lambda with rescue" => [<<-RUBY, :BlockNode],
+      lambda $do; rescue; end$.call(1)
+      RUBY
+
+      "def with rescue" => [<<-RUBY, :DefNode],
+      value = Object.new
+      $def value.f(a); rescue => e; e; end$
+      value.f()
+      RUBY
+
+      "block with it parameters" => [<<-RUBY, :BlockNode],
+      value = lambda $do
+        it
+      end$
+      value.call
+      RUBY
+
+      "block with numbered parameters" => [<<-RUBY, :BlockNode],
+      value = lambda ${ _1 }$
+      value.call
+      RUBY
+
+      "lambda with numbered parameters" => [<<-RUBY, :LambdaNode],
+      value = $-> { _1 }$
+      value.call
+      RUBY
+
+      "hash pattern with implicit key" => [<<-RUBY, :HashPatternNode],
+      value = Object.new
+      def value.deconstruct_keys(keys) = nil
+      case value
+      in $key:$
+      end
+      RUBY
+
+      "hash pattern with value" => [<<-RUBY, :HashPatternNode],
+      value = Object.new
+      def value.deconstruct_keys(keys) = nil
+      case value
+      in $key: 1$
+      end
+      RUBY
+
+      "hash pattern with rest" => [<<-RUBY, :HashPatternNode],
+      value = Object.new
+      def value.deconstruct_keys(keys) = nil
+      case value
+      in $**rest$
+      end
+      RUBY
+
+      "hash pattern rejecting extra keys" => [<<-RUBY, :HashPatternNode],
+      value = Object.new
+      def value.deconstruct_keys(keys) = nil
+      case value
+      in $**nil$
+      end
+      RUBY
+
+      "array pattern with splat" => [<<-RUBY, :ArrayPatternNode],
+      value = Object.new
+      def value.deconstruct = nil
+      case value
+      in $*rest$
+      end
+      RUBY
+
+      "keyword hash with splat" => [<<-RUBY, :KeywordHashNode],
+      value = Object.new
+      def value.to_hash = 1
+      [$**value$]
+      RUBY
+
+      "keyword hash with association" => [<<-RUBY, :KeywordHashNode],
+      key = Object.new
+      def key.hash = nil
+      [$key => 1$]
+      RUBY
+
+      "array with splat" => [<<-RUBY, :ArrayNode],
+      value = Object.new
+      def value.to_a = 1
+      result = $*value$
+      RUBY
+
+      "singleton class with rescue" => [<<-RUBY, :SingletonClassNode],
+      value = 1
+      $class << value; rescue; end$
+      RUBY
+
+      "class with rescue" => [<<-RUBY, :ClassNode],
+      SourceRangeClass = 1
+      $class SourceRangeClass; rescue; end$
+      RUBY
+
+      "module with rescue" => [<<-RUBY, :ModuleNode],
+      SourceRangeModule = 1
+      $module SourceRangeModule; rescue; end$
+      RUBY
+
+      # These nodes can own real calls, so source-range lookup cannot always exclude their classes.
+      "symbol used for case equality" => [<<-RUBY, :SymbolNode, 1],
+      class Symbol
+        alias_method :source_range_original_case_equal, :===
+        def ===(other) = raise(TypeError)
+      end
+      begin
+        case :other
+        when $:expected$
+        end
+      ensure
+        class Symbol
+          alias_method :===, :source_range_original_case_equal
+          remove_method :source_range_original_case_equal
+        end
+      end
+      RUBY
+
+      "splat converted for a when clause" => [<<-RUBY, :SplatNode, 1],
+      value = Object.new
+      def value.to_a = raise(TypeError)
+      case nil
+      when $*value$
+      end
+      RUBY
+
+      "keyword argument omission call" => [<<-RUBY, :CallNode],
+      def target(**keywords) = keywords
+      target($missing:$)
+      RUBY
+
+      "splat returned from a method" => [<<-RUBY, :SplatNode, 1],
+      value = Object.new
+      def value.to_a = raise(TypeError)
+      def target(value)
+        return $*value$
+      end
+      target(value)
+      RUBY
+
+      "symbol used for pattern matching" => [<<-RUBY, :SymbolNode, 1],
+      class Symbol
+        alias_method :source_range_original_case_equal, :===
+        def ===(other) = raise(TypeError)
+      end
+      begin
+        case :other
+        in $:expected$
+        end
+      ensure
+        class Symbol
+          alias_method :===, :source_range_original_case_equal
+          remove_method :source_range_original_case_equal
+        end
+      end
+      RUBY
+
+      "interpolated symbol" => [<<-RUBY, :InterpolatedSymbolNode],
+      value = Object.new
+      def value.to_s
+        (+"\\xFF").force_encoding(Encoding::UTF_8)
+      end
+      %I[$\#{value}$]
+      RUBY
+    }.each_pair do |description, (source, prism_class, frame)|
       it "returns the precise range for #{description}" do
-        capture_backtrace_location_source_range(source, prism_class)
+        capture_backtrace_location_source_range(source, prism_class, frame: frame || 0)
       end
     end
 

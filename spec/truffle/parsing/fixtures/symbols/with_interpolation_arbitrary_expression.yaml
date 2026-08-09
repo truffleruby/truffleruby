@@ -1,10 +1,10 @@
 subject: "Symbol"
 description: "Literal with interpolation when expressions are arbitrary (not Strings)"
-focused_on_node: "org.truffleruby.core.cast.StringToSymbolNodeGen"
+focused_on_node: "org.truffleruby.core.cast.InterpolatedStringToSymbolNodeGen"
 ruby: |
   :"ab#{ 42 }cd"
 ast: |
-  StringToSymbolNodeGen
+  InterpolatedStringToSymbolNodeGen
       attributes:
           flags = 0
           sourceCharIndex = 0

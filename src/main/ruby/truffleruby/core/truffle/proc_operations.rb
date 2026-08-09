@@ -51,23 +51,75 @@ module Truffle::ProcOperations
     end
   end
 
-  # variant of Thread::Backtrace::Location#syntax_tree to handle returning the CallNode instead of BlockNode
-  def self.syntax_tree(receiver)
+  def self.syntax_tree(range, block_owner: false)
     require 'prism'
-    range = receiver.source_range
     return nil unless range&.absolute_path
+
     result = Prism.parse_file(range.absolute_path, raise_error: true)
     start_offset = result.source.byte_offset(range.start_line, range.start_column)
     end_offset = result.source.byte_offset(range.end_line, range.end_column)
-    result.value.tunnel(range.start_line, range.start_column).rfind do |n|
-      case n
-      when Prism::BlockNode
-        nil
-      when Prism::CallNode
-        Primitive.is_a?(n.block, Prism::BlockNode) && n.block.start_offset == start_offset && n.block.end_offset == end_offset
-      else
-        n.start_offset == start_offset && n.end_offset == end_offset
+
+    # Prism::Node#tunnel only follows one child at each level. Some nodes with
+    # the same range are siblings, notably the SymbolNode and implicit CallNode
+    # for a keyword omission such as `target(missing:)`, so visit every branch
+    # which contains the range.
+    candidates = []
+    stack = [[result.value, nil, 0]]
+    until stack.empty?
+      node, parent, depth = stack.pop
+      if node.start_offset <= start_offset && node.end_offset >= end_offset
+        if node.start_offset == start_offset && node.end_offset == end_offset
+          candidates << [node, parent, depth]
+        end
+
+        node.compact_child_nodes.reverse_each do |child|
+          stack << [child, node, depth + 1]
+        end
       end
+    end
+
+    if block_owner
+      block = candidates.select { |candidate,| Primitive.is_a?(candidate, Prism::BlockNode) }.max_by(&:last)
+      if block
+        owner = block[1]
+        if Primitive.is_a?(owner, Prism::CallNode) ||
+            Primitive.is_a?(owner, Prism::SuperNode) ||
+            Primitive.is_a?(owner, Prism::ForwardingSuperNode)
+          return owner
+        end
+      end
+    end
+
+    eligible = candidates.select { |candidate,| syntax_tree_location_candidate?(candidate, candidates) }
+    eligible = candidates if eligible.empty?
+    eligible.max_by(&:last)&.first
+  end
+
+  def self.syntax_tree_location_candidate?(node, candidates)
+    case node
+    when Prism::ProgramNode,
+        Prism::StatementsNode,
+        Prism::BeginNode,
+        Prism::EmbeddedStatementsNode,
+        Prism::MatchWriteNode,
+        Prism::ItParametersNode,
+        Prism::NumberedParametersNode,
+        Prism::AssocNode,
+        Prism::AssocSplatNode,
+        Prism::NoKeywordsParameterNode
+      false
+    when Prism::SymbolNode
+      # A symbol can own an observable #=== call, except when it is the
+      # structural key of an exact-location hash pattern.
+      candidates.none? { |candidate,| Primitive.is_a?(candidate, Prism::HashPatternNode) }
+    when Prism::SplatNode
+      # A splat can own an observable #to_a call, except when the enclosing
+      # array or array pattern owns the exact same source range.
+      candidates.none? do |candidate,|
+        Primitive.is_a?(candidate, Prism::ArrayNode) || Primitive.is_a?(candidate, Prism::ArrayPatternNode)
+      end
+    else
+      true
     end
   end
 end

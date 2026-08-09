@@ -17,9 +17,6 @@ import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
-import com.oracle.truffle.api.strings.TruffleString;
-import org.truffleruby.core.encoding.RubyEncoding;
-import org.truffleruby.core.string.StringHelperNodes;
 import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.core.symbol.RubySymbol;
 
@@ -63,24 +60,11 @@ public abstract class ToSymbolNode extends RubyBaseNode {
         return getSymbol(node, str);
     }
 
-    @Specialization(
-            guards = {
-                    "strings.isRubyString(this, str)",
-                    "equalNode.execute(node, strings, str, cachedTString, cachedEncoding)" },
-            limit = "getCacheLimit()")
+    @Specialization(guards = "strings.isRubyString(this, str)", limit = "1")
     static RubySymbol rubyString(Node node, Object str,
             @Cached @Exclusive RubyStringLibrary strings,
-            @Cached("asTruffleStringUncached(str)") TruffleString cachedTString,
-            @Cached("strings.getEncoding($node, str)") RubyEncoding cachedEncoding,
-            @Cached StringHelperNodes.EqualSameEncodingNode equalNode,
-            @Cached("getSymbol(node, cachedTString, cachedEncoding)") RubySymbol rubySymbol) {
-        return rubySymbol;
-    }
-
-    @Specialization(guards = "strings.isRubyString(this, str)", replaces = "rubyString", limit = "1")
-    static RubySymbol rubyStringUncached(Node node, Object str,
-            @Cached @Exclusive RubyStringLibrary strings) {
-        return getSymbol(node, strings.getTString(node, str), strings.getEncoding(node, str));
+            @Cached @Exclusive StringToSymbolNode stringToSymbolNode) {
+        return stringToSymbolNode.execute(node, str, false);
     }
 
     @Specialization(guards = { "!isRubySymbol(object)", "!isString(object)", "isNotRubyString(object)" })
@@ -88,7 +72,7 @@ public abstract class ToSymbolNode extends RubyBaseNode {
             @Cached InlinedBranchProfile errorProfile,
             @Cached(inline = false) DispatchNode toStrNode,
             @Cached @Exclusive RubyStringLibrary strings,
-            @Cached(inline = false) ToSymbolNode toSymbolNode) {
+            @Cached @Exclusive StringToSymbolNode stringToSymbolNode) {
         var coerced = toStrNode.call(
                 coreLibrary(node).truffleTypeModule,
                 "rb_convert_type_fallback",
@@ -97,7 +81,7 @@ public abstract class ToSymbolNode extends RubyBaseNode {
                 coreSymbols(node).TO_STR);
 
         if (strings.isRubyString(node, coerced)) {
-            return toSymbolNode.executeCached(coerced);
+            return stringToSymbolNode.execute(node, coerced, false);
         } else {
             errorProfile.enter(node);
             throw new RaiseException(getContext(node), coreExceptions(node).typeErrorBadCoercion(

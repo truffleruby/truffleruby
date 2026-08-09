@@ -13,6 +13,7 @@ package org.truffleruby.core.symbol;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.strings.AbstractTruffleString;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.truffleruby.collections.WeakValueCache;
@@ -127,6 +128,9 @@ public final class SymbolTable {
     private TStringWithEncoding normalizeForLookup(AbstractTruffleString tstring, RubyEncoding encoding) {
         TruffleString string = tstring.asManagedTruffleStringUncached(encoding.tencoding);
         var strEnc = new TStringWithEncoding(string, encoding);
+        if (strEnc.isBroken()) {
+            throw CompilerDirectives.shouldNotReachHere("Symbols must be created from a non-broken String: " + strEnc);
+        }
 
         if (strEnc.isAsciiOnly() && encoding != Encodings.US_ASCII) {
             strEnc = strEnc.forceEncoding(Encodings.US_ASCII);

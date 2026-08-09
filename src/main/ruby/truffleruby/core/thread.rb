@@ -347,15 +347,7 @@ end
 
 class Thread::Backtrace::Location
   def syntax_tree
-    require 'prism'
-    range = self.source_range
-    return nil unless range&.absolute_path
-    result = Prism.parse_file(range.absolute_path, raise_error: true)
-    start_offset = result.source.byte_offset(range.start_line, range.start_column)
-    end_offset = result.source.byte_offset(range.end_line, range.end_column)
-    result.value.tunnel(range.start_line, range.start_column).rfind do |n|
-      n.start_offset == start_offset && n.end_offset == end_offset
-    end
+    Truffle::ProcOperations.syntax_tree(source_range, block_owner: false)
   end
 
   def inspect

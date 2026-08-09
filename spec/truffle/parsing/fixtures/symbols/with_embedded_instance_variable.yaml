@@ -1,10 +1,10 @@
 subject: "Symbol"
 description: "with embedded instance variable (#@a)"
-focused_on_node: "org.truffleruby.core.cast.StringToSymbolNodeGen"
+focused_on_node: "org.truffleruby.core.cast.InterpolatedStringToSymbolNodeGen"
 ruby: |
   :"foo #@bar"
 ast: |
-  StringToSymbolNodeGen
+  InterpolatedStringToSymbolNodeGen
       attributes:
           flags = 0
           sourceCharIndex = 0

@@ -104,6 +104,7 @@ import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.collections.ByteArrayBuilder;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.array.RubyArray;
+import org.truffleruby.core.cast.StringToSymbolNode;
 import org.truffleruby.core.cast.ToStrNode;
 import org.truffleruby.core.encoding.EncodingNodes.CheckStringEncodingNode;
 import org.truffleruby.core.encoding.EncodingNodes.NegotiateCompatibleStringEncodingNode;
@@ -808,49 +809,12 @@ public abstract class StringPrimitiveNodes {
     }
 
     @Primitive(name = "string_to_symbol")
-    @ImportStatic({ StringGuards.class, StringOperations.class })
     public abstract static class ToSymNode extends PrimitiveArrayArgumentsNode {
-
-        @Child GetByteCodeRangeNode codeRangeNode = GetByteCodeRangeNode.create();
-
-        @Specialization(
-                guards = {
-                        "!isBrokenCodeRange(tstring, encoding, codeRangeNode)",
-                        "equalNode.execute(node, tstring, encoding, cachedTString, cachedEncoding)",
-                        "preserveSymbol == cachedPreserveSymbol" },
-                limit = "getDefaultCacheLimit()")
-        static RubySymbol toSymCached(Object string, boolean preserveSymbol,
-                @Bind Node node,
-                @Cached @Exclusive RubyStringLibrary strings,
-                @Cached("asTruffleStringUncached(string)") TruffleString cachedTString,
-                @Cached("strings.getEncoding(node, string)") RubyEncoding cachedEncoding,
-                @Cached("preserveSymbol") boolean cachedPreserveSymbol,
-                @Cached("getSymbol(cachedTString, cachedEncoding, cachedPreserveSymbol)") RubySymbol cachedSymbol,
-                @Cached StringHelperNodes.EqualSameEncodingNode equalNode,
-                @Bind("strings.getTString(node, string)") AbstractTruffleString tstring,
-                @Bind("strings.getEncoding(node, string)") RubyEncoding encoding) {
-            return cachedSymbol;
+        @Specialization
+        RubySymbol toSym(Object string, boolean preserveSymbol,
+                @Cached StringToSymbolNode stringToSymbolNode) {
+            return stringToSymbolNode.execute(this, string, preserveSymbol);
         }
-
-        @Specialization(guards = "!isBrokenCodeRange(tstring, encoding, codeRangeNode)", replaces = "toSymCached",
-                limit = "1")
-        static RubySymbol toSym(Object string, boolean preserveSymbol,
-                @Bind Node node,
-                @Cached @Exclusive RubyStringLibrary strings,
-                @Bind("strings.getTString(node, string)") AbstractTruffleString tstring,
-                @Bind("strings.getEncoding(node, string)") RubyEncoding encoding) {
-            return getSymbol(node, strings.getTString(node, string), strings.getEncoding(node, string), preserveSymbol);
-        }
-
-        @Specialization(guards = "isBrokenCodeRange(tstring, encoding, codeRangeNode)", limit = "1")
-        static RubySymbol toSymBroken(Object string, boolean preserveSymbol,
-                @Bind Node node,
-                @Cached @Exclusive RubyStringLibrary strings,
-                @Bind("strings.getTString(node, string)") AbstractTruffleString tstring,
-                @Bind("strings.getEncoding(node, string)") RubyEncoding encoding) {
-            throw new RaiseException(getContext(node), coreExceptions(node).encodingError(string, encoding, node));
-        }
-
     }
 
     @Primitive(name = "string_unpack")

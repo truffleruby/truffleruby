@@ -28,7 +28,7 @@ ast: |
                       sourceLength = 27
                   children:
                       rescueBody =
-                          StringToSymbolNodeGen
+                          InterpolatedStringToSymbolNodeGen
                               attributes:
                                   flags = 0
                                   sourceCharIndex = 23
