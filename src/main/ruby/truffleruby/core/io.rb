@@ -1956,8 +1956,6 @@ class IO
   #  f2.readlines[0]   #=> "This is line one\n"
   def reopen(other, mode = undefined)
     if other.respond_to?(:to_io) # reopen(IO)
-      flush
-
       if Primitive.is_a?(other, IO)
         io = other
       else
@@ -1966,6 +1964,8 @@ class IO
           raise TypeError, '#to_io must return an instance of IO'
         end
       end
+
+      flush
 
       if Primitive.io_fd(self) != io.fileno
         io.__send__ :ensure_open
