@@ -24,6 +24,7 @@ Bug fixes:
 * Fix `Marshal.load` for an object extended with a module containing a nested user-marshaled object (#3943, @andrykonchin).
 * Fix `Regexp` comments in extended mode to always end at a newline, even when the newline is preceded by a backslash (#4435, @eregon).
 * Fix issue where environment updates made in native code (e.g., a C extension calling `setenv(3)`) would not be reflected by `ENV` (@nirvdrum).
+* Make `ENV` thread-safe (#4352, @nirvdrum).
 
 Compatibility:
 

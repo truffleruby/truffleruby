@@ -37,6 +37,17 @@
 
 ENV = Object.new
 
+# TruffleRuby's `ENV` implementation is a wrapper around direct access
+# to the global process environment. `setenv()` and `unsetenv()` are not
+# thread-safe, so relevant calls are guarded with `TruffleRuby.synchronized`.
+# The lock is reentrant, so code running under it may call back into `ENV`.
+# However, blocks supplied by the caller (e.g., in `each`) are not run within
+# the synchronized block in order to avoid stalls or deadlocks.
+#
+# While `ENV` mutation is thread-safe, the process environment can be modified
+# in other native code (e.g., native extensions or FFI). Such modifications are
+# not thread-safe and there isn't a whole lot we can do about it. Any such
+# native extension should run with the C extension lock.
 class << ENV
   include Enumerable
 
@@ -47,7 +58,7 @@ class << ENV
 
   private def lookup(key)
     key = Primitive.convert_with_to_str(key)
-    value = Truffle::POSIX.getenv(key)
+    value = TruffleRuby.synchronized(self) { Truffle::POSIX.getenv(key) }
     value && set_encoding(value)
   end
 
@@ -58,18 +69,22 @@ class << ENV
   end
 
   # Walks environ and yields each "NAME=VALUE" entry along with the index of
-  # its '=', so that callers can take just the name or both parts.
+  # its '=', so that callers can take just the name or both parts. The lock is
+  # held for the whole walk, since the entries are pointers into environ, which
+  # `setenv()` on another thread may free.
   private def each_environ_entry
-    array = environ_pointer.read_pointer
+    TruffleRuby.synchronized(self) do
+      array = environ_pointer.read_pointer
 
-    index = 0
-    until (entry = array.get_pointer(index * Truffle::FFI::Pointer::SIZE)).null?
-      string = entry.read_string_to_null
-      separator = string.index('=')
+      index = 0
+      until (entry = array.get_pointer(index * Truffle::FFI::Pointer::SIZE)).null?
+        string = entry.read_string_to_null
+        separator = string.index('=')
 
-      # An entry without a '=' is not a variable. Skip it like MRI's `env_each_pair` does.
-      yield string, separator if separator
-      index += 1
+        # An entry without a '=' is not a variable. Skip it like MRI's `env_each_pair` does.
+        yield string, separator if separator
+        index += 1
+      end
     end
   end
 
@@ -102,11 +117,13 @@ class << ENV
   alias_method :store, :[]=
 
   private def env_set(key, value)
-    if Primitive.nil? value
-      Truffle::POSIX.unsetenv(key)
-    else
-      if Truffle::POSIX.setenv(key, Primitive.convert_with_to_str(value), 1) != 0
-        Errno.handle('setenv')
+    TruffleRuby.synchronized(self) do
+      if Primitive.nil? value
+        Truffle::POSIX.unsetenv(key)
+      else
+        if Truffle::POSIX.setenv(key, Primitive.convert_with_to_str(value), 1) != 0
+          Errno.handle('setenv')
+        end
       end
     end
   end
@@ -117,8 +134,13 @@ class << ENV
 
   def delete(key)
     key = Primitive.convert_with_to_str(key)
-    existing_value = Truffle::POSIX.getenv(key)
-    Truffle::POSIX.unsetenv(key) if existing_value
+
+    # The env var read and delete must be atomic.
+    existing_value = TruffleRuby.synchronized(self) do
+      value = Truffle::POSIX.getenv(key)
+      Truffle::POSIX.unsetenv(key) if value
+      value
+    end
 
     if existing_value
       set_encoding(existing_value)
@@ -132,13 +154,15 @@ class << ENV
   end
 
   def shift
-    key = environ_keys.first
-    return nil unless key
+    TruffleRuby.synchronized(self) do
+      key = environ_keys.first
+      next nil unless key
 
-    value = Truffle::POSIX.getenv(key)
-    Truffle::POSIX.unsetenv(key)
+      value = Truffle::POSIX.getenv(key)
+      Truffle::POSIX.unsetenv(key)
 
-    [set_encoding(key), set_encoding(value)]
+      [set_encoding(key), set_encoding(value)]
+    end
   end
 
   def each
@@ -217,16 +241,24 @@ class << ENV
     keys = []
     each { |k, v| keys << k if yield(k, v) }
 
-    keys.each do |key|
-      Truffle::POSIX.unsetenv(key)
+    unless keys.empty?
+      TruffleRuby.synchronized(self) do
+        keys.each do |key|
+          Truffle::POSIX.unsetenv(key)
+        end
+      end
     end
 
     keys.empty? ? nil : self
   end
 
   def clear
-    environ_keys.each do |key|
-      Truffle::POSIX.unsetenv(key)
+    # Hold the lock for the whole operation so that writes from other threads
+    # aren't interleaved with the deletions.
+    TruffleRuby.synchronized(self) do
+      environ_keys.each do |key|
+        Truffle::POSIX.unsetenv(key)
+      end
     end
 
     self
@@ -281,16 +313,20 @@ class << ENV
     return self if Primitive.equal?(self, other)
     other = Primitive.convert_with_to_hash(other)
 
-    keys_to_delete = environ_keys.map(&:b)
+    # Hold the lock for the whole operation so that writes from other threads
+    # aren't interleaved with the replacement.
+    TruffleRuby.synchronized(self) do
+      keys_to_delete = environ_keys.map(&:b)
 
-    other.each do |k, v|
-      key = Primitive.convert_with_to_str(k)
-      env_set(key, v)
-      keys_to_delete.delete(key.b)
-    end
+      other.each do |k, v|
+        key = Primitive.convert_with_to_str(k)
+        env_set(key, v)
+        keys_to_delete.delete(key.b)
+      end
 
-    keys_to_delete.each do |key|
-      Truffle::POSIX.unsetenv(key)
+      keys_to_delete.each do |key|
+        Truffle::POSIX.unsetenv(key)
+      end
     end
 
     self
@@ -342,8 +378,12 @@ class << ENV
           end
         end
       else
-        other.each do |k, v|
-          env_set(Primitive.convert_with_to_str(k), v)
+        # Hold the lock for the whole operation so that writes from other threads
+        # aren't interleaved with the updates.
+        TruffleRuby.synchronized(self) do
+          other.each do |k, v|
+            env_set(Primitive.convert_with_to_str(k), v)
+          end
         end
       end
     end
