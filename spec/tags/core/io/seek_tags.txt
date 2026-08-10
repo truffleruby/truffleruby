@@ -1,1 +1,0 @@
-fails:IO#seek clears the character buffer

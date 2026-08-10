@@ -214,8 +214,15 @@ class IO
       TruffleRuby.synchronized(self) do
         unless empty?
           amount = @start - @used
-          r = Truffle::POSIX.lseek(io.fileno, amount, IO::SEEK_CUR)
-          Errno.handle if r == -1
+          pos = Truffle::POSIX.lseek(io.fileno, 0, IO::SEEK_CUR)
+          Errno.handle if pos == -1
+          # Prevent seeking past 0 to handle bytes prepended via #ungetc
+          amount = -pos if amount < -pos
+
+          if amount < 0
+            r = Truffle::POSIX.lseek(io.fileno, amount, IO::SEEK_CUR)
+            Errno.handle if r == -1
+          end
         end
         reset!
       end
