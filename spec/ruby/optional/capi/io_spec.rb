@@ -673,7 +673,7 @@ describe "C-API IO function" do
     it "includes FMODE_APPEND when in append mode" do
       io = File.open(@name, "a")
       begin
-        (@o.rb_io_mode(io) & 0x40).should == 0x40
+        (@o.rb_io_mode(io) & CApiIOSpecs::FMODE_APPEND).should == CApiIOSpecs::FMODE_APPEND
       ensure
         io.close
       end
@@ -682,7 +682,7 @@ describe "C-API IO function" do
     it "includes FMODE_BINMODE when in binary mode" do
       io = File.open(@name, "rb")
       begin
-        (@o.rb_io_mode(io) & 0x04).should == 0x04
+        (@o.rb_io_mode(io) & CApiIOSpecs::FMODE_BINMODE).should == CApiIOSpecs::FMODE_BINMODE
       ensure
         io.close
       end
@@ -692,7 +692,7 @@ describe "C-API IO function" do
       rm_r @name
       io = File.open(@name, "w")
       begin
-        (@o.rb_io_mode(io) & 0x80).should == 0x80
+        (@o.rb_io_mode(io) & CApiIOSpecs::FMODE_CREATE).should == CApiIOSpecs::FMODE_CREATE
       ensure
         io.close
       end
@@ -701,7 +701,7 @@ describe "C-API IO function" do
     it "includes FMODE_TRUNC when the file is truncated" do
       io = File.open(@name, "w")
       begin
-        (@o.rb_io_mode(io) & 0x800).should == 0x800
+        (@o.rb_io_mode(io) & CApiIOSpecs::FMODE_TRUNC).should == CApiIOSpecs::FMODE_TRUNC
       ensure
         io.close
       end
