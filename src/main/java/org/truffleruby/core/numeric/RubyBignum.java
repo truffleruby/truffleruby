@@ -29,6 +29,7 @@ public final class RubyBignum extends ImmutableRubyObjectNotCopyable {
 
     private static final BigInteger LONG_MIN_BIGINT = BigInteger.valueOf(Long.MIN_VALUE);
     private static final BigInteger LONG_MAX_BIGINT = BigInteger.valueOf(Long.MAX_VALUE);
+    private static final BigInteger TWO_POW_64 = BigInteger.ONE.shiftLeft(Long.SIZE);
 
     public final BigInteger value;
 
@@ -41,6 +42,13 @@ public final class RubyBignum extends ImmutableRubyObjectNotCopyable {
     @TruffleBoundary
     private int bitLength() {
         return value.bitLength();
+    }
+
+    @TruffleBoundary
+    public long toUnsignedLong() {
+        assert value.signum() >= 0 : value;
+        assert value.compareTo(TWO_POW_64) < 0 : value;
+        return value.subtract(TWO_POW_64).longValueExact();
     }
 
     @TruffleBoundary

@@ -194,7 +194,9 @@ module Truffle
           to_fds(writable_ios, writables_pointer, POLLOUT)
           to_fds(errorable_ios, errorables_pointer, POLLPRI)
 
-          primitive_result = Primitive.thread_run_blocking_nfi_system_call(Truffle::POSIX::POLL, [buffer, total_size, remaining_timeout])
+          # Don't mark Truffle::POSIX.poll_blocking_no_retry as retry_eintr because
+          # then it would automatically retry on EINTR without considering/adjusting the timeout.
+          primitive_result = Truffle::POSIX.poll_blocking_no_retry(buffer, total_size, remaining_timeout)
           result =
             if primitive_result < 0
               errno = Errno.errno
@@ -263,18 +265,9 @@ module Truffle
       end
 
       begin
-        # Change thread status manually.
-        # Don't mark Truffle::POSIX.truffleposix_poll_single_fd as blocking because
+        # Don't mark Truffle::POSIX.poll_single_fd_blocking_no_retry as retry_eintr because
         # then it would automatically retry on EINTR without considering/adjusting the timeout.
-        status = Primitive.thread_set_status(Thread.current, :sleep)
-
-        begin
-          returned_events = Primitive.thread_run_blocking_nfi_system_call(
-            Truffle::POSIX::POLL_SINGLE_FD,
-            [Primitive.io_fd(io), event_mask, remaining_timeout])
-        ensure
-          Primitive.thread_set_status(Thread.current, status)
-        end
+        returned_events = Truffle::POSIX.poll_single_fd_blocking_no_retry(Primitive.io_fd(io), event_mask, remaining_timeout)
 
         result =
           if returned_events < 0

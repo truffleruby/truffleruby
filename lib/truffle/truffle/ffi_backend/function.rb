@@ -85,7 +85,7 @@ module FFI
       if blocking
         begin
           result = Primitive.thread_run_blocking_nfi_system_call(@function, args)
-        end while Primitive.is_a?(result, Integer) and result == -1 and Errno.errno == Errno::EINTR::Errno
+        end while Primitive.is_a?(result, Integer) and result == -1 and FFI.errno == Errno::EINTR::Errno
       else
         result = @function.call(*args)
       end
@@ -173,7 +173,7 @@ module FFI
         ruby_value = convert_native_to_ruby(type.native_type, value)
         type.from_native(ruby_value, nil)
       elsif FFI::Type::POINTER == type
-        FFI::Pointer.new(Truffle::Interop.as_pointer(value))
+        FFI::Pointer.new(Primitive.interop_as_pointer(value))
       elsif FFI::Type::BOOL == type
         value != 0
       elsif FFI::Type::STRING == type
@@ -182,13 +182,13 @@ module FFI
         elsif Primitive.is_a?(value, String)
           value
         else
-          FFI::Pointer.new(Truffle::Interop.as_pointer(value)).read_string_to_null
+          FFI::Pointer.new(Primitive.interop_as_pointer(value)).read_string_to_null
         end
       elsif FFI::Type::UINT64 == type or FFI::Type::ULONG == type
         # GR-15358: No uint64 in interop yet
         type.signed2unsigned(value)
       elsif Primitive.is_a?(type, FFI::FunctionType)
-        ptr = FFI::Pointer.new(Truffle::Interop.as_pointer(value))
+        ptr = FFI::Pointer.new(Primitive.interop_as_pointer(value))
         FFI::Function.new(type, nil, ptr)
       else
         value

@@ -210,10 +210,6 @@
       <property name="message" value='Use .toArray(Type.EMPTY_ARRAY) instead, because this avoids extra allocations.'/>
     </module>
     <module name="RegexpSinglelineJava">
-      <property name="format" value="transferToInterpreterOnException"/>
-      <property name="message" value="Don't use transferToInterpreterOnException"/>
-    </module>
-    <module name="RegexpSinglelineJava">
       <property name="format" value='"isRuby(?!Value|DynamicObject|SymbolOrString|Rational|Range|[^"]+\|\|)\w+\(\w+\)'/> <!-- Rational is not a builtin type -->
       <property name="message" value="Type the argument instead of using a positive isRuby* guard."/>
     </module>

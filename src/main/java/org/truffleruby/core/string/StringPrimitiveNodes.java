@@ -2441,33 +2441,6 @@ public abstract class StringPrimitiveNodes {
 
     }
 
-    @Primitive(name = "string_to_null_terminated_byte_array")
-    public abstract static class StringToNullTerminatedByteArrayNode extends PrimitiveArrayArgumentsNode {
-
-        @Specialization(guards = "libString.isRubyString(node, string)", limit = "1")
-        static Object toByteArray(Object string,
-                @Bind Node node,
-                @Cached TruffleString.CopyToByteArrayNode copyToByteArrayNode,
-                @Cached RubyStringLibrary libString) {
-            final var encoding = libString.getEncoding(node, string);
-            final var tstring = libString.getTString(node, string);
-            final int bytesToCopy = tstring.byteLength(encoding.tencoding);
-            final var bytesWithNull = new byte[bytesToCopy + 1];
-
-            // NOTE: we always need one copy here, as native code could modify the passed byte[]
-            copyToByteArrayNode.execute(tstring, 0,
-                    bytesWithNull, 0, bytesToCopy, encoding.tencoding);
-
-            return getContext(node).getEnv().asGuestValue(bytesWithNull);
-        }
-
-        @Specialization
-        Object emptyString(Nil string) {
-            return getContext().getEnv().asGuestValue(null);
-        }
-
-    }
-
     @Primitive(name = "string_interned?")
     public abstract static class IsInternedNode extends PrimitiveArrayArgumentsNode {
         @Specialization

@@ -38,7 +38,8 @@ module Truffle
       dirptr = Primitive.object_ivar_get(dir, :@ptr)
       dirents = Primitive.io_thread_buffer_allocate(MULTIPLE_READS_BUFFER_SIZE)
       begin
-        res = Truffle::POSIX.truffleposix_readdir_multiple(dirptr, MULTIPLE_READS_BUFFER_SIZE, resolve_type, exclude_self, dirents)
+        res = Truffle::POSIX.truffleposix_readdir_multiple(dirptr, MULTIPLE_READS_BUFFER_SIZE,
+                                                           resolve_type ? 1 : 0, exclude_self ? 1 : 0, dirents)
         num_read = dirents.read_int
         offset = 4
         num_read.times do

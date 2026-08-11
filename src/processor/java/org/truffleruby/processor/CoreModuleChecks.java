@@ -62,10 +62,11 @@ public class CoreModuleChecks {
                 }
             }
 
-            klassIt = processor
-                    .getProcessingEnvironment()
-                    .getElementUtils()
-                    .getTypeElement(klassIt.getSuperclass().toString());
+            klassIt = processor.getSuperclassTypeElement(klassIt);
+            if (klassIt == null) {
+                processor.error("could not find superclass", klass);
+                return;
+            }
         }
 
         if (specializationMethods.isEmpty()) {

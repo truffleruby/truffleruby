@@ -34,7 +34,7 @@ class UNIXServer < UNIXSocket
 
     fd = Truffle::Socket::Foreign.socket(Socket::AF_UNIX, Socket::SOCK_STREAM, 0)
 
-    Errno.handle('socket(2)') if fd < 0
+    Errno.handle_ffi('socket(2)') if fd < 0
 
     setup(fd, 'r+', true)
     binmode
@@ -42,7 +42,7 @@ class UNIXServer < UNIXSocket
     sockaddr = Socket.sockaddr_un(@path)
     status   = Truffle::Socket::Foreign.bind(Primitive.io_fd(self), sockaddr)
 
-    Errno.handle('bind(2)') if status < 0
+    Errno.handle_ffi('bind(2)') if status < 0
 
     listen(Socket::SOMAXCONN)
   end

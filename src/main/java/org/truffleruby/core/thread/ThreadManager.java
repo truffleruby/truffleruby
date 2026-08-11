@@ -573,7 +573,7 @@ public final class ThreadManager {
     }
 
     @TruffleBoundary
-    Interrupter getNativeCallInterrupter() {
+    public Interrupter getNativeCallInterrupter() {
         if (nativeInterrupt) {
             return nativeCallInterrupter.get();
         } else {
