@@ -2243,7 +2243,7 @@ class IO
   #  f.sysread(10)                  #=> "And so on."
   def sysseek(amount, whence = SEEK_SET)
     ensure_open
-    raise IOError unless buffer_empty?
+    raise IOError, 'sysseek for buffered IO' unless buffer_empty?
 
     whence = Truffle::IOOperations.parse_whence(whence)
     r = Truffle::POSIX.lseek(Primitive.io_fd(self), Primitive.rb_num2long(amount), whence)
