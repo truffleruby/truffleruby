@@ -99,6 +99,10 @@ class Encoding
       str = Primitive.convert_with_to_str(obj)
     end
 
+    unless str.encoding.ascii_compatible?
+      raise ArgumentError, 'invalid encoding name (non ASCII)'
+    end
+
     key = str.upcase.to_sym
 
     pair = EncodingMap[key]

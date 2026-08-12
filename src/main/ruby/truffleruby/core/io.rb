@@ -2086,10 +2086,27 @@ class IO
   # Otherwise         => enc is external, enc2 is internal
   #
   # We use the internal and external terminology only because enc/enc2 is so confusing.
-  def set_encoding(external, internal = nil, **options)
+  def set_encoding(external, internal = nil, newline: nil, **options)
+    unless Primitive.nil?(newline)
+      if Primitive.is_a?(newline, Symbol)
+        unless newline == :universal || newline == :crlf || newline == :cr || newline == :lf
+          raise ArgumentError, "unexpected value for newline option: #{newline}"
+        end
+      else
+        raise ArgumentError, 'unexpected value for newline option'
+      end
+    end
+
+    if binmode?
+      if options[:universal_newline] || options[:crlf_newline] || options[:cr_newline] || !Primitive.nil?(newline)
+        raise ArgumentError, 'newline decorator with binary mode'
+      end
+    end
+
     if !Primitive.nil?(internal)
-      unless Primitive.nil?(external) || Primitive.is_a?(external, Encoding)
-        external = Truffle::IOOperations.parse_external_enc(self, Primitive.convert_with_to_str(external), @mode)
+      unless Primitive.is_a?(external, Encoding)
+        external = Primitive.convert_with_to_str(external)
+        external = Truffle::IOOperations.parse_external_enc(self, external, @mode)
       end
 
       unless Primitive.is_a?(internal, Encoding)
@@ -2107,15 +2124,33 @@ class IO
         internal = nil
       end
     else
+      unless Primitive.nil?(external) || Primitive.is_a?(external, Encoding)
+        external = Primitive.convert_with_to_str(external)
+        unless external.encoding.ascii_compatible?
+          raise ArgumentError, 'invalid encoding name (non ASCII)'
+        end
+      end
+
       if Primitive.nil?(external) # Set to default encodings
         external, internal = Truffle::IOOperations.rb_io_ext_int_to_encs(@mode, nil, nil)
       else
-        if !Primitive.is_a?(external, Encoding) and
-            external = Primitive.convert_with_to_str(external) and external.encoding.ascii_compatible?
+        if !Primitive.is_a?(external, Encoding)
           external, internal = Truffle::IOOperations.parse_mode_enc(self, @mode, external)
         else
           external, internal = Truffle::IOOperations.rb_io_ext_int_to_encs(@mode, Encoding.find(external), nil)
         end
+      end
+    end
+
+    # MRI: validate_enc_binmode
+    effective_external = external
+    if Primitive.nil?(effective_external) && @mode.anybits?(FMODE_READABLE)
+      effective_external = Encoding.default_external
+    end
+
+    if !Primitive.nil?(effective_external) && !effective_external.ascii_compatible?
+      if @mode.anybits?(FMODE_READABLE) && !binmode? && Primitive.nil?(internal)
+        raise ArgumentError, 'ASCII incompatible encoding needs binmode'
       end
     end
 

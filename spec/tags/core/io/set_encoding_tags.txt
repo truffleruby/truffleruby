@@ -1,6 +1,1 @@
 fails:IO#set_encoding saves encoding options passed as a hash in the last argument
-fails:IO#set_encoding raises ArgumentError when argument is not ASCII compatible
-fails:IO#set_encoding raises TypeError when the first argument is nil and the second is not nil
-fails:IO#set_encoding raises ArgumentError when newline decorator has invalid value
-fails:IO#set_encoding raises ArgumentError when ASCII incompatible encoding is used with readable stream without binmode or character conversion
-fails:IO#set_encoding raises ArgumentError when newline decorator provided in binary mode
