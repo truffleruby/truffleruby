@@ -41,6 +41,10 @@ void rb_include_module(VALUE module, VALUE to_include) {
   RUBY_INVOKE_NO_WRAP(module, "include", to_include);
 }
 
+void rb_prepend_module(VALUE module, VALUE to_prepend) {
+  RUBY_INVOKE_NO_WRAP(module, "prepend", to_prepend);
+}
+
 #undef rb_define_method
 void rb_define_method(VALUE module, const char *name, VALUE (*function)(ANYARGS), int argc) {
   if (function == rb_tr_rb_f_notimplement) {
