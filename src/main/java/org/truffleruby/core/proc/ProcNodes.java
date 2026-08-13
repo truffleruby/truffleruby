@@ -28,6 +28,7 @@ import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.binding.BindingNodes;
 import org.truffleruby.core.binding.RubyBinding;
 import org.truffleruby.core.inlined.AlwaysInlinedMethodNode;
+import org.truffleruby.core.kernel.KernelNodes.CopyInstanceVariablesNode;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.method.UnboundMethodNodes.MethodRuby2KeywordsNode;
 import org.truffleruby.core.ruby.RubySourceRange;
@@ -103,6 +104,7 @@ public abstract class ProcNodes {
 
         @Specialization
         RubyProc clone(RubyProc proc,
+                @Cached CopyInstanceVariablesNode copyInstanceVariablesNode,
                 @Cached DispatchNode initializeCloneNode,
                 @Cached LazySingletonClassNode lazySingletonClassNode) {
             RubyClass metaClass = proc.getMetaClass();
@@ -114,6 +116,8 @@ public abstract class ProcNodes {
                 newMetaClass.fields.initCopy(metaClass);
                 copy.setMetaClass(newMetaClass);
             }
+
+            copyInstanceVariablesNode.execute(this, copy, proc);
 
             initializeCloneNode.call(copy, "initialize_clone", proc);
             return copy;
