@@ -39,6 +39,7 @@ import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.language.methods.Arity;
 import org.truffleruby.language.objects.AllocationTracing;
+import org.truffleruby.language.objects.LazySingletonClassNode;
 import org.truffleruby.language.objects.LogicalClassNode;
 import org.truffleruby.language.yield.CallBlockNode;
 import org.truffleruby.parser.ArgumentDescriptor;
@@ -102,8 +103,18 @@ public abstract class ProcNodes {
 
         @Specialization
         RubyProc clone(RubyProc proc,
-                @Cached DispatchNode initializeCloneNode) {
-            final RubyProc copy = proc.duplicate(getLanguage().procShape, this);
+                @Cached DispatchNode initializeCloneNode,
+                @Cached LazySingletonClassNode lazySingletonClassNode) {
+            RubyClass metaClass = proc.getMetaClass();
+
+            final RubyProc copy = proc.duplicate(metaClass, getLanguage().procShape, this);
+
+            if (metaClass.isSingleton) {
+                final RubyClass newMetaClass = lazySingletonClassNode.get(this).execute(copy);
+                newMetaClass.fields.initCopy(metaClass);
+                copy.setMetaClass(newMetaClass);
+            }
+
             initializeCloneNode.call(copy, "initialize_clone", proc);
             return copy;
         }
