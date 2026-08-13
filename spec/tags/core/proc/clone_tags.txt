@@ -1,3 +1,2 @@
-fails:Proc#clone preserves frozen status
 slow:Proc#clone copies the finalizer
 fails:Proc#clone copies the finalizer

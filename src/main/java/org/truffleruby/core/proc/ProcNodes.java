@@ -40,6 +40,8 @@ import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.language.methods.Arity;
 import org.truffleruby.language.objects.AllocationTracing;
+import org.truffleruby.language.objects.FreezeNode;
+import org.truffleruby.language.objects.IsFrozenNode;
 import org.truffleruby.language.objects.LazySingletonClassNode;
 import org.truffleruby.language.objects.LogicalClassNode;
 import org.truffleruby.language.yield.CallBlockNode;
@@ -104,9 +106,11 @@ public abstract class ProcNodes {
 
         @Specialization
         RubyProc clone(RubyProc proc,
+                @Cached LazySingletonClassNode lazySingletonClassNode,
                 @Cached CopyInstanceVariablesNode copyInstanceVariablesNode,
                 @Cached DispatchNode initializeCloneNode,
-                @Cached LazySingletonClassNode lazySingletonClassNode) {
+                @Cached IsFrozenNode isFrozenNode,
+                @Cached FreezeNode freezeNode) {
             RubyClass metaClass = proc.getMetaClass();
 
             final RubyProc copy = proc.duplicate(metaClass, getLanguage().procShape, this);
@@ -118,8 +122,12 @@ public abstract class ProcNodes {
             }
 
             copyInstanceVariablesNode.execute(this, copy, proc);
-
             initializeCloneNode.call(copy, "initialize_clone", proc);
+
+            if (isFrozenNode.execute(proc)) {
+                freezeNode.execute(this, copy);
+            }
+
             return copy;
         }
     }
