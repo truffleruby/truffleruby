@@ -118,7 +118,6 @@ public abstract class ProcNodes {
             if (metaClass.isSingleton) {
                 final RubyClass newMetaClass = lazySingletonClassNode.get(this).execute(copy);
                 newMetaClass.fields.initCopy(metaClass);
-                copy.setMetaClass(newMetaClass);
             }
 
             copyInstanceVariablesNode.execute(this, copy, proc);
