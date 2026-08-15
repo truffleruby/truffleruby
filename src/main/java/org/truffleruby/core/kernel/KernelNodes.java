@@ -367,9 +367,16 @@ public abstract class KernelNodes {
     public abstract static class CalleeNameNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        RubySymbol calleeName() {
+        Object calleeName() {
             // the "called name" of a method.
-            return getSymbol(getContext().getCallStack().getCallingMethod().getName());
+            final InternalMethod callingMethod = getContext().getCallStack().getCallingMethod();
+            assert callingMethod != null;
+
+            if (callingMethod.getSharedMethodInfo().isModuleBody()) {
+                return nil;
+            }
+
+            return getSymbol(callingMethod.getName());
         }
     }
 
@@ -1195,9 +1202,15 @@ public abstract class KernelNodes {
     public abstract static class MethodNameNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        RubySymbol methodName() {
+        Object methodName() {
             // the "original/definition name" of the method.
-            InternalMethod internalMethod = getContext().getCallStack().getCallingMethod();
+            final InternalMethod internalMethod = getContext().getCallStack().getCallingMethod();
+            assert internalMethod != null;
+
+            if (internalMethod.getSharedMethodInfo().isModuleBody()) {
+                return nil;
+            }
+
             return getSymbol(internalMethod.getSharedMethodInfo().getMethodName());
         }
 
