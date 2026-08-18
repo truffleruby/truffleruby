@@ -25,7 +25,6 @@ import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.encoding.TStringUtils;
 import org.truffleruby.core.klass.RubyClass;
-import org.truffleruby.core.string.RubyString;
 import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.extra.ffi.PointerNodes;
 import org.truffleruby.extra.ffi.RubyPointer;
@@ -129,12 +128,13 @@ public abstract class ByteArrayNodes {
     @CoreMethod(names = "fill", required = 4, lowerFixnum = { 1, 3, 4 })
     public abstract static class FillNode extends CoreMethodArrayArgumentsNode {
 
-        @Specialization
-        Object fillFromString(RubyByteArray destByteArray, int dstStart, RubyString source, int srcStart, int length,
-                @Cached RubyStringLibrary libString,
+        @Specialization(guards = "strings.isRubyString(node, source)", limit = "1")
+        static Object fillFromString(RubyByteArray destByteArray, int dstStart, Object source, int srcStart, int length,
+                @Bind Node node,
+                @Cached RubyStringLibrary strings,
                 @Cached TruffleString.CopyToByteArrayNode copyToByteArrayNode) {
-            var tstring = source.tstring;
-            var encoding = libString.getTEncoding(this, source);
+            var tstring = strings.getTString(node, source);
+            var encoding = strings.getTEncoding(node, source);
             copyToByteArrayNode.execute(tstring, srcStart, destByteArray.bytes, dstStart, length, encoding);
             return source;
         }
