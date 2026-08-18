@@ -576,6 +576,11 @@ module Truffle
           path = Primitive.convert_with_to_str(path)
         end
       end
+
+      if Primitive.nil?(external) && !Primitive.nil?(internal)
+        external = Encoding.default_external
+      end
+
       external = Encoding::BINARY if binary and !external and !internal
       perm ||= 0666
       [mode, binary, external, internal, autoclose, perm, path]
