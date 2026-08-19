@@ -1431,7 +1431,7 @@ class IO
     end
 
     command = Primitive.convert_with_to_int(command)
-    ret = Truffle::POSIX.ioctl(Primitive.io_fd(self), command, real_arg)
+    ret = Truffle::POSIX.ioctl(Primitive.io_fd(self), command, Truffle::FFI::Pointer.new(real_arg))
     Errno.handle if ret < 0
 
     if buffer

@@ -138,7 +138,7 @@ module Truffle
 
           err = _getsockopt(descriptor, level, optname, val, length)
 
-          Errno.handle('Unable to get socket option') unless err == 0
+          Errno.handle_ffi('Unable to get socket option') unless err == 0
 
           val.read_string(length.read_int)
         ensure
@@ -252,7 +252,7 @@ module Truffle
           len_p.write_int(128)
           err = _getpeername(socket.fileno, sockaddr_storage_p, len_p)
 
-          Errno.handle('getpeername(2)') unless err == 0
+          Errno.handle_ffi('getpeername(2)') unless err == 0
 
           sockaddr_storage_p.read_string(len_p.read_int)
         ensure
@@ -266,7 +266,7 @@ module Truffle
           len_p.write_int(128)
           err = _getsockname(socket.fileno, sockaddr_storage_p, len_p)
 
-          Errno.handle('getsockname(2)') unless err == 0
+          Errno.handle_ffi('getsockname(2)') unless err == 0
 
           sockaddr_storage_p.read_string(len_p.read_int)
         ensure
@@ -351,7 +351,7 @@ module Truffle
           pointer.clear
           status = _socketpair(family, type, protocol, pointer)
 
-          Errno.handle('socketpair(2)') unless status == 0
+          Errno.handle_ffi('socketpair(2)') unless status == 0
 
           pointer.read_array_of_int(2)
         ensure
@@ -396,7 +396,7 @@ module Truffle
         begin
           status = inet_pton(family, address, pointer)
 
-          Errno.handle('inet_pton()') if status < 1
+          Errno.handle_ffi('inet_pton()') if status < 1
 
           pointer.get_array_of_uchar(0, size)
         ensure

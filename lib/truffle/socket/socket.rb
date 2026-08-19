@@ -207,7 +207,7 @@ class Socket < BasicSocket
   def self.getifaddrs
     Truffle::Socket::Foreign.memory_pointer(:pointer) do |ptr|
       status = Truffle::Socket::Foreign.getifaddrs(ptr)
-      Errno.handle('getifaddrs()') if status < 0
+      Errno.handle_ffi('getifaddrs()') if status < 0
 
       initial = Truffle::Socket::Foreign::Ifaddrs.new(ptr.read_pointer)
       ifaddrs = []
@@ -321,7 +321,7 @@ class Socket < BasicSocket
 
     descriptor = Truffle::Socket::Foreign.socket(@family, socket_type, protocol)
 
-    Errno.handle('socket(2)') if descriptor < 0
+    Errno.handle_ffi('socket(2)') if descriptor < 0
 
     setup(descriptor, nil, true)
     binmode
@@ -334,7 +334,7 @@ class Socket < BasicSocket
 
     err = Truffle::Socket::Foreign.bind(Primitive.io_fd(self), addr)
 
-    Errno.handle('bind(2)') unless err == 0
+    Errno.handle_ffi('bind(2)') unless err == 0
 
     0
   end
@@ -364,7 +364,7 @@ class Socket < BasicSocket
       if exception
         Truffle::Socket::Error.connect_nonblock('connect(2)')
       else
-        errno = Errno.errno
+        errno = ::FFI.errno
         if errno == Errno::EINPROGRESS::Errno
           :wait_writable
         elsif errno == Errno::EISCONN::Errno

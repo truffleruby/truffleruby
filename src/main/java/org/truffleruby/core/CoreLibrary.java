@@ -890,8 +890,10 @@ public final class CoreLibrary {
         return ((int) value) == value;
     }
 
+    private static final long UINT32_MAX = (1L << 32) - 1;
+
     public static boolean fitsIntoUnsignedInteger(long value) {
-        return value == (value & 0xffffffffL) || value < 0 && value >= Integer.MIN_VALUE;
+        return value >= Integer.MIN_VALUE && value <= UINT32_MAX;
     }
 
     public Object getDebug() {
@@ -1109,6 +1111,7 @@ public final class CoreLibrary {
             "/core/truffle/polyglot.rb",
             "/core/truffle/polyglot_methods.rb",
             "/core/posix.rb",
+            "/core/posix_functions.rb",
             "/core/io_buffer.rb",
             "/core/data.rb",
             "/core/truffle/queue_operations.rb",

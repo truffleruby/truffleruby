@@ -107,7 +107,7 @@ class BasicSocket < IO
       raise TypeError, 'socket option should be an Integer, String, true, or false'
     end
 
-    Errno.handle('unable to set socket option') if error < 0
+    Errno.handle_ffi('unable to set socket option') if error < 0
 
     0
   end
@@ -158,7 +158,7 @@ class BasicSocket < IO
       n_bytes = Truffle::Socket::Foreign.recv(Primitive.io_fd(self), buf, bytes_to_read, flags)
 
       if n_bytes == -1
-        if !exception and Errno.errno == Truffle::POSIX::EAGAIN_ERRNO
+        if !exception and ::FFI.errno == Truffle::POSIX::EAGAIN_ERRNO
           return :wait_readable
         else
           Truffle::Socket::Error.read_error('recv(2)', self)
@@ -210,7 +210,7 @@ class BasicSocket < IO
         msg_size = Truffle::Socket::Foreign.recvmsg(Primitive.io_fd(self), header.pointer, flags)
 
         if msg_size < 0
-          if !exception and Errno.errno == Truffle::POSIX::EAGAIN_ERRNO
+          if !exception and ::FFI.errno == Truffle::POSIX::EAGAIN_ERRNO
             return :wait_readable
           else
             Truffle::Socket::Error.read_error('recvmsg(2)', self)
@@ -279,7 +279,7 @@ class BasicSocket < IO
       num_bytes = Truffle::Socket::Foreign.sendmsg(Primitive.io_fd(self), header.pointer, flags)
 
       if num_bytes < 0
-        if !exception and Errno.errno == Truffle::POSIX::EAGAIN_ERRNO
+        if !exception and ::FFI.errno == Truffle::POSIX::EAGAIN_ERRNO
           return :wait_writable
         else
           Truffle::Socket::Error.write_error('sendmsg(2)', self)
@@ -337,7 +337,7 @@ class BasicSocket < IO
     how = Truffle::Socket.shutdown_option(how)
     err = Truffle::Socket::Foreign.shutdown(Primitive.io_fd(self), how)
 
-    Errno.handle('shutdown(2)') unless err == 0
+    Errno.handle_ffi('shutdown(2)') unless err == 0
 
     0
   end

@@ -80,7 +80,7 @@ module Truffle
         if Truffle::Interop.number?(object)
           string << " #{Truffle::Interop.unbox(object)}"
         elsif Truffle::Interop.pointer?(object)
-          string << " 0x#{Truffle::Interop.as_pointer(object).to_s(16)}"
+          string << " 0x#{Primitive.interop_as_pointer(object).to_s(16)}"
         else
           string << ":#{hash_code}"
         end
