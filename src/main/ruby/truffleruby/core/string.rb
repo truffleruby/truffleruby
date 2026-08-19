@@ -358,14 +358,15 @@ class String
     str.squeeze!(*strings) || str
   end
 
-  def strip
+  def strip(*strings)
     str = Primitive.dup_as_string_instance(self)
-    str.strip! || str
+    str.strip!(*strings) || str
   end
 
-  def strip!
-    right = rstrip! # Process rstrip! first because it must perform an encoding compatibility check that lstrip! does not.
-    left = lstrip!
+  def strip!(*strings)
+    strings = strings.map { |s| Primitive.convert_with_to_str(s) } unless strings.empty?
+    right = rstrip!(*strings)
+    left = lstrip!(*strings)
     Primitive.nil?(left) && Primitive.nil?(right) ? nil : self
   end
 
