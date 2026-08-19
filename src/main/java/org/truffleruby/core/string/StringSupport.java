@@ -37,9 +37,11 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.AbstractTruffleString;
 import com.oracle.truffle.api.strings.InternalByteArray;
 import com.oracle.truffle.api.strings.TruffleString;
+import com.oracle.truffle.api.strings.TruffleString.CreateBackwardCodePointIteratorNode;
 import com.oracle.truffle.api.strings.TruffleString.CreateCodePointIteratorNode;
 import com.oracle.truffle.api.strings.TruffleString.ErrorHandling;
 import com.oracle.truffle.api.strings.TruffleString.FromByteArrayNode;
+import com.oracle.truffle.api.strings.TruffleStringIterator;
 import org.graalvm.collections.Pair;
 import org.graalvm.shadowed.org.jcodings.Config;
 import org.graalvm.shadowed.org.jcodings.Encoding;
@@ -1331,6 +1333,65 @@ public final class StringSupport {
         }
 
         return false;
+    }
+
+    public static int singleByteRstripEndIndex(InternalByteArray byteArray, boolean[] squeeze) {
+        final int len = byteArray.getLength();
+        if (len == 0) {
+            return -1;
+        }
+
+        final int lastByte = byteArray.get(len - 1) & 0xff;
+        if (squeeze != null ? !squeeze[lastByte] : !isAsciiSpaceOrNull(lastByte)) {
+            return -1;
+        }
+
+        int i = len - 2;
+        while (i >= 0) {
+            final int b = byteArray.get(i) & 0xff;
+            if (squeeze != null ? !squeeze[b] : !isAsciiSpaceOrNull(b)) {
+                return i + 1;
+            }
+            i--;
+        }
+
+        return 0;
+    }
+
+    @TruffleBoundary
+    public static int multiByteRstripEndIndex(AbstractTruffleString tstring, RubyEncoding encoding,
+            boolean[] squeeze, TrTables tables, Node node) {
+        final var tencoding = encoding.tencoding;
+        var iterator = CreateBackwardCodePointIteratorNode.getUncached().execute(tstring, tencoding,
+                ErrorHandling.RETURN_NEGATIVE);
+        int codePoint = TruffleStringIterator.PreviousNode.getUncached().execute(iterator, tencoding);
+
+        if (codePoint == -1) {
+            throw new RaiseException(RubyContext.get(node),
+                    RubyContext.get(node).getCoreExceptions().argumentErrorInvalidByteSequence(encoding, node));
+        }
+
+        boolean matches = squeeze != null ? trFind(codePoint, squeeze, tables) : isAsciiSpaceOrNull(codePoint);
+        if (!matches) {
+            return -1;
+        }
+
+        while (iterator.hasPrevious()) {
+            int byteIndex = iterator.getByteIndex();
+            codePoint = TruffleStringIterator.PreviousNode.getUncached().execute(iterator, tencoding);
+
+            if (codePoint == -1) {
+                throw new RaiseException(RubyContext.get(node),
+                        RubyContext.get(node).getCoreExceptions().argumentErrorInvalidByteSequence(encoding, node));
+            }
+
+            matches = squeeze != null ? trFind(codePoint, squeeze, tables) : isAsciiSpaceOrNull(codePoint);
+            if (!matches) {
+                return byteIndex;
+            }
+        }
+
+        return 0;
     }
 
     // region Case Mapping Methods

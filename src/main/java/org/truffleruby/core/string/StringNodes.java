@@ -1417,80 +1417,107 @@ public abstract class StringNodes {
         }
     }
 
-    @CoreMethod(names = "rstrip!", raiseIfNotMutableSelf = true)
+    @CoreMethod(names = "rstrip!", raiseIfNotMutableSelf = true, rest = true)
     @ImportStatic(StringGuards.class)
     public abstract static class RstripBangNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization(guards = "string.tstring.isEmpty()")
-        Object rstripBangEmptyString(RubyString string) {
+        Object rstripBangEmptyString(RubyString string, Object[] args) {
             return nil;
         }
 
-        @Specialization(guards = "!string.tstring.isEmpty()")
-        static Object rstripBangNonEmptyString(RubyString string,
-                @Cached RubyStringLibrary libString,
-                @Cached TruffleString.CreateBackwardCodePointIteratorNode createBackwardCodePointIteratorNode,
-                @Cached TruffleStringIterator.PreviousNode previousNode,
-                @Cached InlinedBranchProfile allWhitespaceProfile,
-                @Cached InlinedBranchProfile nonSpaceCodePointProfile,
-                @Cached InlinedBranchProfile badCodePointProfile,
-                @Cached TruffleString.SubstringByteIndexNode substringNode,
+        @Specialization(guards = { "!string.tstring.isEmpty()", "noArguments(args)" })
+        static Object rstripZeroArgs(RubyString string, Object[] args,
+                @Cached @Exclusive RubyStringLibrary libString,
+                @Cached @Exclusive SingleByteOptimizableNode singleByteOptimizableNode,
+                @Cached @Shared TruffleString.GetInternalByteArrayNode byteArrayNode,
+                @Cached @Shared TruffleString.SubstringByteIndexNode substringNode,
+                @Cached @Exclusive InlinedConditionProfile singleByteProfile,
                 @Cached @Exclusive InlinedConditionProfile noopProfile,
+                @Cached @Exclusive InlinedConditionProfile emptyStringProfile,
                 @Bind Node node) {
             var tstring = string.tstring;
             var encoding = libString.getEncoding(node, string);
-            var tencoding = encoding.tencoding;
 
-            var iterator = createBackwardCodePointIteratorNode.execute(tstring, tencoding,
-                    ErrorHandling.RETURN_NEGATIVE);
-            int codePoint = previousNode.execute(iterator, tencoding);
-
-            // Check the last code point to see if it's broken. In the case of strings without trailing spaces,
-            // this check can avoid having to compile the while loop.
-            if (codePoint == -1) {
-                badCodePointProfile.enter(node);
-                throw new RaiseException(getContext(node),
-                        coreExceptions(node).argumentErrorInvalidByteSequence(encoding, node));
+            int endIndex;
+            if (singleByteProfile.profile(node,
+                    StringGuards.isSingleByteOptimizable(node, tstring, encoding, singleByteOptimizableNode))) {
+                var byteArray = byteArrayNode.execute(tstring, encoding.tencoding);
+                endIndex = StringSupport.singleByteRstripEndIndex(byteArray, null);
+            } else {
+                endIndex = StringSupport.multiByteRstripEndIndex(tstring, encoding, null, null, node);
             }
 
-            // Check the last code point to see if it's a space. In the case of strings without trailing spaces,
-            // this check can avoid having to compile the while loop.
-            if (noopProfile.profile(node, !StringSupport.isAsciiSpaceOrNull(codePoint))) {
+            return trimTrailing(node, string, tstring, encoding.tencoding, endIndex, substringNode,
+                    noopProfile, emptyStringProfile);
+        }
+
+        @Specialization(guards = { "!string.tstring.isEmpty()", "!noArguments(args)" })
+        static Object rstripWithSelectors(RubyString string, Object[] args,
+                @Cached @Exclusive RubyStringLibrary libString,
+                @Cached @Exclusive SingleByteOptimizableNode singleByteOptimizableNode,
+                @Cached @Shared TruffleString.GetInternalByteArrayNode byteArrayNode,
+                @Cached @Shared TruffleString.SubstringByteIndexNode substringNode,
+                @Cached @Exclusive ToStrNode toStrNode,
+                @Cached @Exclusive CheckStringEncodingNode checkEncodingNode,
+                @Cached @Exclusive InlinedConditionProfile singleByteProfile,
+                @Cached @Exclusive InlinedConditionProfile noopProfile,
+                @Cached @Exclusive InlinedConditionProfile emptyStringProfile,
+                @Bind Node node) {
+            var tstring = string.tstring;
+            var encoding = libString.getEncoding(node, string);
+
+            var squeeze = new boolean[StringSupport.TRANS_SIZE + 1];
+            StringSupport.TrTables tables = setupTables(node, args, tstring, encoding, squeeze, libString,
+                    toStrNode, checkEncodingNode);
+
+            int endIndex;
+            if (singleByteProfile.profile(node,
+                    StringGuards.isSingleByteOptimizable(node, tstring, encoding, singleByteOptimizableNode))) {
+                var byteArray = byteArrayNode.execute(tstring, encoding.tencoding);
+                endIndex = StringSupport.singleByteRstripEndIndex(byteArray, squeeze);
+            } else {
+                endIndex = StringSupport.multiByteRstripEndIndex(tstring, encoding, squeeze, tables, node);
+            }
+
+            return trimTrailing(node, string, tstring, encoding.tencoding, endIndex, substringNode,
+                    noopProfile, emptyStringProfile);
+        }
+
+        // Trims trailing characters from the string up to endIndex.
+        private static Object trimTrailing(Node node, RubyString string, AbstractTruffleString tstring,
+                TruffleString.Encoding tencoding, int endIndex,
+                TruffleString.SubstringByteIndexNode substringNode,
+                InlinedConditionProfile noopProfile,
+                InlinedConditionProfile emptyStringProfile) {
+            if (noopProfile.profile(node, endIndex == -1)) {
                 return nil;
             }
 
-            while (iterator.hasPrevious()) {
-                int byteIndex = iterator.getByteIndex();
-                codePoint = previousNode.execute(iterator, tencoding);
-
-                if (codePoint == -1) {
-                    badCodePointProfile.enter(node);
-                    throw new RaiseException(getContext(node),
-                            coreExceptions(node).argumentErrorInvalidByteSequence(encoding, node));
-                }
-
-                if (!StringSupport.isAsciiSpaceOrNull(codePoint)) {
-                    nonSpaceCodePointProfile.enter(node);
-                    string.setTString(makeSubstring(substringNode, tstring, tencoding, byteIndex));
-
-                    return string;
-                }
+            if (emptyStringProfile.profile(node, endIndex == 0)) {
+                string.setTString(tencoding.getEmpty());
+            } else {
+                string.setTString(substringNode.execute(tstring, 0, endIndex, tencoding, true));
             }
-
-            // If we've made it this far, the string must consist only of whitespace. Otherwise, we would have exited
-            // early in the first code point check or in the iterator when the first non-space character was encountered.
-            allWhitespaceProfile.enter(node);
-            string.setTString(tencoding.getEmpty());
-
             return string;
         }
 
-        private static AbstractTruffleString makeSubstring(TruffleString.SubstringByteIndexNode substringNode,
-                AbstractTruffleString base, TruffleString.Encoding encoding,
-                int byteEnd) {
-            return substringNode.execute(base, 0, byteEnd, encoding, true);
-        }
+    }
 
+    // Builds the character lookup tables and squeeze flags for selector arguments after validating encoding compatibility.
+    private static StringSupport.TrTables setupTables(Node node, Object[] args,
+            AbstractTruffleString tstring, RubyEncoding encoding, boolean[] squeeze,
+            RubyStringLibrary libString, ToStrNode toStrNode, CheckStringEncodingNode checkEncodingNode) {
+        StringSupport.TrTables tables = null;
+        for (int i = 0; i < args.length; i++) {
+            Object arg = toStrNode.execute(node, args[i]);
+            var argTString = libString.getTString(node, arg);
+            var argEncoding = libString.getEncoding(node, arg);
+            var negotiatedEncoding = checkEncodingNode.execute(node, tstring, encoding, argTString, argEncoding);
+            tables = StringSupport.trSetupTable(argTString, argEncoding, squeeze, tables, i == 0,
+                    negotiatedEncoding.jcoding, node);
+        }
+        return tables;
     }
 
     @CoreMethod(names = "dump")

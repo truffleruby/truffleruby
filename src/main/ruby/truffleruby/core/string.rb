@@ -307,9 +307,9 @@ class String
     [empty, empty.dup, Primitive.dup_as_string_instance(self)]
   end
 
-  def rstrip
+  def rstrip(*strings)
     str = Primitive.dup_as_string_instance(self)
-    str.rstrip! || str
+    str.rstrip!(*strings) || str
   end
 
   def scan(pattern, &block)
