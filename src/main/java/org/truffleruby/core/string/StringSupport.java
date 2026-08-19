@@ -1394,6 +1394,65 @@ public final class StringSupport {
         return 0;
     }
 
+    public static int singleByteLstripStartIndex(InternalByteArray byteArray, boolean[] squeeze) {
+        final int len = byteArray.getLength();
+        if (len == 0) {
+            return -1;
+        }
+
+        final int firstByte = byteArray.get(0) & 0xff;
+        if (squeeze != null ? !squeeze[firstByte] : !isAsciiSpaceOrNull(firstByte)) {
+            return -1;
+        }
+
+        int i = 1;
+        while (i < len) {
+            final int b = byteArray.get(i) & 0xff;
+            if (squeeze != null ? !squeeze[b] : !isAsciiSpaceOrNull(b)) {
+                return i;
+            }
+            i++;
+        }
+
+        return len;
+    }
+
+    @TruffleBoundary
+    public static int multiByteLstripStartIndex(AbstractTruffleString tstring, RubyEncoding encoding,
+            boolean[] squeeze, TrTables tables, Node node) {
+        final var tencoding = encoding.tencoding;
+        var iterator = CreateCodePointIteratorNode.getUncached().execute(tstring, tencoding,
+                ErrorHandling.RETURN_NEGATIVE);
+        int codePoint = TruffleStringIterator.NextNode.getUncached().execute(iterator, tencoding);
+
+        if (codePoint == -1) {
+            throw new RaiseException(RubyContext.get(node),
+                    RubyContext.get(node).getCoreExceptions().argumentErrorInvalidByteSequence(encoding, node));
+        }
+
+        boolean matches = squeeze != null ? trFind(codePoint, squeeze, tables) : isAsciiSpaceOrNull(codePoint);
+        if (!matches) {
+            return -1;
+        }
+
+        while (iterator.hasNext()) {
+            int byteIndex = iterator.getByteIndex();
+            codePoint = TruffleStringIterator.NextNode.getUncached().execute(iterator, tencoding);
+
+            if (codePoint == -1) {
+                throw new RaiseException(RubyContext.get(node),
+                        RubyContext.get(node).getCoreExceptions().argumentErrorInvalidByteSequence(encoding, node));
+            }
+
+            matches = squeeze != null ? trFind(codePoint, squeeze, tables) : isAsciiSpaceOrNull(codePoint);
+            if (!matches) {
+                return byteIndex;
+            }
+        }
+
+        return tstring.byteLength(tencoding);
+    }
+
     // region Case Mapping Methods
 
     @TruffleBoundary

@@ -230,9 +230,9 @@ class String
   end
   alias_method :intern, :to_sym
 
-  def lstrip
+  def lstrip(*strings)
     str = Primitive.dup_as_string_instance(self)
-    str.lstrip! || str
+    str.lstrip!(*strings) || str
   end
 
   def oct
