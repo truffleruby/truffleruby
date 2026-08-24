@@ -45,7 +45,7 @@ module Truffle
           if res == 0
             [euid.read_int, egid.read_int]
           else
-            Errno.handle('getpeereid(3)')
+            Errno.handle_ffi('getpeereid(3)')
           end
         ensure
           euid.free

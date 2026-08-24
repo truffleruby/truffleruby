@@ -86,6 +86,13 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         return pointer;
     }
 
+    /** Internal allocation which is not exposed to Ruby code and can be used even if native access is disabled. */
+    public static Pointer callocInternal(long size) {
+        final Pointer pointer = new Pointer(UNSAFE.allocateMemory(size), size);
+        pointer.writeBytes(0, size, (byte) 0);
+        return pointer;
+    }
+
     private final long address;
     private final long size;
     /** Non-null iff autorelease */
@@ -118,6 +125,11 @@ public final class Pointer implements AutoCloseable, TruffleObject {
     private Pointer() {
         this.address = 0L;
         this.size = 0L;
+    }
+
+    private Pointer(long address, long size) {
+        this.address = address;
+        this.size = size;
     }
 
     public Pointer(RubyContext context, long address) {

@@ -29,21 +29,31 @@
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 
 module FFI
   module LastError
+
+    library = Primitive.interop_eval_nfi 'default'
+    function_name = Truffle::Platform.darwin? ? :__error : :__errno_location
+    # It would be tempting to make it return uint64,
+    # but Truffle NFI always returns a pointer on Native Image for this function, regardless of the signature
+    NFI_ERRNO_FUNCTION = Primitive.interop_eval_nfi('():pointer').bind(library[function_name])
+
     # @return [Numeric]
     # Get +errno+ value.
     def error
-      ::Errno.errno
+      nfi_errno_address = Primitive.interop_as_pointer(NFI_ERRNO_FUNCTION.call)
+      Primitive.pointer_read_int(nfi_errno_address)
     end
 
     # @param [Numeric] error
     # @return [nil]
     # Set +errno+ value.
     def error=(error)
-      ::Errno.errno = error
+      nfi_errno_address = Primitive.interop_as_pointer(NFI_ERRNO_FUNCTION.call)
+      Primitive.pointer_write_int(nfi_errno_address, error)
     end
 
     module_function :error, :error=

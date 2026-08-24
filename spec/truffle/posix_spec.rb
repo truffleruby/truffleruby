@@ -12,40 +12,58 @@
 require_relative '../ruby/spec_helper'
 
 describe "Truffle::POSIX" do
-  it "marks a method as unimplemented if the native function is not available on the current platform" do
-    Truffle::POSIX.should.respond_to?(:chdir)
-
-    Truffle::POSIX.attach_function :test_missing_function, [], :int
-
-    Truffle::POSIX.should.respond_to?(:test_missing_function) # not ideal but cannot be fixed while remaining lazy
-    -> { Truffle::POSIX.test_missing_function(0) }.should.raise(NotImplementedError)
-    Truffle::POSIX.should_not.respond_to?(:test_missing_function)
-  end
-end
-
-describe "Truffle::POSIX returns the correct value for an identity function returning" do
-  before :all do
-    src = fixture __FILE__, "libtestnfi.c"
-    lib = src[0...-1] + RbConfig::CONFIG['SOEXT']
-    unless system RbConfig::CONFIG['CC'], "-shared", "-o", lib, src
-      abort "Could not compile libtestnfi"
-    end
-
-    lazy_library = Truffle::POSIX::LazyLibrary.new do
-      Primitive.interop_eval_nfi "load '#{lib}'"
-    end
-
-    @libtestnfi = Module.new do
-      Truffle::POSIX.attach_function :max_ushort, [], :ushort, lazy_library, false, :max_ushort, self
-      Truffle::POSIX.attach_function :max_uint, [], :uint, lazy_library, false, :max_uint, self
-    end
+  it "captures errno from a failed native call" do
+    Errno.errno = 0
+    Truffle::POSIX.chdir("/definitely/not/a/truffleruby/path").should == -1
+    Errno.errno.should == Errno::ENOENT::Errno
   end
 
-  it "the maximum unsigned short" do
-    @libtestnfi.max_ushort.should == 65535
+  it "stores errno on the current Fiber" do
+    Errno.errno = 123
+
+    fiber = Fiber.new do
+      initial = Errno.errno
+      Errno.errno = 456
+      Fiber.yield initial
+      Errno.errno
+    end
+
+    fiber.resume.should == 0
+    Errno.errno.should == 123
+    fiber.resume.should == 456
+    Errno.errno.should == 123
   end
 
-  it "the maximum unsigned int" do
-    @libtestnfi.max_uint.should == 4294967295
+  it "passes the creation mode to open" do
+    path = tmp("truffle_posix_open_mode")
+    mode = File::Constants::WRONLY | File::Constants::CREAT | File::Constants::TRUNC
+    previous_umask = File.umask(0)
+
+    begin
+      fd = Truffle::POSIX.open(path, mode, 0745)
+      fd.should >= 0
+      Truffle::POSIX.close(fd).should == 0
+      fd = nil
+
+      (File.stat(path).mode & 0777).should == 0745
+    ensure
+      Truffle::POSIX.close(fd) if fd && fd >= 0
+      File.umask(previous_umask)
+      rm_r path
+    end
+  end
+
+  it "accepts unsigned int arguments" do
+    skip "would change ownership as root" if Process.uid == 0
+
+    Errno.errno = 0
+    Truffle::POSIX.chown(__FILE__, 1 << 31, Process.gid).should == -1
+    Errno.errno.should_not == 0
+  end
+
+  it "accepts unsigned long arguments" do
+    Errno.errno = 0
+    Truffle::POSIX.ioctl(-1, 1 << 63, Truffle::FFI::Pointer::NULL).should == -1
+    Errno.errno.should_not == 0
   end
 end

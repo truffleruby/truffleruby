@@ -2087,7 +2087,7 @@ module Truffle::CExt
   private def rb_thread_call_without_gvl_inner(function, data1, unblock, data2)
     Primitive.call_with_unblocking_function(Thread.current,
       POINTER_TO_POINTER_WRAPPER, function, data1,
-      Truffle::Interop.as_pointer(unblock), Truffle::Interop.as_pointer(data2))
+      Primitive.interop_as_pointer(unblock), Primitive.interop_as_pointer(data2))
   end
 
   def rb_iterate(iteration, iterated_object, callback, callback_arg)

@@ -34,22 +34,15 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
 */
 
-/* For statx(), clock_gettime(), lstat() and strdup() on Linux */
-#define _GNU_SOURCE 1
-#define _XOPEN_SOURCE 600
-/* For minor()/major() on Linux */
-#define _BSD_SOURCE
-#define _DEFAULT_SOURCE
-/* For flock() on Darwin */
-#define _DARWIN_C_SOURCE 1
-
 #include "ruby/config.h"
 
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <grp.h>
 #include <poll.h>
 #include <pwd.h>
+#include <signal.h>
 #include <spawn.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -60,6 +53,8 @@ SUCH DAMAGE.
 #include <utime.h>
 
 #include <sys/file.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -69,6 +64,10 @@ SUCH DAMAGE.
 /* For minor()/major() on Linux */
 #ifdef __linux__
 #include <sys/sysmacros.h>
+#endif
+
+#ifdef HAVE_CRYPT_H
+#include <crypt.h>
 #endif
 
 // Birthtime is not supported by the standard POSIX stat(2) system call (or similar POSIX functions).
@@ -598,6 +597,20 @@ int64_t truffleposix_clock_getres(int clock) {
   return ((int64_t) timespec.tv_sec * 1000000000) + (int64_t) timespec.tv_nsec;
 }
 
+// Add helper functions for these 3 variadic C calls to simplify logic significantly
+
+int truffleposix_fcntl(int fd, int command, int argument) {
+  return fcntl(fd, command, argument);
+}
+
+int truffleposix_ioctl(int fd, unsigned long command, void* argument) {
+  return ioctl(fd, command, argument);
+}
+
+int truffleposix_open(char* path, int flags, mode_t mode) {
+  return open(path, flags, mode);
+}
+
 #define CHECK(call, label) if ((error = call) != 0) { perror(#call); goto label; }
 
 pid_t truffleposix_posix_spawn(const char *command, char *const argv[], char *const envp[],
@@ -670,3 +683,6 @@ end:
     return -ret;
   }
 }
+
+/* Keep the generated errno wrappers in this translation unit so truffleposix_* helpers can be inlined. */
+#include "../posix_errno_wrappers.c.inc"

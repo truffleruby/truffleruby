@@ -52,7 +52,7 @@ class TCPServer < TCPSocket
       if status < 0
         Truffle::Socket::Foreign.close(descriptor)
 
-        Errno.handle('bind(2)')
+        Errno.handle_ffi('bind(2)')
       else
         break
       end

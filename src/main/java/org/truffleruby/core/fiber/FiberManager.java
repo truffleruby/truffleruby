@@ -29,6 +29,7 @@ import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.thread.ThreadManager;
 import org.truffleruby.core.thread.ThreadManager.BlockingAction;
 import org.truffleruby.core.thread.ThreadNodes.ThreadRaisePrimitiveNode;
+import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.language.SafepointAction;
 import org.truffleruby.language.arguments.ArgumentsDescriptor;
 import org.truffleruby.language.arguments.NoKeywordArgumentsDescriptor;
@@ -339,6 +340,9 @@ public final class FiberManager {
             // fiber.thread set by createThreadToReceiveFirstMessage()
         }
 
+        fiber.posixErrnoPointer = Pointer.callocInternal(Integer.BYTES);
+        fiber.posixErrnoAddress = fiber.posixErrnoPointer.getAddress();
+
         final RubyThread rubyThread = fiber.rubyThread;
 
         // The RubyFiber has been shared in RubyFiber#initialize,
@@ -350,6 +354,10 @@ public final class FiberManager {
 
     public void cleanup(RubyFiber fiber, Thread javaThread) {
         context.getValueWrapperManager().cleanup(fiber.handleData);
+
+        fiber.posixErrnoPointer.freeNoAutorelease();
+        fiber.posixErrnoPointer = null;
+        fiber.posixErrnoAddress = 0;
 
         fiber.status = FiberStatus.TERMINATED;
 

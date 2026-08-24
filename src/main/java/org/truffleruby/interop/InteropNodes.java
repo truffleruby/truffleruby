@@ -163,6 +163,21 @@ public abstract class InteropNodes {
         }
     }
 
+    @Primitive(name = "interop_as_pointer")
+    public abstract static class InteropAsPointerNode extends PrimitiveArrayArgumentsNode {
+        @Specialization(limit = "getInteropCacheLimit()")
+        static long asPointer(Object receiver,
+                @CachedLibrary("receiver") InteropLibrary receivers,
+                @Cached TranslateInteropExceptionNode translateInteropException,
+                @Bind Node node) {
+            try {
+                return receivers.asPointer(receiver);
+            } catch (InteropException e) {
+                throw translateInteropException.execute(node, e);
+            }
+        }
+    }
+
     @Primitive(name = "dispatch_missing")
     public abstract static class DispatchMissingNode extends PrimitiveArrayArgumentsNode {
 

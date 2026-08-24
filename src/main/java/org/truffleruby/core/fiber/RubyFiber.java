@@ -34,6 +34,7 @@ import org.truffleruby.core.exception.RubyException;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.thread.RubyThread;
+import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyDynamicObject;
 import org.truffleruby.language.control.KillException;
@@ -86,7 +87,7 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
     public Object fiberStorage = nil;
     public final RubyArray catchTags;
     public final CountDownLatch initializedLatch = new CountDownLatch(1);
-    final BlockingQueue<FiberManager.FiberMessage> messageQueue = newMessageQueue();
+    final BlockingQueue<FiberManager.FiberMessage> messageQueue = new LinkedBlockingQueue<>();
     public final RubyThread rubyThread;
     // @formatter:off
     /*
@@ -113,8 +114,11 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
     /** Always false when not inside a C ext Init_ function */
     public boolean threadSafeExtension = false;
 
+    public Pointer posixErrnoPointer = null;
+    public long posixErrnoAddress = 0;
+
     // Last-used cache per thread for the threadState for LightweightLayoutLock's
-    private final WeakHashMap<LightweightLayoutLock, AtomicInteger> layoutLockStates = newWeakHashMap();
+    private final WeakHashMap<LightweightLayoutLock, AtomicInteger> layoutLockStates = new WeakHashMap<>();
 
     private LightweightLayoutLock lastLayoutLock = null;
     private AtomicInteger lastThreadState = null;
@@ -124,6 +128,7 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
     RubyFiber returnFiber;
     FiberManager.FiberMessage lastMessage;
 
+    @TruffleBoundary
     public RubyFiber(
             RubyClass rubyClass,
             Shape shape,
@@ -174,11 +179,6 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
         status = FiberStatus.CREATED;
     }
 
-    @TruffleBoundary
-    private static LinkedBlockingQueue<FiberManager.FiberMessage> newMessageQueue() {
-        return new LinkedBlockingQueue<>();
-    }
-
     @Override
     public void getAdjacentObjects(Set<Object> reachable) {
         reachable.add(fiberLocals);
@@ -217,11 +217,6 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
         lastLayoutLock = lock;
         lastThreadState = threadState;
         return threadState;
-    }
-
-    @TruffleBoundary
-    private static WeakHashMap<LightweightLayoutLock, AtomicInteger> newWeakHashMap() {
-        return new WeakHashMap<>();
     }
 
 }

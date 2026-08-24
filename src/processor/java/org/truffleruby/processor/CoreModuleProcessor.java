@@ -27,6 +27,8 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.tools.FileObject;
@@ -470,10 +472,28 @@ public class CoreModuleProcessor extends TruffleRubyProcessor {
 
             }
 
-            klassIt = processingEnv.getElementUtils().getTypeElement(klassIt.getSuperclass().toString());
+            klassIt = getSuperclassTypeElement(klassIt);
+            if (klassIt == null) {
+                error("could not find superclass", klass);
+                break;
+            }
         }
 
         return argumentNames;
+    }
+
+    public TypeElement getSuperclassTypeElement(TypeElement typeElement) {
+        TypeMirror superclass = typeElement.getSuperclass();
+        if (superclass.getKind() == TypeKind.NONE) {
+            return null;
+        }
+
+        Element superclassElement = ((DeclaredType) superclass).asElement();
+        if (superclassElement instanceof TypeElement) {
+            return (TypeElement) superclassElement;
+        } else {
+            return null;
+        }
     }
 
     public boolean isNodeBaseType(TypeElement typeElement) {

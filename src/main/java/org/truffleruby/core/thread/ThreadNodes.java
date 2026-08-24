@@ -588,30 +588,6 @@ public abstract class ThreadNodes {
 
     }
 
-    @Primitive(name = "thread_set_status")
-    public abstract static class ThreadSetStatusPrimitiveNode extends PrimitiveArrayArgumentsNode {
-
-        @Specialization
-        Object threadSetStatus(RubyThread thread, RubySymbol status) {
-            ThreadStatus previous = thread.status;
-
-            if (status == coreSymbols().RUN) {
-                thread.status = ThreadStatus.RUN;
-            } else if (status == coreSymbols().SLEEP) {
-                thread.status = ThreadStatus.SLEEP;
-            } else if (status == coreSymbols().ABORTING) {
-                thread.status = ThreadStatus.ABORTING;
-            } else if (status == coreSymbols().DEAD) {
-                thread.status = ThreadStatus.DEAD;
-            } else {
-                CompilerDirectives.transferToInterpreterAndInvalidate();
-                throw CompilerDirectives.shouldNotReachHere("Unknown thread status: " + status.getString());
-            }
-
-            return threadStatusToRubySymbol(previous, coreSymbols());
-        }
-    }
-
     @CoreMethod(names = "native_thread_id")
     public abstract static class NativeThreadIdNode extends CoreMethodArrayArgumentsNode {
 

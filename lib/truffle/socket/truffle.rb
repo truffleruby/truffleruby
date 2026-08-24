@@ -107,7 +107,7 @@ module Truffle
         end
 
         if fd < 0
-          if !exception and Errno.errno == Truffle::POSIX::EAGAIN_ERRNO
+          if !exception and ::FFI.errno == Truffle::POSIX::EAGAIN_ERRNO
             return :wait_readable
           else
             Error.read_error('accept(2)', source)
@@ -129,8 +129,9 @@ module Truffle
       raise IOError, 'socket has been closed' if source.closed?
 
       fd = Truffle::Socket::Foreign.accept(source.fileno, ::FFI::Pointer::NULL, ::FFI::Pointer::NULL)
+
       if fd < 0
-        if !exception and Errno.errno == Truffle::POSIX::EAGAIN_ERRNO
+        if !exception and ::FFI.errno == Truffle::POSIX::EAGAIN_ERRNO
           return :wait_readable
         else
           Error.read_error('accept(2)', source)

@@ -35,7 +35,7 @@ class UDPSocket < IPSocket
     descriptor = Truffle::Socket::Foreign
       .socket(@family, Socket::SOCK_DGRAM, Socket::IPPROTO_UDP)
 
-    Errno.handle('socket(2)') if descriptor < 0
+    Errno.handle_ffi('socket(2)') if descriptor < 0
 
     setup(descriptor, nil, true)
     binmode
@@ -46,7 +46,7 @@ class UDPSocket < IPSocket
         host, port.to_i, @family, Socket::SOCK_DGRAM, 0)
     status = Truffle::Socket::Foreign.bind(Primitive.io_fd(self), addr)
 
-    Errno.handle('bind(2)') if status < 0
+    Errno.handle_ffi('bind(2)') if status < 0
 
     0
   end

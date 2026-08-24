@@ -145,19 +145,19 @@ class IO::Buffer
     raise ArgumentError, 'Invalid negative or zero file size!' if size <= 0
     raise ArgumentError, 'Offset too large!' if offset + size > file_size
 
-    pointer = Truffle::POSIX.mmap(nil, size, read_only ? PROT_READ : PROT_WRITE, private ? MAP_PRIVATE : MAP_SHARED, fd, offset)
+    pointer = Truffle::POSIX.mmap(Truffle::FFI::Pointer::NULL, size, read_only ? PROT_READ : PROT_WRITE, private ? MAP_PRIVATE : MAP_SHARED, fd, offset)
     address = pointer.address
     Errno.handle if address <= 0
 
     string = Truffle::CExt.rb_tr_static_native_string(address, size, Encoding::BINARY)
-    ObjectSpace.define_finalizer(string, map_finalizer(address, size))
+    ObjectSpace.define_finalizer(string, map_finalizer(pointer, size))
 
     new(string, flags)
   end
 
-  private_class_method def self.map_finalizer(address, size)
+  private_class_method def self.map_finalizer(pointer, size)
     -> _id do
-      Truffle::POSIX.munmap(address, size)
+      Truffle::POSIX.munmap(pointer, size)
     end
   end
 

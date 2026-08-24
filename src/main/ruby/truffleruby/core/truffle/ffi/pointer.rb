@@ -51,7 +51,7 @@ module Truffle::FFI
     def initialize(type = nil, address)
       if Truffle::Interop.pointer?(address)
         @parent = address # keep the original pointer alive
-        address = Truffle::Interop.as_pointer(address)
+        address = Primitive.interop_as_pointer(address)
       end
       self.address = address
 
@@ -152,8 +152,9 @@ module Truffle::FFI
     end
 
     def put_string(offset, str)
-      put_bytes(offset, str)
-      put_char(offset + str.bytesize, 0)
+      check_bounds(offset, str.bytesize + 1)
+      Primitive.pointer_write_string address + offset, str
+      self
     end
 
     def get_array_of_string(offset, count = nil)

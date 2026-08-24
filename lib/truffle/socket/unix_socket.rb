@@ -47,7 +47,7 @@ class UNIXSocket < BasicSocket
 
     fd = Truffle::Socket::Foreign.socket(Socket::AF_UNIX, Socket::SOCK_STREAM, 0)
 
-    Errno.handle('socket(2)') if fd < 0
+    Errno.handle_ffi('socket(2)') if fd < 0
 
     setup(fd, 'r+', true)
     binmode
@@ -55,13 +55,13 @@ class UNIXSocket < BasicSocket
     sockaddr = Socket.sockaddr_un(Truffle::Type.check_null_safe(path))
     status   = Truffle::Socket::Foreign.connect(Primitive.io_fd(self), sockaddr)
 
-    Errno.handle('connect(2)') if status < 0
+    Errno.handle_ffi('connect(2)') if status < 0
   end
 
   def recvfrom(bytes_read, flags = 0, buffer = nil)
     Truffle::Socket::Foreign.memory_pointer(bytes_read) do |buf|
       n_bytes = Truffle::Socket::Foreign.recvfrom(Primitive.io_fd(self), buf, bytes_read, flags, nil, nil)
-      Errno.handle('recvfrom(2)') if n_bytes == -1
+      Errno.handle_ffi('recvfrom(2)') if n_bytes == -1
 
       message = buf.read_string(n_bytes)
 

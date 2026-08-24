@@ -10,8 +10,6 @@
  */
 package org.truffleruby.extra.ffi;
 
-import java.math.BigInteger;
-
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
@@ -52,8 +50,6 @@ import org.truffleruby.language.objects.WriteObjectFieldNode;
 
 @CoreModule(value = "Truffle::FFI::Pointer", isClass = true)
 public abstract class PointerNodes {
-
-    public static final BigInteger TWO_POW_64 = BigInteger.valueOf(1).shiftLeft(64);
 
     @GenerateInline
     @GenerateCached(false)
@@ -357,6 +353,29 @@ public abstract class PointerNodes {
 
                 copyToNativeMemoryNode.execute(tstring, index, ptr, 0, length, encoding);
             }
+
+            return string;
+        }
+
+    }
+
+    @Primitive(name = "pointer_write_string")
+    public abstract static class PointerWriteStringNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        static Object writeString(long address, Object string,
+                @Cached TruffleString.CopyToNativeMemoryNode copyToNativeMemoryNode,
+                @Cached RubyStringLibrary libString,
+                @Cached CheckNullPointerNode checkNullPointerNode,
+                @Bind Node node) {
+            Pointer ptr = new Pointer(getContext(node), address);
+            checkNullPointerNode.execute(node, ptr);
+
+            var tstring = libString.getTString(node, string);
+            var encoding = libString.getTEncoding(node, string);
+            int length = tstring.byteLength(encoding);
+            copyToNativeMemoryNode.execute(tstring, 0, ptr, 0, length, encoding);
+            ptr.writeByte(length, (byte) 0);
 
             return string;
         }
@@ -680,17 +699,8 @@ public abstract class PointerNodes {
                 @Cached @Shared CheckNullPointerNode checkNullPointerNode) {
             final Pointer ptr = new Pointer(getContext(), address);
             checkNullPointerNode.execute(this, ptr);
-            writeUnsignedLong(ptr, 0, value);
+            ptr.writeLong(0, value.toUnsignedLong());
             return nil;
-        }
-
-        @TruffleBoundary
-        private static void writeUnsignedLong(Pointer ptr, int offset, RubyBignum value) {
-            BigInteger v = value.value;
-            assert v.signum() >= 0;
-            assert v.compareTo(TWO_POW_64) < 0;
-            BigInteger signed = v.subtract(TWO_POW_64);
-            ptr.writeLong(offset, signed.longValueExact());
         }
 
     }

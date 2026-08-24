@@ -4,7 +4,6 @@ New features:
 
 * Updated to Ruby 4.0.2 (#4231, @eregon).
 * Updated to GraalVM 25.2.4 (#4363, @eregon).
-* TruffleRuby Native now uses the better G1 garbage collector also on macOS (@eregon).
 * Implemented `{Proc,Method,UnboundMethod,Thread::Backtrace::Location}#source_range` from Ruby 4.1 (@eregon).
 * Implemented `{Proc,Method,UnboundMethod,Thread::Backtrace::Location}#syntax_tree` from Ruby 4.1 (@eregon).
 
@@ -68,6 +67,8 @@ Compatibility:
 
 Performance:
 
+* POSIX native calls from the core library now use the optimized Foreign Function and Memory API, which reduces the overhead from ~100ns to ~12ns per call (#4412, @eregon).
+* TruffleRuby Native now uses the better G1 garbage collector also on macOS (@eregon).
 * Convert to a `MutableTruffleString` and write inplace for `String#bytesplice` when writing the same number of bytes as the value (#2336, #2599, @eregon).
 * Migrate to `DynamicObject` nodes, which are faster in interpreter and use less memory than `DynamicObjectLibrary`.
 * Add `Array#find` and `Array#detect` as faster overrides of `Enumerable#find` (#4231, @komarovb).
