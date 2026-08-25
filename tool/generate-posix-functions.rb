@@ -31,7 +31,6 @@ ruby_file = 'src/main/ruby/truffleruby/core/posix_functions.rb'
 c_file = 'src/main/c/truffleposix/posix_errno_wrappers.c.inc'
 
 C_NATIVE_GUARDS = {
-  'crypt' => 'HAVE_CRYPT',
   'dup3' => 'HAVE_DUP3',
   'posix_fadvise' => 'HAVE_POSIX_FADVISE',
   'setresgid' => 'HAVE_SETRESGID',

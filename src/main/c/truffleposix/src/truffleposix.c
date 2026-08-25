@@ -66,9 +66,13 @@ SUCH DAMAGE.
 #include <sys/sysmacros.h>
 #endif
 
-#ifdef HAVE_CRYPT_H
-#include <crypt.h>
-#endif
+// Declare it instead of including libcrypt.h, since that's not available in Ubuntu 26.04 by default.
+// Critically, do not link to libcrypt, since they are not ABI compatible between Linux-es,
+// for example Ubuntu 26.04 has libcrypt.so.1.1.0 and Fedora 43 has libcrypt.so.2.0.0.
+// So this is basically the same as dlsym(RTLD_DEFAULT, "crypt")
+// or IOW calling crypt() directly with FFI, without a C wrapper,
+// which is what we did before and worked fine.
+char* crypt(const char *phrase, const char *setting);
 
 // Birthtime is not supported by the standard POSIX stat(2) system call (or similar POSIX functions).
 // On Darwin, it is returned by stat(2) (along with other additional struct members)

@@ -651,13 +651,11 @@ int tpe_unsetenv_native(int* errno_ptr, char* a) {
   return result;
 }
 
-#ifdef HAVE_CRYPT
 char* tpe_crypt(int* errno_ptr, char* a, char* b) {
   char* result = crypt(a, b);
   *errno_ptr = errno;
   return result;
 }
-#endif
 
 void* tpe_truffleposix_get_current_user_home(int* errno_ptr) {
   void* result = truffleposix_get_current_user_home();
