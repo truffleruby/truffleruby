@@ -652,7 +652,7 @@ int tpe_unsetenv_native(int* errno_ptr, char* a) {
 }
 
 char* tpe_crypt(int* errno_ptr, char* a, char* b) {
-  char* result = crypt(a, b);
+  char* result = truffleposix_crypt(a, b);
   *errno_ptr = errno;
   return result;
 }

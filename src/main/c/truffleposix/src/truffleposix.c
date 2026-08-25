@@ -37,10 +37,12 @@ SUCH DAMAGE.
 #include "ruby/config.h"
 
 #include <dirent.h>
+#include <dlfcn.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
 #include <poll.h>
+#include <pthread.h>
 #include <pwd.h>
 #include <signal.h>
 #include <spawn.h>
@@ -66,13 +68,41 @@ SUCH DAMAGE.
 #include <sys/sysmacros.h>
 #endif
 
-// Declare it instead of including libcrypt.h, since that's not available in Ubuntu 26.04 by default.
-// Critically, do not link to libcrypt, since they are not ABI compatible between Linux-es,
-// for example Ubuntu 26.04 has libcrypt.so.1.1.0 and Fedora 43 has libcrypt.so.2.0.0.
-// So this is basically the same as dlsym(RTLD_DEFAULT, "crypt")
-// or IOW calling crypt() directly with FFI, without a C wrapper,
-// which is what we did before and worked fine.
-char* crypt(const char *phrase, const char *setting);
+// Load libcrypt dynamically rather than linking at build time,
+// since libcrypt is not SONAME-compatible between Linux-es:
+// Ubuntu 26.04 has libcrypt.so.1.1.0 and Fedora 43 has libcrypt.so.2.0.0.
+typedef char* (*crypt_function)(const char *phrase, const char *setting);
+
+static pthread_once_t crypt_once = PTHREAD_ONCE_INIT;
+static crypt_function crypt_impl;
+
+static void truffleposix_resolve_crypt(void) {
+#ifdef __linux__
+  void *handle = dlopen("libcrypt.so", RTLD_LAZY | RTLD_LOCAL);
+  if (handle == NULL) {
+    handle = dlopen("libcrypt.so.2", RTLD_LAZY | RTLD_LOCAL);
+  }
+  if (handle == NULL) {
+    handle = dlopen("libcrypt.so.1", RTLD_LAZY | RTLD_LOCAL);
+  }
+#else
+  void *handle = RTLD_DEFAULT;
+#endif
+
+  if (handle != NULL) {
+    crypt_impl = (crypt_function) dlsym(handle, "crypt");
+  }
+}
+
+char* truffleposix_crypt(const char *phrase, const char *setting) {
+  pthread_once(&crypt_once, truffleposix_resolve_crypt);
+  if (crypt_impl == NULL) {
+    errno = ENOSYS;
+    return NULL;
+  }
+
+  return crypt_impl(phrase, setting);
+}
 
 // Birthtime is not supported by the standard POSIX stat(2) system call (or similar POSIX functions).
 // On Darwin, it is returned by stat(2) (along with other additional struct members)

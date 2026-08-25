@@ -169,7 +169,7 @@ attach_function :setenv, [:string, :string, :int], :int, method_name: :setenv_na
 attach_function :unsetenv, [:string], :int, method_name: :unsetenv_native
 
 # Other routines
-attach_function :crypt, [:string, :string], :string
+attach_function :truffleposix_crypt, [:string, :string], :string, method_name: :crypt
 attach_function :truffleposix_get_current_user_home, [], :pointer
 attach_function :truffleposix_get_user_home, [:string], :pointer
 attach_function :truffleposix_free, [:pointer], :void
