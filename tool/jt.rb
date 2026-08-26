@@ -2615,12 +2615,12 @@ module Commands
     rubies_dir = chruby_versions if File.directory?(chruby_versions)
 
     if rubies_dir
-      # Delete broken links
+      # Delete broken links for all truffleruby builds
       Dir.glob(rubies_dir + '/truffleruby-*').each do |link|
         next unless File.symlink?(link)
         next if File.exist?(link)
         target = File.readlink(link)
-        next unless target.start_with?("#{TRUFFLERUBY_DIR}/mxbuild")
+        next unless target.include?('/mxbuild/truffleruby-')
         puts "Deleting broken link: #{link} -> #{target}"
         File.delete link
       end
