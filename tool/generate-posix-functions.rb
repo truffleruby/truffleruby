@@ -31,7 +31,6 @@ ruby_file = 'src/main/ruby/truffleruby/core/posix_functions.rb'
 c_file = 'src/main/c/truffleposix/posix_errno_wrappers.c.inc'
 
 C_NATIVE_GUARDS = {
-  'crypt' => 'HAVE_CRYPT',
   'dup3' => 'HAVE_DUP3',
   'posix_fadvise' => 'HAVE_POSIX_FADVISE',
   'setresgid' => 'HAVE_SETRESGID',
@@ -170,7 +169,7 @@ attach_function :setenv, [:string, :string, :int], :int, method_name: :setenv_na
 attach_function :unsetenv, [:string], :int, method_name: :unsetenv_native
 
 # Other routines
-attach_function :crypt, [:string, :string], :string
+attach_function :truffleposix_crypt, [:string, :string], :string, method_name: :crypt
 attach_function :truffleposix_get_current_user_home, [], :pointer
 attach_function :truffleposix_get_user_home, [:string], :pointer
 attach_function :truffleposix_free, [:pointer], :void

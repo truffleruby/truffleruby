@@ -228,7 +228,7 @@ suite = {
             "ldflags": ["-pthread"],
             "os": {
                 "linux": {
-                    "ldlibs": ["-lrt", "-lcrypt"],
+                    "ldlibs": ["-lrt", "-ldl"],
                 },
                 "<others>": {
                 },

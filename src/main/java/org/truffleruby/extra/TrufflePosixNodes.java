@@ -110,14 +110,8 @@ public abstract class TrufflePosixNodes {
                     context.getCoreExceptions().runtimeError("loading library while pre-initializing", currentNode));
         }
 
-        long address;
-        try {
-            address = lookupLibtruffleposix(language).find(nativeName.getString()).map(MemorySegment::address)
-                    .orElse(0L);
-        } catch (UnsatisfiedLinkError | IllegalArgumentException e) {
-            address = 0;
-        }
-
+        var libtruffleposix = lookupLibtruffleposix(language);
+        long address = libtruffleposix.find(nativeName.getString()).map(MemorySegment::address).orElse(0L);
         if (address == 0) {
             return Nil.INSTANCE;
         }
