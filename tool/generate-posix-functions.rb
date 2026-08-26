@@ -38,7 +38,7 @@ C_NATIVE_GUARDS = {
   'setruid' => 'HAVE_SETRUID',
 }.freeze
 
-Function = Struct.new(:native_name, :argument_types, :return_type, :blocking, :method_name, :guard, :retry_eintr)
+Function = Struct.new(:native_name, :argument_types, :return_type, :blocking, :method_name, :retry_eintr)
 
 FUNCTIONS = []
 
@@ -46,10 +46,10 @@ def native_type_name(type)
   type.to_s
 end
 
-def attach_function(native_name, argument_types, return_type, blocking: false, method_name: native_name, guard: nil,
+def attach_function(native_name, argument_types, return_type, blocking: false, method_name: native_name,
                     retry_eintr: blocking)
   FUNCTIONS << Function.new(native_name.to_s, argument_types.map { |type| native_type_name(type) },
-                            native_type_name(return_type), blocking, method_name.to_s, guard, retry_eintr)
+                            native_type_name(return_type), blocking, method_name.to_s, retry_eintr)
 end
 
 # Filesystem-related
@@ -64,6 +64,7 @@ attach_function :closedir, [:pointer], :int
 attach_function :dirfd, [:pointer], :int
 attach_function :dup, [:int], :int
 attach_function :dup2, [:int, :int], :int
+attach_function :dup3, [:int, :int, :int], :int
 attach_function :fchdir, [:int], :int
 attach_function :fchmod, [:int, :mode_t], :int
 attach_function :fchown, [:int, :uid_t, :gid_t], :int
@@ -121,8 +122,10 @@ attach_function :write, [:int, :pointer, :size_t], :ssize_t, blocking: true
 attach_function :pwrite, [:int, :pointer, :size_t, :off_t], :ssize_t, blocking: true
 
 # retry_eintr=false for both poll because the timeout needs to be decreased on EINTR.
-attach_function :poll, [:pointer, :nfds_t, :int], :int, blocking: true, method_name: :poll_blocking_no_retry, guard: :native_boot, retry_eintr: false
-attach_function :truffleposix_poll_single_fd, [:int, :int, :int], :int, blocking: true, method_name: :poll_single_fd_blocking_no_retry, guard: :native_boot, retry_eintr: false
+attach_function :poll, [:pointer, :nfds_t, :int], :int, blocking: true,
+                method_name: :poll_blocking_no_retry, retry_eintr: false
+attach_function :truffleposix_poll_single_fd, [:int, :int, :int], :int, blocking: true,
+                method_name: :poll_single_fd_blocking_no_retry, retry_eintr: false
 
 # Process-related
 attach_function :getegid, [], :gid_t
@@ -177,9 +180,6 @@ attach_function :truffleposix_page_size, [], :long
 
 # For benchmarking
 attach_function :labs, [:long], :long
-
-# Platform-specific
-attach_function :dup3, [:int, :int, :int], :int, guard: :not_darwin
 
 SIMPLE_NATIVE_TYPES = {
   'bool' => 'B',
@@ -569,8 +569,6 @@ def generated_function(function, platform, indent)
 end
 
 def shared_function?(function)
-  return false if function.guard == :not_darwin
-
   GENERATED_PLATFORMS.map { |platform| primitive_name_for_platform(function, platform) }.uniq.size == 1
 end
 
@@ -579,9 +577,7 @@ def generated_shared_function(function, indent)
 end
 
 def emit_platform_methods(code, platform)
-  functions = FUNCTIONS.reject do |function|
-    shared_function?(function) || platform == 'darwin' && function.guard == :not_darwin
-  end
+  functions = FUNCTIONS.reject { |function| shared_function?(function) }
 
   functions.each do |function|
     code << generated_function(function, platform, '    ')
@@ -621,21 +617,6 @@ def generated_c_wrapper(function)
   lines << '}'
   lines << "#endif" if guard
   lines.join("\n")
-end
-
-def emit_function_calls(code, indent)
-  FUNCTIONS.each do |function|
-    case function.guard
-    when :not_darwin
-      code << "#{indent}unless Truffle::Platform.darwin?\n"
-      code << yield(function, "#{indent}  ")
-      code << "\n"
-      code << "#{indent}end\n"
-    else
-      code << yield(function, indent)
-      code << "\n"
-    end
-  end
 end
 
 code = <<RUBY
@@ -708,7 +689,10 @@ RUBY
 code << <<RUBY
   Truffle::Boot.delay do
 RUBY
-emit_function_calls(code, '    ') { |function, indent| generated_resolve_function_call(function, indent) }
+FUNCTIONS.each do |function|
+  code << generated_resolve_function_call(function, '    ')
+  code << "\n"
+end
 code << <<RUBY
   end
 

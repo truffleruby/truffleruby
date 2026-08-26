@@ -99,6 +99,14 @@ int tpe_dup2(int* errno_ptr, int a, int b) {
   return result;
 }
 
+#ifdef HAVE_DUP3
+int tpe_dup3(int* errno_ptr, int a, int b, int c) {
+  int result = dup3(a, b, c);
+  *errno_ptr = errno;
+  return result;
+}
+#endif
+
 int tpe_fchdir(int* errno_ptr, int a) {
   int result = fchdir(a);
   *errno_ptr = errno;
@@ -685,12 +693,4 @@ long tpe_labs(int* errno_ptr, long a) {
   *errno_ptr = errno;
   return result;
 }
-
-#ifdef HAVE_DUP3
-int tpe_dup3(int* errno_ptr, int a, int b, int c) {
-  int result = dup3(a, b, c);
-  *errno_ptr = errno;
-  return result;
-}
-#endif
 

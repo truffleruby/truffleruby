@@ -109,6 +109,10 @@ module Truffle::POSIX
     Primitive.posix_invoke_i_ii(DUP2_FUNCTION, a, b)
   end
 
+  def self.dup3(a, b, c)
+    Primitive.posix_invoke_i_iii(DUP3_FUNCTION, a, b, c)
+  end
+
   def self.fchdir(a)
     Primitive.posix_invoke_i_i(FCHDIR_FUNCTION, a)
   end
@@ -824,10 +828,6 @@ module Truffle::POSIX
       Primitive.posix_invoke_i_lLi_blocking(POLL_BLOCKING_NO_RETRY_FUNCTION, a_address, b, c)
     end
 
-    def self.dup3(a, b, c) # Linux
-      Primitive.posix_invoke_i_iii(DUP3_FUNCTION, a, b, c)
-    end
-
   elsif Truffle::Platform.darwin?
 
     def self.chmod(a, b) # macOS
@@ -967,6 +967,7 @@ module Truffle::POSIX
     generated_posix_resolve_function(:DIRFD_FUNCTION, :dirfd, :tpe_dirfd)
     generated_posix_resolve_function(:DUP_FUNCTION, :dup, :tpe_dup)
     generated_posix_resolve_function(:DUP2_FUNCTION, :dup2, :tpe_dup2)
+    generated_posix_resolve_function(:DUP3_FUNCTION, :dup3, :tpe_dup3)
     generated_posix_resolve_function(:FCHDIR_FUNCTION, :fchdir, :tpe_fchdir)
     generated_posix_resolve_function(:FCHMOD_FUNCTION, :fchmod, :tpe_fchmod)
     generated_posix_resolve_function(:FCHOWN_FUNCTION, :fchown, :tpe_fchown)
@@ -1064,9 +1065,6 @@ module Truffle::POSIX
     generated_posix_resolve_function(:TRUFFLEPOSIX_FREE_FUNCTION, :truffleposix_free, :tpe_truffleposix_free)
     generated_posix_resolve_function(:TRUFFLEPOSIX_PAGE_SIZE_FUNCTION, :truffleposix_page_size, :tpe_truffleposix_page_size)
     generated_posix_resolve_function(:LABS_FUNCTION, :labs, :tpe_labs)
-    unless Truffle::Platform.darwin?
-      generated_posix_resolve_function(:DUP3_FUNCTION, :dup3, :tpe_dup3)
-    end
   end
 
 end
