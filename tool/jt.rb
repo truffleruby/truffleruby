@@ -898,6 +898,7 @@ module Commands
         SYSTEM_RUBY                                  The Ruby interpreter to run 'jt' itself, when using 'bin/jt'
         JT_JDK                                       The default JDK version to use: #{JDK_VERSIONS.join(' or ')}
         JT_ENV                                       The default value for 'jt build --env JT_ENV' and for 'jt --use JT_ENV'
+        JT_SYMLINK_SUFFIX                            Append '-' and the given suffix to the symlink created for the Ruby switcher
         JT_PROFILE_SUBCOMMANDS                       Print the time each subprocess takes on stderr
         JT_SPECS_COMPILATION                         Controls whether Graal will be used when running specs (default: 'true'). Only affects JVM with Graal. Set to 'false' to disable for running specs faster when developing with jvm-ce.
     TXT
@@ -2603,7 +2604,10 @@ module Commands
     FileUtils.rm_rf dest
     FileUtils.cp_r(build_dir, dest)
 
-    # Symlink builds into version manager
+    symlink_in_version_manager(name, dest)
+  end
+
+  private def symlink_in_version_manager(name, dest)
     rbenv_root = ENV['RBENV_ROOT']
     rubies_dir = File.join(rbenv_root, 'versions') if rbenv_root && File.directory?(rbenv_root)
 
@@ -2611,6 +2615,7 @@ module Commands
     rubies_dir = chruby_versions if File.directory?(chruby_versions)
 
     if rubies_dir
+      # Delete broken links
       Dir.glob(rubies_dir + '/truffleruby-*').each do |link|
         next unless File.symlink?(link)
         next if File.exist?(link)
@@ -2620,7 +2625,10 @@ module Commands
         File.delete link
       end
 
-      link_path = "#{rubies_dir}/#{name}"
+      # Symlink build into version manager
+      suffix = ENV['JT_SYMLINK_SUFFIX']
+      suffix = nil if suffix == ''
+      link_path = "#{rubies_dir}/#{name}#{"-#{suffix}" if suffix}"
       unless File.symlink?(link_path) and File.readlink(link_path) == dest
         File.delete(link_path) if File.symlink?(link_path) or File.exist?(link_path)
         File.symlink(dest, link_path)
