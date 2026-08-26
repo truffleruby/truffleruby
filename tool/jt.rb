@@ -88,7 +88,7 @@ LTS_JDK_VERSION = '21'
 IGV_JDK_VERSION = '21'
 DEFAULT_JDK_VERSION = 'latest'
 
-BOOTSTRAP_GRAALVM_VERSION = '25.2.4'
+BOOTSTRAP_GRAALVM_VERSION = '25.3.4.1'
 BOOTSTRAP_GRAALVM_EA_BUILD_TAG = nil
 
 # Not yet 'jdk.graal' as we test against 21 and 21 does not know 'jdk.graal'
@@ -2410,9 +2410,9 @@ module Commands
       dir = "#{JDKS_CACHE_DIR}/graalvm-#{tag}"
     else
       version = BOOTSTRAP_GRAALVM_VERSION
-      major, minor, patch = /^(\d+)\.(\d+)\.(\d+)$/.match(version).captures
+      major, minor, patches = /^(\d+)\.(\d+)\.(\d+(?:\.\d+)?)$/.match(version).captures
       archive_version = "#{major}i#{minor}"
-      jdk_version = "#{major}.0.#{patch}"
+      jdk_version = "#{major}.0.#{patches}"
       if ee?
         url = "https://gds.oracle.com/download/graal/#{archive_version}/archive/graalvm-jdk-#{archive_version}-#{jdk_version}_#{os}-#{arch}_bin.tar.gz"
         dir = "#{JDKS_CACHE_DIR}/graalvm-#{version}"
