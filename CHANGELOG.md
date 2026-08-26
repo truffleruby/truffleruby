@@ -3,7 +3,7 @@
 New features:
 
 * Updated to Ruby 4.0.2 (#4231, @eregon).
-* Updated to GraalVM 25.2.4 (#4363, @eregon).
+* Updated to GraalVM 25.3.4.1 (#4363, @eregon).
 * Implemented `{Proc,Method,UnboundMethod,Thread::Backtrace::Location}#source_range` from Ruby 4.1 (@eregon).
 * Implemented `{Proc,Method,UnboundMethod,Thread::Backtrace::Location}#syntax_tree` from Ruby 4.1 (@eregon).
 
