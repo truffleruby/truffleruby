@@ -1604,18 +1604,6 @@ public final class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public long upcall_new_memory_pointer(long v0) {
-        try {
-            Object a0 = v0;
-            Object result = runtime.dispatchCExt("new_memory_pointer", a0);
-            return runtime.toPointer(result);
-        } catch (Throwable t) {
-            runtime.reportException(t);
-            return 0L;
-        }
-    }
-
-    @CExtUpcall
     public int upcall_rb_2scomp_bit_length(long v0) {
         try {
             Object a0 = runtime.unwrap(v0);
@@ -2460,9 +2448,9 @@ public final class CExtUpcallTargets {
             Object a0 = runtime.unwrap(v0);
             Object a1 = runtime.pointerArg(v1);
             Object a2 = runtime.pointerArg(v2);
-            Object a3 = v3;
-            Object a4 = v4;
-            Object a5 = v5;
+            Object a3 = runtime.functionArg(v3);
+            Object a4 = runtime.functionArg(v4);
+            Object a5 = runtime.functionArg(v5);
             Object result = runtime.dispatchCExt("rb_data_typed_object_wrap", a0, a1, a2, a3, a4, a5);
             return runtime.toValueHandle(result);
         } catch (Throwable t) {
@@ -3018,7 +3006,7 @@ public final class CExtUpcallTargets {
     public long upcall_rb_exec_recursive(long v0, long v1, long v2) {
         try {
             Object a0 = runtime.functionArg(v0);
-            Object a1 = runtime.pointerArg(v1);
+            Object a1 = v1;
             Object a2 = runtime.pointerArg(v2);
             Object result = runtime.dispatchCExt("rb_exec_recursive", a0, a1, a2);
             return runtime.toValueHandle(result);
@@ -3330,7 +3318,7 @@ public final class CExtUpcallTargets {
     @CExtUpcall
     public void upcall_rb_gc_mark(long v0) {
         try {
-            Object a0 = runtime.unwrap(v0);
+            Object a0 = v0;
             runtime.dispatchCExt("rb_gc_mark", a0);
         } catch (Throwable t) {
             runtime.reportException(t);
@@ -3350,7 +3338,7 @@ public final class CExtUpcallTargets {
     @CExtUpcall
     public void upcall_rb_gc_register_mark_object(long v0) {
         try {
-            Object a0 = runtime.unwrap(v0);
+            Object a0 = v0;
             runtime.dispatchCExt("rb_gc_register_mark_object", a0);
         } catch (Throwable t) {
             runtime.reportException(t);
@@ -3600,7 +3588,7 @@ public final class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public long upcall_rb_integer_bytes(long v0, int v1, int v2, long v3, long v4, long v5) {
+    public long upcall_rb_integer_bytes_string(long v0, int v1, int v2, long v3, long v4, long v5) {
         try {
             Object a0 = runtime.unwrap(v0);
             Object a1 = v1;
@@ -3608,8 +3596,8 @@ public final class CExtUpcallTargets {
             Object a3 = runtime.unwrap(v3);
             Object a4 = runtime.unwrap(v4);
             Object a5 = runtime.unwrap(v5);
-            Object result = runtime.dispatchCExt("rb_integer_bytes", a0, a1, a2, a3, a4, a5);
-            return runtime.toPointer(result);
+            Object result = runtime.dispatchCExt("rb_integer_bytes_string", a0, a1, a2, a3, a4, a5);
+            return runtime.toValueHandle(result);
         } catch (Throwable t) {
             runtime.reportException(t);
             return 0L;
@@ -4562,13 +4550,12 @@ public final class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public long upcall_rb_protect(long v0, long v1, long v2, long v3) {
+    public long upcall_rb_protect(long v0, long v1, long v2) {
         try {
             Object a0 = runtime.functionArg(v0);
             Object a1 = runtime.pointerArg(v1);
-            Object a2 = runtime.functionArg(v2);
-            Object a3 = runtime.pointerArg(v3);
-            Object result = runtime.dispatchCExt("rb_protect", a0, a1, a2, a3);
+            Object a2 = runtime.pointerArg(v2);
+            Object result = runtime.dispatchCExt("rb_protect", a0, a1, a2);
             return runtime.wrappedToHandle(result);
         } catch (Throwable t) {
             runtime.reportException(t);
@@ -5026,7 +5013,7 @@ public final class CExtUpcallTargets {
     @CExtUpcall
     public long upcall_rb_str_new_native(long v0, long v1) {
         try {
-            Object a0 = runtime.readString(v0);
+            Object a0 = runtime.pointerArg(v0);
             Object a1 = v1;
             Object result = runtime.dispatchCExt("rb_str_new_native", a0, a1);
             return runtime.toValueHandle(result);
@@ -5503,7 +5490,7 @@ public final class CExtUpcallTargets {
             Object a1 = runtime.unwrap(v1);
             Object a2 = runtime.functionArg(v2);
             Object a3 = runtime.pointerArg(v3);
-            Object result = runtime.dispatchCExt("rb_tr_enc_mbc_case_fold", a0, a1, a2, a3);
+            Object result = runtime.dispatchCExt("rb_tr_enc_mbc_case_fold_from_native", a0, a1, a2, a3);
             return runtime.toValueHandle(result);
         } catch (Throwable t) {
             runtime.reportException(t);
@@ -5526,7 +5513,7 @@ public final class CExtUpcallTargets {
     @CExtUpcall
     public void upcall_rb_tr_gc_guard(long v0) {
         try {
-            Object a0 = runtime.unwrap(v0);
+            Object a0 = v0;
             runtime.dispatchCExt("rb_tr_gc_guard", a0);
         } catch (Throwable t) {
             runtime.reportException(t);
@@ -5534,13 +5521,15 @@ public final class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public void upcall_rb_tr_io_attach_pointer(long v0, long v1) {
+    public long upcall_rb_tr_io_create_and_attach_pointer(long v0, long v1) {
         try {
             Object a0 = runtime.unwrap(v0);
-            Object a1 = runtime.pointerArg(v1);
-            runtime.dispatchCExt("rb_tr_io_attach_pointer", a0, a1);
+            Object a1 = v1;
+            Object result = runtime.dispatchCExt("rb_tr_io_create_and_attach_pointer", a0, a1);
+            return runtime.toPointer(result);
         } catch (Throwable t) {
             runtime.reportException(t);
+            return 0L;
         }
     }
 
@@ -5629,7 +5618,7 @@ public final class CExtUpcallTargets {
             Object a0 = runtime.unwrap(v0);
             Object a1 = runtime.functionArg(v1);
             Object a2 = runtime.unwrap(v2);
-            Object result = runtime.dispatchCExt("rb_tr_sprintf", a0, a1, a2);
+            Object result = runtime.dispatchCExt("rb_tr_sprintf_from_native", a0, a1, a2);
             return runtime.toValueHandle(result);
         } catch (Throwable t) {
             runtime.reportException(t);
@@ -5677,7 +5666,7 @@ public final class CExtUpcallTargets {
     @CExtUpcall
     public long upcall_rb_tr_temporary_native_string(long v0, long v1, long v2) {
         try {
-            Object a0 = runtime.readString(v0);
+            Object a0 = runtime.pointerArg(v0);
             Object a1 = v1;
             Object a2 = runtime.unwrap(v2);
             Object result = runtime.dispatchCExt("rb_tr_temporary_native_string", a0, a1, a2);
@@ -6066,7 +6055,6 @@ public final class CExtUpcallTargets {
             "upcall_send3_o_aset", "V(LLLL)",
             "upcall_make_binary_if_not_ascii_only", "V(L)",
             "upcall_mark_object_on_call_exit", "V(L)",
-            "upcall_new_memory_pointer", "L(L)",
             "upcall_rb_2scomp_bit_length", "I(L)",
             "upcall_rb_Array", "L(L)",
             "upcall_rb_Complex", "L(LL)",
@@ -6228,7 +6216,7 @@ public final class CExtUpcallTargets {
             "upcall_rb_id2sym", "L(L)",
             "upcall_rb_int2big", "L(L)",
             "upcall_rb_int_positive_pow", "L(LL)",
-            "upcall_rb_integer_bytes", "L(LIILLL)",
+            "upcall_rb_integer_bytes_string", "L(LIILLL)",
             "upcall_rb_integer_type_p", "I(L)",
             "upcall_rb_intern", "L(L)",
             "upcall_rb_io_descriptor", "I(L)",
@@ -6306,7 +6294,7 @@ public final class CExtUpcallTargets {
             "upcall_rb_path_to_class", "L(L)",
             "upcall_rb_proc_call", "L(LL)",
             "upcall_rb_proc_new", "L(LL)",
-            "upcall_rb_protect", "L(LLLL)",
+            "upcall_rb_protect", "L(LLL)",
             "upcall_rb_range_new", "L(LLI)",
             "upcall_rb_rational_new", "L(LL)",
             "upcall_rb_rational_raw", "L(LL)",
@@ -6384,7 +6372,7 @@ public final class CExtUpcallTargets {
             "upcall_rb_tr_enc_mbc_case_fold", "L(ILLL)",
             "upcall_rb_tr_flags", "I(L)",
             "upcall_rb_tr_gc_guard", "V(L)",
-            "upcall_rb_tr_io_attach_pointer", "V(LL)",
+            "upcall_rb_tr_io_create_and_attach_pointer", "L(LL)",
             "upcall_rb_tr_io_pointer", "L(L)",
             "upcall_rb_tr_log_warning", "V(L)",
             "upcall_rb_tr_not_implemented", "V(L)",

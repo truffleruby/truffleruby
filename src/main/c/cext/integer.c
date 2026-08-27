@@ -91,7 +91,7 @@ int rb_integer_pack(VALUE value, void *words, size_t numwords, size_t wordsize, 
   VALUE twosComp = rb_boolean(((flags & INTEGER_PACK_2COMP) != 0));
   VALUE swap = rb_boolean(endian_swap(flags));
   // Test for fixnum and do the right things here.
-  void* bytes = rb_tr_up_rb_integer_bytes(value, (int)numwords, (int)wordsize, msw_first, twosComp, swap);
+  VALUE bytes = rb_tr_up_rb_integer_bytes_string(value, (int)numwords, (int)wordsize, msw_first, twosComp, swap);
   int size = (twosComp == Qtrue) ? rb_tr_up_rb_2scomp_bit_length(value)
     : rb_tr_up_rb_absint_bit_length(value);
 
@@ -107,7 +107,7 @@ int rb_integer_pack(VALUE value, void *words, size_t numwords, size_t wordsize, 
   int result = (words_needed <= numwords ? 1 : 2) * sign;
 
   uint8_t *buf = (uint8_t *)words;
-  memcpy(buf, bytes, numwords * wordsize);
+  memcpy(buf, RSTRING_PTR(bytes), numwords * wordsize);
   return result;
 }
 

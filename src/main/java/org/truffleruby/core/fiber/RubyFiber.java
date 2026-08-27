@@ -117,6 +117,14 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
     public Pointer posixErrnoPointer = null;
     public long posixErrnoAddress = 0;
 
+    /** The address of the native __thread int rb_tr_pending_exception of the native thread which reported
+     * {@link #pendingCExtException}, used to clear the flag when that exception is rethrown. Set on every reported
+     * exception, since with virtual thread fibers the fiber's native thread can change between downcalls. */
+    public long cextPendingExceptionFlagAddress = 0;
+    /** The Ruby exception (or other Throwable) captured at an FFM upcall boundary, to be rethrown when the downcall
+     * into the C extension returns to Java. */
+    public Throwable pendingCExtException = null;
+
     // Last-used cache per thread for the threadState for LightweightLayoutLock's
     private final WeakHashMap<LightweightLayoutLock, AtomicInteger> layoutLockStates = new WeakHashMap<>();
 

@@ -197,7 +197,7 @@ class Truffle::CExt::RbEncoding
   def initialize(encoding)
     @encoding = encoding
     @pointer = nil
-    @name = Truffle::CExt::LIBTRUFFLERUBY.rb_tr_rstring_ptr(Primitive.cext_wrap(encoding.name))
+    @name = Truffle::CExt::RSTRING_PTR_FUNCTION.call(Primitive.cext_wrap(encoding.name))
   end
 
   private
@@ -267,8 +267,8 @@ class Truffle::CExt::RbEncoding
     unless @pointer
       ENCODING_CACHE_MUTEX.synchronize do
         unless @pointer
-          @pointer = Truffle::CExt::LIBTRUFFLERUBY.rb_encoding_to_native(@name)
-          NATIVE_CACHE[Primitive.interop_as_pointer(@pointer)] = self
+          @pointer = Truffle::CExt::ENCODING_TO_NATIVE_FUNCTION.call(@name)
+          NATIVE_CACHE[@pointer] = self
         end
       end
     end
@@ -277,6 +277,6 @@ class Truffle::CExt::RbEncoding
   def polyglot_as_pointer
     pointer = @pointer
     raise Truffle::Interop::UnsupportedMessageException if Primitive.nil?(pointer)
-    Primitive.interop_as_pointer(pointer)
+    pointer
   end
 end

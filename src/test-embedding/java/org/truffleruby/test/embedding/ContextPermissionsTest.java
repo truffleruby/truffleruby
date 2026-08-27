@@ -86,6 +86,31 @@ public class ContextPermissionsTest {
     }
 
     @Test
+    public void testRequireCExtensionInMultipleContexts() {
+        // Only a single Ruby context at a time in a process can load C extension support
+        try (Context context = Context.newBuilder("ruby").allowIO(IOAccess.ALL).allowNativeAccess(true).build()) {
+            Assert.assertEquals("Etc", context.eval("ruby", "require 'etc'; Etc.to_s").asString());
+
+            try (Context concurrentContext = Context.newBuilder("ruby").allowIO(IOAccess.ALL)
+                    .allowNativeAccess(true).build()) {
+                RubyTest.assertThrows(
+                        () -> concurrentContext.eval("ruby", "require 'etc'"),
+                        e -> {
+                            assertTrue(e.getMessage(), e.getMessage().contains(
+                                    "C extension support can only be loaded in a single Ruby context at a time"));
+                            assertEquals("RuntimeError",
+                                    e.getGuestObject().getMetaObject().getMetaQualifiedName());
+                        });
+            }
+        }
+
+        // Once the context which loaded C extension support is disposed, a new context can load them again
+        try (Context context = Context.newBuilder("ruby").allowIO(IOAccess.ALL).allowNativeAccess(true).build()) {
+            Assert.assertEquals("Etc", context.eval("ruby", "require 'etc'; Etc.to_s").asString());
+        }
+    }
+
+    @Test
     public void testThreadsNoNative() throws Throwable {
         try (Context context = Context
                 .newBuilder("ruby")

@@ -75,7 +75,7 @@ static RFile_and_rb_io_t* get_RFile_and_rb_io_t(VALUE io) {
     return pointer;
   }
 
-  pointer = rb_tr_up_new_memory_pointer(sizeof(RFile_and_rb_io_t));
+  pointer = rb_tr_up_rb_tr_io_create_and_attach_pointer(io, sizeof(RFile_and_rb_io_t));
   rb_io_t* fptr = &pointer->io_struct;
   fptr->self = io;
   fptr->fd = rb_tr_io_raw_descriptor(io);
@@ -85,8 +85,6 @@ static RFile_and_rb_io_t* get_RFile_and_rb_io_t(VALUE io) {
   fptr->tied_io_for_writing = (write_io != io) ? write_io : Qfalse;
 
   pointer->rfile.fptr = fptr;
-
-  rb_tr_up_rb_tr_io_attach_pointer(io, pointer);
 
   return pointer;
 }

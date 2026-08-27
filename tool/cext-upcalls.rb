@@ -47,7 +47,6 @@
 #   B = Ruby true/false result converted to int 1/0 (return only).
 #   I = int, L = long, D = double, O = void (return only)
 #   P = native pointer (long); a returned Ruby object is converted with toNative/asPointer
-#   S = const char* (long); Java reads the NUL-terminated native string
 #   F = native function pointer (long)
 #   Y = Ruby ID (long); converted to/from Symbol on the Java side
 #   A = VALUE array: expands to (const VALUE*, long) in C and (long, long) in Java
@@ -182,7 +181,6 @@ module CExtUpcalls
     ["send3_o_aset", :send, "O", "VVVV"],
     ["make_binary_if_not_ascii_only", :cext, "O", "V"],
     ["mark_object_on_call_exit", :cext, "O", "V"],
-    ["new_memory_pointer", :cext, "P", "L"],
     ["rb_2scomp_bit_length", :cext, "I", "V"],
     ["rb_Array", :cext, "V", "V"],
     ["rb_Complex", :cext, "V", "VV"],
@@ -250,7 +248,7 @@ module CExtUpcalls
     ["rb_cvar_set", :cext, "O", "VVV"],
     ["rb_data_define_no_splat", :cext, "V", "VV"],
     ["rb_data_object_wrap", :cext, "V", "VPFF"],
-    ["rb_data_typed_object_wrap", :cext, "V", "VPPLLL"],
+    ["rb_data_typed_object_wrap", :cext, "V", "VPPFFF"],
     ["rb_debug_inspector_open_contexts_and_backtrace", :cext, "V", ""],
     ["rb_default_external_encoding", :cext, "V", ""],
     ["rb_default_internal_encoding", :cext, "V", ""],
@@ -295,7 +293,7 @@ module CExtUpcalls
     ["rb_eval_string", :cext, "V", "V"],
     ["rb_exc_raise", :cext, "O", "V"],
     ["rb_exc_set_message", :cext, "O", "VV"],
-    ["rb_exec_recursive", :cext, "V", "FPP"],
+    ["rb_exec_recursive", :cext, "V", "FLP"],
     ["rb_f_global_variables", :cext, "V", ""],
     ["rb_f_notimplement", :cext, "V", ""],
     ["rb_f_sprintf", :cext, "V", "V"],
@@ -321,9 +319,9 @@ module CExtUpcalls
     ["rb_gc_disable", :cext, "V", ""],
     ["rb_gc_enable", :cext, "V", ""],
     ["rb_gc_latest_gc_info", :cext, "V", "V"],
-    ["rb_gc_mark", :cext, "O", "V"],
+    ["rb_gc_mark", :cext, "O", "L"],
     ["rb_gc_register_address", :cext, "O", "P"],
-    ["rb_gc_register_mark_object", :cext, "O", "V"],
+    ["rb_gc_register_mark_object", :cext, "O", "L"],
     ["rb_gc_unregister_address", :cext, "O", "P"],
     ["rb_get_alloc_func", :cext, "F", "V"],
     ["rb_gv_get", :cext, "V", "V"],
@@ -344,7 +342,7 @@ module CExtUpcalls
     ["rb_id2sym", :cext, "V", "Y"],
     ["rb_int2big", :cext, "V", "L"],
     ["rb_int_positive_pow", :cext, "V", "VV"],
-    ["rb_integer_bytes", :cext, "P", "VIIVVV"],
+    ["rb_integer_bytes_string", :cext, "V", "VIIVVV"],
     ["rb_integer_type_p", :cext, "B", "V"],
     ["rb_intern", :cext, "V", "V"],
     ["rb_io_descriptor", :cext, "I", "V"],
@@ -422,7 +420,7 @@ module CExtUpcalls
     ["rb_path_to_class", :cext, "V", "V"],
     ["rb_proc_call", :cext, "V", "VV"],
     ["rb_proc_new", :cext, "W", "FP"],
-    ["rb_protect", :cext, "W", "FPFP"],
+    ["rb_protect", :cext, "W", "FPP"],
     ["rb_range_new", :cext, "V", "VVI"],
     ["rb_rational_new", :cext, "V", "VV"],
     ["rb_rational_raw", :cext, "V", "VV"],
@@ -459,7 +457,7 @@ module CExtUpcalls
     ["rb_str_format", :cext, "V", "VV"],
     ["rb_str_locktmp", :cext, "V", "V"],
     ["rb_str_new_frozen", :cext, "V", "V"],
-    ["rb_str_new_native", :cext, "V", "SL"],
+    ["rb_str_new_native", :cext, "V", "PL"],
     ["rb_str_new_nul", :cext, "V", "L"],
     ["rb_str_offset", :cext, "L", "VL"],
     ["rb_str_resize", :cext, "V", "VL"],
@@ -499,8 +497,8 @@ module CExtUpcalls
     ["rb_tr_enc_is_unicode", :cext, "I", "V"],
     ["rb_tr_enc_mbc_case_fold", :cext, "V", "IVFP"],
     ["rb_tr_flags", :cext, "I", "V"],
-    ["rb_tr_gc_guard", :cext, "O", "V"],
-    ["rb_tr_io_attach_pointer", :cext, "O", "VP"],
+    ["rb_tr_gc_guard", :cext, "O", "L"],
+    ["rb_tr_io_create_and_attach_pointer", :cext, "P", "VL"],
     ["rb_tr_io_pointer", :cext, "P", "V"],
     ["rb_tr_log_warning", :cext, "O", "V"],
     ["rb_tr_not_implemented", :cext, "O", "V"],
@@ -512,7 +510,7 @@ module CExtUpcalls
     ["rb_tr_sprintf_types", :cext, "V", "V"],
     ["rb_tr_static_native_string", :cext, "V", "LLV"],
     ["rb_tr_str_capa_resize", :cext, "O", "VL"],
-    ["rb_tr_temporary_native_string", :cext, "V", "SLV"],
+    ["rb_tr_temporary_native_string", :cext, "V", "PLV"],
     ["rb_tr_warn", :cext, "V", "V"],
     ["rb_tr_warn_category", :cext, "V", "VV"],
     ["rb_tracepoint_new", :cext, "V", "IFP"],
@@ -652,5 +650,7 @@ module CExtUpcalls
   # c_name => Truffle::CExt method name, where they differ
   RUBY_NAMES = {
     "rb_const_defined_3f" => "rb_const_defined?",
+    "rb_tr_enc_mbc_case_fold" => "rb_tr_enc_mbc_case_fold_from_native",
+    "rb_tr_sprintf" => "rb_tr_sprintf_from_native",
   }
 end

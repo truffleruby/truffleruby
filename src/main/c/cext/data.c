@@ -85,6 +85,11 @@ void rb_tr_rtypeddata_run_finalizer(struct RTypedData* rtypeddata) {
   free(rtypeddata);
 }
 
+// The data field is at the same offset in struct RData and struct RTypedData
+void* rb_tr_rdata_data(struct RData *rdata) {
+  return rdata->data;
+}
+
 struct RData* rb_tr_rdata(VALUE object) {
   struct RData* rdata = rb_tr_up_RDATA(object);
   if (rdata->dmark) {
@@ -118,7 +123,7 @@ VALUE rb_data_object_zalloc(VALUE klass, size_t size, RUBY_DATA_FUNC dmark, RUBY
 // Typed data
 
 VALUE rb_data_typed_object_wrap(VALUE ruby_class, void *data, const rb_data_type_t *data_type) {
-  return rb_tr_up_rb_data_typed_object_wrap(ruby_class, data, (void *) data_type, (long) data_type->function.dmark, (long) data_type->function.dfree, (long) data_type->function.dsize);
+  return rb_tr_up_rb_data_typed_object_wrap(ruby_class, data, (void *) data_type, (void *) data_type->function.dmark, (void *) data_type->function.dfree, (void *) data_type->function.dsize);
 }
 
 VALUE rb_data_typed_object_zalloc(VALUE ruby_class, size_t size, const rb_data_type_t *data_type) {

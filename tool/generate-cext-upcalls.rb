@@ -67,18 +67,18 @@ COPYRIGHT
 
 C_TYPES = {
   'V' => 'VALUE', 'W' => 'VALUE', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
-  'P' => 'void *', 'S' => 'const char *', 'F' => 'void *', 'Y' => 'ID', 'O' => 'void'
+  'P' => 'void *', 'F' => 'void *', 'Y' => 'ID', 'O' => 'void'
 }.freeze
 
 JAVA_TYPES = {
   'V' => 'long', 'W' => 'long', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
-  'P' => 'long', 'S' => 'long', 'F' => 'long', 'Y' => 'long', 'O' => 'void'
+  'P' => 'long', 'F' => 'long', 'Y' => 'long', 'O' => 'void'
 }.freeze
 
 # Carrier letters for FFM FunctionDescriptors (FFMSupport carrier signature format)
 FFM_CARRIERS = {
   'V' => 'L', 'W' => 'L', 'I' => 'I', 'B' => 'I', 'L' => 'L', 'D' => 'D',
-  'P' => 'L', 'S' => 'L', 'F' => 'L', 'Y' => 'L', 'O' => 'V'
+  'P' => 'L', 'F' => 'L', 'Y' => 'L', 'O' => 'V'
 }.freeze
 
 def expand_c_params(carriers)
@@ -87,6 +87,9 @@ def expand_c_params(carriers)
     if c == 'A'
       params << "const VALUE *v#{i}p"
       params << "long v#{i}n"
+    elsif c == 'P'
+      # const so that pointers to const can be passed without a cast
+      params << "const void *v#{i}"
     else
       params << "#{C_TYPES.fetch(c)} v#{i}"
     end
@@ -255,7 +258,6 @@ JAVA
 ARG_CONVERSIONS = {
   'V' => ->(a) { "runtime.unwrap(#{a})" },
   'Y' => ->(a) { "runtime.idToSymbol(#{a})" },
-  'S' => ->(a) { "runtime.readString(#{a})" },
   'P' => ->(a) { "runtime.pointerArg(#{a})" },
   'F' => ->(a) { "runtime.functionArg(#{a})" },
   'L' => ->(a) { a },

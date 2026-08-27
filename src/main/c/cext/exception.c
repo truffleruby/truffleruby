@@ -34,14 +34,8 @@ void rb_exc_set_message(VALUE exc, VALUE message) {
   rb_tr_up_rb_exc_set_message(exc, message);
 }
 
-static void rb_protect_write_status(int *status, int value) {
-  if (status != NULL) {
-    *status = value;
-  }
-}
-
 VALUE rb_protect(VALUE (*function)(VALUE), VALUE data, int *status) {
-  return rb_tr_up_rb_protect(function, (void*)data, rb_protect_write_status, status);
+  return rb_tr_up_rb_protect(function, (void*)data, status);
 }
 
 void rb_jump_tag(int status) {

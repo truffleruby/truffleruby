@@ -34,6 +34,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.utilities.AssumedValue;
 import org.graalvm.collections.Pair;
 import org.graalvm.options.OptionDescriptor;
+import org.truffleruby.cext.CExtFFMLayer;
 import org.truffleruby.cext.ValueWrapperManager;
 import org.truffleruby.collections.SharedIndicesMap.ContextArray;
 import org.truffleruby.core.CoreLibrary;
@@ -144,6 +145,7 @@ public final class RubyContext {
 
     private final Object classVariableDefinitionLock = new Object();
     private final ReentrantLock cExtensionsLock = new ReentrantLock();
+    private CExtFFMLayer cExtFFMLayer;
 
     private final boolean preInitialized;
     @CompilationFinal private boolean preInitializing;
@@ -499,6 +501,10 @@ public final class RubyContext {
         threadManager.dispose();
         threadManager.checkNoRunningThreads();
 
+        if (cExtFFMLayer != null) {
+            CExtFFMLayer.deactivate(cExtFFMLayer);
+        }
+
         Signals.restoreDefaultHandlers();
 
         if (options.METRICS_PROFILE_REQUIRE == Profile.TOTAL) {
@@ -642,6 +648,10 @@ public final class RubyContext {
 
     public ReentrantLock getCExtensionsLock() {
         return cExtensionsLock;
+    }
+
+    public void setCExtFFMLayer(CExtFFMLayer layer) {
+        this.cExtFFMLayer = layer;
     }
 
     public Instrumenter getInstrumenter() {

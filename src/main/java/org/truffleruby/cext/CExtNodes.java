@@ -114,6 +114,7 @@ import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.language.dispatch.LiteralCallNode;
 import org.truffleruby.language.globals.ReadGlobalVariableNode;
 import org.truffleruby.language.library.RubyStringLibrary;
+import org.truffleruby.platform.NativeLibrary;
 import org.truffleruby.language.methods.DeclarationContext;
 import org.truffleruby.language.methods.InternalMethod;
 import org.truffleruby.language.objects.AllocationTracing;
@@ -2134,6 +2135,36 @@ public abstract class CExtNodes {
         @Specialization
         Object setThreadSafe(int threadSafe) {
             getLanguage().getCurrentFiber().threadSafeExtension = threadSafe != 0;
+            return nil;
+        }
+    }
+
+    @Primitive(name = "cext_ffm_bind")
+    public abstract static class CExtFFMBindNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization(guards = "strings.isRubyString(this, signature)", limit = "1")
+        Object bind(long function, Object signature,
+                @Cached RubyStringLibrary strings) {
+            return createFunction(getContext(), getLanguage(), function, signature);
+        }
+
+        @TruffleBoundary
+        private static FFMNativeFunction createFunction(RubyContext context, RubyLanguage language, long function,
+                Object signature) {
+            return new FFMNativeFunction(context, language, function, StringOperations.getJavaString(signature));
+        }
+    }
+
+    @Primitive(name = "cext_init_ffm")
+    public abstract static class CExtInitFFMNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        Object init(NativeLibrary library, RubyArray constants,
+                @Cached ArrayToObjectArrayNode arrayToObjectArrayNode) {
+            final Object[] constantsArray = arrayToObjectArrayNode.executeToObjectArray(constants);
+            final CExtFFMLayer layer = new CExtFFMLayer(getContext(), getLanguage());
+            getContext().setCExtFFMLayer(layer);
+            layer.initialize(library, constantsArray);
             return nil;
         }
     }

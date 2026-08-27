@@ -14,6 +14,7 @@ import static org.truffleruby.language.RubyBaseNode.nil;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,9 +29,7 @@ import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.collections.ConcurrentOperations;
 import org.truffleruby.core.array.ArrayOperations;
-import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.array.RubyArray;
-import org.truffleruby.core.cast.ToPointerAddressNode;
 import org.truffleruby.core.encoding.TStringUtils;
 import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.core.mutex.MutexOperations;
@@ -39,15 +38,14 @@ import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.core.support.IONodes.IOThreadBufferAllocateNode;
 import org.truffleruby.core.thread.RubyThread;
 import org.truffleruby.debug.MetricsProfiler.MetricKind;
-import org.truffleruby.extra.TruffleRubyNodes;
 import org.truffleruby.extra.ffi.Pointer;
-import org.truffleruby.interop.InteropNodes;
 import org.truffleruby.interop.TranslateInteropExceptionNode;
-import org.truffleruby.interop.TranslateInteropExceptionNodeGen;
 import org.truffleruby.language.RubyConstant;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.dispatch.DispatchNode;
+import org.truffleruby.platform.FFMSupport;
 import org.truffleruby.platform.NativeConfiguration;
+import org.truffleruby.platform.NativeLibrary;
 import org.truffleruby.platform.TruffleNFIPlatform;
 import org.truffleruby.shared.Metrics;
 import org.truffleruby.shared.Platform;
@@ -58,8 +56,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.TruffleFile;
 import com.oracle.truffle.api.interop.InteropException;
 import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnknownIdentifierException;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.source.Source;
@@ -89,8 +85,6 @@ public final class FeatureLoader {
 
     private Source mainScriptSource;
     private String mainScriptAbsolutePath;
-
-    private final List<Object> keepLibrariesAlive = Collections.synchronizedList(new ArrayList<>());
 
     public FeatureLoader(RubyContext context, RubyLanguage language) {
         this.context = context;
@@ -434,15 +428,6 @@ public final class FeatureLoader {
                                 null));
             }
 
-            if (!TruffleRubyNodes.SulongNode.isSulongAvailable(context)) {
-                throw new RaiseException(
-                        context,
-                        context.getCoreExceptions().loadError(
-                                "Sulong is required to support C extensions, and it doesn't appear to be available",
-                                feature,
-                                requireNode));
-            }
-
             Metrics.printTime("before-load-cext-support");
             try {
                 final RubyString cextRb = StringOperations.createUTF8String(context, language, "truffle/cext");
@@ -451,26 +436,15 @@ public final class FeatureLoader {
                 final RubyModule truffleModule = context.getCoreLibrary().truffleModule;
                 final Object truffleCExt = truffleModule.fields.getConstant("CExt").getValue();
 
-                Object libTrampoline = null;
-                var libTrampolinePath = language.getRubyHome() + "/lib/cext/libtrufflerubytrampoline" +
-                        Platform.LIB_SUFFIX;
-                if (context.getOptions().CEXTS_LOG_LOAD) {
-                    RubyLanguage.LOGGER
-                            .info(() -> String.format("loading libtrufflerubytrampoline %s", libTrampolinePath));
-                }
-                libTrampoline = loadCExtLibrary("libtrufflerubytrampoline", libTrampolinePath, requireNode, false);
-
                 final String rubyLibPath = language.getRubyHome() + "/lib/cext/libtruffleruby" + Platform.LIB_SUFFIX;
                 final Object library = loadCExtLibRuby(rubyLibPath, feature, requireNode);
 
                 final InteropLibrary interop = InteropLibrary.getUncached();
                 language.getCurrentFiber().extensionCallStack.push(false, nil, nil);
                 try {
-                    // Truffle::CExt.register_libtruffleruby(libtruffleruby)
+                    // Truffle::CExt.init_libtruffleruby(libtruffleruby): creates the FFM upcall stubs and
+                    // calls rb_tr_init()
                     interop.invokeMember(truffleCExt, "init_libtruffleruby", library);
-
-                    // Truffle::CExt.init_libtrufflerubytrampoline(libtrampoline)
-                    interop.invokeMember(truffleCExt, "init_libtrufflerubytrampoline", libTrampoline);
                 } catch (InteropException e) {
                     throw TranslateInteropExceptionNode.executeUncached(e);
                 } finally {
@@ -504,27 +478,32 @@ public final class FeatureLoader {
         return loadCExtLibrary("libtruffleruby", rubyLibPath, currentNode, true);
     }
 
+    /** rb_tr_abi_version() has signature const char* (void) */
+    private static final MethodHandle ABI_VERSION_HANDLE = FFMSupport.createDowncallHandle("L()");
+
     @TruffleBoundary
-    public Object loadCExtLibrary(String feature, String path, Node currentNode, boolean sulong) {
+    public Object loadCExtLibrary(String feature, String path, Node currentNode, boolean unusedSulong) {
         Metrics.printTime("before-load-cext-" + feature);
         try {
             final TruffleFile truffleFile = FileLoader.getSafeTruffleFile(language, context, path);
             FileLoader.ensureReadable(context, truffleFile, currentNode);
-            final Source source;
-            if (sulong) {
-                source = Source
-                        .newBuilder("nfi", "with llvm load (RTLD_GLOBAL) '" + path + "'",
-                                "load RTLD_GLOBAL with Sulong through NFI")
-                        .build();
-            } else {
-                source = Source
-                        .newBuilder("nfi", "load (RTLD_GLOBAL | RTLD_LAZY) '" + path + "'", "load RTLD_GLOBAL with NFI")
-                        .build();
-            }
-            final Object library = context.getEnv().parseInternal(source).call();
 
-            // It is crucial to keep every native library alive, otherwise NFI will unload it and segfault later
-            keepLibrariesAlive.add(library);
+            Pointer.checkNativeAccess(context);
+            // RTLD_GLOBAL so C extensions can resolve rb_* symbols from libtruffleruby lazily,
+            // RTLD_LAZY as C extensions are linked with -Wl,-z,lazy
+            final NativeConfiguration nativeConfiguration = context.getNativeConfiguration();
+            final int flags = (int) nativeConfiguration.get("platform.dlopen.RTLD_GLOBAL") |
+                    (int) nativeConfiguration.get("platform.dlopen.RTLD_LAZY");
+
+            final NativeLibrary library;
+            try {
+                library = NativeLibrary.open(path, flags);
+            } catch (UnsatisfiedLinkError e) {
+                // Use the LoadError overload not setting @path: the file exists but loading failed
+                throw new RaiseException(
+                        context,
+                        context.getCoreExceptions().loadError(e.getMessage(), currentNode));
+            }
 
             final Object embeddedABIVersion = getEmbeddedABIVersion(library);
             DispatchNode.getUncached().call(context.getCoreLibrary().truffleCExtModule, "check_abi_version",
@@ -536,58 +515,23 @@ public final class FeatureLoader {
         }
     }
 
-    private Object getEmbeddedABIVersion(Object library) {
-        InteropLibrary interop = InteropLibrary.getUncached();
-
-        Object abiVersionFunction;
-        try {
-            abiVersionFunction = interop.readMember(library, "rb_tr_abi_version");
-        } catch (UnknownIdentifierException e) {
+    private Object getEmbeddedABIVersion(NativeLibrary library) {
+        final long abiVersionFunction = library.lookupSymbol("rb_tr_abi_version");
+        if (abiVersionFunction == 0) {
             return nil;
-        } catch (UnsupportedMessageException e) {
-            throw TranslateInteropExceptionNode.executeUncached(e);
         }
 
-        abiVersionFunction = TruffleNFIPlatform.bind(context, abiVersionFunction, "():string");
-
-        var abiVersionNativeString = InteropNodes.execute(
-                null,
-                abiVersionFunction,
-                ArrayUtils.EMPTY_ARRAY,
-                interop,
-                TranslateInteropExceptionNodeGen.getUncached());
-
-        long address = ToPointerAddressNode.executeUncached(abiVersionNativeString);
+        final long address;
+        try {
+            address = (long) ABI_VERSION_HANDLE.invokeExact(abiVersionFunction);
+        } catch (Throwable t) {
+            throw CompilerDirectives.shouldNotReachHere(t);
+        }
 
         var pointer = new Pointer(context, address);
-        byte[] bytes = pointer.readZeroTerminatedByteArray(context, interop, 0);
+        byte[] bytes = pointer.readZeroTerminatedByteArray(context, InteropLibrary.getUncached(), 0);
         String abiVersion = new String(bytes, StandardCharsets.US_ASCII);
 
         return StringOperations.createUTF8String(context, language, abiVersion);
-    }
-
-    Object findFunctionInLibrary(Object library, String functionName, String path) {
-        final Object function;
-        try {
-            function = InteropLibrary.getFactory().getUncached(library).readMember(library, functionName);
-        } catch (UnknownIdentifierException e) {
-            throw new RaiseException(
-                    context,
-                    context.getCoreExceptions()
-                            .loadError(String.format("function %s() not found in %s", functionName, path), path, null));
-        } catch (UnsupportedMessageException e) {
-            throw TranslateInteropExceptionNode.executeUncached(e);
-        }
-
-        if (function == null) {
-            throw new RaiseException(
-                    context,
-                    context.getCoreExceptions().loadError(
-                            String.format("%s() not found (readMember() returned null)", functionName),
-                            path,
-                            null));
-        }
-
-        return function;
     }
 }
