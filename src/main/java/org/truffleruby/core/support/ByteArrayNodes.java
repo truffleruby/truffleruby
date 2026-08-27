@@ -75,26 +75,26 @@ public abstract class ByteArrayNodes {
 
     }
 
-    @CoreMethod(names = "prepend", required = 1)
+    @CoreMethod(names = "prepend", required = 3, lowerFixnum = { 2, 3 })
     public abstract static class PrependNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization(guards = "strings.isRubyString(node, string)", limit = "1")
-        static RubyByteArray prepend(RubyByteArray byteArray, Object string,
+        static RubyByteArray prepend(RubyByteArray byteArray, Object string, int srcStart, int length,
                 @Bind Node node,
                 @Cached RubyStringLibrary strings,
-                @Cached TruffleString.CopyToByteArrayNode copyToByteArrayNode) {
+                @Cached TruffleString.GetInternalByteArrayNode getInternalByteArrayNode) {
             final byte[] bytes = byteArray.bytes;
 
             var tstring = strings.getTString(node, string);
             var encoding = strings.getTEncoding(node, string);
 
-            final int prependLength = tstring.byteLength(encoding);
             final int originalLength = bytes.length;
-            final int newLength = prependLength + originalLength;
+            final int newLength = length + originalLength;
             final byte[] prependedBytes = new byte[newLength];
 
-            copyToByteArrayNode.execute(tstring, 0, prependedBytes, 0, prependLength, encoding);
-            System.arraycopy(bytes, 0, prependedBytes, prependLength, originalLength);
+            var stringBytes = getInternalByteArrayNode.execute(tstring, encoding);
+            System.arraycopy(stringBytes.getArray(), stringBytes.getOffset() + srcStart, prependedBytes, 0, length);
+            System.arraycopy(bytes, 0, prependedBytes, length, originalLength);
 
             final RubyByteArray instance = new RubyByteArray(
                     coreLibrary(node).byteArrayClass,
@@ -132,10 +132,12 @@ public abstract class ByteArrayNodes {
         static Object fillFromString(RubyByteArray destByteArray, int dstStart, Object source, int srcStart, int length,
                 @Bind Node node,
                 @Cached RubyStringLibrary strings,
-                @Cached TruffleString.CopyToByteArrayNode copyToByteArrayNode) {
+                @Cached TruffleString.GetInternalByteArrayNode getInternalByteArrayNode) {
             var tstring = strings.getTString(node, source);
             var encoding = strings.getTEncoding(node, source);
-            copyToByteArrayNode.execute(tstring, srcStart, destByteArray.bytes, dstStart, length, encoding);
+            var stringBytes = getInternalByteArrayNode.execute(tstring, encoding);
+            System.arraycopy(stringBytes.getArray(), stringBytes.getOffset() + srcStart, destByteArray.bytes, dstStart,
+                    length);
             return source;
         }
 
