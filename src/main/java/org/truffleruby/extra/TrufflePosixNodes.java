@@ -11,15 +11,9 @@
 package org.truffleruby.extra;
 
 import java.lang.foreign.Arena;
-import java.lang.foreign.FunctionDescriptor;
-import java.lang.foreign.Linker;
-import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.SymbolLookup;
-import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.nio.file.Path;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -48,6 +42,7 @@ import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.library.RubyStringLibrary;
+import org.truffleruby.platform.FFMSupport;
 import org.truffleruby.shared.Platform;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -56,47 +51,49 @@ import com.oracle.truffle.api.dsl.Specialization;
 @CoreModule(value = "Truffle::POSIX", isClass = true)
 public abstract class TrufflePosixNodes {
 
-    private static final Linker LINKER = Linker.nativeLinker();
-    private static final MethodHandle OF_ADDRESS = createOfAddress();
     /* Keep the downcall handles and invoke helpers shared at the class level. Some signatures are used by multiple
      * primitives, such as signed/unsigned return variants and blocking/non-blocking variants, so duplicating them in
-     * each primitive would add code without improving the call shape. */
-    private static final MethodHandle HANDLE_I = createDowncallHandle("I()");
-    private static final MethodHandle HANDLE_L = createDowncallHandle("L()");
-    private static final MethodHandle HANDLE_I_I = createDowncallHandle("I(I)");
-    private static final MethodHandle HANDLE_I_L = createDowncallHandle("I(L)");
-    private static final MethodHandle HANDLE_L_I = createDowncallHandle("L(I)");
-    private static final MethodHandle HANDLE_L_L = createDowncallHandle("L(L)");
-    private static final MethodHandle HANDLE_S_I = createDowncallHandle("S(I)");
-    private static final MethodHandle HANDLE_S_L = createDowncallHandle("S(L)");
-    private static final MethodHandle HANDLE_S_S = createDowncallHandle("S(S)");
-    private static final MethodHandle HANDLE_V_L = createDowncallHandle("V(L)");
-    private static final MethodHandle HANDLE_I_II = createDowncallHandle("I(II)");
-    private static final MethodHandle HANDLE_I_IL = createDowncallHandle("I(IL)");
-    private static final MethodHandle HANDLE_I_IS = createDowncallHandle("I(IS)");
-    private static final MethodHandle HANDLE_I_LI = createDowncallHandle("I(LI)");
-    private static final MethodHandle HANDLE_I_LIS = createDowncallHandle("I(LIS)");
-    private static final MethodHandle HANDLE_I_LL = createDowncallHandle("I(LL)");
-    private static final MethodHandle HANDLE_I_LS = createDowncallHandle("I(LS)");
-    private static final MethodHandle HANDLE_L_LL = createDowncallHandle("L(LL)");
-    private static final MethodHandle HANDLE_V_LL = createDowncallHandle("V(LL)");
-    private static final MethodHandle HANDLE_I_III = createDowncallHandle("I(III)");
-    private static final MethodHandle HANDLE_I_IIL = createDowncallHandle("I(IIL)");
-    private static final MethodHandle HANDLE_I_ILI = createDowncallHandle("I(ILI)");
-    private static final MethodHandle HANDLE_I_ILL = createDowncallHandle("I(ILL)");
-    private static final MethodHandle HANDLE_I_LII = createDowncallHandle("I(LII)");
-    private static final MethodHandle HANDLE_I_LLI = createDowncallHandle("I(LLI)");
-    private static final MethodHandle HANDLE_I_LLL = createDowncallHandle("I(LLL)");
-    private static final MethodHandle HANDLE_L_ILI = createDowncallHandle("L(ILI)");
-    private static final MethodHandle HANDLE_L_ILL = createDowncallHandle("L(ILL)");
-    private static final MethodHandle HANDLE_L_LLL = createDowncallHandle("L(LLL)");
-    private static final MethodHandle HANDLE_S_ILI = createDowncallHandle("S(ILI)");
-    private static final MethodHandle HANDLE_I_ILLI = createDowncallHandle("I(ILLI)");
-    private static final MethodHandle HANDLE_L_ILLL = createDowncallHandle("L(ILLL)");
-    private static final MethodHandle HANDLE_I_LIIIL = createDowncallHandle("I(LIIIL)");
-    private static final MethodHandle HANDLE_I_LLILI = createDowncallHandle("I(LLILI)");
-    private static final MethodHandle HANDLE_L_LLIIIL = createDowncallHandle("L(LLIIIL)");
-    private static final MethodHandle HANDLE_I_LLLILIIL = createDowncallHandle("I(LLLILIIL)");
+     * each primitive would add code without improving the call shape.
+     *
+     * The leading L argument in every signature is the pointer to the errno int, which every libtruffleposix function
+     * takes as its first argument (see tool/generate-posix-functions.rb). The HANDLE_* names use the signature without
+     * it, like the corresponding POSIX functions. */
+    private static final MethodHandle HANDLE_I = FFMSupport.createDowncallHandle("I(L)");
+    private static final MethodHandle HANDLE_L = FFMSupport.createDowncallHandle("L(L)");
+    private static final MethodHandle HANDLE_I_I = FFMSupport.createDowncallHandle("I(LI)");
+    private static final MethodHandle HANDLE_I_L = FFMSupport.createDowncallHandle("I(LL)");
+    private static final MethodHandle HANDLE_L_I = FFMSupport.createDowncallHandle("L(LI)");
+    private static final MethodHandle HANDLE_L_L = FFMSupport.createDowncallHandle("L(LL)");
+    private static final MethodHandle HANDLE_S_I = FFMSupport.createDowncallHandle("S(LI)");
+    private static final MethodHandle HANDLE_S_L = FFMSupport.createDowncallHandle("S(LL)");
+    private static final MethodHandle HANDLE_S_S = FFMSupport.createDowncallHandle("S(LS)");
+    private static final MethodHandle HANDLE_V_L = FFMSupport.createDowncallHandle("V(LL)");
+    private static final MethodHandle HANDLE_I_II = FFMSupport.createDowncallHandle("I(LII)");
+    private static final MethodHandle HANDLE_I_IL = FFMSupport.createDowncallHandle("I(LIL)");
+    private static final MethodHandle HANDLE_I_IS = FFMSupport.createDowncallHandle("I(LIS)");
+    private static final MethodHandle HANDLE_I_LI = FFMSupport.createDowncallHandle("I(LLI)");
+    private static final MethodHandle HANDLE_I_LIS = FFMSupport.createDowncallHandle("I(LLIS)");
+    private static final MethodHandle HANDLE_I_LL = FFMSupport.createDowncallHandle("I(LLL)");
+    private static final MethodHandle HANDLE_I_LS = FFMSupport.createDowncallHandle("I(LLS)");
+    private static final MethodHandle HANDLE_L_LL = FFMSupport.createDowncallHandle("L(LLL)");
+    private static final MethodHandle HANDLE_V_LL = FFMSupport.createDowncallHandle("V(LLL)");
+    private static final MethodHandle HANDLE_I_III = FFMSupport.createDowncallHandle("I(LIII)");
+    private static final MethodHandle HANDLE_I_IIL = FFMSupport.createDowncallHandle("I(LIIL)");
+    private static final MethodHandle HANDLE_I_ILI = FFMSupport.createDowncallHandle("I(LILI)");
+    private static final MethodHandle HANDLE_I_ILL = FFMSupport.createDowncallHandle("I(LILL)");
+    private static final MethodHandle HANDLE_I_LII = FFMSupport.createDowncallHandle("I(LLII)");
+    private static final MethodHandle HANDLE_I_LLI = FFMSupport.createDowncallHandle("I(LLLI)");
+    private static final MethodHandle HANDLE_I_LLL = FFMSupport.createDowncallHandle("I(LLLL)");
+    private static final MethodHandle HANDLE_L_ILI = FFMSupport.createDowncallHandle("L(LILI)");
+    private static final MethodHandle HANDLE_L_ILL = FFMSupport.createDowncallHandle("L(LILL)");
+    private static final MethodHandle HANDLE_L_LLL = FFMSupport.createDowncallHandle("L(LLLL)");
+    private static final MethodHandle HANDLE_S_ILI = FFMSupport.createDowncallHandle("S(LILI)");
+    private static final MethodHandle HANDLE_I_ILLI = FFMSupport.createDowncallHandle("I(LILLI)");
+    private static final MethodHandle HANDLE_L_ILLL = FFMSupport.createDowncallHandle("L(LILLL)");
+    private static final MethodHandle HANDLE_I_LIIIL = FFMSupport.createDowncallHandle("I(LLIIIL)");
+    private static final MethodHandle HANDLE_I_LLILI = FFMSupport.createDowncallHandle("I(LLLILI)");
+    private static final MethodHandle HANDLE_L_LLIIIL = FFMSupport.createDowncallHandle("L(LLLIIIL)");
+    private static final MethodHandle HANDLE_I_LLLILIIL = FFMSupport.createDowncallHandle("I(LLLLILIIL)");
 
     // Lazily initialized for Native Image
     private static SymbolLookup libtruffleposixLookup;
@@ -118,16 +115,6 @@ public abstract class TrufflePosixNodes {
         return address;
     }
 
-    @TruffleBoundary
-    private static MethodHandle createOfAddress() {
-        try {
-            return MethodHandles.lookup().findStatic(MemorySegment.class, "ofAddress",
-                    MethodType.methodType(MemorySegment.class, long.class));
-        } catch (NoSuchMethodException | IllegalAccessException e) {
-            throw CompilerDirectives.shouldNotReachHere(e);
-        }
-    }
-
     private static int getErrno(RubyFiber currentFiber) {
         return currentFiber.posixErrnoPointer.readInt(0);
     }
@@ -144,39 +131,6 @@ public abstract class TrufflePosixNodes {
             libtruffleposixLookup = SymbolLookup.libraryLookup(Path.of(path), Arena.global());
         }
         return libtruffleposixLookup;
-    }
-
-    @TruffleBoundary
-    @SuppressWarnings("restricted")
-    private static MethodHandle createDowncallHandle(String carrierSignature) {
-        int firstArgument = carrierSignature.indexOf('(') + 1;
-        int arity = carrierSignature.length() - firstArgument - 1;
-        MemoryLayout[] argumentLayouts = new MemoryLayout[1 + arity];
-        argumentLayouts[0] = ValueLayout.JAVA_LONG; // the errno pointer
-        for (int i = 0; i < arity; i++) {
-            char carrier = carrierSignature.charAt(firstArgument + i);
-            argumentLayouts[1 + i] = carrierLayout(carrier);
-        }
-
-        char returnCarrier = carrierSignature.charAt(0);
-        FunctionDescriptor descriptor = returnCarrier == 'V'
-                ? FunctionDescriptor.ofVoid(argumentLayouts)
-                : FunctionDescriptor.of(carrierLayout(returnCarrier), argumentLayouts);
-
-        MethodHandle downcallHandle = LINKER.downcallHandle(descriptor);
-        MethodHandle methodHandle = MethodHandles.filterArguments(downcallHandle, 0, OF_ADDRESS);
-        MethodType methodType = descriptor.toMethodType().insertParameterTypes(0, long.class); // the function pointer
-        return methodHandle.asType(methodType);
-    }
-
-    private static MemoryLayout carrierLayout(char carrier) {
-        return switch (carrier) {
-            case 'B' -> ValueLayout.JAVA_BYTE;
-            case 'S' -> ValueLayout.JAVA_SHORT;
-            case 'I' -> ValueLayout.JAVA_INT;
-            case 'L' -> ValueLayout.JAVA_LONG;
-            default -> throw CompilerDirectives.shouldNotReachHere("unsupported native carrier " + carrier);
-        };
     }
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
