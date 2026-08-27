@@ -2162,10 +2162,15 @@ public abstract class CExtNodes {
         Object init(NativeLibrary library, RubyArray constants,
                 @Cached ArrayToObjectArrayNode arrayToObjectArrayNode) {
             final Object[] constantsArray = arrayToObjectArrayNode.executeToObjectArray(constants);
+            initFFMLayer(library, constantsArray);
+            return nil;
+        }
+
+        @TruffleBoundary
+        private void initFFMLayer(NativeLibrary library, Object[] constantsArray) {
             final CExtFFMLayer layer = new CExtFFMLayer(getContext(), getLanguage());
             getContext().setCExtFFMLayer(layer);
             layer.initialize(library, constantsArray);
-            return nil;
         }
     }
 

@@ -2268,7 +2268,7 @@ module Truffle::CExt
   end
 
   def rb_to_encoding(encoding)
-    RbEncoding.get(encoding)
+    RbEncoding.get(encoding).native_address
   end
 
   def rb_enc_from_encoding(rb_encoding)

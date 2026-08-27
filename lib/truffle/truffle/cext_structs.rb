@@ -22,7 +22,9 @@ module Truffle::CExt
   end
 
   def RARRAY_PTR(array)
-    RArrayPtr.new(array)
+    Primitive.array_store_to_native(array)
+    Primitive.cext_mark_object_on_call_exit(array)
+    Primitive.array_store_address(array)
   end
 end
 
@@ -107,60 +109,6 @@ class Truffle::CExt::RBasic
   end
 end
 
-# ruby.h: `struct RArray`
-class Truffle::CExt::RArrayPtr
-  attr_reader :array
-
-  def initialize(array)
-    @array = array
-  end
-
-  def polyglot_pointer?
-    Primitive.array_store_native?(@array)
-  end
-
-  def polyglot_as_pointer
-    Primitive.cext_mark_object_on_call_exit(@array)
-    Primitive.array_store_address(@array)
-  end
-
-  def polyglot_to_native
-    Primitive.array_store_to_native(@array)
-  end
-
-  def polyglot_has_array_elements?
-    true
-  end
-
-  def polyglot_array_size
-    @array.size
-  end
-
-  def polyglot_read_array_element(index)
-    Primitive.cext_wrap(@array[index])
-  end
-
-  def polyglot_write_array_element(index, value)
-    @array[index] = Primitive.cext_unwrap(value)
-  end
-
-  def polyglot_array_element_readable?(index)
-    index >= 0 && index < @array.size
-  end
-
-  def polyglot_array_element_modifiable?(index)
-    index >= 0 && index < @array.size
-  end
-
-  def polyglot_array_element_insertable?(index)
-    false
-  end
-
-  def polyglot_array_element_removable?(index)
-    false
-  end
-end
-
 # encoding.h: `struct rb_encoding`
 class Truffle::CExt::RbEncoding
   ENCODING_CACHE = Array.new(Encoding.list.size, nil) # Encoding index => RbEncoding
@@ -198,6 +146,12 @@ class Truffle::CExt::RbEncoding
     @encoding = encoding
     @pointer = nil
     @name = Truffle::CExt::RSTRING_PTR_FUNCTION.call(Primitive.cext_wrap(encoding.name))
+  end
+
+  # The address of the native rb_encoding struct, converting to native first if needed
+  def native_address
+    polyglot_to_native
+    @pointer
   end
 
   private

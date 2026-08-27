@@ -46,7 +46,7 @@
 #       VALUE (Primitive.cext_wrap), only converted to a handle (return only).
 #   B = Ruby true/false result converted to int 1/0 (return only).
 #   I = int, L = long, D = double, O = void (return only)
-#   P = native pointer (long); a returned Ruby object is converted with toNative/asPointer
+#   P = native pointer (long); a returned Truffle::FFI::Pointer is converted to its address, nil to 0
 #   F = native function pointer (long)
 #   Y = Ruby ID (long); converted to/from Symbol on the Java side
 #   A = VALUE array: expands to (const VALUE*, long) in C and (long, long) in Java

@@ -32,8 +32,11 @@ import java.lang.foreign.Arena;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.concurrent.atomic.AtomicReference;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.interop.InteropLibrary;
@@ -42,35 +45,31 @@ import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.fiber.RubyFiber;
-import org.truffleruby.core.encoding.Encodings;
-import org.truffleruby.core.encoding.TStringUtils;
-import org.truffleruby.core.string.StringOperations;
-import org.truffleruby.core.symbol.CoreSymbols;
-import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.extra.ffi.Pointer;
-import org.truffleruby.extra.ffi.RubyPointer;
-import org.truffleruby.language.Nil;
 import org.truffleruby.language.control.RaiseException;
-import org.truffleruby.language.dispatch.DispatchConfiguration;
-import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.platform.FFMSupport;
 import org.truffleruby.platform.NativeLibrary;
 
 /** The FFM-based layer connecting native C extension code and Java/Ruby: creates the native-to-Java upcall stubs for
- * {@link CExtUpcallTargets} and implements their runtime support ({@link CExtUpcallRuntime}).
+ * {@link CExtUpcallTargets} and implements their runtime support. Each upcall executes through a lazily-created
+ * {@link CExtUpcallRootNode} CallTarget so the conversions and dispatch partial-evaluate.
  *
  * <p>
  * Upcall stubs are allocated in {@link Arena#global()}: native code (including leaked threads and atexit handlers) may
  * hold the function pointers for the lifetime of the process, and libtruffleruby and C extensions are loaded with
- * RTLD_GLOBAL anyway. As a consequence only one Ruby context per process can load C extension support. */
-public final class CExtFFMLayer implements CExtUpcallRuntime {
+ * RTLD_GLOBAL anyway. As a consequence only one Ruby context at a time can load C extension support. */
+public final class CExtFFMLayer {
 
     /** The layer of the single live Ruby context which currently has C extension support loaded: the upcall stubs, the
      * C globals filled by rb_tr_init() and the RTLD_GLOBAL symbols are process-wide. Once that context is disposed, a
-     * new context can load C extension support again: it runs rb_tr_init() again with fresh upcall stubs and constant
-     * handles, overwriting the C globals. The stubs of disposed contexts are intentionally leaked, as they are
-     * allocated in Arena.global(). */
-    private static final AtomicReference<CExtFFMLayer> ACTIVE_LAYER = new AtomicReference<>();
+     * new context can load C extension support again: it runs rb_tr_init() again with the same upcall stubs (created
+     * once per process) and fresh constant handles, overwriting the C globals. Guarded by the CExtFFMLayer.class
+     * monitor together with CExtUpcallTargets' runtime, so deactivating a disposed layer cannot overwrite the runtime
+     * of a successor context which activated concurrently. */
+    private static CExtFFMLayer activeLayer;
+
+    /** The upcall stub addresses, created once per process in Arena.global() */
+    private static long[] upcallStubs;
 
     /** rb_tr_init(void** upcalls, const VALUE* constants) */
     private static final MethodHandle INIT = FFMSupport.createDowncallHandle("V(LL)");
@@ -79,24 +78,47 @@ public final class CExtFFMLayer implements CExtUpcallRuntime {
 
     private final RubyContext context;
     private final RubyLanguage language;
-    private final CExtUpcallTargets targets;
+    private final AtomicReferenceArray<CallTarget> upcallCallTargets;
+    private final ConcurrentHashMap<Long, String> methodNames = new ConcurrentHashMap<>();
     private long pendingExceptionAddressFunction;
 
     public CExtFFMLayer(RubyContext context, RubyLanguage language) {
         this.context = context;
         this.language = language;
-        this.targets = new CExtUpcallTargets(this);
+        this.upcallCallTargets = new AtomicReferenceArray<>(CExtUpcallTargets.UPCALLS.length / 6);
     }
 
     @TruffleBoundary
     public void initialize(NativeLibrary library, Object[] constants) {
-        if (!ACTIVE_LAYER.compareAndSet(null, this)) {
-            throw new RaiseException(context, context.getCoreExceptions().runtimeError(
-                    "C extension support can only be loaded in a single Ruby context at a time in a process, " +
-                            "because the FFM upcall stubs and RTLD_GLOBAL symbols are process-wide",
-                    (Node) null));
+        synchronized (CExtFFMLayer.class) {
+            if (activeLayer != null) {
+                throw new RaiseException(context, context.getCoreExceptions().runtimeError(
+                        "C extension support can only be loaded in a single Ruby context at a time in a process, " +
+                                "because the FFM upcall stubs and RTLD_GLOBAL symbols are process-wide",
+                        (Node) null));
+            }
+            if (upcallStubs == null) {
+                final String[] upcallsArray = CExtUpcallTargets.UPCALLS;
+                final long[] stubs = new long[upcallsArray.length / 6];
+                for (int i = 0; i < stubs.length; i++) {
+                    stubs[i] = createUpcallStub(upcallsArray[i * 6], upcallsArray[i * 6 + 1]);
+                }
+                upcallStubs = stubs;
+            }
+            activeLayer = this;
+            CExtUpcallTargets.setRuntime(this);
         }
 
+        try {
+            initLibTruffleRuby(library, constants);
+        } catch (Throwable t) {
+            // Roll back, so this context or another one can try to load C extension support again
+            deactivate(this);
+            throw t;
+        }
+    }
+
+    private void initLibTruffleRuby(NativeLibrary library, Object[] constants) {
         long initFunction = library.lookupSymbol("rb_tr_init");
         if (initFunction == 0) {
             throw CompilerDirectives.shouldNotReachHere("rb_tr_init not found in " + library.getPath());
@@ -106,13 +128,12 @@ public final class CExtFFMLayer implements CExtUpcallRuntime {
             throw CompilerDirectives.shouldNotReachHere("rb_tr_pending_exception_address not found");
         }
 
-        final String[] upcallsArray = CExtUpcallTargets.UPCALLS;
-        final int upcallsCount = upcallsArray.length / 2;
+        final int upcallsCount = CExtUpcallTargets.UPCALLS.length / 6;
         // rb_tr_init() copies both arrays into C globals, so they can be freed after the call
         try (Pointer upcalls = Pointer.malloc(context, upcallsCount * 8L);
                 Pointer constantHandles = Pointer.malloc(context, constants.length * 8L)) {
             for (int i = 0; i < upcallsCount; i++) {
-                upcalls.writeLong(i * 8L, createUpcallStub(upcallsArray[i * 2], upcallsArray[i * 2 + 1]));
+                upcalls.writeLong(i * 8L, upcallStubs[i]);
             }
             for (int i = 0; i < constants.length; i++) {
                 constantHandles.writeLong(i * 8L, toValueHandle(constants[i]));
@@ -126,15 +147,15 @@ public final class CExtFFMLayer implements CExtUpcallRuntime {
     }
 
     @TruffleBoundary
-    private long createUpcallStub(String methodName, String carrierSignature) {
-        /* IMPORTANT: for fast Native Image direct upcalls, the MethodHandle must be exactly a direct findVirtual handle
-         * with only the receiver bound via bindTo() - no asType()/filterArguments()/other adaptation - otherwise SVM
-         * silently falls back to the slow generic upcall stub. See FFMSupport#createUpcallStub. */
+    private static long createUpcallStub(String methodName, String carrierSignature) {
+        /* IMPORTANT: for fast Native Image direct upcalls, the MethodHandle must be a direct method handle matching the
+         * registered handle shape - here a findStatic handle (findVirtual + bindTo(receiver) would also work), with no
+         * asType()/filterArguments()/other adaptation - otherwise SVM silently falls back to the slow generic upcall
+         * stub. See FFMSupport#createUpcallStub. */
         final MethodHandle methodHandle;
         try {
             methodHandle = MethodHandles.lookup()
-                    .findVirtual(CExtUpcallTargets.class, methodName, methodTypeFor(carrierSignature))
-                    .bindTo(targets);
+                    .findStatic(CExtUpcallTargets.class, methodName, methodTypeFor(carrierSignature));
         } catch (NoSuchMethodException | IllegalAccessException e) {
             throw CompilerDirectives.shouldNotReachHere(e);
         }
@@ -162,92 +183,9 @@ public final class CExtFFMLayer implements CExtUpcallRuntime {
         };
     }
 
-    // region CExtUpcallRuntime
-
-    @Override
-    public Object unwrap(long handle) {
-        return UnwrapNode.UnwrapNativeNode.executeUncached(handle);
-    }
-
-    @Override
     @TruffleBoundary
-    public Object idToSymbol(long id) {
-        if (CoreSymbols.isStaticSymbol(id)) {
-            return language.coreSymbols.STATIC_SYMBOLS[CoreSymbols.idToIndex(id)];
-        } else {
-            return UnwrapNode.UnwrapNativeNode.executeUncached(id);
-        }
-    }
-
-    @Override
-    @TruffleBoundary
-    public Object readString(long address) {
-        final Pointer pointer = new Pointer(context, address);
-        final byte[] bytes = pointer.readZeroTerminatedByteArray(context, InteropLibrary.getUncached(), 0);
-        return StringOperations.createUTF8String(context, language, TStringUtils.fromByteArray(bytes, Encodings.UTF_8));
-    }
-
-    @TruffleBoundary
-    private RubyPointer newRubyPointer(long address) {
-        return new RubyPointer(
-                context.getCoreLibrary().truffleFFIPointerClass,
-                language.truffleFFIPointerShape,
-                new Pointer(context, address));
-    }
-
-    @Override
-    public Object pointerArg(long address) {
-        return address == 0 ? Nil.INSTANCE : newRubyPointer(address);
-    }
-
-    @Override
-    public Object functionArg(long address) {
-        return address == 0 ? Nil.INSTANCE : newRubyPointer(address);
-    }
-
-    @Override
-    @TruffleBoundary
-    public Object valueArray(long address, long count) {
-        return new NativeValueArray(context, address, (int) count);
-    }
-
-    @Override
-    @TruffleBoundary
-    public Object dispatchCExt(String name, Object... arguments) {
-        return DispatchNode.getUncached().call(DispatchConfiguration.PRIVATE,
-                context.getCoreLibrary().truffleCExtModule, name, arguments);
-    }
-
-    @Override
-    @TruffleBoundary
-    public Object dispatchMethod(Object receiver, Object name, Object... arguments) {
-        final String methodName;
-        try {
-            methodName = InteropLibrary.getUncached().asString(name);
-        } catch (Throwable t) {
-            throw CompilerDirectives.shouldNotReachHere(t);
-        }
-        return DispatchNode.getUncached().call(DispatchConfiguration.PRIVATE, receiver, methodName, arguments);
-    }
-
-    @Override
-    @TruffleBoundary
-    public long toValueHandle(Object object) {
+    private long toValueHandle(Object object) {
         final ValueWrapper wrapper = WrapNodeGen.getUncached().execute(object);
-        return wrapperToHandle(wrapper);
-    }
-
-    @Override
-    @TruffleBoundary
-    public long wrappedToHandle(Object wrapper) {
-        if (wrapper instanceof Long longValue) {
-            // Already a VALUE handle, e.g. returned by a setjmp wrapper downcall
-            return longValue;
-        }
-        return wrapperToHandle((ValueWrapper) wrapper);
-    }
-
-    private static long wrapperToHandle(ValueWrapper wrapper) {
         final InteropLibrary interop = InteropLibrary.getUncached();
         try {
             interop.toNative(wrapper);
@@ -257,77 +195,46 @@ public final class CExtFFMLayer implements CExtUpcallRuntime {
         }
     }
 
-    @Override
-    @TruffleBoundary
-    public long toID(Object symbol) {
-        final RubySymbol rubySymbol = (RubySymbol) symbol;
-        if (rubySymbol.getId() != RubySymbol.UNASSIGNED_ID) {
-            return rubySymbol.getId();
-        } else {
-            return toValueHandle(rubySymbol);
+    // region Upcall runtime, called by CExtUpcallTargets
+
+    /** Execute the upcall at the given index in CExtUpcallTargets order, with the raw boxed primitive arguments. The
+     * argument and result conversions happen in {@link CExtUpcallRootNode} with cached nodes; the result is the boxed
+     * return carrier value ({@code Long} for handles and pointers, {@code Integer}, {@code Double}). */
+    public Object upcall(int index, Object... arguments) {
+        CallTarget callTarget = upcallCallTargets.get(index);
+        if (callTarget == null) {
+            callTarget = createUpcallCallTarget(index);
         }
+        /* Pass null as the location instead of using CallTarget.call(Object...), which would read the encapsulating
+         * node: that node belongs to some unrelated Ruby node up the stack (e.g. an uncached block call) and would be
+         * recorded as the caller node of the upcall, confusing stack walking: the Ruby frame which made the downcall
+         * would get that unrelated node as its FrameInstance#getCallNode() instead of null, breaking e.g.
+         * rb_debug_inspector_open(). */
+        return callTarget.call(null, arguments);
     }
 
-    @Override
     @TruffleBoundary
-    public int toInt(Object object) {
-        try {
-            return InteropLibrary.getUncached().asInt(object);
-        } catch (Throwable t) {
-            throw CompilerDirectives.shouldNotReachHere(t);
-        }
+    private CallTarget createUpcallCallTarget(int index) {
+        final var spec = CExtUpcallRootNode.UpcallSpec.parse(
+                CExtUpcallTargets.UPCALLS[index * 6 + 2], CExtUpcallTargets.UPCALLS[index * 6 + 3],
+                CExtUpcallTargets.UPCALLS[index * 6 + 4], CExtUpcallTargets.UPCALLS[index * 6 + 5]);
+        final String name = CExtUpcallTargets.UPCALLS[index * 6];
+        final CallTarget callTarget = new CExtUpcallRootNode(language, this, name, spec).getCallTarget();
+        return upcallCallTargets.compareAndExchange(index, null, callTarget) == null
+                ? callTarget
+                : upcallCallTargets.get(index);
     }
 
-    @Override
+    /** Whether the current thread is entered in the Ruby context, i.e. ruby_native_thread_p(). Unlike upcalls, this
+     * must work on native threads not entered in the context and cannot throw. */
     @TruffleBoundary
-    public int toBooleanInt(Object object) {
-        try {
-            return InteropLibrary.getUncached().asBoolean(object) ? 1 : 0;
-        } catch (Throwable t) {
-            throw CompilerDirectives.shouldNotReachHere(t);
-        }
+    public int isRubyThread() {
+        return context.getEnv().getContext().isEntered() ? 1 : 0;
     }
 
-    @Override
-    @TruffleBoundary
-    public long toLong(Object object) {
-        try {
-            return InteropLibrary.getUncached().asLong(object);
-        } catch (Throwable t) {
-            throw CompilerDirectives.shouldNotReachHere(t);
-        }
-    }
-
-    @Override
-    @TruffleBoundary
-    public double toDouble(Object object) {
-        try {
-            return InteropLibrary.getUncached().asDouble(object);
-        } catch (Throwable t) {
-            throw CompilerDirectives.shouldNotReachHere(t);
-        }
-    }
-
-    @Override
-    @TruffleBoundary
-    public long toPointer(Object object) {
-        if (object == Nil.INSTANCE) {
-            return 0;
-        } else if (object instanceof Long longValue) {
-            return longValue;
-        } else if (object instanceof Integer intValue) {
-            return intValue;
-        }
-        final InteropLibrary interop = InteropLibrary.getUncached();
-        try {
-            interop.toNative(object);
-            return interop.asPointer(object);
-        } catch (Throwable t) {
-            throw CompilerDirectives.shouldNotReachHere(t);
-        }
-    }
-
-    @Override
+    /** Store the exception as the pending C extension exception for the current thread and set the native pending
+     * exception flag, so the native caller longjmps to the innermost setjmp wrapper and the exception is rethrown when
+     * the downcall returns. Must not throw, as no Java exception can propagate through native frames. */
     @TruffleBoundary
     public void reportException(Throwable throwable) {
         try {
@@ -344,6 +251,30 @@ public final class CExtFFMLayer implements CExtUpcallRuntime {
             // Nothing must escape to the native caller
             t.printStackTrace();
         }
+    }
+
+    // endregion
+
+    /** The method name of a generic invoke upcall, from a C string literal address (cached by address) */
+    @TruffleBoundary
+    public String readMethodName(long address) {
+        final String cached = methodNames.get(address);
+        if (cached != null) {
+            return cached;
+        }
+        final String name = readJavaString(address);
+        methodNames.putIfAbsent(address, name);
+        return name;
+    }
+
+    @TruffleBoundary
+    private String readJavaString(long address) {
+        return new String(readZeroTerminatedByteArray(address), StandardCharsets.UTF_8);
+    }
+
+    private byte[] readZeroTerminatedByteArray(long address) {
+        final Pointer pointer = new Pointer(context, address);
+        return pointer.readZeroTerminatedByteArray(context, InteropLibrary.getUncached(), 0);
     }
 
     private long invokePendingExceptionAddress() {
@@ -375,11 +306,17 @@ public final class CExtFFMLayer implements CExtUpcallRuntime {
         throw (T) throwable;
     }
 
-    /** Called when the context owning this layer is disposed, so a new context can load C extension support */
+    /** Called when the context owning this layer is disposed, so a new context can load C extension support and the
+     * disposed context is not kept alive by the process-wide upcall stubs */
     public static void deactivate(CExtFFMLayer layer) {
-        ACTIVE_LAYER.compareAndSet(layer, null);
+        synchronized (CExtFFMLayer.class) {
+            /* The check ensures a layer which never activated (or was already deactivated) does not overwrite the
+             * runtime of a successor context which activated in the meantime. */
+            if (activeLayer == layer) {
+                activeLayer = null;
+                CExtUpcallTargets.setRuntime(null);
+            }
+        }
     }
-
-    // endregion
 
 }
