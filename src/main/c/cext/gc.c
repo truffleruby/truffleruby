@@ -35,7 +35,7 @@ void rb_gc_mark(VALUE ptr) {
 }
 
 void rb_gc_mark_locations(const VALUE *start, const VALUE *end) {
-  VALUE *value = start;
+  const VALUE *value = start;
 
   while (value < end) {
     rb_gc_mark_maybe(*value);

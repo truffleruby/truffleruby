@@ -155,5 +155,5 @@ int rb_absint_singlebit_p(VALUE val) {
 
 VALUE rb_int2big(intptr_t n) {
   // intptr_t is the same as long
-  return rb_tr_longwrap(n);
+  return rb_tr_up_rb_int2big(n);
 }

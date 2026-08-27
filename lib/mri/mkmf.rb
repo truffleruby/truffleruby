@@ -3021,11 +3021,11 @@ MESSAGE
     "$(CFLAGS) $(src) $(LIBPATH) $(LDFLAGS) $(ARCH_FLAG) $(LOCAL_LIBS) $(LIBS)"
 
   if defined?(::TruffleRuby)
-    # We need to link to libtrufflerubytrampoline for MakeMakefile#try_link to succeed.
-    # The created executable will link against libtrufflerubytrampoline and
+    # We need to link to libtruffleruby for MakeMakefile#try_link to succeed.
+    # The created executable will link against libtruffleruby and
     # might be executed for #try_constant and #try_run so we also need -rpath.
-    libtrufflerubytrampoline_dir = File.dirname(RbConfig::CONFIG['libtrufflerubytrampoline'])
-    TRY_LINK << " -L#{libtrufflerubytrampoline_dir} -Wl,-rpath,#{libtrufflerubytrampoline_dir} -ltrufflerubytrampoline"
+    libtruffleruby_dir = File.dirname(RbConfig::CONFIG['libtruffleruby'])
+    TRY_LINK << " -L#{libtruffleruby_dir} -Wl,-rpath,#{libtruffleruby_dir} -ltruffleruby"
   end
 
   ##

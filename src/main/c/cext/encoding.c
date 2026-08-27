@@ -13,8 +13,6 @@
 
 // Encoding, rb_enc_*
 
-POLYGLOT_DECLARE_TYPE(rb_encoding)
-
 // returns Truffle::CExt::RbEncoding, takes Encoding or String
 rb_encoding* rb_to_encoding(VALUE encoding) {
   encoding = rb_tr_up_rb_convert_to_encoding(encoding); // Convert to Encoding
@@ -228,11 +226,11 @@ int rb_enc_get_index(VALUE obj) {
 
 char* rb_enc_left_char_head(const char *start, const char *p, const char *end, rb_encoding *enc) {
   if (p <= start || p >= end) {
-    return p;
+    return (char *) p;
   }
   int length = end - start;
   int position = rb_tr_up_rb_enc_left_char_head(rb_enc_from_encoding(enc), rb_str_new(start, length), p - start);
-  return start + position;
+  return (char *) start + position;
 }
 
 int rb_enc_mbclen(const char *p, const char *e, rb_encoding *enc) {

@@ -41,7 +41,6 @@ module RbConfig
   ruby_home = Truffle::Boot.ruby_home
   TOPDIR = ruby_home
 
-  build_libtruffleruby = ENV['BUILD_LIBTRUFFLERUBY'] == 'true'
 
   host_os = Truffle::System.host_os
   host_cpu = Truffle::System.host_cpu
@@ -65,39 +64,29 @@ module RbConfig
   includedir = "#{prefix}/lib/cext" # the parent dir of rubyhdrdir
   cflags_pre = ''
 
-  if build_libtruffleruby
-    ar = Truffle::Boot.toolchain_executable(:AR)
-    cc = Truffle::Boot.toolchain_executable(:CC)
-    cxx = Truffle::Boot.toolchain_executable(:CXX)
-    ranlib = Truffle::Boot.toolchain_executable(:RANLIB)
-    strip = Truffle::Boot.toolchain_executable(:STRIP)
-
-    strip = "#{strip} --keep-section=.llvmbc" unless Truffle::Platform.darwin?
+  if Truffle::Platform.linux?
+    ar = 'gcc-ar'
+    cc = 'gcc' # -std=gnu99 ?
+    cxx = 'g++'
+    ranlib = 'gcc-ranlib'
+    strip = 'strip -S -x'
+  elsif Truffle::Platform.darwin?
+    ar = 'ar'
+    cc = 'clang'
+    cxx = 'clang++'
+    ranlib = 'ranlib'
+    # We add -x here, `strip -A -n` always fails, like `error: symbols referenced by indirect symbol table entries that can't be stripped` even on CRuby.
+    # This is notably necessary for grpc where the current logic does not append -x for TruffleRuby:
+    # https://github.com/grpc/grpc/blob/54f65e0dbd2151a3ba2ad364327c0c31b200a5ae/src/ruby/ext/grpc/extconf.rb#L125-L126
+    strip = 'strip -A -n -x'
+    cflags_pre = '-fdeclspec '
   else
-    if Truffle::Platform.linux?
-      ar = 'gcc-ar'
-      cc = 'gcc' # -std=gnu99 ?
-      cxx = 'g++'
-      ranlib = 'gcc-ranlib'
-      strip = 'strip -S -x'
-    elsif Truffle::Platform.darwin?
-      ar = 'ar'
-      cc = 'clang'
-      cxx = 'clang++'
-      ranlib = 'ranlib'
-      # We add -x here, `strip -A -n` always fails, like `error: symbols referenced by indirect symbol table entries that can't be stripped` even on CRuby.
-      # This is notably necessary for grpc where the current logic does not append -x for TruffleRuby:
-      # https://github.com/grpc/grpc/blob/54f65e0dbd2151a3ba2ad364327c0c31b200a5ae/src/ruby/ext/grpc/extconf.rb#L125-L126
-      strip = 'strip -A -n -x'
-      cflags_pre = '-fdeclspec '
-    else
-      raise 'Unknown platform'
-    end
+    raise 'Unknown platform'
   end
 
   # Determine the various flags for native compilation
-  optflags = build_libtruffleruby ? '' : '-O3 -fno-fast-math'
-  debugflags = build_libtruffleruby ? '' : '-ggdb3'
+  optflags = '-O3 -fno-fast-math'
+  debugflags = '-ggdb3'
   warnflags = [
     '-Werror=implicit-function-declaration', # https://bugs.ruby-lang.org/issues/18615
     '-Wno-int-conversion',             # MRI has VALUE defined as long while we have it as void*
@@ -120,7 +109,6 @@ module RbConfig
   if Truffle::Boot.get_option 'building-core-cexts'
     repo = Truffle::System.get_java_property 'truffleruby.repository'
     libtruffleruby = "#{repo}/src/main/c/cext/libtruffleruby.#{soext}"
-    libtrufflerubytrampoline = "#{repo}/src/main/c/cext-trampoline/libtrufflerubytrampoline.#{soext}"
 
     relative_debug_paths = " -fdebug-prefix-map=#{repo}=."
     cppflags << relative_debug_paths
@@ -132,7 +120,6 @@ module RbConfig
     warnflags << '-Wno-error=deprecated-declarations'
   else
     libtruffleruby = "#{cext_dir}/libtruffleruby.#{soext}"
-    libtrufflerubytrampoline = "#{cext_dir}/libtrufflerubytrampoline.#{soext}"
   end
 
   # We do not link to libtruffleruby here to workaround GR-29448
@@ -186,7 +173,6 @@ module RbConfig
     'LIBRUBY_SO'        => "cext/libtruffleruby.#{soext}",
     'LIBS'              => libs,
     'libtruffleruby'    => libtruffleruby,
-    'libtrufflerubytrampoline' => libtrufflerubytrampoline,
     'MAKEDIRS'          => 'mkdir -p',
     'MAJOR'             => major,
     'MKDIR_P'           => 'mkdir -p',

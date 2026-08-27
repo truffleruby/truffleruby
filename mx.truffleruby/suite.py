@@ -448,17 +448,12 @@ suite = {
             "native": True,
             "dir": "src/main/c",
             "buildDependencies": [
-                "sulong:SULONG_BOOTSTRAP_TOOLCHAIN", # graalvm-native-clang
-                "sulong:SULONG_HOME", # polyglot.h
-                "truffle:TRUFFLE_NFI_NATIVE", # trufflenfi.h
                 "TRUFFLERUBY-BOOTSTRAP-LAUNCHER",
                 "libssl",
                 "libyaml",
             ],
             "buildEnv": {
                 "TRUFFLERUBY_BOOTSTRAP_LAUNCHER": "<path:TRUFFLERUBY-BOOTSTRAP-LAUNCHER>/miniruby",
-                "GRAALVM_TOOLCHAIN_CC": "<toolchainGetToolPath:native,CC>",
-                "TRUFFLE_NFI_NATIVE_INCLUDE": "<path:truffle:TRUFFLE_NFI_NATIVE>/include",
                 "BIGDECIMAL_VERSION": "<gem_version:bigdecimal>",
                 "DEBUG_VERSION": "<gem_version:debug>",
                 "NKF_VERSION": "<gem_version:nkf>",
@@ -468,7 +463,6 @@ suite = {
             "output": ".",
             "results": [
                 "src/main/c/cext/<lib:truffleruby>",
-                "src/main/c/cext-trampoline/<lib:trufflerubytrampoline>",
                 "src/main/c/bigdecimal/<extsuffix:bigdecimal>",
                 "src/main/c/date/<extsuffix:date_core>",
                 "src/main/c/etc/<extsuffix:etc>",
@@ -883,7 +877,6 @@ suite = {
                     "dependency:org.truffleruby.librubysignal",
                     "dependency:org.truffleruby.libtruffleposix",
                     "dependency:org.truffleruby.cext/src/main/c/cext/<lib:truffleruby>",
-                    "dependency:org.truffleruby.cext/src/main/c/cext-trampoline/<lib:trufflerubytrampoline>",
                 ],
                 # Create the complete files for bundled gems to let RubyGems know the gems are fully built and can be activated
                 "lib/gems/extensions/<cruby_arch>-<os>/<truffleruby_abi_version>/bigdecimal-<gem_version:bigdecimal>/gem.build_complete": "string:",

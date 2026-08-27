@@ -68,6 +68,9 @@ public interface CExtUpcallRuntime {
     /** Convert an already-wrapped VALUE result (carrier W) to its handle */
     long wrappedToHandle(Object wrapper);
 
+    /** Convert a Ruby Symbol result to an ID (carrier ID return) */
+    long toID(Object symbol);
+
     int toInt(Object object);
 
     /** Ruby true/false result (carrier B) as 1/0 */

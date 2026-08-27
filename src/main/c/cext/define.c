@@ -47,7 +47,7 @@ void rb_prepend_module(VALUE module, VALUE to_prepend) {
 
 #undef rb_define_method
 void rb_define_method(VALUE module, const char *name, VALUE (*function)(ANYARGS), int argc) {
-  if (function == rb_tr_rb_f_notimplement) {
+  if (function == (VALUE (*)(ANYARGS)) rb_f_notimplement) {
     rb_tr_up_rb_define_method_undefined(module, rb_str_new_cstr(name));
   } else {
     rb_tr_up_rb_define_method(module, rb_str_new_cstr(name), function, argc);

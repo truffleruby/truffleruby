@@ -39,8 +39,8 @@ find lib/mri -name '*.gemspec' -delete
 find lib/mri -name '.document' -delete
 
 # *.c
-cp "$RUBY_SOURCE_DIR/st.c" src/main/c/cext-trampoline
-cp "$RUBY_SOURCE_DIR/missing/strlcpy.c" src/main/c/cext-trampoline
+cp "$RUBY_SOURCE_DIR/st.c" src/main/c/cext
+cp "$RUBY_SOURCE_DIR/missing/strlcpy.c" src/main/c/cext
 
 # Copy core library Ruby files
 cp "$RUBY_SOURCE_DIR/pathname_builtin.rb" src/main/ruby/truffleruby/core/pathname.rb

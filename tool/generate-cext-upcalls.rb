@@ -272,11 +272,12 @@ RET_CONVERSIONS = {
   'D' => ->(call) { "return runtime.toDouble(#{call});" },
   'P' => ->(call) { "return runtime.toPointer(#{call});" },
   'F' => ->(call) { "return runtime.toPointer(#{call});" },
+  'Y' => ->(call) { "return runtime.toID(#{call});" },
   'O' => ->(call) { "#{call};" },
 }.freeze
 
 SENTINELS = { 'V' => '0L', 'W' => '0L', 'I' => '0', 'B' => '0', 'L' => '0L', 'D' => '0.0', 'P' => '0L',
-              'F' => '0L' }.freeze
+              'F' => '0L', 'Y' => '0L' }.freeze
 
 UPCALLS.each do |cname, kind, ret, args|
   carriers = args.chars

@@ -112,13 +112,13 @@ RBIMPL_WARNING_IGNORED(-Wattributes)
 #include "regint.h"
 #include "st.h"
 #include <assert.h>
-#elif defined RUBY_EXPORT
+#elif defined RUBY_EXPORT && !defined TRUFFLERUBY
+// TruffleRuby: skip these internal MRI headers which are not available; ruby.h and
+// internal/bits.h below provide everything needed to compile this copy of st.c.
 #include "internal.h"
 #include "internal/bits.h"
 #include "internal/hash.h"
-#ifndef TRUFFLERUBY
 #include "internal/sanitizers.h"
-#endif
 #include "internal/set_table.h"
 #include "internal/st.h"
 #include "ruby_assert.h"

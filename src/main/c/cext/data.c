@@ -118,7 +118,7 @@ VALUE rb_data_object_zalloc(VALUE klass, size_t size, RUBY_DATA_FUNC dmark, RUBY
 // Typed data
 
 VALUE rb_data_typed_object_wrap(VALUE ruby_class, void *data, const rb_data_type_t *data_type) {
-  return rb_tr_up_rb_data_typed_object_wrap(ruby_class, data, data_type, data_type->function.dmark, data_type->function.dfree, data_type->function.dsize);
+  return rb_tr_up_rb_data_typed_object_wrap(ruby_class, data, (void *) data_type, (long) data_type->function.dmark, (long) data_type->function.dfree, (long) data_type->function.dsize);
 }
 
 VALUE rb_data_typed_object_zalloc(VALUE ruby_class, size_t size, const rb_data_type_t *data_type) {

@@ -149,15 +149,14 @@ COPYRIGHT
   end
 
   f.puts
-  f.puts "void rb_tr_init_global_constants(VALUE (*get_constant)(const char*)) {"
-  constants.each do |name, expr|
-    f.puts "  #{name} = get_constant(\"#{name}\");"
+  f.puts "// Constants are passed as an array of VALUE handles, in the order of GLOBAL_CONSTANT_NAMES"
+  f.puts "// in lib/truffle/truffle/cext_constants.rb (the order of this file)."
+  f.puts "void rb_tr_init_global_constants(const VALUE *constants) {"
+  constants.each_with_index do |(name, expr), index|
+    f.puts "  #{name} = constants[#{index}];"
   end
   f.puts "}"
 end
-
-File.write "src/main/c/cext-trampoline/cext_constants.c",
-  File.read("src/main/c/cext/cext_constants.c").sub('rb_tr_init_global_constants', 'rb_tr_trampoline_init_global_constants')
 
 File.open("lib/truffle/truffle/cext_constants.rb", "w") do |f|
   f.puts <<COPYRIGHT
@@ -177,6 +176,13 @@ COPYRIGHT
   f.puts
 
   f.puts "module Truffle::CExt"
+  f.puts "  # The order must match src/main/c/cext/cext_constants.c's rb_tr_init_global_constants()"
+  f.puts "  GLOBAL_CONSTANT_NAMES = %i["
+  constants.each do |name, expr|
+    f.puts "    #{name}"
+  end
+  f.puts "  ]"
+  f.puts
   constants.each do |name, expr|
     f.puts "  def #{name}"
     f.puts "    #{expr}"

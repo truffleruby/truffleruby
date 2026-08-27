@@ -3563,6 +3563,30 @@ public final class CExtUpcallTargets {
     }
 
     @CExtUpcall
+    public long upcall_rb_id2sym(long v0) {
+        try {
+            Object a0 = runtime.idToSymbol(v0);
+            Object result = runtime.dispatchCExt("rb_id2sym", a0);
+            return runtime.toValueHandle(result);
+        } catch (Throwable t) {
+            runtime.reportException(t);
+            return 0L;
+        }
+    }
+
+    @CExtUpcall
+    public long upcall_rb_int2big(long v0) {
+        try {
+            Object a0 = v0;
+            Object result = runtime.dispatchCExt("rb_int2big", a0);
+            return runtime.toValueHandle(result);
+        } catch (Throwable t) {
+            runtime.reportException(t);
+            return 0L;
+        }
+    }
+
+    @CExtUpcall
     public long upcall_rb_int_positive_pow(long v0, long v1) {
         try {
             Object a0 = runtime.unwrap(v0);
@@ -5215,6 +5239,18 @@ public final class CExtUpcallTargets {
     }
 
     @CExtUpcall
+    public long upcall_rb_sym2id(long v0) {
+        try {
+            Object a0 = runtime.unwrap(v0);
+            Object result = runtime.dispatchCExt("rb_sym2id", a0);
+            return runtime.toID(result);
+        } catch (Throwable t) {
+            runtime.reportException(t);
+            return 0L;
+        }
+    }
+
+    @CExtUpcall
     public long upcall_rb_syserr_new(long v0, long v1) {
         try {
             Object a0 = runtime.unwrap(v0);
@@ -5354,8 +5390,8 @@ public final class CExtUpcallTargets {
             Object a0 = v0;
             Object a1 = v1;
             Object a2 = v2;
-            Object a3 = runtime.pointerArg(v3);
-            Object a4 = runtime.pointerArg(v4);
+            Object a3 = runtime.unwrap(v3);
+            Object a4 = runtime.unwrap(v4);
             Object result = runtime.dispatchCExt("rb_time_timespec_new", a0, a1, a2, a3, a4);
             return runtime.toValueHandle(result);
         } catch (Throwable t) {
@@ -6189,6 +6225,8 @@ public final class CExtUpcallTargets {
             "upcall_rb_ident_hash_new", "L()",
             "upcall_rb_inspect", "L(L)",
             "upcall_rb_int_cmp", "I(LL)",
+            "upcall_rb_id2sym", "L(L)",
+            "upcall_rb_int2big", "L(L)",
             "upcall_rb_int_positive_pow", "L(LL)",
             "upcall_rb_integer_bytes", "L(LIILLL)",
             "upcall_rb_integer_type_p", "I(L)",
@@ -6322,6 +6360,7 @@ public final class CExtUpcallTargets {
             "upcall_rb_struct_new_no_splat", "L(LL)",
             "upcall_rb_struct_size", "I(L)",
             "upcall_rb_syserr_fail", "V(IL)",
+            "upcall_rb_sym2id", "L(L)",
             "upcall_rb_syserr_new", "L(LL)",
             "upcall_rb_thread_alone", "I()",
             "upcall_rb_thread_call_with_gvl", "L(LL)",

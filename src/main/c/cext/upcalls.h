@@ -2580,6 +2580,24 @@ static inline int rb_tr_up_rb_int_cmp(VALUE v0, VALUE v1) {
   return result;
 }
 
+extern VALUE (*rb_tr_up_impl_rb_id2sym)(ID v0);
+static inline VALUE rb_tr_up_rb_id2sym(ID v0) {
+  VALUE result = rb_tr_up_impl_rb_id2sym(v0);
+  if (UNLIKELY(rb_tr_pending_exception)) {
+    rb_tr_longjmp_from_java_exception();
+  }
+  return result;
+}
+
+extern VALUE (*rb_tr_up_impl_rb_int2big)(long v0);
+static inline VALUE rb_tr_up_rb_int2big(long v0) {
+  VALUE result = rb_tr_up_impl_rb_int2big(v0);
+  if (UNLIKELY(rb_tr_pending_exception)) {
+    rb_tr_longjmp_from_java_exception();
+  }
+  return result;
+}
+
 extern VALUE (*rb_tr_up_impl_rb_int_positive_pow)(VALUE v0, VALUE v1);
 static inline VALUE rb_tr_up_rb_int_positive_pow(VALUE v0, VALUE v1) {
   VALUE result = rb_tr_up_impl_rb_int_positive_pow(v0, v1);
@@ -3765,6 +3783,15 @@ static inline void rb_tr_up_rb_syserr_fail(int v0, VALUE v1) {
   }
 }
 
+extern ID (*rb_tr_up_impl_rb_sym2id)(VALUE v0);
+static inline ID rb_tr_up_rb_sym2id(VALUE v0) {
+  ID result = rb_tr_up_impl_rb_sym2id(v0);
+  if (UNLIKELY(rb_tr_pending_exception)) {
+    rb_tr_longjmp_from_java_exception();
+  }
+  return result;
+}
+
 extern VALUE (*rb_tr_up_impl_rb_syserr_new)(VALUE v0, VALUE v1);
 static inline VALUE rb_tr_up_rb_syserr_new(VALUE v0, VALUE v1) {
   VALUE result = rb_tr_up_impl_rb_syserr_new(v0, v1);
@@ -3862,8 +3889,8 @@ static inline VALUE rb_tr_up_rb_time_num_new(VALUE v0, VALUE v1) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_time_timespec_new)(long v0, long v1, int v2, void * v3, void * v4);
-static inline VALUE rb_tr_up_rb_time_timespec_new(long v0, long v1, int v2, void * v3, void * v4) {
+extern VALUE (*rb_tr_up_impl_rb_time_timespec_new)(long v0, long v1, int v2, VALUE v3, VALUE v4);
+static inline VALUE rb_tr_up_rb_time_timespec_new(long v0, long v1, int v2, VALUE v3, VALUE v4) {
   VALUE result = rb_tr_up_impl_rb_time_timespec_new(v0, v1, v2, v3, v4);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();

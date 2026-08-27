@@ -101,14 +101,13 @@ VALUE rb_sym_to_s(VALUE sym) {
   return rb_tr_up_send0_to_s(sym);
 }
 
-// TODO: rb_tr_sym2id() has a single call site since native cexts, the one below, so the inline cache in it is global.
 ID rb_sym2id(VALUE sym) {
-  return rb_tr_sym2id(sym);
+  return rb_tr_up_rb_sym2id(sym);
 }
 
 #undef rb_id2sym
 VALUE rb_id2sym(ID x) {
-  return rb_tr_wrap(rb_tr_id2sym(x));
+  return rb_tr_up_rb_id2sym(x);
 }
 
 VALUE rb_to_symbol(VALUE name) {

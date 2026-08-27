@@ -45,8 +45,8 @@ void rb_tr_time_timespec(VALUE time_val, struct timespec *result) {
 }
 
 VALUE rb_time_timespec_new(const struct timespec *ts, int offset) {
-  void* is_utc = rb_tr_unwrap(rb_boolean(offset == INT_MAX-1));
-  void* is_local = rb_tr_unwrap(rb_boolean(offset == INT_MAX));
+  VALUE is_utc = rb_boolean(offset == INT_MAX-1);
+  VALUE is_local = rb_boolean(offset == INT_MAX);
   return rb_tr_up_rb_time_timespec_new(ts->tv_sec, ts->tv_nsec, offset, is_utc, is_local);
 }
 
