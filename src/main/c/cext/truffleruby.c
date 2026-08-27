@@ -14,36 +14,36 @@
 
 void rb_tr_not_implemented(const char *function_name) {
   fprintf(stderr, "The C API function %s is not implemented yet on TruffleRuby\n", function_name);
-  RUBY_CEXT_INVOKE_NO_WRAP("rb_tr_not_implemented", rb_str_new_cstr(function_name));
+  rb_tr_up_rb_tr_not_implemented(rb_str_new_cstr(function_name));
   UNREACHABLE;
 }
 
 void rb_tr_log_warning(const char *message) {
-  RUBY_CEXT_INVOKE_NO_WRAP("rb_tr_log_warning", rb_str_new_cstr(message));
+  rb_tr_up_rb_tr_log_warning(rb_str_new_cstr(message));
 }
 
 VALUE rb_java_class_of(VALUE obj) {
-  return RUBY_CEXT_INVOKE("rb_java_class_of", obj);
+  return rb_tr_up_rb_java_class_of(obj);
 }
 
 VALUE rb_java_to_string(VALUE obj) {
-  return RUBY_CEXT_INVOKE("rb_java_to_string", obj);
+  return rb_tr_up_rb_java_to_string(obj);
 }
 
 // BasicObject#equal?
 int rb_tr_obj_equal(VALUE first, VALUE second) {
-  return RTEST(RUBY_CEXT_INVOKE("rb_tr_obj_equal", first, second));
+  return RTEST(rb_tr_up_rb_tr_obj_equal(first, second));
 }
 
 VALUE rb_tr_zlib_crc_table(void) {
-  return RUBY_CEXT_INVOKE("zlib_get_crc_table");
+  return rb_tr_up_zlib_get_crc_table();
 }
 
 VALUE rb_tr_cext_lock_owned_p(void) {
-  return RUBY_CEXT_INVOKE("rb_tr_cext_lock_owned_p");
+  return rb_tr_up_rb_tr_cext_lock_owned_p() ? Qtrue : Qfalse;
 }
 
 // Used for internal testing
 VALUE rb_tr_invoke(VALUE recv, const char* meth) {
-  return RUBY_INVOKE(recv, meth);
+  return rb_tr_up_invoke0(recv, meth);
 }

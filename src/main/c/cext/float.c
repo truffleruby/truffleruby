@@ -13,12 +13,12 @@
 // Float, rb_float_*
 
 bool rb_tr_float_type_p(VALUE obj) {
-  return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("RB_FLOAT_TYPE_P", obj));
+  return rb_tr_up_RB_FLOAT_TYPE_P(obj);
 }
 
 #undef rb_float_new
 VALUE rb_float_new(double value) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_float_new", value));
+  return rb_tr_up_rb_float_new(value);
 }
 
 VALUE rb_float_new_in_heap(double value) {
@@ -26,10 +26,10 @@ VALUE rb_float_new_in_heap(double value) {
 }
 
 VALUE rb_Float(VALUE value) {
-  return RUBY_CEXT_INVOKE("rb_Float", value);
+  return rb_tr_up_rb_Float(value);
 }
 
 #undef rb_float_value
 double rb_float_value(VALUE value) {
-  return polyglot_as_double(RUBY_CEXT_INVOKE_NO_WRAP("RFLOAT_VALUE", value));
+  return rb_tr_up_RFLOAT_VALUE(value);
 }

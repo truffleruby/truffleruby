@@ -13,11 +13,11 @@
 // Fiber, rb_fiber_*
 
 VALUE rb_fiber_current(void) {
-  return RUBY_CEXT_INVOKE("rb_fiber_current");
+  return rb_tr_up_rb_fiber_current();
 }
 
 VALUE rb_fiber_alive_p(VALUE fiber) {
-  return RUBY_INVOKE(fiber, "alive?");
+  return rb_tr_up_send0_alive_p(fiber);
 }
 
 VALUE rb_fiber_resume(VALUE fib, int argc, const VALUE *argv) {
@@ -33,12 +33,12 @@ VALUE rb_fiber_yield(int argc, const VALUE *argv) {
 }
 
 VALUE rb_fiber_yield_kw(int argc, const VALUE *argv, int kw_splat) {
-  VALUE rb_cFiber = RUBY_CEXT_INVOKE("rb_cFiber");
+  VALUE rb_cFiber = rb_tr_up_rb_cFiber();
   return rb_funcallv_kw(rb_cFiber, rb_intern("yield"), argc, argv, kw_splat);
 }
 
 VALUE rb_fiber_new(rb_block_call_func_t function, VALUE value) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_fiber_new", function, (void*)value));
+  return rb_tr_up_rb_fiber_new(function, (void*)value);
 }
 
 VALUE rb_fiber_raise(VALUE fiber, int argc, VALUE *argv) {

@@ -20,6 +20,8 @@
 
 #include <graalvm/llvm/polyglot.h>
 
+#include <upcalls.h>
+
 // For polyglot_from_VALUE_array()
 POLYGLOT_DECLARE_TYPE(VALUE)
 

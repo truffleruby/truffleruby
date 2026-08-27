@@ -13,7 +13,7 @@
 // Range, rb_range_*
 
 VALUE rb_range_new(VALUE beg, VALUE end, int exclude_end) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_range_new", rb_tr_unwrap(beg), rb_tr_unwrap(end), exclude_end));
+  return rb_tr_up_rb_range_new(beg, end, exclude_end);
 }
 
 /* This function can not be inlined as the two rb_intern macros
@@ -29,9 +29,9 @@ int rb_range_values(VALUE range, VALUE *begp, VALUE *endp, int *exclp) {
     if (!rb_respond_to(range, rb_intern("end"))) return Qfalse;
   }
 
-  *begp = RUBY_INVOKE(range, "begin");
-  *endp = RUBY_INVOKE(range, "end");
-  *exclp = (int) RTEST(RUBY_INVOKE(range, "exclude_end?"));
+  *begp = rb_tr_up_send0_begin(range);
+  *endp = rb_tr_up_send0_end(range);
+  *exclp = (int) RTEST(rb_tr_up_send0_exclude_end_p(range));
   return Qtrue;
 }
 

@@ -52,18 +52,10 @@ VALUE rb_tr_vsprintf_new_cstr(char *cstr) {
 
 VALUE rb_enc_vsprintf(rb_encoding *enc, const char *format, va_list args) {
   VALUE rubyFormat = rb_str_new_cstr(format);
-  VALUE types = RUBY_CEXT_INVOKE("rb_tr_sprintf_types", rubyFormat);
+  VALUE types = rb_tr_up_rb_tr_sprintf_types(rubyFormat);
   VALUE rubyArgs = rb_tr_get_sprintf_args(args, types);
 
-  VALUE string = rb_tr_wrap(
-    polyglot_invoke(
-      RUBY_CEXT,
-      "rb_tr_sprintf",
-      rb_tr_unwrap(rubyFormat),
-      rb_tr_vsprintf_new_cstr,
-      rb_tr_unwrap(rubyArgs)
-    )
-  );
+  VALUE string = rb_tr_up_rb_tr_sprintf(rubyFormat, rb_tr_vsprintf_new_cstr, rubyArgs);
 
   return rb_enc_associate(string, enc);
 }
@@ -73,7 +65,7 @@ VALUE rb_vsprintf(const char *format, va_list args) {
 }
 
 VALUE rb_f_sprintf(int argc, const VALUE *argv) {
-  return RUBY_CEXT_INVOKE("rb_f_sprintf", rb_ary_new4(argc, argv));
+  return rb_tr_up_rb_f_sprintf(rb_ary_new4(argc, argv));
 }
 
 #undef vsnprintf
@@ -145,10 +137,10 @@ static VALUE rb_tr_get_sprintf_args(va_list args, VALUE types) {
       val = LONG2NUM(va_arg(args, ptrdiff_t));
       break;
     case TYPE_STRING:
-      val = rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_tr_pointer", va_arg(args, char *)));
+      val = rb_tr_up_rb_tr_pointer(va_arg(args, char *));
       break;
     case TYPE_POINTER:
-      val = rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_tr_pointer", va_arg(args, void *)));
+      val = rb_tr_up_rb_tr_pointer(va_arg(args, void *));
       break;
     case TYPE_SCHAR:
     case TYPE_SSHORT:
@@ -156,14 +148,8 @@ static VALUE rb_tr_get_sprintf_args(va_list args, VALUE types) {
       val = INT2NUM(va_arg(args, int));
       break;
     case TYPE_SLONG:
-      {
-        long arg = va_arg(args, long);
-        if (polyglot_is_value(arg)) {
-          arg = rb_tr_force_native(arg);
-        }
-        val = LONG2NUM(arg);
-        break;
-      }
+      val = LONG2NUM(va_arg(args, long));
+      break;
     case TYPE_SLONGLONG:
       val = LL2NUM(va_arg(args, long long));
       break;
@@ -186,5 +172,5 @@ VALUE rb_str_vcatf(VALUE str, const char *fmt, va_list args) {
 }
 
 VALUE rb_str_format(int argc, const VALUE *argv, VALUE fmt) {
-  return RUBY_CEXT_INVOKE("rb_str_format", rb_ary_new4(argc, argv), fmt);
+  return rb_tr_up_rb_str_format(rb_ary_new4(argc, argv), fmt);
 }

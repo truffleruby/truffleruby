@@ -26,11 +26,23 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.truffleruby.annotations;
 
- #include <truffleruby-impl.h>
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-// rubv_vm_*
-
-void ruby_vm_at_exit(void (*callback)(ruby_vm_t* vm)) {
-  rb_tr_up_ruby_vm_at_exit(callback, NULL);
+/** Marks a method as the Java target of a native-to-Java FFM upcall stub. The annotation processor validates that every
+ * parameter and the return type are primitives and generates the corresponding {@code foreign.directUpcalls} Native
+ * Image reachability metadata, so the upcall uses a fast specialized stub instead of the generic method-handle upcall
+ * machinery.
+ *
+ * <p>
+ * The MethodHandle used to create the upcall stub for an annotated method must be exactly {@code findStatic} (unbound)
+ * or {@code findVirtual(...).bindTo(receiver)} with no other adaptation, otherwise Native Image silently falls back to
+ * the slow generic upcall stub. */
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.SOURCE)
+public @interface CExtUpcall {
 }

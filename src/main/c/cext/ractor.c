@@ -18,7 +18,7 @@ void rb_ext_ractor_safe(bool flag) {
 }
 
 void rb_ext_thread_safe(bool flag) {
-  polyglot_invoke(RUBY_CEXT, "set_thread_safe", flag);
+  rb_tr_up_set_thread_safe(flag);
 }
 
 // Simplified to main Ractor only

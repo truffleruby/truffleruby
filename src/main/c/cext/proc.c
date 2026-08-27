@@ -13,11 +13,11 @@
 // Proc, rb_proc_*
 
 VALUE rb_proc_new(rb_block_call_func_t func, VALUE callback_arg) {
-  return (VALUE) polyglot_invoke(RUBY_CEXT, "rb_proc_new", func, (void*)callback_arg);
+  return rb_tr_up_rb_proc_new(func, (void*)callback_arg);
 }
 
 VALUE rb_proc_call(VALUE self, VALUE args) {
-  return RUBY_CEXT_INVOKE("rb_proc_call", self, args);
+  return rb_tr_up_rb_proc_call(self, args);
 }
 
 VALUE rb_proc_call_kw(VALUE recv, VALUE args, int kw_splat) {
@@ -33,7 +33,7 @@ VALUE rb_proc_call_with_block_kw(VALUE recv, int argc, const VALUE *argv, VALUE 
 }
 
 int rb_proc_arity(VALUE self) {
-  return polyglot_as_i32(RUBY_INVOKE_NO_WRAP(self, "arity"));
+  return rb_tr_up_send0_i_arity(self);
 }
 
 VALUE rb_obj_is_proc(VALUE proc) {

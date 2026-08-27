@@ -37,7 +37,7 @@ void rb_define_hooked_variable(const char *name, VALUE *var, rb_gvar_getter_t *g
     setter = rb_gvar_var_setter;
   }
 
-  polyglot_invoke(RUBY_CEXT, "rb_define_hooked_variable", rb_tr_unwrap(rb_str_new_cstr(name)), var, getter, setter);
+  rb_tr_up_rb_define_hooked_variable(rb_str_new_cstr(name), var, getter, setter);
 }
 
 void rb_gvar_readonly_setter(VALUE val, ID id, VALUE *data) {
@@ -65,15 +65,15 @@ void rb_define_virtual_variable(const char *name, rb_gvar_getter_t *getter, rb_g
 }
 
 VALUE rb_f_global_variables(void) {
-  return RUBY_CEXT_INVOKE("rb_f_global_variables");
+  return rb_tr_up_rb_f_global_variables();
 }
 
 VALUE rb_gv_set(const char *name, VALUE value) {
-  return RUBY_CEXT_INVOKE("rb_gv_set", rb_str_new_cstr(name), value);
+  return rb_tr_up_rb_gv_set(rb_str_new_cstr(name), value);
 }
 
 VALUE rb_gv_get(const char *name) {
-  return RUBY_CEXT_INVOKE("rb_gv_get", rb_str_new_cstr(name));
+  return rb_tr_up_rb_gv_get(rb_str_new_cstr(name));
 }
 
 // $VERBOSE
@@ -81,7 +81,7 @@ VALUE rb_gv_get(const char *name) {
 VALUE rb_tr_ruby_verbose_ptr;
 
 VALUE *rb_ruby_verbose_ptr(void) {
-  rb_tr_ruby_verbose_ptr = RUBY_CEXT_INVOKE("rb_ruby_verbose_ptr");
+  rb_tr_ruby_verbose_ptr = rb_tr_up_rb_ruby_verbose_ptr();
   return &rb_tr_ruby_verbose_ptr;
 }
 
@@ -90,7 +90,7 @@ VALUE *rb_ruby_verbose_ptr(void) {
 VALUE rb_tr_ruby_debug_ptr;
 
 VALUE *rb_ruby_debug_ptr(void) {
-  rb_tr_ruby_debug_ptr = RUBY_CEXT_INVOKE("rb_ruby_debug_ptr");
+  rb_tr_ruby_debug_ptr = rb_tr_up_rb_ruby_debug_ptr();
   return &rb_tr_ruby_debug_ptr;
 }
 
@@ -98,33 +98,33 @@ VALUE *rb_ruby_debug_ptr(void) {
 // so we use macros instead of C global variables like MRI, which would be complicated to update.
 
 VALUE rb_tr_stdin(void) {
-  return RUBY_CEXT_INVOKE("rb_stdin");
+  return rb_tr_up_rb_stdin();
 }
 
 VALUE rb_tr_stdout(void) {
-  return RUBY_CEXT_INVOKE("rb_stdout");
+  return rb_tr_up_rb_stdout();
 }
 
 VALUE rb_tr_stderr(void) {
-  return RUBY_CEXT_INVOKE("rb_stderr");
+  return rb_tr_up_rb_stderr();
 }
 
 VALUE rb_tr_fs(void) {
-  return RUBY_CEXT_INVOKE("rb_fs");
+  return rb_tr_up_rb_fs();
 }
 
 VALUE rb_tr_output_fs(void) {
-  return RUBY_CEXT_INVOKE("rb_output_fs");
+  return rb_tr_up_rb_output_fs();
 }
 
 VALUE rb_tr_rs(void) {
-  return RUBY_CEXT_INVOKE("rb_rs");
+  return rb_tr_up_rb_rs();
 }
 
 VALUE rb_tr_output_rs(void) {
-  return RUBY_CEXT_INVOKE("rb_output_rs");
+  return rb_tr_up_rb_output_rs();
 }
 
 VALUE rb_tr_default_rs(void) {
-  return RUBY_CEXT_INVOKE("rb_default_rs");
+  return rb_tr_up_rb_default_rs();
 }

@@ -13,7 +13,7 @@
 // GC, rb_gc_*
 
 VALUE rb_tr_gc_guard(VALUE value) {
-  polyglot_invoke(RUBY_CEXT, "rb_tr_gc_guard", value);
+  rb_tr_up_rb_tr_gc_guard(value);
   return value;
 }
 
@@ -23,15 +23,15 @@ void rb_global_variable(VALUE *address) {
 
 void rb_gc_register_address(VALUE *address) {
   /* NOTE: this captures the value after the Init_ function returns and assumes the value does not change after that. */
-  polyglot_invoke(RUBY_CEXT, "rb_gc_register_address", address);
+  rb_tr_up_rb_gc_register_address(address);
 }
 
 void rb_gc_unregister_address(VALUE *address) {
-  polyglot_invoke(RUBY_CEXT, "rb_gc_unregister_address", address);
+  rb_tr_up_rb_gc_unregister_address(address);
 }
 
 void rb_gc_mark(VALUE ptr) {
-  polyglot_invoke(RUBY_CEXT, "rb_gc_mark", ptr);
+  rb_tr_up_rb_gc_mark(ptr);
 }
 
 void rb_gc_mark_locations(const VALUE *start, const VALUE *end) {
@@ -49,24 +49,24 @@ void rb_gc_mark_movable(VALUE obj) {
 
 void rb_gc_mark_maybe(VALUE ptr) {
   if (!RB_TYPE_P(ptr, T_NONE)) {
-    polyglot_invoke(RUBY_CEXT, "rb_gc_mark", ptr);
+    rb_tr_up_rb_gc_mark(ptr);
   }
 }
 
 VALUE rb_gc_enable(void) {
-  return RUBY_CEXT_INVOKE("rb_gc_enable");
+  return rb_tr_up_rb_gc_enable();
 }
 
 VALUE rb_gc_disable(void) {
-  return RUBY_CEXT_INVOKE("rb_gc_disable");
+  return rb_tr_up_rb_gc_disable();
 }
 
 void rb_gc(void) {
-  RUBY_CEXT_INVOKE_NO_WRAP("rb_gc");
+  rb_tr_up_rb_gc();
 }
 
 VALUE rb_gc_latest_gc_info(VALUE key) {
-  return RUBY_CEXT_INVOKE("rb_gc_latest_gc_info", key);
+  return rb_tr_up_rb_gc_latest_gc_info(key);
 }
 
 void rb_gc_adjust_memory_usage(ssize_t diff) {
@@ -76,7 +76,7 @@ void rb_gc_adjust_memory_usage(ssize_t diff) {
 
 void rb_gc_register_mark_object(VALUE obj) {
   // No rb_tr_unwrap() here as the caller actually wants a ValueWrapper or a handle
-  polyglot_invoke(RUBY_CEXT, "rb_gc_register_mark_object", obj);
+  rb_tr_up_rb_gc_register_mark_object(obj);
 }
 
 void* rb_tr_read_VALUE_pointer(VALUE *pointer) {

@@ -13,29 +13,29 @@
 // Rational, rb_rational_*
 
 VALUE rb_Rational(VALUE num, VALUE den) {
-  return RUBY_CEXT_INVOKE("rb_Rational", num, den);
+  return rb_tr_up_rb_Rational(num, den);
 }
 
 VALUE rb_rational_raw(VALUE num, VALUE den) {
-  return RUBY_CEXT_INVOKE("rb_rational_raw", num, den);
+  return rb_tr_up_rb_rational_raw(num, den);
 }
 
 VALUE rb_rational_new(VALUE num, VALUE den) {
-  return RUBY_CEXT_INVOKE("rb_rational_new", num, den);
+  return rb_tr_up_rb_rational_new(num, den);
 }
 
 VALUE rb_rational_num(VALUE rat) {
-  return RUBY_INVOKE(rat, "numerator");
+  return rb_tr_up_send0_numerator(rat);
 }
 
 VALUE rb_rational_den(VALUE rat) {
-  return RUBY_INVOKE(rat, "denominator");
+  return rb_tr_up_send0_denominator(rat);
 }
 
 VALUE rb_flt_rationalize_with_prec(VALUE value, VALUE precision) {
-  return RUBY_CEXT_INVOKE("rb_flt_rationalize_with_prec", value, precision);
+  return rb_tr_up_rb_flt_rationalize_with_prec(value, precision);
 }
 
 VALUE rb_flt_rationalize(VALUE value) {
-    return RUBY_CEXT_INVOKE("rb_flt_rationalize", value);
+    return rb_tr_up_rb_flt_rationalize(value);
 }

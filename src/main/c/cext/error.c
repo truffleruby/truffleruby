@@ -32,7 +32,7 @@ void rb_tr_category_warn_va_list(rb_warning_category_t category, const char *fmt
 
     message = rb_vsprintf(fmt, args);
     category_name = rb_tr_warning_category_to_name(category);
-    RUBY_CEXT_INVOKE("rb_tr_warn_category", message, category_name);
+    rb_tr_up_rb_tr_warn_category(message, category_name);
 }
 
 bool rb_warning_category_enabled_p(rb_warning_category_t category) {
@@ -41,12 +41,12 @@ bool rb_warning_category_enabled_p(rb_warning_category_t category) {
     category_name = rb_tr_warning_category_to_name(category);
 
     if (category_name != Qnil) {
-        return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("rb_warning_category_enabled_p", category_name));
+        return rb_tr_up_rb_warning_category_enabled_p(category_name);
     } else {
         return true;
     }
 }
 
 void rb_tr_warn_va_list(const char *fmt, va_list args) {
-  RUBY_CEXT_INVOKE("rb_tr_warn", rb_vsprintf(fmt, args));
+  rb_tr_up_rb_tr_warn(rb_vsprintf(fmt, args));
 }

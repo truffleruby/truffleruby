@@ -13,35 +13,35 @@
 // Hash, rb_hash_*
 
 VALUE rb_Hash(VALUE obj) {
-  return RUBY_CEXT_INVOKE("rb_Hash", obj);
+  return rb_tr_up_rb_Hash(obj);
 }
 
 VALUE rb_hash(VALUE obj) {
-  return RUBY_CEXT_INVOKE("rb_hash", obj);
+  return rb_tr_up_rb_hash(obj);
 }
 
 VALUE rb_hash_new(void) {
-  return RUBY_CEXT_INVOKE("rb_hash_new");
+  return rb_tr_up_rb_hash_new();
 }
 
 VALUE rb_hash_new_capa(long capacity) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_hash_new_capa", capacity));
+  return rb_tr_up_rb_hash_new_capa(capacity);
 }
 
 VALUE rb_ident_hash_new(void) {
-  return RUBY_CEXT_INVOKE("rb_ident_hash_new");
+  return rb_tr_up_rb_ident_hash_new();
 }
 
 VALUE rb_hash_aref(VALUE hash, VALUE key) {
-  return RUBY_CEXT_INVOKE("rb_hash_aref", hash, key);
+  return rb_tr_up_rb_hash_aref(hash, key);
 }
 
 VALUE rb_hash_fetch(VALUE hash, VALUE key) {
-  return RUBY_INVOKE(hash, "fetch", key);
+  return rb_tr_up_send1_fetch(hash, key);
 }
 
 VALUE rb_hash_aset(VALUE hash, VALUE key, VALUE value) {
-  return RUBY_INVOKE(hash, "[]=", key, value);
+  return rb_tr_up_send2_aset(hash, key, value);
 }
 
 VALUE rb_hash_dup(VALUE hash) {
@@ -53,7 +53,7 @@ VALUE rb_hash_lookup(VALUE hash, VALUE key) {
 }
 
 VALUE rb_hash_lookup2(VALUE hash, VALUE key, VALUE default_value) {
-  VALUE result = RUBY_CEXT_INVOKE("rb_hash_get_or_undefined", hash, key);
+  VALUE result = rb_tr_up_rb_hash_get_or_undefined(hash, key);
   if (result == Qundef) {
     result = default_value;
   }
@@ -61,7 +61,7 @@ VALUE rb_hash_lookup2(VALUE hash, VALUE key, VALUE default_value) {
 }
 
 VALUE rb_hash_set_ifnone(VALUE hash, VALUE if_none) {
-  return RUBY_CEXT_INVOKE("rb_hash_set_ifnone", hash, if_none);
+  return rb_tr_up_rb_hash_set_ifnone(hash, if_none);
 }
 
 st_index_t rb_memhash(const void *data, long length) {
@@ -77,35 +77,33 @@ st_index_t rb_memhash(const void *data, long length) {
 }
 
 VALUE rb_hash_clear(VALUE hash) {
-  return RUBY_INVOKE(hash, "clear");
+  return rb_tr_up_send0_clear(hash);
 }
 
 VALUE rb_hash_delete(VALUE hash, VALUE key) {
-  return RUBY_INVOKE(hash, "delete", key);
+  return rb_tr_up_send1_delete(hash, key);
 }
 
 VALUE rb_hash_delete_if(VALUE hash) {
   if (rb_block_given_p()) {
     return rb_funcall_with_block(hash, rb_intern("delete_if"), 0, NULL, rb_block_proc());
   } else {
-    return RUBY_INVOKE(hash, "delete_if");
+    return rb_tr_up_send0_delete_if(hash);
   }
 }
 
 void rb_hash_foreach(VALUE hash, int (*func)(VALUE key, VALUE val, VALUE arg), VALUE arg) {
-  polyglot_invoke(RUBY_CEXT, "rb_hash_foreach", rb_tr_unwrap(hash), func, (void*)arg);
+  rb_tr_up_rb_hash_foreach(hash, func, (void*)arg);
 }
 
 void rb_hash_bulk_insert(long n, const VALUE *values, VALUE hash) {
-  void* unwrapped_hash = rb_tr_unwrap(hash);
-
   for (long i = 0; i < n; i += 2) {
-    polyglot_invoke(unwrapped_hash, "[]=", rb_tr_unwrap(values[i]), rb_tr_unwrap(values[i + 1]));
+    rb_tr_up_send2_o_aset(hash, values[i], values[i + 1]);
   }
 }
 
 VALUE rb_hash_size(VALUE hash) {
-  return RUBY_INVOKE(hash, "size");
+  return rb_tr_up_send0_size(hash);
 }
 
 size_t rb_hash_size_num(VALUE hash) {
@@ -113,7 +111,7 @@ size_t rb_hash_size_num(VALUE hash) {
 }
 
 st_index_t rb_hash_start(st_index_t h) {
-  return (st_index_t) polyglot_as_i64(polyglot_invoke(RUBY_CEXT, "rb_hash_start", h));
+  return (st_index_t) rb_tr_up_rb_hash_start(h);
 }
 
 VALUE rb_hash_freeze(VALUE hash) {

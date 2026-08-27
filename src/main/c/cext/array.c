@@ -13,31 +13,31 @@
 // Array, rb_ary_*
 
 long rb_array_len(VALUE array) {
-  return polyglot_get_array_size(rb_tr_unwrap(array));
+  return rb_tr_up_rb_array_len(array);
 }
 
 int RARRAY_LENINT(VALUE array) {
-  return polyglot_get_array_size(rb_tr_unwrap(array));
+  return (int) rb_tr_up_rb_array_len(array);
 }
 
 VALUE rb_tr_rarray_aref(VALUE array, long index) {
-  return rb_tr_wrap(polyglot_get_array_element(rb_tr_unwrap(array), (int) index));
+  return rb_tr_up_send1_aref(array, LONG2NUM(index));
 }
 
 VALUE rb_Array(VALUE array) {
-  return RUBY_CEXT_INVOKE("rb_Array", array);
+  return rb_tr_up_rb_Array(array);
 }
 
 VALUE *RARRAY_PTR_IMPL(VALUE array) {
-  return (VALUE *) polyglot_as_i64_array(RUBY_CEXT_INVOKE_NO_WRAP("RARRAY_PTR", array));
+  return (VALUE *) rb_tr_up_RARRAY_PTR(array);
 }
 
 VALUE rb_ary_new(void) {
-  return RUBY_CEXT_INVOKE("rb_ary_new");
+  return rb_tr_up_rb_ary_new();
 }
 
 VALUE rb_ary_new_capa(long capacity) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_ary_new_capa", capacity));
+  return rb_tr_up_rb_ary_new_capa(capacity);
 }
 
 VALUE rb_tr_ary_new_from_args_va_list(long n, va_list args) {
@@ -49,8 +49,7 @@ VALUE rb_tr_ary_new_from_args_va_list(long n, va_list args) {
 }
 
 VALUE rb_ary_new_from_values(long n, const VALUE *values) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_ary_new_from_values",
-    polyglot_from_VALUE_array(values, n)));
+  return rb_tr_up_rb_ary_new_from_values(values, n);
 }
 
 VALUE rb_assoc_new(VALUE a, VALUE b) {
@@ -58,76 +57,76 @@ VALUE rb_assoc_new(VALUE a, VALUE b) {
 }
 
 VALUE rb_ary_push(VALUE array, VALUE value) {
-  RUBY_INVOKE_NO_WRAP(array, "push", value);
+  rb_tr_up_send1_o_push(array, value);
   return array;
 }
 
 VALUE rb_ary_pop(VALUE array) {
-  return RUBY_INVOKE(array, "pop");
+  return rb_tr_up_send0_pop(array);
 }
 
 VALUE rb_ary_sort(VALUE array) {
-  return RUBY_INVOKE(array, "sort");
+  return rb_tr_up_send0_sort(array);
 }
 
 VALUE rb_ary_sort_bang(VALUE array) {
-  return RUBY_INVOKE(array, "sort!");
+  return rb_tr_up_send0_sort_bang(array);
 }
 
 void rb_ary_store(VALUE array, long index, VALUE value) {
-  RUBY_INVOKE_NO_WRAP(array, "[]=", LONG2FIX(index), value);
+  rb_tr_up_send2_o_aset(array, LONG2FIX(index), value);
 }
 
 VALUE rb_ary_entry(VALUE array, long index) {
-  return rb_tr_wrap(polyglot_invoke(rb_tr_unwrap(array), "[]", index));
+  return rb_tr_up_send1_aref(array, LONG2NUM(index));
 }
 
 VALUE rb_ary_unshift(VALUE array, VALUE value) {
-  return RUBY_INVOKE(array, "unshift", value);
+  return rb_tr_up_send1_unshift(array, value);
 }
 
 VALUE rb_ary_aref(int n, const VALUE* values, VALUE array) {
-  return RUBY_CEXT_INVOKE("send_splatted", array, rb_str_new_cstr("[]"), rb_ary_new4(n, values));
+  return rb_tr_up_send_splatted(array, rb_str_new_cstr("[]"), rb_ary_new4(n, values));
 }
 
 VALUE rb_ary_clear(VALUE array) {
-  return RUBY_INVOKE(array, "clear");
+  return rb_tr_up_send0_clear(array);
 }
 
 VALUE rb_ary_delete(VALUE array, VALUE value) {
-  return RUBY_INVOKE(array, "delete", value);
+  return rb_tr_up_send1_delete(array, value);
 }
 
 VALUE rb_ary_delete_at(VALUE array, long n) {
-  return rb_tr_wrap(polyglot_invoke(rb_tr_unwrap(array), "delete_at", n));
+  return rb_tr_up_send1_delete_at(array, LONG2NUM(n));
 }
 
 VALUE rb_ary_includes(VALUE array, VALUE value) {
-  return RUBY_INVOKE(array, "include?", value);
+  return rb_tr_up_send1_include_p(array, value);
 }
 
 VALUE rb_ary_join(VALUE array, VALUE sep) {
-  return RUBY_INVOKE(array, "join", sep);
+  return rb_tr_up_send1_join(array, sep);
 }
 
 VALUE rb_ary_to_s(VALUE array) {
-  return RUBY_INVOKE(array, "to_s");
+  return rb_tr_up_send0_to_s(array);
 }
 
 VALUE rb_ary_reverse(VALUE array) {
-  return RUBY_INVOKE(array, "reverse!");
+  return rb_tr_up_send0_reverse_bang(array);
 }
 
 VALUE rb_ary_shift(VALUE array) {
-  return RUBY_INVOKE(array, "shift");
+  return rb_tr_up_send0_shift(array);
 }
 
 VALUE rb_ary_concat(VALUE a, VALUE b) {
-  return RUBY_INVOKE(a, "concat", b);
+  return rb_tr_up_send1_concat(a, b);
 }
 
 VALUE rb_ary_plus(VALUE a, VALUE b) {
-  return RUBY_INVOKE(a, "+", b);
+  return rb_tr_up_send1_plus(a, b);
 }
 
 VALUE rb_ary_to_ary(VALUE array) {
@@ -138,16 +137,16 @@ VALUE rb_ary_to_ary(VALUE array) {
 }
 
 VALUE rb_ary_subseq(VALUE array, long start, long length) {
-  return rb_tr_wrap(polyglot_invoke(rb_tr_unwrap(array), "[]", start, length));
+  return rb_tr_up_send2_aref(array, LONG2NUM(start), LONG2NUM(length));
 }
 
 VALUE rb_ary_cat(VALUE array, const VALUE *cat, long n) {
-  return RUBY_INVOKE(array, "concat", rb_ary_new4(n, cat));
+  return rb_tr_up_send1_concat(array, rb_ary_new4(n, cat));
 }
 
 VALUE rb_ary_rotate(VALUE array, long n) {
   if (n != 0) {
-    return rb_tr_wrap(polyglot_invoke(rb_tr_unwrap(array), "rotate!", n));
+    return rb_tr_up_send1_rotate_bang(array, LONG2NUM(n));
   }
   return Qnil;
 }

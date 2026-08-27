@@ -23,7 +23,7 @@ VALUE rb_debug_inspector_backtrace_locations(const rb_debug_inspector_t *dc) {
 
 VALUE rb_debug_inspector_open(rb_debug_inspector_func_t func, void *data) {
   rb_debug_inspector_t dbg_context;
-  VALUE contexts_and_backtrace = RUBY_CEXT_INVOKE("rb_debug_inspector_open_contexts_and_backtrace");
+  VALUE contexts_and_backtrace = rb_tr_up_rb_debug_inspector_open_contexts_and_backtrace();
   VALUE contexts = RARRAY_AREF(contexts_and_backtrace, 0);
   VALUE backtrace = RARRAY_AREF(contexts_and_backtrace, 1);
   dbg_context.contexts = contexts;

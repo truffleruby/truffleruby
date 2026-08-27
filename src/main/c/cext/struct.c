@@ -13,15 +13,15 @@
 // Structs, rb_struct_*
 
 VALUE rb_struct_aref(VALUE s, VALUE idx) {
-  return RUBY_CEXT_INVOKE("rb_struct_aref", s, idx);
+  return rb_tr_up_rb_struct_aref(s, idx);
 }
 
 VALUE rb_struct_aset(VALUE s, VALUE idx, VALUE val) {
-  return RUBY_CEXT_INVOKE("rb_struct_aset", s, idx, val);
+  return rb_tr_up_rb_struct_aset(s, idx, val);
 }
 
 VALUE rb_struct_getmember(VALUE s, ID member) {
-  return RUBY_CEXT_INVOKE("rb_struct_getmember", s, ID2SYM(member));
+  return rb_tr_up_rb_struct_getmember(s, ID2SYM(member));
 }
 
 VALUE rb_tr_struct_define_va_list(const char *name, va_list args) {
@@ -33,7 +33,7 @@ VALUE rb_tr_struct_define_va_list(const char *name, va_list args) {
     rb_ary_push(ary, rb_str_new_cstr(arg));
     i++;
   }
-  return RUBY_CEXT_INVOKE("rb_struct_define_no_splat", rb_name, ary);
+  return rb_tr_up_rb_struct_define_no_splat(rb_name, ary);
 }
 
 VALUE rb_tr_struct_define_under_va_list(VALUE space, const char *name, va_list args) {
@@ -45,11 +45,11 @@ VALUE rb_tr_struct_define_under_va_list(VALUE space, const char *name, va_list a
     rb_ary_push(ary, rb_str_new_cstr(arg));
     i++;
   }
-  return RUBY_CEXT_INVOKE("rb_struct_define_under_no_splat", space, rb_name, ary);
+  return rb_tr_up_rb_struct_define_under_no_splat(space, rb_name, ary);
 }
 
 VALUE rb_tr_struct_new_va_list(VALUE klass, va_list args) {
-  int members = polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_struct_size", klass));
+  int members = rb_tr_up_rb_struct_size(klass);
   VALUE ary = rb_ary_new_capa(members);
   int i = 0;
   while (i < members) {
@@ -57,19 +57,19 @@ VALUE rb_tr_struct_new_va_list(VALUE klass, va_list args) {
     rb_ary_push(ary, arg);
     i++;
   }
-  return RUBY_CEXT_INVOKE("rb_struct_new_no_splat", klass, ary);
+  return rb_tr_up_rb_struct_new_no_splat(klass, ary);
 }
 
 VALUE rb_struct_s_members(VALUE klass) {
-  return RUBY_INVOKE(klass, "members");
+  return rb_tr_up_send0_members(klass);
 }
 
 VALUE rb_struct_members(VALUE s) {
-  return RUBY_INVOKE(s, "members");
+  return rb_tr_up_send0_members(s);
 }
 
 VALUE rb_struct_size(VALUE s) {
-  return RUBY_INVOKE(s, "size");
+  return rb_tr_up_send0_size(s);
 }
 
 VALUE rb_tr_data_define_va_list(VALUE super, va_list args) {
@@ -80,9 +80,9 @@ VALUE rb_tr_data_define_va_list(VALUE super, va_list args) {
     rb_ary_push(ary, rb_str_new_cstr(arg));
     i++;
   }
-  return RUBY_CEXT_INVOKE("rb_data_define_no_splat", super, ary);
+  return rb_tr_up_rb_data_define_no_splat(super, ary);
 }
 
 VALUE rb_struct_initialize(VALUE self, VALUE values) {
-  return RUBY_CEXT_INVOKE("rb_struct_initialize", self, values);
+  return rb_tr_up_rb_struct_initialize(self, values);
 }

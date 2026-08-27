@@ -17,19 +17,19 @@
 // coerce
 
 VALUE rb_num_coerce_bin(VALUE x, VALUE y, ID func) {
-  return RUBY_CEXT_INVOKE("rb_num_coerce_bin", x, y, ID2SYM(func));
+  return rb_tr_up_rb_num_coerce_bin(x, y, ID2SYM(func));
 }
 
 VALUE rb_num_coerce_cmp(VALUE x, VALUE y, ID func) {
-  return RUBY_CEXT_INVOKE("rb_num_coerce_cmp", x, y, ID2SYM(func));
+  return rb_tr_up_rb_num_coerce_cmp(x, y, ID2SYM(func));
 }
 
 VALUE rb_num_coerce_relop(VALUE x, VALUE y, ID func) {
-  return RUBY_CEXT_INVOKE("rb_num_coerce_relop", x, y, ID2SYM(func));
+  return rb_tr_up_rb_num_coerce_relop(x, y, ID2SYM(func));
 }
 
 VALUE rb_check_to_integer(VALUE object, const char *method) {
-  return RUBY_CEXT_INVOKE("rb_check_to_integer", object, rb_str_new_cstr(method));
+  return rb_tr_up_rb_check_to_integer(object, rb_str_new_cstr(method));
 }
 
 void rb_num_zerodiv(void) {
@@ -50,7 +50,7 @@ double ruby_strtod(const char *nptr, char **endptr) {
 }
 
 unsigned long rb_num2ulong(VALUE val) {
-  return (unsigned long)polyglot_as_i64(RUBY_CEXT_INVOKE_NO_WRAP("rb_num2ulong", val));
+  return (unsigned long)rb_tr_up_rb_num2ulong(val);
 }
 
 static char *out_of_range_float(char (*pbuf)[24], VALUE val) {
@@ -162,7 +162,7 @@ short rb_fix2short(VALUE value) {
 }
 
 unsigned long rb_fix2uint(VALUE value) {
-  return polyglot_as_i64(RUBY_CEXT_INVOKE_NO_WRAP("rb_fix2uint", value));
+  return rb_tr_up_rb_fix2uint(value);
 }
 
 VALUE rb_int2inum(intptr_t n) {
@@ -170,7 +170,7 @@ VALUE rb_int2inum(intptr_t n) {
 }
 
 VALUE rb_uint2inum(uintptr_t n) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_ulong2num", n));
+  return rb_tr_up_rb_ulong2num(n);
 }
 
 VALUE rb_uint2big(uintptr_t i) {
@@ -184,55 +184,55 @@ VALUE rb_ll2inum(LONG_LONG n) {
 
 VALUE rb_ull2inum(unsigned LONG_LONG val) {
   /* Long and long long are both 64-bits with clang x86-64. */
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_ulong2num", val));
+  return rb_tr_up_rb_ulong2num(val);
 }
 
 double rb_num2dbl(VALUE val) {
-  return polyglot_as_double(RUBY_CEXT_INVOKE_NO_WRAP("rb_num2dbl", val));
+  return rb_tr_up_rb_num2dbl(val);
 }
 
 long rb_num2int(VALUE val) {
-  return polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_num2int", val));
+  return rb_tr_up_rb_num2int(val);
 }
 
 unsigned long rb_num2uint(VALUE val) {
-  return (unsigned long)polyglot_as_i64(RUBY_CEXT_INVOKE_NO_WRAP("rb_num2uint", val));
+  return (unsigned long)rb_tr_up_rb_num2uint(val);
 }
 
 long rb_num2long(VALUE val) {
-  return polyglot_as_i64(RUBY_CEXT_INVOKE_NO_WRAP("rb_num2long", val));
+  return rb_tr_up_rb_num2long(val);
 }
 
 VALUE rb_cstr_to_inum(const char* string, int base, int raise) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_cstr_to_inum", rb_tr_unwrap(rb_str_new_cstr(string)), base, raise));
+  return rb_tr_up_rb_cstr_to_inum(rb_str_new_cstr(string), base, raise);
 }
 
 double rb_cstr_to_dbl(const char* string, int badcheck) {
-  return polyglot_as_double(RUBY_CEXT_INVOKE_NO_WRAP("rb_cstr_to_dbl", rb_str_new_cstr(string), rb_boolean(badcheck)));
+  return rb_tr_up_rb_cstr_to_dbl(rb_str_new_cstr(string), rb_boolean(badcheck));
 }
 
 double rb_big2dbl(VALUE x) {
-  return polyglot_as_double(RUBY_CEXT_INVOKE_NO_WRAP("rb_num2dbl", x));
+  return rb_tr_up_rb_num2dbl(x);
 }
 
 VALUE rb_dbl2big(double d) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "DBL2BIG", d));
+  return rb_tr_up_DBL2BIG(d);
 }
 
 LONG_LONG rb_big2ll(VALUE x) {
-  return polyglot_as_i64(RUBY_CEXT_INVOKE_NO_WRAP("rb_num2long", x));
+  return rb_tr_up_rb_num2long(x);
 }
 
 unsigned LONG_LONG rb_big2ull(VALUE x) {
-  return polyglot_as_i64(RUBY_CEXT_INVOKE_NO_WRAP("rb_num2ulong", x));
+  return rb_tr_up_rb_num2ulong(x);
 }
 
 long rb_big2long(VALUE x) {
-  return polyglot_as_i64(RUBY_CEXT_INVOKE_NO_WRAP("rb_num2long", x));
+  return rb_tr_up_rb_num2long(x);
 }
 
 unsigned long rb_big2ulong(VALUE x) {
-  return polyglot_as_i64(RUBY_CEXT_INVOKE_NO_WRAP("rb_num2ulong", x));
+  return rb_tr_up_rb_num2ulong(x);
 }
 
 VALUE rb_cstr2inum(const char *string, int base) {
@@ -256,7 +256,7 @@ VALUE rb_str2inum(VALUE string, int base) {
 }
 
 VALUE rb_fix2str(VALUE x, int base) {
-  return RUBY_CEXT_INVOKE("rb_fix2str", x, INT2FIX(base));
+  return rb_tr_up_rb_fix2str(x, INT2FIX(base));
 }
 
 VALUE rb_big2str(VALUE x, int base) {
@@ -264,5 +264,5 @@ VALUE rb_big2str(VALUE x, int base) {
 }
 
 VALUE rb_to_int(VALUE object) {
-  return RUBY_CEXT_INVOKE("rb_to_int", object);
+  return rb_tr_up_rb_to_int(object);
 }

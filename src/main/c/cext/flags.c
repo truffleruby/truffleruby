@@ -13,9 +13,9 @@
 // struct RBasic flags, RB_FL_*
 
 unsigned long rb_tr_flags(VALUE object) {
-  return polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_tr_flags", object));
+  return rb_tr_up_rb_tr_flags(object);
 }
 
 void rb_tr_set_flags(VALUE object, unsigned long flags) {
-  polyglot_invoke(RUBY_CEXT, "rb_tr_set_flags", rb_tr_unwrap(object), flags);
+  rb_tr_up_rb_tr_set_flags(object, flags);
 }
