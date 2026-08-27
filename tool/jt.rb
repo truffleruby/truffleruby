@@ -2838,6 +2838,7 @@ module Commands
       'src/main/c/cext/upcalls.h',
       'src/main/c/cext/upcalls_init.c',
       'src/main/java/org/truffleruby/cext/CExtUpcallTargets.java',
+      'src/main/java/META-INF/native-image/dev.truffleruby.internal/cext-downcalls/reachability-metadata.json',
     ]
     diff = sh 'git', 'diff', *files, capture: :out
     unless diff.empty?

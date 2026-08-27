@@ -359,11 +359,42 @@ java << "    };\n"
 java << "    // @formatter:on\n"
 java << "}\n"
 
+# ---- Native Image foreign.downcalls metadata ----
+# FFM downcall handles created at image build time (static final fields) need no metadata, but handles
+# created at run time by Primitive.cext_ffm_bind do. Collect the carrier signatures from the Ruby sources.
 base = File.expand_path('..', __dir__)
+bind_signatures = []
+Dir["#{base}/lib/truffle/**/*.rb"].sort.each do |file|
+  contents = File.read(file)
+  # Match any quoted carrier signature literal like 'L(LL)' (all are arguments of cext_ffm_bind)
+  contents.scan(/'([VILD]\([VILD]*\))'/) { bind_signatures << $1 }
+  # The interpolated rb_tr_setjmp_wrapper_pointer{1..16}_to_pointer family in cext.rb
+  if contents.include?("cext_ffm_bind(lib[:\"rb_tr_setjmp_wrapper_pointer\#{n}_to_pointer\"]")
+    (1..16).each { |n| bind_signatures << "L(#{'L' * (n + 1)})" }
+  end
+end
+bind_signatures = bind_signatures.uniq.sort
+
+JNI_NAMES = { 'L' => 'jlong', 'I' => 'jint', 'D' => 'jdouble', 'V' => 'void' }.freeze
+
+downcalls_json = +"{\n  \"foreign\": {\n    \"downcalls\": [\n"
+downcalls_json << bind_signatures.map do |signature|
+  ret = JNI_NAMES.fetch(signature[0].to_s)
+  params = signature[(signature.index('(') + 1)...-1].chars.map { |c| "\"#{JNI_NAMES.fetch(c)}\"" }
+  <<~ENTRY.gsub(/^/, '      ').chomp
+    {
+      "returnType": "#{ret}",
+      "parameterTypes": [#{params.join(', ')}]
+    }
+  ENTRY
+end.join(",\n")
+downcalls_json << "\n    ]\n  }\n}\n"
+
 files = {
   "#{base}/src/main/c/cext/upcalls.h" => upcalls_h,
   "#{base}/src/main/c/cext/upcalls_init.c" => init_c,
   "#{base}/src/main/java/org/truffleruby/cext/CExtUpcallTargets.java" => java,
+  "#{base}/src/main/java/META-INF/native-image/dev.truffleruby.internal/cext-downcalls/reachability-metadata.json" => downcalls_json,
 }
 files.each do |path, contents|
   if File.exist?(path) && File.read(path) == contents
