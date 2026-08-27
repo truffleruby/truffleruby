@@ -2939,6 +2939,103 @@ module Commands
     end
   end
 
+  # New files under these directories must use the BSD-3-Clause license,
+  # unlike older files which use the tri EPL/GPL/LGPL license.
+  BSD3_NEW_FILES_DIRS = %w[src/ lib/truffle/ lib/cext/ spec/truffle/ test/truffle/ tool/]
+  BSD3_NEW_FILES_EXTENSIONS = %w[.java .rb .c .h .cpp .hpp .sh .inc .py]
+  # Files imported from other projects keep their original license
+  BSD3_NEW_FILES_EXCLUDED = [
+    %r{\Alib/cext/include/(?!truffleruby/)},                            # C extension API headers imported from MRI
+    %r{\Asrc/main/c/(?!cext/|truffleposix/|rubysignal/|spawn-helper/)}, # C extensions and libraries imported from MRI and elsewhere
+    %r{\Asrc/yarp/},                                                    # imported from prism
+    %r{\Asrc/dev\.truffleruby\.shadowed\.},                             # shadowed libraries such as joni
+    %r{\Aspec/truffle/capi/ext/internal_id\.h\z},                       # imported from MRI id.h
+  ]
+
+  # The standard BSD-3-Clause license text, as in the headers of
+  # tool/generate-posix-functions.rb and src/main/c/cext/vm.c
+  BSD3_LICENSE_TEXT = <<~LICENSE
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    1. Redistributions of source code must retain the above copyright notice, this
+       list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright notice,
+       this list of conditions and the following disclaimer in the documentation
+       and/or other materials provided with the distribution.
+
+    3. Neither the name of the copyright holder nor the names of its
+       contributors may be used to endorse or promote products derived from
+       this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+    SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  LICENSE
+
+  def check_new_files_license(base_commit = nil)
+    puts bold '$ jt check_new_files_license'
+    unless base_commit
+      %w[master origin/master].each do |branch|
+        base_commit = `git merge-base HEAD #{branch} 2>/dev/null`.chomp
+        break unless base_commit.empty?
+      end
+      raise 'could not find the master branch' if base_commit.empty?
+    end
+
+    offenders = added_files(base_commit).select do |file|
+      BSD3_NEW_FILES_DIRS.any? { |dir| file.start_with?(dir) } and
+        BSD3_NEW_FILES_EXTENSIONS.include?(File.extname(file)) and
+        BSD3_NEW_FILES_EXCLUDED.none? { |pattern| pattern =~ file } and
+        File.file?(file)
+    end.reject do |file|
+      valid_bsd3_header?(file)
+    end
+
+    unless offenders.empty?
+      abort <<~MESSAGE
+        These new files must use the BSD-3-Clause license:
+        #{offenders.join("\n")}
+
+        Start each file with a 'Copyright (c) #{Time.now.year} TruffleRuby contributors' line
+        followed by the full BSD-3-Clause license text, in a comment.
+        See tool/generate-posix-functions.rb for Ruby/shell files
+        and src/main/c/cext/vm.c for C/Java files.
+
+        For files imported from other projects which keep their original license,
+        add a pattern in BSD3_NEW_FILES_EXCLUDED in tool/jt.rb instead.
+      MESSAGE
+    end
+  end
+
+  # The header must be an exact match: it starts with "Copyright (c) YEAR TruffleRuby contributors"
+  # (no dot at the end, unlike the tri-license header) followed by a blank line and the exact
+  # BSD-3-Clause license text, with no extra spaces or any other difference, as a comment.
+  private def valid_bsd3_header?(file)
+    contents = File.read(file)
+    # A shebang and magic comments may precede the license header
+    contents = contents.sub(/\A#!.+\n\n?/, '').sub(/\A(# [a-z_]+: [a-z_]+\n)+\n?/, '')
+
+    copyright_line = contents[/\A(?:\/\*\n \* |# )(Copyright \(c\) (?:\d{4}-)?\d{4} TruffleRuby contributors)\n/, 1]
+    return false unless copyright_line
+
+    text = "#{copyright_line}\n\n#{BSD3_LICENSE_TEXT}"
+    c_comment_body = text.lines[1..].map { |line| line == "\n" ? " *\n" : " * #{line}" }.join
+    expected_headers = [
+      "/*\n * #{text.lines.first}" + c_comment_body + " */\n",
+      text.lines.map { |line| line == "\n" ? "#\n" : "# #{line}" }.join,
+    ]
+    expected_headers.any? { |header| contents.start_with?(header) }
+  end
+
   def checkstyle(changed_java_files = nil)
     if changed_java_files.is_a?(Array)
       File.write('mxbuild/javafilelist.txt', changed_java_files.join("\n"))
@@ -3272,6 +3369,7 @@ module Commands
     check_lockfiles(changed['.lock']) if changed['.lock']
 
     check_abi(fail: !compare_to)
+    check_new_files_license(compare_to)
 
     unless fast
       mx 'gate', '--tags', 'style' # mx eclipseformat, mx checkstyle and a few more checks
@@ -3339,6 +3437,10 @@ module Commands
 
   private def changed_files(base_commit)
     `git diff --cached --name-only #{base_commit}`.lines.map(&:chomp)
+  end
+
+  private def added_files(base_commit)
+    `git diff --cached --name-only --diff-filter=A #{base_commit}`.lines.map(&:chomp)
   end
 
   def spotbugs
