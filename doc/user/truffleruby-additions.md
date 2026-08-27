@@ -26,7 +26,7 @@ TruffleRuby provides these non-standard methods and classes that provide additio
 
 * `TruffleRuby.native?` reports if TruffleRuby is compiled as a native executable.
 
-* `TruffleRuby.cexts?` reports if TruffleRuby has the GraalVM LLVM Runtime for C extensions available.
+* `TruffleRuby.cexts?` reports if C extensions are enabled (the `--cexts` option).
 
 * `TruffleRuby.revision` reports the source control revision used to build TruffleRuby as a String. Also available as `RUBY_REVISION`, like CRuby 2.7+.
 

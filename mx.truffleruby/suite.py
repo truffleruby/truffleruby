@@ -27,15 +27,6 @@ suite = {
                     {"url": "https://curio.ssw.jku.at/nexus/content/repositories/snapshots", "kind": "binary"},
                 ]
             },
-            {
-                "name": "sulong",
-                "subdir": True,
-                "version": "521a3ee1817c7495de25f2f57506029c90068692",
-                "urls": [
-                    {"url": "https://github.com/truffleruby/graal.git", "kind": "git"},
-                    {"url": "https://curio.ssw.jku.at/nexus/content/repositories/snapshots", "kind": "binary"},
-                ]
-            },
         ],
     },
 
@@ -321,8 +312,6 @@ suite = {
                 "truffle:TRUFFLE_API",
                 "truffle:TRUFFLE_NFI",
                 "regex:TREGEX",
-                "sulong:SULONG_API",
-                "sulong:SULONG_NFI",
                 "sdk:COLLECTIONS",
                 "sdk:NATIVEIMAGE",
                 "sdk:POLYGLOT",
@@ -438,7 +427,6 @@ suite = {
             "buildDependencies": [ # These are used to build the module path
                 "TRUFFLERUBY", # We need this jar to run extconf.rb
                 "TRUFFLERUBY-LAUNCHER", # We need this jar to run extconf.rb
-                "sulong:SULONG_NATIVE", # We need this jar to find the toolchain with Toolchain#getToolPath
                 "TRUFFLERUBY_BOOTSTRAP_HOME", # libyarpbindings.so, librubysignal.so
             ],
             "license": ["EPL-2.0"],
@@ -529,7 +517,6 @@ suite = {
             ],
             "relative_home_paths": {
                 "ruby": "..",
-                "llvm": "../lib/sulong",
             },
             "relative_jre_path": "../jvm",
             "relative_module_path": "../modules",
@@ -544,9 +531,6 @@ suite = {
             "class": "LanguageLibraryProject",
             "dependencies": [
                 "TRUFFLERUBY_STANDALONE_DEPENDENCIES",
-                # LLVM_NATIVE_POM is intentionally not used as that would include SULONG_NATIVE_RESOURCES,
-                # which would copy the resources in the image, regardless of IncludeLanguageResources,
-                # see com.oracle.truffle.llvm.nativemode.resources.NativeResourceFeature.
             ],
             "buildDependencies": [
                 "TRUFFLERUBY_STANDALONE_COMMON",
@@ -647,8 +631,6 @@ suite = {
                 "truffle:TRUFFLE_API",
                 "truffle:TRUFFLE_NFI",
                 "regex:TREGEX",
-                "sulong:SULONG_API",
-                "sulong:SULONG_NFI",
                 "sdk:COLLECTIONS",
                 "sdk:NATIVEIMAGE",
                 "sdk:POLYGLOT",
@@ -658,7 +640,6 @@ suite = {
                 # runtime-only dependencies
                 "truffle:TRUFFLE_NFI_LIBFFI",
                 "truffle:TRUFFLE_NFI_PANAMA",
-                "sulong:SULONG_NATIVE",
             ],
             "description": "Internal.",
             "license": [
@@ -681,7 +662,6 @@ suite = {
                 "TRUFFLERUBY",
                 "TRUFFLERUBY-RESOURCES",
                 "truffle:TRUFFLE_RUNTIME",
-                "sulong:LLVM_NATIVE_POM",
             ],
             "description": "TruffleRuby, a high-performance embeddable Ruby implementation",
             "maven": {
@@ -1032,29 +1012,6 @@ suite = {
                 "bin/ruby": "dependency:truffleruby_thin_launcher",
                 "bin/truffleruby": "dependency:truffleruby_thin_launcher",
                 "bin/truffleruby-polyglot-get": "dependency:truffleruby_thin_launcher",
-                "lib/sulong/": [
-                    "extracted-dependency:sulong:SULONG_CORE_HOME",
-                    "extracted-dependency:sulong:SULONG_GRAALVM_DOCS",
-                    {
-                        "source_type": "extracted-dependency",
-                        "dependency": "sulong:SULONG_BITCODE_HOME",
-                        "path": "*",
-                        "exclude": [
-                            "native/lib/*++*",
-                        ],
-                    },
-                    {
-                        "source_type": "extracted-dependency",
-                        "dependency": "sulong:SULONG_NATIVE_HOME",
-                        "path": "*",
-                        "exclude": [
-                            "native/cmake",
-                            "native/include",
-                            "native/lib/*++*",
-                            "native/share",
-                        ],
-                    },
-                ],
                 "release": "dependency:sdk:STANDALONE_JAVA_HOME/release",
             },
         },

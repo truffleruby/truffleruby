@@ -27,8 +27,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Returning a struct by value from Sulong to NFI is not supported.
-// So we need to declare such functions here and call a `rb_tr_` variant which takes a struct pointer instead.
+// Returning a struct by value is complicated.
+// So we declare such functions here and call a `rb_tr_` variant which takes a struct pointer instead.
 
 #include <ruby.h>
 

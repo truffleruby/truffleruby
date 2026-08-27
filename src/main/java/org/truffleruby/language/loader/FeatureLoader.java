@@ -475,14 +475,14 @@ public final class FeatureLoader {
                             null));
         }
 
-        return loadCExtLibrary("libtruffleruby", rubyLibPath, currentNode, true);
+        return loadCExtLibrary("libtruffleruby", rubyLibPath, currentNode);
     }
 
     /** rb_tr_abi_version() has signature const char* (void) */
     private static final MethodHandle ABI_VERSION_HANDLE = FFMSupport.createDowncallHandle("L()");
 
     @TruffleBoundary
-    public Object loadCExtLibrary(String feature, String path, Node currentNode, boolean unusedSulong) {
+    public Object loadCExtLibrary(String feature, String path, Node currentNode) {
         Metrics.printTime("before-load-cext-" + feature);
         try {
             final TruffleFile truffleFile = FileLoader.getSafeTruffleFile(language, context, path);

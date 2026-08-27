@@ -11,6 +11,6 @@ require_relative '../../ruby/spec_helper'
 
 describe "Truffle::Interop.languages" do
   it "returns the public languages" do
-    Truffle::Interop.languages.sort.should == %w[llvm ruby]
+    Truffle::Interop.languages.sort.should == %w[ruby]
   end
 end

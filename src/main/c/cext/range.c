@@ -16,13 +16,11 @@ VALUE rb_range_new(VALUE beg, VALUE end, int exclude_end) {
   return rb_tr_up_rb_range_new(beg, end, exclude_end);
 }
 
-/* This function can not be inlined as the two rb_intern macros
-   generate static variables, and would produce unwanted
-   warnings. This does mean that the start and end VALUEs will be
-   converted to native handles and back if Sulong doesn't choose to
-   inline this function, but this is unlikely to cause a major
-   performance issue.
- */
+/* This function cannot be `inline` as the two rb_intern() macros
+ * generate static variables, and would produce unwanted
+ * warnings. This does mean that the start and end VALUEs will be
+ * converted to native handles and back, but this is unlikely to
+ * cause a major performance issue. */
 int rb_range_values(VALUE range, VALUE *begp, VALUE *endp, int *exclp) {
   if (!rb_obj_is_kind_of(range, rb_cRange)) {
     if (!rb_respond_to(range, rb_intern("begin"))) return Qfalse;

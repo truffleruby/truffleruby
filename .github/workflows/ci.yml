@@ -2,8 +2,8 @@
 # * In general most tests are run on a single platform rather than all platforms
 # * ubuntu-22.04-arm is chosen as the default platform because it is the fastest on GitHub Actions
 # * Test on a single JDK instead of stable + latest
-# * No `jt test mri --fast --no-sulong` on JVM
-# * `jt test mri --fast --no-sulong` on Native instead of `test mri --no-sulong`
+# * No `jt test mri --fast --no-cexts` on JVM
+# * `jt test mri --fast --no-cexts` on Native instead of `test mri --no-cexts`
 # Those differences are intentional to avoid making the CI too slow.
 name: CI
 on:
@@ -192,7 +192,7 @@ jobs:
         - :language :core :cxx # ~3min ~7min ~1min
         - :command_line :library :cext :security :tracepoint :next # ~5min ~2min ~1.5min ~0.75min ~0.5min ~0.25min
         - fast bundle cexts # ~1.5min ~1.5min ~6.5min
-        - "'mri --all-sulong'" # ~6min
+        - "'mri --all-cexts'" # ~6min
         - integration basictest # ~10min ~0.5min
         - gems ecosystem # ~2min ~6min
     steps:
@@ -254,7 +254,7 @@ jobs:
       with:
         archive: truffleruby-native
 
-    - run: tr-timeout 30 jt test mri --fast --no-sulong -- --jobs=4 --longest=10
+    - run: tr-timeout 30 jt test mri --fast --no-cexts -- --jobs=4 --longest=10
 
   ruby_spec_cruby: # ~3min
     name: ruby/spec on CRuby

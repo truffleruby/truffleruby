@@ -39,7 +39,6 @@ module Truffle::CExt
     # will be done to unwind the native stack.
     # It is essential that only native frames and no Java frames are unwinded with longjmp(),
     # which means these wrappers must be used exactly when calling into native functions, not before or after.
-    # Sulong-executed C code counts as not-native in this context.
 
     # The signature starts with an extra pointer (L) which is the native function to call
     POINTER_TO_POINTER_WRAPPERS = [nil] + (1..16).map do |n|

@@ -24,10 +24,6 @@
 // We don't have a transient heap
 #define USE_TRANSIENT_HEAP 0
 
-// Sulong enforces calling functions with the correct arity, so we set this
-// to catch rb_block_call_func_t* functions with incorrect arity faster.
-#define RB_BLOCK_CALL_FUNC_STRICT 1
-
 // To avoid extra write barrier code
 #define USE_RINCGC 0
 

@@ -120,13 +120,13 @@ MRI_TEST_MODULES = {
       help: 'run all C-API MRI tests',
       include: capi = MRI_TEST_CAPI_TESTS,
     },
-    '--all-sulong' => {
-        help: 'run all tests requiring Sulong (C exts and C API)',
-        include: all_sulong = cexts + capi
+    '--all-cexts' => {
+        help: 'run all tests requiring C extension support (C exts and C API)',
+        include: all_cexts = cexts + capi
     },
-    '--no-sulong' => {
-        help: 'exclude all tests requiring Sulong',
-        exclude: all_sulong
+    '--no-cexts' => {
+        help: 'exclude all tests requiring C extension support',
+        exclude: all_cexts
     },
 }
 
@@ -177,7 +177,7 @@ module Utilities
     case from
     when :suite
       suite = File.read("#{TRUFFLERUBY_DIR}/mx.truffleruby/suite.py")
-      raise unless /"name": "sulong",.+?"version": "(\h{40})"/m =~ suite
+      raise unless /"name": "regex",.+?"version": "(\h{40})"/m =~ suite
       $1
     when :repository
       sh('git', 'rev-parse', 'HEAD', capture: :out, no_print_cmd: true, chdir: GRAAL_DIR).chomp

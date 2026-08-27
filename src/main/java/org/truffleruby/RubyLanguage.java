@@ -167,7 +167,7 @@ import static org.truffleruby.language.RubyBaseNode.nil;
         version = TruffleRuby.LANGUAGE_VERSION,
         characterMimeTypes = RubyLanguage.MIME_TYPE,
         defaultMimeType = RubyLanguage.MIME_TYPE,
-        dependentLanguages = { "nfi", "llvm", "regex" },
+        dependentLanguages = { "nfi", "regex" },
         fileTypeDetectors = RubyFileTypeDetector.class)
 @ProvidedTags({
         CoverageManager.LineTag.class,
@@ -200,7 +200,6 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     /** To avoid some String[] allocations */
     public static final String[] MIME_TYPES = { MIME_TYPE };
 
-    public static final String LLVM_BITCODE_MIME_TYPE = "application/x-llvm-ir-bitcode";
 
     public static final String CEXT_EXTENSION = Platform.CEXT_SUFFIX;
 

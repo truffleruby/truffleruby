@@ -15,13 +15,8 @@
 extern "C" {
 #endif
 
-// Tests that Sulong does not force ptr to native
-static char* function_returning_char_ptr(char* ptr) {
-  return ptr;
-}
-
 static VALUE string_ptr(VALUE self, VALUE str) {
-  char* ptr = function_returning_char_ptr(RSTRING_PTR(str));
+  char* ptr = RSTRING_PTR(str);
   char cstring[] = { ptr[0], 0 };
   return rb_str_new_cstr(cstring);
 }
