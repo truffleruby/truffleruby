@@ -357,6 +357,7 @@ void rb_debug_rstring_null_ptr(const char *func);
 int rb_tr_str_len(VALUE string);
 char* rb_tr_rstring_ptr(VALUE string);
 char* rb_tr_rstring_end(VALUE string);
+char* rb_tr_rstring_getmem(VALUE string, long *lenvar);
 #endif
 
 RBIMPL_SYMBOL_EXPORT_END()
@@ -470,7 +471,17 @@ RSTRING_LENINT(VALUE str)
  * @param  ptrvar  Variable where its contents is stored.
  * @param  lenvar  Variable where its length is stored.
  */
+#ifdef TRUFFLERUBY
+/* A single call getting both the pointer and length, cheaper than 2 calls into the Ruby runtime */
+# define RSTRING_GETMEM(str, ptrvar, lenvar) \
+    __extension__ ({ \
+        long rb_tr_rstring_len; \
+        (ptrvar) = rb_tr_rstring_getmem((str), &rb_tr_rstring_len); \
+        (lenvar) = rb_tr_rstring_len; \
+    })
+#else
 # define RSTRING_GETMEM(str, ptrvar, lenvar) \
     ((ptrvar) = RSTRING_PTR(str),           \
      (lenvar) = RSTRING_LEN(str))
+#endif
 #endif /* RBIMPL_RSTRING_H */

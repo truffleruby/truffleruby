@@ -2307,9 +2307,19 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
+    public static long upcall_rb_enc_str_new_native(long v0, long v1, long v2) {
+        try {
+            return (long) runtime.upcall(227, v0, v1, v2);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
+        }
+    }
+
+    @CExtUpcall
     public static long upcall_rb_enc_strlen(long v0) {
         try {
-            return (long) runtime.upcall(227, v0);
+            return (long) runtime.upcall(228, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2319,7 +2329,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_enc_to_index(long v0) {
         try {
-            return (int) runtime.upcall(228, v0);
+            return (int) runtime.upcall(229, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -2329,7 +2339,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_ensure(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(229, v0, v1, v2, v3);
+            return (long) runtime.upcall(230, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2339,7 +2349,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_enumeratorize(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(230, v0, v1, v2);
+            return (long) runtime.upcall(231, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2349,7 +2359,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_enumeratorize_with_size(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(231, v0, v1, v2, v3);
+            return (long) runtime.upcall(232, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2359,7 +2369,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_equal(long v0, long v1) {
         try {
-            return (long) runtime.upcall(232, v0, v1);
+            return (long) runtime.upcall(233, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2369,7 +2379,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_errinfo() {
         try {
-            return (long) runtime.upcall(233);
+            return (long) runtime.upcall(234);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2379,7 +2389,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_error_frozen_object(long v0) {
         try {
-            runtime.upcall(234, v0);
+            runtime.upcall(235, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -2388,7 +2398,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_eval_cmd_kw(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(235, v0, v1, v2);
+            return (long) runtime.upcall(236, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2398,7 +2408,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_eval_string(long v0) {
         try {
-            return (long) runtime.upcall(236, v0);
+            return (long) runtime.upcall(237, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2408,7 +2418,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_exc_raise(long v0) {
         try {
-            runtime.upcall(237, v0);
+            runtime.upcall(238, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -2417,7 +2427,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_exc_set_message(long v0, long v1) {
         try {
-            runtime.upcall(238, v0, v1);
+            runtime.upcall(239, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -2426,7 +2436,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_exec_recursive(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(239, v0, v1, v2);
+            return (long) runtime.upcall(240, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2436,7 +2446,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_f_global_variables() {
         try {
-            return (long) runtime.upcall(240);
+            return (long) runtime.upcall(241);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2446,7 +2456,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_f_notimplement() {
         try {
-            return (long) runtime.upcall(241);
+            return (long) runtime.upcall(242);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2456,7 +2466,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_f_sprintf(long v0) {
         try {
-            return (long) runtime.upcall(242, v0);
+            return (long) runtime.upcall(243, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2466,7 +2476,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_fatal(long v0) {
         try {
-            runtime.upcall(243, v0);
+            runtime.upcall(244, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -2475,7 +2485,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_fiber_current() {
         try {
-            return (long) runtime.upcall(244);
+            return (long) runtime.upcall(245);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2485,7 +2495,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_fiber_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(245, v0, v1);
+            return (long) runtime.upcall(246, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2495,7 +2505,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_filesystem_encindex() {
         try {
-            return (int) runtime.upcall(246);
+            return (int) runtime.upcall(247);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -2505,7 +2515,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_filesystem_encoding() {
         try {
-            return (long) runtime.upcall(247);
+            return (long) runtime.upcall(248);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2515,7 +2525,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_fix2str(long v0, long v1) {
         try {
-            return (long) runtime.upcall(248, v0, v1);
+            return (long) runtime.upcall(249, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2525,7 +2535,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_fix2uint(long v0) {
         try {
-            return (long) runtime.upcall(249, v0);
+            return (long) runtime.upcall(250, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2535,7 +2545,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_float_new(double v0) {
         try {
-            return (long) runtime.upcall(250, v0);
+            return (long) runtime.upcall(251, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2545,7 +2555,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_flt_rationalize(long v0) {
         try {
-            return (long) runtime.upcall(251, v0);
+            return (long) runtime.upcall(252, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2555,7 +2565,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_flt_rationalize_with_prec(long v0, long v1) {
         try {
-            return (long) runtime.upcall(252, v0, v1);
+            return (long) runtime.upcall(253, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2565,7 +2575,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_frame_this_func() {
         try {
-            return (long) runtime.upcall(253);
+            return (long) runtime.upcall(254);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2575,7 +2585,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_free_generic_ivar(long v0) {
         try {
-            runtime.upcall(254, v0);
+            runtime.upcall(255, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -2584,7 +2594,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_fs() {
         try {
-            return (long) runtime.upcall(255);
+            return (long) runtime.upcall(256);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2594,7 +2604,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_funcall_with_block(long v0, long v1, long v2p, long v2n, long v3) {
         try {
-            return (long) runtime.upcall(256, v0, v1, v2p, v2n, v3);
+            return (long) runtime.upcall(257, v0, v1, v2p, v2n, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2604,7 +2614,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_funcall_with_block_keywords(long v0, long v1, long v2p, long v2n, long v3) {
         try {
-            return (long) runtime.upcall(257, v0, v1, v2p, v2n, v3);
+            return (long) runtime.upcall(258, v0, v1, v2p, v2n, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2614,7 +2624,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_funcallv(long v0, long v1, long v2p, long v2n) {
         try {
-            return (long) runtime.upcall(258, v0, v1, v2p, v2n);
+            return (long) runtime.upcall(259, v0, v1, v2p, v2n);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2624,7 +2634,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_funcallv_keywords(long v0, long v1, long v2p, long v2n) {
         try {
-            return (long) runtime.upcall(259, v0, v1, v2p, v2n);
+            return (long) runtime.upcall(260, v0, v1, v2p, v2n);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2634,7 +2644,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_funcallv_public(long v0, long v1, long v2p, long v2n) {
         try {
-            return (long) runtime.upcall(260, v0, v1, v2p, v2n);
+            return (long) runtime.upcall(261, v0, v1, v2p, v2n);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2644,7 +2654,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_gc() {
         try {
-            runtime.upcall(261);
+            runtime.upcall(262);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -2652,16 +2662,6 @@ public abstract class CExtUpcallTargets {
 
     @CExtUpcall
     public static long upcall_rb_gc_disable() {
-        try {
-            return (long) runtime.upcall(262);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
-    @CExtUpcall
-    public static long upcall_rb_gc_enable() {
         try {
             return (long) runtime.upcall(263);
         } catch (Throwable t) {
@@ -2671,9 +2671,19 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
+    public static long upcall_rb_gc_enable() {
+        try {
+            return (long) runtime.upcall(264);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
+        }
+    }
+
+    @CExtUpcall
     public static long upcall_rb_gc_latest_gc_info(long v0) {
         try {
-            return (long) runtime.upcall(264, v0);
+            return (long) runtime.upcall(265, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2683,7 +2693,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_gc_mark(long v0) {
         try {
-            runtime.upcall(265, v0);
+            runtime.upcall(266, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -2692,7 +2702,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_gc_register_address(long v0) {
         try {
-            runtime.upcall(266, v0);
+            runtime.upcall(267, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -2701,7 +2711,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_gc_register_mark_object(long v0) {
         try {
-            runtime.upcall(267, v0);
+            runtime.upcall(268, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -2710,7 +2720,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_gc_unregister_address(long v0) {
         try {
-            runtime.upcall(268, v0);
+            runtime.upcall(269, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -2718,16 +2728,6 @@ public abstract class CExtUpcallTargets {
 
     @CExtUpcall
     public static long upcall_rb_get_alloc_func(long v0) {
-        try {
-            return (long) runtime.upcall(269, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
-    @CExtUpcall
-    public static long upcall_rb_gv_get(long v0) {
         try {
             return (long) runtime.upcall(270, v0);
         } catch (Throwable t) {
@@ -2737,9 +2737,19 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
+    public static long upcall_rb_gv_get(long v0) {
+        try {
+            return (long) runtime.upcall(271, v0);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
+        }
+    }
+
+    @CExtUpcall
     public static long upcall_rb_gv_set(long v0, long v1) {
         try {
-            return (long) runtime.upcall(271, v0, v1);
+            return (long) runtime.upcall(272, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2749,7 +2759,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_hash(long v0) {
         try {
-            return (long) runtime.upcall(272, v0);
+            return (long) runtime.upcall(273, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2759,7 +2769,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_hash_aref(long v0, long v1) {
         try {
-            return (long) runtime.upcall(273, v0, v1);
+            return (long) runtime.upcall(274, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2769,7 +2779,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_hash_foreach(long v0, long v1, long v2) {
         try {
-            runtime.upcall(274, v0, v1, v2);
+            runtime.upcall(275, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -2778,7 +2788,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_hash_get_or_undefined(long v0, long v1) {
         try {
-            return (long) runtime.upcall(275, v0, v1);
+            return (long) runtime.upcall(276, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2788,7 +2798,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_hash_new() {
         try {
-            return (long) runtime.upcall(276);
+            return (long) runtime.upcall(277);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2798,7 +2808,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_hash_new_capa(long v0) {
         try {
-            return (long) runtime.upcall(277, v0);
+            return (long) runtime.upcall(278, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2808,7 +2818,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_hash_set_ifnone(long v0, long v1) {
         try {
-            return (long) runtime.upcall(278, v0, v1);
+            return (long) runtime.upcall(279, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2818,7 +2828,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_hash_start(long v0) {
         try {
-            return (long) runtime.upcall(279, v0);
+            return (long) runtime.upcall(280, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2828,7 +2838,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_id2str(long v0) {
         try {
-            return (long) runtime.upcall(280, v0);
+            return (long) runtime.upcall(281, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2838,7 +2848,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_id_attrset(long v0) {
         try {
-            return (long) runtime.upcall(281, v0);
+            return (long) runtime.upcall(282, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2848,7 +2858,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_ident_hash_new() {
         try {
-            return (long) runtime.upcall(282);
+            return (long) runtime.upcall(283);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2858,7 +2868,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_inspect(long v0) {
         try {
-            return (long) runtime.upcall(283, v0);
+            return (long) runtime.upcall(284, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2868,7 +2878,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_int_cmp(long v0, long v1) {
         try {
-            return (int) runtime.upcall(284, v0, v1);
+            return (int) runtime.upcall(285, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -2878,7 +2888,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_id2sym(long v0) {
         try {
-            return (long) runtime.upcall(285, v0);
+            return (long) runtime.upcall(286, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2888,7 +2898,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_int2big(long v0) {
         try {
-            return (long) runtime.upcall(286, v0);
+            return (long) runtime.upcall(287, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2898,7 +2908,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_int_positive_pow(long v0, long v1) {
         try {
-            return (long) runtime.upcall(287, v0, v1);
+            return (long) runtime.upcall(288, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2908,7 +2918,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_integer_bytes_string(long v0, int v1, int v2, long v3, long v4, long v5) {
         try {
-            return (long) runtime.upcall(288, v0, v1, v2, v3, v4, v5);
+            return (long) runtime.upcall(289, v0, v1, v2, v3, v4, v5);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2918,7 +2928,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_integer_type_p(long v0) {
         try {
-            return (int) runtime.upcall(289, v0);
+            return (int) runtime.upcall(290, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -2928,7 +2938,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_intern(long v0) {
         try {
-            return (long) runtime.upcall(290, v0);
+            return (long) runtime.upcall(291, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2938,7 +2948,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_io_descriptor(long v0) {
         try {
-            return (int) runtime.upcall(291, v0);
+            return (int) runtime.upcall(292, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -2948,7 +2958,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_io_get_io(long v0) {
         try {
-            return (long) runtime.upcall(292, v0);
+            return (long) runtime.upcall(293, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2958,7 +2968,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_io_get_write_io(long v0) {
         try {
-            return (long) runtime.upcall(293, v0);
+            return (long) runtime.upcall(294, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2968,7 +2978,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_io_mode(long v0) {
         try {
-            return (int) runtime.upcall(294, v0);
+            return (int) runtime.upcall(295, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -2979,7 +2989,7 @@ public abstract class CExtUpcallTargets {
     public static long upcall_rb_io_open_descriptor(long v0, long v1, long v2, long v3, long v4, long v5, long v6,
             long v7, long v8) {
         try {
-            return (long) runtime.upcall(295, v0, v1, v2, v3, v4, v5, v6, v7, v8);
+            return (long) runtime.upcall(296, v0, v1, v2, v3, v4, v5, v6, v7, v8);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2989,7 +2999,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_io_path(long v0) {
         try {
-            return (long) runtime.upcall(296, v0);
+            return (long) runtime.upcall(297, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2999,7 +3009,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_io_print(long v0, long v1) {
         try {
-            return (long) runtime.upcall(297, v0, v1);
+            return (long) runtime.upcall(298, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3009,7 +3019,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_io_printf(long v0, long v1) {
         try {
-            return (long) runtime.upcall(298, v0, v1);
+            return (long) runtime.upcall(299, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3019,7 +3029,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_io_puts(long v0, long v1) {
         try {
-            return (long) runtime.upcall(299, v0, v1);
+            return (long) runtime.upcall(300, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3029,7 +3039,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_is_class_id(long v0) {
         try {
-            return (int) runtime.upcall(300, v0);
+            return (int) runtime.upcall(301, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -3039,7 +3049,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_is_const_id(long v0) {
         try {
-            return (int) runtime.upcall(301, v0);
+            return (int) runtime.upcall(302, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -3049,7 +3059,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_is_instance_id(long v0) {
         try {
-            return (int) runtime.upcall(302, v0);
+            return (int) runtime.upcall(303, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -3059,7 +3069,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_iter_break_value(long v0) {
         try {
-            runtime.upcall(303, v0);
+            runtime.upcall(304, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -3068,7 +3078,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_iterate(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(304, v0, v1, v2, v3);
+            return (long) runtime.upcall(305, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3078,7 +3088,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_ivar_count(long v0) {
         try {
-            return (long) runtime.upcall(305, v0);
+            return (long) runtime.upcall(306, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3088,7 +3098,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_ivar_defined(long v0, long v1) {
         try {
-            return (long) runtime.upcall(306, v0, v1);
+            return (long) runtime.upcall(307, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3098,7 +3108,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_ivar_foreach(long v0, long v1, long v2) {
         try {
-            runtime.upcall(307, v0, v1, v2);
+            runtime.upcall(308, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -3107,7 +3117,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_ivar_get(long v0, long v1) {
         try {
-            return (long) runtime.upcall(308, v0, v1);
+            return (long) runtime.upcall(309, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3117,7 +3127,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_ivar_lookup(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(309, v0, v1, v2);
+            return (long) runtime.upcall(310, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3127,7 +3137,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_ivar_set(long v0, long v1, long v2) {
         try {
-            runtime.upcall(310, v0, v1, v2);
+            runtime.upcall(311, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -3135,16 +3145,6 @@ public abstract class CExtUpcallTargets {
 
     @CExtUpcall
     public static long upcall_rb_java_class_of(long v0) {
-        try {
-            return (long) runtime.upcall(311, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
-    @CExtUpcall
-    public static long upcall_rb_java_to_string(long v0) {
         try {
             return (long) runtime.upcall(312, v0);
         } catch (Throwable t) {
@@ -3154,9 +3154,19 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
+    public static long upcall_rb_java_to_string(long v0) {
+        try {
+            return (long) runtime.upcall(313, v0);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
+        }
+    }
+
+    @CExtUpcall
     public static void upcall_rb_jump_tag(int v0) {
         try {
-            runtime.upcall(313, v0);
+            runtime.upcall(314, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -3165,7 +3175,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_keyword_given_p() {
         try {
-            return (int) runtime.upcall(314);
+            return (int) runtime.upcall(315);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -3175,7 +3185,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_lastline_get() {
         try {
-            return (long) runtime.upcall(315);
+            return (long) runtime.upcall(316);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3185,7 +3195,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_lastline_set(long v0) {
         try {
-            runtime.upcall(316, v0);
+            runtime.upcall(317, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -3194,7 +3204,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_locale_encindex() {
         try {
-            return (int) runtime.upcall(317);
+            return (int) runtime.upcall(318);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -3204,7 +3214,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_locale_encoding() {
         try {
-            return (long) runtime.upcall(318);
+            return (long) runtime.upcall(319);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3214,7 +3224,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_make_backtrace() {
         try {
-            return (long) runtime.upcall(319);
+            return (long) runtime.upcall(320);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3224,7 +3234,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_make_exception(long v0) {
         try {
-            return (long) runtime.upcall(320, v0);
+            return (long) runtime.upcall(321, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3234,7 +3244,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_marshal_dump(long v0, long v1) {
         try {
-            return (long) runtime.upcall(321, v0, v1);
+            return (long) runtime.upcall(322, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3244,7 +3254,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_marshal_load(long v0) {
         try {
-            return (long) runtime.upcall(322, v0);
+            return (long) runtime.upcall(323, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3254,7 +3264,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_memerror() {
         try {
-            runtime.upcall(323);
+            runtime.upcall(324);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -3263,7 +3273,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_method_boundp(long v0, long v1, int v2) {
         try {
-            return (int) runtime.upcall(324, v0, v1, v2);
+            return (int) runtime.upcall(325, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -3273,7 +3283,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_module_new() {
         try {
-            return (long) runtime.upcall(325);
+            return (long) runtime.upcall(326);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3283,7 +3293,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_mutex_lock(long v0) {
         try {
-            return (long) runtime.upcall(326, v0);
+            return (long) runtime.upcall(327, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3293,7 +3303,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_mutex_locked_p(long v0) {
         try {
-            return (long) runtime.upcall(327, v0);
+            return (long) runtime.upcall(328, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3303,7 +3313,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_mutex_new() {
         try {
-            return (long) runtime.upcall(328);
+            return (long) runtime.upcall(329);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3313,7 +3323,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_mutex_sleep(long v0, long v1) {
         try {
-            return (long) runtime.upcall(329, v0, v1);
+            return (long) runtime.upcall(330, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3323,7 +3333,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_mutex_synchronize(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(330, v0, v1, v2);
+            return (long) runtime.upcall(331, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3333,7 +3343,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_mutex_trylock(long v0) {
         try {
-            return (long) runtime.upcall(331, v0);
+            return (long) runtime.upcall(332, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3343,7 +3353,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_mutex_unlock(long v0) {
         try {
-            return (long) runtime.upcall(332, v0);
+            return (long) runtime.upcall(333, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3353,7 +3363,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_nativethread_lock_destroy(long v0) {
         try {
-            return (long) runtime.upcall(333, v0);
+            return (long) runtime.upcall(334, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3363,7 +3373,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_nativethread_lock_initialize() {
         try {
-            return (long) runtime.upcall(334);
+            return (long) runtime.upcall(335);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3373,7 +3383,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_nativethread_self() {
         try {
-            return (long) runtime.upcall(335);
+            return (long) runtime.upcall(336);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3383,7 +3393,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static double upcall_rb_num2dbl(long v0) {
         try {
-            return (double) runtime.upcall(336, v0);
+            return (double) runtime.upcall(337, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0.0;
@@ -3393,7 +3403,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_num2int(long v0) {
         try {
-            return (int) runtime.upcall(337, v0);
+            return (int) runtime.upcall(338, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -3403,7 +3413,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_num2long(long v0) {
         try {
-            return (long) runtime.upcall(338, v0);
+            return (long) runtime.upcall(339, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3413,7 +3423,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_num2uint(long v0) {
         try {
-            return (long) runtime.upcall(339, v0);
+            return (long) runtime.upcall(340, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3423,7 +3433,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_num2ulong(long v0) {
         try {
-            return (long) runtime.upcall(340, v0);
+            return (long) runtime.upcall(341, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3433,7 +3443,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_num_coerce_bin(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(341, v0, v1, v2);
+            return (long) runtime.upcall(342, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3443,7 +3453,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_num_coerce_cmp(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(342, v0, v1, v2);
+            return (long) runtime.upcall(343, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3453,7 +3463,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_num_coerce_relop(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(343, v0, v1, v2);
+            return (long) runtime.upcall(344, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3463,7 +3473,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_obj_as_string(long v0) {
         try {
-            return (long) runtime.upcall(344, v0);
+            return (long) runtime.upcall(345, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3473,7 +3483,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_obj_call_init(long v0, long v1, long v2) {
         try {
-            runtime.upcall(345, v0, v1, v2);
+            runtime.upcall(346, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -3481,16 +3491,6 @@ public abstract class CExtUpcallTargets {
 
     @CExtUpcall
     public static long upcall_rb_obj_class(long v0) {
-        try {
-            return (long) runtime.upcall(346, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
-    @CExtUpcall
-    public static long upcall_rb_obj_classname(long v0) {
         try {
             return (long) runtime.upcall(347, v0);
         } catch (Throwable t) {
@@ -3500,7 +3500,7 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_obj_clone(long v0) {
+    public static long upcall_rb_obj_classname(long v0) {
         try {
             return (long) runtime.upcall(348, v0);
         } catch (Throwable t) {
@@ -3510,7 +3510,7 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_obj_dup(long v0) {
+    public static long upcall_rb_obj_clone(long v0) {
         try {
             return (long) runtime.upcall(349, v0);
         } catch (Throwable t) {
@@ -3520,7 +3520,7 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_obj_encoding(long v0) {
+    public static long upcall_rb_obj_dup(long v0) {
         try {
             return (long) runtime.upcall(350, v0);
         } catch (Throwable t) {
@@ -3530,7 +3530,7 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_obj_freeze(long v0) {
+    public static long upcall_rb_obj_encoding(long v0) {
         try {
             return (long) runtime.upcall(351, v0);
         } catch (Throwable t) {
@@ -3540,7 +3540,7 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_obj_frozen_p(long v0) {
+    public static long upcall_rb_obj_freeze(long v0) {
         try {
             return (long) runtime.upcall(352, v0);
         } catch (Throwable t) {
@@ -3550,7 +3550,7 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_obj_id(long v0) {
+    public static long upcall_rb_obj_frozen_p(long v0) {
         try {
             return (long) runtime.upcall(353, v0);
         } catch (Throwable t) {
@@ -3560,9 +3560,19 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
+    public static long upcall_rb_obj_id(long v0) {
+        try {
+            return (long) runtime.upcall(354, v0);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
+        }
+    }
+
+    @CExtUpcall
     public static long upcall_rb_obj_instance_eval(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(354, v0, v1, v2);
+            return (long) runtime.upcall(355, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3572,7 +3582,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_obj_instance_variables(long v0) {
         try {
-            return (long) runtime.upcall(355, v0);
+            return (long) runtime.upcall(356, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3582,7 +3592,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_obj_is_instance_of(long v0, long v1) {
         try {
-            return (long) runtime.upcall(356, v0, v1);
+            return (long) runtime.upcall(357, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3592,7 +3602,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_obj_is_kind_of(long v0, long v1) {
         try {
-            return (long) runtime.upcall(357, v0, v1);
+            return (long) runtime.upcall(358, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3602,7 +3612,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_obj_method(long v0, long v1) {
         try {
-            return (long) runtime.upcall(358, v0, v1);
+            return (long) runtime.upcall(359, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3612,7 +3622,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_obj_method_arity(long v0, long v1) {
         try {
-            return (int) runtime.upcall(359, v0, v1);
+            return (int) runtime.upcall(360, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -3622,7 +3632,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_obj_respond_to(long v0, long v1, int v2) {
         try {
-            return (int) runtime.upcall(360, v0, v1, v2);
+            return (int) runtime.upcall(361, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -3632,7 +3642,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_output_fs() {
         try {
-            return (long) runtime.upcall(361);
+            return (long) runtime.upcall(362);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3642,7 +3652,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_output_rs() {
         try {
-            return (long) runtime.upcall(362);
+            return (long) runtime.upcall(363);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3652,7 +3662,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_path_to_class(long v0) {
         try {
-            return (long) runtime.upcall(363, v0);
+            return (long) runtime.upcall(364, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3662,7 +3672,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_proc_call(long v0, long v1) {
         try {
-            return (long) runtime.upcall(364, v0, v1);
+            return (long) runtime.upcall(365, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3672,7 +3682,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_proc_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(365, v0, v1);
+            return (long) runtime.upcall(366, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3682,7 +3692,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_protect(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(366, v0, v1, v2);
+            return (long) runtime.upcall(367, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3692,7 +3702,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_range_new(long v0, long v1, int v2) {
         try {
-            return (long) runtime.upcall(367, v0, v1, v2);
+            return (long) runtime.upcall(368, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3702,7 +3712,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_rational_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(368, v0, v1);
+            return (long) runtime.upcall(369, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3712,7 +3722,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_rational_raw(long v0, long v1) {
         try {
-            return (long) runtime.upcall(369, v0, v1);
+            return (long) runtime.upcall(370, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3722,7 +3732,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_reg_compile(long v0, int v1) {
         try {
-            return (long) runtime.upcall(370, v0, v1);
+            return (long) runtime.upcall(371, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3732,7 +3742,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_reg_match(long v0, long v1) {
         try {
-            return (long) runtime.upcall(371, v0, v1);
+            return (long) runtime.upcall(372, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3742,7 +3752,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_reg_match_pre(long v0) {
         try {
-            return (long) runtime.upcall(372, v0);
+            return (long) runtime.upcall(373, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3752,7 +3762,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_reg_new(long v0, int v1) {
         try {
-            return (long) runtime.upcall(373, v0, v1);
+            return (long) runtime.upcall(374, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3762,7 +3772,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_reg_new_str(long v0, int v1) {
         try {
-            return (long) runtime.upcall(374, v0, v1);
+            return (long) runtime.upcall(375, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3772,7 +3782,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_reg_nth_match(int v0, long v1) {
         try {
-            return (long) runtime.upcall(375, v0, v1);
+            return (long) runtime.upcall(376, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3782,7 +3792,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_reg_options(long v0) {
         try {
-            return (long) runtime.upcall(376, v0);
+            return (long) runtime.upcall(377, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3792,7 +3802,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_reg_regcomp(long v0) {
         try {
-            return (long) runtime.upcall(377, v0);
+            return (long) runtime.upcall(378, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3802,7 +3812,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_require(long v0) {
         try {
-            return (long) runtime.upcall(378, v0);
+            return (long) runtime.upcall(379, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3812,7 +3822,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_rescue(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(379, v0, v1, v2, v3);
+            return (long) runtime.upcall(380, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3822,7 +3832,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_rescue2(long v0, long v1, long v2, long v3, long v4) {
         try {
-            return (long) runtime.upcall(380, v0, v1, v2, v3, v4);
+            return (long) runtime.upcall(381, v0, v1, v2, v3, v4);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3832,7 +3842,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_respond_to(long v0, long v1) {
         try {
-            return (long) runtime.upcall(381, v0, v1);
+            return (long) runtime.upcall(382, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3842,7 +3852,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_rs() {
         try {
-            return (long) runtime.upcall(382);
+            return (long) runtime.upcall(383);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3852,7 +3862,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_ruby_debug_ptr() {
         try {
-            return (long) runtime.upcall(383);
+            return (long) runtime.upcall(384);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3862,7 +3872,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_ruby_verbose_ptr() {
         try {
-            return (long) runtime.upcall(384);
+            return (long) runtime.upcall(385);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3872,7 +3882,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_set_end_proc(long v0, long v1) {
         try {
-            runtime.upcall(385, v0, v1);
+            runtime.upcall(386, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -3881,7 +3891,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_set_errinfo(long v0) {
         try {
-            runtime.upcall(386, v0);
+            runtime.upcall(387, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -3890,7 +3900,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_set_foreach(long v0, long v1, long v2) {
         try {
-            runtime.upcall(387, v0, v1, v2);
+            runtime.upcall(388, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -3899,7 +3909,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_set_new() {
         try {
-            return (long) runtime.upcall(388);
+            return (long) runtime.upcall(389);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3909,7 +3919,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_singleton_class(long v0) {
         try {
-            return (long) runtime.upcall(389, v0);
+            return (long) runtime.upcall(390, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3919,7 +3929,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_sourcefile() {
         try {
-            return (long) runtime.upcall(390);
+            return (long) runtime.upcall(391);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3929,7 +3939,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_sourceline() {
         try {
-            return (int) runtime.upcall(391);
+            return (int) runtime.upcall(392);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -3939,7 +3949,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_stderr() {
         try {
-            return (long) runtime.upcall(392);
+            return (long) runtime.upcall(393);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3949,7 +3959,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_stdin() {
         try {
-            return (long) runtime.upcall(393);
+            return (long) runtime.upcall(394);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3959,7 +3969,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_stdout() {
         try {
-            return (long) runtime.upcall(394);
+            return (long) runtime.upcall(395);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3969,7 +3979,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_str_append(long v0, long v1) {
         try {
-            return (long) runtime.upcall(395, v0, v1);
+            return (long) runtime.upcall(396, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3979,7 +3989,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_str_capacity(long v0) {
         try {
-            return (long) runtime.upcall(396, v0);
+            return (long) runtime.upcall(397, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3989,7 +3999,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_str_concat(long v0, long v1) {
         try {
-            return (long) runtime.upcall(397, v0, v1);
+            return (long) runtime.upcall(398, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3999,7 +4009,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_str_conv_enc_opts(long v0, long v1, long v2, int v3, long v4) {
         try {
-            return (long) runtime.upcall(398, v0, v1, v2, v3, v4);
+            return (long) runtime.upcall(399, v0, v1, v2, v3, v4);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4009,7 +4019,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_str_encode(long v0, long v1, int v2, long v3) {
         try {
-            return (long) runtime.upcall(399, v0, v1, v2, v3);
+            return (long) runtime.upcall(400, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4019,7 +4029,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_str_format(long v0, long v1) {
         try {
-            return (long) runtime.upcall(400, v0, v1);
+            return (long) runtime.upcall(401, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4029,7 +4039,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_str_locktmp(long v0) {
         try {
-            return (long) runtime.upcall(401, v0);
+            return (long) runtime.upcall(402, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4039,7 +4049,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_str_new_frozen(long v0) {
         try {
-            return (long) runtime.upcall(402, v0);
+            return (long) runtime.upcall(403, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4049,7 +4059,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_str_new_native(long v0, long v1) {
         try {
-            return (long) runtime.upcall(403, v0, v1);
+            return (long) runtime.upcall(404, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4057,17 +4067,7 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_str_new_nul(long v0) {
-        try {
-            return (long) runtime.upcall(404, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
-    @CExtUpcall
-    public static long upcall_rb_str_offset(long v0, long v1) {
+    public static long upcall_rb_tr_rstring_getmem(long v0, long v1) {
         try {
             return (long) runtime.upcall(405, v0, v1);
         } catch (Throwable t) {
@@ -4077,9 +4077,9 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_str_resize(long v0, long v1) {
+    public static long upcall_rb_str_new_nul(long v0) {
         try {
-            return (long) runtime.upcall(406, v0, v1);
+            return (long) runtime.upcall(406, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4087,16 +4087,17 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static void upcall_rb_str_set_len(long v0, long v1) {
+    public static long upcall_rb_str_offset(long v0, long v1) {
         try {
-            runtime.upcall(407, v0, v1);
+            return (long) runtime.upcall(407, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
+            return 0L;
         }
     }
 
     @CExtUpcall
-    public static long upcall_rb_str_sublen(long v0, long v1) {
+    public static long upcall_rb_str_resize(long v0, long v1) {
         try {
             return (long) runtime.upcall(408, v0, v1);
         } catch (Throwable t) {
@@ -4106,9 +4107,28 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
+    public static void upcall_rb_str_set_len(long v0, long v1) {
+        try {
+            runtime.upcall(409, v0, v1);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+        }
+    }
+
+    @CExtUpcall
+    public static long upcall_rb_str_sublen(long v0, long v1) {
+        try {
+            return (long) runtime.upcall(410, v0, v1);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
+        }
+    }
+
+    @CExtUpcall
     public static long upcall_rb_str_unlocktmp(long v0) {
         try {
-            return (long) runtime.upcall(409, v0);
+            return (long) runtime.upcall(411, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4118,7 +4138,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_string_value_cstr_check(long v0) {
         try {
-            return (long) runtime.upcall(410, v0);
+            return (long) runtime.upcall(412, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4128,7 +4148,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_struct_aref(long v0, long v1) {
         try {
-            return (long) runtime.upcall(411, v0, v1);
+            return (long) runtime.upcall(413, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4138,7 +4158,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_struct_aset(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(412, v0, v1, v2);
+            return (long) runtime.upcall(414, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4148,7 +4168,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_struct_define_no_splat(long v0, long v1) {
         try {
-            return (long) runtime.upcall(413, v0, v1);
+            return (long) runtime.upcall(415, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4158,7 +4178,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_struct_define_under_no_splat(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(414, v0, v1, v2);
+            return (long) runtime.upcall(416, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4168,7 +4188,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_struct_getmember(long v0, long v1) {
         try {
-            return (long) runtime.upcall(415, v0, v1);
+            return (long) runtime.upcall(417, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4178,7 +4198,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_struct_initialize(long v0, long v1) {
         try {
-            return (long) runtime.upcall(416, v0, v1);
+            return (long) runtime.upcall(418, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4188,7 +4208,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_struct_new_no_splat(long v0, long v1) {
         try {
-            return (long) runtime.upcall(417, v0, v1);
+            return (long) runtime.upcall(419, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4198,7 +4218,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_struct_size(long v0) {
         try {
-            return (int) runtime.upcall(418, v0);
+            return (int) runtime.upcall(420, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -4208,7 +4228,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_syserr_fail(int v0, long v1) {
         try {
-            runtime.upcall(419, v0, v1);
+            runtime.upcall(421, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -4217,7 +4237,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_sym2id(long v0) {
         try {
-            return (long) runtime.upcall(420, v0);
+            return (long) runtime.upcall(422, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4227,7 +4247,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_syserr_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(421, v0, v1);
+            return (long) runtime.upcall(423, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4237,7 +4257,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_thread_alone() {
         try {
-            return (int) runtime.upcall(422);
+            return (int) runtime.upcall(424);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -4247,7 +4267,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_thread_call_with_gvl(long v0, long v1) {
         try {
-            return (long) runtime.upcall(423, v0, v1);
+            return (long) runtime.upcall(425, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4257,7 +4277,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_thread_call_without_gvl(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(424, v0, v1, v2, v3);
+            return (long) runtime.upcall(426, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4267,7 +4287,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_thread_check_ints() {
         try {
-            runtime.upcall(425);
+            runtime.upcall(427);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -4276,7 +4296,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_thread_create(long v0, long v1) {
         try {
-            return (long) runtime.upcall(426, v0, v1);
+            return (long) runtime.upcall(428, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4286,7 +4306,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_thread_fd_writable(int v0) {
         try {
-            return (int) runtime.upcall(427, v0);
+            return (int) runtime.upcall(429, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -4296,7 +4316,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_thread_wait_fd(int v0) {
         try {
-            return (int) runtime.upcall(428, v0);
+            return (int) runtime.upcall(430, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -4306,7 +4326,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_time_interval_acceptable(long v0) {
         try {
-            runtime.upcall(429, v0);
+            runtime.upcall(431, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -4315,7 +4335,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_time_nano_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(430, v0, v1);
+            return (long) runtime.upcall(432, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4325,7 +4345,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_time_num_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(431, v0, v1);
+            return (long) runtime.upcall(433, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4335,7 +4355,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_time_timespec_new(long v0, long v1, int v2, long v3, long v4) {
         try {
-            return (long) runtime.upcall(432, v0, v1, v2, v3, v4);
+            return (long) runtime.upcall(434, v0, v1, v2, v3, v4);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4345,7 +4365,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_to_encoding(long v0) {
         try {
-            return (long) runtime.upcall(433, v0);
+            return (long) runtime.upcall(435, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4355,7 +4375,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_to_encoding_index(long v0) {
         try {
-            return (int) runtime.upcall(434, v0);
+            return (int) runtime.upcall(436, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -4365,7 +4385,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_to_int(long v0) {
         try {
-            return (long) runtime.upcall(435, v0);
+            return (long) runtime.upcall(437, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4375,7 +4395,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_to_symbol(long v0) {
         try {
-            return (long) runtime.upcall(436, v0);
+            return (long) runtime.upcall(438, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4385,7 +4405,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_tr_cext_lock_owned_p() {
         try {
-            return (int) runtime.upcall(437);
+            return (int) runtime.upcall(439);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -4395,7 +4415,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_tr_code_to_mbc(long v0, long v1) {
         try {
-            return (long) runtime.upcall(438, v0, v1);
+            return (long) runtime.upcall(440, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4405,7 +4425,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_tr_default_alloc_func(long v0) {
         try {
-            return (long) runtime.upcall(439, v0);
+            return (long) runtime.upcall(441, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4415,7 +4435,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_tr_enc_is_unicode(long v0) {
         try {
-            return (int) runtime.upcall(440, v0);
+            return (int) runtime.upcall(442, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -4425,7 +4445,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_tr_enc_mbc_case_fold(int v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(441, v0, v1, v2, v3);
+            return (long) runtime.upcall(443, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4435,7 +4455,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_tr_flags(long v0) {
         try {
-            return (int) runtime.upcall(442, v0);
+            return (int) runtime.upcall(444, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -4445,7 +4465,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_tr_gc_guard(long v0) {
         try {
-            runtime.upcall(443, v0);
+            runtime.upcall(445, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -4454,7 +4474,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_tr_io_create_and_attach_pointer(long v0, long v1) {
         try {
-            return (long) runtime.upcall(444, v0, v1);
+            return (long) runtime.upcall(446, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4464,7 +4484,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_tr_io_pointer(long v0) {
         try {
-            return (long) runtime.upcall(445, v0);
+            return (long) runtime.upcall(447, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4474,7 +4494,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_tr_log_warning(long v0) {
         try {
-            runtime.upcall(446, v0);
+            runtime.upcall(448, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -4483,7 +4503,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_tr_not_implemented(long v0) {
         try {
-            runtime.upcall(447, v0);
+            runtime.upcall(449, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -4492,7 +4512,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_tr_obj_equal(long v0, long v1) {
         try {
-            return (long) runtime.upcall(448, v0, v1);
+            return (long) runtime.upcall(450, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4502,7 +4522,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_tr_pointer(long v0) {
         try {
-            return (long) runtime.upcall(449, v0);
+            return (long) runtime.upcall(451, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4512,7 +4532,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_tr_set_default_alloc_func(long v0, long v1) {
         try {
-            runtime.upcall(450, v0, v1);
+            runtime.upcall(452, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -4521,7 +4541,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_tr_set_flags(long v0, long v1) {
         try {
-            runtime.upcall(451, v0, v1);
+            runtime.upcall(453, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -4529,26 +4549,6 @@ public abstract class CExtUpcallTargets {
 
     @CExtUpcall
     public static long upcall_rb_tr_sprintf(long v0, long v1, long v2) {
-        try {
-            return (long) runtime.upcall(452, v0, v1, v2);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
-    @CExtUpcall
-    public static long upcall_rb_tr_sprintf_types(long v0) {
-        try {
-            return (long) runtime.upcall(453, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
-    @CExtUpcall
-    public static long upcall_rb_tr_static_native_string(long v0, long v1, long v2) {
         try {
             return (long) runtime.upcall(454, v0, v1, v2);
         } catch (Throwable t) {
@@ -4558,16 +4558,17 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static void upcall_rb_tr_str_capa_resize(long v0, long v1) {
+    public static long upcall_rb_tr_sprintf_types(long v0) {
         try {
-            runtime.upcall(455, v0, v1);
+            return (long) runtime.upcall(455, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
+            return 0L;
         }
     }
 
     @CExtUpcall
-    public static long upcall_rb_tr_temporary_native_string(long v0, long v1, long v2) {
+    public static long upcall_rb_tr_static_native_string(long v0, long v1, long v2) {
         try {
             return (long) runtime.upcall(456, v0, v1, v2);
         } catch (Throwable t) {
@@ -4577,9 +4578,28 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
+    public static void upcall_rb_tr_str_capa_resize(long v0, long v1) {
+        try {
+            runtime.upcall(457, v0, v1);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+        }
+    }
+
+    @CExtUpcall
+    public static long upcall_rb_tr_temporary_native_string(long v0, long v1, long v2) {
+        try {
+            return (long) runtime.upcall(458, v0, v1, v2);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
+        }
+    }
+
+    @CExtUpcall
     public static long upcall_rb_tr_warn(long v0) {
         try {
-            return (long) runtime.upcall(457, v0);
+            return (long) runtime.upcall(459, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4589,7 +4609,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_tr_warn_category(long v0, long v1) {
         try {
-            return (long) runtime.upcall(458, v0, v1);
+            return (long) runtime.upcall(460, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4599,7 +4619,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_tracepoint_new(int v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(459, v0, v1, v2);
+            return (long) runtime.upcall(461, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4609,7 +4629,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_type(long v0) {
         try {
-            return (int) runtime.upcall(460, v0);
+            return (int) runtime.upcall(462, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -4619,7 +4639,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_ulong2num(long v0) {
         try {
-            return (long) runtime.upcall(461, v0);
+            return (long) runtime.upcall(463, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4629,7 +4649,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_undef(long v0, long v1) {
         try {
-            runtime.upcall(462, v0, v1);
+            runtime.upcall(464, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -4638,7 +4658,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_rb_undef_alloc_func(long v0) {
         try {
-            runtime.upcall(463, v0);
+            runtime.upcall(465, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -4647,7 +4667,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_usascii_encindex() {
         try {
-            return (int) runtime.upcall(464);
+            return (int) runtime.upcall(466);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -4657,7 +4677,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_utf8_encindex() {
         try {
-            return (int) runtime.upcall(465);
+            return (int) runtime.upcall(467);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -4667,7 +4687,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_wait_for_single_fd(int v0, int v1, long v2, long v3) {
         try {
-            return (int) runtime.upcall(466, v0, v1, v2, v3);
+            return (int) runtime.upcall(468, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -4677,7 +4697,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_rb_warning_category_enabled_p(long v0) {
         try {
-            return (int) runtime.upcall(467, v0);
+            return (int) runtime.upcall(469, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -4687,7 +4707,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_yield(long v0) {
         try {
-            return (long) runtime.upcall(468, v0);
+            return (long) runtime.upcall(470, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4697,7 +4717,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_rb_yield_splat(long v0) {
         try {
-            return (long) runtime.upcall(469, v0);
+            return (long) runtime.upcall(471, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4713,7 +4733,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_ruby_vm_at_exit(long v0, long v1) {
         try {
-            runtime.upcall(471, v0, v1);
+            runtime.upcall(473, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -4722,7 +4742,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_send_splatted(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(472, v0, v1, v2);
+            return (long) runtime.upcall(474, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4732,7 +4752,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static void upcall_set_thread_safe(int v0) {
         try {
-            runtime.upcall(473, v0);
+            runtime.upcall(475, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
@@ -4740,26 +4760,6 @@ public abstract class CExtUpcallTargets {
 
     @CExtUpcall
     public static long upcall_usascii_encoding() {
-        try {
-            return (long) runtime.upcall(474);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
-    @CExtUpcall
-    public static long upcall_utf8_encoding() {
-        try {
-            return (long) runtime.upcall(475);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
-    @CExtUpcall
-    public static long upcall_yield_no_block() {
         try {
             return (long) runtime.upcall(476);
         } catch (Throwable t) {
@@ -4769,9 +4769,29 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_zlib_get_crc_table() {
+    public static long upcall_utf8_encoding() {
         try {
             return (long) runtime.upcall(477);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
+        }
+    }
+
+    @CExtUpcall
+    public static long upcall_yield_no_block() {
+        try {
+            return (long) runtime.upcall(478);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
+        }
+    }
+
+    @CExtUpcall
+    public static long upcall_zlib_get_crc_table() {
+        try {
+            return (long) runtime.upcall(479);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -5010,6 +5030,7 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_enc_precise_mbclen", "I(L)", "cext", "rb_enc_precise_mbclen", "I", "V",
             "upcall_rb_enc_set_index", "V(LI)", "cext", "rb_enc_set_index", "O", "VI",
             "upcall_rb_enc_str_coderange", "I(L)", "cext", "rb_enc_str_coderange", "I", "V",
+            "upcall_rb_enc_str_new_native", "L(LLL)", "cext", "rb_enc_str_new_native", "V", "PLL",
             "upcall_rb_enc_strlen", "L(L)", "cext", "rb_enc_strlen", "L", "V",
             "upcall_rb_enc_to_index", "I(L)", "cext", "rb_enc_to_index", "I", "V",
             "upcall_rb_ensure", "L(LLLL)", "cext", "rb_ensure", "W", "FPFP",
@@ -5187,6 +5208,7 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_str_locktmp", "L(L)", "cext", "rb_str_locktmp", "V", "V",
             "upcall_rb_str_new_frozen", "L(L)", "cext", "rb_str_new_frozen", "V", "V",
             "upcall_rb_str_new_native", "L(LL)", "cext", "rb_str_new_native", "V", "PL",
+            "upcall_rb_tr_rstring_getmem", "L(LL)", "cext", "rb_tr_rstring_getmem", "L", "VP",
             "upcall_rb_str_new_nul", "L(L)", "cext", "rb_str_new_nul", "V", "L",
             "upcall_rb_str_offset", "L(LL)", "cext", "rb_str_offset", "L", "VL",
             "upcall_rb_str_resize", "L(LL)", "cext", "rb_str_resize", "V", "VL",

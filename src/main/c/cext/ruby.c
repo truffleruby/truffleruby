@@ -14,6 +14,7 @@
 RBIMPL_STATIC_ASSERT("sizeof(bool) is 1", sizeof(bool) == 1);
 
 void rb_tr_init_global_constants(const VALUE *constants);
+void rb_tr_init_encoding_cache(void);
 
 // Run when loading C-extension support. upcalls contains the addresses of the
 // FFM upcall stubs in tool/cext-upcalls.rb order, constants the handles of the
@@ -21,6 +22,8 @@ void rb_tr_init_global_constants(const VALUE *constants);
 void rb_tr_init(void **upcalls, const VALUE *constants) {
   rb_tr_init_ffm_upcalls(upcalls);
   rb_tr_init_global_constants(constants);
+  // A new Ruby context is loading C extension support: fill the caches for this context
+  rb_tr_init_encoding_cache();
 
   // In CRuby some core classes have custom allocation function.
   // So mimic this CRuby implementation detail to satisfy rb_define_alloc_func's specs

@@ -110,8 +110,24 @@ int rb_enc_alias(const char *alias, const char *orig) {
   return rb_enc_get_index(enc);
 }
 
+// Encodings are immortal and their native structs have stable addresses within a Ruby context,
+// so cache them. Benign race: concurrent initialization computes the same pointer.
+// The caches must be reset when a new Ruby context loads C extension support (see rb_tr_init()),
+// as the native structs belong to the previous, disposed context.
+static rb_encoding *cached_ascii8bit_encoding;
+static rb_encoding *cached_usascii_encoding;
+static rb_encoding *cached_utf8_encoding;
+
+// Fills the cache eagerly so the getters below need no check.
+// Called on every rb_tr_init() as the encodings are per Ruby context.
+void rb_tr_init_encoding_cache(void) {
+  cached_ascii8bit_encoding = rb_to_encoding(rb_tr_up_ascii8bit_encoding());
+  cached_usascii_encoding = rb_to_encoding(rb_tr_up_usascii_encoding());
+  cached_utf8_encoding = rb_to_encoding(rb_tr_up_utf8_encoding());
+}
+
 rb_encoding* rb_ascii8bit_encoding(void) {
-  return rb_to_encoding(rb_tr_up_ascii8bit_encoding());
+  return cached_ascii8bit_encoding;
 }
 
 int rb_ascii8bit_encindex(void) {
@@ -119,7 +135,7 @@ int rb_ascii8bit_encindex(void) {
 }
 
 rb_encoding* rb_usascii_encoding(void) {
-  return rb_to_encoding(rb_tr_up_usascii_encoding());
+  return cached_usascii_encoding;
 }
 
 bool rb_enc_asciicompat(rb_encoding *enc) {
@@ -138,7 +154,7 @@ int rb_usascii_encindex(void) {
 }
 
 rb_encoding* rb_utf8_encoding(void) {
-  return rb_to_encoding(rb_tr_up_utf8_encoding());
+  return cached_utf8_encoding;
 }
 
 int rb_utf8_encindex(void) {
@@ -343,7 +359,16 @@ VALUE rb_tr_static_native_string(const char *ptr, long len, rb_encoding *enc) {
 
 #undef rb_enc_str_new
 VALUE rb_enc_str_new(const char *ptr, long len, rb_encoding *enc) {
-  return rb_tr_up_send1_force_encoding(rb_str_new(ptr, len), rb_enc_from_encoding(enc)); // TODO: do it more directly
+  if (len < 0) {
+    rb_raise(rb_eArgError, "negative string size (or size too big)");
+  }
+  if (enc == NULL) {
+    return rb_str_new(ptr, len);
+  }
+  if (ptr == NULL) {
+    return rb_tr_up_send1_force_encoding(rb_tr_up_rb_str_new_nul(len), rb_enc_from_encoding(enc));
+  }
+  return rb_tr_up_rb_enc_str_new_native(ptr, len, (long) enc);
 }
 
 #undef rb_enc_str_new_cstr

@@ -240,14 +240,14 @@ java << <<~JAVA
 
   import org.truffleruby.annotations.CExtUpcall;
 
-  /** The Java targets of the native-to-Java upcalls used to implement the Ruby C API. Each method is turned into a
-   * native function pointer with an FFM upcall stub. Everything is static since the upcall stubs are created once per
-   * process (in Arena.global(), see CExtFFMLayer).
+  /** The Java targets of the native-to-Java upcalls used to implement the Ruby C API. Each method is turned into a native
+   * function pointer with an FFM upcall stub. Everything is static since the upcall stubs are created once per process
+   * (in Arena.global(), see CExtFFMLayer).
    *
    * <p>
    * IMPORTANT: for Native Image direct upcalls the MethodHandle for each target must be exactly
-   * {@code findStatic(CExtUpcallTargets.class, name, type)} with no other adaptation, and every parameter and return
-   * type must be primitive. See {@code FFMSupport#createUpcallStub}. */
+   * {@code findStatic(CExtUpcallTargets.class, name, type)} with no other adaptation, and every parameter and return type
+   * must be primitive. See {@code FFMSupport#createUpcallStub}. */
   public abstract class CExtUpcallTargets {
 
       /** The layer of the Ruby context which currently has C extension support loaded, or null if none. The runtime is

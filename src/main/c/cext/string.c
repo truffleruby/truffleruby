@@ -47,6 +47,10 @@ char* rb_tr_rstring_ptr(VALUE string) {
   return (char*) rb_tr_up_RSTRING_PTR(string);
 }
 
+char* rb_tr_rstring_getmem(VALUE string, long *lenvar) {
+  return (char*) rb_tr_up_rb_tr_rstring_getmem(string, lenvar);
+}
+
 char* rb_tr_rstring_end(VALUE string) {
   return rb_tr_rstring_ptr(string) + RSTRING_LEN(string);
 }

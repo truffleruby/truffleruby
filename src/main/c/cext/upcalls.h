@@ -2060,6 +2060,15 @@ static inline int rb_tr_up_rb_enc_str_coderange(VALUE v0) {
   return result;
 }
 
+extern VALUE (*rb_tr_up_impl_rb_enc_str_new_native)(const void *v0, long v1, long v2);
+static inline VALUE rb_tr_up_rb_enc_str_new_native(const void *v0, long v1, long v2) {
+  VALUE result = rb_tr_up_impl_rb_enc_str_new_native(v0, v1, v2);
+  if (UNLIKELY(rb_tr_pending_exception)) {
+    rb_tr_longjmp_from_java_exception();
+  }
+  return result;
+}
+
 extern long (*rb_tr_up_impl_rb_enc_strlen)(VALUE v0);
 static inline long rb_tr_up_rb_enc_strlen(VALUE v0) {
   long result = rb_tr_up_impl_rb_enc_strlen(v0);
@@ -3626,6 +3635,15 @@ static inline VALUE rb_tr_up_rb_str_new_frozen(VALUE v0) {
 extern VALUE (*rb_tr_up_impl_rb_str_new_native)(const void *v0, long v1);
 static inline VALUE rb_tr_up_rb_str_new_native(const void *v0, long v1) {
   VALUE result = rb_tr_up_impl_rb_str_new_native(v0, v1);
+  if (UNLIKELY(rb_tr_pending_exception)) {
+    rb_tr_longjmp_from_java_exception();
+  }
+  return result;
+}
+
+extern long (*rb_tr_up_impl_rb_tr_rstring_getmem)(VALUE v0, const void *v1);
+static inline long rb_tr_up_rb_tr_rstring_getmem(VALUE v0, const void *v1) {
+  long result = rb_tr_up_impl_rb_tr_rstring_getmem(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
   }
