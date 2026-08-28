@@ -13,6 +13,8 @@ package org.truffleruby.builtins;
 import java.util.Arrays;
 import java.util.List;
 
+import org.truffleruby.cext.CExtInvokePrimitivesBuiltins;
+import org.truffleruby.cext.CExtInvokePrimitivesFactory;
 import org.truffleruby.cext.CExtNodesBuiltins;
 import org.truffleruby.cext.CExtNodesFactory;
 import org.truffleruby.core.GCNodesBuiltins;
@@ -187,6 +189,7 @@ public abstract class BuiltinsClasses {
         BasicObjectNodesBuiltins.setup(coreManager);
         BindingNodesBuiltins.setup(coreManager);
         ByteArrayNodesBuiltins.setup(coreManager);
+        CExtInvokePrimitivesBuiltins.setup(coreManager);
         CExtNodesBuiltins.setup(coreManager);
         ClassNodesBuiltins.setup(coreManager);
         ConcurrentMapNodesBuiltins.setup(coreManager);
@@ -270,6 +273,7 @@ public abstract class BuiltinsClasses {
         BasicObjectNodesBuiltins.setupPrimitives(primitiveManager);
         BindingNodesBuiltins.setupPrimitives(primitiveManager);
         ByteArrayNodesBuiltins.setupPrimitives(primitiveManager);
+        CExtInvokePrimitivesBuiltins.setupPrimitives(primitiveManager);
         CExtNodesBuiltins.setupPrimitives(primitiveManager);
         ClassNodesBuiltins.setupPrimitives(primitiveManager);
         CustomRandomizerNodesBuiltins.setupPrimitives(primitiveManager);
@@ -354,6 +358,7 @@ public abstract class BuiltinsClasses {
                 BasicObjectNodesFactory.getFactories(),
                 BindingNodesFactory.getFactories(),
                 ByteArrayNodesFactory.getFactories(),
+                CExtInvokePrimitivesFactory.getFactories(),
                 CExtNodesFactory.getFactories(),
                 ClassNodesFactory.getFactories(),
                 ConcurrentMapNodesFactory.getFactories(),

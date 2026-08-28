@@ -145,7 +145,7 @@ class Truffle::CExt::RbEncoding
   def initialize(encoding)
     @encoding = encoding
     @pointer = nil
-    @name = Truffle::CExt::RSTRING_PTR_FUNCTION.call(Primitive.cext_wrap(encoding.name))
+    @name = Primitive.cext_invoke_l_l(Truffle::CExt::RSTRING_PTR_FUNCTION, Primitive.cext_wrap(encoding.name))
   end
 
   # The address of the native rb_encoding struct, converting to native first if needed
@@ -221,7 +221,7 @@ class Truffle::CExt::RbEncoding
     unless @pointer
       ENCODING_CACHE_MUTEX.synchronize do
         unless @pointer
-          @pointer = Truffle::CExt::ENCODING_TO_NATIVE_FUNCTION.call(@name)
+          @pointer = Primitive.cext_invoke_l_l(Truffle::CExt::ENCODING_TO_NATIVE_FUNCTION, @name)
           NATIVE_CACHE[@pointer] = self
         end
       end

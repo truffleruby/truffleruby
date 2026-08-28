@@ -647,6 +647,25 @@ module CExtUpcalls
     "send3_o_aset" => "[]=",
   }
 
+  # The carrier signatures of the native functions invoked from Ruby with Primitive.cext_invoke_*:
+  # the rb_tr_setjmp_wrapper_* functions and the native helper functions of libtruffleruby.
+  # tool/generate-cext-upcalls.rb generates one primitive per signature in CExtInvokePrimitives.java.
+  DOWNCALL_SIGNATURES = [
+    # rb_tr_setjmp_wrapper_pointer{1..16}_to_pointer: (target function, 1..16 VALUEs) -> VALUE,
+    # also used by the native helper functions taking and returning pointers/VALUEs
+    *(1..17).map { |n| "L(#{'L' * n})" },
+    'V(L)',      # rb_tr_setjmp_wrapper_void_to_void, rb_tr_rdata_run_marker/finalizer
+    'V(LL)',     # rb_tr_setjmp_wrapper_pointer1_to_void
+    'V(LLL)',    # rb_tr_setjmp_wrapper_pointer2_to_void
+    'V(LLLL)',   # rb_tr_setjmp_wrapper_pointer3_to_void
+    'V(LI)',     # the ONIGENC_MBC_CASE_FOLD advance_p callback
+    'I(LLL)',    # rb_tr_setjmp_wrapper_pointer2_to_int
+    'I(LLLL)',   # rb_tr_setjmp_wrapper_pointer3_to_int
+    'L(LILL)',   # rb_tr_setjmp_wrapper_int_pointer2_to_pointer
+    'L(LLLI)',   # rb_tr_setjmp_wrapper_pointer2_int_to_pointer
+    'L(LLLILL)', # rb_tr_setjmp_wrapper_pointer2_int_pointer2_to_pointer
+  ]
+
   # c_name => Truffle::CExt method name, where they differ
   RUBY_NAMES = {
     "rb_const_defined_3f" => "rb_const_defined?",

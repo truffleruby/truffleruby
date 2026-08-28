@@ -2838,7 +2838,7 @@ module Commands
       'src/main/c/cext/upcalls.h',
       'src/main/c/cext/upcalls_init.c',
       'src/main/java/org/truffleruby/cext/CExtUpcallTargets.java',
-      'src/main/java/META-INF/native-image/dev.truffleruby.internal/cext-downcalls/reachability-metadata.json',
+      'src/main/java/org/truffleruby/cext/CExtInvokePrimitives.java',
     ]
     diff = sh 'git', 'diff', *files, capture: :out
     unless diff.empty?
@@ -3260,7 +3260,14 @@ module Commands
         lines = content.lines.to_a
 
         while (line = lines.shift)
-          if /^ *@(Specialization|Fallback|CreateCast|ExportMessage)/ =~ line
+          if /^\s*\/\/ @formatter:off/ =~ line
+            # Skip regions excluded from formatting, e.g. in generated files
+            begin
+              new_content << line
+            end while (line = lines.shift) and /^\s*\/\/ @formatter:on/ !~ line
+            new_content << line if line
+            next
+          elsif /^ *@(Specialization|Fallback|CreateCast|ExportMessage)/ =~ line
             type = $1.to_sym
           else
             new_content << line
