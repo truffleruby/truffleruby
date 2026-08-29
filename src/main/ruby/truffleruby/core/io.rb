@@ -214,8 +214,15 @@ class IO
       TruffleRuby.synchronized(self) do
         unless empty?
           amount = @start - @used
-          r = Truffle::POSIX.lseek(io.fileno, amount, IO::SEEK_CUR)
-          Errno.handle if r == -1
+          pos = Truffle::POSIX.lseek(io.fileno, 0, IO::SEEK_CUR)
+          Errno.handle if pos == -1
+          # Prevent seeking past 0 to handle bytes prepended via #ungetc
+          amount = -pos if amount + pos < 0
+
+          if amount < 0
+            r = Truffle::POSIX.lseek(io.fileno, amount, IO::SEEK_CUR)
+            Errno.handle if r == -1
+          end
         end
         reset!
       end
@@ -290,18 +297,20 @@ class IO
     # Prepends the bytes of string +str+ to the internal buffer,
     # so that future reads will return them.
     def put_back(str)
-      length = str.bytesize
-      # A simple case, which is common and can be done efficiently
-      if @start >= length
-        @start -= length
-        str.bytes.each_with_index do |byte, i|
-          @storage[@start+i] = byte
+      TruffleRuby.synchronized(self) do
+        length = str.bytesize
+        # A simple case, which is common and can be done efficiently
+        if @start >= length
+          @start -= length
+          @storage.fill(@start, str, 0, length)
+        else
+          prepend_length = length - @start
+          @storage = @storage.prepend(str, 0, prepend_length)
+          @storage.fill(prepend_length, str, prepend_length, @start) if @start > 0
+          @total += prepend_length
+          @used += prepend_length
+          @start = 0
         end
-      else
-        @storage = @storage.prepend(str)
-        @total += length
-        @start = 0
-        @used += length
       end
     end
 
@@ -2267,7 +2276,7 @@ class IO
   #  f.sysread(10)                  #=> "And so on."
   def sysseek(amount, whence = SEEK_SET)
     ensure_open
-    raise IOError unless buffer_empty?
+    raise IOError, 'sysseek for buffered IO' unless buffer_empty?
 
     whence = Truffle::IOOperations.parse_whence(whence)
     r = Truffle::POSIX.lseek(Primitive.io_fd(self), Primitive.rb_num2long(amount), whence)
