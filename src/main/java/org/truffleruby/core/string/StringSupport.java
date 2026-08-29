@@ -636,8 +636,11 @@ public final class StringSupport {
                             context,
                             context.getCoreExceptions().argumentError("invalid range in string transliteration", node));
                 }
-                tr.gen = true;
-                tr.max = c;
+                // Do not expand single-character ranges (e.g. c1-c1)
+                if (tr.now < c) {
+                    tr.gen = true;
+                    tr.max = c;
+                }
             }
         }
         return tr.now;
