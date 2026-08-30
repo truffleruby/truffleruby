@@ -201,14 +201,15 @@ public abstract class StringHelperNodes {
                 @Bind("libString.getTString($node, string)") AbstractTruffleString tstring,
                 @Bind("libString.getEncoding($node, string)") RubyEncoding encoding,
                 @Cached("libString.getEncoding($node, string)") RubyEncoding cachedEncoding,
-                @Cached(value = "squeeze()", dimensions = 1) boolean[] squeeze,
+                @Cached(value = "asciiFilter()", dimensions = 1) boolean[] asciiFilter,
                 @Cached("findEncoding($node, libString.getTString($node, string), libString.getEncoding($node, string), cachedArgs, checkEncodingNode)") RubyEncoding compatEncoding,
-                @Cached("makeTables($node, cachedArgs, squeeze, compatEncoding)") StringSupport.TrTables tables,
+                @Cached("makeNonAsciiFilter($node, cachedArgs, asciiFilter, compatEncoding)") StringSupport.NonAsciiFilter nonAsciiFilter,
                 @Cached @Shared TruffleString.GetInternalByteArrayNode byteArrayNode,
                 @Cached @Shared TruffleString.GetByteCodeRangeNode getByteCodeRangeNode) {
             var byteArray = byteArrayNode.execute(tstring, encoding.tencoding);
             var codeRange = getByteCodeRangeNode.execute(tstring, encoding.tencoding);
-            return StringSupport.strCount(byteArray, codeRange, squeeze, tables, compatEncoding.jcoding, this);
+            return StringSupport.strCount(byteArray, codeRange, asciiFilter, nonAsciiFilter, compatEncoding.jcoding,
+                    this);
         }
 
         @Specialization(guards = "!libString.getTString(this, string).isEmpty()")
@@ -235,9 +236,9 @@ public abstract class StringHelperNodes {
         @TruffleBoundary
         private int countSlow(InternalByteArray byteArray, TruffleString.CodeRange codeRange,
                 TStringWithEncoding[] tstringsWithEncs, RubyEncoding enc) {
-            final boolean[] table = squeeze();
-            final StringSupport.TrTables tables = makeTables(this, tstringsWithEncs, table, enc);
-            return StringSupport.strCount(byteArray, codeRange, table, tables, enc.jcoding, this);
+            boolean[] asciiFilter = asciiFilter();
+            StringSupport.NonAsciiFilter nonAsciiFilter = makeNonAsciiFilter(this, tstringsWithEncs, asciiFilter, enc);
+            return StringSupport.strCount(byteArray, codeRange, asciiFilter, nonAsciiFilter, enc.jcoding, this);
         }
     }
 
@@ -246,7 +247,7 @@ public abstract class StringHelperNodes {
         static final EncodingNodes.CheckStringEncodingNode UNCACHED_CHECK_ENCODING_NODE = EncodingNodesFactory.CheckStringEncodingNodeGen
                 .getUncached();
 
-        protected boolean[] squeeze() {
+        protected boolean[] asciiFilter() {
             return new boolean[StringSupport.TRANS_SIZE + 1];
         }
 
@@ -262,28 +263,29 @@ public abstract class StringHelperNodes {
             return enc;
         }
 
-        protected static StringSupport.TrTables makeTables(Node node, TStringWithEncoding[] tstringsWithEncs,
-                boolean[] squeeze, RubyEncoding enc) {
-            // The trSetupTable method will consume the bytes from the rope one encoded character at a time and
-            // build a TrTable from this. Previously we started with the encoding of rope zero, and at each
-            // stage found a compatible encoding to build that TrTable with. Although we now calculate a single
-            // encoding with which to build the tables it must be compatible with all ropes, so will not
-            // affect the consumption of characters from those ropes.
-            StringSupport.TrTables tables = StringSupport.trSetupTable(
+        protected static StringSupport.NonAsciiFilter makeNonAsciiFilter(Node node,
+                TStringWithEncoding[] tstringsWithEncs, boolean[] asciiFilter, RubyEncoding enc) {
+            // The trSetupFilter method will consume the bytes from the string one encoded character at a time and
+            // build a NonAsciiFilter from this. Previously we started with the encoding of the 1st string, and at each
+            // stage found a compatible encoding to build that NonAsciiFilter with. Although we now calculate a single
+            // encoding with which to build the filter it must be compatible with all strings, so will not
+            // affect the consumption of characters from those strings.
+            StringSupport.NonAsciiFilter nonAsciiFilter = StringSupport.trSetupFilter(
                     tstringsWithEncs[0].tstring,
                     tstringsWithEncs[0].encoding,
-                    squeeze,
+                    asciiFilter,
                     null,
                     true,
                     enc.jcoding,
                     node);
 
             for (int i = 1; i < tstringsWithEncs.length; i++) {
-                tables = StringSupport
-                        .trSetupTable(tstringsWithEncs[i].tstring, tstringsWithEncs[i].encoding, squeeze, tables, false,
-                                enc.jcoding, node);
+                var tstring = tstringsWithEncs[i].tstring;
+                var encoding = tstringsWithEncs[i].encoding;
+                nonAsciiFilter = StringSupport.trSetupFilter(tstring, encoding, asciiFilter, nonAsciiFilter, false,
+                        enc.jcoding, node);
             }
-            return tables;
+            return nonAsciiFilter;
         }
 
         @ExplodeLoop
@@ -328,11 +330,11 @@ public abstract class StringHelperNodes {
                 @Cached(inline = false) TruffleString.EqualNode equalNode,
                 @Cached @Exclusive RubyStringLibrary libString,
                 @Cached("libString.getEncoding($node, string)") RubyEncoding cachedEncoding,
-                @Cached(value = "squeeze()", dimensions = 1) boolean[] squeeze,
+                @Cached(value = "asciiFilter()", dimensions = 1) boolean[] asciiFilter,
                 @Cached("findEncoding(node, libString.getTString($node, string), libString.getEncoding($node, string), cachedArgs, UNCACHED_CHECK_ENCODING_NODE)") RubyEncoding compatEncoding,
-                @Cached("makeTables(node, cachedArgs, squeeze, compatEncoding)") StringSupport.TrTables tables,
+                @Cached("makeNonAsciiFilter(node, cachedArgs, asciiFilter, compatEncoding)") StringSupport.NonAsciiFilter nonAsciiFilter,
                 @Cached @Exclusive InlinedBranchProfile nullProfile) {
-            var processedTString = processStr(node, string, squeeze, compatEncoding, tables);
+            var processedTString = processStr(node, string, asciiFilter, compatEncoding, nonAsciiFilter);
             if (processedTString == null) {
                 nullProfile.enter(node);
                 return nil;
@@ -361,11 +363,12 @@ public abstract class StringHelperNodes {
         @TruffleBoundary
         private static Object deleteBangSlow(Node node, RubyString string, TStringWithEncoding[] tstringsWithEncs,
                 RubyEncoding enc) {
-            final boolean[] squeeze = new boolean[StringSupport.TRANS_SIZE + 1];
+            final boolean[] asciiFilter = new boolean[StringSupport.TRANS_SIZE + 1];
 
-            final StringSupport.TrTables tables = makeTables(node, tstringsWithEncs, squeeze, enc);
+            final StringSupport.NonAsciiFilter nonAsciiFilter = makeNonAsciiFilter(node, tstringsWithEncs, asciiFilter,
+                    enc);
 
-            var processedTString = processStr(node, string, squeeze, enc, tables);
+            var processedTString = processStr(node, string, asciiFilter, enc, nonAsciiFilter);
             if (processedTString == null) {
                 return nil;
             }
@@ -377,10 +380,11 @@ public abstract class StringHelperNodes {
         }
 
         @TruffleBoundary
-        private static TruffleString processStr(Node node, RubyString string, boolean[] squeeze, RubyEncoding enc,
-                StringSupport.TrTables tables) {
+        private static TruffleString processStr(Node node, RubyString string, boolean[] asciiFilter, RubyEncoding enc,
+                StringSupport.NonAsciiFilter nonAsciiFilter) {
             return StringSupport.delete_bangCommon19(
-                    new ATStringWithEncoding(string.tstring, string.getEncodingUncached()), squeeze, tables, enc, node);
+                    new ATStringWithEncoding(string.tstring, string.getEncodingUncached()), asciiFilter, nonAsciiFilter,
+                    enc, node);
         }
     }
 

@@ -360,8 +360,8 @@ public final class StringSupport {
 
     /** rb_str_count */
     @TruffleBoundary
-    public static int strCount(InternalByteArray byteArray, TruffleString.CodeRange codeRange, boolean[] table,
-            TrTables tables, Encoding enc, Node node) {
+    public static int strCount(InternalByteArray byteArray, TruffleString.CodeRange codeRange, boolean[] asciiFilter,
+            NonAsciiFilter nonAsciiFilter, Encoding enc, Node node) {
         final byte[] bytes = byteArray.getArray();
         int p = byteArray.getOffset();
         final int end = byteArray.getEnd();
@@ -371,14 +371,14 @@ public final class StringSupport {
         while (p < end) {
             int c;
             if (asciiCompat && (c = bytes[p] & 0xff) < 0x80) {
-                if (table[c]) {
+                if (asciiFilter[c]) {
                     count++;
                 }
                 p++;
             } else {
                 c = codePoint(enc, codeRange, bytes, p, end, node);
                 int cl = codeLength(enc, c);
-                if (trFind(c, table, tables)) {
+                if (trFind(c, asciiFilter, nonAsciiFilter)) {
                     count++;
                 }
                 p += cl;
@@ -472,15 +472,15 @@ public final class StringSupport {
     }
 
     /** tr_setup_table */
-    public static final class TrTables {
+    public static final class NonAsciiFilter {
         IntHashMap<Object> del, noDel; // used as ~ Set
     }
 
     private static final Object DUMMY_VALUE = "";
 
     @TruffleBoundary
-    public static TrTables trSetupTable(AbstractTruffleString str, RubyEncoding encoding, boolean[] stable,
-            TrTables tables, boolean first, Encoding enc, Node node) {
+    public static NonAsciiFilter trSetupFilter(AbstractTruffleString str, RubyEncoding encoding, boolean[] asciiFilter,
+            NonAsciiFilter nonAsciiFilter, boolean first, Encoding enc, Node node) {
         int i, l[] = { 0 };
         final boolean cflag;
 
@@ -497,15 +497,15 @@ public final class StringSupport {
 
         if (first) {
             for (i = 0; i < TRANS_SIZE; i++) {
-                stable[i] = true;
+                asciiFilter[i] = true;
             }
-            stable[TRANS_SIZE] = cflag;
-        } else if (stable[TRANS_SIZE] && !cflag) {
-            stable[TRANS_SIZE] = false;
+            asciiFilter[TRANS_SIZE] = cflag;
+        } else if (asciiFilter[TRANS_SIZE] && !cflag) {
+            asciiFilter[TRANS_SIZE] = false;
         }
 
-        if (tables == null) {
-            tables = new TrTables();
+        if (nonAsciiFilter == null) {
+            nonAsciiFilter = new NonAsciiFilter();
         }
 
         byte[] buf = null; // lazy initialized
@@ -523,15 +523,15 @@ public final class StringSupport {
                 // update the buff at [c] :
                 buf[c & 0xff] = (byte) (cflag ? 0 : 1);
             } else {
-                if (table == null && (first || tables.del != null || stable[TRANS_SIZE])) {
+                if (table == null && (first || nonAsciiFilter.del != null || asciiFilter[TRANS_SIZE])) {
                     if (cflag) {
-                        ptable = tables.noDel;
+                        ptable = nonAsciiFilter.noDel;
                         table = ptable != null ? ptable : new IntHashMap<>(8);
-                        tables.noDel = table;
+                        nonAsciiFilter.noDel = table;
                     } else {
                         table = new IntHashMap<>(8);
-                        ptable = tables.del;
-                        tables.del = table;
+                        ptable = nonAsciiFilter.del;
+                        nonAsciiFilter.del = table;
                     }
                 }
 
@@ -552,27 +552,31 @@ public final class StringSupport {
         }
         if (buf != null) {
             for (i = 0; i < TRANS_SIZE; i++) {
-                stable[i] = stable[i] && buf[i] != 0;
+                asciiFilter[i] = asciiFilter[i] && buf[i] != 0;
             }
         } else {
             for (i = 0; i < TRANS_SIZE; i++) {
-                stable[i] = stable[i] && cflag;
+                asciiFilter[i] = asciiFilter[i] && cflag;
             }
         }
 
         if (table == null && !cflag) {
-            tables.del = null;
+            nonAsciiFilter.del = null;
         }
 
-        return tables;
+        return nonAsciiFilter;
     }
 
-    public static boolean trFind(final int c, final boolean[] table, final TrTables tables) {
+    public static boolean trFind(final int c, final boolean[] asciiFilter, final NonAsciiFilter nonAsciiFilter) {
         if (c < TRANS_SIZE) {
-            return table[c];
+            return asciiFilter[c];
         }
 
-        final IntHashMap<Object> del = tables.del, noDel = tables.noDel;
+        if (nonAsciiFilter == null) {
+            return asciiFilter[TRANS_SIZE];
+        }
+
+        final IntHashMap<Object> del = nonAsciiFilter.del, noDel = nonAsciiFilter.noDel;
 
         if (del != null) {
             if (del.get(c) != null &&
@@ -583,7 +587,7 @@ public final class StringSupport {
             return false;
         }
 
-        return table[TRANS_SIZE];
+        return asciiFilter[TRANS_SIZE];
     }
 
     @TruffleBoundary
@@ -919,7 +923,8 @@ public final class StringSupport {
 
     /** rb_str_delete_bang */
     @TruffleBoundary
-    public static TruffleString delete_bangCommon19(ATStringWithEncoding rubyString, boolean[] squeeze, TrTables tables,
+    public static TruffleString delete_bangCommon19(ATStringWithEncoding rubyString, boolean[] asciiFilter,
+            NonAsciiFilter nonAsciiFilter,
             RubyEncoding encoding, Node node) {
         Encoding enc = encoding.jcoding;
         int s = 0;
@@ -932,7 +937,7 @@ public final class StringSupport {
         while (s < send) {
             int c;
             if (asciiCompatible && Encoding.isAscii(c = bytes[s] & 0xff)) {
-                if (squeeze[c]) {
+                if (asciiFilter[c]) {
                     modified = true;
                 } else {
                     if (t != s) {
@@ -944,7 +949,7 @@ public final class StringSupport {
             } else {
                 c = codePoint(enc, rubyString.getCodeRange(), bytes, s, send, node);
                 int cl = codeLength(enc, c);
-                if (trFind(c, squeeze, tables)) {
+                if (trFind(c, asciiFilter, nonAsciiFilter)) {
                     modified = true;
                 } else {
                     if (t != s) {
@@ -1278,7 +1283,7 @@ public final class StringSupport {
         return 0;
     }
 
-    public static boolean singleByteSqueeze(TStringBuilder value, boolean squeeze[]) {
+    public static boolean singleByteSqueeze(TStringBuilder value, boolean[] asciiFilter) {
         int s = 0;
         int t = s;
         int send = s + value.getLength();
@@ -1287,7 +1292,7 @@ public final class StringSupport {
 
         while (s < send) {
             int c = bytes[s++] & 0xff;
-            if (c != save || !squeeze[c]) {
+            if (c != save || !asciiFilter[c]) {
                 bytes[t++] = (byte) (save = c);
             }
         }
@@ -1302,7 +1307,7 @@ public final class StringSupport {
 
     @TruffleBoundary
     public static boolean multiByteSqueeze(TStringBuilder value, TruffleString.CodeRange originalCodeRange,
-            boolean[] squeeze, TrTables tables, Encoding enc, boolean isArg, Node node) {
+            boolean[] asciiFilter, NonAsciiFilter nonAsciiFilter, Encoding enc, boolean isArg, Node node) {
         int s = 0;
         int t = s;
         int send = s + value.getLength();
@@ -1312,14 +1317,14 @@ public final class StringSupport {
 
         while (s < send) {
             if (enc.isAsciiCompatible() && (c = bytes[s] & 0xff) < 0x80) {
-                if (c != save || (isArg && !squeeze[c])) {
+                if (c != save || (isArg && !asciiFilter[c])) {
                     bytes[t++] = (byte) (save = c);
                 }
                 s++;
             } else {
                 c = codePoint(enc, originalCodeRange, bytes, s, send, node);
                 int cl = codeLength(enc, c);
-                if (c != save || (isArg && !trFind(c, squeeze, tables))) {
+                if (c != save || (isArg && !trFind(c, asciiFilter, nonAsciiFilter))) {
                     if (t != s) {
                         enc.codeToMbc(c, bytes, t);
                     }
@@ -1338,21 +1343,21 @@ public final class StringSupport {
         return false;
     }
 
-    public static int singleByteRstripEndIndex(InternalByteArray byteArray, boolean[] squeeze) {
+    public static int singleByteRstripEndIndex(InternalByteArray byteArray, boolean[] asciiFilter) {
         final int len = byteArray.getLength();
         if (len == 0) {
             return -1;
         }
 
         final int lastByte = byteArray.get(len - 1) & 0xff;
-        if (squeeze != null ? !squeeze[lastByte] : !isAsciiSpaceOrNull(lastByte)) {
+        if (asciiFilter != null ? !asciiFilter[lastByte] : !isAsciiSpaceOrNull(lastByte)) {
             return -1;
         }
 
         int i = len - 2;
         while (i >= 0) {
             final int b = byteArray.get(i) & 0xff;
-            if (squeeze != null ? !squeeze[b] : !isAsciiSpaceOrNull(b)) {
+            if (asciiFilter != null ? !asciiFilter[b] : !isAsciiSpaceOrNull(b)) {
                 return i + 1;
             }
             i--;
@@ -1363,7 +1368,7 @@ public final class StringSupport {
 
     @TruffleBoundary
     public static int multiByteRstripEndIndex(AbstractTruffleString tstring, RubyEncoding encoding,
-            boolean[] squeeze, TrTables tables, Node node) {
+            boolean[] asciiFilter, NonAsciiFilter nonAsciiFilter, Node node) {
         final var tencoding = encoding.tencoding;
         var iterator = CreateBackwardCodePointIteratorNode.getUncached().execute(tstring, tencoding,
                 ErrorHandling.RETURN_NEGATIVE);
@@ -1374,7 +1379,9 @@ public final class StringSupport {
                     RubyContext.get(node).getCoreExceptions().argumentErrorInvalidByteSequence(encoding, node));
         }
 
-        boolean matches = squeeze != null ? trFind(codePoint, squeeze, tables) : isAsciiSpaceOrNull(codePoint);
+        boolean matches = asciiFilter != null
+                ? trFind(codePoint, asciiFilter, nonAsciiFilter)
+                : isAsciiSpaceOrNull(codePoint);
         if (!matches) {
             return -1;
         }
@@ -1388,7 +1395,9 @@ public final class StringSupport {
                         RubyContext.get(node).getCoreExceptions().argumentErrorInvalidByteSequence(encoding, node));
             }
 
-            matches = squeeze != null ? trFind(codePoint, squeeze, tables) : isAsciiSpaceOrNull(codePoint);
+            matches = asciiFilter != null
+                    ? trFind(codePoint, asciiFilter, nonAsciiFilter)
+                    : isAsciiSpaceOrNull(codePoint);
             if (!matches) {
                 return byteIndex;
             }
@@ -1397,21 +1406,21 @@ public final class StringSupport {
         return 0;
     }
 
-    public static int singleByteLstripStartIndex(InternalByteArray byteArray, boolean[] squeeze) {
+    public static int singleByteLstripStartIndex(InternalByteArray byteArray, boolean[] asciiFilter) {
         final int len = byteArray.getLength();
         if (len == 0) {
             return -1;
         }
 
         final int firstByte = byteArray.get(0) & 0xff;
-        if (squeeze != null ? !squeeze[firstByte] : !isAsciiSpaceOrNull(firstByte)) {
+        if (asciiFilter != null ? !asciiFilter[firstByte] : !isAsciiSpaceOrNull(firstByte)) {
             return -1;
         }
 
         int i = 1;
         while (i < len) {
             final int b = byteArray.get(i) & 0xff;
-            if (squeeze != null ? !squeeze[b] : !isAsciiSpaceOrNull(b)) {
+            if (asciiFilter != null ? !asciiFilter[b] : !isAsciiSpaceOrNull(b)) {
                 return i;
             }
             i++;
@@ -1422,7 +1431,7 @@ public final class StringSupport {
 
     @TruffleBoundary
     public static int multiByteLstripStartIndex(AbstractTruffleString tstring, RubyEncoding encoding,
-            boolean[] squeeze, TrTables tables, Node node) {
+            boolean[] asciiFilter, NonAsciiFilter nonAsciiFilter, Node node) {
         final var tencoding = encoding.tencoding;
         var iterator = CreateCodePointIteratorNode.getUncached().execute(tstring, tencoding,
                 ErrorHandling.RETURN_NEGATIVE);
@@ -1433,7 +1442,9 @@ public final class StringSupport {
                     RubyContext.get(node).getCoreExceptions().argumentErrorInvalidByteSequence(encoding, node));
         }
 
-        boolean matches = squeeze != null ? trFind(codePoint, squeeze, tables) : isAsciiSpaceOrNull(codePoint);
+        boolean matches = asciiFilter != null
+                ? trFind(codePoint, asciiFilter, nonAsciiFilter)
+                : isAsciiSpaceOrNull(codePoint);
         if (!matches) {
             return -1;
         }
@@ -1447,7 +1458,9 @@ public final class StringSupport {
                         RubyContext.get(node).getCoreExceptions().argumentErrorInvalidByteSequence(encoding, node));
             }
 
-            matches = squeeze != null ? trFind(codePoint, squeeze, tables) : isAsciiSpaceOrNull(codePoint);
+            matches = asciiFilter != null
+                    ? trFind(codePoint, asciiFilter, nonAsciiFilter)
+                    : isAsciiSpaceOrNull(codePoint);
             if (!matches) {
                 return byteIndex;
             }

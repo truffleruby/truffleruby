@@ -1341,17 +1341,19 @@ public abstract class StringNodes {
             var tstring = string.tstring;
             var encoding = libString.getEncoding(node, string);
 
-            var squeeze = new boolean[StringSupport.TRANS_SIZE + 1];
-            StringSupport.TrTables tables = setupTables(node, args, tstring, encoding, squeeze, libString,
+            var asciiFilter = new boolean[StringSupport.TRANS_SIZE + 1];
+            StringSupport.NonAsciiFilter nonAsciiFilter = setupFilters(node, args, tstring, encoding, asciiFilter,
+                    libString,
                     toStrNode, checkEncodingNode);
 
             int startIndex;
             if (singleByteProfile.profile(node,
                     StringGuards.isSingleByteOptimizable(node, tstring, encoding, singleByteOptimizableNode))) {
                 var byteArray = byteArrayNode.execute(tstring, encoding.tencoding);
-                startIndex = StringSupport.singleByteLstripStartIndex(byteArray, squeeze);
+                startIndex = StringSupport.singleByteLstripStartIndex(byteArray, asciiFilter);
             } else {
-                startIndex = StringSupport.multiByteLstripStartIndex(tstring, encoding, squeeze, tables, node);
+                startIndex = StringSupport.multiByteLstripStartIndex(tstring, encoding, asciiFilter, nonAsciiFilter,
+                        node);
             }
 
             return trimLeading(node, string, tstring, encoding.tencoding, startIndex, substringNode,
@@ -1470,17 +1472,17 @@ public abstract class StringNodes {
             var tstring = string.tstring;
             var encoding = libString.getEncoding(node, string);
 
-            var squeeze = new boolean[StringSupport.TRANS_SIZE + 1];
-            StringSupport.TrTables tables = setupTables(node, args, tstring, encoding, squeeze, libString,
-                    toStrNode, checkEncodingNode);
+            var asciiFilter = new boolean[StringSupport.TRANS_SIZE + 1];
+            StringSupport.NonAsciiFilter nonAsciiFilter = setupFilters(node, args, tstring, encoding, asciiFilter,
+                    libString, toStrNode, checkEncodingNode);
 
             int endIndex;
             if (singleByteProfile.profile(node,
                     StringGuards.isSingleByteOptimizable(node, tstring, encoding, singleByteOptimizableNode))) {
                 var byteArray = byteArrayNode.execute(tstring, encoding.tencoding);
-                endIndex = StringSupport.singleByteRstripEndIndex(byteArray, squeeze);
+                endIndex = StringSupport.singleByteRstripEndIndex(byteArray, asciiFilter);
             } else {
-                endIndex = StringSupport.multiByteRstripEndIndex(tstring, encoding, squeeze, tables, node);
+                endIndex = StringSupport.multiByteRstripEndIndex(tstring, encoding, asciiFilter, nonAsciiFilter, node);
             }
 
             return trimTrailing(node, string, tstring, encoding.tencoding, endIndex, substringNode,
@@ -1502,20 +1504,20 @@ public abstract class StringNodes {
 
     }
 
-    // Builds the character lookup tables and squeeze flags for selector arguments after validating encoding compatibility.
-    private static StringSupport.TrTables setupTables(Node node, Object[] args,
-            AbstractTruffleString tstring, RubyEncoding encoding, boolean[] squeeze,
+    // Build filters for ascii and non-ascii characters for given character selectors
+    private static StringSupport.NonAsciiFilter setupFilters(Node node, Object[] args,
+            AbstractTruffleString tstring, RubyEncoding encoding, boolean[] asciiFilter,
             RubyStringLibrary libString, ToStrNode toStrNode, CheckStringEncodingNode checkEncodingNode) {
-        StringSupport.TrTables tables = null;
+        StringSupport.NonAsciiFilter nonAsciiFilter = null;
         for (int i = 0; i < args.length; i++) {
             Object arg = toStrNode.execute(node, args[i]);
             var argTString = libString.getTString(node, arg);
             var argEncoding = libString.getEncoding(node, arg);
             var negotiatedEncoding = checkEncodingNode.execute(node, tstring, encoding, argTString, argEncoding);
-            tables = StringSupport.trSetupTable(argTString, argEncoding, squeeze, tables, i == 0,
+            nonAsciiFilter = StringSupport.trSetupFilter(argTString, argEncoding, asciiFilter, nonAsciiFilter, i == 0,
                     negotiatedEncoding.jcoding, node);
         }
-        return tables;
+        return nonAsciiFilter;
     }
 
     @CoreMethod(names = "dump")
@@ -1790,14 +1792,14 @@ public abstract class StringNodes {
 
             final TStringBuilder buffer = TStringBuilder.create(string);
 
-            final boolean[] squeeze = new boolean[StringSupport.TRANS_SIZE];
+            final boolean[] asciiFilter = new boolean[StringSupport.TRANS_SIZE];
             for (int i = 0; i < StringSupport.TRANS_SIZE; i++) {
-                squeeze[i] = true;
+                asciiFilter[i] = true;
             }
 
             if (StringGuards.isSingleByteOptimizable(this, string.tstring, string.getEncodingUncached(),
                     singleByteOptimizableNode)) {
-                if (!StringSupport.singleByteSqueeze(buffer, squeeze)) {
+                if (!StringSupport.singleByteSqueeze(buffer, asciiFilter)) {
                     return nil;
                 } else {
                     string.setTString(buffer.toTString(), buffer.getRubyEncoding());
@@ -1805,7 +1807,7 @@ public abstract class StringNodes {
             } else {
                 var codeRange = string.tstring
                         .getByteCodeRangeUncached(RubyStringLibrary.getUncached().getTEncoding(this, string));
-                if (!StringSupport.multiByteSqueeze(buffer, codeRange, squeeze, null,
+                if (!StringSupport.multiByteSqueeze(buffer, codeRange, asciiFilter, null,
                         string.getEncodingUncached().jcoding, false, this)) {
                     return nil;
                 } else {
@@ -1843,14 +1845,14 @@ public abstract class StringNodes {
             var otherEncoding = RubyStringLibrary.getUncached().getEncoding(node, otherStr);
             RubyEncoding enc = checkEncodingNode.execute(node, string.tstring, string.getEncodingUncached(),
                     otherTString, otherEncoding);
-            final boolean squeeze[] = new boolean[StringSupport.TRANS_SIZE + 1];
+            final boolean[] asciiFilter = new boolean[StringSupport.TRANS_SIZE + 1];
 
             boolean singlebyte = TStringUtils.isSingleByteOptimizable(string.tstring, string.getEncodingUncached()) &&
                     TStringUtils.isSingleByteOptimizable(otherTString, otherEncoding);
 
             if (singlebyte && otherTString.byteLength(otherEncoding.tencoding) == 1 && otherStrings.length == 1) {
-                squeeze[otherTString.readByteUncached(0, otherEncoding.tencoding)] = true;
-                if (!StringSupport.singleByteSqueeze(buffer, squeeze)) {
+                asciiFilter[otherTString.readByteUncached(0, otherEncoding.tencoding)] = true;
+                if (!StringSupport.singleByteSqueeze(buffer, asciiFilter)) {
                     return nil;
                 } else {
                     string.setTString(buffer.toTString(), buffer.getRubyEncoding());
@@ -1858,8 +1860,8 @@ public abstract class StringNodes {
                 }
             }
 
-            StringSupport.TrTables tables = StringSupport
-                    .trSetupTable(otherTString, otherEncoding, squeeze, null, true, enc.jcoding, node);
+            StringSupport.NonAsciiFilter nonAsciiFilter = StringSupport
+                    .trSetupFilter(otherTString, otherEncoding, asciiFilter, null, true, enc.jcoding, node);
 
             for (int i = 1; i < otherStrings.length; i++) {
                 otherStr = otherStrings[i];
@@ -1868,12 +1870,12 @@ public abstract class StringNodes {
                 enc = checkEncodingNode.execute(node, string.tstring, string.getEncodingUncached(), otherTString,
                         otherEncoding);
                 singlebyte = singlebyte && TStringUtils.isSingleByteOptimizable(otherTString, otherEncoding);
-                tables = StringSupport.trSetupTable(otherTString, otherEncoding, squeeze, tables, false, enc.jcoding,
-                        node);
+                nonAsciiFilter = StringSupport.trSetupFilter(otherTString, otherEncoding, asciiFilter, nonAsciiFilter,
+                        false, enc.jcoding, node);
             }
 
             if (singlebyte) {
-                if (!StringSupport.singleByteSqueeze(buffer, squeeze)) {
+                if (!StringSupport.singleByteSqueeze(buffer, asciiFilter)) {
                     return nil;
                 } else {
                     string.setTString(buffer.toTString(), buffer.getRubyEncoding());
@@ -1881,7 +1883,8 @@ public abstract class StringNodes {
             } else {
                 var codeRange = string.tstring
                         .getByteCodeRangeUncached(RubyStringLibrary.getUncached().getTEncoding(node, string));
-                if (!StringSupport.multiByteSqueeze(buffer, codeRange, squeeze, tables, enc.jcoding, true, node)) {
+                if (!StringSupport.multiByteSqueeze(buffer, codeRange, asciiFilter, nonAsciiFilter, enc.jcoding, true,
+                        node)) {
                     return nil;
                 } else {
                     string.setTString(buffer.toTString(), buffer.getRubyEncoding());
