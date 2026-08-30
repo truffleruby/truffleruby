@@ -1310,7 +1310,6 @@ public abstract class StringNodes {
                 @Cached @Shared TruffleString.SubstringByteIndexNode substringNode,
                 @Cached @Exclusive InlinedConditionProfile singleByteProfile,
                 @Cached @Exclusive InlinedConditionProfile noopProfile,
-                @Cached @Exclusive InlinedConditionProfile emptyStringProfile,
                 @Bind Node node) {
             var tstring = string.tstring;
             var encoding = libString.getEncoding(node, string);
@@ -1325,7 +1324,7 @@ public abstract class StringNodes {
             }
 
             return trimLeading(node, string, tstring, encoding.tencoding, startIndex, substringNode,
-                    noopProfile, emptyStringProfile);
+                    noopProfile);
         }
 
         @Specialization(guards = { "!string.tstring.isEmpty()", "!noArguments(args)" })
@@ -1338,7 +1337,6 @@ public abstract class StringNodes {
                 @Cached @Exclusive CheckStringEncodingNode checkEncodingNode,
                 @Cached @Exclusive InlinedConditionProfile singleByteProfile,
                 @Cached @Exclusive InlinedConditionProfile noopProfile,
-                @Cached @Exclusive InlinedConditionProfile emptyStringProfile,
                 @Bind Node node) {
             var tstring = string.tstring;
             var encoding = libString.getEncoding(node, string);
@@ -1357,26 +1355,21 @@ public abstract class StringNodes {
             }
 
             return trimLeading(node, string, tstring, encoding.tencoding, startIndex, substringNode,
-                    noopProfile, emptyStringProfile);
+                    noopProfile);
         }
 
         // Trims leading characters from the string up to startIndex.
         private static Object trimLeading(Node node, RubyString string, AbstractTruffleString tstring,
                 TruffleString.Encoding tencoding, int startIndex,
                 TruffleString.SubstringByteIndexNode substringNode,
-                InlinedConditionProfile noopProfile,
-                InlinedConditionProfile emptyStringProfile) {
+                InlinedConditionProfile noopProfile) {
             if (noopProfile.profile(node, startIndex == -1)) {
                 return nil;
             }
 
             int totalLength = tstring.byteLength(tencoding);
-            if (emptyStringProfile.profile(node, startIndex == totalLength)) {
-                string.setTString(tencoding.getEmpty());
-            } else {
-                int substringByteLength = totalLength - startIndex;
-                string.setTString(substringNode.execute(tstring, startIndex, substringByteLength, tencoding, true));
-            }
+            int substringByteLength = totalLength - startIndex;
+            string.setTString(substringNode.execute(tstring, startIndex, substringByteLength, tencoding, true));
             return string;
         }
 
@@ -1446,7 +1439,6 @@ public abstract class StringNodes {
                 @Cached @Shared TruffleString.SubstringByteIndexNode substringNode,
                 @Cached @Exclusive InlinedConditionProfile singleByteProfile,
                 @Cached @Exclusive InlinedConditionProfile noopProfile,
-                @Cached @Exclusive InlinedConditionProfile emptyStringProfile,
                 @Bind Node node) {
             var tstring = string.tstring;
             var encoding = libString.getEncoding(node, string);
@@ -1461,7 +1453,7 @@ public abstract class StringNodes {
             }
 
             return trimTrailing(node, string, tstring, encoding.tencoding, endIndex, substringNode,
-                    noopProfile, emptyStringProfile);
+                    noopProfile);
         }
 
         @Specialization(guards = { "!string.tstring.isEmpty()", "!noArguments(args)" })
@@ -1474,7 +1466,6 @@ public abstract class StringNodes {
                 @Cached @Exclusive CheckStringEncodingNode checkEncodingNode,
                 @Cached @Exclusive InlinedConditionProfile singleByteProfile,
                 @Cached @Exclusive InlinedConditionProfile noopProfile,
-                @Cached @Exclusive InlinedConditionProfile emptyStringProfile,
                 @Bind Node node) {
             var tstring = string.tstring;
             var encoding = libString.getEncoding(node, string);
@@ -1493,24 +1484,19 @@ public abstract class StringNodes {
             }
 
             return trimTrailing(node, string, tstring, encoding.tencoding, endIndex, substringNode,
-                    noopProfile, emptyStringProfile);
+                    noopProfile);
         }
 
         // Trims trailing characters from the string up to endIndex.
         private static Object trimTrailing(Node node, RubyString string, AbstractTruffleString tstring,
                 TruffleString.Encoding tencoding, int endIndex,
                 TruffleString.SubstringByteIndexNode substringNode,
-                InlinedConditionProfile noopProfile,
-                InlinedConditionProfile emptyStringProfile) {
+                InlinedConditionProfile noopProfile) {
             if (noopProfile.profile(node, endIndex == -1)) {
                 return nil;
             }
 
-            if (emptyStringProfile.profile(node, endIndex == 0)) {
-                string.setTString(tencoding.getEmpty());
-            } else {
-                string.setTString(substringNode.execute(tstring, 0, endIndex, tencoding, true));
-            }
+            string.setTString(substringNode.execute(tstring, 0, endIndex, tencoding, true));
             return string;
         }
 
