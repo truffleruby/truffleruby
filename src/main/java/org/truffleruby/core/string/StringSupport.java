@@ -572,10 +572,6 @@ public final class StringSupport {
             return asciiFilter[c];
         }
 
-        if (nonAsciiFilter == null) {
-            return asciiFilter[TRANS_SIZE];
-        }
-
         final IntHashMap<Object> del = nonAsciiFilter.del, noDel = nonAsciiFilter.noDel;
 
         if (del != null) {
