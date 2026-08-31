@@ -265,15 +265,13 @@ module Truffle::CExt
 
   # The advance_p native callback is made executable for the cext_enc_mbc_case_fold primitive
   def rb_tr_enc_mbc_case_fold(flag, string, advance_p, p)
-    address = Primitive.interop_as_pointer(advance_p)
-    advance = -> pointer, length { Primitive.cext_invoke_v_li(address, pointer, length) }
+    advance = -> pointer, length { Primitive.cext_invoke_v_li(advance_p, pointer, length) }
     Primitive.cext_enc_mbc_case_fold(flag, string, advance, p)
   end
 
   # The string reader is a native function reading a char* to a Ruby String; make it executable for ReadCStringNode
   def rb_tr_sprintf(format, string_reader, args)
-    address = Primitive.interop_as_pointer(string_reader)
-    reader = -> pointer { Primitive.cext_invoke_l_l(address, pointer) }
+    reader = -> pointer { Primitive.cext_invoke_l_l(string_reader, pointer) }
     Primitive.cext_sprintf(format, reader, args)
   end
   Primitive.always_split self, :rb_tr_sprintf
@@ -962,15 +960,13 @@ module Truffle::CExt
   end
 
   def rb_str_new_native(pointer, length)
-    raise "#{pointer} not a pointer" unless Truffle::Interop.pointer?(pointer)
-    Truffle::FFI::Pointer.new(pointer).read_string(length)
+    Primitive.pointer_read_bytes(pointer, length)
   end
 
   # A single upcall for rb_enc_str_new(), as it is used for every String created by C extension
   # code with a known encoding (e.g. every String parsed by the json C extension)
   def rb_enc_str_new_native(pointer, length, rb_encoding)
-    raise "#{pointer} not a pointer" unless Truffle::Interop.pointer?(pointer)
-    string = Truffle::FFI::Pointer.new(pointer).read_string(length)
+    string = Primitive.pointer_read_bytes(pointer, length)
     string.force_encoding(RbEncoding.get_encoding_from_native(rb_encoding))
   end
 
@@ -1311,7 +1307,7 @@ module Truffle::CExt
       Primitive.fiber_set_error_info(extract_ruby_exception(e))
     end
 
-    status.write_int(pos) unless Primitive.nil?(status)
+    Primitive.pointer_write_int(status, pos) unless status == 0
     res
   end
   Primitive.always_split self, :rb_protect
@@ -1535,7 +1531,7 @@ module Truffle::CExt
   end
 
   def rb_enumeratorize_with_size(obj, meth, args, size_fn)
-    return rb_enumeratorize(obj, meth, args) if Primitive.interop_null?(size_fn)
+    return rb_enumeratorize(obj, meth, args) if size_fn == 0
     use_cext_lock = Primitive.use_cext_lock?
     enum = obj.to_enum(meth, *args) do
       locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
@@ -1806,7 +1802,7 @@ module Truffle::CExt
   end
 
   private def data_marker(marker_function, struct)
-    if Truffle::Interop.null?(marker_function)
+    if marker_function == 0
       nil
     else
       -> { Primitive.cext_invoke_v_l(marker_function, struct) }
@@ -1833,10 +1829,10 @@ module Truffle::CExt
     rdata = Truffle::FFI::Pointer.new(Primitive.cext_invoke_l_lll(RDATA_CREATE, mark, free, data))
     Primitive.object_hidden_var_set object, DATA_STRUCT, rdata
     Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(RDATA_RUN_MARKER, rdata)
-    # Could use a simpler finalizer if Truffle::Interop.null?(free)
+    # Could use a simpler finalizer if free == 0
     Primitive.objectspace_define_data_finalizer object, RDATA_RUN_FINALIZER, rdata, use_cext_lock
 
-    Primitive.cext_mark_object_on_call_exit(object) unless Truffle::Interop.null?(mark)
+    Primitive.cext_mark_object_on_call_exit(object) unless mark == 0
 
     object
   end
@@ -1849,15 +1845,15 @@ module Truffle::CExt
     rtypeddata = Truffle::FFI::Pointer.new(Primitive.cext_invoke_l_ll(RTYPEDDATA_CREATE, data_type, data))
     Primitive.object_hidden_var_set object, DATA_STRUCT, rtypeddata
     Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(RTYPEDDATA_RUN_MARKER, rtypeddata)
-    # Could use a simpler finalizer if Truffle::Interop.null?(free)
+    # Could use a simpler finalizer if free == 0
     Primitive.objectspace_define_data_finalizer object, RTYPEDDATA_RUN_FINALIZER, rtypeddata, use_cext_lock
 
-    unless Truffle::Interop.null?(size)
+    unless size == 0
       Primitive.object_hidden_var_set object, DATA_MEMSIZER, data_sizer(RTYPEDDATA_RUN_MEMSIZER, rtypeddata)
     end
     Primitive.object_hidden_var_set object, DATA_TYPE, data_type
 
-    Primitive.cext_mark_object_on_call_exit(object) unless Truffle::Interop.null?(mark)
+    Primitive.cext_mark_object_on_call_exit(object) unless mark == 0
 
     object
   end
@@ -1954,7 +1950,7 @@ module Truffle::CExt
     begin
       Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, b_proc, data1)
     rescue StandardError => exc
-      if Truffle::Interop.null?(r_proc)
+      if r_proc == 0
         Primitive.cext_wrap(nil)
       else
         errinfo = Primitive.fiber_get_error_info
@@ -2155,11 +2151,9 @@ module Truffle::CExt
   end
 
   private def rb_thread_call_without_gvl_inner(function, data1, unblock, data2)
-    unblock_address = Primitive.nil?(unblock) ? 0 : Primitive.interop_as_pointer(unblock)
-    data2_address = Primitive.nil?(data2) ? 0 : Primitive.interop_as_pointer(data2)
     Primitive.call_with_unblocking_function(Thread.current,
       CALL_TO_POINTER_WITHOUT_GVL, function, data1,
-      unblock_address, data2_address)
+      unblock, data2)
   end
 
   def rb_iterate(iteration, iterated_object, callback, callback_arg)
@@ -2365,7 +2359,7 @@ module Truffle::CExt
 
   # A single upcall for RSTRING_GETMEM(), which reads both RSTRING_PTR() and RSTRING_LEN()
   def rb_tr_rstring_getmem(string, len_pointer)
-    Truffle::FFI::Pointer.new(len_pointer).write_long(string.bytesize)
+    Primitive.pointer_write_long(len_pointer, string.bytesize)
     Primitive.string_pointer_to_native(string)
   end
 
@@ -2448,8 +2442,6 @@ module Truffle::CExt
   end
 
   def rb_tr_pointer(pointer)
-    Truffle::Interop.to_native(pointer) unless Truffle::Interop.pointer?(pointer)
-    raise "#{pointer} not a pointer" unless Truffle::Interop.pointer?(pointer)
     Truffle::FFI::Pointer.new(pointer)
   end
 
@@ -2463,8 +2455,6 @@ module Truffle::CExt
   GC_REGISTERED_ADDRESSES = {}
 
   def rb_gc_register_address(address)
-    address = Primitive.interop_as_pointer(address)
-
     c_global_variables = Primitive.fiber_c_global_variables
     if c_global_variables # called during Init_ function
       c_global_variables << address
@@ -2487,7 +2477,7 @@ module Truffle::CExt
   end
 
   def rb_gc_unregister_address(address)
-    GC_REGISTERED_ADDRESSES.delete(Primitive.interop_as_pointer(address))
+    GC_REGISTERED_ADDRESSES.delete(address)
   end
 
   def rb_eval_cmd_kw(cmd, args, kw_splat)

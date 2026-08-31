@@ -67,18 +67,18 @@ COPYRIGHT
 
 C_TYPES = {
   'V' => 'VALUE', 'W' => 'VALUE', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
-  'P' => 'void *', 'F' => 'void *', 'Y' => 'ID', 'A' => 'const VALUE *', 'O' => 'void'
+  'P' => 'void *', 'Y' => 'ID', 'O' => 'void'
 }.freeze
 
 JAVA_TYPES = {
   'V' => 'long', 'W' => 'long', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
-  'P' => 'long', 'F' => 'long', 'Y' => 'long', 'A' => 'long', 'O' => 'void'
+  'P' => 'long', 'Y' => 'long', 'O' => 'void'
 }.freeze
 
 # Carrier letters for FFM FunctionDescriptors (FFMSupport carrier signature format)
 FFM_CARRIERS = {
   'V' => 'L', 'W' => 'L', 'I' => 'I', 'B' => 'I', 'L' => 'L', 'D' => 'D',
-  'P' => 'L', 'F' => 'L', 'Y' => 'L', 'A' => 'L', 'O' => 'V'
+  'P' => 'L', 'Y' => 'L', 'O' => 'V'
 }.freeze
 
 def expand_c_params(carriers)
@@ -256,13 +256,13 @@ JAVA
 # How the generated method body unboxes the result of CExtFFMLayer#upcall per return carrier
 RET_UNBOX = {
   'V' => '(long) ', 'W' => '(long) ', 'L' => '(long) ', 'P' => '(long) ',
-  'F' => '(long) ', 'Y' => '(long) ',
+  'Y' => '(long) ',
   'I' => '(int) ', 'B' => '(int) ',
   'D' => '(double) '
 }.freeze
 
 SENTINELS = { 'V' => '0L', 'W' => '0L', 'I' => '0', 'B' => '0', 'L' => '0L', 'D' => '0.0', 'P' => '0L',
-              'F' => '0L', 'Y' => '0L' }.freeze
+              'Y' => '0L' }.freeze
 
 UPCALLS.each_with_index do |(cname, kind, ret, args), index|
   if cname == 'ruby_native_thread_p'

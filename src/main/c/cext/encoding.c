@@ -368,7 +368,7 @@ VALUE rb_enc_str_new(const char *ptr, long len, rb_encoding *enc) {
   if (ptr == NULL) {
     return rb_tr_up_send1_force_encoding(rb_tr_up_rb_str_new_nul(len), rb_enc_from_encoding(enc));
   }
-  return rb_tr_up_rb_enc_str_new_native(ptr, len, (long) enc);
+  return rb_tr_up_rb_enc_str_new_native(ptr, len, enc);
 }
 
 #undef rb_enc_str_new_cstr

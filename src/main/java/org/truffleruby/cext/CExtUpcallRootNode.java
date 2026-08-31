@@ -40,7 +40,6 @@ import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.cext.ValueWrapperManager.AllocateHandleNode;
 import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
-import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.extra.ffi.RubyPointer;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
@@ -63,8 +62,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode implements Intern
         BOOL, // B: Ruby true/false as int 1/0
         LONG, // L
         DOUBLE, // D
-        POINTER, // P
-        FUNCTION, // F: a function pointer
+        POINTER, // P: a raw long address, including function pointers and VALUE arrays
         ID, // Y: converted from/to a Ruby Symbol
         VOID; // O
 
@@ -75,10 +73,8 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode implements Intern
                 case 'I' -> INT;
                 case 'B' -> BOOL;
                 case 'L' -> LONG;
-                case 'A' -> LONG; // the address of a native VALUE[], read by UnwrapCArrayNode
                 case 'D' -> DOUBLE;
                 case 'P' -> POINTER;
-                case 'F' -> FUNCTION;
                 case 'Y' -> ID;
                 case 'O' -> VOID;
                 default -> throw CompilerDirectives.shouldNotReachHere(String.valueOf(carrier));
@@ -224,19 +220,9 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode implements Intern
                 case VALUE -> unwrapNode.execute(this, raw);
                 case INT, LONG, DOUBLE -> raw;
                 case ID -> idToSymbolNode.execute(raw);
-                case POINTER, FUNCTION -> pointer((long) raw);
+                case POINTER -> raw; // a raw long address, like L
                 default -> throw CompilerDirectives.shouldNotReachHere();
             };
-        }
-
-        private Object pointer(long address) {
-            if (address == 0) {
-                return Nil.INSTANCE;
-            }
-            return new RubyPointer(
-                    coreLibrary().truffleFFIPointerClass,
-                    getLanguage().truffleFFIPointerShape,
-                    new Pointer(getContext(), address));
         }
 
         /** The Truffle::CExt methods only return values these conversions handle, no need for anything fancier like
@@ -269,7 +255,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode implements Intern
                     default -> throw unexpectedValue(result);
                 };
                 case DOUBLE -> (double) result;
-                case POINTER, FUNCTION -> switch (result) {
+                case POINTER -> switch (result) {
                     case Nil _ -> 0L;
                     case Long longValue -> longValue;
                     case RubyPointer rubyPointer -> rubyPointer.pointer.getAddress();

@@ -656,8 +656,9 @@ public abstract class CExtNodes {
     public abstract static class TemporaryNativeStringNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        RubyString temporaryNativeString(Object pointer, int byteLength, RubyEncoding encoding,
+        RubyString temporaryNativeString(long address, int byteLength, RubyEncoding encoding,
                 @Cached MutableTruffleString.FromNativePointerNode fromNativePointerNode) {
+            Pointer pointer = new Pointer(getContext(), address, byteLength);
             var nativeTString = fromNativePointerNode.execute(pointer, 0, byteLength, encoding.tencoding, false);
             return createMutableString(nativeTString, encoding);
         }
