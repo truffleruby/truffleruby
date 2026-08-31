@@ -1359,7 +1359,6 @@ public abstract class CExtNodes {
                 @Cached RubyStringLibrary libString,
                 @Cached InlinedConditionProfile convertProfile,
                 @Cached(inline = false) TruffleString.CopyToNativeMemoryNode copyToNativeMemoryNode,
-                @Cached(inline = false) MutableTruffleString.FromNativePointerNode fromNativePointerNode,
                 @Cached(inline = false) TruffleString.GetInternalNativePointerNode getInternalNativePointerNode) {
             CompilerAsserts.partialEvaluationConstant(inplace);
 
@@ -1370,15 +1369,12 @@ public abstract class CExtNodes {
             if (convertProfile.profile(node, tstring.isNative())) {
                 assert tstring.isMutable();
                 pointer = (Pointer) getInternalNativePointerNode.execute(tstring, tencoding);
+            } else if (inplace) {
+                pointer = toNativeInPlace(getLanguage(node), getContext(node), string, tencoding);
             } else {
                 int byteLength = tstring.byteLength(tencoding);
                 pointer = allocateAndCopyToNative(getLanguage(node), getContext(node), tstring, tencoding, byteLength,
                         copyToNativeMemoryNode);
-
-                if (inplace) {
-                    var nativeTString = fromNativePointerNode.execute(pointer, 0, byteLength, tencoding, false);
-                    string.setTString(nativeTString);
-                }
             }
 
             return pointer;
@@ -1387,6 +1383,25 @@ public abstract class CExtNodes {
         @Specialization
         static Pointer toNativeImmutable(Node node, ImmutableRubyString string, boolean inplace) {
             return string.getNativeString(getLanguage(node), getContext(node));
+        }
+
+        @TruffleBoundary
+        private static Pointer toNativeInPlace(RubyLanguage language, RubyContext context, RubyString string,
+                TruffleString.Encoding tencoding) {
+            synchronized (string) {
+                var tstring = string.tstring;
+                if (tstring.isNative()) {
+                    return (Pointer) tstring.getInternalNativePointerUncached(tencoding);
+                }
+
+                int byteLength = tstring.byteLength(tencoding);
+                Pointer pointer = allocateAndCopyToNative(language, context, tstring, tencoding, byteLength,
+                        TruffleString.CopyToNativeMemoryNode.getUncached());
+                var nativeTString = MutableTruffleString.FromNativePointerNode.getUncached().execute(pointer, 0,
+                        byteLength, tencoding, false);
+                string.setTString(nativeTString);
+                return pointer;
+            }
         }
 
         public static Pointer allocateAndCopyToNative(RubyLanguage language, RubyContext context,
