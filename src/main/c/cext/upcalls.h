@@ -1618,9 +1618,9 @@ static inline VALUE rb_tr_up_rb_complex_set_real(VALUE v0, VALUE v1) {
   return result;
 }
 
-extern int (*rb_tr_up_impl_rb_const_defined_3f)(VALUE v0, VALUE v1);
-static inline int rb_tr_up_rb_const_defined_3f(VALUE v0, VALUE v1) {
-  int result = rb_tr_up_impl_rb_const_defined_3f(v0, v1);
+extern int (*rb_tr_up_impl_rb_const_defined)(VALUE v0, VALUE v1);
+static inline int rb_tr_up_rb_const_defined(VALUE v0, VALUE v1) {
+  int result = rb_tr_up_impl_rb_const_defined(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
   }

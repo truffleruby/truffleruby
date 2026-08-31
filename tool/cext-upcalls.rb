@@ -232,7 +232,7 @@ module CExtUpcalls
     ["rb_complex_raw", :cext, "V", "VV"],
     ["rb_complex_set_imag", :cext, "V", "VV"],
     ["rb_complex_set_real", :cext, "V", "VV"],
-    ["rb_const_defined_3f", :cext, "B", "VV"],
+    ["rb_const_defined", :cext, "B", "VV"],
     ["rb_const_get", :cext, "V", "VV"],
     ["rb_const_get_from", :cext, "V", "VV"],
     ["rb_const_remove", :cext, "V", "VV"],
@@ -669,10 +669,4 @@ module CExtUpcalls
     'L(LLLILL)', # rb_tr_setjmp_wrapper_pointer2_int_pointer2_to_pointer
   ]
 
-  # c_name => Truffle::CExt method name, where they differ
-  RUBY_NAMES = {
-    "rb_const_defined_3f" => "rb_const_defined?",
-    "rb_tr_enc_mbc_case_fold" => "rb_tr_enc_mbc_case_fold_from_native",
-    "rb_tr_sprintf" => "rb_tr_sprintf_from_native",
-  }
 end

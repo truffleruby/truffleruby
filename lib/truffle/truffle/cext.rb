@@ -263,19 +263,20 @@ module Truffle::CExt
     Truffle::CExt.rb_integer_bytes(value, num_words, word_length, msw_first, twos_comp, big_endian).pack('C*')
   end
 
-  # The advance_p native callback is made executable for the rb_tr_enc_mbc_case_fold core method
-  def rb_tr_enc_mbc_case_fold_from_native(flag, string, advance_p, p)
+  # The advance_p native callback is made executable for the cext_enc_mbc_case_fold primitive
+  def rb_tr_enc_mbc_case_fold(flag, string, advance_p, p)
     address = Primitive.interop_as_pointer(advance_p)
     advance = -> pointer, length { Primitive.cext_invoke_v_li(address, pointer, length) }
-    Truffle::CExt.rb_tr_enc_mbc_case_fold(flag, string, advance, p)
+    Primitive.cext_enc_mbc_case_fold(flag, string, advance, p)
   end
 
   # The string reader is a native function reading a char* to a Ruby String; make it executable for ReadCStringNode
-  def rb_tr_sprintf_from_native(format, string_reader, args)
+  def rb_tr_sprintf(format, string_reader, args)
     address = Primitive.interop_as_pointer(string_reader)
     reader = -> pointer { Primitive.cext_invoke_l_l(address, pointer) }
-    Truffle::CExt.rb_tr_sprintf(format, reader, args)
+    Primitive.cext_sprintf(format, reader, args)
   end
+  Primitive.always_split self, :rb_tr_sprintf
 
   def check_abi_version(embedded_abi_version, extension_path)
     runtime_abi_version = Truffle::GemUtil::ABI_VERSION
@@ -1421,7 +1422,7 @@ module Truffle::CExt
     :"#{sym}="
   end
 
-  def rb_const_defined?(mod, name)
+  def rb_const_defined(mod, name)
     Primitive.module_const_defined? mod, name, true, false
   end
 

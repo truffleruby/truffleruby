@@ -119,7 +119,6 @@ def ffm_signature(kind, ret, carriers)
 end
 
 UPCALLS = CExtUpcalls::UPCALLS
-RUBY_NAMES = CExtUpcalls::RUBY_NAMES
 SEND_NAMES = CExtUpcalls::SEND_NAMES
 
 # ---- verification: C call sites match the spec ----
@@ -338,7 +337,7 @@ UPCALLS.each do |cname, kind, ret, args|
     case kind
     when :invoke then ''
     when :send then SEND_NAMES.fetch(cname)
-    else RUBY_NAMES.fetch(cname, cname)
+    else cname
     end
   java << "            \"upcall_#{cname}\", \"#{ffm_signature(kind, ret, args.chars)}\","
   java << " \"#{kind}\", \"#{ruby_name}\", \"#{ret}\", \"#{args}\",\n"

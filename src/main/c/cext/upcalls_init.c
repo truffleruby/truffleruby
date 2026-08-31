@@ -213,7 +213,7 @@ VALUE (*rb_tr_up_impl_rb_complex_polar)(VALUE v0, VALUE v1);
 VALUE (*rb_tr_up_impl_rb_complex_raw)(VALUE v0, VALUE v1);
 VALUE (*rb_tr_up_impl_rb_complex_set_imag)(VALUE v0, VALUE v1);
 VALUE (*rb_tr_up_impl_rb_complex_set_real)(VALUE v0, VALUE v1);
-int (*rb_tr_up_impl_rb_const_defined_3f)(VALUE v0, VALUE v1);
+int (*rb_tr_up_impl_rb_const_defined)(VALUE v0, VALUE v1);
 VALUE (*rb_tr_up_impl_rb_const_get)(VALUE v0, VALUE v1);
 VALUE (*rb_tr_up_impl_rb_const_get_from)(VALUE v0, VALUE v1);
 VALUE (*rb_tr_up_impl_rb_const_remove)(VALUE v0, VALUE v1);
@@ -695,7 +695,7 @@ void rb_tr_init_ffm_upcalls(void **upcalls) {
   rb_tr_up_impl_rb_complex_raw = (VALUE (*)(VALUE v0, VALUE v1)) upcalls[174];
   rb_tr_up_impl_rb_complex_set_imag = (VALUE (*)(VALUE v0, VALUE v1)) upcalls[175];
   rb_tr_up_impl_rb_complex_set_real = (VALUE (*)(VALUE v0, VALUE v1)) upcalls[176];
-  rb_tr_up_impl_rb_const_defined_3f = (int (*)(VALUE v0, VALUE v1)) upcalls[177];
+  rb_tr_up_impl_rb_const_defined = (int (*)(VALUE v0, VALUE v1)) upcalls[177];
   rb_tr_up_impl_rb_const_get = (VALUE (*)(VALUE v0, VALUE v1)) upcalls[178];
   rb_tr_up_impl_rb_const_get_from = (VALUE (*)(VALUE v0, VALUE v1)) upcalls[179];
   rb_tr_up_impl_rb_const_remove = (VALUE (*)(VALUE v0, VALUE v1)) upcalls[180];

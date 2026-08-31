@@ -13,7 +13,7 @@
 // Accessing Ruby constants, rb_const_*
 
 int rb_const_defined(VALUE module, ID name) {
-  return rb_tr_up_rb_const_defined_3f(module, ID2SYM(name));
+  return rb_tr_up_rb_const_defined(module, ID2SYM(name));
 }
 
 int rb_const_defined_at(VALUE module, ID name) {

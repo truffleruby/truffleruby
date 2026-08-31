@@ -35,7 +35,6 @@ import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.CoreMethod;
 import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.annotations.Primitive;
-import org.truffleruby.annotations.Split;
 import org.truffleruby.annotations.Visibility;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
@@ -1528,8 +1527,8 @@ public abstract class CExtNodes {
         }
     }
 
-    @CoreMethod(names = "rb_tr_enc_mbc_case_fold", onSingleton = true, required = 4, lowerFixnum = 1)
-    public abstract static class RbTrMbcCaseFoldNode extends CoreMethodArrayArgumentsNode {
+    @Primitive(name = "cext_enc_mbc_case_fold", lowerFixnum = 0)
+    public abstract static class RbTrMbcCaseFoldNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization(limit = "getCacheLimit()")
         static Object rbTrEncMbcCaseFold(int flags, Object string, Object advance_p, Object p,
@@ -1913,8 +1912,8 @@ public abstract class CExtNodes {
         }
     }
 
-    @CoreMethod(names = "rb_tr_sprintf", onSingleton = true, required = 3, split = Split.ALWAYS)
-    public abstract static class RBSprintfNode extends CoreMethodArrayArgumentsNode {
+    @Primitive(name = "cext_sprintf")
+    public abstract static class RBSprintfNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
         static RubyString format(Object format, Object stringReader, RubyArray argArray,

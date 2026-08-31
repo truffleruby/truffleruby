@@ -1815,7 +1815,7 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static int upcall_rb_const_defined_3f(long v0, long v1) {
+    public static int upcall_rb_const_defined(long v0, long v1) {
         try {
             return (int) runtime.upcall(177, v0, v1);
         } catch (Throwable t) {
@@ -4980,7 +4980,7 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_complex_raw", "L(LL)", "cext", "rb_complex_raw", "V", "VV",
             "upcall_rb_complex_set_imag", "L(LL)", "cext", "rb_complex_set_imag", "V", "VV",
             "upcall_rb_complex_set_real", "L(LL)", "cext", "rb_complex_set_real", "V", "VV",
-            "upcall_rb_const_defined_3f", "I(LL)", "cext", "rb_const_defined?", "B", "VV",
+            "upcall_rb_const_defined", "I(LL)", "cext", "rb_const_defined", "B", "VV",
             "upcall_rb_const_get", "L(LL)", "cext", "rb_const_get", "V", "VV",
             "upcall_rb_const_get_from", "L(LL)", "cext", "rb_const_get_from", "V", "VV",
             "upcall_rb_const_remove", "L(LL)", "cext", "rb_const_remove", "V", "VV",
@@ -5246,7 +5246,7 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_tr_code_to_mbc", "L(LL)", "cext", "rb_tr_code_to_mbc", "V", "VL",
             "upcall_rb_tr_default_alloc_func", "L(L)", "cext", "rb_tr_default_alloc_func", "V", "V",
             "upcall_rb_tr_enc_is_unicode", "I(L)", "cext", "rb_tr_enc_is_unicode", "I", "V",
-            "upcall_rb_tr_enc_mbc_case_fold", "L(ILLL)", "cext", "rb_tr_enc_mbc_case_fold_from_native", "V", "IVFP",
+            "upcall_rb_tr_enc_mbc_case_fold", "L(ILLL)", "cext", "rb_tr_enc_mbc_case_fold", "V", "IVFP",
             "upcall_rb_tr_flags", "I(L)", "cext", "rb_tr_flags", "I", "V",
             "upcall_rb_tr_gc_guard", "V(L)", "cext", "rb_tr_gc_guard", "O", "L",
             "upcall_rb_tr_io_create_and_attach_pointer", "L(LL)", "cext", "rb_tr_io_create_and_attach_pointer", "P", "VL",
@@ -5257,7 +5257,7 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_tr_pointer", "L(L)", "cext", "rb_tr_pointer", "V", "P",
             "upcall_rb_tr_set_default_alloc_func", "V(LL)", "cext", "rb_tr_set_default_alloc_func", "O", "VF",
             "upcall_rb_tr_set_flags", "V(LL)", "cext", "rb_tr_set_flags", "O", "VL",
-            "upcall_rb_tr_sprintf", "L(LLL)", "cext", "rb_tr_sprintf_from_native", "V", "VFV",
+            "upcall_rb_tr_sprintf", "L(LLL)", "cext", "rb_tr_sprintf", "V", "VFV",
             "upcall_rb_tr_sprintf_types", "L(L)", "cext", "rb_tr_sprintf_types", "V", "V",
             "upcall_rb_tr_static_native_string", "L(LLL)", "cext", "rb_tr_static_native_string", "V", "LLV",
             "upcall_rb_tr_str_capa_resize", "V(LL)", "cext", "rb_tr_str_capa_resize", "O", "VL",
