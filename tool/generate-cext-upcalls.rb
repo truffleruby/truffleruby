@@ -67,46 +67,33 @@ COPYRIGHT
 
 C_TYPES = {
   'V' => 'VALUE', 'W' => 'VALUE', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
-  'P' => 'void *', 'F' => 'void *', 'Y' => 'ID', 'O' => 'void'
+  'P' => 'void *', 'F' => 'void *', 'Y' => 'ID', 'A' => 'const VALUE *', 'O' => 'void'
 }.freeze
 
 JAVA_TYPES = {
   'V' => 'long', 'W' => 'long', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
-  'P' => 'long', 'F' => 'long', 'Y' => 'long', 'O' => 'void'
+  'P' => 'long', 'F' => 'long', 'Y' => 'long', 'A' => 'long', 'O' => 'void'
 }.freeze
 
 # Carrier letters for FFM FunctionDescriptors (FFMSupport carrier signature format)
 FFM_CARRIERS = {
   'V' => 'L', 'W' => 'L', 'I' => 'I', 'B' => 'I', 'L' => 'L', 'D' => 'D',
-  'P' => 'L', 'F' => 'L', 'Y' => 'L', 'O' => 'V'
+  'P' => 'L', 'F' => 'L', 'Y' => 'L', 'A' => 'L', 'O' => 'V'
 }.freeze
 
 def expand_c_params(carriers)
-  params = []
-  carriers.each_with_index do |c, i|
-    if c == 'A'
-      params << "const VALUE *v#{i}p"
-      params << "long v#{i}n"
-    elsif c == 'P'
+  carriers.each_with_index.map do |c, i|
+    if c == 'P'
       # const so that pointers to const can be passed without a cast
-      params << "const void *v#{i}"
+      "const void *v#{i}"
     else
-      params << "#{C_TYPES.fetch(c)} v#{i}"
+      "#{C_TYPES.fetch(c)} v#{i}"
     end
   end
-  params
 end
 
 def expand_c_args(carriers)
-  args = []
-  carriers.each_with_index do |c, i|
-    if c == 'A'
-      args << "v#{i}p" << "v#{i}n"
-    else
-      args << "v#{i}"
-    end
-  end
-  args
+  carriers.each_index.map { |i| "v#{i}" }
 end
 
 def c_signature(ret, carriers)
@@ -119,11 +106,7 @@ def java_params(kind, carriers)
   params = []
   params << 'long recv' << 'long name' if kind == :invoke
   carriers.each_with_index do |c, i|
-    if c == 'A'
-      params << "long v#{i}p" << "long v#{i}n"
-    else
-      params << "#{JAVA_TYPES.fetch(c)} v#{i}"
-    end
+    params << "#{JAVA_TYPES.fetch(c)} v#{i}"
   end
   params
 end
@@ -131,9 +114,7 @@ end
 def ffm_signature(kind, ret, carriers)
   args = ''
   args << 'LL' if kind == :invoke
-  carriers.each do |c|
-    args << (c == 'A' ? 'LL' : FFM_CARRIERS.fetch(c))
-  end
+  carriers.each { |c| args << FFM_CARRIERS.fetch(c) }
   "#{FFM_CARRIERS.fetch(ret)}(#{args})"
 end
 
@@ -301,13 +282,7 @@ UPCALLS.each_with_index do |(cname, kind, ret, args), index|
 
   raw_names = []
   raw_names << 'recv' << 'name' if kind == :invoke
-  carriers.each_with_index do |c, i|
-    if c == 'A'
-      raw_names << "v#{i}p" << "v#{i}n"
-    else
-      raw_names << "v#{i}"
-    end
-  end
+  carriers.each_index { |i| raw_names << "v#{i}" }
   upcall_arguments = ([index] + raw_names).join(', ')
 
   ret_type = JAVA_TYPES.fetch(ret)

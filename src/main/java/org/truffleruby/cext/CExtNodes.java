@@ -219,29 +219,31 @@ public abstract class CExtNodes {
 
     }
 
-    @Primitive(name = "send_argv_without_cext_lock")
+    @Primitive(name = "send_argv_without_cext_lock", lowerFixnum = 3)
     public abstract static class SendARGVWithoutCExtLockNode extends SendWithoutCExtLockBaseNode {
         @Specialization
-        Object sendWithoutCExtLock(VirtualFrame frame, Object receiver, RubySymbol method, Object argv, Object block,
+        Object sendWithoutCExtLock(
+                VirtualFrame frame, Object receiver, RubySymbol method, long argv, int argc, Object block,
                 @Cached UnwrapCArrayNode unwrapCArrayNode,
                 @Cached DispatchNode dispatchNode,
                 @Cached InlinedConditionProfile ownedProfile) {
-            final Object[] args = unwrapCArrayNode.execute(argv);
+            final Object[] args = unwrapCArrayNode.execute(argv, argc);
             return sendWithoutCExtLock(frame, receiver, method, block, NoKeywordArgumentsDescriptor.INSTANCE, args,
                     dispatchNode, PRIVATE, ownedProfile);
         }
     }
 
-    @Primitive(name = "send_argv_keywords_without_cext_lock")
+    @Primitive(name = "send_argv_keywords_without_cext_lock", lowerFixnum = 3)
     public abstract static class SendARGVKeywordsWithoutCExtLockNode extends SendWithoutCExtLockBaseNode {
         @Specialization
-        Object sendWithoutCExtLock(VirtualFrame frame, Object receiver, RubySymbol method, Object argv, Object block,
+        Object sendWithoutCExtLock(
+                VirtualFrame frame, Object receiver, RubySymbol method, long argv, int argc, Object block,
                 @Cached UnwrapCArrayNode unwrapCArrayNode,
                 @Cached HashCastNode hashCastNode,
                 @Cached InlinedConditionProfile emptyProfile,
                 @Cached DispatchNode dispatchNode,
                 @Cached InlinedConditionProfile ownedProfile) {
-            Object[] args = unwrapCArrayNode.execute(argv);
+            Object[] args = unwrapCArrayNode.execute(argv, argc);
 
             // Remove empty kwargs in the caller, so the callee does not need to care about this special case
             final RubyHash keywords = hashCastNode.execute(this, ArrayUtils.getLast(args));
@@ -257,29 +259,31 @@ public abstract class CExtNodes {
         }
     }
 
-    @Primitive(name = "public_send_argv_without_cext_lock", lowerFixnum = 2)
+    @Primitive(name = "public_send_argv_without_cext_lock", lowerFixnum = 3)
     public abstract static class PublicSendARGVWithoutCExtLockNode extends SendWithoutCExtLockBaseNode {
         @Specialization
-        Object publicSendWithoutLock(VirtualFrame frame, Object receiver, RubySymbol method, Object argv, Object block,
+        Object publicSendWithoutLock(
+                VirtualFrame frame, Object receiver, RubySymbol method, long argv, int argc, Object block,
                 @Cached UnwrapCArrayNode unwrapCArrayNode,
                 @Cached DispatchNode dispatchNode,
                 @Cached InlinedConditionProfile ownedProfile) {
-            final Object[] args = unwrapCArrayNode.execute(argv);
+            final Object[] args = unwrapCArrayNode.execute(argv, argc);
             return sendWithoutCExtLock(frame, receiver, method, block, NoKeywordArgumentsDescriptor.INSTANCE, args,
                     dispatchNode, PUBLIC, ownedProfile);
         }
     }
 
-    @Primitive(name = "public_send_argv_keywords_without_cext_lock")
+    @Primitive(name = "public_send_argv_keywords_without_cext_lock", lowerFixnum = 3)
     public abstract static class PublicSendARGVKeywordsWithoutCExtLockNode extends SendWithoutCExtLockBaseNode {
         @Specialization
-        Object sendWithoutCExtLock(VirtualFrame frame, Object receiver, RubySymbol method, Object argv, Object block,
+        Object sendWithoutCExtLock(
+                VirtualFrame frame, Object receiver, RubySymbol method, long argv, int argc, Object block,
                 @Cached UnwrapCArrayNode unwrapCArrayNode,
                 @Cached HashCastNode hashCastNode,
                 @Cached InlinedConditionProfile emptyProfile,
                 @Cached DispatchNode dispatchNode,
                 @Cached InlinedConditionProfile ownedProfile) {
-            Object[] args = unwrapCArrayNode.execute(argv);
+            Object[] args = unwrapCArrayNode.execute(argv, argc);
 
             // Remove empty kwargs in the caller, so the callee does not need to care about this special case
             final RubyHash keywords = hashCastNode.execute(this, ArrayUtils.getLast(args));
@@ -1863,12 +1867,12 @@ public abstract class CExtNodes {
         }
     }
 
-    @CoreMethod(names = "rb_ary_new_from_values", onSingleton = true, required = 1)
+    @CoreMethod(names = "rb_ary_new_from_values", onSingleton = true, required = 2, lowerFixnum = 2)
     public abstract static class RbAryNewFromValues extends CoreMethodArrayArgumentsNode {
         @Specialization
-        RubyArray rbAryNewFromValues(Object cArray,
+        RubyArray rbAryNewFromValues(long cArray, int size,
                 @Cached UnwrapCArrayNode unwrapCArrayNode) {
-            final Object[] values = unwrapCArrayNode.execute(cArray);
+            final Object[] values = unwrapCArrayNode.execute(cArray, size);
             return createArray(values);
         }
     }

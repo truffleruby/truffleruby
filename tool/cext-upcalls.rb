@@ -47,9 +47,10 @@
 #   B = Ruby true/false result converted to int 1/0 (return only).
 #   I = int, L = long, D = double, O = void (return only)
 #   P = native pointer (long); a returned Truffle::FFI::Pointer is converted to its address, nil to 0
+#   A = const VALUE* (a long on the Java side): the address of a VALUE array, read by
+#       UnwrapCArrayNode together with a separate L length argument
 #   F = native function pointer (long)
 #   Y = Ruby ID (long); converted to/from Symbol on the Java side
-#   A = VALUE array: expands to (const VALUE*, long) in C and (long, long) in Java
 
 module CExtUpcalls
   # standard: [c_name, kind, ret, args]
@@ -198,7 +199,7 @@ module CExtUpcalls
     ["rb_array_len", :cext, "L", "V"],
     ["rb_ary_new", :cext, "V", ""],
     ["rb_ary_new_capa", :cext, "V", "L"],
-    ["rb_ary_new_from_values", :cext, "V", "A"],
+    ["rb_ary_new_from_values", :cext, "V", "AL"],
     ["rb_ascii8bit_encindex", :cext, "I", ""],
     ["rb_attr", :cext, "O", "VVIII"],
     ["rb_backref_get", :cext, "V", ""],
@@ -311,11 +312,11 @@ module CExtUpcalls
     ["rb_frame_this_func", :cext, "V", ""],
     ["rb_free_generic_ivar", :cext, "O", "V"],
     ["rb_fs", :cext, "V", ""],
-    ["rb_funcall_with_block", :cext, "V", "VVAV"],
-    ["rb_funcall_with_block_keywords", :cext, "V", "VVAV"],
-    ["rb_funcallv", :cext, "V", "VVA"],
-    ["rb_funcallv_keywords", :cext, "V", "VVA"],
-    ["rb_funcallv_public", :cext, "V", "VVA"],
+    ["rb_funcall_with_block", :cext, "V", "VVALV"],
+    ["rb_funcall_with_block_keywords", :cext, "V", "VVALV"],
+    ["rb_funcallv", :cext, "V", "VVAL"],
+    ["rb_funcallv_keywords", :cext, "V", "VVAL"],
+    ["rb_funcallv_public", :cext, "V", "VVAL"],
     ["rb_gc", :cext, "O", ""],
     ["rb_gc_disable", :cext, "V", ""],
     ["rb_gc_enable", :cext, "V", ""],

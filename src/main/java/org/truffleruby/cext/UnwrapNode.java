@@ -16,14 +16,13 @@ import static org.truffleruby.cext.ValueWrapperManager.UNDEF_HANDLE;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleSafepoint;
-import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
-import com.oracle.truffle.api.interop.InvalidArrayIndexException;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import org.truffleruby.core.cast.ToPointerAddressNode;
+import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.language.NotProvided;
 import org.truffleruby.language.RubyBaseNode;
 
@@ -34,9 +33,6 @@ import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
-import com.oracle.truffle.api.library.CachedLibrary;
 
 @GenerateUncached
 @GenerateInline
@@ -171,62 +167,40 @@ public abstract class UnwrapNode extends RubyBaseNode {
         }
     }
 
-    @ImportStatic(ValueWrapperManager.class)
+    /** Unwraps a native VALUE[] (an address and a length) to the corresponding Ruby objects */
     public abstract static class UnwrapCArrayNode extends RubyBaseNode {
 
-        public abstract Object[] execute(Object cArray);
+        public abstract Object[] execute(long address, int size);
 
         @ExplodeLoop
         @Specialization(
                 guards = { "size == cachedSize", "cachedSize <= MAX_EXPLODE_SIZE" },
                 limit = "1")
-        Object[] unwrapCArrayExplode(Object cArray,
-                @CachedLibrary("cArray") InteropLibrary interop,
-                @Bind("getArraySize(cArray, interop)") int size,
+        Object[] unwrapCArrayExplode(long address, int size,
                 @Cached("size") int cachedSize,
                 @Cached @Shared UnwrapNode unwrapNode) {
             final Object[] store = new Object[cachedSize];
             for (int i = 0; i < cachedSize; i++) {
-                final Object cValue = readArrayElement(cArray, interop, i);
-                store[i] = unwrapNode.execute(this, cValue);
+                store[i] = unwrapNode.execute(this, Pointer.rawReadLong(address + i * 8L));
             }
             return store;
         }
 
-        @Specialization(replaces = "unwrapCArrayExplode", limit = "getDefaultCacheLimit()")
-        Object[] unwrapCArray(Object cArray,
-                @CachedLibrary("cArray") InteropLibrary interop,
-                @Bind("getArraySize(cArray, interop)") int size,
+        @Specialization(replaces = "unwrapCArrayExplode")
+        Object[] unwrapCArray(long address, int size,
                 @Cached @Shared UnwrapNode unwrapNode,
                 @Cached LoopConditionProfile loopProfile) {
             final Object[] store = new Object[size];
             int i = 0;
             try {
                 for (; loopProfile.inject(i < size); i++) {
-                    final Object cValue = readArrayElement(cArray, interop, i);
-                    store[i] = unwrapNode.execute(this, cValue);
+                    store[i] = unwrapNode.execute(this, Pointer.rawReadLong(address + i * 8L));
                     TruffleSafepoint.poll(this);
                 }
             } finally {
                 profileAndReportLoopCount(loopProfile, i);
             }
             return store;
-        }
-
-        protected static int getArraySize(Object cArray, InteropLibrary interop) {
-            try {
-                return Math.toIntExact(interop.getArraySize(cArray));
-            } catch (UnsupportedMessageException | ArithmeticException e) {
-                throw CompilerDirectives.shouldNotReachHere(e);
-            }
-        }
-
-        private static Object readArrayElement(Object cArray, InteropLibrary interop, int i) {
-            try {
-                return interop.readArrayElement(cArray, i);
-            } catch (UnsupportedMessageException | InvalidArrayIndexException e) {
-                throw CompilerDirectives.shouldNotReachHere(e);
-            }
         }
     }
 

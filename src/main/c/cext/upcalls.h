@@ -1325,9 +1325,9 @@ static inline VALUE rb_tr_up_rb_ary_new_capa(long v0) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_ary_new_from_values)(const VALUE *v0p, long v0n);
-static inline VALUE rb_tr_up_rb_ary_new_from_values(const VALUE *v0p, long v0n) {
-  VALUE result = rb_tr_up_impl_rb_ary_new_from_values(v0p, v0n);
+extern VALUE (*rb_tr_up_impl_rb_ary_new_from_values)(const VALUE * v0, long v1);
+static inline VALUE rb_tr_up_rb_ary_new_from_values(const VALUE * v0, long v1) {
+  VALUE result = rb_tr_up_impl_rb_ary_new_from_values(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
   }
@@ -2325,45 +2325,45 @@ static inline VALUE rb_tr_up_rb_fs(void) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_funcall_with_block)(VALUE v0, VALUE v1, const VALUE *v2p, long v2n, VALUE v3);
-static inline VALUE rb_tr_up_rb_funcall_with_block(VALUE v0, VALUE v1, const VALUE *v2p, long v2n, VALUE v3) {
-  VALUE result = rb_tr_up_impl_rb_funcall_with_block(v0, v1, v2p, v2n, v3);
+extern VALUE (*rb_tr_up_impl_rb_funcall_with_block)(VALUE v0, VALUE v1, const VALUE * v2, long v3, VALUE v4);
+static inline VALUE rb_tr_up_rb_funcall_with_block(VALUE v0, VALUE v1, const VALUE * v2, long v3, VALUE v4) {
+  VALUE result = rb_tr_up_impl_rb_funcall_with_block(v0, v1, v2, v3, v4);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
   }
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_funcall_with_block_keywords)(VALUE v0, VALUE v1, const VALUE *v2p, long v2n, VALUE v3);
-static inline VALUE rb_tr_up_rb_funcall_with_block_keywords(VALUE v0, VALUE v1, const VALUE *v2p, long v2n, VALUE v3) {
-  VALUE result = rb_tr_up_impl_rb_funcall_with_block_keywords(v0, v1, v2p, v2n, v3);
+extern VALUE (*rb_tr_up_impl_rb_funcall_with_block_keywords)(VALUE v0, VALUE v1, const VALUE * v2, long v3, VALUE v4);
+static inline VALUE rb_tr_up_rb_funcall_with_block_keywords(VALUE v0, VALUE v1, const VALUE * v2, long v3, VALUE v4) {
+  VALUE result = rb_tr_up_impl_rb_funcall_with_block_keywords(v0, v1, v2, v3, v4);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
   }
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_funcallv)(VALUE v0, VALUE v1, const VALUE *v2p, long v2n);
-static inline VALUE rb_tr_up_rb_funcallv(VALUE v0, VALUE v1, const VALUE *v2p, long v2n) {
-  VALUE result = rb_tr_up_impl_rb_funcallv(v0, v1, v2p, v2n);
+extern VALUE (*rb_tr_up_impl_rb_funcallv)(VALUE v0, VALUE v1, const VALUE * v2, long v3);
+static inline VALUE rb_tr_up_rb_funcallv(VALUE v0, VALUE v1, const VALUE * v2, long v3) {
+  VALUE result = rb_tr_up_impl_rb_funcallv(v0, v1, v2, v3);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
   }
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_funcallv_keywords)(VALUE v0, VALUE v1, const VALUE *v2p, long v2n);
-static inline VALUE rb_tr_up_rb_funcallv_keywords(VALUE v0, VALUE v1, const VALUE *v2p, long v2n) {
-  VALUE result = rb_tr_up_impl_rb_funcallv_keywords(v0, v1, v2p, v2n);
+extern VALUE (*rb_tr_up_impl_rb_funcallv_keywords)(VALUE v0, VALUE v1, const VALUE * v2, long v3);
+static inline VALUE rb_tr_up_rb_funcallv_keywords(VALUE v0, VALUE v1, const VALUE * v2, long v3) {
+  VALUE result = rb_tr_up_impl_rb_funcallv_keywords(v0, v1, v2, v3);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
   }
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_funcallv_public)(VALUE v0, VALUE v1, const VALUE *v2p, long v2n);
-static inline VALUE rb_tr_up_rb_funcallv_public(VALUE v0, VALUE v1, const VALUE *v2p, long v2n) {
-  VALUE result = rb_tr_up_impl_rb_funcallv_public(v0, v1, v2p, v2n);
+extern VALUE (*rb_tr_up_impl_rb_funcallv_public)(VALUE v0, VALUE v1, const VALUE * v2, long v3);
+static inline VALUE rb_tr_up_rb_funcallv_public(VALUE v0, VALUE v1, const VALUE * v2, long v3) {
+  VALUE result = rb_tr_up_impl_rb_funcallv_public(v0, v1, v2, v3);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
   }

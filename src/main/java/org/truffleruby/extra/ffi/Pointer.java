@@ -423,6 +423,10 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         return "Pointer@0x" + Long.toHexString(address) + "(size=" + (isBounded() ? size : "UNBOUNDED") + ")";
     }
 
+    public static long rawReadLong(long address) {
+        return UNSAFE.getLong(address);
+    }
+
     public static long rawMalloc(long size) {
         return UNSAFE.allocateMemory(size);
     }

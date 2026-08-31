@@ -1489,9 +1489,9 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_ary_new_from_values(long v0p, long v0n) {
+    public static long upcall_rb_ary_new_from_values(long v0, long v1) {
         try {
-            return (long) runtime.upcall(144, v0p, v0n);
+            return (long) runtime.upcall(144, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2602,9 +2602,9 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_funcall_with_block(long v0, long v1, long v2p, long v2n, long v3) {
+    public static long upcall_rb_funcall_with_block(long v0, long v1, long v2, long v3, long v4) {
         try {
-            return (long) runtime.upcall(257, v0, v1, v2p, v2n, v3);
+            return (long) runtime.upcall(257, v0, v1, v2, v3, v4);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2612,9 +2612,9 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_funcall_with_block_keywords(long v0, long v1, long v2p, long v2n, long v3) {
+    public static long upcall_rb_funcall_with_block_keywords(long v0, long v1, long v2, long v3, long v4) {
         try {
-            return (long) runtime.upcall(258, v0, v1, v2p, v2n, v3);
+            return (long) runtime.upcall(258, v0, v1, v2, v3, v4);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2622,9 +2622,9 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_funcallv(long v0, long v1, long v2p, long v2n) {
+    public static long upcall_rb_funcallv(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(259, v0, v1, v2p, v2n);
+            return (long) runtime.upcall(259, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2632,9 +2632,9 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_funcallv_keywords(long v0, long v1, long v2p, long v2n) {
+    public static long upcall_rb_funcallv_keywords(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(260, v0, v1, v2p, v2n);
+            return (long) runtime.upcall(260, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -2642,9 +2642,9 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_rb_funcallv_public(long v0, long v1, long v2p, long v2n) {
+    public static long upcall_rb_funcallv_public(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(261, v0, v1, v2p, v2n);
+            return (long) runtime.upcall(261, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -4947,7 +4947,7 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_array_len", "L(L)", "cext", "rb_array_len", "L", "V",
             "upcall_rb_ary_new", "L()", "cext", "rb_ary_new", "V", "",
             "upcall_rb_ary_new_capa", "L(L)", "cext", "rb_ary_new_capa", "V", "L",
-            "upcall_rb_ary_new_from_values", "L(LL)", "cext", "rb_ary_new_from_values", "V", "A",
+            "upcall_rb_ary_new_from_values", "L(LL)", "cext", "rb_ary_new_from_values", "V", "AL",
             "upcall_rb_ascii8bit_encindex", "I()", "cext", "rb_ascii8bit_encindex", "I", "",
             "upcall_rb_attr", "V(LLIII)", "cext", "rb_attr", "O", "VVIII",
             "upcall_rb_backref_get", "L()", "cext", "rb_backref_get", "V", "",
@@ -5060,11 +5060,11 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_frame_this_func", "L()", "cext", "rb_frame_this_func", "V", "",
             "upcall_rb_free_generic_ivar", "V(L)", "cext", "rb_free_generic_ivar", "O", "V",
             "upcall_rb_fs", "L()", "cext", "rb_fs", "V", "",
-            "upcall_rb_funcall_with_block", "L(LLLLL)", "cext", "rb_funcall_with_block", "V", "VVAV",
-            "upcall_rb_funcall_with_block_keywords", "L(LLLLL)", "cext", "rb_funcall_with_block_keywords", "V", "VVAV",
-            "upcall_rb_funcallv", "L(LLLL)", "cext", "rb_funcallv", "V", "VVA",
-            "upcall_rb_funcallv_keywords", "L(LLLL)", "cext", "rb_funcallv_keywords", "V", "VVA",
-            "upcall_rb_funcallv_public", "L(LLLL)", "cext", "rb_funcallv_public", "V", "VVA",
+            "upcall_rb_funcall_with_block", "L(LLLLL)", "cext", "rb_funcall_with_block", "V", "VVALV",
+            "upcall_rb_funcall_with_block_keywords", "L(LLLLL)", "cext", "rb_funcall_with_block_keywords", "V", "VVALV",
+            "upcall_rb_funcallv", "L(LLLL)", "cext", "rb_funcallv", "V", "VVAL",
+            "upcall_rb_funcallv_keywords", "L(LLLL)", "cext", "rb_funcallv_keywords", "V", "VVAL",
+            "upcall_rb_funcallv_public", "L(LLLL)", "cext", "rb_funcallv_public", "V", "VVAL",
             "upcall_rb_gc", "V()", "cext", "rb_gc", "O", "",
             "upcall_rb_gc_disable", "L()", "cext", "rb_gc_disable", "V", "",
             "upcall_rb_gc_enable", "L()", "cext", "rb_gc_enable", "V", "",

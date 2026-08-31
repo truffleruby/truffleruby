@@ -66,7 +66,6 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode implements Intern
         POINTER, // P
         FUNCTION, // F: a function pointer
         ID, // Y: converted from/to a Ruby Symbol
-        VALUE_ARRAY, // A: a VALUE* and its length, passed as two native arguments
         VOID; // O
 
         static Carrier parse(char carrier) {
@@ -76,11 +75,11 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode implements Intern
                 case 'I' -> INT;
                 case 'B' -> BOOL;
                 case 'L' -> LONG;
+                case 'A' -> LONG; // the address of a native VALUE[], read by UnwrapCArrayNode
                 case 'D' -> DOUBLE;
                 case 'P' -> POINTER;
                 case 'F' -> FUNCTION;
                 case 'Y' -> ID;
-                case 'A' -> VALUE_ARRAY;
                 case 'O' -> VOID;
                 default -> throw CompilerDirectives.shouldNotReachHere(String.valueOf(carrier));
             };
@@ -105,8 +104,6 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode implements Intern
         final String rubyName;
         final Carrier returnCarrier;
         @CompilationFinal(dimensions = 1) final Carrier[] argumentCarriers;
-        /** index of each converted argument in the raw arguments (VALUE_ARRAY carriers take two raw arguments) */
-        @CompilationFinal(dimensions = 1) final int[] rawIndices;
 
         public static UpcallSpec parse(String kindString, String rubyName, String returnCarrierString, String args) {
             final Kind kind = switch (kindString) {
@@ -128,12 +125,6 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode implements Intern
             this.rubyName = rubyName;
             this.returnCarrier = returnCarrier;
             this.argumentCarriers = argumentCarriers;
-            this.rawIndices = new int[argumentCarriers.length];
-            int raw = kind == Kind.INVOKE ? 2 : 0;
-            for (int i = 0; i < argumentCarriers.length; i++) {
-                rawIndices[i] = raw;
-                raw += argumentCarriers[i] == Carrier.VALUE_ARRAY ? 2 : 1;
-            }
         }
     }
 
@@ -212,11 +203,13 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode implements Intern
                 default -> throw CompilerDirectives.shouldNotReachHere();
             }
 
+            // INVOKE upcalls pass the receiver handle and the method name pointer before the arguments
+            final int rawArgumentsOffset = spec.kind == Kind.INVOKE ? 2 : 0;
             final Object[] arguments = new Object[spec.argumentCarriers.length - argumentsOffset];
             for (int i = 0; i < arguments.length; i++) {
                 final int carrierIndex = argumentsOffset + i;
-                arguments[i] = convertArgument(spec.argumentCarriers[carrierIndex], spec.rawIndices[carrierIndex],
-                        rawArguments, unwrapNode, idToSymbolNode);
+                arguments[i] = convertArgument(spec.argumentCarriers[carrierIndex],
+                        rawArguments[rawArgumentsOffset + carrierIndex], unwrapNode, idToSymbolNode);
             }
 
             final Object result = dispatchNode.call(DispatchConfiguration.PRIVATE, receiver, methodName, arguments);
@@ -225,16 +218,13 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode implements Intern
                     createHandleProfile, taggedObjectProfile);
         }
 
-        private Object convertArgument(Carrier carrier, int rawIndex, Object[] rawArguments,
-                UnwrapNode unwrapNode, IDToSymbolNode idToSymbolNode) {
-            final Object raw = rawArguments[rawIndex];
+        private Object convertArgument(Carrier carrier, Object raw, UnwrapNode unwrapNode,
+                IDToSymbolNode idToSymbolNode) {
             return switch (carrier) {
                 case VALUE -> unwrapNode.execute(this, raw);
                 case INT, LONG, DOUBLE -> raw;
                 case ID -> idToSymbolNode.execute(raw);
                 case POINTER, FUNCTION -> pointer((long) raw);
-                case VALUE_ARRAY -> new NativeValueArray(getContext(), (long) raw,
-                        (int) (long) rawArguments[rawIndex + 1]);
                 default -> throw CompilerDirectives.shouldNotReachHere();
             };
         }

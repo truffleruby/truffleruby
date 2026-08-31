@@ -1108,28 +1108,28 @@ module Truffle::CExt
     end
   end
 
-  def rb_funcall_with_block(recv, meth, argv, block)
-    Primitive.public_send_argv_without_cext_lock(recv, meth, argv, block)
+  def rb_funcall_with_block(recv, meth, argv, argc, block)
+    Primitive.public_send_argv_without_cext_lock(recv, meth, argv, argc, block)
   end
 
-  def rb_funcall_with_block_keywords(recv, meth, argv, block)
-    Primitive.public_send_argv_keywords_without_cext_lock(recv, meth, argv, block)
+  def rb_funcall_with_block_keywords(recv, meth, argv, argc, block)
+    Primitive.public_send_argv_keywords_without_cext_lock(recv, meth, argv, argc, block)
   end
 
-  def rb_funcallv_public(recv, meth, argv)
-    Primitive.public_send_argv_without_cext_lock(recv, meth, argv, nil)
+  def rb_funcallv_public(recv, meth, argv, argc)
+    Primitive.public_send_argv_without_cext_lock(recv, meth, argv, argc, nil)
   end
 
-  def rb_funcallv(recv, meth, argv)
-    Primitive.send_argv_without_cext_lock(recv, meth, argv, nil)
+  def rb_funcallv(recv, meth, argv, argc)
+    Primitive.send_argv_without_cext_lock(recv, meth, argv, argc, nil)
   end
 
   def rb_check_funcall(recv, meth, args)
     Primitive.send_without_cext_lock(Truffle::Type, :check_funcall, [recv, meth, args], nil)
   end
 
-  def rb_funcallv_keywords(recv, meth, argv)
-    Primitive.send_argv_keywords_without_cext_lock(recv, meth, argv, nil)
+  def rb_funcallv_keywords(recv, meth, argv, argc)
+    Primitive.send_argv_keywords_without_cext_lock(recv, meth, argv, argc, nil)
   end
 
   def rb_funcall(recv, meth, n, *args)
