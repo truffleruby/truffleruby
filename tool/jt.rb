@@ -2819,7 +2819,7 @@ module Commands
   end
 
   def check_posix_functions
-    run_ruby('tool/generate-posix-functions.rb')
+    sh SYSTEM_RUBY, 'tool/generate-posix-functions.rb'
     files = [
       'src/main/ruby/truffleruby/core/posix_functions.rb',
       'src/main/c/truffleposix/posix_errno_wrappers.c.inc',
