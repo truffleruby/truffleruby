@@ -1566,13 +1566,13 @@ module Truffle::CExt
   end
 
   def rb_get_alloc_func(ruby_class)
-    return nil unless Primitive.is_a?(ruby_class, Class)
+    return 0 unless Primitive.is_a?(ruby_class, Class)
     begin
       allocate_method = ruby_class.method(:__allocate__).owner
     rescue NameError
-      nil # it's fine to call this on a class that doesn't have an allocator
+      0 # it's fine to call this on a class that doesn't have an allocator
     else
-      Primitive.object_hidden_var_get(allocate_method, ALLOCATOR_FUNC)
+      Primitive.object_hidden_var_get(allocate_method, ALLOCATOR_FUNC) || 0
     end
   end
 
@@ -1783,7 +1783,7 @@ module Truffle::CExt
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end
-    data_struct
+    data_struct.address
   end
 
   def RTYPEDDATA(object)
@@ -1792,7 +1792,7 @@ module Truffle::CExt
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end
-    data_struct
+    data_struct.address
   end
 
   # The address of the data field of the given native struct RData or struct RTypedData
@@ -2526,7 +2526,7 @@ module Truffle::CExt
     # The MemoryPointer must stay alive as long as the IO object, see rb_tr_io_attach_pointer
     pointer = Truffle::FFI::MemoryPointer.new(size)
     rb_tr_io_attach_pointer(io, pointer)
-    pointer
+    pointer.address
   end
 
   def rb_io_mode(io)
@@ -2546,7 +2546,9 @@ module Truffle::CExt
   end
 
   def rb_tr_io_pointer(io)
-    Primitive.object_hidden_var_get(io, RB_IO_STRUCT)
+    rb_io_t = Primitive.object_hidden_var_get(io, RB_IO_STRUCT)
+    # NULL if no rb_io_t struct was attached to the IO yet
+    rb_io_t ? rb_io_t.address : 0
   end
 
   def rb_tr_io_attach_pointer(io, rb_io_t)

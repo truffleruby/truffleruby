@@ -46,8 +46,7 @@
 #   B = Ruby true/false result converted to int 1/0 (return only).
 #   I = int, L = long, D = double, O = void (return only)
 #   P = native pointer (const void* argument, void* return), including function pointers
-#       and VALUE arrays; arguments are passed as a plain long address on the Java side;
-#       a returned Truffle::FFI::Pointer is converted to its address, nil to 0
+#       and VALUE arrays; passed and returned as a plain long address on the Java side
 #   Y = Ruby ID (long); converted to/from Symbol on the Java side
 
 module CExtUpcalls

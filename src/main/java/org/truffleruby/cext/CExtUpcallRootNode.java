@@ -41,7 +41,6 @@ import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.cext.ValueWrapperManager.AllocateHandleNode;
 import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
-import org.truffleruby.extra.ffi.RubyPointer;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyBaseRootNode;
@@ -241,9 +240,8 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
                 };
                 case DOUBLE -> (double) result;
                 case POINTER -> switch (result) {
-                    case Nil _ -> 0L;
                     case Long longValue -> longValue;
-                    case RubyPointer rubyPointer -> rubyPointer.pointer.getAddress();
+                    case Integer intValue -> (long) intValue;
                     default -> throw unexpectedValue(result);
                 };
                 default -> throw CompilerDirectives.shouldNotReachHere();
