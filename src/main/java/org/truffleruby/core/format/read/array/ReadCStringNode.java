@@ -11,40 +11,31 @@
 package org.truffleruby.core.format.read.array;
 
 import org.truffleruby.cext.UnwrapNode;
+import org.truffleruby.core.proc.RubyProc;
+import org.truffleruby.language.yield.CallBlockNode;
 import org.truffleruby.core.array.ArrayGuards;
 import org.truffleruby.core.format.FormatNode;
-import org.truffleruby.interop.InteropNodes;
-import org.truffleruby.interop.TranslateInteropExceptionNode;
 
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.library.CachedLibrary;
 
 @NodeChild(value = "source", type = FormatNode.class)
 @ImportStatic(ArrayGuards.class)
 public abstract class ReadCStringNode extends FormatNode {
 
-    protected final Object stringReader;
+    protected final RubyProc stringReader;
 
-    public ReadCStringNode(Object stringReader) {
+    public ReadCStringNode(RubyProc stringReader) {
         this.stringReader = stringReader;
     }
 
     @Specialization
     Object read(Object pointer,
             @Cached UnwrapNode unwrapNode,
-            @Cached TranslateInteropExceptionNode translateInteropExceptionNode,
-            @CachedLibrary("stringReader") InteropLibrary stringReaders) {
-        Object string = unwrapNode.execute(this, InteropNodes.execute(
-                this,
-                stringReader,
-                new Object[]{ pointer },
-                stringReaders,
-                translateInteropExceptionNode));
-        return string;
+            @Cached CallBlockNode callBlockNode) {
+        return unwrapNode.execute(this, callBlockNode.yield(this, stringReader, pointer));
     }
 
 }

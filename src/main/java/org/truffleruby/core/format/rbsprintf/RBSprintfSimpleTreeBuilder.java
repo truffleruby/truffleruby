@@ -15,6 +15,7 @@ import java.util.List;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import org.truffleruby.core.encoding.RubyEncoding;
+import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.format.FormatNode;
 import org.truffleruby.core.format.LiteralFormatNode;
 import org.truffleruby.core.format.SharedTreeBuilder;
@@ -44,12 +45,12 @@ public final class RBSprintfSimpleTreeBuilder {
 
     private final List<FormatNode> sequence = new ArrayList<>();
     private final List<RBSprintfConfig> configs;
-    private final Object stringReader;
+    private final RubyProc stringReader;
     private final RubyEncoding encoding;
 
     public static final int DEFAULT = PrintfSimpleTreeBuilder.DEFAULT;
 
-    public RBSprintfSimpleTreeBuilder(List<RBSprintfConfig> configs, Object stringReader, RubyEncoding encoding) {
+    public RBSprintfSimpleTreeBuilder(List<RBSprintfConfig> configs, RubyProc stringReader, RubyEncoding encoding) {
         this.configs = configs;
         this.stringReader = stringReader;
         this.encoding = encoding;

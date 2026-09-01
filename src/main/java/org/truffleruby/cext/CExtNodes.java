@@ -81,9 +81,7 @@ import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.core.thread.ThreadManager;
 import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.extra.ffi.RubyPointer;
-import org.truffleruby.interop.InteropNodes;
 import org.truffleruby.interop.ToJavaStringNode;
-import org.truffleruby.interop.TranslateInteropExceptionNode;
 import org.truffleruby.core.string.ImmutableRubyString;
 import org.truffleruby.language.LazyWarningNode;
 import org.truffleruby.language.LexicalScope;
@@ -134,8 +132,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -1531,11 +1527,10 @@ public abstract class CExtNodes {
     @Primitive(name = "cext_enc_mbc_case_fold", lowerFixnum = 0)
     public abstract static class RbTrMbcCaseFoldNode extends PrimitiveArrayArgumentsNode {
 
-        @Specialization(limit = "getCacheLimit()")
-        static Object rbTrEncMbcCaseFold(int flags, Object string, Object advance_p, Object p,
+        @Specialization
+        static Object rbTrEncMbcCaseFold(int flags, Object string, RubyProc advance, Object p,
                 @Cached RubyStringLibrary strings,
-                @CachedLibrary("advance_p") InteropLibrary receivers,
-                @Cached TranslateInteropExceptionNode translateInteropExceptionNode,
+                @Cached CallBlockNode callBlockNode,
                 @Cached TruffleString.FromByteArrayNode fromByteArrayNode,
                 @Cached TruffleString.GetInternalByteArrayNode byteArrayNode,
                 @Bind Node node) {
@@ -1549,8 +1544,7 @@ public abstract class CExtNodes {
 
             final int resultLength = encoding.jcoding.mbcCaseFold(flags, bytes, intHolder, bytes.length, to);
 
-            InteropNodes.execute(node, advance_p, new Object[]{ p, intHolder.value }, receivers,
-                    translateInteropExceptionNode);
+            callBlockNode.yield(node, advance, p, intHolder.value);
 
             final byte[] result = new byte[resultLength];
             if (resultLength > 0) {
@@ -1917,7 +1911,7 @@ public abstract class CExtNodes {
     public abstract static class RBSprintfNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        static RubyString format(Object format, Object stringReader, RubyArray argArray,
+        static RubyString format(Object format, RubyProc stringReader, RubyArray argArray,
                 @Cached ArrayToObjectArrayNode arrayToObjectArrayNode,
                 @Cached RubyStringLibrary libFormat,
                 @Cached AsTruffleStringNode asTruffleStringNode,
@@ -1954,7 +1948,7 @@ public abstract class CExtNodes {
 
         @TruffleBoundary
         protected static RootCallTarget compileFormat(AbstractTruffleString format, RubyEncoding encoding,
-                Object stringReader, AsTruffleStringNode asTruffleStringNode, Node node) {
+                RubyProc stringReader, AsTruffleStringNode asTruffleStringNode, Node node) {
             var cacheKey = new TStringWithEncoding(asTruffleStringNode, format, encoding);
 
             RootCallTarget cachedCallTarget = RubyLanguage.sprintfCompilerCallTargets.get(cacheKey);
