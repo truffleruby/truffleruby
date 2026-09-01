@@ -17,7 +17,7 @@ extern "C" {
 #endif
 
 static VALUE call_binding(VALUE self) {
-  return rb_tr_invoke(self, "binding");
+  return rb_tr_binding(self);
 }
 
 static VALUE call_binding_rb_funcall(VALUE self) {

@@ -102,18 +102,12 @@ def c_signature(ret, carriers)
   [C_TYPES.fetch(ret), params]
 end
 
-def java_params(kind, carriers)
-  params = []
-  params << 'long recv' << 'long name' if kind == :invoke
-  carriers.each_with_index do |c, i|
-    params << "#{JAVA_TYPES.fetch(c)} v#{i}"
-  end
-  params
+def java_params(carriers)
+  carriers.each_with_index.map { |c, i| "#{JAVA_TYPES.fetch(c)} v#{i}" }
 end
 
-def ffm_signature(kind, ret, carriers)
+def ffm_signature(ret, carriers)
   args = ''
-  args << 'LL' if kind == :invoke
   carriers.each { |c| args << FFM_CARRIERS.fetch(c) }
   "#{FFM_CARRIERS.fetch(ret)}(#{args})"
 end
@@ -162,10 +156,9 @@ HEADER
 UPCALLS.each do |cname, kind, ret, args|
   carriers = args.chars
   ret_type, params = c_signature(ret, carriers)
-  invoke_params = kind == :invoke ? ['VALUE recv', 'const char *name'] : []
-  all_params = invoke_params + expand_c_params(carriers)
+  all_params = expand_c_params(carriers)
   all_params = ['void'] if all_params.empty?
-  arg_names = (kind == :invoke ? ['recv', 'name'] : []) + expand_c_args(carriers)
+  arg_names = expand_c_args(carriers)
 
   upcalls_h << "extern #{ret_type} (*rb_tr_up_impl_#{cname})(#{all_params.join(', ')});\n"
   upcalls_h << "static inline #{ret_type} rb_tr_up_#{cname}(#{all_params.join(', ')}) {\n"
@@ -197,8 +190,7 @@ assigns = +''
 UPCALLS.each_with_index do |(cname, kind, ret, args), index|
   carriers = args.chars
   ret_type, = c_signature(ret, carriers)
-  invoke_params = kind == :invoke ? ['VALUE recv', 'const char *name'] : []
-  all_params = invoke_params + expand_c_params(carriers)
+  all_params = expand_c_params(carriers)
   all_params = ['void'] if all_params.empty?
   decls << "#{ret_type} (*rb_tr_up_impl_#{cname})(#{all_params.join(', ')});\n"
   assigns << "  rb_tr_up_impl_#{cname} = (#{ret_type} (*)(#{all_params.join(', ')})) upcalls[#{index}];\n"
@@ -277,10 +269,9 @@ UPCALLS.each_with_index do |(cname, kind, ret, args), index|
   end
 
   carriers = args.chars
-  params = java_params(kind, carriers)
+  params = java_params(carriers)
 
   raw_names = []
-  raw_names << 'recv' << 'name' if kind == :invoke
   carriers.each_index { |i| raw_names << "v#{i}" }
   upcall_arguments = ([index] + raw_names).join(', ')
 
@@ -326,20 +317,14 @@ UPCALLS.each_with_index do |(cname, kind, ret, args), index|
   java << "    }\n\n"
 end
 
-java << "    /** Groups of 6 strings per upcall: the upcall method name, the FFM carrier signature (FFMSupport\n"
-java << "     * format), the kind, the Ruby method name, the return carrier and the argument carrier letters (see\n"
-java << "     * CExtUpcallRootNode.UpcallSpec), in the same order as the pointer array passed to\n"
-java << "     * rb_tr_init_ffm_upcalls() */\n"
+java << "    /** Groups of 6 strings per upcall: the upcall method name, the FFM carrier signature (FFMSupport format), the kind,\n"
+java << "     * the Ruby method name, the return carrier and the argument carrier letters (see CExtUpcallRootNode.UpcallSpec), in\n"
+java << "     * the same order as the pointer array passed to rb_tr_init_ffm_upcalls() */\n"
 java << "    // @formatter:off\n"
 java << "    public static final String[] UPCALLS = {\n"
 UPCALLS.each do |cname, kind, ret, args|
-  ruby_name =
-    case kind
-    when :invoke then ''
-    when :send then SEND_NAMES.fetch(cname)
-    else cname
-    end
-  java << "            \"upcall_#{cname}\", \"#{ffm_signature(kind, ret, args.chars)}\","
+  ruby_name = kind == :send ? SEND_NAMES.fetch(cname) : cname
+  java << "            \"upcall_#{cname}\", \"#{ffm_signature(ret, args.chars)}\","
   java << " \"#{kind}\", \"#{ruby_name}\", \"#{ret}\", \"#{args}\",\n"
 end
 java << "    };\n"

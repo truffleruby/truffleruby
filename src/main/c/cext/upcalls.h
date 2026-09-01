@@ -180,15 +180,6 @@ static inline VALUE rb_tr_up_ensure_class(VALUE v0, VALUE v1, VALUE v2) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_invoke0)(VALUE recv, const char *name);
-static inline VALUE rb_tr_up_invoke0(VALUE recv, const char *name) {
-  VALUE result = rb_tr_up_impl_invoke0(recv, name);
-  if (UNLIKELY(rb_tr_pending_exception)) {
-    rb_tr_longjmp_from_java_exception();
-  }
-  return result;
-}
-
 extern VALUE (*rb_tr_up_impl_send0___allocate__)(VALUE v0);
 static inline VALUE rb_tr_up_send0___allocate__(VALUE v0) {
   VALUE result = rb_tr_up_impl_send0___allocate__(v0);
@@ -237,6 +228,15 @@ static inline int rb_tr_up_send0_b_ascii_only_p(VALUE v0) {
 extern int (*rb_tr_up_impl_send0_b_dummy_p)(VALUE v0);
 static inline int rb_tr_up_send0_b_dummy_p(VALUE v0) {
   int result = rb_tr_up_impl_send0_b_dummy_p(v0);
+  if (UNLIKELY(rb_tr_pending_exception)) {
+    rb_tr_longjmp_from_java_exception();
+  }
+  return result;
+}
+
+extern VALUE (*rb_tr_up_impl_send0_binding)(VALUE v0);
+static inline VALUE rb_tr_up_send0_binding(VALUE v0) {
+  VALUE result = rb_tr_up_impl_send0_binding(v0);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
   }

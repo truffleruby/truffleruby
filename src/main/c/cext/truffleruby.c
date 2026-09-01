@@ -44,6 +44,6 @@ VALUE rb_tr_cext_lock_owned_p(void) {
 }
 
 // Used for internal testing
-VALUE rb_tr_invoke(VALUE recv, const char* meth) {
-  return rb_tr_up_invoke0(recv, meth);
+VALUE rb_tr_binding(VALUE recv) {
+  return rb_tr_up_send0_binding(recv);
 }

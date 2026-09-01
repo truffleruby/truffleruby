@@ -86,10 +86,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         /** call the method {@code rubyName} on Truffle::CExt */
         CEXT,
         /** call the method {@code rubyName} on the receiver, which is the first argument */
-        SEND,
-        /** call a dynamically-named method: the receiver handle and the method name pointer are passed before the
-         * arguments and are not part of {@code argumentCarriers} */
-        INVOKE
+        SEND
     }
 
     /** Parsed form of a CExtUpcallTargets.UPCALLS entry: the kind, Ruby method name, return carrier and argument
@@ -104,7 +101,6 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
             final Kind kind = switch (kindString) {
                 case "cext" -> Kind.CEXT;
                 case "send" -> Kind.SEND;
-                case "invoke" -> Kind.INVOKE;
                 default -> throw CompilerDirectives.shouldNotReachHere(kindString);
             };
             final Carrier returnCarrier = Carrier.parse(returnCarrierString.charAt(0));
@@ -126,10 +122,10 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
     private final String name;
     @Child private ExecuteUpcallNode executeUpcall;
 
-    public CExtUpcallRootNode(RubyLanguage language, CExtFFMLayer layer, String name, UpcallSpec spec) {
+    public CExtUpcallRootNode(RubyLanguage language, String name, UpcallSpec spec) {
         super(language, language.EMPTY_DECLARATION_DESCRIPTOR, null);
         this.name = name;
-        this.executeUpcall = CExtUpcallRootNodeFactory.ExecuteUpcallNodeGen.create(layer, spec);
+        this.executeUpcall = CExtUpcallRootNodeFactory.ExecuteUpcallNodeGen.create(spec);
     }
 
     @Override
@@ -154,11 +150,9 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
 
     public abstract static class ExecuteUpcallNode extends RubyBaseNode {
 
-        private final CExtFFMLayer layer;
         protected final UpcallSpec spec;
 
-        protected ExecuteUpcallNode(CExtFFMLayer layer, UpcallSpec spec) {
-            this.layer = layer;
+        protected ExecuteUpcallNode(UpcallSpec spec) {
             this.spec = spec;
         }
 
@@ -190,21 +184,14 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
                     methodName = spec.rubyName;
                     argumentsOffset = 1;
                 }
-                case INVOKE -> {
-                    receiver = unwrapNode.execute(this, rawArguments[0]);
-                    methodName = layer.readMethodName((long) rawArguments[1]);
-                    argumentsOffset = 0;
-                }
                 default -> throw CompilerDirectives.shouldNotReachHere();
             }
 
-            // INVOKE upcalls pass the receiver handle and the method name pointer before the arguments
-            final int rawArgumentsOffset = spec.kind == Kind.INVOKE ? 2 : 0;
             final Object[] arguments = new Object[spec.argumentCarriers.length - argumentsOffset];
             for (int i = 0; i < arguments.length; i++) {
                 final int carrierIndex = argumentsOffset + i;
                 arguments[i] = convertArgument(spec.argumentCarriers[carrierIndex],
-                        rawArguments[rawArgumentsOffset + carrierIndex], unwrapNode, idToSymbolNode);
+                        rawArguments[carrierIndex], unwrapNode, idToSymbolNode);
             }
 
             final Object result = dispatchNode.call(DispatchConfiguration.PRIVATE, receiver, methodName, arguments);

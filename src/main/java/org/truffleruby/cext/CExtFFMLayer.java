@@ -32,8 +32,6 @@ import java.lang.foreign.Arena;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import com.oracle.truffle.api.CallTarget;
@@ -79,7 +77,6 @@ public final class CExtFFMLayer {
     private final RubyContext context;
     private final RubyLanguage language;
     private final AtomicReferenceArray<CallTarget> upcallCallTargets;
-    private final ConcurrentHashMap<Long, String> methodNames = new ConcurrentHashMap<>();
     private long pendingExceptionAddressFunction;
 
     public CExtFFMLayer(RubyContext context, RubyLanguage language) {
@@ -219,7 +216,7 @@ public final class CExtFFMLayer {
                 CExtUpcallTargets.UPCALLS[index * 6 + 2], CExtUpcallTargets.UPCALLS[index * 6 + 3],
                 CExtUpcallTargets.UPCALLS[index * 6 + 4], CExtUpcallTargets.UPCALLS[index * 6 + 5]);
         final String name = CExtUpcallTargets.UPCALLS[index * 6];
-        final CallTarget callTarget = new CExtUpcallRootNode(language, this, name, spec).getCallTarget();
+        final CallTarget callTarget = new CExtUpcallRootNode(language, name, spec).getCallTarget();
         return upcallCallTargets.compareAndExchange(index, null, callTarget) == null
                 ? callTarget
                 : upcallCallTargets.get(index);
@@ -254,28 +251,6 @@ public final class CExtFFMLayer {
     }
 
     // endregion
-
-    /** The method name of a generic invoke upcall, from a C string literal address (cached by address) */
-    @TruffleBoundary
-    public String readMethodName(long address) {
-        final String cached = methodNames.get(address);
-        if (cached != null) {
-            return cached;
-        }
-        final String name = readJavaString(address);
-        methodNames.putIfAbsent(address, name);
-        return name;
-    }
-
-    @TruffleBoundary
-    private String readJavaString(long address) {
-        return new String(readZeroTerminatedByteArray(address), StandardCharsets.UTF_8);
-    }
-
-    private byte[] readZeroTerminatedByteArray(long address) {
-        final Pointer pointer = new Pointer(context, address);
-        return pointer.readZeroTerminatedByteArray(context, 0);
-    }
 
     private long invokePendingExceptionAddress() {
         try {

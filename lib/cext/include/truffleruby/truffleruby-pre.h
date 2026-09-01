@@ -65,7 +65,7 @@ const char* rb_tr_abi_version(void) {
 NORETURN(void rb_tr_not_implemented(const char *function_name));
 VALUE rb_tr_zlib_crc_table(void);
 VALUE rb_tr_cext_lock_owned_p(void);
-VALUE rb_tr_invoke(VALUE recv, const char* meth);
+VALUE rb_tr_binding(VALUE recv);
 unsigned long rb_tr_flags(VALUE object);
 void rb_tr_set_flags(VALUE object, unsigned long flags);
 

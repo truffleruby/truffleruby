@@ -215,19 +215,9 @@ public abstract class CExtUpcallTargets {
     }
 
     @CExtUpcall
-    public static long upcall_invoke0(long recv, long name) {
-        try {
-            return (long) runtime.upcall(15, recv, name);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
-    @CExtUpcall
     public static long upcall_send0___allocate__(long v0) {
         try {
-            return (long) runtime.upcall(16, v0);
+            return (long) runtime.upcall(15, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -237,7 +227,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_send0_alive_p(long v0) {
         try {
-            return (long) runtime.upcall(17, v0);
+            return (long) runtime.upcall(16, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -247,7 +237,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static long upcall_send0_ancestors(long v0) {
         try {
-            return (long) runtime.upcall(18, v0);
+            return (long) runtime.upcall(17, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -257,7 +247,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_send0_b_ascii_compatible_p(long v0) {
         try {
-            return (int) runtime.upcall(19, v0);
+            return (int) runtime.upcall(18, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -267,7 +257,7 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_send0_b_ascii_only_p(long v0) {
         try {
-            return (int) runtime.upcall(20, v0);
+            return (int) runtime.upcall(19, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
@@ -277,10 +267,20 @@ public abstract class CExtUpcallTargets {
     @CExtUpcall
     public static int upcall_send0_b_dummy_p(long v0) {
         try {
-            return (int) runtime.upcall(21, v0);
+            return (int) runtime.upcall(20, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
+        }
+    }
+
+    @CExtUpcall
+    public static long upcall_send0_binding(long v0) {
+        try {
+            return (long) runtime.upcall(21, v0);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
         }
     }
 
@@ -4818,13 +4818,13 @@ public abstract class CExtUpcallTargets {
             "upcall_cext_module_function", "V(LL)", "cext", "cext_module_function", "O", "VY",
             "upcall_code_to_mbclen", "I(LL)", "cext", "code_to_mbclen", "I", "LV",
             "upcall_ensure_class", "L(LLL)", "cext", "ensure_class", "V", "VVV",
-            "upcall_invoke0", "L(LL)", "invoke", "", "V", "",
             "upcall_send0___allocate__", "L(L)", "send", "__allocate__", "V", "V",
             "upcall_send0_alive_p", "L(L)", "send", "alive?", "V", "V",
             "upcall_send0_ancestors", "L(L)", "send", "ancestors", "V", "V",
             "upcall_send0_b_ascii_compatible_p", "I(L)", "send", "ascii_compatible?", "B", "V",
             "upcall_send0_b_ascii_only_p", "I(L)", "send", "ascii_only?", "B", "V",
             "upcall_send0_b_dummy_p", "I(L)", "send", "dummy?", "B", "V",
+            "upcall_send0_binding", "L(L)", "send", "binding", "V", "V",
             "upcall_send0_begin", "L(L)", "send", "begin", "V", "V",
             "upcall_send0_binmode", "L(L)", "send", "binmode", "V", "V",
             "upcall_send0_class", "L(L)", "send", "class", "V", "V",

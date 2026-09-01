@@ -37,7 +37,6 @@
 # kind: :cext   = calls the Truffle::CExt method named c_name (Java carrier long)
 #       :send   = calls the SEND_NAMES[c_name] method on the receiver, which is the
 #                 first argument; the method name is a constant on the Java side
-#       :invoke = dynamically-named method call: (receiver, method name, args...)
 #
 # Carriers:
 #   V = VALUE (handle, long).  Unwrapped to a Ruby object for the call; the
@@ -69,13 +68,13 @@ module CExtUpcalls
     ["cext_module_function", :cext, "O", "VY"],
     ["code_to_mbclen", :cext, "I", "LV"],
     ["ensure_class", :cext, "V", "VVV"],
-    ["invoke0", :invoke, "V", ""],
     ["send0___allocate__", :send, "V", "V"],
     ["send0_alive_p", :send, "V", "V"],
     ["send0_ancestors", :send, "V", "V"],
     ["send0_b_ascii_compatible_p", :send, "B", "V"],
     ["send0_b_ascii_only_p", :send, "B", "V"],
     ["send0_b_dummy_p", :send, "B", "V"],
+    ["send0_binding", :send, "V", "V"],
     ["send0_begin", :send, "V", "V"],
     ["send0_binmode", :send, "V", "V"],
     ["send0_class", :send, "V", "V"],
@@ -544,6 +543,7 @@ module CExtUpcalls
     "send0_b_ascii_compatible_p" => "ascii_compatible?",
     "send0_b_ascii_only_p" => "ascii_only?",
     "send0_b_dummy_p" => "dummy?",
+    "send0_binding" => "binding",
     "send0_begin" => "begin",
     "send0_binmode" => "binmode",
     "send0_class" => "class",
