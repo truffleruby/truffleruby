@@ -28,6 +28,7 @@
  */
 package org.truffleruby.cext;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -173,23 +174,21 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
             final Object receiver;
             final String methodName;
             final int argumentsOffset;
-            switch (spec.kind) {
-                case CEXT -> {
-                    receiver = coreLibrary().truffleCExtModule;
-                    methodName = spec.rubyName;
-                    argumentsOffset = 0;
-                }
-                case SEND -> {
-                    receiver = unwrapNode.execute(this, rawArguments[0]);
-                    methodName = spec.rubyName;
-                    argumentsOffset = 1;
-                }
-                default -> throw CompilerDirectives.shouldNotReachHere();
+            if (spec.kind == Kind.CEXT) {
+                receiver = coreLibrary().truffleCExtModule;
+                methodName = spec.rubyName;
+                argumentsOffset = 0;
+            } else {
+                receiver = unwrapNode.execute(this, rawArguments[0]);
+                methodName = spec.rubyName;
+                argumentsOffset = 1;
             }
+            CompilerAsserts.partialEvaluationConstant(argumentsOffset);
 
             final Object[] arguments = new Object[spec.argumentCarriers.length - argumentsOffset];
             for (int i = 0; i < arguments.length; i++) {
                 final int carrierIndex = argumentsOffset + i;
+                CompilerAsserts.partialEvaluationConstant(carrierIndex);
                 arguments[i] = convertArgument(spec.argumentCarriers[carrierIndex],
                         rawArguments[carrierIndex], unwrapNode, idToSymbolNode);
             }
@@ -202,11 +201,11 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
 
         private Object convertArgument(Carrier carrier, Object raw, UnwrapNode unwrapNode,
                 IDToSymbolNode idToSymbolNode) {
+            CompilerAsserts.partialEvaluationConstant(carrier);
             return switch (carrier) {
                 case VALUE -> unwrapNode.execute(this, raw);
-                case INT, LONG, DOUBLE -> raw;
+                case INT, LONG, DOUBLE, POINTER -> raw;
                 case ID -> idToSymbolNode.execute(raw);
-                case POINTER -> raw; // a raw long address, like L
                 default -> throw CompilerDirectives.shouldNotReachHere();
             };
         }
@@ -267,8 +266,13 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
             return handle;
         }
 
-        @TruffleBoundary
         private RuntimeException unexpectedValue(Object result) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            return unexpectedValueException(result);
+        }
+
+        @TruffleBoundary
+        private RuntimeException unexpectedValueException(Object result) {
             throw CompilerDirectives.shouldNotReachHere(
                     "unexpected value for carrier " + spec.returnCarrier + " of " + spec.rubyName + ": " + result);
         }
