@@ -25,7 +25,6 @@ module Truffle::CExt
   RBASIC_USER_FLAGS = Primitive.object_hidden_var_create :user_flags
 
   # RUBY_FL* values are from ruby.h
-  RUBY_FL_TAINT = (1<<8)
   RUBY_FL_FREEZE = (1<<11)
 
   RUBY_FL_USHIFT = 12
@@ -39,11 +38,6 @@ module Truffle::CExt
   end
 
   def rb_tr_set_flags(object, flags)
-    if flags & RUBY_FL_TAINT != 0
-      # noop
-      flags &= ~RUBY_FL_TAINT
-    end
-
     Primitive.object_hidden_var_set(object, RBASIC_USER_FLAGS, flags & RBASIC_USER_FLAGS_MASK)
     flags &= ~RBASIC_USER_FLAGS_MASK
 
