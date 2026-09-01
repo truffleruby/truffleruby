@@ -44,7 +44,6 @@ import org.truffleruby.extra.ffi.RubyPointer;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyBaseRootNode;
-import org.truffleruby.language.backtrace.InternalRootNode;
 import org.truffleruby.language.dispatch.DispatchConfiguration;
 import org.truffleruby.language.dispatch.DispatchNode;
 
@@ -52,7 +51,7 @@ import org.truffleruby.language.dispatch.DispatchNode;
  * and the dispatch to the Truffle::CExt method partial-evaluate. Called from the corresponding
  * {@link CExtUpcallTargets} method through {@link CExtFFMLayer#upcall(int, Object...)}. The frame arguments are the raw
  * boxed primitive upcall arguments. */
-public final class CExtUpcallRootNode extends RubyBaseRootNode implements InternalRootNode {
+public final class CExtUpcallRootNode extends RubyBaseRootNode {
 
     /** The kind of a native value in an upcall signature, from the carrier letters in tool/cext-upcalls.rb */
     public enum Carrier {

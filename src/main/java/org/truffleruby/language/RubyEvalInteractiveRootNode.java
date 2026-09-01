@@ -16,13 +16,12 @@ import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.binding.RubyBinding;
 import org.truffleruby.core.encoding.TStringUtils;
 import org.truffleruby.core.string.StringOperations;
-import org.truffleruby.language.backtrace.InternalRootNode;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.Source;
 import org.truffleruby.language.dispatch.DispatchNode;
 
-public final class RubyEvalInteractiveRootNode extends RubyBaseRootNode implements InternalRootNode {
+public final class RubyEvalInteractiveRootNode extends RubyBaseRootNode {
 
     private final TruffleString sourceString;
     @Child DispatchNode callEvalNode = DispatchNode.create();
@@ -43,6 +42,11 @@ public final class RubyEvalInteractiveRootNode extends RubyBaseRootNode implemen
                 interactiveBinding,
                 "eval",
                 StringOperations.createUTF8String(context, getLanguage(), sourceString));
+    }
+
+    @Override
+    public boolean isInternal() {
+        return true;
     }
 
     @Override

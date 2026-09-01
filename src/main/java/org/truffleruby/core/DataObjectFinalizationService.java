@@ -17,7 +17,6 @@ import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseRootNode;
-import org.truffleruby.language.backtrace.InternalRootNode;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
@@ -32,7 +31,7 @@ public final class DataObjectFinalizationService
         ReferenceProcessingService<DataObjectFinalizerReference, Object> {
 
     // We need a base node here, it should extend ruby base root node and implement internal root node.
-    public static final class DataObjectFinalizerRootNode extends RubyBaseRootNode implements InternalRootNode {
+    public static final class DataObjectFinalizerRootNode extends RubyBaseRootNode {
 
         @Child private InteropLibrary callNode;
 
@@ -40,6 +39,11 @@ public final class DataObjectFinalizationService
             super(language, RubyLanguage.newEmptyDeclarationFrameDescriptor(), null);
 
             callNode = InteropLibrary.getFactory().createDispatched(1);
+        }
+
+        @Override
+        public boolean isInternal() {
+            return true;
         }
 
         @Override

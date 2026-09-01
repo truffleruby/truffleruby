@@ -15,14 +15,13 @@ import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.format.FormatFrameDescriptor;
 import org.truffleruby.core.format.FormatNode;
 import org.truffleruby.language.RubyBaseRootNode;
-import org.truffleruby.language.backtrace.InternalRootNode;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
-public final class UnpackRootNode extends RubyBaseRootNode implements InternalRootNode {
+public final class UnpackRootNode extends RubyBaseRootNode {
 
     private final RubyLanguage language;
 
@@ -65,6 +64,11 @@ public final class UnpackRootNode extends RubyBaseRootNode implements InternalRo
 
     @Override
     public boolean isCloningAllowed() {
+        return true;
+    }
+
+    @Override
+    public boolean isInternal() {
         return true;
     }
 
