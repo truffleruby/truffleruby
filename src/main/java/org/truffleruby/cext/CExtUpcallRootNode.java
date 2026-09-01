@@ -36,11 +36,9 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 
 import org.truffleruby.RubyLanguage;
-import org.truffleruby.cext.ValueWrapperManager.AllocateHandleNode;
-import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
+import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyBaseRootNode;
@@ -166,10 +164,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
                 @Cached IDToSymbolNode idToSymbolNode,
                 @Cached SymbolToIDNode symbolToIDNode,
                 @Cached DispatchNode dispatchNode,
-                @Cached AllocateHandleNode allocateHandleNode,
-                @Cached KeepAliveNode keepAliveNode,
-                @Cached InlinedBranchProfile createHandleProfile,
-                @Cached InlinedBranchProfile taggedObjectProfile) {
+                @Cached WrapperToHandleNode wrapperToHandleNode) {
             final Object receiver;
             final String methodName;
             final int argumentsOffset;
@@ -194,8 +189,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
 
             final Object result = dispatchNode.call(DispatchConfiguration.PRIVATE, receiver, methodName, arguments);
 
-            return convertResult(result, wrapNode, symbolToIDNode, allocateHandleNode, keepAliveNode,
-                    createHandleProfile, taggedObjectProfile);
+            return convertResult(result, wrapNode, symbolToIDNode, wrapperToHandleNode);
         }
 
         private Object convertArgument(Carrier carrier, Object raw, UnwrapNode unwrapNode,
@@ -212,20 +206,17 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         /** The Truffle::CExt methods only return values these conversions handle, no need for anything fancier like
          * InteropLibrary here. */
         private Object convertResult(Object result, WrapNode wrapNode, SymbolToIDNode symbolToIDNode,
-                AllocateHandleNode allocateHandleNode, KeepAliveNode keepAliveNode,
-                InlinedBranchProfile createHandleProfile, InlinedBranchProfile taggedObjectProfile) {
+                WrapperToHandleNode wrapperToHandleNode) {
             return switch (spec.returnCarrier) {
                 case VOID -> Nil.INSTANCE;
-                case VALUE -> wrapperToHandle(wrapNode.execute(result), allocateHandleNode, keepAliveNode,
-                        createHandleProfile, taggedObjectProfile);
+                case VALUE -> wrapperToHandleNode.execute(this, wrapNode.execute(result));
                 case WRAPPED, ID -> {
                     final Object value = spec.returnCarrier == Carrier.WRAPPED
                             ? result
                             : symbolToIDNode.execute(result);
                     yield value instanceof Long longValue
                             ? longValue
-                            : wrapperToHandle((ValueWrapper) value, allocateHandleNode, keepAliveNode,
-                                    createHandleProfile, taggedObjectProfile);
+                            : wrapperToHandleNode.execute(this, (ValueWrapper) value);
                 }
                 case INT -> switch (result) {
                     case Integer intValue -> intValue;
@@ -240,22 +231,6 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
                 case DOUBLE -> (double) result;
                 case BOOL -> (boolean) result ? 1 : 0;
             };
-        }
-
-        /** The same conversion as ValueWrapper's toNative and asPointer interop messages */
-        private long wrapperToHandle(ValueWrapper wrapper, AllocateHandleNode allocateHandleNode,
-                KeepAliveNode keepAliveNode,
-                InlinedBranchProfile createHandleProfile, InlinedBranchProfile taggedObjectProfile) {
-            long handle = wrapper.getHandle();
-            if (handle == ValueWrapperManager.UNSET_HANDLE) {
-                createHandleProfile.enter(this);
-                handle = allocateHandleNode.execute(this, wrapper);
-            }
-            if (ValueWrapperManager.isTaggedObject(handle)) {
-                taggedObjectProfile.enter(this);
-                keepAliveNode.execute(this, wrapper);
-            }
-            return handle;
         }
 
         private RuntimeException unexpectedValue(Object result) {

@@ -28,14 +28,13 @@
  */
 package org.truffleruby.cext;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.library.CachedLibrary;
+import com.oracle.truffle.api.nodes.Node;
 
+import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
 import org.truffleruby.extra.ffi.RubyPointer;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
@@ -55,13 +54,9 @@ public abstract class CExtDowncallArgumentNode extends RubyBaseNode {
 
     @Specialization
     static long doValueWrapper(ValueWrapper value,
-            @CachedLibrary(limit = "1") InteropLibrary interop) {
-        try {
-            interop.toNative(value);
-            return interop.asPointer(value);
-        } catch (Throwable t) {
-            throw CompilerDirectives.shouldNotReachHere(t);
-        }
+            @Bind Node node,
+            @Cached WrapperToHandleNode wrapperToHandleNode) {
+        return wrapperToHandleNode.execute(node, value);
     }
 
     @Specialization
@@ -72,18 +67,6 @@ public abstract class CExtDowncallArgumentNode extends RubyBaseNode {
     @Specialization
     static long doNil(Nil value) {
         return 0L;
-    }
-
-    @TruffleBoundary
-    @Fallback
-    static long doOther(Object value) {
-        final InteropLibrary interop = InteropLibrary.getUncached();
-        try {
-            interop.toNative(value);
-            return interop.asPointer(value);
-        } catch (Throwable t) {
-            throw CompilerDirectives.shouldNotReachHere(t);
-        }
     }
 
 }

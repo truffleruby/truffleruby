@@ -21,6 +21,8 @@ import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.InlinedBranchProfile;
+import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.SuppressFBWarnings;
@@ -309,6 +311,35 @@ public final class ValueWrapperManager {
     public static final class HandleBlockHolder {
         private HandleBlock handleBlock = null;
         private HandleBlock sharedHandleBlock = null;
+    }
+
+    /** The same conversion as ValueWrapper's toNative and asPointer interop messages: returns the handle of the
+     * wrapper, allocating it if needed, and keeps wrappers with a tagged object handle alive until the end of the
+     * current C extension call. */
+    @GenerateUncached
+    @GenerateInline
+    @GenerateCached(false)
+    public abstract static class WrapperToHandleNode extends RubyBaseNode {
+
+        public abstract long execute(Node node, ValueWrapper wrapper);
+
+        @Specialization
+        static long wrapperToHandle(Node node, ValueWrapper wrapper,
+                @Cached AllocateHandleNode allocateHandleNode,
+                @Cached KeepAliveNode keepAliveNode,
+                @Cached InlinedBranchProfile createHandleProfile,
+                @Cached InlinedBranchProfile taggedObjectProfile) {
+            long handle = wrapper.getHandle();
+            if (handle == UNSET_HANDLE) {
+                createHandleProfile.enter(node);
+                handle = allocateHandleNode.execute(node, wrapper);
+            }
+            if (isTaggedObject(handle)) {
+                taggedObjectProfile.enter(node);
+                keepAliveNode.execute(node, wrapper);
+            }
+            return handle;
+        }
     }
 
     @GenerateUncached
