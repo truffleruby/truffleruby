@@ -232,19 +232,13 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
                     case Long longValue -> (int) (long) longValue;
                     default -> throw unexpectedValue(result);
                 };
-                case BOOL -> (boolean) result ? 1 : 0;
-                case LONG -> switch (result) {
+                case LONG, POINTER -> switch (result) {
                     case Long longValue -> longValue;
                     case Integer intValue -> (long) intValue;
                     default -> throw unexpectedValue(result);
                 };
                 case DOUBLE -> (double) result;
-                case POINTER -> switch (result) {
-                    case Long longValue -> longValue;
-                    case Integer intValue -> (long) intValue;
-                    default -> throw unexpectedValue(result);
-                };
-                default -> throw CompilerDirectives.shouldNotReachHere();
+                case BOOL -> (boolean) result ? 1 : 0;
             };
         }
 
