@@ -14,6 +14,7 @@
 package org.truffleruby.core.encoding;
 
 import java.nio.charset.Charset;
+import java.lang.invoke.MethodHandle;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
@@ -21,8 +22,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.interop.InteropException;
-import com.oracle.truffle.api.interop.InteropLibrary;
 import org.graalvm.shadowed.org.jcodings.Encoding;
 import org.graalvm.shadowed.org.jcodings.EncodingDB;
 import org.truffleruby.RubyContext;
@@ -32,8 +31,8 @@ import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.string.EncodingUtils;
 import org.truffleruby.extra.ffi.Pointer;
+import org.truffleruby.platform.FFMSupport;
 import org.truffleruby.platform.NativeConfiguration;
-import org.truffleruby.platform.TruffleNFIPlatform;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -94,8 +93,8 @@ public final class EncodingManager {
         }
     }
 
-    public void initializeDefaultEncodings(TruffleNFIPlatform nfi, NativeConfiguration nativeConfiguration) {
-        initializeLocaleEncoding(nfi, nativeConfiguration);
+    public void initializeDefaultEncodings(NativeConfiguration nativeConfiguration) {
+        initializeLocaleEncoding(nativeConfiguration);
 
         // External should always have a value, but Encoding.external_encoding{,=} will lazily setup
         final String externalEncodingName = context.getOptions().EXTERNAL_ENCODING;
@@ -128,27 +127,26 @@ public final class EncodingManager {
         }
     }
 
-    private void initializeLocaleEncoding(TruffleNFIPlatform nfi, NativeConfiguration nativeConfiguration) {
+    private static final MethodHandle NL_LANGINFO = FFMSupport.createDowncallHandle("L(I)");
+
+    private void initializeLocaleEncoding(NativeConfiguration nativeConfiguration) {
         final String localeEncodingName;
         final String detector;
-        if (nfi != null) {
+        if (context.getOptions().NATIVE_PLATFORM) {
             final int codeset = (int) nativeConfiguration.get("platform.langinfo.CODESET");
 
             // nl_langinfo() needs setlocale(LC_CTYPE, "") before, which is done in RubyLanguage#setupLocale()
             // char *nl_langinfo(nl_item item);
             // nl_item is int on at least Linux and macOS
-            final Object nl_langinfo = nfi.getFunction(context, "nl_langinfo", "(sint32):string");
+            final long nlLanginfoFunction = FFMSupport.lookupDefaultSymbol("nl_langinfo");
 
             final long address;
             try {
-                address = nfi.asPointer(InteropLibrary.getUncached().execute(nl_langinfo, codeset));
-            } catch (InteropException e) {
-                throw CompilerDirectives.shouldNotReachHere(e);
+                address = (long) NL_LANGINFO.invokeExact(nlLanginfoFunction, codeset);
+            } catch (Throwable t) {
+                throw CompilerDirectives.shouldNotReachHere(t);
             }
-            final byte[] bytes = new Pointer(context, address).readZeroTerminatedByteArray(
-                    context,
-                    InteropLibrary.getUncached(),
-                    0);
+            final byte[] bytes = new Pointer(context, address).readZeroTerminatedByteArray(context, 0);
             detector = "nl_langinfo(CODESET)";
             localeEncodingName = new String(bytes, StandardCharsets.US_ASCII);
         } else {

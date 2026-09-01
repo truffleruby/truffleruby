@@ -274,7 +274,7 @@ public final class CExtFFMLayer {
 
     private byte[] readZeroTerminatedByteArray(long address) {
         final Pointer pointer = new Pointer(context, address);
-        return pointer.readZeroTerminatedByteArray(context, InteropLibrary.getUncached(), 0);
+        return pointer.readZeroTerminatedByteArray(context, 0);
     }
 
     private long invokePendingExceptionAddress() {

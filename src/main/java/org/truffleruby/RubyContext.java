@@ -79,9 +79,9 @@ import org.truffleruby.language.objects.shared.SharedObjects;
 import org.truffleruby.options.LanguageOptions;
 import org.truffleruby.options.Options;
 import org.truffleruby.parser.YARPTranslatorDriver;
+import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.platform.NativeConfiguration;
 import org.truffleruby.platform.Signals;
-import org.truffleruby.platform.TruffleNFIPlatform;
 import org.truffleruby.shared.Metrics;
 import org.truffleruby.shared.TruffleRuby;
 import org.truffleruby.shared.options.OptionsCatalog;
@@ -134,7 +134,6 @@ public final class RubyContext {
     private final Hashing hashing;
     @CompilationFinal private BacktraceFormatter defaultBacktraceFormatter;
     private final BacktraceFormatter userBacktraceFormatter;
-    @CompilationFinal private TruffleNFIPlatform truffleNFIPlatform;
     private final CoreLibrary coreLibrary;
     @CompilationFinal private CoreMethods coreMethods;
     private final ThreadManager threadManager;
@@ -228,13 +227,15 @@ public final class RubyContext {
 
         // Create objects that need core classes
 
-        truffleNFIPlatform = isPreInitializing() ? null : createNativePlatform();
+        if (!isPreInitializing()) {
+            initializeNativePlatform();
+        }
 
         // The encoding manager relies on POSIX having been initialized, so we can't process it during
         // normal core library initialization.
         Metrics.printTime("before-initialize-encodings");
         encodingManager.defineEncodings();
-        encodingManager.initializeDefaultEncodings(truffleNFIPlatform, nativeConfiguration);
+        encodingManager.initializeDefaultEncodings(nativeConfiguration);
         Metrics.printTime("after-initialize-encodings");
 
         Metrics.printTime("before-thread-manager");
@@ -316,8 +317,8 @@ public final class RubyContext {
 
         this.defaultBacktraceFormatter = BacktraceFormatter.createDefaultFormatter(this, language);
 
-        this.truffleNFIPlatform = createNativePlatform();
-        encodingManager.initializeDefaultEncodings(truffleNFIPlatform, nativeConfiguration);
+        initializeNativePlatform();
+        encodingManager.initializeDefaultEncodings(nativeConfiguration);
 
         threadManager.initialize();
         threadManager.restartMainThread(Thread.currentThread());
@@ -423,12 +424,13 @@ public final class RubyContext {
         }
     }
 
-    private TruffleNFIPlatform createNativePlatform() {
+    private void initializeNativePlatform() {
         Metrics.printTime("before-create-native-platform");
-        final TruffleNFIPlatform truffleNFIPlatform = options.NATIVE_PLATFORM ? new TruffleNFIPlatform(this) : null;
-        featureLoader.initialize(nativeConfiguration, truffleNFIPlatform);
+        if (options.NATIVE_PLATFORM) {
+            Pointer.resolveStringFunctions();
+        }
+        featureLoader.initialize();
         Metrics.printTime("after-create-native-platform");
-        return truffleNFIPlatform;
     }
 
     @TruffleBoundary
@@ -684,10 +686,6 @@ public final class RubyContext {
 
     public boolean isFinalizing() {
         return finalizing;
-    }
-
-    public TruffleNFIPlatform getTruffleNFI() {
-        return truffleNFIPlatform;
     }
 
     public NativeConfiguration getNativeConfiguration() {

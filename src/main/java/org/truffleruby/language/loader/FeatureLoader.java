@@ -46,7 +46,6 @@ import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.platform.FFMSupport;
 import org.truffleruby.platform.NativeConfiguration;
 import org.truffleruby.platform.NativeLibrary;
-import org.truffleruby.platform.TruffleNFIPlatform;
 import org.truffleruby.shared.Metrics;
 import org.truffleruby.shared.Platform;
 import org.truffleruby.shared.TruffleRuby;
@@ -81,7 +80,8 @@ public final class FeatureLoader {
     private boolean cextImplementationLoaded = false;
 
     private String cwd = null;
-    private Object getcwd;
+    private static final MethodHandle GETCWD = FFMSupport.createDowncallHandle("L(LL)");
+    private long getcwdFunction;
 
     private Source mainScriptSource;
     private String mainScriptAbsolutePath;
@@ -91,9 +91,9 @@ public final class FeatureLoader {
         this.language = language;
     }
 
-    public void initialize(NativeConfiguration nativeConfiguration, TruffleNFIPlatform nfi) {
+    public void initialize() {
         if (context.getOptions().NATIVE_PLATFORM) {
-            this.getcwd = nfi.getFunction(context, "getcwd", "(pointer," + nfi.size_t() + "):pointer");
+            this.getcwdFunction = FFMSupport.lookupDefaultSymbol("getcwd");
         }
     }
 
@@ -197,9 +197,8 @@ public final class FeatureLoader {
     }
 
     private String initializeWorkingDirectory() {
-        final TruffleNFIPlatform nfi = context.getTruffleNFI();
-        if (nfi == null) {
-            // The current working cannot change if there are no native calls
+        if (!context.getOptions().NATIVE_PLATFORM) {
+            // The current working directory cannot change if there are no native calls
             return context.getEnv().getCurrentWorkingDirectory().getPath();
         }
 
@@ -210,17 +209,14 @@ public final class FeatureLoader {
         try {
             final long address;
             try {
-                address = nfi.asPointer(InteropLibrary.getUncached().execute(getcwd, buffer.getAddress(), bufferSize));
-            } catch (InteropException e) {
-                throw CompilerDirectives.shouldNotReachHere(e);
+                address = (long) GETCWD.invokeExact(getcwdFunction, buffer.getAddress(), (long) bufferSize);
+            } catch (Throwable t) {
+                throw CompilerDirectives.shouldNotReachHere(t);
             }
             if (address == 0) {
                 DispatchNode.getUncached().call(context.getCoreLibrary().errnoModule, "handle");
             }
-            final byte[] bytes = buffer.readZeroTerminatedByteArray(
-                    context,
-                    InteropLibrary.getUncached(),
-                    0);
+            final byte[] bytes = buffer.readZeroTerminatedByteArray(context, 0);
             var localeEncoding = context.getEncodingManager().getLocaleEncoding();
             return TStringUtils.toJavaStringOrThrow(bytes, localeEncoding);
         } finally {
@@ -529,7 +525,7 @@ public final class FeatureLoader {
         }
 
         var pointer = new Pointer(context, address);
-        byte[] bytes = pointer.readZeroTerminatedByteArray(context, InteropLibrary.getUncached(), 0);
+        byte[] bytes = pointer.readZeroTerminatedByteArray(context, 0);
         String abiVersion = new String(bytes, StandardCharsets.US_ASCII);
 
         return StringOperations.createUTF8String(context, language, abiVersion);

@@ -108,6 +108,12 @@ public final class FFMSupport {
         return methodHandle.asType(methodType);
     }
 
+    /** The address of a symbol from the native linker's default lookup (libc, etc) */
+    @SuppressWarnings("restricted")
+    public static long lookupDefaultSymbol(String name) {
+        return LINKER.defaultLookup().find(name).orElseThrow().address();
+    }
+
     /** Creates a native function pointer (upcall stub) calling the given Java MethodHandle, and returns its address.
      * The stub is allocated in the given Arena and remains valid until the Arena is closed.
      *
