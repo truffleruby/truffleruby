@@ -967,7 +967,7 @@ module Truffle::CExt
   # code with a known encoding (e.g. every String parsed by the json C extension)
   def rb_enc_str_new_native(pointer, length, rb_encoding)
     string = Primitive.pointer_read_bytes(pointer, length)
-    string.force_encoding(RbEncoding.get_encoding_from_native(rb_encoding))
+    string.force_encoding(rb_encoding_from_native(rb_encoding))
   end
 
   def rb_enc_str_coderange(str)
@@ -2327,16 +2327,12 @@ module Truffle::CExt
   end
 
   def rb_to_encoding(encoding)
-    RbEncoding.get(encoding).native_address
-  end
-
-  def rb_enc_from_encoding(rb_encoding)
-    rb_encoding.encoding
+    rb_encoding_native_address(encoding)
   end
 
   def rb_enc_from_native_encoding(rb_encoding)
     # rb_encoding is the address of the native rb_encoding struct as a long
-    RbEncoding.get_encoding_from_native(rb_encoding)
+    rb_encoding_from_native(rb_encoding)
   end
 
   def rb_enc_check(str1, str2)
@@ -2516,14 +2512,6 @@ module Truffle::CExt
     location = caller_locations(1, 1)[0]
     message_with_prefix = "#{location.label}: warning: #{message}"
     Warning.warn(message_with_prefix, category: category)
-  end
-
-  def rb_tr_flags(object)
-    Truffle::CExt::RBasic.new(object).compute_flags
-  end
-
-  def rb_tr_set_flags(object, flags)
-    Truffle::CExt::RBasic.new(object).set_flags(flags)
   end
 
   def rb_io_get_write_io(io)

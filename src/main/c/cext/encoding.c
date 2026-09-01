@@ -13,7 +13,7 @@
 
 // Encoding, rb_enc_*
 
-// returns Truffle::CExt::RbEncoding, takes Encoding or String
+// returns the address of the native rb_encoding struct, takes Encoding or String
 rb_encoding* rb_to_encoding(VALUE encoding) {
   encoding = rb_tr_up_rb_convert_to_encoding(encoding); // Convert to Encoding
   return (rb_encoding *) rb_tr_up_rb_to_encoding(encoding);
@@ -211,7 +211,7 @@ int rb_enc_isspace(unsigned char c, rb_encoding *enc) {
   return rb_tr_up_rb_enc_isspace(c, rb_enc_from_encoding(enc));
 }
 
-// returns Encoding, takes rb_encoding struct or RbEncoding
+// returns Encoding, takes the address of the native rb_encoding struct
 VALUE rb_enc_from_encoding(rb_encoding *encoding) {
   return rb_tr_up_rb_enc_from_native_encoding((long) encoding);
 }
