@@ -66,6 +66,8 @@ src/main/c/libssl
 
 spec/truffle/fixtures/libtestnfi.so
 spec/truffle/fixtures/libtestnfi.dylib
+spec/truffle/interop/fixtures/examplejar/example.jar
+spec/truffle/interop/fixtures/examplejar/org/truffleruby/examplejar/Example.class
 
 test/truffle/cexts/**/*.o
 test/truffle/cexts/**/*.so
