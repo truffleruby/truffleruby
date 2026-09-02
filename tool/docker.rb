@@ -127,18 +127,8 @@ class JT
       packages << distro.fetch('cext')
       packages << distro.fetch('c++') if full_test
 
-      proxy_vars = []
-      # There is an issue with dnf + proxy in Fedora 34, install packages outside proxy to workaround
-      unless distro_name == 'fedora34'
-        %w[http_proxy https_proxy no_proxy].each do |var|
-          value = ENV[var]
-          proxy_vars << "ENV #{var}=#{value}" if value
-        end
-      end
-
       lines = [
         "FROM #{distro.fetch('base')}",
-        *proxy_vars,
         [distro.fetch('install'), *packages.compact].join(' '),
         *distro.fetch('set-locale'),
       ]

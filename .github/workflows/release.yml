@@ -110,8 +110,8 @@ jobs:
         name: truffleruby-release-archives-linux-${{ matrix.arch }}
         path: release
 
-    - run: jt docker test --${{ matrix.image }} --standalone "$(jt native_standalone_release_archive)" --test "${{ github.ref_name }}"
-    - run: jt docker test --${{ matrix.image }} --standalone "$(jt jvm_standalone_release_archive)" --test "${{ github.ref_name }}"
+    - run: jt docker build --${{ matrix.image }} --standalone "$(jt native_standalone_release_archive)" --test "${{ github.ref_name }}"
+    - run: jt docker build --${{ matrix.image }} --standalone "$(jt jvm_standalone_release_archive)" --test "${{ github.ref_name }}"
 
   build_maven_bundle:
     name: Maven Bundle
