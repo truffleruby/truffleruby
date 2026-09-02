@@ -577,7 +577,7 @@ module Utilities
     args = args.map { |a| shellescape(a) }
 
     all = [*("unset #{unsets.join(' ')};" unless unsets.empty?), *sets, *args]
-    size = all.reduce(0) { |s, v| s + v.size }
+    size = all.sum(&:size)
     all.join(size <= 180 ? ' ' : " \\\n  ")
   end
 
@@ -672,7 +672,7 @@ module Utilities
       env['JAVA_HOME'] = nil
     else
       if java_home.start_with?(JDKS_CACHE_DIR)
-        mx_args.unshift '--java-home', java_home[JDKS_CACHE_DIR.size+1..-1]
+        mx_args.unshift '--java-home', java_home.delete_prefix("#{JDKS_CACHE_DIR}/")
       else
         mx_args.unshift '--java-home', java_home
       end
@@ -731,7 +731,7 @@ module Utilities
   def args_split(args)
     delimiter_index = args.index('--')
     return [args, []] unless delimiter_index
-    [args[0...delimiter_index], args[(delimiter_index + 1)..-1]]
+    [args[...delimiter_index], args[(delimiter_index + 1)..]]
   end
 
   def with_color(color_code, &block)
@@ -1238,7 +1238,7 @@ module Commands
   private def run_runner_test(runner, *args)
     double_dash_index = args.index '--'
     if double_dash_index
-      args, runner_args = args[0...double_dash_index], args[(double_dash_index+1)..-1]
+      args, runner_args = args[...double_dash_index], args[(double_dash_index+1)..]
     else
       runner_args = []
     end
@@ -1248,7 +1248,7 @@ module Commands
   private def test_mri(*args)
     double_dash_index = args.index '--'
     if double_dash_index
-      args, runner_args = args[0...double_dash_index], args[(double_dash_index+1)..-1]
+      args, runner_args = args[...double_dash_index], args[(double_dash_index+1)..]
     else
       runner_args = []
     end
@@ -1300,15 +1300,7 @@ module Commands
   end
 
   private def mri_test_name(test)
-    prefix = "#{MRI_TEST_RELATIVE_PREFIX}/"
-    abs_prefix = "#{MRI_TEST_PREFIX}/"
-    if test.start_with?(prefix)
-      test[prefix.size..-1]
-    elsif test.start_with?(abs_prefix)
-      test[abs_prefix.size..-1]
-    else
-      test
-    end
+    test.delete_prefix("#{MRI_TEST_RELATIVE_PREFIX}/").delete_prefix("#{MRI_TEST_PREFIX}/")
   end
 
   private def run_mri_tests(extra_args, test_files, runner_args, run_options)
@@ -1955,7 +1947,7 @@ module Commands
     results = {}
     samples[0].each_key do |region|
       region_samples = samples.map { |s| s[region] }
-      mean = region_samples.inject(:+) / samples.size
+      mean = region_samples.sum / samples.size
       human = "#{region} #{mean.round(2)} MB"
       results[region] = {
           samples: region_samples,
@@ -1970,7 +1962,7 @@ module Commands
       file.puts region[/\s*/] + human
     end
     if use_json
-      puts JSON.generate(Hash[results.map { |key, values| [key, values] }])
+      puts JSON.generate(results)
     end
   end
 
@@ -2042,7 +2034,7 @@ module Commands
     mean_by_stack = {}
     samples[0].each_key do |stack|
       region_samples = samples.map { |s| s[stack] }
-      mean = region_samples.inject(:+) / samples.size
+      mean = region_samples.sum / samples.size
       mean_by_stack[stack] = mean
       mean_in_seconds = (mean / 1000.0)
 
@@ -2070,7 +2062,7 @@ module Commands
         mean_by_stack.each_pair do |stack, mean|
           on_top_of_stack = mean
           mean_by_stack.each_pair do |sub_stack, time|
-            on_top_of_stack -= time if sub_stack[0...-1] == stack
+            on_top_of_stack -= time if sub_stack[...-1] == stack
           end
 
           file.puts "#{stack.join(';')} #{on_top_of_stack.round}"
@@ -2092,11 +2084,11 @@ module Commands
         region = $1
         time = Float($2)
         if region.start_with? 'before-'
-          name = region['before-'.size..-1]
+          name = region.delete_prefix('before-')
           stack << [name, time]
           result[stack.map(&:first)] += 0
         elsif region.start_with? 'after-'
-          name = region['after-'.size..-1]
+          name = region.delete_prefix('after-')
           prev, start = stack.last
           raise "#{region} after before-#{prev}" unless name == prev
           result[stack.map(&:first)] += (time - start)
@@ -2235,8 +2227,8 @@ module Commands
       else
         test_file = arg
         if dash = args.index('--')
-          app_args = [arg, *args[0...dash]]
-          args = args[dash..-1]
+          app_args = [arg, *args[...dash]]
+          args = args[dash..]
         else
           app_args = [arg, *args]
           args.clear
@@ -2914,7 +2906,7 @@ module Commands
     ]
 
     known_hardcoded_urls.each do |url|
-      file = url[url_base.size..-1]
+      file = url.delete_prefix(url_base)
       path = "#{TRUFFLERUBY_DIR}/doc/#{file}"
       unless File.file?(path)
         abort "#{path} could not be found but is referenced in code"
@@ -3115,16 +3107,16 @@ module Commands
 
         if one_line.size <= 120
           [one_line + "\n",
-           *cached_arguments[0..-2].map { |c| arg_indent + c + ",\n" },
+           *cached_arguments[...-1].map { |c| arg_indent + c + ",\n" },
            *(arg_indent + cached_arguments[-1] + rest + "\n" unless cached_arguments.empty?)]
         elsif one_line_below.size <= 120
           ["#{indent}#{declaration}\n",
            one_line_below + "\n",
-           *cached_arguments[0..-2].map { |c| arg_indent + c + ",\n" },
+           *cached_arguments[...-1].map { |c| arg_indent + c + ",\n" },
            *(arg_indent + cached_arguments[-1] + rest + "\n" unless cached_arguments.empty?)]
         else
           [indent + declaration + "\n",
-           *arguments[0..-2].map { |c| arg_indent + c + ",\n" },
+           *arguments[...-1].map { |c| arg_indent + c + ",\n" },
            arg_indent + arguments[-1] + rest + "\n"]
         end
       end
@@ -3473,7 +3465,6 @@ module Commands
   end
 
   def docker(*args)
-    raise 'Ruby 3+ needed for "jt docker"' unless RUBY_VERSION >= '3.0'
     require_relative 'docker'
     JT::Docker.new.docker(*args)
   end
