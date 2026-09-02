@@ -50,7 +50,6 @@ import org.truffleruby.language.objects.ObjectGraph;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import org.truffleruby.shared.Platform;
-import org.truffleruby.shared.TruffleRuby;
 
 public final class NativeConfiguration {
 
@@ -81,7 +80,8 @@ public final class NativeConfiguration {
                 break;
         }
 
-        RubyLanguage.LOGGER.severe("no native configuration for platform " + TruffleRuby.RUBY_PLATFORM);
+        RubyLanguage.LOGGER
+                .severe("no native configuration for platform " + Platform.getArchName() + "-" + Platform.getOSName());
         return nativeConfiguration;
     }
 

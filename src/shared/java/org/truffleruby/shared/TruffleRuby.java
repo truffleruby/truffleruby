@@ -19,45 +19,46 @@ public final class TruffleRuby {
     public static final String EXTENSION = ".rb";
     public static final String ENGINE_ID = "truffleruby";
     public static final String LANGUAGE_VERSION = "4.0.2";
-    public static final String LANGUAGE_REVISION = BuildInformationImpl.INSTANCE.getFullRevision();
     public static final String BOOT_SOURCE_NAME = "main_boot_source";
     public static final String RUBY_COPYRIGHT = "truffleruby - Copyright (c) 2013-2025 Oracle and/or its affiliates; 2026-present TruffleRuby contributors";
-    public static final String RUBY_PLATFORM = String.format(
-            "%s-%s%s",
-            Platform.getArchName(),
-            Platform.getOSName(),
-            Platform.getKernelMajorVersion());
 
-    public static String getVersionString(String implementationName) {
-        final String buildName = BuildInformationImpl.INSTANCE.getBuildName();
+    public static String getRubyPlatform(BuildInformation buildInformation) {
+        return String.format(
+                "%s-%s%s",
+                Platform.getArchName(),
+                Platform.getOSName(),
+                Platform.OS == Platform.OS_TYPE.DARWIN ? buildInformation.kernelMajorVersion : "");
+    }
+
+    public static String getVersionString(String implementationName, BuildInformation buildInformation) {
+        final String buildName = buildInformation.buildName;
         final String nameExtra;
 
         if (buildName == null) {
             nameExtra = "";
         } else {
-            nameExtra = String.format(" (%s)", BuildInformationImpl.INSTANCE.getBuildName());
+            nameExtra = String.format(" (%s)", buildName);
         }
 
         return String.format(
                 "%s%s %s%s (%s), like ruby %s, %s %s [%s]",
                 ENGINE_ID,
                 nameExtra,
-                getTruffleRubyVersion(),
-                BuildInformationImpl.INSTANCE.isDirty() ? "*" : "",
-                BuildInformationImpl.INSTANCE.getCommitDate(),
+                getTruffleRubyVersion(buildInformation),
+                buildInformation.isDirty ? "*" : "",
+                buildInformation.commitDate,
                 LANGUAGE_VERSION,
                 implementationName,
                 ImageInfo.inImageCode() ? "Native" : "JVM",
-                RUBY_PLATFORM);
+                getRubyPlatform(buildInformation));
     }
 
-    public static String getTruffleRubyVersion() {
-        final String version = BuildInformationImpl.INSTANCE.getTruffleRubyVersion();
-        final String revisionString = BuildInformationImpl.INSTANCE.getShortRevision();
+    public static String getTruffleRubyVersion(BuildInformation buildInformation) {
+        final String version = buildInformation.truffleRubyVersion;
 
         // A "-dev" version number - append the commit as well
-        if (version.endsWith("-dev")) {
-            return version + "-" + revisionString;
+        if (version.endsWith("-dev") && buildInformation != BuildInformation.UNKNOWN) {
+            return version + "-" + buildInformation.shortRevision;
         }
 
         return version;

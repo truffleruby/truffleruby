@@ -129,12 +129,4 @@ public abstract class Platform {
                 return ".so";
         }
     }
-
-    public static String getKernelMajorVersion() {
-        if (OS == OS_TYPE.DARWIN) {
-            return BuildInformationImpl.INSTANCE.getKernelMajorVersion();
-        } else {
-            return "";
-        }
-    }
 }

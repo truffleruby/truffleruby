@@ -13,9 +13,11 @@ import json
 import os
 from os.path import join, exists, basename, dirname, isdir
 import pathlib
+import platform
 import re
 import shlex
 import shutil
+import subprocess
 import sys
 
 import mx
@@ -182,6 +184,10 @@ class TruffleRubyBootstrapLauncherBuildTask(mx.BuildTask):
         jvm_args.append('-Dorg.graalvm.language.ruby.home=' + bootstrap_home)
 
         jvm_args.append('-Dtruffleruby.repository=' + root)
+
+        # There is no build-information.properties in TRUFFLERUBY_BOOTSTRAP_HOME, but some code like
+        # lib/mri/strscan.rb needs a meaningful RUBY_ENGINE_VERSION, so pass the version explicitly.
+        jvm_args.append('-Dtruffleruby.version=' + _suite.release_version())
 
         main_class = 'org.truffleruby.launcher.RubyLauncher'
         ruby_options = [
@@ -415,6 +421,74 @@ class CopyGraalVMLicensesBuildTask(mx.BuildTask):
 
     def clean(self, forBuild=False):
         mx.rmtree(self.witness_file(), ignore_errors=True)
+
+
+class BuildInformationProject(mx.Project):
+    """Generates build-information.properties with the git revision, dirty state, commit date, etc.
+    It is generated here rather than in Java code (e.g. an annotation processor) so a new commit does not
+    cause recompiling Java sources, only re-generating this small file."""
+
+    def __init__(self, suite, name, deps, workingSets, theLicense=None, **kw_args):
+        super().__init__(suite, name, subDir=None, srcDirs=[], deps=deps, workingSets=workingSets, d=suite.dir, theLicense=theLicense, **kw_args)
+
+    def output_file(self):
+        return join(self.get_output_root(), 'build-information.properties')
+
+    def getArchivableResults(self, use_relpath=True, single=False):
+        yield self.output_file(), basename(self.output_file())
+
+    def getBuildTask(self, args):
+        return BuildInformationBuildTask(self, args, 1)
+
+    def contents(self):
+        def git(*args):
+            return subprocess.check_output(['git', *args], cwd=root).decode('utf-8').strip()
+
+        properties = {
+            'truffleRubyVersion': _suite.release_version(),
+            'fullRevision': git('rev-parse', 'HEAD'),
+            'isDirty': str(subprocess.call(['git', 'diff', '--quiet'], cwd=root) != 0).lower(),
+            'commitDate': git('log', '-1', '--date=short', '--pretty=format:%cd'),
+            'kernelMajorVersion': platform.release().split('.')[0],
+        }
+        build_name = mx.get_env('TRUFFLERUBY_BUILD_NAME')
+        if build_name:
+            properties['buildName'] = build_name
+
+        return ''.join(f"{key}={value}\n" for key, value in properties.items())
+
+class BuildInformationBuildTask(mx.BuildTask):
+    subject: BuildInformationProject
+
+    def __str__(self):
+        return 'Generating {}'.format(self.subject.name)
+
+    def newestOutput(self):
+        return mx.TimeStampFile(self.subject.output_file())
+
+    def needsBuild(self, newestInput):
+        sup = super().needsBuild(newestInput)
+        if sup[0]:
+            return sup
+
+        output_file = self.subject.output_file()
+        if not exists(output_file):
+            return True, output_file + ' does not exist'
+        with open(output_file, 'r') as f:
+            on_disk = f.read()
+        if on_disk != self.subject.contents():
+            return True, 'the build information changed'
+        return False, 'up to date'
+
+    def build(self):
+        output_file = self.subject.output_file()
+        mx_util.ensure_dirname_exists(output_file)
+        with open(output_file, 'w') as f:
+            f.write(self.subject.contents())
+
+    def clean(self, forBuild=False):
+        if exists(self.subject.get_output_root()):
+            mx.rmtree(self.subject.get_output_root())
 
 
 # Functions called from suite.py

@@ -70,7 +70,7 @@ import org.truffleruby.parser.RubySource;
 import org.truffleruby.parser.YARPTranslatorDriver;
 import org.truffleruby.platform.NativeConfiguration;
 import org.truffleruby.platform.NativeTypes;
-import org.truffleruby.shared.BuildInformationImpl;
+import org.truffleruby.shared.BuildInformation;
 import org.truffleruby.shared.TruffleRuby;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -689,20 +689,17 @@ public final class CoreLibrary {
 
         setConstant(truffleFFIPointerClass, "UNBOUNDED", Pointer.UNBOUNDED);
 
+        final BuildInformation buildInformation = context.getBuildInformation();
         setConstant(objectClass, "RUBY_VERSION", frozenUSASCIIString(TruffleRuby.LANGUAGE_VERSION));
         setConstant(objectClass, "RUBY_PATCHLEVEL", 0);
-        setConstant(objectClass, "RUBY_REVISION", frozenUSASCIIString(TruffleRuby.LANGUAGE_REVISION));
+        setConstant(objectClass, "RUBY_REVISION", frozenUSASCIIString(buildInformation.fullRevision));
         setConstant(objectClass, "RUBY_ENGINE", frozenUSASCIIString(TruffleRuby.ENGINE_ID));
-        setConstant(objectClass, "RUBY_ENGINE_VERSION", frozenUSASCIIString(TruffleRuby.getTruffleRubyVersion()));
-        setConstant(objectClass, "RUBY_PLATFORM", frozenUSASCIIString(TruffleRuby.RUBY_PLATFORM));
-        setConstant(
-                objectClass,
-                "RUBY_RELEASE_DATE",
-                frozenUSASCIIString(BuildInformationImpl.INSTANCE.getCommitDate()));
-        setConstant(
-                objectClass,
-                "RUBY_DESCRIPTION",
-                frozenUSASCIIString(TruffleRuby.getVersionString(Truffle.getRuntime().getName())));
+        setConstant(objectClass, "RUBY_ENGINE_VERSION",
+                frozenUSASCIIString(TruffleRuby.getTruffleRubyVersion(buildInformation)));
+        setConstant(objectClass, "RUBY_PLATFORM", frozenUSASCIIString(TruffleRuby.getRubyPlatform(buildInformation)));
+        setConstant(objectClass, "RUBY_RELEASE_DATE", frozenUSASCIIString(buildInformation.commitDate));
+        setConstant(objectClass, "RUBY_DESCRIPTION",
+                frozenUSASCIIString(TruffleRuby.getVersionString(Truffle.getRuntime().getName(), buildInformation)));
         setConstant(objectClass, "RUBY_COPYRIGHT", frozenUSASCIIString(TruffleRuby.RUBY_COPYRIGHT));
 
         // BasicObject knows itself
