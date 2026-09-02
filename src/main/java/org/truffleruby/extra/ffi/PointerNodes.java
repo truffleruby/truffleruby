@@ -267,7 +267,7 @@ public abstract class PointerNodes {
 
         @Specialization(guards = "limit != 0")
         RubyString readStringToNull(long address, long limit,
-                @Cached @Shared TruffleString.FromByteArrayNode fromByteArrayNode,
+                @Cached TruffleString.FromByteArrayNode fromByteArrayNode,
                 @Cached @Shared CheckNullPointerNode checkNullPointerNode) {
             final Pointer ptr = new Pointer(getContext(), address);
             checkNullPointerNode.execute(this, ptr);
@@ -277,12 +277,12 @@ public abstract class PointerNodes {
 
         @Specialization
         RubyString readStringToNull(long address, Nil limit,
-                @Cached @Shared TruffleString.FromByteArrayNode fromByteArrayNode,
+                @Cached TruffleString.FromZeroTerminatedNativePointerNode fromZeroTerminatedNativePointerNode,
                 @Cached @Shared CheckNullPointerNode checkNullPointerNode) {
-            final Pointer ptr = new Pointer(getContext(), address);
-            checkNullPointerNode.execute(this, ptr);
-            final byte[] bytes = ptr.readZeroTerminatedByteArray(getContext(), 0);
-            return createString(fromByteArrayNode, bytes, Encodings.BINARY);
+            checkNullPointerNode.execute(this, new Pointer(getContext(), address));
+            var tstring = fromZeroTerminatedNativePointerNode.execute8Bit(address, 0, Encodings.BINARY.tencoding,
+                    true);
+            return createString(tstring, Encodings.BINARY);
         }
 
     }
