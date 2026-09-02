@@ -211,6 +211,13 @@ public final class ValueWrapperManager {
         }
     }
 
+    /** A block of handles. A HandleBlock is only ever mutated ({@link #registerWrapper(ValueWrapper)}) by the single
+     * fiber which currently has it in its {@link HandleBlockHolder} (fibers run on one thread at a time), so
+     * {@code count} and {@code wrappers} need no synchronization. Once a full block is replaced by a fresh one in the
+     * holder it is never mutated again. Other fibers only read already-registered wrappers through
+     * {@link #getWrapper(long, boolean)}. This holds for {@code HandleBlockHolder#sharedHandleBlock} too: "shared"
+     * refers to the wrapped objects being shared (immutable) and to the block being registered in the process-wide
+     * {@code RubyLanguage#handleBlockSharedMap}, not to the block being filled by multiple fibers. */
     public static final class HandleBlock {
 
         private final long base;
