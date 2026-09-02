@@ -1840,15 +1840,6 @@ public abstract class CExtNodes {
         }
     }
 
-    @CoreMethod(names = "rb_tr_force_native_function", onSingleton = true, required = 0)
-    public abstract static class ToNativeFunctionNode extends CoreMethodArrayArgumentsNode {
-
-        @Specialization
-        Object wrapFunction() {
-            return new ValueWrapperManager.ToNativeObjectFunction();
-        }
-    }
-
     @CoreMethod(names = "rb_check_symbol_cstr", onSingleton = true, required = 1)
     public abstract static class RbCheckSymbolCStrNode extends CoreMethodArrayArgumentsNode {
         @Specialization

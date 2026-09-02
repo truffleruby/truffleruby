@@ -38,8 +38,6 @@ import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 
@@ -511,27 +509,6 @@ public final class ValueWrapperManager {
         protected ValueWrapper execute(Object[] arguments,
                 @Cached WrapNode wrapNode) {
             return wrapNode.execute(arguments[0]);
-        }
-    }
-
-    @ExportLibrary(InteropLibrary.class)
-    @GenerateUncached
-    public static final class ToNativeObjectFunction implements TruffleObject {
-
-        @ExportMessage
-        protected boolean isExecutable() {
-            return true;
-        }
-
-        @ExportMessage
-        protected long execute(Object[] arguments,
-                @CachedLibrary(limit = "1") InteropLibrary values) {
-            values.toNative(arguments[0]);
-            try {
-                return values.asPointer(arguments[0]);
-            } catch (UnsupportedMessageException e) {
-                throw CompilerDirectives.shouldNotReachHere(e);
-            }
         }
     }
 
