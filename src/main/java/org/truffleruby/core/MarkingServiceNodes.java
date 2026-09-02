@@ -20,7 +20,7 @@ import org.truffleruby.core.MarkingService.ExtensionCallStack;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.dispatch.DispatchNode;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Bind;
@@ -38,36 +38,31 @@ public abstract class MarkingServiceNodes {
 
         public abstract void execute(Node node, ValueWrapper object);
 
-        @Specialization(guards = "!stack.hasKeptObjects()")
-        static void keepFirstObject(Node node, ValueWrapper object,
-                @Bind("getStack(node)") ExtensionCallStack stack) {
-            stack.current.preservedObject = object;
-        }
-
-        @Specialization(guards = "stack.hasSingleKeptObject()")
-        static void keepCreatingList(Node node, ValueWrapper object,
+        @Specialization
+        static void keepObject(Node node, ValueWrapper object,
                 @Bind("getStack(node)") ExtensionCallStack stack,
-                @Cached InlinedConditionProfile sameObjectProfile) {
-            if (sameObjectProfile.profile(node, object != stack.current.preservedObject)) {
-                createKeptList(object, stack);
+                @Cached InlinedConditionProfile sameObjectProfile,
+                @Cached InlinedConditionProfile growProfile) {
+            final MarkingService.ExtensionCallStackEntry entry = stack.current;
+            final ValueWrapper[] preservedObjects = entry.preservedObjects;
+            final int count = entry.preservedObjectsCount;
+            if (sameObjectProfile.profile(node, count > 0 && preservedObjects[count - 1] == object)) {
+                return; // the common case of keeping the same wrapper alive repeatedly during a call
+            }
+            if (growProfile.profile(node, count == preservedObjects.length)) {
+                grow(entry, object);
+            } else {
+                preservedObjects[count] = object;
+                entry.preservedObjectsCount = count + 1;
             }
         }
 
-        @Specialization(guards = {
-                "stack.isPreservedObjectListInitialized()",
-                "stack.hasKeptObjects()",
-                "!stack.hasSingleKeptObject()" })
         @TruffleBoundary
-        static void keepAddingToList(Node node, ValueWrapper object,
-                @Bind("getStack(node)") ExtensionCallStack stack) {
-            stack.current.preservedObjectList.add(object);
-        }
-
-        @TruffleBoundary
-        private static void createKeptList(ValueWrapper object, ExtensionCallStack stack) {
-            stack.current.preservedObjectList = new ArrayList<>();
-            stack.current.preservedObjectList.add(stack.current.preservedObject);
-            stack.current.preservedObjectList.add(object);
+        private static void grow(MarkingService.ExtensionCallStackEntry entry, ValueWrapper object) {
+            final ValueWrapper[] grown = Arrays.copyOf(entry.preservedObjects, entry.preservedObjects.length * 2);
+            grown[entry.preservedObjectsCount] = object;
+            entry.preservedObjects = grown;
+            entry.preservedObjectsCount++;
         }
 
         @NonIdempotent

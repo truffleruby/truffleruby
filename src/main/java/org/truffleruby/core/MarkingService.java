@@ -12,7 +12,6 @@ package org.truffleruby.core;
 
 import java.util.ArrayList;
 
-import org.truffleruby.annotations.SuppressFBWarnings;
 import org.truffleruby.cext.CapturedException;
 import org.truffleruby.cext.ValueWrapper;
 import org.truffleruby.core.array.ArrayUtils;
@@ -44,8 +43,11 @@ public final class MarkingService {
     protected static final class ExtensionCallStackEntry {
 
         private final ExtensionCallStackEntry previous;
-        ValueWrapper preservedObject;
-        @SuppressFBWarnings("UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR") ArrayList<ValueWrapper> preservedObjectList;
+        /** The wrappers converted to native handles during the current C extension call, kept alive until the entry is
+         * popped. Allocated eagerly since almost every downcall/upcall keeps at least one wrapper alive (e.g. the
+         * receiver). Grown by KeepAliveNode, only preservedObjectsCount elements are set. */
+        ValueWrapper[] preservedObjects = new ValueWrapper[8];
+        int preservedObjectsCount;
         private final boolean keywordsGiven;
         private Object specialVariables;
         private final Object block;
@@ -74,18 +76,6 @@ public final class MarkingService {
 
         public ExtensionCallStack(Object specialVariables, Object block) {
             current = new ExtensionCallStackEntry(null, false, specialVariables, block);
-        }
-
-        public boolean hasKeptObjects() {
-            return current.preservedObject != null;
-        }
-
-        public boolean hasSingleKeptObject() {
-            return current.preservedObject != null && current.preservedObjectList == null;
-        }
-
-        public boolean isPreservedObjectListInitialized() {
-            return current.preservedObjectList != null;
         }
 
         public void markOnExitObject(ValueWrapper value) {
