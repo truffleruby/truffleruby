@@ -137,10 +137,11 @@ static VALUE rb_tr_get_sprintf_args(va_list args, VALUE types) {
       val = LONG2NUM(va_arg(args, ptrdiff_t));
       break;
     case TYPE_STRING:
-      val = rb_tr_up_rb_tr_pointer(va_arg(args, char *));
+      // The address as a tagged Integer VALUE, no upcall or allocation, the Ruby side reads the C string from it
+      val = ULONG2NUM((uintptr_t) va_arg(args, char *));
       break;
     case TYPE_POINTER:
-      val = rb_tr_up_rb_tr_pointer(va_arg(args, void *));
+      val = ULONG2NUM((uintptr_t) va_arg(args, void *));
       break;
     case TYPE_SCHAR:
     case TYPE_SSHORT:

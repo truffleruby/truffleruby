@@ -503,7 +503,6 @@ module CExtUpcalls
     ["rb_tr_log_warning", :cext, "O", "V"],
     ["rb_tr_not_implemented", :cext, "O", "V"],
     ["rb_tr_obj_equal", :cext, "V", "VV"],
-    ["rb_tr_pointer", :cext, "V", "P"],
     ["rb_tr_set_default_alloc_func", :cext, "O", "VP"],
     ["rb_tr_set_flags", :cext, "O", "VL"],
     ["rb_tr_sprintf", :cext, "V", "VPV"],

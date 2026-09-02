@@ -487,7 +487,6 @@ void * (*rb_tr_up_impl_rb_tr_io_pointer)(VALUE v0);
 void (*rb_tr_up_impl_rb_tr_log_warning)(VALUE v0);
 void (*rb_tr_up_impl_rb_tr_not_implemented)(VALUE v0);
 VALUE (*rb_tr_up_impl_rb_tr_obj_equal)(VALUE v0, VALUE v1);
-VALUE (*rb_tr_up_impl_rb_tr_pointer)(const void *v0);
 void (*rb_tr_up_impl_rb_tr_set_default_alloc_func)(VALUE v0, const void *v1);
 void (*rb_tr_up_impl_rb_tr_set_flags)(VALUE v0, long v1);
 VALUE (*rb_tr_up_impl_rb_tr_sprintf)(VALUE v0, const void *v1, VALUE v2);
@@ -971,7 +970,6 @@ void rb_tr_init_ffm_upcalls(void **upcalls) {
   rb_tr_up_impl_rb_tr_log_warning = (void (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_tr_not_implemented = (void (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_tr_obj_equal = (VALUE (*)(VALUE v0, VALUE v1)) upcalls[i++];
-  rb_tr_up_impl_rb_tr_pointer = (VALUE (*)(const void *v0)) upcalls[i++];
   rb_tr_up_impl_rb_tr_set_default_alloc_func = (void (*)(VALUE v0, const void *v1)) upcalls[i++];
   rb_tr_up_impl_rb_tr_set_flags = (void (*)(VALUE v0, long v1)) upcalls[i++];
   rb_tr_up_impl_rb_tr_sprintf = (VALUE (*)(VALUE v0, const void *v1, VALUE v2)) upcalls[i++];

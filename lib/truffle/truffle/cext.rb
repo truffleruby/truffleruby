@@ -2437,10 +2437,6 @@ module Truffle::CExt
     end
   end
 
-  def rb_tr_pointer(pointer)
-    Truffle::FFI::Pointer.new(pointer)
-  end
-
   def rb_exc_set_message(e, mesg)
     Primitive.exception_set_message(e, mesg)
   end
