@@ -84,30 +84,31 @@ module Truffle::CExt
 
   # encoding.h: `struct rb_encoding`
 
-  RB_ENCODING_NATIVE_CACHE = Array.new(Encoding.list.size, nil) # Encoding index => address of the native rb_encoding struct
-  RB_ENCODING_TO_RUBY_CACHE = {} # address of the native rb_encoding struct => Encoding
-  RB_ENCODING_CACHE_MUTEX = Mutex.new
+  # Tracks which slots of the native rb_encoding block have their name initialized.
+  # Only used to initialize slots, reads of initialized slots need no lookup table.
+  RB_ENCODING_INITIALIZED = []
+  RB_ENCODING_INIT_MUTEX = Mutex.new
 
-  # The address of the native rb_encoding struct for the given Encoding, created and cached on first use
+  # The address of the native rb_encoding struct for the given Encoding. All the structs are in a single native block
+  # (rb_tr_encodings in encoding.c), ordered by the encoding's index, so the address is computed from the index.
   def rb_encoding_native_address(encoding)
     index = Primitive.encoding_get_encoding_index(encoding)
-    address = RB_ENCODING_NATIVE_CACHE[index]
-    return address if address
-
-    RB_ENCODING_CACHE_MUTEX.synchronize do
-      RB_ENCODING_NATIVE_CACHE[index] || begin
-        # The name is stored in the native rb_encoding struct, so it must be converted to native first
-        name = Primitive.cext_invoke_l_l(RSTRING_PTR_FUNCTION, Primitive.cext_wrap(encoding.name))
-        address = Primitive.cext_invoke_l_l(ENCODING_TO_NATIVE_FUNCTION, name)
-        RB_ENCODING_TO_RUBY_CACHE[address] = encoding
-        RB_ENCODING_NATIVE_CACHE[index] = address
+    unless RB_ENCODING_INITIALIZED[index]
+      RB_ENCODING_INIT_MUTEX.synchronize do
+        unless RB_ENCODING_INITIALIZED[index]
+          # The name is stored in the native rb_encoding struct, so it must be converted to native first.
+          # The name String is kept alive by the Encoding object.
+          name = Primitive.cext_invoke_l_l(RSTRING_PTR_FUNCTION, Primitive.cext_wrap(encoding.name))
+          Primitive.cext_invoke_v_ll(SETUP_ENCODING_FUNCTION, index, name)
+          RB_ENCODING_INITIALIZED[index] = true
+        end
       end
     end
+    RB_ENCODINGS_BASE + index * RB_ENCODING_SIZE
   end
 
-  # The Encoding for the address of a native rb_encoding struct created by rb_encoding_native_address().
-  # No synchronization needed as Hash is thread-safe.
+  # The Encoding for the address of a native rb_encoding struct, computed from the address, see above
   def rb_encoding_from_native(address)
-    RB_ENCODING_TO_RUBY_CACHE.fetch(address)
+    Primitive.encoding_get_encoding_by_index((address - RB_ENCODINGS_BASE) / RB_ENCODING_SIZE)
   end
 end

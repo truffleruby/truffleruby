@@ -95,7 +95,9 @@ module Truffle::CExt
     RDATA_RUN_FINALIZER = lib[:rb_tr_rdata_run_finalizer]
     RTYPEDDATA_RUN_FINALIZER = lib[:rb_tr_rtypeddata_run_finalizer]
     RSTRING_PTR_FUNCTION = lib[:rb_tr_rstring_ptr]
-    ENCODING_TO_NATIVE_FUNCTION = lib[:rb_encoding_to_native]
+    SETUP_ENCODING_FUNCTION = lib[:rb_tr_setup_encoding]
+    RB_ENCODINGS_BASE = lib[:rb_tr_encodings]
+    RB_ENCODING_SIZE = Primitive.pointer_read_long(lib[:rb_tr_sizeof_encoding])
     READ_VALUE_POINTER_FUNCTION = lib[:rb_tr_read_VALUE_pointer]
     RDATA_DATA_FUNCTION = lib[:rb_tr_rdata_data]
   end
@@ -210,6 +212,10 @@ module Truffle::CExt
 
     # Creates the FFM upcall stubs and calls rb_tr_init() with them and the constant handles
     Primitive.cext_init_ffm(libtruffleruby, constants)
+
+    # Initialize the native rb_encoding structs of all encodings created so far.
+    # Encodings created later are initialized in rb_encoding_native_address().
+    Encoding.list.each { |encoding| rb_encoding_native_address(encoding) }
 
     Truffle::CExt.cext_start_new_handle_block
   end
