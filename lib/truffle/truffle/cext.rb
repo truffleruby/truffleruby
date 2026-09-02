@@ -963,13 +963,6 @@ module Truffle::CExt
     Primitive.pointer_read_bytes(pointer, length)
   end
 
-  # A single upcall for rb_enc_str_new(), as it is used for every String created by C extension
-  # code with a known encoding (e.g. every String parsed by the json C extension)
-  def rb_enc_str_new_native(pointer, length, rb_encoding)
-    string = Primitive.pointer_read_bytes(pointer, length)
-    string.force_encoding(rb_encoding_from_native(rb_encoding))
-  end
-
   def rb_enc_str_coderange(str)
     cr = Primitive.string_get_coderange str
     coderange_java_to_rb(cr)
@@ -2350,12 +2343,6 @@ module Truffle::CExt
   end
 
   def RSTRING_PTR(string)
-    Primitive.string_pointer_to_native(string)
-  end
-
-  # A single upcall for RSTRING_GETMEM(), which reads both RSTRING_PTR() and RSTRING_LEN()
-  def rb_tr_rstring_getmem(string, len_pointer)
-    Primitive.pointer_write_long(len_pointer, string.bytesize)
     Primitive.string_pointer_to_native(string)
   end
 

@@ -125,6 +125,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.ReportPolymorphism;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -1281,6 +1282,55 @@ public abstract class CExtNodes {
         long toNative(Object string,
                 @Cached StringToNativeNode stringToNativeNode) {
             return stringToNativeNode.executeToNative(this, string, true).getAddress();
+        }
+    }
+
+    /** A single upcall for RSTRING_GETMEM(): writes RSTRING_LEN() to lenPointer and returns RSTRING_PTR(). Hot for the
+     * json parser, whose string cache calls RSTRING_GETMEM on a cached String for every cache probe. */
+    @CoreMethod(names = "rb_tr_rstring_getmem", onSingleton = true, required = 2)
+    public abstract static class RbTrRStringGetMemNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization(guards = "libString.isRubyString(this, string)", limit = "1")
+        static long getmem(Object string, long lenPointer,
+                @Bind Node node,
+                @Cached RubyStringLibrary libString,
+                @Cached StringToNativeNode stringToNativeNode) {
+            Pointer pointer = stringToNativeNode.executeToNative(node, string, true);
+            int byteLength = libString.getTString(node, string).byteLength(libString.getTEncoding(node, string));
+            Pointer.rawWriteLong(lenPointer, byteLength);
+            return pointer.getAddress();
+        }
+    }
+
+    /** A single upcall for rb_enc_str_new(): creates the String with the right Encoding directly, avoiding a separate
+     * force_encoding and encoding lookup. Hot for the json parser, which creates every parsed String this way. The
+     * Encoding is looked up from the native rb_encoding address with an inline cache, as C extensions use very few
+     * distinct encodings. */
+    @CoreMethod(names = "rb_enc_str_new_native", onSingleton = true, required = 3, lowerFixnum = 2)
+    public abstract static class RbEncStrNewNativeNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization(guards = "rbEncoding == cachedRbEncoding", limit = "4")
+        RubyString encStrNewCached(long pointer, int length, long rbEncoding,
+                @Cached("rbEncoding") long cachedRbEncoding,
+                @Cached("lookupEncoding(rbEncoding)") RubyEncoding cachedEncoding,
+                @Cached @Shared TruffleString.FromNativePointerNode fromNativePointerNode) {
+            var tstring = fromNativePointerNode.execute(pointer, 0, length, cachedEncoding.tencoding, true);
+            return createString(tstring, cachedEncoding);
+        }
+
+        @Specialization(replaces = "encStrNewCached")
+        RubyString encStrNewGeneric(long pointer, int length, long rbEncoding,
+                @Cached DispatchNode dispatchNode,
+                @Cached @Shared TruffleString.FromNativePointerNode fromNativePointerNode) {
+            var encoding = (RubyEncoding) dispatchNode.call(coreLibrary().truffleCExtModule, "rb_encoding_from_native",
+                    rbEncoding);
+            var tstring = fromNativePointerNode.execute(pointer, 0, length, encoding.tencoding, true);
+            return createString(tstring, encoding);
+        }
+
+        protected RubyEncoding lookupEncoding(long rbEncoding) {
+            return (RubyEncoding) DispatchNode.getUncached().call(
+                    getContext().getCoreLibrary().truffleCExtModule, "rb_encoding_from_native", rbEncoding);
         }
     }
 
