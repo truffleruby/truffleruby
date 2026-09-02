@@ -264,6 +264,7 @@ int (*rb_tr_up_impl_rb_enc_precise_mbclen)(VALUE v0);
 void (*rb_tr_up_impl_rb_enc_set_index)(VALUE v0, int v1);
 int (*rb_tr_up_impl_rb_enc_str_coderange)(VALUE v0);
 VALUE (*rb_tr_up_impl_rb_enc_str_new_native)(const void *v0, long v1, const void *v2);
+VALUE (*rb_tr_up_impl_rb_tr_enc_str_new_cstr)(const void *v0, const void *v1);
 long (*rb_tr_up_impl_rb_enc_strlen)(VALUE v0);
 int (*rb_tr_up_impl_rb_enc_to_index)(VALUE v0);
 VALUE (*rb_tr_up_impl_rb_ensure)(const void *v0, const void *v1, const void *v2, const void *v3);
@@ -747,6 +748,7 @@ void rb_tr_init_ffm_upcalls(void **upcalls) {
   rb_tr_up_impl_rb_enc_set_index = (void (*)(VALUE v0, int v1)) upcalls[i++];
   rb_tr_up_impl_rb_enc_str_coderange = (int (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_enc_str_new_native = (VALUE (*)(const void *v0, long v1, const void *v2)) upcalls[i++];
+  rb_tr_up_impl_rb_tr_enc_str_new_cstr = (VALUE (*)(const void *v0, const void *v1)) upcalls[i++];
   rb_tr_up_impl_rb_enc_strlen = (long (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_enc_to_index = (int (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_ensure = (VALUE (*)(const void *v0, const void *v1, const void *v2, const void *v3)) upcalls[i++];

@@ -280,6 +280,7 @@ module CExtUpcalls
     ["rb_enc_set_index", :cext, "O", "VI"],
     ["rb_enc_str_coderange", :cext, "I", "V"],
     ["rb_enc_str_new_native", :cext, "V", "PLP"],
+    ["rb_tr_enc_str_new_cstr", :cext, "V", "PP"],
     ["rb_enc_strlen", :cext, "L", "V"],
     ["rb_enc_to_index", :cext, "I", "V"],
     ["rb_ensure", :cext, "W", "PPPP"],

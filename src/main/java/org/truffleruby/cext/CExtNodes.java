@@ -1334,6 +1334,36 @@ public abstract class CExtNodes {
         }
     }
 
+    /** A single upcall for rb_str_new_cstr() & similar: reads the zero-terminated C string and creates the String with
+     * the right Encoding in one pass, instead of a strlen() followed by reading the bytes. */
+    @CoreMethod(names = "rb_tr_enc_str_new_cstr", onSingleton = true, required = 2)
+    public abstract static class RbTrEncStrNewCStrNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization(guards = "rbEncoding == cachedRbEncoding", limit = "4")
+        RubyString encStrNewCStrCached(long pointer, long rbEncoding,
+                @Cached("rbEncoding") long cachedRbEncoding,
+                @Cached("lookupEncoding(rbEncoding)") RubyEncoding cachedEncoding,
+                @Cached @Shared TruffleString.FromZeroTerminatedNativePointerNode fromZeroTerminatedNativePointerNode) {
+            var tstring = fromZeroTerminatedNativePointerNode.execute8Bit(pointer, 0, cachedEncoding.tencoding, true);
+            return createString(tstring, cachedEncoding);
+        }
+
+        @Specialization(replaces = "encStrNewCStrCached")
+        RubyString encStrNewCStrGeneric(long pointer, long rbEncoding,
+                @Cached DispatchNode dispatchNode,
+                @Cached @Shared TruffleString.FromZeroTerminatedNativePointerNode fromZeroTerminatedNativePointerNode) {
+            var encoding = (RubyEncoding) dispatchNode.call(coreLibrary().truffleCExtModule, "rb_encoding_from_native",
+                    rbEncoding);
+            var tstring = fromZeroTerminatedNativePointerNode.execute8Bit(pointer, 0, encoding.tencoding, true);
+            return createString(tstring, encoding);
+        }
+
+        protected RubyEncoding lookupEncoding(long rbEncoding) {
+            return (RubyEncoding) DispatchNode.getUncached().call(
+                    getContext().getCoreLibrary().truffleCExtModule, "rb_encoding_from_native", rbEncoding);
+        }
+    }
+
     @CoreMethod(names = "string_to_ffi_pointer_inplace", onSingleton = true, required = 1)
     public abstract static class StringToFFIPointerInplaceNode extends CoreMethodArrayArgumentsNode {
 

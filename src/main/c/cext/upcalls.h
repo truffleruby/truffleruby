@@ -2069,6 +2069,15 @@ static inline VALUE rb_tr_up_rb_enc_str_new_native(const void *v0, long v1, cons
   return result;
 }
 
+extern VALUE (*rb_tr_up_impl_rb_tr_enc_str_new_cstr)(const void *v0, const void *v1);
+static inline VALUE rb_tr_up_rb_tr_enc_str_new_cstr(const void *v0, const void *v1) {
+  VALUE result = rb_tr_up_impl_rb_tr_enc_str_new_cstr(v0, v1);
+  if (UNLIKELY(rb_tr_pending_exception)) {
+    rb_tr_longjmp_from_java_exception();
+  }
+  return result;
+}
+
 extern long (*rb_tr_up_impl_rb_enc_strlen)(VALUE v0);
 static inline long rb_tr_up_rb_enc_strlen(VALUE v0) {
   long result = rb_tr_up_impl_rb_enc_strlen(v0);

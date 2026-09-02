@@ -377,9 +377,7 @@ VALUE rb_enc_str_new_cstr(const char *ptr, rb_encoding *enc) {
     rb_raise(rb_eArgError, "wchar encoding given");
   }
 
-  VALUE string = rb_str_new_cstr(ptr);
-  rb_enc_associate(string, enc);
-  return string;
+  return rb_tr_up_rb_tr_enc_str_new_cstr(ptr, enc);
 }
 
 VALUE rb_enc_str_new_static(const char *ptr, long len, rb_encoding *enc) {

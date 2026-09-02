@@ -76,9 +76,7 @@ VALUE rb_str_new_static(const char *ptr, long len) {
 }
 
 VALUE rb_str_new_cstr(const char *string) {
-  // TODO CS 24-Oct-17 would be nice to read in one go rather than strlen followed by read
-  size_t len = strlen(string);
-  return rb_str_new(string, len);
+  return rb_tr_up_rb_tr_enc_str_new_cstr(string, rb_ascii8bit_encoding());
 }
 
 VALUE rb_str_new_shared(VALUE string) {
@@ -364,7 +362,7 @@ VALUE rb_usascii_str_new_static(const char *ptr, long len) {
 }
 
 VALUE rb_usascii_str_new_cstr(const char *ptr) {
-  return rb_usascii_str_new(ptr, strlen(ptr));
+  return rb_tr_up_rb_tr_enc_str_new_cstr(ptr, rb_usascii_encoding());
 }
 
 VALUE rb_str_times(VALUE string, VALUE times) {
@@ -382,8 +380,7 @@ VALUE rb_utf8_str_new(const char *ptr, long len) {
 
 #undef rb_utf8_str_new_cstr
 VALUE rb_utf8_str_new_cstr(const char *ptr) {
-  // TODO CS 11-Oct-19 would be nice to read in one go rather than strlen followed by read
-  return rb_utf8_str_new(ptr, strlen(ptr));
+  return rb_tr_up_rb_tr_enc_str_new_cstr(ptr, rb_utf8_encoding());
 }
 
 VALUE rb_utf8_str_new_static(const char *ptr, long len) {
