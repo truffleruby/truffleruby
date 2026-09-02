@@ -166,6 +166,7 @@ Compatibility:
 * Create sockets in non-blocking mode with `FD_CLOEXEC` set and emulate blocking socket operations by waiting for readiness, like CRuby, so C extensions such as `trilogy` can take over the descriptors (@nirvdrum).
 * Accept objects responding to `#to_path` for the path argument of `UNIXSocket.new` and `UNIXServer.new`, preserving the path bytes like CRuby (@nirvdrum).
 * Implement `rb_ractor_local_storage_value_newkey()`, `rb_ractor_local_storage_value()`, `rb_ractor_local_storage_value_lookup()` and `rb_ractor_local_storage_value_set()` (@nirvdrum).
+* Fix `Enumerator::Lazy#{compact,drop,drop_while,grep,grep_v,reject,select,take,take_while,uniq}` to pass multiple values yielded by the source to the next method in the chain, and all lazy methods to see a source yield with no value as `nil` (#4420, @sampokuokkanen).
 
 Performance:
 

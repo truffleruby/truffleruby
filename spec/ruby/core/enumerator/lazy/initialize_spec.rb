@@ -60,4 +60,10 @@ describe "Enumerator::Lazy#initialize" do
       -> {  @uninitialized.freeze.send(:initialize, @receiver) {} }.should.raise(FrozenError)
     end
   end
+
+  it "passes the values its block yields on without packing them into an Array" do
+    args = nil
+    Enumerator::Lazy.new(@receiver) { |yielder, *values| yielder.yield 1, 2 }.each { |*a| args = a }
+    args.should == [1, 2]
+  end
 end

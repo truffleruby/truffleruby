@@ -23,5 +23,4 @@ exclude :test_sort_by, "ArgumentError: wrong number of arguments (given 1, expec
 exclude :test_sum, "NameError: uninitialized constant TestEnumerable::SimpleDelegator"
 exclude :test_sum_with_saved_block, "Expected 1 to be nil."
 exclude :test_sum_with_saved_block_and_block, "Expected 2 to be nil."
-exclude :test_take_while, "ArgumentError: wrong number of arguments (given 1, expected 2)"
 exclude :test_zip, "ArgumentError: wrong number of arguments (given 1, expected 2)"
