@@ -46,8 +46,9 @@ import org.truffleruby.debug.VariableNamesObject;
 
 /** A native library loaded with dlopen(3) through FFM downcalls. Unlike {@code SymbolLookup#libraryLookup} this allows
  * controlling the RTLD flags, notably RTLD_GLOBAL which is needed so C extensions can resolve {@code rb_*} symbols from
- * libtruffleruby lazily. Libraries are never dlclose()'d: native code may retain function pointers into them for the
- * lifetime of the process.
+ * libtruffleruby lazily. Libraries are dlclose()'d when the Ruby context which loaded them is disposed (see
+ * {@code FeatureLoader#closeCExtLibraries()}), so their static variables do not retain state of a disposed context and
+ * a later Ruby context in the same process re-dlopen()s them with freshly-initialized static variables.
  *
  * <p>
  * As an interop object, reading a member returns the address of that symbol as a long, or throws
@@ -57,11 +58,13 @@ public final class NativeLibrary implements TruffleObject {
 
     private static final MethodHandle DLOPEN = FFMSupport.createDowncallHandle("L(LI)");
     private static final MethodHandle DLSYM = FFMSupport.createDowncallHandle("L(LL)");
+    private static final MethodHandle DLCLOSE = FFMSupport.createDowncallHandle("I(L)");
     private static final MethodHandle DLERROR = FFMSupport.createDowncallHandle("L()");
 
     /** Function addresses, resolved lazily so image build time never looks up native symbols */
     private static long dlopenFunction;
     private static long dlsymFunction;
+    private static long dlcloseFunction;
     private static long dlerrorFunction;
 
     private final String path;
@@ -89,6 +92,7 @@ public final class NativeLibrary implements TruffleObject {
             var defaultLookup = Linker.nativeLinker().defaultLookup();
             dlopenFunction = defaultLookup.find("dlopen").orElseThrow().address();
             dlsymFunction = defaultLookup.find("dlsym").orElseThrow().address();
+            dlcloseFunction = defaultLookup.find("dlclose").orElseThrow().address();
             dlerrorFunction = defaultLookup.find("dlerror").orElseThrow().address();
         }
     }
@@ -124,6 +128,20 @@ public final class NativeLibrary implements TruffleObject {
             return (long) DLSYM.invokeExact(dlsymFunction, handle, namePointer);
         } catch (Throwable t) {
             throw CompilerDirectives.shouldNotReachHere(t);
+        }
+    }
+
+    /** dlclose(3) this library. Only call this once nothing can call into the library anymore. */
+    @TruffleBoundary
+    public void close() {
+        final int result;
+        try {
+            result = (int) DLCLOSE.invokeExact(dlcloseFunction, handle);
+        } catch (Throwable t) {
+            throw CompilerDirectives.shouldNotReachHere(t);
+        }
+        if (result != 0) {
+            throw new UnsatisfiedLinkError(dlerror());
         }
     }
 

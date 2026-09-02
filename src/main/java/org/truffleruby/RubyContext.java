@@ -506,6 +506,7 @@ public final class RubyContext {
         if (cExtFFMLayer != null) {
             CExtFFMLayer.deactivate(cExtFFMLayer);
         }
+        featureLoader.closeCExtLibraries();
 
         Signals.restoreDefaultHandlers();
 

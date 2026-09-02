@@ -59,9 +59,10 @@ import org.truffleruby.platform.NativeLibrary;
 public final class CExtFFMLayer {
 
     /** The layer of the single live Ruby context which currently has C extension support loaded: the upcall stubs, the
-     * C globals filled by rb_tr_init() and the RTLD_GLOBAL symbols are process-wide. Once that context is disposed, a
-     * new context can load C extension support again: it runs rb_tr_init() again with the same upcall stubs (created
-     * once per process) and fresh constant handles, overwriting the C globals. Guarded by the CExtFFMLayer.class
+     * C globals filled by rb_tr_init() and the RTLD_GLOBAL symbols are process-wide. Once that context is disposed, its
+     * native libraries are dlclose()'d (see FeatureLoader#closeCExtLibraries()) and a new context can load C extension
+     * support again: it dlopen()s a fresh libtruffleruby image and runs rb_tr_init() again with the same upcall stubs
+     * (created once per process) and fresh constant handles, filling the C globals. Guarded by the CExtFFMLayer.class
      * monitor together with CExtUpcallTargets' runtime, so deactivating a disposed layer cannot overwrite the runtime
      * of a successor context which activated concurrently. */
     private static CExtFFMLayer activeLayer;

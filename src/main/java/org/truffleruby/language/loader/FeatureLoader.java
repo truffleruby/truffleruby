@@ -79,6 +79,10 @@ public final class FeatureLoader {
     private final ReentrantLock cextImplementationLock = new ReentrantLock();
     private boolean cextImplementationLoaded = false;
 
+    /** The native libraries loaded by this context (libtruffleruby first, then C extensions), so they can be
+     * dlclose()'d on context disposal in {@link #closeCExtLibraries()}. Guarded by its own monitor. */
+    private final List<NativeLibrary> loadedCExtLibraries = new ArrayList<>();
+
     private String cwd = null;
     private static final MethodHandle GETCWD = FFMSupport.createDowncallHandle("L(LL)");
     private long getcwdFunction;
@@ -501,6 +505,10 @@ public final class FeatureLoader {
                         context.getCoreExceptions().loadError(e.getMessage(), currentNode));
             }
 
+            synchronized (loadedCExtLibraries) {
+                loadedCExtLibraries.add(library);
+            }
+
             final Object embeddedABIVersion = getEmbeddedABIVersion(library);
             DispatchNode.getUncached().call(context.getCoreLibrary().truffleCExtModule, "check_abi_version",
                     embeddedABIVersion, path);
@@ -508,6 +516,20 @@ public final class FeatureLoader {
             return library;
         } finally {
             Metrics.printTime("after-load-cext-" + feature);
+        }
+    }
+
+    /** Called on context disposal, once no more native code of these libraries can run. dlclose() every native library
+     * this context loaded, in reverse order so C extensions are closed before libtruffleruby which they link against.
+     * This way their static variables (which can e.g. cache VALUE handles of this context) do not survive this context,
+     * and a later Ruby context in the same process re-dlopen()s the libraries with freshly-initialized static
+     * variables. */
+    @TruffleBoundary
+    public void closeCExtLibraries() {
+        synchronized (loadedCExtLibraries) {
+            while (!loadedCExtLibraries.isEmpty()) {
+                loadedCExtLibraries.removeLast().close();
+            }
         }
     }
 
