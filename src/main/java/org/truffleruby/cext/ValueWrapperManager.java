@@ -17,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.nodes.Node;
@@ -26,7 +25,6 @@ import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.SuppressFBWarnings;
-import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.language.ImmutableRubyObject;
 import org.truffleruby.language.NotProvided;
@@ -36,10 +34,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.TruffleObject;
-import com.oracle.truffle.api.library.ExportLibrary;
-import com.oracle.truffle.api.library.ExportMessage;
 
 @SuppressFBWarnings("VO")
 public final class ValueWrapperManager {
@@ -428,73 +422,6 @@ public final class ValueWrapperManager {
 
     public static long untagTaggedLong(long handle) {
         return handle >> 1;
-    }
-
-    @ExportLibrary(InteropLibrary.class)
-    @GenerateUncached
-    public static final class UnwrapperFunction implements TruffleObject {
-
-        @ExportMessage
-        protected boolean isExecutable() {
-            return true;
-        }
-
-        @ExportMessage
-        protected Object execute(Object[] arguments,
-                @Cached UnwrapNode unwrapNode,
-                @Bind Node node) {
-            return unwrapNode.execute(node, arguments[0]);
-        }
-    }
-
-    @ExportLibrary(InteropLibrary.class)
-    @GenerateUncached
-    public static final class ID2SymbolFunction implements TruffleObject {
-
-        @ExportMessage
-        protected boolean isExecutable() {
-            return true;
-        }
-
-        @ExportMessage
-        public RubySymbol execute(Object[] arguments,
-                @Cached IDToSymbolNode unwrapIDNode) {
-            return unwrapIDNode.execute(arguments[0]);
-        }
-    }
-
-    @ExportLibrary(InteropLibrary.class)
-    @GenerateUncached
-    public static final class Symbol2IDFunction implements TruffleObject {
-
-        @ExportMessage
-        protected boolean isExecutable() {
-            return true;
-        }
-
-        @ExportMessage
-        public Object execute(Object[] arguments,
-                @Cached UnwrapNode unwrapNode,
-                @Cached SymbolToIDNode symbolTOIDNode,
-                @Bind Node node) {
-            return symbolTOIDNode.execute(unwrapNode.execute(node, arguments[0]));
-        }
-    }
-
-    @ExportLibrary(InteropLibrary.class)
-    @GenerateUncached
-    public static final class WrapperFunction implements TruffleObject {
-
-        @ExportMessage
-        protected boolean isExecutable() {
-            return true;
-        }
-
-        @ExportMessage
-        protected ValueWrapper execute(Object[] arguments,
-                @Cached WrapNode wrapNode) {
-            return wrapNode.execute(arguments[0]);
-        }
     }
 
 }
