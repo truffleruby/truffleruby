@@ -53,6 +53,11 @@ public abstract class CExtUpcallTargets {
         CExtUpcallTargets.runtime = runtime;
     }
 
+    /** Each upcall method has an INDEX_* field assigned from this counter in declaration order, matching the order of
+     * {@code UPCALLS} and of the pointer array passed to rb_tr_init_ffm_upcalls(). This way adding or removing an
+     * upcall does not renumber every index in this file. The fields are still constants in compiled code. */
+    private static int nextUpcallIndex = 0;
+
     @TruffleBoundary
     private static void reportException(CExtFFMLayer runtime, Throwable throwable) {
         if (runtime == null) {
@@ -65,4664 +70,5610 @@ public abstract class CExtUpcallTargets {
         }
     }
 
+    private static final int INDEX_DBL2BIG = nextUpcallIndex++;
+
     @CExtUpcall
     public static long upcall_DBL2BIG(double v0) {
         try {
-            return (long) runtime.upcall(0, v0);
+            return (long) runtime.upcall(INDEX_DBL2BIG, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_RARRAY_PTR = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_RARRAY_PTR(long v0) {
         try {
-            return (long) runtime.upcall(1, v0);
+            return (long) runtime.upcall(INDEX_RARRAY_PTR, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_RB_ENC_CODERANGE = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_RB_ENC_CODERANGE(long v0) {
         try {
-            return (int) runtime.upcall(2, v0);
+            return (int) runtime.upcall(INDEX_RB_ENC_CODERANGE, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_RB_FLOAT_TYPE_P = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_RB_FLOAT_TYPE_P(long v0) {
         try {
-            return (int) runtime.upcall(3, v0);
+            return (int) runtime.upcall(INDEX_RB_FLOAT_TYPE_P, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_RB_TYPE_P = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_RB_TYPE_P(long v0, int v1) {
         try {
-            return (int) runtime.upcall(4, v0, v1);
+            return (int) runtime.upcall(INDEX_RB_TYPE_P, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_RDATA = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_RDATA(long v0) {
         try {
-            return (long) runtime.upcall(5, v0);
+            return (long) runtime.upcall(INDEX_RDATA, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_RFLOAT_VALUE = nextUpcallIndex++;
 
     @CExtUpcall
     public static double upcall_RFLOAT_VALUE(long v0) {
         try {
-            return (double) runtime.upcall(6, v0);
+            return (double) runtime.upcall(INDEX_RFLOAT_VALUE, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0.0;
         }
     }
+
+    private static final int INDEX_RSTRING_PTR = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_RSTRING_PTR(long v0) {
         try {
-            return (long) runtime.upcall(7, v0);
+            return (long) runtime.upcall(INDEX_RSTRING_PTR, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_RTYPEDDATA = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_RTYPEDDATA(long v0) {
         try {
-            return (long) runtime.upcall(8, v0);
+            return (long) runtime.upcall(INDEX_RTYPEDDATA, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_RTYPEDDATA_P = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_RTYPEDDATA_P(long v0) {
         try {
-            return (int) runtime.upcall(9, v0);
+            return (int) runtime.upcall(INDEX_RTYPEDDATA_P, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_SYMBOL_P = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_SYMBOL_P(long v0) {
         try {
-            return (int) runtime.upcall(10, v0);
+            return (int) runtime.upcall(INDEX_SYMBOL_P, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_ascii8bit_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_ascii8bit_encoding() {
         try {
-            return (long) runtime.upcall(11);
+            return (long) runtime.upcall(INDEX_ascii8bit_encoding);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_cext_module_function = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_cext_module_function(long v0, long v1) {
         try {
-            runtime.upcall(12, v0, v1);
+            runtime.upcall(INDEX_cext_module_function, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_code_to_mbclen = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_code_to_mbclen(long v0, long v1) {
         try {
-            return (int) runtime.upcall(13, v0, v1);
+            return (int) runtime.upcall(INDEX_code_to_mbclen, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_ensure_class = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_ensure_class(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(14, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_ensure_class, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0___allocate__ = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0___allocate__(long v0) {
         try {
-            return (long) runtime.upcall(15, v0);
+            return (long) runtime.upcall(INDEX_send0___allocate__, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_alive_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_alive_p(long v0) {
         try {
-            return (long) runtime.upcall(16, v0);
+            return (long) runtime.upcall(INDEX_send0_alive_p, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_ancestors = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_ancestors(long v0) {
         try {
-            return (long) runtime.upcall(17, v0);
+            return (long) runtime.upcall(INDEX_send0_ancestors, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_b_ascii_compatible_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_send0_b_ascii_compatible_p(long v0) {
         try {
-            return (int) runtime.upcall(18, v0);
+            return (int) runtime.upcall(INDEX_send0_b_ascii_compatible_p, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_send0_b_ascii_only_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_send0_b_ascii_only_p(long v0) {
         try {
-            return (int) runtime.upcall(19, v0);
+            return (int) runtime.upcall(INDEX_send0_b_ascii_only_p, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_send0_b_dummy_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_send0_b_dummy_p(long v0) {
         try {
-            return (int) runtime.upcall(20, v0);
+            return (int) runtime.upcall(INDEX_send0_b_dummy_p, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_send0_binding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_binding(long v0) {
         try {
-            return (long) runtime.upcall(21, v0);
+            return (long) runtime.upcall(INDEX_send0_binding, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_begin = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_begin(long v0) {
         try {
-            return (long) runtime.upcall(22, v0);
+            return (long) runtime.upcall(INDEX_send0_begin, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_binmode = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_binmode(long v0) {
         try {
-            return (long) runtime.upcall(23, v0);
+            return (long) runtime.upcall(INDEX_send0_binmode, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_class = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_class(long v0) {
         try {
-            return (long) runtime.upcall(24, v0);
+            return (long) runtime.upcall(INDEX_send0_class, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_clear = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_clear(long v0) {
         try {
-            return (long) runtime.upcall(25, v0);
+            return (long) runtime.upcall(INDEX_send0_clear, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_close = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_close(long v0) {
         try {
-            return (long) runtime.upcall(26, v0);
+            return (long) runtime.upcall(INDEX_send0_close, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_closed_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_closed_p(long v0) {
         try {
-            return (long) runtime.upcall(27, v0);
+            return (long) runtime.upcall(INDEX_send0_closed_p, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_current = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_current(long v0) {
         try {
-            return (long) runtime.upcall(28, v0);
+            return (long) runtime.upcall(INDEX_send0_current, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_default_external = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_default_external(long v0) {
         try {
-            return (long) runtime.upcall(29, v0);
+            return (long) runtime.upcall(INDEX_send0_default_external, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_default_internal = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_default_internal(long v0) {
         try {
-            return (long) runtime.upcall(30, v0);
+            return (long) runtime.upcall(INDEX_send0_default_internal, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_delete_if = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_delete_if(long v0) {
         try {
-            return (long) runtime.upcall(31, v0);
+            return (long) runtime.upcall(INDEX_send0_delete_if, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_denominator = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_denominator(long v0) {
         try {
-            return (long) runtime.upcall(32, v0);
+            return (long) runtime.upcall(INDEX_send0_denominator, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_disable = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_disable(long v0) {
         try {
-            return (long) runtime.upcall(33, v0);
+            return (long) runtime.upcall(INDEX_send0_disable, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_dup = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_dup(long v0) {
         try {
-            return (long) runtime.upcall(34, v0);
+            return (long) runtime.upcall(INDEX_send0_dup, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_each = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_each(long v0) {
         try {
-            return (long) runtime.upcall(35, v0);
+            return (long) runtime.upcall(INDEX_send0_each, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_enable = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_enable(long v0) {
         try {
-            return (long) runtime.upcall(36, v0);
+            return (long) runtime.upcall(INDEX_send0_enable, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_enabled_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_enabled_p(long v0) {
         try {
-            return (long) runtime.upcall(37, v0);
+            return (long) runtime.upcall(INDEX_send0_enabled_p, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_encoding(long v0) {
         try {
-            return (long) runtime.upcall(38, v0);
+            return (long) runtime.upcall(INDEX_send0_encoding, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_end = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_end(long v0) {
         try {
-            return (long) runtime.upcall(39, v0);
+            return (long) runtime.upcall(INDEX_send0_end, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_exclude_end_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_exclude_end_p(long v0) {
         try {
-            return (long) runtime.upcall(40, v0);
+            return (long) runtime.upcall(INDEX_send0_exclude_end_p, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_flush = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_flush(long v0) {
         try {
-            return (long) runtime.upcall(41, v0);
+            return (long) runtime.upcall(INDEX_send0_flush, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_getbyte = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_getbyte(long v0) {
         try {
-            return (long) runtime.upcall(42, v0);
+            return (long) runtime.upcall(INDEX_send0_getbyte, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_gets = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_gets(long v0) {
         try {
-            return (long) runtime.upcall(43, v0);
+            return (long) runtime.upcall(INDEX_send0_gets, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_i_arity = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_send0_i_arity(long v0) {
         try {
-            return (int) runtime.upcall(44, v0);
+            return (int) runtime.upcall(INDEX_send0_i_arity, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_send0_i_bytesize = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_send0_i_bytesize(long v0) {
         try {
-            return (int) runtime.upcall(45, v0);
+            return (int) runtime.upcall(INDEX_send0_i_bytesize, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_send0_imag = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_imag(long v0) {
         try {
-            return (long) runtime.upcall(46, v0);
+            return (long) runtime.upcall(INDEX_send0_imag, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_inspect = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_inspect(long v0) {
         try {
-            return (long) runtime.upcall(47, v0);
+            return (long) runtime.upcall(INDEX_send0_inspect, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_instance_methods = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_instance_methods(long v0) {
         try {
-            return (long) runtime.upcall(48, v0);
+            return (long) runtime.upcall(INDEX_send0_instance_methods, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_intern = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_intern(long v0) {
         try {
-            return (long) runtime.upcall(49, v0);
+            return (long) runtime.upcall(INDEX_send0_intern, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_keys = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_keys(long v0) {
         try {
-            return (long) runtime.upcall(50, v0);
+            return (long) runtime.upcall(INDEX_send0_keys, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_l_hash = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_l_hash(long v0) {
         try {
-            return (long) runtime.upcall(51, v0);
+            return (long) runtime.upcall(INDEX_send0_l_hash, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_l_size = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_l_size(long v0) {
         try {
-            return (long) runtime.upcall(52, v0);
+            return (long) runtime.upcall(INDEX_send0_l_size, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_l_tv_nsec = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_l_tv_nsec(long v0) {
         try {
-            return (long) runtime.upcall(53, v0);
+            return (long) runtime.upcall(INDEX_send0_l_tv_nsec, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_l_tv_sec = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_l_tv_sec(long v0) {
         try {
-            return (long) runtime.upcall(54, v0);
+            return (long) runtime.upcall(INDEX_send0_l_tv_sec, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_l_tv_usec = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_l_tv_usec(long v0) {
         try {
-            return (long) runtime.upcall(55, v0);
+            return (long) runtime.upcall(INDEX_send0_l_tv_usec, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_length = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_length(long v0) {
         try {
-            return (long) runtime.upcall(56, v0);
+            return (long) runtime.upcall(INDEX_send0_length, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_members = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_members(long v0) {
         try {
-            return (long) runtime.upcall(57, v0);
+            return (long) runtime.upcall(INDEX_send0_members, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_name = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_name(long v0) {
         try {
-            return (long) runtime.upcall(58, v0);
+            return (long) runtime.upcall(INDEX_send0_name, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_now = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_now(long v0) {
         try {
-            return (long) runtime.upcall(59, v0);
+            return (long) runtime.upcall(INDEX_send0_now, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_numerator = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_numerator(long v0) {
         try {
-            return (long) runtime.upcall(60, v0);
+            return (long) runtime.upcall(INDEX_send0_numerator, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_o_lock = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_send0_o_lock(long v0) {
         try {
-            runtime.upcall(61, v0);
+            runtime.upcall(INDEX_send0_o_lock, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_send0_o_pass = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_send0_o_pass(long v0) {
         try {
-            runtime.upcall(62, v0);
+            runtime.upcall(INDEX_send0_o_pass, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_send0_o_unlock = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_send0_o_unlock(long v0) {
         try {
-            runtime.upcall(63, v0);
+            runtime.upcall(INDEX_send0_o_unlock, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_send0_pop = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_pop(long v0) {
         try {
-            return (long) runtime.upcall(64, v0);
+            return (long) runtime.upcall(INDEX_send0_pop, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_private_instance_methods = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_private_instance_methods(long v0) {
         try {
-            return (long) runtime.upcall(65, v0);
+            return (long) runtime.upcall(INDEX_send0_private_instance_methods, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_protected_instance_methods = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_protected_instance_methods(long v0) {
         try {
-            return (long) runtime.upcall(66, v0);
+            return (long) runtime.upcall(INDEX_send0_protected_instance_methods, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_public_instance_methods = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_public_instance_methods(long v0) {
         try {
-            return (long) runtime.upcall(67, v0);
+            return (long) runtime.upcall(INDEX_send0_public_instance_methods, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_real = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_real(long v0) {
         try {
-            return (long) runtime.upcall(68, v0);
+            return (long) runtime.upcall(INDEX_send0_real, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_reverse_bang = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_reverse_bang(long v0) {
         try {
-            return (long) runtime.upcall(69, v0);
+            return (long) runtime.upcall(INDEX_send0_reverse_bang, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_shift = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_shift(long v0) {
         try {
-            return (long) runtime.upcall(70, v0);
+            return (long) runtime.upcall(INDEX_send0_shift, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_size = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_size(long v0) {
         try {
-            return (long) runtime.upcall(71, v0);
+            return (long) runtime.upcall(INDEX_send0_size, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_sort = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_sort(long v0) {
         try {
-            return (long) runtime.upcall(72, v0);
+            return (long) runtime.upcall(INDEX_send0_sort, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_sort_bang = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_sort_bang(long v0) {
         try {
-            return (long) runtime.upcall(73, v0);
+            return (long) runtime.upcall(INDEX_send0_sort_bang, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_superclass = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_superclass(long v0) {
         try {
-            return (long) runtime.upcall(74, v0);
+            return (long) runtime.upcall(INDEX_send0_superclass, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_to_s = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_to_s(long v0) {
         try {
-            return (long) runtime.upcall(75, v0);
+            return (long) runtime.upcall(INDEX_send0_to_s, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_uminus = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_uminus(long v0) {
         try {
-            return (long) runtime.upcall(76, v0);
+            return (long) runtime.upcall(INDEX_send0_uminus, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send0_wakeup = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send0_wakeup(long v0) {
         try {
-            return (long) runtime.upcall(77, v0);
+            return (long) runtime.upcall(INDEX_send0_wakeup, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_add_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_add_p(long v0, long v1) {
         try {
-            return (long) runtime.upcall(78, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_add_p, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_aref = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_aref(long v0, long v1) {
         try {
-            return (long) runtime.upcall(79, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_aref, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_b_eq = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_send1_b_eq(long v0, long v1) {
         try {
-            return (int) runtime.upcall(80, v0, v1);
+            return (int) runtime.upcall(INDEX_send1_b_eq, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_send1_concat = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_concat(long v0, long v1) {
         try {
-            return (long) runtime.upcall(81, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_concat, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_delete = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_delete(long v0, long v1) {
         try {
-            return (long) runtime.upcall(82, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_delete, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_delete_at = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_delete_at(long v0, long v1) {
         try {
-            return (long) runtime.upcall(83, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_delete_at, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_delete_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_delete_p(long v0, long v1) {
         try {
-            return (long) runtime.upcall(84, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_delete_p, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_eq = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_eq(long v0, long v1) {
         try {
-            return (long) runtime.upcall(85, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_eq, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_extend_object = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_extend_object(long v0, long v1) {
         try {
-            return (long) runtime.upcall(86, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_extend_object, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_fetch = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_fetch(long v0, long v1) {
         try {
-            return (long) runtime.upcall(87, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_fetch, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_force_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_force_encoding(long v0, long v1) {
         try {
-            return (long) runtime.upcall(88, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_force_encoding, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_i_aref = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_send1_i_aref(long v0, long v1) {
         try {
-            return (int) runtime.upcall(89, v0, v1);
+            return (int) runtime.upcall(INDEX_send1_i_aref, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_send1_i_cmp = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_send1_i_cmp(long v0, long v1) {
         try {
-            return (int) runtime.upcall(90, v0, v1);
+            return (int) runtime.upcall(INDEX_send1_i_cmp, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_send1_include_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_include_p(long v0, long v1) {
         try {
-            return (long) runtime.upcall(91, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_include_p, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_instance_methods = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_instance_methods(long v0, long v1) {
         try {
-            return (long) runtime.upcall(92, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_instance_methods, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_join = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_join(long v0, long v1) {
         try {
-            return (long) runtime.upcall(93, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_join, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_lshift = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_lshift(long v0, long v1) {
         try {
-            return (long) runtime.upcall(94, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_lshift, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(95, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_new, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_o_include = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_send1_o_include(long v0, long v1) {
         try {
-            runtime.upcall(96, v0, v1);
+            runtime.upcall(INDEX_send1_o_include, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_send1_o_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_send1_o_p(long v0, long v1) {
         try {
-            runtime.upcall(97, v0, v1);
+            runtime.upcall(INDEX_send1_o_p, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_send1_o_prepend = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_send1_o_prepend(long v0, long v1) {
         try {
-            runtime.upcall(98, v0, v1);
+            runtime.upcall(INDEX_send1_o_prepend, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_send1_o_private = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_send1_o_private(long v0, long v1) {
         try {
-            runtime.upcall(99, v0, v1);
+            runtime.upcall(INDEX_send1_o_private, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_send1_o_protected = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_send1_o_protected(long v0, long v1) {
         try {
-            runtime.upcall(100, v0, v1);
+            runtime.upcall(INDEX_send1_o_protected, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_send1_o_push = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_send1_o_push(long v0, long v1) {
         try {
-            runtime.upcall(101, v0, v1);
+            runtime.upcall(INDEX_send1_o_push, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_send1_o_sleep = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_send1_o_sleep(long v0, long v1) {
         try {
-            runtime.upcall(102, v0, v1);
+            runtime.upcall(INDEX_send1_o_sleep, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_send1_path = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_path(long v0, long v1) {
         try {
-            return (long) runtime.upcall(103, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_path, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_plus = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_plus(long v0, long v1) {
         try {
-            return (long) runtime.upcall(104, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_plus, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_private_instance_methods = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_private_instance_methods(long v0, long v1) {
         try {
-            return (long) runtime.upcall(105, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_private_instance_methods, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_protected_instance_methods = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_protected_instance_methods(long v0, long v1) {
         try {
-            return (long) runtime.upcall(106, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_protected_instance_methods, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_public_instance_methods = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_public_instance_methods(long v0, long v1) {
         try {
-            return (long) runtime.upcall(107, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_public_instance_methods, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_replace = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_replace(long v0, long v1) {
         try {
-            return (long) runtime.upcall(108, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_replace, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_rotate_bang = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_rotate_bang(long v0, long v1) {
         try {
-            return (long) runtime.upcall(109, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_rotate_bang, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_split = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_split(long v0, long v1) {
         try {
-            return (long) runtime.upcall(110, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_split, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_times = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_times(long v0, long v1) {
         try {
-            return (long) runtime.upcall(111, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_times, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_unshift = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_unshift(long v0, long v1) {
         try {
-            return (long) runtime.upcall(112, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_unshift, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send1_write = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send1_write(long v0, long v1) {
         try {
-            return (long) runtime.upcall(113, v0, v1);
+            return (long) runtime.upcall(INDEX_send1_write, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send2_aref = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send2_aref(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(114, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_send2_aref, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send2_aset = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send2_aset(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(115, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_send2_aset, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send2_at = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send2_at(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(116, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_send2_at, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send2_b_const_defined_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_send2_b_const_defined_p(long v0, long v1, long v2) {
         try {
-            return (int) runtime.upcall(117, v0, v1, v2);
+            return (int) runtime.upcall(INDEX_send2_b_const_defined_p, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_send2_byteslice = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send2_byteslice(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(118, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_send2_byteslice, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send2_compatible_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send2_compatible_p(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(119, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_send2_compatible_p, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send2_const_get = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send2_const_get(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(120, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_send2_const_get, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send2_o_aset = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_send2_o_aset(long v0, long v1, long v2) {
         try {
-            runtime.upcall(121, v0, v1, v2);
+            runtime.upcall(INDEX_send2_o_aset, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_send2_o_throw = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_send2_o_throw(long v0, long v1, long v2) {
         try {
-            runtime.upcall(122, v0, v1, v2);
+            runtime.upcall(INDEX_send2_o_throw, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_send2_open = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send2_open(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(123, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_send2_open, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_send3_o_aset = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_send3_o_aset(long v0, long v1, long v2, long v3) {
         try {
-            runtime.upcall(124, v0, v1, v2, v3);
+            runtime.upcall(INDEX_send3_o_aset, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_make_binary_if_not_ascii_only = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_make_binary_if_not_ascii_only(long v0) {
         try {
-            runtime.upcall(125, v0);
+            runtime.upcall(INDEX_make_binary_if_not_ascii_only, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_mark_object_on_call_exit = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_mark_object_on_call_exit(long v0) {
         try {
-            runtime.upcall(126, v0);
+            runtime.upcall(INDEX_mark_object_on_call_exit, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_2scomp_bit_length = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_2scomp_bit_length(long v0) {
         try {
-            return (int) runtime.upcall(127, v0);
+            return (int) runtime.upcall(INDEX_rb_2scomp_bit_length, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_Array = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_Array(long v0) {
         try {
-            return (long) runtime.upcall(128, v0);
+            return (long) runtime.upcall(INDEX_rb_Array, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_Complex = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_Complex(long v0, long v1) {
         try {
-            return (long) runtime.upcall(129, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_Complex, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_Float = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_Float(long v0) {
         try {
-            return (long) runtime.upcall(130, v0);
+            return (long) runtime.upcall(INDEX_rb_Float, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_Hash = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_Hash(long v0) {
         try {
-            return (long) runtime.upcall(131, v0);
+            return (long) runtime.upcall(INDEX_rb_Hash, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_Integer = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_Integer(long v0) {
         try {
-            return (long) runtime.upcall(132, v0);
+            return (long) runtime.upcall(INDEX_rb_Integer, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_Rational = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_Rational(long v0, long v1) {
         try {
-            return (long) runtime.upcall(133, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_Rational, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_String = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_String(long v0) {
         try {
-            return (long) runtime.upcall(134, v0);
+            return (long) runtime.upcall(INDEX_rb_String, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_absint_bit_length = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_absint_bit_length(long v0) {
         try {
-            return (int) runtime.upcall(135, v0);
+            return (int) runtime.upcall(INDEX_rb_absint_bit_length, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_absint_singlebit_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_absint_singlebit_p(long v0) {
         try {
-            return (int) runtime.upcall(136, v0);
+            return (int) runtime.upcall(INDEX_rb_absint_singlebit_p, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_alias = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_alias(long v0, long v1, long v2) {
         try {
-            runtime.upcall(137, v0, v1, v2);
+            runtime.upcall(INDEX_rb_alias, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_any_to_s = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_any_to_s(long v0) {
         try {
-            return (long) runtime.upcall(138, v0);
+            return (long) runtime.upcall(INDEX_rb_any_to_s, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_apply = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_apply(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(139, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_apply, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_arity_error_string = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_arity_error_string(int v0, int v1, int v2) {
         try {
-            return (long) runtime.upcall(140, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_arity_error_string, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_array_len = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_array_len(long v0) {
         try {
-            return (long) runtime.upcall(141, v0);
+            return (long) runtime.upcall(INDEX_rb_array_len, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_ary_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_ary_new() {
         try {
-            return (long) runtime.upcall(142);
+            return (long) runtime.upcall(INDEX_rb_ary_new);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_ary_new_capa = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_ary_new_capa(long v0) {
         try {
-            return (long) runtime.upcall(143, v0);
+            return (long) runtime.upcall(INDEX_rb_ary_new_capa, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_ary_new_from_values = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_ary_new_from_values(long v0, long v1) {
         try {
-            return (long) runtime.upcall(144, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_ary_new_from_values, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_ascii8bit_encindex = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_ascii8bit_encindex() {
         try {
-            return (int) runtime.upcall(145);
+            return (int) runtime.upcall(INDEX_rb_ascii8bit_encindex);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_attr = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_attr(long v0, long v1, int v2, int v3, int v4) {
         try {
-            runtime.upcall(146, v0, v1, v2, v3, v4);
+            runtime.upcall(INDEX_rb_attr, v0, v1, v2, v3, v4);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_backref_get = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_backref_get() {
         try {
-            return (long) runtime.upcall(147);
+            return (long) runtime.upcall(INDEX_rb_backref_get);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_backref_set = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_backref_set(long v0) {
         try {
-            return (long) runtime.upcall(148, v0);
+            return (long) runtime.upcall(INDEX_rb_backref_set, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_big_cmp = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_big_cmp(long v0, long v1) {
         try {
-            return (long) runtime.upcall(149, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_big_cmp, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_big_sign = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_big_sign(long v0) {
         try {
-            return (long) runtime.upcall(150, v0);
+            return (long) runtime.upcall(INDEX_rb_big_sign, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_block_call = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_block_call(long v0, long v1, long v2, long v3, long v4) {
         try {
-            return (long) runtime.upcall(151, v0, v1, v2, v3, v4);
+            return (long) runtime.upcall(INDEX_rb_block_call, v0, v1, v2, v3, v4);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_block_proc = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_block_proc() {
         try {
-            return (long) runtime.upcall(152);
+            return (long) runtime.upcall(INDEX_rb_block_proc);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_bug = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_bug(long v0) {
         try {
-            runtime.upcall(153, v0);
+            runtime.upcall(INDEX_rb_bug, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_cFiber = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_cFiber() {
         try {
-            return (long) runtime.upcall(154);
+            return (long) runtime.upcall(INDEX_rb_cFiber);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_call_super = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_call_super(long v0) {
         try {
-            return (long) runtime.upcall(155, v0);
+            return (long) runtime.upcall(INDEX_rb_call_super, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_call_super_kw = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_call_super_kw(long v0) {
         try {
-            return (long) runtime.upcall(156, v0);
+            return (long) runtime.upcall(INDEX_rb_call_super_kw, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_catch_obj = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_catch_obj(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(157, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_catch_obj, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_check_convert_type = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_check_convert_type(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(158, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_check_convert_type, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_check_frozen = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_check_frozen(long v0) {
         try {
-            runtime.upcall(159, v0);
+            runtime.upcall(INDEX_rb_check_frozen, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_check_funcall = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_check_funcall(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(160, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_check_funcall, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_check_symbol_cstr = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_check_symbol_cstr(long v0) {
         try {
-            return (long) runtime.upcall(161, v0);
+            return (long) runtime.upcall(INDEX_rb_check_symbol_cstr, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_check_to_integer = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_check_to_integer(long v0, long v1) {
         try {
-            return (long) runtime.upcall(162, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_check_to_integer, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_check_type = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_check_type(long v0, int v1) {
         try {
-            runtime.upcall(163, v0, v1);
+            runtime.upcall(INDEX_rb_check_type, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_class_get_superclass = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_class_get_superclass(long v0) {
         try {
-            return (long) runtime.upcall(164, v0);
+            return (long) runtime.upcall(INDEX_rb_class_get_superclass, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_class_inherited_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_class_inherited_p(long v0, long v1) {
         try {
-            return (long) runtime.upcall(165, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_class_inherited_p, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_class_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_class_new(long v0) {
         try {
-            return (long) runtime.upcall(166, v0);
+            return (long) runtime.upcall(INDEX_rb_class_new, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_class_new_instance = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_class_new_instance(long v0, long v1) {
         try {
-            return (long) runtime.upcall(167, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_class_new_instance, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_class_new_instance_kw = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_class_new_instance_kw(long v0, long v1) {
         try {
-            return (long) runtime.upcall(168, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_class_new_instance_kw, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_class_of = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_class_of(long v0) {
         try {
-            return (long) runtime.upcall(169, v0);
+            return (long) runtime.upcall(INDEX_rb_class_of, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_class_real = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_class_real(long v0) {
         try {
-            return (long) runtime.upcall(170, v0);
+            return (long) runtime.upcall(INDEX_rb_class_real, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_cmpint = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_cmpint(long v0, long v1, long v2) {
         try {
-            return (int) runtime.upcall(171, v0, v1, v2);
+            return (int) runtime.upcall(INDEX_rb_cmpint, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_complex_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_complex_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(172, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_complex_new, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_complex_polar = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_complex_polar(long v0, long v1) {
         try {
-            return (long) runtime.upcall(173, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_complex_polar, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_complex_raw = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_complex_raw(long v0, long v1) {
         try {
-            return (long) runtime.upcall(174, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_complex_raw, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_complex_set_imag = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_complex_set_imag(long v0, long v1) {
         try {
-            return (long) runtime.upcall(175, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_complex_set_imag, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_complex_set_real = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_complex_set_real(long v0, long v1) {
         try {
-            return (long) runtime.upcall(176, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_complex_set_real, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
 
+    private static final int INDEX_rb_const_defined = nextUpcallIndex++;
+
     @CExtUpcall
     public static int upcall_rb_const_defined(long v0, long v1) {
         try {
-            return (int) runtime.upcall(177, v0, v1);
+            return (int) runtime.upcall(INDEX_rb_const_defined, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
 
+    private static final int INDEX_rb_const_get = nextUpcallIndex++;
+
     @CExtUpcall
     public static long upcall_rb_const_get(long v0, long v1) {
         try {
-            return (long) runtime.upcall(178, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_const_get, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_const_get_from = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_const_get_from(long v0, long v1) {
         try {
-            return (long) runtime.upcall(179, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_const_get_from, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_const_remove = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_const_remove(long v0, long v1) {
         try {
-            return (long) runtime.upcall(180, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_const_remove, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_const_set = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_const_set(long v0, long v1, long v2) {
         try {
-            runtime.upcall(181, v0, v1, v2);
+            runtime.upcall(INDEX_rb_const_set, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_convert_to_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_convert_to_encoding(long v0) {
         try {
-            return (long) runtime.upcall(182, v0);
+            return (long) runtime.upcall(INDEX_rb_convert_to_encoding, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_convert_type = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_convert_type(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(183, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_convert_type, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
 
+    private static final int INDEX_rb_copy_generic_ivar = nextUpcallIndex++;
+
     @CExtUpcall
     public static void upcall_rb_copy_generic_ivar(long v0, long v1) {
         try {
-            runtime.upcall(184, v0, v1);
+            runtime.upcall(INDEX_rb_copy_generic_ivar, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
 
+    private static final int INDEX_rb_cstr_to_dbl = nextUpcallIndex++;
+
     @CExtUpcall
     public static double upcall_rb_cstr_to_dbl(long v0, long v1) {
         try {
-            return (double) runtime.upcall(185, v0, v1);
+            return (double) runtime.upcall(INDEX_rb_cstr_to_dbl, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0.0;
         }
     }
 
+    private static final int INDEX_rb_cstr_to_inum = nextUpcallIndex++;
+
     @CExtUpcall
     public static long upcall_rb_cstr_to_inum(long v0, int v1, int v2) {
         try {
-            return (long) runtime.upcall(186, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_cstr_to_inum, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_cv_get = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_cv_get(long v0, long v1) {
         try {
-            return (long) runtime.upcall(187, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_cv_get, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_cv_set = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_cv_set(long v0, long v1, long v2) {
         try {
-            runtime.upcall(188, v0, v1, v2);
+            runtime.upcall(INDEX_rb_cv_set, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_cvar_defined = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_cvar_defined(long v0, long v1) {
         try {
-            return (long) runtime.upcall(189, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_cvar_defined, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_cvar_get = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_cvar_get(long v0, long v1) {
         try {
-            return (long) runtime.upcall(190, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_cvar_get, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_cvar_set = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_cvar_set(long v0, long v1, long v2) {
         try {
-            runtime.upcall(191, v0, v1, v2);
+            runtime.upcall(INDEX_rb_cvar_set, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_data_define_no_splat = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_data_define_no_splat(long v0, long v1) {
         try {
-            return (long) runtime.upcall(192, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_data_define_no_splat, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_data_object_wrap = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_data_object_wrap(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(193, v0, v1, v2, v3);
+            return (long) runtime.upcall(INDEX_rb_data_object_wrap, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_data_typed_object_wrap = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_data_typed_object_wrap(long v0, long v1, long v2, long v3, long v4, long v5) {
         try {
-            return (long) runtime.upcall(194, v0, v1, v2, v3, v4, v5);
+            return (long) runtime.upcall(INDEX_rb_data_typed_object_wrap, v0, v1, v2, v3, v4, v5);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_debug_inspector_open_contexts_and_backtrace = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_debug_inspector_open_contexts_and_backtrace() {
         try {
-            return (long) runtime.upcall(195);
+            return (long) runtime.upcall(INDEX_rb_debug_inspector_open_contexts_and_backtrace);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_default_external_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_default_external_encoding() {
         try {
-            return (long) runtime.upcall(196);
+            return (long) runtime.upcall(INDEX_rb_default_external_encoding);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_default_internal_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_default_internal_encoding() {
         try {
-            return (long) runtime.upcall(197);
+            return (long) runtime.upcall(INDEX_rb_default_internal_encoding);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_default_rs = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_default_rs() {
         try {
-            return (long) runtime.upcall(198);
+            return (long) runtime.upcall(INDEX_rb_default_rs);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_define_alloc_func = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_define_alloc_func(long v0, long v1) {
         try {
-            runtime.upcall(199, v0, v1);
+            runtime.upcall(INDEX_rb_define_alloc_func, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_define_attr = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_define_attr(long v0, long v1, int v2, int v3) {
         try {
-            runtime.upcall(200, v0, v1, v2, v3);
+            runtime.upcall(INDEX_rb_define_attr, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_define_class_under = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_define_class_under(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(201, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_define_class_under, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_define_dummy_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_define_dummy_encoding(long v0) {
         try {
-            return (int) runtime.upcall(202, v0);
+            return (int) runtime.upcall(INDEX_rb_define_dummy_encoding, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_define_hooked_variable = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_define_hooked_variable(long v0, long v1, long v2, long v3) {
         try {
-            runtime.upcall(203, v0, v1, v2, v3);
+            runtime.upcall(INDEX_rb_define_hooked_variable, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_define_method = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_define_method(long v0, long v1, long v2, int v3) {
         try {
-            return (long) runtime.upcall(204, v0, v1, v2, v3);
+            return (long) runtime.upcall(INDEX_rb_define_method, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_define_method_undefined = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_define_method_undefined(long v0, long v1) {
         try {
-            return (long) runtime.upcall(205, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_define_method_undefined, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_define_module_under = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_define_module_under(long v0, long v1) {
         try {
-            return (long) runtime.upcall(206, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_define_module_under, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_enc_alias = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_enc_alias(long v0, long v1) {
         try {
-            return (long) runtime.upcall(207, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_enc_alias, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_enc_associate_index = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_enc_associate_index(long v0, int v1) {
         try {
-            return (long) runtime.upcall(208, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_enc_associate_index, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_enc_check = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_enc_check(long v0, long v1) {
         try {
-            return (long) runtime.upcall(209, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_enc_check, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_enc_codepoint_len = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_enc_codepoint_len(long v0) {
         try {
-            return (long) runtime.upcall(210, v0);
+            return (long) runtime.upcall(INDEX_rb_enc_codepoint_len, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_enc_coderange_clear = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_enc_coderange_clear(long v0) {
         try {
-            return (long) runtime.upcall(211, v0);
+            return (long) runtime.upcall(INDEX_rb_enc_coderange_clear, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_enc_find_index = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_enc_find_index(long v0) {
         try {
-            return (int) runtime.upcall(212, v0);
+            return (int) runtime.upcall(INDEX_rb_enc_find_index, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_enc_from_index = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_enc_from_index(int v0) {
         try {
-            return (long) runtime.upcall(213, v0);
+            return (long) runtime.upcall(INDEX_rb_enc_from_index, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_enc_from_native_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_enc_from_native_encoding(long v0) {
         try {
-            return (long) runtime.upcall(214, v0);
+            return (long) runtime.upcall(INDEX_rb_enc_from_native_encoding, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_enc_get = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_enc_get(long v0) {
         try {
-            return (long) runtime.upcall(215, v0);
+            return (long) runtime.upcall(INDEX_rb_enc_get, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_enc_get_index = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_enc_get_index(long v0) {
         try {
-            return (int) runtime.upcall(216, v0);
+            return (int) runtime.upcall(INDEX_rb_enc_get_index, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_enc_isalnum = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_enc_isalnum(int v0, long v1) {
         try {
-            return (int) runtime.upcall(217, v0, v1);
+            return (int) runtime.upcall(INDEX_rb_enc_isalnum, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_enc_isspace = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_enc_isspace(int v0, long v1) {
         try {
-            return (int) runtime.upcall(218, v0, v1);
+            return (int) runtime.upcall(INDEX_rb_enc_isspace, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_enc_left_char_head = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_enc_left_char_head(long v0, long v1, long v2) {
         try {
-            return (int) runtime.upcall(219, v0, v1, v2);
+            return (int) runtime.upcall(INDEX_rb_enc_left_char_head, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_enc_mbc_to_codepoint = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_enc_mbc_to_codepoint(long v0) {
         try {
-            return (int) runtime.upcall(220, v0);
+            return (int) runtime.upcall(INDEX_rb_enc_mbc_to_codepoint, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_enc_mbclen = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_enc_mbclen(long v0) {
         try {
-            return (int) runtime.upcall(221, v0);
+            return (int) runtime.upcall(INDEX_rb_enc_mbclen, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_enc_mbmaxlen = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_enc_mbmaxlen(long v0) {
         try {
-            return (int) runtime.upcall(222, v0);
+            return (int) runtime.upcall(INDEX_rb_enc_mbmaxlen, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_enc_mbminlen = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_enc_mbminlen(long v0) {
         try {
-            return (int) runtime.upcall(223, v0);
+            return (int) runtime.upcall(INDEX_rb_enc_mbminlen, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_enc_precise_mbclen = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_enc_precise_mbclen(long v0) {
         try {
-            return (int) runtime.upcall(224, v0);
+            return (int) runtime.upcall(INDEX_rb_enc_precise_mbclen, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_enc_set_index = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_enc_set_index(long v0, int v1) {
         try {
-            runtime.upcall(225, v0, v1);
+            runtime.upcall(INDEX_rb_enc_set_index, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_enc_str_coderange = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_enc_str_coderange(long v0) {
         try {
-            return (int) runtime.upcall(226, v0);
+            return (int) runtime.upcall(INDEX_rb_enc_str_coderange, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_enc_str_new_native = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_enc_str_new_native(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(227, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_enc_str_new_native, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_enc_strlen = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_enc_strlen(long v0) {
         try {
-            return (long) runtime.upcall(228, v0);
+            return (long) runtime.upcall(INDEX_rb_enc_strlen, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_enc_to_index = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_enc_to_index(long v0) {
         try {
-            return (int) runtime.upcall(229, v0);
+            return (int) runtime.upcall(INDEX_rb_enc_to_index, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_ensure = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_ensure(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(230, v0, v1, v2, v3);
+            return (long) runtime.upcall(INDEX_rb_ensure, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_enumeratorize = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_enumeratorize(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(231, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_enumeratorize, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_enumeratorize_with_size = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_enumeratorize_with_size(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(232, v0, v1, v2, v3);
+            return (long) runtime.upcall(INDEX_rb_enumeratorize_with_size, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_equal = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_equal(long v0, long v1) {
         try {
-            return (long) runtime.upcall(233, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_equal, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_errinfo = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_errinfo() {
         try {
-            return (long) runtime.upcall(234);
+            return (long) runtime.upcall(INDEX_rb_errinfo);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_error_frozen_object = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_error_frozen_object(long v0) {
         try {
-            runtime.upcall(235, v0);
+            runtime.upcall(INDEX_rb_error_frozen_object, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_eval_cmd_kw = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_eval_cmd_kw(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(236, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_eval_cmd_kw, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_eval_string = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_eval_string(long v0) {
         try {
-            return (long) runtime.upcall(237, v0);
+            return (long) runtime.upcall(INDEX_rb_eval_string, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_exc_raise = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_exc_raise(long v0) {
         try {
-            runtime.upcall(238, v0);
+            runtime.upcall(INDEX_rb_exc_raise, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_exc_set_message = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_exc_set_message(long v0, long v1) {
         try {
-            runtime.upcall(239, v0, v1);
+            runtime.upcall(INDEX_rb_exc_set_message, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_exec_recursive = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_exec_recursive(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(240, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_exec_recursive, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_f_global_variables = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_f_global_variables() {
         try {
-            return (long) runtime.upcall(241);
+            return (long) runtime.upcall(INDEX_rb_f_global_variables);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_f_notimplement = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_f_notimplement() {
         try {
-            return (long) runtime.upcall(242);
+            return (long) runtime.upcall(INDEX_rb_f_notimplement);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_f_sprintf = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_f_sprintf(long v0) {
         try {
-            return (long) runtime.upcall(243, v0);
+            return (long) runtime.upcall(INDEX_rb_f_sprintf, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_fatal = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_fatal(long v0) {
         try {
-            runtime.upcall(244, v0);
+            runtime.upcall(INDEX_rb_fatal, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_fiber_current = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_fiber_current() {
         try {
-            return (long) runtime.upcall(245);
+            return (long) runtime.upcall(INDEX_rb_fiber_current);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_fiber_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_fiber_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(246, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_fiber_new, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_filesystem_encindex = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_filesystem_encindex() {
         try {
-            return (int) runtime.upcall(247);
+            return (int) runtime.upcall(INDEX_rb_filesystem_encindex);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_filesystem_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_filesystem_encoding() {
         try {
-            return (long) runtime.upcall(248);
+            return (long) runtime.upcall(INDEX_rb_filesystem_encoding);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_fix2str = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_fix2str(long v0, long v1) {
         try {
-            return (long) runtime.upcall(249, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_fix2str, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_fix2uint = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_fix2uint(long v0) {
         try {
-            return (long) runtime.upcall(250, v0);
+            return (long) runtime.upcall(INDEX_rb_fix2uint, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_float_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_float_new(double v0) {
         try {
-            return (long) runtime.upcall(251, v0);
+            return (long) runtime.upcall(INDEX_rb_float_new, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_flt_rationalize = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_flt_rationalize(long v0) {
         try {
-            return (long) runtime.upcall(252, v0);
+            return (long) runtime.upcall(INDEX_rb_flt_rationalize, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_flt_rationalize_with_prec = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_flt_rationalize_with_prec(long v0, long v1) {
         try {
-            return (long) runtime.upcall(253, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_flt_rationalize_with_prec, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_frame_this_func = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_frame_this_func() {
         try {
-            return (long) runtime.upcall(254);
+            return (long) runtime.upcall(INDEX_rb_frame_this_func);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_free_generic_ivar = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_free_generic_ivar(long v0) {
         try {
-            runtime.upcall(255, v0);
+            runtime.upcall(INDEX_rb_free_generic_ivar, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_fs = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_fs() {
         try {
-            return (long) runtime.upcall(256);
+            return (long) runtime.upcall(INDEX_rb_fs);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_funcall_with_block = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_funcall_with_block(long v0, long v1, long v2, long v3, long v4) {
         try {
-            return (long) runtime.upcall(257, v0, v1, v2, v3, v4);
+            return (long) runtime.upcall(INDEX_rb_funcall_with_block, v0, v1, v2, v3, v4);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_funcall_with_block_keywords = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_funcall_with_block_keywords(long v0, long v1, long v2, long v3, long v4) {
         try {
-            return (long) runtime.upcall(258, v0, v1, v2, v3, v4);
+            return (long) runtime.upcall(INDEX_rb_funcall_with_block_keywords, v0, v1, v2, v3, v4);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_funcallv = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_funcallv(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(259, v0, v1, v2, v3);
+            return (long) runtime.upcall(INDEX_rb_funcallv, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_funcallv_keywords = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_funcallv_keywords(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(260, v0, v1, v2, v3);
+            return (long) runtime.upcall(INDEX_rb_funcallv_keywords, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_funcallv_public = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_funcallv_public(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(261, v0, v1, v2, v3);
+            return (long) runtime.upcall(INDEX_rb_funcallv_public, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_gc = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_gc() {
         try {
-            runtime.upcall(262);
+            runtime.upcall(INDEX_rb_gc);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_gc_disable = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_gc_disable() {
         try {
-            return (long) runtime.upcall(263);
+            return (long) runtime.upcall(INDEX_rb_gc_disable);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_gc_enable = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_gc_enable() {
         try {
-            return (long) runtime.upcall(264);
+            return (long) runtime.upcall(INDEX_rb_gc_enable);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_gc_latest_gc_info = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_gc_latest_gc_info(long v0) {
         try {
-            return (long) runtime.upcall(265, v0);
+            return (long) runtime.upcall(INDEX_rb_gc_latest_gc_info, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_gc_mark = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_gc_mark(long v0) {
         try {
-            runtime.upcall(266, v0);
+            runtime.upcall(INDEX_rb_gc_mark, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_gc_register_address = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_gc_register_address(long v0) {
         try {
-            runtime.upcall(267, v0);
+            runtime.upcall(INDEX_rb_gc_register_address, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_gc_register_mark_object = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_gc_register_mark_object(long v0) {
         try {
-            runtime.upcall(268, v0);
+            runtime.upcall(INDEX_rb_gc_register_mark_object, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_gc_unregister_address = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_gc_unregister_address(long v0) {
         try {
-            runtime.upcall(269, v0);
+            runtime.upcall(INDEX_rb_gc_unregister_address, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_get_alloc_func = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_get_alloc_func(long v0) {
         try {
-            return (long) runtime.upcall(270, v0);
+            return (long) runtime.upcall(INDEX_rb_get_alloc_func, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_gv_get = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_gv_get(long v0) {
         try {
-            return (long) runtime.upcall(271, v0);
+            return (long) runtime.upcall(INDEX_rb_gv_get, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_gv_set = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_gv_set(long v0, long v1) {
         try {
-            return (long) runtime.upcall(272, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_gv_set, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_hash = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_hash(long v0) {
         try {
-            return (long) runtime.upcall(273, v0);
+            return (long) runtime.upcall(INDEX_rb_hash, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_hash_aref = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_hash_aref(long v0, long v1) {
         try {
-            return (long) runtime.upcall(274, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_hash_aref, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_hash_foreach = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_hash_foreach(long v0, long v1, long v2) {
         try {
-            runtime.upcall(275, v0, v1, v2);
+            runtime.upcall(INDEX_rb_hash_foreach, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_hash_get_or_undefined = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_hash_get_or_undefined(long v0, long v1) {
         try {
-            return (long) runtime.upcall(276, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_hash_get_or_undefined, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_hash_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_hash_new() {
         try {
-            return (long) runtime.upcall(277);
+            return (long) runtime.upcall(INDEX_rb_hash_new);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_hash_new_capa = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_hash_new_capa(long v0) {
         try {
-            return (long) runtime.upcall(278, v0);
+            return (long) runtime.upcall(INDEX_rb_hash_new_capa, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_hash_set_ifnone = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_hash_set_ifnone(long v0, long v1) {
         try {
-            return (long) runtime.upcall(279, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_hash_set_ifnone, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_hash_start = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_hash_start(long v0) {
         try {
-            return (long) runtime.upcall(280, v0);
+            return (long) runtime.upcall(INDEX_rb_hash_start, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_id2str = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_id2str(long v0) {
         try {
-            return (long) runtime.upcall(281, v0);
+            return (long) runtime.upcall(INDEX_rb_id2str, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_id_attrset = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_id_attrset(long v0) {
         try {
-            return (long) runtime.upcall(282, v0);
+            return (long) runtime.upcall(INDEX_rb_id_attrset, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_ident_hash_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_ident_hash_new() {
         try {
-            return (long) runtime.upcall(283);
+            return (long) runtime.upcall(INDEX_rb_ident_hash_new);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_inspect = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_inspect(long v0) {
         try {
-            return (long) runtime.upcall(284, v0);
+            return (long) runtime.upcall(INDEX_rb_inspect, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_int_cmp = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_int_cmp(long v0, long v1) {
         try {
-            return (int) runtime.upcall(285, v0, v1);
+            return (int) runtime.upcall(INDEX_rb_int_cmp, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_id2sym = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_id2sym(long v0) {
         try {
-            return (long) runtime.upcall(286, v0);
+            return (long) runtime.upcall(INDEX_rb_id2sym, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_int2big = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_int2big(long v0) {
         try {
-            return (long) runtime.upcall(287, v0);
+            return (long) runtime.upcall(INDEX_rb_int2big, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_int_positive_pow = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_int_positive_pow(long v0, long v1) {
         try {
-            return (long) runtime.upcall(288, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_int_positive_pow, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_integer_bytes_string = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_integer_bytes_string(long v0, int v1, int v2, long v3, long v4, long v5) {
         try {
-            return (long) runtime.upcall(289, v0, v1, v2, v3, v4, v5);
+            return (long) runtime.upcall(INDEX_rb_integer_bytes_string, v0, v1, v2, v3, v4, v5);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_integer_type_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_integer_type_p(long v0) {
         try {
-            return (int) runtime.upcall(290, v0);
+            return (int) runtime.upcall(INDEX_rb_integer_type_p, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_intern = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_intern(long v0) {
         try {
-            return (long) runtime.upcall(291, v0);
+            return (long) runtime.upcall(INDEX_rb_intern, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_io_descriptor = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_io_descriptor(long v0) {
         try {
-            return (int) runtime.upcall(292, v0);
+            return (int) runtime.upcall(INDEX_rb_io_descriptor, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_io_get_io = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_io_get_io(long v0) {
         try {
-            return (long) runtime.upcall(293, v0);
+            return (long) runtime.upcall(INDEX_rb_io_get_io, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_io_get_write_io = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_io_get_write_io(long v0) {
         try {
-            return (long) runtime.upcall(294, v0);
+            return (long) runtime.upcall(INDEX_rb_io_get_write_io, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
 
+    private static final int INDEX_rb_io_mode = nextUpcallIndex++;
+
     @CExtUpcall
     public static int upcall_rb_io_mode(long v0) {
         try {
-            return (int) runtime.upcall(295, v0);
+            return (int) runtime.upcall(INDEX_rb_io_mode, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_io_open_descriptor = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_io_open_descriptor(long v0, long v1, long v2, long v3, long v4, long v5, long v6,
             long v7, long v8) {
         try {
-            return (long) runtime.upcall(296, v0, v1, v2, v3, v4, v5, v6, v7, v8);
+            return (long) runtime.upcall(INDEX_rb_io_open_descriptor, v0, v1, v2, v3, v4, v5, v6, v7, v8);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_io_path = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_io_path(long v0) {
         try {
-            return (long) runtime.upcall(297, v0);
+            return (long) runtime.upcall(INDEX_rb_io_path, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_io_print = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_io_print(long v0, long v1) {
         try {
-            return (long) runtime.upcall(298, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_io_print, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_io_printf = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_io_printf(long v0, long v1) {
         try {
-            return (long) runtime.upcall(299, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_io_printf, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_io_puts = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_io_puts(long v0, long v1) {
         try {
-            return (long) runtime.upcall(300, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_io_puts, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_is_class_id = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_is_class_id(long v0) {
         try {
-            return (int) runtime.upcall(301, v0);
+            return (int) runtime.upcall(INDEX_rb_is_class_id, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_is_const_id = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_is_const_id(long v0) {
         try {
-            return (int) runtime.upcall(302, v0);
+            return (int) runtime.upcall(INDEX_rb_is_const_id, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_is_instance_id = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_is_instance_id(long v0) {
         try {
-            return (int) runtime.upcall(303, v0);
+            return (int) runtime.upcall(INDEX_rb_is_instance_id, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_iter_break_value = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_iter_break_value(long v0) {
         try {
-            runtime.upcall(304, v0);
+            runtime.upcall(INDEX_rb_iter_break_value, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_iterate = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_iterate(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(305, v0, v1, v2, v3);
+            return (long) runtime.upcall(INDEX_rb_iterate, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_ivar_count = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_ivar_count(long v0) {
         try {
-            return (long) runtime.upcall(306, v0);
+            return (long) runtime.upcall(INDEX_rb_ivar_count, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_ivar_defined = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_ivar_defined(long v0, long v1) {
         try {
-            return (long) runtime.upcall(307, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_ivar_defined, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_ivar_foreach = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_ivar_foreach(long v0, long v1, long v2) {
         try {
-            runtime.upcall(308, v0, v1, v2);
+            runtime.upcall(INDEX_rb_ivar_foreach, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_ivar_get = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_ivar_get(long v0, long v1) {
         try {
-            return (long) runtime.upcall(309, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_ivar_get, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_ivar_lookup = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_ivar_lookup(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(310, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_ivar_lookup, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_ivar_set = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_ivar_set(long v0, long v1, long v2) {
         try {
-            runtime.upcall(311, v0, v1, v2);
+            runtime.upcall(INDEX_rb_ivar_set, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_java_class_of = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_java_class_of(long v0) {
         try {
-            return (long) runtime.upcall(312, v0);
+            return (long) runtime.upcall(INDEX_rb_java_class_of, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_java_to_string = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_java_to_string(long v0) {
         try {
-            return (long) runtime.upcall(313, v0);
+            return (long) runtime.upcall(INDEX_rb_java_to_string, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_jump_tag = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_jump_tag(int v0) {
         try {
-            runtime.upcall(314, v0);
+            runtime.upcall(INDEX_rb_jump_tag, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_keyword_given_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_keyword_given_p() {
         try {
-            return (int) runtime.upcall(315);
+            return (int) runtime.upcall(INDEX_rb_keyword_given_p);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_lastline_get = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_lastline_get() {
         try {
-            return (long) runtime.upcall(316);
+            return (long) runtime.upcall(INDEX_rb_lastline_get);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_lastline_set = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_lastline_set(long v0) {
         try {
-            runtime.upcall(317, v0);
+            runtime.upcall(INDEX_rb_lastline_set, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_locale_encindex = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_locale_encindex() {
         try {
-            return (int) runtime.upcall(318);
+            return (int) runtime.upcall(INDEX_rb_locale_encindex);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_locale_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_locale_encoding() {
         try {
-            return (long) runtime.upcall(319);
+            return (long) runtime.upcall(INDEX_rb_locale_encoding);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_make_backtrace = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_make_backtrace() {
         try {
-            return (long) runtime.upcall(320);
+            return (long) runtime.upcall(INDEX_rb_make_backtrace);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_make_exception = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_make_exception(long v0) {
         try {
-            return (long) runtime.upcall(321, v0);
+            return (long) runtime.upcall(INDEX_rb_make_exception, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_marshal_dump = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_marshal_dump(long v0, long v1) {
         try {
-            return (long) runtime.upcall(322, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_marshal_dump, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_marshal_load = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_marshal_load(long v0) {
         try {
-            return (long) runtime.upcall(323, v0);
+            return (long) runtime.upcall(INDEX_rb_marshal_load, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
 
+    private static final int INDEX_rb_memerror = nextUpcallIndex++;
+
     @CExtUpcall
     public static void upcall_rb_memerror() {
         try {
-            runtime.upcall(324);
+            runtime.upcall(INDEX_rb_memerror);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
 
+    private static final int INDEX_rb_method_boundp = nextUpcallIndex++;
+
     @CExtUpcall
     public static int upcall_rb_method_boundp(long v0, long v1, int v2) {
         try {
-            return (int) runtime.upcall(325, v0, v1, v2);
+            return (int) runtime.upcall(INDEX_rb_method_boundp, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
 
+    private static final int INDEX_rb_module_new = nextUpcallIndex++;
+
     @CExtUpcall
     public static long upcall_rb_module_new() {
         try {
-            return (long) runtime.upcall(326);
+            return (long) runtime.upcall(INDEX_rb_module_new);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_mutex_lock = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_mutex_lock(long v0) {
         try {
-            return (long) runtime.upcall(327, v0);
+            return (long) runtime.upcall(INDEX_rb_mutex_lock, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_mutex_locked_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_mutex_locked_p(long v0) {
         try {
-            return (long) runtime.upcall(328, v0);
+            return (long) runtime.upcall(INDEX_rb_mutex_locked_p, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_mutex_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_mutex_new() {
         try {
-            return (long) runtime.upcall(329);
+            return (long) runtime.upcall(INDEX_rb_mutex_new);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_mutex_sleep = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_mutex_sleep(long v0, long v1) {
         try {
-            return (long) runtime.upcall(330, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_mutex_sleep, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_mutex_synchronize = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_mutex_synchronize(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(331, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_mutex_synchronize, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_mutex_trylock = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_mutex_trylock(long v0) {
         try {
-            return (long) runtime.upcall(332, v0);
+            return (long) runtime.upcall(INDEX_rb_mutex_trylock, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_mutex_unlock = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_mutex_unlock(long v0) {
         try {
-            return (long) runtime.upcall(333, v0);
+            return (long) runtime.upcall(INDEX_rb_mutex_unlock, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_nativethread_lock_destroy = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_nativethread_lock_destroy(long v0) {
         try {
-            return (long) runtime.upcall(334, v0);
+            return (long) runtime.upcall(INDEX_rb_nativethread_lock_destroy, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_nativethread_lock_initialize = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_nativethread_lock_initialize() {
         try {
-            return (long) runtime.upcall(335);
+            return (long) runtime.upcall(INDEX_rb_nativethread_lock_initialize);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_nativethread_self = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_nativethread_self() {
         try {
-            return (long) runtime.upcall(336);
+            return (long) runtime.upcall(INDEX_rb_nativethread_self);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
 
+    private static final int INDEX_rb_num2dbl = nextUpcallIndex++;
+
     @CExtUpcall
     public static double upcall_rb_num2dbl(long v0) {
         try {
-            return (double) runtime.upcall(337, v0);
+            return (double) runtime.upcall(INDEX_rb_num2dbl, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0.0;
         }
     }
 
+    private static final int INDEX_rb_num2int = nextUpcallIndex++;
+
     @CExtUpcall
     public static int upcall_rb_num2int(long v0) {
         try {
-            return (int) runtime.upcall(338, v0);
+            return (int) runtime.upcall(INDEX_rb_num2int, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_num2long = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_num2long(long v0) {
         try {
-            return (long) runtime.upcall(339, v0);
+            return (long) runtime.upcall(INDEX_rb_num2long, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_num2uint = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_num2uint(long v0) {
         try {
-            return (long) runtime.upcall(340, v0);
+            return (long) runtime.upcall(INDEX_rb_num2uint, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_num2ulong = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_num2ulong(long v0) {
         try {
-            return (long) runtime.upcall(341, v0);
+            return (long) runtime.upcall(INDEX_rb_num2ulong, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_num_coerce_bin = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_num_coerce_bin(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(342, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_num_coerce_bin, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_num_coerce_cmp = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_num_coerce_cmp(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(343, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_num_coerce_cmp, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_num_coerce_relop = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_num_coerce_relop(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(344, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_num_coerce_relop, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_as_string = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_as_string(long v0) {
         try {
-            return (long) runtime.upcall(345, v0);
+            return (long) runtime.upcall(INDEX_rb_obj_as_string, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_call_init = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_obj_call_init(long v0, long v1, long v2) {
         try {
-            runtime.upcall(346, v0, v1, v2);
+            runtime.upcall(INDEX_rb_obj_call_init, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_obj_class = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_class(long v0) {
         try {
-            return (long) runtime.upcall(347, v0);
+            return (long) runtime.upcall(INDEX_rb_obj_class, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_classname = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_classname(long v0) {
         try {
-            return (long) runtime.upcall(348, v0);
+            return (long) runtime.upcall(INDEX_rb_obj_classname, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_clone = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_clone(long v0) {
         try {
-            return (long) runtime.upcall(349, v0);
+            return (long) runtime.upcall(INDEX_rb_obj_clone, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_dup = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_dup(long v0) {
         try {
-            return (long) runtime.upcall(350, v0);
+            return (long) runtime.upcall(INDEX_rb_obj_dup, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_encoding(long v0) {
         try {
-            return (long) runtime.upcall(351, v0);
+            return (long) runtime.upcall(INDEX_rb_obj_encoding, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_freeze = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_freeze(long v0) {
         try {
-            return (long) runtime.upcall(352, v0);
+            return (long) runtime.upcall(INDEX_rb_obj_freeze, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_frozen_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_frozen_p(long v0) {
         try {
-            return (long) runtime.upcall(353, v0);
+            return (long) runtime.upcall(INDEX_rb_obj_frozen_p, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_id = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_id(long v0) {
         try {
-            return (long) runtime.upcall(354, v0);
+            return (long) runtime.upcall(INDEX_rb_obj_id, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_instance_eval = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_instance_eval(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(355, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_obj_instance_eval, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_instance_variables = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_instance_variables(long v0) {
         try {
-            return (long) runtime.upcall(356, v0);
+            return (long) runtime.upcall(INDEX_rb_obj_instance_variables, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_is_instance_of = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_is_instance_of(long v0, long v1) {
         try {
-            return (long) runtime.upcall(357, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_obj_is_instance_of, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_is_kind_of = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_is_kind_of(long v0, long v1) {
         try {
-            return (long) runtime.upcall(358, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_obj_is_kind_of, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_method = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_obj_method(long v0, long v1) {
         try {
-            return (long) runtime.upcall(359, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_obj_method, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_obj_method_arity = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_obj_method_arity(long v0, long v1) {
         try {
-            return (int) runtime.upcall(360, v0, v1);
+            return (int) runtime.upcall(INDEX_rb_obj_method_arity, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_obj_respond_to = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_obj_respond_to(long v0, long v1, int v2) {
         try {
-            return (int) runtime.upcall(361, v0, v1, v2);
+            return (int) runtime.upcall(INDEX_rb_obj_respond_to, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_output_fs = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_output_fs() {
         try {
-            return (long) runtime.upcall(362);
+            return (long) runtime.upcall(INDEX_rb_output_fs);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_output_rs = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_output_rs() {
         try {
-            return (long) runtime.upcall(363);
+            return (long) runtime.upcall(INDEX_rb_output_rs);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_path_to_class = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_path_to_class(long v0) {
         try {
-            return (long) runtime.upcall(364, v0);
+            return (long) runtime.upcall(INDEX_rb_path_to_class, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_proc_call = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_proc_call(long v0, long v1) {
         try {
-            return (long) runtime.upcall(365, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_proc_call, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_proc_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_proc_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(366, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_proc_new, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_protect = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_protect(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(367, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_protect, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_range_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_range_new(long v0, long v1, int v2) {
         try {
-            return (long) runtime.upcall(368, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_range_new, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_rational_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_rational_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(369, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_rational_new, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_rational_raw = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_rational_raw(long v0, long v1) {
         try {
-            return (long) runtime.upcall(370, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_rational_raw, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_reg_compile = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_reg_compile(long v0, int v1) {
         try {
-            return (long) runtime.upcall(371, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_reg_compile, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_reg_match = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_reg_match(long v0, long v1) {
         try {
-            return (long) runtime.upcall(372, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_reg_match, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_reg_match_pre = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_reg_match_pre(long v0) {
         try {
-            return (long) runtime.upcall(373, v0);
+            return (long) runtime.upcall(INDEX_rb_reg_match_pre, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_reg_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_reg_new(long v0, int v1) {
         try {
-            return (long) runtime.upcall(374, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_reg_new, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_reg_new_str = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_reg_new_str(long v0, int v1) {
         try {
-            return (long) runtime.upcall(375, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_reg_new_str, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_reg_nth_match = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_reg_nth_match(int v0, long v1) {
         try {
-            return (long) runtime.upcall(376, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_reg_nth_match, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_reg_options = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_reg_options(long v0) {
         try {
-            return (long) runtime.upcall(377, v0);
+            return (long) runtime.upcall(INDEX_rb_reg_options, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_reg_regcomp = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_reg_regcomp(long v0) {
         try {
-            return (long) runtime.upcall(378, v0);
+            return (long) runtime.upcall(INDEX_rb_reg_regcomp, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_require = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_require(long v0) {
         try {
-            return (long) runtime.upcall(379, v0);
+            return (long) runtime.upcall(INDEX_rb_require, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_rescue = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_rescue(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(380, v0, v1, v2, v3);
+            return (long) runtime.upcall(INDEX_rb_rescue, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_rescue2 = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_rescue2(long v0, long v1, long v2, long v3, long v4) {
         try {
-            return (long) runtime.upcall(381, v0, v1, v2, v3, v4);
+            return (long) runtime.upcall(INDEX_rb_rescue2, v0, v1, v2, v3, v4);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_respond_to = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_respond_to(long v0, long v1) {
         try {
-            return (long) runtime.upcall(382, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_respond_to, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_rs = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_rs() {
         try {
-            return (long) runtime.upcall(383);
+            return (long) runtime.upcall(INDEX_rb_rs);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_ruby_debug_ptr = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_ruby_debug_ptr() {
         try {
-            return (long) runtime.upcall(384);
+            return (long) runtime.upcall(INDEX_rb_ruby_debug_ptr);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_ruby_verbose_ptr = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_ruby_verbose_ptr() {
         try {
-            return (long) runtime.upcall(385);
+            return (long) runtime.upcall(INDEX_rb_ruby_verbose_ptr);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_set_end_proc = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_set_end_proc(long v0, long v1) {
         try {
-            runtime.upcall(386, v0, v1);
+            runtime.upcall(INDEX_rb_set_end_proc, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_set_errinfo = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_set_errinfo(long v0) {
         try {
-            runtime.upcall(387, v0);
+            runtime.upcall(INDEX_rb_set_errinfo, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_set_foreach = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_set_foreach(long v0, long v1, long v2) {
         try {
-            runtime.upcall(388, v0, v1, v2);
+            runtime.upcall(INDEX_rb_set_foreach, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_set_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_set_new() {
         try {
-            return (long) runtime.upcall(389);
+            return (long) runtime.upcall(INDEX_rb_set_new);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_singleton_class = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_singleton_class(long v0) {
         try {
-            return (long) runtime.upcall(390, v0);
+            return (long) runtime.upcall(INDEX_rb_singleton_class, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_sourcefile = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_sourcefile() {
         try {
-            return (long) runtime.upcall(391);
+            return (long) runtime.upcall(INDEX_rb_sourcefile);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_sourceline = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_sourceline() {
         try {
-            return (int) runtime.upcall(392);
+            return (int) runtime.upcall(INDEX_rb_sourceline);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_stderr = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_stderr() {
         try {
-            return (long) runtime.upcall(393);
+            return (long) runtime.upcall(INDEX_rb_stderr);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_stdin = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_stdin() {
         try {
-            return (long) runtime.upcall(394);
+            return (long) runtime.upcall(INDEX_rb_stdin);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_stdout = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_stdout() {
         try {
-            return (long) runtime.upcall(395);
+            return (long) runtime.upcall(INDEX_rb_stdout);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_append = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_append(long v0, long v1) {
         try {
-            return (long) runtime.upcall(396, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_str_append, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_capacity = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_capacity(long v0) {
         try {
-            return (long) runtime.upcall(397, v0);
+            return (long) runtime.upcall(INDEX_rb_str_capacity, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_concat = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_concat(long v0, long v1) {
         try {
-            return (long) runtime.upcall(398, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_str_concat, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_conv_enc_opts = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_conv_enc_opts(long v0, long v1, long v2, int v3, long v4) {
         try {
-            return (long) runtime.upcall(399, v0, v1, v2, v3, v4);
+            return (long) runtime.upcall(INDEX_rb_str_conv_enc_opts, v0, v1, v2, v3, v4);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_encode = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_encode(long v0, long v1, int v2, long v3) {
         try {
-            return (long) runtime.upcall(400, v0, v1, v2, v3);
+            return (long) runtime.upcall(INDEX_rb_str_encode, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_format = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_format(long v0, long v1) {
         try {
-            return (long) runtime.upcall(401, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_str_format, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_locktmp = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_locktmp(long v0) {
         try {
-            return (long) runtime.upcall(402, v0);
+            return (long) runtime.upcall(INDEX_rb_str_locktmp, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_new_frozen = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_new_frozen(long v0) {
         try {
-            return (long) runtime.upcall(403, v0);
+            return (long) runtime.upcall(INDEX_rb_str_new_frozen, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_new_native = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_new_native(long v0, long v1) {
         try {
-            return (long) runtime.upcall(404, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_str_new_native, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_rstring_getmem = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_rstring_getmem(long v0, long v1) {
         try {
-            return (long) runtime.upcall(405, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_tr_rstring_getmem, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_new_nul = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_new_nul(long v0) {
         try {
-            return (long) runtime.upcall(406, v0);
+            return (long) runtime.upcall(INDEX_rb_str_new_nul, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_offset = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_offset(long v0, long v1) {
         try {
-            return (long) runtime.upcall(407, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_str_offset, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_resize = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_resize(long v0, long v1) {
         try {
-            return (long) runtime.upcall(408, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_str_resize, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_set_len = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_str_set_len(long v0, long v1) {
         try {
-            runtime.upcall(409, v0, v1);
+            runtime.upcall(INDEX_rb_str_set_len, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_str_sublen = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_sublen(long v0, long v1) {
         try {
-            return (long) runtime.upcall(410, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_str_sublen, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_str_unlocktmp = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_str_unlocktmp(long v0) {
         try {
-            return (long) runtime.upcall(411, v0);
+            return (long) runtime.upcall(INDEX_rb_str_unlocktmp, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_string_value_cstr_check = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_string_value_cstr_check(long v0) {
         try {
-            return (long) runtime.upcall(412, v0);
+            return (long) runtime.upcall(INDEX_rb_string_value_cstr_check, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_struct_aref = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_struct_aref(long v0, long v1) {
         try {
-            return (long) runtime.upcall(413, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_struct_aref, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_struct_aset = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_struct_aset(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(414, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_struct_aset, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_struct_define_no_splat = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_struct_define_no_splat(long v0, long v1) {
         try {
-            return (long) runtime.upcall(415, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_struct_define_no_splat, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_struct_define_under_no_splat = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_struct_define_under_no_splat(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(416, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_struct_define_under_no_splat, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_struct_getmember = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_struct_getmember(long v0, long v1) {
         try {
-            return (long) runtime.upcall(417, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_struct_getmember, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_struct_initialize = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_struct_initialize(long v0, long v1) {
         try {
-            return (long) runtime.upcall(418, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_struct_initialize, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_struct_new_no_splat = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_struct_new_no_splat(long v0, long v1) {
         try {
-            return (long) runtime.upcall(419, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_struct_new_no_splat, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_struct_size = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_struct_size(long v0) {
         try {
-            return (int) runtime.upcall(420, v0);
+            return (int) runtime.upcall(INDEX_rb_struct_size, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_syserr_fail = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_syserr_fail(int v0, long v1) {
         try {
-            runtime.upcall(421, v0, v1);
+            runtime.upcall(INDEX_rb_syserr_fail, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_sym2id = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_sym2id(long v0) {
         try {
-            return (long) runtime.upcall(422, v0);
+            return (long) runtime.upcall(INDEX_rb_sym2id, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_syserr_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_syserr_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(423, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_syserr_new, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_thread_alone = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_thread_alone() {
         try {
-            return (int) runtime.upcall(424);
+            return (int) runtime.upcall(INDEX_rb_thread_alone);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_thread_call_with_gvl = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_thread_call_with_gvl(long v0, long v1) {
         try {
-            return (long) runtime.upcall(425, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_thread_call_with_gvl, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_thread_call_without_gvl = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_thread_call_without_gvl(long v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(426, v0, v1, v2, v3);
+            return (long) runtime.upcall(INDEX_rb_thread_call_without_gvl, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_thread_check_ints = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_thread_check_ints() {
         try {
-            runtime.upcall(427);
+            runtime.upcall(INDEX_rb_thread_check_ints);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_thread_create = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_thread_create(long v0, long v1) {
         try {
-            return (long) runtime.upcall(428, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_thread_create, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_thread_fd_writable = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_thread_fd_writable(int v0) {
         try {
-            return (int) runtime.upcall(429, v0);
+            return (int) runtime.upcall(INDEX_rb_thread_fd_writable, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_thread_wait_fd = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_thread_wait_fd(int v0) {
         try {
-            return (int) runtime.upcall(430, v0);
+            return (int) runtime.upcall(INDEX_rb_thread_wait_fd, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_time_interval_acceptable = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_time_interval_acceptable(long v0) {
         try {
-            runtime.upcall(431, v0);
+            runtime.upcall(INDEX_rb_time_interval_acceptable, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_time_nano_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_time_nano_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(432, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_time_nano_new, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_time_num_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_time_num_new(long v0, long v1) {
         try {
-            return (long) runtime.upcall(433, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_time_num_new, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_time_timespec_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_time_timespec_new(long v0, long v1, int v2, long v3, long v4) {
         try {
-            return (long) runtime.upcall(434, v0, v1, v2, v3, v4);
+            return (long) runtime.upcall(INDEX_rb_time_timespec_new, v0, v1, v2, v3, v4);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_to_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_to_encoding(long v0) {
         try {
-            return (long) runtime.upcall(435, v0);
+            return (long) runtime.upcall(INDEX_rb_to_encoding, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_to_encoding_index = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_to_encoding_index(long v0) {
         try {
-            return (int) runtime.upcall(436, v0);
+            return (int) runtime.upcall(INDEX_rb_to_encoding_index, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_to_int = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_to_int(long v0) {
         try {
-            return (long) runtime.upcall(437, v0);
+            return (long) runtime.upcall(INDEX_rb_to_int, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_to_symbol = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_to_symbol(long v0) {
         try {
-            return (long) runtime.upcall(438, v0);
+            return (long) runtime.upcall(INDEX_rb_to_symbol, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_cext_lock_owned_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_tr_cext_lock_owned_p() {
         try {
-            return (int) runtime.upcall(439);
+            return (int) runtime.upcall(INDEX_rb_tr_cext_lock_owned_p);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_tr_code_to_mbc = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_code_to_mbc(long v0, long v1) {
         try {
-            return (long) runtime.upcall(440, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_tr_code_to_mbc, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_default_alloc_func = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_default_alloc_func(long v0) {
         try {
-            return (long) runtime.upcall(441, v0);
+            return (long) runtime.upcall(INDEX_rb_tr_default_alloc_func, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_enc_is_unicode = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_tr_enc_is_unicode(long v0) {
         try {
-            return (int) runtime.upcall(442, v0);
+            return (int) runtime.upcall(INDEX_rb_tr_enc_is_unicode, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_tr_enc_mbc_case_fold = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_enc_mbc_case_fold(int v0, long v1, long v2, long v3) {
         try {
-            return (long) runtime.upcall(443, v0, v1, v2, v3);
+            return (long) runtime.upcall(INDEX_rb_tr_enc_mbc_case_fold, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_flags = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_tr_flags(long v0) {
         try {
-            return (int) runtime.upcall(444, v0);
+            return (int) runtime.upcall(INDEX_rb_tr_flags, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_tr_gc_guard = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_tr_gc_guard(long v0) {
         try {
-            runtime.upcall(445, v0);
+            runtime.upcall(INDEX_rb_tr_gc_guard, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_tr_io_create_and_attach_pointer = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_io_create_and_attach_pointer(long v0, long v1) {
         try {
-            return (long) runtime.upcall(446, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_tr_io_create_and_attach_pointer, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_io_pointer = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_io_pointer(long v0) {
         try {
-            return (long) runtime.upcall(447, v0);
+            return (long) runtime.upcall(INDEX_rb_tr_io_pointer, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_log_warning = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_tr_log_warning(long v0) {
         try {
-            runtime.upcall(448, v0);
+            runtime.upcall(INDEX_rb_tr_log_warning, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_tr_not_implemented = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_tr_not_implemented(long v0) {
         try {
-            runtime.upcall(449, v0);
+            runtime.upcall(INDEX_rb_tr_not_implemented, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_tr_obj_equal = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_obj_equal(long v0, long v1) {
         try {
-            return (long) runtime.upcall(450, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_tr_obj_equal, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_pointer = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_pointer(long v0) {
         try {
-            return (long) runtime.upcall(451, v0);
+            return (long) runtime.upcall(INDEX_rb_tr_pointer, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_set_default_alloc_func = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_tr_set_default_alloc_func(long v0, long v1) {
         try {
-            runtime.upcall(452, v0, v1);
+            runtime.upcall(INDEX_rb_tr_set_default_alloc_func, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_tr_set_flags = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_tr_set_flags(long v0, long v1) {
         try {
-            runtime.upcall(453, v0, v1);
+            runtime.upcall(INDEX_rb_tr_set_flags, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_tr_sprintf = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_sprintf(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(454, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_tr_sprintf, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_sprintf_types = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_sprintf_types(long v0) {
         try {
-            return (long) runtime.upcall(455, v0);
+            return (long) runtime.upcall(INDEX_rb_tr_sprintf_types, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_static_native_string = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_static_native_string(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(456, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_tr_static_native_string, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_str_capa_resize = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_tr_str_capa_resize(long v0, long v1) {
         try {
-            runtime.upcall(457, v0, v1);
+            runtime.upcall(INDEX_rb_tr_str_capa_resize, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_tr_temporary_native_string = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_temporary_native_string(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(458, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_tr_temporary_native_string, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_warn = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_warn(long v0) {
         try {
-            return (long) runtime.upcall(459, v0);
+            return (long) runtime.upcall(INDEX_rb_tr_warn, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tr_warn_category = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tr_warn_category(long v0, long v1) {
         try {
-            return (long) runtime.upcall(460, v0, v1);
+            return (long) runtime.upcall(INDEX_rb_tr_warn_category, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_tracepoint_new = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_tracepoint_new(int v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(461, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_rb_tracepoint_new, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_type = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_type(long v0) {
         try {
-            return (int) runtime.upcall(462, v0);
+            return (int) runtime.upcall(INDEX_rb_type, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_ulong2num = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_rb_ulong2num(long v0) {
         try {
-            return (long) runtime.upcall(463, v0);
+            return (long) runtime.upcall(INDEX_rb_ulong2num, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_rb_undef = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_undef(long v0, long v1) {
         try {
-            runtime.upcall(464, v0, v1);
+            runtime.upcall(INDEX_rb_undef, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_undef_alloc_func = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_rb_undef_alloc_func(long v0) {
         try {
-            runtime.upcall(465, v0);
+            runtime.upcall(INDEX_rb_undef_alloc_func, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_rb_usascii_encindex = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_usascii_encindex() {
         try {
-            return (int) runtime.upcall(466);
+            return (int) runtime.upcall(INDEX_rb_usascii_encindex);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_utf8_encindex = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_utf8_encindex() {
         try {
-            return (int) runtime.upcall(467);
+            return (int) runtime.upcall(INDEX_rb_utf8_encindex);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_wait_for_single_fd = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_wait_for_single_fd(int v0, int v1, long v2, long v3) {
         try {
-            return (int) runtime.upcall(468, v0, v1, v2, v3);
+            return (int) runtime.upcall(INDEX_rb_wait_for_single_fd, v0, v1, v2, v3);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
+
+    private static final int INDEX_rb_warning_category_enabled_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_rb_warning_category_enabled_p(long v0) {
         try {
-            return (int) runtime.upcall(469, v0);
+            return (int) runtime.upcall(INDEX_rb_warning_category_enabled_p, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
         }
     }
 
+    private static final int INDEX_rb_yield = nextUpcallIndex++;
+
     @CExtUpcall
     public static long upcall_rb_yield(long v0) {
         try {
-            return (long) runtime.upcall(470, v0);
+            return (long) runtime.upcall(INDEX_rb_yield, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
 
+    private static final int INDEX_rb_yield_splat = nextUpcallIndex++;
+
     @CExtUpcall
     public static long upcall_rb_yield_splat(long v0) {
         try {
-            return (long) runtime.upcall(471, v0);
+            return (long) runtime.upcall(INDEX_rb_yield_splat, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    @SuppressWarnings("unused") private static final int INDEX_ruby_native_thread_p = nextUpcallIndex++;
 
     @CExtUpcall
     public static int upcall_ruby_native_thread_p() {
@@ -4730,68 +5681,82 @@ public abstract class CExtUpcallTargets {
         return runtime == null ? 0 : runtime.isRubyThread();
     }
 
+    private static final int INDEX_ruby_vm_at_exit = nextUpcallIndex++;
+
     @CExtUpcall
     public static void upcall_ruby_vm_at_exit(long v0, long v1) {
         try {
-            runtime.upcall(473, v0, v1);
+            runtime.upcall(INDEX_ruby_vm_at_exit, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_send_splatted = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_send_splatted(long v0, long v1, long v2) {
         try {
-            return (long) runtime.upcall(474, v0, v1, v2);
+            return (long) runtime.upcall(INDEX_send_splatted, v0, v1, v2);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_set_thread_safe = nextUpcallIndex++;
 
     @CExtUpcall
     public static void upcall_set_thread_safe(int v0) {
         try {
-            runtime.upcall(475, v0);
+            runtime.upcall(INDEX_set_thread_safe, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
         }
     }
+
+    private static final int INDEX_usascii_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_usascii_encoding() {
         try {
-            return (long) runtime.upcall(476);
+            return (long) runtime.upcall(INDEX_usascii_encoding);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_utf8_encoding = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_utf8_encoding() {
         try {
-            return (long) runtime.upcall(477);
+            return (long) runtime.upcall(INDEX_utf8_encoding);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
+
+    private static final int INDEX_yield_no_block = nextUpcallIndex++;
 
     @CExtUpcall
     public static long upcall_yield_no_block() {
         try {
-            return (long) runtime.upcall(478);
+            return (long) runtime.upcall(INDEX_yield_no_block);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
         }
     }
 
+    private static final int INDEX_zlib_get_crc_table = nextUpcallIndex++;
+
     @CExtUpcall
     public static long upcall_zlib_get_crc_table() {
         try {
-            return (long) runtime.upcall(479);
+            return (long) runtime.upcall(INDEX_zlib_get_crc_table);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
