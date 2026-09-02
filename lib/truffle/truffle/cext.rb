@@ -18,7 +18,7 @@ require_relative 'cext_structs'
 
 module Truffle::CExt
   DATA_TYPE = Primitive.object_hidden_var_create :data_type
-  DATA_STRUCT = Primitive.object_hidden_var_create :data_struct # struct RData* or struct RTypedData*
+  DATA_STRUCT = Primitive.object_hidden_var_create :data_struct # address of the struct RData* or struct RTypedData*, as a long
   DATA_MARKER = Primitive.object_hidden_var_create :data_marker
   DATA_MEMSIZER = Primitive.object_hidden_var_create :data_memsizer
   RB_TYPE = Primitive.object_hidden_var_create :rb_type
@@ -1783,7 +1783,7 @@ module Truffle::CExt
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end
-    data_struct.address
+    data_struct
   end
 
   def RTYPEDDATA(object)
@@ -1792,7 +1792,7 @@ module Truffle::CExt
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end
-    data_struct.address
+    data_struct
   end
 
   # The address of the data field of the given native struct RData or struct RTypedData
@@ -1826,7 +1826,7 @@ module Truffle::CExt
     object = ruby_class.__send__(:__layout_allocate__)
     use_cext_lock = Primitive.use_cext_lock?
 
-    rdata = Truffle::FFI::Pointer.new(Primitive.cext_invoke_l_lll(RDATA_CREATE, mark, free, data))
+    rdata = Primitive.cext_invoke_l_lll(RDATA_CREATE, mark, free, data)
     Primitive.object_hidden_var_set object, DATA_STRUCT, rdata
     Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(RDATA_RUN_MARKER, rdata)
     # Could use a simpler finalizer if free == 0
@@ -1842,7 +1842,7 @@ module Truffle::CExt
     object = ruby_class.__send__(:__layout_allocate__)
     use_cext_lock = Primitive.use_cext_lock?
 
-    rtypeddata = Truffle::FFI::Pointer.new(Primitive.cext_invoke_l_ll(RTYPEDDATA_CREATE, data_type, data))
+    rtypeddata = Primitive.cext_invoke_l_ll(RTYPEDDATA_CREATE, data_type, data)
     Primitive.object_hidden_var_set object, DATA_STRUCT, rtypeddata
     Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(RTYPEDDATA_RUN_MARKER, rtypeddata)
     # Could use a simpler finalizer if free == 0
