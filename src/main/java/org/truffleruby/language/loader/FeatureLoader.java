@@ -31,7 +31,6 @@ import org.truffleruby.collections.ConcurrentOperations;
 import org.truffleruby.core.array.ArrayOperations;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.encoding.TStringUtils;
-import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.core.mutex.MutexOperations;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.string.StringOperations;
@@ -39,7 +38,6 @@ import org.truffleruby.core.support.IONodes.IOThreadBufferAllocateNode;
 import org.truffleruby.core.thread.RubyThread;
 import org.truffleruby.debug.MetricsProfiler.MetricKind;
 import org.truffleruby.extra.ffi.Pointer;
-import org.truffleruby.interop.TranslateInteropExceptionNode;
 import org.truffleruby.language.RubyConstant;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.dispatch.DispatchNode;
@@ -53,8 +51,6 @@ import org.truffleruby.shared.TruffleRuby;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.TruffleFile;
-import com.oracle.truffle.api.interop.InteropException;
-import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.source.Source;
@@ -433,20 +429,15 @@ public final class FeatureLoader {
                 final RubyString cextRb = StringOperations.createUTF8String(context, language, "truffle/cext");
                 DispatchNode.getUncached().call(context.getCoreLibrary().mainObject, "gem_original_require", cextRb);
 
-                final RubyModule truffleModule = context.getCoreLibrary().truffleModule;
-                final Object truffleCExt = truffleModule.fields.getConstant("CExt").getValue();
-
                 final String rubyLibPath = language.getRubyHome() + "/lib/cext/libtruffleruby" + Platform.LIB_SUFFIX;
                 final Object library = loadCExtLibRuby(rubyLibPath, feature, requireNode);
 
-                final InteropLibrary interop = InteropLibrary.getUncached();
                 language.getCurrentFiber().extensionCallStack.push(false, nil, nil);
                 try {
                     // Truffle::CExt.init_libtruffleruby(libtruffleruby): creates the FFM upcall stubs and
                     // calls rb_tr_init()
-                    interop.invokeMember(truffleCExt, "init_libtruffleruby", library);
-                } catch (InteropException e) {
-                    throw TranslateInteropExceptionNode.executeUncached(e);
+                    DispatchNode.getUncached().call(context.getCoreLibrary().truffleCExtModule,
+                            "init_libtruffleruby", library);
                 } finally {
                     language.getCurrentFiber().extensionCallStack.pop();
                 }
