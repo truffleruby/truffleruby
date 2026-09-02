@@ -79,4 +79,26 @@ describe 'Enumerator::Lazy#uniq' do
     s.lazy.uniq.first(100).should ==
       s.first(100).uniq
   end
+
+  # Cannot use shared/value_propagation.rb wholesale: the repeated yields of
+  # YieldsMixed are dropped by #uniq.
+  describe "propagating source yields to later methods in the chain" do
+    it "passes every value of a multi-value source yield to a splat block later in the chain" do
+      args = nil
+      Enumerator.new { |y| y.yield 1, 2 }.lazy.uniq.map { |*a| args = a }.force
+      args.should == [1, 2]
+    end
+
+    it "passes a source yield with no value on as a single nil" do
+      args = nil
+      Enumerator.new { |y| y.yield }.lazy.uniq.map { |*a| args = a }.force
+      args.should == [nil]
+    end
+
+    it "yields a single value once a method in the chain replaces the value" do
+      yields = []
+      Enumerator.new { |y| y.yield 1, 2 }.lazy.uniq.map { |x| x }.map { |*a| yields << a }.force
+      yields.should == [[1]]
+    end
+  end
 end

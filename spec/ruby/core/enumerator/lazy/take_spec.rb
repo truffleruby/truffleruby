@@ -3,6 +3,7 @@
 require_relative '../../../spec_helper'
 require_relative 'fixtures/classes'
 require_relative '../../enumerable/shared/value_packing'
+require_relative 'shared/value_propagation'
 
 describe "Enumerator::Lazy#take" do
   describe "value packing of source yields (matches Enumerable#take)" do
@@ -76,5 +77,12 @@ describe "Enumerator::Lazy#take" do
         ScratchPad.recorded.should == []
       end
     end
+  end
+
+  describe "propagating source yields to later methods in the chain" do
+    before :each do
+      @lazy_method = -> e { e.take(12) }
+    end
+    it_behaves_like :enumerator_lazy_value_propagation, nil
   end
 end
