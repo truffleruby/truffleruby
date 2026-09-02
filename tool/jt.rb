@@ -720,14 +720,13 @@ module Utilities
     end
   end
 
-  def run_gem_or_install(name, version, *args)
+  def run_gem_or_install(name, version, ...)
     env = ruby_running_jt_env
     if Gem::Specification.find_all_by_name(name, version).empty?
       sh env, 'gem', 'install', name, '-v', version
     end
-    sh env, name, "_#{version}_", *args
+    sh(env, name, "_#{version}_", ...)
   end
-  ruby2_keywords :run_gem_or_install if respond_to?(:ruby2_keywords, true)
 
   def args_split(args)
     delimiter_index = args.index('--')
@@ -920,10 +919,9 @@ module Commands
     puts native_standalone_release_archive_path
   end
 
-  def mx(*args)
-    super(*args)
+  def mx(...)
+    super(...)
   end
-  ruby2_keywords :mx if respond_to?(:ruby2_keywords, true)
 
   def launcher
     puts ruby_launcher
@@ -2337,25 +2335,23 @@ module Commands
     end
   end
 
-  private def seafoam(*args)
+  private def seafoam(...)
     seafoam_dir = ENV['SEAFOAM_DIR']
     if seafoam_dir
-      sh(RbConfig.ruby, "-I#{seafoam_dir}/lib", "#{seafoam_dir}/bin/seafoam", *args)
+      sh(RbConfig.ruby, "-I#{seafoam_dir}/lib", "#{seafoam_dir}/bin/seafoam", ...)
     else
-      run_gem_or_install('seafoam', SEAFOAM_VERSION, *args)
+      run_gem_or_install('seafoam', SEAFOAM_VERSION, ...)
     end
   end
-  ruby2_keywords :seafoam if respond_to?(:ruby2_keywords, true)
 
-  private def cfg2asm(*args)
+  private def cfg2asm(...)
     cfg2asm_dir = ENV['CFG2ASM_DIR']
     if cfg2asm_dir
-      sh(RbConfig.ruby, "-I#{cfg2asm_dir}/lib", "#{cfg2asm_dir}/bin/cfg2asm", *args)
+      sh(RbConfig.ruby, "-I#{cfg2asm_dir}/lib", "#{cfg2asm_dir}/bin/cfg2asm", ...)
     else
-      run_gem_or_install('cfg2asm', CFG2ASM_VERSION, *args)
+      run_gem_or_install('cfg2asm', CFG2ASM_VERSION, ...)
     end
   end
-  ruby2_keywords :cfg2asm if respond_to?(:ruby2_keywords, true)
 
   def igv
     compiler = "#{GRAAL_DIR}/compiler"
