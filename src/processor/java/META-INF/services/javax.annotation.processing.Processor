@@ -1,3 +1,2 @@
 org.truffleruby.processor.CoreModuleProcessor
-org.truffleruby.processor.BuildInformationProcessor
 org.truffleruby.processor.CExtUpcallProcessor

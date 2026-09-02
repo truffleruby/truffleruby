@@ -788,7 +788,6 @@ module Commands
                                               it is also linked in your ruby manager (if found) under the same name,
                                               by default it is the name of the mx env file,
                                               the named build stays until it is rebuilt or deleted manually
-              --new-hash                      update the git commit hash in RUBY_DESCRIPTION
             mx options:                       options passed directly to mx
               -d                              start the Java debugger and enables assertions when running truffleruby to configure C extensions
             mx build options                  options passed to the 'build' command of mx
@@ -2525,12 +2524,6 @@ module Commands
   end
 
   private def build_standalone(*options)
-    if options.delete('--new-hash')
-      build_information_path = "#{TRUFFLERUBY_DIR}/src/shared/java/org/truffleruby/shared/BuildInformation.java"
-      raise unless File.exist?(build_information_path) # in case the file moves in the future
-      FileUtils.touch(build_information_path)
-    end
-
     # Override @mx_env if --env is passed
     if (i = options.index('--env') || options.index('-e'))
       options.delete_at i

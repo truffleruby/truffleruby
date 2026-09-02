@@ -141,12 +141,8 @@ suite = {
             "sourceDirs": ["java"],
             "requires": ["java.management"],
             "dependencies": [
-                "truffleruby:TRUFFLERUBY-ANNOTATIONS",
                 "sdk:NATIVEIMAGE",
                 "sdk:POLYGLOT",
-            ],
-            "annotationProcessors": [
-                "TRUFFLERUBY-PROCESSOR",
             ],
             "jacoco": "include",
             "javaCompliance": "25+",
@@ -507,6 +503,11 @@ suite = {
             "class": "CopyGraalVMLicenses",
         },
 
+        "build_information": {
+            "class": "BuildInformationProject",
+            "description": "Generates build-information.properties with the git revision, dirty state, commit date, etc",
+        },
+
         "truffleruby_thin_launcher": {
             "class": "ThinLauncherProject",
             "mainClass": "org.truffleruby.launcher.RubyLauncher",
@@ -589,7 +590,6 @@ suite = {
                 "org.truffleruby.signal",
             ],
             "distDependencies": [
-                "truffleruby:TRUFFLERUBY-ANNOTATIONS",
                 "sdk:NATIVEIMAGE",
                 "sdk:POLYGLOT",
             ],
@@ -847,6 +847,9 @@ suite = {
             "platformDependent": True,
             "defaultDereference": "never",
             "layout": {
+                # Not in TRUFFLERUBY_BOOTSTRAP_HOME to avoid rebuilding C extensions on every commit,
+                # BuildInformation.UNKNOWN is good enough for miniruby.
+                "./": "dependency:build_information",
                 "lib/": [
                     "dependency:org.truffleruby.yarp.bindings.native",
                 ],

@@ -13,6 +13,7 @@ package org.truffleruby.launcher;
 import java.io.PrintStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,6 +31,7 @@ import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
+import org.truffleruby.shared.BuildInformation;
 import org.truffleruby.shared.ProcessStatus;
 import org.truffleruby.shared.Platform;
 import org.truffleruby.shared.Metrics;
@@ -90,9 +92,17 @@ public class RubyLauncher extends AbstractLanguageLauncher {
 
     @Override
     protected void printVersion() {
-        getOutput().println(TruffleRuby.getVersionString(getImplementationNameFromEngine()));
+        getOutput().println(TruffleRuby.getVersionString(getImplementationNameFromEngine(), getBuildInformation()));
         getOutput().println();
         printPolyglotVersions();
+    }
+
+    private static BuildInformation getBuildInformation() {
+        final String home = System.getProperty("org.graalvm.language.ruby.home");
+        if (home == null) {
+            return BuildInformation.UNKNOWN;
+        }
+        return BuildInformation.load(Paths.get(home, BuildInformation.PROPERTIES_FILE));
     }
 
     @Override
@@ -408,7 +418,7 @@ public class RubyLauncher extends AbstractLanguageLauncher {
 
     private void printPreRunInformation(CommandLineOptions config) {
         if (config.showVersion) {
-            getOutput().println(TruffleRuby.getVersionString(getImplementationNameFromEngine()));
+            getOutput().println(TruffleRuby.getVersionString(getImplementationNameFromEngine(), getBuildInformation()));
         }
 
         if (config.showCopyright) {

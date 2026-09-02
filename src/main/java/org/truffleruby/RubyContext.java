@@ -10,10 +10,12 @@
  */
 package org.truffleruby;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Map;
@@ -25,6 +27,7 @@ import java.util.logging.Level;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.TruffleFile;
 import com.oracle.truffle.api.TruffleLanguage.ContextReference;
 import com.oracle.truffle.api.TruffleLogger;
 import com.oracle.truffle.api.dsl.NeverDefault;
@@ -82,6 +85,7 @@ import org.truffleruby.parser.YARPTranslatorDriver;
 import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.platform.NativeConfiguration;
 import org.truffleruby.platform.Signals;
+import org.truffleruby.shared.BuildInformation;
 import org.truffleruby.shared.Metrics;
 import org.truffleruby.shared.TruffleRuby;
 import org.truffleruby.shared.options.OptionsCatalog;
@@ -125,6 +129,7 @@ public final class RubyContext {
     private final PreInitializationManager preInitializationManager;
     private final NativeConfiguration nativeConfiguration;
     private final ValueWrapperManager valueWrapperManager;
+    private BuildInformation buildInformation;
     /** (Symbol, refinements) -> Proc for Symbol#to_proc */
     public final Map<Pair<RubySymbol, Map<RubyModule, RubyModule[]>>, RootCallTarget> cachedSymbolToProcTargetsWithRefinements = new ConcurrentHashMap<>();
     /** Default signal handlers for Ruby, only SIGINT and SIGALRM, see {@code core/main.rb} */
@@ -686,6 +691,23 @@ public final class RubyContext {
 
     public NativeConfiguration getNativeConfiguration() {
         return nativeConfiguration;
+    }
+
+    @TruffleBoundary
+    public BuildInformation getBuildInformation() {
+        if (buildInformation == null) {
+            final TruffleFile file = language.getRubyHomeTruffleFile().resolve(BuildInformation.PROPERTIES_FILE);
+            byte[] bytes;
+            try {
+                bytes = file.readAllBytes();
+            } catch (IOException e) {
+                bytes = null;
+            }
+            buildInformation = bytes == null
+                    ? BuildInformation.UNKNOWN
+                    : BuildInformation.parse(new String(bytes, StandardCharsets.UTF_8));
+        }
+        return buildInformation;
     }
 
     public ValueWrapperManager getValueWrapperManager() {
