@@ -160,10 +160,6 @@ public final class Options {
     public final boolean LOG_PENDING_INTERRUPTS;
     /** --print-interned-tstring-stats=false */
     public final boolean PRINT_INTERNED_TSTRING_STATS;
-    /** --cexts-to-native-stats=false */
-    public final boolean CEXTS_TO_NATIVE_STATS;
-    /** --cexts-to-native-count=CEXTS_TO_NATIVE_STATS */
-    public final boolean CEXTS_TO_NATIVE_COUNT;
     /** --keep-handles-alive=false */
     public final boolean CEXTS_KEEP_HANDLES_ALIVE;
     /** --basic-ops-log-rewrite=false */
@@ -273,8 +269,6 @@ public final class Options {
         ARGV_GLOBAL_FLAGS = options.get(OptionsCatalog.ARGV_GLOBAL_FLAGS_KEY);
         LOG_PENDING_INTERRUPTS = options.get(OptionsCatalog.LOG_PENDING_INTERRUPTS_KEY);
         PRINT_INTERNED_TSTRING_STATS = options.get(OptionsCatalog.PRINT_INTERNED_TSTRING_STATS_KEY);
-        CEXTS_TO_NATIVE_STATS = options.get(OptionsCatalog.CEXTS_TO_NATIVE_STATS_KEY);
-        CEXTS_TO_NATIVE_COUNT = options.hasBeenSet(OptionsCatalog.CEXTS_TO_NATIVE_COUNT_KEY) ? options.get(OptionsCatalog.CEXTS_TO_NATIVE_COUNT_KEY) : CEXTS_TO_NATIVE_STATS;
         CEXTS_KEEP_HANDLES_ALIVE = options.get(OptionsCatalog.CEXTS_KEEP_HANDLES_ALIVE_KEY);
         BASICOPS_LOG_REWRITE = options.get(OptionsCatalog.BASICOPS_LOG_REWRITE_KEY);
         ARRAY_SMALL = options.get(OptionsCatalog.ARRAY_SMALL_KEY);
@@ -433,10 +427,6 @@ public final class Options {
                 return LOG_PENDING_INTERRUPTS;
             case "ruby.print-interned-tstring-stats":
                 return PRINT_INTERNED_TSTRING_STATS;
-            case "ruby.cexts-to-native-stats":
-                return CEXTS_TO_NATIVE_STATS;
-            case "ruby.cexts-to-native-count":
-                return CEXTS_TO_NATIVE_COUNT;
             case "ruby.keep-handles-alive":
                 return CEXTS_KEEP_HANDLES_ALIVE;
             case "ruby.basic-ops-log-rewrite":

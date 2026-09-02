@@ -178,8 +178,6 @@ INTERNAL: # Options for debugging the TruffleRuby implementation
     LOG_DYNAMIC_CONSTANT_LOOKUP: [constant-dynamic-lookup-log, boolean, false, Log source code positions where dynamic constant lookup is performed]
     LOG_PENDING_INTERRUPTS: [log-pending-interrupts, boolean, false, Log when executing pending interrupts]
     PRINT_INTERNED_TSTRING_STATS: [print-interned-tstring-stats, boolean, false, Print interned tstring stats at application exit]
-    CEXTS_TO_NATIVE_STATS: [cexts-to-native-stats, boolean, false, Track the number of conversions of VALUEs to native and print the stats at application exit]
-    CEXTS_TO_NATIVE_COUNT: [cexts-to-native-count, boolean, CEXTS_TO_NATIVE_STATS, Track the number of conversions of VALUEs to native]
     CEXTS_KEEP_HANDLES_ALIVE: [keep-handles-alive, boolean, false, Keep handles for value wrappers alive forever]
 
     # Options to debug the implementation

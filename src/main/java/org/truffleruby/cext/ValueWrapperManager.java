@@ -14,7 +14,6 @@ import java.lang.ref.WeakReference;
 import java.lang.ref.Cleaner.Cleanable;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateCached;
@@ -154,16 +153,6 @@ public final class ValueWrapperManager {
             this.start = start;
             this.next = next;
         }
-    }
-
-    private final AtomicLong counter = new AtomicLong();
-
-    protected void recordHandleAllocation() {
-        counter.incrementAndGet();
-    }
-
-    public long totalHandleAllocations() {
-        return counter.get();
     }
 
     /** A valid handle is of the form, bits (MSB first):
@@ -369,10 +358,6 @@ public final class ValueWrapperManager {
                 block = holder.sharedHandleBlock;
             } else {
                 block = holder.handleBlock;
-            }
-
-            if (context.getOptions().CEXTS_TO_NATIVE_COUNT) {
-                context.getValueWrapperManager().recordHandleAllocation();
             }
 
             if (block == null || block.isFull()) {

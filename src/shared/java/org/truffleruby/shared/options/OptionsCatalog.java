@@ -101,8 +101,6 @@ public final class OptionsCatalog {
     public static final OptionKey<Boolean> LOG_DYNAMIC_CONSTANT_LOOKUP_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> LOG_PENDING_INTERRUPTS_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> PRINT_INTERNED_TSTRING_STATS_KEY = new OptionKey<>(false);
-    public static final OptionKey<Boolean> CEXTS_TO_NATIVE_STATS_KEY = new OptionKey<>(false);
-    public static final OptionKey<Boolean> CEXTS_TO_NATIVE_COUNT_KEY = new OptionKey<>(CEXTS_TO_NATIVE_STATS_KEY.getDefaultValue());
     public static final OptionKey<Boolean> CEXTS_KEEP_HANDLES_ALIVE_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> LAZY_BUILTINS_KEY = new OptionKey<>(LAZY_CALLTARGETS_KEY.getDefaultValue());
     public static final OptionKey<Boolean> LAZY_TRANSLATION_CORE_KEY = new OptionKey<>(LAZY_CALLTARGETS_KEY.getDefaultValue());
@@ -804,22 +802,6 @@ public final class OptionsCatalog {
             .usageSyntax("")
             .build();
 
-    public static final OptionDescriptor CEXTS_TO_NATIVE_STATS = OptionDescriptor
-            .newBuilder(CEXTS_TO_NATIVE_STATS_KEY, "ruby.cexts-to-native-stats")
-            .help("Track the number of conversions of VALUEs to native and print the stats at application exit")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("")
-            .build();
-
-    public static final OptionDescriptor CEXTS_TO_NATIVE_COUNT = OptionDescriptor
-            .newBuilder(CEXTS_TO_NATIVE_COUNT_KEY, "ruby.cexts-to-native-count")
-            .help("Track the number of conversions of VALUEs to native")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("")
-            .build();
-
     public static final OptionDescriptor CEXTS_KEEP_HANDLES_ALIVE = OptionDescriptor
             .newBuilder(CEXTS_KEEP_HANDLES_ALIVE_KEY, "ruby.keep-handles-alive")
             .help("Keep handles for value wrappers alive forever")
@@ -1462,10 +1444,6 @@ public final class OptionsCatalog {
                 return LOG_PENDING_INTERRUPTS;
             case "ruby.print-interned-tstring-stats":
                 return PRINT_INTERNED_TSTRING_STATS;
-            case "ruby.cexts-to-native-stats":
-                return CEXTS_TO_NATIVE_STATS;
-            case "ruby.cexts-to-native-count":
-                return CEXTS_TO_NATIVE_COUNT;
             case "ruby.keep-handles-alive":
                 return CEXTS_KEEP_HANDLES_ALIVE;
             case "ruby.lazy-builtins":
@@ -1673,8 +1651,6 @@ public final class OptionsCatalog {
             LOG_DYNAMIC_CONSTANT_LOOKUP,
             LOG_PENDING_INTERRUPTS,
             PRINT_INTERNED_TSTRING_STATS,
-            CEXTS_TO_NATIVE_STATS,
-            CEXTS_TO_NATIVE_COUNT,
             CEXTS_KEEP_HANDLES_ALIVE,
             LAZY_BUILTINS,
             LAZY_TRANSLATION_CORE,
