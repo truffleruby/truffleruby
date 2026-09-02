@@ -487,19 +487,14 @@ module Utilities
     SUBPROCESSES.delete(pid)
   end
 
-  def sh(*args)
-    options = args.last.is_a?(Hash) ? args.last : {}
-    continue_on_failure = options.delete :continue_on_failure
-    use_exec = options.delete :use_exec
-    timeout = options.delete :timeout
-    capture = options.delete :capture
-    no_print_cmd = options.delete(:no_print_cmd) || !@verbose
+  def sh(*args, continue_on_failure: false, use_exec: false, timeout: nil, capture: nil, no_print_cmd: false, **options)
+    no_print_cmd ||= !@verbose
 
     unless no_print_cmd
-      STDERR.puts bold "$ #{printable_cmd(args)}"
+      STDERR.puts bold "$ #{printable_cmd(args, options)}"
     end
 
-    exec(*args) if use_exec
+    exec(*args, **options) if use_exec
 
     if capture
       capture_modes = [:out, :err, :both]
@@ -513,7 +508,7 @@ module Utilities
     out = nil
     start = Process.clock_gettime(Process::CLOCK_MONOTONIC) if JT_PROFILE_SUBCOMMANDS
     begin
-      pid = Process.spawn(*args)
+      pid = Process.spawn(*args, **options)
     rescue Errno::ENOENT => no_such_executable
       STDERR.puts bold no_such_executable
       status = sh_failed_status
@@ -533,7 +528,7 @@ module Utilities
 
     if JT_PROFILE_SUBCOMMANDS
       finish = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      STDERR.puts "\n[jt] #{printable_cmd(args)} took #{'%.3f' % (finish - start)}s\n\n"
+      STDERR.puts "\n[jt] #{printable_cmd(args, options)} took #{'%.3f' % (finish - start)}s\n\n"
     end
 
     if capture
@@ -549,19 +544,16 @@ module Utilities
         status.success?
       end
     else
-      STDERR.puts "FAILED (#{status}): #{printable_cmd(args)}"
+      STDERR.puts "FAILED (#{status}): #{printable_cmd(args, options)}"
       STDERR.puts out if capture
       exit(status.exitstatus || status.termsig || status.stopsig || 1)
     end
   end
 
-  def printable_cmd(args)
+  def printable_cmd(args, options = {})
     env = {}
     if Hash === args.first
       env, *args = args
-    end
-    if Hash === args.last && args.last.empty?
-      *args, _options = args
     end
 
     raise 'use multiple arguments instead of a single string with spaces' if args[0].include?(' ')
@@ -577,6 +569,7 @@ module Utilities
     args = args.map { |a| shellescape(a) }
 
     all = [*("unset #{unsets.join(' ')};" unless unsets.empty?), *sets, *args]
+    all << options.to_s unless options.empty?
     size = all.sum(&:size)
     all.join(size <= 180 ? ' ' : " \\\n  ")
   end
@@ -1093,13 +1086,12 @@ module Commands
     [vm_args, ruby_args + args, options]
   end
 
-  private def run_ruby(*args)
+  private def run_ruby(*args, **options)
     env_vars = args.first.is_a?(Hash) ? args.shift : {}
-    options = args.last.is_a?(Hash) ? args.pop : {}
 
     vm_args, ruby_args, options = ruby_options(options, args)
 
-    sh env_vars, ruby_launcher, *(vm_args if truffleruby?), *ruby_args, options
+    sh env_vars, ruby_launcher, *(vm_args if truffleruby?), *ruby_args, **options
   end
 
   def ruby(*args)
@@ -1303,7 +1295,7 @@ module Commands
     test.delete_prefix("#{MRI_TEST_RELATIVE_PREFIX}/").delete_prefix("#{MRI_TEST_PREFIX}/")
   end
 
-  private def run_mri_tests(extra_args, test_files, runner_args, run_options)
+  private def run_mri_tests(extra_args, test_files, runner_args, **run_options)
     abort 'No test files! (probably filtered out by failing.exclude)' if test_files.empty?
     test_files = test_files.map { |file| mri_test_name(file) }
 
@@ -1332,7 +1324,7 @@ module Commands
 
     command = %w[test/mri/tests/runner.rb -v --test-order=sorted --color=never --tty=no -q]
     command.unshift("-I#{TRUFFLERUBY_DIR}/.ext")  if !cext_tests.empty?
-    run_ruby(env_vars, *extra_args, *command, *test_files, *runner_args, run_options)
+    run_ruby(env_vars, *extra_args, *command, *test_files, *runner_args, **run_options)
   end
 
   private def compile_cext_for_mri_c_api_tests(cext_tests)
@@ -3480,9 +3472,9 @@ end
 class JT
   include Commands
 
-  def self.ruby(*args)
+  def self.ruby(...)
     jt = JT.new
-    jt.send(:run_ruby, *args)
+    jt.send(:run_ruby, ...)
   end
 
   def initialize
