@@ -38,7 +38,6 @@ import org.truffleruby.annotations.Primitive;
 import org.truffleruby.annotations.Visibility;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
-import org.truffleruby.cext.UnwrapNode.UnwrapCArrayNode;
 import org.truffleruby.core.MarkingService.ExtensionCallStack;
 import org.truffleruby.core.MarkingServiceNodes;
 import org.truffleruby.core.MarkingServiceNodes.RunMarkOnExitNode;
@@ -1693,33 +1692,21 @@ public abstract class CExtNodes {
     public abstract static class UnwrapValueNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        Object unwrap(Object value,
-                @Cached InlinedBranchProfile exceptionProfile,
+        Object unwrap(long handle,
                 @Cached UnwrapNode unwrapNode) {
-            Object object = unwrapNode.execute(this, value);
-            if (object == null) {
-                exceptionProfile.enter(this);
-                throw new RaiseException(getContext(), coreExceptions().runtimeError(exceptionMessage(value), this));
-            } else {
-                return object;
-            }
-        }
-
-        @TruffleBoundary
-        private String exceptionMessage(Object value) {
-            return String.format("native handle not found (%s)", value);
+            return unwrapNode.execute(this, handle);
         }
     }
 
     @Primitive(name = "cext_to_wrapper")
     public abstract static class CExtToWrapperNode extends PrimitiveArrayArgumentsNode {
         @Specialization
-        ValueWrapper toWrapper(Object value,
-                @Cached UnwrapNode.ToWrapperNode toWrapperNode) {
-            ValueWrapper wrapper = toWrapperNode.execute(this, value);
+        ValueWrapper toWrapper(long handle,
+                @Cached ToWrapperNode toWrapperNode) {
+            ValueWrapper wrapper = toWrapperNode.execute(this, handle);
             if (wrapper == null) {
                 CompilerDirectives.transferToInterpreterAndInvalidate();
-                throw CompilerDirectives.shouldNotReachHere("ValueWrapper not found for " + value);
+                throw CompilerDirectives.shouldNotReachHere("ValueWrapper not found for " + handle);
             }
             return wrapper;
         }
@@ -1743,10 +1730,10 @@ public abstract class CExtNodes {
     public abstract static class AddToMarkList extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        Object rbGCMark(Object markedObject,
+        Object rbGCMark(long handle,
                 @Cached InlinedBranchProfile noExceptionProfile,
-                @Cached UnwrapNode.ToWrapperNode toWrapperNode) {
-            ValueWrapper wrappedValue = toWrapperNode.execute(this, markedObject);
+                @Cached ToWrapperNode toWrapperNode) {
+            ValueWrapper wrappedValue = toWrapperNode.execute(this, handle);
             if (wrappedValue != null) {
                 noExceptionProfile.enter(this);
                 getContext().getMarkingService()
@@ -1764,11 +1751,11 @@ public abstract class CExtNodes {
     public abstract static class GCGuardNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        Object addToMarkList(Object guardedObject,
+        Object addToMarkList(long handle,
                 @Cached MarkingServiceNodes.KeepAliveNode keepAliveNode,
                 @Cached InlinedBranchProfile noExceptionProfile,
-                @Cached UnwrapNode.ToWrapperNode toWrapperNode) {
-            ValueWrapper wrappedValue = toWrapperNode.execute(this, guardedObject);
+                @Cached ToWrapperNode toWrapperNode) {
+            ValueWrapper wrappedValue = toWrapperNode.execute(this, handle);
             if (wrappedValue != null) {
                 noExceptionProfile.enter(this);
                 keepAliveNode.execute(this, wrappedValue);

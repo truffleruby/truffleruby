@@ -226,7 +226,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
 
     abstract static class ValueArgumentNode extends UpcallArgumentNode {
         @Specialization
-        static Object unwrap(Object rawArgument,
+        static Object unwrap(long rawArgument,
                 @Bind Node node,
                 @Cached UnwrapNode unwrapNode) {
             return unwrapNode.execute(node, rawArgument);

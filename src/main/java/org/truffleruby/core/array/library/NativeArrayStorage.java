@@ -21,7 +21,6 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import org.truffleruby.RubyContext;
 import org.truffleruby.cext.UnwrapNode;
-import org.truffleruby.cext.UnwrapNode.UnwrapNativeNode;
 import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
 import org.truffleruby.cext.WrapNode;
 import org.truffleruby.core.array.ArrayGuards;
@@ -282,7 +281,7 @@ public final class NativeArrayStorage implements ObjectGraphNode {
     @Override
     public void getAdjacentObjects(Set<Object> reachable) {
         for (int i = 0; i < length; i++) {
-            final Object value = UnwrapNativeNode.executeUncached(readElement(i));
+            final Object value = UnwrapNode.executeUncached(readElement(i));
             if (ObjectGraph.isRubyObject(value)) {
                 reachable.add(value);
             }
@@ -292,7 +291,7 @@ public final class NativeArrayStorage implements ObjectGraphNode {
     @TruffleBoundary
     public void preserveMembers() {
         for (int i = 0; i < length; i++) {
-            final Object value = UnwrapNativeNode.executeUncached(readElement(i));
+            final Object value = UnwrapNode.executeUncached(readElement(i));
             markedObjects[i] = value;
         }
     }
