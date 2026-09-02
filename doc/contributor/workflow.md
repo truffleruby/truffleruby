@@ -12,7 +12,7 @@ by a package manager. Without it the build fails with `'stdio.h' file not found`
 
 Additionally, you will need:
 
-* Ruby >= 2.3 (we stick at this version as it is available all the way back to for example Ubuntu 16.04)
+* Ruby >= 3.0 for `jt`
 * Python >= 3.8 for `mx`
 * Perl >= 5.10 and the Perl core library, for building OpenSSL: `dnf install perl-core`/`apt-get install perl`
 * `git`

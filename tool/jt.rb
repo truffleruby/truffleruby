@@ -27,7 +27,7 @@ if RUBY_ENGINE != 'ruby' && !RUBY_DESCRIPTION.include?('Native')
   STDERR.puts '    alias jt=/path/to/truffleruby/bin/jt'
 end
 
-abort "ERROR: jt requires Ruby 2.3 and above, was #{RUBY_VERSION}" if (RUBY_VERSION.split('.').map(&:to_i) <=> [2, 3, 0]) < 0
+abort "ERROR: jt requires Ruby 3.0 and above, was #{RUBY_VERSION}" if RUBY_VERSION < '3'
 
 SYSTEM_RUBY = ENV['SYSTEM_RUBY'] || 'ruby'
 
@@ -165,8 +165,7 @@ module Utilities
   end
 
   def soext
-    # RbConfig::CONFIG["SOEXT"] is not set for system ruby 2.3 in macOS CI
-    RbConfig::CONFIG.fetch('SOEXT') { darwin? ? 'dylib' : 'so' }
+    RbConfig::CONFIG.fetch('SOEXT')
   end
 
   def bold(text)

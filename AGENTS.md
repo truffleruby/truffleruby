@@ -31,7 +31,7 @@ TruffleRuby uses the `mx` build tool (GraalVM ecosystem) but wraps it behind the
 
 ### Prerequisites
 
-- Ruby >= 2.3 (system Ruby, for running `jt`)
+- Ruby >= 3.0 (system Ruby, for running `jt`)
 - Python >= 3.8 (for `mx`)
 - A JVMCI-enabled JDK (if `JAVA_HOME` is set but doesn't have JVMCI, unset it so `jt` downloads a suitable JDK)
 - `make`, `gcc`/`g++`, `cmake`, `git`, `wget`

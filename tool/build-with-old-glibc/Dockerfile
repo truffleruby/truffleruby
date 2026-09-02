@@ -6,7 +6,8 @@ FROM almalinux:8
 RUN ldd --version
 
 # See workflow.md#requirements
-RUN dnf install -y git wget ruby python3.12 cmake perl-core maven make gcc gcc-c++ ca-certificates zlib-devel
+RUN dnf module install -y ruby:3.0
+RUN dnf install -y git wget python3.12 cmake perl-core maven make gcc gcc-c++ ca-certificates zlib-devel
 
 RUN useradd -ms /bin/bash test
 RUN mkdir -p /truffleruby-ws /release
