@@ -13,8 +13,6 @@ package org.truffleruby.extra.ffi;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
@@ -40,6 +38,7 @@ import org.truffleruby.annotations.Visibility;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.library.RubyStringLibrary;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Shared;
@@ -97,9 +96,11 @@ public abstract class PointerNodes {
             if (size > 0) {
                 return size;
             } else {
-                final Object typedef = getContext()
-                        .getTruffleNFI()
-                        .resolveTypeRaw(getContext().getNativeConfiguration(), typeString);
+                final Object typedef = getContext().getNativeConfiguration().get("platform.typedef." + typeString);
+                if (typedef == null) {
+                    throw CompilerDirectives
+                            .shouldNotReachHere("Type " + typeString + " is not defined in the native configuration");
+                }
                 final int typedefSize = typeSize(StringOperations.getJavaString(typedef));
                 assert typedefSize > 0 : typedef;
                 return typedefSize;
@@ -267,22 +268,20 @@ public abstract class PointerNodes {
         @Specialization(guards = "limit != 0")
         RubyString readStringToNull(long address, long limit,
                 @Cached @Shared TruffleString.FromByteArrayNode fromByteArrayNode,
-                @CachedLibrary(limit = "1") @Shared InteropLibrary interop,
                 @Cached @Shared CheckNullPointerNode checkNullPointerNode) {
             final Pointer ptr = new Pointer(getContext(), address);
             checkNullPointerNode.execute(this, ptr);
-            final byte[] bytes = ptr.readZeroTerminatedByteArray(getContext(), interop, 0, limit);
+            final byte[] bytes = ptr.readZeroTerminatedByteArray(getContext(), 0, limit);
             return createString(fromByteArrayNode, bytes, Encodings.BINARY);
         }
 
         @Specialization
         RubyString readStringToNull(long address, Nil limit,
-                @CachedLibrary(limit = "1") @Shared InteropLibrary interop,
                 @Cached @Shared TruffleString.FromByteArrayNode fromByteArrayNode,
                 @Cached @Shared CheckNullPointerNode checkNullPointerNode) {
             final Pointer ptr = new Pointer(getContext(), address);
             checkNullPointerNode.execute(this, ptr);
-            final byte[] bytes = ptr.readZeroTerminatedByteArray(getContext(), interop, 0);
+            final byte[] bytes = ptr.readZeroTerminatedByteArray(getContext(), 0);
             return createString(fromByteArrayNode, bytes, Encodings.BINARY);
         }
 

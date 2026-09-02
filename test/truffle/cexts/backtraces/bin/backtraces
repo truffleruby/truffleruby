@@ -11,14 +11,16 @@ def puts_backtrace(backtrace)
 end
 
 puts "Test error in Ruby => C ext support => Ruby"
-RB_FUNCALLV = Truffle::CExt::LIBTRUFFLERUBY[:rb_funcallv]
+RB_OBJ_DUP = Truffle::CExt::LIBTRUFFLERUBY[:rb_obj_dup]
 
-def callback
-  raise 'Ruby callback error'
+class Callback
+  def dup
+    raise 'Ruby callback error'
+  end
 end
 
 def ruby_call
-  RB_FUNCALLV.call(Truffle::CExt.test_cext_wrap(self), Truffle::CExt.test_cext_wrap(:callback), 0, [])
+  Truffle::CExt.test_invoke_pointer_to_pointer(RB_OBJ_DUP, Truffle::CExt.test_cext_wrap(Callback.new))
 end
 
 def top
@@ -40,7 +42,7 @@ RB_MUTEX_LOCK = Truffle::CExt::LIBTRUFFLERUBY[:rb_mutex_lock]
 LOCK.lock
 
 def double_lock
-  RB_MUTEX_LOCK.call(Truffle::CExt.test_cext_wrap(LOCK))
+  Truffle::CExt.test_invoke_pointer_to_pointer(RB_MUTEX_LOCK, Truffle::CExt.test_cext_wrap(LOCK))
 end
 
 begin
@@ -66,12 +68,12 @@ end
 
 
 puts
-puts "Test error in the callback to the Sulong-instrinsified qsort()"
+puts "Test error in the callback to qsort()"
 p Backtraces.qsort(-> a, b { a <=> b })
 
 begin
   Backtraces.qsort(-> a, b {
-    raise "error from Ruby called from instrinsified qsort()"
+    raise "error from Ruby called from qsort()"
   })
 rescue => e
   puts_backtrace e.full_message(order: :top, highlight: false)
@@ -83,7 +85,7 @@ puts "Test error in callback from a native function"
 p Backtraces.native_callback(-> { 6*7 })
 
 def error_helper
-  raise "error from Ruby called from Sulong called from native callback"
+  raise "error from Ruby called from C called from native callback"
 end
 
 begin

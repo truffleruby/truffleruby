@@ -24,7 +24,7 @@ typedef struct {
 } RFile_and_rb_io_t;
 
 static inline int rb_tr_io_raw_descriptor(VALUE io) {
-  return polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_io_descriptor", io));
+  return rb_tr_up_rb_io_descriptor(io);
 }
 
 int rb_io_descriptor(VALUE io) {
@@ -36,11 +36,11 @@ int rb_io_descriptor(VALUE io) {
 }
 
 int rb_io_mode(VALUE io) {
-  return polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_io_mode", io));
+  return rb_tr_up_rb_io_mode(io);
 }
 
 VALUE rb_io_path(VALUE io) {
-  return RUBY_CEXT_INVOKE("rb_io_path", io);
+  return rb_tr_up_rb_io_path(io);
 }
 
 VALUE rb_io_open_descriptor(VALUE klass, int descriptor, int mode, VALUE path, VALUE timeout, struct rb_io_encoding *encoding) {
@@ -58,33 +58,24 @@ VALUE rb_io_open_descriptor(VALUE klass, int descriptor, int mode, VALUE path, V
     ecopts = rb_hash_new();
   }
 
-  return RUBY_CEXT_INVOKE("rb_io_open_descriptor",
-    klass,
-    INT2FIX(descriptor),
-    INT2FIX(mode),
-    path,
-    timeout,
-    internal_encoding,
-    external_encoding,
-    ecflags,
-    ecopts);
+  return rb_tr_up_rb_io_open_descriptor(klass, INT2FIX(descriptor), INT2FIX(mode), path, timeout, internal_encoding, external_encoding, ecflags, ecopts);
 }
 
 VALUE rb_io_closed_p(VALUE io) {
-  return RUBY_INVOKE(io, "closed?");
+  return rb_tr_up_send0_closed_p(io);
 }
 
 VALUE rb_io_get_io(VALUE io) {
-  return RUBY_CEXT_INVOKE("rb_io_get_io", io);
+  return rb_tr_up_rb_io_get_io(io);
 }
 
 static RFile_and_rb_io_t* get_RFile_and_rb_io_t(VALUE io) {
-  RFile_and_rb_io_t* pointer = RUBY_CEXT_INVOKE_NO_WRAP("rb_tr_io_pointer", io);
-  if (!polyglot_is_null(pointer)) {
+  RFile_and_rb_io_t* pointer = rb_tr_up_rb_tr_io_pointer(io);
+  if (pointer != NULL) {
     return pointer;
   }
 
-  pointer = polyglot_invoke(RUBY_CEXT, "new_memory_pointer", sizeof(RFile_and_rb_io_t));
+  pointer = rb_tr_up_rb_tr_io_create_and_attach_pointer(io, sizeof(RFile_and_rb_io_t));
   rb_io_t* fptr = &pointer->io_struct;
   fptr->self = io;
   fptr->fd = rb_tr_io_raw_descriptor(io);
@@ -94,8 +85,6 @@ static RFile_and_rb_io_t* get_RFile_and_rb_io_t(VALUE io) {
   fptr->tied_io_for_writing = (write_io != io) ? write_io : Qfalse;
 
   pointer->rfile.fptr = fptr;
-
-  polyglot_invoke(RUBY_CEXT, "rb_tr_io_attach_pointer", rb_tr_unwrap(io), pointer);
 
   return pointer;
 }
@@ -172,7 +161,7 @@ int rb_io_wait_writable(int fd) {
 }
 
 int rb_thread_wait_fd(int fd) {
-  return polyglot_as_i32(polyglot_invoke(RUBY_CEXT, "rb_thread_wait_fd", fd));
+  return rb_tr_up_rb_thread_wait_fd(fd);
 }
 
 int rb_wait_for_single_fd(int fd, int events, struct timeval *tv) {
@@ -182,7 +171,7 @@ int rb_wait_for_single_fd(int fd, int events, struct timeval *tv) {
     tv_sec = tv->tv_sec;
     tv_usec = tv->tv_usec;
   }
-  return polyglot_as_i32(polyglot_invoke(RUBY_CEXT, "rb_wait_for_single_fd", fd, events, tv_sec, tv_usec));
+  return rb_tr_up_rb_wait_for_single_fd(fd, events, tv_sec, tv_usec);
 }
 
 void rb_tr_time_interval(VALUE num, struct timeval *result);
@@ -306,43 +295,43 @@ VALUE rb_io_taint_check(VALUE io) {
 }
 
 VALUE rb_io_close(VALUE io) {
-  return RUBY_INVOKE(io, "close");
+  return rb_tr_up_send0_close(io);
 }
 
 VALUE rb_io_gets(VALUE io) {
-  return RUBY_INVOKE(io, "gets");
+  return rb_tr_up_send0_gets(io);
 }
 
 VALUE rb_io_print(int argc, const VALUE *argv, VALUE out) {
-  return RUBY_CEXT_INVOKE("rb_io_print", out, rb_ary_new4(argc, argv));
+  return rb_tr_up_rb_io_print(out, rb_ary_new4(argc, argv));
 }
 
 VALUE rb_io_printf(int argc, const VALUE *argv, VALUE out) {
-  return RUBY_CEXT_INVOKE("rb_io_printf", out, rb_ary_new4(argc, argv));
+  return rb_tr_up_rb_io_printf(out, rb_ary_new4(argc, argv));
 }
 
 VALUE rb_io_puts(int argc, const VALUE *argv, VALUE out) {
-  return RUBY_CEXT_INVOKE("rb_io_puts", out, rb_ary_new4(argc, argv));
+  return rb_tr_up_rb_io_puts(out, rb_ary_new4(argc, argv));
 }
 
 VALUE rb_io_write(VALUE io, VALUE str) {
-  return RUBY_INVOKE(io, "write", str);
+  return rb_tr_up_send1_write(io, str);
 }
 
 VALUE rb_io_binmode(VALUE io) {
-  return RUBY_INVOKE(io, "binmode");
+  return rb_tr_up_send0_binmode(io);
 }
 
 VALUE rb_io_flush(VALUE io) {
-  return RUBY_INVOKE(io, "flush");
+  return rb_tr_up_send0_flush(io);
 }
 
 VALUE rb_io_get_write_io(VALUE io) {
-  return RUBY_CEXT_INVOKE("rb_io_get_write_io", io);
+  return rb_tr_up_rb_io_get_write_io(io);
 }
 
 int rb_thread_fd_writable(int fd) {
-  return polyglot_as_i32(polyglot_invoke(RUBY_CEXT, "rb_thread_fd_writable", fd));
+  return rb_tr_up_rb_thread_fd_writable(fd);
 }
 
 int rb_cloexec_open(const char *pathname, int flags, mode_t mode) {
@@ -354,22 +343,22 @@ int rb_cloexec_open(const char *pathname, int flags, mode_t mode) {
 }
 
 VALUE rb_file_open(const char *fname, const char *modestr) {
-  return RUBY_INVOKE(rb_cFile, "open", rb_str_new_cstr(fname), rb_str_new_cstr(modestr));
+  return rb_tr_up_send2_open(rb_cFile, rb_str_new_cstr(fname), rb_str_new_cstr(modestr));
 }
 
 VALUE rb_file_open_str(VALUE fname, const char *modestr) {
-  return RUBY_INVOKE(rb_cFile, "open", fname, rb_str_new_cstr(modestr));
+  return rb_tr_up_send2_open(rb_cFile, fname, rb_str_new_cstr(modestr));
 }
 
 VALUE rb_get_path(VALUE object) {
-  return RUBY_INVOKE(rb_cFile, "path", object);
+  return rb_tr_up_send1_path(rb_cFile, object);
 }
 
 int rb_io_extract_encoding_option(VALUE opt, rb_encoding **enc_p, rb_encoding **enc2_p, enum rb_io_mode *fmode_p) {
   // TODO (pitr-ch 12-Jun-2017): review, just approximate implementation
   VALUE encoding = rb_cEncoding;
-  VALUE external_encoding = RUBY_INVOKE(encoding, "default_external");
-  VALUE internal_encoding = RUBY_INVOKE(encoding, "default_internal");
+  VALUE external_encoding = rb_tr_up_send0_default_external(encoding);
+  VALUE internal_encoding = rb_tr_up_send0_default_internal(encoding);
   if (!NIL_P(external_encoding)) {
     *enc_p = rb_to_encoding(external_encoding);
   }
@@ -401,15 +390,15 @@ FILE *rb_io_stdio_file(rb_io_t *fptr) {
 }
 
 VALUE rb_lastline_get(void) {
-  return RUBY_CEXT_INVOKE("rb_lastline_get");
+  return rb_tr_up_rb_lastline_get();
 }
 
 void rb_lastline_set(VALUE str) {
-  RUBY_CEXT_INVOKE_NO_WRAP("rb_lastline_set", str);
+  rb_tr_up_rb_lastline_set(str);
 }
 
 VALUE rb_io_getbyte(VALUE io) {
-  return RUBY_INVOKE(io, "getbyte");
+  return rb_tr_up_send0_getbyte(io);
 }
 
 static void rb_maygvl_fd_fix_cloexec(int fd) {

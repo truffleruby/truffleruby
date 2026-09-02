@@ -32,5 +32,5 @@
 // rubv_vm_*
 
 void ruby_vm_at_exit(void (*callback)(ruby_vm_t* vm)) {
-  polyglot_invoke(RUBY_CEXT, "ruby_vm_at_exit", callback, NULL);
+  rb_tr_up_ruby_vm_at_exit(callback, NULL);
 }

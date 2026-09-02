@@ -17,8 +17,6 @@ endif
 ROOT := $(realpath ../../..)
 RUBY := $(TRUFFLERUBY_BOOTSTRAP_LAUNCHER)
 
-TRAMPOLINE := cext-trampoline/libtrufflerubytrampoline.$(SOEXT)
-
 RUBY_HEADERS := $(shell find $(ROOT)/lib/cext/include -name '*.h')
 CEXT_C_FILES := $(shell find cext -name '*.c')
 RBCONFIG := $(ROOT)/lib/truffle/rbconfig.rb
@@ -40,16 +38,13 @@ SYSLOG_GEM_EXT := $(ROOT)/lib/gems/gems/syslog-$(SYSLOG_VERSION)/ext/syslog
 
 IF_EXTCONF_FAIL := ( echo "`pwd`/extconf.rb failed:" 1>&2 && cat mkmf.log && false )
 
-all: $(TRAMPOLINE) $(LIBTRUFFLERUBY) openssl/openssl.$(DLEXT) zlib/zlib.$(DLEXT) \
+all: $(LIBTRUFFLERUBY) openssl/openssl.$(DLEXT) zlib/zlib.$(DLEXT) \
 			psych/psych.$(DLEXT) syslog/syslog_ext.$(DLEXT) nkf/nkf.$(DLEXT) \
 			bigdecimal/bigdecimal.$(DLEXT) date/date_core.$(DLEXT) io-console/console.$(DLEXT) etc/etc.$(DLEXT) \
 			rbconfig-sizeof/sizeof.$(DLEXT) json/parser/parser.$(DLEXT) \
 			debug/debug.$(DLEXT) rbs/rbs_extension.$(DLEXT)
 
-clean: clean_cexts clean_trampoline
-
-clean_trampoline:
-	$(Q) rm -f $(TRAMPOLINE) cext-trampoline/trampoline.c cext-trampoline/*.o
+clean: clean_cexts
 
 clean_cexts:
 	$(Q) rm -f cext/Makefile cext/*.o $(LIBTRUFFLERUBY)
@@ -68,18 +63,9 @@ clean_cexts:
 	$(Q) rm -rf rbs
 	$(Q) rm -rf syslog
 
-# cext-trampoline
-# Remove cext/wrappers.c explicitly, as it was a generated file and so `git pull` does not remove it
-cext-trampoline/trampoline.c: $(CEXT_C_FILES) $(BASIC_DEPS) $(ROOT)/tool/generate-cext-trampoline.rb
-	$(Q) rm -f cext/wrappers.c
-	$(Q) cd $(ROOT) && $(RUBY) tool/generate-cext-trampoline.rb
-
-$(TRAMPOLINE): cext-trampoline/Makefile cext-trampoline/trampoline.c cext-trampoline/*.c Makefile
-	$(Q) cd cext-trampoline && $(MAKE)
-
-# libtruffleruby, must be compiled with the GraalVM LLVM Toolchain as it needs to run on Sulong
-cext/Makefile: cext/extconf.rb $(BASIC_EXTCONF_DEPS) $(TRAMPOLINE)
-	$(Q) cd cext && BUILD_LIBTRUFFLERUBY=true $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
+# libtruffleruby
+cext/Makefile: cext/extconf.rb $(BASIC_EXTCONF_DEPS)
+	$(Q) cd cext && $(RUBY) extconf.rb || $(IF_EXTCONF_FAIL)
 
 $(LIBTRUFFLERUBY): cext/Makefile cext/*.c cext/*.h
 	$(Q) cd cext && $(MAKE)

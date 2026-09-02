@@ -10,7 +10,6 @@
  */
 package org.truffleruby.core.format.read.bytes;
 
-import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.format.FormatFrameDescriptor;
@@ -24,7 +23,6 @@ import org.truffleruby.language.control.RaiseException;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.profiles.BranchProfile;
 
 @NodeChild("value")
@@ -45,18 +43,13 @@ public abstract class ReadStringPointerNode extends FormatNode {
     }
 
     @Specialization
-    RubyString read(VirtualFrame frame, long address,
-            @CachedLibrary(limit = "1") InteropLibrary interop) {
+    RubyString read(VirtualFrame frame, long address) {
         final Pointer pointer = new Pointer(getContext(), address);
         checkAssociated(
                 (Pointer[]) frame.getObject(FormatFrameDescriptor.SOURCE_ASSOCIATED_SLOT),
                 pointer);
 
-        final byte[] bytes = pointer.readZeroTerminatedByteArray(
-                getContext(),
-                interop,
-                0,
-                limit);
+        final byte[] bytes = pointer.readZeroTerminatedByteArray(getContext(), 0, limit);
         return createString(fromByteArrayNode, bytes, Encodings.US_ASCII);
     }
 

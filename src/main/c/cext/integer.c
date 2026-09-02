@@ -13,11 +13,11 @@
 // Integer, rb_integer_*, rb_*int*, rb_big_*
 
 bool rb_tr_integer_type_p(VALUE obj) {
-  return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("rb_integer_type_p", obj));
+  return rb_tr_up_rb_integer_type_p(obj);
 }
 
 VALUE rb_Integer(VALUE value) {
-  return RUBY_CEXT_INVOKE("rb_Integer", value);
+  return rb_tr_up_rb_Integer(value);
 }
 
 #define INTEGER_PACK_WORDORDER_MASK \
@@ -91,31 +91,28 @@ int rb_integer_pack(VALUE value, void *words, size_t numwords, size_t wordsize, 
   VALUE twosComp = rb_boolean(((flags & INTEGER_PACK_2COMP) != 0));
   VALUE swap = rb_boolean(endian_swap(flags));
   // Test for fixnum and do the right things here.
-  void* bytes = polyglot_invoke(RUBY_CEXT, "rb_integer_bytes", rb_tr_unwrap(value),
-                          (int)numwords, (int)wordsize, rb_tr_unwrap(msw_first), rb_tr_unwrap(twosComp), rb_tr_unwrap(swap));
-  int size = (twosComp == Qtrue) ? polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_2scomp_bit_length", value))
-    : polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_absint_bit_length", value));
+  VALUE bytes = rb_tr_up_rb_integer_bytes_string(value, (int)numwords, (int)wordsize, msw_first, twosComp, swap);
+  int size = (twosComp == Qtrue) ? rb_tr_up_rb_2scomp_bit_length(value)
+    : rb_tr_up_rb_absint_bit_length(value);
 
   int sign;
   if (RB_FIXNUM_P(value)) {
     long l = NUM2LONG(value);
     sign = (l > 0) - (l < 0);
   } else {
-    sign = polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_int_cmp", value, INT2FIX(0)));
+    sign = rb_tr_up_rb_int_cmp(value, INT2FIX(0));
   }
   int bytes_needed = size / 8 + (size % 8 == 0 ? 0 : 1);
   int words_needed = bytes_needed / wordsize + (bytes_needed % wordsize == 0 ? 0 : 1);
   int result = (words_needed <= numwords ? 1 : 2) * sign;
 
   uint8_t *buf = (uint8_t *)words;
-  for (long i = 0; i < numwords * wordsize; i++) {
-    buf[i] = (uint8_t) polyglot_as_i32(polyglot_get_array_element(bytes, i));
-  }
+  memcpy(buf, RSTRING_PTR(bytes), numwords * wordsize);
   return result;
 }
 
 VALUE rb_int_positive_pow(long x, unsigned long y) {
-  return RUBY_CEXT_INVOKE("rb_int_positive_pow", INT2FIX(x), INT2FIX(y));
+  return rb_tr_up_rb_int_positive_pow(INT2FIX(x), INT2FIX(y));
 }
 
 // Needed to gem install cbor
@@ -124,7 +121,7 @@ VALUE rb_integer_unpack(const void *words, size_t numwords, size_t wordsize, siz
 }
 
 size_t rb_absint_size(VALUE value, int *nlz_bits_ret) {
-  int size = polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_absint_bit_length", value));
+  int size = rb_tr_up_rb_absint_bit_length(value);
   if (nlz_bits_ret != NULL) {
     *nlz_bits_ret = size % 8;
   }
@@ -136,15 +133,15 @@ size_t rb_absint_size(VALUE value, int *nlz_bits_ret) {
 }
 
 int rb_big_sign(VALUE x) {
-  return RTEST(RUBY_CEXT_INVOKE("rb_big_sign", x)) ? 1 : 0;
+  return RTEST(rb_tr_up_rb_big_sign(x)) ? 1 : 0;
 }
 
 int rb_cmpint(VALUE val, VALUE a, VALUE b) {
-  return polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_cmpint", val, a, b));
+  return rb_tr_up_rb_cmpint(val, a, b);
 }
 
 VALUE rb_big_cmp(VALUE x, VALUE y) {
-  return RUBY_CEXT_INVOKE("rb_big_cmp", x, y);
+  return rb_tr_up_rb_big_cmp(x, y);
 }
 
 void rb_big_pack(VALUE val, unsigned long *buf, long num_longs) {
@@ -153,10 +150,10 @@ void rb_big_pack(VALUE val, unsigned long *buf, long num_longs) {
 }
 
 int rb_absint_singlebit_p(VALUE val) {
-  return polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_absint_singlebit_p", val));
+  return rb_tr_up_rb_absint_singlebit_p(val);
 }
 
 VALUE rb_int2big(intptr_t n) {
   // intptr_t is the same as long
-  return rb_tr_longwrap(n);
+  return rb_tr_up_rb_int2big(n);
 }

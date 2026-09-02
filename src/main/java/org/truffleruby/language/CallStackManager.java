@@ -21,7 +21,6 @@ import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.backtrace.Backtrace;
 import org.truffleruby.language.backtrace.BacktraceFormatter;
-import org.truffleruby.language.backtrace.InternalRootNode;
 import org.truffleruby.language.methods.InternalMethod;
 import org.truffleruby.language.methods.SharedMethodInfo;
 import org.truffleruby.shared.TruffleRuby;
@@ -251,7 +250,7 @@ public final class CallStackManager {
             }
         }
 
-        return rootNode instanceof InternalRootNode || callNode.getEncapsulatingSourceSection() == null;
+        return rootNode.isInternal() || callNode.getEncapsulatingSourceSection() == null;
 
     }
 

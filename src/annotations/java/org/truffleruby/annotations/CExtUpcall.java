@@ -26,38 +26,23 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.truffleruby.annotations;
 
-// Returning a struct by value from Sulong to NFI is not supported.
-// So we need to declare such functions here and call a `rb_tr_` variant which takes a struct pointer instead.
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-#include <ruby.h>
-
-void rb_tr_time_interval(VALUE num, struct timeval *result);
-
-struct timeval rb_time_interval(VALUE num) {
-  struct timeval result;
-  rb_tr_time_interval(num, &result);
-  return result;
-}
-
-void rb_tr_time_timeval(VALUE time, struct timeval *result);
-
-struct timeval rb_time_timeval(VALUE time) {
-  struct timeval result;
-  rb_tr_time_timeval(time, &result);
-  return result;
-}
-
-void rb_tr_time_timespec(VALUE time, struct timespec *result);
-
-struct timespec rb_time_timespec(VALUE time) {
-  struct timespec result;
-  rb_tr_time_timespec(time, &result);
-  return result;
-}
-
-void rb_tr_thread_wait_for(struct timeval* time);
-
-void rb_thread_wait_for(struct timeval time) {
-  rb_tr_thread_wait_for(&time);
+/** Marks a method as the Java target of a native-to-Java FFM upcall stub. The annotation processor validates that every
+ * parameter and the return type are primitives and generates the corresponding {@code foreign.directUpcalls} Native
+ * Image reachability metadata, so the upcall uses a fast specialized stub instead of the generic method-handle upcall
+ * machinery.
+ *
+ * <p>
+ * The MethodHandle used to create the upcall stub for an annotated method must be exactly {@code findStatic} (unbound)
+ * or {@code findVirtual(...).bindTo(receiver)} with no other adaptation, otherwise Native Image silently falls back to
+ * the slow generic upcall stub. */
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.SOURCE)
+public @interface CExtUpcall {
 }

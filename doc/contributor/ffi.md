@@ -3,11 +3,11 @@
 We have our own implementation of FFI, implemented entirely in Ruby + Truffle
 NFI.
 
-Using the FFI gem C extension would be suboptimal because Sulong uses Truffle
-NFI to call native methods. Truffle NFI is implemented with `libffi`. The FFI C
-extension uses its own `libffi` to call native functions. This means we would
-use Truffle NFI's `libffi` to call the C extension `libffi` functions, adding
-overhead on every call to the C extension `libffi` functions.
+Using the FFI gem C extension would be suboptimal because it calls native
+functions through the FFI gem's own bundled `libffi`, with the target function
+and its signature opaque to the JIT compiler. With our backend, each native
+function is bound with its signature through Truffle NFI, so each call site
+gets a specialized, JIT-compiled call to the native function.
 
 FFI is also one way to avoid C extensions altogether, so it makes sense to not
 require C extension support for gems using FFI.

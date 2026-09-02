@@ -31,10 +31,6 @@ module Truffle::CExt
     LIBTRUFFLERUBY = libtruffleruby
   end
 
-  SET_LIBTRAMPOLINE = -> libtrampoline do
-    LIBTRAMPOLINE = libtrampoline
-  end
-
   SETUP_WRAPPERS = -> lib do
     # These wrappers must be used when calling native extension functions,
     # so that setjmp() is done before calling the native extension function,
@@ -43,29 +39,37 @@ module Truffle::CExt
     # will be done to unwind the native stack.
     # It is essential that only native frames and no Java frames are unwinded with longjmp(),
     # which means these wrappers must be used exactly when calling into native functions, not before or after.
-    # Sulong-executed C code counts as not-native in this context.
 
-    # The signature starts with an extra pointer which is for passing the native function to call
+    # The addresses of the rb_tr_setjmp_wrapper_* functions, called with the matching
+    # fixed-signature Primitive.cext_invoke_* directly in the frame needing the native call
+    # (between Primitive.cext_push_lock_and_frame/cext_pop_lock_and_frame where a C extension
+    # frame is needed), so that no extra Ruby frame is visible to stack walking like
+    # rb_frame_this_func() and rb_call_super().
     POINTER_TO_POINTER_WRAPPERS = [nil] + (1..16).map do |n|
-      sig = -"(pointer,#{(['pointer'] * n).join(',')}):pointer"
-      Primitive.interop_eval_nfi(sig).bind(lib[:"rb_tr_setjmp_wrapper_pointer#{n}_to_pointer"])
+      lib[:"rb_tr_setjmp_wrapper_pointer#{n}_to_pointer"]
     end
 
     POINTER_TO_POINTER_WRAPPER = POINTER_TO_POINTER_WRAPPERS[1]
     POINTER2_TO_POINTER_WRAPPER = POINTER_TO_POINTER_WRAPPERS[2]
     POINTER3_TO_POINTER_WRAPPER = POINTER_TO_POINTER_WRAPPERS[3]
 
-    VOID_TO_VOID_WRAPPER = Primitive.interop_eval_nfi('(pointer):void').bind(lib[:rb_tr_setjmp_wrapper_void_to_void])
-    POINTER_TO_VOID_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer):void').bind(lib[:rb_tr_setjmp_wrapper_pointer1_to_void])
-    POINTER2_TO_VOID_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer,pointer):void').bind(lib[:rb_tr_setjmp_wrapper_pointer2_to_void])
-    POINTER2_TO_INT_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer,pointer):sint32').bind(lib[:rb_tr_setjmp_wrapper_pointer2_to_int])
-    POINTER3_TO_VOID_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer,pointer,pointer):void').bind(lib[:rb_tr_setjmp_wrapper_pointer3_to_void])
-    POINTER3_TO_INT_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer,pointer,pointer):sint32').bind(lib[:rb_tr_setjmp_wrapper_pointer3_to_int])
-    POINTER_TO_SIZE_T_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer):uint64').bind(lib[:rb_tr_setjmp_wrapper_pointer1_to_size_t])
-    INT_POINTER2_TO_POINTER_WRAPPER = Primitive.interop_eval_nfi('(pointer,sint32,pointer,pointer):pointer').bind(lib[:rb_tr_setjmp_wrapper_int_pointer2_to_pointer])
-    POINTER2_INT_TO_POINTER_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer,pointer,sint32):pointer').bind(lib[:rb_tr_setjmp_wrapper_pointer2_int_to_pointer])
-    POINTER2_INT_POINTER2_TO_POINTER_WRAPPER = Primitive.interop_eval_nfi('(pointer,pointer,pointer,sint32,pointer,pointer):pointer').bind(lib[:rb_tr_setjmp_wrapper_pointer2_int_pointer2_to_pointer])
+    VOID_TO_VOID_WRAPPER = lib[:rb_tr_setjmp_wrapper_void_to_void]
+    POINTER_TO_VOID_WRAPPER = lib[:rb_tr_setjmp_wrapper_pointer1_to_void]
+    POINTER2_TO_VOID_WRAPPER = lib[:rb_tr_setjmp_wrapper_pointer2_to_void]
+    POINTER2_TO_INT_WRAPPER = lib[:rb_tr_setjmp_wrapper_pointer2_to_int]
+    POINTER3_TO_VOID_WRAPPER = lib[:rb_tr_setjmp_wrapper_pointer3_to_void]
+    POINTER3_TO_INT_WRAPPER = lib[:rb_tr_setjmp_wrapper_pointer3_to_int]
+    POINTER_TO_SIZE_T_WRAPPER = lib[:rb_tr_setjmp_wrapper_pointer1_to_size_t]
+    INT_POINTER2_TO_POINTER_WRAPPER = lib[:rb_tr_setjmp_wrapper_int_pointer2_to_pointer]
+    POINTER2_INT_TO_POINTER_WRAPPER = lib[:rb_tr_setjmp_wrapper_pointer2_int_to_pointer]
+    POINTER2_INT_POINTER2_TO_POINTER_WRAPPER = lib[:rb_tr_setjmp_wrapper_pointer2_int_pointer2_to_pointer]
     RB_BLOCK_CALL_FUNC_WRAPPER = POINTER2_INT_POINTER2_TO_POINTER_WRAPPER
+
+    # Primitive.call_with_unblocking_function needs an executable receiver, called while the
+    # thread is considered blocked
+    CALL_TO_POINTER_WITHOUT_GVL = -> function, arg do
+      Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, function, arg)
+    end
 
     RB_DEFINE_METHOD_WRAPPERS = [
       # argc=0 still means passing (VALUE self) for rb_define_method
@@ -77,6 +81,23 @@ module Truffle::CExt
       # argc == -1 # (int argc, VALUE *argv, VALUE obj)
       INT_POINTER2_TO_POINTER_WRAPPER
     ]
+  end
+
+  # The addresses of the native helper functions of libtruffleruby which are called directly from
+  # Ruby with the matching fixed-signature Primitive.cext_invoke_* (unlike the setjmp wrappers,
+  # the helper itself is the called function)
+  SETUP_NATIVE_FUNCTIONS = -> lib do
+    RDATA_CREATE = lib[:rb_tr_rdata_create]
+    RTYPEDDATA_CREATE = lib[:rb_tr_rtypeddata_create]
+    RDATA_RUN_MARKER = lib[:rb_tr_rdata_run_marker]
+    RTYPEDDATA_RUN_MARKER = lib[:rb_tr_rtypeddata_run_marker]
+    RTYPEDDATA_RUN_MEMSIZER = lib[:rb_tr_rtypeddata_run_memsizer]
+    RDATA_RUN_FINALIZER = lib[:rb_tr_rdata_run_finalizer]
+    RTYPEDDATA_RUN_FINALIZER = lib[:rb_tr_rtypeddata_run_finalizer]
+    RSTRING_PTR_FUNCTION = lib[:rb_tr_rstring_ptr]
+    ENCODING_TO_NATIVE_FUNCTION = lib[:rb_encoding_to_native]
+    READ_VALUE_POINTER_FUNCTION = lib[:rb_tr_read_VALUE_pointer]
+    RDATA_DATA_FUNCTION = lib[:rb_tr_rdata_data]
   end
 
   extend self
@@ -177,62 +198,20 @@ module Truffle::CExt
 
   def self.init_libtruffleruby(libtruffleruby)
     SET_LIBTRUFFLERUBY.call(libtruffleruby)
+    SETUP_WRAPPERS.call(libtruffleruby)
+    SETUP_NATIVE_FUNCTIONS.call(libtruffleruby)
 
-    libtruffleruby.rb_tr_init(Truffle::CExt)
-  end
+    Truffle::CExt.cext_start_new_handle_block
 
-  def self.init_libtrufflerubytrampoline(libtrampoline)
-    keep_alive = []
+    # The global constants must be kept alive: their VALUE handles are stored in C globals
+    # which are not seen by the GC.
+    constants = GLOBAL_CONSTANT_NAMES.map { |name| Truffle::CExt.send(name) }
+    @global_constants_keep_alive = constants
 
-    # rb_tr_longwrap_sig = Primitive.interop_eval_nfi('(sint64):pointer')
-    # rb_tr_longwrap = rb_tr_longwrap_sig.createClosure(self.rb_tr_wrap_function)
-    #
-    # globals_args = [
-    #   rb_tr_longwrap
-    # ]
-    # keep_alive << globals_args
-    #
-    # init_globals = libtrampoline['rb_tr_trampoline_init_globals']
-    # init_globals = Primitive.interop_eval_nfi("(#{Array.new(globals_args.size, 'pointer').join(',')}):void").bind(init_globals)
-    # init_globals.call(*globals_args)
+    # Creates the FFM upcall stubs and calls rb_tr_init() with them and the constant handles
+    Primitive.cext_init_ffm(libtruffleruby, constants)
 
-    init_functions = libtrampoline[:rb_tr_trampoline_init_functions]
-    init_functions = Primitive.interop_eval_nfi('(env,(string):pointer):void').bind(init_functions)
-
-    panama = Truffle::Boot.get_option('cexts-panama') && Primitive.vm_java_version >= 22 && !TruffleRuby.native?
-    if panama
-      # Check if the Panama backend is available, it might not be when embedding TruffleRuby
-      rb_tr_invoke = LIBTRUFFLERUBY['rb_tr_invoke']
-      begin
-        keep_alive << rb_tr_invoke.createNativeClosure('panama')
-      rescue Polyglot::ForeignException => e
-        warn "warning: the Panama Truffle NFI backend for running C extensions faster is not available (#{e.message}). Add 'org.graalvm.truffle:truffle-nfi-panama' to Maven dependencies to resolve or use '--ruby.cexts-panama=false' to ignore."
-        panama = false
-      end
-    end
-
-    if panama
-      init_functions.call(-> name {
-        closure = LIBTRUFFLERUBY[name].createNativeClosure('panama')
-        keep_alive << closure
-        closure
-      })
-    else
-      init_functions.call(-> name { LIBTRUFFLERUBY[name] })
-    end
-
-    init_constants = libtrampoline[:rb_tr_trampoline_init_global_constants]
-    init_constants = Primitive.interop_eval_nfi('((string):pointer):void').bind(init_constants)
-    # TODO: use a Hash instead to be faster? (or Array with fixed indices)
-    init_constants.call(-> name { value = Truffle::CExt.send(name); keep_alive << value; Primitive.cext_wrap(value) })
-
-    LIBTRUFFLERUBY.set_rb_tr_rb_f_notimplement(libtrampoline[:rb_f_notimplement])
-
-    SET_LIBTRAMPOLINE.call(libtrampoline)
-
-    SETUP_WRAPPERS.call(libtrampoline)
-
-    @init_libtrufflerubytrampoline_keep_alive = keep_alive.freeze
+    Truffle::CExt.cext_start_new_handle_block
   end
 
   def init_extension(library, library_path)
@@ -244,19 +223,58 @@ module Truffle::CExt
 
     init_function = library[function_name]
 
-    Primitive.call_with_cext_lock_and_frame(-> {
+    locked = Primitive.cext_push_lock_and_frame(nil, nil, CEXT_LOCK)
+    begin
       begin
-        Primitive.interop_execute(VOID_TO_VOID_WRAPPER, [init_function])
+        Primitive.cext_invoke_v_l(VOID_TO_VOID_WRAPPER, init_function)
       ensure
         # Resolve while inside the ExtensionCallStackEntry to ensure the preservedObjects are still all alive
         resolve_registered_addresses
       end
-    }, [], nil, nil, CEXT_LOCK)
+    ensure
+      Primitive.cext_pop_lock_and_frame(locked)
+    end
   end
 
   def supported?
-    Interop.mime_type_supported?('application/x-sulong-library')
+    true
   end
+
+  # The Java side of the upcall converts the long to a Ruby Integer and wraps the result
+  def rb_int2big(long)
+    long
+  end
+
+  # The Java side converts between Symbol and ID
+  def rb_sym2id(sym)
+    sym
+  end
+
+  # The Java side converts between ID and Symbol
+  def rb_id2sym(sym)
+    sym
+  end
+
+  def rb_array_len(array)
+    array.size
+  end
+
+  def rb_integer_bytes_string(value, num_words, word_length, msw_first, twos_comp, big_endian)
+    Truffle::CExt.rb_integer_bytes(value, num_words, word_length, msw_first, twos_comp, big_endian).pack('C*')
+  end
+
+  # The advance_p native callback is made executable for the cext_enc_mbc_case_fold primitive
+  def rb_tr_enc_mbc_case_fold(flag, string, advance_p, p)
+    advance = -> pointer, length { Primitive.cext_invoke_v_li(advance_p, pointer, length) }
+    Primitive.cext_enc_mbc_case_fold(flag, string, advance, p)
+  end
+
+  # The string reader is a native function reading a char* to a Ruby String; make it executable for ReadCStringNode
+  def rb_tr_sprintf(format, string_reader, args)
+    reader = -> pointer { Primitive.cext_invoke_l_l(string_reader, pointer) }
+    Primitive.cext_sprintf(format, reader, args)
+  end
+  Primitive.always_split self, :rb_tr_sprintf
 
   def check_abi_version(embedded_abi_version, extension_path)
     runtime_abi_version = Truffle::GemUtil::ABI_VERSION
@@ -687,8 +705,8 @@ module Truffle::CExt
     end
 
     keys_and_vals.each_slice(2) do |key, val|
-      st_result = Primitive.interop_execute(POINTER3_TO_INT_WRAPPER,
-        [func, Primitive.cext_sym2id(key), Primitive.cext_wrap(val), arg])
+      st_result = Primitive.cext_invoke_i_llll(POINTER3_TO_INT_WRAPPER,
+        func, Primitive.cext_sym2id(key), Primitive.cext_wrap(val), arg)
 
       case st_result
       when ST_CONTINUE
@@ -862,12 +880,12 @@ module Truffle::CExt
   def rb_tracepoint_new(events, func, data)
     use_cext_lock = Primitive.use_cext_lock?
     TracePoint.new(*events_to_events_array(events)) do |tp|
-      Primitive.call_with_cext_lock_and_frame(
-        POINTER2_TO_VOID_WRAPPER,
-        [func, Primitive.cext_wrap(tp), data],
-        Primitive.caller_special_variables_if_available,
-        nil,
-        use_cext_lock)
+      locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
+      begin
+        Primitive.cext_invoke_v_lll(POINTER2_TO_VOID_WRAPPER, func, Primitive.cext_wrap(tp), data)
+      ensure
+        Primitive.cext_pop_lock_and_frame(locked)
+      end
     end
   end
 
@@ -942,8 +960,14 @@ module Truffle::CExt
   end
 
   def rb_str_new_native(pointer, length)
-    raise "#{pointer} not a pointer" unless Truffle::Interop.pointer?(pointer)
-    Truffle::FFI::Pointer.new(pointer).read_string(length)
+    Primitive.pointer_read_bytes(pointer, length)
+  end
+
+  # A single upcall for rb_enc_str_new(), as it is used for every String created by C extension
+  # code with a known encoding (e.g. every String parsed by the json C extension)
+  def rb_enc_str_new_native(pointer, length, rb_encoding)
+    string = Primitive.pointer_read_bytes(pointer, length)
+    string.force_encoding(rb_encoding_from_native(rb_encoding))
   end
 
   def rb_enc_str_coderange(str)
@@ -1081,28 +1105,28 @@ module Truffle::CExt
     end
   end
 
-  def rb_funcall_with_block(recv, meth, argv, block)
-    Primitive.public_send_argv_without_cext_lock(recv, meth, argv, block)
+  def rb_funcall_with_block(recv, meth, argv, argc, block)
+    Primitive.public_send_argv_without_cext_lock(recv, meth, argv, argc, block)
   end
 
-  def rb_funcall_with_block_keywords(recv, meth, argv, block)
-    Primitive.public_send_argv_keywords_without_cext_lock(recv, meth, argv, block)
+  def rb_funcall_with_block_keywords(recv, meth, argv, argc, block)
+    Primitive.public_send_argv_keywords_without_cext_lock(recv, meth, argv, argc, block)
   end
 
-  def rb_funcallv_public(recv, meth, argv)
-    Primitive.public_send_argv_without_cext_lock(recv, meth, argv, nil)
+  def rb_funcallv_public(recv, meth, argv, argc)
+    Primitive.public_send_argv_without_cext_lock(recv, meth, argv, argc, nil)
   end
 
-  def rb_funcallv(recv, meth, argv)
-    Primitive.send_argv_without_cext_lock(recv, meth, argv, nil)
+  def rb_funcallv(recv, meth, argv, argc)
+    Primitive.send_argv_without_cext_lock(recv, meth, argv, argc, nil)
   end
 
   def rb_check_funcall(recv, meth, args)
     Primitive.send_without_cext_lock(Truffle::Type, :check_funcall, [recv, meth, args], nil)
   end
 
-  def rb_funcallv_keywords(recv, meth, argv)
-    Primitive.send_argv_keywords_without_cext_lock(recv, meth, argv, nil)
+  def rb_funcallv_keywords(recv, meth, argv, argc)
+    Primitive.send_argv_keywords_without_cext_lock(recv, meth, argv, argc, nil)
   end
 
   def rb_funcall(recv, meth, n, *args)
@@ -1183,8 +1207,8 @@ module Truffle::CExt
 
   def rb_hash_foreach(hash, func, farg)
     hash.each do |key, value|
-      st_result = Primitive.interop_execute(POINTER3_TO_INT_WRAPPER,
-        [func, Primitive.cext_wrap(key), Primitive.cext_wrap(value), farg])
+      st_result = Primitive.cext_invoke_i_llll(POINTER3_TO_INT_WRAPPER,
+        func, Primitive.cext_wrap(key), Primitive.cext_wrap(value), farg)
 
       case st_result
       when ST_CONTINUE
@@ -1199,8 +1223,8 @@ module Truffle::CExt
 
   def rb_set_foreach(set, func, farg)
     set.each do |element|
-      st_result = Primitive.interop_execute(POINTER2_TO_INT_WRAPPER,
-        [func, Primitive.cext_wrap(element), farg])
+      st_result = Primitive.cext_invoke_i_lll(POINTER2_TO_INT_WRAPPER,
+        func, Primitive.cext_wrap(element), farg)
 
       case st_result
       when ST_CONTINUE
@@ -1228,14 +1252,18 @@ module Truffle::CExt
   def rb_proc_new(function, value)
     use_cext_lock = Primitive.use_cext_lock?
     Primitive.cext_wrap(Proc.new do |*args, &block|
-      Primitive.call_with_cext_lock_and_frame_and_unwrap(RB_BLOCK_CALL_FUNC_WRAPPER, [
-        function,
-        Primitive.cext_wrap(args.first), # yieldarg
-        value, # procarg,
-        args.size, # argc
-        Truffle::CExt.RARRAY_PTR(args), # argv
-        Primitive.cext_wrap(block), # blockarg
-      ], Primitive.caller_special_variables_if_available, nil, use_cext_lock)
+      locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
+      begin
+        Primitive.cext_unwrap(Primitive.cext_invoke_l_lllill(RB_BLOCK_CALL_FUNC_WRAPPER,
+          function,
+          Primitive.cext_wrap(args.first), # yieldarg
+          value, # procarg,
+          args.size, # argc
+          Truffle::CExt.RARRAY_PTR(args), # argv
+          Primitive.cext_wrap(block))) # blockarg
+      ensure
+        Primitive.cext_pop_lock_and_frame(locked)
+      end
     end)
   end
 
@@ -1262,7 +1290,7 @@ module Truffle::CExt
   # exception out of the thread local and calls raise exception to
   # throw it and allow normal error handling to continue.
 
-  def rb_protect(function, arg, write_status, status)
+  def rb_protect(function, arg, status)
     # We wrap nil here to avoid wrapping any result returned, as the
     # function called will do that. In general we try not to touch the
     # values passed in or out of protected functions as C extensions
@@ -1270,7 +1298,7 @@ module Truffle::CExt
     res = Primitive.cext_wrap(nil)
     pos = 0
     e = capture_exception do
-      res = Primitive.interop_execute(POINTER_TO_POINTER_WRAPPER, [function, arg])
+      res = Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, function, arg)
     end
 
     unless Primitive.nil?(e)
@@ -1279,7 +1307,7 @@ module Truffle::CExt
       Primitive.fiber_set_error_info(extract_ruby_exception(e))
     end
 
-    Truffle::Interop.execute_without_conversion(write_status, status, pos)
+    Primitive.pointer_write_int(status, pos) unless status == 0
     res
   end
   Primitive.always_split self, :rb_protect
@@ -1390,7 +1418,7 @@ module Truffle::CExt
     :"#{sym}="
   end
 
-  def rb_const_defined?(mod, name)
+  def rb_const_defined(mod, name)
     Primitive.module_const_defined? mod, name, true, false
   end
 
@@ -1503,15 +1531,16 @@ module Truffle::CExt
   end
 
   def rb_enumeratorize_with_size(obj, meth, args, size_fn)
-    return rb_enumeratorize(obj, meth, args) if Primitive.interop_null?(size_fn)
+    return rb_enumeratorize(obj, meth, args) if size_fn == 0
     use_cext_lock = Primitive.use_cext_lock?
     enum = obj.to_enum(meth, *args) do
-      Primitive.call_with_cext_lock_and_frame_and_unwrap(
-        POINTER3_TO_POINTER_WRAPPER,
-        [size_fn, Primitive.cext_wrap(obj), Primitive.cext_wrap(args), Primitive.cext_wrap(enum)],
-        Primitive.caller_special_variables_if_available,
-        nil,
-        use_cext_lock)
+      locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
+      begin
+        Primitive.cext_unwrap(Primitive.cext_invoke_l_llll(POINTER3_TO_POINTER_WRAPPER,
+          size_fn, Primitive.cext_wrap(obj), Primitive.cext_wrap(args), Primitive.cext_wrap(enum)))
+      ensure
+        Primitive.cext_pop_lock_and_frame(locked)
+      end
     end
     enum
   end
@@ -1523,12 +1552,12 @@ module Truffle::CExt
   def rb_define_alloc_func(ruby_class, function)
     use_cext_lock = Primitive.use_cext_lock?
     ruby_class.singleton_class.define_method(:__allocate__) do
-      Primitive.call_with_cext_lock_and_frame_and_unwrap(
-        POINTER_TO_POINTER_WRAPPER,
-        [function, Primitive.cext_wrap(self)],
-        Primitive.caller_special_variables_if_available,
-        nil,
-        use_cext_lock)
+      locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
+      begin
+        Primitive.cext_unwrap(Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, function, Primitive.cext_wrap(self)))
+      ensure
+        Primitive.cext_pop_lock_and_frame(locked)
+      end
     end
     class << ruby_class
       private :__allocate__
@@ -1537,13 +1566,13 @@ module Truffle::CExt
   end
 
   def rb_get_alloc_func(ruby_class)
-    return nil unless Primitive.is_a?(ruby_class, Class)
+    return 0 unless Primitive.is_a?(ruby_class, Class)
     begin
       allocate_method = ruby_class.method(:__allocate__).owner
     rescue NameError
-      nil # it's fine to call this on a class that doesn't have an allocator
+      0 # it's fine to call this on a class that doesn't have an allocator
     else
-      Primitive.object_hidden_var_get(allocate_method, ALLOCATOR_FUNC)
+      Primitive.object_hidden_var_get(allocate_method, ALLOCATOR_FUNC) || 0
     end
   end
 
@@ -1666,7 +1695,7 @@ module Truffle::CExt
 
   def rb_mutex_synchronize(mutex, func, arg)
     mutex.synchronize do
-      Primitive.interop_execute(POINTER_TO_POINTER_WRAPPER, [func, arg])
+      Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, func, arg)
     end
   end
   Primitive.always_split self, :rb_mutex_synchronize
@@ -1728,16 +1757,19 @@ module Truffle::CExt
   def rb_set_end_proc(func, data)
     use_cext_lock = Primitive.use_cext_lock?
     at_exit do
-      Primitive.call_with_cext_lock_and_frame(
-        POINTER_TO_VOID_WRAPPER, [func, data],
-        Primitive.caller_special_variables_if_available, nil, use_cext_lock)
+      locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
+      begin
+        Primitive.cext_invoke_v_ll(POINTER_TO_VOID_WRAPPER, func, data)
+      ensure
+        Primitive.cext_pop_lock_and_frame(locked)
+      end
     end
   end
 
   def ruby_vm_at_exit(callback, arg)
     # No C ext lock, this is called when only 1 Thread is left
     Primitive.add_native_exit_hook(-> {
-      Primitive.interop_execute(POINTER_TO_VOID_WRAPPER, [callback, arg])
+      Primitive.cext_invoke_v_ll(POINTER_TO_VOID_WRAPPER, callback, arg)
     })
   end
 
@@ -1751,7 +1783,7 @@ module Truffle::CExt
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end
-    data_struct
+    data_struct.address
   end
 
   def RTYPEDDATA(object)
@@ -1760,23 +1792,32 @@ module Truffle::CExt
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end
-    data_struct
+    data_struct.address
+  end
+
+  # The address of the data field of the given native struct RData or struct RTypedData
+  # (the field is at the same offset in both)
+  def rb_tr_rdata_data(rdata)
+    Primitive.cext_invoke_l_l(RDATA_DATA_FUNCTION, rdata)
   end
 
   private def data_marker(marker_function, struct)
-    if Truffle::Interop.null?(marker_function)
+    if marker_function == 0
       nil
     else
-      -> { Primitive.interop_execute(marker_function, [struct]) }
+      -> { Primitive.cext_invoke_v_l(marker_function, struct) }
     end
   end
 
   private def data_sizer(sizer_function, rtypeddata)
     use_cext_lock = Primitive.use_cext_lock?
     proc {
-      Primitive.call_with_cext_lock_and_frame(
-        sizer_function, [rtypeddata],
-        Primitive.caller_special_variables_if_available, nil, use_cext_lock)
+      locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
+      begin
+        Primitive.cext_invoke_l_l(sizer_function, rtypeddata)
+      ensure
+        Primitive.cext_pop_lock_and_frame(locked)
+      end
     }
   end
 
@@ -1785,13 +1826,13 @@ module Truffle::CExt
     object = ruby_class.__send__(:__layout_allocate__)
     use_cext_lock = Primitive.use_cext_lock?
 
-    rdata = LIBTRUFFLERUBY.rb_tr_rdata_create(mark, free, data)
+    rdata = Truffle::FFI::Pointer.new(Primitive.cext_invoke_l_lll(RDATA_CREATE, mark, free, data))
     Primitive.object_hidden_var_set object, DATA_STRUCT, rdata
-    Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(LIBTRUFFLERUBY[:rb_tr_rdata_run_marker], rdata)
-    # Could use a simpler finalizer if Truffle::Interop.null?(free)
-    Primitive.objectspace_define_data_finalizer object, LIBTRUFFLERUBY[:rb_tr_rdata_run_finalizer], rdata, use_cext_lock
+    Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(RDATA_RUN_MARKER, rdata)
+    # Could use a simpler finalizer if free == 0
+    Primitive.objectspace_define_data_finalizer object, RDATA_RUN_FINALIZER, rdata, use_cext_lock
 
-    Primitive.cext_mark_object_on_call_exit(object) unless Truffle::Interop.null?(mark)
+    Primitive.cext_mark_object_on_call_exit(object) unless mark == 0
 
     object
   end
@@ -1801,24 +1842,29 @@ module Truffle::CExt
     object = ruby_class.__send__(:__layout_allocate__)
     use_cext_lock = Primitive.use_cext_lock?
 
-    rtypeddata = LIBTRUFFLERUBY.rb_tr_rtypeddata_create(data_type, data)
+    rtypeddata = Truffle::FFI::Pointer.new(Primitive.cext_invoke_l_ll(RTYPEDDATA_CREATE, data_type, data))
     Primitive.object_hidden_var_set object, DATA_STRUCT, rtypeddata
-    Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(LIBTRUFFLERUBY[:rb_tr_rtypeddata_run_marker], rtypeddata)
-    # Could use a simpler finalizer if Truffle::Interop.null?(free)
-    Primitive.objectspace_define_data_finalizer object, LIBTRUFFLERUBY[:rb_tr_rtypeddata_run_finalizer], rtypeddata, use_cext_lock
+    Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(RTYPEDDATA_RUN_MARKER, rtypeddata)
+    # Could use a simpler finalizer if free == 0
+    Primitive.objectspace_define_data_finalizer object, RTYPEDDATA_RUN_FINALIZER, rtypeddata, use_cext_lock
 
-    unless Truffle::Interop.null?(size)
-      Primitive.object_hidden_var_set object, DATA_MEMSIZER, data_sizer(LIBTRUFFLERUBY[:rb_tr_rtypeddata_run_memsizer], rtypeddata)
+    unless size == 0
+      Primitive.object_hidden_var_set object, DATA_MEMSIZER, data_sizer(RTYPEDDATA_RUN_MEMSIZER, rtypeddata)
     end
     Primitive.object_hidden_var_set object, DATA_TYPE, data_type
 
-    Primitive.cext_mark_object_on_call_exit(object) unless Truffle::Interop.null?(mark)
+    Primitive.cext_mark_object_on_call_exit(object) unless mark == 0
 
     object
   end
 
   def run_data_finalizer(function, data, use_cext_lock)
-    Primitive.call_with_cext_lock_and_frame function, [data], nil, nil, use_cext_lock
+    locked = Primitive.cext_push_lock_and_frame(nil, nil, use_cext_lock)
+    begin
+      Primitive.cext_invoke_v_l(function, data)
+    ensure
+      Primitive.cext_pop_lock_and_frame(locked)
+    end
   end
 
   def run_marker(obj)
@@ -1865,14 +1911,19 @@ module Truffle::CExt
     use_cext_lock = Primitive.use_cext_lock?
 
     object.__send__(method, *args) do |*block_args|
-      Primitive.cext_unwrap(Primitive.call_with_cext_lock(RB_BLOCK_CALL_FUNC_WRAPPER, [ # Probably need to save the frame here for blocks.
-        func,
-        Primitive.cext_wrap(block_args.first),
-        data,
-        block_args.size, # argc
-        Truffle::CExt.RARRAY_PTR(block_args), # argv
-        nil, # blockarg
-      ], use_cext_lock))
+      locked = Primitive.cext_lock_acquire(use_cext_lock)
+      begin
+        # Probably need to save the frame here for blocks.
+        Primitive.cext_unwrap(Primitive.cext_invoke_l_lllill(RB_BLOCK_CALL_FUNC_WRAPPER,
+          func,
+          Primitive.cext_wrap(block_args.first),
+          data,
+          block_args.size, # argc
+          Truffle::CExt.RARRAY_PTR(block_args), # argv
+          nil)) # blockarg
+      ensure
+        Primitive.cext_lock_release(locked)
+      end
     end
   end
 
@@ -1882,12 +1933,12 @@ module Truffle::CExt
 
   def rb_ensure(b_proc, data1, e_proc, data2)
     begin
-      Primitive.interop_execute(POINTER_TO_POINTER_WRAPPER, [b_proc, data1])
+      Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, b_proc, data1)
     ensure
       errinfo = Primitive.fiber_get_error_info
       Primitive.fiber_set_error_info($!)
       begin
-        Primitive.interop_execute(POINTER_TO_POINTER_WRAPPER, [e_proc, data2])
+        Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, e_proc, data2)
       ensure
         Primitive.fiber_set_error_info(errinfo)
       end
@@ -1897,15 +1948,15 @@ module Truffle::CExt
 
   def rb_rescue(b_proc, data1, r_proc, data2)
     begin
-      Primitive.interop_execute(POINTER_TO_POINTER_WRAPPER, [b_proc, data1])
+      Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, b_proc, data1)
     rescue StandardError => exc
-      if Truffle::Interop.null?(r_proc)
+      if r_proc == 0
         Primitive.cext_wrap(nil)
       else
         errinfo = Primitive.fiber_get_error_info
         Primitive.fiber_set_error_info(exc)
         begin
-          Primitive.interop_execute(POINTER2_TO_POINTER_WRAPPER, [r_proc, data2, Primitive.cext_wrap(exc)])
+          Primitive.cext_invoke_l_lll(POINTER2_TO_POINTER_WRAPPER, r_proc, data2, Primitive.cext_wrap(exc))
         ensure
           Primitive.fiber_set_error_info(errinfo)
         end
@@ -1916,12 +1967,12 @@ module Truffle::CExt
 
   def rb_rescue2(b_proc, data1, r_proc, data2, rescued)
     begin
-      Primitive.interop_execute(POINTER_TO_POINTER_WRAPPER, [b_proc, data1])
+      Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, b_proc, data1)
     rescue *rescued => exc
       errinfo = Primitive.fiber_get_error_info
       Primitive.fiber_set_error_info(exc)
       begin
-        Primitive.interop_execute(POINTER2_TO_POINTER_WRAPPER, [r_proc, data2, Primitive.cext_wrap(exc)])
+        Primitive.cext_invoke_l_lll(POINTER2_TO_POINTER_WRAPPER, r_proc, data2, Primitive.cext_wrap(exc))
       ensure
         Primitive.fiber_set_error_info(errinfo)
       end
@@ -1929,19 +1980,20 @@ module Truffle::CExt
   end
   Primitive.always_split self, :rb_rescue2
 
-  def rb_exec_recursive(func, obj, arg)
+  # obj_handle is the raw VALUE handle: it is passed through unchanged to func so that
+  # nested rb_exec_recursive calls see the same VALUE, while recursion is detected on the object
+  def rb_exec_recursive(func, obj_handle, arg)
+    obj = Primitive.cext_unwrap(obj_handle)
     result = nil
 
     recursive = Truffle::ThreadOperations.detect_recursion(obj) do
-      result = Primitive.cext_unwrap(Primitive.interop_execute(
-        POINTER2_INT_TO_POINTER_WRAPPER,
-        [func, obj, arg, 0]))
+      result = Primitive.cext_unwrap(Primitive.cext_invoke_l_llli(
+        POINTER2_INT_TO_POINTER_WRAPPER, func, obj_handle, arg, 0))
     end
 
     if recursive
-      Primitive.cext_unwrap(Primitive.interop_execute(
-        POINTER2_INT_TO_POINTER_WRAPPER,
-        [func, obj, arg, 1]))
+      Primitive.cext_unwrap(Primitive.cext_invoke_l_llli(
+        POINTER2_INT_TO_POINTER_WRAPPER, func, obj_handle, arg, 1))
     else
       result
     end
@@ -1956,14 +2008,18 @@ module Truffle::CExt
     # So we track which case it is and wrap as needed.
     threw = true
     result = catch tag do |caught|
-      func_result = Primitive.call_with_cext_lock(RB_BLOCK_CALL_FUNC_WRAPPER, [
-        func,
-        Primitive.cext_wrap(caught),
-        data,
-        0, # argc
-        nil, # argv
-        nil, # blockarg
-      ], use_cext_lock)
+      locked = Primitive.cext_lock_acquire(use_cext_lock)
+      begin
+        func_result = Primitive.cext_invoke_l_lllill(RB_BLOCK_CALL_FUNC_WRAPPER,
+          func,
+          Primitive.cext_wrap(caught),
+          data,
+          0, # argc
+          nil, # argv
+          nil) # blockarg
+      ensure
+        Primitive.cext_lock_release(locked)
+      end
       threw = false
       func_result
     end
@@ -2068,12 +2124,22 @@ module Truffle::CExt
   def rb_thread_create(fn, args)
     use_cext_lock = Primitive.use_cext_lock?
     Thread.new do
-      Primitive.call_with_cext_lock_and_frame(POINTER_TO_POINTER_WRAPPER, [fn, args], Primitive.caller_special_variables_if_available, nil, use_cext_lock)
+      locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
+      begin
+        Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, fn, args)
+      ensure
+        Primitive.cext_pop_lock_and_frame(locked)
+      end
     end
   end
 
   def rb_thread_call_with_gvl(function, data)
-    Primitive.call_with_cext_lock(POINTER_TO_POINTER_WRAPPER, [function, data], CEXT_LOCK)
+    locked = Primitive.cext_lock_acquire(CEXT_LOCK)
+    begin
+      Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, function, data)
+    ensure
+      Primitive.cext_lock_release(locked)
+    end
   end
 
   def rb_thread_call_without_gvl(function, data1, unblock, data2)
@@ -2086,28 +2152,33 @@ module Truffle::CExt
 
   private def rb_thread_call_without_gvl_inner(function, data1, unblock, data2)
     Primitive.call_with_unblocking_function(Thread.current,
-      POINTER_TO_POINTER_WRAPPER, function, data1,
-      Primitive.interop_as_pointer(unblock), Primitive.interop_as_pointer(data2))
+      CALL_TO_POINTER_WITHOUT_GVL, function, data1,
+      unblock, data2)
   end
 
   def rb_iterate(iteration, iterated_object, callback, callback_arg)
     use_cext_lock = Primitive.use_cext_lock?
     block = rb_block_proc
     wrapped_callback = proc do |block_arg|
-      Primitive.call_with_cext_lock_and_frame_and_unwrap(RB_BLOCK_CALL_FUNC_WRAPPER, [
-        callback,
-        Primitive.cext_wrap(block_arg),
-        callback_arg,
-        0, # argc
-        nil, # argv
-        nil, # blockarg
-      ], Primitive.cext_special_variables_from_stack, block, use_cext_lock)
+      locked = Primitive.cext_push_lock_and_frame(Primitive.cext_special_variables_from_stack, block, use_cext_lock)
+      begin
+        Primitive.cext_unwrap(Primitive.cext_invoke_l_lllill(RB_BLOCK_CALL_FUNC_WRAPPER,
+          callback,
+          Primitive.cext_wrap(block_arg),
+          callback_arg,
+          0, # argc
+          nil, # argv
+          nil)) # blockarg
+      ensure
+        Primitive.cext_pop_lock_and_frame(locked)
+      end
     end
-    Primitive.cext_unwrap(
-      Primitive.call_with_cext_lock_and_frame(POINTER_TO_POINTER_WRAPPER, [
-        iteration,
-        iterated_object
-      ], Primitive.cext_special_variables_from_stack, wrapped_callback, use_cext_lock))
+    locked = Primitive.cext_push_lock_and_frame(Primitive.cext_special_variables_from_stack, wrapped_callback, use_cext_lock)
+    begin
+      Primitive.cext_unwrap(Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, iteration, iterated_object))
+    ensure
+      Primitive.cext_pop_lock_and_frame(locked)
+    end
   end
 
   # From ruby.h
@@ -2219,21 +2290,23 @@ module Truffle::CExt
     use_cext_lock = Primitive.use_cext_lock?
 
     getter_proc = -> {
-      Primitive.call_with_cext_lock_and_frame_and_unwrap(
-        POINTER2_TO_POINTER_WRAPPER,
-        [getter, Primitive.cext_wrap(id), gvar],
-        Primitive.caller_special_variables_if_available,
-        nil,
-        use_cext_lock)
+      locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
+      begin
+        Primitive.cext_unwrap(Primitive.cext_invoke_l_lll(POINTER2_TO_POINTER_WRAPPER,
+          getter, Primitive.cext_wrap(id), gvar))
+      ensure
+        Primitive.cext_pop_lock_and_frame(locked)
+      end
     }
 
     setter_proc = -> _, value {
-      Primitive.call_with_cext_lock_and_frame(
-        POINTER3_TO_VOID_WRAPPER,
-        [setter, Primitive.cext_wrap(value), Primitive.cext_wrap(id), gvar],
-        Primitive.caller_special_variables_if_available,
-        nil,
-        use_cext_lock)
+      locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
+      begin
+        Primitive.cext_invoke_v_llll(POINTER3_TO_VOID_WRAPPER,
+          setter, Primitive.cext_wrap(value), Primitive.cext_wrap(id), gvar)
+      ensure
+        Primitive.cext_pop_lock_and_frame(locked)
+      end
     }
 
     Truffle::KernelOperations.define_hooked_variable id, getter_proc, setter_proc
@@ -2254,15 +2327,12 @@ module Truffle::CExt
   end
 
   def rb_to_encoding(encoding)
-    RbEncoding.get(encoding)
-  end
-
-  def rb_enc_from_encoding(rb_encoding)
-    rb_encoding.encoding
+    rb_encoding_native_address(encoding)
   end
 
   def rb_enc_from_native_encoding(rb_encoding)
-    RbEncoding.get_encoding_from_native(rb_encoding)
+    # rb_encoding is the address of the native rb_encoding struct as a long
+    rb_encoding_from_native(rb_encoding)
   end
 
   def rb_enc_check(str1, str2)
@@ -2283,6 +2353,12 @@ module Truffle::CExt
     Primitive.string_pointer_to_native(string)
   end
 
+  # A single upcall for RSTRING_GETMEM(), which reads both RSTRING_PTR() and RSTRING_LEN()
+  def rb_tr_rstring_getmem(string, len_pointer)
+    Primitive.pointer_write_long(len_pointer, string.bytesize)
+    Primitive.string_pointer_to_native(string)
+  end
+
   def rb_java_class_of(object)
     Truffle::Debug.java_class_of(object)
   end
@@ -2295,7 +2371,13 @@ module Truffle::CExt
     Primitive.cext_wrap(value)
   end
 
-  RB_THREAD_CURRENT_BACKTRACE_LOCATIONS_OMIT = 4
+  # Only used by test/truffle/cexts/backtraces: calls a VALUE (*)(VALUE) function of libtruffleruby
+  # through the setjmp wrapper, so Ruby exceptions raised in upcalls unwind the native frames correctly
+  def test_invoke_pointer_to_pointer(function, arg)
+    Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, function, arg)
+  end
+
+  RB_THREAD_CURRENT_BACKTRACE_LOCATIONS_OMIT = 2
 
   def rb_debug_inspector_open_contexts_and_backtrace
     contexts = Truffle::Debug.get_frame_bindings.map do |binding|
@@ -2309,7 +2391,7 @@ module Truffle::CExt
     backtrace = Thread.current.backtrace_locations(RB_THREAD_CURRENT_BACKTRACE_LOCATIONS_OMIT)
 
     if contexts.size != backtrace.size
-      STDERR.puts '', 'contexts:', contexts.map { |_,_,binding| binding.source_location.join(':') }
+      STDERR.puts '', 'contexts:', contexts.map { |_, _, binding| binding ? binding.source_location.join(':') : 'nil' }
       STDERR.puts '', 'backtrace:', backtrace, ''
       raise 'debug_inspector contexts and backtrace lengths are not equal'
     end
@@ -2340,20 +2422,22 @@ module Truffle::CExt
   def rb_fiber_new(function, value)
     use_cext_lock = Primitive.use_cext_lock?
     Fiber.new do |*args|
-      Primitive.call_with_cext_lock_and_frame_and_unwrap(RB_BLOCK_CALL_FUNC_WRAPPER, [
-        function,
-        Primitive.cext_wrap(args.first), # yieldarg
-        value, # procarg
-        0, # argc
-        nil, # argv
-        nil, # blockarg
-      ], nil, nil, use_cext_lock)
+      locked = Primitive.cext_push_lock_and_frame(nil, nil, use_cext_lock)
+      begin
+        Primitive.cext_unwrap(Primitive.cext_invoke_l_lllill(RB_BLOCK_CALL_FUNC_WRAPPER,
+          function,
+          Primitive.cext_wrap(args.first), # yieldarg
+          value, # procarg
+          0, # argc
+          nil, # argv
+          nil)) # blockarg
+      ensure
+        Primitive.cext_pop_lock_and_frame(locked)
+      end
     end
   end
 
   def rb_tr_pointer(pointer)
-    Truffle::Interop.to_native(pointer) unless Truffle::Interop.pointer?(pointer)
-    raise "#{pointer} not a pointer" unless Truffle::Interop.pointer?(pointer)
     Truffle::FFI::Pointer.new(pointer)
   end
 
@@ -2367,9 +2451,6 @@ module Truffle::CExt
   GC_REGISTERED_ADDRESSES = {}
 
   def rb_gc_register_address(address)
-    # Make it a native pointer so its identity hash is stable
-    Truffle::Interop.to_native(address) unless Truffle::Interop.pointer?(address)
-
     c_global_variables = Primitive.fiber_c_global_variables
     if c_global_variables # called during Init_ function
       c_global_variables << address
@@ -2388,11 +2469,10 @@ module Truffle::CExt
     # We save the ValueWrapper here and not the actual value/object, this is important for primitives like double and
     # not-fixnum-long, as we need to preserve the handle by preserving the ValueWrapper of that handle.
     # For those cases the primitive cannot itself reference its ValueWrapper, unlike RubyDynamicObject and ImmutableRubyObject.
-    GC_REGISTERED_ADDRESSES[address] = Primitive.cext_to_wrapper LIBTRUFFLERUBY.rb_tr_read_VALUE_pointer(address)
+    GC_REGISTERED_ADDRESSES[address] = Primitive.cext_to_wrapper Primitive.cext_invoke_l_l(READ_VALUE_POINTER_FUNCTION, address)
   end
 
   def rb_gc_unregister_address(address)
-    Truffle::Interop.to_native(address) unless Truffle::Interop.pointer?(address)
     GC_REGISTERED_ADDRESSES.delete(address)
   end
 
@@ -2434,14 +2514,6 @@ module Truffle::CExt
     Warning.warn(message_with_prefix, category: category)
   end
 
-  def rb_tr_flags(object)
-    Truffle::CExt::RBasic.new(object).compute_flags
-  end
-
-  def rb_tr_set_flags(object, flags)
-    Truffle::CExt::RBasic.new(object).set_flags(flags)
-  end
-
   def rb_io_get_write_io(io)
     if Primitive.is_a?(io, IO::BidirectionalPipe)
       Primitive.object_ivar_get(io, :@write)
@@ -2450,8 +2522,11 @@ module Truffle::CExt
     end
   end
 
-  def new_memory_pointer(size)
-    Truffle::FFI::MemoryPointer.new(size)
+  def rb_tr_io_create_and_attach_pointer(io, size)
+    # The MemoryPointer must stay alive as long as the IO object, see rb_tr_io_attach_pointer
+    pointer = Truffle::FFI::MemoryPointer.new(size)
+    rb_tr_io_attach_pointer(io, pointer)
+    pointer.address
   end
 
   def rb_io_mode(io)
@@ -2471,7 +2546,9 @@ module Truffle::CExt
   end
 
   def rb_tr_io_pointer(io)
-    Primitive.object_hidden_var_get(io, RB_IO_STRUCT)
+    rb_io_t = Primitive.object_hidden_var_get(io, RB_IO_STRUCT)
+    # NULL if no rb_io_t struct was attached to the IO yet
+    rb_io_t ? rb_io_t.address : 0
   end
 
   def rb_tr_io_attach_pointer(io, rb_io_t)

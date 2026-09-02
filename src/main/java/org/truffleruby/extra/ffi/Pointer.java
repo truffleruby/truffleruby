@@ -10,16 +10,17 @@
  */
 package org.truffleruby.extra.ffi;
 
+import java.lang.invoke.MethodHandle;
 import java.lang.ref.Cleaner.Cleanable;
 import java.lang.reflect.Field;
 
-import com.oracle.truffle.api.interop.InteropException;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
+import org.truffleruby.platform.FFMSupport;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -277,29 +278,37 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         return UNSAFE.getDouble(address + offset);
     }
 
-    public byte[] readZeroTerminatedByteArray(RubyContext context, InteropLibrary interopLibrary, long offset) {
-        return readBytes(offset, checkStringSize(findNullByte(
-                context,
-                interopLibrary,
-                offset)));
+    public byte[] readZeroTerminatedByteArray(RubyContext context, long offset) {
+        return readBytes(offset, checkStringSize(findNullByte(context, offset)));
     }
 
-    public byte[] readZeroTerminatedByteArray(RubyContext context, InteropLibrary interopLibrary, long offset,
-            long limit) {
-        return readBytes(offset, checkStringSize(findNullByte(
-                context,
-                interopLibrary,
-                offset,
-                limit)));
+    public byte[] readZeroTerminatedByteArray(RubyContext context, long offset, long limit) {
+        return readBytes(offset, checkStringSize(findNullByte(context, offset, limit)));
     }
 
-    public long findNullByte(RubyContext context, InteropLibrary interopLibrary, long offset) {
+    // Uses a boundary like CExtInvokePrimitives, as the FFM downcall stub cannot be used in PE code
+    @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
+    private static long invokeStrlen(long function, long address) {
+        try {
+            return (long) STRLEN.invokeExact(function, address);
+        } catch (Throwable t) {
+            throw CompilerDirectives.shouldNotReachHere(t);
+        }
+    }
+
+    @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
+    private static long invokeStrnlen(long function, long address, long limit) {
+        try {
+            return (long) STRNLEN.invokeExact(function, address, limit);
+        } catch (Throwable t) {
+            throw CompilerDirectives.shouldNotReachHere(t);
+        }
+    }
+
+    public long findNullByte(RubyContext context, long offset) {
         if (context.getOptions().NATIVE_PLATFORM) {
-            try {
-                return (long) interopLibrary.execute(context.getTruffleNFI().getStrlen(), address + offset);
-            } catch (InteropException e) {
-                throw CompilerDirectives.shouldNotReachHere(e);
-            }
+            assert strlenFunction != 0;
+            return invokeStrlen(strlenFunction, address + offset);
         } else {
             int n = 0;
             while (true) {
@@ -311,13 +320,10 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         }
     }
 
-    private long findNullByte(RubyContext context, InteropLibrary interopLibrary, long offset, long limit) {
+    private long findNullByte(RubyContext context, long offset, long limit) {
         if (context.getOptions().NATIVE_PLATFORM) {
-            try {
-                return (long) interopLibrary.execute(context.getTruffleNFI().getStrnlen(), address + offset, limit);
-            } catch (InteropException e) {
-                throw CompilerDirectives.shouldNotReachHere(e);
-            }
+            assert strnlenFunction != 0;
+            return invokeStrnlen(strnlenFunction, address + offset, limit);
         } else {
             int n = 0;
             while (n < limit) {
@@ -421,6 +427,24 @@ public final class Pointer implements AutoCloseable, TruffleObject {
     @Override
     public String toString() {
         return "Pointer@0x" + Long.toHexString(address) + "(size=" + (isBounded() ? size : "UNBOUNDED") + ")";
+    }
+
+    private static final MethodHandle STRLEN = FFMSupport.createDowncallHandle("L(L)");
+    private static final MethodHandle STRNLEN = FFMSupport.createDowncallHandle("L(LL)");
+    private static long strlenFunction;
+    private static long strnlenFunction;
+
+    /** Called during context initialization when the native platform is available, so findNullByte() does not need to
+     * check it and stays PE-able code */
+    public static synchronized void resolveStringFunctions() {
+        if (strlenFunction == 0) {
+            strlenFunction = FFMSupport.lookupDefaultSymbol("strlen");
+            strnlenFunction = FFMSupport.lookupDefaultSymbol("strnlen");
+        }
+    }
+
+    public static long rawReadLong(long address) {
+        return UNSAFE.getLong(address);
     }
 
     public static long rawMalloc(long size) {

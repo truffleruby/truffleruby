@@ -15,7 +15,6 @@ import java.util.List;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.language.RubyBaseRootNode;
-import org.truffleruby.language.backtrace.InternalRootNode;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -24,7 +23,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 /** The node at the root of a pack expression. */
-public final class FormatRootNode extends RubyBaseRootNode implements InternalRootNode {
+public final class FormatRootNode extends RubyBaseRootNode {
 
     private final FormatEncoding encoding;
 
@@ -101,6 +100,11 @@ public final class FormatRootNode extends RubyBaseRootNode implements InternalRo
 
     @Override
     public boolean isCloningAllowed() {
+        return true;
+    }
+
+    @Override
+    public boolean isInternal() {
         return true;
     }
 

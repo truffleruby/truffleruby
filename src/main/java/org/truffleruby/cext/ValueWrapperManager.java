@@ -21,6 +21,8 @@ import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.InlinedBranchProfile;
+import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.SuppressFBWarnings;
@@ -72,7 +74,7 @@ public final class ValueWrapperManager {
 
     @TruffleBoundary
     public synchronized HandleBlock addToBlockMap(RubyLanguage language) {
-        HandleBlock block = new HandleBlock(language, this);
+        HandleBlock block = new HandleBlock(language, this, false);
         int blockIndex = block.getIndex();
         HandleBlockWeakReference[] map = growMapIfRequired(blockMap, blockIndex);
         blockMap = map;
@@ -83,12 +85,13 @@ public final class ValueWrapperManager {
 
     @TruffleBoundary
     public HandleBlock addToSharedBlockMap(RubyLanguage language) {
-        synchronized (language) {
-            HandleBlock block = new HandleBlock(language, this);
+        synchronized (RubyLanguage.handleBlockAllocator) {
+            HandleBlock block = new HandleBlock(language, this, true);
             int blockIndex = block.getIndex();
-            HandleBlockWeakReference[] map = growMapIfRequired(language.handleBlockSharedMap, blockIndex);
-            language.handleBlockSharedMap = map;
+            HandleBlockWeakReference[] map = growMapIfRequired(RubyLanguage.handleBlockSharedMap, blockIndex);
+            RubyLanguage.handleBlockSharedMap = map;
             map[blockIndex] = new HandleBlockWeakReference(block);
+            RubyLanguage.keepSharedHandleBlockAlive(block);
             return block;
         }
     }
@@ -117,7 +120,7 @@ public final class ValueWrapperManager {
     private HandleBlock getBlockFromMap(int index, RubyLanguage language) {
         assert index >= 0;
         final HandleBlockWeakReference[] blockMap = this.blockMap;
-        final HandleBlockWeakReference[] sharedMap = language.handleBlockSharedMap;
+        final HandleBlockWeakReference[] sharedMap = RubyLanguage.handleBlockSharedMap;
         HandleBlockWeakReference ref = null;
 
         // First try getting the block from the context's map
@@ -226,13 +229,18 @@ public final class ValueWrapperManager {
 
         @SuppressWarnings("unused") private Cleanable cleanable;
 
-        public HandleBlock(RubyLanguage language, ValueWrapperManager manager) {
-            HandleBlockAllocator allocator = language.handleBlockAllocator;
+        public HandleBlock(RubyLanguage language, ValueWrapperManager manager, boolean shared) {
+            HandleBlockAllocator allocator = RubyLanguage.handleBlockAllocator;
             long base = allocator.getFreeBlock();
             this.base = base;
             this.wrappers = new ValueWrapperWeakReference[BLOCK_SIZE];
             this.count = 0;
-            this.cleanable = language.cleaner.register(this, HandleBlock.makeCleaner(manager, base, allocator));
+            /* Blocks for shared (immutable) objects are process-wide and immortal (see
+             * RubyLanguage#keepSharedHandleBlockAlive), so no cleaner for them: it would never run, and its Runnable
+             * would keep the per-context ValueWrapperManager alive. */
+            this.cleanable = shared
+                    ? null
+                    : language.cleaner.register(this, HandleBlock.makeCleaner(manager, base, allocator));
         }
 
         private static Runnable makeCleaner(ValueWrapperManager manager, long base, HandleBlockAllocator allocator) {
@@ -303,6 +311,35 @@ public final class ValueWrapperManager {
     public static final class HandleBlockHolder {
         private HandleBlock handleBlock = null;
         private HandleBlock sharedHandleBlock = null;
+    }
+
+    /** The same conversion as ValueWrapper's toNative and asPointer interop messages: returns the handle of the
+     * wrapper, allocating it if needed, and keeps wrappers with a tagged object handle alive until the end of the
+     * current C extension call. */
+    @GenerateUncached
+    @GenerateInline
+    @GenerateCached(false)
+    public abstract static class WrapperToHandleNode extends RubyBaseNode {
+
+        public abstract long execute(Node node, ValueWrapper wrapper);
+
+        @Specialization
+        static long wrapperToHandle(Node node, ValueWrapper wrapper,
+                @Cached AllocateHandleNode allocateHandleNode,
+                @Cached KeepAliveNode keepAliveNode,
+                @Cached InlinedBranchProfile createHandleProfile,
+                @Cached InlinedBranchProfile taggedObjectProfile) {
+            long handle = wrapper.getHandle();
+            if (handle == UNSET_HANDLE) {
+                createHandleProfile.enter(node);
+                handle = allocateHandleNode.execute(node, wrapper);
+            }
+            if (isTaggedObject(handle)) {
+                taggedObjectProfile.enter(node);
+                keepAliveNode.execute(node, wrapper);
+            }
+            return handle;
+        }
     }
 
     @GenerateUncached

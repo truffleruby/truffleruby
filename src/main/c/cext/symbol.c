@@ -14,7 +14,7 @@
 // Symbol and ID, rb_sym*, rb_id*
 
 bool rb_tr_symbol_p(VALUE obj) {
-  return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("SYMBOL_P", obj));
+  return rb_tr_up_SYMBOL_P(obj);
 }
 
 static VALUE string_for_symbol(VALUE name) {
@@ -42,15 +42,15 @@ ID rb_intern(const char *string) {
 }
 
 ID rb_intern2(const char *string, long length) {
-  return SYM2ID(RUBY_CEXT_INVOKE("rb_intern", rb_tr_temporary_native_string(string, length, rb_ascii8bit_encoding())));
+  return SYM2ID(rb_tr_up_rb_intern(rb_tr_temporary_native_string(string, length, rb_ascii8bit_encoding())));
 }
 
 ID rb_intern3(const char *name, long len, rb_encoding *enc) {
-  return SYM2ID(RUBY_CEXT_INVOKE("rb_intern", rb_tr_temporary_native_string(name, len, enc)));
+  return SYM2ID(rb_tr_up_rb_intern(rb_tr_temporary_native_string(name, len, enc)));
 }
 
 VALUE rb_sym2str(VALUE string) {
-  return RUBY_INVOKE(string, "name");
+  return rb_tr_up_send0_name(string);
 }
 
 const char *rb_id2name(ID id) {
@@ -68,24 +68,24 @@ VALUE rb_id2str(ID id) {
     return Qfalse;
   }
 
-  return RUBY_CEXT_INVOKE("rb_id2str", ID2SYM(id));
+  return rb_tr_up_rb_id2str(ID2SYM(id));
 }
 
 ID rb_id_attrset(ID id) {
   VALUE sym = ID2SYM(id);
-  return SYM2ID(RUBY_CEXT_INVOKE("rb_id_attrset", ID2SYM(id)));
+  return SYM2ID(rb_tr_up_rb_id_attrset(ID2SYM(id)));
 }
 
 int rb_is_class_id(ID id) {
-  return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("rb_is_class_id", ID2SYM(id)));
+  return rb_tr_up_rb_is_class_id(ID2SYM(id));
 }
 
 int rb_is_const_id(ID id) {
-  return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("rb_is_const_id", ID2SYM(id)));
+  return rb_tr_up_rb_is_const_id(ID2SYM(id));
 }
 
 int rb_is_instance_id(ID id) {
-  return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("rb_is_instance_id", ID2SYM(id)));
+  return rb_tr_up_rb_is_instance_id(ID2SYM(id));
 }
 
 ID rb_check_id(volatile VALUE *namep) {
@@ -94,23 +94,22 @@ ID rb_check_id(volatile VALUE *namep) {
 }
 
 VALUE rb_check_symbol_cstr(const char *ptr, long len, rb_encoding *enc) {
-  return RUBY_CEXT_INVOKE("rb_check_symbol_cstr", rb_tr_temporary_native_string(ptr, len, enc));
+  return rb_tr_up_rb_check_symbol_cstr(rb_tr_temporary_native_string(ptr, len, enc));
 }
 
 VALUE rb_sym_to_s(VALUE sym) {
-  return RUBY_INVOKE(sym, "to_s");
+  return rb_tr_up_send0_to_s(sym);
 }
 
-// TODO: rb_tr_sym2id() has a single call site since native cexts, the one below, so the inline cache in it is global.
 ID rb_sym2id(VALUE sym) {
-  return rb_tr_sym2id(sym);
+  return rb_tr_up_rb_sym2id(sym);
 }
 
 #undef rb_id2sym
 VALUE rb_id2sym(ID x) {
-  return rb_tr_wrap(rb_tr_id2sym(x));
+  return rb_tr_up_rb_id2sym(x);
 }
 
 VALUE rb_to_symbol(VALUE name) {
-  return RUBY_CEXT_INVOKE("rb_to_symbol", name);
+  return rb_tr_up_rb_to_symbol(name);
 }

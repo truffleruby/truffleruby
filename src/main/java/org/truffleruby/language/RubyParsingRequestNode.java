@@ -15,7 +15,6 @@ import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.Visibility;
 import org.truffleruby.language.arguments.NoKeywordArgumentsDescriptor;
 import org.truffleruby.language.arguments.RubyArguments;
-import org.truffleruby.language.backtrace.InternalRootNode;
 import org.truffleruby.language.methods.DeclarationContext;
 import org.truffleruby.language.methods.InternalMethod;
 import org.truffleruby.language.methods.SharedMethodInfo;
@@ -32,7 +31,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.Source;
 
-public final class RubyParsingRequestNode extends RubyBaseRootNode implements InternalRootNode {
+public final class RubyParsingRequestNode extends RubyBaseRootNode {
 
     private final RootCallTarget callTarget;
 
@@ -97,6 +96,11 @@ public final class RubyParsingRequestNode extends RubyBaseRootNode implements In
         } finally {
             printTimeMetric("after-script");
         }
+    }
+
+    @Override
+    public boolean isInternal() {
+        return true;
     }
 
     @Override

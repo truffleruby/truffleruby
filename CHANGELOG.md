@@ -69,6 +69,7 @@ Compatibility:
 Performance:
 
 * POSIX native calls from the core library now use the optimized Foreign Function and Memory API, which reduces the overhead from ~100ns to ~12ns per call (#4412, @eregon).
+* C extensions now run fully natively and call into Ruby through the optimized Foreign Function and Memory API. TruffleRuby no longer depends on Sulong (#4426, @eregon).
 * TruffleRuby Native now uses the better G1 garbage collector also on macOS (@eregon).
 * Convert to a `MutableTruffleString` and write inplace for `String#bytesplice` when writing the same number of bytes as the value (#2336, #2599, @eregon).
 * Migrate to `DynamicObject` nodes, which are faster in interpreter and use less memory than `DynamicObjectLibrary`.

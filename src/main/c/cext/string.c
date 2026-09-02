@@ -39,12 +39,16 @@ char *rb_string_value_ptr(volatile VALUE *ptr) {
 
 char *rb_string_value_cstr(volatile VALUE *ptr) {
   VALUE string = rb_string_value(ptr);
-  RUBY_CEXT_INVOKE("rb_string_value_cstr_check", string);
+  rb_tr_up_rb_string_value_cstr_check(string);
   return RSTRING_PTR(string);
 }
 
 char* rb_tr_rstring_ptr(VALUE string) {
-  return (char*) polyglot_as_i64(RUBY_CEXT_INVOKE_NO_WRAP("RSTRING_PTR", string));
+  return (char*) rb_tr_up_RSTRING_PTR(string);
+}
+
+char* rb_tr_rstring_getmem(VALUE string, long *lenvar) {
+  return (char*) rb_tr_up_rb_tr_rstring_getmem(string, lenvar);
 }
 
 char* rb_tr_rstring_end(VALUE string) {
@@ -52,7 +56,7 @@ char* rb_tr_rstring_end(VALUE string) {
 }
 
 int rb_tr_str_len(VALUE string) {
-  return polyglot_as_i32(polyglot_invoke(rb_tr_unwrap(string), "bytesize"));
+  return rb_tr_up_send0_i_bytesize(string);
 }
 
 VALUE rb_str_new(const char *string, long length) {
@@ -61,9 +65,9 @@ VALUE rb_str_new(const char *string, long length) {
   }
 
   if (string == NULL) {
-    return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_str_new_nul", length));
+    return rb_tr_up_rb_str_new_nul(length);
   } else {
-    return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_str_new_native", string, length));
+    return rb_tr_up_rb_str_new_native(string, length);
   }
 }
 
@@ -78,11 +82,11 @@ VALUE rb_str_new_cstr(const char *string) {
 }
 
 VALUE rb_str_new_shared(VALUE string) {
-  return RUBY_INVOKE(string, "dup");
+  return rb_tr_up_send0_dup(string);
 }
 
 VALUE rb_str_new_with_class(VALUE str, const char *string, long len) {
-  return RUBY_INVOKE(RUBY_INVOKE(str, "class"), "new", rb_str_new(string, len));
+  return rb_tr_up_send1_new(rb_tr_up_send0_class(str), rb_str_new(string, len));
 }
 
 VALUE rb_str_dup(VALUE string) {
@@ -98,12 +102,12 @@ VALUE rb_str_freeze(VALUE string) {
 }
 
 VALUE rb_str_locktmp(VALUE str) {
-  RUBY_CEXT_INVOKE("rb_str_locktmp", str);
+  rb_tr_up_rb_str_locktmp(str);
   return str;
 }
 
 VALUE rb_str_unlocktmp(VALUE str) {
-  RUBY_CEXT_INVOKE("rb_str_unlocktmp", str);
+  rb_tr_up_rb_str_unlocktmp(str);
   return str;
 }
 
@@ -112,7 +116,7 @@ VALUE rb_str_inspect(VALUE string) {
 }
 
 ID rb_intern_str(VALUE string) {
-  return SYM2ID(RUBY_CEXT_INVOKE("rb_intern", string));
+  return SYM2ID(rb_tr_up_rb_intern(string));
 }
 
 VALUE rb_str_cat(VALUE string, const char *to_concat, long length) {
@@ -132,7 +136,7 @@ VALUE rb_str_cat(VALUE string, const char *to_concat, long length) {
 
 VALUE rb_str_buf_append(VALUE string, VALUE other) {
   StringValue(other);
-  return RUBY_INVOKE(string, "<<", other);
+  return rb_tr_up_send1_lshift(string, other);
 }
 
 VALUE rb_enc_str_buf_cat(VALUE str, const char *ptr, long len, rb_encoding *enc) {
@@ -159,11 +163,11 @@ VALUE rb_str_buf_new(long capacity) {
 }
 
 VALUE rb_str_append(VALUE string, VALUE to_append) {
-  return RUBY_CEXT_INVOKE("rb_str_append", string, to_append);
+  return rb_tr_up_rb_str_append(string, to_append);
 }
 
 VALUE rb_str_concat(VALUE string, VALUE to_concat) {
-  return RUBY_CEXT_INVOKE("rb_str_concat", string, to_concat);
+  return rb_tr_up_rb_str_concat(string, to_concat);
 }
 
 void rb_str_set_len(VALUE string, long length) {
@@ -171,23 +175,23 @@ void rb_str_set_len(VALUE string, long length) {
   if (length > capacity || length < 0) {
     rb_raise(rb_eRuntimeError, "probable buffer overflow: %ld for %ld", length, capacity);
   }
-  polyglot_invoke(RUBY_CEXT, "rb_str_set_len", rb_tr_unwrap(string), length);
+  rb_tr_up_rb_str_set_len(string, length);
 }
 
 VALUE rb_str_new_frozen(VALUE value) {
-  return RUBY_CEXT_INVOKE("rb_str_new_frozen", value);
+  return rb_tr_up_rb_str_new_frozen(value);
 }
 
 VALUE rb_String(VALUE value) {
-  return RUBY_CEXT_INVOKE("rb_String", value);
+  return rb_tr_up_rb_String(value);
 }
 
 VALUE rb_str_resize(VALUE string, long length) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_str_resize", rb_tr_unwrap(string), length));
+  return rb_tr_up_rb_str_resize(string, length);
 }
 
 VALUE rb_str_split(VALUE string, const char *split) {
-  return RUBY_INVOKE(string, "split", rb_str_new_cstr(split));
+  return rb_tr_up_send1_split(string, rb_str_new_cstr(split));
 }
 
 void rb_str_modify(VALUE string) {
@@ -200,11 +204,11 @@ VALUE rb_str_buf_new_cstr(const char *string) {
 }
 
 int rb_str_cmp(VALUE a, VALUE b) {
-  return polyglot_as_i32(RUBY_INVOKE_NO_WRAP(a, "<=>", b));
+  return rb_tr_up_send1_i_cmp(a, b);
 }
 
 long rb_str_strlen(VALUE string) {
-  return polyglot_as_i64(RUBY_INVOKE_NO_WRAP(string, "size"));
+  return rb_tr_up_send0_l_size(string);
 }
 
 VALUE rb_str_conv_enc(VALUE string, rb_encoding *from, rb_encoding *to) {
@@ -215,11 +219,11 @@ VALUE rb_str_conv_enc_opts(VALUE str, rb_encoding *from, rb_encoding *to, int ec
   if (!to) return str;
   if (!from) from = rb_enc_get(str);
   if (from == to) return str;
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_str_conv_enc_opts", rb_tr_unwrap(str), rb_tr_unwrap(rb_enc_from_encoding(from)), rb_tr_unwrap(rb_enc_from_encoding(to)), ecflags, rb_tr_unwrap(ecopts)));
+  return rb_tr_up_rb_str_conv_enc_opts(str, rb_enc_from_encoding(from), rb_enc_from_encoding(to), ecflags, ecopts);
 }
 
 static VALUE rb_external_str_with_enc(VALUE str, rb_encoding *eenc) {
-  if (polyglot_as_boolean(RUBY_INVOKE_NO_WRAP(rb_enc_from_encoding(eenc), "==", rb_enc_from_encoding(rb_usascii_encoding()))) &&
+  if (rb_tr_up_send1_b_eq(rb_enc_from_encoding(eenc), rb_enc_from_encoding(rb_usascii_encoding())) &&
     rb_enc_str_coderange(str) != ENC_CODERANGE_7BIT) {
     rb_enc_associate_index(str, rb_ascii8bit_encindex());
     return str;
@@ -260,7 +264,7 @@ VALUE rb_filesystem_str_new_cstr(const char *string) {
 }
 
 static rb_encoding* get_encoding(VALUE string) {
-  return rb_to_encoding(RUBY_INVOKE(string, "encoding"));
+  return rb_to_encoding(rb_tr_up_send0_encoding(string));
 }
 
 VALUE rb_str_export(VALUE string) {
@@ -276,23 +280,23 @@ VALUE rb_str_export_to_enc(VALUE string, rb_encoding *enc) {
 }
 
 VALUE rb_str_intern(VALUE string) {
-  return RUBY_INVOKE(string, "intern");
+  return rb_tr_up_send0_intern(string);
 }
 
 VALUE rb_str_length(VALUE string) {
-  return RUBY_INVOKE(string, "length");
+  return rb_tr_up_send0_length(string);
 }
 
 VALUE rb_str_plus(VALUE a, VALUE b) {
-  return RUBY_INVOKE(a, "+", b);
+  return rb_tr_up_send1_plus(a, b);
 }
 
 VALUE rb_str_subseq(VALUE string, long beg, long len) {
-    return rb_tr_wrap(polyglot_invoke(rb_tr_unwrap(string), "byteslice", beg, len));
+    return rb_tr_up_send2_byteslice(string, LONG2NUM(beg), LONG2NUM(len));
 }
 
 VALUE rb_str_substr(VALUE string, long beg, long len) {
-  return rb_tr_wrap(polyglot_invoke(rb_tr_unwrap(string), "[]", beg, len));
+  return rb_tr_up_send2_aref(string, LONG2NUM(beg), LONG2NUM(len));
 }
 
 char* rb_str_subpos(VALUE string, long from, long* lenp) {
@@ -319,28 +323,28 @@ char* rb_str_subpos(VALUE string, long from, long* lenp) {
 
 // character offset to byte offset
 long rb_str_offset(VALUE str, long pos) {
-  return polyglot_as_i64(polyglot_invoke(RUBY_CEXT, "rb_str_offset", rb_tr_unwrap(str), pos));
+  return rb_tr_up_rb_str_offset(str, pos);
 }
 
 // byte offset to character offset
 long rb_str_sublen(VALUE str, long pos) {
-  return polyglot_as_i64(polyglot_invoke(RUBY_CEXT, "rb_str_sublen", rb_tr_unwrap(str), pos));
+  return rb_tr_up_rb_str_sublen(str, pos);
 }
 
 st_index_t rb_str_hash(VALUE string) {
-  return (st_index_t) polyglot_as_i64(polyglot_invoke(rb_tr_unwrap(string), "hash"));
+  return (st_index_t) rb_tr_up_send0_l_hash(string);
 }
 
 void rb_str_update(VALUE string, long beg, long len, VALUE value) {
-  polyglot_invoke(rb_tr_unwrap(string), "[]=", beg, len, rb_tr_unwrap(value));
+  rb_tr_up_send3_o_aset(string, LONG2NUM(beg), LONG2NUM(len), value);
 }
 
 VALUE rb_str_replace(VALUE str, VALUE by) {
-  return RUBY_INVOKE(str, "replace", by);
+  return rb_tr_up_send1_replace(str, by);
 }
 
 VALUE rb_str_equal(VALUE a, VALUE b) {
-  return RUBY_INVOKE(a, "==", b);
+  return rb_tr_up_send1_eq(a, b);
 }
 
 void rb_str_free(VALUE string) {
@@ -348,7 +352,7 @@ void rb_str_free(VALUE string) {
 }
 
 VALUE rb_str_encode(VALUE str, VALUE to, int ecflags, VALUE ecopts) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_str_encode", rb_tr_unwrap(str), rb_tr_unwrap(to), ecflags, rb_tr_unwrap(ecopts)));
+  return rb_tr_up_rb_str_encode(str, to, ecflags, ecopts);
 }
 
 VALUE rb_usascii_str_new(const char *ptr, long len) {
@@ -364,7 +368,7 @@ VALUE rb_usascii_str_new_cstr(const char *ptr) {
 }
 
 VALUE rb_str_times(VALUE string, VALUE times) {
-  return RUBY_INVOKE(string, "*", times);
+  return rb_tr_up_send1_times(string, times);
 }
 
 VALUE rb_str_tmp_new(long len) {
@@ -397,7 +401,7 @@ void rb_str_modify_expand(VALUE str, long expand) {
 
   rb_check_frozen(str);
   if (expand > 0) {
-    polyglot_invoke(RUBY_CEXT, "rb_tr_str_capa_resize", rb_tr_unwrap(str), len + expand);
+    rb_tr_up_rb_tr_str_capa_resize(str, len + expand);
   }
 
   ENC_CODERANGE_CLEAR(str);
@@ -412,7 +416,7 @@ VALUE rb_str_drop_bytes(VALUE str, long len) {
 }
 
 size_t rb_str_capacity(VALUE str) {
-  return polyglot_as_i64(RUBY_CEXT_INVOKE_NO_WRAP("rb_str_capacity", str));
+  return rb_tr_up_rb_str_capacity(str);
 }
 
 long rb_str_coderange_scan_restartable(const char *s, const char *e, rb_encoding *enc, int *cr) {
@@ -477,12 +481,12 @@ VALUE rb_enc_interned_str(const char *ptr, long len, rb_encoding *enc) {
 }
 
 VALUE rb_str_to_interned_str(VALUE str) {
-  return RUBY_INVOKE(str, "-@");
+  return rb_tr_up_send0_uminus(str);
 }
 
 VALUE rb_interned_str(const char *ptr, long len) {
   VALUE str = rb_usascii_str_new(ptr, len);
-  RUBY_CEXT_INVOKE_NO_WRAP("make_binary_if_not_ascii_only", str);
+  rb_tr_up_make_binary_if_not_ascii_only(str);
   return rb_str_to_interned_str(str);
 }
 

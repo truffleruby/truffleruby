@@ -85,33 +85,34 @@ void rb_tr_rtypeddata_run_finalizer(struct RTypedData* rtypeddata) {
   free(rtypeddata);
 }
 
+// The data field is at the same offset in struct RData and struct RTypedData
+void* rb_tr_rdata_data(struct RData *rdata) {
+  return rdata->data;
+}
+
 struct RData* rb_tr_rdata(VALUE object) {
-  struct RData* rdata = polyglot_invoke(RUBY_CEXT, "RDATA", rb_tr_unwrap(object));
+  struct RData* rdata = rb_tr_up_RDATA(object);
   if (rdata->dmark) {
-    polyglot_invoke(RUBY_CEXT, "mark_object_on_call_exit", rb_tr_unwrap(object));
+    rb_tr_up_mark_object_on_call_exit(object);
   }
   return rdata;
 }
 
 struct RTypedData* rb_tr_rtypeddata(VALUE object) {
-  struct RTypedData* rtypeddata = polyglot_invoke(RUBY_CEXT, "RTYPEDDATA", rb_tr_unwrap(object));
+  struct RTypedData* rtypeddata = rb_tr_up_RTYPEDDATA(object);
   if (RB_TR_RTYPEDDATA_STRUCT_TYPE(rtypeddata)->function.dmark) {
-    polyglot_invoke(RUBY_CEXT, "mark_object_on_call_exit", rb_tr_unwrap(object));
+    rb_tr_up_mark_object_on_call_exit(object);
   }
   return rtypeddata;
 }
 
 bool rb_tr_rtypeddata_p(VALUE obj) {
-  return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("RTYPEDDATA_P", obj));
+  return rb_tr_up_RTYPEDDATA_P(obj);
 }
 
 #undef rb_data_object_wrap
 VALUE rb_data_object_wrap(VALUE klass, void *data, RUBY_DATA_FUNC dmark, RUBY_DATA_FUNC dfree) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_data_object_wrap",
-    rb_tr_unwrap(klass),
-    data,
-    dmark,
-    dfree));
+  return rb_tr_up_rb_data_object_wrap(klass, data, dmark, dfree);
 }
 
 VALUE rb_data_object_zalloc(VALUE klass, size_t size, RUBY_DATA_FUNC dmark, RUBY_DATA_FUNC dfree) {
@@ -122,13 +123,7 @@ VALUE rb_data_object_zalloc(VALUE klass, size_t size, RUBY_DATA_FUNC dmark, RUBY
 // Typed data
 
 VALUE rb_data_typed_object_wrap(VALUE ruby_class, void *data, const rb_data_type_t *data_type) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_data_typed_object_wrap",
-    rb_tr_unwrap(ruby_class),
-    data,
-    data_type,
-    data_type->function.dmark,
-    data_type->function.dfree,
-    data_type->function.dsize));
+  return rb_tr_up_rb_data_typed_object_wrap(ruby_class, data, (void *) data_type, (void *) data_type->function.dmark, (void *) data_type->function.dfree, (void *) data_type->function.dsize);
 }
 
 VALUE rb_data_typed_object_zalloc(VALUE ruby_class, size_t size, const rb_data_type_t *data_type) {

@@ -12,17 +12,14 @@ package org.truffleruby.core;
 
 import java.lang.ref.ReferenceQueue;
 
-import com.oracle.truffle.api.interop.InteropException;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.language.Nil;
+import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.language.RubyBaseRootNode;
-import org.truffleruby.language.backtrace.InternalRootNode;
 
 import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 /** C-ext data finalizers are implemented with phantom references and reference queues, and are run in a dedicated Ruby
@@ -32,14 +29,19 @@ public final class DataObjectFinalizationService
         ReferenceProcessingService<DataObjectFinalizerReference, Object> {
 
     // We need a base node here, it should extend ruby base root node and implement internal root node.
-    public static final class DataObjectFinalizerRootNode extends RubyBaseRootNode implements InternalRootNode {
+    public static final class DataObjectFinalizerRootNode extends RubyBaseRootNode {
 
-        @Child private InteropLibrary callNode;
+        @Child private DispatchNode dispatchNode;
 
         public DataObjectFinalizerRootNode(RubyLanguage language) {
             super(language, RubyLanguage.newEmptyDeclarationFrameDescriptor(), null);
 
-            callNode = InteropLibrary.getFactory().createDispatched(1);
+            dispatchNode = DispatchNode.create();
+        }
+
+        @Override
+        public boolean isInternal() {
+            return true;
         }
 
         @Override
@@ -49,12 +51,8 @@ public final class DataObjectFinalizationService
 
         public Object execute(DataObjectFinalizerReference ref) {
             if (!getContext().isFinalizing()) {
-                try {
-                    callNode.invokeMember(getContext().getCoreLibrary().truffleCExtModule, "run_data_finalizer",
-                            ref.finalizerCFunction, ref.dataStruct, ref.useCExtLock);
-                } catch (InteropException e) {
-                    throw CompilerDirectives.shouldNotReachHere(e);
-                }
+                dispatchNode.call(getContext().getCoreLibrary().truffleCExtModule, "run_data_finalizer",
+                        ref.finalizerCFunction, ref.dataStruct, ref.useCExtLock);
             }
             return Nil.INSTANCE;
         }

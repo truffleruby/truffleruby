@@ -34,14 +34,14 @@ VALUE call_qsort(VALUE mod, VALUE callback) {
 // From the nativetestlib
 int test_native_callback(int (*callback)(void));
 
-static int sulong_callback(void) {
+static int nested_callback(void) {
   VALUE result = rb_funcall(ruby_callback, rb_intern("call"), 0);
   return NUM2INT(result);
 }
 
 VALUE native_callback(VALUE mod, VALUE callback) {
   ruby_callback = callback;
-  return INT2FIX(test_native_callback(sulong_callback));
+  return INT2FIX(test_native_callback(nested_callback));
 }
 
 void Init_backtraces() {

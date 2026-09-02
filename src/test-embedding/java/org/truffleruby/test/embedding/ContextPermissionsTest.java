@@ -86,6 +86,36 @@ public class ContextPermissionsTest {
     }
 
     @Test
+    public void testRequireCExtensionInMultipleContexts() {
+        // Only a single Ruby context at a time in a process can load C extension support
+        try (Context context = Context.newBuilder("ruby").allowIO(IOAccess.ALL).allowNativeAccess(true).build()) {
+            Assert.assertEquals("Etc", context.eval("ruby", "require 'etc'; Etc.to_s").asString());
+            // Date._parse caches Regexp VALUE handles in C static variables of date_core.so (date_parse.c)
+            Assert.assertEquals(2003, context.eval("ruby", "require 'date'; Date._parse('2003-01-02')[:year]").asInt());
+
+            try (Context concurrentContext = Context.newBuilder("ruby").allowIO(IOAccess.ALL)
+                    .allowNativeAccess(true).build()) {
+                RubyTest.assertThrows(
+                        () -> concurrentContext.eval("ruby", "require 'etc'"),
+                        e -> {
+                            assertTrue(e.getMessage(), e.getMessage().contains(
+                                    "C extension support can only be loaded in a single Ruby context at a time"));
+                            assertEquals("RuntimeError",
+                                    e.getGuestObject().getMetaObject().getMetaQualifiedName());
+                        });
+            }
+        }
+
+        // Once the context which loaded C extension support is disposed, its native libraries are dlclose()'d,
+        // so a new context can load C extensions again with freshly-initialized static variables
+        try (Context context = Context.newBuilder("ruby").allowIO(IOAccess.ALL).allowNativeAccess(true).build()) {
+            Assert.assertEquals("Etc", context.eval("ruby", "require 'etc'; Etc.to_s").asString());
+            // This would fail with dead VALUE handles of the disposed context if date_core.so was not dlclose()'d
+            Assert.assertEquals(2003, context.eval("ruby", "require 'date'; Date._parse('2003-01-02')[:year]").asInt());
+        }
+    }
+
+    @Test
     public void testThreadsNoNative() throws Throwable {
         try (Context context = Context
                 .newBuilder("ruby")

@@ -1309,15 +1309,24 @@ public abstract class TruffleDebugNodes {
         RubyArray getFrameBindings() {
             var stack = new ArrayDeque<Pair<MaterializedFrame, SourceSection>>();
 
-            getContext().getCallStack().iterateFrameBindings(5, frameInstance -> {
+            // Skip the frames implementing the rb_debug_inspector_open upcall, so the first frame is the caller
+            // of the C extension function calling rb_debug_inspector_open()
+            getContext().getCallStack().iterateFrameBindings(2, frameInstance -> {
                 final RootNode rootNode = ((RootCallTarget) frameInstance.getCallTarget()).getRootNode();
                 var callNode = frameInstance.getCallNode();
                 var encapsulatingSourceSection = callNode == null ? null : callNode.getEncapsulatingSourceSection();
-                if (rootNode instanceof RubyRootNode && BacktraceFormatter.isAvailable(encapsulatingSourceSection)) {
+                final boolean available = BacktraceFormatter.isAvailable(encapsulatingSourceSection);
+                // callNode == null happens for a Ruby frame whose deeper call carries no location, such as a
+                // Ruby method called from an FFM upcall of a C extension. The frame is still materialized and
+                // the section of the next outer frame is used below, like
+                // BacktraceFormatter#nextAvailableSourceSection().
+                if (rootNode instanceof RubyRootNode && (available || callNode == null)) {
                     final MaterializedFrame frame = frameInstance.getFrame(FrameAccess.MATERIALIZE).materialize();
-                    assert frame.getFrameDescriptor().getDefaultValue() == nil;
+                    // A RubyRootNode frame always has the RubyArguments layout, unlike e.g. C function frames on
+                    // CRuby there is always a Binding for it (the nil bindings pushed below are for such frames)
                     assert CallStackManager.isRubyFrame(frame);
-                    stack.push(Pair.create(frame, encapsulatingSourceSection));
+                    assert frame.getFrameDescriptor().getDefaultValue() == nil;
+                    stack.push(Pair.create(frame, available ? encapsulatingSourceSection : null));
                 } else {
                     stack.push(Pair.empty());
                 }

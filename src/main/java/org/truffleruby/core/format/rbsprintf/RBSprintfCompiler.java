@@ -21,6 +21,7 @@ import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.encoding.RubyEncoding;
+import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.format.FormatEncoding;
 import org.truffleruby.core.format.FormatRootNode;
 import org.truffleruby.core.format.rbsprintf.RBSprintfConfig.FormatArgumentType;
@@ -40,7 +41,7 @@ public final class RBSprintfCompiler {
 
     @TruffleBoundary
     public RootCallTarget compile(AbstractTruffleString formatTString, RubyEncoding formatEncoding,
-            Object stringReader) {
+            RubyProc stringReader) {
         var byteArray = formatTString.getInternalByteArrayUncached(formatEncoding.tencoding);
 
         final RBSprintfSimpleParser parser = new RBSprintfSimpleParser(StringSupport.bytesToChars(byteArray));

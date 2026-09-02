@@ -622,7 +622,7 @@ end
 code = <<RUBY
 # frozen_string_literal: true
 
-# Copyright (c) 2026 TruffleRuby contributors
+# Copyright (c) #{Time.now.year} TruffleRuby contributors
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -703,7 +703,7 @@ File.write(ruby_file, code)
 
 c_code = <<C
 /*
- * Copyright (c) 2026 TruffleRuby contributors
+ * Copyright (c) #{Time.now.year} TruffleRuby contributors
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:

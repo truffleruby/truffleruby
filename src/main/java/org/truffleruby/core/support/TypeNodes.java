@@ -173,46 +173,6 @@ public abstract class TypeNodes {
         }
     }
 
-    @Primitive(name = "immediate_value?")
-    public abstract static class IsImmediateValueNode extends PrimitiveArrayArgumentsNode {
-
-        @Specialization
-        boolean doBoolean(boolean value) {
-            return true;
-        }
-
-        @Specialization
-        boolean doInt(int value) {
-            return true;
-        }
-
-        @Specialization
-        boolean doLong(long value) {
-            return true;
-        }
-
-        @Specialization
-        boolean doFloat(double value) {
-            return true;
-        }
-
-        @Specialization
-        boolean doSymbol(RubySymbol value) {
-            return true;
-        }
-
-        @Specialization
-        boolean doNil(Nil value) {
-            return true;
-        }
-
-        @Fallback
-        boolean doFallback(Object value) {
-            return false;
-        }
-
-    }
-
     @Primitive(name = "nil?", isPublic = true)
     public abstract static class IsNilNode extends PrimitiveArrayArgumentsNode {
         @Specialization

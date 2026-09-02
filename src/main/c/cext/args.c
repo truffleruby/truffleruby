@@ -43,7 +43,7 @@ static void unknown_keyword_error(VALUE hash, const ID *table, int keywords) {
     VALUE key = table[i];
     rb_hash_delete(hash, ID2SYM(key));
   }
-  rb_keyword_error("unknown", RUBY_INVOKE(hash, "keys"));
+  rb_keyword_error("unknown", rb_tr_up_send0_keys(hash));
 }
 
 static VALUE rb_tr_extract_keyword(VALUE keyword_hash, ID key, VALUE *values) {

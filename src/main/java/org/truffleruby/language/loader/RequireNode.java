@@ -265,7 +265,7 @@ public abstract class RequireNode extends RubyBaseNode {
                         .info(String.format("loading cext module %s (requested as %s)", expandedPath, feature));
             }
 
-            library = featureLoader.loadCExtLibrary(feature, expandedPath, currentNode, false);
+            library = featureLoader.loadCExtLibrary(feature, expandedPath, currentNode);
         } catch (Exception e) {
             handleCExtensionException(feature, e);
             throw e;

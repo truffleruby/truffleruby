@@ -523,8 +523,10 @@ public final class InternalMethod implements ObjectGraphNode {
             return false;
         }
 
-        var path = sourceSection.getSource().getPath();
-        var isCExtension = path != null && path.equals(language.cextPath);
+        // Use RubyLanguage.getPath() and not Source#getPath() because methods defined by rb_define_method()
+        // have an eval'ed body with the cext_ruby.rb path as the Source name (see METHOD_BODY_TEMPLATES).
+        var path = RubyLanguage.getPath(sourceSection.getSource());
+        var isCExtension = path.equals(language.cextPath);
         return !isCExtension;
     }
 }

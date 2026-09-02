@@ -493,7 +493,7 @@ def build_truffleruby(args):
 
 def ruby_check_heap_dump(input_args, out=None):
     print("mx ruby_check_heap_dump " + " ".join(input_args))
-    dists = ['TRUFFLERUBY', 'TRUFFLE_NFI', 'SULONG_NATIVE', 'TRUFFLERUBY-TEST-INTERNAL']
+    dists = ['TRUFFLERUBY', 'TRUFFLE_NFI', 'TRUFFLERUBY-TEST-INTERNAL']
     mx.command_function('build')(['--dependencies', ','.join(dists)])
     args = input_args
     args.insert(0, "--experimental-options")

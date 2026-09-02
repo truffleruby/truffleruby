@@ -14,7 +14,6 @@ Additionally, you will need:
 
 * Ruby >= 2.3 (we stick at this version as it is available all the way back to for example Ubuntu 16.04)
 * Python >= 3.8 for `mx`
-* [CMake](https://cmake.org/), for building Sulong (GraalVM's LLVM support): `dnf/apt-get/brew install cmake`
 * Perl >= 5.10 and the Perl core library, for building OpenSSL: `dnf install perl-core`/`apt-get install perl`
 * `git`
 * `wget`
@@ -113,7 +112,7 @@ scratch.
 
 ### Using the correct version of the graal repository
 
-TruffleRuby needs the `truffle` and `sulong` suites from the `graal` repository.
+TruffleRuby needs the `truffle` suite from the `graal` repository.
 `jt build` will automatically clone the repository but not enforce a specific version (commit).
 When running `jt build`, you might see an early warning:
 ```
@@ -121,7 +120,7 @@ $ jt build
 ...
 NOTE: Set env variable JT_IMPORTS_DONT_ASK to always answer 'no' to this prompt.
 
-WARNING: imported version of sulong in truffleruby (ae65c10142907329e03ad8e3fa17b88aca42058d) does not match parent (1bf42ddef0e4961cbb92ebc31019747fd1c15f1a)
+WARNING: imported version of regex in truffleruby (ae65c10142907329e03ad8e3fa17b88aca42058d) does not match parent (1bf42ddef0e4961cbb92ebc31019747fd1c15f1a)
 Do you want to checkout the supported version of graal as specified in truffleruby's suite.py? (runs `mx sforceimports`) [y/n]
 ...
 ```

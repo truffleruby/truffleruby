@@ -37,7 +37,6 @@ import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.annotations.Primitive;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.array.ArrayGuards;
-import org.truffleruby.core.array.ArrayToObjectArrayNode;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.array.library.ArrayStoreLibrary;
@@ -147,19 +146,6 @@ public abstract class InteropNodes {
         boolean isNull(Object receiver,
                 @CachedLibrary("receiver") InteropLibrary receivers) {
             return receivers.isNull(receiver);
-        }
-    }
-
-    @Primitive(name = "interop_execute")
-    public abstract static class InteropExecuteNode extends PrimitiveArrayArgumentsNode {
-        @Specialization(limit = "getInteropCacheLimit()")
-        static Object interopExecuteWithoutConversion(Object receiver, RubyArray argsArray,
-                @CachedLibrary("receiver") InteropLibrary receivers,
-                @Cached ArrayToObjectArrayNode arrayToObjectArrayNode,
-                @Cached TranslateInteropExceptionNode translateInteropException,
-                @Bind Node node) {
-            final Object[] args = arrayToObjectArrayNode.executeToObjectArray(argsArray);
-            return InteropNodes.execute(node, receiver, args, receivers, translateInteropException);
         }
     }
 

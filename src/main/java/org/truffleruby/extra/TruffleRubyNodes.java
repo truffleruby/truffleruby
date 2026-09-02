@@ -18,8 +18,6 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import org.truffleruby.Layouts;
-import org.truffleruby.RubyContext;
-import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.CoreMethod;
 import org.truffleruby.annotations.Split;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
@@ -73,16 +71,11 @@ public abstract class TruffleRubyNodes {
     }
 
     @CoreMethod(names = "cexts?", onSingleton = true)
-    public abstract static class SulongNode extends CoreMethodArrayArgumentsNode {
+    public abstract static class CExtsNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        boolean isSulong() {
-            return isSulongAvailable(getContext());
-        }
-
-        @TruffleBoundary
-        public static boolean isSulongAvailable(RubyContext context) {
-            return context.getEnv().isMimeTypeSupported(RubyLanguage.LLVM_BITCODE_MIME_TYPE);
+        boolean cexts() {
+            return getContext().getOptions().CEXTS;
         }
 
     }

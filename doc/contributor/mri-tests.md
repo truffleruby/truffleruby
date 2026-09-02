@@ -22,7 +22,6 @@ or with the full path `jt test mri test/mri/tests/ruby/test_time.rb`.
 
 Whole files are excluded in:
 * `test/mri/failing.exclude` - excludes failing test files 
-* `test/mri/sulong.exclude` - excludes any test files depending on Sulong
 
 Individual test excludes are created in the `test/mri/excludes`
 directory using the test's class name as the file name.

@@ -133,7 +133,6 @@ EXPERT:
     # C extension options
     CEXTS: [cexts, boolean, true, Enable use of C extensions]
     CEXT_LOCK: [cexts-lock, boolean, true, Use a Global Lock when running C extensions]
-    CEXTS_PANAMA: [cexts-panama, boolean, true, 'Use Panama for native to Ruby calls in C extensions. Only available in --jvm mode on JDK 22+.']
 
     # Debugging the values of options
     OPTIONS_LOG: [options-log, boolean, false, Log the final value of all options]

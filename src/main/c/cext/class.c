@@ -13,7 +13,7 @@
 // Class, rb_class_*, rb_mod_*, rb_cvar_*, rb_cv_*
 
 VALUE rb_class_inherited_p(VALUE module, VALUE object) {
-  return RUBY_CEXT_INVOKE("rb_class_inherited_p", module, object);
+  return rb_tr_up_rb_class_inherited_p(module, object);
 }
 
 const char* rb_class2name(VALUE ruby_class) {
@@ -24,19 +24,19 @@ VALUE rb_class_real(VALUE ruby_class) {
   if (!ruby_class) {
     return NULL;
   }
-  return RUBY_CEXT_INVOKE("rb_class_real", ruby_class);
+  return rb_tr_up_rb_class_real(ruby_class);
 }
 
 VALUE rb_class_superclass(VALUE ruby_class) {
-  return RUBY_INVOKE(ruby_class, "superclass");
+  return rb_tr_up_send0_superclass(ruby_class);
 }
 
 VALUE rb_obj_class(VALUE object) {
-  return RUBY_CEXT_INVOKE("rb_obj_class", object);
+  return rb_tr_up_rb_obj_class(object);
 }
 
 const char *rb_obj_classname(VALUE object) {
-  VALUE str = RUBY_CEXT_INVOKE("rb_obj_classname", object);
+  VALUE str = rb_tr_up_rb_obj_classname(object);
   if (str != Qnil) {
     return RSTRING_PTR(str);
   } else {
@@ -45,131 +45,131 @@ const char *rb_obj_classname(VALUE object) {
 }
 
 VALUE rb_class_of(VALUE object) {
-  return RUBY_CEXT_INVOKE("rb_class_of", object);
+  return rb_tr_up_rb_class_of(object);
 }
 
 VALUE rb_singleton_class(VALUE object) {
-  return RUBY_CEXT_INVOKE("rb_singleton_class", object);
+  return rb_tr_up_rb_singleton_class(object);
 }
 
 VALUE rb_class_get_superclass(VALUE klass) {
-  return RUBY_CEXT_INVOKE("rb_class_get_superclass", klass);
+  return rb_tr_up_rb_class_get_superclass(klass);
 }
 
 VALUE rb_obj_alloc(VALUE ruby_class) {
-  return RUBY_INVOKE(ruby_class, "__allocate__");
+  return rb_tr_up_send0___allocate__(ruby_class);
 }
 
 VALUE rb_class_path(VALUE ruby_class) {
-  return RUBY_INVOKE(ruby_class, "name");
+  return rb_tr_up_send0_name(ruby_class);
 }
 
 VALUE rb_path2class(const char *string) {
-  return RUBY_CEXT_INVOKE("rb_path_to_class", rb_str_new_cstr(string));
+  return rb_tr_up_rb_path_to_class(rb_str_new_cstr(string));
 }
 
 VALUE rb_path_to_class(VALUE pathname) {
-  return RUBY_CEXT_INVOKE("rb_path_to_class", pathname);
+  return rb_tr_up_rb_path_to_class(pathname);
 }
 
 VALUE rb_class_name(VALUE ruby_class) {
-  VALUE name = RUBY_INVOKE(ruby_class, "name");
+  VALUE name = rb_tr_up_send0_name(ruby_class);
 
   if (NIL_P(name)) {
-    return RUBY_INVOKE(ruby_class, "inspect");
+    return rb_tr_up_send0_inspect(ruby_class);
   } else {
     return name;
   }
 }
 
 VALUE rb_class_new(VALUE super) {
-  return RUBY_CEXT_INVOKE("rb_class_new", super);
+  return rb_tr_up_rb_class_new(super);
 }
 
 VALUE rb_class_new_instance(int argc, const VALUE *argv, VALUE klass) {
-  return RUBY_CEXT_INVOKE("rb_class_new_instance", klass, rb_ary_new4(argc, argv));
+  return rb_tr_up_rb_class_new_instance(klass, rb_ary_new4(argc, argv));
 }
 
 VALUE rb_class_new_instance_kw(int argc, const VALUE *argv, VALUE klass, int kw_splat) {
   if (kw_splat && argc > 0) {
-    return RUBY_CEXT_INVOKE("rb_class_new_instance_kw", klass, rb_ary_new4(argc, argv));
+    return rb_tr_up_rb_class_new_instance_kw(klass, rb_ary_new4(argc, argv));
   } else {
     return rb_class_new_instance(argc, argv, klass);
   }
 }
 
 VALUE rb_cvar_defined(VALUE klass, ID id) {
-  return RUBY_CEXT_INVOKE("rb_cvar_defined", klass, ID2SYM(id));
+  return rb_tr_up_rb_cvar_defined(klass, ID2SYM(id));
 }
 
 VALUE rb_cvar_get(VALUE klass, ID id) {
-  return RUBY_CEXT_INVOKE("rb_cvar_get", klass, ID2SYM(id));
+  return rb_tr_up_rb_cvar_get(klass, ID2SYM(id));
 }
 
 void rb_cvar_set(VALUE klass, ID id, VALUE val) {
-  RUBY_CEXT_INVOKE_NO_WRAP("rb_cvar_set", klass, ID2SYM(id), val);
+  rb_tr_up_rb_cvar_set(klass, ID2SYM(id), val);
 }
 
 VALUE rb_cv_get(VALUE klass, const char *name) {
-  return RUBY_CEXT_INVOKE("rb_cv_get", klass, rb_str_new_cstr(name));
+  return rb_tr_up_rb_cv_get(klass, rb_str_new_cstr(name));
 }
 
 void rb_cv_set(VALUE klass, const char *name, VALUE val) {
-  RUBY_CEXT_INVOKE_NO_WRAP("rb_cv_set", klass, rb_str_new_cstr(name), val);
+  rb_tr_up_rb_cv_set(klass, rb_str_new_cstr(name), val);
 }
 
 void rb_define_attr(VALUE klass, const char *name, int read, int write) {
-  polyglot_invoke(RUBY_CEXT, "rb_define_attr", rb_tr_unwrap(klass), rb_tr_unwrap(ID2SYM(rb_intern(name))), read, write);
+  rb_tr_up_rb_define_attr(klass, ID2SYM(rb_intern(name)), read, write);
 }
 
 void rb_define_class_variable(VALUE klass, const char *name, VALUE val) {
-  RUBY_CEXT_INVOKE_NO_WRAP("rb_cv_set", klass, rb_str_new_cstr(name), val);
+  rb_tr_up_rb_cv_set(klass, rb_str_new_cstr(name), val);
 }
 
 VALUE rb_mod_ancestors(VALUE mod) {
-  return RUBY_INVOKE(mod, "ancestors");
+  return rb_tr_up_send0_ancestors(mod);
 }
 
 VALUE rb_module_new(void) {
-  return RUBY_CEXT_INVOKE("rb_module_new");
+  return rb_tr_up_rb_module_new();
 }
 
 void rb_extend_object(VALUE object, VALUE module) {
-  RUBY_INVOKE(module, "extend_object", object);
+  rb_tr_up_send1_extend_object(module, object);
 }
 
 VALUE rb_class_instance_methods(int argc, const VALUE *argv, VALUE mod) {
   if (rb_check_arity(argc, 0, 1)) {
     VALUE include_super = rb_boolean(argv[0]);
-    return RUBY_INVOKE(mod, "instance_methods", include_super);
+    return rb_tr_up_send1_instance_methods(mod, include_super);
   } else {
-    return RUBY_INVOKE(mod, "instance_methods");
+    return rb_tr_up_send0_instance_methods(mod);
   }
 }
 
 VALUE rb_class_public_instance_methods(int argc, const VALUE *argv, VALUE mod) {
   if (rb_check_arity(argc, 0, 1)) {
     VALUE include_super = rb_boolean(argv[0]);
-    return RUBY_INVOKE(mod, "public_instance_methods", include_super);
+    return rb_tr_up_send1_public_instance_methods(mod, include_super);
   } else {
-    return RUBY_INVOKE(mod, "public_instance_methods");
+    return rb_tr_up_send0_public_instance_methods(mod);
   }
 }
 
 VALUE rb_class_protected_instance_methods(int argc, const VALUE *argv, VALUE mod) {
   if (rb_check_arity(argc, 0, 1)) {
     VALUE include_super = rb_boolean(argv[0]);
-    return RUBY_INVOKE(mod, "protected_instance_methods", include_super);
+    return rb_tr_up_send1_protected_instance_methods(mod, include_super);
   } else {
-    return RUBY_INVOKE(mod, "protected_instance_methods");
+    return rb_tr_up_send0_protected_instance_methods(mod);
   }
 }
 
 VALUE rb_class_private_instance_methods(int argc, const VALUE *argv, VALUE mod) {
   if (rb_check_arity(argc, 0, 1)) {
     VALUE include_super = rb_boolean(argv[0]);
-    return RUBY_INVOKE(mod, "private_instance_methods", include_super);
+    return rb_tr_up_send1_private_instance_methods(mod, include_super);
   } else {
-    return RUBY_INVOKE(mod, "private_instance_methods");
+    return rb_tr_up_send0_private_instance_methods(mod);
   }
 }

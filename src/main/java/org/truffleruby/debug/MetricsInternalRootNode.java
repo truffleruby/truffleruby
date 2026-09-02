@@ -13,14 +13,13 @@ package org.truffleruby.debug;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.language.RubyBaseRootNode;
 import org.truffleruby.language.RubyNode;
-import org.truffleruby.language.backtrace.InternalRootNode;
 import org.truffleruby.shared.TruffleRuby;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-final class MetricsInternalRootNode extends RubyBaseRootNode implements InternalRootNode {
+final class MetricsInternalRootNode extends RubyBaseRootNode {
 
     private static final SourceSection REQUIRE_METRICS_SOURCE_SECTION = Source
             .newBuilder(TruffleRuby.LANGUAGE_ID, "", "(metrics)")
@@ -46,6 +45,11 @@ final class MetricsInternalRootNode extends RubyBaseRootNode implements Internal
     @Override
     public Object execute(VirtualFrame frame) {
         return body.execute(frame);
+    }
+
+    @Override
+    public boolean isInternal() {
+        return true;
     }
 
     @Override

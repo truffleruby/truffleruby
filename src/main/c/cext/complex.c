@@ -13,33 +13,33 @@
 // Complex, rb_complex_*
 
 VALUE rb_Complex(VALUE real, VALUE imag) {
-  return RUBY_CEXT_INVOKE("rb_Complex", real, imag);
+  return rb_tr_up_rb_Complex(real, imag);
 }
 
 VALUE rb_complex_new(VALUE real, VALUE imag) {
-  return RUBY_CEXT_INVOKE("rb_complex_new", real, imag);
+  return rb_tr_up_rb_complex_new(real, imag);
 }
 
 VALUE rb_complex_raw(VALUE real, VALUE imag) {
-  return RUBY_CEXT_INVOKE("rb_complex_raw", real, imag);
+  return rb_tr_up_rb_complex_raw(real, imag);
 }
 
 VALUE rb_complex_polar(VALUE r, VALUE theta) {
-  return RUBY_CEXT_INVOKE("rb_complex_polar", r, theta);
+  return rb_tr_up_rb_complex_polar(r, theta);
 }
 
 VALUE rb_complex_real(VALUE complex) {
-  return RUBY_INVOKE(complex, "real");
+  return rb_tr_up_send0_real(complex);
 }
 
 VALUE rb_complex_imag(VALUE complex) {
-  return RUBY_INVOKE(complex, "imag");
+  return rb_tr_up_send0_imag(complex);
 }
 
 VALUE rb_complex_set_real(VALUE complex, VALUE real) {
-  return RUBY_CEXT_INVOKE("rb_complex_set_real", complex, real);
+  return rb_tr_up_rb_complex_set_real(complex, real);
 }
 
 VALUE rb_complex_set_imag(VALUE complex, VALUE imag) {
-  return RUBY_CEXT_INVOKE("rb_complex_set_imag", complex, imag);
+  return rb_tr_up_rb_complex_set_imag(complex, imag);
 }

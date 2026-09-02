@@ -10,10 +10,8 @@
  */
 package org.truffleruby.language;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 import com.oracle.truffle.api.ArrayUtils;
 import com.oracle.truffle.api.RootCallTarget;
@@ -32,7 +30,6 @@ import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.string.StringOperations;
-import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.dispatch.DispatchNode;
@@ -53,10 +50,7 @@ import com.oracle.truffle.api.TruffleFile;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
-import com.oracle.truffle.api.nodes.LanguageInfo;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
-import com.oracle.truffle.llvm.api.Toolchain;
 
 @CoreModule("Truffle::Boot")
 public abstract class TruffleBootNodes {
@@ -372,67 +366,6 @@ public abstract class TruffleBootNodes {
             return getContext().getOptions().SINGLE_THREADED;
         }
 
-    }
-
-    @CoreMethod(names = "toolchain_executable", onSingleton = true, required = 1)
-    public abstract static class ToolchainExecutableNode extends CoreMethodArrayArgumentsNode {
-
-        @TruffleBoundary
-        @Specialization
-        Object toolchainExecutable(RubySymbol executable,
-                @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-            final String name = executable.getString();
-            final Toolchain toolchain = getToolchain(getContext(), this);
-            final TruffleFile path = toolchain.getToolPath(name);
-            if (path != null) {
-                return createString(fromJavaStringNode, path.getPath(), Encodings.UTF_8);
-            } else {
-                throw new RaiseException(
-                        getContext(),
-                        coreExceptions().argumentError("Toolchain executable " + name + " not found", this));
-            }
-        }
-
-    }
-
-    @CoreMethod(names = "toolchain_paths", onSingleton = true, required = 1)
-    public abstract static class ToolchainPathsNode extends CoreMethodArrayArgumentsNode {
-
-        @TruffleBoundary
-        @Specialization
-        Object toolchainPaths(RubySymbol pathName,
-                @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-            final String name = pathName.getString();
-            final Toolchain toolchain = getToolchain(getContext(), this);
-            final List<TruffleFile> paths = toolchain.getPaths(name);
-            if (paths != null) {
-                String path = StringUtils.join(paths.toArray(), File.pathSeparator);
-                return createString(fromJavaStringNode, path, Encodings.UTF_8);
-            } else {
-                throw new RaiseException(
-                        getContext(),
-                        coreExceptions().argumentError("Toolchain path " + name + " not found", this));
-            }
-        }
-
-    }
-
-    private static Toolchain getToolchain(RubyContext context, Node currentNode) {
-        final LanguageInfo llvmInfo = context.getEnv().getInternalLanguages().get("llvm");
-        if (llvmInfo == null) {
-            throw new RaiseException(
-                    context,
-                    context.getCoreExceptions().runtimeError(
-                            "Could not find Sulong in internal languages",
-                            currentNode));
-        }
-        final Toolchain toolchain = context.getEnv().lookup(llvmInfo, Toolchain.class);
-        if (toolchain == null) {
-            throw new RaiseException(
-                    context,
-                    context.getCoreExceptions().runtimeError("Could not find the LLVM Toolchain", currentNode));
-        }
-        return toolchain;
     }
 
     @CoreMethod(names = "read_abi_version", onSingleton = true)

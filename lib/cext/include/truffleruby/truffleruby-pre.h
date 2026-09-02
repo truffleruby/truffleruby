@@ -24,10 +24,6 @@
 // We don't have a transient heap
 #define USE_TRANSIENT_HEAP 0
 
-// Sulong enforces calling functions with the correct arity, so we set this
-// to catch rb_block_call_func_t* functions with incorrect arity faster.
-#define RB_BLOCK_CALL_FUNC_STRICT 1
-
 // To avoid extra write barrier code
 #define USE_RINCGC 0
 
@@ -69,7 +65,7 @@ const char* rb_tr_abi_version(void) {
 NORETURN(void rb_tr_not_implemented(const char *function_name));
 VALUE rb_tr_zlib_crc_table(void);
 VALUE rb_tr_cext_lock_owned_p(void);
-VALUE rb_tr_invoke(VALUE recv, const char* meth);
+VALUE rb_tr_binding(VALUE recv);
 unsigned long rb_tr_flags(VALUE object);
 void rb_tr_set_flags(VALUE object, unsigned long flags);
 

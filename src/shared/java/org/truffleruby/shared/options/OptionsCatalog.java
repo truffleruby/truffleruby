@@ -72,7 +72,6 @@ public final class OptionsCatalog {
     public static final OptionKey<Boolean> BACKTRACE_ON_NEW_FIBER_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> CEXTS_KEY = new OptionKey<>(true);
     public static final OptionKey<Boolean> CEXT_LOCK_KEY = new OptionKey<>(true);
-    public static final OptionKey<Boolean> CEXTS_PANAMA_KEY = new OptionKey<>(true);
     public static final OptionKey<Boolean> OPTIONS_LOG_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> LOG_LOAD_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> LOG_AUTOLOAD_KEY = new OptionKey<>(false);
@@ -569,14 +568,6 @@ public final class OptionsCatalog {
     public static final OptionDescriptor CEXT_LOCK = OptionDescriptor
             .newBuilder(CEXT_LOCK_KEY, "ruby.cexts-lock")
             .help("Use a Global Lock when running C extensions")
-            .category(OptionCategory.EXPERT)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("")
-            .build();
-
-    public static final OptionDescriptor CEXTS_PANAMA = OptionDescriptor
-            .newBuilder(CEXTS_PANAMA_KEY, "ruby.cexts-panama")
-            .help("Use Panama for native to Ruby calls in C extensions. Only available in --jvm mode on JDK 22+.")
             .category(OptionCategory.EXPERT)
             .stability(OptionStability.EXPERIMENTAL)
             .usageSyntax("")
@@ -1422,8 +1413,6 @@ public final class OptionsCatalog {
                 return CEXTS;
             case "ruby.cexts-lock":
                 return CEXT_LOCK;
-            case "ruby.cexts-panama":
-                return CEXTS_PANAMA;
             case "ruby.options-log":
                 return OPTIONS_LOG;
             case "ruby.log-load":
@@ -1666,7 +1655,6 @@ public final class OptionsCatalog {
             BACKTRACE_ON_NEW_FIBER,
             CEXTS,
             CEXT_LOCK,
-            CEXTS_PANAMA,
             OPTIONS_LOG,
             LOG_LOAD,
             LOG_AUTOLOAD,

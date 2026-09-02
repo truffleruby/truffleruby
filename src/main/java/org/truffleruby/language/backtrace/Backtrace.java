@@ -235,11 +235,17 @@ public final class Backtrace {
             ++retainedCount;
         }
 
-        // If there are activations with a InternalMethod but no caller information above in the
-        // stack, then all of these activations are internal as they are not called from user code.
-        while (!stackTraceList.isEmpty() && stackTraceList.get(stackTraceList.size() - 1).getLocation() == null) {
-            stackTraceList.remove(stackTraceList.size() - 1);
-            --retainedCount;
+        // Remove the Truffle::Boot.main frame at the bottom of the stack, like ignoreFrame() does when it is the
+        // caller: it runs e.g. at_exit hooks with no caller information and should not appear in backtraces.
+        // Other frames with no caller information are kept, e.g. a Ruby frame which performed a C extension downcall
+        // has a null location because the FFM upcall dispatch uses call(null, arguments).
+        if (!stackTraceList.isEmpty()) {
+            final TruffleStackTraceElement last = stackTraceList.getLast();
+            if (last.getLocation() == null && last.getTarget().getRootNode() instanceof RubyRootNode lastRootNode &&
+                    context.getCoreLibrary().isTruffleBootMainMethod(lastRootNode.getSharedMethodInfo())) {
+                stackTraceList.removeLast();
+                --retainedCount;
+            }
         }
 
         this.totalUnderlyingElements = retainedCount;

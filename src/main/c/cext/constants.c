@@ -13,31 +13,31 @@
 // Accessing Ruby constants, rb_const_*
 
 int rb_const_defined(VALUE module, ID name) {
-  return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("rb_const_defined?", module, ID2SYM(name)));
+  return rb_tr_up_rb_const_defined(module, ID2SYM(name));
 }
 
 int rb_const_defined_at(VALUE module, ID name) {
-  return polyglot_as_boolean(RUBY_INVOKE_NO_WRAP(module, "const_defined?", ID2SYM(name), Qfalse));
+  return rb_tr_up_send2_b_const_defined_p(module, ID2SYM(name), Qfalse);
 }
 
 VALUE rb_const_get(VALUE module, ID name) {
-  return RUBY_CEXT_INVOKE("rb_const_get", module, ID2SYM(name));
+  return rb_tr_up_rb_const_get(module, ID2SYM(name));
 }
 
 VALUE rb_const_get_at(VALUE module, ID name) {
-  return RUBY_INVOKE(module, "const_get", ID2SYM(name), Qfalse);
+  return rb_tr_up_send2_const_get(module, ID2SYM(name), Qfalse);
 }
 
 VALUE rb_const_get_from(VALUE module, ID name) {
-  return RUBY_CEXT_INVOKE("rb_const_get_from", module, ID2SYM(name));
+  return rb_tr_up_rb_const_get_from(module, ID2SYM(name));
 }
 
 VALUE rb_const_remove(VALUE module, ID name) {
-  return RUBY_CEXT_INVOKE("rb_const_remove", module, ID2SYM(name));
+  return rb_tr_up_rb_const_remove(module, ID2SYM(name));
 }
 
 void rb_const_set(VALUE module, ID name, VALUE value) {
-  RUBY_CEXT_INVOKE_NO_WRAP("rb_const_set", module, ID2SYM(name), value);
+  rb_tr_up_rb_const_set(module, ID2SYM(name), value);
 }
 
 void rb_define_const(VALUE module, const char *name, VALUE value) {

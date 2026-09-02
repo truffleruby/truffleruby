@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
@@ -166,7 +167,7 @@ import static org.truffleruby.language.RubyBaseNode.nil;
         version = TruffleRuby.LANGUAGE_VERSION,
         characterMimeTypes = RubyLanguage.MIME_TYPE,
         defaultMimeType = RubyLanguage.MIME_TYPE,
-        dependentLanguages = { "nfi", "llvm", "regex" },
+        dependentLanguages = { "nfi", "regex" },
         fileTypeDetectors = RubyFileTypeDetector.class)
 @ProvidedTags({
         CoverageManager.LineTag.class,
@@ -199,7 +200,6 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     /** To avoid some String[] allocations */
     public static final String[] MIME_TYPES = { MIME_TYPE };
 
-    public static final String LLVM_BITCODE_MIME_TYPE = "application/x-llvm-ir-bitcode";
 
     public static final String CEXT_EXTENSION = Platform.CEXT_SUFFIX;
 
@@ -277,8 +277,21 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     public Thread cleanerThread = null;
     @CompilationFinal public Cleaner cleaner = null;
 
-    @SuppressFBWarnings("VO_VOLATILE_REFERENCE_TO_ARRAY") public volatile ValueWrapperManager.HandleBlockWeakReference[] handleBlockSharedMap = new ValueWrapperManager.HandleBlockWeakReference[0];
-    public final ValueWrapperManager.HandleBlockAllocator handleBlockAllocator = new ValueWrapperManager.HandleBlockAllocator();
+    /** The handle machinery for shared (immutable) objects is process-wide, not per-language or per-context: the handle
+     * of a shared object (a symbol, immutable string or encoding, i.e. an ImmutableRubyObject) and its cached
+     * ValueWrapper can outlive the context which allocated the handle, and a later context uses a new language
+     * instance. So handles of shared objects are allocated by a process-wide allocator (which ensures handles of
+     * different language instances never alias) and registered in a process-wide map, and their blocks stay alive for
+     * the lifetime of the process ({@link #keepSharedHandleBlockAlive}). The blocks only reference the wrappers weakly,
+     * so this does not keep shared objects of disposed language instances alive. */
+    @SuppressFBWarnings("VO_VOLATILE_REFERENCE_TO_ARRAY") public static volatile ValueWrapperManager.HandleBlockWeakReference[] handleBlockSharedMap = new ValueWrapperManager.HandleBlockWeakReference[0];
+    private static final ConcurrentLinkedQueue<ValueWrapperManager.HandleBlock> sharedHandleBlocks = new ConcurrentLinkedQueue<>();
+
+    public static void keepSharedHandleBlockAlive(ValueWrapperManager.HandleBlock block) {
+        sharedHandleBlocks.add(block);
+    }
+
+    public static final ValueWrapperManager.HandleBlockAllocator handleBlockAllocator = new ValueWrapperManager.HandleBlockAllocator();
 
     @CompilationFinal public LanguageOptions options;
     @CompilationFinal private String rubyHome;

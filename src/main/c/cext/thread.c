@@ -14,28 +14,28 @@
 // Threads, rb_thread_*, rb_nativethread_*
 
 int rb_thread_alone(void) {
-  return polyglot_as_i32(RUBY_CEXT_INVOKE_NO_WRAP("rb_thread_alone"));
+  return rb_tr_up_rb_thread_alone();
 }
 
 VALUE rb_thread_current(void) {
-  return RUBY_INVOKE(rb_cThread, "current");
+  return rb_tr_up_send0_current(rb_cThread);
 }
 
 VALUE rb_thread_local_aref(VALUE thread, ID id) {
-  return RUBY_INVOKE(thread, "[]", ID2SYM(id));
+  return rb_tr_up_send1_aref(thread, ID2SYM(id));
 }
 
 VALUE rb_thread_local_aset(VALUE thread, ID id, VALUE val) {
-  return RUBY_INVOKE(thread, "[]=", ID2SYM(id), val);
+  return rb_tr_up_send2_aset(thread, ID2SYM(id), val);
 }
 
 void rb_tr_thread_wait_for(struct timeval* time) {
   double seconds = (double)time->tv_sec + (double)time->tv_usec/1000000;
-  polyglot_invoke(rb_tr_unwrap(rb_mKernel), "sleep", seconds);
+  rb_tr_up_send1_o_sleep(rb_mKernel, DBL2NUM(seconds));
 }
 
 void rb_thread_check_ints(void) {
-  RUBY_CEXT_INVOKE_NO_WRAP("rb_thread_check_ints");
+  rb_tr_up_rb_thread_check_ints();
 }
 
 int rb_thread_check_trap_pending(void) {
@@ -43,41 +43,41 @@ int rb_thread_check_trap_pending(void) {
 }
 
 VALUE rb_thread_wakeup(VALUE thread) {
-  return RUBY_INVOKE(thread, "wakeup");
+  return rb_tr_up_send0_wakeup(thread);
 }
 
 VALUE rb_thread_create(VALUE (*fn)(void *g), void *arg) {
-  return rb_tr_wrap(polyglot_invoke(RUBY_CEXT, "rb_thread_create", fn, arg));
+  return rb_tr_up_rb_thread_create(fn, arg);
 }
 
 void rb_thread_schedule(void) {
-  RUBY_INVOKE_NO_WRAP(rb_cThread, "pass");
+  rb_tr_up_send0_o_pass(rb_cThread);
 }
 
 rb_nativethread_id_t rb_nativethread_self(void) {
-  return RUBY_CEXT_INVOKE("rb_nativethread_self");
+  return rb_tr_up_rb_nativethread_self();
 }
 
 void rb_nativethread_lock_initialize(rb_nativethread_lock_t *lock) {
-  *lock = RUBY_CEXT_INVOKE("rb_nativethread_lock_initialize");
+  *lock = rb_tr_up_rb_nativethread_lock_initialize();
 }
 
 void rb_nativethread_lock_destroy(rb_nativethread_lock_t *lock) {
-  *lock = RUBY_CEXT_INVOKE("rb_nativethread_lock_destroy", *lock);
+  *lock = rb_tr_up_rb_nativethread_lock_destroy(*lock);
 }
 
 void rb_nativethread_lock_lock(rb_nativethread_lock_t *lock) {
-  RUBY_INVOKE_NO_WRAP(*lock, "lock");
+  rb_tr_up_send0_o_lock(*lock);
 }
 
 void rb_nativethread_lock_unlock(rb_nativethread_lock_t *lock) {
-  RUBY_INVOKE_NO_WRAP(*lock, "unlock");
+  rb_tr_up_send0_o_unlock(*lock);
 }
 
 int ruby_native_thread_p(void) {
-  return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("ruby_native_thread_p"));
+  return rb_tr_up_ruby_native_thread_p();
 }
 
 int ruby_thread_has_gvl_p(void) {
-  return polyglot_as_boolean(RUBY_CEXT_INVOKE_NO_WRAP("rb_tr_cext_lock_owned_p")) ? 1 : 0;
+  return rb_tr_up_rb_tr_cext_lock_owned_p() ? 1 : 0;
 }

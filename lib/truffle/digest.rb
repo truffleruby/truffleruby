@@ -223,7 +223,8 @@ module Digest
     def initialize
       super
       metadata_wrapped = Primitive.object_ivar_get(Primitive.class(self), :metadata)
-      metadata_pointer = Primitive.object_hidden_var_get(metadata_wrapped, Truffle::CExt::DATA_STRUCT).data
+      rdata = Primitive.object_hidden_var_get(metadata_wrapped, Truffle::CExt::DATA_STRUCT)
+      metadata_pointer = Truffle::CExt.rb_tr_rdata_data(rdata)
       @metadata = Truffle::Digest::Foreign::RbDigestMetadata.new(FFI::Pointer.new(metadata_pointer))
 
       reset
