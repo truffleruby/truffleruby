@@ -136,7 +136,6 @@ public final class OptionsCatalog {
     public static final OptionKey<Integer> ARRAY_SMALL_KEY = new OptionKey<>(3);
     public static final OptionKey<Integer> PACK_UNROLL_LIMIT_KEY = new OptionKey<>(4);
     public static final OptionKey<Integer> PACK_RECOVER_LOOP_MIN_KEY = new OptionKey<>(32);
-    public static final OptionKey<Integer> CEXTS_MARKING_CACHE_KEY = new OptionKey<>(100);
     public static final OptionKey<Integer> GLOBAL_VARIABLE_MAX_INVALIDATIONS_KEY = new OptionKey<>(1);
     public static final OptionKey<Boolean> CLONE_DEFAULT_KEY = new OptionKey<>(true);
     public static final OptionKey<Boolean> INLINE_DEFAULT_KEY = new OptionKey<>(true);
@@ -1082,14 +1081,6 @@ public final class OptionsCatalog {
             .usageSyntax("32")
             .build();
 
-    public static final OptionDescriptor CEXTS_MARKING_CACHE = OptionDescriptor
-            .newBuilder(CEXTS_MARKING_CACHE_KEY, "ruby.cexts-marking-cache")
-            .help("Number of objects converted to native handles before the marking service is run")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("100")
-            .build();
-
     public static final OptionDescriptor GLOBAL_VARIABLE_MAX_INVALIDATIONS = OptionDescriptor
             .newBuilder(GLOBAL_VARIABLE_MAX_INVALIDATIONS_KEY, "ruby.global-variable-max-invalidations")
             .help("Maximum number of times a global variable can be changed to be considered constant")
@@ -1514,8 +1505,6 @@ public final class OptionsCatalog {
                 return PACK_UNROLL_LIMIT;
             case "ruby.pack-recover":
                 return PACK_RECOVER_LOOP_MIN;
-            case "ruby.cexts-marking-cache":
-                return CEXTS_MARKING_CACHE;
             case "ruby.global-variable-max-invalidations":
                 return GLOBAL_VARIABLE_MAX_INVALIDATIONS;
             case "ruby.clone-default":
@@ -1686,7 +1675,6 @@ public final class OptionsCatalog {
             ARRAY_SMALL,
             PACK_UNROLL_LIMIT,
             PACK_RECOVER_LOOP_MIN,
-            CEXTS_MARKING_CACHE,
             GLOBAL_VARIABLE_MAX_INVALIDATIONS,
             CLONE_DEFAULT,
             INLINE_DEFAULT,

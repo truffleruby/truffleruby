@@ -224,7 +224,6 @@ INTERNAL: # Options for debugging the TruffleRuby implementation
     ARRAY_SMALL: [array-small, integer, 3, Maximum size of an Array to consider small for optimisations]
     PACK_UNROLL_LIMIT: [pack-unroll, integer, 4, 'If a pack or unpack expression has a loop less than this many iterations, unroll it']
     PACK_RECOVER_LOOP_MIN: [pack-recover, integer, 32, 'If a pack or unpack expression is longer than this, attempt to recover loops']
-    CEXTS_MARKING_CACHE: [cexts-marking-cache, integer, 100, 'Number of objects converted to native handles before the marking service is run']
     GLOBAL_VARIABLE_MAX_INVALIDATIONS: [global-variable-max-invalidations, integer, 1, Maximum number of times a global variable can be changed to be considered constant]
 
     # Splitting and cloning, useful for debugging cloning
