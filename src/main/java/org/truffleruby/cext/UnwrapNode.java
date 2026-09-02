@@ -206,14 +206,14 @@ public abstract class UnwrapNode extends RubyBaseNode {
 
     public abstract Object execute(Node node, Object value);
 
-    @Specialization(guards = "!isTaggedLong(value.getHandle())")
+    @Specialization(guards = "!isTaggedLong(value.handle)")
     static Object unwrapValueObject(ValueWrapper value) {
         return value.getObject();
     }
 
-    @Specialization(guards = "isTaggedLong(value.getHandle())")
+    @Specialization(guards = "isTaggedLong(value.handle)")
     static long unwrapValueTaggedLong(ValueWrapper value) {
-        return ValueWrapperManager.untagTaggedLong(value.getHandle());
+        return ValueWrapperManager.untagTaggedLong(value.handle);
     }
 
     @Specialization(guards = "!isWrapper(value)")

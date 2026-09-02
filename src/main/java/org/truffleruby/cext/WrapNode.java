@@ -11,7 +11,6 @@
 package org.truffleruby.cext;
 
 import static org.truffleruby.cext.ValueWrapperManager.LONG_TAG;
-import static org.truffleruby.cext.ValueWrapperManager.UNSET_HANDLE;
 
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.ImportStatic;
@@ -35,7 +34,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.language.objects.ObjectIDOperations;
 
-import java.lang.invoke.VarHandle;
+import org.truffleruby.cext.ValueWrapperManager.CreateWrapperNode;
 
 @ImportStatic(ObjectIDOperations.class)
 @GenerateUncached
@@ -55,13 +54,17 @@ public abstract class WrapNode extends RubyBaseNode {
     }
 
     @Specialization(guards = "!isSmallFixnum(value)")
-    ValueWrapper wrapNonFixnum(long value) {
-        return new ValueWrapper(value, UNSET_HANDLE, null);
+    static ValueWrapper wrapNonFixnum(long value,
+            @Cached @Shared CreateWrapperNode createWrapperNode,
+            @Bind Node node) {
+        return createWrapperNode.execute(node, value);
     }
 
     @Specialization
-    ValueWrapper wrapDouble(double value) {
-        return new ValueWrapper(value, UNSET_HANDLE, null);
+    static ValueWrapper wrapDouble(double value,
+            @Cached @Shared CreateWrapperNode createWrapperNode,
+            @Bind Node node) {
+        return createWrapperNode.execute(node, value);
     }
 
     @Specialization
@@ -89,18 +92,19 @@ public abstract class WrapNode extends RubyBaseNode {
     }
 
     @Specialization(guards = "!isNil(value)")
-    ValueWrapper wrapImmutable(ImmutableRubyObject value,
-            @Cached @Shared InlinedBranchProfile noHandleProfile) {
+    static ValueWrapper wrapImmutable(ImmutableRubyObject value,
+            @Cached @Shared InlinedBranchProfile noHandleProfile,
+            @Cached @Shared CreateWrapperNode createWrapperNode,
+            @Bind Node node) {
         ValueWrapper wrapper = value.getValueWrapper();
         if (wrapper == null) {
-            noHandleProfile.enter(this);
+            noHandleProfile.enter(node);
             synchronized (value) {
                 wrapper = value.getValueWrapper();
                 if (wrapper == null) {
-                    /* This is double-checked locking, but it's safe because the object that we create, the
-                     * ValueWrapper, is not published until after a memory store fence. */
-                    wrapper = new ValueWrapper(value, UNSET_HANDLE, null);
-                    VarHandle.storeStoreFence();
+                    /* This is double-checked locking, but it's safe because ValueWrapper only has final fields, so the
+                     * racy read above sees either null or a fully-initialized ValueWrapper. */
+                    wrapper = createWrapperNode.execute(node, value);
                     value.setValueWrapper(wrapper);
                 }
             }
@@ -113,6 +117,7 @@ public abstract class WrapNode extends RubyBaseNode {
             @Cached DynamicObject.GetNode getNode,
             @Cached DynamicObject.PutNode putNode,
             @Cached @Shared InlinedBranchProfile noHandleProfile,
+            @Cached @Shared CreateWrapperNode createWrapperNode,
             @Bind Node node) {
         ValueWrapper wrapper = (ValueWrapper) getNode.execute(value, Layouts.VALUE_WRAPPER_IDENTIFIER, null);
         if (wrapper == null) {
@@ -120,10 +125,9 @@ public abstract class WrapNode extends RubyBaseNode {
             synchronized (value) {
                 wrapper = (ValueWrapper) getNode.execute(value, Layouts.VALUE_WRAPPER_IDENTIFIER, null);
                 if (wrapper == null) {
-                    /* This is double-checked locking, but it's safe because the object that we create, the
-                     * ValueWrapper, is not published until after a memory store fence. */
-                    wrapper = new ValueWrapper(value, UNSET_HANDLE, null);
-                    VarHandle.storeStoreFence();
+                    /* This is double-checked locking, but it's safe because ValueWrapper only has final fields, so the
+                     * racy read above sees either null or a fully-initialized ValueWrapper. */
+                    wrapper = createWrapperNode.execute(node, value);
                     putNode.execute(value, Layouts.VALUE_WRAPPER_IDENTIFIER, wrapper);
                 }
             }

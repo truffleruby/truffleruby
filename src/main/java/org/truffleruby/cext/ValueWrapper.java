@@ -13,7 +13,6 @@ package org.truffleruby.cext;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
-import org.truffleruby.cext.ValueWrapperManager.AllocateHandleNode;
 import org.truffleruby.cext.ValueWrapperManager.HandleBlock;
 import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
 import org.truffleruby.debug.VariableNamesObject;
@@ -35,11 +34,10 @@ import com.oracle.truffle.api.library.ExportMessage;
 public final class ValueWrapper implements TruffleObject {
 
     private final Object object;
-    private volatile long handle;
-    @SuppressWarnings("unused")
-    // The handleBlock is held here to stop it being GCed and the memory freed while wrappers still
-    // exist with handles in it.
-    private volatile HandleBlock handleBlock;
+    public final long handle;
+    /* The handleBlock is held here to keep it alive and prevent the memory freed while wrappers still exist with
+     * handles in it. */
+    @SuppressWarnings("unused") private final HandleBlock handleBlock;
 
     public ValueWrapper(Object object, long handle, HandleBlock handleBlock) {
         this.object = object;
@@ -49,15 +47,6 @@ public final class ValueWrapper implements TruffleObject {
 
     public Object getObject() {
         return object;
-    }
-
-    public long getHandle() {
-        return handle;
-    }
-
-    public void setHandle(long handle, HandleBlock handleBlock) {
-        this.handle = handle;
-        this.handleBlock = handleBlock;
     }
 
     @ExportMessage
@@ -98,18 +87,12 @@ public final class ValueWrapper implements TruffleObject {
 
     @ExportMessage
     protected boolean isPointer() {
-        return handle != ValueWrapperManager.UNSET_HANDLE;
+        return true;
     }
 
     @ExportMessage
-    static void toNative(ValueWrapper wrapper,
-            @Cached AllocateHandleNode createNativeHandleNode,
-            @Cached @Exclusive InlinedBranchProfile createHandleProfile,
-            @Bind Node node) {
-        if (!wrapper.isPointer()) {
-            createHandleProfile.enter(node);
-            createNativeHandleNode.execute(node, wrapper);
-        }
+    protected void toNative() {
+        // The handle is allocated eagerly when creating the ValueWrapper
     }
 
     @ExportMessage
@@ -117,9 +100,7 @@ public final class ValueWrapper implements TruffleObject {
             @Cached KeepAliveNode keepAliveNode,
             @Cached @Exclusive InlinedBranchProfile taggedObjectProfile,
             @Bind Node node) {
-        long handle = wrapper.getHandle();
-        assert handle != ValueWrapperManager.UNSET_HANDLE;
-
+        long handle = wrapper.handle;
         if (ValueWrapperManager.isTaggedObject(handle)) {
             taggedObjectProfile.enter(node);
 
