@@ -18,7 +18,7 @@ require_relative 'cext_structs'
 
 module Truffle::CExt
   DATA_TYPE = Primitive.object_hidden_var_create :data_type
-  DATA_STRUCT = Primitive.object_hidden_var_create :data_struct # struct RData* or struct RTypedData*
+  DATA_STRUCT = Primitive.object_hidden_var_create :data_struct # address of the struct RData* or struct RTypedData*, as a long
   DATA_MARKER = Primitive.object_hidden_var_create :data_marker
   DATA_MEMSIZER = Primitive.object_hidden_var_create :data_memsizer
   RB_TYPE = Primitive.object_hidden_var_create :rb_type
@@ -95,7 +95,9 @@ module Truffle::CExt
     RDATA_RUN_FINALIZER = lib[:rb_tr_rdata_run_finalizer]
     RTYPEDDATA_RUN_FINALIZER = lib[:rb_tr_rtypeddata_run_finalizer]
     RSTRING_PTR_FUNCTION = lib[:rb_tr_rstring_ptr]
-    ENCODING_TO_NATIVE_FUNCTION = lib[:rb_encoding_to_native]
+    SETUP_ENCODING_FUNCTION = lib[:rb_tr_setup_encoding]
+    RB_ENCODINGS_BASE = lib[:rb_tr_encodings]
+    RB_ENCODING_SIZE = Primitive.pointer_read_long(lib[:rb_tr_sizeof_encoding])
     READ_VALUE_POINTER_FUNCTION = lib[:rb_tr_read_VALUE_pointer]
     RDATA_DATA_FUNCTION = lib[:rb_tr_rdata_data]
   end
@@ -210,6 +212,10 @@ module Truffle::CExt
 
     # Creates the FFM upcall stubs and calls rb_tr_init() with them and the constant handles
     Primitive.cext_init_ffm(libtruffleruby, constants)
+
+    # Initialize the native rb_encoding structs of all encodings created so far.
+    # Encodings created later are initialized in rb_encoding_native_address().
+    Encoding.list.each { |encoding| rb_encoding_native_address(encoding) }
 
     Truffle::CExt.cext_start_new_handle_block
   end
@@ -961,13 +967,6 @@ module Truffle::CExt
 
   def rb_str_new_native(pointer, length)
     Primitive.pointer_read_bytes(pointer, length)
-  end
-
-  # A single upcall for rb_enc_str_new(), as it is used for every String created by C extension
-  # code with a known encoding (e.g. every String parsed by the json C extension)
-  def rb_enc_str_new_native(pointer, length, rb_encoding)
-    string = Primitive.pointer_read_bytes(pointer, length)
-    string.force_encoding(rb_encoding_from_native(rb_encoding))
   end
 
   def rb_enc_str_coderange(str)
@@ -1783,7 +1782,7 @@ module Truffle::CExt
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end
-    data_struct.address
+    data_struct
   end
 
   def RTYPEDDATA(object)
@@ -1792,7 +1791,7 @@ module Truffle::CExt
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end
-    data_struct.address
+    data_struct
   end
 
   # The address of the data field of the given native struct RData or struct RTypedData
@@ -1826,7 +1825,7 @@ module Truffle::CExt
     object = ruby_class.__send__(:__layout_allocate__)
     use_cext_lock = Primitive.use_cext_lock?
 
-    rdata = Truffle::FFI::Pointer.new(Primitive.cext_invoke_l_lll(RDATA_CREATE, mark, free, data))
+    rdata = Primitive.cext_invoke_l_lll(RDATA_CREATE, mark, free, data)
     Primitive.object_hidden_var_set object, DATA_STRUCT, rdata
     Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(RDATA_RUN_MARKER, rdata)
     # Could use a simpler finalizer if free == 0
@@ -1842,7 +1841,7 @@ module Truffle::CExt
     object = ruby_class.__send__(:__layout_allocate__)
     use_cext_lock = Primitive.use_cext_lock?
 
-    rtypeddata = Truffle::FFI::Pointer.new(Primitive.cext_invoke_l_ll(RTYPEDDATA_CREATE, data_type, data))
+    rtypeddata = Primitive.cext_invoke_l_ll(RTYPEDDATA_CREATE, data_type, data)
     Primitive.object_hidden_var_set object, DATA_STRUCT, rtypeddata
     Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(RTYPEDDATA_RUN_MARKER, rtypeddata)
     # Could use a simpler finalizer if free == 0
@@ -2353,12 +2352,6 @@ module Truffle::CExt
     Primitive.string_pointer_to_native(string)
   end
 
-  # A single upcall for RSTRING_GETMEM(), which reads both RSTRING_PTR() and RSTRING_LEN()
-  def rb_tr_rstring_getmem(string, len_pointer)
-    Primitive.pointer_write_long(len_pointer, string.bytesize)
-    Primitive.string_pointer_to_native(string)
-  end
-
   def rb_java_class_of(object)
     Truffle::Debug.java_class_of(object)
   end
@@ -2435,10 +2428,6 @@ module Truffle::CExt
         Primitive.cext_pop_lock_and_frame(locked)
       end
     end
-  end
-
-  def rb_tr_pointer(pointer)
-    Truffle::FFI::Pointer.new(pointer)
   end
 
   def rb_exc_set_message(e, mesg)

@@ -447,6 +447,10 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         return UNSAFE.getLong(address);
     }
 
+    public static void rawWriteLong(long address, long value) {
+        UNSAFE.putLong(address, value);
+    }
+
     public static long rawMalloc(long size) {
         return UNSAFE.allocateMemory(size);
     }

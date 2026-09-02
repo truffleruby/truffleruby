@@ -193,10 +193,11 @@ UPCALLS.each_with_index do |(cname, kind, ret, args), index|
   all_params = expand_c_params(carriers)
   all_params = ['void'] if all_params.empty?
   decls << "#{ret_type} (*rb_tr_up_impl_#{cname})(#{all_params.join(', ')});\n"
-  assigns << "  rb_tr_up_impl_#{cname} = (#{ret_type} (*)(#{all_params.join(', ')})) upcalls[#{index}];\n"
+  assigns << "  rb_tr_up_impl_#{cname} = (#{ret_type} (*)(#{all_params.join(', ')})) upcalls[i++];\n"
 end
 init_c << decls
-init_c << "\nvoid rb_tr_init_ffm_upcalls(void **upcalls) {\n"
+init_c << "\n// A counter instead of explicit indexes, so adding or removing an upcall does not renumber every line\n"
+init_c << "void rb_tr_init_ffm_upcalls(void **upcalls) {\n  int i = 0;\n"
 init_c << assigns
 init_c << "}\n"
 
@@ -231,6 +232,11 @@ java << <<~JAVA
           CExtUpcallTargets.runtime = runtime;
       }
 
+      /** Each upcall method has an INDEX_* field assigned from this counter in declaration order, matching the order of
+       * {@code UPCALLS} and of the pointer array passed to rb_tr_init_ffm_upcalls(). This way adding or removing an
+       * upcall does not renumber every index in this file. The fields are still constants in compiled code. */
+      private static int nextUpcallIndex = 0;
+
       @TruffleBoundary
       private static void reportException(CExtFFMLayer runtime, Throwable throwable) {
           if (runtime == null) {
@@ -260,6 +266,8 @@ UPCALLS.each_with_index do |(cname, kind, ret, args), index|
   if cname == 'ruby_native_thread_p'
     # Hand-routed: it is called from native threads not entered in the context, where no upcall is possible.
     # It must also work when no Ruby context has C extension support loaded (runtime == null).
+    # Still consume its index so the INDEX_* fields below stay aligned with the UPCALLS order.
+    java << "    @SuppressWarnings(\"unused\") private static final int INDEX_#{cname} = nextUpcallIndex++;\n\n"
     java << "    @CExtUpcall\n"
     java << "    public static int upcall_ruby_native_thread_p() {\n"
     java << "        final CExtFFMLayer runtime = CExtUpcallTargets.runtime;\n"
@@ -273,10 +281,11 @@ UPCALLS.each_with_index do |(cname, kind, ret, args), index|
 
   raw_names = []
   carriers.each_index { |i| raw_names << "v#{i}" }
-  upcall_arguments = ([index] + raw_names).join(', ')
+  upcall_arguments = (["INDEX_#{cname}"] + raw_names).join(', ')
 
   ret_type = JAVA_TYPES.fetch(ret)
 
+  java << "    private static final int INDEX_#{cname} = nextUpcallIndex++;\n\n"
   java << "    @CExtUpcall\n"
   # wrap the signature at 120 columns like the Eclipse formatter (continuation indent 12)
   signature = "    public static #{ret_type} upcall_#{cname}(#{params.join(', ')}) {"

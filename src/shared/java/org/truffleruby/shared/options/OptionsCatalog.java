@@ -101,9 +101,6 @@ public final class OptionsCatalog {
     public static final OptionKey<Boolean> LOG_DYNAMIC_CONSTANT_LOOKUP_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> LOG_PENDING_INTERRUPTS_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> PRINT_INTERNED_TSTRING_STATS_KEY = new OptionKey<>(false);
-    public static final OptionKey<Boolean> CEXTS_TO_NATIVE_STATS_KEY = new OptionKey<>(false);
-    public static final OptionKey<Boolean> CEXTS_TO_NATIVE_COUNT_KEY = new OptionKey<>(CEXTS_TO_NATIVE_STATS_KEY.getDefaultValue());
-    public static final OptionKey<Boolean> BACKTRACE_ON_TO_NATIVE_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> CEXTS_KEEP_HANDLES_ALIVE_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> LAZY_BUILTINS_KEY = new OptionKey<>(LAZY_CALLTARGETS_KEY.getDefaultValue());
     public static final OptionKey<Boolean> LAZY_TRANSLATION_CORE_KEY = new OptionKey<>(LAZY_CALLTARGETS_KEY.getDefaultValue());
@@ -139,7 +136,6 @@ public final class OptionsCatalog {
     public static final OptionKey<Integer> ARRAY_SMALL_KEY = new OptionKey<>(3);
     public static final OptionKey<Integer> PACK_UNROLL_LIMIT_KEY = new OptionKey<>(4);
     public static final OptionKey<Integer> PACK_RECOVER_LOOP_MIN_KEY = new OptionKey<>(32);
-    public static final OptionKey<Integer> CEXTS_MARKING_CACHE_KEY = new OptionKey<>(100);
     public static final OptionKey<Integer> GLOBAL_VARIABLE_MAX_INVALIDATIONS_KEY = new OptionKey<>(1);
     public static final OptionKey<Boolean> CLONE_DEFAULT_KEY = new OptionKey<>(true);
     public static final OptionKey<Boolean> INLINE_DEFAULT_KEY = new OptionKey<>(true);
@@ -805,30 +801,6 @@ public final class OptionsCatalog {
             .usageSyntax("")
             .build();
 
-    public static final OptionDescriptor CEXTS_TO_NATIVE_STATS = OptionDescriptor
-            .newBuilder(CEXTS_TO_NATIVE_STATS_KEY, "ruby.cexts-to-native-stats")
-            .help("Track the number of conversions of VALUEs to native and print the stats at application exit")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("")
-            .build();
-
-    public static final OptionDescriptor CEXTS_TO_NATIVE_COUNT = OptionDescriptor
-            .newBuilder(CEXTS_TO_NATIVE_COUNT_KEY, "ruby.cexts-to-native-count")
-            .help("Track the number of conversions of VALUEs to native")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("")
-            .build();
-
-    public static final OptionDescriptor BACKTRACE_ON_TO_NATIVE = OptionDescriptor
-            .newBuilder(BACKTRACE_ON_TO_NATIVE_KEY, "ruby.backtraces-to-native")
-            .help("Show a backtrace when a ValueWrapper handle is created for a Ruby object")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("")
-            .build();
-
     public static final OptionDescriptor CEXTS_KEEP_HANDLES_ALIVE = OptionDescriptor
             .newBuilder(CEXTS_KEEP_HANDLES_ALIVE_KEY, "ruby.keep-handles-alive")
             .help("Keep handles for value wrappers alive forever")
@@ -1107,14 +1079,6 @@ public final class OptionsCatalog {
             .category(OptionCategory.INTERNAL)
             .stability(OptionStability.EXPERIMENTAL)
             .usageSyntax("32")
-            .build();
-
-    public static final OptionDescriptor CEXTS_MARKING_CACHE = OptionDescriptor
-            .newBuilder(CEXTS_MARKING_CACHE_KEY, "ruby.cexts-marking-cache")
-            .help("Number of objects converted to native handles before the marking service is run")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("100")
             .build();
 
     public static final OptionDescriptor GLOBAL_VARIABLE_MAX_INVALIDATIONS = OptionDescriptor
@@ -1471,12 +1435,6 @@ public final class OptionsCatalog {
                 return LOG_PENDING_INTERRUPTS;
             case "ruby.print-interned-tstring-stats":
                 return PRINT_INTERNED_TSTRING_STATS;
-            case "ruby.cexts-to-native-stats":
-                return CEXTS_TO_NATIVE_STATS;
-            case "ruby.cexts-to-native-count":
-                return CEXTS_TO_NATIVE_COUNT;
-            case "ruby.backtraces-to-native":
-                return BACKTRACE_ON_TO_NATIVE;
             case "ruby.keep-handles-alive":
                 return CEXTS_KEEP_HANDLES_ALIVE;
             case "ruby.lazy-builtins":
@@ -1547,8 +1505,6 @@ public final class OptionsCatalog {
                 return PACK_UNROLL_LIMIT;
             case "ruby.pack-recover":
                 return PACK_RECOVER_LOOP_MIN;
-            case "ruby.cexts-marking-cache":
-                return CEXTS_MARKING_CACHE;
             case "ruby.global-variable-max-invalidations":
                 return GLOBAL_VARIABLE_MAX_INVALIDATIONS;
             case "ruby.clone-default":
@@ -1684,9 +1640,6 @@ public final class OptionsCatalog {
             LOG_DYNAMIC_CONSTANT_LOOKUP,
             LOG_PENDING_INTERRUPTS,
             PRINT_INTERNED_TSTRING_STATS,
-            CEXTS_TO_NATIVE_STATS,
-            CEXTS_TO_NATIVE_COUNT,
-            BACKTRACE_ON_TO_NATIVE,
             CEXTS_KEEP_HANDLES_ALIVE,
             LAZY_BUILTINS,
             LAZY_TRANSLATION_CORE,
@@ -1722,7 +1675,6 @@ public final class OptionsCatalog {
             ARRAY_SMALL,
             PACK_UNROLL_LIMIT,
             PACK_RECOVER_LOOP_MIN,
-            CEXTS_MARKING_CACHE,
             GLOBAL_VARIABLE_MAX_INVALIDATIONS,
             CLONE_DEFAULT,
             INLINE_DEFAULT,

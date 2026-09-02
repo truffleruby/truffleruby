@@ -160,20 +160,12 @@ public final class Options {
     public final boolean LOG_PENDING_INTERRUPTS;
     /** --print-interned-tstring-stats=false */
     public final boolean PRINT_INTERNED_TSTRING_STATS;
-    /** --cexts-to-native-stats=false */
-    public final boolean CEXTS_TO_NATIVE_STATS;
-    /** --cexts-to-native-count=CEXTS_TO_NATIVE_STATS */
-    public final boolean CEXTS_TO_NATIVE_COUNT;
-    /** --backtraces-to-native=false */
-    public final boolean BACKTRACE_ON_TO_NATIVE;
     /** --keep-handles-alive=false */
     public final boolean CEXTS_KEEP_HANDLES_ALIVE;
     /** --basic-ops-log-rewrite=false */
     public final boolean BASICOPS_LOG_REWRITE;
     /** --array-small=3 */
     public final int ARRAY_SMALL;
-    /** --cexts-marking-cache=100 */
-    public final int CEXTS_MARKING_CACHE;
     /** --global-variable-max-invalidations=1 */
     public final int GLOBAL_VARIABLE_MAX_INVALIDATIONS;
     /** --clone-default=true */
@@ -275,13 +267,9 @@ public final class Options {
         ARGV_GLOBAL_FLAGS = options.get(OptionsCatalog.ARGV_GLOBAL_FLAGS_KEY);
         LOG_PENDING_INTERRUPTS = options.get(OptionsCatalog.LOG_PENDING_INTERRUPTS_KEY);
         PRINT_INTERNED_TSTRING_STATS = options.get(OptionsCatalog.PRINT_INTERNED_TSTRING_STATS_KEY);
-        CEXTS_TO_NATIVE_STATS = options.get(OptionsCatalog.CEXTS_TO_NATIVE_STATS_KEY);
-        CEXTS_TO_NATIVE_COUNT = options.hasBeenSet(OptionsCatalog.CEXTS_TO_NATIVE_COUNT_KEY) ? options.get(OptionsCatalog.CEXTS_TO_NATIVE_COUNT_KEY) : CEXTS_TO_NATIVE_STATS;
-        BACKTRACE_ON_TO_NATIVE = options.get(OptionsCatalog.BACKTRACE_ON_TO_NATIVE_KEY);
         CEXTS_KEEP_HANDLES_ALIVE = options.get(OptionsCatalog.CEXTS_KEEP_HANDLES_ALIVE_KEY);
         BASICOPS_LOG_REWRITE = options.get(OptionsCatalog.BASICOPS_LOG_REWRITE_KEY);
         ARRAY_SMALL = options.get(OptionsCatalog.ARRAY_SMALL_KEY);
-        CEXTS_MARKING_CACHE = options.get(OptionsCatalog.CEXTS_MARKING_CACHE_KEY);
         GLOBAL_VARIABLE_MAX_INVALIDATIONS = options.get(OptionsCatalog.GLOBAL_VARIABLE_MAX_INVALIDATIONS_KEY);
         CLONE_DEFAULT = options.get(OptionsCatalog.CLONE_DEFAULT_KEY);
         INLINE_DEFAULT = options.get(OptionsCatalog.INLINE_DEFAULT_KEY);
@@ -436,20 +424,12 @@ public final class Options {
                 return LOG_PENDING_INTERRUPTS;
             case "ruby.print-interned-tstring-stats":
                 return PRINT_INTERNED_TSTRING_STATS;
-            case "ruby.cexts-to-native-stats":
-                return CEXTS_TO_NATIVE_STATS;
-            case "ruby.cexts-to-native-count":
-                return CEXTS_TO_NATIVE_COUNT;
-            case "ruby.backtraces-to-native":
-                return BACKTRACE_ON_TO_NATIVE;
             case "ruby.keep-handles-alive":
                 return CEXTS_KEEP_HANDLES_ALIVE;
             case "ruby.basic-ops-log-rewrite":
                 return BASICOPS_LOG_REWRITE;
             case "ruby.array-small":
                 return ARRAY_SMALL;
-            case "ruby.cexts-marking-cache":
-                return CEXTS_MARKING_CACHE;
             case "ruby.global-variable-max-invalidations":
                 return GLOBAL_VARIABLE_MAX_INVALIDATIONS;
             case "ruby.clone-default":

@@ -35,7 +35,7 @@ public abstract class ReadCStringNode extends FormatNode {
     Object read(Object pointer,
             @Cached UnwrapNode unwrapNode,
             @Cached CallBlockNode callBlockNode) {
-        return unwrapNode.execute(this, callBlockNode.yield(this, stringReader, pointer));
+        return unwrapNode.execute(this, (long) callBlockNode.yield(this, stringReader, pointer));
     }
 
 }

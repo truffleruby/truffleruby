@@ -37,7 +37,6 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.nodes.Node;
 
 import org.truffleruby.RubyContext;
@@ -134,7 +133,9 @@ public final class CExtFFMLayer {
                 upcalls.writeLong(i * 8L, upcallStubs[i]);
             }
             for (int i = 0; i < constants.length; i++) {
-                constantHandles.writeLong(i * 8L, toValueHandle(constants[i]));
+                /* No need to keep the wrapper alive here like WrapperToHandleNode does: the constants are core classes
+                 * and modules which live as long as the context and strongly reference their cached ValueWrapper. */
+                constantHandles.writeLong(i * 8L, WrapNodeGen.getUncached().execute(constants[i]).handle);
             }
             try {
                 INIT.invokeExact(initFunction, upcalls.getAddress(), constantHandles.getAddress());
@@ -179,18 +180,6 @@ public final class CExtFFMLayer {
             case 'D' -> double.class;
             default -> throw CompilerDirectives.shouldNotReachHere("unsupported carrier " + carrier);
         };
-    }
-
-    @TruffleBoundary
-    private long toValueHandle(Object object) {
-        final ValueWrapper wrapper = WrapNodeGen.getUncached().execute(object);
-        final InteropLibrary interop = InteropLibrary.getUncached();
-        try {
-            interop.toNative(wrapper);
-            return interop.asPointer(wrapper);
-        } catch (Throwable t) {
-            throw CompilerDirectives.shouldNotReachHere(t);
-        }
     }
 
     // region Upcall runtime, called by CExtUpcallTargets

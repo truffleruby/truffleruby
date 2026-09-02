@@ -525,11 +525,6 @@ public final class RubyContext {
             RubyLanguage.LOGGER.info("tstring bytes saved: " + language.tstringCache.getTStringBytesSaved());
             RubyLanguage.LOGGER.info("total tstrings interned: " + language.tstringCache.totalTStrings());
         }
-
-        if (options.CEXTS_TO_NATIVE_STATS) {
-            RubyLanguage.LOGGER.info(
-                    "Total VALUE object to native conversions: " + getValueWrapperManager().totalHandleAllocations());
-        }
         valueWrapperManager.freeAllBlocksInMap();
     }
 

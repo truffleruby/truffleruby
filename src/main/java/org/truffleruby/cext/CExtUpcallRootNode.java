@@ -31,14 +31,17 @@ package org.truffleruby.cext;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
+import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyBaseRootNode;
@@ -123,7 +126,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
     public CExtUpcallRootNode(RubyLanguage language, String name, UpcallSpec spec) {
         super(language, language.EMPTY_DECLARATION_DESCRIPTOR, null);
         this.name = name;
-        this.executeUpcall = CExtUpcallRootNodeFactory.ExecuteUpcallNodeGen.create(spec);
+        this.executeUpcall = new ExecuteUpcallNode(spec);
     }
 
     @Override
@@ -146,102 +149,197 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         return getName();
     }
 
-    public abstract static class ExecuteUpcallNode extends RubyBaseNode {
+    public static final class ExecuteUpcallNode extends RubyBaseNode {
 
-        protected final UpcallSpec spec;
+        private final String rubyName;
+        /** Unwraps the receiver (the first argument, a VALUE) for {@link Kind#SEND}, null for {@link Kind#CEXT} */
+        @Child private UpcallArgumentNode receiverNode;
+        @Children private final UpcallArgumentNode[] argumentNodes;
+        @Child private DispatchNode dispatchNode = DispatchNode.create();
+        @Child private UpcallResultNode resultNode;
 
-        protected ExecuteUpcallNode(UpcallSpec spec) {
-            this.spec = spec;
+        ExecuteUpcallNode(UpcallSpec spec) {
+            this.rubyName = spec.rubyName;
+            final Carrier[] carriers = spec.argumentCarriers;
+            final int argumentsOffset;
+            if (spec.kind == Kind.SEND) {
+                assert carriers[0] == Carrier.VALUE;
+                this.receiverNode = UpcallArgumentNode.create(Carrier.VALUE);
+                argumentsOffset = 1;
+            } else {
+                argumentsOffset = 0;
+            }
+            final var argumentNodes = new UpcallArgumentNode[carriers.length - argumentsOffset];
+            for (int i = 0; i < argumentNodes.length; i++) {
+                argumentNodes[i] = UpcallArgumentNode.create(carriers[argumentsOffset + i]);
+            }
+            this.argumentNodes = argumentNodes;
+            this.resultNode = UpcallResultNode.create(spec.returnCarrier);
         }
-
-        public abstract Object execute(Object[] rawArguments);
 
         @ExplodeLoop
-        @Specialization
-        Object upcall(Object[] rawArguments,
-                @Cached UnwrapNode unwrapNode,
-                @Cached WrapNode wrapNode,
-                @Cached IDToSymbolNode idToSymbolNode,
-                @Cached SymbolToIDNode symbolToIDNode,
-                @Cached DispatchNode dispatchNode,
-                @Cached WrapperToHandleNode wrapperToHandleNode) {
+        public Object execute(Object[] rawArguments) {
             final Object receiver;
-            final String methodName;
             final int argumentsOffset;
-            if (spec.kind == Kind.CEXT) {
-                receiver = coreLibrary().truffleCExtModule;
-                methodName = spec.rubyName;
-                argumentsOffset = 0;
-            } else {
-                receiver = unwrapNode.execute(this, rawArguments[0]);
-                methodName = spec.rubyName;
+            if (receiverNode != null) {
+                receiver = receiverNode.execute(rawArguments[0]);
                 argumentsOffset = 1;
+            } else {
+                receiver = coreLibrary().truffleCExtModule;
+                argumentsOffset = 0;
             }
-            CompilerAsserts.partialEvaluationConstant(argumentsOffset);
 
-            final Object[] arguments = new Object[spec.argumentCarriers.length - argumentsOffset];
+            final Object[] arguments = new Object[argumentNodes.length];
             for (int i = 0; i < arguments.length; i++) {
-                final int carrierIndex = argumentsOffset + i;
-                CompilerAsserts.partialEvaluationConstant(carrierIndex);
-                arguments[i] = convertArgument(spec.argumentCarriers[carrierIndex],
-                        rawArguments[carrierIndex], unwrapNode, idToSymbolNode);
+                int index = argumentsOffset + i;
+                CompilerAsserts.partialEvaluationConstant(index);
+                arguments[i] = argumentNodes[i].execute(rawArguments[index]);
             }
 
-            final Object result = dispatchNode.call(DispatchConfiguration.PRIVATE, receiver, methodName, arguments);
+            final Object result = dispatchNode.call(DispatchConfiguration.PRIVATE, receiver, rubyName, arguments);
 
-            return convertResult(result, wrapNode, symbolToIDNode, wrapperToHandleNode);
+            return resultNode.execute(result);
         }
+    }
 
-        private Object convertArgument(Carrier carrier, Object raw, UnwrapNode unwrapNode,
-                IDToSymbolNode idToSymbolNode) {
-            CompilerAsserts.partialEvaluationConstant(carrier);
+    /** Converts one raw boxed upcall argument to the corresponding Ruby value, per its {@link Carrier} */
+    public abstract static class UpcallArgumentNode extends RubyBaseNode {
+
+        static UpcallArgumentNode create(Carrier carrier) {
             return switch (carrier) {
-                case VALUE -> unwrapNode.execute(this, raw);
-                case INT, LONG, DOUBLE, POINTER -> raw;
-                case ID -> idToSymbolNode.execute(raw);
-                default -> throw CompilerDirectives.shouldNotReachHere();
+                case VALUE -> CExtUpcallRootNodeFactory.ValueArgumentNodeGen.create();
+                case INT, LONG, DOUBLE, POINTER -> new PassThroughArgumentNode();
+                case ID -> CExtUpcallRootNodeFactory.IDArgumentNodeGen.create();
+                default -> throw CompilerDirectives.shouldNotReachHere(carrier.name());
             };
         }
 
-        /** The Truffle::CExt methods only return values these conversions handle, no need for anything fancier like
-         * InteropLibrary here. */
-        private Object convertResult(Object result, WrapNode wrapNode, SymbolToIDNode symbolToIDNode,
-                WrapperToHandleNode wrapperToHandleNode) {
-            return switch (spec.returnCarrier) {
-                case VOID -> Nil.INSTANCE;
-                case VALUE -> wrapperToHandleNode.execute(this, wrapNode.execute(result));
-                case WRAPPED, ID -> {
-                    final Object value = spec.returnCarrier == Carrier.WRAPPED
-                            ? result
-                            : symbolToIDNode.execute(result);
-                    yield value instanceof Long longValue
-                            ? longValue
-                            : wrapperToHandleNode.execute(this, (ValueWrapper) value);
-                }
-                case INT -> switch (result) {
-                    case Integer intValue -> intValue;
-                    case Long longValue -> (int) (long) longValue;
-                    default -> throw unexpectedValue(result);
-                };
-                case LONG, POINTER -> switch (result) {
-                    case Long longValue -> longValue;
-                    case Integer intValue -> (long) intValue;
-                    default -> throw unexpectedValue(result);
-                };
-                case DOUBLE -> (double) result;
-                case BOOL -> (boolean) result ? 1 : 0;
+        public abstract Object execute(Object rawArgument);
+    }
+
+    static final class PassThroughArgumentNode extends UpcallArgumentNode {
+        @Override
+        public Object execute(Object rawArgument) {
+            return rawArgument;
+        }
+    }
+
+    abstract static class ValueArgumentNode extends UpcallArgumentNode {
+        @Specialization
+        static Object unwrap(long rawArgument,
+                @Bind Node node,
+                @Cached UnwrapNode unwrapNode) {
+            return unwrapNode.execute(node, rawArgument);
+        }
+    }
+
+    abstract static class IDArgumentNode extends UpcallArgumentNode {
+        @Specialization
+        static RubySymbol idToSymbol(Object rawArgument,
+                @Cached IDToSymbolNode idToSymbolNode) {
+            return idToSymbolNode.execute(rawArgument);
+        }
+    }
+
+    /** Converts the Ruby result of an upcall to the raw value the FFM upcall stub returns, per the return
+     * {@link Carrier}. The Truffle::CExt methods only return values these conversions handle, no need for anything
+     * fancier like InteropLibrary here. */
+    public abstract static class UpcallResultNode extends RubyBaseNode {
+
+        static UpcallResultNode create(Carrier carrier) {
+            return switch (carrier) {
+                case VOID -> new VoidResultNode();
+                case VALUE -> CExtUpcallRootNodeFactory.ValueResultNodeGen.create();
+                case WRAPPED -> CExtUpcallRootNodeFactory.WrappedResultNodeGen.create();
+                case ID -> CExtUpcallRootNodeFactory.IDResultNodeGen.create();
+                case INT -> CExtUpcallRootNodeFactory.IntResultNodeGen.create();
+                case LONG, POINTER -> CExtUpcallRootNodeFactory.LongResultNodeGen.create();
+                case DOUBLE -> CExtUpcallRootNodeFactory.DoubleResultNodeGen.create();
+                case BOOL -> CExtUpcallRootNodeFactory.BoolResultNodeGen.create();
             };
         }
 
-        private RuntimeException unexpectedValue(Object result) {
-            CompilerDirectives.transferToInterpreterAndInvalidate();
-            return unexpectedValueException(result);
+        public abstract Object execute(Object value);
+    }
+
+    static final class VoidResultNode extends UpcallResultNode {
+        @Override
+        public Object execute(Object value) {
+            return Nil.INSTANCE;
+        }
+    }
+
+    abstract static class ValueResultNode extends UpcallResultNode {
+        @Specialization
+        static long wrap(Object value,
+                @Bind Node node,
+                @Cached WrapNode wrapNode,
+                @Cached WrapperToHandleNode wrapperToHandleNode) {
+            return wrapperToHandleNode.execute(node, wrapNode.execute(value));
+        }
+    }
+
+    abstract static class WrappedResultNode extends UpcallResultNode {
+        @Specialization
+        static long handle(long value) {
+            return value;
         }
 
-        @TruffleBoundary
-        private RuntimeException unexpectedValueException(Object result) {
-            throw CompilerDirectives.shouldNotReachHere(
-                    "unexpected value for carrier " + spec.returnCarrier + " of " + spec.rubyName + ": " + result);
+        @Specialization
+        static long wrapperToHandle(ValueWrapper value,
+                @Bind Node node,
+                @Cached WrapperToHandleNode wrapperToHandleNode) {
+            return wrapperToHandleNode.execute(node, value);
+        }
+    }
+
+    abstract static class IDResultNode extends UpcallResultNode {
+        @Specialization
+        static Object symbolToID(Object value,
+                @Bind Node node,
+                @Cached SymbolToIDNode symbolToIDNode,
+                @Cached WrapperToHandleNode wrapperToHandleNode,
+                @Cached InlinedConditionProfile longProfile) {
+            final Object id = symbolToIDNode.execute(value);
+            if (longProfile.profile(node, id instanceof Long)) {
+                return id;
+            } else {
+                return wrapperToHandleNode.execute(node, (ValueWrapper) id);
+            }
+        }
+    }
+
+    abstract static class IntResultNode extends UpcallResultNode {
+        @Specialization
+        static int doInt(int value) {
+            return value;
+        }
+
+        @Specialization
+        static int doLong(long value) {
+            return (int) value;
+        }
+    }
+
+    abstract static class LongResultNode extends UpcallResultNode {
+        /** Also accepts int results through the implicit int-to-long cast of RubyTypes */
+        @Specialization
+        static long doLong(long value) {
+            return value;
+        }
+    }
+
+    abstract static class DoubleResultNode extends UpcallResultNode {
+        @Specialization
+        static double doDouble(double value) {
+            return value;
+        }
+    }
+
+    abstract static class BoolResultNode extends UpcallResultNode {
+        @Specialization
+        static int doBoolean(boolean value) {
+            return value ? 1 : 0;
         }
     }
 

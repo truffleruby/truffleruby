@@ -14,19 +14,16 @@ import java.lang.ref.WeakReference;
 import java.lang.ref.Cleaner.Cleanable;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.profiles.InlinedBranchProfile;
+import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.SuppressFBWarnings;
-import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.language.ImmutableRubyObject;
 import org.truffleruby.language.NotProvided;
@@ -36,17 +33,9 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.interop.TruffleObject;
-import com.oracle.truffle.api.interop.UnsupportedMessageException;
-import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.library.ExportLibrary;
-import com.oracle.truffle.api.library.ExportMessage;
 
 @SuppressFBWarnings("VO")
 public final class ValueWrapperManager {
-
-    static final long UNSET_HANDLE = -2L;
 
     /* These constants are taken from lib/cext/include/ruby/internal/special_consts.h with USE_FLONUM=false */
 
@@ -166,16 +155,6 @@ public final class ValueWrapperManager {
         }
     }
 
-    private final AtomicLong counter = new AtomicLong();
-
-    protected void recordHandleAllocation() {
-        counter.incrementAndGet();
-    }
-
-    public long totalHandleAllocations() {
-        return counter.get();
-    }
-
     /** A valid handle is of the form, bits (MSB first):
      * <ul>
      * <li>0-20: "0bade" in hexadecimal, "00001011101011011110" in binary. The sign bit is 0 to stay positive</li>
@@ -221,6 +200,13 @@ public final class ValueWrapperManager {
         }
     }
 
+    /** A block of handles. A HandleBlock is only ever mutated ({@link #registerWrapper(ValueWrapper)}) by the single
+     * fiber which currently has it in its {@link HandleBlockHolder} (fibers run on one thread at a time), so
+     * {@code count} and {@code wrappers} need no synchronization. Once a full block is replaced by a fresh one in the
+     * holder it is never mutated again. Other fibers only read already-registered wrappers through
+     * {@link #getWrapper(long, boolean)}. This holds for {@code HandleBlockHolder#sharedHandleBlock} too: "shared"
+     * refers to the wrapped objects being shared (immutable) and to the block being registered in the process-wide
+     * {@code RubyLanguage#handleBlockSharedMap}, not to the block being filled by multiple fibers. */
     public static final class HandleBlock {
 
         private final long base;
@@ -281,12 +267,16 @@ public final class ValueWrapperManager {
             return count == BLOCK_SIZE;
         }
 
-        public long setHandleOnWrapper(ValueWrapper wrapper) {
-            long handle = getBase() + count * Pointer.SIZE;
-            wrapper.setHandle(handle, this);
+        /** The handle the next wrapper registered in this block will get, passed to the ValueWrapper constructor before
+         * {@link #registerWrapper(ValueWrapper)} so {@code ValueWrapper#handle} can be final */
+        public long nextHandle() {
+            return base + count * Pointer.SIZE;
+        }
+
+        public void registerWrapper(ValueWrapper wrapper) {
+            assert wrapper.handle == nextHandle();
             wrappers[count] = new ValueWrapperWeakReference(wrapper);
             count++;
-            return handle;
         }
 
         public static int getBlockIndex(long handle) {
@@ -313,9 +303,8 @@ public final class ValueWrapperManager {
         private HandleBlock sharedHandleBlock = null;
     }
 
-    /** The same conversion as ValueWrapper's toNative and asPointer interop messages: returns the handle of the
-     * wrapper, allocating it if needed, and keeps wrappers with a tagged object handle alive until the end of the
-     * current C extension call. */
+    /** The same conversion as ValueWrapper's asPointer interop message: returns the handle of the wrapper, and keeps
+     * wrappers with a tagged object handle alive until the end of the current C extension call. */
     @GenerateUncached
     @GenerateInline
     @GenerateCached(false)
@@ -325,58 +314,35 @@ public final class ValueWrapperManager {
 
         @Specialization
         static long wrapperToHandle(Node node, ValueWrapper wrapper,
-                @Cached AllocateHandleNode allocateHandleNode,
                 @Cached KeepAliveNode keepAliveNode,
-                @Cached InlinedBranchProfile createHandleProfile,
-                @Cached InlinedBranchProfile taggedObjectProfile) {
-            long handle = wrapper.getHandle();
-            if (handle == UNSET_HANDLE) {
-                createHandleProfile.enter(node);
-                handle = allocateHandleNode.execute(node, wrapper);
-            }
-            if (isTaggedObject(handle)) {
-                taggedObjectProfile.enter(node);
+                @Cached InlinedConditionProfile taggedObjectProfile) {
+            final long handle = wrapper.handle;
+            if (taggedObjectProfile.profile(node, isTaggedObject(handle))) {
                 keepAliveNode.execute(node, wrapper);
             }
             return handle;
         }
     }
 
+    /** Creates the ValueWrapper for an object which needs a tagged object handle, allocating the handle eagerly so
+     * {@code ValueWrapper#handle} can be final. */
     @GenerateUncached
     @GenerateInline
     @GenerateCached(false)
-    public abstract static class AllocateHandleNode extends RubyBaseNode {
+    public abstract static class CreateWrapperNode extends RubyBaseNode {
 
         private static final Set<ValueWrapper> keepAlive = ConcurrentHashMap.newKeySet();
 
-        public abstract long execute(Node node, ValueWrapper wrapper);
+        public abstract ValueWrapper execute(Node node, Object object);
 
-        @Specialization(guards = "!isSharedObject(wrapper)")
-        static long allocateHandleOnKnownThread(Node node, ValueWrapper wrapper) {
-            if (getContext(node).getOptions().CEXTS_KEEP_HANDLES_ALIVE) {
-                keepAlive(wrapper);
-            }
-            return allocateHandle(
-                    node,
-                    wrapper,
-                    getContext(node),
-                    getLanguage(node),
-                    getBlockHolder(getLanguage(node)),
-                    false);
+        @Specialization(guards = "!isSharedObject(object)")
+        static ValueWrapper createWrapperOnKnownThread(Node node, Object object) {
+            return createWrapper(object, getContext(node), getLanguage(node), false);
         }
 
-        @Specialization(guards = "isSharedObject(wrapper)")
-        static long allocateSharedHandleOnKnownThread(Node node, ValueWrapper wrapper) {
-            if (getContext(node).getOptions().CEXTS_KEEP_HANDLES_ALIVE) {
-                keepAlive(wrapper);
-            }
-            return allocateHandle(
-                    node,
-                    wrapper,
-                    getContext(node),
-                    getLanguage(node),
-                    getBlockHolder(getLanguage(node)),
-                    true);
+        @Specialization(guards = "isSharedObject(object)")
+        static ValueWrapper createSharedWrapperOnKnownThread(Node node, Object object) {
+            return createWrapper(object, getContext(node), getLanguage(node), true);
         }
 
         @TruffleBoundary
@@ -384,21 +350,14 @@ public final class ValueWrapperManager {
             keepAlive.add(wrapper);
         }
 
-        protected static long allocateHandle(Node node, ValueWrapper wrapper, RubyContext context,
-                RubyLanguage language, HandleBlockHolder holder, boolean shared) {
+        protected static ValueWrapper createWrapper(Object object, RubyContext context,
+                RubyLanguage language, boolean shared) {
+            final HandleBlockHolder holder = getBlockHolder(language);
             HandleBlock block;
             if (shared) {
                 block = holder.sharedHandleBlock;
             } else {
                 block = holder.handleBlock;
-            }
-
-            if (context.getOptions().CEXTS_TO_NATIVE_COUNT) {
-                context.getValueWrapperManager().recordHandleAllocation();
-            }
-
-            if (context.getOptions().BACKTRACE_ON_TO_NATIVE) {
-                context.getDefaultBacktraceFormatter().printBacktraceOnEnvStderr("ValueWrapper#toNative: ", node);
             }
 
             if (block == null || block.isFull()) {
@@ -411,11 +370,17 @@ public final class ValueWrapperManager {
                 }
 
             }
-            return block.setHandleOnWrapper(wrapper);
+
+            final ValueWrapper wrapper = new ValueWrapper(object, block.nextHandle(), block);
+            block.registerWrapper(wrapper);
+            if (context.getOptions().CEXTS_KEEP_HANDLES_ALIVE) {
+                keepAlive(wrapper);
+            }
+            return wrapper;
         }
 
-        protected static boolean isSharedObject(ValueWrapper wrapper) {
-            return wrapper.getObject() instanceof ImmutableRubyObject;
+        protected static boolean isSharedObject(Object object) {
+            return object instanceof ImmutableRubyObject;
         }
     }
 
@@ -445,94 +410,6 @@ public final class ValueWrapperManager {
 
     public static long untagTaggedLong(long handle) {
         return handle >> 1;
-    }
-
-    @ExportLibrary(InteropLibrary.class)
-    @GenerateUncached
-    public static final class UnwrapperFunction implements TruffleObject {
-
-        @ExportMessage
-        protected boolean isExecutable() {
-            return true;
-        }
-
-        @ExportMessage
-        protected Object execute(Object[] arguments,
-                @Cached UnwrapNode unwrapNode,
-                @Bind Node node) {
-            return unwrapNode.execute(node, arguments[0]);
-        }
-    }
-
-    @ExportLibrary(InteropLibrary.class)
-    @GenerateUncached
-    public static final class ID2SymbolFunction implements TruffleObject {
-
-        @ExportMessage
-        protected boolean isExecutable() {
-            return true;
-        }
-
-        @ExportMessage
-        public RubySymbol execute(Object[] arguments,
-                @Cached IDToSymbolNode unwrapIDNode) {
-            return unwrapIDNode.execute(arguments[0]);
-        }
-    }
-
-    @ExportLibrary(InteropLibrary.class)
-    @GenerateUncached
-    public static final class Symbol2IDFunction implements TruffleObject {
-
-        @ExportMessage
-        protected boolean isExecutable() {
-            return true;
-        }
-
-        @ExportMessage
-        public Object execute(Object[] arguments,
-                @Cached UnwrapNode unwrapNode,
-                @Cached SymbolToIDNode symbolTOIDNode,
-                @Bind Node node) {
-            return symbolTOIDNode.execute(unwrapNode.execute(node, arguments[0]));
-        }
-    }
-
-    @ExportLibrary(InteropLibrary.class)
-    @GenerateUncached
-    public static final class WrapperFunction implements TruffleObject {
-
-        @ExportMessage
-        protected boolean isExecutable() {
-            return true;
-        }
-
-        @ExportMessage
-        protected ValueWrapper execute(Object[] arguments,
-                @Cached WrapNode wrapNode) {
-            return wrapNode.execute(arguments[0]);
-        }
-    }
-
-    @ExportLibrary(InteropLibrary.class)
-    @GenerateUncached
-    public static final class ToNativeObjectFunction implements TruffleObject {
-
-        @ExportMessage
-        protected boolean isExecutable() {
-            return true;
-        }
-
-        @ExportMessage
-        protected long execute(Object[] arguments,
-                @CachedLibrary(limit = "1") InteropLibrary values) {
-            values.toNative(arguments[0]);
-            try {
-                return values.asPointer(arguments[0]);
-            } catch (UnsupportedMessageException e) {
-                throw CompilerDirectives.shouldNotReachHere(e);
-            }
-        }
     }
 
 }

@@ -38,7 +38,6 @@ import org.truffleruby.annotations.Primitive;
 import org.truffleruby.annotations.Visibility;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
-import org.truffleruby.cext.UnwrapNode.UnwrapCArrayNode;
 import org.truffleruby.core.MarkingService.ExtensionCallStack;
 import org.truffleruby.core.MarkingServiceNodes;
 import org.truffleruby.core.MarkingServiceNodes.RunMarkOnExitNode;
@@ -126,6 +125,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.ReportPolymorphism;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -1285,6 +1285,85 @@ public abstract class CExtNodes {
         }
     }
 
+    /** A single upcall for RSTRING_GETMEM(): writes RSTRING_LEN() to lenPointer and returns RSTRING_PTR(). Hot for the
+     * json parser, whose string cache calls RSTRING_GETMEM on a cached String for every cache probe. */
+    @CoreMethod(names = "rb_tr_rstring_getmem", onSingleton = true, required = 2)
+    public abstract static class RbTrRStringGetMemNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization(guards = "libString.isRubyString(this, string)", limit = "1")
+        static long getmem(Object string, long lenPointer,
+                @Bind Node node,
+                @Cached RubyStringLibrary libString,
+                @Cached StringToNativeNode stringToNativeNode) {
+            Pointer pointer = stringToNativeNode.executeToNative(node, string, true);
+            int byteLength = libString.getTString(node, string).byteLength(libString.getTEncoding(node, string));
+            Pointer.rawWriteLong(lenPointer, byteLength);
+            return pointer.getAddress();
+        }
+    }
+
+    /** A single upcall for rb_enc_str_new(): creates the String with the right Encoding directly, avoiding a separate
+     * force_encoding and encoding lookup. Hot for the json parser, which creates every parsed String this way. The
+     * Encoding is looked up from the native rb_encoding address with an inline cache, as C extensions use very few
+     * distinct encodings. */
+    @CoreMethod(names = "rb_enc_str_new_native", onSingleton = true, required = 3, lowerFixnum = 2)
+    public abstract static class RbEncStrNewNativeNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization(guards = "rbEncoding == cachedRbEncoding", limit = "4")
+        RubyString encStrNewCached(long pointer, int length, long rbEncoding,
+                @Cached("rbEncoding") long cachedRbEncoding,
+                @Cached("lookupEncoding(rbEncoding)") RubyEncoding cachedEncoding,
+                @Cached @Shared TruffleString.FromNativePointerNode fromNativePointerNode) {
+            var tstring = fromNativePointerNode.execute(pointer, 0, length, cachedEncoding.tencoding, true);
+            return createString(tstring, cachedEncoding);
+        }
+
+        @Specialization(replaces = "encStrNewCached")
+        RubyString encStrNewGeneric(long pointer, int length, long rbEncoding,
+                @Cached DispatchNode dispatchNode,
+                @Cached @Shared TruffleString.FromNativePointerNode fromNativePointerNode) {
+            var encoding = (RubyEncoding) dispatchNode.call(coreLibrary().truffleCExtModule, "rb_encoding_from_native",
+                    rbEncoding);
+            var tstring = fromNativePointerNode.execute(pointer, 0, length, encoding.tencoding, true);
+            return createString(tstring, encoding);
+        }
+
+        protected RubyEncoding lookupEncoding(long rbEncoding) {
+            return (RubyEncoding) DispatchNode.getUncached().call(
+                    getContext().getCoreLibrary().truffleCExtModule, "rb_encoding_from_native", rbEncoding);
+        }
+    }
+
+    /** A single upcall for rb_str_new_cstr() & similar: reads the zero-terminated C string and creates the String with
+     * the right Encoding in one pass, instead of a strlen() followed by reading the bytes. */
+    @CoreMethod(names = "rb_tr_enc_str_new_cstr", onSingleton = true, required = 2)
+    public abstract static class RbTrEncStrNewCStrNode extends CoreMethodArrayArgumentsNode {
+
+        @Specialization(guards = "rbEncoding == cachedRbEncoding", limit = "4")
+        RubyString encStrNewCStrCached(long pointer, long rbEncoding,
+                @Cached("rbEncoding") long cachedRbEncoding,
+                @Cached("lookupEncoding(rbEncoding)") RubyEncoding cachedEncoding,
+                @Cached @Shared TruffleString.FromZeroTerminatedNativePointerNode fromZeroTerminatedNativePointerNode) {
+            var tstring = fromZeroTerminatedNativePointerNode.execute8Bit(pointer, 0, cachedEncoding.tencoding, true);
+            return createString(tstring, cachedEncoding);
+        }
+
+        @Specialization(replaces = "encStrNewCStrCached")
+        RubyString encStrNewCStrGeneric(long pointer, long rbEncoding,
+                @Cached DispatchNode dispatchNode,
+                @Cached @Shared TruffleString.FromZeroTerminatedNativePointerNode fromZeroTerminatedNativePointerNode) {
+            var encoding = (RubyEncoding) dispatchNode.call(coreLibrary().truffleCExtModule, "rb_encoding_from_native",
+                    rbEncoding);
+            var tstring = fromZeroTerminatedNativePointerNode.execute8Bit(pointer, 0, encoding.tencoding, true);
+            return createString(tstring, encoding);
+        }
+
+        protected RubyEncoding lookupEncoding(long rbEncoding) {
+            return (RubyEncoding) DispatchNode.getUncached().call(
+                    getContext().getCoreLibrary().truffleCExtModule, "rb_encoding_from_native", rbEncoding);
+        }
+    }
+
     @CoreMethod(names = "string_to_ffi_pointer_inplace", onSingleton = true, required = 1)
     public abstract static class StringToFFIPointerInplaceNode extends CoreMethodArrayArgumentsNode {
 
@@ -1693,33 +1772,21 @@ public abstract class CExtNodes {
     public abstract static class UnwrapValueNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        Object unwrap(Object value,
-                @Cached InlinedBranchProfile exceptionProfile,
+        Object unwrap(long handle,
                 @Cached UnwrapNode unwrapNode) {
-            Object object = unwrapNode.execute(this, value);
-            if (object == null) {
-                exceptionProfile.enter(this);
-                throw new RaiseException(getContext(), coreExceptions().runtimeError(exceptionMessage(value), this));
-            } else {
-                return object;
-            }
-        }
-
-        @TruffleBoundary
-        private String exceptionMessage(Object value) {
-            return String.format("native handle not found (%s)", value);
+            return unwrapNode.execute(this, handle);
         }
     }
 
     @Primitive(name = "cext_to_wrapper")
     public abstract static class CExtToWrapperNode extends PrimitiveArrayArgumentsNode {
         @Specialization
-        ValueWrapper toWrapper(Object value,
-                @Cached UnwrapNode.ToWrapperNode toWrapperNode) {
-            ValueWrapper wrapper = toWrapperNode.execute(this, value);
+        ValueWrapper toWrapper(long handle,
+                @Cached ToWrapperNode toWrapperNode) {
+            ValueWrapper wrapper = toWrapperNode.execute(this, handle);
             if (wrapper == null) {
                 CompilerDirectives.transferToInterpreterAndInvalidate();
-                throw CompilerDirectives.shouldNotReachHere("ValueWrapper not found for " + value);
+                throw CompilerDirectives.shouldNotReachHere("ValueWrapper not found for " + handle);
             }
             return wrapper;
         }
@@ -1743,10 +1810,10 @@ public abstract class CExtNodes {
     public abstract static class AddToMarkList extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        Object rbGCMark(Object markedObject,
+        Object rbGCMark(long handle,
                 @Cached InlinedBranchProfile noExceptionProfile,
-                @Cached UnwrapNode.ToWrapperNode toWrapperNode) {
-            ValueWrapper wrappedValue = toWrapperNode.execute(this, markedObject);
+                @Cached ToWrapperNode toWrapperNode) {
+            ValueWrapper wrappedValue = toWrapperNode.execute(this, handle);
             if (wrappedValue != null) {
                 noExceptionProfile.enter(this);
                 getContext().getMarkingService()
@@ -1764,11 +1831,11 @@ public abstract class CExtNodes {
     public abstract static class GCGuardNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        Object addToMarkList(Object guardedObject,
+        Object addToMarkList(long handle,
                 @Cached MarkingServiceNodes.KeepAliveNode keepAliveNode,
                 @Cached InlinedBranchProfile noExceptionProfile,
-                @Cached UnwrapNode.ToWrapperNode toWrapperNode) {
-            ValueWrapper wrappedValue = toWrapperNode.execute(this, guardedObject);
+                @Cached ToWrapperNode toWrapperNode) {
+            ValueWrapper wrappedValue = toWrapperNode.execute(this, handle);
             if (wrappedValue != null) {
                 noExceptionProfile.enter(this);
                 keepAliveNode.execute(this, wrappedValue);
@@ -1801,51 +1868,6 @@ public abstract class CExtNodes {
         Object checkInts() {
             TruffleSafepoint.pollHere(this);
             return nil;
-        }
-    }
-
-    @CoreMethod(names = "rb_tr_unwrap_function", onSingleton = true, required = 0)
-    public abstract static class UnwrapperFunctionNode extends CoreMethodArrayArgumentsNode {
-
-        @Specialization
-        Object unwrapFunction() {
-            return new ValueWrapperManager.UnwrapperFunction();
-        }
-    }
-
-    @CoreMethod(names = "rb_tr_id2sym_function", onSingleton = true, required = 0)
-    public abstract static class UnwrapperIDFunctionNode extends CoreMethodArrayArgumentsNode {
-
-        @Specialization
-        Object unwrapFunction() {
-            return new ValueWrapperManager.ID2SymbolFunction();
-        }
-    }
-
-    @CoreMethod(names = "rb_tr_sym2id_function", onSingleton = true, required = 0)
-    public abstract static class Sym2IDFunctionNode extends CoreMethodArrayArgumentsNode {
-
-        @Specialization
-        Object unwrapFunction() {
-            return new ValueWrapperManager.Symbol2IDFunction();
-        }
-    }
-
-    @CoreMethod(names = "rb_tr_wrap_function", onSingleton = true, required = 0)
-    public abstract static class WrapperFunctionNode extends CoreMethodArrayArgumentsNode {
-
-        @Specialization
-        Object wrapFunction() {
-            return new ValueWrapperManager.WrapperFunction();
-        }
-    }
-
-    @CoreMethod(names = "rb_tr_force_native_function", onSingleton = true, required = 0)
-    public abstract static class ToNativeFunctionNode extends CoreMethodArrayArgumentsNode {
-
-        @Specialization
-        Object wrapFunction() {
-            return new ValueWrapperManager.ToNativeObjectFunction();
         }
     }
 

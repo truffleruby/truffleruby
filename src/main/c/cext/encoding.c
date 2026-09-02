@@ -19,10 +19,16 @@ rb_encoding* rb_to_encoding(VALUE encoding) {
   return (rb_encoding *) rb_tr_up_rb_to_encoding(encoding);
 }
 
-rb_encoding* rb_encoding_to_native(char* name) {
-  OnigEncodingType* native = ruby_xcalloc(1, sizeof(rb_encoding)); // ruby_xcalloc() to zero-fill
-  native->name = name;
-  return native;
+// Must match org.truffleruby.core.encoding.Encodings.MAX_NUMBER_OF_ENCODINGS
+#define RB_TR_MAX_ENCODINGS 256
+
+/* All native rb_encoding structs live in this single block, ordered by the Ruby Encoding's index, so the index can be
+ * computed from the address and vice versa without any lookup table (see rb_encoding_from_native() in Ruby). */
+OnigEncodingType rb_tr_encodings[RB_TR_MAX_ENCODINGS];
+const long rb_tr_sizeof_encoding = sizeof(OnigEncodingType);
+
+void rb_tr_setup_encoding(long index, char* name) {
+  rb_tr_encodings[index].name = name;
 }
 
 rb_encoding* rb_default_external_encoding(void) {
@@ -377,9 +383,7 @@ VALUE rb_enc_str_new_cstr(const char *ptr, rb_encoding *enc) {
     rb_raise(rb_eArgError, "wchar encoding given");
   }
 
-  VALUE string = rb_str_new_cstr(ptr);
-  rb_enc_associate(string, enc);
-  return string;
+  return rb_tr_up_rb_tr_enc_str_new_cstr(ptr, enc);
 }
 
 VALUE rb_enc_str_new_static(const char *ptr, long len, rb_encoding *enc) {
