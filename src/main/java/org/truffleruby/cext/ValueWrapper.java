@@ -14,6 +14,8 @@ import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import org.truffleruby.cext.ValueWrapperManager.HandleBlock;
+import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
+import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
 import org.truffleruby.debug.VariableNamesObject;
 import org.truffleruby.interop.TranslateInteropExceptionNode;
 
@@ -33,13 +35,16 @@ import com.oracle.truffle.api.library.ExportMessage;
 @ExportLibrary(InteropLibrary.class)
 public final class ValueWrapper implements TruffleObject {
 
+    /** {@code null} if this is a tagged long, otherwise the Ruby object. */
     private final Object object;
+    /** Consider using {@link WrapperToHandleNode} or {@link KeepAliveNode} when passing the handle to C */
     public final long handle;
-    /* The handleBlock is held here to keep it alive and prevent the memory freed while wrappers still exist with
+    /** The handleBlock is held here to keep it alive and prevent the memory freed while wrappers still exist with
      * handles in it. */
     @SuppressWarnings("unused") private final HandleBlock handleBlock;
 
     public ValueWrapper(Object object, long handle, HandleBlock handleBlock) {
+        assert (object == null) == ValueWrapperManager.isTaggedLong(handle);
         this.object = object;
         this.handle = handle;
         this.handleBlock = handleBlock;
