@@ -3362,8 +3362,8 @@ module Commands
     # Lint
     rubocop if changed['.rb']
     sh ruby_running_jt_env, 'tool/c-linter.rb' if changed['.c']
-    checkstyle(changed['.java']) if changed['.java']
     command_format(changed['.java']) if changed['.java']
+    checkstyle(changed['.java']) if changed['.java']
     shellcheck if changed['.sh'] or changed['.inc']
     check_lockfiles(changed['.lock']) if changed['.lock']
 
