@@ -348,12 +348,12 @@ public final class ValueWrapperManager {
 
         @Specialization(guards = "!isSharedObject(object)")
         static ValueWrapper createWrapperOnKnownThread(Node node, Object object) {
-            return createWrapper(node, object, getContext(node), getLanguage(node), false);
+            return createWrapper(object, getContext(node), getLanguage(node), false);
         }
 
         @Specialization(guards = "isSharedObject(object)")
         static ValueWrapper createSharedWrapperOnKnownThread(Node node, Object object) {
-            return createWrapper(node, object, getContext(node), getLanguage(node), true);
+            return createWrapper(object, getContext(node), getLanguage(node), true);
         }
 
         @TruffleBoundary
@@ -361,7 +361,7 @@ public final class ValueWrapperManager {
             keepAlive.add(wrapper);
         }
 
-        protected static ValueWrapper createWrapper(Node node, Object object, RubyContext context,
+        protected static ValueWrapper createWrapper(Object object, RubyContext context,
                 RubyLanguage language, boolean shared) {
             final HandleBlockHolder holder = getBlockHolder(language);
             HandleBlock block;
@@ -373,10 +373,6 @@ public final class ValueWrapperManager {
 
             if (context.getOptions().CEXTS_TO_NATIVE_COUNT) {
                 context.getValueWrapperManager().recordHandleAllocation();
-            }
-
-            if (context.getOptions().BACKTRACE_ON_TO_NATIVE) {
-                context.getDefaultBacktraceFormatter().printBacktraceOnEnvStderr("new ValueWrapper: ", node);
             }
 
             if (block == null || block.isFull()) {

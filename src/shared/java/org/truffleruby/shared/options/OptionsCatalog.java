@@ -103,7 +103,6 @@ public final class OptionsCatalog {
     public static final OptionKey<Boolean> PRINT_INTERNED_TSTRING_STATS_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> CEXTS_TO_NATIVE_STATS_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> CEXTS_TO_NATIVE_COUNT_KEY = new OptionKey<>(CEXTS_TO_NATIVE_STATS_KEY.getDefaultValue());
-    public static final OptionKey<Boolean> BACKTRACE_ON_TO_NATIVE_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> CEXTS_KEEP_HANDLES_ALIVE_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> LAZY_BUILTINS_KEY = new OptionKey<>(LAZY_CALLTARGETS_KEY.getDefaultValue());
     public static final OptionKey<Boolean> LAZY_TRANSLATION_CORE_KEY = new OptionKey<>(LAZY_CALLTARGETS_KEY.getDefaultValue());
@@ -821,14 +820,6 @@ public final class OptionsCatalog {
             .usageSyntax("")
             .build();
 
-    public static final OptionDescriptor BACKTRACE_ON_TO_NATIVE = OptionDescriptor
-            .newBuilder(BACKTRACE_ON_TO_NATIVE_KEY, "ruby.backtraces-to-native")
-            .help("Show a backtrace when a ValueWrapper handle is created for a Ruby object")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("")
-            .build();
-
     public static final OptionDescriptor CEXTS_KEEP_HANDLES_ALIVE = OptionDescriptor
             .newBuilder(CEXTS_KEEP_HANDLES_ALIVE_KEY, "ruby.keep-handles-alive")
             .help("Keep handles for value wrappers alive forever")
@@ -1475,8 +1466,6 @@ public final class OptionsCatalog {
                 return CEXTS_TO_NATIVE_STATS;
             case "ruby.cexts-to-native-count":
                 return CEXTS_TO_NATIVE_COUNT;
-            case "ruby.backtraces-to-native":
-                return BACKTRACE_ON_TO_NATIVE;
             case "ruby.keep-handles-alive":
                 return CEXTS_KEEP_HANDLES_ALIVE;
             case "ruby.lazy-builtins":
@@ -1686,7 +1675,6 @@ public final class OptionsCatalog {
             PRINT_INTERNED_TSTRING_STATS,
             CEXTS_TO_NATIVE_STATS,
             CEXTS_TO_NATIVE_COUNT,
-            BACKTRACE_ON_TO_NATIVE,
             CEXTS_KEEP_HANDLES_ALIVE,
             LAZY_BUILTINS,
             LAZY_TRANSLATION_CORE,
