@@ -65,7 +65,11 @@ public abstract class ToWrapperNode extends RubyBaseNode {
 
     @Specialization(guards = "isTaggedObject(handle)")
     static ValueWrapper unwrapTaggedObject(Node node, long handle) {
-        return getContext(node).getValueWrapperManager().getWrapperFromHandleMap(handle, true, getLanguage(node));
+        final ValueWrapper wrapper = getContext(node)
+                .getValueWrapperManager()
+                .getWrapperFromHandleMap(handle, true, getLanguage(node));
+        // A wrapper whose object was collected is as invalid as an unknown handle
+        return wrapper == null || wrapper.getObject() == null ? null : wrapper;
     }
 
     @Fallback
