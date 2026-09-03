@@ -303,10 +303,8 @@ public abstract class CExtNodes {
     public abstract static class MarkObjectOnCallExit extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        Object markOnCallExit(Object object,
-                @Cached WrapNode wrapNode) {
-            ValueWrapper wrapper = wrapNode.execute(object);
-            getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack.markOnExitObject(wrapper);
+        Object markOnCallExit(Object object) {
+            getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack.markOnExitObject(object);
             return nil;
         }
     }
@@ -1797,6 +1795,22 @@ public abstract class CExtNodes {
         }
     }
 
+    /** Returns what a long-lived list must reference to keep the given VALUE and its handle alive, see
+     * {@link ValueWrapper#keepAliveObject()} */
+    @Primitive(name = "cext_keep_alive_object")
+    public abstract static class CExtKeepAliveObjectNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        Object keepAliveObject(long handle,
+                @Cached ToWrapperNode toWrapperNode) {
+            ValueWrapper wrapper = toWrapperNode.execute(this, handle);
+            if (wrapper == null) {
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                throw CompilerDirectives.shouldNotReachHere("ValueWrapper not found for " + handle);
+            }
+            return wrapper.keepAliveObject();
+        }
+    }
+
 
     @CoreMethod(names = "create_mark_list", onSingleton = true, required = 1)
     public abstract static class NewMarkerList extends CoreMethodArrayArgumentsNode {
@@ -1821,8 +1835,11 @@ public abstract class CExtNodes {
             ValueWrapper wrappedValue = toWrapperNode.execute(this, handle);
             if (wrappedValue != null) {
                 noExceptionProfile.enter(this);
+                // The mark list is what keeps the marked VALUE alive, so add what keeps both the object
+                // and its handle alive (a wrapper only references its object weakly).
                 getContext().getMarkingService()
-                        .addMark(getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack, wrappedValue);
+                        .addMark(getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack,
+                                wrappedValue.keepAliveObject());
             }
             // We do nothing here if the handle cannot be resolved. If we are marking an object
             // which is only reachable via weak refs then the handles of objects it is itself
