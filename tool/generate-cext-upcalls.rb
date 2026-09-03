@@ -279,9 +279,14 @@ UPCALLS.each_with_index do |(cname, kind, ret, args), index|
   carriers = args.chars
   params = java_params(carriers)
 
-  raw_names = []
-  carriers.each_index { |i| raw_names << "v#{i}" }
-  upcall_arguments = (["INDEX_#{cname}"] + raw_names).join(', ')
+  # Arguments are passed as long varargs (doubles as their raw bits) so no argument is boxed
+  encoded_arguments = carriers.each_with_index.map do |c, i|
+    c == 'D' ? "Double.doubleToRawLongBits(v#{i})" : "v#{i}"
+  end
+  # upcall() takes long varargs, so no explicit array at the call site.
+  # Zero-argument upcalls pass the shared empty array to not allocate one per call.
+  encoded_arguments = ['CExtFFMLayer.NO_ARGUMENTS'] if encoded_arguments.empty?
+  upcall_arguments = (["INDEX_#{cname}"] + encoded_arguments).join(', ')
 
   ret_type = JAVA_TYPES.fetch(ret)
 
@@ -304,16 +309,14 @@ UPCALLS.each_with_index do |(cname, kind, ret, args), index|
     java << line.rstrip << "\n"
   end
   java << "        try {\n"
-  if ret == 'O'
-    java << "            runtime.upcall(#{upcall_arguments});\n"
+  return_prefix = ret == 'O' ? '' : "return #{RET_UNBOX.fetch(ret)}"
+  call_line = "            #{return_prefix}runtime.upcall(#{upcall_arguments});"
+  if call_line.length <= 120
+    java << call_line << "\n"
   else
-    call_line = "            return #{RET_UNBOX.fetch(ret)}runtime.upcall(#{upcall_arguments});"
-    if call_line.length <= 120
-      java << call_line << "\n"
-    else
-      java << "            return #{RET_UNBOX.fetch(ret)}runtime\n"
-      java << "                    .upcall(#{upcall_arguments});\n"
-    end
+    # wrap after the index like the Eclipse formatter (continuation indent 12 + 8)
+    java << "            #{return_prefix}runtime.upcall(INDEX_#{cname},\n"
+    java << "                    #{encoded_arguments.join(', ')});\n"
   end
   java << "        } catch (Throwable t) {\n"
   java << "            reportException(runtime, t);\n"
