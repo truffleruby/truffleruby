@@ -312,6 +312,7 @@ VALUE (*rb_tr_up_impl_rb_gv_get)(VALUE v0);
 VALUE (*rb_tr_up_impl_rb_gv_set)(VALUE v0, VALUE v1);
 VALUE (*rb_tr_up_impl_rb_hash)(VALUE v0);
 VALUE (*rb_tr_up_impl_rb_hash_aref)(VALUE v0, VALUE v1);
+void (*rb_tr_up_impl_rb_hash_bulk_insert)(long v0, const void *v1, VALUE v2);
 void (*rb_tr_up_impl_rb_hash_foreach)(VALUE v0, const void *v1, const void *v2);
 VALUE (*rb_tr_up_impl_rb_hash_get_or_undefined)(VALUE v0, VALUE v1);
 VALUE (*rb_tr_up_impl_rb_hash_new)(void);
@@ -796,6 +797,7 @@ void rb_tr_init_ffm_upcalls(void **upcalls) {
   rb_tr_up_impl_rb_gv_set = (VALUE (*)(VALUE v0, VALUE v1)) upcalls[i++];
   rb_tr_up_impl_rb_hash = (VALUE (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_hash_aref = (VALUE (*)(VALUE v0, VALUE v1)) upcalls[i++];
+  rb_tr_up_impl_rb_hash_bulk_insert = (void (*)(long v0, const void *v1, VALUE v2)) upcalls[i++];
   rb_tr_up_impl_rb_hash_foreach = (void (*)(VALUE v0, const void *v1, const void *v2)) upcalls[i++];
   rb_tr_up_impl_rb_hash_get_or_undefined = (VALUE (*)(VALUE v0, VALUE v1)) upcalls[i++];
   rb_tr_up_impl_rb_hash_new = (VALUE (*)(void)) upcalls[i++];

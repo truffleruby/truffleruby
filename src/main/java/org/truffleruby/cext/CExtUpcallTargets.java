@@ -3344,6 +3344,17 @@ public abstract class CExtUpcallTargets {
         }
     }
 
+    private static final int INDEX_rb_hash_bulk_insert = nextUpcallIndex++;
+
+    @CExtUpcall
+    public static void upcall_rb_hash_bulk_insert(long v0, long v1, long v2) {
+        try {
+            runtime.upcall(INDEX_rb_hash_bulk_insert, v0, v1, v2);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+        }
+    }
+
     private static final int INDEX_rb_hash_foreach = nextUpcallIndex++;
 
     @CExtUpcall
@@ -6045,6 +6056,7 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_gv_set", "L(LL)", "cext", "rb_gv_set", "V", "VV",
             "upcall_rb_hash", "L(L)", "cext", "rb_hash", "V", "V",
             "upcall_rb_hash_aref", "L(LL)", "cext", "rb_hash_aref", "V", "VV",
+            "upcall_rb_hash_bulk_insert", "V(LLL)", "cext", "rb_hash_bulk_insert", "O", "LPV",
             "upcall_rb_hash_foreach", "V(LLL)", "cext", "rb_hash_foreach", "O", "VPP",
             "upcall_rb_hash_get_or_undefined", "L(LL)", "cext", "rb_hash_get_or_undefined", "V", "VV",
             "upcall_rb_hash_new", "L()", "cext", "rb_hash_new", "V", "",

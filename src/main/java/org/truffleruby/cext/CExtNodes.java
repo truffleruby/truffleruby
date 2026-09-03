@@ -19,9 +19,12 @@ import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
+import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import com.oracle.truffle.api.strings.AbstractTruffleString;
 import com.oracle.truffle.api.strings.MutableTruffleString;
 import com.oracle.truffle.api.strings.TruffleString;
@@ -57,8 +60,10 @@ import org.truffleruby.core.format.FormatExceptionTranslator;
 import org.truffleruby.core.format.exceptions.FormatException;
 import org.truffleruby.core.format.exceptions.InvalidFormatException;
 import org.truffleruby.core.format.rbsprintf.RBSprintfCompiler;
+import org.truffleruby.core.hash.HashGuards;
 import org.truffleruby.core.hash.HashingNodes;
 import org.truffleruby.core.hash.RubyHash;
+import org.truffleruby.core.hash.library.HashStoreLibrary;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.module.MethodLookupResult;
 import org.truffleruby.core.module.ModuleNodes.ConstSetUncheckedNode;
@@ -1890,6 +1895,30 @@ public abstract class CExtNodes {
                 @Cached UnwrapCArrayNode unwrapCArrayNode) {
             final Object[] values = unwrapCArrayNode.execute(cArray, size);
             return createArray(values);
+        }
+    }
+
+    /** A single upcall for rb_hash_bulk_insert(): unwraps the native VALUE[] of key/value pairs and inserts them all,
+     * instead of one Hash#[]= upcall per pair. Hot for the json parser, which builds every parsed Hash this way. */
+    @CoreMethod(names = "rb_hash_bulk_insert", onSingleton = true, required = 3, lowerFixnum = 1)
+    @ImportStatic(HashGuards.class)
+    public abstract static class RbHashBulkInsertNode extends CoreMethodArrayArgumentsNode {
+        @Specialization
+        Object bulkInsert(int count, long cArray, RubyHash hash,
+                @Cached UnwrapCArrayNode unwrapCArrayNode,
+                @Cached LoopConditionProfile loopProfile,
+                @CachedLibrary(limit = "hashStrategyLimit()") HashStoreLibrary hashes) {
+            final Object[] pairs = unwrapCArrayNode.execute(cArray, count);
+            int i = 0;
+            try {
+                for (; loopProfile.inject(i < count); i += 2) {
+                    hashes.set(hash.store, hash, pairs[i], pairs[i + 1], hash.compareByIdentity);
+                    TruffleSafepoint.poll(this);
+                }
+            } finally {
+                profileAndReportLoopCount(loopProfile, i >> 1);
+            }
+            return nil;
         }
     }
 

@@ -2491,6 +2491,14 @@ static inline VALUE rb_tr_up_rb_hash_aref(VALUE v0, VALUE v1) {
   return result;
 }
 
+extern void (*rb_tr_up_impl_rb_hash_bulk_insert)(long v0, const void *v1, VALUE v2);
+static inline void rb_tr_up_rb_hash_bulk_insert(long v0, const void *v1, VALUE v2) {
+  rb_tr_up_impl_rb_hash_bulk_insert(v0, v1, v2);
+  if (UNLIKELY(rb_tr_pending_exception)) {
+    rb_tr_longjmp_from_java_exception();
+  }
+}
+
 extern void (*rb_tr_up_impl_rb_hash_foreach)(VALUE v0, const void *v1, const void *v2);
 static inline void rb_tr_up_rb_hash_foreach(VALUE v0, const void *v1, const void *v2) {
   rb_tr_up_impl_rb_hash_foreach(v0, v1, v2);
