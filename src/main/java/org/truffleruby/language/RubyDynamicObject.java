@@ -15,6 +15,7 @@ import com.oracle.truffle.api.interop.StopIterationException;
 import com.oracle.truffle.api.interop.UnknownKeyException;
 import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.RubyContext;
+import org.truffleruby.cext.ValueWrapper;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.cast.BooleanCastNode;
 import org.truffleruby.core.cast.IntegerCastNode;
@@ -70,6 +71,13 @@ public abstract class RubyDynamicObject extends DynamicObject {
 
     private RubyClass metaClass;
 
+    /** The ValueWrapper of this object if it was ever converted to a C extension VALUE, otherwise null. A plain Java
+     * field and not a hidden DynamicObject property so creating it does not need a Shape transition and reading it is a
+     * single field read: C extensions wrap every object crossing the native boundary, which makes this hot. Written
+     * only inside synchronized(this) and read racily, which is safe because ValueWrapper only has final fields (see
+     * WrapNode). */
+    private ValueWrapper valueWrapper;
+
     public RubyDynamicObject(RubyClass metaClass, Shape shape) {
         super(shape);
         assert metaClass != null;
@@ -92,6 +100,15 @@ public abstract class RubyDynamicObject extends DynamicObject {
 
     public final RubyClass getLogicalClass() {
         return metaClass.nonSingletonClass;
+    }
+
+    public final ValueWrapper getValueWrapper() {
+        return valueWrapper;
+    }
+
+    public final void setValueWrapper(ValueWrapper valueWrapper) {
+        assert Thread.holdsLock(this);
+        this.valueWrapper = valueWrapper;
     }
 
     @Override
