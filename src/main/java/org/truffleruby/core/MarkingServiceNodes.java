@@ -36,18 +36,21 @@ public abstract class MarkingServiceNodes {
     @GenerateInline
     public abstract static class KeepAliveNode extends RubyBaseNode {
 
-        public abstract void execute(Node node, ValueWrapper object);
+        /** Keeps the wrapper's object, the wrapper and its handle block alive until the current C extension call
+         * returns, by preserving {@link ValueWrapper#keepAliveObject()}. */
+        public abstract void execute(Node node, ValueWrapper wrapper);
 
         @Specialization
-        static void keepObject(Node node, ValueWrapper object,
+        static void keepObject(Node node, ValueWrapper wrapper,
                 @Bind("getStack(node)") ExtensionCallStack stack,
                 @Cached InlinedConditionProfile sameObjectProfile,
                 @Cached InlinedConditionProfile growProfile) {
+            final Object object = wrapper.keepAliveObject();
             final MarkingService.ExtensionCallStackEntry entry = stack.current;
-            final ValueWrapper[] preservedObjects = entry.preservedObjects;
+            final Object[] preservedObjects = entry.preservedObjects;
             final int count = entry.preservedObjectsCount;
             if (sameObjectProfile.profile(node, count > 0 && preservedObjects[count - 1] == object)) {
-                return; // the common case of keeping the same wrapper alive repeatedly during a call
+                return; // the common case of keeping the same object alive repeatedly during a call
             }
             if (growProfile.profile(node, count == preservedObjects.length)) {
                 grow(entry, object);
@@ -58,8 +61,8 @@ public abstract class MarkingServiceNodes {
         }
 
         @TruffleBoundary
-        private static void grow(MarkingService.ExtensionCallStackEntry entry, ValueWrapper object) {
-            final ValueWrapper[] grown = Arrays.copyOf(entry.preservedObjects, entry.preservedObjects.length * 2);
+        private static void grow(MarkingService.ExtensionCallStackEntry entry, Object object) {
+            final Object[] grown = Arrays.copyOf(entry.preservedObjects, entry.preservedObjects.length * 2);
             grown[entry.preservedObjectsCount] = object;
             entry.preservedObjects = grown;
             entry.preservedObjectsCount++;
@@ -85,8 +88,8 @@ public abstract class MarkingServiceNodes {
         @Specialization(guards = "stack.hasSingleMarkObject()")
         static void markSingleObject(Node node, ExtensionCallStack stack,
                 @Cached(inline = false) @Shared DispatchNode callNode) {
-            ValueWrapper value = stack.getSingleMarkObject();
-            callNode.call(getContext(node).getCoreLibrary().truffleCExtModule, "run_marker", value.getObject());
+            Object value = stack.getSingleMarkObject();
+            callNode.call(getContext(node).getCoreLibrary().truffleCExtModule, "run_marker", value);
         }
 
         @TruffleBoundary
@@ -101,7 +104,7 @@ public abstract class MarkingServiceNodes {
             stack.push(false, nil, nil);
             try {
                 for (var value : valuesForMarking) {
-                    callNode.call(getContext(node).getCoreLibrary().truffleCExtModule, "run_marker", value.getObject());
+                    callNode.call(getContext(node).getCoreLibrary().truffleCExtModule, "run_marker", value);
                 }
             } finally {
                 stack.pop();

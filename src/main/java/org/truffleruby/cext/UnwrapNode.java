@@ -66,11 +66,12 @@ public abstract class UnwrapNode extends RubyBaseNode {
         final ValueWrapper wrapper = getContext(node)
                 .getValueWrapperManager()
                 .getWrapperFromHandleMap(handle, false, getLanguage(node));
-        if (wrapper == null) {
+        final Object object = wrapper == null ? null : wrapper.getObject();
+        if (object == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             deadHandle(handle);
         }
-        return wrapper.getObject();
+        return object;
     }
 
     @Fallback
