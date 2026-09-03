@@ -7,4 +7,5 @@ Here is how the various env files relate to each other:
   * `jvm-ee`: + Oracle GraalVM Compiler + libgraal
     * `native-ee`: + librubyvm + Native Image G1
       * `native-ee-host-inlining`: + `TruffleHostInliningPrintExplored`
+      * `native-ee-profiling`: + `-H:-DeleteLocalSymbols`
       * `native-ee-aux`: + `AuxiliaryEngineCache`, - Native Image G1 (currently incompatible)
