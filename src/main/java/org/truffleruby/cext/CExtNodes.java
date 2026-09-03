@@ -1860,7 +1860,7 @@ public abstract class CExtNodes {
             ValueWrapper wrappedValue = toWrapperNode.execute(this, handle);
             if (wrappedValue != null) {
                 noExceptionProfile.enter(this);
-                keepAliveNode.execute(this, wrappedValue);
+                keepAliveNode.execute(this, wrappedValue.getObject(), wrappedValue);
             }
             return nil;
         }
