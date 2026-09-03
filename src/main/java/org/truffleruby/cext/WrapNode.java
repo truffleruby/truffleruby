@@ -18,7 +18,6 @@ import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.strings.TruffleString;
-import org.truffleruby.Layouts;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.language.ImmutableRubyObject;
 import org.truffleruby.language.Nil;
@@ -31,7 +30,6 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.language.objects.ObjectIDOperations;
 
 import org.truffleruby.cext.ValueWrapperManager.CreateWrapperNode;
@@ -114,21 +112,19 @@ public abstract class WrapNode extends RubyBaseNode {
 
     @Specialization
     static ValueWrapper wrapValue(RubyDynamicObject value,
-            @Cached DynamicObject.GetNode getNode,
-            @Cached DynamicObject.PutNode putNode,
             @Cached @Shared InlinedBranchProfile noHandleProfile,
             @Cached @Shared CreateWrapperNode createWrapperNode,
             @Bind Node node) {
-        ValueWrapper wrapper = (ValueWrapper) getNode.execute(value, Layouts.VALUE_WRAPPER_IDENTIFIER, null);
+        ValueWrapper wrapper = value.getValueWrapper();
         if (wrapper == null) {
             noHandleProfile.enter(node);
             synchronized (value) {
-                wrapper = (ValueWrapper) getNode.execute(value, Layouts.VALUE_WRAPPER_IDENTIFIER, null);
+                wrapper = value.getValueWrapper();
                 if (wrapper == null) {
                     /* This is double-checked locking, but it's safe because ValueWrapper only has final fields, so the
                      * racy read above sees either null or a fully-initialized ValueWrapper. */
                     wrapper = createWrapperNode.execute(node, value);
-                    putNode.execute(value, Layouts.VALUE_WRAPPER_IDENTIFIER, wrapper);
+                    value.setValueWrapper(wrapper);
                 }
             }
         }
