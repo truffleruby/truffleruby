@@ -94,6 +94,17 @@ public final class ValueWrapper extends WeakReference<Object> implements Truffle
         return collectedProfile.profile(node, object == null) ? this : object;
     }
 
+    /** Like {@link #keepAliveObject(Node, InlinedConditionProfile, InlinedConditionProfile)}, but takes the object from
+     * a strong reference the caller holds instead of reading this wrapper's weak reference, which could return null if
+     * nothing else references the object strongly anymore. Returns null when there is nothing to keep alive: a tagged
+     * long, or the caller only had the wrapper and the object was already collected. */
+    public Object keepAliveObject(Node node, Object object, InlinedConditionProfile strongRefProfile) {
+        // The identity check only applies when the object is what keeps this handle alive: for a
+        // primitive-backed wrapper the argument can be a different box of the same primitive value.
+        assert strongRef != null || object == null || get() == null || get() == object;
+        return strongRefProfile.profile(node, strongRef != null) ? this : object;
+    }
+
     @ExportMessage
     protected boolean hasLanguageId() {
         return true;

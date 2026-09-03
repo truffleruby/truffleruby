@@ -298,22 +298,25 @@ public final class ValueWrapperManager {
         private HandleBlock sharedHandleBlock = null;
     }
 
-    /** The same conversion as ValueWrapper's asPointer interop message: returns the handle of the wrapper, and keeps
-     * wrappers with a tagged object handle alive until the end of the current C extension call. */
+    /** Returns the handle of the wrapper, and keeps tagged object handles (and their object) alive until the end of the
+     * current C extension call. The object must be passed in by the caller, from a strong reference it holds (or null
+     * if it only has the wrapper): re-reading it from the wrapper's weak reference here would leave a window where, if
+     * nothing else references the object strongly anymore, the GC could collect it before the keep-alive list
+     * references it, leaving a dead handle. */
     @GenerateUncached
     @GenerateInline
     @GenerateCached(false)
     public abstract static class WrapperToHandleNode extends RubyBaseNode {
 
-        public abstract long execute(Node node, ValueWrapper wrapper);
+        public abstract long execute(Node node, Object object, ValueWrapper wrapper);
 
         @Specialization
-        static long wrapperToHandle(Node node, ValueWrapper wrapper,
+        static long wrapperToHandle(Node node, Object object, ValueWrapper wrapper,
                 @Cached KeepAliveNode keepAliveNode,
                 @Cached InlinedConditionProfile taggedObjectProfile) {
             final long handle = wrapper.handle;
             if (taggedObjectProfile.profile(node, isTaggedObject(handle))) {
-                keepAliveNode.execute(node, wrapper);
+                keepAliveNode.execute(node, object, wrapper);
             }
             return handle;
         }
@@ -326,8 +329,8 @@ public final class ValueWrapperManager {
     @GenerateCached(false)
     public abstract static class CreateWrapperNode extends RubyBaseNode {
 
-        /** {@link ValueWrapper#keepAliveObject(Node, InlinedConditionProfile, InlinedConditionProfile)} tokens, which
-         * keep both the object and its handle alive. */
+        /** {@link ValueWrapper#keepAliveObject(Node, Object, InlinedConditionProfile)} tokens, which keep both the
+         * object and its handle alive. */
         private static final Set<Object> keepAlive = ConcurrentHashMap.newKeySet();
 
         public abstract ValueWrapper execute(Node node, Object object);
@@ -343,9 +346,8 @@ public final class ValueWrapperManager {
         }
 
         @TruffleBoundary
-        protected static void keepAlive(ValueWrapper wrapper) {
-            keepAlive.add(wrapper.keepAliveObject(null, InlinedConditionProfile.getUncached(),
-                    InlinedConditionProfile.getUncached()));
+        protected static void keepAlive(ValueWrapper wrapper, Object object) {
+            keepAlive.add(wrapper.keepAliveObject(null, object, InlinedConditionProfile.getUncached()));
         }
 
         protected static ValueWrapper createWrapper(Object object, RubyContext context,
@@ -372,7 +374,7 @@ public final class ValueWrapperManager {
             final ValueWrapper wrapper = new ValueWrapper(object, block.nextHandle(), block);
             block.registerWrapper(wrapper);
             if (context.getOptions().CEXTS_KEEP_HANDLES_ALIVE) {
-                keepAlive(wrapper);
+                keepAlive(wrapper, object);
             }
             return wrapper;
         }
