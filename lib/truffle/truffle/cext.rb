@@ -1714,11 +1714,10 @@ module Truffle::CExt
   GC_ROOTS = []
 
   def rb_gc_register_mark_object(value)
-    # We save the ValueWrapper here and not the actual value/object, this is important for primitives like double and
-    # not-fixnum-long, as we need to preserve the handle by preserving the ValueWrapper of that handle.
-    # For those cases the primitive cannot itself reference its ValueWrapper, unlike RubyDynamicObject and ImmutableRubyObject.
-    wrapper = Primitive.cext_to_wrapper(value)
-    GC_ROOTS.push wrapper
+    # We save the keep-alive object, which keeps both the object and its handle (ValueWrapper) alive. This matters for
+    # primitives like double and not-fixnum-long: the primitive cannot itself reference its ValueWrapper, unlike
+    # RubyDynamicObject and ImmutableRubyObject, so for those the ValueWrapper is saved (and it keeps the primitive alive).
+    GC_ROOTS.push Primitive.cext_keep_alive_object(value)
   end
 
   def rb_gc_latest_gc_info(hash_or_key)
@@ -2455,10 +2454,11 @@ module Truffle::CExt
   end
 
   private def register_address(address)
-    # We save the ValueWrapper here and not the actual value/object, this is important for primitives like double and
-    # not-fixnum-long, as we need to preserve the handle by preserving the ValueWrapper of that handle.
-    # For those cases the primitive cannot itself reference its ValueWrapper, unlike RubyDynamicObject and ImmutableRubyObject.
-    GC_REGISTERED_ADDRESSES[address] = Primitive.cext_to_wrapper Primitive.cext_invoke_l_l(READ_VALUE_POINTER_FUNCTION, address)
+    # We save the keep-alive object, which keeps both the object and its handle (ValueWrapper) alive. This matters for
+    # primitives like double and not-fixnum-long: the primitive cannot itself reference its ValueWrapper, unlike
+    # RubyDynamicObject and ImmutableRubyObject, so for those the ValueWrapper is saved (and it keeps the primitive alive).
+    GC_REGISTERED_ADDRESSES[address] =
+      Primitive.cext_keep_alive_object(Primitive.cext_invoke_l_l(READ_VALUE_POINTER_FUNCTION, address))
   end
 
   def rb_gc_unregister_address(address)

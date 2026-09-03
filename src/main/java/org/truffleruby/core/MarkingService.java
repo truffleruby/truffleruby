@@ -13,7 +13,6 @@ package org.truffleruby.core;
 import java.util.ArrayList;
 
 import org.truffleruby.cext.CapturedException;
-import org.truffleruby.cext.ValueWrapper;
 import org.truffleruby.core.array.ArrayUtils;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -43,17 +42,18 @@ public final class MarkingService {
     protected static final class ExtensionCallStackEntry {
 
         private final ExtensionCallStackEntry previous;
-        /** The wrappers converted to native handles during the current C extension call, kept alive until the entry is
-         * popped. Allocated eagerly since almost every downcall/upcall keeps at least one wrapper alive (e.g. the
-         * receiver). Grown by KeepAliveNode, only preservedObjectsCount elements are set. */
-        ValueWrapper[] preservedObjects = new ValueWrapper[8];
+        /** The objects converted to native handles during the current C extension call, kept alive until the entry is
+         * popped. The objects and not their ValueWrappers, because a ValueWrapper only references its object weakly.
+         * Allocated eagerly since almost every downcall/upcall keeps at least one object alive (e.g. the receiver).
+         * Grown by KeepAliveNode, only preservedObjectsCount elements are set. */
+        Object[] preservedObjects = new Object[8];
         int preservedObjectsCount;
         private final boolean keywordsGiven;
         private Object specialVariables;
         private final Object block;
         private CapturedException capturedException;
-        private ValueWrapper markOnExitObject;
-        private ArrayList<ValueWrapper> markOnExitObjects;
+        private Object markOnExitObject;
+        private ArrayList<Object> markOnExitObjects;
         private Object[] marks = null;
         private int marksIndex = 0;
 
@@ -78,7 +78,7 @@ public final class MarkingService {
             current = new ExtensionCallStackEntry(null, false, specialVariables, block);
         }
 
-        public void markOnExitObject(ValueWrapper value) {
+        public void markOnExitObject(Object value) {
             if (current.markOnExitObject == null) {
                 current.markOnExitObject = value;
             } else if (current.markOnExitObject != value) {
@@ -87,7 +87,7 @@ public final class MarkingService {
         }
 
         @TruffleBoundary
-        private void markOnExitObjectOnList(ValueWrapper value) {
+        private void markOnExitObjectOnList(Object value) {
             if (current.markOnExitObjects == null) {
                 current.markOnExitObjects = new ArrayList<>();
                 current.markOnExitObjects.add(current.markOnExitObject);
@@ -95,7 +95,7 @@ public final class MarkingService {
             current.markOnExitObjects.add(value);
         }
 
-        public ArrayList<ValueWrapper> getMarkOnExitObjects() {
+        public ArrayList<Object> getMarkOnExitObjects() {
             assert current.previous != null;
             assert current.markOnExitObjects != null;
 
@@ -110,7 +110,7 @@ public final class MarkingService {
             return current.markOnExitObject != null && current.markOnExitObjects == null;
         }
 
-        public ValueWrapper getSingleMarkObject() {
+        public Object getSingleMarkObject() {
             return current.markOnExitObject;
         }
 
