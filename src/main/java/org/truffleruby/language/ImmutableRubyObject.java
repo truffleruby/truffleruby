@@ -60,6 +60,7 @@ public abstract class ImmutableRubyObject implements TruffleObject {
         }
     }
 
+    /** See {@link RubyDynamicObject#getValueWrapper()} for the memory ordering of this field. */
     protected ValueWrapper valueWrapper;
     protected long objectId;
 
@@ -72,7 +73,7 @@ public abstract class ImmutableRubyObject implements TruffleObject {
     }
 
     public ValueWrapper getValueWrapper() {
-        return valueWrapper;
+        return (ValueWrapper) VALUE_WRAPPER.getAcquire(this);
     }
 
     public final ValueWrapper setValueWrapperIfAbsent(ValueWrapper wrapper) {

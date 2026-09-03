@@ -97,9 +97,9 @@ public abstract class WrapNode extends RubyBaseNode {
         ValueWrapper wrapper = value.getValueWrapper();
         if (wrapper == null) {
             noHandleProfile.enter(node);
-            /* The racy initial read is safe because ValueWrapper only has final fields, so it sees either null or a
-             * fully-initialized ValueWrapper. If two threads race, one wrapper wins and the other remains unused in its
-             * HandleBlock, which is harmless. */
+            /* The initial read sees either null or a fully-initialized ValueWrapper (see
+             * RubyDynamicObject#getValueWrapper). If two threads race, one wrapper wins and the other remains unused in
+             * its HandleBlock, which is harmless. */
             wrapper = value.setValueWrapperIfAbsent(createWrapperNode.execute(node, value));
         }
         return wrapper;
@@ -113,9 +113,9 @@ public abstract class WrapNode extends RubyBaseNode {
         ValueWrapper wrapper = value.getValueWrapper();
         if (wrapper == null) {
             noHandleProfile.enter(node);
-            /* The racy initial read is safe because ValueWrapper only has final fields, so it sees either null or a
-             * fully-initialized ValueWrapper. If two threads race, one wrapper wins and the other remains unused in its
-             * HandleBlock, which is harmless. */
+            /* The initial read sees either null or a fully-initialized ValueWrapper (see
+             * RubyDynamicObject#getValueWrapper). If two threads race, one wrapper wins and the other remains unused in
+             * its HandleBlock, which is harmless. */
             wrapper = value.setValueWrapperIfAbsent(createWrapperNode.execute(node, value));
         }
         return wrapper;

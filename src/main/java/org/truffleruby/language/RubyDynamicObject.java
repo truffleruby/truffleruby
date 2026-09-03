@@ -85,8 +85,10 @@ public abstract class RubyDynamicObject extends DynamicObject {
     /** The ValueWrapper of this object if it was ever converted to a C extension VALUE, otherwise null. A plain Java
      * field and not a hidden DynamicObject property so creating it does not need a Shape transition and reading it is a
      * single field read: C extensions wrap every object crossing the native boundary, which makes this hot. Written
-     * only through {@link #setValueWrapperIfAbsent(ValueWrapper)} and read racily, which is safe because ValueWrapper
-     * only has final fields (see WrapNode). */
+     * only through {@link #setValueWrapperIfAbsent(ValueWrapper)}, a compare-and-exchange with release semantics, and
+     * read with acquire semantics in {@link #getValueWrapper()}, so a thread which sees the wrapper sees it fully
+     * initialized: its {@link java.lang.ref.WeakReference} referent is not a final field, unlike ValueWrapper's own
+     * fields, so a plain racy read would not be guaranteed to see it. */
     private ValueWrapper valueWrapper;
 
     public RubyDynamicObject(RubyClass metaClass, Shape shape) {
@@ -114,7 +116,7 @@ public abstract class RubyDynamicObject extends DynamicObject {
     }
 
     public final ValueWrapper getValueWrapper() {
-        return valueWrapper;
+        return (ValueWrapper) VALUE_WRAPPER.getAcquire(this);
     }
 
     public final ValueWrapper setValueWrapperIfAbsent(ValueWrapper wrapper) {

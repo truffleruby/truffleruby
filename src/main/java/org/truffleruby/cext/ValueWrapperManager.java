@@ -15,7 +15,6 @@ import java.lang.ref.Cleaner.Cleanable;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.nodes.Node;
@@ -94,7 +93,9 @@ public final class ValueWrapperManager {
         return map;
     }
 
-    public ValueWrapper getWrapperFromHandleMap(long handle, boolean allowUnregisteredHandle, RubyLanguage language) {
+    /** The wrapper registered for a tagged object handle, or null if there is none. Callers must check that the
+     * wrapper's object is still alive, see {@link #getLiveWrapperFromHandleMap(long, RubyLanguage)}. */
+    public ValueWrapper getWrapperFromHandleMap(long handle, RubyLanguage language) {
         assert isTaggedObject(handle);
         final int index = HandleBlock.getBlockIndex(handle);
 
@@ -103,7 +104,14 @@ public final class ValueWrapperManager {
             return null;
         }
 
-        return block.getWrapper(handle, allowUnregisteredHandle);
+        return block.getWrapper(handle);
+    }
+
+    /** The wrapper of a tagged object handle, or null if the handle is unknown or its object was collected: a dead
+     * handle (passed by C after its object died, which nothing kept alive) is as invalid as an unknown handle. */
+    public ValueWrapper getLiveWrapperFromHandleMap(long handle, RubyLanguage language) {
+        final ValueWrapper wrapper = getWrapperFromHandleMap(handle, language);
+        return wrapper != null && wrapper.getObject() != null ? wrapper : null;
     }
 
     private HandleBlock getBlockFromMap(int index, RubyLanguage language) {
@@ -206,11 +214,16 @@ public final class ValueWrapperManager {
      * holder it is never mutated again. Other fibers only read already-registered wrappers through
      * {@link #getWrapper(long, boolean)}. This holds for {@code HandleBlockHolder#sharedHandleBlock} too: "shared"
      * refers to the wrapped objects being shared (immutable) and to the block being registered in the process-wide
-     * {@code RubyLanguage#handleBlockSharedMap}, not to the block being filled by multiple fibers. */
+     * {@code RubyLanguage#handleBlockSharedMap}, not to the block being filled by multiple fibers.
+     *
+     * The block references its wrappers strongly: each {@link ValueWrapper} is itself the weak reference to its object,
+     * so the block does not keep wrapped objects alive. Live objects keep their wrapper alive (they reference it
+     * strongly), the wrapper keeps its block alive, and once all objects of a block die the block and its wrappers form
+     * an unreachable cycle collected together, which frees the handle range through the block's cleaner. */
     public static final class HandleBlock {
 
         private final long base;
-        private final ValueWrapperWeakReference[] wrappers;
+        private final ValueWrapper[] wrappers;
         private int count;
 
         @SuppressWarnings("unused") private Cleanable cleanable;
@@ -219,7 +232,7 @@ public final class ValueWrapperManager {
             HandleBlockAllocator allocator = RubyLanguage.handleBlockAllocator;
             long base = allocator.getFreeBlock();
             this.base = base;
-            this.wrappers = new ValueWrapperWeakReference[BLOCK_SIZE];
+            this.wrappers = new ValueWrapper[BLOCK_SIZE];
             this.count = 0;
             /* Blocks for shared (immutable) objects are process-wide and immortal (see
              * RubyLanguage#keepSharedHandleBlockAlive), so no cleaner for them: it would never run, and its Runnable
@@ -244,23 +257,13 @@ public final class ValueWrapperManager {
             return getBlockIndex(base);
         }
 
-        public ValueWrapper getWrapper(long handle, boolean allowUnregisteredHandle) {
-            int offset = (int) (handle & OFFSET_MASK) >> ADDRESS_ALIGN_BITS;
-            ValueWrapperWeakReference reference = wrappers[offset];
-            if (allowUnregisteredHandle) {
-                return reference == null ? null : reference.get();
-            } else {
-                if (reference == null) {
-                    CompilerDirectives.transferToInterpreterAndInvalidate();
-                    throw unregisteredHandle(handle);
-                }
-                return reference.get();
-            }
+        /** The wrapper registered for the handle, or null if none was */
+        public ValueWrapper getWrapper(long handle) {
+            return wrappers[offset(handle)];
         }
 
-        @TruffleBoundary
-        private static RuntimeException unregisteredHandle(long handle) {
-            return CompilerDirectives.shouldNotReachHere("unregistered handle 0x" + Long.toHexString(handle));
+        private static int offset(long handle) {
+            return (int) (handle & OFFSET_MASK) >> ADDRESS_ALIGN_BITS;
         }
 
         public boolean isFull() {
@@ -275,7 +278,7 @@ public final class ValueWrapperManager {
 
         public void registerWrapper(ValueWrapper wrapper) {
             assert wrapper.handle == nextHandle();
-            wrappers[count] = new ValueWrapperWeakReference(wrapper);
+            wrappers[count] = wrapper;
             count++;
         }
 
@@ -288,12 +291,6 @@ public final class ValueWrapperManager {
 
     public static final class HandleBlockWeakReference extends WeakReference<HandleBlock> {
         HandleBlockWeakReference(HandleBlock referent) {
-            super(referent);
-        }
-    }
-
-    public static final class ValueWrapperWeakReference extends WeakReference<ValueWrapper> {
-        ValueWrapperWeakReference(ValueWrapper referent) {
             super(referent);
         }
     }
@@ -331,7 +328,9 @@ public final class ValueWrapperManager {
     @GenerateCached(false)
     public abstract static class CreateWrapperNode extends RubyBaseNode {
 
-        private static final Set<ValueWrapper> keepAlive = ConcurrentHashMap.newKeySet();
+        /** {@link ValueWrapper#keepAliveObject(Node, InlinedConditionProfile, InlinedConditionProfile)} tokens, which
+         * keep both the object and its handle alive. */
+        private static final Set<Object> keepAlive = ConcurrentHashMap.newKeySet();
 
         public abstract ValueWrapper execute(Node node, Object object);
 
@@ -347,7 +346,8 @@ public final class ValueWrapperManager {
 
         @TruffleBoundary
         protected static void keepAlive(ValueWrapper wrapper) {
-            keepAlive.add(wrapper);
+            keepAlive.add(wrapper.keepAliveObject(null, InlinedConditionProfile.getUncached(),
+                    InlinedConditionProfile.getUncached()));
         }
 
         protected static ValueWrapper createWrapper(Object object, RubyContext context,

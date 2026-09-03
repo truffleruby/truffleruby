@@ -63,14 +63,17 @@ public abstract class UnwrapNode extends RubyBaseNode {
 
     @Specialization(guards = "isTaggedObject(handle)")
     static Object unwrapTaggedObject(Node node, long handle) {
+        // Like ValueWrapperManager#getLiveWrapperFromHandleMap, but reading the weak reference only once so the
+        // object checked is the object returned (nothing else might reference it strongly).
         final ValueWrapper wrapper = getContext(node)
                 .getValueWrapperManager()
-                .getWrapperFromHandleMap(handle, false, getLanguage(node));
-        if (wrapper == null) {
+                .getWrapperFromHandleMap(handle, getLanguage(node));
+        final Object object = wrapper == null ? null : wrapper.getObject();
+        if (object == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             deadHandle(handle);
         }
-        return wrapper.getObject();
+        return object;
     }
 
     @Fallback

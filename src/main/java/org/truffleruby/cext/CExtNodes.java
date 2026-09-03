@@ -304,12 +304,10 @@ public abstract class CExtNodes {
 
         @Specialization
         Object markOnCallExit(Object object,
-                @Cached WrapNode wrapNode,
                 @Cached InlinedConditionProfile sameObjectProfile,
                 @Cached InlinedConditionProfile growProfile) {
-            ValueWrapper wrapper = wrapNode.execute(object);
             getLanguage().getCurrentFiber().extensionCallStack
-                    .markOnExitObject(wrapper, sameObjectProfile, growProfile, this);
+                    .markOnExitObject(object, sameObjectProfile, growProfile, this);
             return nil;
         }
     }
@@ -1800,6 +1798,24 @@ public abstract class CExtNodes {
         }
     }
 
+    /** Returns what a long-lived list must reference to keep the given VALUE and its handle alive, see
+     * {@link ValueWrapper#keepAliveObject(Node, InlinedConditionProfile, InlinedConditionProfile)} */
+    @Primitive(name = "cext_keep_alive_object")
+    public abstract static class CExtKeepAliveObjectNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        Object keepAliveObject(long handle,
+                @Cached ToWrapperNode toWrapperNode,
+                @Cached InlinedConditionProfile strongRefProfile,
+                @Cached InlinedConditionProfile collectedProfile) {
+            ValueWrapper wrapper = toWrapperNode.execute(this, handle);
+            if (wrapper == null) {
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                throw CompilerDirectives.shouldNotReachHere("ValueWrapper not found for " + handle);
+            }
+            return wrapper.keepAliveObject(this, strongRefProfile, collectedProfile);
+        }
+    }
+
 
     @CoreMethod(names = "create_mark_list", onSingleton = true, required = 1)
     public abstract static class NewMarkerList extends CoreMethodArrayArgumentsNode {
@@ -1820,12 +1836,17 @@ public abstract class CExtNodes {
         @Specialization
         Object rbGCMark(long handle,
                 @Cached InlinedBranchProfile noExceptionProfile,
-                @Cached ToWrapperNode toWrapperNode) {
+                @Cached ToWrapperNode toWrapperNode,
+                @Cached InlinedConditionProfile strongRefProfile,
+                @Cached InlinedConditionProfile collectedProfile) {
             ValueWrapper wrappedValue = toWrapperNode.execute(this, handle);
             if (wrappedValue != null) {
                 noExceptionProfile.enter(this);
+                // The mark list is what keeps the marked VALUE alive, so add what keeps both the object
+                // and its handle alive (a wrapper only references its object weakly).
                 getContext().getMarkingService()
-                        .addMark(getLanguage().getCurrentFiber().extensionCallStack, wrappedValue);
+                        .addMark(getLanguage().getCurrentFiber().extensionCallStack,
+                                wrappedValue.keepAliveObject(this, strongRefProfile, collectedProfile));
             }
             // We do nothing here if the handle cannot be resolved. If we are marking an object
             // which is only reachable via weak refs then the handles of objects it is itself

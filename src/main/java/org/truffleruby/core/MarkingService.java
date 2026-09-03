@@ -13,7 +13,6 @@ package org.truffleruby.core;
 import java.util.Arrays;
 
 import org.truffleruby.cext.CapturedException;
-import org.truffleruby.cext.ValueWrapper;
 import org.truffleruby.core.array.ArrayUtils;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -42,15 +41,14 @@ public final class MarkingService {
         public abstract void mark(Object owner);
     }
 
-    private static final ValueWrapper[] EMPTY_WRAPPERS = new ValueWrapper[0];
-
     protected static final class ExtensionCallStackEntry {
 
         private final ExtensionCallStackEntry previous;
-        /** The wrappers converted to native handles during the current C extension call, kept alive until the entry is
-         * popped. Allocated eagerly since almost every downcall/upcall keeps at least one wrapper alive (e.g. the
-         * receiver). Grown by KeepAliveNode, only preservedObjectsCount elements are set. */
-        ValueWrapper[] preservedObjects = new ValueWrapper[8];
+        /** The objects converted to native handles during the current C extension call, kept alive until the entry is
+         * popped. The objects and not their ValueWrappers, because a ValueWrapper only references its object weakly.
+         * Allocated eagerly since almost every downcall/upcall keeps at least one object alive (e.g. the receiver).
+         * Grown by KeepAliveNode, only preservedObjectsCount elements are set. */
+        Object[] preservedObjects = new Object[8];
         int preservedObjectsCount = 0;
         private final boolean keywordsGiven;
         private Object specialVariables;
@@ -59,7 +57,7 @@ public final class MarkingService {
         /** The objects to run the C mark functions of when the current C extension call exits. Like
          * {@link #preservedObjects} a growable array, but starting empty since most calls mark nothing. Grown by
          * {@link ExtensionCallStack#markOnExitObject}, only markOnExitObjectsCount elements are set. */
-        ValueWrapper[] markOnExitObjects = EMPTY_WRAPPERS;
+        Object[] markOnExitObjects = ArrayUtils.EMPTY_ARRAY;
         int markOnExitObjectsCount = 0;
         private Object[] marks = null;
         private int marksIndex = 0;
@@ -85,9 +83,9 @@ public final class MarkingService {
             current = new ExtensionCallStackEntry(null, false, specialVariables, block);
         }
 
-        public void markOnExitObject(ValueWrapper value, InlinedConditionProfile sameObjectProfile,
+        public void markOnExitObject(Object value, InlinedConditionProfile sameObjectProfile,
                 InlinedConditionProfile growProfile, Node node) {
-            final ValueWrapper[] markOnExitObjects = current.markOnExitObjects;
+            final Object[] markOnExitObjects = current.markOnExitObjects;
             final int count = current.markOnExitObjectsCount;
             if (sameObjectProfile.profile(node, count > 0 && markOnExitObjects[count - 1] == value)) {
                 return; // the common case of marking the same object repeatedly during a call
@@ -101,9 +99,9 @@ public final class MarkingService {
         }
 
         @TruffleBoundary
-        private void growMarkOnExitObjects(ValueWrapper value) {
+        private void growMarkOnExitObjects(Object value) {
             final ExtensionCallStackEntry entry = current;
-            final ValueWrapper[] grown = Arrays
+            final Object[] grown = Arrays
                     .copyOf(entry.markOnExitObjects, Integer.max(entry.markOnExitObjects.length * 2, 4));
             grown[entry.markOnExitObjectsCount] = value;
             entry.markOnExitObjects = grown;
