@@ -97,15 +97,10 @@ public abstract class WrapNode extends RubyBaseNode {
         ValueWrapper wrapper = value.getValueWrapper();
         if (wrapper == null) {
             noHandleProfile.enter(node);
-            synchronized (value) {
-                wrapper = value.getValueWrapper();
-                if (wrapper == null) {
-                    /* This is double-checked locking, but it's safe because ValueWrapper only has final fields, so the
-                     * racy read above sees either null or a fully-initialized ValueWrapper. */
-                    wrapper = createWrapperNode.execute(node, value);
-                    value.setValueWrapper(wrapper);
-                }
-            }
+            /* The racy initial read is safe because ValueWrapper only has final fields, so it sees either null or a
+             * fully-initialized ValueWrapper. If two threads race, one wrapper wins and the other remains unused in its
+             * HandleBlock, which is harmless. */
+            wrapper = value.setValueWrapperIfAbsent(createWrapperNode.execute(node, value));
         }
         return wrapper;
     }
@@ -118,15 +113,10 @@ public abstract class WrapNode extends RubyBaseNode {
         ValueWrapper wrapper = value.getValueWrapper();
         if (wrapper == null) {
             noHandleProfile.enter(node);
-            synchronized (value) {
-                wrapper = value.getValueWrapper();
-                if (wrapper == null) {
-                    /* This is double-checked locking, but it's safe because ValueWrapper only has final fields, so the
-                     * racy read above sees either null or a fully-initialized ValueWrapper. */
-                    wrapper = createWrapperNode.execute(node, value);
-                    value.setValueWrapper(wrapper);
-                }
-            }
+            /* The racy initial read is safe because ValueWrapper only has final fields, so it sees either null or a
+             * fully-initialized ValueWrapper. If two threads race, one wrapper wins and the other remains unused in its
+             * HandleBlock, which is harmless. */
+            wrapper = value.setValueWrapperIfAbsent(createWrapperNode.execute(node, value));
         }
         return wrapper;
     }
