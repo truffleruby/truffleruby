@@ -37,18 +37,25 @@ public abstract class MarkingServiceNodes {
     public abstract static class KeepAliveNode extends RubyBaseNode {
 
         /** Keeps the wrapper's object, the wrapper and its handle block alive until the current C extension call
-         * returns, by preserving
-         * {@link ValueWrapper#keepAliveObject(Node, InlinedConditionProfile, InlinedConditionProfile)}. */
-        public abstract void execute(Node node, ValueWrapper wrapper);
+         * returns. The object must be passed in from a strong reference the caller holds (or null if it only has the
+         * wrapper): re-reading it from the wrapper's weak reference here would leave a window where the GC could
+         * collect it before the keep-alive list references it (see
+         * {@link org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode}). */
+        public abstract void execute(Node node, Object object, ValueWrapper wrapper);
 
         @Specialization
-        static void keepObject(Node node, ValueWrapper wrapper,
+        static void keepObject(Node node, Object objectArgument, ValueWrapper wrapper,
                 @Bind("getStack(node)") ExtensionCallStack stack,
                 @Cached InlinedConditionProfile strongRefProfile,
-                @Cached InlinedConditionProfile collectedProfile,
+                @Cached InlinedConditionProfile nothingToKeepProfile,
                 @Cached InlinedConditionProfile sameObjectProfile,
                 @Cached InlinedConditionProfile growProfile) {
-            final Object object = wrapper.keepAliveObject(node, strongRefProfile, collectedProfile);
+            final Object object = wrapper.keepAliveObject(node, objectArgument, strongRefProfile);
+            if (nothingToKeepProfile.profile(node, object == null)) {
+                // The caller only had the wrapper and the object was already collected: the handle is
+                // already dead, there is nothing left to keep alive.
+                return;
+            }
             final MarkingService.ExtensionCallStackEntry entry = stack.current;
             final Object[] preservedObjects = entry.preservedObjects;
             final int count = entry.preservedObjectsCount;

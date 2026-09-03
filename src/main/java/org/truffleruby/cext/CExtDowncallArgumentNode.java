@@ -28,21 +28,17 @@
  */
 package org.truffleruby.cext;
 
-import com.oracle.truffle.api.dsl.Bind;
-import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.nodes.Node;
 
-import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
 import org.truffleruby.extra.ffi.RubyPointer;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
 
 /** Converts an argument of a {@code Primitive.cext_invoke_*} native downcall (see CExtInvokePrimitives) to a native
- * long: a VALUE handle for {@link ValueWrapper}s (keeping wrappers with a tagged object handle alive until the end of
- * the current C extension call, see {@link WrapperToHandleNode}), the address for pointers, 0 for nil (NULL), and longs
- * (addresses, handles and plain integers) as-is. */
+ * long: the VALUE handle for a {@link ValueWrapper} (which comes from Primitive.cext_wrap, see CExtNodes.WrapValueNode,
+ * so its object is already kept alive until the end of the current C extension call), the address for pointers, 0 for
+ * nil (NULL), and longs (addresses, handles and plain integers) as-is. */
 @GenerateUncached
 public abstract class CExtDowncallArgumentNode extends RubyBaseNode {
 
@@ -54,10 +50,8 @@ public abstract class CExtDowncallArgumentNode extends RubyBaseNode {
     }
 
     @Specialization
-    static long doValueWrapper(ValueWrapper value,
-            @Bind Node node,
-            @Cached WrapperToHandleNode wrapperToHandleNode) {
-        return wrapperToHandleNode.execute(node, value);
+    static long doValueWrapper(ValueWrapper value) {
+        return value.handle;
     }
 
     @Specialization

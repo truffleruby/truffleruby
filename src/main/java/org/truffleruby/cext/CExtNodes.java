@@ -43,6 +43,7 @@ import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.MarkingService.ExtensionCallStack;
 import org.truffleruby.core.MarkingServiceNodes;
+import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
 import org.truffleruby.core.MarkingServiceNodes.RunMarkOnExitNode;
 import org.truffleruby.core.array.ArrayToObjectArrayNode;
 import org.truffleruby.core.array.ArrayUtils;
@@ -1764,13 +1765,24 @@ public abstract class CExtNodes {
 
     }
 
+    /** Wraps a Ruby object into the ValueWrapper which Ruby code then passes to C as a VALUE, as a downcall argument
+     * ({@link CExtDowncallArgumentNode}) or an upcall result ({@link CExtUpcallRootNode.WrappedResultNode}). The object
+     * is kept alive until the end of the current C extension call here, since the wrapper only references it weakly and
+     * once this primitive returns nothing else might reference it strongly (e.g. a Proc created only to be wrapped), so
+     * the conversion to a handle at the boundary could otherwise find it collected. */
     @Primitive(name = "cext_wrap")
     public abstract static class WrapValueNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
         ValueWrapper wrap(Object value,
-                @Cached WrapNode wrapNode) {
-            return wrapNode.execute(value);
+                @Cached WrapNode wrapNode,
+                @Cached KeepAliveNode keepAliveNode,
+                @Cached InlinedConditionProfile taggedObjectProfile) {
+            final ValueWrapper wrapper = wrapNode.execute(value);
+            if (taggedObjectProfile.profile(this, ValueWrapperManager.isTaggedObject(wrapper.handle))) {
+                keepAliveNode.execute(this, value, wrapper);
+            }
+            return wrapper;
         }
     }
 
@@ -1867,7 +1879,7 @@ public abstract class CExtNodes {
             ValueWrapper wrappedValue = toWrapperNode.execute(this, handle);
             if (wrappedValue != null) {
                 noExceptionProfile.enter(this);
-                keepAliveNode.execute(this, wrappedValue);
+                keepAliveNode.execute(this, wrappedValue.getObject(), wrappedValue);
             }
             return nil;
         }
