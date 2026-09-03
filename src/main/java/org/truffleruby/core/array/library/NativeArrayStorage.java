@@ -101,7 +101,7 @@ public final class NativeArrayStorage implements ObjectGraphNode {
             @Cached WrapNode wrapNode,
             @Cached WrapperToHandleNode wrapperToHandleNode,
             @Bind Node node) {
-        writeElement(index, wrapperToHandleNode.execute(node, wrapNode.execute(value)));
+        writeElement(index, wrapperToHandleNode.execute(node, value, wrapNode.execute(value)));
     }
 
     @ExportMessage

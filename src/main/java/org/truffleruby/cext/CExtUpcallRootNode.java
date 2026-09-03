@@ -293,7 +293,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
                 @Bind Node node,
                 @Cached WrapNode wrapNode,
                 @Cached WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(node, wrapNode.execute(value));
+            return wrapperToHandleNode.execute(node, value, wrapNode.execute(value));
         }
     }
 
@@ -307,7 +307,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         static long wrapperToHandle(ValueWrapper value,
                 @Bind Node node,
                 @Cached WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(node, value);
+            return wrapperToHandleNode.execute(node, value.getObject(), value);
         }
     }
 
@@ -322,7 +322,8 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
             if (longProfile.profile(node, id instanceof Long)) {
                 return id;
             } else {
-                return wrapperToHandleNode.execute(node, (ValueWrapper) id);
+                final ValueWrapper wrapper = (ValueWrapper) id;
+                return wrapperToHandleNode.execute(node, wrapper.getObject(), wrapper);
             }
         }
     }
