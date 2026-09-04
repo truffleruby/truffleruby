@@ -976,6 +976,16 @@ describe "Marshal.load" do
       loaded.instance_variable_get(:@ivar).should_not.is_a?(Meths)
     end
 
+    it "does not leak the extending module to a user-marshaled instance variable when loading an extended Object" do
+      obj = Object.new.extend(Meths)
+      obj.instance_variable_set(:@ivar, UserMarshal.new)
+      dump = "\x04\be:\nMethso:\vObject\x06:\n@ivarU:\x10UserMarshal:\tdata"
+      dump.should == Marshal.dump(obj)
+      loaded = Marshal.load(dump)
+      loaded.should.is_a?(Meths)
+      loaded.instance_variable_get(:@ivar).should_not.is_a?(Meths)
+    end
+
     it "isolates extending modules between an extended Object and an instance variable extended with another module" do
       obj = Object.new.extend(Meths)
       obj.instance_variable_set(:@ivar, Object.new.extend(MethsMore))

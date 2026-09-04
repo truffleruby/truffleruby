@@ -10,6 +10,3 @@ fails:Marshal.load for a Regexp restore the regexp instance variables
 fails:Marshal.load for a Regexp loads a Regexp subclass instance variables when it is extended with a module
 fails:Marshal.load for a String sets binmode if it is loading through StringIO stream
 fails:Marshal.load for a Regexp loads a Regexp subclass instance variables
-fails:Marshal.load for an Array isolates extending modules between an extended Array and a nested element extended with another module
-fails:Marshal.load for a Struct isolates extending modules between an extended Struct and a member object extended with another module
-fails:Marshal.load for an Object isolates extending modules between an extended Object and an instance variable extended with another module
