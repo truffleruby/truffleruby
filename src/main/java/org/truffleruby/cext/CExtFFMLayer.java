@@ -184,10 +184,14 @@ public final class CExtFFMLayer {
 
     // region Upcall runtime, called by CExtUpcallTargets
 
-    /** Execute the upcall at the given index in CExtUpcallTargets order, with the raw boxed primitive arguments. The
-     * argument and result conversions happen in {@link CExtUpcallRootNode} with cached nodes; the result is the boxed
-     * return carrier value ({@code Long} for handles and pointers, {@code Integer}, {@code Double}). */
-    public Object upcall(int index, Object... arguments) {
+    /** Shared arguments array for upcalls without arguments, so they allocate nothing for their arguments */
+    public static final long[] NO_ARGUMENTS = new long[0];
+
+    /** Execute the upcall at the given index in CExtUpcallTargets order, with the raw arguments encoded as longs
+     * (doubles as their raw bits), so the primitive arguments need no boxing. The argument and result conversions
+     * happen in {@link CExtUpcallRootNode} with cached nodes; the result is the boxed return carrier value
+     * ({@code Long} for handles and pointers, {@code Integer}, {@code Double}). */
+    public Object upcall(int index, long... arguments) {
         CallTarget callTarget = upcallCallTargets.get(index);
         if (callTarget == null) {
             callTarget = createUpcallCallTarget(index);
