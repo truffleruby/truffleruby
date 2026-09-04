@@ -26,7 +26,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 @GenerateUncached
 public abstract class IDToSymbolNode extends RubyBaseNode {
 
-    public abstract RubySymbol execute(Object value);
+    public abstract RubySymbol execute(long value);
 
     @Specialization(guards = "isStaticSymbol(value)")
     RubySymbol unwrapStaticSymbol(long value,

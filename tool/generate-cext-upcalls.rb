@@ -279,9 +279,16 @@ UPCALLS.each_with_index do |(cname, kind, ret, args), index|
   carriers = args.chars
   params = java_params(carriers)
 
-  raw_names = []
-  carriers.each_index { |i| raw_names << "v#{i}" }
-  upcall_arguments = (["INDEX_#{cname}"] + raw_names).join(', ')
+  # Arguments are passed as a single long[] (doubles as their raw bits) so no argument is boxed
+  encoded_arguments = carriers.each_with_index.map do |c, i|
+    c == 'D' ? "Double.doubleToRawLongBits(v#{i})" : "v#{i}"
+  end
+  arguments_array = if encoded_arguments.empty?
+                      'CExtFFMLayer.NO_ARGUMENTS'
+                    else
+                      "new long[]{ #{encoded_arguments.join(', ')} }"
+                    end
+  upcall_arguments = "INDEX_#{cname}, #{arguments_array}"
 
   ret_type = JAVA_TYPES.fetch(ret)
 
@@ -304,16 +311,14 @@ UPCALLS.each_with_index do |(cname, kind, ret, args), index|
     java << line.rstrip << "\n"
   end
   java << "        try {\n"
-  if ret == 'O'
-    java << "            runtime.upcall(#{upcall_arguments});\n"
+  return_prefix = ret == 'O' ? '' : "return #{RET_UNBOX.fetch(ret)}"
+  call_line = "            #{return_prefix}runtime.upcall(#{upcall_arguments});"
+  if call_line.length <= 120
+    java << call_line << "\n"
   else
-    call_line = "            return #{RET_UNBOX.fetch(ret)}runtime.upcall(#{upcall_arguments});"
-    if call_line.length <= 120
-      java << call_line << "\n"
-    else
-      java << "            return #{RET_UNBOX.fetch(ret)}runtime\n"
-      java << "                    .upcall(#{upcall_arguments});\n"
-    end
+    # wrap after the index like the Eclipse formatter (continuation indent 12 + 8)
+    java << "            #{return_prefix}runtime.upcall(INDEX_#{cname},\n"
+    java << "                    #{arguments_array});\n"
   end
   java << "        } catch (Throwable t) {\n"
   java << "            reportException(runtime, t);\n"

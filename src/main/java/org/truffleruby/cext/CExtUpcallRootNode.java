@@ -50,8 +50,9 @@ import org.truffleruby.language.dispatch.DispatchNode;
 
 /** Executes one C extension upcall (see tool/cext-upcalls.rb) with cached nodes, so the argument and result conversions
  * and the dispatch to the Truffle::CExt method partial-evaluate. Called from the corresponding
- * {@link CExtUpcallTargets} method through {@link CExtFFMLayer#upcall(int, Object...)}. The frame arguments are the raw
- * boxed primitive upcall arguments. */
+ * {@link CExtUpcallTargets} method through {@link CExtFFMLayer#upcall(int, long[])}. The single frame argument is the
+ * long[] of raw upcall arguments (doubles as raw bits), so the primitive arguments need no boxing: only the converted
+ * Ruby call arguments are boxed where needed, and VALUE handles are unwrapped straight from the longs. */
 public final class CExtUpcallRootNode extends RubyBaseRootNode {
 
     /** The kind of a native value in an upcall signature, from the carrier letters in tool/cext-upcalls.rb */
@@ -131,7 +132,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
-        return executeUpcall.execute(frame.getArguments());
+        return executeUpcall.execute((long[]) frame.getArguments()[0]);
     }
 
     @Override
@@ -178,7 +179,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         }
 
         @ExplodeLoop
-        public Object execute(Object[] rawArguments) {
+        public Object execute(long[] rawArguments) {
             final Object receiver;
             final int argumentsOffset;
             if (receiverNode != null) {
@@ -202,25 +203,42 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         }
     }
 
-    /** Converts one raw boxed upcall argument to the corresponding Ruby value, per its {@link Carrier} */
+    /** Converts one raw long upcall argument (see {@link CExtFFMLayer#upcall(int, long[])}) to the corresponding Ruby
+     * value, per its {@link Carrier} */
     public abstract static class UpcallArgumentNode extends RubyBaseNode {
 
         static UpcallArgumentNode create(Carrier carrier) {
             return switch (carrier) {
                 case VALUE -> CExtUpcallRootNodeFactory.ValueArgumentNodeGen.create();
-                case INT, LONG, DOUBLE, POINTER -> new PassThroughArgumentNode();
+                case INT -> new IntArgumentNode();
+                case LONG, POINTER -> new LongArgumentNode();
+                case DOUBLE -> new DoubleArgumentNode();
                 case ID -> CExtUpcallRootNodeFactory.IDArgumentNodeGen.create();
                 default -> throw CompilerDirectives.shouldNotReachHere(carrier.name());
             };
         }
 
-        public abstract Object execute(Object rawArgument);
+        public abstract Object execute(long rawArgument);
     }
 
-    static final class PassThroughArgumentNode extends UpcallArgumentNode {
+    static final class LongArgumentNode extends UpcallArgumentNode {
         @Override
-        public Object execute(Object rawArgument) {
+        public Object execute(long rawArgument) {
             return rawArgument;
+        }
+    }
+
+    static final class IntArgumentNode extends UpcallArgumentNode {
+        @Override
+        public Object execute(long rawArgument) {
+            return (int) rawArgument;
+        }
+    }
+
+    static final class DoubleArgumentNode extends UpcallArgumentNode {
+        @Override
+        public Object execute(long rawArgument) {
+            return Double.longBitsToDouble(rawArgument);
         }
     }
 
@@ -235,7 +253,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
 
     abstract static class IDArgumentNode extends UpcallArgumentNode {
         @Specialization
-        static RubySymbol idToSymbol(Object rawArgument,
+        static RubySymbol idToSymbol(long rawArgument,
                 @Cached IDToSymbolNode idToSymbolNode) {
             return idToSymbolNode.execute(rawArgument);
         }
