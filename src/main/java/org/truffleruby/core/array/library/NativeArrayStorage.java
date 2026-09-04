@@ -295,11 +295,10 @@ public final class NativeArrayStorage implements ObjectGraphNode {
         for (int i = 0; i < length; i++) {
             final ValueWrapper wrapper = ToWrapperNode.executeUncached(readElement(i));
             if (wrapper != null) {
-                /* Preserve the ValueWrapper and not just the unwrapped object: for a Float or Bignum-range integer, the
-                 * boxed value does not reference its ValueWrapper back, so preserving only the box would let the
-                 * wrapper and its HandleBlock be collected while the native storage still holds the handle. The wrapper
-                 * strongly references both the object and its block. */
-                markedObjects[i] = wrapper;
+                /* Preserve the keep-alive object and not the wrapper itself: the wrapper now only references its object
+                 * weakly, so preserving the wrapper alone would no longer keep e.g. a RubyString element alive.
+                 * keepAliveObject() keeps the object, the wrapper and its HandleBlock alive in all cases. */
+                markedObjects[i] = wrapper.keepAliveObject();
             }
         }
     }
