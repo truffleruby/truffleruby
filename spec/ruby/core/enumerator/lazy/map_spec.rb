@@ -61,4 +61,16 @@ describe "Enumerator::Lazy#map" do
   it "doesn't unwrap Arrays" do
     Enumerator.new {|y| y.yield([1])}.lazy.to_a.should == [[1]]
   end
+
+  it "passes a source yield with no value on to the block as nil" do
+    args = nil
+    Enumerator.new { |y| y.yield }.lazy.map { |*a| args = a }.force
+    args.should == [nil]
+  end
+
+  it "passes every value of a multi-value source yield on to the block" do
+    args = nil
+    Enumerator.new { |y| y.yield 1, 2 }.lazy.map { |*a| args = a }.force
+    args.should == [1, 2]
+  end
 end

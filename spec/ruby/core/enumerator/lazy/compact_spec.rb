@@ -11,7 +11,7 @@ describe "Enumerator::Lazy#compact" do
       args.should == [[1, 2]]
     end
 
-    it "removes a zero-argument source yield like nil" do
+    it "removes a source yield with no value like nil" do
       e = Enumerator.new { |y| y.yield; y.yield :v }
       collected = []
       e.lazy.compact.each { |*a| collected << a }
@@ -27,5 +27,21 @@ describe "Enumerator::Lazy#compact" do
 
   it "sets #size to nil" do
     Enumerator::Lazy.new(Object.new, 100) {}.compact.size.should == nil
+  end
+
+  # Cannot use shared/value_propagation.rb wholesale: #compact removes the
+  # packed nil, so neither YieldsMixed nor a yield with no value survives it.
+  describe "propagating source yields to later methods in the chain" do
+    it "passes every value of a multi-value source yield to a splat block later in the chain" do
+      args = nil
+      Enumerator.new { |y| y.yield 1, 2 }.lazy.compact.map { |*a| args = a }.force
+      args.should == [1, 2]
+    end
+
+    it "yields a single value once a method in the chain replaces the value" do
+      yields = []
+      Enumerator.new { |y| y.yield 1, 2 }.lazy.compact.map { |x| x }.map { |*a| yields << a }.force
+      yields.should == [[1]]
+    end
   end
 end

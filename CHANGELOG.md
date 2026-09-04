@@ -65,6 +65,7 @@ Compatibility:
 * Run a signal handler immediately when `Process.kill(signal, Process.pid)` is called on the main Thread (#4383, @eregon).
 * Fix `Module#module_function` and keep new Module methods public created from implicitly private callbacks (#4388, @andrykonchin).
 * Add `flags` keyword argument to `Dir.glob` as an alternative to the positional argument (#4394, @earlopain).
+* Fix `Enumerator::Lazy#{compact,drop,drop_while,grep,grep_v,reject,select,take,take_while,uniq}` to pass multiple values yielded by the source to the next method in the chain, and all lazy methods to see a source yield with no value as `nil` (#4420, @sampokuokkanen).
 
 Performance:
 
