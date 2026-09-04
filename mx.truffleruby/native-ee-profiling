@@ -1,4 +1,4 @@
-# Identical to native-ee-profiling, but the env name implies GraalVM Community
+# Identical to native-profiling, but the env name implies Oracle GraalVM
 DYNAMIC_IMPORTS=/tools
 BUILD_TARGETS=TRUFFLERUBY_NATIVE_STANDALONE
 NATIVE_IMAGES=lib:rubyvm
