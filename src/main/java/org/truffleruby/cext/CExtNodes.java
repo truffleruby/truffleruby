@@ -1781,20 +1781,6 @@ public abstract class CExtNodes {
         }
     }
 
-    @Primitive(name = "cext_to_wrapper")
-    public abstract static class CExtToWrapperNode extends PrimitiveArrayArgumentsNode {
-        @Specialization
-        ValueWrapper toWrapper(long handle,
-                @Cached ToWrapperNode toWrapperNode) {
-            ValueWrapper wrapper = toWrapperNode.execute(this, handle);
-            if (wrapper == null) {
-                CompilerDirectives.transferToInterpreterAndInvalidate();
-                throw CompilerDirectives.shouldNotReachHere("ValueWrapper not found for " + handle);
-            }
-            return wrapper;
-        }
-    }
-
     /** Returns what a long-lived list must reference to keep the given VALUE and its handle alive, see
      * {@link ValueWrapper#keepAliveObject()} */
     @Primitive(name = "cext_keep_alive_object")
