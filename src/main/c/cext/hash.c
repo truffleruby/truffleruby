@@ -97,9 +97,7 @@ void rb_hash_foreach(VALUE hash, int (*func)(VALUE key, VALUE val, VALUE arg), V
 }
 
 void rb_hash_bulk_insert(long n, const VALUE *values, VALUE hash) {
-  for (long i = 0; i < n; i += 2) {
-    rb_tr_up_send2_o_aset(hash, values[i], values[i + 1]);
-  }
+  rb_tr_up_rb_hash_bulk_insert(n, values, hash);
 }
 
 VALUE rb_hash_size(VALUE hash) {

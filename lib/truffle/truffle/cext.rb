@@ -1183,7 +1183,7 @@ module Truffle::CExt
 
   def rb_hash_new_capa(capacity)
     raise RuntimeError, 'st_table too big' if capacity < 0
-    {}
+    Hash.new(capacity: capacity)
   end
 
   def rb_ident_hash_new

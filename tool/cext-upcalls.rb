@@ -328,6 +328,7 @@ module CExtUpcalls
     ["rb_gv_set", :cext, "V", "VV"],
     ["rb_hash", :cext, "V", "V"],
     ["rb_hash_aref", :cext, "V", "VV"],
+    ["rb_hash_bulk_insert", :cext, "O", "LPV"],
     ["rb_hash_foreach", :cext, "O", "VPP"],
     ["rb_hash_get_or_undefined", :cext, "V", "VV"],
     ["rb_hash_new", :cext, "V", ""],
