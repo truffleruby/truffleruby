@@ -1,1 +1,2 @@
 fails(deprecated):C-API Array function rb_iterate calls a function with the other function available as a block
+slow:C-API Array function RARRAY_PTR keeps Float elements alive across GC and later accesses

@@ -31,6 +31,10 @@ import org.truffleruby.language.RubyBaseNode;
 @ImportStatic(ValueWrapperManager.class)
 public abstract class ToWrapperNode extends RubyBaseNode {
 
+    public static ValueWrapper executeUncached(long handle) {
+        return ToWrapperNodeGen.getUncached().execute(null, handle);
+    }
+
     /** Returns null for invalid handles */
     public abstract ValueWrapper execute(Node node, long handle);
 
