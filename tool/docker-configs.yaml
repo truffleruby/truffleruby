@@ -23,7 +23,7 @@ deb: &deb
     - RUN locale-gen
     - ENV LANG=en_US.UTF-8
 
-# Keep this list in sync with the docker-test.yml workflow
+# Keep this list in sync with the release.yml workflow
 
 ol8:
   base: oraclelinux:8-slim
