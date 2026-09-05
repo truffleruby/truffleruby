@@ -65,6 +65,16 @@ ubuntu2204:
   install: RUN apt-get update && apt-get install -y
   <<: *deb
 
+ubuntu2404:
+  base: ubuntu:24.04
+  install: RUN apt-get update && apt-get install -y
+  <<: *deb
+
+ubuntu2604:
+  base: ubuntu:26.04
+  install: RUN apt-get update && apt-get install -y
+  <<: *deb
+
 debian12:
   base: debian:12 # bookworm
   install: RUN apt-get update && apt-get install -y
