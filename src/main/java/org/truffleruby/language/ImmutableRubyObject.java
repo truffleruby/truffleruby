@@ -10,6 +10,10 @@
  */
 package org.truffleruby.language;
 
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
+
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
@@ -57,12 +61,25 @@ public abstract class ImmutableRubyObject implements TruffleObject {
         this.objectId = objectId;
     }
 
+    private static final VarHandle VALUE_WRAPPER;
+    static {
+        try {
+            VALUE_WRAPPER = MethodHandles.lookup()
+                    .findVarHandle(ImmutableRubyObject.class, "valueWrapper", ValueWrapper.class);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw CompilerDirectives.shouldNotReachHere(e);
+        }
+    }
+
     public ValueWrapper getValueWrapper() {
         return valueWrapper;
     }
 
-    public void setValueWrapper(ValueWrapper valueWrapper) {
-        this.valueWrapper = valueWrapper;
+    /** Sets the ValueWrapper of this object, unless another thread raced and set it first: the returned wrapper is the
+     * one to use, and it is the given wrapper unless the race was lost. */
+    public final ValueWrapper setValueWrapperIfAbsent(ValueWrapper wrapper) {
+        final ValueWrapper witness = (ValueWrapper) VALUE_WRAPPER.compareAndExchange(this, null, wrapper);
+        return witness == null ? wrapper : witness;
     }
 
     // region InteropLibrary messages

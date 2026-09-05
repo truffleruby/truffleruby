@@ -52,7 +52,7 @@ public abstract class WriteBarrierNode extends RubyBaseNode {
 
     protected abstract void executeInternal(Node node, Object value, int depth);
 
-    @Specialization(guards = { "!isRubyDynamicObject(value)", "!isFinalizer(value)" })
+    @Specialization(guards = { "!isRubyDynamicObject(value)", "!isFinalizer(value)", "!isObjectArray(value)" })
     static void noWriteBarrier(Node node, Object value, int depth) {
     }
 
@@ -93,8 +93,25 @@ public abstract class WriteBarrierNode extends RubyBaseNode {
         }
     }
 
+    /** An Object[] in a DynamicObject property, like the Layouts.MARKED_OBJECTS_IDENTIFIER list of objects marked by a
+     * C extension mark function: its elements are reachable from the owner (see ObjectGraph#addProperty) and must be
+     * shared with it. */
+    @Specialization
+    @TruffleBoundary
+    static void writeBarrierObjectArray(Node node, Object[] array, int depth) {
+        for (Object element : array) {
+            if (element != null) {
+                SharedObjects.writeBarrier(getLanguage(node), element);
+            }
+        }
+    }
+
     protected static boolean isFinalizer(Object object) {
         return object instanceof FinalizerReference;
+    }
+
+    protected static boolean isObjectArray(Object object) {
+        return object instanceof Object[];
     }
 
 }
