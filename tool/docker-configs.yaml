@@ -43,14 +43,14 @@ ol10:
   locale: glibc-langpack-en
   <<: *rpm
 
-fedora37:
-  base: fedora:37
+fedora43:
+  base: fedora:43
   install: RUN dnf install -y
   locale: glibc-langpack-en
   <<: *rpm
 
-fedora38:
-  base: fedora:38
+fedora44:
+  base: fedora:44
   install: RUN dnf install -y
   locale: glibc-langpack-en
   <<: *rpm
