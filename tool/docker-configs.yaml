@@ -23,7 +23,7 @@ deb: &deb
     - RUN locale-gen
     - ENV LANG=en_US.UTF-8
 
-# Keep this list in sync with the docker-test.yml workflow
+# Keep this list in sync with the release.yml workflow
 
 ol8:
   base: oraclelinux:8-slim
@@ -43,14 +43,14 @@ ol10:
   locale: glibc-langpack-en
   <<: *rpm
 
-fedora37:
-  base: fedora:37
+fedora43:
+  base: fedora:43
   install: RUN dnf install -y
   locale: glibc-langpack-en
   <<: *rpm
 
-fedora38:
-  base: fedora:38
+fedora44:
+  base: fedora:44
   install: RUN dnf install -y
   locale: glibc-langpack-en
   <<: *rpm
@@ -65,8 +65,13 @@ ubuntu2204:
   install: RUN apt-get update && apt-get install -y
   <<: *deb
 
-debian11:
-  base: debian:11 # bullseye
+ubuntu2404:
+  base: ubuntu:24.04
+  install: RUN apt-get update && apt-get install -y
+  <<: *deb
+
+ubuntu2604:
+  base: ubuntu:26.04
   install: RUN apt-get update && apt-get install -y
   <<: *deb
 
