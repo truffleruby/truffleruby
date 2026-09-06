@@ -130,7 +130,13 @@ public abstract class ObjectGraph {
 
     public static Set<Object> getAdjacentObjects(RubyDynamicObject object) {
         final Set<Object> reachable = newObjectSet();
+        getAdjacentObjects(object, reachable);
+        return reachable;
+    }
 
+    /** The given Set can be a special implementation like SharedObjects.ShareQueue, which processes objects as they are
+     * added instead of collecting them. */
+    public static void getAdjacentObjects(RubyDynamicObject object, Set<Object> reachable) {
         reachable.add(object.getLogicalClass());
         reachable.add(object.getMetaClass());
 
@@ -142,8 +148,6 @@ public abstract class ObjectGraph {
             final Object value = DynamicObject.GetNode.getUncached().execute(object, property.getKey(), null);
             addProperty(reachable, value);
         }
-
-        return reachable;
     }
 
     public static void addProperty(Set<Object> reachable, Object value) {
