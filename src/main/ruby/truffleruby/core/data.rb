@@ -96,7 +96,7 @@ class Data
         undef_method :define
       end
 
-      def self.new(*args, **kwargs)
+      def self.new(*args, **kwargs, &block)
         if !args.empty? and !kwargs.empty?
           raise ArgumentError, "wrong number of arguments (given #{args.size + 1}, expected 0)"
         end
@@ -104,7 +104,7 @@ class Data
         instance = allocate
 
         if !kwargs.empty?
-          instance.send(:initialize, **kwargs)
+          instance.send(:initialize, **kwargs, &block)
         else
           if args.size > self::CLASS_MEMBERS.size
             raise ArgumentError, "wrong number of arguments (given #{args.size}, expected 0..#{self::CLASS_MEMBERS.size})"
@@ -115,7 +115,7 @@ class Data
             kwargs_for_initialize[self::CLASS_MEMBERS[i]] = arg
           end
 
-          instance.send(:initialize, **kwargs_for_initialize)
+          instance.send(:initialize, **kwargs_for_initialize, &block)
         end
 
         instance

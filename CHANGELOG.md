@@ -66,6 +66,7 @@ Compatibility:
 * Run a signal handler immediately when `Process.kill(signal, Process.pid)` is called on the main Thread (#4383, @eregon).
 * Fix `Module#module_function` and keep new Module methods public created from implicitly private callbacks (#4388, @andrykonchin).
 * Add `flags` keyword argument to `Dir.glob` as an alternative to the positional argument (#4394, @earlopain).
+* Fix `new` on `Data` subclasses to pass the given block to `#initialize` (@eregon).
 
 Performance:
 
