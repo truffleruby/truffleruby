@@ -22,6 +22,7 @@ Bug fixes:
 * Fix converting the same mutable `String` to native memory concurrently (@eregon).
 * Fix keeping `Float` and big `Integer` elements of an `Array` converted to native storage by `RARRAY_PTR()` alive (@eregon).
 * Fix `Marshal.load` for an object extended with a module containing a nested user-marshaled object (#3943, @andrykonchin).
+* Fix `Regexp` comments in extended mode to always end at a newline, even when the newline is preceded by a backslash (#4435, @eregon).
 
 Compatibility:
 
