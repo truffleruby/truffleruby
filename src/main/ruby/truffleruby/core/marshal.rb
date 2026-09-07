@@ -610,7 +610,6 @@ module Marshal
       end
 
       @consumed = 0
-      @modules = nil
       @has_ivar = []
       @proc = proc
       @freeze = freeze
@@ -683,7 +682,9 @@ module Marshal
       @symlinks[obj.__id__] = sz
     end
 
-    def construct(ivar_index = nil, call_proc = true, postpone_freezing = false)
+    # Pass `modules` to avoid leaking extending modules (?e) to nested objects
+    # and extend user-marshaled (?U) objects before #marshal_load is called.
+    def construct(ivar_index = nil, call_proc = true, postpone_freezing = false, modules = nil)
       type = consume_byte()
       obj = case type
             when 48   # ?0
@@ -723,7 +724,7 @@ module Marshal
             when 117  # ?u
               construct_user_defined(ivar_index)
             when 85   # ?U
-              construct_user_marshal
+              construct_user_marshal(modules)
             when 100  # ?d
               construct_data
             when 64   # ?@
@@ -744,14 +745,17 @@ module Marshal
 
               return sym
             when 101  # ?e
-              @modules ||= []
-
               name = get_symbol
-              @modules << const_lookup(name, Module)
+              mod = const_lookup(name, Module)
+              modules ||= []
+              modules << mod
 
-              obj = construct nil, false, true
+              obj = construct nil, false, true, modules
 
-              extend_object obj
+              until modules.empty?
+                m = modules.pop
+                extend_object obj, m
+              end
 
               obj
             when 67   # ?C
@@ -761,13 +765,13 @@ module Marshal
               @user_classes ||= []
               @user_classes << name
 
-              construct nil, false, postpone_freezing
+              construct nil, false, postpone_freezing, modules
 
             when 73   # ?I
               ivar_index = @has_ivar.length
               @has_ivar.push true
 
-              obj = construct ivar_index, false, true
+              obj = construct ivar_index, false, true, modules
 
               set_instance_variables obj if @has_ivar.pop
 
@@ -896,11 +900,8 @@ module Marshal
       store_unique_object obj
 
       construct_integer.times do
-        original_modules = @modules
-        @modules = nil
         key = construct
         val = construct
-        @modules = original_modules
 
         # Use Primitive.hash_store (an alias for []=) to get around subclass overrides
         Primitive.hash_store(obj, key, val)
@@ -1067,13 +1068,18 @@ module Marshal
       obj
     end
 
-    def construct_user_marshal
+    def construct_user_marshal(modules)
       name = get_symbol
 
       klass = const_lookup name, Class
       obj = klass.allocate
 
-      extend_object obj if @modules
+      if modules
+        until modules.empty?
+          mod = modules.pop
+          extend_object obj, mod
+        end
+      end
 
       unless Primitive.respond_to? obj, :marshal_load, true
         raise TypeError, "instance of #{klass} needs to have method 'marshal_load'"
@@ -1084,12 +1090,9 @@ module Marshal
       obj
     end
 
-    def extend_object(obj)
-      until @modules.empty?
-        mod = @modules.pop
-        mod.__send__ :extend_object, obj
-        mod.__send__ :extended, obj
-      end
+    def extend_object(obj, mod)
+      mod.__send__ :extend_object, obj
+      mod.__send__ :extended, obj
     end
 
     def find_link(obj)
