@@ -1,5 +1,6 @@
 require_relative '../../../spec_helper'
 require_relative 'fixtures/classes'
+require_relative 'shared/value_propagation'
 
 describe "Enumerator::Lazy#grep_v" do
   before(:each) do
@@ -119,5 +120,12 @@ describe "Enumerator::Lazy#grep_v" do
     s = 0..Float::INFINITY
     s.lazy.grep_v(String).first(100).should ==
       s.first(100).grep_v(String)
+  end
+
+  describe "propagating source yields to later methods in the chain" do
+    before :each do
+      @lazy_method = -> e { e.grep_v(Float) }
+    end
+    it_behaves_like :enumerator_lazy_value_propagation, nil
   end
 end

@@ -2,8 +2,17 @@
 
 require_relative '../../../spec_helper'
 require_relative 'fixtures/classes'
+require_relative '../../enumerable/shared/value_packing'
+require_relative 'shared/value_propagation'
 
 describe "Enumerator::Lazy#grep" do
+  describe "value packing of source yields (matches Enumerable#grep)" do
+    before :each do
+      @take = -> e { e.lazy.grep(Object) }
+    end
+    it_behaves_like :enumerable_value_packing, nil
+  end
+
   before :each do
     @yieldsmixed = EnumeratorLazySpecs::YieldsMixed.new.to_enum.lazy
     @eventsmixed = EnumeratorLazySpecs::EventsMixed.new.to_enum.lazy
@@ -117,5 +126,12 @@ describe "Enumerator::Lazy#grep" do
     s = 0..Float::INFINITY
     s.lazy.grep(Numeric).first(100).should ==
       s.first(100).grep(Numeric)
+  end
+
+  describe "propagating source yields to later methods in the chain" do
+    before :each do
+      @lazy_method = -> e { e.grep(Object) }
+    end
+    it_behaves_like :enumerator_lazy_value_propagation, nil
   end
 end

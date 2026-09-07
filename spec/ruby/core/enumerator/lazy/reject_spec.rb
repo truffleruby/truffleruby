@@ -3,6 +3,7 @@
 require_relative '../../../spec_helper'
 require_relative 'fixtures/classes'
 require_relative '../../enumerable/shared/value_packing'
+require_relative 'shared/value_propagation'
 
 describe "Enumerator::Lazy#reject" do
   describe "value packing of source yields (matches Enumerable#reject)" do
@@ -82,5 +83,12 @@ describe "Enumerator::Lazy#reject" do
     s = 0..Float::INFINITY
     s.lazy.reject { |n| false }.first(100).should ==
       s.first(100).reject { |n| false }
+  end
+
+  describe "propagating source yields to later methods in the chain" do
+    before :each do
+      @lazy_method = -> e { e.reject { false } }
+    end
+    it_behaves_like :enumerator_lazy_value_propagation, nil
   end
 end
