@@ -25,7 +25,6 @@ import java.util.Arrays;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -94,26 +93,18 @@ public abstract class MarkingServiceNodes {
             // Do nothing.
         }
 
-        @Specialization(guards = "stack.hasSingleMarkObject()")
-        static void markSingleObject(Node node, ExtensionCallStack stack,
-                @Cached(inline = false) @Shared DispatchNode callNode) {
-            Object value = stack.getSingleMarkObject();
-            callNode.call(getContext(node).getCoreLibrary().truffleCExtModule, "run_marker", value);
-        }
-
-        @TruffleBoundary
-        @Specialization(guards = { "stack.hasMarkObjects()", "!stack.hasSingleMarkObject()" })
+        @Specialization(guards = "stack.hasMarkObjects()")
         static void marksToRun(Node node, ExtensionCallStack stack,
-                @Cached(inline = false) @Shared DispatchNode callNode) {
-            // Run the markers...
-            var valuesForMarking = stack.getMarkOnExitObjects();
-            // Push a new stack frame because we should
-            // mutate the list while iterating, and we
-            // don't know what the mark routine might do.
+                @Cached(inline = false) DispatchNode callNode) {
+            final Object[] valuesForMarking = stack.current.markOnExitObjects;
+            final int count = stack.current.markOnExitObjectsCount;
+            // Push a new stack frame because we don't know what the mark routines might do, and
+            // mark-on-exit objects they register must go to the new entry.
             stack.push(false, nil, nil);
             try {
-                for (var value : valuesForMarking) {
-                    callNode.call(getContext(node).getCoreLibrary().truffleCExtModule, "run_marker", value);
+                for (int i = 0; i < count; i++) {
+                    callNode.call(getContext(node).getCoreLibrary().truffleCExtModule, "run_marker",
+                            valuesForMarking[i]);
                 }
             } finally {
                 stack.pop();
