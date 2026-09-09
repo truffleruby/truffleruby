@@ -55,6 +55,13 @@ static VALUE rb_str_to_interned_str(VALUE str)
 typedef struct rvalue_cache_struct {
     int length;
     VALUE entries[JSON_RVALUE_CACHE_CAPA];
+#ifdef TRUFFLERUBY
+    /* The bytes of the cache entries, snapshotted by rvalue_cache_insert_at, so cache probes do not need to call into
+     * the Ruby runtime with RSTRING_GETMEM for every comparison. Entries are interned/frozen Strings (or Symbols of
+     * such Strings) so their bytes and address cannot change. */
+    const char *entry_ptrs[JSON_RVALUE_CACHE_CAPA];
+    long entry_lens[JSON_RVALUE_CACHE_CAPA];
+#endif
 } rvalue_cache;
 
 static rb_encoding *enc_utf8;
@@ -79,6 +86,12 @@ static inline VALUE build_symbol(const char *str, const long length)
 static void rvalue_cache_insert_at(rvalue_cache *cache, int index, VALUE rstring)
 {
     MEMMOVE(&cache->entries[index + 1], &cache->entries[index], VALUE, cache->length - index);
+#ifdef TRUFFLERUBY
+    MEMMOVE(&cache->entry_ptrs[index + 1], &cache->entry_ptrs[index], const char *, cache->length - index);
+    MEMMOVE(&cache->entry_lens[index + 1], &cache->entry_lens[index], long, cache->length - index);
+    VALUE bytes_owner = RB_TYPE_P(rstring, T_SYMBOL) ? rb_sym2str(rstring) : rstring;
+    RSTRING_GETMEM(bytes_owner, cache->entry_ptrs[index], cache->entry_lens[index]);
+#endif
     cache->length++;
     cache->entries[index] = rstring;
 }
@@ -117,6 +130,17 @@ ALWAYS_INLINE(static) int rstring_cache_memcmp(const char *str, const char *rptr
 #endif
 #endif
 
+#ifdef TRUFFLERUBY
+ALWAYS_INLINE(static) int rstring_cache_cmp(rvalue_cache *cache, int index, const char *str, const long length)
+{
+    long rstring_length = cache->entry_lens[index];
+    if (length == rstring_length) {
+        return rstring_cache_memcmp(str, cache->entry_ptrs[index], length);
+    } else {
+        return (int)(length - rstring_length);
+    }
+}
+#else
 ALWAYS_INLINE(static) int rstring_cache_cmp(const char *str, const long length, VALUE rstring)
 {
     const char *rstring_ptr;
@@ -130,6 +154,7 @@ ALWAYS_INLINE(static) int rstring_cache_cmp(const char *str, const long length, 
         return (int)(length - rstring_length);
     }
 }
+#endif
 
 ALWAYS_INLINE(static) VALUE rstring_cache_fetch(rvalue_cache *cache, const char *str, const long length)
 {
@@ -139,7 +164,11 @@ ALWAYS_INLINE(static) VALUE rstring_cache_fetch(rvalue_cache *cache, const char 
     while (low <= high) {
         int mid = (high + low) >> 1;
         VALUE entry = cache->entries[mid];
+#ifdef TRUFFLERUBY
+        int cmp = rstring_cache_cmp(cache, mid, str, length);
+#else
         int cmp = rstring_cache_cmp(str, length, entry);
+#endif
 
         if (cmp == 0) {
             return entry;
@@ -166,7 +195,11 @@ static VALUE rsymbol_cache_fetch(rvalue_cache *cache, const char *str, const lon
     while (low <= high) {
         int mid = (high + low) >> 1;
         VALUE entry = cache->entries[mid];
+#ifdef TRUFFLERUBY
+        int cmp = rstring_cache_cmp(cache, mid, str, length);
+#else
         int cmp = rstring_cache_cmp(str, length, rb_sym2str(entry));
+#endif
 
         if (cmp == 0) {
             return entry;
