@@ -25,6 +25,18 @@ describe "ENV.[]=" do
     ENV.key?("foo").should == false
   end
 
+  platform_is_not :windows do
+    it "accepts a BINARY variable name containing non-ASCII bytes" do
+      key = "ENV_ELEMENT_SET_SPEC_\u00DCBER"
+      begin
+        ENV[key.b] = "bar"
+        ENV[key].should == "bar"
+      ensure
+        ENV[key] = nil
+      end
+    end
+  end
+
   it "coerces the key argument with #to_str" do
     k = mock("key")
     k.should_receive(:to_str).and_return("foo")

@@ -31,9 +31,9 @@ import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.annotations.Primitive;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.CoreLibrary;
+import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.fiber.RubyFiber;
 import org.truffleruby.core.numeric.RubyBignum;
-import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.core.thread.RubyThread;
 import org.truffleruby.core.thread.ThreadStatus;
@@ -47,6 +47,7 @@ import org.truffleruby.shared.Platform;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.strings.AbstractTruffleString;
 
 @CoreModule(value = "Truffle::POSIX", isClass = true)
 public abstract class TrufflePosixNodes {
@@ -611,13 +612,18 @@ public abstract class TrufflePosixNodes {
         @Specialization(guards = "libEnvVar.isRubyString(this, envVar)", limit = "1")
         Object invalidate(Object envVar,
                 @Cached RubyStringLibrary libEnvVar) {
-            invalidateENV(StringOperations.getJavaString(envVar));
+            invalidateENV(libEnvVar.getTString(this, envVar), libEnvVar.getEncoding(this, envVar));
             return envVar;
         }
 
         @TruffleBoundary
-        private static void invalidateENV(String name) {
-            if (name.equals("TZ")) {
+        private static void invalidateENV(AbstractTruffleString name, RubyEncoding encoding) {
+            // Check if the env var name is "TZ" so we can invalidate the timezone if needed.
+            // Since the string can contain arbitrary bytes, we can't do a simple j.l.String comparison.
+            final var tencoding = encoding.tencoding;
+            if (name.byteLength(tencoding) == 2 &&
+                    name.readByteUncached(0, tencoding) == 'T' &&
+                    name.readByteUncached(1, tencoding) == 'Z') {
                 GetTimeZoneNode.invalidateTZ();
             }
         }
