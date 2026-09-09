@@ -26,7 +26,7 @@ To run C extension benchmarks, you first need to compile them.
 jt cextc bench/chunky_png/oily_png
 ```
 
-Then follow the instructions for benchmarking above, and then try:
+Then follow the instructions in [benchmarking.md](benchmarking.md), and then try:
 
 ```bash
 USE_CEXTS=true TRUFFLERUBYOPT="--experimental-options --cexts-log-load" jt benchmark bench/chunky_png/chunky-color-r.rb --simple
@@ -73,8 +73,9 @@ MRI) and be rethrown on the Java side when the downcall returns.
 
 We compile C extensions using the standard `mkmf` tool, and `gcc`/`clang` compilers.
 
-We pipe C source code through a pre-processor `lib/cext/preprocess.rb` before it
-goes to `gcc`/`clang` to work around some limitations.
+C source code goes through a pre-processor,
+`lib/truffle/truffle/cext_preprocessor.rb`, before it is compiled, which applies
+a few gem-specific source patches (see `lib/truffle/truffle/patches/`).
 
 ### API functions
 
@@ -92,8 +93,8 @@ as functions, where this makes sense.
 
 `VALUE` is defined as `unsigned long` as on MRI. In native code, every `VALUE`
 is a native handle: a tagged long for `Integer`s and the constants like `Qnil`,
-or an entry in the handle block map referencing a `ValueWrapper` holding the
-Ruby object.
+or an entry in the handle block map referencing the `ValueWrapper` of the Ruby
+object.
 
 On the Java side of an upcall, `VALUE` handle arguments are unwrapped to the
 Ruby object with `UnwrapNode` and results are wrapped with `WrapNode` and
@@ -107,28 +108,30 @@ conversion and management of native handles.
 ### String pointers
 
 When a Ruby String is accessed via `RSTRING_PTR` or `RSTRING_END`, it is
-permanently converted to a rope representing the String in native memory,
-instead of storing the bytes in the Java heap.
+permanently converted to a native `TruffleString`, storing the String's bytes
+in native memory instead of the Java heap.
 
 ### Data and typed data
 
-The user data pointer for data and typed data objects needs to be available as a
-right-hand-side value which can be assigned to, so we cannot implement this as a
-function call. Instead, when a data or typed data object is cast to pointers to
-the `RData` or `RTypedData` structures we create a proxy object that pretends to
-be a C pointer but really redirects interop reads and writes from C to read and
-write the data field in the object.
+Data and typed data objects have a real `struct RData` or `struct RTypedData`
+allocated in native memory (see `src/main/c/cext/data.c`), holding the mark and
+free functions and the user data pointer, so `RDATA()`, `RTYPEDDATA()` and
+`DATA_PTR()` work on plain native memory (including assigning to `->data`). The
+native struct address is attached to the Ruby object as a hidden variable
+(`DATA_STRUCT` in `lib/truffle/truffle/cext.rb`). Since the garbage
+collector cannot run the C mark functions, they are run by the
+`MarkingService` when a C extension call exits, for the data objects accessed
+during that call (see [cext-values.md](cext-values.md)); the free functions are
+run by the `DataObjectFinalizationService` when the object is collected.
 
 ### `rb_scan_args`
 
-`rb_scan_args` is problematic because it passes pointers to local variables in
-variadic arguments. Taking the address of a local variable that holds a Ruby
-object and passing that to a function which is not inlined is not supported, and
-`clang` will never inline a function with variadic arguments.
-
-We work around this by defining `rb_scan_args` as a macro that redirects to a
-function that is not variadic and handles up to ten pointers. This function is
-then inlined.
+`rb_scan_args` is defined as a macro (see
+`lib/cext/include/truffleruby/truffleruby.h`) that redirects to a non-variadic,
+always-inlined function handling up to ten out-pointers. When the format string
+is a constant, it is parsed only once per call site into a static
+`rb_tr_scan_args_parse_data`, so scanning the arguments compiles to simple
+inlined assignments with no format string parsing at runtime.
 
 ### Integer and pointer data model
 
