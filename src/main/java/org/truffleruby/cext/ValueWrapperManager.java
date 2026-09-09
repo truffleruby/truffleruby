@@ -206,11 +206,16 @@ public final class ValueWrapperManager {
      * holder it is never mutated again. Other fibers only read already-registered wrappers through
      * {@link #getWrapper(long, boolean)}. This holds for {@code HandleBlockHolder#sharedHandleBlock} too: "shared"
      * refers to the wrapped objects being shared (immutable) and to the block being registered in the process-wide
-     * {@code RubyLanguage#handleBlockSharedMap}, not to the block being filled by multiple fibers. */
+     * {@code RubyLanguage#handleBlockSharedMap}, not to the block being filled by multiple fibers.
+     *
+     * The block references its wrappers strongly: each {@link ValueWrapper} is itself the weak reference to its object,
+     * so the block does not keep wrapped objects alive. Live objects keep their wrapper alive (they reference it
+     * strongly), the wrapper keeps its block alive, and once all objects of a block die the block and its wrappers form
+     * an unreachable cycle collected together, which frees the handle range through the block's cleaner. */
     public static final class HandleBlock {
 
         private final long base;
-        private final ValueWrapperWeakReference[] wrappers;
+        private final ValueWrapper[] wrappers;
         private int count;
 
         @SuppressWarnings("unused") private Cleanable cleanable;
@@ -219,7 +224,7 @@ public final class ValueWrapperManager {
             HandleBlockAllocator allocator = RubyLanguage.handleBlockAllocator;
             long base = allocator.getFreeBlock();
             this.base = base;
-            this.wrappers = new ValueWrapperWeakReference[BLOCK_SIZE];
+            this.wrappers = new ValueWrapper[BLOCK_SIZE];
             this.count = 0;
             /* Blocks for shared (immutable) objects are process-wide and immortal (see
              * RubyLanguage#keepSharedHandleBlockAlive), so no cleaner for them: it would never run, and its Runnable
@@ -246,16 +251,12 @@ public final class ValueWrapperManager {
 
         public ValueWrapper getWrapper(long handle, boolean allowUnregisteredHandle) {
             int offset = (int) (handle & OFFSET_MASK) >> ADDRESS_ALIGN_BITS;
-            ValueWrapperWeakReference reference = wrappers[offset];
-            if (allowUnregisteredHandle) {
-                return reference == null ? null : reference.get();
-            } else {
-                if (reference == null) {
-                    CompilerDirectives.transferToInterpreterAndInvalidate();
-                    throw unregisteredHandle(handle);
-                }
-                return reference.get();
+            ValueWrapper wrapper = wrappers[offset];
+            if (!allowUnregisteredHandle && wrapper == null) {
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                throw unregisteredHandle(handle);
             }
+            return wrapper;
         }
 
         @TruffleBoundary
@@ -275,7 +276,7 @@ public final class ValueWrapperManager {
 
         public void registerWrapper(ValueWrapper wrapper) {
             assert wrapper.handle == nextHandle();
-            wrappers[count] = new ValueWrapperWeakReference(wrapper);
+            wrappers[count] = wrapper;
             count++;
         }
 
@@ -292,33 +293,30 @@ public final class ValueWrapperManager {
         }
     }
 
-    public static final class ValueWrapperWeakReference extends WeakReference<ValueWrapper> {
-        ValueWrapperWeakReference(ValueWrapper referent) {
-            super(referent);
-        }
-    }
-
     public static final class HandleBlockHolder {
         private HandleBlock handleBlock = null;
         private HandleBlock sharedHandleBlock = null;
     }
 
-    /** The same conversion as ValueWrapper's asPointer interop message: returns the handle of the wrapper, and keeps
-     * wrappers with a tagged object handle alive until the end of the current C extension call. */
+    /** Returns the handle of the wrapper, and keeps tagged object handles (and their object) alive until the end of the
+     * current C extension call. The object must be passed in by the caller, from a strong reference it holds (or null
+     * if it only has the wrapper): re-reading it from the wrapper's weak reference here would leave a window where, if
+     * nothing else references the object strongly anymore, the GC could collect it before the keep-alive list
+     * references it, leaving a dead handle. */
     @GenerateUncached
     @GenerateInline
     @GenerateCached(false)
     public abstract static class WrapperToHandleNode extends RubyBaseNode {
 
-        public abstract long execute(Node node, ValueWrapper wrapper);
+        public abstract long execute(Node node, Object object, ValueWrapper wrapper);
 
         @Specialization
-        static long wrapperToHandle(Node node, ValueWrapper wrapper,
+        static long wrapperToHandle(Node node, Object object, ValueWrapper wrapper,
                 @Cached KeepAliveNode keepAliveNode,
                 @Cached InlinedConditionProfile taggedObjectProfile) {
             final long handle = wrapper.handle;
             if (taggedObjectProfile.profile(node, isTaggedObject(handle))) {
-                keepAliveNode.execute(node, wrapper);
+                keepAliveNode.execute(node, object, wrapper);
             }
             return handle;
         }
@@ -331,7 +329,8 @@ public final class ValueWrapperManager {
     @GenerateCached(false)
     public abstract static class CreateWrapperNode extends RubyBaseNode {
 
-        private static final Set<ValueWrapper> keepAlive = ConcurrentHashMap.newKeySet();
+        /** {@link ValueWrapper#keepAliveObject()} tokens, which keep both the object and its handle alive. */
+        private static final Set<Object> keepAlive = ConcurrentHashMap.newKeySet();
 
         public abstract ValueWrapper execute(Node node, Object object);
 
@@ -346,8 +345,8 @@ public final class ValueWrapperManager {
         }
 
         @TruffleBoundary
-        protected static void keepAlive(ValueWrapper wrapper) {
-            keepAlive.add(wrapper);
+        protected static void keepAlive(Object keepAliveObject) {
+            keepAlive.add(keepAliveObject);
         }
 
         protected static ValueWrapper createWrapper(Object object, RubyContext context,
@@ -374,7 +373,7 @@ public final class ValueWrapperManager {
             final ValueWrapper wrapper = new ValueWrapper(object, block.nextHandle(), block);
             block.registerWrapper(wrapper);
             if (context.getOptions().CEXTS_KEEP_HANDLES_ALIVE) {
-                keepAlive(wrapper);
+                keepAlive(wrapper.keepAliveObject(object));
             }
             return wrapper;
         }

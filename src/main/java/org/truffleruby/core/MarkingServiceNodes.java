@@ -25,7 +25,6 @@ import java.util.Arrays;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -36,18 +35,30 @@ public abstract class MarkingServiceNodes {
     @GenerateInline
     public abstract static class KeepAliveNode extends RubyBaseNode {
 
-        public abstract void execute(Node node, ValueWrapper object);
+        /** Keeps the wrapper's object, the wrapper and its handle block alive until the current C extension call
+         * returns. The object must be passed in from a strong reference the caller holds (or null if it only has the
+         * wrapper): re-reading it from the wrapper's weak reference here would leave a window where the GC could
+         * collect it before the keep-alive list references it (see
+         * {@link org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode}). */
+        public abstract void execute(Node node, Object object, ValueWrapper wrapper);
 
         @Specialization
-        static void keepObject(Node node, ValueWrapper object,
+        static void keepObject(Node node, Object objectArgument, ValueWrapper wrapper,
                 @Bind("getStack(node)") ExtensionCallStack stack,
+                @Cached InlinedConditionProfile nothingToKeepProfile,
                 @Cached InlinedConditionProfile sameObjectProfile,
                 @Cached InlinedConditionProfile growProfile) {
+            final Object object = wrapper.keepAliveObject(objectArgument);
+            if (nothingToKeepProfile.profile(node, object == null)) {
+                // The caller only had the wrapper and the object was already collected: the handle is
+                // already dead, there is nothing left to keep alive.
+                return;
+            }
             final MarkingService.ExtensionCallStackEntry entry = stack.current;
-            final ValueWrapper[] preservedObjects = entry.preservedObjects;
+            final Object[] preservedObjects = entry.preservedObjects;
             final int count = entry.preservedObjectsCount;
             if (sameObjectProfile.profile(node, count > 0 && preservedObjects[count - 1] == object)) {
-                return; // the common case of keeping the same wrapper alive repeatedly during a call
+                return; // the common case of keeping the same object alive repeatedly during a call
             }
             if (growProfile.profile(node, count == preservedObjects.length)) {
                 grow(entry, object);
@@ -58,8 +69,8 @@ public abstract class MarkingServiceNodes {
         }
 
         @TruffleBoundary
-        private static void grow(MarkingService.ExtensionCallStackEntry entry, ValueWrapper object) {
-            final ValueWrapper[] grown = Arrays.copyOf(entry.preservedObjects, entry.preservedObjects.length * 2);
+        private static void grow(MarkingService.ExtensionCallStackEntry entry, Object object) {
+            final Object[] grown = Arrays.copyOf(entry.preservedObjects, entry.preservedObjects.length * 2);
             grown[entry.preservedObjectsCount] = object;
             entry.preservedObjects = grown;
             entry.preservedObjectsCount++;
@@ -82,26 +93,18 @@ public abstract class MarkingServiceNodes {
             // Do nothing.
         }
 
-        @Specialization(guards = "stack.hasSingleMarkObject()")
-        static void markSingleObject(Node node, ExtensionCallStack stack,
-                @Cached(inline = false) @Shared DispatchNode callNode) {
-            ValueWrapper value = stack.getSingleMarkObject();
-            callNode.call(getContext(node).getCoreLibrary().truffleCExtModule, "run_marker", value.getObject());
-        }
-
-        @TruffleBoundary
-        @Specialization(guards = { "stack.hasMarkObjects()", "!stack.hasSingleMarkObject()" })
+        @Specialization(guards = "stack.hasMarkObjects()")
         static void marksToRun(Node node, ExtensionCallStack stack,
-                @Cached(inline = false) @Shared DispatchNode callNode) {
-            // Run the markers...
-            var valuesForMarking = stack.getMarkOnExitObjects();
-            // Push a new stack frame because we should
-            // mutate the list while iterating, and we
-            // don't know what the mark routine might do.
+                @Cached(inline = false) DispatchNode callNode) {
+            final Object[] valuesForMarking = stack.current.markOnExitObjects;
+            final int count = stack.current.markOnExitObjectsCount;
+            // Push a new stack frame because we don't know what the mark routines might do, and
+            // mark-on-exit objects they register must go to the new entry.
             stack.push(false, nil, nil);
             try {
-                for (var value : valuesForMarking) {
-                    callNode.call(getContext(node).getCoreLibrary().truffleCExtModule, "run_marker", value.getObject());
+                for (int i = 0; i < count; i++) {
+                    callNode.call(getContext(node).getCoreLibrary().truffleCExtModule, "run_marker",
+                            valuesForMarking[i]);
                 }
             } finally {
                 stack.pop();
