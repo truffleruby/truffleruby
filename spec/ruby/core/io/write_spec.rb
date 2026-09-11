@@ -295,6 +295,27 @@ describe "IO#write" do
       r.read.should == "foobar"
     end
   end
+
+  platform_is_not :windows do
+    it "writes all the data when the write would block" do
+      require 'socket'
+      server, client = UNIXSocket.pair
+      begin
+        # Shrink the send buffer so the write fills it up part way through and
+        # has to wait for the reader before continuing from the right offset.
+        client.setsockopt(Socket::SOL_SOCKET, Socket::SO_SNDBUF, 4096)
+        data = "0123456789abcdef" * (1024 * 64)
+
+        reader = Thread.new { server.read(data.bytesize) }
+
+        client.write(data).should == data.bytesize
+        reader.value.should == data
+      ensure
+        server.close
+        client.close
+      end
+    end
+  end
 end
 
 platform_is :windows do
