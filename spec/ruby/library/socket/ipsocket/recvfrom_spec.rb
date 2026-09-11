@@ -163,6 +163,16 @@ describe 'Socket::IPSocket#recvfrom' do
       @server.recvfrom(2)[0].should == 'he'
     end
 
+    it 'waits for data when nothing is available' do
+      t = Thread.new do
+        Thread.pass until Thread.main.stop?
+        @client.write('hello')
+      end
+
+      @server.recvfrom(5)[0].should == 'hello'
+      t.join
+    end
+
     describe 'using reverse lookups' do
       before do
         @server.do_not_reverse_lookup = false

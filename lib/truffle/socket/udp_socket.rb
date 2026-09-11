@@ -55,9 +55,7 @@ class UDPSocket < IPSocket
     sockaddr = Truffle::Socket::Foreign.pack_sockaddr_in(
         host, port.to_i, @family, Socket::SOCK_DGRAM, 0)
 
-    status = Truffle::Socket::Foreign.connect(Primitive.io_fd(self), sockaddr)
-
-    Truffle::Socket::Error.connect_error('connect(2)', self) if status < 0
+    Truffle::Socket.connect(self, sockaddr)
 
     0
   end
