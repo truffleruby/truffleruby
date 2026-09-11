@@ -223,10 +223,13 @@ module Truffle::POSIX
       written = 0
       while written < length
         ret = Truffle::POSIX.write(fd, buffer + written, length - written)
-        if ret < 0
+        if ret >= 0
+          written += ret
+        else
           errno = Errno.errno
           if errno == EAGAIN_ERRNO
             if continue_on_eagain
+              # Nothing was written, so wait for the descriptor to become writable and retry from the same offset.
               IO.select([], [io])
             else
               return written
@@ -240,7 +243,6 @@ module Truffle::POSIX
             Errno.handle_errno(errno)
           end
         end
-        written += ret
       end
       written
     ensure
