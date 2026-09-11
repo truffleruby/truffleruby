@@ -1,0 +1,11 @@
+fails:Fiber.current_scheduler returns nil when no scheduler is set
+fails:Fiber.current_scheduler when a scheduler is set returns nil on the root Fiber, which is blocking
+fails:Fiber.current_scheduler when a scheduler is set returns the scheduler inside a non-blocking Fiber
+fails:Fiber.current_scheduler when a scheduler is set returns nil inside a blocking Fiber, where Fiber.scheduler still returns the scheduler
+fails:Fiber.current_scheduler when a scheduler is set returns nil inside a blocking Fiber nested in a non-blocking Fiber
+fails:Fiber.current_scheduler when a scheduler is set returns the scheduler inside a non-blocking Fiber nested in a blocking Fiber
+fails:Fiber.current_scheduler when a scheduler is set returns nil inside Fiber.blocking in a non-blocking Fiber
+fails:Fiber.current_scheduler when a scheduler is set returns the scheduler again after Fiber.blocking returns
+fails:Fiber.current_scheduler when a scheduler is set returns nil on the root Fiber after a blocking Fiber has finished
+fails:Fiber.current_scheduler when a scheduler is set returns nil on the root Fiber after a blocking Fiber has raised
+fails:Fiber.current_scheduler when a scheduler is set returns nil on the root Fiber after a blocking Fiber has been killed

@@ -1,0 +1,6 @@
+fails:Fiber.schedule when no scheduler is set raises a RuntimeError
+fails:Fiber.schedule when a scheduler is set calls the scheduler's #fiber hook
+fails:Fiber.schedule when a scheduler is set returns the Fiber which runs the block
+fails:Fiber.schedule when a scheduler is set can be called from inside a non-blocking Fiber
+fails:Fiber.schedule when a scheduler is set uses the scheduler of the Thread owning the Fiber it is called from
+fails:Fiber.schedule when a scheduler is set runs the block in a Fiber which sees the scheduler as its current scheduler
