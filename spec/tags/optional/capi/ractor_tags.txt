@@ -1,0 +1,2 @@
+slow:C-API ractor local storage function rb_ractor_local_storage_value_set keeps the stored value alive across GC
+slow:C-API ractor local storage function rb_ractor_local_storage_value_set keeps the stored value alive when replaced concurrently by multiple threads
