@@ -2,6 +2,10 @@ require_relative '../../spec_helper'
 
 ruby_version_is "4.1" do
   describe "Proc#syntax_tree" do
+    before :each do
+      skip "parse.y" unless syntax_tree_returns_prism_node
+    end
+
     def return_block(&b)
       b
     end
@@ -11,7 +15,7 @@ ruby_version_is "4.1" do
       node.start_line.should == __LINE__ - 1
       node.should.is_a?(Prism::CallNode)
 
-      node = lambda { 42 }.syntax_tree
+      node = lambda { 42 }.syntax_tree # rubocop:disable Style/Lambda
       node.start_line.should == __LINE__ - 1
       node.should.is_a?(Prism::CallNode)
 

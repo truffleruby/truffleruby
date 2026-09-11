@@ -689,12 +689,13 @@ describe "C-API IO function" do
     end
 
     it "includes FMODE_CREATE when the file is created" do
-      rm_r @name
-      io = File.open(@name, "w")
+      name = tmp("rb_io_mode_specs")
+      io = File.open(name, "w")
       begin
         (@o.rb_io_mode(io) & CApiIOSpecs::FMODE_CREATE).should == CApiIOSpecs::FMODE_CREATE
       ensure
         io.close
+        rm_r name
       end
     end
 
@@ -761,6 +762,14 @@ describe "C-API IO function" do
 
         io = @o.rb_io_open_descriptor(File, @r_io.fileno, CApiIOSpecs::FMODE_TEXTMODE, "a.txt", 60, "US-ASCII", "UTF-8", 0, {})
         io.should_not.binmode?
+      end
+
+      it "sets sync mode" do
+        mode = CApiIOSpecs::FMODE_READABLE | CApiIOSpecs::FMODE_SYNC
+        io = @o.rb_io_open_descriptor(File, @r_io.fileno, mode, "a.txt", 60, "US-ASCII", "UTF-8", 0, {})
+
+        io.should.sync
+        @o.rb_io_mode_sync_flag(io).should == true
       end
 
       it "sets the specified timeout" do
