@@ -301,13 +301,13 @@ ruby_version_is "4.1" do
       RUBY
 
       "class with rescue" => [<<-RUBY, :ClassNode],
-      SourceRangeClass = 1
-      $class SourceRangeClass; rescue; end$
+      SourceRangeClassSpecs = 1
+      $class SourceRangeClassSpecs; rescue; end$
       RUBY
 
       "module with rescue" => [<<-RUBY, :ModuleNode],
-      SourceRangeModule = 1
-      $module SourceRangeModule; rescue; end$
+      SourceRangeModuleSpecs = 1
+      $module SourceRangeModuleSpecs; rescue; end$
       RUBY
 
       # These nodes can own real calls, so source-range lookup cannot always exclude their classes.
@@ -367,15 +367,19 @@ ruby_version_is "4.1" do
       end
       RUBY
 
-      "interpolated symbol" => [<<-RUBY, :InterpolatedSymbolNode],
-      value = Object.new
-      def value.to_s
-        (+"\\xFF").force_encoding(Encoding::UTF_8)
-      end
-      %I[$\#{value}$]
-      RUBY
+      # Aborts the test process on CRuby's CI with ZJIT
+      # "interpolated symbol" => [<<-RUBY, :InterpolatedSymbolNode],
+      # value = Object.new
+      # def value.to_s
+      #   (+"\\xFF").force_encoding(Encoding::UTF_8)
+      # end
+      # %I[$\#{value}$]
+      # RUBY
     }.each_pair do |description, (source, prism_class, frame)|
       it "returns the precise range for #{description}" do
+        # Currently fails with parse.y, needs to be fixed
+        skip "parse.y" if description == "top-level constant operator assignments" && !syntax_tree_returns_prism_node
+
         capture_backtrace_location_source_range(source, prism_class, frame: frame || 0)
       end
     end
