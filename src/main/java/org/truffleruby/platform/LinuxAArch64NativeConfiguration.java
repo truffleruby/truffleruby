@@ -637,7 +637,9 @@ public final class LinuxAArch64NativeConfiguration extends DefaultNativeConfigur
         configuration.config("platform.socket.SHUT_RD", 0);
         configuration.config("platform.socket.SHUT_RDWR", 2);
         configuration.config("platform.socket.SHUT_WR", 1);
+        configuration.config("platform.socket.SOCK_CLOEXEC", 524288);
         configuration.config("platform.socket.SOCK_DGRAM", 2);
+        configuration.config("platform.socket.SOCK_NONBLOCK", 2048);
         configuration.config("platform.socket.SOCK_PACKET", 10);
         configuration.config("platform.socket.SOCK_RAW", 3);
         configuration.config("platform.socket.SOCK_RDM", 4);

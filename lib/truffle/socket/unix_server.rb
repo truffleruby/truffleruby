@@ -52,12 +52,12 @@ class UNIXServer < UNIXSocket
   end
 
   def accept
-    Truffle::Socket.accept(self, UNIXSocket, true)
+    Truffle::Socket.accept(self, UNIXSocket, true, true)
   end
 
   private def __accept_nonblock(exception)
     self.nonblock = true
-    Truffle::Socket.accept(self, UNIXSocket, exception)
+    Truffle::Socket.accept(self, UNIXSocket, exception, false)
   end
 
   def sysaccept

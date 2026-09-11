@@ -1,2 +1,1 @@
 fails:IO#nonblock? returns true for pipe by default
-fails:IO#nonblock? returns true for socket by default

@@ -1,5 +1,6 @@
 require_relative '../spec_helper'
 require_relative '../fixtures/classes'
+require_relative '../shared/buffered_receive'
 
 describe 'BasicSocket#recvmsg' do
   SocketSpecs.each_ip_protocol do |family, ip_address|
@@ -252,6 +253,18 @@ describe 'BasicSocket#recvmsg' do
           message[0].should == ""
         end
       end
+    end
+  end
+end
+
+platform_is_not :windows do
+  describe "BasicSocket#recvmsg with buffered IO" do
+    describe "for a Socket" do
+      it_behaves_like :socket_buffered_receive, :recvmsg, -> { Socket.pair(:UNIX, :STREAM) }
+    end
+
+    describe "for a UNIXSocket" do
+      it_behaves_like :socket_buffered_receive, :recvmsg, -> { UNIXSocket.pair }
     end
   end
 end

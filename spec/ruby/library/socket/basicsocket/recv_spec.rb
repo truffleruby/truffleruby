@@ -1,6 +1,7 @@
 # encoding: binary
 require_relative '../spec_helper'
 require_relative '../fixtures/classes'
+require_relative '../shared/buffered_receive'
 
 describe "BasicSocket#recv" do
 
@@ -224,6 +225,18 @@ describe "BasicSocket#recv" do
           @server.recv(1).should == ""
         end
       end
+    end
+  end
+end
+
+platform_is_not :windows do
+  describe "BasicSocket#recv with buffered IO" do
+    describe "for a Socket" do
+      it_behaves_like :socket_buffered_receive, :recv, -> { Socket.pair(:UNIX, :STREAM) }
+    end
+
+    describe "for a UNIXSocket" do
+      it_behaves_like :socket_buffered_receive, :recv, -> { UNIXSocket.pair }
     end
   end
 end
