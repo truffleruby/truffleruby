@@ -43,6 +43,33 @@ describe 'Socket#connect' do
       }.should.raise(Errno::EISCONN)
     end
 
+    it 'raises IOError when the socket is closed' do
+      @server.listen(1)
+      @client.close
+
+      -> { @client.connect(@server.getsockname) }.should.raise(IOError)
+    end
+
+    it 'does not call #getsockopt to check whether the connection failed' do
+      address = @server.getsockname
+      @server.close
+
+      def @client.getsockopt(*)
+        raise "#getsockopt should not be called"
+      end
+
+      -> { @client.connect(address) }.should.raise(Errno::ECONNREFUSED)
+    end
+
+    it 'includes the destination in the error message' do
+      address = @server.getsockname
+      port = Socket.unpack_sockaddr_in(address)[0]
+      destination = family == Socket::AF_INET6 ? "[#{ip_address}]:#{port}" : "#{ip_address}:#{port}"
+      @server.close
+
+      -> { @client.connect(address) }.should.raise(Errno::ECONNREFUSED, /connect\(2\) for #{Regexp.escape(destination)}\z/)
+    end
+
     platform_is_not :darwin do
       it 'raises Errno::ECONNREFUSED or Errno::ETIMEDOUT when the connection failed' do
         begin
