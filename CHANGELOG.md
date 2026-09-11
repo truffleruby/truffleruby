@@ -23,6 +23,8 @@ Bug fixes:
 * Fix keeping `Float` and big `Integer` elements of an `Array` converted to native storage by `RARRAY_PTR()` alive (@eregon).
 * Fix `Marshal.load` for an object extended with a module containing a nested user-marshaled object (#3943, @andrykonchin).
 * Fix `Regexp` comments in extended mode to always end at a newline, even when the newline is preceded by a backslash (#4435, @eregon).
+* Fix issue where environment updates made in native code (e.g., a C extension calling `setenv(3)`) would not be reflected by `ENV` (@nirvdrum).
+* Make `ENV` thread-safe (#4352, @nirvdrum).
 
 Compatibility:
 
@@ -69,6 +71,7 @@ Compatibility:
 * Fix `Module#module_function` and keep new Module methods public created from implicitly private callbacks (#4388, @andrykonchin).
 * Add `flags` keyword argument to `Dir.glob` as an alternative to the positional argument (#4394, @earlopain).
 * Fix `new` on `Data` subclasses to pass the given block to `#initialize` (@eregon).
+* Fix `ENV` for `BINARY` strings with non-ASCII bytes (@nirvdrum).
 
 Performance:
 
