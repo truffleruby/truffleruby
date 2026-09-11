@@ -66,7 +66,7 @@ class TCPServer < TCPSocket
   end
 
   def accept
-    Truffle::Socket.accept(self, TCPSocket, true)
+    Truffle::Socket.accept(self, TCPSocket, true, true)
   end
 
   private def __accept_nonblock(exception)
