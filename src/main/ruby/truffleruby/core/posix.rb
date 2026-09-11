@@ -227,7 +227,9 @@ module Truffle::POSIX
           errno = Errno.errno
           if errno == EAGAIN_ERRNO
             if continue_on_eagain
+              # Nothing was written, so wait for the descriptor to become writable and retry from the same offset.
               IO.select([], [io])
+              next
             else
               return written
             end

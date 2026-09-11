@@ -26,6 +26,7 @@ Bug fixes:
 * Fix issue where environment updates made in native code (e.g., a C extension calling `setenv(3)`) would not be reflected by `ENV` (@nirvdrum).
 * Make `ENV` thread-safe (#4352, @nirvdrum).
 * Fix `TracePoint` events not triggering for code loaded via `eval`, `class_eval` or `ruby -e` (#3095, @andrykonchin).
+* Fix `IO#write` to retry from the same offset after waiting for a non-blocking descriptor to become writable instead of corrupting the written data (@nirvdrum).
 
 Compatibility:
 
