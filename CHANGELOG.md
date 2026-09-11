@@ -102,6 +102,7 @@ Compatibility:
 * Support pattern matching on Hash subclasses (#3678, @andrykonchin).
 * Create sockets in non-blocking mode with `FD_CLOEXEC` set and emulate blocking socket operations by waiting for readiness, like CRuby, so C extensions such as `trilogy` can take over the descriptors (@nirvdrum).
 * Accept objects responding to `#to_path` for the path argument of `UNIXSocket.new` and `UNIXServer.new`, preserving the path bytes like CRuby (@nirvdrum).
+* Implement `rb_ractor_local_storage_value_newkey()`, `rb_ractor_local_storage_value()`, `rb_ractor_local_storage_value_lookup()` and `rb_ractor_local_storage_value_set()` (@nirvdrum).
 
 Performance:
 
