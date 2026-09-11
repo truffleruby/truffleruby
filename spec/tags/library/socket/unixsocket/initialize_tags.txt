@@ -1,2 +1,0 @@
-fails:UNIXSocket#initialize using an existing socket path sets the socket to nonblock
-fails:UNIXSocket#initialize using an existing socket path sets the socket to close on exec

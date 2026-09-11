@@ -66,6 +66,45 @@ module Truffle
       struct_class.layout(*layout_args)
     end
 
+    # Our sockets are non-blocking, so blocking operations wait and retry, like CRuby. This polls the descriptor
+    # alone, as IO.select returns immediately for buffered input, which would make accept(2) busy-loop.
+    def self.wait_readable(socket)
+      socket.__send__(:ensure_open)
+      Truffle::IOOperations.poll_descriptor(socket, ::IO::READABLE, nil)
+    end
+
+    def self.wait_writable(socket)
+      socket.__send__(:ensure_open)
+      Truffle::IOOperations.poll_descriptor(socket, ::IO::WRITABLE, nil)
+    end
+
+    # A blocking connect(2) on a non-blocking socket, raising the error recorded in SO_ERROR.
+    def self.connect(socket, sockaddr)
+      status = Foreign.connect(socket.fileno, sockaddr)
+      return if status == 0
+
+      errno = ::FFI.errno
+
+      if errno == Truffle::POSIX::EAGAIN_ERRNO || errno == Errno::EINPROGRESS::Errno
+        wait_writable(socket)
+
+        errno = Foreign.getsockopt(Primitive.io_fd(socket), ::Socket::SOL_SOCKET, ::Socket::SO_ERROR).unpack1('i')
+        return if errno == 0
+      end
+
+      # Formatting the destination can clobber errno, so it must be read first.
+      Errno.handle_errno(errno, "connect(2) for #{connect_destination(sockaddr)}")
+    end
+
+    # Like CRuby, e.g. "127.0.0.1:3306", "[::1]:3306" or "/tmp/mysql.sock".
+    def self.connect_destination(sockaddr)
+      address = Primitive.is_a?(sockaddr, ::Addrinfo) ? sockaddr : ::Addrinfo.new(sockaddr)
+      address.inspect_sockaddr
+    rescue StandardError
+      # Only used for the message, so never mask the original error.
+      'unknown destination'
+    end
+
     def self.aliases_for_hostname(hostname)
       pointer = Foreign.gethostbyname(hostname)
       return [] if pointer.null? # Truffle: added null check
@@ -94,16 +133,24 @@ module Truffle
       end
     end
 
-    def self.accept_and_addrinfo(source, new_class, exception)
+    def self.accept_and_addrinfo(source, new_class, exception, blocking = false)
       raise IOError, 'socket has been closed' if source.closed?
 
       sockaddr = sockaddr_class_for_socket(source).new
 
       begin
-        fd = Truffle::Socket::Foreign.memory_pointer(:int) do |size_p|
-          size_p.write_int(sockaddr.size)
+        fd = nil
 
-          Truffle::Socket::Foreign.accept(source.fileno, sockaddr.pointer, size_p)
+        while true
+          fd = Truffle::Socket::Foreign.memory_pointer(:int) do |size_p|
+            size_p.write_int(sockaddr.size)
+
+            Truffle::Socket::Foreign.accept(source.fileno, sockaddr.pointer, size_p)
+          end
+
+          break if fd >= 0 || !blocking || ::FFI.errno != Truffle::POSIX::EAGAIN_ERRNO
+
+          wait_readable(source)
         end
 
         if fd < 0
@@ -125,10 +172,16 @@ module Truffle
       end
     end
 
-    def self.accept(source, new_class, exception)
+    def self.accept(source, new_class, exception, blocking = false)
       raise IOError, 'socket has been closed' if source.closed?
 
-      fd = Truffle::Socket::Foreign.accept(source.fileno, ::FFI::Pointer::NULL, ::FFI::Pointer::NULL)
+      while true
+        fd = Truffle::Socket::Foreign.accept(source.fileno, ::FFI::Pointer::NULL, ::FFI::Pointer::NULL)
+
+        break if fd >= 0 || !blocking || ::FFI.errno != Truffle::POSIX::EAGAIN_ERRNO
+
+        wait_readable(source)
+      end
 
       if fd < 0
         if !exception and ::FFI.errno == Truffle::POSIX::EAGAIN_ERRNO
