@@ -76,6 +76,18 @@ public final class RubyRegexp extends ImmutableRubyObjectNotCopyable
     public final RegexpOptions options;
     public final EncodingCache cachedEncodings;
     public final TRegexCache tregexCache;
+    /** Lazily computed #to_s result. Immutable value, so racy initialization is fine. */
+    private volatile TStringWithEncoding toSResult;
+
+    @TruffleBoundary
+    public TStringWithEncoding getCachedToS() {
+        var toS = toSResult;
+        if (toS == null) {
+            toS = ClassicRegexp.toS(new TStringWithEncoding(source, encoding), options);
+            toSResult = toS;
+        }
+        return toS;
+    }
 
     private RubyRegexp(Regex regex, RegexpOptions options) {
         this.regex = regex;

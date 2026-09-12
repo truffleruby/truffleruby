@@ -120,13 +120,7 @@ public abstract class RegexpNodes {
 
         @Specialization
         RubyString toS(RubyRegexp regexp) {
-            return createString(createTString(regexp));
-        }
-
-        @TruffleBoundary
-        protected TStringWithEncoding createTString(RubyRegexp regexp) {
-            var sourceEnc = new TStringWithEncoding(regexp.source, regexp.encoding);
-            return ClassicRegexp.toS(sourceEnc, regexp.options);
+            return createString(regexp.getCachedToS());
         }
     }
 
