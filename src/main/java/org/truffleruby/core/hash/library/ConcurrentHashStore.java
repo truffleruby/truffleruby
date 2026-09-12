@@ -407,6 +407,11 @@ public final class ConcurrentHashStore {
 
     @TruffleBoundary
     public static void convertFromOtherStrategy(RubyHash hash) {
+        if (RubyLanguage.get(null).options.SHARED_OBJECTS_DEBUG) {
+            RubyLanguage.LOGGER.info("converting Hash of size " + hash.size + " to ConcurrentHashStore at:");
+            RubyContext.get(null).getDefaultBacktraceFormatter()
+                    .printBacktraceOnEnvStderr("hash-to-concurrent: ", null);
+        }
         int capacity = Math.max(BucketsHashStore.growthCapacityGreaterThan(hash.size), INITIAL_CAPACITY);
         ConcurrentHashStore concurrentHash = new ConcurrentHashStore(capacity);
 
