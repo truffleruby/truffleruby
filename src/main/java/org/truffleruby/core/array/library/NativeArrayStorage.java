@@ -23,8 +23,7 @@ import org.truffleruby.RubyContext;
 import org.truffleruby.cext.ToWrapperNode;
 import org.truffleruby.cext.UnwrapNode;
 import org.truffleruby.cext.ValueWrapper;
-import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
-import org.truffleruby.cext.WrapNode;
+import org.truffleruby.cext.ValueToHandleNode;
 import org.truffleruby.core.array.ArrayGuards;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.array.library.ArrayStoreLibrary.ArrayAllocator;
@@ -98,10 +97,9 @@ public final class NativeArrayStorage implements ObjectGraphNode {
 
     @ExportMessage
     protected void write(int index, Object value,
-            @Cached WrapNode wrapNode,
-            @Cached WrapperToHandleNode wrapperToHandleNode,
+            @Cached ValueToHandleNode valueToHandleNode,
             @Bind Node node) {
-        writeElement(index, wrapperToHandleNode.execute(node, value, wrapNode.execute(value)));
+        writeElement(index, valueToHandleNode.execute(node, value));
     }
 
     @ExportMessage

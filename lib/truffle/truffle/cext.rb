@@ -718,7 +718,7 @@ module Truffle::CExt
 
     keys_and_vals.each_slice(2) do |key, val|
       st_result = Primitive.cext_invoke_i_llll(POINTER3_TO_INT_WRAPPER,
-        func, Primitive.cext_sym2id(key), Primitive.cext_wrap(val), arg)
+        func, Primitive.cext_sym2id(key), Primitive.cext_to_handle(val), arg)
 
       case st_result
       when ST_CONTINUE
@@ -894,7 +894,7 @@ module Truffle::CExt
     TracePoint.new(*events_to_events_array(events)) do |tp|
       locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
       begin
-        Primitive.cext_invoke_v_lll(POINTER2_TO_VOID_WRAPPER, func, Primitive.cext_wrap(tp), data)
+        Primitive.cext_invoke_v_lll(POINTER2_TO_VOID_WRAPPER, func, Primitive.cext_to_handle(tp), data)
       ensure
         Primitive.cext_pop_lock_and_frame(locked)
       end
@@ -1213,7 +1213,7 @@ module Truffle::CExt
   def rb_hash_foreach(hash, func, farg)
     hash.each do |key, value|
       st_result = Primitive.cext_invoke_i_llll(POINTER3_TO_INT_WRAPPER,
-        func, Primitive.cext_wrap(key), Primitive.cext_wrap(value), farg)
+        func, Primitive.cext_to_handle(key), Primitive.cext_to_handle(value), farg)
 
       case st_result
       when ST_CONTINUE
@@ -1229,7 +1229,7 @@ module Truffle::CExt
   def rb_set_foreach(set, func, farg)
     set.each do |element|
       st_result = Primitive.cext_invoke_i_lll(POINTER2_TO_INT_WRAPPER,
-        func, Primitive.cext_wrap(element), farg)
+        func, Primitive.cext_to_handle(element), farg)
 
       case st_result
       when ST_CONTINUE
@@ -1261,11 +1261,11 @@ module Truffle::CExt
       begin
         Primitive.cext_unwrap(Primitive.cext_invoke_l_lllill(RB_BLOCK_CALL_FUNC_WRAPPER,
           function,
-          Primitive.cext_wrap(args.first), # yieldarg
+          Primitive.cext_to_handle(args.first), # yieldarg
           value, # procarg,
           args.size, # argc
           Truffle::CExt.RARRAY_PTR(args), # argv
-          Primitive.cext_wrap(block))) # blockarg
+          Primitive.cext_to_handle(block))) # blockarg
       ensure
         Primitive.cext_pop_lock_and_frame(locked)
       end
@@ -1542,7 +1542,7 @@ module Truffle::CExt
       locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
       begin
         Primitive.cext_unwrap(Primitive.cext_invoke_l_llll(POINTER3_TO_POINTER_WRAPPER,
-          size_fn, Primitive.cext_wrap(obj), Primitive.cext_wrap(args), Primitive.cext_wrap(enum)))
+          size_fn, Primitive.cext_to_handle(obj), Primitive.cext_to_handle(args), Primitive.cext_to_handle(enum)))
       ensure
         Primitive.cext_pop_lock_and_frame(locked)
       end
@@ -1559,7 +1559,7 @@ module Truffle::CExt
     ruby_class.singleton_class.define_method(:__allocate__) do
       locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
       begin
-        Primitive.cext_unwrap(Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, function, Primitive.cext_wrap(self)))
+        Primitive.cext_unwrap(Primitive.cext_invoke_l_ll(POINTER_TO_POINTER_WRAPPER, function, Primitive.cext_to_handle(self)))
       ensure
         Primitive.cext_pop_lock_and_frame(locked)
       end
@@ -1920,7 +1920,7 @@ module Truffle::CExt
         # Probably need to save the frame here for blocks.
         Primitive.cext_unwrap(Primitive.cext_invoke_l_lllill(RB_BLOCK_CALL_FUNC_WRAPPER,
           func,
-          Primitive.cext_wrap(block_args.first),
+          Primitive.cext_to_handle(block_args.first),
           data,
           block_args.size, # argc
           Truffle::CExt.RARRAY_PTR(block_args), # argv
@@ -1960,7 +1960,7 @@ module Truffle::CExt
         errinfo = Primitive.fiber_get_error_info
         Primitive.fiber_set_error_info(exc)
         begin
-          Primitive.cext_invoke_l_lll(POINTER2_TO_POINTER_WRAPPER, r_proc, data2, Primitive.cext_wrap(exc))
+          Primitive.cext_invoke_l_lll(POINTER2_TO_POINTER_WRAPPER, r_proc, data2, Primitive.cext_to_handle(exc))
         ensure
           Primitive.fiber_set_error_info(errinfo)
         end
@@ -1976,7 +1976,7 @@ module Truffle::CExt
       errinfo = Primitive.fiber_get_error_info
       Primitive.fiber_set_error_info(exc)
       begin
-        Primitive.cext_invoke_l_lll(POINTER2_TO_POINTER_WRAPPER, r_proc, data2, Primitive.cext_wrap(exc))
+        Primitive.cext_invoke_l_lll(POINTER2_TO_POINTER_WRAPPER, r_proc, data2, Primitive.cext_to_handle(exc))
       ensure
         Primitive.fiber_set_error_info(errinfo)
       end
@@ -2016,7 +2016,7 @@ module Truffle::CExt
       begin
         func_result = Primitive.cext_invoke_l_lllill(RB_BLOCK_CALL_FUNC_WRAPPER,
           func,
-          Primitive.cext_wrap(caught),
+          Primitive.cext_to_handle(caught),
           data,
           0, # argc
           nil, # argv
@@ -2168,7 +2168,7 @@ module Truffle::CExt
       begin
         Primitive.cext_unwrap(Primitive.cext_invoke_l_lllill(RB_BLOCK_CALL_FUNC_WRAPPER,
           callback,
-          Primitive.cext_wrap(block_arg),
+          Primitive.cext_to_handle(block_arg),
           callback_arg,
           0, # argc
           nil, # argv
@@ -2297,7 +2297,7 @@ module Truffle::CExt
       locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
       begin
         Primitive.cext_unwrap(Primitive.cext_invoke_l_lll(POINTER2_TO_POINTER_WRAPPER,
-          getter, Primitive.cext_wrap(id), gvar))
+          getter, Primitive.cext_to_handle(id), gvar))
       ensure
         Primitive.cext_pop_lock_and_frame(locked)
       end
@@ -2307,7 +2307,7 @@ module Truffle::CExt
       locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
       begin
         Primitive.cext_invoke_v_llll(POINTER3_TO_VOID_WRAPPER,
-          setter, Primitive.cext_wrap(value), Primitive.cext_wrap(id), gvar)
+          setter, Primitive.cext_to_handle(value), Primitive.cext_to_handle(id), gvar)
       ensure
         Primitive.cext_pop_lock_and_frame(locked)
       end
@@ -2424,7 +2424,7 @@ module Truffle::CExt
       begin
         Primitive.cext_unwrap(Primitive.cext_invoke_l_lllill(RB_BLOCK_CALL_FUNC_WRAPPER,
           function,
-          Primitive.cext_wrap(args.first), # yieldarg
+          Primitive.cext_to_handle(args.first), # yieldarg
           value, # procarg
           0, # argc
           nil, # argv
