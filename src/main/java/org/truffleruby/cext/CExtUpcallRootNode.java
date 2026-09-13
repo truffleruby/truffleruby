@@ -57,7 +57,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
 
     /** The kind of a native value in an upcall signature, from the carrier letters in tool/cext-upcalls.rb */
     public enum Carrier {
-        VALUE, // V: a VALUE handle, converted with UnwrapNode/WrapNode
+        VALUE, // V: a VALUE handle, converted with UnwrapNode/ValueToHandleNode
         WRAPPED, // W: a result which is already a VALUE handle or a ValueWrapper
         INT, // I
         BOOL, // B: Ruby true/false as int 1/0
@@ -289,11 +289,10 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
 
     abstract static class ValueResultNode extends UpcallResultNode {
         @Specialization
-        static long wrap(Object value,
+        static long toHandle(Object value,
                 @Bind Node node,
-                @Cached WrapNode wrapNode,
-                @Cached WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(node, value, wrapNode.execute(value));
+                @Cached ValueToHandleNode valueToHandleNode) {
+            return valueToHandleNode.execute(node, value);
         }
     }
 
