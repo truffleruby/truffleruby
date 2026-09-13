@@ -333,11 +333,10 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
 
             var rest = node.rest;
             if (rest != null) {
-                RubyNode withoutMatchedKeys = keys.length == 0
-                        ? readTemp
-                        : HashSubtractKeysNodeGen.create(keys, readTemp);
                 if (rest instanceof Nodes.AssocSplatNode assocSplatNode) {
                     if (assocSplatNode.value != null) {
+                        // Always creates a copy so **rest receives a new Hash instance.
+                        RubyNode withoutMatchedKeys = HashSubtractKeysNodeGen.create(keys, readTemp);
                         RubyNode prev = currentValueToMatch;
                         currentValueToMatch = withoutMatchedKeys;
                         try {
@@ -349,6 +348,9 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
                         // nothing
                     }
                 } else if (rest instanceof Nodes.NoKeywordsParameterNode) {
+                    RubyNode withoutMatchedKeys = keys.length == 0
+                            ? readTemp
+                            : HashSubtractKeysNodeGen.create(keys, readTemp);
                     condition = AndNodeGen.create(condition, HashIsEmptyNodeGen.create(withoutMatchedKeys));
                 } else {
                     throw fail(rest);
