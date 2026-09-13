@@ -22,6 +22,7 @@ import org.truffleruby.core.hash.library.ConcurrentHashStore;
 import org.truffleruby.core.hash.library.EmptyHashStore;
 import org.truffleruby.core.hash.library.HashStoreLibrary;
 import org.truffleruby.core.klass.RubyClass;
+import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.interop.ForeignToRubyNode;
 import org.truffleruby.language.RubyDynamicObject;
 import org.truffleruby.language.dispatch.DispatchNode;
@@ -60,8 +61,13 @@ public final class RubyHash extends RubyDynamicObject implements ObjectGraphNode
     /** Do not write directly, use {@link #setStore(Object)} */
     public Object store;
     public int size;
-    public Object defaultBlock;
-    public Object defaultValue;
+    /** Either the default value (Hash#default=) or the default Proc (Hash.new(&block), Hash#default_proc=),
+     * discriminated by {@link #defaultIsProc}: they are mutually exclusive, like MRI's single ifnone slot with its
+     * PROC_DEFAULT flag. nil when the Hash has neither. A single field instead of two so the extra field for the
+     * ValueWrapper does not grow RubyHash instances. */
+    private Object defaultValueOrProc;
+    /** Whether {@link #defaultValueOrProc} is the default Proc */
+    private boolean defaultIsProc;
     public boolean compareByIdentity;
     public final boolean ruby2_keywords;
 
@@ -80,8 +86,8 @@ public final class RubyHash extends RubyDynamicObject implements ObjectGraphNode
         super(rubyClass, shape);
         setStore(store);
         this.size = size;
-        this.defaultBlock = nil;
-        this.defaultValue = nil;
+        this.defaultValueOrProc = nil;
+        this.defaultIsProc = false;
         this.compareByIdentity = false;
         this.ruby2_keywords = ruby2_keywords;
 
@@ -97,9 +103,34 @@ public final class RubyHash extends RubyDynamicObject implements ObjectGraphNode
     }
 
     public void copyFieldsExceptStoreAndSize(RubyHash from) {
-        this.defaultBlock = from.defaultBlock;
-        this.defaultValue = from.defaultValue;
+        this.defaultValueOrProc = from.defaultValueOrProc;
+        this.defaultIsProc = from.defaultIsProc;
         this.compareByIdentity = from.compareByIdentity;
+    }
+
+    /** The Hash#default value, or nil if there is none or a default Proc instead */
+    public Object getDefaultValue() {
+        return defaultIsProc ? nil : defaultValueOrProc;
+    }
+
+    public void setDefaultValue(Object defaultValue) {
+        this.defaultValueOrProc = defaultValue;
+        this.defaultIsProc = false;
+    }
+
+    /** The Hash#default_proc, or nil if there is none or a default value instead */
+    public Object getDefaultProc() {
+        return defaultIsProc ? defaultValueOrProc : nil;
+    }
+
+    public void setDefaultProc(RubyProc defaultProc) {
+        this.defaultValueOrProc = defaultProc;
+        this.defaultIsProc = true;
+    }
+
+    public void clearDefault() {
+        this.defaultValueOrProc = nil;
+        this.defaultIsProc = false;
     }
 
     public int getSizeVolatile() {
@@ -137,8 +168,7 @@ public final class RubyHash extends RubyDynamicObject implements ObjectGraphNode
             ObjectGraph.addProperty(reachable, store);
         }
 
-        ObjectGraph.addProperty(reachable, defaultBlock);
-        ObjectGraph.addProperty(reachable, defaultValue);
+        ObjectGraph.addProperty(reachable, defaultValueOrProc);
     }
 
     // region InteropLibrary messages

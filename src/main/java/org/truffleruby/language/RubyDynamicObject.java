@@ -15,6 +15,7 @@ import com.oracle.truffle.api.interop.StopIterationException;
 import com.oracle.truffle.api.interop.UnknownKeyException;
 import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.RubyContext;
+import org.truffleruby.cext.ValueWrapper;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.cast.BooleanCastNode;
 import org.truffleruby.core.cast.IntegerCastNode;
@@ -36,6 +37,7 @@ import org.truffleruby.language.objects.IsFrozenNode;
 import org.truffleruby.language.objects.LogicalClassNode;
 import org.truffleruby.language.objects.WriteObjectFieldNode;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Exclusive;
@@ -57,6 +59,7 @@ import com.oracle.truffle.api.utilities.TriState;
 import org.truffleruby.language.objects.shared.SharedObjects;
 
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 
 import static org.truffleruby.language.dispatch.DispatchConfiguration.PRIVATE;
 import static org.truffleruby.language.dispatch.DispatchConfiguration.PRIVATE_RETURN_MISSING;
@@ -69,6 +72,13 @@ public abstract class RubyDynamicObject extends DynamicObject {
     public static final MethodHandles.Lookup LOOKUP = MethodHandles.lookup();
 
     private RubyClass metaClass;
+
+    /** The ValueWrapper of this object if it was ever converted to a C extension VALUE, otherwise null. A plain Java
+     * field and not a hidden DynamicObject property so creating it does not need a Shape transition and reading it is a
+     * single field read: C extensions wrap every object crossing the native boundary, which makes this hot. Written
+     * only through {@link #setValueWrapperIfAbsent(ValueWrapper)} and read racily, which is safe because ValueWrapper
+     * only has final fields (see WrapNode). */
+    private ValueWrapper valueWrapper;
 
     public RubyDynamicObject(RubyClass metaClass, Shape shape) {
         super(shape);
@@ -92,6 +102,26 @@ public abstract class RubyDynamicObject extends DynamicObject {
 
     public final RubyClass getLogicalClass() {
         return metaClass.nonSingletonClass;
+    }
+
+    private static final VarHandle VALUE_WRAPPER;
+    static {
+        try {
+            VALUE_WRAPPER = LOOKUP.findVarHandle(RubyDynamicObject.class, "valueWrapper", ValueWrapper.class);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw CompilerDirectives.shouldNotReachHere(e);
+        }
+    }
+
+    public final ValueWrapper getValueWrapper() {
+        return valueWrapper;
+    }
+
+    /** Sets the ValueWrapper of this object, unless another thread raced and set it first: the returned wrapper is the
+     * one to use, and it is the given wrapper unless the race was lost. */
+    public final ValueWrapper setValueWrapperIfAbsent(ValueWrapper wrapper) {
+        final ValueWrapper witness = (ValueWrapper) VALUE_WRAPPER.compareAndExchange(this, null, wrapper);
+        return witness == null ? wrapper : witness;
     }
 
     @Override
