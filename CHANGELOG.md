@@ -73,6 +73,7 @@ Compatibility:
 * Add `flags` keyword argument to `Dir.glob` as an alternative to the positional argument (#4394, @earlopain).
 * Fix `new` on `Data` subclasses to pass the given block to `#initialize` (@eregon).
 * Fix `ENV` for `BINARY` strings with non-ASCII bytes (@nirvdrum).
+* Support pattern matching on Hash subclasses (#3678, @andrykonchin).
 
 Performance:
 
