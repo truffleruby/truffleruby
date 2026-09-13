@@ -125,6 +125,7 @@ import org.truffleruby.language.methods.DeclarationContext;
 import org.truffleruby.language.methods.InternalMethod;
 import org.truffleruby.language.objects.AllocationTracing;
 import org.truffleruby.language.objects.MetaClassNode;
+import org.truffleruby.language.objects.ObjectIDOperations;
 import org.truffleruby.language.objects.WriteObjectFieldNode;
 import org.truffleruby.language.supercall.CallSuperMethodNode;
 import org.truffleruby.language.yield.CallBlockNode;
@@ -1796,15 +1797,14 @@ public abstract class CExtNodes {
                 @Cached("args.size") int cachedSize,
                 @Cached("wrapperAddress(stackWrappers, cachedSize)") long stackWrapper,
                 @CachedLibrary(limit = "storageStrategyLimit()") @Shared ArrayStoreLibrary stores,
-                @Cached @Shared WrapNode wrapNode,
-                @Cached @Exclusive WrapperToHandleNode wrapperToHandleNode,
+                @Cached @Exclusive ArgToHandleNode argToHandleNode,
                 @Cached @Shared CExtDowncallArgumentNode selfNode,
                 @Cached @Exclusive InlinedBranchProfile exceptionProfile,
                 @Bind Node node) {
             final Object store = args.getStore();
             final long[] argv = new long[cachedSize];
             for (int i = 0; i < cachedSize; i++) {
-                argv[i] = toHandle(node, store, i, stores, wrapNode, wrapperToHandleNode);
+                argv[i] = argToHandleNode.execute(node, stores.read(store, i));
             }
             final long result = callStackWrapper(cachedSize, stackWrapper, function, selfNode.execute(self), argv);
             checkPendingException(node, exceptionProfile);
@@ -1814,8 +1814,7 @@ public abstract class CExtNodes {
         @Specialization(replaces = "invokeCachedSize")
         static long invokeAnySize(long argvWrapper, RubyArray stackWrappers, long function, Object self, RubyArray args,
                 @CachedLibrary(limit = "storageStrategyLimit()") @Shared ArrayStoreLibrary stores,
-                @Cached @Shared WrapNode wrapNode,
-                @Cached @Exclusive WrapperToHandleNode wrapperToHandleNode,
+                @Cached @Exclusive ArgToHandleNode argToHandleNode,
                 @Cached @Shared CExtDowncallArgumentNode selfNode,
                 @Cached @Exclusive InlinedConditionProfile stackProfile,
                 @Cached @Exclusive InlinedConditionProfile bufferSizeProfile,
@@ -1826,7 +1825,7 @@ public abstract class CExtNodes {
             final Object store = args.getStore();
             final long[] argv = new long[argc];
             for (int i = 0; i < argc; i++) {
-                argv[i] = toHandle(node, store, i, stores, wrapNode, wrapperToHandleNode);
+                argv[i] = argToHandleNode.execute(node, stores.read(store, i));
             }
             final long selfHandle = selfNode.execute(self);
 
@@ -1852,10 +1851,37 @@ public abstract class CExtNodes {
             return result;
         }
 
-        private static long toHandle(Node node, Object store, int i, ArrayStoreLibrary stores, WrapNode wrapNode,
-                WrapperToHandleNode wrapperToHandleNode) {
-            final Object element = stores.read(store, i);
-            return wrapperToHandleNode.execute(node, element, wrapNode.execute(element));
+        /** Converts an argument to its VALUE handle. Small fixnums get their tagged handle directly: wrapping them
+         * would allocate a ValueWrapper (a WeakReference, which cannot be escape-analyzed) just to read its handle. */
+        @GenerateInline
+        @GenerateCached(false)
+        @ImportStatic(ObjectIDOperations.class)
+        public abstract static class ArgToHandleNode extends RubyBaseNode {
+
+            public abstract long execute(Node node, Object value);
+
+            @Specialization(guards = "isSmallFixnum(value)")
+            static long smallFixnum(long value) {
+                return ValueWrapperManager.tagLong(value);
+            }
+
+            @Specialization(guards = "!isSmallFixnum(value)")
+            static long largeLong(Node node, long value,
+                    @Cached(inline = false) @Shared WrapNode wrapNode,
+                    @Cached @Shared WrapperToHandleNode wrapperToHandleNode) {
+                return wrapperToHandleNode.execute(node, value, wrapNode.execute(value));
+            }
+
+            @Specialization(guards = "!isLong(value)")
+            static long other(Node node, Object value,
+                    @Cached(inline = false) @Shared WrapNode wrapNode,
+                    @Cached @Shared WrapperToHandleNode wrapperToHandleNode) {
+                return wrapperToHandleNode.execute(node, value, wrapNode.execute(value));
+            }
+
+            static boolean isLong(Object value) {
+                return value instanceof Integer || value instanceof Long;
+            }
         }
 
         static long wrapperAddress(RubyArray stackWrappers, int argc) {
