@@ -34,7 +34,6 @@ public abstract class HashSubtractKeysNode extends RubyContextSourceNode impleme
     @Child private HashStoreLibrary hashes = HashStoreLibrary.createDispatched();
 
     public HashSubtractKeysNode(RubySymbol[] excludedKeys) {
-        assert excludedKeys.length > 0 : "unnecessary";
         this.excludedKeys = excludedKeys;
     }
 

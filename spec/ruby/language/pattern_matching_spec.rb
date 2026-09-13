@@ -1098,6 +1098,21 @@ describe "Pattern matching" do
       end.should == {b: 1, c: 2}
     end
 
+    it "copies the hash when matching **rest with no preceding keys" do
+      h = {a: 1}
+      case h
+      in **rest
+        rest.should_not equal(h)
+        rest.should == h
+      end
+
+      case h
+      in {**rest}
+        rest.should_not equal(h)
+        rest.should == h
+      end
+    end
+
     it "treats **nil like there should not be any other keys in a matched Hash" do
       case {a: 1, b: 2}
       in {a: 1, b: 2, **nil}
