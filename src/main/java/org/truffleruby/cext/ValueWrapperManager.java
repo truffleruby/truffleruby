@@ -407,6 +407,10 @@ public final class ValueWrapperManager {
         return value instanceof ValueWrapper;
     }
 
+    public static long tagLong(long value) {
+        return (value << 1) | LONG_TAG;
+    }
+
     public static long untagTaggedLong(long handle) {
         return handle >> 1;
     }

@@ -379,6 +379,7 @@ invoke_java << <<~JAVA
   import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
   import com.oracle.truffle.api.dsl.Cached;
   import com.oracle.truffle.api.dsl.Specialization;
+  import com.oracle.truffle.api.nodes.Node;
   import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 
   import org.truffleruby.annotations.CoreModule;
@@ -402,10 +403,14 @@ invoke_java << <<~JAVA
 
       public abstract static class CExtInvokeNode extends PrimitiveArrayArgumentsNode {
           protected final void checkPendingException(InlinedBranchProfile exceptionProfile) {
-              final RubyFiber fiber = getLanguage().getCurrentFiber();
+              checkPendingException(this, exceptionProfile);
+          }
+
+          protected static void checkPendingException(Node node, InlinedBranchProfile exceptionProfile) {
+              final RubyFiber fiber = getLanguage(node).getCurrentFiber();
               if (fiber.pendingCExtException != null) {
-                  exceptionProfile.enter(this);
-                  CExtFFMLayer.checkPendingException(getContext(), fiber);
+                  exceptionProfile.enter(node);
+                  CExtFFMLayer.checkPendingException(getContext(node), fiber);
               }
           }
       }
@@ -424,7 +429,7 @@ CExtUpcalls::DOWNCALL_SIGNATURES.each do |signature|
 
   invoke_java << "    private static final MethodHandle #{constant} = FFMSupport.createDowncallHandle(\"#{signature}\");\n\n"
   invoke_java << "    @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)\n"
-  invoke_java << "    private static #{ret_type} #{name}(#{params.join(', ')}) {\n"
+  invoke_java << "    static #{ret_type} #{name}(#{params.join(', ')}) {\n"
   invoke_java << "        try {\n"
   invoke_java << "            #{ret == 'V' ? '' : 'return '}#{cast}#{constant}.invokeExact(#{arg_names.join(', ')});\n"
   invoke_java << "        } catch (Throwable t) {\n"

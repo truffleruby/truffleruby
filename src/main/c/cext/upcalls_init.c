@@ -483,7 +483,6 @@ VALUE (*rb_tr_up_impl_rb_tr_default_alloc_func)(VALUE v0);
 int (*rb_tr_up_impl_rb_tr_enc_is_unicode)(VALUE v0);
 VALUE (*rb_tr_up_impl_rb_tr_enc_mbc_case_fold)(int v0, VALUE v1, const void *v2, const void *v3);
 int (*rb_tr_up_impl_rb_tr_flags)(VALUE v0);
-void (*rb_tr_up_impl_rb_tr_gc_guard)(long v0);
 void * (*rb_tr_up_impl_rb_tr_io_create_and_attach_pointer)(VALUE v0, long v1);
 void * (*rb_tr_up_impl_rb_tr_io_pointer)(VALUE v0);
 void (*rb_tr_up_impl_rb_tr_log_warning)(VALUE v0);
@@ -968,7 +967,6 @@ void rb_tr_init_ffm_upcalls(void **upcalls) {
   rb_tr_up_impl_rb_tr_enc_is_unicode = (int (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_tr_enc_mbc_case_fold = (VALUE (*)(int v0, VALUE v1, const void *v2, const void *v3)) upcalls[i++];
   rb_tr_up_impl_rb_tr_flags = (int (*)(VALUE v0)) upcalls[i++];
-  rb_tr_up_impl_rb_tr_gc_guard = (void (*)(long v0)) upcalls[i++];
   rb_tr_up_impl_rb_tr_io_create_and_attach_pointer = (void * (*)(VALUE v0, long v1)) upcalls[i++];
   rb_tr_up_impl_rb_tr_io_pointer = (void * (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_tr_log_warning = (void (*)(VALUE v0)) upcalls[i++];

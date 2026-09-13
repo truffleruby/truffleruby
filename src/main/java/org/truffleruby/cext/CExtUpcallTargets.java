@@ -5381,17 +5381,6 @@ public abstract class CExtUpcallTargets {
         }
     }
 
-    private static final int INDEX_rb_tr_gc_guard = nextUpcallIndex++;
-
-    @CExtUpcall
-    public static void upcall_rb_tr_gc_guard(long v0) {
-        try {
-            runtime.upcall(INDEX_rb_tr_gc_guard, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-        }
-    }
-
     private static final int INDEX_rb_tr_io_create_and_attach_pointer = nextUpcallIndex++;
 
     @CExtUpcall
@@ -6227,7 +6216,6 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_tr_enc_is_unicode", "I(L)", "cext", "rb_tr_enc_is_unicode", "I", "V",
             "upcall_rb_tr_enc_mbc_case_fold", "L(ILLL)", "cext", "rb_tr_enc_mbc_case_fold", "V", "IVPP",
             "upcall_rb_tr_flags", "I(L)", "cext", "rb_tr_flags", "I", "V",
-            "upcall_rb_tr_gc_guard", "V(L)", "cext", "rb_tr_gc_guard", "O", "L",
             "upcall_rb_tr_io_create_and_attach_pointer", "L(LL)", "cext", "rb_tr_io_create_and_attach_pointer", "P", "VL",
             "upcall_rb_tr_io_pointer", "L(L)", "cext", "rb_tr_io_pointer", "P", "V",
             "upcall_rb_tr_log_warning", "V(L)", "cext", "rb_tr_log_warning", "O", "V",

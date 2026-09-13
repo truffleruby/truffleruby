@@ -12,11 +12,6 @@
 
 // GC, rb_gc_*
 
-VALUE rb_tr_gc_guard(VALUE value) {
-  rb_tr_up_rb_tr_gc_guard(value);
-  return value;
-}
-
 void rb_global_variable(VALUE *address) {
   rb_gc_register_address(address);
 }

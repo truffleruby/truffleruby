@@ -10,8 +10,6 @@
  */
 package org.truffleruby.cext;
 
-import static org.truffleruby.cext.ValueWrapperManager.LONG_TAG;
-
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NeverDefault;
@@ -47,8 +45,7 @@ public abstract class WrapNode extends RubyBaseNode {
 
     @Specialization(guards = "isSmallFixnum(value)")
     ValueWrapper wrapFixnum(long value) {
-        long val = (value << 1) | LONG_TAG;
-        return new ValueWrapper(null, val, null);
+        return new ValueWrapper(null, ValueWrapperManager.tagLong(value), null);
     }
 
     @Specialization(guards = "!isSmallFixnum(value)")

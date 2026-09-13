@@ -36,6 +36,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 
 import org.truffleruby.annotations.CoreModule;
@@ -59,10 +60,14 @@ public abstract class CExtInvokePrimitives {
 
     public abstract static class CExtInvokeNode extends PrimitiveArrayArgumentsNode {
         protected final void checkPendingException(InlinedBranchProfile exceptionProfile) {
-            final RubyFiber fiber = getLanguage().getCurrentFiber();
+            checkPendingException(this, exceptionProfile);
+        }
+
+        protected static void checkPendingException(Node node, InlinedBranchProfile exceptionProfile) {
+            final RubyFiber fiber = getLanguage(node).getCurrentFiber();
             if (fiber.pendingCExtException != null) {
-                exceptionProfile.enter(this);
-                CExtFFMLayer.checkPendingException(getContext(), fiber);
+                exceptionProfile.enter(node);
+                CExtFFMLayer.checkPendingException(getContext(node), fiber);
             }
         }
     }
@@ -70,7 +75,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_L = FFMSupport.createDowncallHandle("L(L)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_L(long function, long a0) {
+    static long invokeL_L(long function, long a0) {
         try {
             return (long) HANDLE_L_L.invokeExact(function, a0);
         } catch (Throwable t) {
@@ -93,7 +98,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LL = FFMSupport.createDowncallHandle("L(LL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LL(long function, long a0, long a1) {
+    static long invokeL_LL(long function, long a0, long a1) {
         try {
             return (long) HANDLE_L_LL.invokeExact(function, a0, a1);
         } catch (Throwable t) {
@@ -117,7 +122,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLL = FFMSupport.createDowncallHandle("L(LLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLL(long function, long a0, long a1, long a2) {
+    static long invokeL_LLL(long function, long a0, long a1, long a2) {
         try {
             return (long) HANDLE_L_LLL.invokeExact(function, a0, a1, a2);
         } catch (Throwable t) {
@@ -142,7 +147,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLL = FFMSupport.createDowncallHandle("L(LLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLL(long function, long a0, long a1, long a2, long a3) {
+    static long invokeL_LLLL(long function, long a0, long a1, long a2, long a3) {
         try {
             return (long) HANDLE_L_LLLL.invokeExact(function, a0, a1, a2, a3);
         } catch (Throwable t) {
@@ -168,7 +173,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLLL = FFMSupport.createDowncallHandle("L(LLLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLLL(long function, long a0, long a1, long a2, long a3, long a4) {
+    static long invokeL_LLLLL(long function, long a0, long a1, long a2, long a3, long a4) {
         try {
             return (long) HANDLE_L_LLLLL.invokeExact(function, a0, a1, a2, a3, a4);
         } catch (Throwable t) {
@@ -195,7 +200,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLLLL = FFMSupport.createDowncallHandle("L(LLLLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5) {
+    static long invokeL_LLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5) {
         try {
             return (long) HANDLE_L_LLLLLL.invokeExact(function, a0, a1, a2, a3, a4, a5);
         } catch (Throwable t) {
@@ -223,7 +228,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLLLLL = FFMSupport.createDowncallHandle("L(LLLLLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6) {
+    static long invokeL_LLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6) {
         try {
             return (long) HANDLE_L_LLLLLLL.invokeExact(function, a0, a1, a2, a3, a4, a5, a6);
         } catch (Throwable t) {
@@ -252,7 +257,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLLLLLL = FFMSupport.createDowncallHandle("L(LLLLLLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7) {
+    static long invokeL_LLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7) {
         try {
             return (long) HANDLE_L_LLLLLLLL.invokeExact(function, a0, a1, a2, a3, a4, a5, a6, a7);
         } catch (Throwable t) {
@@ -282,7 +287,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLLLLLLL = FFMSupport.createDowncallHandle("L(LLLLLLLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8) {
+    static long invokeL_LLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8) {
         try {
             return (long) HANDLE_L_LLLLLLLLL.invokeExact(function, a0, a1, a2, a3, a4, a5, a6, a7, a8);
         } catch (Throwable t) {
@@ -313,7 +318,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLLLLLLLL = FFMSupport.createDowncallHandle("L(LLLLLLLLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9) {
+    static long invokeL_LLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9) {
         try {
             return (long) HANDLE_L_LLLLLLLLLL.invokeExact(function, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9);
         } catch (Throwable t) {
@@ -345,7 +350,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLLLLLLLLL = FFMSupport.createDowncallHandle("L(LLLLLLLLLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10) {
+    static long invokeL_LLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10) {
         try {
             return (long) HANDLE_L_LLLLLLLLLLL.invokeExact(function, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
         } catch (Throwable t) {
@@ -378,7 +383,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLLLLLLLLLL = FFMSupport.createDowncallHandle("L(LLLLLLLLLLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10, long a11) {
+    static long invokeL_LLLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10, long a11) {
         try {
             return (long) HANDLE_L_LLLLLLLLLLLL.invokeExact(function, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
         } catch (Throwable t) {
@@ -412,7 +417,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLLLLLLLLLLL = FFMSupport.createDowncallHandle("L(LLLLLLLLLLLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10, long a11, long a12) {
+    static long invokeL_LLLLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10, long a11, long a12) {
         try {
             return (long) HANDLE_L_LLLLLLLLLLLLL.invokeExact(function, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
         } catch (Throwable t) {
@@ -447,7 +452,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLLLLLLLLLLLL = FFMSupport.createDowncallHandle("L(LLLLLLLLLLLLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLLLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10, long a11, long a12, long a13) {
+    static long invokeL_LLLLLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10, long a11, long a12, long a13) {
         try {
             return (long) HANDLE_L_LLLLLLLLLLLLLL.invokeExact(function, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13);
         } catch (Throwable t) {
@@ -483,7 +488,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLLLLLLLLLLLLL = FFMSupport.createDowncallHandle("L(LLLLLLLLLLLLLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLLLLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10, long a11, long a12, long a13, long a14) {
+    static long invokeL_LLLLLLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10, long a11, long a12, long a13, long a14) {
         try {
             return (long) HANDLE_L_LLLLLLLLLLLLLLL.invokeExact(function, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14);
         } catch (Throwable t) {
@@ -520,7 +525,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLLLLLLLLLLLLLL = FFMSupport.createDowncallHandle("L(LLLLLLLLLLLLLLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLLLLLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10, long a11, long a12, long a13, long a14, long a15) {
+    static long invokeL_LLLLLLLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10, long a11, long a12, long a13, long a14, long a15) {
         try {
             return (long) HANDLE_L_LLLLLLLLLLLLLLLL.invokeExact(function, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15);
         } catch (Throwable t) {
@@ -558,7 +563,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLLLLLLLLLLLLLLL = FFMSupport.createDowncallHandle("L(LLLLLLLLLLLLLLLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLLLLLLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10, long a11, long a12, long a13, long a14, long a15, long a16) {
+    static long invokeL_LLLLLLLLLLLLLLLLL(long function, long a0, long a1, long a2, long a3, long a4, long a5, long a6, long a7, long a8, long a9, long a10, long a11, long a12, long a13, long a14, long a15, long a16) {
         try {
             return (long) HANDLE_L_LLLLLLLLLLLLLLLLL.invokeExact(function, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16);
         } catch (Throwable t) {
@@ -597,7 +602,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_V_L = FFMSupport.createDowncallHandle("V(L)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static void invokeV_L(long function, long a0) {
+    static void invokeV_L(long function, long a0) {
         try {
             HANDLE_V_L.invokeExact(function, a0);
         } catch (Throwable t) {
@@ -620,7 +625,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_V_LL = FFMSupport.createDowncallHandle("V(LL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static void invokeV_LL(long function, long a0, long a1) {
+    static void invokeV_LL(long function, long a0, long a1) {
         try {
             HANDLE_V_LL.invokeExact(function, a0, a1);
         } catch (Throwable t) {
@@ -644,7 +649,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_V_LLL = FFMSupport.createDowncallHandle("V(LLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static void invokeV_LLL(long function, long a0, long a1, long a2) {
+    static void invokeV_LLL(long function, long a0, long a1, long a2) {
         try {
             HANDLE_V_LLL.invokeExact(function, a0, a1, a2);
         } catch (Throwable t) {
@@ -669,7 +674,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_V_LLLL = FFMSupport.createDowncallHandle("V(LLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static void invokeV_LLLL(long function, long a0, long a1, long a2, long a3) {
+    static void invokeV_LLLL(long function, long a0, long a1, long a2, long a3) {
         try {
             HANDLE_V_LLLL.invokeExact(function, a0, a1, a2, a3);
         } catch (Throwable t) {
@@ -695,7 +700,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_V_LI = FFMSupport.createDowncallHandle("V(LI)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static void invokeV_LI(long function, long a0, int a1) {
+    static void invokeV_LI(long function, long a0, int a1) {
         try {
             HANDLE_V_LI.invokeExact(function, a0, a1);
         } catch (Throwable t) {
@@ -718,7 +723,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_I_LLL = FFMSupport.createDowncallHandle("I(LLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static int invokeI_LLL(long function, long a0, long a1, long a2) {
+    static int invokeI_LLL(long function, long a0, long a1, long a2) {
         try {
             return (int) HANDLE_I_LLL.invokeExact(function, a0, a1, a2);
         } catch (Throwable t) {
@@ -743,7 +748,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_I_LLLL = FFMSupport.createDowncallHandle("I(LLLL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static int invokeI_LLLL(long function, long a0, long a1, long a2, long a3) {
+    static int invokeI_LLLL(long function, long a0, long a1, long a2, long a3) {
         try {
             return (int) HANDLE_I_LLLL.invokeExact(function, a0, a1, a2, a3);
         } catch (Throwable t) {
@@ -769,7 +774,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LILL = FFMSupport.createDowncallHandle("L(LILL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LILL(long function, long a0, int a1, long a2, long a3) {
+    static long invokeL_LILL(long function, long a0, int a1, long a2, long a3) {
         try {
             return (long) HANDLE_L_LILL.invokeExact(function, a0, a1, a2, a3);
         } catch (Throwable t) {
@@ -794,7 +799,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLI = FFMSupport.createDowncallHandle("L(LLLI)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLI(long function, long a0, long a1, long a2, int a3) {
+    static long invokeL_LLLI(long function, long a0, long a1, long a2, int a3) {
         try {
             return (long) HANDLE_L_LLLI.invokeExact(function, a0, a1, a2, a3);
         } catch (Throwable t) {
@@ -819,7 +824,7 @@ public abstract class CExtInvokePrimitives {
     private static final MethodHandle HANDLE_L_LLLILL = FFMSupport.createDowncallHandle("L(LLLILL)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
-    private static long invokeL_LLLILL(long function, long a0, long a1, long a2, int a3, long a4, long a5) {
+    static long invokeL_LLLILL(long function, long a0, long a1, long a2, int a3, long a4, long a5) {
         try {
             return (long) HANDLE_L_LLLILL.invokeExact(function, a0, a1, a2, a3, a4, a5);
         } catch (Throwable t) {

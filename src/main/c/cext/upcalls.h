@@ -4014,14 +4014,6 @@ static inline int rb_tr_up_rb_tr_flags(VALUE v0) {
   return result;
 }
 
-extern void (*rb_tr_up_impl_rb_tr_gc_guard)(long v0);
-static inline void rb_tr_up_rb_tr_gc_guard(long v0) {
-  rb_tr_up_impl_rb_tr_gc_guard(v0);
-  if (UNLIKELY(rb_tr_pending_exception)) {
-    rb_tr_longjmp_from_java_exception();
-  }
-}
-
 extern void * (*rb_tr_up_impl_rb_tr_io_create_and_attach_pointer)(VALUE v0, long v1);
 static inline void * rb_tr_up_rb_tr_io_create_and_attach_pointer(VALUE v0, long v1) {
   void * result = rb_tr_up_impl_rb_tr_io_create_and_attach_pointer(v0, v1);

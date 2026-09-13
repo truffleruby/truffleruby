@@ -499,7 +499,6 @@ module CExtUpcalls
     ["rb_tr_enc_is_unicode", :cext, "I", "V"],
     ["rb_tr_enc_mbc_case_fold", :cext, "V", "IVPP"],
     ["rb_tr_flags", :cext, "I", "V"],
-    ["rb_tr_gc_guard", :cext, "O", "L"],
     ["rb_tr_io_create_and_attach_pointer", :cext, "P", "VL"],
     ["rb_tr_io_pointer", :cext, "P", "V"],
     ["rb_tr_log_warning", :cext, "O", "V"],
