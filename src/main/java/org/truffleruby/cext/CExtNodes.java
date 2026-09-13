@@ -42,7 +42,6 @@ import org.truffleruby.annotations.Visibility;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.MarkingService.ExtensionCallStack;
-import org.truffleruby.core.MarkingServiceNodes;
 import org.truffleruby.core.MarkingServiceNodes.RunMarkOnExitNode;
 import org.truffleruby.cext.CExtInvokePrimitives.CExtInvokeNode;
 import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
@@ -1972,24 +1971,6 @@ public abstract class CExtNodes {
             // We do nothing here if the handle cannot be resolved. If we are marking an object
             // which is only reachable via weak refs then the handles of objects it is itself
             // marking may have already been removed from the handle map.
-            return nil;
-        }
-
-    }
-
-    @CoreMethod(names = "rb_tr_gc_guard", onSingleton = true, required = 1)
-    public abstract static class GCGuardNode extends CoreMethodArrayArgumentsNode {
-
-        @Specialization
-        Object addToMarkList(long handle,
-                @Cached MarkingServiceNodes.KeepAliveNode keepAliveNode,
-                @Cached InlinedBranchProfile noExceptionProfile,
-                @Cached ToWrapperNode toWrapperNode) {
-            ValueWrapper wrappedValue = toWrapperNode.execute(this, handle);
-            if (wrappedValue != null) {
-                noExceptionProfile.enter(this);
-                keepAliveNode.execute(this, wrappedValue.getObject(), wrappedValue);
-            }
             return nil;
         }
 
