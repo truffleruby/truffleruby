@@ -44,6 +44,9 @@ import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.MarkingService.ExtensionCallStack;
 import org.truffleruby.core.MarkingServiceNodes;
 import org.truffleruby.core.MarkingServiceNodes.RunMarkOnExitNode;
+import org.truffleruby.cext.CExtInvokePrimitives.CExtInvokeNode;
+import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
+import org.truffleruby.core.array.ArrayGuards;
 import org.truffleruby.core.array.ArrayToObjectArrayNode;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.array.RubyArray;
@@ -80,8 +83,10 @@ import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.core.string.StringSupport;
 import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.core.string.TStringWithEncoding;
+import org.truffleruby.core.support.IONodes;
 import org.truffleruby.core.support.TypeNodes;
 import org.truffleruby.core.symbol.RubySymbol;
+import org.truffleruby.core.thread.RubyThread;
 import org.truffleruby.core.thread.ThreadManager;
 import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.extra.ffi.RubyPointer;
@@ -130,6 +135,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.ReportPolymorphism;
@@ -137,6 +143,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -1769,6 +1776,115 @@ public abstract class CExtNodes {
                 @Cached WrapNode wrapNode) {
             return wrapNode.execute(value);
         }
+    }
+
+    /** Calls a {@code VALUE func(int argc, VALUE *argv, VALUE obj)} function (rb_define_method with argc=-1) with the
+     * elements of the args Array as arguments. Up to {@link #MAX_STACK_ARGV} arguments are passed individually, with
+     * the fixed-signature downcall of that count, to the rb_tr_setjmp_wrapper_argv<N>_to_pointer wrapper which builds
+     * argv on the native stack, so no native allocation is needed. With more arguments, argv is written to the thread's
+     * native buffer and passed to the rb_tr_setjmp_wrapper_int_pointer2_to_pointer wrapper. */
+    @Primitive(name = "cext_invoke_argv")
+    @ImportStatic(ArrayGuards.class)
+    public abstract static class InvokeArgvNode extends CExtInvokeNode {
+
+        static final int MAX_STACK_ARGV = 15;
+
+        @Specialization(guards = { "args.size == cachedSize", "cachedSize <= MAX_STACK_ARGV" }, limit = "3")
+        @ExplodeLoop
+        static long invokeCachedSize(
+                long argvWrapper, RubyArray stackWrappers, long function, Object self, RubyArray args,
+                @Cached("args.size") int cachedSize,
+                @Cached("wrapperAddress(stackWrappers, cachedSize)") long stackWrapper,
+                @CachedLibrary(limit = "storageStrategyLimit()") @Shared ArrayStoreLibrary stores,
+                @Cached @Shared WrapNode wrapNode,
+                @Cached @Exclusive WrapperToHandleNode wrapperToHandleNode,
+                @Cached @Shared CExtDowncallArgumentNode selfNode,
+                @Cached @Exclusive InlinedBranchProfile exceptionProfile,
+                @Bind Node node) {
+            final Object store = args.getStore();
+            final long[] argv = new long[cachedSize];
+            for (int i = 0; i < cachedSize; i++) {
+                argv[i] = toHandle(node, store, i, stores, wrapNode, wrapperToHandleNode);
+            }
+            final long result = callStackWrapper(cachedSize, stackWrapper, function, selfNode.execute(self), argv);
+            checkPendingException(node, exceptionProfile);
+            return result;
+        }
+
+        @Specialization(replaces = "invokeCachedSize")
+        static long invokeAnySize(long argvWrapper, RubyArray stackWrappers, long function, Object self, RubyArray args,
+                @CachedLibrary(limit = "storageStrategyLimit()") @Shared ArrayStoreLibrary stores,
+                @Cached @Shared WrapNode wrapNode,
+                @Cached @Exclusive WrapperToHandleNode wrapperToHandleNode,
+                @Cached @Shared CExtDowncallArgumentNode selfNode,
+                @Cached @Exclusive InlinedConditionProfile stackProfile,
+                @Cached @Exclusive InlinedConditionProfile bufferSizeProfile,
+                @Cached @Exclusive InlinedConditionProfile bufferFreeProfile,
+                @Cached @Exclusive InlinedBranchProfile exceptionProfile,
+                @Bind Node node) {
+            final int argc = args.size;
+            final Object store = args.getStore();
+            final long[] argv = new long[argc];
+            for (int i = 0; i < argc; i++) {
+                argv[i] = toHandle(node, store, i, stores, wrapNode, wrapperToHandleNode);
+            }
+            final long selfHandle = selfNode.execute(self);
+
+            final long result;
+            if (stackProfile.profile(node, argc <= MAX_STACK_ARGV)) {
+                final long stackWrapper = (long) stores.read(stackWrappers.getStore(), argc);
+                result = callStackWrapper(argc, stackWrapper, function, selfHandle, argv);
+            } else {
+                final RubyThread thread = getLanguage(node).getCurrentThread();
+                final Pointer buffer = IONodes.IOThreadBufferAllocateNode.getBuffer(node, getContext(node), thread,
+                        argc * 8L, bufferSizeProfile);
+                for (int i = 0; i < argc; i++) {
+                    buffer.writeLong(i * 8L, argv[i]);
+                }
+                try {
+                    result = CExtInvokePrimitives.invokeL_LILL(argvWrapper, function, argc, buffer.getAddress(),
+                            selfHandle);
+                } finally {
+                    thread.getIoBuffer(getContext(node)).free(node, thread, buffer, bufferFreeProfile);
+                }
+            }
+            checkPendingException(node, exceptionProfile);
+            return result;
+        }
+
+        private static long toHandle(Node node, Object store, int i, ArrayStoreLibrary stores, WrapNode wrapNode,
+                WrapperToHandleNode wrapperToHandleNode) {
+            final Object element = stores.read(store, i);
+            return wrapperToHandleNode.execute(node, element, wrapNode.execute(element));
+        }
+
+        static long wrapperAddress(RubyArray stackWrappers, int argc) {
+            return (long) ArrayStoreLibrary.getUncached().read(stackWrappers.getStore(), argc);
+        }
+
+        // @formatter:off
+        private static long callStackWrapper(int argc, long wrapper, long function, long self, long[] a) {
+            switch (argc) {
+                case 0: return CExtInvokePrimitives.invokeL_LL(wrapper, function, self);
+                case 1: return CExtInvokePrimitives.invokeL_LLL(wrapper, function, self, a[0]);
+                case 2: return CExtInvokePrimitives.invokeL_LLLL(wrapper, function, self, a[0], a[1]);
+                case 3: return CExtInvokePrimitives.invokeL_LLLLL(wrapper, function, self, a[0], a[1], a[2]);
+                case 4: return CExtInvokePrimitives.invokeL_LLLLLL(wrapper, function, self, a[0], a[1], a[2], a[3]);
+                case 5: return CExtInvokePrimitives.invokeL_LLLLLLL(wrapper, function, self, a[0], a[1], a[2], a[3], a[4]);
+                case 6: return CExtInvokePrimitives.invokeL_LLLLLLLL(wrapper, function, self, a[0], a[1], a[2], a[3], a[4], a[5]);
+                case 7: return CExtInvokePrimitives.invokeL_LLLLLLLLL(wrapper, function, self, a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
+                case 8: return CExtInvokePrimitives.invokeL_LLLLLLLLLL(wrapper, function, self, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7]);
+                case 9: return CExtInvokePrimitives.invokeL_LLLLLLLLLLL(wrapper, function, self, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]);
+                case 10: return CExtInvokePrimitives.invokeL_LLLLLLLLLLLL(wrapper, function, self, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9]);
+                case 11: return CExtInvokePrimitives.invokeL_LLLLLLLLLLLLL(wrapper, function, self, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10]);
+                case 12: return CExtInvokePrimitives.invokeL_LLLLLLLLLLLLLL(wrapper, function, self, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11]);
+                case 13: return CExtInvokePrimitives.invokeL_LLLLLLLLLLLLLLL(wrapper, function, self, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12]);
+                case 14: return CExtInvokePrimitives.invokeL_LLLLLLLLLLLLLLLL(wrapper, function, self, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13]);
+                case 15: return CExtInvokePrimitives.invokeL_LLLLLLLLLLLLLLLLL(wrapper, function, self, a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14]);
+                default: throw CompilerDirectives.shouldNotReachHere();
+            }
+        }
+        // @formatter:on
     }
 
     @Primitive(name = "cext_unwrap")

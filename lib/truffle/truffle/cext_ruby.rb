@@ -18,7 +18,7 @@ module Truffle::CExt
   # tool/find_unused_primitives.rb finds these primitives used
   INVOKE_PRIMITIVES = {
     -2 => 'Primitive.cext_invoke_l_lll',  # (VALUE obj, VALUE rubyArrayArgs)
-    -1 => 'Primitive.cext_invoke_l_lill', # (int argc, VALUE *argv, VALUE obj)
+    -1 => 'Primitive.cext_invoke_argv',   # (int argc, VALUE *argv, VALUE obj)
     0 => 'Primitive.cext_invoke_l_ll',
     1 => 'Primitive.cext_invoke_l_lll',
     2 => 'Primitive.cext_invoke_l_llll',
@@ -48,8 +48,8 @@ module Truffle::CExt
   METHOD_BODY_TEMPLATES = (-2..15).to_h do |argc|
     call_args =
       case argc
-      when -1 # (int argc, VALUE *argv, VALUE obj)
-        'function, args.size, Truffle::CExt.RARRAY_PTR(args), Primitive.cext_wrap(self)'
+      when -1 # (int argc, VALUE *argv, VALUE obj), argv built on the native stack by the wrapper for that argc
+        'ARGV_WRAPPERS, function, Primitive.cext_wrap(self), args'
       when -2 # (VALUE obj, VALUE rubyArrayArgs)
         'function, Primitive.cext_wrap(self), Primitive.cext_wrap(args)'
       else # (VALUE obj); (VALUE obj, VALUE arg1); (VALUE obj, VALUE arg1, VALUE arg2); ...

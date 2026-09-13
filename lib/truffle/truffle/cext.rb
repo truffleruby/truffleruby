@@ -65,6 +65,12 @@ module Truffle::CExt
     POINTER2_INT_POINTER2_TO_POINTER_WRAPPER = lib[:rb_tr_setjmp_wrapper_pointer2_int_pointer2_to_pointer]
     RB_BLOCK_CALL_FUNC_WRAPPER = POINTER2_INT_POINTER2_TO_POINTER_WRAPPER
 
+    # The wrappers building argv on the native stack for (int argc, VALUE *argv, VALUE obj)
+    # functions with 0..15 arguments, indexed by argc, see Primitive.cext_invoke_argv
+    ARGV_WRAPPERS = (0..15).map do |n|
+      lib[:"rb_tr_setjmp_wrapper_argv#{n}_to_pointer"]
+    end.freeze
+
     # Primitive.call_with_unblocking_function needs an executable receiver, called while the
     # thread is considered blocked
     CALL_TO_POINTER_WITHOUT_GVL = -> function, arg do

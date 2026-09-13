@@ -525,3 +525,45 @@ VALUE rb_tr_setjmp_wrapper_pointer16_to_pointer(VALUE (*func)(VALUE arg1, VALUE 
   return result;
 }
 
+
+// Wrappers for (int argc, VALUE *argv, VALUE obj) functions (rb_define_method with argc=-1),
+// receiving the arguments individually like the fixed-arity wrappers above and building argv on
+// the native stack, so no native allocation is needed to pass the arguments (see
+// Primitive.cext_invoke_argv). More than 15 arguments are passed by
+// rb_tr_setjmp_wrapper_int_pointer2_to_pointer with an argv in the thread's native buffer.
+#define RB_TR_ARGV_WRAPPER(N, PARAMS, ...) \
+VALUE rb_tr_setjmp_wrapper_argv##N##_to_pointer(VALUE (*func)(int argc, VALUE *argv, VALUE obj), VALUE obj PARAMS) { \
+  VALUE argv[N > 0 ? N : 1] = { __VA_ARGS__ }; \
+  VALUE result; \
+  jmp_buf *prev_jmp_buf = rb_tr_jmp_buf; \
+  jmp_buf here; \
+  rb_tr_jmp_buf = &here; \
+  if (RUBY_SETJMP(here) == 0) { \
+    result = func(N, argv, obj); \
+  } else { \
+    /* The exception is rethrown by Java when this downcall returns, so the return value does not matter */ \
+    result = Qundef; \
+  } \
+  rb_tr_jmp_buf = prev_jmp_buf; \
+  return result; \
+}
+
+#define A(i) , VALUE a##i
+RB_TR_ARGV_WRAPPER(0, , Qnil)
+RB_TR_ARGV_WRAPPER(1, A(0), a0)
+RB_TR_ARGV_WRAPPER(2, A(0) A(1), a0, a1)
+RB_TR_ARGV_WRAPPER(3, A(0) A(1) A(2), a0, a1, a2)
+RB_TR_ARGV_WRAPPER(4, A(0) A(1) A(2) A(3), a0, a1, a2, a3)
+RB_TR_ARGV_WRAPPER(5, A(0) A(1) A(2) A(3) A(4), a0, a1, a2, a3, a4)
+RB_TR_ARGV_WRAPPER(6, A(0) A(1) A(2) A(3) A(4) A(5), a0, a1, a2, a3, a4, a5)
+RB_TR_ARGV_WRAPPER(7, A(0) A(1) A(2) A(3) A(4) A(5) A(6), a0, a1, a2, a3, a4, a5, a6)
+RB_TR_ARGV_WRAPPER(8, A(0) A(1) A(2) A(3) A(4) A(5) A(6) A(7), a0, a1, a2, a3, a4, a5, a6, a7)
+RB_TR_ARGV_WRAPPER(9, A(0) A(1) A(2) A(3) A(4) A(5) A(6) A(7) A(8), a0, a1, a2, a3, a4, a5, a6, a7, a8)
+RB_TR_ARGV_WRAPPER(10, A(0) A(1) A(2) A(3) A(4) A(5) A(6) A(7) A(8) A(9), a0, a1, a2, a3, a4, a5, a6, a7, a8, a9)
+RB_TR_ARGV_WRAPPER(11, A(0) A(1) A(2) A(3) A(4) A(5) A(6) A(7) A(8) A(9) A(10), a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
+RB_TR_ARGV_WRAPPER(12, A(0) A(1) A(2) A(3) A(4) A(5) A(6) A(7) A(8) A(9) A(10) A(11), a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11)
+RB_TR_ARGV_WRAPPER(13, A(0) A(1) A(2) A(3) A(4) A(5) A(6) A(7) A(8) A(9) A(10) A(11) A(12), a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12)
+RB_TR_ARGV_WRAPPER(14, A(0) A(1) A(2) A(3) A(4) A(5) A(6) A(7) A(8) A(9) A(10) A(11) A(12) A(13), a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13)
+RB_TR_ARGV_WRAPPER(15, A(0) A(1) A(2) A(3) A(4) A(5) A(6) A(7) A(8) A(9) A(10) A(11) A(12) A(13) A(14), a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14)
+#undef A
+#undef RB_TR_ARGV_WRAPPER
