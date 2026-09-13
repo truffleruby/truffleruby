@@ -44,7 +44,6 @@ import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.MarkingService.ExtensionCallStack;
 import org.truffleruby.core.MarkingServiceNodes.RunMarkOnExitNode;
 import org.truffleruby.cext.CExtInvokePrimitives.CExtInvokeNode;
-import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
 import org.truffleruby.core.array.ArrayGuards;
 import org.truffleruby.core.array.ArrayToObjectArrayNode;
 import org.truffleruby.core.array.ArrayUtils;
@@ -124,7 +123,6 @@ import org.truffleruby.language.methods.DeclarationContext;
 import org.truffleruby.language.methods.InternalMethod;
 import org.truffleruby.language.objects.AllocationTracing;
 import org.truffleruby.language.objects.MetaClassNode;
-import org.truffleruby.language.objects.ObjectIDOperations;
 import org.truffleruby.language.objects.WriteObjectFieldNode;
 import org.truffleruby.language.supercall.CallSuperMethodNode;
 import org.truffleruby.language.yield.CallBlockNode;
@@ -1796,14 +1794,14 @@ public abstract class CExtNodes {
                 @Cached("args.size") int cachedSize,
                 @Cached("wrapperAddress(stackWrappers, cachedSize)") long stackWrapper,
                 @CachedLibrary(limit = "storageStrategyLimit()") @Shared ArrayStoreLibrary stores,
-                @Cached @Exclusive ArgToHandleNode argToHandleNode,
+                @Cached @Exclusive ValueToHandleNode valueToHandleNode,
                 @Cached @Shared CExtDowncallArgumentNode selfNode,
                 @Cached @Exclusive InlinedBranchProfile exceptionProfile,
                 @Bind Node node) {
             final Object store = args.getStore();
             final long[] argv = new long[cachedSize];
             for (int i = 0; i < cachedSize; i++) {
-                argv[i] = argToHandleNode.execute(node, stores.read(store, i));
+                argv[i] = valueToHandleNode.execute(node, stores.read(store, i));
             }
             final long result = callStackWrapper(cachedSize, stackWrapper, function, selfNode.execute(self), argv);
             checkPendingException(node, exceptionProfile);
@@ -1813,7 +1811,7 @@ public abstract class CExtNodes {
         @Specialization(replaces = "invokeCachedSize")
         static long invokeAnySize(long argvWrapper, RubyArray stackWrappers, long function, Object self, RubyArray args,
                 @CachedLibrary(limit = "storageStrategyLimit()") @Shared ArrayStoreLibrary stores,
-                @Cached @Exclusive ArgToHandleNode argToHandleNode,
+                @Cached @Exclusive ValueToHandleNode valueToHandleNode,
                 @Cached @Shared CExtDowncallArgumentNode selfNode,
                 @Cached @Exclusive InlinedConditionProfile stackProfile,
                 @Cached @Exclusive InlinedConditionProfile bufferSizeProfile,
@@ -1824,7 +1822,7 @@ public abstract class CExtNodes {
             final Object store = args.getStore();
             final long[] argv = new long[argc];
             for (int i = 0; i < argc; i++) {
-                argv[i] = argToHandleNode.execute(node, stores.read(store, i));
+                argv[i] = valueToHandleNode.execute(node, stores.read(store, i));
             }
             final long selfHandle = selfNode.execute(self);
 
@@ -1848,39 +1846,6 @@ public abstract class CExtNodes {
             }
             checkPendingException(node, exceptionProfile);
             return result;
-        }
-
-        /** Converts an argument to its VALUE handle. Small fixnums get their tagged handle directly: wrapping them
-         * would allocate a ValueWrapper (a WeakReference, which cannot be escape-analyzed) just to read its handle. */
-        @GenerateInline
-        @GenerateCached(false)
-        @ImportStatic(ObjectIDOperations.class)
-        public abstract static class ArgToHandleNode extends RubyBaseNode {
-
-            public abstract long execute(Node node, Object value);
-
-            @Specialization(guards = "isSmallFixnum(value)")
-            static long smallFixnum(long value) {
-                return ValueWrapperManager.tagLong(value);
-            }
-
-            @Specialization(guards = "!isSmallFixnum(value)")
-            static long largeLong(Node node, long value,
-                    @Cached(inline = false) @Shared WrapNode wrapNode,
-                    @Cached @Shared WrapperToHandleNode wrapperToHandleNode) {
-                return wrapperToHandleNode.execute(node, value, wrapNode.execute(value));
-            }
-
-            @Specialization(guards = "!isLong(value)")
-            static long other(Node node, Object value,
-                    @Cached(inline = false) @Shared WrapNode wrapNode,
-                    @Cached @Shared WrapperToHandleNode wrapperToHandleNode) {
-                return wrapperToHandleNode.execute(node, value, wrapNode.execute(value));
-            }
-
-            static boolean isLong(Object value) {
-                return value instanceof Integer || value instanceof Long;
-            }
         }
 
         static long wrapperAddress(RubyArray stackWrappers, int argc) {
@@ -1910,6 +1875,19 @@ public abstract class CExtNodes {
             }
         }
         // @formatter:on
+    }
+
+    /** Like Primitive.cext_wrap, but returns the VALUE handle directly, for arguments of Primitive.cext_invoke_*
+     * downcalls, which pass longs as-is. */
+    @Primitive(name = "cext_to_handle")
+    public abstract static class ValueToHandlePrimitiveNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        static long toHandle(Object value,
+                @Cached ValueToHandleNode valueToHandleNode,
+                @Bind Node node) {
+            return valueToHandleNode.execute(node, value);
+        }
     }
 
     @Primitive(name = "cext_unwrap")

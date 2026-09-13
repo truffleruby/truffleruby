@@ -49,11 +49,11 @@ module Truffle::CExt
     call_args =
       case argc
       when -1 # (int argc, VALUE *argv, VALUE obj), argv built on the native stack by the wrapper for that argc
-        'ARGV_WRAPPERS, function, Primitive.cext_wrap(self), args'
+        'ARGV_WRAPPERS, function, Primitive.cext_to_handle(self), args'
       when -2 # (VALUE obj, VALUE rubyArrayArgs)
-        'function, Primitive.cext_wrap(self), Primitive.cext_wrap(args)'
+        'function, Primitive.cext_to_handle(self), Primitive.cext_to_handle(args)'
       else # (VALUE obj); (VALUE obj, VALUE arg1); (VALUE obj, VALUE arg1, VALUE arg2); ...
-        "function, Primitive.cext_wrap(self)#{(1..argc).map { |i| ", Primitive.cext_wrap(arg#{i})" }.join}"
+        "function, Primitive.cext_to_handle(self)#{(1..argc).map { |i| ", Primitive.cext_to_handle(arg#{i})" }.join}"
       end
     params = argc >= 0 ? (1..argc).map { |i| "arg#{i}, " }.join : '*args, '
     [argc, <<~RUBY]
