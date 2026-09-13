@@ -983,6 +983,32 @@ describe "Pattern matching" do
       }.should.raise(TypeError, /deconstruct_keys must return Hash/)
     end
 
+    it "accepts a subclass of Hash from #deconstruct_keys" do
+      subclass = Class.new(Hash) do
+        def key?(key)
+          super(key.to_s)
+        end
+
+        def [](key)
+          super(key.to_s)
+        end
+      end
+
+      obj = Object.new
+      obj.define_singleton_method(:deconstruct_keys) do |*|
+        h = subclass.new
+        h["a"] = 1
+        h
+      end
+
+      case obj
+      in {b: 1}
+        false
+      in {a: 1}
+        true
+      end.should == true
+    end
+
     it "does not match object if #deconstruct_keys method returns Hash with non-symbol keys" do
       obj = Object.new
 
