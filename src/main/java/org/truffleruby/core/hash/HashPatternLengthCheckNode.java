@@ -10,11 +10,19 @@
  */
 package org.truffleruby.core.hash;
 
+import static org.truffleruby.language.dispatch.DispatchConfiguration.PUBLIC;
+
+import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
+import org.truffleruby.core.cast.LongCastNode;
 import org.truffleruby.language.RubyContextSourceNode;
 import org.truffleruby.language.RubyNode;
+import org.truffleruby.language.dispatch.DispatchNode;
 
 @NodeChild(value = "valueNode", type = RubyNode.class)
 public abstract class HashPatternLengthCheckNode extends RubyContextSourceNode {
@@ -25,16 +33,34 @@ public abstract class HashPatternLengthCheckNode extends RubyContextSourceNode {
         this.minimumKeys = minimumKeys;
     }
 
+    int getMinimumKeys() {
+        return minimumKeys;
+    }
+
     abstract RubyNode getValueNode();
 
-    @Specialization
+    @Specialization(guards = "isBuiltinHash(matchHash)")
     boolean hashLengthCheck(RubyHash matchHash) {
         return minimumKeys <= matchHash.size;
+    }
+
+    @Specialization(guards = "!isBuiltinHash(matchHash)")
+    static boolean hashLengthCheckOnSubclass(VirtualFrame frame, RubyHash matchHash,
+            @Bind Node node,
+            @Bind("getMinimumKeys()") int minimumKeys,
+            @Cached DispatchNode sizeNode,
+            @Cached LongCastNode toLongNode) {
+        Object size = sizeNode.callWithFrame(PUBLIC, frame, matchHash, "size");
+        return minimumKeys <= toLongNode.executeCastLong(node, size);
     }
 
     @Fallback
     boolean notHash(Object value) {
         return false;
+    }
+
+    protected boolean isBuiltinHash(RubyHash hash) {
+        return hash.getMetaClass() == coreLibrary().hashClass;
     }
 
     @Override
