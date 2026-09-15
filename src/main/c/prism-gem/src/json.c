@@ -2576,16 +2576,16 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
                 pm_buffer_append_string(buffer, "null", 4);
             }
 
-            // Dump the in_loc field
+            // Dump the in_keyword_loc field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"in_loc\":", 9);
-            pm_dump_json_location(buffer, &cast->in_loc);
+            pm_buffer_append_string(buffer, "\"in_keyword_loc\":", 17);
+            pm_dump_json_location(buffer, &cast->in_keyword_loc);
 
-            // Dump the then_loc field
+            // Dump the then_keyword_loc field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"then_loc\":", 11);
-            if (cast->then_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->then_loc);
+            pm_buffer_append_string(buffer, "\"then_keyword_loc\":", 19);
+            if (cast->then_keyword_loc.length != 0) {
+                pm_dump_json_location(buffer, &cast->then_keyword_loc);
             } else {
                 pm_buffer_append_string(buffer, "null", 4);
             }
@@ -3883,10 +3883,10 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
             pm_buffer_append_string(buffer, "\"pattern\":", 10);
             pm_dump_json(buffer, parser, (const pm_node_t *) cast->pattern);
 
-            // Dump the operator_loc field
+            // Dump the keyword_loc field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"operator_loc\":", 15);
-            pm_dump_json_location(buffer, &cast->operator_loc);
+            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
+            pm_dump_json_location(buffer, &cast->keyword_loc);
 
             pm_buffer_append_byte(buffer, '}');
             break;
@@ -5363,11 +5363,7 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
             // Dump the value_loc field
             pm_buffer_append_byte(buffer, ',');
             pm_buffer_append_string(buffer, "\"value_loc\":", 12);
-            if (cast->value_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->value_loc);
-            } else {
-                pm_buffer_append_string(buffer, "null", 4);
-            }
+            pm_dump_json_location(buffer, &cast->value_loc);
 
             // Dump the closing_loc field
             pm_buffer_append_byte(buffer, ',');
@@ -5430,10 +5426,10 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
             const pm_unless_node_t *cast = (const pm_unless_node_t *) node;
             pm_dump_json_location(buffer, &cast->base.location);
 
-            // Dump the keyword_loc field
+            // Dump the unless_keyword_loc field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
+            pm_buffer_append_string(buffer, "\"unless_keyword_loc\":", 21);
+            pm_dump_json_location(buffer, &cast->unless_keyword_loc);
 
             // Dump the predicate field
             pm_buffer_append_byte(buffer, ',');
@@ -5497,10 +5493,10 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
             }
             pm_buffer_append_byte(buffer, ']');
 
-            // Dump the keyword_loc field
+            // Dump the until_keyword_loc field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
+            pm_buffer_append_string(buffer, "\"until_keyword_loc\":", 20);
+            pm_dump_json_location(buffer, &cast->until_keyword_loc);
 
             // Dump the do_keyword_loc field
             pm_buffer_append_byte(buffer, ',');
@@ -5511,11 +5507,11 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
                 pm_buffer_append_string(buffer, "null", 4);
             }
 
-            // Dump the closing_loc field
+            // Dump the end_keyword_loc field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
+            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
+            if (cast->end_keyword_loc.length != 0) {
+                pm_dump_json_location(buffer, &cast->end_keyword_loc);
             } else {
                 pm_buffer_append_string(buffer, "null", 4);
             }
@@ -5543,10 +5539,10 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
             const pm_when_node_t *cast = (const pm_when_node_t *) node;
             pm_dump_json_location(buffer, &cast->base.location);
 
-            // Dump the keyword_loc field
+            // Dump the when_keyword_loc field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
+            pm_buffer_append_string(buffer, "\"when_keyword_loc\":", 19);
+            pm_dump_json_location(buffer, &cast->when_keyword_loc);
 
             // Dump the conditions field
             pm_buffer_append_byte(buffer, ',');
@@ -5599,10 +5595,10 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
             }
             pm_buffer_append_byte(buffer, ']');
 
-            // Dump the keyword_loc field
+            // Dump the while_keyword_loc field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"keyword_loc\":", 14);
-            pm_dump_json_location(buffer, &cast->keyword_loc);
+            pm_buffer_append_string(buffer, "\"while_keyword_loc\":", 20);
+            pm_dump_json_location(buffer, &cast->while_keyword_loc);
 
             // Dump the do_keyword_loc field
             pm_buffer_append_byte(buffer, ',');
@@ -5613,11 +5609,11 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
                 pm_buffer_append_string(buffer, "null", 4);
             }
 
-            // Dump the closing_loc field
+            // Dump the end_keyword_loc field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"closing_loc\":", 14);
-            if (cast->closing_loc.length != 0) {
-                pm_dump_json_location(buffer, &cast->closing_loc);
+            pm_buffer_append_string(buffer, "\"end_keyword_loc\":", 18);
+            if (cast->end_keyword_loc.length != 0) {
+                pm_dump_json_location(buffer, &cast->end_keyword_loc);
             } else {
                 pm_buffer_append_string(buffer, "null", 4);
             }

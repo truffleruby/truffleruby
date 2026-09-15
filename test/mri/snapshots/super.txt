@@ -1,10 +1,10 @@
-@ ProgramNode (location: (1,0)-(17,21))
+@ ProgramNode (location: (1,0)-(21,21))
 ├── flags: ∅
 ├── locals: []
 └── statements:
-    @ StatementsNode (location: (1,0)-(17,21))
+    @ StatementsNode (location: (1,0)-(21,21))
     ├── flags: ∅
-    └── body: (length: 9)
+    └── body: (length: 11)
         ├── @ ForwardingSuperNode (location: (1,0)-(1,5))
         │   ├── flags: newline
         │   ├── keyword_loc: (1,0)-(1,5) = "super"
@@ -119,32 +119,100 @@
         │       ├── body: ∅
         │       ├── opening_loc: (15,15)-(15,16) = "{"
         │       └── closing_loc: (15,16)-(15,17) = "}"
-        └── @ SuperNode (location: (17,0)-(17,21))
+        ├── @ SuperNode (location: (17,0)-(17,21))
+        │   ├── flags: newline
+        │   ├── keyword_loc: (17,0)-(17,5) = "super"
+        │   ├── lparen_loc: (17,5)-(17,6) = "("
+        │   ├── arguments:
+        │   │   @ ArgumentsNode (location: (17,6)-(17,13))
+        │   │   ├── flags: ∅
+        │   │   └── arguments: (length: 3)
+        │   │       ├── @ IntegerNode (location: (17,6)-(17,7))
+        │   │       │   ├── flags: static_literal, decimal
+        │   │       │   └── value: 1
+        │   │       ├── @ IntegerNode (location: (17,9)-(17,10))
+        │   │       │   ├── flags: static_literal, decimal
+        │   │       │   └── value: 2
+        │   │       └── @ IntegerNode (location: (17,12)-(17,13))
+        │   │           ├── flags: static_literal, decimal
+        │   │           └── value: 3
+        │   ├── rparen_loc: (17,20)-(17,21) = ")"
+        │   └── block:
+        │       @ BlockArgumentNode (location: (17,15)-(17,20))
+        │       ├── flags: ∅
+        │       ├── expression:
+        │       │   @ SymbolNode (location: (17,16)-(17,20))
+        │       │   ├── flags: static_literal, forced_us_ascii_encoding
+        │       │   ├── opening_loc: (17,16)-(17,17) = ":"
+        │       │   ├── value_loc: (17,17)-(17,20) = "foo"
+        │       │   ├── closing_loc: ∅
+        │       │   └── unescaped: "foo"
+        │       └── operator_loc: (17,15)-(17,16) = "&"
+        ├── @ CallNode (location: (19,0)-(19,18))
+        │   ├── flags: newline
+        │   ├── receiver:
+        │   │   @ SuperNode (location: (19,0)-(19,14))
+        │   │   ├── flags: ∅
+        │   │   ├── keyword_loc: (19,0)-(19,5) = "super"
+        │   │   ├── lparen_loc: ∅
+        │   │   ├── arguments:
+        │   │   │   @ ArgumentsNode (location: (19,6)-(19,7))
+        │   │   │   ├── flags: ∅
+        │   │   │   └── arguments: (length: 1)
+        │   │   │       └── @ IntegerNode (location: (19,6)-(19,7))
+        │   │   │           ├── flags: static_literal, decimal
+        │   │   │           └── value: 1
+        │   │   ├── rparen_loc: ∅
+        │   │   └── block:
+        │   │       @ BlockNode (location: (19,8)-(19,14))
+        │   │       ├── flags: ∅
+        │   │       ├── locals: []
+        │   │       ├── parameters: ∅
+        │   │       ├── body: ∅
+        │   │       ├── opening_loc: (19,8)-(19,10) = "do"
+        │   │       └── closing_loc: (19,11)-(19,14) = "end"
+        │   ├── call_operator_loc: (19,14)-(19,15) = "."
+        │   ├── name: :baz
+        │   ├── message_loc: (19,15)-(19,18) = "baz"
+        │   ├── opening_loc: ∅
+        │   ├── arguments: ∅
+        │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
+        │   └── block: ∅
+        └── @ CallNode (location: (21,0)-(21,21))
             ├── flags: newline
-            ├── keyword_loc: (17,0)-(17,5) = "super"
-            ├── lparen_loc: (17,5)-(17,6) = "("
-            ├── arguments:
-            │   @ ArgumentsNode (location: (17,6)-(17,13))
+            ├── receiver:
+            │   @ SuperNode (location: (21,0)-(21,14))
             │   ├── flags: ∅
-            │   └── arguments: (length: 3)
-            │       ├── @ IntegerNode (location: (17,6)-(17,7))
-            │       │   ├── flags: static_literal, decimal
-            │       │   └── value: 1
-            │       ├── @ IntegerNode (location: (17,9)-(17,10))
-            │       │   ├── flags: static_literal, decimal
-            │       │   └── value: 2
-            │       └── @ IntegerNode (location: (17,12)-(17,13))
+            │   ├── keyword_loc: (21,0)-(21,5) = "super"
+            │   ├── lparen_loc: ∅
+            │   ├── arguments:
+            │   │   @ ArgumentsNode (location: (21,6)-(21,7))
+            │   │   ├── flags: ∅
+            │   │   └── arguments: (length: 1)
+            │   │       └── @ IntegerNode (location: (21,6)-(21,7))
+            │   │           ├── flags: static_literal, decimal
+            │   │           └── value: 1
+            │   ├── rparen_loc: ∅
+            │   └── block:
+            │       @ BlockNode (location: (21,8)-(21,14))
+            │       ├── flags: ∅
+            │       ├── locals: []
+            │       ├── parameters: ∅
+            │       ├── body: ∅
+            │       ├── opening_loc: (21,8)-(21,10) = "do"
+            │       └── closing_loc: (21,11)-(21,14) = "end"
+            ├── call_operator_loc: (21,14)-(21,15) = "."
+            ├── name: :baz
+            ├── message_loc: (21,15)-(21,18) = "baz"
+            ├── opening_loc: (21,18)-(21,19) = "("
+            ├── arguments:
+            │   @ ArgumentsNode (location: (21,19)-(21,20))
+            │   ├── flags: ∅
+            │   └── arguments: (length: 1)
+            │       └── @ IntegerNode (location: (21,19)-(21,20))
             │           ├── flags: static_literal, decimal
-            │           └── value: 3
-            ├── rparen_loc: (17,20)-(17,21) = ")"
-            └── block:
-                @ BlockArgumentNode (location: (17,15)-(17,20))
-                ├── flags: ∅
-                ├── expression:
-                │   @ SymbolNode (location: (17,16)-(17,20))
-                │   ├── flags: static_literal, forced_us_ascii_encoding
-                │   ├── opening_loc: (17,16)-(17,17) = ":"
-                │   ├── value_loc: (17,17)-(17,20) = "foo"
-                │   ├── closing_loc: ∅
-                │   └── unescaped: "foo"
-                └── operator_loc: (17,15)-(17,16) = "&"
+            │           └── value: 2
+            ├── closing_loc: (21,20)-(21,21) = ")"
+            ├── equal_loc: ∅
+            └── block: ∅

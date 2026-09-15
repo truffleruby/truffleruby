@@ -34,7 +34,7 @@ module Prism
     #
     # The formatting of the source of this method is purposeful to illustrate
     # the structure of the serialized data.
-    #--
+    #
     #: (String input, String serialized, bool freeze) -> ParseResult
     def self.load_parse(input, serialized, freeze)
       input = input.dup
@@ -90,7 +90,7 @@ module Prism
     #
     # The formatting of the source of this method is purposeful to illustrate
     # the structure of the serialized data.
-    #--
+    #
     #: (String input, String serialized, bool freeze) -> LexResult
     def self.load_lex(input, serialized, freeze)
       source = Source.for(input, 1, [])
@@ -137,7 +137,7 @@ module Prism
     #
     # The formatting of the source of this method is purposeful to illustrate
     # the structure of the serialized data.
-    #--
+    #
     #: (String input, String serialized, bool freeze) -> Array[Comment]
     def self.load_parse_comments(input, serialized, freeze)
       source = Source.for(input, 1, [])
@@ -146,8 +146,10 @@ module Prism
                    loader.load_header
                    loader.load_encoding
       start_line = loader.load_varsint
+      offsets    = loader.load_line_offsets(freeze)
 
       source.replace_start_line(start_line)
+      source.replace_offsets(offsets)
 
       result =     loader.load_comments(freeze)
       raise unless loader.eof?
@@ -161,7 +163,7 @@ module Prism
     #
     # The formatting of the source of this method is purposeful to illustrate
     # the structure of the serialized data.
-    #--
+    #
     #: (String input, String serialized, bool freeze) -> ParseLexResult
     def self.load_parse_lex(input, serialized, freeze)
       source = Source.for(input, 1, [])
@@ -191,7 +193,7 @@ module Prism
                        loader.load_constant_pool(constant_pool)
       raise unless     loader.eof?
 
-      value = [node, tokens] #: [ProgramNode, Array[[Token, Integer]]]
+      value = [node, tokens] #: [ProgramNode, Array[Token]]
       result = ParseLexResult.new(value, comments, magic_comments, data_loc, errors, warnings, continuable, source)
 
       tokens.each do |token|
@@ -369,7 +371,6 @@ module Prism
         :argument_after_block,
         :argument_after_forwarding_ellipses,
         :argument_bare_hash,
-        :argument_block_forwarding,
         :argument_block_multi,
         :argument_conflict_ampersand,
         :argument_conflict_star,
@@ -462,7 +463,6 @@ module Prism
         :expect_expression_after_lparen,
         :expect_expression_after_operator,
         :expect_expression_after_pipepipeeq,
-        :expect_expression_after_question,
         :expect_expression_after_splat,
         :expect_expression_after_splat_hash,
         :expect_expression_after_star,
@@ -766,18 +766,18 @@ module Prism
         warnings
       end
 
-      #: () -> Array[[Token, Integer]]
+      #: () -> Array[Token]
       def load_tokens
-        tokens = [] #: Array[[Token, Integer]]
+        tokens = [] #: Array[Token]
 
         while (type = TOKEN_TYPES.fetch(load_varuint))
           location = load_location_object(false)
 
           lex_state = load_varuint
 
-          token = Token.new(@source, type, location.slice, location)
+          token = Token.new(@source, type, location.slice, location, lex_state)
 
-          tokens << [token, lex_state]
+          tokens << token
         end
 
         tokens
@@ -785,7 +785,7 @@ module Prism
 
       # variable-length integer using https://en.wikipedia.org/wiki/LEB128
       # This is also what protobuf uses: https://protobuf.dev/programming-guides/encoding/#varints
-      #--
+      #
       #: () -> Integer
       def load_varuint
         n = (io.getbyte or raise)
@@ -857,7 +857,7 @@ module Prism
       # Load a location object from the serialized data. Note that we are lying
       # about the signature a bit here, because we sometimes load it as a packed
       # integer instead of an object.
-      #--
+      #
       #: (bool freeze) -> Location
       def load_location(freeze)
         return load_location_object(freeze) if freeze
@@ -867,7 +867,7 @@ module Prism
       # Load an optional location object from the serialized data if it is
       # present. Note that we are lying about the signature a bit here, because
       # we sometimes load it as a packed integer instead of an object.
-      #--
+      #
       #: (bool freeze) -> Location?
       def load_optional_location(freeze)
         load_location(freeze) if io.getbyte != 0
@@ -2434,7 +2434,7 @@ module Prism
                 location,
                 load_varuint,
                 load_optional_location(freeze),
-                load_optional_location(freeze),
+                load_location(freeze),
                 load_optional_location(freeze),
                 load_string(encoding),
               )
@@ -4942,7 +4942,7 @@ module Prism
                   location,
                   load_varuint,
                   load_optional_location(freeze),
-                  load_optional_location(freeze),
+                  load_location(freeze),
                   load_optional_location(freeze),
                   load_string(encoding),
                 )
@@ -5113,6 +5113,7 @@ module Prism
       :KEYWORD_THEN,
       :KEYWORD_WHEN,
       :NEWLINE,
+      :NEWLINE_TERMINATOR,
       :PARENTHESIS_RIGHT,
       :PIPE,
       :SEMICOLON,
@@ -5127,6 +5128,8 @@ module Prism
       :BANG_EQUAL,
       :BANG_TILDE,
       :BRACE_LEFT,
+      :BRACE_LEFT_ARGUMENT,
+      :BRACE_LEFT_HASH,
       :BRACKET_LEFT,
       :BRACKET_LEFT_ARRAY,
       :BRACKET_LEFT_RIGHT,
@@ -5181,6 +5184,7 @@ module Prism
       :KEYWORD_DEF,
       :KEYWORD_DEFINED,
       :KEYWORD_DO_BLOCK,
+      :KEYWORD_DO_LAMBDA,
       :KEYWORD_DO_LOOP,
       :KEYWORD_END_UPCASE,
       :KEYWORD_FALSE,
@@ -5224,6 +5228,7 @@ module Prism
       :MINUS_GREATER,
       :NUMBERED_REFERENCE,
       :PARENTHESIS_LEFT,
+      :PARENTHESIS_LEFT_GROUPING,
       :PARENTHESIS_LEFT_PARENTHESES,
       :PERCENT,
       :PERCENT_EQUAL,
@@ -5261,6 +5266,7 @@ module Prism
       :USTAR,
       :USTAR_STAR,
       :WORDS_SEP,
+      :XSTRING_BEGIN,
       :__END__,
     ].freeze #: Array[Symbol?]
 

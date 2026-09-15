@@ -57,8 +57,8 @@
         │   │   │   │       │   └── value: 0
         │   │   │   │       └── @ TrueNode (location: (4,0)-(4,4))
         │   │   │   │           └── flags: newline, static_literal
-        │   │   │   ├── in_loc: (2,0)-(2,2) = "in"
-        │   │   │   └── then_loc: ∅
+        │   │   │   ├── in_keyword_loc: (2,0)-(2,2) = "in"
+        │   │   │   └── then_keyword_loc: ∅
         │   │   └── @ InNode (location: (5,0)-(7,4))
         │   │       ├── flags: ∅
         │   │       ├── pattern:
@@ -96,8 +96,8 @@
         │   │       │       │   └── value: 0
         │   │       │       └── @ TrueNode (location: (7,0)-(7,4))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (5,0)-(5,2) = "in"
-        │   │       └── then_loc: ∅
+        │   │       ├── in_keyword_loc: (5,0)-(5,2) = "in"
+        │   │       └── then_keyword_loc: ∅
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (1,0)-(1,4) = "case"
         │   └── end_keyword_loc: (8,0)-(8,3) = "end"

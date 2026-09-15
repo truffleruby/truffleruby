@@ -8,6 +8,7 @@
 
 #include "prism/internal/diagnostic.h"
 
+#include "prism/compiler/assume.h"
 #include "prism/compiler/inline.h"
 
 #include "prism/internal/allocator.h"
@@ -20,7 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define PM_DIAGNOSTIC_ID_MAX 329
+#define PM_DIAGNOSTIC_ID_MAX 327
 
 /** This struct holds the data for each diagnostic. */
 typedef struct {
@@ -445,7 +446,6 @@ pm_diagnostic_id_name(pm_diagnostic_id_t diag_id) {
         case PM_ERR_ARGUMENT_AFTER_BLOCK: return "argument_after_block";
         case PM_ERR_ARGUMENT_AFTER_FORWARDING_ELLIPSES: return "argument_after_forwarding_ellipses";
         case PM_ERR_ARGUMENT_BARE_HASH: return "argument_bare_hash";
-        case PM_ERR_ARGUMENT_BLOCK_FORWARDING: return "argument_block_forwarding";
         case PM_ERR_ARGUMENT_BLOCK_MULTI: return "argument_block_multi";
         case PM_ERR_ARGUMENT_CONFLICT_AMPERSAND: return "argument_conflict_ampersand";
         case PM_ERR_ARGUMENT_CONFLICT_STAR: return "argument_conflict_star";
@@ -538,7 +538,6 @@ pm_diagnostic_id_name(pm_diagnostic_id_t diag_id) {
         case PM_ERR_EXPECT_EXPRESSION_AFTER_LPAREN: return "expect_expression_after_lparen";
         case PM_ERR_EXPECT_EXPRESSION_AFTER_OPERATOR: return "expect_expression_after_operator";
         case PM_ERR_EXPECT_EXPRESSION_AFTER_PIPEPIPEEQ: return "expect_expression_after_pipepipeeq";
-        case PM_ERR_EXPECT_EXPRESSION_AFTER_QUESTION: return "expect_expression_after_question";
         case PM_ERR_EXPECT_EXPRESSION_AFTER_SPLAT: return "expect_expression_after_splat";
         case PM_ERR_EXPECT_EXPRESSION_AFTER_SPLAT_HASH: return "expect_expression_after_splat_hash";
         case PM_ERR_EXPECT_EXPRESSION_AFTER_STAR: return "expect_expression_after_star";
@@ -777,6 +776,7 @@ pm_diagnostic_id_name(pm_diagnostic_id_t diag_id) {
 static PRISM_INLINE const char *
 pm_diagnostic_id_message(pm_diagnostic_id_t diag_id) {
     assert(diag_id < PM_DIAGNOSTIC_ID_MAX);
+    PRISM_ASSUME(diag_id < PM_DIAGNOSTIC_ID_MAX);
 
     const char *message = diagnostic_messages[diag_id].message;
     assert(message);
@@ -787,6 +787,7 @@ pm_diagnostic_id_message(pm_diagnostic_id_t diag_id) {
 static PRISM_INLINE uint8_t
 pm_diagnostic_id_level(pm_diagnostic_id_t diag_id) {
     assert(diag_id < PM_DIAGNOSTIC_ID_MAX);
+    PRISM_ASSUME(diag_id < PM_DIAGNOSTIC_ID_MAX);
 
     return (uint8_t) diagnostic_messages[diag_id].level;
 }

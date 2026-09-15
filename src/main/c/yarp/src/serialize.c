@@ -1339,7 +1339,10 @@ pm_serialize_node(pm_parser_t *parser, pm_node_t *node, pm_buffer_t *buffer) {
     }
 }
 
-static void
+/*
+ * Serialize the given list of offsets to the given buffer.
+ */
+void
 pm_serialize_line_offset_list(pm_line_offset_list_t *list, pm_buffer_t *buffer) {
     uint32_t size = pm_sizet_to_u32(list->size);
     pm_buffer_append_varuint(buffer, size);
@@ -1451,7 +1454,7 @@ pm_serialize_metadata(pm_parser_t *parser, pm_buffer_t *buffer) {
     pm_buffer_append_byte(buffer, (uint8_t) parser->continuable);
 }
 
-#line 275 "prism/templates/src/serialize.c.erb"
+#line 278 "prism/templates/src/serialize.c.erb"
 /**
  * Serialize the metadata, nodes, and constant pool.
  */

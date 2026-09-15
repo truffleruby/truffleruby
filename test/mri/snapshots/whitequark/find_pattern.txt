@@ -48,8 +48,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ TrueNode (location: (1,27)-(1,31))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (1,10)-(1,12) = "in"
-        │   │       └── then_loc: (1,22)-(1,26) = "then"
+        │   │       ├── in_keyword_loc: (1,10)-(1,12) = "in"
+        │   │       └── then_keyword_loc: (1,22)-(1,26) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (1,0)-(1,4) = "case"
         │   └── end_keyword_loc: (1,33)-(1,36) = "end"
@@ -99,8 +99,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ TrueNode (location: (3,33)-(3,37))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (3,10)-(3,12) = "in"
-        │   │       └── then_loc: (3,28)-(3,32) = "then"
+        │   │       ├── in_keyword_loc: (3,10)-(3,12) = "in"
+        │   │       └── then_keyword_loc: (3,28)-(3,32) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (3,0)-(3,4) = "case"
         │   └── end_keyword_loc: (3,39)-(3,42) = "end"
@@ -150,8 +150,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ TrueNode (location: (5,34)-(5,38))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (5,10)-(5,12) = "in"
-        │   │       └── then_loc: (5,29)-(5,33) = "then"
+        │   │       ├── in_keyword_loc: (5,10)-(5,12) = "in"
+        │   │       └── then_keyword_loc: (5,29)-(5,33) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (5,0)-(5,4) = "case"
         │   └── end_keyword_loc: (5,40)-(5,43) = "end"
@@ -215,8 +215,8 @@
             │       │   └── body: (length: 1)
             │       │       └── @ TrueNode (location: (7,35)-(7,39))
             │       │           └── flags: newline, static_literal
-            │       ├── in_loc: (7,10)-(7,12) = "in"
-            │       └── then_loc: (7,30)-(7,34) = "then"
+            │       ├── in_keyword_loc: (7,10)-(7,12) = "in"
+            │       └── then_keyword_loc: (7,30)-(7,34) = "then"
             ├── else_clause: ∅
             ├── case_keyword_loc: (7,0)-(7,4) = "case"
             └── end_keyword_loc: (7,41)-(7,44) = "end"

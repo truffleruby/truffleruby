@@ -22,7 +22,7 @@
             ├── conditions: (length: 1)
             │   └── @ WhenNode (location: (1,10)-(1,32))
             │       ├── flags: ∅
-            │       ├── keyword_loc: (1,10)-(1,14) = "when"
+            │       ├── when_keyword_loc: (1,10)-(1,14) = "when"
             │       ├── conditions: (length: 2)
             │       │   ├── @ StringNode (location: (1,15)-(1,20))
             │       │   │   ├── flags: static_literal, frozen

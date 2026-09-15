@@ -7,9 +7,9 @@
     └── body: (length: 2)
         ├── @ UntilNode (location: (1,0)-(1,21))
         │   ├── flags: newline
-        │   ├── keyword_loc: (1,0)-(1,5) = "until"
+        │   ├── until_keyword_loc: (1,0)-(1,5) = "until"
         │   ├── do_keyword_loc: (1,10)-(1,12) = "do"
-        │   ├── closing_loc: (1,18)-(1,21) = "end"
+        │   ├── end_keyword_loc: (1,18)-(1,21) = "end"
         │   ├── predicate:
         │   │   @ CallNode (location: (1,6)-(1,9))
         │   │   ├── flags: variable_call, ignore_visibility
@@ -39,9 +39,9 @@
         │               └── block: ∅
         └── @ UntilNode (location: (3,0)-(3,19))
             ├── flags: newline
-            ├── keyword_loc: (3,0)-(3,5) = "until"
+            ├── until_keyword_loc: (3,0)-(3,5) = "until"
             ├── do_keyword_loc: ∅
-            ├── closing_loc: (3,16)-(3,19) = "end"
+            ├── end_keyword_loc: (3,16)-(3,19) = "end"
             ├── predicate:
             │   @ CallNode (location: (3,6)-(3,9))
             │   ├── flags: variable_call, ignore_visibility

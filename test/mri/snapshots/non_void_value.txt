@@ -237,7 +237,7 @@
             │   ├── conditions: (length: 1)
             │   │   └── @ WhenNode (location: (26,2)-(28,17))
             │   │       ├── flags: ∅
-            │   │       ├── keyword_loc: (26,2)-(26,6) = "when"
+            │   │       ├── when_keyword_loc: (26,2)-(26,6) = "when"
             │   │       ├── conditions: (length: 1)
             │   │       │   └── @ IntegerNode (location: (26,7)-(26,8))
             │   │       │       ├── flags: static_literal, decimal

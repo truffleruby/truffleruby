@@ -73,8 +73,8 @@
             │       │           │       └── depth: 0
             │       │           ├── opening_loc: (3,2)-(3,3) = "["
             │       │           └── closing_loc: (3,4)-(3,5) = "]"
-            │       ├── in_loc: (2,0)-(2,2) = "in"
-            │       └── then_loc: ∅
+            │       ├── in_keyword_loc: (2,0)-(2,2) = "in"
+            │       └── then_keyword_loc: ∅
             ├── else_clause: ∅
             ├── case_keyword_loc: (1,0)-(1,4) = "case"
             └── end_keyword_loc: (4,0)-(4,3) = "end"

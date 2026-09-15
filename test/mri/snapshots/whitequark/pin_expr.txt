@@ -31,8 +31,8 @@
         │   │       │   │   └── name: :$TestPatternMatching
         │   │       │   └── operator_loc: (1,13)-(1,14) = "^"
         │   │       ├── statements: ∅
-        │   │       ├── in_loc: (1,10)-(1,12) = "in"
-        │   │       └── then_loc: ∅
+        │   │       ├── in_keyword_loc: (1,10)-(1,12) = "in"
+        │   │       └── then_keyword_loc: ∅
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (1,0)-(1,4) = "case"
         │   └── end_keyword_loc: (1,36)-(1,39) = "end"
@@ -86,8 +86,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ NilNode (location: (3,25)-(3,28))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (3,10)-(3,12) = "in"
-        │   │       └── then_loc: (3,20)-(3,24) = "then"
+        │   │       ├── in_keyword_loc: (3,10)-(3,12) = "in"
+        │   │       └── then_keyword_loc: (3,20)-(3,24) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (3,0)-(3,4) = "case"
         │   └── end_keyword_loc: (3,30)-(3,33) = "end"
@@ -119,8 +119,8 @@
         │   │       │   ├── lparen_loc: (5,14)-(5,15) = "("
         │   │       │   └── rparen_loc: (6,0)-(6,1) = ")"
         │   │       ├── statements: ∅
-        │   │       ├── in_loc: (5,10)-(5,12) = "in"
-        │   │       └── then_loc: ∅
+        │   │       ├── in_keyword_loc: (5,10)-(5,12) = "in"
+        │   │       └── then_keyword_loc: ∅
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (5,0)-(5,4) = "case"
         │   └── end_keyword_loc: (6,3)-(6,6) = "end"
@@ -157,8 +157,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ NilNode (location: (8,24)-(8,27))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (8,10)-(8,12) = "in"
-        │   │       └── then_loc: (8,19)-(8,23) = "then"
+        │   │       ├── in_keyword_loc: (8,10)-(8,12) = "in"
+        │   │       └── then_keyword_loc: (8,19)-(8,23) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (8,0)-(8,4) = "case"
         │   └── end_keyword_loc: (8,29)-(8,32) = "end"
@@ -188,8 +188,8 @@
         │   │       │   │   └── name: :@@TestPatternMatching
         │   │       │   └── operator_loc: (10,13)-(10,14) = "^"
         │   │       ├── statements: ∅
-        │   │       ├── in_loc: (10,10)-(10,12) = "in"
-        │   │       └── then_loc: ∅
+        │   │       ├── in_keyword_loc: (10,10)-(10,12) = "in"
+        │   │       └── then_keyword_loc: ∅
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (10,0)-(10,4) = "case"
         │   └── end_keyword_loc: (10,37)-(10,40) = "end"
@@ -219,8 +219,8 @@
         │   │       │   │   └── name: :@a
         │   │       │   └── operator_loc: (12,13)-(12,14) = "^"
         │   │       ├── statements: ∅
-        │   │       ├── in_loc: (12,10)-(12,12) = "in"
-        │   │       └── then_loc: ∅
+        │   │       ├── in_keyword_loc: (12,10)-(12,12) = "in"
+        │   │       └── then_keyword_loc: ∅
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (12,0)-(12,4) = "case"
         │   └── end_keyword_loc: (12,18)-(12,21) = "end"
@@ -275,8 +275,8 @@
             │       │   └── body: (length: 1)
             │       │       └── @ NilNode (location: (14,33)-(14,36))
             │       │           └── flags: newline, static_literal
-            │       ├── in_loc: (14,10)-(14,12) = "in"
-            │       └── then_loc: (14,28)-(14,32) = "then"
+            │       ├── in_keyword_loc: (14,10)-(14,12) = "in"
+            │       └── then_keyword_loc: (14,28)-(14,32) = "then"
             ├── else_clause: ∅
             ├── case_keyword_loc: (14,0)-(14,4) = "case"
             └── end_keyword_loc: (14,38)-(14,41) = "end"

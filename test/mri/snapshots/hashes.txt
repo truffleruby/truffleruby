@@ -1,10 +1,10 @@
-@ ProgramNode (location: (1,0)-(28,9))
+@ ProgramNode (location: (1,0)-(33,10))
 ├── flags: ∅
 ├── locals: [:a]
 └── statements:
-    @ StatementsNode (location: (1,0)-(28,9))
+    @ StatementsNode (location: (1,0)-(33,10))
     ├── flags: ∅
-    └── body: (length: 10)
+    └── body: (length: 12)
         ├── @ HashNode (location: (1,0)-(1,2))
         │   ├── flags: newline, static_literal
         │   ├── opening_loc: (1,0)-(1,1) = "{"
@@ -418,22 +418,58 @@
         │       │           └── closing_loc: (25,19)-(25,20) = "}"
         │       ├── opening_loc: (23,4)-(23,6) = "do"
         │       └── closing_loc: (26,0)-(26,3) = "end"
-        └── @ HashNode (location: (28,0)-(28,9))
+        ├── @ HashNode (location: (28,0)-(28,9))
+        │   ├── flags: newline, static_literal
+        │   ├── opening_loc: (28,0)-(28,1) = "{"
+        │   ├── elements: (length: 1)
+        │   │   └── @ AssocNode (location: (28,2)-(28,7))
+        │   │       ├── flags: static_literal
+        │   │       ├── key:
+        │   │       │   @ SymbolNode (location: (28,2)-(28,4))
+        │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   ├── opening_loc: ∅
+        │   │       │   ├── value_loc: (28,2)-(28,3) = "a"
+        │   │       │   ├── closing_loc: (28,3)-(28,4) = ":"
+        │   │       │   └── unescaped: "a"
+        │   │       ├── value:
+        │   │       │   @ IntegerNode (location: (28,5)-(28,7))
+        │   │       │   ├── flags: static_literal, decimal
+        │   │       │   └── value: -1
+        │   │       └── operator_loc: ∅
+        │   └── closing_loc: (28,8)-(28,9) = "}"
+        ├── @ HashNode (location: (30,0)-(30,10))
+        │   ├── flags: newline, static_literal
+        │   ├── opening_loc: (30,0)-(30,1) = "{"
+        │   ├── elements: (length: 1)
+        │   │   └── @ AssocNode (location: (30,2)-(30,9))
+        │   │       ├── flags: static_literal
+        │   │       ├── key:
+        │   │       │   @ SymbolNode (location: (30,2)-(30,5))
+        │   │       │   ├── flags: static_literal
+        │   │       │   ├── opening_loc: (30,2)-(30,3) = "\""
+        │   │       │   ├── value_loc: (1,0)-(1,0) = ""
+        │   │       │   ├── closing_loc: (30,3)-(30,5) = "\":"
+        │   │       │   └── unescaped: ""
+        │   │       ├── value:
+        │   │       │   @ NilNode (location: (30,6)-(30,9))
+        │   │       │   └── flags: static_literal
+        │   │       └── operator_loc: ∅
+        │   └── closing_loc: (30,9)-(30,10) = "}"
+        └── @ HashNode (location: (32,0)-(33,10))
             ├── flags: newline, static_literal
-            ├── opening_loc: (28,0)-(28,1) = "{"
+            ├── opening_loc: (32,0)-(32,1) = "{"
             ├── elements: (length: 1)
-            │   └── @ AssocNode (location: (28,2)-(28,7))
+            │   └── @ AssocNode (location: (32,2)-(33,9))
             │       ├── flags: static_literal
             │       ├── key:
-            │       │   @ SymbolNode (location: (28,2)-(28,4))
+            │       │   @ SymbolNode (location: (32,2)-(33,5))
             │       │   ├── flags: static_literal, forced_us_ascii_encoding
-            │       │   ├── opening_loc: ∅
-            │       │   ├── value_loc: (28,2)-(28,3) = "a"
-            │       │   ├── closing_loc: (28,3)-(28,4) = ":"
-            │       │   └── unescaped: "a"
+            │       │   ├── opening_loc: (32,2)-(32,3) = "\""
+            │       │   ├── value_loc: (32,3)-(33,3) = "foo\nbar"
+            │       │   ├── closing_loc: (33,3)-(33,5) = "\":"
+            │       │   └── unescaped: "foo\nbar"
             │       ├── value:
-            │       │   @ IntegerNode (location: (28,5)-(28,7))
-            │       │   ├── flags: static_literal, decimal
-            │       │   └── value: -1
+            │       │   @ NilNode (location: (33,6)-(33,9))
+            │       │   └── flags: static_literal
             │       └── operator_loc: ∅
-            └── closing_loc: (28,8)-(28,9) = "}"
+            └── closing_loc: (33,9)-(33,10) = "}"

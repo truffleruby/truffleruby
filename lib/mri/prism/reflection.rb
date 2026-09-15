@@ -24,7 +24,7 @@ module Prism
       attr_reader :name #: Symbol
 
       # Initializes the field with the given name.
-      #--
+      #
       #: (Symbol name) -> void
       def initialize(name)
         @name = name
@@ -102,7 +102,7 @@ module Prism
       attr_reader :flags #: Array[Symbol]
 
       # Initializes the flags field with the given name and flags.
-      #--
+      #
       #: (Symbol name, Array[Symbol] flags) -> void
       def initialize(name, flags)
         super(name)
@@ -111,7 +111,7 @@ module Prism
     end
 
     # Returns the fields for the given node.
-    #--
+    #
     #: (singleton(Node) node) -> Array[Field]
     def self.fields_for(node)
       case node.type
@@ -258,7 +258,7 @@ module Prism
       when :implicit_rest_node
         []
       when :in_node
-        [NodeField.new(:pattern), OptionalNodeField.new(:statements), LocationField.new(:in_loc), OptionalLocationField.new(:then_loc)]
+        [NodeField.new(:pattern), OptionalNodeField.new(:statements), LocationField.new(:in_keyword_loc), OptionalLocationField.new(:then_keyword_loc)]
       when :index_and_write_node
         [FlagsField.new(:flags, [:safe_navigation?, :variable_call?, :attribute_write?, :ignore_visibility?]), OptionalNodeField.new(:receiver), OptionalLocationField.new(:call_operator_loc), LocationField.new(:opening_loc), OptionalNodeField.new(:arguments), LocationField.new(:closing_loc), OptionalNodeField.new(:block), LocationField.new(:operator_loc), NodeField.new(:value)]
       when :index_operator_write_node
@@ -316,7 +316,7 @@ module Prism
       when :match_last_line_node
         [FlagsField.new(:flags, [:ignore_case?, :extended?, :multi_line?, :once?, :euc_jp?, :ascii_8bit?, :windows_31j?, :utf_8?, :forced_utf8_encoding?, :forced_binary_encoding?, :forced_us_ascii_encoding?]), LocationField.new(:opening_loc), LocationField.new(:content_loc), LocationField.new(:closing_loc), StringField.new(:unescaped)]
       when :match_predicate_node
-        [NodeField.new(:value), NodeField.new(:pattern), LocationField.new(:operator_loc)]
+        [NodeField.new(:value), NodeField.new(:pattern), LocationField.new(:keyword_loc)]
       when :match_required_node
         [NodeField.new(:value), NodeField.new(:pattern), LocationField.new(:operator_loc)]
       when :match_write_node
@@ -402,19 +402,19 @@ module Prism
       when :super_node
         [LocationField.new(:keyword_loc), OptionalLocationField.new(:lparen_loc), OptionalNodeField.new(:arguments), OptionalLocationField.new(:rparen_loc), OptionalNodeField.new(:block)]
       when :symbol_node
-        [FlagsField.new(:flags, [:forced_utf8_encoding?, :forced_binary_encoding?, :forced_us_ascii_encoding?]), OptionalLocationField.new(:opening_loc), OptionalLocationField.new(:value_loc), OptionalLocationField.new(:closing_loc), StringField.new(:unescaped)]
+        [FlagsField.new(:flags, [:forced_utf8_encoding?, :forced_binary_encoding?, :forced_us_ascii_encoding?]), OptionalLocationField.new(:opening_loc), LocationField.new(:value_loc), OptionalLocationField.new(:closing_loc), StringField.new(:unescaped)]
       when :true_node
         []
       when :undef_node
         [NodeListField.new(:names), LocationField.new(:keyword_loc)]
       when :unless_node
-        [LocationField.new(:keyword_loc), NodeField.new(:predicate), OptionalLocationField.new(:then_keyword_loc), OptionalNodeField.new(:statements), OptionalNodeField.new(:else_clause), OptionalLocationField.new(:end_keyword_loc)]
+        [LocationField.new(:unless_keyword_loc), NodeField.new(:predicate), OptionalLocationField.new(:then_keyword_loc), OptionalNodeField.new(:statements), OptionalNodeField.new(:else_clause), OptionalLocationField.new(:end_keyword_loc)]
       when :until_node
-        [FlagsField.new(:flags, [:begin_modifier?]), LocationField.new(:keyword_loc), OptionalLocationField.new(:do_keyword_loc), OptionalLocationField.new(:closing_loc), NodeField.new(:predicate), OptionalNodeField.new(:statements)]
+        [FlagsField.new(:flags, [:begin_modifier?]), LocationField.new(:until_keyword_loc), OptionalLocationField.new(:do_keyword_loc), OptionalLocationField.new(:end_keyword_loc), NodeField.new(:predicate), OptionalNodeField.new(:statements)]
       when :when_node
-        [LocationField.new(:keyword_loc), NodeListField.new(:conditions), OptionalLocationField.new(:then_keyword_loc), OptionalNodeField.new(:statements)]
+        [LocationField.new(:when_keyword_loc), NodeListField.new(:conditions), OptionalLocationField.new(:then_keyword_loc), OptionalNodeField.new(:statements)]
       when :while_node
-        [FlagsField.new(:flags, [:begin_modifier?]), LocationField.new(:keyword_loc), OptionalLocationField.new(:do_keyword_loc), OptionalLocationField.new(:closing_loc), NodeField.new(:predicate), OptionalNodeField.new(:statements)]
+        [FlagsField.new(:flags, [:begin_modifier?]), LocationField.new(:while_keyword_loc), OptionalLocationField.new(:do_keyword_loc), OptionalLocationField.new(:end_keyword_loc), NodeField.new(:predicate), OptionalNodeField.new(:statements)]
       when :x_string_node
         [FlagsField.new(:flags, [:forced_utf8_encoding?, :forced_binary_encoding?]), LocationField.new(:opening_loc), LocationField.new(:content_loc), LocationField.new(:closing_loc), StringField.new(:unescaped)]
       when :yield_node

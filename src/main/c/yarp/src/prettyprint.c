@@ -4219,11 +4219,11 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
                 }
             }
 
-            // in_loc
+            // in_keyword_loc
             {
                 pm_buffer_concat(output_buffer, prefix_buffer);
-                pm_buffer_append_string(output_buffer, "+-- in_loc:", 11);
-                pm_location_t *location = &cast->in_loc;
+                pm_buffer_append_string(output_buffer, "+-- in_keyword_loc:", 19);
+                pm_location_t *location = &cast->in_keyword_loc;
                 pm_buffer_append_byte(output_buffer, ' ');
                 prettyprint_location(output_buffer, parser, location);
                 pm_buffer_append_string(output_buffer, " = \"", 4);
@@ -4231,11 +4231,11 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
                 pm_buffer_append_string(output_buffer, "\"\n", 2);
             }
 
-            // then_loc
+            // then_keyword_loc
             {
                 pm_buffer_concat(output_buffer, prefix_buffer);
-                pm_buffer_append_string(output_buffer, "+-- then_loc:", 13);
-                pm_location_t *location = &cast->then_loc;
+                pm_buffer_append_string(output_buffer, "+-- then_keyword_loc:", 21);
+                pm_location_t *location = &cast->then_keyword_loc;
                 if (location->length == 0) {
                     pm_buffer_append_string(output_buffer, " nil\n", 5);
                 } else {
@@ -6201,11 +6201,11 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
                 prefix_buffer->length = prefix_length;
             }
 
-            // operator_loc
+            // keyword_loc
             {
                 pm_buffer_concat(output_buffer, prefix_buffer);
-                pm_buffer_append_string(output_buffer, "+-- operator_loc:", 17);
-                pm_location_t *location = &cast->operator_loc;
+                pm_buffer_append_string(output_buffer, "+-- keyword_loc:", 16);
+                pm_location_t *location = &cast->keyword_loc;
                 pm_buffer_append_byte(output_buffer, ' ');
                 prettyprint_location(output_buffer, parser, location);
                 pm_buffer_append_string(output_buffer, " = \"", 4);
@@ -8426,15 +8426,11 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
                 pm_buffer_concat(output_buffer, prefix_buffer);
                 pm_buffer_append_string(output_buffer, "+-- value_loc:", 14);
                 pm_location_t *location = &cast->value_loc;
-                if (location->length == 0) {
-                    pm_buffer_append_string(output_buffer, " nil\n", 5);
-                } else {
-                    pm_buffer_append_byte(output_buffer, ' ');
-                    prettyprint_location(output_buffer, parser, location);
-                    pm_buffer_append_string(output_buffer, " = \"", 4);
-                    pm_buffer_append_source(output_buffer, parser->start + location->start, (size_t) location->length, PM_BUFFER_ESCAPING_RUBY);
-                    pm_buffer_append_string(output_buffer, "\"\n", 2);
-                }
+                pm_buffer_append_byte(output_buffer, ' ');
+                prettyprint_location(output_buffer, parser, location);
+                pm_buffer_append_string(output_buffer, " = \"", 4);
+                pm_buffer_append_source(output_buffer, parser->start + location->start, (size_t) location->length, PM_BUFFER_ESCAPING_RUBY);
+                pm_buffer_append_string(output_buffer, "\"\n", 2);
             }
 
             // closing_loc
@@ -8515,11 +8511,11 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
             prettyprint_location(output_buffer, parser, &node->location);
             pm_buffer_append_string(output_buffer, ")\n", 2);
 
-            // keyword_loc
+            // unless_keyword_loc
             {
                 pm_buffer_concat(output_buffer, prefix_buffer);
-                pm_buffer_append_string(output_buffer, "+-- keyword_loc:", 16);
-                pm_location_t *location = &cast->keyword_loc;
+                pm_buffer_append_string(output_buffer, "+-- unless_keyword_loc:", 23);
+                pm_location_t *location = &cast->unless_keyword_loc;
                 pm_buffer_append_byte(output_buffer, ' ');
                 prettyprint_location(output_buffer, parser, location);
                 pm_buffer_append_string(output_buffer, " = \"", 4);
@@ -8628,11 +8624,11 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
                 pm_buffer_append_byte(output_buffer, '\n');
             }
 
-            // keyword_loc
+            // until_keyword_loc
             {
                 pm_buffer_concat(output_buffer, prefix_buffer);
-                pm_buffer_append_string(output_buffer, "+-- keyword_loc:", 16);
-                pm_location_t *location = &cast->keyword_loc;
+                pm_buffer_append_string(output_buffer, "+-- until_keyword_loc:", 22);
+                pm_location_t *location = &cast->until_keyword_loc;
                 pm_buffer_append_byte(output_buffer, ' ');
                 prettyprint_location(output_buffer, parser, location);
                 pm_buffer_append_string(output_buffer, " = \"", 4);
@@ -8656,11 +8652,11 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
                 }
             }
 
-            // closing_loc
+            // end_keyword_loc
             {
                 pm_buffer_concat(output_buffer, prefix_buffer);
-                pm_buffer_append_string(output_buffer, "+-- closing_loc:", 16);
-                pm_location_t *location = &cast->closing_loc;
+                pm_buffer_append_string(output_buffer, "+-- end_keyword_loc:", 20);
+                pm_location_t *location = &cast->end_keyword_loc;
                 if (location->length == 0) {
                     pm_buffer_append_string(output_buffer, " nil\n", 5);
                 } else {
@@ -8710,11 +8706,11 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
             prettyprint_location(output_buffer, parser, &node->location);
             pm_buffer_append_string(output_buffer, ")\n", 2);
 
-            // keyword_loc
+            // when_keyword_loc
             {
                 pm_buffer_concat(output_buffer, prefix_buffer);
-                pm_buffer_append_string(output_buffer, "+-- keyword_loc:", 16);
-                pm_location_t *location = &cast->keyword_loc;
+                pm_buffer_append_string(output_buffer, "+-- when_keyword_loc:", 21);
+                pm_location_t *location = &cast->when_keyword_loc;
                 pm_buffer_append_byte(output_buffer, ' ');
                 prettyprint_location(output_buffer, parser, location);
                 pm_buffer_append_string(output_buffer, " = \"", 4);
@@ -8795,11 +8791,11 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
                 pm_buffer_append_byte(output_buffer, '\n');
             }
 
-            // keyword_loc
+            // while_keyword_loc
             {
                 pm_buffer_concat(output_buffer, prefix_buffer);
-                pm_buffer_append_string(output_buffer, "+-- keyword_loc:", 16);
-                pm_location_t *location = &cast->keyword_loc;
+                pm_buffer_append_string(output_buffer, "+-- while_keyword_loc:", 22);
+                pm_location_t *location = &cast->while_keyword_loc;
                 pm_buffer_append_byte(output_buffer, ' ');
                 prettyprint_location(output_buffer, parser, location);
                 pm_buffer_append_string(output_buffer, " = \"", 4);
@@ -8823,11 +8819,11 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
                 }
             }
 
-            // closing_loc
+            // end_keyword_loc
             {
                 pm_buffer_concat(output_buffer, prefix_buffer);
-                pm_buffer_append_string(output_buffer, "+-- closing_loc:", 16);
-                pm_location_t *location = &cast->closing_loc;
+                pm_buffer_append_string(output_buffer, "+-- end_keyword_loc:", 20);
+                pm_location_t *location = &cast->end_keyword_loc;
                 if (location->length == 0) {
                     pm_buffer_append_string(output_buffer, " nil\n", 5);
                 } else {

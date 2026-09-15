@@ -25,8 +25,8 @@
             │       │       └── @ IntegerNode (location: (1,14)-(1,15))
             │       │           ├── flags: newline, static_literal, decimal
             │       │           └── value: 3
-            │       ├── in_loc: (1,8)-(1,10) = "in"
-            │       └── then_loc: ∅
+            │       ├── in_keyword_loc: (1,8)-(1,10) = "in"
+            │       └── then_keyword_loc: ∅
             ├── else_clause:
             │   @ ElseNode (location: (1,17)-(1,29))
             │   ├── flags: ∅

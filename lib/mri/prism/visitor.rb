@@ -329,7 +329,7 @@ module Prism
   class BasicVisitor
     # Calls `accept` on the given node if it is not `nil`, which in turn should
     # call back into this visitor by calling the appropriate `visit_*` method.
-    #--
+    #
     #: (node? node) -> void
     def visit(node)
       # @type self: _Visitor
@@ -337,7 +337,7 @@ module Prism
     end
 
     # Visits each node in `nodes` by calling `accept` on each one.
-    #--
+    #
     #: (Array[node?] nodes) -> void
     def visit_all(nodes)
       # @type self: _Visitor
@@ -345,7 +345,7 @@ module Prism
     end
 
     # Visits the child nodes of `node` by calling `accept` on each one.
-    #--
+    #
     #: (node node) -> void
     def visit_child_nodes(node)
       # @type self: _Visitor
@@ -374,1064 +374,1064 @@ module Prism
   #
   class Visitor < BasicVisitor
     # Visit a AliasGlobalVariableNode node
-    #--
+    #
     #: (AliasGlobalVariableNode node) -> void
     def visit_alias_global_variable_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a AliasMethodNode node
-    #--
+    #
     #: (AliasMethodNode node) -> void
     def visit_alias_method_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a AlternationPatternNode node
-    #--
+    #
     #: (AlternationPatternNode node) -> void
     def visit_alternation_pattern_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a AndNode node
-    #--
+    #
     #: (AndNode node) -> void
     def visit_and_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ArgumentsNode node
-    #--
+    #
     #: (ArgumentsNode node) -> void
     def visit_arguments_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ArrayNode node
-    #--
+    #
     #: (ArrayNode node) -> void
     def visit_array_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ArrayPatternNode node
-    #--
+    #
     #: (ArrayPatternNode node) -> void
     def visit_array_pattern_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a AssocNode node
-    #--
+    #
     #: (AssocNode node) -> void
     def visit_assoc_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a AssocSplatNode node
-    #--
+    #
     #: (AssocSplatNode node) -> void
     def visit_assoc_splat_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a BackReferenceReadNode node
-    #--
+    #
     #: (BackReferenceReadNode node) -> void
     def visit_back_reference_read_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a BeginNode node
-    #--
+    #
     #: (BeginNode node) -> void
     def visit_begin_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a BlockArgumentNode node
-    #--
+    #
     #: (BlockArgumentNode node) -> void
     def visit_block_argument_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a BlockLocalVariableNode node
-    #--
+    #
     #: (BlockLocalVariableNode node) -> void
     def visit_block_local_variable_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a BlockNode node
-    #--
+    #
     #: (BlockNode node) -> void
     def visit_block_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a BlockParameterNode node
-    #--
+    #
     #: (BlockParameterNode node) -> void
     def visit_block_parameter_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a BlockParametersNode node
-    #--
+    #
     #: (BlockParametersNode node) -> void
     def visit_block_parameters_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a BreakNode node
-    #--
+    #
     #: (BreakNode node) -> void
     def visit_break_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a CallAndWriteNode node
-    #--
+    #
     #: (CallAndWriteNode node) -> void
     def visit_call_and_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a CallNode node
-    #--
+    #
     #: (CallNode node) -> void
     def visit_call_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a CallOperatorWriteNode node
-    #--
+    #
     #: (CallOperatorWriteNode node) -> void
     def visit_call_operator_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a CallOrWriteNode node
-    #--
+    #
     #: (CallOrWriteNode node) -> void
     def visit_call_or_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a CallTargetNode node
-    #--
+    #
     #: (CallTargetNode node) -> void
     def visit_call_target_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a CapturePatternNode node
-    #--
+    #
     #: (CapturePatternNode node) -> void
     def visit_capture_pattern_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a CaseMatchNode node
-    #--
+    #
     #: (CaseMatchNode node) -> void
     def visit_case_match_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a CaseNode node
-    #--
+    #
     #: (CaseNode node) -> void
     def visit_case_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ClassNode node
-    #--
+    #
     #: (ClassNode node) -> void
     def visit_class_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ClassVariableAndWriteNode node
-    #--
+    #
     #: (ClassVariableAndWriteNode node) -> void
     def visit_class_variable_and_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ClassVariableOperatorWriteNode node
-    #--
+    #
     #: (ClassVariableOperatorWriteNode node) -> void
     def visit_class_variable_operator_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ClassVariableOrWriteNode node
-    #--
+    #
     #: (ClassVariableOrWriteNode node) -> void
     def visit_class_variable_or_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ClassVariableReadNode node
-    #--
+    #
     #: (ClassVariableReadNode node) -> void
     def visit_class_variable_read_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ClassVariableTargetNode node
-    #--
+    #
     #: (ClassVariableTargetNode node) -> void
     def visit_class_variable_target_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ClassVariableWriteNode node
-    #--
+    #
     #: (ClassVariableWriteNode node) -> void
     def visit_class_variable_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ConstantAndWriteNode node
-    #--
+    #
     #: (ConstantAndWriteNode node) -> void
     def visit_constant_and_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ConstantOperatorWriteNode node
-    #--
+    #
     #: (ConstantOperatorWriteNode node) -> void
     def visit_constant_operator_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ConstantOrWriteNode node
-    #--
+    #
     #: (ConstantOrWriteNode node) -> void
     def visit_constant_or_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ConstantPathAndWriteNode node
-    #--
+    #
     #: (ConstantPathAndWriteNode node) -> void
     def visit_constant_path_and_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ConstantPathNode node
-    #--
+    #
     #: (ConstantPathNode node) -> void
     def visit_constant_path_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ConstantPathOperatorWriteNode node
-    #--
+    #
     #: (ConstantPathOperatorWriteNode node) -> void
     def visit_constant_path_operator_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ConstantPathOrWriteNode node
-    #--
+    #
     #: (ConstantPathOrWriteNode node) -> void
     def visit_constant_path_or_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ConstantPathTargetNode node
-    #--
+    #
     #: (ConstantPathTargetNode node) -> void
     def visit_constant_path_target_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ConstantPathWriteNode node
-    #--
+    #
     #: (ConstantPathWriteNode node) -> void
     def visit_constant_path_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ConstantReadNode node
-    #--
+    #
     #: (ConstantReadNode node) -> void
     def visit_constant_read_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ConstantTargetNode node
-    #--
+    #
     #: (ConstantTargetNode node) -> void
     def visit_constant_target_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ConstantWriteNode node
-    #--
+    #
     #: (ConstantWriteNode node) -> void
     def visit_constant_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a DefNode node
-    #--
+    #
     #: (DefNode node) -> void
     def visit_def_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a DefinedNode node
-    #--
+    #
     #: (DefinedNode node) -> void
     def visit_defined_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ElseNode node
-    #--
+    #
     #: (ElseNode node) -> void
     def visit_else_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a EmbeddedStatementsNode node
-    #--
+    #
     #: (EmbeddedStatementsNode node) -> void
     def visit_embedded_statements_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a EmbeddedVariableNode node
-    #--
+    #
     #: (EmbeddedVariableNode node) -> void
     def visit_embedded_variable_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a EnsureNode node
-    #--
+    #
     #: (EnsureNode node) -> void
     def visit_ensure_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ErrorRecoveryNode node
-    #--
+    #
     #: (ErrorRecoveryNode node) -> void
     def visit_error_recovery_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a FalseNode node
-    #--
+    #
     #: (FalseNode node) -> void
     def visit_false_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a FindPatternNode node
-    #--
+    #
     #: (FindPatternNode node) -> void
     def visit_find_pattern_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a FlipFlopNode node
-    #--
+    #
     #: (FlipFlopNode node) -> void
     def visit_flip_flop_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a FloatNode node
-    #--
+    #
     #: (FloatNode node) -> void
     def visit_float_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ForNode node
-    #--
+    #
     #: (ForNode node) -> void
     def visit_for_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ForwardingArgumentsNode node
-    #--
+    #
     #: (ForwardingArgumentsNode node) -> void
     def visit_forwarding_arguments_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ForwardingParameterNode node
-    #--
+    #
     #: (ForwardingParameterNode node) -> void
     def visit_forwarding_parameter_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ForwardingSuperNode node
-    #--
+    #
     #: (ForwardingSuperNode node) -> void
     def visit_forwarding_super_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a GlobalVariableAndWriteNode node
-    #--
+    #
     #: (GlobalVariableAndWriteNode node) -> void
     def visit_global_variable_and_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a GlobalVariableOperatorWriteNode node
-    #--
+    #
     #: (GlobalVariableOperatorWriteNode node) -> void
     def visit_global_variable_operator_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a GlobalVariableOrWriteNode node
-    #--
+    #
     #: (GlobalVariableOrWriteNode node) -> void
     def visit_global_variable_or_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a GlobalVariableReadNode node
-    #--
+    #
     #: (GlobalVariableReadNode node) -> void
     def visit_global_variable_read_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a GlobalVariableTargetNode node
-    #--
+    #
     #: (GlobalVariableTargetNode node) -> void
     def visit_global_variable_target_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a GlobalVariableWriteNode node
-    #--
+    #
     #: (GlobalVariableWriteNode node) -> void
     def visit_global_variable_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a HashNode node
-    #--
+    #
     #: (HashNode node) -> void
     def visit_hash_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a HashPatternNode node
-    #--
+    #
     #: (HashPatternNode node) -> void
     def visit_hash_pattern_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a IfNode node
-    #--
+    #
     #: (IfNode node) -> void
     def visit_if_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ImaginaryNode node
-    #--
+    #
     #: (ImaginaryNode node) -> void
     def visit_imaginary_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ImplicitNode node
-    #--
+    #
     #: (ImplicitNode node) -> void
     def visit_implicit_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ImplicitRestNode node
-    #--
+    #
     #: (ImplicitRestNode node) -> void
     def visit_implicit_rest_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a InNode node
-    #--
+    #
     #: (InNode node) -> void
     def visit_in_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a IndexAndWriteNode node
-    #--
+    #
     #: (IndexAndWriteNode node) -> void
     def visit_index_and_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a IndexOperatorWriteNode node
-    #--
+    #
     #: (IndexOperatorWriteNode node) -> void
     def visit_index_operator_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a IndexOrWriteNode node
-    #--
+    #
     #: (IndexOrWriteNode node) -> void
     def visit_index_or_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a IndexTargetNode node
-    #--
+    #
     #: (IndexTargetNode node) -> void
     def visit_index_target_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a InstanceVariableAndWriteNode node
-    #--
+    #
     #: (InstanceVariableAndWriteNode node) -> void
     def visit_instance_variable_and_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a InstanceVariableOperatorWriteNode node
-    #--
+    #
     #: (InstanceVariableOperatorWriteNode node) -> void
     def visit_instance_variable_operator_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a InstanceVariableOrWriteNode node
-    #--
+    #
     #: (InstanceVariableOrWriteNode node) -> void
     def visit_instance_variable_or_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a InstanceVariableReadNode node
-    #--
+    #
     #: (InstanceVariableReadNode node) -> void
     def visit_instance_variable_read_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a InstanceVariableTargetNode node
-    #--
+    #
     #: (InstanceVariableTargetNode node) -> void
     def visit_instance_variable_target_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a InstanceVariableWriteNode node
-    #--
+    #
     #: (InstanceVariableWriteNode node) -> void
     def visit_instance_variable_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a IntegerNode node
-    #--
+    #
     #: (IntegerNode node) -> void
     def visit_integer_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a InterpolatedMatchLastLineNode node
-    #--
+    #
     #: (InterpolatedMatchLastLineNode node) -> void
     def visit_interpolated_match_last_line_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a InterpolatedRegularExpressionNode node
-    #--
+    #
     #: (InterpolatedRegularExpressionNode node) -> void
     def visit_interpolated_regular_expression_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a InterpolatedStringNode node
-    #--
+    #
     #: (InterpolatedStringNode node) -> void
     def visit_interpolated_string_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a InterpolatedSymbolNode node
-    #--
+    #
     #: (InterpolatedSymbolNode node) -> void
     def visit_interpolated_symbol_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a InterpolatedXStringNode node
-    #--
+    #
     #: (InterpolatedXStringNode node) -> void
     def visit_interpolated_x_string_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ItLocalVariableReadNode node
-    #--
+    #
     #: (ItLocalVariableReadNode node) -> void
     def visit_it_local_variable_read_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ItParametersNode node
-    #--
+    #
     #: (ItParametersNode node) -> void
     def visit_it_parameters_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a KeywordHashNode node
-    #--
+    #
     #: (KeywordHashNode node) -> void
     def visit_keyword_hash_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a KeywordRestParameterNode node
-    #--
+    #
     #: (KeywordRestParameterNode node) -> void
     def visit_keyword_rest_parameter_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a LambdaNode node
-    #--
+    #
     #: (LambdaNode node) -> void
     def visit_lambda_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a LocalVariableAndWriteNode node
-    #--
+    #
     #: (LocalVariableAndWriteNode node) -> void
     def visit_local_variable_and_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a LocalVariableOperatorWriteNode node
-    #--
+    #
     #: (LocalVariableOperatorWriteNode node) -> void
     def visit_local_variable_operator_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a LocalVariableOrWriteNode node
-    #--
+    #
     #: (LocalVariableOrWriteNode node) -> void
     def visit_local_variable_or_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a LocalVariableReadNode node
-    #--
+    #
     #: (LocalVariableReadNode node) -> void
     def visit_local_variable_read_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a LocalVariableTargetNode node
-    #--
+    #
     #: (LocalVariableTargetNode node) -> void
     def visit_local_variable_target_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a LocalVariableWriteNode node
-    #--
+    #
     #: (LocalVariableWriteNode node) -> void
     def visit_local_variable_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a MatchLastLineNode node
-    #--
+    #
     #: (MatchLastLineNode node) -> void
     def visit_match_last_line_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a MatchPredicateNode node
-    #--
+    #
     #: (MatchPredicateNode node) -> void
     def visit_match_predicate_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a MatchRequiredNode node
-    #--
+    #
     #: (MatchRequiredNode node) -> void
     def visit_match_required_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a MatchWriteNode node
-    #--
+    #
     #: (MatchWriteNode node) -> void
     def visit_match_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ModuleNode node
-    #--
+    #
     #: (ModuleNode node) -> void
     def visit_module_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a MultiTargetNode node
-    #--
+    #
     #: (MultiTargetNode node) -> void
     def visit_multi_target_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a MultiWriteNode node
-    #--
+    #
     #: (MultiWriteNode node) -> void
     def visit_multi_write_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a NextNode node
-    #--
+    #
     #: (NextNode node) -> void
     def visit_next_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a NilNode node
-    #--
+    #
     #: (NilNode node) -> void
     def visit_nil_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a NoBlockParameterNode node
-    #--
+    #
     #: (NoBlockParameterNode node) -> void
     def visit_no_block_parameter_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a NoKeywordsParameterNode node
-    #--
+    #
     #: (NoKeywordsParameterNode node) -> void
     def visit_no_keywords_parameter_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a NumberedParametersNode node
-    #--
+    #
     #: (NumberedParametersNode node) -> void
     def visit_numbered_parameters_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a NumberedReferenceReadNode node
-    #--
+    #
     #: (NumberedReferenceReadNode node) -> void
     def visit_numbered_reference_read_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a OptionalKeywordParameterNode node
-    #--
+    #
     #: (OptionalKeywordParameterNode node) -> void
     def visit_optional_keyword_parameter_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a OptionalParameterNode node
-    #--
+    #
     #: (OptionalParameterNode node) -> void
     def visit_optional_parameter_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a OrNode node
-    #--
+    #
     #: (OrNode node) -> void
     def visit_or_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ParametersNode node
-    #--
+    #
     #: (ParametersNode node) -> void
     def visit_parameters_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ParenthesesNode node
-    #--
+    #
     #: (ParenthesesNode node) -> void
     def visit_parentheses_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a PinnedExpressionNode node
-    #--
+    #
     #: (PinnedExpressionNode node) -> void
     def visit_pinned_expression_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a PinnedVariableNode node
-    #--
+    #
     #: (PinnedVariableNode node) -> void
     def visit_pinned_variable_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a PostExecutionNode node
-    #--
+    #
     #: (PostExecutionNode node) -> void
     def visit_post_execution_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a PreExecutionNode node
-    #--
+    #
     #: (PreExecutionNode node) -> void
     def visit_pre_execution_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ProgramNode node
-    #--
+    #
     #: (ProgramNode node) -> void
     def visit_program_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a RangeNode node
-    #--
+    #
     #: (RangeNode node) -> void
     def visit_range_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a RationalNode node
-    #--
+    #
     #: (RationalNode node) -> void
     def visit_rational_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a RedoNode node
-    #--
+    #
     #: (RedoNode node) -> void
     def visit_redo_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a RegularExpressionNode node
-    #--
+    #
     #: (RegularExpressionNode node) -> void
     def visit_regular_expression_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a RequiredKeywordParameterNode node
-    #--
+    #
     #: (RequiredKeywordParameterNode node) -> void
     def visit_required_keyword_parameter_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a RequiredParameterNode node
-    #--
+    #
     #: (RequiredParameterNode node) -> void
     def visit_required_parameter_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a RescueModifierNode node
-    #--
+    #
     #: (RescueModifierNode node) -> void
     def visit_rescue_modifier_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a RescueNode node
-    #--
+    #
     #: (RescueNode node) -> void
     def visit_rescue_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a RestParameterNode node
-    #--
+    #
     #: (RestParameterNode node) -> void
     def visit_rest_parameter_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a RetryNode node
-    #--
+    #
     #: (RetryNode node) -> void
     def visit_retry_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ReturnNode node
-    #--
+    #
     #: (ReturnNode node) -> void
     def visit_return_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a SelfNode node
-    #--
+    #
     #: (SelfNode node) -> void
     def visit_self_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a ShareableConstantNode node
-    #--
+    #
     #: (ShareableConstantNode node) -> void
     def visit_shareable_constant_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a SingletonClassNode node
-    #--
+    #
     #: (SingletonClassNode node) -> void
     def visit_singleton_class_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a SourceEncodingNode node
-    #--
+    #
     #: (SourceEncodingNode node) -> void
     def visit_source_encoding_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a SourceFileNode node
-    #--
+    #
     #: (SourceFileNode node) -> void
     def visit_source_file_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a SourceLineNode node
-    #--
+    #
     #: (SourceLineNode node) -> void
     def visit_source_line_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a SplatNode node
-    #--
+    #
     #: (SplatNode node) -> void
     def visit_splat_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a StatementsNode node
-    #--
+    #
     #: (StatementsNode node) -> void
     def visit_statements_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a StringNode node
-    #--
+    #
     #: (StringNode node) -> void
     def visit_string_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a SuperNode node
-    #--
+    #
     #: (SuperNode node) -> void
     def visit_super_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a SymbolNode node
-    #--
+    #
     #: (SymbolNode node) -> void
     def visit_symbol_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a TrueNode node
-    #--
+    #
     #: (TrueNode node) -> void
     def visit_true_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a UndefNode node
-    #--
+    #
     #: (UndefNode node) -> void
     def visit_undef_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a UnlessNode node
-    #--
+    #
     #: (UnlessNode node) -> void
     def visit_unless_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a UntilNode node
-    #--
+    #
     #: (UntilNode node) -> void
     def visit_until_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a WhenNode node
-    #--
+    #
     #: (WhenNode node) -> void
     def visit_when_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a WhileNode node
-    #--
+    #
     #: (WhileNode node) -> void
     def visit_while_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a XStringNode node
-    #--
+    #
     #: (XStringNode node) -> void
     def visit_x_string_node(node)
       node.each_child_node { |node| node.accept(self) }
     end
 
     # Visit a YieldNode node
-    #--
+    #
     #: (YieldNode node) -> void
     def visit_yield_node(node)
       node.each_child_node { |node| node.accept(self) }

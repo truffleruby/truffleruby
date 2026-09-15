@@ -435,7 +435,7 @@
         │   │   │   @ IntegerNode (location: (29,11)-(29,12))
         │   │   │   ├── flags: static_literal, decimal
         │   │   │   └── value: 1
-        │   │   └── operator_loc: (29,8)-(29,10) = "in"
+        │   │   └── keyword_loc: (29,8)-(29,10) = "in"
         │   ├── then_keyword_loc: ∅
         │   ├── statements: ∅
         │   ├── subsequent:
@@ -461,7 +461,7 @@
         │   │   │   │   @ ConstantReadNode (location: (30,14)-(30,15))
         │   │   │   │   ├── flags: ∅
         │   │   │   │   └── name: :B
-        │   │   │   └── operator_loc: (30,11)-(30,13) = "in"
+        │   │   │   └── keyword_loc: (30,11)-(30,13) = "in"
         │   │   ├── then_keyword_loc: ∅
         │   │   ├── statements: ∅
         │   │   ├── subsequent: ∅

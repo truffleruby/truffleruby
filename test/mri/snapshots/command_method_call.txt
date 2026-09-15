@@ -100,7 +100,7 @@
         │   └── end_keyword_loc: ∅
         ├── @ UnlessNode (location: (7,0)-(7,18))
         │   ├── flags: newline
-        │   ├── keyword_loc: (7,6)-(7,12) = "unless"
+        │   ├── unless_keyword_loc: (7,6)-(7,12) = "unless"
         │   ├── predicate:
         │   │   @ CallNode (location: (7,13)-(7,18))
         │   │   ├── flags: ignore_visibility
@@ -145,9 +145,9 @@
         │   └── end_keyword_loc: ∅
         ├── @ WhileNode (location: (9,0)-(9,17))
         │   ├── flags: newline
-        │   ├── keyword_loc: (9,6)-(9,11) = "while"
+        │   ├── while_keyword_loc: (9,6)-(9,11) = "while"
         │   ├── do_keyword_loc: ∅
-        │   ├── closing_loc: ∅
+        │   ├── end_keyword_loc: ∅
         │   ├── predicate:
         │   │   @ CallNode (location: (9,12)-(9,17))
         │   │   ├── flags: ignore_visibility
@@ -189,9 +189,9 @@
         │               └── block: ∅
         ├── @ UntilNode (location: (11,0)-(11,17))
         │   ├── flags: newline
-        │   ├── keyword_loc: (11,6)-(11,11) = "until"
+        │   ├── until_keyword_loc: (11,6)-(11,11) = "until"
         │   ├── do_keyword_loc: ∅
-        │   ├── closing_loc: ∅
+        │   ├── end_keyword_loc: ∅
         │   ├── predicate:
         │   │   @ CallNode (location: (11,12)-(11,17))
         │   │   ├── flags: ignore_visibility

@@ -1,0 +1,577 @@
+@ ProgramNode (location: (1,0)-(21,13))
+├── flags: ∅
+├── locals: [:b, :x, :y]
+└── statements:
+    @ StatementsNode (location: (1,0)-(21,13))
+    ├── flags: ∅
+    └── body: (length: 11)
+        ├── @ WhileNode (location: (1,0)-(1,22))
+        │   ├── flags: newline
+        │   ├── while_keyword_loc: (1,0)-(1,5) = "while"
+        │   ├── do_keyword_loc: (1,14)-(1,16) = "do"
+        │   ├── end_keyword_loc: (1,19)-(1,22) = "end"
+        │   ├── predicate:
+        │   │   @ MatchPredicateNode (location: (1,6)-(1,13))
+        │   │   ├── flags: ∅
+        │   │   ├── value:
+        │   │   │   @ CallNode (location: (1,6)-(1,7))
+        │   │   │   ├── flags: variable_call, ignore_visibility
+        │   │   │   ├── receiver: ∅
+        │   │   │   ├── call_operator_loc: ∅
+        │   │   │   ├── name: :a
+        │   │   │   ├── message_loc: (1,6)-(1,7) = "a"
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   ├── arguments: ∅
+        │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
+        │   │   │   └── block: ∅
+        │   │   ├── pattern:
+        │   │   │   @ ArrayPatternNode (location: (1,11)-(1,13))
+        │   │   │   ├── flags: ∅
+        │   │   │   ├── constant: ∅
+        │   │   │   ├── requireds: (length: 1)
+        │   │   │   │   └── @ LocalVariableTargetNode (location: (1,11)-(1,12))
+        │   │   │   │       ├── flags: ∅
+        │   │   │   │       ├── name: :b
+        │   │   │   │       └── depth: 0
+        │   │   │   ├── rest:
+        │   │   │   │   @ ImplicitRestNode (location: (1,12)-(1,13))
+        │   │   │   │   └── flags: ∅
+        │   │   │   ├── posts: (length: 0)
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   └── closing_loc: ∅
+        │   │   └── keyword_loc: (1,8)-(1,10) = "in"
+        │   └── statements:
+        │       @ StatementsNode (location: (1,17)-(1,18))
+        │       ├── flags: ∅
+        │       └── body: (length: 1)
+        │           └── @ IntegerNode (location: (1,17)-(1,18))
+        │               ├── flags: newline, static_literal, decimal
+        │               └── value: 1
+        ├── @ UntilNode (location: (3,0)-(3,22))
+        │   ├── flags: newline
+        │   ├── until_keyword_loc: (3,0)-(3,5) = "until"
+        │   ├── do_keyword_loc: (3,14)-(3,16) = "do"
+        │   ├── end_keyword_loc: (3,19)-(3,22) = "end"
+        │   ├── predicate:
+        │   │   @ MatchPredicateNode (location: (3,6)-(3,13))
+        │   │   ├── flags: ∅
+        │   │   ├── value:
+        │   │   │   @ CallNode (location: (3,6)-(3,7))
+        │   │   │   ├── flags: variable_call, ignore_visibility
+        │   │   │   ├── receiver: ∅
+        │   │   │   ├── call_operator_loc: ∅
+        │   │   │   ├── name: :a
+        │   │   │   ├── message_loc: (3,6)-(3,7) = "a"
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   ├── arguments: ∅
+        │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
+        │   │   │   └── block: ∅
+        │   │   ├── pattern:
+        │   │   │   @ ArrayPatternNode (location: (3,11)-(3,13))
+        │   │   │   ├── flags: ∅
+        │   │   │   ├── constant: ∅
+        │   │   │   ├── requireds: (length: 1)
+        │   │   │   │   └── @ LocalVariableTargetNode (location: (3,11)-(3,12))
+        │   │   │   │       ├── flags: ∅
+        │   │   │   │       ├── name: :b
+        │   │   │   │       └── depth: 0
+        │   │   │   ├── rest:
+        │   │   │   │   @ ImplicitRestNode (location: (3,12)-(3,13))
+        │   │   │   │   └── flags: ∅
+        │   │   │   ├── posts: (length: 0)
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   └── closing_loc: ∅
+        │   │   └── keyword_loc: (3,8)-(3,10) = "in"
+        │   └── statements:
+        │       @ StatementsNode (location: (3,17)-(3,18))
+        │       ├── flags: ∅
+        │       └── body: (length: 1)
+        │           └── @ IntegerNode (location: (3,17)-(3,18))
+        │               ├── flags: newline, static_literal, decimal
+        │               └── value: 1
+        ├── @ ForNode (location: (5,0)-(5,25))
+        │   ├── flags: newline
+        │   ├── index:
+        │   │   @ LocalVariableTargetNode (location: (5,4)-(5,5))
+        │   │   ├── flags: ∅
+        │   │   ├── name: :x
+        │   │   └── depth: 0
+        │   ├── collection:
+        │   │   @ MatchPredicateNode (location: (5,9)-(5,16))
+        │   │   ├── flags: ∅
+        │   │   ├── value:
+        │   │   │   @ CallNode (location: (5,9)-(5,10))
+        │   │   │   ├── flags: variable_call, ignore_visibility
+        │   │   │   ├── receiver: ∅
+        │   │   │   ├── call_operator_loc: ∅
+        │   │   │   ├── name: :a
+        │   │   │   ├── message_loc: (5,9)-(5,10) = "a"
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   ├── arguments: ∅
+        │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
+        │   │   │   └── block: ∅
+        │   │   ├── pattern:
+        │   │   │   @ ArrayPatternNode (location: (5,14)-(5,16))
+        │   │   │   ├── flags: ∅
+        │   │   │   ├── constant: ∅
+        │   │   │   ├── requireds: (length: 1)
+        │   │   │   │   └── @ LocalVariableTargetNode (location: (5,14)-(5,15))
+        │   │   │   │       ├── flags: ∅
+        │   │   │   │       ├── name: :b
+        │   │   │   │       └── depth: 0
+        │   │   │   ├── rest:
+        │   │   │   │   @ ImplicitRestNode (location: (5,15)-(5,16))
+        │   │   │   │   └── flags: ∅
+        │   │   │   ├── posts: (length: 0)
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   └── closing_loc: ∅
+        │   │   └── keyword_loc: (5,11)-(5,13) = "in"
+        │   ├── statements:
+        │   │   @ StatementsNode (location: (5,20)-(5,21))
+        │   │   ├── flags: ∅
+        │   │   └── body: (length: 1)
+        │   │       └── @ IntegerNode (location: (5,20)-(5,21))
+        │   │           ├── flags: newline, static_literal, decimal
+        │   │           └── value: 1
+        │   ├── for_keyword_loc: (5,0)-(5,3) = "for"
+        │   ├── in_keyword_loc: (5,6)-(5,8) = "in"
+        │   ├── do_keyword_loc: (5,17)-(5,19) = "do"
+        │   └── end_keyword_loc: (5,22)-(5,25) = "end"
+        ├── @ CallNode (location: (7,0)-(7,19))
+        │   ├── flags: newline, ignore_visibility
+        │   ├── receiver: ∅
+        │   ├── call_operator_loc: ∅
+        │   ├── name: :loop
+        │   ├── message_loc: (7,0)-(7,4) = "loop"
+        │   ├── opening_loc: ∅
+        │   ├── arguments: ∅
+        │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
+        │   └── block:
+        │       @ BlockNode (location: (7,5)-(7,19))
+        │       ├── flags: ∅
+        │       ├── locals: []
+        │       ├── parameters: ∅
+        │       ├── body:
+        │       │   @ StatementsNode (location: (7,8)-(7,15))
+        │       │   ├── flags: ∅
+        │       │   └── body: (length: 1)
+        │       │       └── @ MatchPredicateNode (location: (7,8)-(7,15))
+        │       │           ├── flags: newline
+        │       │           ├── value:
+        │       │           │   @ CallNode (location: (7,8)-(7,9))
+        │       │           │   ├── flags: variable_call, ignore_visibility
+        │       │           │   ├── receiver: ∅
+        │       │           │   ├── call_operator_loc: ∅
+        │       │           │   ├── name: :a
+        │       │           │   ├── message_loc: (7,8)-(7,9) = "a"
+        │       │           │   ├── opening_loc: ∅
+        │       │           │   ├── arguments: ∅
+        │       │           │   ├── closing_loc: ∅
+        │       │           │   ├── equal_loc: ∅
+        │       │           │   └── block: ∅
+        │       │           ├── pattern:
+        │       │           │   @ ArrayPatternNode (location: (7,13)-(7,15))
+        │       │           │   ├── flags: ∅
+        │       │           │   ├── constant: ∅
+        │       │           │   ├── requireds: (length: 1)
+        │       │           │   │   └── @ LocalVariableTargetNode (location: (7,13)-(7,14))
+        │       │           │   │       ├── flags: ∅
+        │       │           │   │       ├── name: :b
+        │       │           │   │       └── depth: 1
+        │       │           │   ├── rest:
+        │       │           │   │   @ ImplicitRestNode (location: (7,14)-(7,15))
+        │       │           │   │   └── flags: ∅
+        │       │           │   ├── posts: (length: 0)
+        │       │           │   ├── opening_loc: ∅
+        │       │           │   └── closing_loc: ∅
+        │       │           └── keyword_loc: (7,10)-(7,12) = "in"
+        │       ├── opening_loc: (7,5)-(7,7) = "do"
+        │       └── closing_loc: (7,16)-(7,19) = "end"
+        ├── @ InterpolatedStringNode (location: (9,0)-(9,12))
+        │   ├── flags: newline
+        │   ├── opening_loc: (9,0)-(9,1) = "\""
+        │   ├── parts: (length: 1)
+        │   │   └── @ EmbeddedStatementsNode (location: (9,1)-(9,11))
+        │   │       ├── flags: ∅
+        │   │       ├── opening_loc: (9,1)-(9,3) = "\#{"
+        │   │       ├── statements:
+        │   │       │   @ StatementsNode (location: (9,3)-(9,10))
+        │   │       │   ├── flags: ∅
+        │   │       │   └── body: (length: 1)
+        │   │       │       └── @ MatchPredicateNode (location: (9,3)-(9,10))
+        │   │       │           ├── flags: ∅
+        │   │       │           ├── value:
+        │   │       │           │   @ CallNode (location: (9,3)-(9,4))
+        │   │       │           │   ├── flags: variable_call, ignore_visibility
+        │   │       │           │   ├── receiver: ∅
+        │   │       │           │   ├── call_operator_loc: ∅
+        │   │       │           │   ├── name: :a
+        │   │       │           │   ├── message_loc: (9,3)-(9,4) = "a"
+        │   │       │           │   ├── opening_loc: ∅
+        │   │       │           │   ├── arguments: ∅
+        │   │       │           │   ├── closing_loc: ∅
+        │   │       │           │   ├── equal_loc: ∅
+        │   │       │           │   └── block: ∅
+        │   │       │           ├── pattern:
+        │   │       │           │   @ ArrayPatternNode (location: (9,8)-(9,10))
+        │   │       │           │   ├── flags: ∅
+        │   │       │           │   ├── constant: ∅
+        │   │       │           │   ├── requireds: (length: 1)
+        │   │       │           │   │   └── @ LocalVariableTargetNode (location: (9,8)-(9,9))
+        │   │       │           │   │       ├── flags: ∅
+        │   │       │           │   │       ├── name: :b
+        │   │       │           │   │       └── depth: 0
+        │   │       │           │   ├── rest:
+        │   │       │           │   │   @ ImplicitRestNode (location: (9,9)-(9,10))
+        │   │       │           │   │   └── flags: ∅
+        │   │       │           │   ├── posts: (length: 0)
+        │   │       │           │   ├── opening_loc: ∅
+        │   │       │           │   └── closing_loc: ∅
+        │   │       │           └── keyword_loc: (9,5)-(9,7) = "in"
+        │   │       └── closing_loc: (9,10)-(9,11) = "}"
+        │   └── closing_loc: (9,11)-(9,12) = "\""
+        ├── @ WhileNode (location: (11,0)-(11,22))
+        │   ├── flags: newline
+        │   ├── while_keyword_loc: (11,0)-(11,5) = "while"
+        │   ├── do_keyword_loc: (11,14)-(11,16) = "do"
+        │   ├── end_keyword_loc: (11,19)-(11,22) = "end"
+        │   ├── predicate:
+        │   │   @ MatchPredicateNode (location: (11,6)-(11,13))
+        │   │   ├── flags: ∅
+        │   │   ├── value:
+        │   │   │   @ CallNode (location: (11,6)-(11,7))
+        │   │   │   ├── flags: variable_call, ignore_visibility
+        │   │   │   ├── receiver: ∅
+        │   │   │   ├── call_operator_loc: ∅
+        │   │   │   ├── name: :a
+        │   │   │   ├── message_loc: (11,6)-(11,7) = "a"
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   ├── arguments: ∅
+        │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
+        │   │   │   └── block: ∅
+        │   │   ├── pattern:
+        │   │   │   @ HashPatternNode (location: (11,11)-(11,13))
+        │   │   │   ├── flags: ∅
+        │   │   │   ├── constant: ∅
+        │   │   │   ├── elements: (length: 1)
+        │   │   │   │   └── @ AssocNode (location: (11,11)-(11,13))
+        │   │   │   │       ├── flags: ∅
+        │   │   │   │       ├── key:
+        │   │   │   │       │   @ SymbolNode (location: (11,11)-(11,13))
+        │   │   │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │   │   │       │   ├── opening_loc: ∅
+        │   │   │   │       │   ├── value_loc: (11,11)-(11,12) = "x"
+        │   │   │   │       │   ├── closing_loc: (11,12)-(11,13) = ":"
+        │   │   │   │       │   └── unescaped: "x"
+        │   │   │   │       ├── value:
+        │   │   │   │       │   @ ImplicitNode (location: (11,11)-(11,12))
+        │   │   │   │       │   ├── flags: ∅
+        │   │   │   │       │   └── value:
+        │   │   │   │       │       @ LocalVariableTargetNode (location: (11,11)-(11,12))
+        │   │   │   │       │       ├── flags: ∅
+        │   │   │   │       │       ├── name: :x
+        │   │   │   │       │       └── depth: 0
+        │   │   │   │       └── operator_loc: ∅
+        │   │   │   ├── rest: ∅
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   └── closing_loc: ∅
+        │   │   └── keyword_loc: (11,8)-(11,10) = "in"
+        │   └── statements:
+        │       @ StatementsNode (location: (11,17)-(11,18))
+        │       ├── flags: ∅
+        │       └── body: (length: 1)
+        │           └── @ IntegerNode (location: (11,17)-(11,18))
+        │               ├── flags: newline, static_literal, decimal
+        │               └── value: 1
+        ├── @ WhileNode (location: (13,0)-(13,25))
+        │   ├── flags: newline
+        │   ├── while_keyword_loc: (13,0)-(13,5) = "while"
+        │   ├── do_keyword_loc: (13,17)-(13,19) = "do"
+        │   ├── end_keyword_loc: (13,22)-(13,25) = "end"
+        │   ├── predicate:
+        │   │   @ MatchPredicateNode (location: (13,6)-(13,15))
+        │   │   ├── flags: ∅
+        │   │   ├── value:
+        │   │   │   @ CallNode (location: (13,6)-(13,7))
+        │   │   │   ├── flags: variable_call, ignore_visibility
+        │   │   │   ├── receiver: ∅
+        │   │   │   ├── call_operator_loc: ∅
+        │   │   │   ├── name: :a
+        │   │   │   ├── message_loc: (13,6)-(13,7) = "a"
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   ├── arguments: ∅
+        │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
+        │   │   │   └── block: ∅
+        │   │   ├── pattern:
+        │   │   │   @ HashPatternNode (location: (13,11)-(13,15))
+        │   │   │   ├── flags: ∅
+        │   │   │   ├── constant: ∅
+        │   │   │   ├── elements: (length: 1)
+        │   │   │   │   └── @ AssocNode (location: (13,11)-(13,15))
+        │   │   │   │       ├── flags: static_literal
+        │   │   │   │       ├── key:
+        │   │   │   │       │   @ SymbolNode (location: (13,11)-(13,13))
+        │   │   │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │   │   │       │   ├── opening_loc: ∅
+        │   │   │   │       │   ├── value_loc: (13,11)-(13,12) = "x"
+        │   │   │   │       │   ├── closing_loc: (13,12)-(13,13) = ":"
+        │   │   │   │       │   └── unescaped: "x"
+        │   │   │   │       ├── value:
+        │   │   │   │       │   @ IntegerNode (location: (13,14)-(13,15))
+        │   │   │   │       │   ├── flags: static_literal, decimal
+        │   │   │   │       │   └── value: 1
+        │   │   │   │       └── operator_loc: ∅
+        │   │   │   ├── rest: ∅
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   └── closing_loc: ∅
+        │   │   └── keyword_loc: (13,8)-(13,10) = "in"
+        │   └── statements:
+        │       @ StatementsNode (location: (13,20)-(13,21))
+        │       ├── flags: ∅
+        │       └── body: (length: 1)
+        │           └── @ IntegerNode (location: (13,20)-(13,21))
+        │               ├── flags: newline, static_literal, decimal
+        │               └── value: 1
+        ├── @ WhileNode (location: (15,0)-(15,26))
+        │   ├── flags: newline
+        │   ├── while_keyword_loc: (15,0)-(15,5) = "while"
+        │   ├── do_keyword_loc: (15,18)-(15,20) = "do"
+        │   ├── end_keyword_loc: (15,23)-(15,26) = "end"
+        │   ├── predicate:
+        │   │   @ MatchPredicateNode (location: (15,6)-(15,17))
+        │   │   ├── flags: ∅
+        │   │   ├── value:
+        │   │   │   @ CallNode (location: (15,6)-(15,7))
+        │   │   │   ├── flags: variable_call, ignore_visibility
+        │   │   │   ├── receiver: ∅
+        │   │   │   ├── call_operator_loc: ∅
+        │   │   │   ├── name: :a
+        │   │   │   ├── message_loc: (15,6)-(15,7) = "a"
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   ├── arguments: ∅
+        │   │   │   ├── closing_loc: ∅
+        │   │   │   ├── equal_loc: ∅
+        │   │   │   └── block: ∅
+        │   │   ├── pattern:
+        │   │   │   @ HashPatternNode (location: (15,11)-(15,17))
+        │   │   │   ├── flags: ∅
+        │   │   │   ├── constant: ∅
+        │   │   │   ├── elements: (length: 2)
+        │   │   │   │   ├── @ AssocNode (location: (15,11)-(15,13))
+        │   │   │   │   │   ├── flags: ∅
+        │   │   │   │   │   ├── key:
+        │   │   │   │   │   │   @ SymbolNode (location: (15,11)-(15,13))
+        │   │   │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │   │   │   │   │   ├── opening_loc: ∅
+        │   │   │   │   │   │   ├── value_loc: (15,11)-(15,12) = "x"
+        │   │   │   │   │   │   ├── closing_loc: (15,12)-(15,13) = ":"
+        │   │   │   │   │   │   └── unescaped: "x"
+        │   │   │   │   │   ├── value:
+        │   │   │   │   │   │   @ ImplicitNode (location: (15,11)-(15,12))
+        │   │   │   │   │   │   ├── flags: ∅
+        │   │   │   │   │   │   └── value:
+        │   │   │   │   │   │       @ LocalVariableTargetNode (location: (15,11)-(15,12))
+        │   │   │   │   │   │       ├── flags: ∅
+        │   │   │   │   │   │       ├── name: :x
+        │   │   │   │   │   │       └── depth: 0
+        │   │   │   │   │   └── operator_loc: ∅
+        │   │   │   │   └── @ AssocNode (location: (15,15)-(15,17))
+        │   │   │   │       ├── flags: ∅
+        │   │   │   │       ├── key:
+        │   │   │   │       │   @ SymbolNode (location: (15,15)-(15,17))
+        │   │   │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │   │   │       │   ├── opening_loc: ∅
+        │   │   │   │       │   ├── value_loc: (15,15)-(15,16) = "y"
+        │   │   │   │       │   ├── closing_loc: (15,16)-(15,17) = ":"
+        │   │   │   │       │   └── unescaped: "y"
+        │   │   │   │       ├── value:
+        │   │   │   │       │   @ ImplicitNode (location: (15,15)-(15,16))
+        │   │   │   │       │   ├── flags: ∅
+        │   │   │   │       │   └── value:
+        │   │   │   │       │       @ LocalVariableTargetNode (location: (15,15)-(15,16))
+        │   │   │   │       │       ├── flags: ∅
+        │   │   │   │       │       ├── name: :y
+        │   │   │   │       │       └── depth: 0
+        │   │   │   │       └── operator_loc: ∅
+        │   │   │   ├── rest: ∅
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   └── closing_loc: ∅
+        │   │   └── keyword_loc: (15,8)-(15,10) = "in"
+        │   └── statements:
+        │       @ StatementsNode (location: (15,21)-(15,22))
+        │       ├── flags: ∅
+        │       └── body: (length: 1)
+        │           └── @ IntegerNode (location: (15,21)-(15,22))
+        │               ├── flags: newline, static_literal, decimal
+        │               └── value: 1
+        ├── @ CallNode (location: (17,0)-(17,19))
+        │   ├── flags: newline, ignore_visibility
+        │   ├── receiver: ∅
+        │   ├── call_operator_loc: ∅
+        │   ├── name: :loop
+        │   ├── message_loc: (17,0)-(17,4) = "loop"
+        │   ├── opening_loc: ∅
+        │   ├── arguments: ∅
+        │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
+        │   └── block:
+        │       @ BlockNode (location: (17,5)-(17,19))
+        │       ├── flags: ∅
+        │       ├── locals: []
+        │       ├── parameters: ∅
+        │       ├── body:
+        │       │   @ StatementsNode (location: (17,8)-(17,15))
+        │       │   ├── flags: ∅
+        │       │   └── body: (length: 1)
+        │       │       └── @ MatchPredicateNode (location: (17,8)-(17,15))
+        │       │           ├── flags: newline
+        │       │           ├── value:
+        │       │           │   @ CallNode (location: (17,8)-(17,9))
+        │       │           │   ├── flags: variable_call, ignore_visibility
+        │       │           │   ├── receiver: ∅
+        │       │           │   ├── call_operator_loc: ∅
+        │       │           │   ├── name: :a
+        │       │           │   ├── message_loc: (17,8)-(17,9) = "a"
+        │       │           │   ├── opening_loc: ∅
+        │       │           │   ├── arguments: ∅
+        │       │           │   ├── closing_loc: ∅
+        │       │           │   ├── equal_loc: ∅
+        │       │           │   └── block: ∅
+        │       │           ├── pattern:
+        │       │           │   @ HashPatternNode (location: (17,13)-(17,15))
+        │       │           │   ├── flags: ∅
+        │       │           │   ├── constant: ∅
+        │       │           │   ├── elements: (length: 1)
+        │       │           │   │   └── @ AssocNode (location: (17,13)-(17,15))
+        │       │           │   │       ├── flags: ∅
+        │       │           │   │       ├── key:
+        │       │           │   │       │   @ SymbolNode (location: (17,13)-(17,15))
+        │       │           │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
+        │       │           │   │       │   ├── opening_loc: ∅
+        │       │           │   │       │   ├── value_loc: (17,13)-(17,14) = "x"
+        │       │           │   │       │   ├── closing_loc: (17,14)-(17,15) = ":"
+        │       │           │   │       │   └── unescaped: "x"
+        │       │           │   │       ├── value:
+        │       │           │   │       │   @ ImplicitNode (location: (17,13)-(17,14))
+        │       │           │   │       │   ├── flags: ∅
+        │       │           │   │       │   └── value:
+        │       │           │   │       │       @ LocalVariableTargetNode (location: (17,13)-(17,14))
+        │       │           │   │       │       ├── flags: ∅
+        │       │           │   │       │       ├── name: :x
+        │       │           │   │       │       └── depth: 1
+        │       │           │   │       └── operator_loc: ∅
+        │       │           │   ├── rest: ∅
+        │       │           │   ├── opening_loc: ∅
+        │       │           │   └── closing_loc: ∅
+        │       │           └── keyword_loc: (17,10)-(17,12) = "in"
+        │       ├── opening_loc: (17,5)-(17,7) = "do"
+        │       └── closing_loc: (17,16)-(17,19) = "end"
+        ├── @ InterpolatedStringNode (location: (19,0)-(19,12))
+        │   ├── flags: newline
+        │   ├── opening_loc: (19,0)-(19,1) = "\""
+        │   ├── parts: (length: 1)
+        │   │   └── @ EmbeddedStatementsNode (location: (19,1)-(19,11))
+        │   │       ├── flags: ∅
+        │   │       ├── opening_loc: (19,1)-(19,3) = "\#{"
+        │   │       ├── statements:
+        │   │       │   @ StatementsNode (location: (19,3)-(19,10))
+        │   │       │   ├── flags: ∅
+        │   │       │   └── body: (length: 1)
+        │   │       │       └── @ MatchPredicateNode (location: (19,3)-(19,10))
+        │   │       │           ├── flags: ∅
+        │   │       │           ├── value:
+        │   │       │           │   @ CallNode (location: (19,3)-(19,4))
+        │   │       │           │   ├── flags: variable_call, ignore_visibility
+        │   │       │           │   ├── receiver: ∅
+        │   │       │           │   ├── call_operator_loc: ∅
+        │   │       │           │   ├── name: :a
+        │   │       │           │   ├── message_loc: (19,3)-(19,4) = "a"
+        │   │       │           │   ├── opening_loc: ∅
+        │   │       │           │   ├── arguments: ∅
+        │   │       │           │   ├── closing_loc: ∅
+        │   │       │           │   ├── equal_loc: ∅
+        │   │       │           │   └── block: ∅
+        │   │       │           ├── pattern:
+        │   │       │           │   @ HashPatternNode (location: (19,8)-(19,10))
+        │   │       │           │   ├── flags: ∅
+        │   │       │           │   ├── constant: ∅
+        │   │       │           │   ├── elements: (length: 1)
+        │   │       │           │   │   └── @ AssocNode (location: (19,8)-(19,10))
+        │   │       │           │   │       ├── flags: ∅
+        │   │       │           │   │       ├── key:
+        │   │       │           │   │       │   @ SymbolNode (location: (19,8)-(19,10))
+        │   │       │           │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │           │   │       │   ├── opening_loc: ∅
+        │   │       │           │   │       │   ├── value_loc: (19,8)-(19,9) = "x"
+        │   │       │           │   │       │   ├── closing_loc: (19,9)-(19,10) = ":"
+        │   │       │           │   │       │   └── unescaped: "x"
+        │   │       │           │   │       ├── value:
+        │   │       │           │   │       │   @ ImplicitNode (location: (19,8)-(19,9))
+        │   │       │           │   │       │   ├── flags: ∅
+        │   │       │           │   │       │   └── value:
+        │   │       │           │   │       │       @ LocalVariableTargetNode (location: (19,8)-(19,9))
+        │   │       │           │   │       │       ├── flags: ∅
+        │   │       │           │   │       │       ├── name: :x
+        │   │       │           │   │       │       └── depth: 0
+        │   │       │           │   │       └── operator_loc: ∅
+        │   │       │           │   ├── rest: ∅
+        │   │       │           │   ├── opening_loc: ∅
+        │   │       │           │   └── closing_loc: ∅
+        │   │       │           └── keyword_loc: (19,5)-(19,7) = "in"
+        │   │       └── closing_loc: (19,10)-(19,11) = "}"
+        │   └── closing_loc: (19,11)-(19,12) = "\""
+        └── @ AndNode (location: (21,0)-(21,13))
+            ├── flags: newline
+            ├── left:
+            │   @ MatchPredicateNode (location: (21,0)-(21,7))
+            │   ├── flags: ∅
+            │   ├── value:
+            │   │   @ CallNode (location: (21,0)-(21,1))
+            │   │   ├── flags: variable_call, ignore_visibility
+            │   │   ├── receiver: ∅
+            │   │   ├── call_operator_loc: ∅
+            │   │   ├── name: :a
+            │   │   ├── message_loc: (21,0)-(21,1) = "a"
+            │   │   ├── opening_loc: ∅
+            │   │   ├── arguments: ∅
+            │   │   ├── closing_loc: ∅
+            │   │   ├── equal_loc: ∅
+            │   │   └── block: ∅
+            │   ├── pattern:
+            │   │   @ HashPatternNode (location: (21,5)-(21,7))
+            │   │   ├── flags: ∅
+            │   │   ├── constant: ∅
+            │   │   ├── elements: (length: 1)
+            │   │   │   └── @ AssocNode (location: (21,5)-(21,7))
+            │   │   │       ├── flags: ∅
+            │   │   │       ├── key:
+            │   │   │       │   @ SymbolNode (location: (21,5)-(21,7))
+            │   │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
+            │   │   │       │   ├── opening_loc: ∅
+            │   │   │       │   ├── value_loc: (21,5)-(21,6) = "x"
+            │   │   │       │   ├── closing_loc: (21,6)-(21,7) = ":"
+            │   │   │       │   └── unescaped: "x"
+            │   │   │       ├── value:
+            │   │   │       │   @ ImplicitNode (location: (21,5)-(21,6))
+            │   │   │       │   ├── flags: ∅
+            │   │   │       │   └── value:
+            │   │   │       │       @ LocalVariableTargetNode (location: (21,5)-(21,6))
+            │   │   │       │       ├── flags: ∅
+            │   │   │       │       ├── name: :x
+            │   │   │       │       └── depth: 0
+            │   │   │       └── operator_loc: ∅
+            │   │   ├── rest: ∅
+            │   │   ├── opening_loc: ∅
+            │   │   └── closing_loc: ∅
+            │   └── keyword_loc: (21,2)-(21,4) = "in"
+            ├── right:
+            │   @ IntegerNode (location: (21,12)-(21,13))
+            │   ├── flags: static_literal, decimal
+            │   └── value: 1
+            └── operator_loc: (21,8)-(21,11) = "and"

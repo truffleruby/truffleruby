@@ -7,7 +7,7 @@
     └── body: (length: 1)
         └── @ UnlessNode (location: (1,0)-(1,14))
             ├── flags: newline
-            ├── keyword_loc: (1,4)-(1,10) = "unless"
+            ├── unless_keyword_loc: (1,4)-(1,10) = "unless"
             ├── predicate:
             │   @ CallNode (location: (1,11)-(1,14))
             │   ├── flags: variable_call, ignore_visibility

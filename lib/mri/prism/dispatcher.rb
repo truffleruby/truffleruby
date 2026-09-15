@@ -51,14 +51,14 @@ module Prism
     attr_reader :listeners #: Hash[Symbol, Array[untyped]]
 
     # Initialize a new dispatcher.
-    #--
+    #
     #: () -> void
     def initialize
       @listeners = {}
     end
 
     # Register a listener for one or more events.
-    #--
+    #
     #: (untyped, *Symbol) -> void
     def register(listener, *events)
       register_events(listener, events)
@@ -66,14 +66,14 @@ module Prism
 
     # Register all public methods of a listener that match the pattern
     # `on_<node_name>_(enter|leave)`.
-    #--
+    #
     #: (untyped) -> void
     def register_public_methods(listener)
       register_events(listener, listener.public_methods(false).grep(/\Aon_.+_(?:enter|leave)\z/))
     end
 
     # Register a listener for the given events.
-    #--
+    #
     #: (untyped, Array[Symbol]) -> void
     private def register_events(listener, events) # :nodoc:
       events.each { |event| (listeners[event] ||= []) << listener }
@@ -83,7 +83,7 @@ module Prism
     alias dispatch visit
 
     # Dispatches a single event for `node` to all registered listeners.
-    #--
+    #
     #: (node node) -> void
     def dispatch_once(node)
       node.accept(DispatchOnce.new(listeners))
@@ -1162,7 +1162,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for AliasGlobalVariableNode nodes.
-      #--
+      #
       #: (AliasGlobalVariableNode node) -> void
       def visit_alias_global_variable_node(node)
         listeners[:on_alias_global_variable_node_enter]&.each { |listener| listener.on_alias_global_variable_node_enter(node) }
@@ -1170,7 +1170,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for AliasMethodNode nodes.
-      #--
+      #
       #: (AliasMethodNode node) -> void
       def visit_alias_method_node(node)
         listeners[:on_alias_method_node_enter]&.each { |listener| listener.on_alias_method_node_enter(node) }
@@ -1178,7 +1178,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for AlternationPatternNode nodes.
-      #--
+      #
       #: (AlternationPatternNode node) -> void
       def visit_alternation_pattern_node(node)
         listeners[:on_alternation_pattern_node_enter]&.each { |listener| listener.on_alternation_pattern_node_enter(node) }
@@ -1186,7 +1186,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for AndNode nodes.
-      #--
+      #
       #: (AndNode node) -> void
       def visit_and_node(node)
         listeners[:on_and_node_enter]&.each { |listener| listener.on_and_node_enter(node) }
@@ -1194,7 +1194,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ArgumentsNode nodes.
-      #--
+      #
       #: (ArgumentsNode node) -> void
       def visit_arguments_node(node)
         listeners[:on_arguments_node_enter]&.each { |listener| listener.on_arguments_node_enter(node) }
@@ -1202,7 +1202,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ArrayNode nodes.
-      #--
+      #
       #: (ArrayNode node) -> void
       def visit_array_node(node)
         listeners[:on_array_node_enter]&.each { |listener| listener.on_array_node_enter(node) }
@@ -1210,7 +1210,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ArrayPatternNode nodes.
-      #--
+      #
       #: (ArrayPatternNode node) -> void
       def visit_array_pattern_node(node)
         listeners[:on_array_pattern_node_enter]&.each { |listener| listener.on_array_pattern_node_enter(node) }
@@ -1218,7 +1218,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for AssocNode nodes.
-      #--
+      #
       #: (AssocNode node) -> void
       def visit_assoc_node(node)
         listeners[:on_assoc_node_enter]&.each { |listener| listener.on_assoc_node_enter(node) }
@@ -1226,7 +1226,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for AssocSplatNode nodes.
-      #--
+      #
       #: (AssocSplatNode node) -> void
       def visit_assoc_splat_node(node)
         listeners[:on_assoc_splat_node_enter]&.each { |listener| listener.on_assoc_splat_node_enter(node) }
@@ -1234,7 +1234,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for BackReferenceReadNode nodes.
-      #--
+      #
       #: (BackReferenceReadNode node) -> void
       def visit_back_reference_read_node(node)
         listeners[:on_back_reference_read_node_enter]&.each { |listener| listener.on_back_reference_read_node_enter(node) }
@@ -1242,7 +1242,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for BeginNode nodes.
-      #--
+      #
       #: (BeginNode node) -> void
       def visit_begin_node(node)
         listeners[:on_begin_node_enter]&.each { |listener| listener.on_begin_node_enter(node) }
@@ -1250,7 +1250,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for BlockArgumentNode nodes.
-      #--
+      #
       #: (BlockArgumentNode node) -> void
       def visit_block_argument_node(node)
         listeners[:on_block_argument_node_enter]&.each { |listener| listener.on_block_argument_node_enter(node) }
@@ -1258,7 +1258,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for BlockLocalVariableNode nodes.
-      #--
+      #
       #: (BlockLocalVariableNode node) -> void
       def visit_block_local_variable_node(node)
         listeners[:on_block_local_variable_node_enter]&.each { |listener| listener.on_block_local_variable_node_enter(node) }
@@ -1266,7 +1266,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for BlockNode nodes.
-      #--
+      #
       #: (BlockNode node) -> void
       def visit_block_node(node)
         listeners[:on_block_node_enter]&.each { |listener| listener.on_block_node_enter(node) }
@@ -1274,7 +1274,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for BlockParameterNode nodes.
-      #--
+      #
       #: (BlockParameterNode node) -> void
       def visit_block_parameter_node(node)
         listeners[:on_block_parameter_node_enter]&.each { |listener| listener.on_block_parameter_node_enter(node) }
@@ -1282,7 +1282,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for BlockParametersNode nodes.
-      #--
+      #
       #: (BlockParametersNode node) -> void
       def visit_block_parameters_node(node)
         listeners[:on_block_parameters_node_enter]&.each { |listener| listener.on_block_parameters_node_enter(node) }
@@ -1290,7 +1290,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for BreakNode nodes.
-      #--
+      #
       #: (BreakNode node) -> void
       def visit_break_node(node)
         listeners[:on_break_node_enter]&.each { |listener| listener.on_break_node_enter(node) }
@@ -1298,7 +1298,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for CallAndWriteNode nodes.
-      #--
+      #
       #: (CallAndWriteNode node) -> void
       def visit_call_and_write_node(node)
         listeners[:on_call_and_write_node_enter]&.each { |listener| listener.on_call_and_write_node_enter(node) }
@@ -1306,7 +1306,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for CallNode nodes.
-      #--
+      #
       #: (CallNode node) -> void
       def visit_call_node(node)
         listeners[:on_call_node_enter]&.each { |listener| listener.on_call_node_enter(node) }
@@ -1314,7 +1314,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for CallOperatorWriteNode nodes.
-      #--
+      #
       #: (CallOperatorWriteNode node) -> void
       def visit_call_operator_write_node(node)
         listeners[:on_call_operator_write_node_enter]&.each { |listener| listener.on_call_operator_write_node_enter(node) }
@@ -1322,7 +1322,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for CallOrWriteNode nodes.
-      #--
+      #
       #: (CallOrWriteNode node) -> void
       def visit_call_or_write_node(node)
         listeners[:on_call_or_write_node_enter]&.each { |listener| listener.on_call_or_write_node_enter(node) }
@@ -1330,7 +1330,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for CallTargetNode nodes.
-      #--
+      #
       #: (CallTargetNode node) -> void
       def visit_call_target_node(node)
         listeners[:on_call_target_node_enter]&.each { |listener| listener.on_call_target_node_enter(node) }
@@ -1338,7 +1338,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for CapturePatternNode nodes.
-      #--
+      #
       #: (CapturePatternNode node) -> void
       def visit_capture_pattern_node(node)
         listeners[:on_capture_pattern_node_enter]&.each { |listener| listener.on_capture_pattern_node_enter(node) }
@@ -1346,7 +1346,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for CaseMatchNode nodes.
-      #--
+      #
       #: (CaseMatchNode node) -> void
       def visit_case_match_node(node)
         listeners[:on_case_match_node_enter]&.each { |listener| listener.on_case_match_node_enter(node) }
@@ -1354,7 +1354,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for CaseNode nodes.
-      #--
+      #
       #: (CaseNode node) -> void
       def visit_case_node(node)
         listeners[:on_case_node_enter]&.each { |listener| listener.on_case_node_enter(node) }
@@ -1362,7 +1362,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ClassNode nodes.
-      #--
+      #
       #: (ClassNode node) -> void
       def visit_class_node(node)
         listeners[:on_class_node_enter]&.each { |listener| listener.on_class_node_enter(node) }
@@ -1370,7 +1370,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ClassVariableAndWriteNode nodes.
-      #--
+      #
       #: (ClassVariableAndWriteNode node) -> void
       def visit_class_variable_and_write_node(node)
         listeners[:on_class_variable_and_write_node_enter]&.each { |listener| listener.on_class_variable_and_write_node_enter(node) }
@@ -1378,7 +1378,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ClassVariableOperatorWriteNode nodes.
-      #--
+      #
       #: (ClassVariableOperatorWriteNode node) -> void
       def visit_class_variable_operator_write_node(node)
         listeners[:on_class_variable_operator_write_node_enter]&.each { |listener| listener.on_class_variable_operator_write_node_enter(node) }
@@ -1386,7 +1386,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ClassVariableOrWriteNode nodes.
-      #--
+      #
       #: (ClassVariableOrWriteNode node) -> void
       def visit_class_variable_or_write_node(node)
         listeners[:on_class_variable_or_write_node_enter]&.each { |listener| listener.on_class_variable_or_write_node_enter(node) }
@@ -1394,7 +1394,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ClassVariableReadNode nodes.
-      #--
+      #
       #: (ClassVariableReadNode node) -> void
       def visit_class_variable_read_node(node)
         listeners[:on_class_variable_read_node_enter]&.each { |listener| listener.on_class_variable_read_node_enter(node) }
@@ -1402,7 +1402,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ClassVariableTargetNode nodes.
-      #--
+      #
       #: (ClassVariableTargetNode node) -> void
       def visit_class_variable_target_node(node)
         listeners[:on_class_variable_target_node_enter]&.each { |listener| listener.on_class_variable_target_node_enter(node) }
@@ -1410,7 +1410,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ClassVariableWriteNode nodes.
-      #--
+      #
       #: (ClassVariableWriteNode node) -> void
       def visit_class_variable_write_node(node)
         listeners[:on_class_variable_write_node_enter]&.each { |listener| listener.on_class_variable_write_node_enter(node) }
@@ -1418,7 +1418,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ConstantAndWriteNode nodes.
-      #--
+      #
       #: (ConstantAndWriteNode node) -> void
       def visit_constant_and_write_node(node)
         listeners[:on_constant_and_write_node_enter]&.each { |listener| listener.on_constant_and_write_node_enter(node) }
@@ -1426,7 +1426,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ConstantOperatorWriteNode nodes.
-      #--
+      #
       #: (ConstantOperatorWriteNode node) -> void
       def visit_constant_operator_write_node(node)
         listeners[:on_constant_operator_write_node_enter]&.each { |listener| listener.on_constant_operator_write_node_enter(node) }
@@ -1434,7 +1434,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ConstantOrWriteNode nodes.
-      #--
+      #
       #: (ConstantOrWriteNode node) -> void
       def visit_constant_or_write_node(node)
         listeners[:on_constant_or_write_node_enter]&.each { |listener| listener.on_constant_or_write_node_enter(node) }
@@ -1442,7 +1442,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ConstantPathAndWriteNode nodes.
-      #--
+      #
       #: (ConstantPathAndWriteNode node) -> void
       def visit_constant_path_and_write_node(node)
         listeners[:on_constant_path_and_write_node_enter]&.each { |listener| listener.on_constant_path_and_write_node_enter(node) }
@@ -1450,7 +1450,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ConstantPathNode nodes.
-      #--
+      #
       #: (ConstantPathNode node) -> void
       def visit_constant_path_node(node)
         listeners[:on_constant_path_node_enter]&.each { |listener| listener.on_constant_path_node_enter(node) }
@@ -1458,7 +1458,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ConstantPathOperatorWriteNode nodes.
-      #--
+      #
       #: (ConstantPathOperatorWriteNode node) -> void
       def visit_constant_path_operator_write_node(node)
         listeners[:on_constant_path_operator_write_node_enter]&.each { |listener| listener.on_constant_path_operator_write_node_enter(node) }
@@ -1466,7 +1466,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ConstantPathOrWriteNode nodes.
-      #--
+      #
       #: (ConstantPathOrWriteNode node) -> void
       def visit_constant_path_or_write_node(node)
         listeners[:on_constant_path_or_write_node_enter]&.each { |listener| listener.on_constant_path_or_write_node_enter(node) }
@@ -1474,7 +1474,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ConstantPathTargetNode nodes.
-      #--
+      #
       #: (ConstantPathTargetNode node) -> void
       def visit_constant_path_target_node(node)
         listeners[:on_constant_path_target_node_enter]&.each { |listener| listener.on_constant_path_target_node_enter(node) }
@@ -1482,7 +1482,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ConstantPathWriteNode nodes.
-      #--
+      #
       #: (ConstantPathWriteNode node) -> void
       def visit_constant_path_write_node(node)
         listeners[:on_constant_path_write_node_enter]&.each { |listener| listener.on_constant_path_write_node_enter(node) }
@@ -1490,7 +1490,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ConstantReadNode nodes.
-      #--
+      #
       #: (ConstantReadNode node) -> void
       def visit_constant_read_node(node)
         listeners[:on_constant_read_node_enter]&.each { |listener| listener.on_constant_read_node_enter(node) }
@@ -1498,7 +1498,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ConstantTargetNode nodes.
-      #--
+      #
       #: (ConstantTargetNode node) -> void
       def visit_constant_target_node(node)
         listeners[:on_constant_target_node_enter]&.each { |listener| listener.on_constant_target_node_enter(node) }
@@ -1506,7 +1506,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ConstantWriteNode nodes.
-      #--
+      #
       #: (ConstantWriteNode node) -> void
       def visit_constant_write_node(node)
         listeners[:on_constant_write_node_enter]&.each { |listener| listener.on_constant_write_node_enter(node) }
@@ -1514,7 +1514,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for DefNode nodes.
-      #--
+      #
       #: (DefNode node) -> void
       def visit_def_node(node)
         listeners[:on_def_node_enter]&.each { |listener| listener.on_def_node_enter(node) }
@@ -1522,7 +1522,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for DefinedNode nodes.
-      #--
+      #
       #: (DefinedNode node) -> void
       def visit_defined_node(node)
         listeners[:on_defined_node_enter]&.each { |listener| listener.on_defined_node_enter(node) }
@@ -1530,7 +1530,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ElseNode nodes.
-      #--
+      #
       #: (ElseNode node) -> void
       def visit_else_node(node)
         listeners[:on_else_node_enter]&.each { |listener| listener.on_else_node_enter(node) }
@@ -1538,7 +1538,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for EmbeddedStatementsNode nodes.
-      #--
+      #
       #: (EmbeddedStatementsNode node) -> void
       def visit_embedded_statements_node(node)
         listeners[:on_embedded_statements_node_enter]&.each { |listener| listener.on_embedded_statements_node_enter(node) }
@@ -1546,7 +1546,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for EmbeddedVariableNode nodes.
-      #--
+      #
       #: (EmbeddedVariableNode node) -> void
       def visit_embedded_variable_node(node)
         listeners[:on_embedded_variable_node_enter]&.each { |listener| listener.on_embedded_variable_node_enter(node) }
@@ -1554,7 +1554,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for EnsureNode nodes.
-      #--
+      #
       #: (EnsureNode node) -> void
       def visit_ensure_node(node)
         listeners[:on_ensure_node_enter]&.each { |listener| listener.on_ensure_node_enter(node) }
@@ -1562,7 +1562,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ErrorRecoveryNode nodes.
-      #--
+      #
       #: (ErrorRecoveryNode node) -> void
       def visit_error_recovery_node(node)
         listeners[:on_error_recovery_node_enter]&.each { |listener| listener.on_error_recovery_node_enter(node) }
@@ -1570,7 +1570,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for FalseNode nodes.
-      #--
+      #
       #: (FalseNode node) -> void
       def visit_false_node(node)
         listeners[:on_false_node_enter]&.each { |listener| listener.on_false_node_enter(node) }
@@ -1578,7 +1578,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for FindPatternNode nodes.
-      #--
+      #
       #: (FindPatternNode node) -> void
       def visit_find_pattern_node(node)
         listeners[:on_find_pattern_node_enter]&.each { |listener| listener.on_find_pattern_node_enter(node) }
@@ -1586,7 +1586,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for FlipFlopNode nodes.
-      #--
+      #
       #: (FlipFlopNode node) -> void
       def visit_flip_flop_node(node)
         listeners[:on_flip_flop_node_enter]&.each { |listener| listener.on_flip_flop_node_enter(node) }
@@ -1594,7 +1594,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for FloatNode nodes.
-      #--
+      #
       #: (FloatNode node) -> void
       def visit_float_node(node)
         listeners[:on_float_node_enter]&.each { |listener| listener.on_float_node_enter(node) }
@@ -1602,7 +1602,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ForNode nodes.
-      #--
+      #
       #: (ForNode node) -> void
       def visit_for_node(node)
         listeners[:on_for_node_enter]&.each { |listener| listener.on_for_node_enter(node) }
@@ -1610,7 +1610,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ForwardingArgumentsNode nodes.
-      #--
+      #
       #: (ForwardingArgumentsNode node) -> void
       def visit_forwarding_arguments_node(node)
         listeners[:on_forwarding_arguments_node_enter]&.each { |listener| listener.on_forwarding_arguments_node_enter(node) }
@@ -1618,7 +1618,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ForwardingParameterNode nodes.
-      #--
+      #
       #: (ForwardingParameterNode node) -> void
       def visit_forwarding_parameter_node(node)
         listeners[:on_forwarding_parameter_node_enter]&.each { |listener| listener.on_forwarding_parameter_node_enter(node) }
@@ -1626,7 +1626,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ForwardingSuperNode nodes.
-      #--
+      #
       #: (ForwardingSuperNode node) -> void
       def visit_forwarding_super_node(node)
         listeners[:on_forwarding_super_node_enter]&.each { |listener| listener.on_forwarding_super_node_enter(node) }
@@ -1634,7 +1634,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for GlobalVariableAndWriteNode nodes.
-      #--
+      #
       #: (GlobalVariableAndWriteNode node) -> void
       def visit_global_variable_and_write_node(node)
         listeners[:on_global_variable_and_write_node_enter]&.each { |listener| listener.on_global_variable_and_write_node_enter(node) }
@@ -1642,7 +1642,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for GlobalVariableOperatorWriteNode nodes.
-      #--
+      #
       #: (GlobalVariableOperatorWriteNode node) -> void
       def visit_global_variable_operator_write_node(node)
         listeners[:on_global_variable_operator_write_node_enter]&.each { |listener| listener.on_global_variable_operator_write_node_enter(node) }
@@ -1650,7 +1650,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for GlobalVariableOrWriteNode nodes.
-      #--
+      #
       #: (GlobalVariableOrWriteNode node) -> void
       def visit_global_variable_or_write_node(node)
         listeners[:on_global_variable_or_write_node_enter]&.each { |listener| listener.on_global_variable_or_write_node_enter(node) }
@@ -1658,7 +1658,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for GlobalVariableReadNode nodes.
-      #--
+      #
       #: (GlobalVariableReadNode node) -> void
       def visit_global_variable_read_node(node)
         listeners[:on_global_variable_read_node_enter]&.each { |listener| listener.on_global_variable_read_node_enter(node) }
@@ -1666,7 +1666,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for GlobalVariableTargetNode nodes.
-      #--
+      #
       #: (GlobalVariableTargetNode node) -> void
       def visit_global_variable_target_node(node)
         listeners[:on_global_variable_target_node_enter]&.each { |listener| listener.on_global_variable_target_node_enter(node) }
@@ -1674,7 +1674,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for GlobalVariableWriteNode nodes.
-      #--
+      #
       #: (GlobalVariableWriteNode node) -> void
       def visit_global_variable_write_node(node)
         listeners[:on_global_variable_write_node_enter]&.each { |listener| listener.on_global_variable_write_node_enter(node) }
@@ -1682,7 +1682,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for HashNode nodes.
-      #--
+      #
       #: (HashNode node) -> void
       def visit_hash_node(node)
         listeners[:on_hash_node_enter]&.each { |listener| listener.on_hash_node_enter(node) }
@@ -1690,7 +1690,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for HashPatternNode nodes.
-      #--
+      #
       #: (HashPatternNode node) -> void
       def visit_hash_pattern_node(node)
         listeners[:on_hash_pattern_node_enter]&.each { |listener| listener.on_hash_pattern_node_enter(node) }
@@ -1698,7 +1698,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for IfNode nodes.
-      #--
+      #
       #: (IfNode node) -> void
       def visit_if_node(node)
         listeners[:on_if_node_enter]&.each { |listener| listener.on_if_node_enter(node) }
@@ -1706,7 +1706,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ImaginaryNode nodes.
-      #--
+      #
       #: (ImaginaryNode node) -> void
       def visit_imaginary_node(node)
         listeners[:on_imaginary_node_enter]&.each { |listener| listener.on_imaginary_node_enter(node) }
@@ -1714,7 +1714,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ImplicitNode nodes.
-      #--
+      #
       #: (ImplicitNode node) -> void
       def visit_implicit_node(node)
         listeners[:on_implicit_node_enter]&.each { |listener| listener.on_implicit_node_enter(node) }
@@ -1722,7 +1722,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ImplicitRestNode nodes.
-      #--
+      #
       #: (ImplicitRestNode node) -> void
       def visit_implicit_rest_node(node)
         listeners[:on_implicit_rest_node_enter]&.each { |listener| listener.on_implicit_rest_node_enter(node) }
@@ -1730,7 +1730,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for InNode nodes.
-      #--
+      #
       #: (InNode node) -> void
       def visit_in_node(node)
         listeners[:on_in_node_enter]&.each { |listener| listener.on_in_node_enter(node) }
@@ -1738,7 +1738,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for IndexAndWriteNode nodes.
-      #--
+      #
       #: (IndexAndWriteNode node) -> void
       def visit_index_and_write_node(node)
         listeners[:on_index_and_write_node_enter]&.each { |listener| listener.on_index_and_write_node_enter(node) }
@@ -1746,7 +1746,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for IndexOperatorWriteNode nodes.
-      #--
+      #
       #: (IndexOperatorWriteNode node) -> void
       def visit_index_operator_write_node(node)
         listeners[:on_index_operator_write_node_enter]&.each { |listener| listener.on_index_operator_write_node_enter(node) }
@@ -1754,7 +1754,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for IndexOrWriteNode nodes.
-      #--
+      #
       #: (IndexOrWriteNode node) -> void
       def visit_index_or_write_node(node)
         listeners[:on_index_or_write_node_enter]&.each { |listener| listener.on_index_or_write_node_enter(node) }
@@ -1762,7 +1762,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for IndexTargetNode nodes.
-      #--
+      #
       #: (IndexTargetNode node) -> void
       def visit_index_target_node(node)
         listeners[:on_index_target_node_enter]&.each { |listener| listener.on_index_target_node_enter(node) }
@@ -1770,7 +1770,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for InstanceVariableAndWriteNode nodes.
-      #--
+      #
       #: (InstanceVariableAndWriteNode node) -> void
       def visit_instance_variable_and_write_node(node)
         listeners[:on_instance_variable_and_write_node_enter]&.each { |listener| listener.on_instance_variable_and_write_node_enter(node) }
@@ -1778,7 +1778,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for InstanceVariableOperatorWriteNode nodes.
-      #--
+      #
       #: (InstanceVariableOperatorWriteNode node) -> void
       def visit_instance_variable_operator_write_node(node)
         listeners[:on_instance_variable_operator_write_node_enter]&.each { |listener| listener.on_instance_variable_operator_write_node_enter(node) }
@@ -1786,7 +1786,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for InstanceVariableOrWriteNode nodes.
-      #--
+      #
       #: (InstanceVariableOrWriteNode node) -> void
       def visit_instance_variable_or_write_node(node)
         listeners[:on_instance_variable_or_write_node_enter]&.each { |listener| listener.on_instance_variable_or_write_node_enter(node) }
@@ -1794,7 +1794,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for InstanceVariableReadNode nodes.
-      #--
+      #
       #: (InstanceVariableReadNode node) -> void
       def visit_instance_variable_read_node(node)
         listeners[:on_instance_variable_read_node_enter]&.each { |listener| listener.on_instance_variable_read_node_enter(node) }
@@ -1802,7 +1802,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for InstanceVariableTargetNode nodes.
-      #--
+      #
       #: (InstanceVariableTargetNode node) -> void
       def visit_instance_variable_target_node(node)
         listeners[:on_instance_variable_target_node_enter]&.each { |listener| listener.on_instance_variable_target_node_enter(node) }
@@ -1810,7 +1810,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for InstanceVariableWriteNode nodes.
-      #--
+      #
       #: (InstanceVariableWriteNode node) -> void
       def visit_instance_variable_write_node(node)
         listeners[:on_instance_variable_write_node_enter]&.each { |listener| listener.on_instance_variable_write_node_enter(node) }
@@ -1818,7 +1818,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for IntegerNode nodes.
-      #--
+      #
       #: (IntegerNode node) -> void
       def visit_integer_node(node)
         listeners[:on_integer_node_enter]&.each { |listener| listener.on_integer_node_enter(node) }
@@ -1826,7 +1826,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for InterpolatedMatchLastLineNode nodes.
-      #--
+      #
       #: (InterpolatedMatchLastLineNode node) -> void
       def visit_interpolated_match_last_line_node(node)
         listeners[:on_interpolated_match_last_line_node_enter]&.each { |listener| listener.on_interpolated_match_last_line_node_enter(node) }
@@ -1834,7 +1834,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for InterpolatedRegularExpressionNode nodes.
-      #--
+      #
       #: (InterpolatedRegularExpressionNode node) -> void
       def visit_interpolated_regular_expression_node(node)
         listeners[:on_interpolated_regular_expression_node_enter]&.each { |listener| listener.on_interpolated_regular_expression_node_enter(node) }
@@ -1842,7 +1842,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for InterpolatedStringNode nodes.
-      #--
+      #
       #: (InterpolatedStringNode node) -> void
       def visit_interpolated_string_node(node)
         listeners[:on_interpolated_string_node_enter]&.each { |listener| listener.on_interpolated_string_node_enter(node) }
@@ -1850,7 +1850,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for InterpolatedSymbolNode nodes.
-      #--
+      #
       #: (InterpolatedSymbolNode node) -> void
       def visit_interpolated_symbol_node(node)
         listeners[:on_interpolated_symbol_node_enter]&.each { |listener| listener.on_interpolated_symbol_node_enter(node) }
@@ -1858,7 +1858,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for InterpolatedXStringNode nodes.
-      #--
+      #
       #: (InterpolatedXStringNode node) -> void
       def visit_interpolated_x_string_node(node)
         listeners[:on_interpolated_x_string_node_enter]&.each { |listener| listener.on_interpolated_x_string_node_enter(node) }
@@ -1866,7 +1866,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ItLocalVariableReadNode nodes.
-      #--
+      #
       #: (ItLocalVariableReadNode node) -> void
       def visit_it_local_variable_read_node(node)
         listeners[:on_it_local_variable_read_node_enter]&.each { |listener| listener.on_it_local_variable_read_node_enter(node) }
@@ -1874,7 +1874,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ItParametersNode nodes.
-      #--
+      #
       #: (ItParametersNode node) -> void
       def visit_it_parameters_node(node)
         listeners[:on_it_parameters_node_enter]&.each { |listener| listener.on_it_parameters_node_enter(node) }
@@ -1882,7 +1882,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for KeywordHashNode nodes.
-      #--
+      #
       #: (KeywordHashNode node) -> void
       def visit_keyword_hash_node(node)
         listeners[:on_keyword_hash_node_enter]&.each { |listener| listener.on_keyword_hash_node_enter(node) }
@@ -1890,7 +1890,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for KeywordRestParameterNode nodes.
-      #--
+      #
       #: (KeywordRestParameterNode node) -> void
       def visit_keyword_rest_parameter_node(node)
         listeners[:on_keyword_rest_parameter_node_enter]&.each { |listener| listener.on_keyword_rest_parameter_node_enter(node) }
@@ -1898,7 +1898,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for LambdaNode nodes.
-      #--
+      #
       #: (LambdaNode node) -> void
       def visit_lambda_node(node)
         listeners[:on_lambda_node_enter]&.each { |listener| listener.on_lambda_node_enter(node) }
@@ -1906,7 +1906,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for LocalVariableAndWriteNode nodes.
-      #--
+      #
       #: (LocalVariableAndWriteNode node) -> void
       def visit_local_variable_and_write_node(node)
         listeners[:on_local_variable_and_write_node_enter]&.each { |listener| listener.on_local_variable_and_write_node_enter(node) }
@@ -1914,7 +1914,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for LocalVariableOperatorWriteNode nodes.
-      #--
+      #
       #: (LocalVariableOperatorWriteNode node) -> void
       def visit_local_variable_operator_write_node(node)
         listeners[:on_local_variable_operator_write_node_enter]&.each { |listener| listener.on_local_variable_operator_write_node_enter(node) }
@@ -1922,7 +1922,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for LocalVariableOrWriteNode nodes.
-      #--
+      #
       #: (LocalVariableOrWriteNode node) -> void
       def visit_local_variable_or_write_node(node)
         listeners[:on_local_variable_or_write_node_enter]&.each { |listener| listener.on_local_variable_or_write_node_enter(node) }
@@ -1930,7 +1930,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for LocalVariableReadNode nodes.
-      #--
+      #
       #: (LocalVariableReadNode node) -> void
       def visit_local_variable_read_node(node)
         listeners[:on_local_variable_read_node_enter]&.each { |listener| listener.on_local_variable_read_node_enter(node) }
@@ -1938,7 +1938,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for LocalVariableTargetNode nodes.
-      #--
+      #
       #: (LocalVariableTargetNode node) -> void
       def visit_local_variable_target_node(node)
         listeners[:on_local_variable_target_node_enter]&.each { |listener| listener.on_local_variable_target_node_enter(node) }
@@ -1946,7 +1946,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for LocalVariableWriteNode nodes.
-      #--
+      #
       #: (LocalVariableWriteNode node) -> void
       def visit_local_variable_write_node(node)
         listeners[:on_local_variable_write_node_enter]&.each { |listener| listener.on_local_variable_write_node_enter(node) }
@@ -1954,7 +1954,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for MatchLastLineNode nodes.
-      #--
+      #
       #: (MatchLastLineNode node) -> void
       def visit_match_last_line_node(node)
         listeners[:on_match_last_line_node_enter]&.each { |listener| listener.on_match_last_line_node_enter(node) }
@@ -1962,7 +1962,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for MatchPredicateNode nodes.
-      #--
+      #
       #: (MatchPredicateNode node) -> void
       def visit_match_predicate_node(node)
         listeners[:on_match_predicate_node_enter]&.each { |listener| listener.on_match_predicate_node_enter(node) }
@@ -1970,7 +1970,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for MatchRequiredNode nodes.
-      #--
+      #
       #: (MatchRequiredNode node) -> void
       def visit_match_required_node(node)
         listeners[:on_match_required_node_enter]&.each { |listener| listener.on_match_required_node_enter(node) }
@@ -1978,7 +1978,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for MatchWriteNode nodes.
-      #--
+      #
       #: (MatchWriteNode node) -> void
       def visit_match_write_node(node)
         listeners[:on_match_write_node_enter]&.each { |listener| listener.on_match_write_node_enter(node) }
@@ -1986,7 +1986,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ModuleNode nodes.
-      #--
+      #
       #: (ModuleNode node) -> void
       def visit_module_node(node)
         listeners[:on_module_node_enter]&.each { |listener| listener.on_module_node_enter(node) }
@@ -1994,7 +1994,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for MultiTargetNode nodes.
-      #--
+      #
       #: (MultiTargetNode node) -> void
       def visit_multi_target_node(node)
         listeners[:on_multi_target_node_enter]&.each { |listener| listener.on_multi_target_node_enter(node) }
@@ -2002,7 +2002,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for MultiWriteNode nodes.
-      #--
+      #
       #: (MultiWriteNode node) -> void
       def visit_multi_write_node(node)
         listeners[:on_multi_write_node_enter]&.each { |listener| listener.on_multi_write_node_enter(node) }
@@ -2010,7 +2010,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for NextNode nodes.
-      #--
+      #
       #: (NextNode node) -> void
       def visit_next_node(node)
         listeners[:on_next_node_enter]&.each { |listener| listener.on_next_node_enter(node) }
@@ -2018,7 +2018,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for NilNode nodes.
-      #--
+      #
       #: (NilNode node) -> void
       def visit_nil_node(node)
         listeners[:on_nil_node_enter]&.each { |listener| listener.on_nil_node_enter(node) }
@@ -2026,7 +2026,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for NoBlockParameterNode nodes.
-      #--
+      #
       #: (NoBlockParameterNode node) -> void
       def visit_no_block_parameter_node(node)
         listeners[:on_no_block_parameter_node_enter]&.each { |listener| listener.on_no_block_parameter_node_enter(node) }
@@ -2034,7 +2034,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for NoKeywordsParameterNode nodes.
-      #--
+      #
       #: (NoKeywordsParameterNode node) -> void
       def visit_no_keywords_parameter_node(node)
         listeners[:on_no_keywords_parameter_node_enter]&.each { |listener| listener.on_no_keywords_parameter_node_enter(node) }
@@ -2042,7 +2042,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for NumberedParametersNode nodes.
-      #--
+      #
       #: (NumberedParametersNode node) -> void
       def visit_numbered_parameters_node(node)
         listeners[:on_numbered_parameters_node_enter]&.each { |listener| listener.on_numbered_parameters_node_enter(node) }
@@ -2050,7 +2050,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for NumberedReferenceReadNode nodes.
-      #--
+      #
       #: (NumberedReferenceReadNode node) -> void
       def visit_numbered_reference_read_node(node)
         listeners[:on_numbered_reference_read_node_enter]&.each { |listener| listener.on_numbered_reference_read_node_enter(node) }
@@ -2058,7 +2058,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for OptionalKeywordParameterNode nodes.
-      #--
+      #
       #: (OptionalKeywordParameterNode node) -> void
       def visit_optional_keyword_parameter_node(node)
         listeners[:on_optional_keyword_parameter_node_enter]&.each { |listener| listener.on_optional_keyword_parameter_node_enter(node) }
@@ -2066,7 +2066,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for OptionalParameterNode nodes.
-      #--
+      #
       #: (OptionalParameterNode node) -> void
       def visit_optional_parameter_node(node)
         listeners[:on_optional_parameter_node_enter]&.each { |listener| listener.on_optional_parameter_node_enter(node) }
@@ -2074,7 +2074,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for OrNode nodes.
-      #--
+      #
       #: (OrNode node) -> void
       def visit_or_node(node)
         listeners[:on_or_node_enter]&.each { |listener| listener.on_or_node_enter(node) }
@@ -2082,7 +2082,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ParametersNode nodes.
-      #--
+      #
       #: (ParametersNode node) -> void
       def visit_parameters_node(node)
         listeners[:on_parameters_node_enter]&.each { |listener| listener.on_parameters_node_enter(node) }
@@ -2090,7 +2090,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ParenthesesNode nodes.
-      #--
+      #
       #: (ParenthesesNode node) -> void
       def visit_parentheses_node(node)
         listeners[:on_parentheses_node_enter]&.each { |listener| listener.on_parentheses_node_enter(node) }
@@ -2098,7 +2098,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for PinnedExpressionNode nodes.
-      #--
+      #
       #: (PinnedExpressionNode node) -> void
       def visit_pinned_expression_node(node)
         listeners[:on_pinned_expression_node_enter]&.each { |listener| listener.on_pinned_expression_node_enter(node) }
@@ -2106,7 +2106,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for PinnedVariableNode nodes.
-      #--
+      #
       #: (PinnedVariableNode node) -> void
       def visit_pinned_variable_node(node)
         listeners[:on_pinned_variable_node_enter]&.each { |listener| listener.on_pinned_variable_node_enter(node) }
@@ -2114,7 +2114,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for PostExecutionNode nodes.
-      #--
+      #
       #: (PostExecutionNode node) -> void
       def visit_post_execution_node(node)
         listeners[:on_post_execution_node_enter]&.each { |listener| listener.on_post_execution_node_enter(node) }
@@ -2122,7 +2122,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for PreExecutionNode nodes.
-      #--
+      #
       #: (PreExecutionNode node) -> void
       def visit_pre_execution_node(node)
         listeners[:on_pre_execution_node_enter]&.each { |listener| listener.on_pre_execution_node_enter(node) }
@@ -2130,7 +2130,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ProgramNode nodes.
-      #--
+      #
       #: (ProgramNode node) -> void
       def visit_program_node(node)
         listeners[:on_program_node_enter]&.each { |listener| listener.on_program_node_enter(node) }
@@ -2138,7 +2138,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for RangeNode nodes.
-      #--
+      #
       #: (RangeNode node) -> void
       def visit_range_node(node)
         listeners[:on_range_node_enter]&.each { |listener| listener.on_range_node_enter(node) }
@@ -2146,7 +2146,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for RationalNode nodes.
-      #--
+      #
       #: (RationalNode node) -> void
       def visit_rational_node(node)
         listeners[:on_rational_node_enter]&.each { |listener| listener.on_rational_node_enter(node) }
@@ -2154,7 +2154,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for RedoNode nodes.
-      #--
+      #
       #: (RedoNode node) -> void
       def visit_redo_node(node)
         listeners[:on_redo_node_enter]&.each { |listener| listener.on_redo_node_enter(node) }
@@ -2162,7 +2162,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for RegularExpressionNode nodes.
-      #--
+      #
       #: (RegularExpressionNode node) -> void
       def visit_regular_expression_node(node)
         listeners[:on_regular_expression_node_enter]&.each { |listener| listener.on_regular_expression_node_enter(node) }
@@ -2170,7 +2170,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for RequiredKeywordParameterNode nodes.
-      #--
+      #
       #: (RequiredKeywordParameterNode node) -> void
       def visit_required_keyword_parameter_node(node)
         listeners[:on_required_keyword_parameter_node_enter]&.each { |listener| listener.on_required_keyword_parameter_node_enter(node) }
@@ -2178,7 +2178,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for RequiredParameterNode nodes.
-      #--
+      #
       #: (RequiredParameterNode node) -> void
       def visit_required_parameter_node(node)
         listeners[:on_required_parameter_node_enter]&.each { |listener| listener.on_required_parameter_node_enter(node) }
@@ -2186,7 +2186,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for RescueModifierNode nodes.
-      #--
+      #
       #: (RescueModifierNode node) -> void
       def visit_rescue_modifier_node(node)
         listeners[:on_rescue_modifier_node_enter]&.each { |listener| listener.on_rescue_modifier_node_enter(node) }
@@ -2194,7 +2194,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for RescueNode nodes.
-      #--
+      #
       #: (RescueNode node) -> void
       def visit_rescue_node(node)
         listeners[:on_rescue_node_enter]&.each { |listener| listener.on_rescue_node_enter(node) }
@@ -2202,7 +2202,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for RestParameterNode nodes.
-      #--
+      #
       #: (RestParameterNode node) -> void
       def visit_rest_parameter_node(node)
         listeners[:on_rest_parameter_node_enter]&.each { |listener| listener.on_rest_parameter_node_enter(node) }
@@ -2210,7 +2210,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for RetryNode nodes.
-      #--
+      #
       #: (RetryNode node) -> void
       def visit_retry_node(node)
         listeners[:on_retry_node_enter]&.each { |listener| listener.on_retry_node_enter(node) }
@@ -2218,7 +2218,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ReturnNode nodes.
-      #--
+      #
       #: (ReturnNode node) -> void
       def visit_return_node(node)
         listeners[:on_return_node_enter]&.each { |listener| listener.on_return_node_enter(node) }
@@ -2226,7 +2226,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for SelfNode nodes.
-      #--
+      #
       #: (SelfNode node) -> void
       def visit_self_node(node)
         listeners[:on_self_node_enter]&.each { |listener| listener.on_self_node_enter(node) }
@@ -2234,7 +2234,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for ShareableConstantNode nodes.
-      #--
+      #
       #: (ShareableConstantNode node) -> void
       def visit_shareable_constant_node(node)
         listeners[:on_shareable_constant_node_enter]&.each { |listener| listener.on_shareable_constant_node_enter(node) }
@@ -2242,7 +2242,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for SingletonClassNode nodes.
-      #--
+      #
       #: (SingletonClassNode node) -> void
       def visit_singleton_class_node(node)
         listeners[:on_singleton_class_node_enter]&.each { |listener| listener.on_singleton_class_node_enter(node) }
@@ -2250,7 +2250,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for SourceEncodingNode nodes.
-      #--
+      #
       #: (SourceEncodingNode node) -> void
       def visit_source_encoding_node(node)
         listeners[:on_source_encoding_node_enter]&.each { |listener| listener.on_source_encoding_node_enter(node) }
@@ -2258,7 +2258,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for SourceFileNode nodes.
-      #--
+      #
       #: (SourceFileNode node) -> void
       def visit_source_file_node(node)
         listeners[:on_source_file_node_enter]&.each { |listener| listener.on_source_file_node_enter(node) }
@@ -2266,7 +2266,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for SourceLineNode nodes.
-      #--
+      #
       #: (SourceLineNode node) -> void
       def visit_source_line_node(node)
         listeners[:on_source_line_node_enter]&.each { |listener| listener.on_source_line_node_enter(node) }
@@ -2274,7 +2274,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for SplatNode nodes.
-      #--
+      #
       #: (SplatNode node) -> void
       def visit_splat_node(node)
         listeners[:on_splat_node_enter]&.each { |listener| listener.on_splat_node_enter(node) }
@@ -2282,7 +2282,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for StatementsNode nodes.
-      #--
+      #
       #: (StatementsNode node) -> void
       def visit_statements_node(node)
         listeners[:on_statements_node_enter]&.each { |listener| listener.on_statements_node_enter(node) }
@@ -2290,7 +2290,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for StringNode nodes.
-      #--
+      #
       #: (StringNode node) -> void
       def visit_string_node(node)
         listeners[:on_string_node_enter]&.each { |listener| listener.on_string_node_enter(node) }
@@ -2298,7 +2298,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for SuperNode nodes.
-      #--
+      #
       #: (SuperNode node) -> void
       def visit_super_node(node)
         listeners[:on_super_node_enter]&.each { |listener| listener.on_super_node_enter(node) }
@@ -2306,7 +2306,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for SymbolNode nodes.
-      #--
+      #
       #: (SymbolNode node) -> void
       def visit_symbol_node(node)
         listeners[:on_symbol_node_enter]&.each { |listener| listener.on_symbol_node_enter(node) }
@@ -2314,7 +2314,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for TrueNode nodes.
-      #--
+      #
       #: (TrueNode node) -> void
       def visit_true_node(node)
         listeners[:on_true_node_enter]&.each { |listener| listener.on_true_node_enter(node) }
@@ -2322,7 +2322,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for UndefNode nodes.
-      #--
+      #
       #: (UndefNode node) -> void
       def visit_undef_node(node)
         listeners[:on_undef_node_enter]&.each { |listener| listener.on_undef_node_enter(node) }
@@ -2330,7 +2330,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for UnlessNode nodes.
-      #--
+      #
       #: (UnlessNode node) -> void
       def visit_unless_node(node)
         listeners[:on_unless_node_enter]&.each { |listener| listener.on_unless_node_enter(node) }
@@ -2338,7 +2338,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for UntilNode nodes.
-      #--
+      #
       #: (UntilNode node) -> void
       def visit_until_node(node)
         listeners[:on_until_node_enter]&.each { |listener| listener.on_until_node_enter(node) }
@@ -2346,7 +2346,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for WhenNode nodes.
-      #--
+      #
       #: (WhenNode node) -> void
       def visit_when_node(node)
         listeners[:on_when_node_enter]&.each { |listener| listener.on_when_node_enter(node) }
@@ -2354,7 +2354,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for WhileNode nodes.
-      #--
+      #
       #: (WhileNode node) -> void
       def visit_while_node(node)
         listeners[:on_while_node_enter]&.each { |listener| listener.on_while_node_enter(node) }
@@ -2362,7 +2362,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for XStringNode nodes.
-      #--
+      #
       #: (XStringNode node) -> void
       def visit_x_string_node(node)
         listeners[:on_x_string_node_enter]&.each { |listener| listener.on_x_string_node_enter(node) }
@@ -2370,7 +2370,7 @@ module Prism
       end
 
       # Dispatch enter and leave events for YieldNode nodes.
-      #--
+      #
       #: (YieldNode node) -> void
       def visit_yield_node(node)
         listeners[:on_yield_node_enter]&.each { |listener| listener.on_yield_node_enter(node) }
