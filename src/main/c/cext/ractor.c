@@ -40,6 +40,7 @@ VALUE rb_ractor_stderr(void) {
 struct rb_ractor_local_key_struct {
     const struct rb_ractor_local_storage_type *type;
     void *main_cache;
+    VALUE main_value;
 };
 
 static const struct rb_ractor_local_storage_type ractor_local_storage_type_null = {
@@ -51,6 +52,7 @@ rb_ractor_local_key_t rb_ractor_local_storage_ptr_newkey(const struct rb_ractor_
   rb_ractor_local_key_t key = ALLOC(struct rb_ractor_local_key_struct);
   key->type = type ? type : &ractor_local_storage_type_null;
   key->main_cache = (void *)Qundef;
+  key->main_value = Qundef;
   return key;
 }
 
@@ -64,4 +66,30 @@ void *rb_ractor_local_storage_ptr(rb_ractor_local_key_t key) {
 
 void rb_ractor_local_storage_ptr_set(rb_ractor_local_key_t key, void *ptr) {
   key->main_cache = ptr;
+}
+
+rb_ractor_local_key_t rb_ractor_local_storage_value_newkey(void) {
+  return rb_ractor_local_storage_ptr_newkey(NULL);
+}
+
+bool rb_ractor_local_storage_value_lookup(rb_ractor_local_key_t key, VALUE *val) {
+  if (key->main_value == Qundef) {
+    return false;
+  }
+
+  *val = key->main_value;
+  return true;
+}
+
+VALUE rb_ractor_local_storage_value(rb_ractor_local_key_t key) {
+  VALUE value;
+  return rb_ractor_local_storage_value_lookup(key, &value) ? value : Qnil;
+}
+
+void rb_ractor_local_storage_value_set(rb_ractor_local_key_t key, VALUE val) {
+  key->main_value = val;
+
+  // The value is only reachable from native memory, so the slot holding it has to be a GC root. Registering the same
+  // address again replaces the previously stored value, which is what we want when a key is assigned more than once.
+  rb_gc_register_address(&key->main_value);
 }

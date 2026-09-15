@@ -23,4 +23,16 @@ describe 'UNIXServer#initialize' do
   it 'raises Errno::EADDRINUSE when the socket is already in use' do
     -> { UNIXServer.new(@path) }.should.raise(Errno::EADDRINUSE)
   end
+
+  it 'accepts an object responding to #to_path' do
+    @server.close
+    rm_r @path
+
+    path = @path
+    object = Object.new
+    object.define_singleton_method(:to_path) { path }
+
+    @server = UNIXServer.new(object)
+    @server.should.instance_of?(UNIXServer)
+  end
 end

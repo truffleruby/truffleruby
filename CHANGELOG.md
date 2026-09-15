@@ -26,6 +26,8 @@ Bug fixes:
 * Fix issue where environment updates made in native code (e.g., a C extension calling `setenv(3)`) would not be reflected by `ENV` (@nirvdrum).
 * Make `ENV` thread-safe (#4352, @nirvdrum).
 * Fix `TracePoint` events not triggering for code loaded via `eval`, `class_eval` or `ruby -e` (#3095, @andrykonchin).
+* Fix `IO#write` to retry from the same offset after waiting for a non-blocking descriptor to become writable instead of corrupting the written data (@nirvdrum).
+* Fix `IO#sysread` and `IO#syswrite` to wait for a descriptor in non-blocking mode to become ready, like CRuby, instead of raising `Errno::EAGAIN` or returning 0 (@nirvdrum).
 
 Compatibility:
 
@@ -73,6 +75,9 @@ Compatibility:
 * Add `flags` keyword argument to `Dir.glob` as an alternative to the positional argument (#4394, @earlopain).
 * Fix `new` on `Data` subclasses to pass the given block to `#initialize` (@eregon).
 * Fix `ENV` for `BINARY` strings with non-ASCII bytes (@nirvdrum).
+* Create sockets in non-blocking mode with `FD_CLOEXEC` set and emulate blocking socket operations by waiting for readiness, like CRuby, so C extensions such as `trilogy` can take over the descriptors (@nirvdrum).
+* Accept objects responding to `#to_path` for the path argument of `UNIXSocket.new` and `UNIXServer.new`, like CRuby (@nirvdrum).
+* Implement `rb_ractor_local_storage_value_newkey()`, `rb_ractor_local_storage_value()`, `rb_ractor_local_storage_value_lookup()` and `rb_ractor_local_storage_value_set()` (@nirvdrum).
 
 Performance:
 

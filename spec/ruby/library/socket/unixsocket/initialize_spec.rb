@@ -52,5 +52,18 @@ describe 'UNIXSocket#initialize' do
     it 'sets the socket to close on exec' do
       @socket.should.close_on_exec?
     end
+
+    it 'accepts an object responding to #to_path' do
+      path = @path
+      object = Object.new
+      object.define_singleton_method(:to_path) { path }
+
+      socket = UNIXSocket.new(object)
+      begin
+        socket.should.instance_of?(UNIXSocket)
+      ensure
+        socket.close
+      end
+    end
   end
 end
