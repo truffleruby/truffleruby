@@ -86,7 +86,9 @@ public abstract class DebugHelpers {
             evalFrame.setObject(i, arguments[i * 2 + 1]);
         }
 
-        final Source source = Source.newBuilder(TruffleRuby.LANGUAGE_ID, code, "debug-eval").build();
+        final Source source = Source.newBuilder(TruffleRuby.LANGUAGE_ID, code, "debug-eval")
+                .mimeType(RubyLanguage.MIME_TYPE)
+                .build();
 
         final RootCallTarget callTarget = context
                 .getCodeLoader()
