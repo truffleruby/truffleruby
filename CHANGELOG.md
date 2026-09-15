@@ -27,6 +27,7 @@ Bug fixes:
 * Make `ENV` thread-safe (#4352, @nirvdrum).
 * Fix `TracePoint` events not triggering for code loaded via `eval`, `class_eval` or `ruby -e` (#3095, @andrykonchin).
 * Fix `IO#write` to retry from the same offset after waiting for a non-blocking descriptor to become writable instead of corrupting the written data (@nirvdrum).
+* Fix `IO#sysread` and `IO#syswrite` to wait for a descriptor in non-blocking mode to become ready, like CRuby, instead of raising `Errno::EAGAIN` or returning 0 (@nirvdrum).
 
 Compatibility:
 
