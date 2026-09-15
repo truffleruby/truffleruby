@@ -13,6 +13,7 @@ package org.truffleruby.language.loader;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.AbstractTruffleString;
 import org.truffleruby.RubyContext;
+import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.string.CannotConvertBinaryRubyStringToJavaString;
 import org.truffleruby.core.string.TStringWithEncoding;
@@ -56,6 +57,7 @@ public abstract class EvalLoader {
         }
 
         final Source source = Source.newBuilder(TruffleRuby.LANGUAGE_ID, new ByteBasedCharSequence(sourceTString), file)
+                .mimeType(RubyLanguage.MIME_TYPE)
                 .option("ruby.LineOffset", Integer.toString(line - 1))
                 .build();
 

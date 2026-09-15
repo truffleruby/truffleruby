@@ -148,6 +148,7 @@ public final class FileLoader {
         final Source source = Source
                 .newBuilder(TruffleRuby.LANGUAGE_ID, file)
                 .canonicalizePath(false)
+                .mimeType(RubyLanguage.MIME_TYPE)
                 .content(new ByteBasedCharSequence(sourceTStringWithEncoding))
                 .internal(internal)
                 .cached(!coverageEnabled)

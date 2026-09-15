@@ -823,6 +823,7 @@ public final class CoreLibrary {
 
         Source source = Source
                 .newBuilder(TruffleRuby.LANGUAGE_ID, new ByteBasedCharSequence(sourceTString), coreSourceName)
+                .mimeType(RubyLanguage.MIME_TYPE)
                 .internal(language.options.CORE_AS_INTERNAL)
                 .build();
 
