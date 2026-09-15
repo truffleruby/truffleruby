@@ -8,7 +8,7 @@ ast: |
   InlinedIndexSetNodeGen
       attributes:
           assumptions = [Assumption(valid, name=set_trace_func is not used)]
-          flags = 1
+          flags = 0
           parameters = RubyCallNodeParameters{methodName='[]=', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=false, isVCall=false, isSafeNavigation=false, isAttrAssign=true}
           sourceCharIndex = 7
           sourceLength = 14
@@ -30,7 +30,7 @@ ast: |
           receiver_ =
               ReadLocalVariableNode
                   attributes:
-                      flags = 0
+                      flags = 1
                       frameSlot = 2 # a
                       sourceCharIndex = 7
                       sourceLength = 1

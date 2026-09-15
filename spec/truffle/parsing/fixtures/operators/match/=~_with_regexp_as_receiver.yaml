@@ -11,7 +11,7 @@ ast: |
           descriptor = NoKeywordArgumentsDescriptor
           dispatchConfig = PROTECTED
           emptyKeywordsProfile = false
-          flags = 1
+          flags = 0
           isAttrAssign = false
           isSafeNavigation = false
           isSplatted = false
@@ -51,7 +51,7 @@ ast: |
           receiver =
               ObjectLiteralNode
                   attributes:
-                      flags = 0
+                      flags = 1
                       object = RubyRegexp(source = foo, options = RegexpOptions(kcode: NONE, kcodeDefault, literal), encoding = US-ASCII)
                       sourceCharIndex = 0
                       sourceLength = 5

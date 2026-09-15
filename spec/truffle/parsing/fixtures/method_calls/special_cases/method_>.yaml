@@ -7,7 +7,7 @@ ast: |
   InlinedGreaterThanNodeGen
       attributes:
           assumptions = [Assumption(valid, name=set_trace_func is not used), Assumption(valid, name=core method is not overridden:), Assumption(valid, name=core method is not overridden:)]
-          flags = 1
+          flags = 0
           parameters = RubyCallNodeParameters{methodName='>', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=false, isVCall=false, isSafeNavigation=false, isAttrAssign=false}
           sourceCharIndex = 0
           sourceLength = 5
@@ -15,7 +15,7 @@ ast: |
           leftNode_ =
               IntegerFixnumLiteralNode
                   attributes:
-                      flags = 0
+                      flags = 1
                       sourceCharIndex = 0
                       sourceLength = 1
                       value = 1

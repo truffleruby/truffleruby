@@ -197,7 +197,7 @@ ast: |
                                                                                                                   type = FRAME_LOCAL
                                                                                               WriteDeclarationVariableNode
                                                                                                   attributes:
-                                                                                                      flags = 1
+                                                                                                      flags = 0
                                                                                                       frameDepth = 1
                                                                                                       frameSlot = 2 # b
                                                                                                       sourceCharIndex = 24
@@ -206,7 +206,7 @@ ast: |
                                                                                                       valueNode =
                                                                                                           ReadConstantWithLexicalScopeNode
                                                                                                               attributes:
-                                                                                                                  flags = 0
+                                                                                                                  flags = 1
                                                                                                                   lexicalScope =  :: Object
                                                                                                                   name = "A"
                                                                                                                   sourceCharIndex = 28

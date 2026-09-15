@@ -6,7 +6,7 @@ ruby: |
 ast: |
   WriteGlobalVariableNodeGen
       attributes:
-          flags = 1
+          flags = 0
           name = "$a"
           sourceCharIndex = 0
           sourceLength = 6
@@ -19,7 +19,7 @@ ast: |
           valueNode_ =
               IntegerFixnumLiteralNode
                   attributes:
-                      flags = 0
+                      flags = 1
                       sourceCharIndex = 5
                       sourceLength = 1
                       value = 1

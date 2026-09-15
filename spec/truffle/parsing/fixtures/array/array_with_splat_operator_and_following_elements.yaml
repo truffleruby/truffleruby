@@ -33,7 +33,7 @@ ast: |
                                               sourceLength = 0
               ArrayConcatNode
                   attributes:
-                      flags = 1
+                      flags = 0
                       sourceCharIndex = 0
                       sourceLength = 12
                   children:
@@ -42,7 +42,7 @@ ast: |
                               attributes:
                                   conversionMethod = :to_a
                                   copy = true
-                                  flags = 0
+                                  flags = 1
                                   nilBehavior = EMPTY_ARRAY
                                   sourceCharIndex = 1
                                   sourceLength = 4

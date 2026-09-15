@@ -6,7 +6,7 @@ ruby: |
 ast: |
   WriteInstanceVariableNodeGen
       attributes:
-          flags = 1
+          flags = 0
           frozenProfile = false
           name = "@foo"
           sourceCharIndex = 0
@@ -19,7 +19,7 @@ ast: |
           rhs =
               IntegerFixnumLiteralNode
                   attributes:
-                      flags = 0
+                      flags = 1
                       sourceCharIndex = 7
                       sourceLength = 2
                       value = 42

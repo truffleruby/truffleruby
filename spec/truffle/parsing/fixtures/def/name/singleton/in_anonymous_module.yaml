@@ -68,7 +68,7 @@ ast: |
                                                                   sourceLength = 0
                                   WriteLocalVariableNode
                                       attributes:
-                                          flags = 1
+                                          flags = 0
                                           frameSlot = 1 # bar
                                           sourceCharIndex = 16
                                           sourceLength = 11
@@ -77,7 +77,7 @@ ast: |
                                               StringLiteralNode
                                                   attributes:
                                                       encoding = UTF-8
-                                                      flags = 0
+                                                      flags = 1
                                                       sourceCharIndex = 22
                                                       sourceLength = 5
                                                       tstring = bar

@@ -7,7 +7,7 @@ ast: |
   InlinedCaseEqualNodeGen
       attributes:
           assumptions = [Assumption(valid, name=set_trace_func is not used)]
-          flags = 1
+          flags = 0
           integerCaseEqualAssumption = Assumption(valid, name=core method is not overridden:)
           parameters = RubyCallNodeParameters{methodName='===', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=false, isVCall=false, isSafeNavigation=false, isAttrAssign=false}
           sourceCharIndex = 0
@@ -16,7 +16,7 @@ ast: |
           leftNode_ =
               IntegerFixnumLiteralNode
                   attributes:
-                      flags = 0
+                      flags = 1
                       sourceCharIndex = 0
                       sourceLength = 1
                       value = 1
