@@ -52,7 +52,7 @@ class UNIXSocket < BasicSocket
     setup(fd, 'r+', true)
     binmode
 
-    sockaddr = Socket.sockaddr_un(Truffle::Type.check_null_safe(path))
+    sockaddr = Socket.sockaddr_un(Truffle::Type.coerce_to_path(path))
     Truffle::Socket.connect(self, sockaddr)
   end
 

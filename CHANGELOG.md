@@ -76,6 +76,7 @@ Compatibility:
 * Fix `new` on `Data` subclasses to pass the given block to `#initialize` (@eregon).
 * Fix `ENV` for `BINARY` strings with non-ASCII bytes (@nirvdrum).
 * Create sockets in non-blocking mode with `FD_CLOEXEC` set and emulate blocking socket operations by waiting for readiness, like CRuby, so C extensions such as `trilogy` can take over the descriptors (@nirvdrum).
+* Accept objects responding to `#to_path` for the path argument of `UNIXSocket.new` and `UNIXServer.new`, like CRuby (@nirvdrum).
 
 Performance:
 
