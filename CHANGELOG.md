@@ -101,6 +101,7 @@ Compatibility:
 * Support multiple arguments in `StringIO#write` (@andrykonchin).
 * Support pattern matching on Hash subclasses (#3678, @andrykonchin).
 * Create sockets in non-blocking mode with `FD_CLOEXEC` set and emulate blocking socket operations by waiting for readiness, like CRuby, so C extensions such as `trilogy` can take over the descriptors (@nirvdrum).
+* Accept objects responding to `#to_path` for the path argument of `UNIXSocket.new` and `UNIXServer.new`, preserving the path bytes like CRuby (@nirvdrum).
 
 Performance:
 
