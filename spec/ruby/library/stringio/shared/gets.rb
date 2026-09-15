@@ -110,6 +110,42 @@ describe :stringio_gets_limit, shared: true do
     it "ignores it when passed a negative limit" do
       @io.send(@method, -4).should == "this>is>an>example"
     end
+
+    it "does not split a multi-byte character" do
+      io = StringIO.new("\u00e9\u00e9\u00e9abc")
+
+      io.send(@method, 1).should == "\u00e9"
+      io.send(@method, 3).should == "\u00e9\u00e9"
+      io.send(@method, 2).should == "ab"
+    end
+
+    it "does not split a multi-byte character when the limit is the last byte of one" do
+      io = StringIO.new("\u{1F44D}ab")
+
+      io.send(@method, 3).should == "\u{1F44D}"
+      io.pos.should == 4
+    end
+
+    it "does not split a multi-byte character in a non-Unicode encoding" do
+      io = StringIO.new("\u3042\u3044abc".encode("Shift_JIS"))
+
+      io.send(@method, 1).should == "\u3042".encode("Shift_JIS")
+      io.send(@method, 3).should == "\u3044a".encode("Shift_JIS")
+    end
+
+    it "does not extend over bytes that are not a character" do
+      io = StringIO.new("\xFF\xFEabc".b.force_encoding("UTF-8"))
+
+      io.send(@method, 1).bytes.should == [0xFF]
+      io.send(@method, 1).bytes.should == [0xFE]
+    end
+
+    it "counts bytes, not characters, when the encoding is binary" do
+      io = StringIO.new("\u00e9\u00e9".b)
+
+      io.send(@method, 1).bytes.should == [0xC3]
+      io.pos.should == 1
+    end
   end
 end
 
