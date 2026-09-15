@@ -168,11 +168,11 @@ public class RubyDebugTest {
             debuggerSession.suspendNextExecution();
         });
 
-        assertLocation(25, "res = fac(2)", "res", "nil");
+        assertLocation(25, "fac(2)", "res", "nil"); // res = fac(2)
         stepInto(1);
         assertLocation(
                 14,
-                "n <= 1",
+                "n", // n <= 1
                 "n",
                 "2",
                 "nMinusOne",
@@ -184,7 +184,7 @@ public class RubyDebugTest {
         stepOver(1);
         assertLocation(
                 17,
-                "nMinusOne = n - 1",
+                "n", // nMinusOne = n - 1
                 "n",
                 "2",
                 "nMinusOne",
@@ -196,7 +196,7 @@ public class RubyDebugTest {
         stepOver(1);
         assertLocation(
                 18,
-                "nMOFact = fac(nMinusOne)",
+                "fac(nMinusOne)", // nMOFact = fac(nMinusOne)
                 "n",
                 "2",
                 "nMinusOne",
@@ -208,7 +208,7 @@ public class RubyDebugTest {
         stepOver(1);
         assertLocation(
                 19,
-                "res = n * nMOFact",
+                "n", // res = n * nMOFact
                 "n",
                 "2",
                 "nMinusOne",
@@ -303,7 +303,7 @@ public class RubyDebugTest {
 
         assertLocation(
                 breakpointLine,
-                "res = nme + nm1",
+                "nme", // res = nme + nm1
                 "name",
                 "\"Panama\"", // Possible bug: should really the quotes be included?
                 "cityArray",
