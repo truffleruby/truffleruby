@@ -7,9 +7,9 @@
     └── body: (length: 7)
         ├── @ UntilNode (location: (1,0)-(1,18))
         │   ├── flags: newline
-        │   ├── keyword_loc: (1,0)-(1,5) = "until"
+        │   ├── until_keyword_loc: (1,0)-(1,5) = "until"
         │   ├── do_keyword_loc: ∅
-        │   ├── closing_loc: (1,15)-(1,18) = "end"
+        │   ├── end_keyword_loc: (1,15)-(1,18) = "end"
         │   ├── predicate:
         │   │   @ TrueNode (location: (1,6)-(1,10))
         │   │   └── flags: static_literal
@@ -22,9 +22,9 @@
         │               └── value: 1
         ├── @ UntilNode (location: (3,0)-(3,12))
         │   ├── flags: newline
-        │   ├── keyword_loc: (3,2)-(3,7) = "until"
+        │   ├── until_keyword_loc: (3,2)-(3,7) = "until"
         │   ├── do_keyword_loc: ∅
-        │   ├── closing_loc: ∅
+        │   ├── end_keyword_loc: ∅
         │   ├── predicate:
         │   │   @ TrueNode (location: (3,8)-(3,12))
         │   │   └── flags: static_literal
@@ -56,9 +56,9 @@
         │       │   └── body: (length: 1)
         │       │       └── @ UntilNode (location: (5,6)-(5,22))
         │       │           ├── flags: newline
-        │       │           ├── keyword_loc: (5,12)-(5,17) = "until"
+        │       │           ├── until_keyword_loc: (5,12)-(5,17) = "until"
         │       │           ├── do_keyword_loc: ∅
-        │       │           ├── closing_loc: ∅
+        │       │           ├── end_keyword_loc: ∅
         │       │           ├── predicate:
         │       │           │   @ TrueNode (location: (5,18)-(5,22))
         │       │           │   └── flags: static_literal
@@ -93,9 +93,9 @@
         │       │   └── body: (length: 1)
         │       │       └── @ UntilNode (location: (7,6)-(7,21))
         │       │           ├── flags: newline
-        │       │           ├── keyword_loc: (7,11)-(7,16) = "until"
+        │       │           ├── until_keyword_loc: (7,11)-(7,16) = "until"
         │       │           ├── do_keyword_loc: ∅
-        │       │           ├── closing_loc: ∅
+        │       │           ├── end_keyword_loc: ∅
         │       │           ├── predicate:
         │       │           │   @ TrueNode (location: (7,17)-(7,21))
         │       │           │   └── flags: static_literal
@@ -111,9 +111,9 @@
         │       └── closing_loc: (7,22)-(7,23) = "}"
         ├── @ UntilNode (location: (9,0)-(9,17))
         │   ├── flags: newline
-        │   ├── keyword_loc: (9,7)-(9,12) = "until"
+        │   ├── until_keyword_loc: (9,7)-(9,12) = "until"
         │   ├── do_keyword_loc: ∅
-        │   ├── closing_loc: ∅
+        │   ├── end_keyword_loc: ∅
         │   ├── predicate:
         │   │   @ TrueNode (location: (9,13)-(9,17))
         │   │   └── flags: static_literal
@@ -127,9 +127,9 @@
         │               └── arguments: ∅
         ├── @ UntilNode (location: (11,0)-(11,21))
         │   ├── flags: newline
-        │   ├── keyword_loc: (11,11)-(11,16) = "until"
+        │   ├── until_keyword_loc: (11,11)-(11,16) = "until"
         │   ├── do_keyword_loc: ∅
-        │   ├── closing_loc: ∅
+        │   ├── end_keyword_loc: ∅
         │   ├── predicate:
         │   │   @ CallNode (location: (11,17)-(11,21))
         │   │   ├── flags: ignore_visibility
@@ -174,9 +174,9 @@
         │               └── block: ∅
         └── @ WhileNode (location: (13,0)-(13,20))
             ├── flags: newline
-            ├── keyword_loc: (13,4)-(13,9) = "while"
+            ├── while_keyword_loc: (13,4)-(13,9) = "while"
             ├── do_keyword_loc: ∅
-            ├── closing_loc: ∅
+            ├── end_keyword_loc: ∅
             ├── predicate:
             │   @ MatchPredicateNode (location: (13,10)-(13,20))
             │   ├── flags: ∅
@@ -197,7 +197,7 @@
             │   │   ├── flags: ∅
             │   │   ├── name: :baz
             │   │   └── depth: 0
-            │   └── operator_loc: (13,14)-(13,16) = "in"
+            │   └── keyword_loc: (13,14)-(13,16) = "in"
             └── statements:
                 @ StatementsNode (location: (13,0)-(13,3))
                 ├── flags: ∅

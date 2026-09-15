@@ -11,7 +11,7 @@ ast: |
           descriptor = NoKeywordArgumentsDescriptor
           dispatchConfig = PRIVATE
           emptyKeywordsProfile = false
-          flags = 1
+          flags = 0
           isAttrAssign = false
           isSafeNavigation = false
           isSplatted = false
@@ -26,6 +26,6 @@ ast: |
           receiver =
               SelfNode
                   attributes:
-                      flags = 0
+                      flags = 1
                       sourceCharIndex = 0
                       sourceLength = 4

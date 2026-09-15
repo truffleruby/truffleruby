@@ -7,9 +7,9 @@
     └── body: (length: 1)
         └── @ WhileNode (location: (1,0)-(1,23))
             ├── flags: newline
-            ├── keyword_loc: (1,0)-(1,5) = "while"
+            ├── while_keyword_loc: (1,0)-(1,5) = "while"
             ├── do_keyword_loc: (1,17)-(1,19) = "do"
-            ├── closing_loc: (1,20)-(1,23) = "end"
+            ├── end_keyword_loc: (1,20)-(1,23) = "end"
             ├── predicate:
             │   @ CallNode (location: (1,6)-(1,16))
             │   ├── flags: ∅

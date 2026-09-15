@@ -69,8 +69,8 @@
             │       │           ├── value_loc: (3,3)-(3,4) = "f"
             │       │           ├── closing_loc: ∅
             │       │           └── unescaped: "f"
-            │       ├── in_loc: (2,0)-(2,2) = "in"
-            │       └── then_loc: (2,22)-(2,26) = "then"
+            │       ├── in_keyword_loc: (2,0)-(2,2) = "in"
+            │       └── then_keyword_loc: (2,22)-(2,26) = "then"
             ├── else_clause: ∅
             ├── case_keyword_loc: (1,0)-(1,4) = "case"
             └── end_keyword_loc: (4,0)-(4,3) = "end"

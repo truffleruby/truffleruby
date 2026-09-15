@@ -8,7 +8,7 @@ ast: |
   InlinedNotNodeGen
       attributes:
           assumptions = [Assumption(valid, name=set_trace_func is not used)]
-          flags = 1
+          flags = 0
           parameters = RubyCallNodeParameters{methodName='!', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=false, isVCall=false, isSafeNavigation=false, isAttrAssign=false}
           sourceCharIndex = 14
           sourceLength = 2
@@ -16,7 +16,7 @@ ast: |
           selfNode_ =
               ReadLocalVariableNode
                   attributes:
-                      flags = 0
+                      flags = 1
                       frameSlot = 2 # a
                       sourceCharIndex = 15
                       sourceLength = 1

@@ -7,7 +7,7 @@
     └── body: (length: 2)
         ├── @ UnlessNode (location: (1,0)-(1,24))
         │   ├── flags: newline
-        │   ├── keyword_loc: (1,0)-(1,6) = "unless"
+        │   ├── unless_keyword_loc: (1,0)-(1,6) = "unless"
         │   ├── predicate:
         │   │   @ CallNode (location: (1,7)-(1,10))
         │   │   ├── flags: variable_call, ignore_visibility
@@ -40,7 +40,7 @@
         │   └── end_keyword_loc: (1,21)-(1,24) = "end"
         └── @ UnlessNode (location: (3,0)-(3,20))
             ├── flags: newline
-            ├── keyword_loc: (3,0)-(3,6) = "unless"
+            ├── unless_keyword_loc: (3,0)-(3,6) = "unless"
             ├── predicate:
             │   @ CallNode (location: (3,7)-(3,10))
             │   ├── flags: variable_call, ignore_visibility

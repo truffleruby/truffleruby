@@ -6,7 +6,7 @@ ruby: |
 ast: |
   WriteConstantNode
       attributes:
-          flags = 1
+          flags = 0
           name = "FOO"
           sourceCharIndex = 0
           sourceLength = 9
@@ -20,7 +20,7 @@ ast: |
           valueNode =
               IntegerFixnumLiteralNode
                   attributes:
-                      flags = 0
+                      flags = 1
                       sourceCharIndex = 8
                       sourceLength = 1
                       value = 1

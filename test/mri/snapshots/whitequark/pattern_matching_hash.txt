@@ -106,8 +106,8 @@
         │   │       │           ├── closing_loc: ∅
         │   │       │           ├── equal_loc: ∅
         │   │       │           └── block: ∅
-        │   │       ├── in_loc: (2,8)-(2,10) = "in"
-        │   │       └── then_loc: ∅
+        │   │       ├── in_keyword_loc: (2,8)-(2,10) = "in"
+        │   │       └── then_keyword_loc: ∅
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (1,0)-(1,4) = "case"
         │   └── end_keyword_loc: (4,8)-(4,11) = "end"
@@ -156,8 +156,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ FalseNode (location: (9,10)-(9,15))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (7,8)-(7,10) = "in"
-        │   │       └── then_loc: ∅
+        │   │       ├── in_keyword_loc: (7,8)-(7,10) = "in"
+        │   │       └── then_keyword_loc: ∅
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (6,0)-(6,4) = "case"
         │   └── end_keyword_loc: (10,8)-(10,11) = "end"
@@ -206,8 +206,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ FalseNode (location: (15,10)-(15,15))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (13,8)-(13,10) = "in"
-        │   │       └── then_loc: ∅
+        │   │       ├── in_keyword_loc: (13,8)-(13,10) = "in"
+        │   │       └── then_keyword_loc: ∅
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (12,0)-(12,4) = "case"
         │   └── end_keyword_loc: (16,8)-(16,11) = "end"
@@ -260,8 +260,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ TrueNode (location: (21,10)-(21,14))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (19,8)-(19,10) = "in"
-        │   │       └── then_loc: ∅
+        │   │       ├── in_keyword_loc: (19,8)-(19,10) = "in"
+        │   │       └── then_keyword_loc: ∅
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (18,0)-(18,4) = "case"
         │   └── end_keyword_loc: (22,8)-(22,11) = "end"
@@ -310,8 +310,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ FalseNode (location: (27,10)-(27,15))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (25,8)-(25,10) = "in"
-        │   │       └── then_loc: ∅
+        │   │       ├── in_keyword_loc: (25,8)-(25,10) = "in"
+        │   │       └── then_keyword_loc: ∅
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (24,0)-(24,4) = "case"
         │   └── end_keyword_loc: (28,8)-(28,11) = "end"
@@ -350,8 +350,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ TrueNode (location: (30,21)-(30,25))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (30,10)-(30,12) = "in"
-        │   │       └── then_loc: (30,16)-(30,20) = "then"
+        │   │       ├── in_keyword_loc: (30,10)-(30,12) = "in"
+        │   │       └── then_keyword_loc: (30,16)-(30,20) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (30,0)-(30,4) = "case"
         │   └── end_keyword_loc: (30,27)-(30,30) = "end"
@@ -394,8 +394,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ TrueNode (location: (32,22)-(32,26))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (32,10)-(32,12) = "in"
-        │   │       └── then_loc: (32,17)-(32,21) = "then"
+        │   │       ├── in_keyword_loc: (32,10)-(32,12) = "in"
+        │   │       └── then_keyword_loc: (32,17)-(32,21) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (32,0)-(32,4) = "case"
         │   └── end_keyword_loc: (32,28)-(32,31) = "end"
@@ -444,8 +444,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ TrueNode (location: (34,23)-(34,27))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (34,10)-(34,12) = "in"
-        │   │       └── then_loc: (34,18)-(34,22) = "then"
+        │   │       ├── in_keyword_loc: (34,10)-(34,12) = "in"
+        │   │       └── then_keyword_loc: (34,18)-(34,22) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (34,0)-(34,4) = "case"
         │   └── end_keyword_loc: (34,29)-(34,32) = "end"
@@ -516,8 +516,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ TrueNode (location: (36,32)-(36,36))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (36,10)-(36,12) = "in"
-        │   │       └── then_loc: (36,27)-(36,31) = "then"
+        │   │       ├── in_keyword_loc: (36,10)-(36,12) = "in"
+        │   │       └── then_keyword_loc: (36,27)-(36,31) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (36,0)-(36,4) = "case"
         │   └── end_keyword_loc: (36,38)-(36,41) = "end"
@@ -580,8 +580,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ TrueNode (location: (38,29)-(38,33))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (38,10)-(38,12) = "in"
-        │   │       └── then_loc: (38,24)-(38,28) = "then"
+        │   │       ├── in_keyword_loc: (38,10)-(38,12) = "in"
+        │   │       └── then_keyword_loc: (38,24)-(38,28) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (38,0)-(38,4) = "case"
         │   └── end_keyword_loc: (38,35)-(38,38) = "end"
@@ -634,8 +634,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ TrueNode (location: (40,21)-(40,25))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (40,10)-(40,12) = "in"
-        │   │       └── then_loc: (40,16)-(40,20) = "then"
+        │   │       ├── in_keyword_loc: (40,10)-(40,12) = "in"
+        │   │       └── then_keyword_loc: (40,16)-(40,20) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (40,0)-(40,4) = "case"
         │   └── end_keyword_loc: (40,27)-(40,30) = "end"
@@ -706,8 +706,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ TrueNode (location: (42,25)-(42,29))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (42,10)-(42,12) = "in"
-        │   │       └── then_loc: (42,20)-(42,24) = "then"
+        │   │       ├── in_keyword_loc: (42,10)-(42,12) = "in"
+        │   │       └── then_keyword_loc: (42,20)-(42,24) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (42,0)-(42,4) = "case"
         │   └── end_keyword_loc: (42,31)-(42,34) = "end"
@@ -756,8 +756,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ TrueNode (location: (44,27)-(44,31))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (44,10)-(44,12) = "in"
-        │   │       └── then_loc: (44,22)-(44,26) = "then"
+        │   │       ├── in_keyword_loc: (44,10)-(44,12) = "in"
+        │   │       └── then_keyword_loc: (44,22)-(44,26) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (44,0)-(44,4) = "case"
         │   └── end_keyword_loc: (44,33)-(44,36) = "end"
@@ -806,8 +806,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ TrueNode (location: (46,28)-(46,32))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (46,10)-(46,12) = "in"
-        │   │       └── then_loc: (46,23)-(46,27) = "then"
+        │   │       ├── in_keyword_loc: (46,10)-(46,12) = "in"
+        │   │       └── then_keyword_loc: (46,23)-(46,27) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (46,0)-(46,4) = "case"
         │   └── end_keyword_loc: (46,34)-(46,37) = "end"
@@ -842,8 +842,8 @@
             │       │   └── body: (length: 1)
             │       │       └── @ TrueNode (location: (48,21)-(48,25))
             │       │           └── flags: newline, static_literal
-            │       ├── in_loc: (48,10)-(48,12) = "in"
-            │       └── then_loc: (48,16)-(48,20) = "then"
+            │       ├── in_keyword_loc: (48,10)-(48,12) = "in"
+            │       └── then_keyword_loc: (48,16)-(48,20) = "then"
             ├── else_clause: ∅
             ├── case_keyword_loc: (48,0)-(48,4) = "case"
             └── end_keyword_loc: (48,27)-(48,30) = "end"

@@ -6,7 +6,7 @@ ruby: |
 ast: |
   WriteClassVariableNode
       attributes:
-          flags = 1
+          flags = 0
           name = "@@foo"
           sourceCharIndex = 0
           sourceLength = 10
@@ -23,7 +23,7 @@ ast: |
           rhs =
               IntegerFixnumLiteralNode
                   attributes:
-                      flags = 0
+                      flags = 1
                       sourceCharIndex = 8
                       sourceLength = 2
                       value = 42

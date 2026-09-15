@@ -11,7 +11,7 @@ ruby: |
 ast: |
   ConcatHashLiteralNode
       attributes:
-          flags = 1
+          flags = 0
           sourceCharIndex = 0
           sourceLength = 23
       children:

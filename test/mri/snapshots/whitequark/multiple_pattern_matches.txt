@@ -151,7 +151,7 @@
         │   │   ├── rest: ∅
         │   │   ├── opening_loc: ∅
         │   │   └── closing_loc: ∅
-        │   └── operator_loc: (4,7)-(4,9) = "in"
+        │   └── keyword_loc: (4,7)-(4,9) = "in"
         └── @ MatchPredicateNode (location: (5,0)-(5,12))
             ├── flags: newline
             ├── value:
@@ -200,4 +200,4 @@
             │   ├── rest: ∅
             │   ├── opening_loc: ∅
             │   └── closing_loc: ∅
-            └── operator_loc: (5,7)-(5,9) = "in"
+            └── keyword_loc: (5,7)-(5,9) = "in"

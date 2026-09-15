@@ -11,7 +11,7 @@
             ├── conditions: (length: 1)
             │   └── @ WhenNode (location: (1,6)-(1,23))
             │       ├── flags: ∅
-            │       ├── keyword_loc: (1,6)-(1,10) = "when"
+            │       ├── when_keyword_loc: (1,6)-(1,10) = "when"
             │       ├── conditions: (length: 1)
             │       │   └── @ RegularExpressionNode (location: (1,11)-(1,23))
             │       │       ├── flags: static_literal, forced_us_ascii_encoding

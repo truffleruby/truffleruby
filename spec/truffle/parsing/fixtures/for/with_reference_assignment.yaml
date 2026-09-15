@@ -222,7 +222,7 @@ ast: |
                                                                                                                               sourceLength = 0
                                                                                               WriteDeclarationVariableNode
                                                                                                   attributes:
-                                                                                                      flags = 1
+                                                                                                      flags = 0
                                                                                                       frameDepth = 1
                                                                                                       frameSlot = 2 # b
                                                                                                       sourceCharIndex = 30
@@ -243,7 +243,7 @@ ast: |
                                                                                                                               descriptor = NoKeywordArgumentsDescriptor
                                                                                                                               dispatchConfig = PRIVATE
                                                                                                                               emptyKeywordsProfile = false
-                                                                                                                              flags = 0
+                                                                                                                              flags = 1
                                                                                                                               isAttrAssign = false
                                                                                                                               isSafeNavigation = false
                                                                                                                               isSplatted = false

@@ -123,14 +123,14 @@ module Prism
     attr_reader :digraph #: Digraph
 
     # Initialize a new dot visitor.
-    #--
+    #
     #: () -> void
     def initialize
       @digraph = Digraph.new
     end
 
     # Convert this visitor into a graphviz dot graph string.
-    #--
+    #
     #: () -> String
     def to_dot
       digraph.to_dot
@@ -2267,12 +2267,12 @@ module Prism
         digraph.edge("#{id}:statements -> #{node_id(statements)};")
       end
 
-      # in_loc
-      table.field("in_loc", location_inspect(node.in_loc))
+      # in_keyword_loc
+      table.field("in_keyword_loc", location_inspect(node.in_keyword_loc))
 
-      # then_loc
-      unless (then_loc = node.then_loc).nil?
-        table.field("then_loc", location_inspect(then_loc))
+      # then_keyword_loc
+      unless (then_keyword_loc = node.then_keyword_loc).nil?
+        table.field("then_keyword_loc", location_inspect(then_keyword_loc))
       end
 
       digraph.node(<<~DOT)
@@ -3161,8 +3161,8 @@ module Prism
       table.field("pattern", port: true)
       digraph.edge("#{id}:pattern -> #{node_id(node.pattern)};")
 
-      # operator_loc
-      table.field("operator_loc", location_inspect(node.operator_loc))
+      # keyword_loc
+      table.field("keyword_loc", location_inspect(node.keyword_loc))
 
       digraph.node(<<~DOT)
         #{id} [
@@ -4361,9 +4361,7 @@ module Prism
       end
 
       # value_loc
-      unless (value_loc = node.value_loc).nil?
-        table.field("value_loc", location_inspect(value_loc))
-      end
+      table.field("value_loc", location_inspect(node.value_loc))
 
       # closing_loc
       unless (closing_loc = node.closing_loc).nil?
@@ -4431,8 +4429,8 @@ module Prism
       table = Table.new("UnlessNode")
       id = node_id(node)
 
-      # keyword_loc
-      table.field("keyword_loc", location_inspect(node.keyword_loc))
+      # unless_keyword_loc
+      table.field("unless_keyword_loc", location_inspect(node.unless_keyword_loc))
 
       # predicate
       table.field("predicate", port: true)
@@ -4477,17 +4475,17 @@ module Prism
       # flags
       table.field("flags", loop_flags_inspect(node))
 
-      # keyword_loc
-      table.field("keyword_loc", location_inspect(node.keyword_loc))
+      # until_keyword_loc
+      table.field("until_keyword_loc", location_inspect(node.until_keyword_loc))
 
       # do_keyword_loc
       unless (do_keyword_loc = node.do_keyword_loc).nil?
         table.field("do_keyword_loc", location_inspect(do_keyword_loc))
       end
 
-      # closing_loc
-      unless (closing_loc = node.closing_loc).nil?
-        table.field("closing_loc", location_inspect(closing_loc))
+      # end_keyword_loc
+      unless (end_keyword_loc = node.end_keyword_loc).nil?
+        table.field("end_keyword_loc", location_inspect(end_keyword_loc))
       end
 
       # predicate
@@ -4514,8 +4512,8 @@ module Prism
       table = Table.new("WhenNode")
       id = node_id(node)
 
-      # keyword_loc
-      table.field("keyword_loc", location_inspect(node.keyword_loc))
+      # when_keyword_loc
+      table.field("when_keyword_loc", location_inspect(node.when_keyword_loc))
 
       # conditions
       if node.conditions.any?
@@ -4558,17 +4556,17 @@ module Prism
       # flags
       table.field("flags", loop_flags_inspect(node))
 
-      # keyword_loc
-      table.field("keyword_loc", location_inspect(node.keyword_loc))
+      # while_keyword_loc
+      table.field("while_keyword_loc", location_inspect(node.while_keyword_loc))
 
       # do_keyword_loc
       unless (do_keyword_loc = node.do_keyword_loc).nil?
         table.field("do_keyword_loc", location_inspect(do_keyword_loc))
       end
 
-      # closing_loc
-      unless (closing_loc = node.closing_loc).nil?
-        table.field("closing_loc", location_inspect(closing_loc))
+      # end_keyword_loc
+      unless (end_keyword_loc = node.end_keyword_loc).nil?
+        table.field("end_keyword_loc", location_inspect(end_keyword_loc))
       end
 
       # predicate
@@ -4655,14 +4653,14 @@ module Prism
     private
 
     # Generate a unique node ID for a node throughout the digraph.
-    #--
+    #
     #: (node) -> String
     def node_id(node) # :nodoc:
       "Node_#{node.object_id}"
     end
 
     # Inspect a location to display the start and end line and columns in bytes.
-    #--
+    #
     #: (Location) -> String
     def location_inspect(location) # :nodoc:
       "(#{location.start_line},#{location.start_column})-(#{location.end_line},#{location.end_column})"
@@ -4670,7 +4668,7 @@ module Prism
 
     # Inspect a node that has arguments_node_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (ArgumentsNode node) -> String
     def arguments_node_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4684,7 +4682,7 @@ module Prism
 
     # Inspect a node that has array_node_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (ArrayNode node) -> String
     def array_node_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4694,7 +4692,7 @@ module Prism
 
     # Inspect a node that has call_node_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (CallAndWriteNode | CallNode | CallOperatorWriteNode | CallOrWriteNode | CallTargetNode | IndexAndWriteNode | IndexOperatorWriteNode | IndexOrWriteNode | IndexTargetNode node) -> String
     def call_node_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4707,7 +4705,7 @@ module Prism
 
     # Inspect a node that has encoding_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (XStringNode node) -> String
     def encoding_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4718,7 +4716,7 @@ module Prism
 
     # Inspect a node that has integer_base_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (IntegerNode | RationalNode node) -> String
     def integer_base_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4731,7 +4729,7 @@ module Prism
 
     # Inspect a node that has interpolated_string_node_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (InterpolatedStringNode node) -> String
     def interpolated_string_node_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4742,7 +4740,7 @@ module Prism
 
     # Inspect a node that has keyword_hash_node_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (KeywordHashNode node) -> String
     def keyword_hash_node_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4752,7 +4750,7 @@ module Prism
 
     # Inspect a node that has loop_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (UntilNode | WhileNode node) -> String
     def loop_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4762,7 +4760,7 @@ module Prism
 
     # Inspect a node that has parameter_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (BlockLocalVariableNode | BlockParameterNode | KeywordRestParameterNode | OptionalKeywordParameterNode | OptionalParameterNode | RequiredKeywordParameterNode | RequiredParameterNode | RestParameterNode node) -> String
     def parameter_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4772,7 +4770,7 @@ module Prism
 
     # Inspect a node that has parentheses_node_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (ParenthesesNode node) -> String
     def parentheses_node_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4782,7 +4780,7 @@ module Prism
 
     # Inspect a node that has range_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (FlipFlopNode | RangeNode node) -> String
     def range_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4792,7 +4790,7 @@ module Prism
 
     # Inspect a node that has regular_expression_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (InterpolatedMatchLastLineNode | InterpolatedRegularExpressionNode | MatchLastLineNode | RegularExpressionNode node) -> String
     def regular_expression_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4812,7 +4810,7 @@ module Prism
 
     # Inspect a node that has shareable_constant_node_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (ShareableConstantNode node) -> String
     def shareable_constant_node_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4824,7 +4822,7 @@ module Prism
 
     # Inspect a node that has string_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (SourceFileNode | StringNode node) -> String
     def string_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]
@@ -4837,7 +4835,7 @@ module Prism
 
     # Inspect a node that has symbol_flags flags to display the flags as a
     # comma-separated list.
-    #--
+    #
     #: (SymbolNode node) -> String
     def symbol_flags_inspect(node) # :nodoc:
       flags = [] #: Array[String]

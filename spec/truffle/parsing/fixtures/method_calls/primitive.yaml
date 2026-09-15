@@ -59,7 +59,7 @@ ast: |
                                                           sourceLength = 0
                           TypeNodesFactory$IsNilNodeFactory$IsNilNodeGen
                               attributes:
-                                  flags = 1
+                                  flags = 0
                                   sourceCharIndex = 32
                                   sourceLength = 18
                               children:

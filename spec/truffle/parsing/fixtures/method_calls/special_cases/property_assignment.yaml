@@ -11,7 +11,7 @@ ast: |
           descriptor = NoKeywordArgumentsDescriptor
           dispatchConfig = PROTECTED
           emptyKeywordsProfile = false
-          flags = 1
+          flags = 0
           isAttrAssign = true
           isSafeNavigation = false
           isSplatted = false
@@ -37,7 +37,7 @@ ast: |
                       descriptor = NoKeywordArgumentsDescriptor
                       dispatchConfig = PRIVATE
                       emptyKeywordsProfile = false
-                      flags = 0
+                      flags = 1
                       isAttrAssign = false
                       isSafeNavigation = false
                       isSplatted = false

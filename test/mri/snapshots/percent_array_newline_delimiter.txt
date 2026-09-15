@@ -1,0 +1,75 @@
+@ ProgramNode (location: (1,0)-(12,0))
+├── flags: ∅
+├── locals: []
+└── statements:
+    @ StatementsNode (location: (1,0)-(12,0))
+    ├── flags: ∅
+    └── body: (length: 4)
+        ├── @ ArrayNode (location: (1,0)-(3,0))
+        │   ├── flags: newline
+        │   ├── elements: (length: 2)
+        │   │   ├── @ StringNode (location: (2,0)-(2,3))
+        │   │   │   ├── flags: ∅
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   ├── content_loc: (2,0)-(2,3) = "foo"
+        │   │   │   ├── closing_loc: ∅
+        │   │   │   └── unescaped: "foo"
+        │   │   └── @ StringNode (location: (2,4)-(2,7))
+        │   │       ├── flags: ∅
+        │   │       ├── opening_loc: ∅
+        │   │       ├── content_loc: (2,4)-(2,7) = "bar"
+        │   │       ├── closing_loc: ∅
+        │   │       └── unescaped: "bar"
+        │   ├── opening_loc: (1,0)-(2,0) = "%w\n"
+        │   └── closing_loc: (2,7)-(3,0) = "\n"
+        ├── @ ArrayNode (location: (4,0)-(6,0))
+        │   ├── flags: newline, static_literal
+        │   ├── elements: (length: 2)
+        │   │   ├── @ SymbolNode (location: (5,0)-(5,3))
+        │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   ├── value_loc: (5,0)-(5,3) = "baz"
+        │   │   │   ├── closing_loc: ∅
+        │   │   │   └── unescaped: "baz"
+        │   │   └── @ SymbolNode (location: (5,4)-(5,7))
+        │   │       ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       ├── opening_loc: ∅
+        │   │       ├── value_loc: (5,4)-(5,7) = "qux"
+        │   │       ├── closing_loc: ∅
+        │   │       └── unescaped: "qux"
+        │   ├── opening_loc: (4,0)-(5,0) = "%i\n"
+        │   └── closing_loc: (5,7)-(6,0) = "\n"
+        ├── @ ArrayNode (location: (7,0)-(9,0))
+        │   ├── flags: newline
+        │   ├── elements: (length: 2)
+        │   │   ├── @ StringNode (location: (8,0)-(8,1))
+        │   │   │   ├── flags: ∅
+        │   │   │   ├── opening_loc: ∅
+        │   │   │   ├── content_loc: (8,0)-(8,1) = "a"
+        │   │   │   ├── closing_loc: ∅
+        │   │   │   └── unescaped: "a"
+        │   │   └── @ StringNode (location: (8,2)-(8,3))
+        │   │       ├── flags: ∅
+        │   │       ├── opening_loc: ∅
+        │   │       ├── content_loc: (8,2)-(8,3) = "b"
+        │   │       ├── closing_loc: ∅
+        │   │       └── unescaped: "b"
+        │   ├── opening_loc: (7,0)-(8,0) = "%W\n"
+        │   └── closing_loc: (8,3)-(9,0) = "\n"
+        └── @ ArrayNode (location: (10,0)-(12,0))
+            ├── flags: newline, static_literal
+            ├── elements: (length: 2)
+            │   ├── @ SymbolNode (location: (11,0)-(11,1))
+            │   │   ├── flags: static_literal, forced_us_ascii_encoding
+            │   │   ├── opening_loc: ∅
+            │   │   ├── value_loc: (11,0)-(11,1) = "c"
+            │   │   ├── closing_loc: ∅
+            │   │   └── unescaped: "c"
+            │   └── @ SymbolNode (location: (11,2)-(11,3))
+            │       ├── flags: static_literal, forced_us_ascii_encoding
+            │       ├── opening_loc: ∅
+            │       ├── value_loc: (11,2)-(11,3) = "d"
+            │       ├── closing_loc: ∅
+            │       └── unescaped: "d"
+            ├── opening_loc: (10,0)-(11,0) = "%I\n"
+            └── closing_loc: (11,3)-(12,0) = "\n"

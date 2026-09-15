@@ -37,8 +37,8 @@
             │   │   │           ├── value_loc: (3,3)-(3,4) = "C"
             │   │   │           ├── closing_loc: ∅
             │   │   │           └── unescaped: "C"
-            │   │   ├── in_loc: (2,0)-(2,2) = "in"
-            │   │   └── then_loc: ∅
+            │   │   ├── in_keyword_loc: (2,0)-(2,2) = "in"
+            │   │   └── then_keyword_loc: ∅
             │   └── @ InNode (location: (4,0)-(5,4))
             │       ├── flags: ∅
             │       ├── pattern:
@@ -61,8 +61,8 @@
             │       │           ├── value_loc: (5,3)-(5,4) = "F"
             │       │           ├── closing_loc: ∅
             │       │           └── unescaped: "F"
-            │       ├── in_loc: (4,0)-(4,2) = "in"
-            │       └── then_loc: ∅
+            │       ├── in_keyword_loc: (4,0)-(4,2) = "in"
+            │       └── then_keyword_loc: ∅
             ├── else_clause: ∅
             ├── case_keyword_loc: (1,0)-(1,4) = "case"
             └── end_keyword_loc: (6,0)-(6,3) = "end"

@@ -195,7 +195,7 @@ ast: |
                                                                                                                   type = FRAME_LOCAL
                                                                                               WriteDeclarationVariableNode
                                                                                                   attributes:
-                                                                                                      flags = 1
+                                                                                                      flags = 0
                                                                                                       frameDepth = 1
                                                                                                       frameSlot = 2 # b
                                                                                                       sourceCharIndex = 25
@@ -204,7 +204,7 @@ ast: |
                                                                                                       valueNode =
                                                                                                           ReadGlobalVariableNodeGen
                                                                                                               attributes:
-                                                                                                                  flags = 0
+                                                                                                                  flags = 1
                                                                                                                   name = "$a"
                                                                                                                   sourceCharIndex = 29
                                                                                                                   sourceLength = 2

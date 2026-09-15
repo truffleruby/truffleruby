@@ -7,9 +7,9 @@
     └── body: (length: 1)
         └── @ UntilNode (location: (1,0)-(1,14))
             ├── flags: newline
-            ├── keyword_loc: (1,5)-(1,10) = "until"
+            ├── until_keyword_loc: (1,5)-(1,10) = "until"
             ├── do_keyword_loc: ∅
-            ├── closing_loc: ∅
+            ├── end_keyword_loc: ∅
             ├── predicate:
             │   @ CallNode (location: (1,11)-(1,14))
             │   ├── flags: variable_call, ignore_visibility

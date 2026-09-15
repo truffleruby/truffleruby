@@ -93,7 +93,7 @@ ast: |
                                                       body = [
                                                           WriteLocalVariableNode
                                                               attributes:
-                                                                  flags = 1
+                                                                  flags = 0
                                                                   frameSlot = 2 # bar
                                                                   sourceCharIndex = 11
                                                                   sourceLength = 11
@@ -102,7 +102,7 @@ ast: |
                                                                       StringLiteralNode
                                                                           attributes:
                                                                               encoding = UTF-8
-                                                                              flags = 0
+                                                                              flags = 1
                                                                               sourceCharIndex = 17
                                                                               sourceLength = 5
                                                                               tstring = bar

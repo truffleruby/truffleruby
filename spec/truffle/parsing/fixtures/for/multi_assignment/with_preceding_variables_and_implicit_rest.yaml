@@ -207,7 +207,7 @@ ast: |
                                                                                                                   sourceLength = 0
                                                                                               WriteDeclarationVariableNode
                                                                                                   attributes:
-                                                                                                      flags = 1
+                                                                                                      flags = 0
                                                                                                       frameDepth = 1
                                                                                                       frameSlot = 3 # b
                                                                                                       sourceCharIndex = 25
@@ -216,7 +216,7 @@ ast: |
                                                                                                       valueNode =
                                                                                                           ReadDeclarationVariableNode
                                                                                                               attributes:
-                                                                                                                  flags = 0
+                                                                                                                  flags = 1
                                                                                                                   frameDepth = 1
                                                                                                                   frameSlot = 2 # a
                                                                                                                   sourceCharIndex = 29

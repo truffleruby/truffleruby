@@ -212,7 +212,7 @@
         │   │   ├── conditions: (length: 1)
         │   │   │   └── @ WhenNode (location: (18,0)-(18,8))
         │   │   │       ├── flags: ∅
-        │   │   │       ├── keyword_loc: (18,0)-(18,4) = "when"
+        │   │   │       ├── when_keyword_loc: (18,0)-(18,4) = "when"
         │   │   │       ├── conditions: (length: 1)
         │   │   │       │   └── @ CallNode (location: (18,5)-(18,8))
         │   │   │       │       ├── flags: variable_call, ignore_visibility
@@ -258,7 +258,7 @@
         │   │   ├── conditions: (length: 1)
         │   │   │   └── @ WhenNode (location: (21,0)-(21,8))
         │   │   │       ├── flags: ∅
-        │   │   │       ├── keyword_loc: (21,0)-(21,4) = "when"
+        │   │   │       ├── when_keyword_loc: (21,0)-(21,4) = "when"
         │   │   │       ├── conditions: (length: 1)
         │   │   │       │   └── @ CallNode (location: (21,5)-(21,8))
         │   │   │       │       ├── flags: variable_call, ignore_visibility
@@ -362,9 +362,9 @@
         │   ├── receiver:
         │   │   @ UntilNode (location: (29,0)-(30,3))
         │   │   ├── flags: ∅
-        │   │   ├── keyword_loc: (29,0)-(29,5) = "until"
+        │   │   ├── until_keyword_loc: (29,0)-(29,5) = "until"
         │   │   ├── do_keyword_loc: ∅
-        │   │   ├── closing_loc: (30,0)-(30,3) = "end"
+        │   │   ├── end_keyword_loc: (30,0)-(30,3) = "end"
         │   │   ├── predicate:
         │   │   │   @ CallNode (location: (29,6)-(29,9))
         │   │   │   ├── flags: variable_call, ignore_visibility
@@ -391,9 +391,9 @@
         │   ├── receiver:
         │   │   @ WhileNode (location: (31,0)-(32,3))
         │   │   ├── flags: ∅
-        │   │   ├── keyword_loc: (31,0)-(31,5) = "while"
+        │   │   ├── while_keyword_loc: (31,0)-(31,5) = "while"
         │   │   ├── do_keyword_loc: ∅
-        │   │   ├── closing_loc: (32,0)-(32,3) = "end"
+        │   │   ├── end_keyword_loc: (32,0)-(32,3) = "end"
         │   │   ├── predicate:
         │   │   │   @ CallNode (location: (31,6)-(31,9))
         │   │   │   ├── flags: variable_call, ignore_visibility

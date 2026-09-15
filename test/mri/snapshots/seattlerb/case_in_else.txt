@@ -28,8 +28,8 @@
             │       │           ├── value_loc: (3,3)-(3,4) = "b"
             │       │           ├── closing_loc: ∅
             │       │           └── unescaped: "b"
-            │       ├── in_loc: (2,0)-(2,2) = "in"
-            │       └── then_loc: ∅
+            │       ├── in_keyword_loc: (2,0)-(2,2) = "in"
+            │       └── then_keyword_loc: ∅
             ├── else_clause:
             │   @ ElseNode (location: (4,0)-(6,3))
             │   ├── flags: ∅

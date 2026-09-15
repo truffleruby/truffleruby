@@ -1,0 +1,101 @@
+@ ProgramNode (location: (1,0)-(8,11))
+├── flags: ∅
+├── locals: [:a, :b, :c, :bar]
+└── statements:
+    @ StatementsNode (location: (1,0)-(8,11))
+    ├── flags: ∅
+    └── body: (length: 2)
+        ├── @ CaseMatchNode (location: (1,0)-(6,3))
+        │   ├── flags: newline
+        │   ├── predicate:
+        │   │   @ CallNode (location: (1,5)-(1,6))
+        │   │   ├── flags: variable_call, ignore_visibility
+        │   │   ├── receiver: ∅
+        │   │   ├── call_operator_loc: ∅
+        │   │   ├── name: :x
+        │   │   ├── message_loc: (1,5)-(1,6) = "x"
+        │   │   ├── opening_loc: ∅
+        │   │   ├── arguments: ∅
+        │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
+        │   │   └── block: ∅
+        │   ├── conditions: (length: 2)
+        │   │   ├── @ InNode (location: (2,0)-(3,3))
+        │   │   │   ├── flags: ∅
+        │   │   │   ├── pattern:
+        │   │   │   │   @ ArrayPatternNode (location: (2,3)-(3,3))
+        │   │   │   │   ├── flags: ∅
+        │   │   │   │   ├── constant: ∅
+        │   │   │   │   ├── requireds: (length: 2)
+        │   │   │   │   │   ├── @ LocalVariableTargetNode (location: (2,3)-(2,4))
+        │   │   │   │   │   │   ├── flags: ∅
+        │   │   │   │   │   │   ├── name: :a
+        │   │   │   │   │   │   └── depth: 0
+        │   │   │   │   │   └── @ IntegerNode (location: (3,2)-(3,3))
+        │   │   │   │   │       ├── flags: static_literal, decimal
+        │   │   │   │   │       └── value: 1
+        │   │   │   │   ├── rest: ∅
+        │   │   │   │   ├── posts: (length: 0)
+        │   │   │   │   ├── opening_loc: ∅
+        │   │   │   │   └── closing_loc: ∅
+        │   │   │   ├── statements: ∅
+        │   │   │   ├── in_keyword_loc: (2,0)-(2,2) = "in"
+        │   │   │   └── then_keyword_loc: ∅
+        │   │   └── @ InNode (location: (4,0)-(5,3))
+        │   │       ├── flags: ∅
+        │   │       ├── pattern:
+        │   │       │   @ ArrayPatternNode (location: (4,3)-(5,3))
+        │   │       │   ├── flags: ∅
+        │   │       │   ├── constant: ∅
+        │   │       │   ├── requireds: (length: 3)
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (4,3)-(4,4))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :b
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (4,6)-(4,7))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :c
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   └── @ IntegerNode (location: (5,2)-(5,3))
+        │   │       │   │       ├── flags: static_literal, decimal
+        │   │       │   │       └── value: 2
+        │   │       │   ├── rest: ∅
+        │   │       │   ├── posts: (length: 0)
+        │   │       │   ├── opening_loc: ∅
+        │   │       │   └── closing_loc: ∅
+        │   │       ├── statements: ∅
+        │   │       ├── in_keyword_loc: (4,0)-(4,2) = "in"
+        │   │       └── then_keyword_loc: ∅
+        │   ├── else_clause: ∅
+        │   ├── case_keyword_loc: (1,0)-(1,4) = "case"
+        │   └── end_keyword_loc: (6,0)-(6,3) = "end"
+        └── @ MatchRequiredNode (location: (8,0)-(8,11))
+            ├── flags: newline
+            ├── value:
+            │   @ CallNode (location: (8,0)-(8,3))
+            │   ├── flags: variable_call, ignore_visibility
+            │   ├── receiver: ∅
+            │   ├── call_operator_loc: ∅
+            │   ├── name: :foo
+            │   ├── message_loc: (8,0)-(8,3) = "foo"
+            │   ├── opening_loc: ∅
+            │   ├── arguments: ∅
+            │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
+            │   └── block: ∅
+            ├── pattern:
+            │   @ ArrayPatternNode (location: (8,7)-(8,11))
+            │   ├── flags: ∅
+            │   ├── constant: ∅
+            │   ├── requireds: (length: 1)
+            │   │   └── @ LocalVariableTargetNode (location: (8,7)-(8,10))
+            │   │       ├── flags: ∅
+            │   │       ├── name: :bar
+            │   │       └── depth: 0
+            │   ├── rest:
+            │   │   @ ImplicitRestNode (location: (8,10)-(8,11))
+            │   │   └── flags: ∅
+            │   ├── posts: (length: 0)
+            │   ├── opening_loc: ∅
+            │   └── closing_loc: ∅
+            └── operator_loc: (8,4)-(8,6) = "=>"

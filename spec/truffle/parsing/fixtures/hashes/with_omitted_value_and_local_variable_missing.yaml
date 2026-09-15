@@ -8,7 +8,7 @@ ruby: |
 ast: |
   PackedHashStoreLibraryFactory$SmallHashLiteralNodeGen
       attributes:
-          flags = 1
+          flags = 0
           sourceCharIndex = 0
           sourceLength = 11
       children:

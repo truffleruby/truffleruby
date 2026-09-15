@@ -44,14 +44,14 @@
             │   │   │           ├── value_loc: (3,3)-(3,4) = "C"
             │   │   │           ├── closing_loc: ∅
             │   │   │           └── unescaped: "C"
-            │   │   ├── in_loc: (2,0)-(2,2) = "in"
-            │   │   └── then_loc: ∅
+            │   │   ├── in_keyword_loc: (2,0)-(2,2) = "in"
+            │   │   └── then_keyword_loc: ∅
             │   └── @ InNode (location: (4,0)-(5,4))
             │       ├── flags: ∅
             │       ├── pattern:
             │       │   @ UnlessNode (location: (4,3)-(4,17))
             │       │   ├── flags: newline
-            │       │   ├── keyword_loc: (4,5)-(4,11) = "unless"
+            │       │   ├── unless_keyword_loc: (4,5)-(4,11) = "unless"
             │       │   ├── predicate:
             │       │   │   @ FalseNode (location: (4,12)-(4,17))
             │       │   │   └── flags: static_literal
@@ -75,8 +75,8 @@
             │       │           ├── value_loc: (5,3)-(5,4) = "E"
             │       │           ├── closing_loc: ∅
             │       │           └── unescaped: "E"
-            │       ├── in_loc: (4,0)-(4,2) = "in"
-            │       └── then_loc: ∅
+            │       ├── in_keyword_loc: (4,0)-(4,2) = "in"
+            │       └── then_keyword_loc: ∅
             ├── else_clause: ∅
             ├── case_keyword_loc: (1,0)-(1,4) = "case"
             └── end_keyword_loc: (6,0)-(6,3) = "end"

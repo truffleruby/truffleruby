@@ -85,7 +85,7 @@ ast: |
                                               CatchBreakNode
                                                   attributes:
                                                       breakID = org.truffleruby.language.control.BreakID@...
-                                                      flags = 1
+                                                      flags = 0
                                                       isWhile = false
                                                       sourceCharIndex = 13
                                                       sourceLength = 30
@@ -188,7 +188,7 @@ ast: |
                                                                               receiver =
                                                                                   IntegerFixnumLiteralNode
                                                                                       attributes:
-                                                                                          flags = 0
+                                                                                          flags = 1
                                                                                           sourceCharIndex = 13
                                                                                           sourceLength = 1
                                                                                           value = 1

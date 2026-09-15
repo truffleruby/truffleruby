@@ -33,7 +33,7 @@ ast: |
                                               sourceLength = 0
               ArrayConcatNode
                   attributes:
-                      flags = 1
+                      flags = 0
                       sourceCharIndex = 0
                       sourceLength = 12
                   children:
@@ -48,7 +48,7 @@ ast: |
                                   values = [
                                       IntegerFixnumLiteralNode
                                           attributes:
-                                              flags = 0
+                                              flags = 1
                                               sourceCharIndex = 1
                                               sourceLength = 1
                                               value = 1

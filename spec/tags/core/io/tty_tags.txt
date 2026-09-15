@@ -1,0 +1,1 @@
+slow:IO#tty? returns false for stdio streams if they are not connected to a terminal

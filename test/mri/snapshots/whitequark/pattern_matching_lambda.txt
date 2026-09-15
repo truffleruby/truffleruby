@@ -43,8 +43,8 @@
             │       │   └── body: (length: 1)
             │       │       └── @ TrueNode (location: (1,27)-(1,31))
             │       │           └── flags: newline, static_literal
-            │       ├── in_loc: (1,10)-(1,12) = "in"
-            │       └── then_loc: (1,22)-(1,26) = "then"
+            │       ├── in_keyword_loc: (1,10)-(1,12) = "in"
+            │       └── then_keyword_loc: (1,22)-(1,26) = "then"
             ├── else_clause: ∅
             ├── case_keyword_loc: (1,0)-(1,4) = "case"
             └── end_keyword_loc: (1,33)-(1,36) = "end"

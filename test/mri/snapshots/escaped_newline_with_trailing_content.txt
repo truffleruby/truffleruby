@@ -1,0 +1,13 @@
+@ ProgramNode (location: (1,0)-(2,6))
+├── flags: ∅
+├── locals: []
+└── statements:
+    @ StatementsNode (location: (1,0)-(2,6))
+    ├── flags: ∅
+    └── body: (length: 1)
+        └── @ StringNode (location: (1,0)-(2,6))
+            ├── flags: newline
+            ├── opening_loc: (1,0)-(1,1) = "\""
+            ├── content_loc: (1,1)-(2,5) = "A\nB\\nCC"
+            ├── closing_loc: (2,5)-(2,6) = "\""
+            └── unescaped: "A\nB\nCC"

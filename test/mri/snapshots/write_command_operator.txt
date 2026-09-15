@@ -81,4 +81,4 @@
             │   @ ConstantReadNode (location: (3,21)-(3,24))
             │   ├── flags: ∅
             │   └── name: :BAR
-            └── operator_loc: (3,18)-(3,20) = "in"
+            └── keyword_loc: (3,18)-(3,20) = "in"

@@ -11,7 +11,7 @@
         │   ├── conditions: (length: 2)
         │   │   ├── @ WhenNode (location: (2,0)-(3,5))
         │   │   │   ├── flags: ∅
-        │   │   │   ├── keyword_loc: (2,0)-(2,4) = "when"
+        │   │   │   ├── when_keyword_loc: (2,0)-(2,4) = "when"
         │   │   │   ├── conditions: (length: 1)
         │   │   │   │   └── @ CallNode (location: (2,5)-(2,8))
         │   │   │   │       ├── flags: variable_call, ignore_visibility
@@ -42,7 +42,7 @@
         │   │   │               └── block: ∅
         │   │   └── @ WhenNode (location: (4,0)-(5,5))
         │   │       ├── flags: ∅
-        │   │       ├── keyword_loc: (4,0)-(4,4) = "when"
+        │   │       ├── when_keyword_loc: (4,0)-(4,4) = "when"
         │   │       ├── conditions: (length: 1)
         │   │       │   └── @ CallNode (location: (4,5)-(4,8))
         │   │       │       ├── flags: variable_call, ignore_visibility
@@ -91,7 +91,7 @@
         │   ├── conditions: (length: 2)
         │   │   ├── @ WhenNode (location: (8,0)-(8,8))
         │   │   │   ├── flags: ∅
-        │   │   │   ├── keyword_loc: (8,0)-(8,4) = "when"
+        │   │   │   ├── when_keyword_loc: (8,0)-(8,4) = "when"
         │   │   │   ├── conditions: (length: 1)
         │   │   │   │   └── @ CallNode (location: (8,5)-(8,8))
         │   │   │   │       ├── flags: variable_call, ignore_visibility
@@ -108,7 +108,7 @@
         │   │   │   └── statements: ∅
         │   │   └── @ WhenNode (location: (9,0)-(10,5))
         │   │       ├── flags: ∅
-        │   │       ├── keyword_loc: (9,0)-(9,4) = "when"
+        │   │       ├── when_keyword_loc: (9,0)-(9,4) = "when"
         │   │       ├── conditions: (length: 1)
         │   │       │   └── @ CallNode (location: (9,5)-(9,8))
         │   │       │       ├── flags: variable_call, ignore_visibility
@@ -157,7 +157,7 @@
         │   ├── conditions: (length: 2)
         │   │   ├── @ WhenNode (location: (13,0)-(14,5))
         │   │   │   ├── flags: ∅
-        │   │   │   ├── keyword_loc: (13,0)-(13,4) = "when"
+        │   │   │   ├── when_keyword_loc: (13,0)-(13,4) = "when"
         │   │   │   ├── conditions: (length: 1)
         │   │   │   │   └── @ CallNode (location: (13,5)-(13,8))
         │   │   │   │       ├── flags: variable_call, ignore_visibility
@@ -188,7 +188,7 @@
         │   │   │               └── block: ∅
         │   │   └── @ WhenNode (location: (15,0)-(16,5))
         │   │       ├── flags: ∅
-        │   │       ├── keyword_loc: (15,0)-(15,4) = "when"
+        │   │       ├── when_keyword_loc: (15,0)-(15,4) = "when"
         │   │       ├── conditions: (length: 1)
         │   │       │   └── @ CallNode (location: (15,5)-(15,8))
         │   │       │       ├── flags: variable_call, ignore_visibility
@@ -237,7 +237,7 @@
         │   ├── conditions: (length: 1)
         │   │   └── @ WhenNode (location: (19,0)-(20,8))
         │   │       ├── flags: ∅
-        │   │       ├── keyword_loc: (19,0)-(19,4) = "when"
+        │   │       ├── when_keyword_loc: (19,0)-(19,4) = "when"
         │   │       ├── conditions: (length: 2)
         │   │       │   ├── @ CallNode (location: (19,5)-(19,8))
         │   │       │   │   ├── flags: variable_call, ignore_visibility
@@ -292,7 +292,7 @@
         │   ├── conditions: (length: 1)
         │   │   └── @ WhenNode (location: (23,0)-(24,8))
         │   │       ├── flags: ∅
-        │   │       ├── keyword_loc: (23,0)-(23,4) = "when"
+        │   │       ├── when_keyword_loc: (23,0)-(23,4) = "when"
         │   │       ├── conditions: (length: 1)
         │   │       │   └── @ SplatNode (location: (23,5)-(23,9))
         │   │       │       ├── flags: ∅
@@ -340,7 +340,7 @@
         │   ├── conditions: (length: 1)
         │   │   └── @ WhenNode (location: (27,0)-(28,5))
         │   │       ├── flags: ∅
-        │   │       ├── keyword_loc: (27,0)-(27,4) = "when"
+        │   │       ├── when_keyword_loc: (27,0)-(27,4) = "when"
         │   │       ├── conditions: (length: 1)
         │   │       │   └── @ CallNode (location: (27,5)-(27,8))
         │   │       │       ├── flags: variable_call, ignore_visibility
@@ -403,7 +403,7 @@
         │   ├── conditions: (length: 1)
         │   │   └── @ WhenNode (location: (33,0)-(33,15))
         │   │       ├── flags: ∅
-        │   │       ├── keyword_loc: (33,0)-(33,4) = "when"
+        │   │       ├── when_keyword_loc: (33,0)-(33,4) = "when"
         │   │       ├── conditions: (length: 1)
         │   │       │   └── @ SplatNode (location: (33,5)-(33,15))
         │   │       │       ├── flags: ∅
@@ -467,7 +467,7 @@
             ├── conditions: (length: 1)
             │   └── @ WhenNode (location: (36,0)-(36,15))
             │       ├── flags: ∅
-            │       ├── keyword_loc: (36,0)-(36,4) = "when"
+            │       ├── when_keyword_loc: (36,0)-(36,4) = "when"
             │       ├── conditions: (length: 1)
             │       │   └── @ SplatNode (location: (36,5)-(36,15))
             │       │       ├── flags: ∅

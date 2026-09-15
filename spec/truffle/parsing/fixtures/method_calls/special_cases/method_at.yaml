@@ -7,7 +7,7 @@ ast: |
   InlinedAtNodeGen
       attributes:
           assumptions = [Assumption(valid, name=set_trace_func is not used)]
-          flags = 1
+          flags = 0
           parameters = RubyCallNodeParameters{methodName='at', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=false, isVCall=false, isSafeNavigation=false, isAttrAssign=false}
           sourceCharIndex = 0
           sourceLength = 9
@@ -15,7 +15,7 @@ ast: |
           leftNode_ =
               ArrayLiteralNode$UninitialisedArrayLiteralNode
                   attributes:
-                      flags = 0
+                      flags = 1
                       language = org.truffleruby.RubyLanguage@...
                       sourceCharIndex = 0
                       sourceLength = 2

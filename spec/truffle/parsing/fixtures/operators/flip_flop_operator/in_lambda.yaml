@@ -146,7 +146,7 @@ ast: |
                                                                                                   sourceLength = 0
                                                                   WriteLocalVariableNode
                                                                       attributes:
-                                                                          flags = 1
+                                                                          flags = 0
                                                                           frameSlot = 1 # x
                                                                           sourceCharIndex = 20
                                                                           sourceLength = 6
@@ -154,7 +154,7 @@ ast: |
                                                                           valueNode =
                                                                               IntegerFixnumLiteralNode
                                                                                   attributes:
-                                                                                      flags = 0
+                                                                                      flags = 1
                                                                                       sourceCharIndex = 24
                                                                                       sourceLength = 2
                                                                                       value = 42

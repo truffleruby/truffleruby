@@ -221,7 +221,7 @@ ast: |
                                                                                                                   sourceLength = 0
                                                                                               WriteDeclarationVariableNode
                                                                                                   attributes:
-                                                                                                      flags = 1
+                                                                                                      flags = 0
                                                                                                       frameDepth = 1
                                                                                                       frameSlot = 5 # array
                                                                                                       sourceCharIndex = 30
@@ -238,7 +238,7 @@ ast: |
                                                                                                                   values = [
                                                                                                                       ReadDeclarationVariableNode
                                                                                                                           attributes:
-                                                                                                                              flags = 0
+                                                                                                                              flags = 1
                                                                                                                               frameDepth = 1
                                                                                                                               frameSlot = 2 # a
                                                                                                                               sourceCharIndex = 39

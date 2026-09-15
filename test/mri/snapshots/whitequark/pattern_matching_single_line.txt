@@ -48,7 +48,7 @@
         │   │   ├── posts: (length: 0)
         │   │   ├── opening_loc: (3,5)-(3,6) = "["
         │   │   └── closing_loc: (3,7)-(3,8) = "]"
-        │   └── operator_loc: (3,2)-(3,4) = "in"
+        │   └── keyword_loc: (3,2)-(3,4) = "in"
         └── @ LocalVariableReadNode (location: (3,10)-(3,11))
             ├── flags: newline
             ├── name: :a

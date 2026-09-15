@@ -83,7 +83,7 @@ ast: |
                                           body =
                                               WriteLocalVariableNode
                                                   attributes:
-                                                      flags = 1
+                                                      flags = 0
                                                       frameSlot = 2 # foo
                                                       sourceCharIndex = 15
                                                       sourceLength = 8
@@ -91,7 +91,7 @@ ast: |
                                                       valueNode =
                                                           IntegerFixnumLiteralNode
                                                               attributes:
-                                                                  flags = 0
+                                                                  flags = 1
                                                                   sourceCharIndex = 21
                                                                   sourceLength = 2
                                                                   value = 42

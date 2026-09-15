@@ -10,7 +10,7 @@ ruby: |
 ast: |
   MultipleAssignmentNode
       attributes:
-          flags = 1
+          flags = 0
           sourceCharIndex = 0
           sourceLength = 24
       children:
@@ -30,7 +30,7 @@ ast: |
                           StringLiteralNode
                               attributes:
                                   encoding = UTF-8
-                                  flags = 0
+                                  flags = 1
                                   sourceCharIndex = 5
                                   sourceLength = 5
                                   tstring = foo

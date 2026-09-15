@@ -206,7 +206,7 @@ ast: |
                                                                                                                   type = FRAME_LOCAL
                                                                                               WriteDeclarationVariableNode
                                                                                                   attributes:
-                                                                                                      flags = 1
+                                                                                                      flags = 0
                                                                                                       frameDepth = 1
                                                                                                       frameSlot = 2 # b
                                                                                                       sourceCharIndex = 27
@@ -215,7 +215,7 @@ ast: |
                                                                                                       valueNode =
                                                                                                           ReadConstantNode
                                                                                                               attributes:
-                                                                                                                  flags = 0
+                                                                                                                  flags = 1
                                                                                                                   name = "B"
                                                                                                                   sourceCharIndex = 31
                                                                                                                   sourceLength = 4

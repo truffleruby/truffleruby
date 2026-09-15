@@ -1,10 +1,10 @@
-@ ProgramNode (location: (1,0)-(2,5))
+@ ProgramNode (location: (1,0)-(8,2))
 ├── flags: ∅
 ├── locals: []
 └── statements:
-    @ StatementsNode (location: (1,0)-(2,5))
+    @ StatementsNode (location: (1,0)-(8,2))
     ├── flags: ∅
-    └── body: (length: 2)
+    └── body: (length: 4)
         ├── @ CallNode (location: (1,0)-(1,5))
         │   ├── flags: newline
         │   ├── receiver:
@@ -19,15 +19,43 @@
         │   ├── closing_loc: ∅
         │   ├── equal_loc: ∅
         │   └── block: ∅
-        └── @ CallNode (location: (2,0)-(2,5))
+        ├── @ CallNode (location: (2,0)-(2,5))
+        │   ├── flags: newline
+        │   ├── receiver:
+        │   │   @ IntegerNode (location: (2,0)-(2,2))
+        │   │   ├── flags: static_literal, decimal
+        │   │   └── value: 42
+        │   ├── call_operator_loc: (2,2)-(2,3) = "."
+        │   ├── name: :!
+        │   ├── message_loc: (2,3)-(2,5) = "!@"
+        │   ├── opening_loc: ∅
+        │   ├── arguments: ∅
+        │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
+        │   └── block: ∅
+        ├── @ CallNode (location: (4,0)-(5,2))
+        │   ├── flags: newline
+        │   ├── receiver:
+        │   │   @ IntegerNode (location: (5,0)-(5,2))
+        │   │   ├── flags: static_literal, decimal
+        │   │   └── value: 42
+        │   ├── call_operator_loc: ∅
+        │   ├── name: :-@
+        │   ├── message_loc: (4,0)-(4,1) = "-"
+        │   ├── opening_loc: ∅
+        │   ├── arguments: ∅
+        │   ├── closing_loc: ∅
+        │   ├── equal_loc: ∅
+        │   └── block: ∅
+        └── @ CallNode (location: (7,0)-(8,2))
             ├── flags: newline
             ├── receiver:
-            │   @ IntegerNode (location: (2,0)-(2,2))
+            │   @ IntegerNode (location: (8,0)-(8,2))
             │   ├── flags: static_literal, decimal
             │   └── value: 42
-            ├── call_operator_loc: (2,2)-(2,3) = "."
-            ├── name: :!
-            ├── message_loc: (2,3)-(2,5) = "!@"
+            ├── call_operator_loc: ∅
+            ├── name: :+@
+            ├── message_loc: (7,0)-(7,1) = "+"
             ├── opening_loc: ∅
             ├── arguments: ∅
             ├── closing_loc: ∅

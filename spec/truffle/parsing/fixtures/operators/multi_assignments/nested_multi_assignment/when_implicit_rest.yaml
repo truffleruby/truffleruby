@@ -8,7 +8,7 @@ ruby: |
 ast: |
   MultipleAssignmentNode
       attributes:
-          flags = 1
+          flags = 0
           sourceCharIndex = 0
           sourceLength = 12
       children:
@@ -40,7 +40,7 @@ ast: |
           rhsNode =
               ArrayLiteralNode$UninitialisedArrayLiteralNode
                   attributes:
-                      flags = 0
+                      flags = 1
                       language = org.truffleruby.RubyLanguage@...
                       sourceCharIndex = 10
                       sourceLength = 2

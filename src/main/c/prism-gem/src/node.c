@@ -3125,15 +3125,15 @@ pm_implicit_rest_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t f
  * Allocate and initialize a new InNode node.
  */
 pm_in_node_t *
-pm_in_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *pattern, struct pm_statements_node *statements, pm_location_t in_loc, pm_location_t then_loc) {
+pm_in_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *pattern, struct pm_statements_node *statements, pm_location_t in_keyword_loc, pm_location_t then_keyword_loc) {
     pm_in_node_t *node = (pm_in_node_t *) pm_arena_alloc(arena, sizeof(pm_in_node_t), PRISM_ALIGNOF(pm_in_node_t));
 
     *node = (pm_in_node_t) {
         .base = { .type = PM_IN_NODE, .flags = flags, .node_id = node_id, .location = location },
         .pattern = pattern,
         .statements = statements,
-        .in_loc = in_loc,
-        .then_loc = then_loc
+        .in_keyword_loc = in_keyword_loc,
+        .then_keyword_loc = then_keyword_loc
     };
 
     return node;
@@ -3639,14 +3639,14 @@ pm_match_last_line_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t
  * Allocate and initialize a new MatchPredicateNode node.
  */
 pm_match_predicate_node_t *
-pm_match_predicate_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value, struct pm_node *pattern, pm_location_t operator_loc) {
+pm_match_predicate_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value, struct pm_node *pattern, pm_location_t keyword_loc) {
     pm_match_predicate_node_t *node = (pm_match_predicate_node_t *) pm_arena_alloc(arena, sizeof(pm_match_predicate_node_t), PRISM_ALIGNOF(pm_match_predicate_node_t));
 
     *node = (pm_match_predicate_node_t) {
         .base = { .type = PM_MATCH_PREDICATE_NODE, .flags = flags, .node_id = node_id, .location = location },
         .value = value,
         .pattern = pattern,
-        .operator_loc = operator_loc
+        .keyword_loc = keyword_loc
     };
 
     return node;
@@ -4406,12 +4406,12 @@ pm_undef_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm
  * Allocate and initialize a new UnlessNode node.
  */
 pm_unless_node_t *
-pm_unless_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, struct pm_node *predicate, pm_location_t then_keyword_loc, struct pm_statements_node *statements, struct pm_else_node *else_clause, pm_location_t end_keyword_loc) {
+pm_unless_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t unless_keyword_loc, struct pm_node *predicate, pm_location_t then_keyword_loc, struct pm_statements_node *statements, struct pm_else_node *else_clause, pm_location_t end_keyword_loc) {
     pm_unless_node_t *node = (pm_unless_node_t *) pm_arena_alloc(arena, sizeof(pm_unless_node_t), PRISM_ALIGNOF(pm_unless_node_t));
 
     *node = (pm_unless_node_t) {
         .base = { .type = PM_UNLESS_NODE, .flags = flags, .node_id = node_id, .location = location },
-        .keyword_loc = keyword_loc,
+        .unless_keyword_loc = unless_keyword_loc,
         .predicate = predicate,
         .then_keyword_loc = then_keyword_loc,
         .statements = statements,
@@ -4426,14 +4426,14 @@ pm_unless_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, p
  * Allocate and initialize a new UntilNode node.
  */
 pm_until_node_t *
-pm_until_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_location_t do_keyword_loc, pm_location_t closing_loc, struct pm_node *predicate, struct pm_statements_node *statements) {
+pm_until_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t until_keyword_loc, pm_location_t do_keyword_loc, pm_location_t end_keyword_loc, struct pm_node *predicate, struct pm_statements_node *statements) {
     pm_until_node_t *node = (pm_until_node_t *) pm_arena_alloc(arena, sizeof(pm_until_node_t), PRISM_ALIGNOF(pm_until_node_t));
 
     *node = (pm_until_node_t) {
         .base = { .type = PM_UNTIL_NODE, .flags = flags, .node_id = node_id, .location = location },
-        .keyword_loc = keyword_loc,
+        .until_keyword_loc = until_keyword_loc,
         .do_keyword_loc = do_keyword_loc,
-        .closing_loc = closing_loc,
+        .end_keyword_loc = end_keyword_loc,
         .predicate = predicate,
         .statements = statements
     };
@@ -4445,12 +4445,12 @@ pm_until_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm
  * Allocate and initialize a new WhenNode node.
  */
 pm_when_node_t *
-pm_when_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_node_list_t conditions, pm_location_t then_keyword_loc, struct pm_statements_node *statements) {
+pm_when_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t when_keyword_loc, pm_node_list_t conditions, pm_location_t then_keyword_loc, struct pm_statements_node *statements) {
     pm_when_node_t *node = (pm_when_node_t *) pm_arena_alloc(arena, sizeof(pm_when_node_t), PRISM_ALIGNOF(pm_when_node_t));
 
     *node = (pm_when_node_t) {
         .base = { .type = PM_WHEN_NODE, .flags = flags, .node_id = node_id, .location = location },
-        .keyword_loc = keyword_loc,
+        .when_keyword_loc = when_keyword_loc,
         .conditions = conditions,
         .then_keyword_loc = then_keyword_loc,
         .statements = statements
@@ -4463,14 +4463,14 @@ pm_when_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_
  * Allocate and initialize a new WhileNode node.
  */
 pm_while_node_t *
-pm_while_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_location_t do_keyword_loc, pm_location_t closing_loc, struct pm_node *predicate, struct pm_statements_node *statements) {
+pm_while_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t while_keyword_loc, pm_location_t do_keyword_loc, pm_location_t end_keyword_loc, struct pm_node *predicate, struct pm_statements_node *statements) {
     pm_while_node_t *node = (pm_while_node_t *) pm_arena_alloc(arena, sizeof(pm_while_node_t), PRISM_ALIGNOF(pm_while_node_t));
 
     *node = (pm_while_node_t) {
         .base = { .type = PM_WHILE_NODE, .flags = flags, .node_id = node_id, .location = location },
-        .keyword_loc = keyword_loc,
+        .while_keyword_loc = while_keyword_loc,
         .do_keyword_loc = do_keyword_loc,
-        .closing_loc = closing_loc,
+        .end_keyword_loc = end_keyword_loc,
         .predicate = predicate,
         .statements = statements
     };

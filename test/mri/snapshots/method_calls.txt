@@ -2173,9 +2173,9 @@
         │   │       │   └── unescaped: "a"
         │   │       ├── @ WhileNode (location: (127,2)-(131,5))
         │   │       │   ├── flags: ∅
-        │   │       │   ├── keyword_loc: (127,2)-(127,7) = "while"
+        │   │       │   ├── while_keyword_loc: (127,2)-(127,7) = "while"
         │   │       │   ├── do_keyword_loc: ∅
-        │   │       │   ├── closing_loc: (131,2)-(131,5) = "end"
+        │   │       │   ├── end_keyword_loc: (131,2)-(131,5) = "end"
         │   │       │   ├── predicate:
         │   │       │   │   @ CallNode (location: (127,8)-(127,9))
         │   │       │   │   ├── flags: variable_call, ignore_visibility
@@ -2237,9 +2237,9 @@
         │   │       │                   └── closing_loc: (130,4)-(130,7) = "end"
         │   │       └── @ UntilNode (location: (132,2)-(135,5))
         │   │           ├── flags: ∅
-        │   │           ├── keyword_loc: (132,2)-(132,7) = "until"
+        │   │           ├── until_keyword_loc: (132,2)-(132,7) = "until"
         │   │           ├── do_keyword_loc: ∅
-        │   │           ├── closing_loc: (135,2)-(135,5) = "end"
+        │   │           ├── end_keyword_loc: (135,2)-(135,5) = "end"
         │   │           ├── predicate:
         │   │           │   @ CallNode (location: (132,8)-(132,9))
         │   │           │   ├── flags: variable_call, ignore_visibility

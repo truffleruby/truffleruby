@@ -73,6 +73,9 @@ typedef enum pm_token_type {
     /** a newline character outside of other tokens */
     PM_TOKEN_NEWLINE,
 
+    /** a newline that terminates a construct where a newline is otherwise insignificant */
+    PM_TOKEN_NEWLINE_TERMINATOR,
+
     /** ) */
     PM_TOKEN_PARENTHESIS_RIGHT,
 
@@ -97,7 +100,7 @@ typedef enum pm_token_type {
     /** &= */
     PM_TOKEN_AMPERSAND_EQUAL,
 
-    /** \` */
+    /** \` as a method name */
     PM_TOKEN_BACKTICK,
 
     /** a back reference */
@@ -114,6 +117,12 @@ typedef enum pm_token_type {
 
     /** { */
     PM_TOKEN_BRACE_LEFT,
+
+    /** { for a block following a parenthesized argument */
+    PM_TOKEN_BRACE_LEFT_ARGUMENT,
+
+    /** { for a hash literal */
+    PM_TOKEN_BRACE_LEFT_HASH,
 
     /** [ */
     PM_TOKEN_BRACKET_LEFT,
@@ -277,6 +286,9 @@ typedef enum pm_token_type {
     /** do keyword for a block attached to a command */
     PM_TOKEN_KEYWORD_DO_BLOCK,
 
+    /** do keyword that opens the body of a lambda literal */
+    PM_TOKEN_KEYWORD_DO_LAMBDA,
+
     /** do keyword for a predicate in a while, until, or for loop */
     PM_TOKEN_KEYWORD_DO_LOOP,
 
@@ -406,6 +418,9 @@ typedef enum pm_token_type {
     /** ( */
     PM_TOKEN_PARENTHESIS_LEFT,
 
+    /** ( scanned at the beginning of an expression */
+    PM_TOKEN_PARENTHESIS_LEFT_GROUPING,
+
     /** ( for a parentheses node */
     PM_TOKEN_PARENTHESIS_LEFT_PARENTHESES,
 
@@ -516,6 +531,9 @@ typedef enum pm_token_type {
 
     /** a separator between words in a list */
     PM_TOKEN_WORDS_SEP,
+
+    /** the beginning of an execution string */
+    PM_TOKEN_XSTRING_BEGIN,
 
     /** marker for the point in the file at which the parser should stop */
     PM_TOKEN___END__,
@@ -4712,14 +4730,14 @@ typedef struct pm_in_node {
     PM_NODE_ALIGNAS struct pm_statements_node *statements;
 
     /**
-     * InNode#in_loc
+     * InNode#in_keyword_loc
      */
-    pm_location_t in_loc;
+    pm_location_t in_keyword_loc;
 
     /**
-     * InNode#then_loc
+     * InNode#then_keyword_loc
      */
-    pm_location_t then_loc;
+    pm_location_t then_keyword_loc;
 } pm_in_node_t;
 
 /**
@@ -5922,9 +5940,9 @@ typedef struct pm_match_predicate_node {
     PM_NODE_ALIGNAS struct pm_node *pattern;
 
     /**
-     * MatchPredicateNode#operator_loc
+     * MatchPredicateNode#keyword_loc
      */
-    pm_location_t operator_loc;
+    pm_location_t keyword_loc;
 } pm_match_predicate_node_t;
 
 /**
@@ -7643,7 +7661,7 @@ typedef struct pm_unless_node {
     pm_node_t base;
 
     /**
-     * UnlessNode#keyword_loc
+     * UnlessNode#unless_keyword_loc
      *
      * The Location of the `unless` keyword.
      *
@@ -7653,7 +7671,7 @@ typedef struct pm_unless_node {
      *     bar unless cond
      *         ^^^^^^
      */
-    pm_location_t keyword_loc;
+    pm_location_t unless_keyword_loc;
 
     /**
      * UnlessNode#predicate
@@ -7733,9 +7751,9 @@ typedef struct pm_until_node {
     pm_node_t base;
 
     /**
-     * UntilNode#keyword_loc
+     * UntilNode#until_keyword_loc
      */
-    pm_location_t keyword_loc;
+    pm_location_t until_keyword_loc;
 
     /**
      * UntilNode#do_keyword_loc
@@ -7743,9 +7761,9 @@ typedef struct pm_until_node {
     pm_location_t do_keyword_loc;
 
     /**
-     * UntilNode#closing_loc
+     * UntilNode#end_keyword_loc
      */
-    pm_location_t closing_loc;
+    pm_location_t end_keyword_loc;
 
     /**
      * UntilNode#predicate
@@ -7777,9 +7795,9 @@ typedef struct pm_when_node {
     pm_node_t base;
 
     /**
-     * WhenNode#keyword_loc
+     * WhenNode#when_keyword_loc
      */
-    pm_location_t keyword_loc;
+    pm_location_t when_keyword_loc;
 
     /**
      * WhenNode#conditions
@@ -7820,9 +7838,9 @@ typedef struct pm_while_node {
     pm_node_t base;
 
     /**
-     * WhileNode#keyword_loc
+     * WhileNode#while_keyword_loc
      */
-    pm_location_t keyword_loc;
+    pm_location_t while_keyword_loc;
 
     /**
      * WhileNode#do_keyword_loc
@@ -7830,9 +7848,9 @@ typedef struct pm_while_node {
     pm_location_t do_keyword_loc;
 
     /**
-     * WhileNode#closing_loc
+     * WhileNode#end_keyword_loc
      */
-    pm_location_t closing_loc;
+    pm_location_t end_keyword_loc;
 
     /**
      * WhileNode#predicate
@@ -9198,11 +9216,11 @@ PRISM_EXPORTED_FUNCTION pm_implicit_rest_node_t * pm_implicit_rest_node_new(pm_a
  * @param location The location of this node in the source.
  * @param pattern The pattern field.
  * @param statements The statements field.
- * @param in_loc The in_loc field.
- * @param then_loc The then_loc field.
+ * @param in_keyword_loc The in_keyword_loc field.
+ * @param then_keyword_loc The then_keyword_loc field.
  * @returns The newly allocated and initialized node.
  */
-PRISM_EXPORTED_FUNCTION pm_in_node_t * pm_in_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *pattern, struct pm_statements_node *statements, pm_location_t in_loc, pm_location_t then_loc);
+PRISM_EXPORTED_FUNCTION pm_in_node_t * pm_in_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *pattern, struct pm_statements_node *statements, pm_location_t in_keyword_loc, pm_location_t then_keyword_loc);
 
 /**
  * Allocate and initialize a new IndexAndWriteNode node.
@@ -9625,10 +9643,10 @@ PRISM_EXPORTED_FUNCTION pm_match_last_line_node_t * pm_match_last_line_node_new(
  * @param location The location of this node in the source.
  * @param value The value field.
  * @param pattern The pattern field.
- * @param operator_loc The operator_loc field.
+ * @param keyword_loc The keyword_loc field.
  * @returns The newly allocated and initialized node.
  */
-PRISM_EXPORTED_FUNCTION pm_match_predicate_node_t * pm_match_predicate_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value, struct pm_node *pattern, pm_location_t operator_loc);
+PRISM_EXPORTED_FUNCTION pm_match_predicate_node_t * pm_match_predicate_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, struct pm_node *value, struct pm_node *pattern, pm_location_t keyword_loc);
 
 /**
  * Allocate and initialize a new MatchRequiredNode node.
@@ -10252,7 +10270,7 @@ PRISM_EXPORTED_FUNCTION pm_undef_node_t * pm_undef_node_new(pm_arena_t *arena, u
  * @param node_id The unique identifier for this node.
  * @param flags The flags for this node.
  * @param location The location of this node in the source.
- * @param keyword_loc The Location of the \`unless\` keyword.
+ * @param unless_keyword_loc The Location of the \`unless\` keyword.
  * @param predicate The condition to be evaluated for the unless expression. It can be any [non\-void expression](https://github.com/ruby/prism/blob/main/docs/parsing\_rules.md\#non\-void\-expression).
  * @param then_keyword_loc The Location of the \`then\` keyword, if present.
  * @param statements The body of statements that will executed if the unless condition is
@@ -10260,7 +10278,7 @@ PRISM_EXPORTED_FUNCTION pm_undef_node_t * pm_undef_node_new(pm_arena_t *arena, u
  * @param end_keyword_loc The Location of the \`end\` keyword, if present.
  * @returns The newly allocated and initialized node.
  */
-PRISM_EXPORTED_FUNCTION pm_unless_node_t * pm_unless_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, struct pm_node *predicate, pm_location_t then_keyword_loc, struct pm_statements_node *statements, struct pm_else_node *else_clause, pm_location_t end_keyword_loc);
+PRISM_EXPORTED_FUNCTION pm_unless_node_t * pm_unless_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t unless_keyword_loc, struct pm_node *predicate, pm_location_t then_keyword_loc, struct pm_statements_node *statements, struct pm_else_node *else_clause, pm_location_t end_keyword_loc);
 
 /**
  * Allocate and initialize a new UntilNode node.
@@ -10269,14 +10287,14 @@ PRISM_EXPORTED_FUNCTION pm_unless_node_t * pm_unless_node_new(pm_arena_t *arena,
  * @param node_id The unique identifier for this node.
  * @param flags The flags for this node.
  * @param location The location of this node in the source.
- * @param keyword_loc The keyword_loc field.
+ * @param until_keyword_loc The until_keyword_loc field.
  * @param do_keyword_loc The do_keyword_loc field.
- * @param closing_loc The closing_loc field.
+ * @param end_keyword_loc The end_keyword_loc field.
  * @param predicate The predicate field.
  * @param statements The statements field.
  * @returns The newly allocated and initialized node.
  */
-PRISM_EXPORTED_FUNCTION pm_until_node_t * pm_until_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_location_t do_keyword_loc, pm_location_t closing_loc, struct pm_node *predicate, struct pm_statements_node *statements);
+PRISM_EXPORTED_FUNCTION pm_until_node_t * pm_until_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t until_keyword_loc, pm_location_t do_keyword_loc, pm_location_t end_keyword_loc, struct pm_node *predicate, struct pm_statements_node *statements);
 
 /**
  * Allocate and initialize a new WhenNode node.
@@ -10285,13 +10303,13 @@ PRISM_EXPORTED_FUNCTION pm_until_node_t * pm_until_node_new(pm_arena_t *arena, u
  * @param node_id The unique identifier for this node.
  * @param flags The flags for this node.
  * @param location The location of this node in the source.
- * @param keyword_loc The keyword_loc field.
+ * @param when_keyword_loc The when_keyword_loc field.
  * @param conditions The conditions field.
  * @param then_keyword_loc The then_keyword_loc field.
  * @param statements The statements field.
  * @returns The newly allocated and initialized node.
  */
-PRISM_EXPORTED_FUNCTION pm_when_node_t * pm_when_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_node_list_t conditions, pm_location_t then_keyword_loc, struct pm_statements_node *statements);
+PRISM_EXPORTED_FUNCTION pm_when_node_t * pm_when_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t when_keyword_loc, pm_node_list_t conditions, pm_location_t then_keyword_loc, struct pm_statements_node *statements);
 
 /**
  * Allocate and initialize a new WhileNode node.
@@ -10300,14 +10318,14 @@ PRISM_EXPORTED_FUNCTION pm_when_node_t * pm_when_node_new(pm_arena_t *arena, uin
  * @param node_id The unique identifier for this node.
  * @param flags The flags for this node.
  * @param location The location of this node in the source.
- * @param keyword_loc The keyword_loc field.
+ * @param while_keyword_loc The while_keyword_loc field.
  * @param do_keyword_loc The do_keyword_loc field.
- * @param closing_loc The closing_loc field.
+ * @param end_keyword_loc The end_keyword_loc field.
  * @param predicate The predicate field.
  * @param statements The statements field.
  * @returns The newly allocated and initialized node.
  */
-PRISM_EXPORTED_FUNCTION pm_while_node_t * pm_while_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t keyword_loc, pm_location_t do_keyword_loc, pm_location_t closing_loc, struct pm_node *predicate, struct pm_statements_node *statements);
+PRISM_EXPORTED_FUNCTION pm_while_node_t * pm_while_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t while_keyword_loc, pm_location_t do_keyword_loc, pm_location_t end_keyword_loc, struct pm_node *predicate, struct pm_statements_node *statements);
 
 /**
  * Allocate and initialize a new XStringNode node.

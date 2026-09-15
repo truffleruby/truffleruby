@@ -8,7 +8,7 @@ ruby: |
 ast: |
   HashCastNodeGen$HashCastASTNodeGen
       attributes:
-          flags = 1
+          flags = 0
           sourceCharIndex = 0
           sourceLength = 7
       children:

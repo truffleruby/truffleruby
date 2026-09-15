@@ -41,8 +41,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ NilNode (location: (1,20)-(1,23))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (1,10)-(1,12) = "in"
-        │   │       └── then_loc: (1,15)-(1,19) = "then"
+        │   │       ├── in_keyword_loc: (1,10)-(1,12) = "in"
+        │   │       └── then_keyword_loc: (1,15)-(1,19) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (1,0)-(1,4) = "case"
         │   └── end_keyword_loc: (1,25)-(1,28) = "end"
@@ -86,8 +86,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ NilNode (location: (3,21)-(3,24))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (3,10)-(3,12) = "in"
-        │   │       └── then_loc: (3,16)-(3,20) = "then"
+        │   │       ├── in_keyword_loc: (3,10)-(3,12) = "in"
+        │   │       └── then_keyword_loc: (3,16)-(3,20) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (3,0)-(3,4) = "case"
         │   └── end_keyword_loc: (3,26)-(3,29) = "end"
@@ -139,8 +139,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ NilNode (location: (5,27)-(5,30))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (5,10)-(5,12) = "in"
-        │   │       └── then_loc: (5,22)-(5,26) = "then"
+        │   │       ├── in_keyword_loc: (5,10)-(5,12) = "in"
+        │   │       └── then_keyword_loc: (5,22)-(5,26) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (5,0)-(5,4) = "case"
         │   └── end_keyword_loc: (5,32)-(5,35) = "end"
@@ -200,8 +200,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ NilNode (location: (7,33)-(7,36))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (7,10)-(7,12) = "in"
-        │   │       └── then_loc: (7,28)-(7,32) = "then"
+        │   │       ├── in_keyword_loc: (7,10)-(7,12) = "in"
+        │   │       └── then_keyword_loc: (7,28)-(7,32) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (7,0)-(7,4) = "case"
         │   └── end_keyword_loc: (7,38)-(7,41) = "end"
@@ -253,8 +253,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ NilNode (location: (9,27)-(9,30))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (9,10)-(9,12) = "in"
-        │   │       └── then_loc: (9,22)-(9,26) = "then"
+        │   │       ├── in_keyword_loc: (9,10)-(9,12) = "in"
+        │   │       └── then_keyword_loc: (9,22)-(9,26) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (9,0)-(9,4) = "case"
         │   └── end_keyword_loc: (9,32)-(9,35) = "end"
@@ -296,8 +296,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ NilNode (location: (11,21)-(11,24))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (11,10)-(11,12) = "in"
-        │   │       └── then_loc: (11,16)-(11,20) = "then"
+        │   │       ├── in_keyword_loc: (11,10)-(11,12) = "in"
+        │   │       └── then_keyword_loc: (11,16)-(11,20) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (11,0)-(11,4) = "case"
         │   └── end_keyword_loc: (11,26)-(11,29) = "end"
@@ -341,8 +341,8 @@
         │   │       │   └── body: (length: 1)
         │   │       │       └── @ NilNode (location: (13,23)-(13,26))
         │   │       │           └── flags: newline, static_literal
-        │   │       ├── in_loc: (13,10)-(13,12) = "in"
-        │   │       └── then_loc: (13,18)-(13,22) = "then"
+        │   │       ├── in_keyword_loc: (13,10)-(13,12) = "in"
+        │   │       └── then_keyword_loc: (13,18)-(13,22) = "then"
         │   ├── else_clause: ∅
         │   ├── case_keyword_loc: (13,0)-(13,4) = "case"
         │   └── end_keyword_loc: (13,28)-(13,31) = "end"
@@ -388,8 +388,8 @@
             │       │   └── body: (length: 1)
             │       │       └── @ NilNode (location: (15,24)-(15,27))
             │       │           └── flags: newline, static_literal
-            │       ├── in_loc: (15,10)-(15,12) = "in"
-            │       └── then_loc: (15,19)-(15,23) = "then"
+            │       ├── in_keyword_loc: (15,10)-(15,12) = "in"
+            │       └── then_keyword_loc: (15,19)-(15,23) = "then"
             ├── else_clause: ∅
             ├── case_keyword_loc: (15,0)-(15,4) = "case"
             └── end_keyword_loc: (15,29)-(15,32) = "end"

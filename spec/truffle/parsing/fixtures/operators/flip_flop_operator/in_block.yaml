@@ -172,7 +172,7 @@ ast: |
                                                                                                                                       sourceLength = 0
                                                                                                       WriteLocalVariableNode
                                                                                                           attributes:
-                                                                                                              flags = 1
+                                                                                                              flags = 0
                                                                                                               frameSlot = 1 # x
                                                                                                               sourceCharIndex = 22
                                                                                                               sourceLength = 6
@@ -180,7 +180,7 @@ ast: |
                                                                                                               valueNode =
                                                                                                                   IntegerFixnumLiteralNode
                                                                                                                       attributes:
-                                                                                                                          flags = 0
+                                                                                                                          flags = 1
                                                                                                                           sourceCharIndex = 26
                                                                                                                           sourceLength = 2
                                                                                                                           value = 42

@@ -1,0 +1,381 @@
+@ ProgramNode (location: (1,0)-(9,20))
+├── flags: ∅
+├── locals: [:b, :c, :d]
+└── statements:
+    @ StatementsNode (location: (1,0)-(9,20))
+    ├── flags: ∅
+    └── body: (length: 9)
+        ├── @ RescueModifierNode (location: (1,0)-(1,17))
+        │   ├── flags: newline
+        │   ├── expression:
+        │   │   @ CallNode (location: (1,0)-(1,1))
+        │   │   ├── flags: variable_call, ignore_visibility
+        │   │   ├── receiver: ∅
+        │   │   ├── call_operator_loc: ∅
+        │   │   ├── name: :a
+        │   │   ├── message_loc: (1,0)-(1,1) = "a"
+        │   │   ├── opening_loc: ∅
+        │   │   ├── arguments: ∅
+        │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
+        │   │   └── block: ∅
+        │   ├── keyword_loc: (1,2)-(1,8) = "rescue"
+        │   └── rescue_expression:
+        │       @ MultiWriteNode (location: (1,9)-(1,17))
+        │       ├── flags: ∅
+        │       ├── lefts: (length: 2)
+        │       │   ├── @ LocalVariableTargetNode (location: (1,9)-(1,10))
+        │       │   │   ├── flags: ∅
+        │       │   │   ├── name: :b
+        │       │   │   └── depth: 0
+        │       │   └── @ LocalVariableTargetNode (location: (1,12)-(1,13))
+        │       │       ├── flags: ∅
+        │       │       ├── name: :c
+        │       │       └── depth: 0
+        │       ├── rest: ∅
+        │       ├── rights: (length: 0)
+        │       ├── lparen_loc: ∅
+        │       ├── rparen_loc: ∅
+        │       ├── operator_loc: (1,14)-(1,15) = "="
+        │       └── value:
+        │           @ IntegerNode (location: (1,16)-(1,17))
+        │           ├── flags: static_literal, decimal
+        │           └── value: 1
+        ├── @ RescueModifierNode (location: (2,0)-(2,20))
+        │   ├── flags: newline
+        │   ├── expression:
+        │   │   @ CallNode (location: (2,0)-(2,1))
+        │   │   ├── flags: variable_call, ignore_visibility
+        │   │   ├── receiver: ∅
+        │   │   ├── call_operator_loc: ∅
+        │   │   ├── name: :a
+        │   │   ├── message_loc: (2,0)-(2,1) = "a"
+        │   │   ├── opening_loc: ∅
+        │   │   ├── arguments: ∅
+        │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
+        │   │   └── block: ∅
+        │   ├── keyword_loc: (2,2)-(2,8) = "rescue"
+        │   └── rescue_expression:
+        │       @ MultiWriteNode (location: (2,9)-(2,20))
+        │       ├── flags: ∅
+        │       ├── lefts: (length: 3)
+        │       │   ├── @ LocalVariableTargetNode (location: (2,9)-(2,10))
+        │       │   │   ├── flags: ∅
+        │       │   │   ├── name: :b
+        │       │   │   └── depth: 0
+        │       │   ├── @ LocalVariableTargetNode (location: (2,12)-(2,13))
+        │       │   │   ├── flags: ∅
+        │       │   │   ├── name: :c
+        │       │   │   └── depth: 0
+        │       │   └── @ LocalVariableTargetNode (location: (2,15)-(2,16))
+        │       │       ├── flags: ∅
+        │       │       ├── name: :d
+        │       │       └── depth: 0
+        │       ├── rest: ∅
+        │       ├── rights: (length: 0)
+        │       ├── lparen_loc: ∅
+        │       ├── rparen_loc: ∅
+        │       ├── operator_loc: (2,17)-(2,18) = "="
+        │       └── value:
+        │           @ IntegerNode (location: (2,19)-(2,20))
+        │           ├── flags: static_literal, decimal
+        │           └── value: 1
+        ├── @ RescueModifierNode (location: (3,0)-(3,18))
+        │   ├── flags: newline
+        │   ├── expression:
+        │   │   @ CallNode (location: (3,0)-(3,1))
+        │   │   ├── flags: variable_call, ignore_visibility
+        │   │   ├── receiver: ∅
+        │   │   ├── call_operator_loc: ∅
+        │   │   ├── name: :a
+        │   │   ├── message_loc: (3,0)-(3,1) = "a"
+        │   │   ├── opening_loc: ∅
+        │   │   ├── arguments: ∅
+        │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
+        │   │   └── block: ∅
+        │   ├── keyword_loc: (3,2)-(3,8) = "rescue"
+        │   └── rescue_expression:
+        │       @ MultiWriteNode (location: (3,9)-(3,18))
+        │       ├── flags: ∅
+        │       ├── lefts: (length: 0)
+        │       ├── rest:
+        │       │   @ SplatNode (location: (3,9)-(3,11))
+        │       │   ├── flags: ∅
+        │       │   ├── operator_loc: (3,9)-(3,10) = "*"
+        │       │   └── expression:
+        │       │       @ LocalVariableTargetNode (location: (3,10)-(3,11))
+        │       │       ├── flags: ∅
+        │       │       ├── name: :b
+        │       │       └── depth: 0
+        │       ├── rights: (length: 1)
+        │       │   └── @ LocalVariableTargetNode (location: (3,13)-(3,14))
+        │       │       ├── flags: ∅
+        │       │       ├── name: :c
+        │       │       └── depth: 0
+        │       ├── lparen_loc: ∅
+        │       ├── rparen_loc: ∅
+        │       ├── operator_loc: (3,15)-(3,16) = "="
+        │       └── value:
+        │           @ IntegerNode (location: (3,17)-(3,18))
+        │           ├── flags: static_literal, decimal
+        │           └── value: 1
+        ├── @ RescueModifierNode (location: (4,0)-(4,18))
+        │   ├── flags: newline
+        │   ├── expression:
+        │   │   @ CallNode (location: (4,0)-(4,1))
+        │   │   ├── flags: variable_call, ignore_visibility
+        │   │   ├── receiver: ∅
+        │   │   ├── call_operator_loc: ∅
+        │   │   ├── name: :a
+        │   │   ├── message_loc: (4,0)-(4,1) = "a"
+        │   │   ├── opening_loc: ∅
+        │   │   ├── arguments: ∅
+        │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
+        │   │   └── block: ∅
+        │   ├── keyword_loc: (4,2)-(4,8) = "rescue"
+        │   └── rescue_expression:
+        │       @ MultiWriteNode (location: (4,9)-(4,18))
+        │       ├── flags: ∅
+        │       ├── lefts: (length: 1)
+        │       │   └── @ LocalVariableTargetNode (location: (4,9)-(4,10))
+        │       │       ├── flags: ∅
+        │       │       ├── name: :b
+        │       │       └── depth: 0
+        │       ├── rest:
+        │       │   @ SplatNode (location: (4,12)-(4,14))
+        │       │   ├── flags: ∅
+        │       │   ├── operator_loc: (4,12)-(4,13) = "*"
+        │       │   └── expression:
+        │       │       @ LocalVariableTargetNode (location: (4,13)-(4,14))
+        │       │       ├── flags: ∅
+        │       │       ├── name: :c
+        │       │       └── depth: 0
+        │       ├── rights: (length: 0)
+        │       ├── lparen_loc: ∅
+        │       ├── rparen_loc: ∅
+        │       ├── operator_loc: (4,15)-(4,16) = "="
+        │       └── value:
+        │           @ IntegerNode (location: (4,17)-(4,18))
+        │           ├── flags: static_literal, decimal
+        │           └── value: 1
+        ├── @ RescueModifierNode (location: (5,0)-(5,21))
+        │   ├── flags: newline
+        │   ├── expression:
+        │   │   @ CallNode (location: (5,0)-(5,1))
+        │   │   ├── flags: variable_call, ignore_visibility
+        │   │   ├── receiver: ∅
+        │   │   ├── call_operator_loc: ∅
+        │   │   ├── name: :a
+        │   │   ├── message_loc: (5,0)-(5,1) = "a"
+        │   │   ├── opening_loc: ∅
+        │   │   ├── arguments: ∅
+        │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
+        │   │   └── block: ∅
+        │   ├── keyword_loc: (5,2)-(5,8) = "rescue"
+        │   └── rescue_expression:
+        │       @ MultiWriteNode (location: (5,9)-(5,21))
+        │       ├── flags: ∅
+        │       ├── lefts: (length: 1)
+        │       │   └── @ LocalVariableTargetNode (location: (5,9)-(5,10))
+        │       │       ├── flags: ∅
+        │       │       ├── name: :b
+        │       │       └── depth: 0
+        │       ├── rest:
+        │       │   @ SplatNode (location: (5,12)-(5,14))
+        │       │   ├── flags: ∅
+        │       │   ├── operator_loc: (5,12)-(5,13) = "*"
+        │       │   └── expression:
+        │       │       @ LocalVariableTargetNode (location: (5,13)-(5,14))
+        │       │       ├── flags: ∅
+        │       │       ├── name: :c
+        │       │       └── depth: 0
+        │       ├── rights: (length: 1)
+        │       │   └── @ LocalVariableTargetNode (location: (5,16)-(5,17))
+        │       │       ├── flags: ∅
+        │       │       ├── name: :d
+        │       │       └── depth: 0
+        │       ├── lparen_loc: ∅
+        │       ├── rparen_loc: ∅
+        │       ├── operator_loc: (5,18)-(5,19) = "="
+        │       └── value:
+        │           @ IntegerNode (location: (5,20)-(5,21))
+        │           ├── flags: static_literal, decimal
+        │           └── value: 1
+        ├── @ RescueModifierNode (location: (6,0)-(6,15))
+        │   ├── flags: newline
+        │   ├── expression:
+        │   │   @ CallNode (location: (6,0)-(6,1))
+        │   │   ├── flags: variable_call, ignore_visibility
+        │   │   ├── receiver: ∅
+        │   │   ├── call_operator_loc: ∅
+        │   │   ├── name: :a
+        │   │   ├── message_loc: (6,0)-(6,1) = "a"
+        │   │   ├── opening_loc: ∅
+        │   │   ├── arguments: ∅
+        │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
+        │   │   └── block: ∅
+        │   ├── keyword_loc: (6,2)-(6,8) = "rescue"
+        │   └── rescue_expression:
+        │       @ MultiWriteNode (location: (6,9)-(6,15))
+        │       ├── flags: ∅
+        │       ├── lefts: (length: 0)
+        │       ├── rest:
+        │       │   @ SplatNode (location: (6,9)-(6,11))
+        │       │   ├── flags: ∅
+        │       │   ├── operator_loc: (6,9)-(6,10) = "*"
+        │       │   └── expression:
+        │       │       @ LocalVariableTargetNode (location: (6,10)-(6,11))
+        │       │       ├── flags: ∅
+        │       │       ├── name: :b
+        │       │       └── depth: 0
+        │       ├── rights: (length: 0)
+        │       ├── lparen_loc: ∅
+        │       ├── rparen_loc: ∅
+        │       ├── operator_loc: (6,12)-(6,13) = "="
+        │       └── value:
+        │           @ IntegerNode (location: (6,14)-(6,15))
+        │           ├── flags: static_literal, decimal
+        │           └── value: 1
+        ├── @ RescueModifierNode (location: (7,0)-(7,22))
+        │   ├── flags: newline
+        │   ├── expression:
+        │   │   @ CallNode (location: (7,0)-(7,1))
+        │   │   ├── flags: variable_call, ignore_visibility
+        │   │   ├── receiver: ∅
+        │   │   ├── call_operator_loc: ∅
+        │   │   ├── name: :a
+        │   │   ├── message_loc: (7,0)-(7,1) = "a"
+        │   │   ├── opening_loc: ∅
+        │   │   ├── arguments: ∅
+        │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
+        │   │   └── block: ∅
+        │   ├── keyword_loc: (7,2)-(7,8) = "rescue"
+        │   └── rescue_expression:
+        │       @ MultiWriteNode (location: (7,9)-(7,22))
+        │       ├── flags: ∅
+        │       ├── lefts: (length: 2)
+        │       │   ├── @ MultiTargetNode (location: (7,9)-(7,15))
+        │       │   │   ├── flags: ∅
+        │       │   │   ├── lefts: (length: 2)
+        │       │   │   │   ├── @ LocalVariableTargetNode (location: (7,10)-(7,11))
+        │       │   │   │   │   ├── flags: ∅
+        │       │   │   │   │   ├── name: :b
+        │       │   │   │   │   └── depth: 0
+        │       │   │   │   └── @ LocalVariableTargetNode (location: (7,13)-(7,14))
+        │       │   │   │       ├── flags: ∅
+        │       │   │   │       ├── name: :c
+        │       │   │   │       └── depth: 0
+        │       │   │   ├── rest: ∅
+        │       │   │   ├── rights: (length: 0)
+        │       │   │   ├── lparen_loc: (7,9)-(7,10) = "("
+        │       │   │   └── rparen_loc: (7,14)-(7,15) = ")"
+        │       │   └── @ LocalVariableTargetNode (location: (7,17)-(7,18))
+        │       │       ├── flags: ∅
+        │       │       ├── name: :d
+        │       │       └── depth: 0
+        │       ├── rest: ∅
+        │       ├── rights: (length: 0)
+        │       ├── lparen_loc: ∅
+        │       ├── rparen_loc: ∅
+        │       ├── operator_loc: (7,19)-(7,20) = "="
+        │       └── value:
+        │           @ IntegerNode (location: (7,21)-(7,22))
+        │           ├── flags: static_literal, decimal
+        │           └── value: 1
+        ├── @ RescueModifierNode (location: (8,0)-(8,19))
+        │   ├── flags: newline
+        │   ├── expression:
+        │   │   @ CallNode (location: (8,0)-(8,1))
+        │   │   ├── flags: variable_call, ignore_visibility
+        │   │   ├── receiver: ∅
+        │   │   ├── call_operator_loc: ∅
+        │   │   ├── name: :a
+        │   │   ├── message_loc: (8,0)-(8,1) = "a"
+        │   │   ├── opening_loc: ∅
+        │   │   ├── arguments: ∅
+        │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
+        │   │   └── block: ∅
+        │   ├── keyword_loc: (8,2)-(8,8) = "rescue"
+        │   └── rescue_expression:
+        │       @ MultiWriteNode (location: (8,9)-(8,19))
+        │       ├── flags: ∅
+        │       ├── lefts: (length: 2)
+        │       │   ├── @ CallTargetNode (location: (8,9)-(8,12))
+        │       │   │   ├── flags: ∅
+        │       │   │   ├── receiver:
+        │       │   │   │   @ LocalVariableReadNode (location: (8,9)-(8,10))
+        │       │   │   │   ├── flags: ∅
+        │       │   │   │   ├── name: :b
+        │       │   │   │   └── depth: 0
+        │       │   │   ├── call_operator_loc: (8,10)-(8,11) = "."
+        │       │   │   ├── name: :c=
+        │       │   │   └── message_loc: (8,11)-(8,12) = "c"
+        │       │   └── @ LocalVariableTargetNode (location: (8,14)-(8,15))
+        │       │       ├── flags: ∅
+        │       │       ├── name: :d
+        │       │       └── depth: 0
+        │       ├── rest: ∅
+        │       ├── rights: (length: 0)
+        │       ├── lparen_loc: ∅
+        │       ├── rparen_loc: ∅
+        │       ├── operator_loc: (8,16)-(8,17) = "="
+        │       └── value:
+        │           @ IntegerNode (location: (8,18)-(8,19))
+        │           ├── flags: static_literal, decimal
+        │           └── value: 1
+        └── @ RescueModifierNode (location: (9,0)-(9,20))
+            ├── flags: newline
+            ├── expression:
+            │   @ CallNode (location: (9,0)-(9,1))
+            │   ├── flags: variable_call, ignore_visibility
+            │   ├── receiver: ∅
+            │   ├── call_operator_loc: ∅
+            │   ├── name: :a
+            │   ├── message_loc: (9,0)-(9,1) = "a"
+            │   ├── opening_loc: ∅
+            │   ├── arguments: ∅
+            │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
+            │   └── block: ∅
+            ├── keyword_loc: (9,2)-(9,8) = "rescue"
+            └── rescue_expression:
+                @ MultiWriteNode (location: (9,9)-(9,20))
+                ├── flags: ∅
+                ├── lefts: (length: 2)
+                │   ├── @ IndexTargetNode (location: (9,9)-(9,13))
+                │   │   ├── flags: attribute_write
+                │   │   ├── receiver:
+                │   │   │   @ LocalVariableReadNode (location: (9,9)-(9,10))
+                │   │   │   ├── flags: ∅
+                │   │   │   ├── name: :b
+                │   │   │   └── depth: 0
+                │   │   ├── opening_loc: (9,10)-(9,11) = "["
+                │   │   ├── arguments:
+                │   │   │   @ ArgumentsNode (location: (9,11)-(9,12))
+                │   │   │   ├── flags: ∅
+                │   │   │   └── arguments: (length: 1)
+                │   │   │       └── @ IntegerNode (location: (9,11)-(9,12))
+                │   │   │           ├── flags: static_literal, decimal
+                │   │   │           └── value: 0
+                │   │   ├── closing_loc: (9,12)-(9,13) = "]"
+                │   │   └── block: ∅
+                │   └── @ LocalVariableTargetNode (location: (9,15)-(9,16))
+                │       ├── flags: ∅
+                │       ├── name: :c
+                │       └── depth: 0
+                ├── rest: ∅
+                ├── rights: (length: 0)
+                ├── lparen_loc: ∅
+                ├── rparen_loc: ∅
+                ├── operator_loc: (9,17)-(9,18) = "="
+                └── value:
+                    @ IntegerNode (location: (9,19)-(9,20))
+                    ├── flags: static_literal, decimal
+                    └── value: 1

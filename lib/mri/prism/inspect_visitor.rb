@@ -49,7 +49,7 @@ module Prism
     end
 
     # Compose an inspect string for the given node.
-    #--
+    #
     #: (node node) -> String
     def self.compose(node)
       visitor = new
@@ -58,7 +58,7 @@ module Prism
     end
 
     # Compose the final string.
-    #--
+    #
     #: () -> String
     def compose # :nodoc:
       buffer = +""
@@ -1194,8 +1194,8 @@ module Prism
         commands << ["├── statements:\n", indent]
         commands << [statements, "#{indent}│   "]
       end
-      commands << ["├── in_loc: #{inspect_location(node.in_loc)}\n", indent]
-      commands << ["└── then_loc: #{inspect_location(node.then_loc)}\n", indent]
+      commands << ["├── in_keyword_loc: #{inspect_location(node.in_keyword_loc)}\n", indent]
+      commands << ["└── then_keyword_loc: #{inspect_location(node.then_keyword_loc)}\n", indent]
     end
 
     #: (IndexAndWriteNode node) -> void
@@ -1636,7 +1636,7 @@ module Prism
       commands << [node.value, "#{indent}│   "]
       commands << ["├── pattern:\n", indent]
       commands << [node.pattern, "#{indent}│   "]
-      commands << ["└── operator_loc: #{inspect_location(node.operator_loc)}\n", indent]
+      commands << ["└── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
     end
 
     #: (MatchRequiredNode node) -> void
@@ -2295,7 +2295,7 @@ module Prism
       commands << [inspect_node("UnlessNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
-      commands << ["├── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
+      commands << ["├── unless_keyword_loc: #{inspect_location(node.unless_keyword_loc)}\n", indent]
       commands << ["├── predicate:\n", indent]
       commands << [node.predicate, "#{indent}│   "]
       commands << ["├── then_keyword_loc: #{inspect_location(node.then_keyword_loc)}\n", indent]
@@ -2319,9 +2319,9 @@ module Prism
       commands << [inspect_node("UntilNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("begin_modifier" if node.begin_modifier?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
-      commands << ["├── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
+      commands << ["├── until_keyword_loc: #{inspect_location(node.until_keyword_loc)}\n", indent]
       commands << ["├── do_keyword_loc: #{inspect_location(node.do_keyword_loc)}\n", indent]
-      commands << ["├── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
+      commands << ["├── end_keyword_loc: #{inspect_location(node.end_keyword_loc)}\n", indent]
       commands << ["├── predicate:\n", indent]
       commands << [node.predicate, "#{indent}│   "]
       if (statements = node.statements).nil?
@@ -2337,7 +2337,7 @@ module Prism
       commands << [inspect_node("WhenNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
-      commands << ["├── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
+      commands << ["├── when_keyword_loc: #{inspect_location(node.when_keyword_loc)}\n", indent]
       commands << ["├── conditions: (length: #{(conditions = node.conditions).length})\n", indent]
       if conditions.any?
         conditions[0...-1].each do |child|
@@ -2361,9 +2361,9 @@ module Prism
       commands << [inspect_node("WhileNode", node), indent]
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("begin_modifier" if node.begin_modifier?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
-      commands << ["├── keyword_loc: #{inspect_location(node.keyword_loc)}\n", indent]
+      commands << ["├── while_keyword_loc: #{inspect_location(node.while_keyword_loc)}\n", indent]
       commands << ["├── do_keyword_loc: #{inspect_location(node.do_keyword_loc)}\n", indent]
-      commands << ["├── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
+      commands << ["├── end_keyword_loc: #{inspect_location(node.end_keyword_loc)}\n", indent]
       commands << ["├── predicate:\n", indent]
       commands << [node.predicate, "#{indent}│   "]
       if (statements = node.statements).nil?
@@ -2404,7 +2404,7 @@ module Prism
     private
 
     # Compose a header for the given node.
-    #--
+    #
     #: (String name, node node) -> String
     def inspect_node(name, node) # :nodoc:
       location = node.location
@@ -2412,7 +2412,7 @@ module Prism
     end
 
     # Compose a string representing the given inner location field.
-    #--
+    #
     #: (Location? location) -> String
     def inspect_location(location) # :nodoc:
       if location
