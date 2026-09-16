@@ -1,0 +1,1 @@
+fails:StringIO#sysread when passed length, buffer preserves the encoding of the given buffer

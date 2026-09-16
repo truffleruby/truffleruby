@@ -1,0 +1,1 @@
+fails:StringIO#read when passed length, buffer preserves the encoding of the given buffer
