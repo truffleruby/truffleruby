@@ -10,13 +10,10 @@
  */
 package org.truffleruby.core.hash;
 
-import static org.truffleruby.language.dispatch.DispatchConfiguration.PUBLIC;
-
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.core.cast.BooleanCastNode;
 import org.truffleruby.language.RubyContextSourceNode;
@@ -34,11 +31,11 @@ public abstract class HashIsEmptyNode extends RubyContextSourceNode {
     }
 
     @Specialization(guards = "!isBuiltinHash(hash)")
-    static boolean emptyOnSubclass(VirtualFrame frame, RubyHash hash,
+    static boolean emptyOnSubclass(RubyHash hash,
             @Bind Node node,
             @Cached DispatchNode emptyNode,
             @Cached BooleanCastNode booleanCastNode) {
-        return booleanCastNode.execute(node, emptyNode.callWithFrame(PUBLIC, frame, hash, "empty?"));
+        return booleanCastNode.execute(node, emptyNode.call(hash, "empty?"));
     }
 
     protected boolean isBuiltinHash(RubyHash hash) {

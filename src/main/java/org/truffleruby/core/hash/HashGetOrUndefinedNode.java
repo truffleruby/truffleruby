@@ -10,15 +10,12 @@
  */
 package org.truffleruby.core.hash;
 
-import static org.truffleruby.language.dispatch.DispatchConfiguration.PUBLIC;
-
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.Frame;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.collections.PEBiFunction;
@@ -54,14 +51,14 @@ public abstract class HashGetOrUndefinedNode extends RubyContextSourceNode imple
     }
 
     @Specialization(guards = "!isBuiltinHash(hash)")
-    static Object getOnSubclass(VirtualFrame frame, RubyHash hash,
+    static Object getOnSubclass(RubyHash hash,
             @Bind Node node,
             @Bind("getKey()") RubySymbol key,
             @Cached DispatchNode keyNode,
             @Cached BooleanCastNode booleanCastNode,
             @Cached DispatchNode arefNode) {
-        if (booleanCastNode.execute(node, keyNode.callWithFrame(PUBLIC, frame, hash, "key?", key))) {
-            return arefNode.callWithFrame(PUBLIC, frame, hash, "[]", key);
+        if (booleanCastNode.execute(node, keyNode.call(hash, "key?", key))) {
+            return arefNode.call(hash, "[]", key);
         } else {
             return NotProvided.INSTANCE;
         }

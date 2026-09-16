@@ -10,13 +10,10 @@
  */
 package org.truffleruby.core.hash;
 
-import static org.truffleruby.language.dispatch.DispatchConfiguration.PUBLIC;
-
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.truffleruby.core.hash.library.HashStoreLibrary;
 import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryCallback;
@@ -47,13 +44,13 @@ public abstract class HashSubtractKeysNode extends RubyContextSourceNode impleme
     }
 
     @Specialization(guards = "!isBuiltinHash(hash)")
-    Object substractKeysOnSubclass(VirtualFrame frame, RubyHash hash,
+    Object substractKeysOnSubclass(RubyHash hash,
             @Cached DispatchNode dupNode,
             @Cached DispatchNode deleteNode) {
-        Object dup = dupNode.callWithFrame(PUBLIC, frame, hash, "dup");
+        Object dup = dupNode.call(hash, "dup");
 
         for (RubySymbol key : excludedKeys) {
-            deleteNode.callWithFrame(PUBLIC, frame, dup, "delete", key);
+            deleteNode.call(dup, "delete", key);
         }
 
         return dup;
