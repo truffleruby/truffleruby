@@ -749,28 +749,45 @@ class StringIO
   end
 
   # rb_enc_right_char_head(): moves +offset+ past a character it splits.
-  private def right_char_head(string, offset, bytesize)
-    encoding = string.encoding
-    return offset if Primitive.string_is_character_head?(encoding, string, offset)
+  private def right_char_head(string, start, offset, bytesize)
+    return offset if char_head?(string, offset)
 
-    head = offset - 1
-
-    while head >= 0 && offset - head < 8 # no character is longer than this
-      if Primitive.string_is_character_head?(encoding, string, head)
-        char = Primitive.string_chr_at(string, head)
-        stop = Primitive.nil?(char) ? offset : head + char.bytesize
-        return stop if stop > offset
-
-        break
+    head = previous_char_head(string, offset - 1, start)
+    if head
+      char = Primitive.string_chr_at(string, head)
+      if char
+        stop = head + char.bytesize
+        return stop if stop > offset # The character reaches past the offset, so the offset splits it.
       end
-
-      head -= 1
     end
 
-    # Broken bytes, which only a fixed width encoding cannot slice at.
-    return offset if encoding.ascii_compatible?
+    # Not a character. CRuby cuts here, which a fixed width encoding cannot.
+    return offset if string.encoding.ascii_compatible?
 
-    offset += 1 while offset < bytesize && !Primitive.string_is_character_head?(encoding, string, offset)
+    next_char_head(string, offset, bytesize)
+  end
+
+  private def char_head?(string, offset)
+    Primitive.string_is_character_head?(string.encoding, string, offset)
+  end
+
+  private def previous_char_head(string, offset, start)
+    while offset >= start
+      return offset if char_head?(string, offset)
+
+      offset -= 1
+    end
+
+    nil
+  end
+
+  private def next_char_head(string, offset, bytesize)
+    while offset < bytesize
+      return offset if char_head?(string, offset)
+
+      offset += 1
+    end
+
     offset
   end
 
@@ -785,7 +802,7 @@ class StringIO
       bytesize = string.bytesize
 
       if limit && limit < bytesize - pos
-        limit = right_char_head(string, pos + limit, bytesize) - pos
+        limit = right_char_head(string, pos, pos + limit, bytesize) - pos
       end
 
       if Primitive.nil?(sep)
