@@ -231,6 +231,7 @@ Update all of these:
 * Grep for the old Bundler version with `git grep -F x.y.z`
 * If `tool/id.def` has changed, then run `jt build core-symbols` and check for correctness.
 * Update `config_*.h` files by running the CI and copying the output.
+* Update `StringIO::VERSION` in `lib/truffle/stringio.rb` and tag failing specs.
 
 For a new major version:
 * Update `TargetRubyVersion` in `.rubocop.yml`
