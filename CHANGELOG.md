@@ -94,6 +94,7 @@ Compatibility:
 * Fix `new` on `Data` subclasses to pass the given block to `#initialize` (@eregon).
 * Fix `ENV` for `BINARY` strings with non-ASCII bytes (@nirvdrum).
 * `StringIO#gets`, `#readline`, `#each_line` and `#readlines` no longer split a multi-byte character when given a limit (@ListlessPanda).
+* Support multiple arguments in `StringIO#write` (@andrykonchin).
 
 Performance:
 

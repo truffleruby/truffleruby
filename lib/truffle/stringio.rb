@@ -298,10 +298,18 @@ class StringIO
     self
   end
 
-  def write(str)
+  def write(*objects)
     check_writable
 
-    str = String(str)
+    total = 0
+    objects.each do |object|
+      total += write_single_object(object)
+    end
+    total
+  end
+
+  private def write_single_object(object)
+    str = Truffle::Type.rb_obj_as_string(object)
     return 0 if str.empty?
 
     # difference to IO, see https://github.com/ruby/stringio/blob/009896b973/ext/stringio/stringio.c#L1498-L1506
