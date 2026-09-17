@@ -128,8 +128,12 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
     // Last-used cache per thread for the threadState for LightweightLayoutLock's
     private final WeakHashMap<LightweightLayoutLock, AtomicInteger> layoutLockStates = new WeakHashMap<>();
 
-    private LightweightLayoutLock lastLayoutLock = null;
-    private AtomicInteger lastThreadState = null;
+    /** Small cache of the last-used locks, since typically a few concurrent Hashes/Arrays are accessed repeatedly. A
+     * single-entry cache would keep missing when alternating between two collections. Only accessed by this Fiber. */
+    private static final int LAYOUT_LOCK_CACHE_SIZE = 4;
+    private final LightweightLayoutLock[] cachedLayoutLocks = new LightweightLayoutLock[LAYOUT_LOCK_CACHE_SIZE];
+    private final AtomicInteger[] cachedLayoutLockThreadStates = new AtomicInteger[LAYOUT_LOCK_CACHE_SIZE];
+    private int nextLayoutLockCacheIndex = 0;
 
     // To pass state between beforeEnter(), fiberMain() and afterLeave()
     FiberManager.FiberMessage firstMessage;
@@ -208,8 +212,16 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
 
     public AtomicInteger getLayoutLockThreadState(LightweightLayoutLock lock, InlinedConditionProfile fastPathProfile,
             Node node) {
-        if (fastPathProfile.profile(node, lock == lastLayoutLock)) {
-            return lastThreadState;
+        AtomicInteger cached = null;
+        for (int i = 0; i < LAYOUT_LOCK_CACHE_SIZE; i++) {
+            if (cachedLayoutLocks[i] == lock) {
+                cached = cachedLayoutLockThreadStates[i];
+                break;
+            }
+        }
+
+        if (fastPathProfile.profile(node, cached != null)) {
+            return cached;
         } else {
             return getLayoutLockThreadStateSlowPath(lock);
         }
@@ -222,8 +234,10 @@ public final class RubyFiber extends RubyDynamicObject implements ObjectGraphNod
             threadState = lock.registerThread();
             layoutLockStates.put(lock, threadState);
         }
-        lastLayoutLock = lock;
-        lastThreadState = threadState;
+        final int i = nextLayoutLockCacheIndex;
+        cachedLayoutLocks[i] = lock;
+        cachedLayoutLockThreadStates[i] = threadState;
+        nextLayoutLockCacheIndex = (i + 1) % LAYOUT_LOCK_CACHE_SIZE;
         return threadState;
     }
 
