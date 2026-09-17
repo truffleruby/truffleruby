@@ -10,9 +10,9 @@
  */
 package org.truffleruby.language.objects.shared;
 
+import java.util.AbstractSet;
 import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Set;
+import java.util.Iterator;
 
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -56,29 +56,57 @@ public final class SharedObjects {
         }
     }
 
+    /** A worklist of objects to share. Objects which do not need sharing are filtered out on
+     * {@link ShareQueue#add(Object)}, without allocating a Set of adjacent objects per visited object (already-shared
+     * objects are skipped when popped, thanks to the shared Shape flag set by
+     * {@link SharedObjects#share(RubyDynamicObject)}, so no visited Set is needed either). Implements Set so it can be
+     * passed to {@link ObjectGraph} methods. */
+    private static final class ShareQueue extends AbstractSet<Object> {
+        final ArrayDeque<RubyDynamicObject> queue = new ArrayDeque<>();
+
+        @Override
+        public boolean add(Object value) {
+            if (value instanceof RubyDynamicObject object && !isShared(object)) {
+                queue.push(object);
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public Iterator<Object> iterator() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int size() {
+            throw new UnsupportedOperationException();
+        }
+    }
+
     private static void shareContextRoots(RubyLanguage language, RubyContext context) {
-        final Deque<Object> stack = new ArrayDeque<>();
+        final ShareQueue queue = new ShareQueue();
 
         // Share global variables (including new ones)
         for (Object object : context.getCoreLibrary().globalVariables.objectGraphValues()) {
-            stack.push(object);
+            queue.add(object);
         }
 
         // Share the native configuration
         for (Object object : context.getNativeConfiguration().objectGraphValues()) {
-            stack.push(object);
+            queue.add(object);
         }
 
         // Share all named modules and constants
-        stack.push(context.getCoreLibrary().objectClass);
+        queue.add(context.getCoreLibrary().objectClass);
 
         // Share all threads since they are accessible via Thread.list
         for (RubyThread thread : context.getThreadManager().iterateThreads()) {
-            stack.push(thread);
+            queue.add(thread);
         }
 
         long t0 = System.currentTimeMillis();
-        shareObjects(stack);
+        shareObjects(queue);
         if (language.options.SHARED_OBJECTS_DEBUG) {
             RubyLanguage.LOGGER.info("sharing roots took " + (System.currentTimeMillis() - t0) + " ms");
         }
@@ -89,32 +117,28 @@ public final class SharedObjects {
             RubyLanguage.LOGGER.info("sharing block and arguments of " + info);
         }
 
-        final Set<Object> objects = ObjectGraph.newObjectSet();
-        ObjectGraph.getObjectsInFrame(block.declarationFrame, objects);
-        ObjectGraph.addProperty(objects, args);
+        final ShareQueue queue = new ShareQueue();
+        ObjectGraph.getObjectsInFrame(block.declarationFrame, queue);
+        ObjectGraph.addProperty(queue, args);
 
-        final Deque<Object> stack = new ArrayDeque<>(objects);
-        shareObjects(stack);
+        shareObjects(queue);
     }
 
-    private static void shareObjects(Deque<Object> stack) {
-        while (!stack.isEmpty()) {
-            final Object object = stack.pop();
-            assert ObjectGraph.isRubyObject(object) : object;
-
-            if (object instanceof RubyDynamicObject) {
-                if (share((RubyDynamicObject) object)) {
-                    stack.addAll(ObjectGraph.getAdjacentObjects((RubyDynamicObject) object));
-                }
+    private static void shareObjects(ShareQueue queue) {
+        final ArrayDeque<RubyDynamicObject> deque = queue.queue;
+        RubyDynamicObject object;
+        while ((object = deque.poll()) != null) {
+            if (share(object)) {
+                ObjectGraph.getAdjacentObjects(object, queue);
             }
         }
     }
 
     @TruffleBoundary
     private static void shareObject(RubyDynamicObject value) {
-        final Deque<Object> stack = new ArrayDeque<>();
-        stack.add(value);
-        shareObjects(stack);
+        final ShareQueue queue = new ShareQueue();
+        queue.add(value);
+        shareObjects(queue);
     }
 
     /** Callers of this should be careful, this method will return true for RubySymbol even if the
@@ -189,8 +213,9 @@ public final class SharedObjects {
     public static void shareInternalFields(RubyDynamicObject object) {
         onShareHook(object);
         // This will also share user fields, but that's OK
-        final Deque<Object> stack = new ArrayDeque<>(ObjectGraph.getAdjacentObjects(object));
-        shareObjects(stack);
+        final ShareQueue queue = new ShareQueue();
+        ObjectGraph.getAdjacentObjects(object, queue);
+        shareObjects(queue);
     }
 
 }
