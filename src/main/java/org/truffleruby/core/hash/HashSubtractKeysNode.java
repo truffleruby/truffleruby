@@ -10,16 +10,17 @@
  */
 package org.truffleruby.core.hash;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.truffleruby.core.hash.library.HashStoreLibrary;
 import org.truffleruby.core.hash.library.HashStoreLibrary.EachEntryCallback;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.RubyContextSourceNode;
 import org.truffleruby.language.RubyNode;
-
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
+import org.truffleruby.language.dispatch.DispatchNode;
 
 /** Based on {@link org.truffleruby.language.arguments.ReadKeywordRestArgumentNode} */
 @NodeChild(value = "hashNode", type = RubyNode.class)
@@ -30,17 +31,33 @@ public abstract class HashSubtractKeysNode extends RubyContextSourceNode impleme
     @Child private HashStoreLibrary hashes = HashStoreLibrary.createDispatched();
 
     public HashSubtractKeysNode(RubySymbol[] excludedKeys) {
-        assert excludedKeys.length > 0 : "unnecessary";
         this.excludedKeys = excludedKeys;
     }
 
     abstract RubyNode getHashNode();
 
-    @Specialization
-    RubyHash remainingKeys(RubyHash hash) {
+    @Specialization(guards = "isBuiltinHash(hash)")
+    RubyHash substractKeys(RubyHash hash) {
         RubyHash rest = HashOperations.newEmptyHash(getContext(), getLanguage());
         hashes.eachEntry(hash.store, hash, this, rest);
         return rest;
+    }
+
+    @Specialization(guards = "!isBuiltinHash(hash)")
+    Object substractKeysOnSubclass(RubyHash hash,
+            @Cached DispatchNode dupNode,
+            @Cached DispatchNode deleteNode) {
+        Object dup = dupNode.call(hash, "dup");
+
+        for (RubySymbol key : excludedKeys) {
+            deleteNode.call(dup, "delete", key);
+        }
+
+        return dup;
+    }
+
+    protected boolean isBuiltinHash(RubyHash hash) {
+        return hash.getMetaClass() == coreLibrary().hashClass;
     }
 
     @Override
