@@ -12,24 +12,33 @@ package org.truffleruby.core.encoding;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Shared;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.strings.AbstractTruffleString;
 import com.oracle.truffle.api.strings.TruffleString;
+import org.truffleruby.core.string.StringGuards;
+import org.truffleruby.core.string.StringHelperNodes.SingleByteOptimizableNode;
 import org.truffleruby.language.RubyBaseNode;
 
 /** Whether the position at byteOffset is the start of a character and not in the middle of a character */
+@ImportStatic(StringGuards.class)
 public abstract class IsCharacterHeadNode extends RubyBaseNode {
 
     public abstract boolean execute(RubyEncoding enc, AbstractTruffleString string, int byteOffset);
 
-    @Specialization(guards = "enc.isSingleByte")
-    boolean singleByte(RubyEncoding enc, AbstractTruffleString string, int byteOffset) {
+    @Specialization(guards = "isSingleByteOptimizable(this, string, enc, singleByteOptimizableNode)")
+    boolean singleByte(RubyEncoding enc, AbstractTruffleString string, int byteOffset,
+            @Cached @Shared SingleByteOptimizableNode singleByteOptimizableNode) {
         // return offset directly (org.jcodings.SingleByteEncoding#leftAdjustCharHead)
         return true;
     }
 
-    @Specialization(guards = { "!enc.isSingleByte", "enc.jcoding.isUTF8()" })
+    @Specialization(guards = {
+            "!isSingleByteOptimizable(this, string, enc, singleByteOptimizableNode)",
+            "enc.jcoding.isUTF8()" })
     boolean utf8(RubyEncoding enc, AbstractTruffleString string, int byteOffset,
+            @Cached @Shared SingleByteOptimizableNode singleByteOptimizableNode,
             @Cached TruffleString.ReadByteNode readByteNode) {
         // based on org.jcodings.specific.BaseUTF8Encoding#leftAdjustCharHead
         return utf8IsLead(readByteNode.execute(string, byteOffset, enc.tencoding));
@@ -37,8 +46,11 @@ public abstract class IsCharacterHeadNode extends RubyBaseNode {
     }
 
     @TruffleBoundary
-    @Specialization(guards = { "!enc.isSingleByte", "!enc.jcoding.isUTF8()" })
+    @Specialization(guards = {
+            "!isSingleByteOptimizable(this, string, enc, singleByteOptimizableNode)",
+            "!enc.jcoding.isUTF8()" })
     boolean other(RubyEncoding enc, AbstractTruffleString string, int byteOffset,
+            @Cached @Shared SingleByteOptimizableNode singleByteOptimizableNode,
             @Cached TruffleString.GetInternalByteArrayNode getInternalByteArrayNode) {
         var byteArray = getInternalByteArrayNode.execute(string, enc.tencoding);
         int addedOffsets = byteArray.getOffset() + byteOffset;
