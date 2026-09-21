@@ -1093,7 +1093,7 @@ class String
       return nil
     end
 
-    if start < bytesize && !Primitive.string_is_character_head?(encoding, self, start)
+    if start < bytesize && !Primitive.string_is_character_head?(self, start)
       raise IndexError, "offset #{start} does not land on character boundary"
     end
 
@@ -1120,7 +1120,7 @@ class String
 
     finish = Primitive.min(finish, bytesize)
 
-    if finish < bytesize && !Primitive.string_is_character_head?(encoding, self, finish)
+    if finish < bytesize && !Primitive.string_is_character_head?(self, finish)
       raise IndexError, "offset #{finish} does not land on character boundary"
     end
 
