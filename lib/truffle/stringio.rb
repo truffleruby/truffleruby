@@ -750,7 +750,7 @@ class StringIO
 
   # rb_enc_right_char_head(): moves +offset+ past a character it splits.
   private def right_char_head(string, start, offset, bytesize)
-    return offset if char_head?(string, offset)
+    return offset if Primitive.string_is_character_head?(string, offset)
 
     head = previous_char_head(string, offset - 1, start)
     if head
@@ -767,13 +767,9 @@ class StringIO
     next_char_head(string, offset, bytesize)
   end
 
-  private def char_head?(string, offset)
-    Primitive.string_is_character_head?(string.encoding, string, offset)
-  end
-
   private def previous_char_head(string, offset, start)
     while offset >= start
-      return offset if char_head?(string, offset)
+      return offset if Primitive.string_is_character_head?(string, offset)
 
       offset -= 1
     end
@@ -783,7 +779,7 @@ class StringIO
 
   private def next_char_head(string, offset, bytesize)
     while offset < bytesize
-      return offset if char_head?(string, offset)
+      return offset if Primitive.string_is_character_head?(string, offset)
 
       offset += 1
     end
