@@ -748,6 +748,49 @@ class StringIO
     [sep, limit]
   end
 
+  # rb_enc_right_char_head(): moves +offset+ past a character it splits.
+  private def right_char_head(string, start, offset, bytesize)
+    return offset if char_head?(string, offset)
+
+    head = previous_char_head(string, offset - 1, start)
+    if head
+      char = Primitive.string_chr_at(string, head)
+      if char
+        stop = head + char.bytesize
+        return stop if stop > offset # The character reaches past the offset, so the offset splits it.
+      end
+    end
+
+    # Not a character. CRuby cuts here, which a fixed width encoding cannot.
+    return offset if string.encoding.ascii_compatible?
+
+    next_char_head(string, offset, bytesize)
+  end
+
+  private def char_head?(string, offset)
+    Primitive.string_is_character_head?(string.encoding, string, offset)
+  end
+
+  private def previous_char_head(string, offset, start)
+    while offset >= start
+      return offset if char_head?(string, offset)
+
+      offset -= 1
+    end
+
+    nil
+  end
+
+  private def next_char_head(string, offset, bytesize)
+    while offset < bytesize
+      return offset if char_head?(string, offset)
+
+      offset += 1
+    end
+
+    offset
+  end
+
   private def getline(sep, limit, chomp:)
     return nil if eof?
 
@@ -757,6 +800,10 @@ class StringIO
       pos = d.pos
       string = d.string
       bytesize = string.bytesize
+
+      if limit && limit < bytesize - pos
+        limit = right_char_head(string, pos, pos + limit, bytesize) - pos
+      end
 
       if Primitive.nil?(sep)
         if limit
