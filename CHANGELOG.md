@@ -8,6 +8,7 @@ Bug fixes:
 
 Compatibility:
 
+* `StringIO#gets`, `#readline`, `#each_line` and `#readlines` no longer split a multi-byte character when given a limit (@ListlessPanda).
 
 Performance:
 
@@ -93,7 +94,6 @@ Compatibility:
 * Add `flags` keyword argument to `Dir.glob` as an alternative to the positional argument (#4394, @earlopain).
 * Fix `new` on `Data` subclasses to pass the given block to `#initialize` (@eregon).
 * Fix `ENV` for `BINARY` strings with non-ASCII bytes (@nirvdrum).
-* `StringIO#gets`, `#readline`, `#each_line` and `#readlines` no longer split a multi-byte character when given a limit (@ListlessPanda).
 
 Performance:
 

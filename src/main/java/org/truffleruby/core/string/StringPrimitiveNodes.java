@@ -2512,15 +2512,16 @@ public abstract class StringPrimitiveNodes {
 
     }
 
-    @Primitive(name = "string_is_character_head?", lowerFixnum = 2)
+    @Primitive(name = "string_is_character_head?", lowerFixnum = 1)
     public abstract static class IsCharacterHeadPrimitiveNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        boolean isCharacterHead(RubyEncoding enc, Object string, int byteOffset,
+        boolean isCharacterHead(Object string, int byteOffset,
                 @Cached RubyStringLibrary libString,
                 @Cached IsCharacterHeadNode isCharacterHeadNode) {
             var tstring = libString.getTString(this, string);
-            return isCharacterHeadNode.execute(enc, tstring, byteOffset);
+            var encoding = libString.getEncoding(this, string);
+            return isCharacterHeadNode.execute(encoding, tstring, byteOffset);
         }
     }
 
