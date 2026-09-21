@@ -20,6 +20,7 @@ Compatibility:
 * `class << expr` no longer triggers the `:class` `TracePoint` event, like CRuby (@eregon).
 * `IO#read` now coerces the `length` parameter to `Integer` (#4456, @andrykonchin).
 * Raise `RangeError` instead of `FloatDomainError` when converting NaN, infinite or other out-of-range `Float` values with `rb_num2ulong()`, `Process.uid=` and similar methods (@nirvdrum).
+* `StringIO#gets`, `#readline`, `#each_line` and `#readlines` no longer split a multi-byte character when given a limit (@ListlessPanda).
 
 Performance:
 
@@ -108,7 +109,6 @@ Compatibility:
 * Add `flags` keyword argument to `Dir.glob` as an alternative to the positional argument (#4394, @earlopain).
 * Fix `new` on `Data` subclasses to pass the given block to `#initialize` (@eregon).
 * Fix `ENV` for `BINARY` strings with non-ASCII bytes (@nirvdrum).
-* `StringIO#gets`, `#readline`, `#each_line` and `#readlines` no longer split a multi-byte character when given a limit (@ListlessPanda).
 * Support multiple arguments in `StringIO#write` (@andrykonchin).
 * Support pattern matching on Hash subclasses (#3678, @andrykonchin).
 
