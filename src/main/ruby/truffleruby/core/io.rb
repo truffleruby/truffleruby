@@ -2252,8 +2252,7 @@ class IO
       return buffer || ''.b
     end
 
-    str, errno = Truffle::POSIX.read_string(self, number_of_bytes)
-    Errno.handle_errno(errno) unless errno == 0
+    str = Truffle::POSIX.read_string_at_least_one_byte(self, number_of_bytes)
 
     if Primitive.nil? str
       buffer.clear if buffer

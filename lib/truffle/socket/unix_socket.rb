@@ -52,15 +52,22 @@ class UNIXSocket < BasicSocket
     setup(fd, 'r+', true)
     binmode
 
-    sockaddr = Socket.sockaddr_un(Truffle::Type.check_null_safe(path))
-    status   = Truffle::Socket::Foreign.connect(Primitive.io_fd(self), sockaddr)
-
-    Errno.handle_ffi('connect(2)') if status < 0
+    sockaddr = Socket.sockaddr_un(Truffle::Type.coerce_to_path_keep_encoding(path))
+    Truffle::Socket.connect(self, sockaddr)
   end
 
   def recvfrom(bytes_read, flags = 0, buffer = nil)
+    raise IOError, 'recv for buffered IO' unless buffer_empty?
+
     Truffle::Socket::Foreign.memory_pointer(bytes_read) do |buf|
-      n_bytes = Truffle::Socket::Foreign.recvfrom(Primitive.io_fd(self), buf, bytes_read, flags, nil, nil)
+      while true
+        n_bytes = Truffle::Socket::Foreign.recvfrom(Primitive.io_fd(self), buf, bytes_read, flags, nil, nil)
+
+        break if n_bytes != -1 || ::FFI.errno != Truffle::POSIX::EAGAIN_ERRNO
+
+        Truffle::Socket.wait_readable(self)
+      end
+
       Errno.handle_ffi('recvfrom(2)') if n_bytes == -1
 
       message = buf.read_string(n_bytes)

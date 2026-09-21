@@ -52,5 +52,31 @@ describe 'UNIXSocket#initialize' do
     it 'sets the socket to close on exec' do
       @socket.should.close_on_exec?
     end
+
+    it 'accepts an object responding to #to_path' do
+      path = @path
+      object = Object.new
+      object.define_singleton_method(:to_path) { path }
+
+      socket = UNIXSocket.new(object)
+      begin
+        socket.should.instance_of?(UNIXSocket)
+      ensure
+        socket.close
+      end
+    end
+
+    platform_is_not :windows do
+      it 'preserves the bytes of a path with a non-UTF-8 encoding' do
+        @socket.close
+        @server.close
+        rm_r @path
+        @path += "\u00E9"
+        @server = UNIXServer.new(@path)
+
+        @socket = UNIXSocket.new(@path.dup.force_encoding(Encoding::ISO_8859_1))
+        @socket.peeraddr[1].b.should == @path.b
+      end
+    end
   end
 end

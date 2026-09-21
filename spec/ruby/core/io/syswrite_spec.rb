@@ -77,6 +77,22 @@ describe "IO#syswrite on a pipe" do
     written.should > 0
     written.should < larger_than_pipe_capacity
   end
+
+  it "waits until the pipe is writable if the fd is in nonblock mode and nothing could be written" do
+    @write.nonblock = true
+    begin
+      loop { @write.write_nonblock("a" * 65536) }
+    rescue IO::WaitWritable
+    end
+
+    t = Thread.new do
+      Thread.pass until Thread.main.stop?
+      @read.readpartial(65536)
+    end
+
+    @write.syswrite("b").should == 1
+    t.join
+  end
 end
 
 describe "IO#syswrite" do

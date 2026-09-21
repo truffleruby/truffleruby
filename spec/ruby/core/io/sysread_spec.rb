@@ -138,4 +138,17 @@ describe "IO#sysread" do
     -> { IOSpecs.closed_io.sysread(1, buffer) }.should.raise(IOError)
     buffer.should == "existing content"
   end
+
+  it "waits for data if the fd is in nonblock mode and nothing is available" do
+    require 'io/nonblock'
+    @read.nonblock = true
+
+    t = Thread.new do
+      Thread.pass until Thread.main.stop?
+      @write.syswrite "ab"
+    end
+
+    @read.sysread(2).should == "ab"
+    t.join
+  end
 end
