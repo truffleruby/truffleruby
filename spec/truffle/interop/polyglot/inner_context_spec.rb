@@ -51,6 +51,20 @@ describe "Polyglot::InnerContext" do
     end
   end
 
+  it "reads constants of a module from the inner context with ::" do
+    Polyglot::InnerContext.new do |context|
+      mod = context.eval('ruby', "module InnerContextModule; CONST = 42; class Klass; VERSION = '1.0'; end; end; InnerContextModule")
+      mod::CONST.should == 42
+      mod::Klass::VERSION.should == "1.0"
+      mod::Klass.new.should.is_a?(mod::Klass)
+      -> { mod::UNDEFINED }.should.raise(NameError)
+
+      defined?(mod::CONST).should == "constant"
+      defined?(mod::Klass::VERSION).should == "constant"
+      defined?(mod::UNDEFINED).should == nil
+    end
+  end
+
   it "treats exceptions from the inner context as foreign" do
     Polyglot::InnerContext.new do |context|
       -> {
