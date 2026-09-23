@@ -2,6 +2,7 @@
 
 New features:
 
+* Add `Ractor`, implemented on top of `Thread` and without isolation between Ractors (@eregon).
 
 Bug fixes:
 

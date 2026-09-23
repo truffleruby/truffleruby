@@ -161,6 +161,15 @@ module Truffle::ThreadOperations
     end
   end
 
+  # The Ractor a Thread belongs to, stored as a hidden instance variable of the Thread, see core/ractor.rb
+  RACTOR_KEY = Primitive.object_hidden_var_create(:ractor)
+
+  # Threads created by a Ractor belong to that Ractor
+  def self.inherit_ractor(thread)
+    ractor = Primitive.object_hidden_var_get(Thread.current, RACTOR_KEY)
+    Primitive.object_hidden_var_set(thread, RACTOR_KEY, ractor) unless Primitive.nil?(ractor)
+  end
+
   def self.report_exception(thread, exception)
     message = "#{thread.inspect} terminated with exception (report_on_exception is true):\n#{exception.full_message}"
     $stderr.write message
