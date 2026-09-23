@@ -23,7 +23,12 @@ class MSpecScript
   # Thread safety specs
   set :thread_safety, [ 'optional/thread_safety' ]
 
-  # A list of _all_ optional specs
+  # Ractor specs, not part of :optional and :files as they need to run in a separate process.
+  # Creating a Ractor has global side effects on CRuby, e.g. it prepends a module to Kernel
+  # and ObjectSpace.each_object only yields shareable objects once there are multiple Ractors.
+  set :ractor, [ 'optional/ractor' ]
+
+  # A list of _all_ optional specs, except :ractor
   set :optional, get(:capi) + get(:thread_safety)
 
   # An ordered list of the directories containing specs to run

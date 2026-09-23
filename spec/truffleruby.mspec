@@ -69,6 +69,10 @@ class MSpecScript
     "spec/ruby/optional/thread_safety",
   ]
 
+  set :ractor, [
+    "spec/ruby/optional/ractor",
+  ]
+
   set :truffle, [
     "spec/truffle",
     # Tested separately
@@ -124,7 +128,7 @@ class MSpecScript
   end
 
   # All specs except C API specs and instrumentation specs
-  set :files, get(:command_line) + get(:language) + get(:core) + get(:library) + get(:truffle) + get(:security) + get(:thread_safety)
+  set :files, get(:command_line) + get(:language) + get(:core) + get(:library) + get(:truffle) + get(:security) + get(:thread_safety) + get(:ractor)
 
   # All C API specs
   set :cext, get(:capi) + get(:truffle_capi)

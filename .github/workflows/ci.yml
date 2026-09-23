@@ -189,7 +189,7 @@ jobs:
         # Group tests to fit under the max time (12min) and minimize the number of jobs to be under GitHub Actions concurrency limits (20)
         test:
         - :truffle # ~12min
-        - :language :core :cxx # ~3min ~7min ~1min
+        - :language :core :ractor :cxx # ~3min ~7min ~0.25min ~1min
         - :command_line :library :cext :security :instrumentation :next # ~5min ~2min ~1.5min ~0.75min ~0.5min ~0.25min
         - fast bundle cexts # ~1.5min ~1.5min ~6.5min
         - "'mri --all-cexts'" # ~6min
@@ -283,4 +283,6 @@ jobs:
       with:
         ruby-version: '4.0'
         bundler: none
-    - run: jt -u ruby mspec -j --timeout 30 spec/ruby
+    - run: jt -u ruby mspec -j --timeout 30 spec/ruby ^spec/ruby/optional/ractor
+    # Ractor specs need to run in a separate process on CRuby, see spec/ruby/default.mspec
+    - run: jt -u ruby mspec -j --timeout 30 spec/ruby/optional/ractor

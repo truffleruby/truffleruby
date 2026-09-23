@@ -10,10 +10,14 @@
  */
 package org.truffleruby.core.proc;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.frame.Frame;
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.strings.TruffleString;
 import org.truffleruby.RubyLanguage;
@@ -271,6 +275,60 @@ public abstract class ProcNodes {
                     getLanguage().procShape);
             AllocationTracing.trace(composedProc, this);
             return composedProc;
+        }
+    }
+
+    /** Returns a copy of the block with the given self, as a lambda if {@code lambda} is true. The copy has its own
+     * copy of the declaration frame, since self is part of the frame arguments, so it does not share the local
+     * variables declared in that frame with the original block. */
+    @Primitive(name = "proc_with_self")
+    public abstract static class ProcWithSelfNode extends PrimitiveArrayArgumentsNode {
+
+        @TruffleBoundary
+        @Specialization
+        RubyProc withSelf(RubyProc block, Object self, boolean lambda) {
+            final MaterializedFrame declarationFrame = block.declarationFrame;
+            final Object[] arguments = declarationFrame.getArguments().clone();
+            RubyArguments.setSelf(arguments, self);
+
+            final FrameDescriptor descriptor = declarationFrame.getFrameDescriptor();
+            final MaterializedFrame frame = Truffle.getRuntime().createMaterializedFrame(arguments, descriptor);
+            for (int slot = 0; slot < descriptor.getNumberOfSlots(); slot++) {
+                copySlot(declarationFrame, frame, slot);
+            }
+            for (int slot = 0; slot < descriptor.getNumberOfAuxiliarySlots(); slot++) {
+                frame.setAuxiliarySlot(slot, declarationFrame.getAuxiliarySlot(slot));
+            }
+
+            final RubyProc proc = ProcOperations.createRubyProc(
+                    coreLibrary().procClass,
+                    getLanguage().procShape,
+                    lambda ? ProcType.LAMBDA : ProcType.PROC,
+                    block.getSharedMethodInfo(),
+                    block.callTargets,
+                    frame,
+                    block.declarationVariables,
+                    block.declaringMethod,
+                    lambda ? null : block.frameOnStackMarker,
+                    block.declarationContext);
+            AllocationTracing.trace(proc, this);
+            return proc;
+        }
+
+        private static void copySlot(MaterializedFrame from, MaterializedFrame to, int slot) {
+            switch (FrameSlotKind.fromTag(from.getTag(slot))) {
+                case Object -> to.setObject(slot, from.getObject(slot));
+                case Long -> to.setLong(slot, from.getLong(slot));
+                case Int -> to.setInt(slot, from.getInt(slot));
+                case Double -> to.setDouble(slot, from.getDouble(slot));
+                case Float -> to.setFloat(slot, from.getFloat(slot));
+                case Boolean -> to.setBoolean(slot, from.getBoolean(slot));
+                case Byte -> to.setByte(slot, from.getByte(slot));
+                case Illegal -> {
+                    // not yet assigned, keep the default value
+                }
+                default -> throw CompilerDirectives.shouldNotReachHere();
+            }
         }
     }
 
