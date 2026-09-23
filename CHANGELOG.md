@@ -2,6 +2,7 @@
 
 New features:
 
+* Added `Ruby::Box`, which is always enabled and where each box is a `Polyglot::InnerContext` (@eregon).
 
 Bug fixes:
 

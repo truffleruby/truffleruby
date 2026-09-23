@@ -7,7 +7,7 @@ describe "Module#ancestors" do
     ModuleSpecs.ancestors.should == [ModuleSpecs]
     ModuleSpecs::Basic.ancestors.should == [ModuleSpecs::Basic]
     ModuleSpecs::Super.ancestors.should == [ModuleSpecs::Super, ModuleSpecs::Basic]
-    if defined?(Ruby::Box) && Ruby::Box.enabled?
+    if defined?(Ruby::Box::Loader) && Ruby::Box.enabled? # CRuby includes Ruby::Box::Loader in Object when Ruby::Box is enabled
       ModuleSpecs.without_test_modules(ModuleSpecs::Parent.ancestors).should ==
         [ModuleSpecs::Parent, Object, Ruby::Box::Loader, Kernel, BasicObject]
       ModuleSpecs.without_test_modules(ModuleSpecs::Child.ancestors).should ==
