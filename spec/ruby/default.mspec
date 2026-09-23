@@ -23,8 +23,11 @@ class MSpecScript
   # Thread safety specs
   set :thread_safety, [ 'optional/thread_safety' ]
 
+  # Ruby::Box specs
+  set :box, [ 'optional/box' ]
+
   # A list of _all_ optional specs
-  set :optional, get(:capi) + get(:thread_safety)
+  set :optional, get(:capi) + get(:thread_safety) + get(:box)
 
   # An ordered list of the directories containing specs to run
   set :files, get(:command_line) + get(:language) + get(:core) + get(:library) + get(:security) + get(:optional)
