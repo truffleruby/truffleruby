@@ -4,6 +4,7 @@ New features:
 
 * Updated to Ruby 4.0.9 (@eregon).
 * Updated to GraalVM 25.5.5.0.3 (@eregon).
+* Added `Ruby::Box`, which is always enabled and where each box is a `Polyglot::InnerContext` (@eregon).
 
 Bug fixes:
 
