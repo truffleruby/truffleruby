@@ -1,1 +1,0 @@
-fails:StringIO#readpartial preserves the encoding of the given buffer

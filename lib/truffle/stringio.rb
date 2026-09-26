@@ -483,8 +483,6 @@ class StringIO
       pos = d.pos
       string = d.string
 
-      # intentionally don't preserve buffer's encoding
-      # see https://bugs.ruby-lang.org/issues/20418
       if length
         length = Primitive.convert_with_to_int length
         raise ArgumentError, "negative length #{length} given" if length < 0
@@ -501,9 +499,13 @@ class StringIO
         end
 
         str = string.byteslice(pos, length)
-        str.force_encoding Encoding::ASCII_8BIT
 
-        str = buffer.replace(str) if buffer
+        if buffer
+          str.force_encoding(buffer.encoding)
+          str = buffer.replace(str)
+        else
+          str.force_encoding Encoding::ASCII_8BIT
+        end
       else
         if eof?
           buffer.clear if buffer
