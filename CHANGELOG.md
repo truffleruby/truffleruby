@@ -8,6 +8,7 @@ Bug fixes:
 
 Compatibility:
 
+* `IO#read` now coerces the `length` parameter to `Integer` (#4456, @andrykonchin).
 
 Performance:
 
