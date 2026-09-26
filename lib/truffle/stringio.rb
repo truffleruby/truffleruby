@@ -301,54 +301,55 @@ class StringIO
   def write(*objects)
     check_writable
 
+    objects.map! { Truffle::Type.rb_obj_as_string(it) }
+
     total = 0
-    objects.each do |object|
-      total += write_single_object(object)
+    TruffleRuby.synchronized(@__data__) do
+      objects.each do |object|
+        total += write_single_string(object)
+      end
     end
     total
   end
 
-  private def write_single_object(object)
-    str = Truffle::Type.rb_obj_as_string(object)
-    return 0 if str.empty?
+  private def write_single_string(source)
+    return 0 if source.empty?
 
     # difference to IO, see https://github.com/ruby/stringio/blob/009896b973/ext/stringio/stringio.c#L1498-L1506
     enc = external_encoding
     unless enc == Encoding::BINARY or enc == Encoding::US_ASCII
-      unless !str.ascii_only? && (str.encoding == Encoding::BINARY || str.encoding == Encoding::US_ASCII)
-        str = Truffle::IOOperations.write_transcoding(str, enc)
+      unless !source.ascii_only? && (source.encoding == Encoding::BINARY || source.encoding == Encoding::US_ASCII)
+        source = Truffle::IOOperations.write_transcoding(source, enc)
       end
     end
 
     d = @__data__
-    TruffleRuby.synchronized(d) do
-      pos = d.pos
-      string = d.string
-      bytesize = string.bytesize
+    pos = d.pos
+    string = d.string
+    bytesize = string.bytesize
 
-      if @append || pos == bytesize
-        Primitive.string_byte_append(string, str)
-        d.pos = string.bytesize
-      elsif pos > bytesize
-        replacement = "\000" * (pos - bytesize)
-        Primitive.string_byte_append(string, replacement)
-        Primitive.string_byte_append(string, str)
-        d.pos = string.bytesize
-      else
-        bytes_to_replace = str.bytesize
-        bytes_after = bytesize - pos
-        if bytes_to_replace > bytes_after
-          bytes_to_replace = bytes_after
-        end
-
-        enc = string.encoding
-        str_in_enc = str.dup.force_encoding(enc)
-        Primitive.string_splice(string, str_in_enc, pos, bytes_to_replace, enc)
-        d.pos += str.bytesize
+    if @append || pos == bytesize
+      Primitive.string_byte_append(string, source)
+      d.pos = string.bytesize
+    elsif pos > bytesize
+      replacement = "\000" * (pos - bytesize)
+      Primitive.string_byte_append(string, replacement)
+      Primitive.string_byte_append(string, source)
+      d.pos = string.bytesize
+    else
+      bytes_to_replace = source.bytesize
+      bytes_after = bytesize - pos
+      if bytes_to_replace > bytes_after
+        bytes_to_replace = bytes_after
       end
 
-      str.bytesize
+      enc = string.encoding
+      str_in_enc = source.dup.force_encoding(enc)
+      Primitive.string_splice(string, str_in_enc, pos, bytes_to_replace, enc)
+      d.pos += source.bytesize
     end
+
+    source.bytesize
   end
 
   def close
