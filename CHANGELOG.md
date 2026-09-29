@@ -6,6 +6,7 @@ New features:
 
 Bug fixes:
 
+* Fix `Process.exec` ignoring the `:umask` option (@nirvdrum).
 
 Compatibility:
 
