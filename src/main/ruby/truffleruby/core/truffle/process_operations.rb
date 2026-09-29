@@ -302,7 +302,8 @@ module Truffle
             raise Errno::ENOENT, path unless Dir.exist?(path)
             @options[key] = path
           when :umask
-            @options[key] = value
+            # Like CRuby, keep only the bits `umask(2)` so they can be passed straight through. -1 masks everything.
+            @options[key] = convert_umask(value)
           when :close_others
             unless Primitive.boolean_or_nil?(value)
               Truffle::Type.rb_bool_expected(value, 'close_others')
@@ -334,6 +335,38 @@ module Truffle
         else
           map << child_fd << parent_fd
         end
+      end
+
+      def convert_umask(value)
+        # Convert like CRuby's NUM2MODET: through unsigned long, then check the range of mode_t,
+        # which also accepts negative values of the signed type. Out-of-range values must raise
+        # because File.umask would turn them into 0, which masks nothing.
+        if Primitive.is_a?(value, Float)
+          # Like CRuby, rely on comparisons with NaN being false so NaN is out of range.
+          unless value >= -(2.0**63) && value < 2.0**64
+            raise RangeError, "float #{format('%-.10g', value)} out of range of integer"
+          end
+          value = value.to_i
+        else
+          value = Primitive.convert_with_to_int(value)
+          if value > 0xffff_ffff_ffff_ffff || value < -0xffff_ffff_ffff_ffff
+            raise RangeError, "bignum too big to convert into 'unsigned long'"
+          elsif value < -(2**63)
+            raise RangeError, 'bignum out of range of unsigned long'
+          end
+        end
+
+        if Truffle::Config['platform.typedef.mode_t'] == 'ushort'
+          type, min, max = 'unsigned short', -(2**15), 2**16 - 1
+        else
+          type, min, max = 'unsigned int', -(2**31), 2**32 - 1
+        end
+        if value < min
+          raise RangeError, "integer #{value} too small to convert to '#{type}'"
+        elsif value > max
+          raise RangeError, "integer #{value} too big to convert to '#{type}'"
+        end
+        value & 0o7777
       end
 
       def convert_io_fd(obj)
@@ -462,8 +495,8 @@ module Truffle
             Process.setpgid(0, pgroup)
           end
 
-          if mask = @options[:mask]
-            File.umask(mask)
+          if umask = @options[:umask]
+            File.umask(umask)
           end
 
           if chdir = @options[:chdir]

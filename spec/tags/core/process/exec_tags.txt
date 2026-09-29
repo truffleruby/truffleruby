@@ -20,3 +20,5 @@ slow:Process.exec with a command array raises an ArgumentError if the Array does
 slow:Process.exec with an options Hash with Integer option keys lets the process after exec have specified file descriptor despite close_on_exec
 slow:Process.exec with an options Hash with Integer option keys sets close_on_exec to false on specified fd even when it fails
 slow:Process.exec with an options Hash with Integer option keys maps the key to a file descriptor in the child that inherits the file descriptor from the parent specified by the value
+slow:Process.exec sets the umask when given the :umask option
+slow:Process.exec masks all permission bits when given umask: -1
