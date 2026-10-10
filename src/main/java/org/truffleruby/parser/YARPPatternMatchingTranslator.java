@@ -19,7 +19,7 @@ import org.truffleruby.core.array.ArraySliceNodeGen;
 import org.truffleruby.core.array.ArrayStaticLiteralNode;
 import org.truffleruby.core.hash.HashDeconstructKeysNodeGen;
 import org.truffleruby.core.hash.HashGetOrUndefinedNodeGen;
-import org.truffleruby.core.hash.HashIsEmptyNode;
+import org.truffleruby.core.hash.HashIsEmptyNodeGen;
 import org.truffleruby.core.hash.HashPatternLengthCheckNodeGen;
 import org.truffleruby.core.hash.HashSubtractKeysNodeGen;
 import org.truffleruby.core.support.IsNotUndefinedNode;
@@ -298,6 +298,8 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
         RubyNode outerPrev = currentValueToMatch;
         currentValueToMatch = readTemp;
         try {
+            // Checks hash size to fail fast, and ensures the value is a Hash
+            // (skipping when #deconstruct_keys returned nil).
             RubyNode check = YARPTranslator.sequence(
                     assignTemp,
                     HashPatternLengthCheckNodeGen.create(node.elements.length, readTemp));
@@ -331,11 +333,10 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
 
             var rest = node.rest;
             if (rest != null) {
-                RubyNode withoutMatchedKeys = keys.length == 0
-                        ? readTemp
-                        : HashSubtractKeysNodeGen.create(keys, readTemp);
                 if (rest instanceof Nodes.AssocSplatNode assocSplatNode) {
                     if (assocSplatNode.value != null) {
+                        // Always creates a copy so **rest receives a new Hash instance.
+                        RubyNode withoutMatchedKeys = HashSubtractKeysNodeGen.create(keys, readTemp);
                         RubyNode prev = currentValueToMatch;
                         currentValueToMatch = withoutMatchedKeys;
                         try {
@@ -347,13 +348,16 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
                         // nothing
                     }
                 } else if (rest instanceof Nodes.NoKeywordsParameterNode) {
-                    condition = AndNodeGen.create(condition, new HashIsEmptyNode(withoutMatchedKeys));
+                    RubyNode withoutMatchedKeys = keys.length == 0
+                            ? readTemp
+                            : HashSubtractKeysNodeGen.create(keys, readTemp);
+                    condition = AndNodeGen.create(condition, HashIsEmptyNodeGen.create(withoutMatchedKeys));
                 } else {
                     throw fail(rest);
                 }
             } else if (pairs.length == 0) {
                 // rest == null && pairs.length == 0 means `in {}` which checks if empty
-                condition = AndNodeGen.create(condition, new HashIsEmptyNode(readTemp));
+                condition = AndNodeGen.create(condition, HashIsEmptyNodeGen.create(readTemp));
             }
 
             return assignPositionAndFlags(node, condition);

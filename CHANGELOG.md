@@ -96,6 +96,7 @@ Compatibility:
 * Fix `ENV` for `BINARY` strings with non-ASCII bytes (@nirvdrum).
 * `StringIO#gets`, `#readline`, `#each_line` and `#readlines` no longer split a multi-byte character when given a limit (@ListlessPanda).
 * Support multiple arguments in `StringIO#write` (@andrykonchin).
+* Support pattern matching on Hash subclasses (#3678, @andrykonchin).
 
 Performance:
 

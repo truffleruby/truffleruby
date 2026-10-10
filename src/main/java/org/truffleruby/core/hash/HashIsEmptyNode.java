@@ -10,27 +10,40 @@
  */
 package org.truffleruby.core.hash;
 
+import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.Node;
+import org.truffleruby.core.cast.BooleanCastNode;
 import org.truffleruby.language.RubyContextSourceNode;
 import org.truffleruby.language.RubyNode;
+import org.truffleruby.language.dispatch.DispatchNode;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
+@NodeChild(value = "hashNode", type = RubyNode.class)
+public abstract class HashIsEmptyNode extends RubyContextSourceNode {
 
-public final class HashIsEmptyNode extends RubyContextSourceNode {
+    abstract RubyNode getHashNode();
 
-    @Child RubyNode currentValueToMatch;
-
-    public HashIsEmptyNode(RubyNode currentValueToMatch) {
-        this.currentValueToMatch = currentValueToMatch;
+    @Specialization(guards = "isBuiltinHash(hash)")
+    boolean empty(RubyHash hash) {
+        return hash.empty();
     }
 
-    @Override
-    public Object execute(VirtualFrame frame) {
-        RubyHash matchHash = (RubyHash) currentValueToMatch.execute(frame);
-        return matchHash.empty();
+    @Specialization(guards = "!isBuiltinHash(hash)")
+    static boolean emptyOnSubclass(RubyHash hash,
+            @Bind Node node,
+            @Cached DispatchNode emptyNode,
+            @Cached BooleanCastNode booleanCastNode) {
+        return booleanCastNode.execute(node, emptyNode.call(hash, "empty?"));
+    }
+
+    protected boolean isBuiltinHash(RubyHash hash) {
+        return hash.getMetaClass() == coreLibrary().hashClass;
     }
 
     @Override
     public RubyNode cloneUninitialized() {
-        return new HashIsEmptyNode(currentValueToMatch.cloneUninitialized()).copyFlags(this);
+        return HashIsEmptyNodeGen.create(getHashNode().cloneUninitialized()).copyFlags(this);
     }
 }
