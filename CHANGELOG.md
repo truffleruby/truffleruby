@@ -1,3 +1,24 @@
+# 40.1.0
+
+New features:
+
+
+Bug fixes:
+
+
+Compatibility:
+
+* `IO#read` now coerces the `length` parameter to `Integer` (#4456, @andrykonchin).
+
+Performance:
+
+
+Incompatible Changes:
+
+
+Memory Footprint:
+
+
 # 40.0.0
 
 New features:
@@ -73,6 +94,8 @@ Compatibility:
 * Add `flags` keyword argument to `Dir.glob` as an alternative to the positional argument (#4394, @earlopain).
 * Fix `new` on `Data` subclasses to pass the given block to `#initialize` (@eregon).
 * Fix `ENV` for `BINARY` strings with non-ASCII bytes (@nirvdrum).
+* `StringIO#gets`, `#readline`, `#each_line` and `#readlines` no longer split a multi-byte character when given a limit (@ListlessPanda).
+* Support multiple arguments in `StringIO#write` (@andrykonchin).
 * Support pattern matching on Hash subclasses (#3678, @andrykonchin).
 
 Performance:
@@ -89,9 +112,6 @@ Incompatible Changes:
 
 * The minimum Java version when embedding TruffleRuby is now Java 25 instead of Java 21 (#4378, @eregon).
 * Remove `Truffle::Interop.java_instanceof?`, it is redundant with `Truffle::Interop.meta_instance?` (@eregon).
-
-Memory Footprint:
-
 
 # 34.0.0
 

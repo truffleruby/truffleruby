@@ -1715,13 +1715,15 @@ class IO
 
   def read(length = nil, buffer = nil)
     ensure_open_and_readable
+
+    unless Primitive.nil?(length)
+      length = Primitive.rb_num2long(length)
+      raise ArgumentError, "negative length #{length} given" if length < 0
+    end
+
     buffer = Primitive.convert_with_to_str(buffer) if buffer
 
-    case length
-    when 0
-      buffer&.clear
-      return ''.b
-    when nil
+    if Primitive.nil?(length)
       str = IO.read_encode self, read_all
       return str unless buffer
 
@@ -1730,12 +1732,15 @@ class IO
       return buffer.replace(str)
     end
 
+    if length == 0
+      buffer&.clear
+      return ''.b
+    end
+
     if @ibuffer.exhausted?
       buffer.clear if buffer
       return nil
     end
-
-    raise ArgumentError, "negative length #{length} given" if length < 0
 
     str = +''
     needed = length

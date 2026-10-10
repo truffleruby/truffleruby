@@ -105,7 +105,7 @@ end
 
 class StringIO
 
-  VERSION = '3.0.1' # Same version as the default gem in CRuby 3.1.3
+  VERSION = '3.2.0' # Same version as the default gem in CRuby 4.0.2
 
   include Enumerable
   include Truffle::CExt.rb_define_module_under(IO, 'generic_readable')
@@ -298,49 +298,58 @@ class StringIO
     self
   end
 
-  def write(str)
+  def write(*objects)
     check_writable
 
-    str = String(str)
-    return 0 if str.empty?
+    objects.map! { Truffle::Type.rb_obj_as_string(it) }
+
+    total = 0
+    TruffleRuby.synchronized(@__data__) do
+      objects.each do |object|
+        total += write_single_string(object)
+      end
+    end
+    total
+  end
+
+  private def write_single_string(source)
+    return 0 if source.empty?
 
     # difference to IO, see https://github.com/ruby/stringio/blob/009896b973/ext/stringio/stringio.c#L1498-L1506
     enc = external_encoding
     unless enc == Encoding::BINARY or enc == Encoding::US_ASCII
-      unless !str.ascii_only? && (str.encoding == Encoding::BINARY || str.encoding == Encoding::US_ASCII)
-        str = Truffle::IOOperations.write_transcoding(str, enc)
+      unless !source.ascii_only? && (source.encoding == Encoding::BINARY || source.encoding == Encoding::US_ASCII)
+        source = Truffle::IOOperations.write_transcoding(source, enc)
       end
     end
 
     d = @__data__
-    TruffleRuby.synchronized(d) do
-      pos = d.pos
-      string = d.string
-      bytesize = string.bytesize
+    pos = d.pos
+    string = d.string
+    bytesize = string.bytesize
 
-      if @append || pos == bytesize
-        Primitive.string_byte_append(string, str)
-        d.pos = string.bytesize
-      elsif pos > bytesize
-        replacement = "\000" * (pos - bytesize)
-        Primitive.string_byte_append(string, replacement)
-        Primitive.string_byte_append(string, str)
-        d.pos = string.bytesize
-      else
-        bytes_to_replace = str.bytesize
-        bytes_after = bytesize - pos
-        if bytes_to_replace > bytes_after
-          bytes_to_replace = bytes_after
-        end
-
-        enc = string.encoding
-        str_in_enc = str.dup.force_encoding(enc)
-        Primitive.string_splice(string, str_in_enc, pos, bytes_to_replace, enc)
-        d.pos += str.bytesize
+    if @append || pos == bytesize
+      Primitive.string_byte_append(string, source)
+      d.pos = string.bytesize
+    elsif pos > bytesize
+      replacement = "\000" * (pos - bytesize)
+      Primitive.string_byte_append(string, replacement)
+      Primitive.string_byte_append(string, source)
+      d.pos = string.bytesize
+    else
+      bytes_to_replace = source.bytesize
+      bytes_after = bytesize - pos
+      if bytes_to_replace > bytes_after
+        bytes_to_replace = bytes_after
       end
 
-      str.bytesize
+      enc = string.encoding
+      str_in_enc = source.dup.force_encoding(enc)
+      Primitive.string_splice(string, str_in_enc, pos, bytes_to_replace, enc)
+      d.pos += source.bytesize
     end
+
+    source.bytesize
   end
 
   def close
@@ -474,8 +483,6 @@ class StringIO
       pos = d.pos
       string = d.string
 
-      # intentionally don't preserve buffer's encoding
-      # see https://bugs.ruby-lang.org/issues/20418
       if length
         length = Primitive.convert_with_to_int length
         raise ArgumentError, "negative length #{length} given" if length < 0
@@ -492,9 +499,13 @@ class StringIO
         end
 
         str = string.byteslice(pos, length)
-        str.force_encoding Encoding::ASCII_8BIT
 
-        str = buffer.replace(str) if buffer
+        if buffer
+          str.force_encoding(buffer.encoding)
+          str = buffer.replace(str)
+        else
+          str.force_encoding Encoding::ASCII_8BIT
+        end
       else
         if eof?
           buffer.clear if buffer
@@ -748,6 +759,49 @@ class StringIO
     [sep, limit]
   end
 
+  # rb_enc_right_char_head(): moves +offset+ past a character it splits.
+  private def right_char_head(string, start, offset, bytesize)
+    return offset if char_head?(string, offset)
+
+    head = previous_char_head(string, offset - 1, start)
+    if head
+      char = Primitive.string_chr_at(string, head)
+      if char
+        stop = head + char.bytesize
+        return stop if stop > offset # The character reaches past the offset, so the offset splits it.
+      end
+    end
+
+    # Not a character. CRuby cuts here, which a fixed width encoding cannot.
+    return offset if string.encoding.ascii_compatible?
+
+    next_char_head(string, offset, bytesize)
+  end
+
+  private def char_head?(string, offset)
+    Primitive.string_is_character_head?(string.encoding, string, offset)
+  end
+
+  private def previous_char_head(string, offset, start)
+    while offset >= start
+      return offset if char_head?(string, offset)
+
+      offset -= 1
+    end
+
+    nil
+  end
+
+  private def next_char_head(string, offset, bytesize)
+    while offset < bytesize
+      return offset if char_head?(string, offset)
+
+      offset += 1
+    end
+
+    offset
+  end
+
   private def getline(sep, limit, chomp:)
     return nil if eof?
 
@@ -757,6 +811,10 @@ class StringIO
       pos = d.pos
       string = d.string
       bytesize = string.bytesize
+
+      if limit && limit < bytesize - pos
+        limit = right_char_head(string, pos, pos + limit, bytesize) - pos
+      end
 
       if Primitive.nil?(sep)
         if limit
