@@ -4551,7 +4551,9 @@ public abstract class Nodes {
      * </pre>
      */
     public static final class DefNode extends Node {
-        public final int serializedLength;
+        /** The position of the lazy marker in the serialized output, if this node is lazy. */
+        public final int lazyPosition;
+        /** The loader that loaded this node, if this node is lazy. */
         public final Loader loader;
         public final String name;
         @Nullable
@@ -4563,9 +4565,9 @@ public abstract class Nodes {
         public final Node body;
         public final String[] locals;
 
-        public DefNode(int startOffset, int length, int serializedLength, Loader loader, String name, Node receiver, ParametersNode parameters, Node body, String[] locals) {
+        public DefNode(int startOffset, int length, int lazyPosition, Loader loader, String name, Node receiver, ParametersNode parameters, Node body, String[] locals) {
             super(startOffset, length);
-            this.serializedLength = serializedLength;
+            this.lazyPosition = lazyPosition;
             this.loader = loader;
             this.name = name;
             this.receiver = receiver;
@@ -4575,12 +4577,12 @@ public abstract class Nodes {
         }
 
         public boolean isLazy() {
-            return serializedLength < 0;
+            return loader != null;
         }
 
         public DefNode getNonLazy() {
             if (isLazy()) {
-                return loader.createDefNodeFromSavedPosition(startOffset, length, -serializedLength);
+                return loader.loadNonLazyDefNode(lazyPosition);
             } else {
                 return this;
             }
