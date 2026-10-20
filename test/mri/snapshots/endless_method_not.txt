@@ -1,0 +1,178 @@
+@ ProgramNode (location: (1,0)-(7,21))
+├── flags: ∅
+├── locals: []
+└── statements:
+    @ StatementsNode (location: (1,0)-(7,21))
+    ├── flags: ∅
+    └── body: (length: 4)
+        ├── @ DefNode (location: (1,0)-(1,13))
+        │   ├── flags: newline
+        │   ├── name: :f
+        │   ├── name_loc: (1,4)-(1,5) = "f"
+        │   ├── receiver: ∅
+        │   ├── parameters: ∅
+        │   ├── body:
+        │   │   @ StatementsNode (location: (1,8)-(1,13))
+        │   │   ├── flags: ∅
+        │   │   └── body: (length: 1)
+        │   │       └── @ CallNode (location: (1,8)-(1,13))
+        │   │           ├── flags: ∅
+        │   │           ├── receiver:
+        │   │           │   @ IntegerNode (location: (1,12)-(1,13))
+        │   │           │   ├── flags: static_literal, decimal
+        │   │           │   └── value: 1
+        │   │           ├── call_operator_loc: ∅
+        │   │           ├── name: :!
+        │   │           ├── message_loc: (1,8)-(1,11) = "not"
+        │   │           ├── opening_loc: ∅
+        │   │           ├── arguments: ∅
+        │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
+        │   │           └── block: ∅
+        │   ├── locals: []
+        │   ├── def_keyword_loc: (1,0)-(1,3) = "def"
+        │   ├── operator_loc: ∅
+        │   ├── lparen_loc: ∅
+        │   ├── rparen_loc: ∅
+        │   ├── equal_loc: (1,6)-(1,7) = "="
+        │   └── end_keyword_loc: ∅
+        ├── @ DefNode (location: (3,0)-(3,17))
+        │   ├── flags: newline
+        │   ├── name: :f
+        │   ├── name_loc: (3,4)-(3,5) = "f"
+        │   ├── receiver: ∅
+        │   ├── parameters: ∅
+        │   ├── body:
+        │   │   @ StatementsNode (location: (3,8)-(3,17))
+        │   │   ├── flags: ∅
+        │   │   └── body: (length: 1)
+        │   │       └── @ CallNode (location: (3,8)-(3,17))
+        │   │           ├── flags: ∅
+        │   │           ├── receiver:
+        │   │           │   @ CallNode (location: (3,12)-(3,17))
+        │   │           │   ├── flags: ignore_visibility
+        │   │           │   ├── receiver: ∅
+        │   │           │   ├── call_operator_loc: ∅
+        │   │           │   ├── name: :foo
+        │   │           │   ├── message_loc: (3,12)-(3,15) = "foo"
+        │   │           │   ├── opening_loc: ∅
+        │   │           │   ├── arguments:
+        │   │           │   │   @ ArgumentsNode (location: (3,16)-(3,17))
+        │   │           │   │   ├── flags: ∅
+        │   │           │   │   └── arguments: (length: 1)
+        │   │           │   │       └── @ IntegerNode (location: (3,16)-(3,17))
+        │   │           │   │           ├── flags: static_literal, decimal
+        │   │           │   │           └── value: 1
+        │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
+        │   │           │   └── block: ∅
+        │   │           ├── call_operator_loc: ∅
+        │   │           ├── name: :!
+        │   │           ├── message_loc: (3,8)-(3,11) = "not"
+        │   │           ├── opening_loc: ∅
+        │   │           ├── arguments: ∅
+        │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
+        │   │           └── block: ∅
+        │   ├── locals: []
+        │   ├── def_keyword_loc: (3,0)-(3,3) = "def"
+        │   ├── operator_loc: ∅
+        │   ├── lparen_loc: ∅
+        │   ├── rparen_loc: ∅
+        │   ├── equal_loc: (3,6)-(3,7) = "="
+        │   └── end_keyword_loc: ∅
+        ├── @ DefNode (location: (5,0)-(5,21))
+        │   ├── flags: newline
+        │   ├── name: :f
+        │   ├── name_loc: (5,4)-(5,5) = "f"
+        │   ├── receiver: ∅
+        │   ├── parameters: ∅
+        │   ├── body:
+        │   │   @ StatementsNode (location: (5,8)-(5,21))
+        │   │   ├── flags: ∅
+        │   │   └── body: (length: 1)
+        │   │       └── @ CallNode (location: (5,8)-(5,21))
+        │   │           ├── flags: ∅
+        │   │           ├── receiver:
+        │   │           │   @ CallNode (location: (5,12)-(5,21))
+        │   │           │   ├── flags: ∅
+        │   │           │   ├── receiver:
+        │   │           │   │   @ CallNode (location: (5,16)-(5,21))
+        │   │           │   │   ├── flags: ignore_visibility
+        │   │           │   │   ├── receiver: ∅
+        │   │           │   │   ├── call_operator_loc: ∅
+        │   │           │   │   ├── name: :foo
+        │   │           │   │   ├── message_loc: (5,16)-(5,19) = "foo"
+        │   │           │   │   ├── opening_loc: ∅
+        │   │           │   │   ├── arguments:
+        │   │           │   │   │   @ ArgumentsNode (location: (5,20)-(5,21))
+        │   │           │   │   │   ├── flags: ∅
+        │   │           │   │   │   └── arguments: (length: 1)
+        │   │           │   │   │       └── @ IntegerNode (location: (5,20)-(5,21))
+        │   │           │   │   │           ├── flags: static_literal, decimal
+        │   │           │   │   │           └── value: 1
+        │   │           │   │   ├── closing_loc: ∅
+        │   │           │   │   ├── equal_loc: ∅
+        │   │           │   │   └── block: ∅
+        │   │           │   ├── call_operator_loc: ∅
+        │   │           │   ├── name: :!
+        │   │           │   ├── message_loc: (5,12)-(5,15) = "not"
+        │   │           │   ├── opening_loc: ∅
+        │   │           │   ├── arguments: ∅
+        │   │           │   ├── closing_loc: ∅
+        │   │           │   ├── equal_loc: ∅
+        │   │           │   └── block: ∅
+        │   │           ├── call_operator_loc: ∅
+        │   │           ├── name: :!
+        │   │           ├── message_loc: (5,8)-(5,11) = "not"
+        │   │           ├── opening_loc: ∅
+        │   │           ├── arguments: ∅
+        │   │           ├── closing_loc: ∅
+        │   │           ├── equal_loc: ∅
+        │   │           └── block: ∅
+        │   ├── locals: []
+        │   ├── def_keyword_loc: (5,0)-(5,3) = "def"
+        │   ├── operator_loc: ∅
+        │   ├── lparen_loc: ∅
+        │   ├── rparen_loc: ∅
+        │   ├── equal_loc: (5,6)-(5,7) = "="
+        │   └── end_keyword_loc: ∅
+        └── @ IfNode (location: (7,0)-(7,21))
+            ├── flags: newline
+            ├── if_keyword_loc: (7,0)-(7,2) = "if"
+            ├── predicate:
+            │   @ DefNode (location: (7,3)-(7,16))
+            │   ├── flags: ∅
+            │   ├── name: :f
+            │   ├── name_loc: (7,7)-(7,8) = "f"
+            │   ├── receiver: ∅
+            │   ├── parameters: ∅
+            │   ├── body:
+            │   │   @ StatementsNode (location: (7,11)-(7,16))
+            │   │   ├── flags: ∅
+            │   │   └── body: (length: 1)
+            │   │       └── @ CallNode (location: (7,11)-(7,16))
+            │   │           ├── flags: ∅
+            │   │           ├── receiver:
+            │   │           │   @ IntegerNode (location: (7,15)-(7,16))
+            │   │           │   ├── flags: static_literal, decimal
+            │   │           │   └── value: 1
+            │   │           ├── call_operator_loc: ∅
+            │   │           ├── name: :!
+            │   │           ├── message_loc: (7,11)-(7,14) = "not"
+            │   │           ├── opening_loc: ∅
+            │   │           ├── arguments: ∅
+            │   │           ├── closing_loc: ∅
+            │   │           ├── equal_loc: ∅
+            │   │           └── block: ∅
+            │   ├── locals: []
+            │   ├── def_keyword_loc: (7,3)-(7,6) = "def"
+            │   ├── operator_loc: ∅
+            │   ├── lparen_loc: ∅
+            │   ├── rparen_loc: ∅
+            │   ├── equal_loc: (7,9)-(7,10) = "="
+            │   └── end_keyword_loc: ∅
+            ├── then_keyword_loc: ∅
+            ├── statements: ∅
+            ├── subsequent: ∅
+            └── end_keyword_loc: (7,18)-(7,21) = "end"

@@ -7,7 +7,7 @@ require_relative "test_helper"
 module Prism
   class RactorTest < TestCase
     def test_version
-      assert_match(/\A\d+\.\d+\.\d+\z/, with_ractor { Prism::VERSION })
+      assert_match(/\A\d+\.\d+\.\d+(\.rc\d+)?\z/, with_ractor { Prism::VERSION })
     end
 
     def test_parse_file
@@ -44,6 +44,10 @@ module Prism
 
     def test_string_query_method_name
       assert_equal("true", with_ractor("foo?") { |source| StringQuery.method_name?(source) })
+    end
+
+    def test_string_query_keyword
+      assert_equal("true", with_ractor("defined?") { |source| StringQuery.keyword?(source) })
     end
 
     if !ENV["PRISM_BUILD_MINIMAL"]

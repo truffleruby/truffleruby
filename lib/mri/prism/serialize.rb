@@ -20,11 +20,11 @@ module Prism
   module Serialize # :nodoc:
     # The major version of prism that we are expecting to find in the serialized
     # strings.
-    MAJOR_VERSION = 1
+    MAJOR_VERSION = 2
 
     # The minor version of prism that we are expecting to find in the serialized
     # strings.
-    MINOR_VERSION = 9
+    MINOR_VERSION = 0
 
     # The patch version of prism that we are expecting to find in the serialized
     # strings.
@@ -44,9 +44,11 @@ module Prism
                        loader.load_header
       encoding =       loader.load_encoding
       start_line =     loader.load_varsint
+      checksum =       loader.load_uint64
       offsets =        loader.load_line_offsets(freeze)
 
       source.replace_start_line(start_line)
+      source.replace_checksum(checksum)
       source.replace_offsets(offsets)
 
                        loader.load_comments(source.comments, freeze)
@@ -61,7 +63,7 @@ module Prism
 
       constant_pool = ConstantPool.new(serialized, cpool_base, cpool_size)
 
-      node =           loader.load_node(constant_pool, encoding, freeze) #: ProgramNode
+      node =           loader.load_nodes(constant_pool, encoding, freeze, cpool_base) #: ProgramNode
                        loader.load_constant_pool(constant_pool)
       raise unless     loader.eof?
 
@@ -100,9 +102,11 @@ module Prism
       tokens =         loader.load_tokens
       encoding =       loader.load_encoding
       start_line =     loader.load_varsint
+      checksum =       loader.load_uint64
       offsets =        loader.load_line_offsets(freeze)
 
       source.replace_start_line(start_line)
+      source.replace_checksum(checksum)
       source.replace_offsets(offsets)
 
                        loader.load_comments(source.comments, freeze)
@@ -145,16 +149,18 @@ module Prism
       source = Source.for(input, 1, [])
       loader = Loader.new(source, serialized)
 
-                   loader.load_header
-                   loader.load_encoding
-      start_line = loader.load_varsint
-      offsets    = loader.load_line_offsets(freeze)
+                    loader.load_header
+                    loader.load_encoding
+      start_line =  loader.load_varsint
+      checksum =    loader.load_uint64
+      offsets =     loader.load_line_offsets(freeze)
 
       source.replace_start_line(start_line)
+      source.replace_checksum(checksum)
       source.replace_offsets(offsets)
 
-      result =     loader.load_comments(source.comments, freeze)
-      raise unless loader.eof?
+      result =      loader.load_comments(source.comments, freeze)
+      raise unless  loader.eof?
 
       source.deep_freeze if freeze
       result
@@ -175,9 +181,11 @@ module Prism
                        loader.load_header
       encoding =       loader.load_encoding
       start_line =     loader.load_varsint
+      checksum =       loader.load_uint64
       offsets =        loader.load_line_offsets(freeze)
 
       source.replace_start_line(start_line)
+      source.replace_checksum(checksum)
       source.replace_offsets(offsets)
 
                        loader.load_comments(source.comments, freeze)
@@ -192,7 +200,7 @@ module Prism
 
       constant_pool = ConstantPool.new(serialized, cpool_base, cpool_size)
 
-      node =           loader.load_node(constant_pool, encoding, freeze) #: ProgramNode
+      node =           loader.load_nodes(constant_pool, encoding, freeze, cpool_base) #: ProgramNode
                        loader.load_constant_pool(constant_pool)
       raise unless     loader.eof?
 
@@ -863,12 +871,9 @@ module Prism
         (io.read(4) or raise).unpack1("L") #: Integer
       end
 
-      #: (ConstantPool constant_pool, Encoding encoding, bool freeze) -> node?
-      def load_optional_node(constant_pool, encoding, freeze)
-        if io.getbyte != 0
-          io.pos -= 1
-          load_node(constant_pool, encoding, freeze)
-        end
+      #: () -> Integer
+      def load_uint64
+        (io.read(8) or raise).unpack1("Q") #: Integer
       end
 
       #: (Encoding encoding) -> String
@@ -920,4199 +925,3475 @@ module Prism
       end
 
       if RUBY_ENGINE == "ruby"
-        #: (ConstantPool constant_pool, Encoding encoding, bool freeze) -> node
-        def load_node(constant_pool, encoding, freeze)
-          type = io.getbyte
-          node_id = load_varuint
-          location = load_location(freeze) #: Location
-          value =
-            case type
+        # Load the nodes that are serialized before the given offset and return
+        # the root. Nodes are serialized in post-order, so the children of each
+        # node are the topmost values on the stack, in field order, by the time
+        # its record is read.
+        #
+        #: (ConstantPool constant_pool, Encoding encoding, bool freeze, Integer finish) -> node
+        def load_nodes(constant_pool, encoding, freeze, finish)
+          stack = [] #: Array[node?]
+
+          while io.pos < finish
+            case (type = io.getbyte)
+            when 0
+              stack << nil
+            when 255
+              io.read(8)
             when 1
-              AliasGlobalVariableNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
-                load_node(constant_pool, encoding, freeze), #: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_old_name = stack.pop #: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
+              field_new_name = stack.pop #: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
+              value = AliasGlobalVariableNode.new(source, node_id, location, flags, field_new_name, field_old_name, field_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 2
-              AliasMethodNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: (SymbolNode | InterpolatedSymbolNode)
-                load_node(constant_pool, encoding, freeze), #: (SymbolNode | InterpolatedSymbolNode)
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_old_name = stack.pop #: (SymbolNode | InterpolatedSymbolNode)
+              field_new_name = stack.pop #: (SymbolNode | InterpolatedSymbolNode)
+              value = AliasMethodNode.new(source, node_id, location, flags, field_new_name, field_old_name, field_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 3
-              AlternationPatternNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_right = stack.pop #: Prism::node
+              field_left = stack.pop #: Prism::node
+              value = AlternationPatternNode.new(source, node_id, location, flags, field_left, field_right, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 4
-              AndNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_right = stack.pop #: Prism::node
+              field_left = stack.pop #: Prism::node
+              value = AndNode.new(source, node_id, location, flags, field_left, field_right, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 5
-              ArgumentsNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: Prism::node
-                end.tap { |nodes| nodes.freeze if freeze },
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              arguments_size = load_varuint
+              field_arguments = stack.slice!(-arguments_size, arguments_size) #: Array[Prism::node]
+              field_arguments.freeze if freeze
+              value = ArgumentsNode.new(source, node_id, location, flags, field_arguments)
+              value.freeze if freeze
+              stack << value
             when 6
-              ArrayNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: Prism::node
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              elements_size = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[Prism::node]
+              field_elements.freeze if freeze
+              value = ArrayNode.new(source, node_id, location, flags, field_elements, field_opening_loc, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 7
-              ArrayPatternNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: (ConstantPathNode | ConstantReadNode)?
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: Prism::node
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_node(constant_pool, encoding, freeze), #: (ImplicitRestNode | SplatNode)?
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: Prism::node
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              requireds_size = load_varuint
+              posts_size = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_posts = stack.slice!(-posts_size, posts_size) #: Array[Prism::node]
+              field_posts.freeze if freeze
+              field_rest = stack.pop #: (ImplicitRestNode | SplatNode)?
+              field_requireds = stack.slice!(-requireds_size, requireds_size) #: Array[Prism::node]
+              field_requireds.freeze if freeze
+              field_constant = stack.pop #: (ConstantPathNode | ConstantReadNode)?
+              value = ArrayPatternNode.new(source, node_id, location, flags, field_constant, field_requireds, field_rest, field_posts, field_opening_loc, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 8
-              AssocNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_optional_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_key = stack.pop #: Prism::node
+              value = AssocNode.new(source, node_id, location, flags, field_key, field_value, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 9
-              AssocSplatNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node?
+              value = AssocSplatNode.new(source, node_id, location, flags, field_value, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 10
-              BackReferenceReadNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = BackReferenceReadNode.new(source, node_id, location, flags, field_name)
+              value.freeze if freeze
+              stack << value
             when 11
-              BeginNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                load_optional_node(constant_pool, encoding, freeze), #: RescueNode?
-                load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
-                load_optional_node(constant_pool, encoding, freeze), #: EnsureNode?
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_begin_keyword_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_ensure_clause = stack.pop #: EnsureNode?
+              field_else_clause = stack.pop #: ElseNode?
+              field_rescue_clause = stack.pop #: RescueNode?
+              field_statements = stack.pop #: StatementsNode?
+              value = BeginNode.new(source, node_id, location, flags, field_begin_keyword_loc, field_statements, field_rescue_clause, field_else_clause, field_ensure_clause, field_end_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 12
-              BlockArgumentNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_expression = stack.pop #: Prism::node?
+              value = BlockArgumentNode.new(source, node_id, location, flags, field_expression, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 13
-              BlockLocalVariableNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = BlockLocalVariableNode.new(source, node_id, location, flags, field_name)
+              value.freeze if freeze
+              stack << value
             when 14
-              BlockNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
-                load_optional_node(constant_pool, encoding, freeze), #: (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
-                load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
-                load_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_body = stack.pop #: (StatementsNode | BeginNode)?
+              field_parameters = stack.pop #: (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
+              value = BlockNode.new(source, node_id, location, flags, field_locals, field_parameters, field_body, field_opening_loc, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 15
-              BlockParameterNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_constant(constant_pool, encoding),
-                load_optional_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_optional_constant(constant_pool, encoding)
+              field_name_loc = load_optional_location(freeze)
+              field_operator_loc = load_location(freeze)
+              value = BlockParameterNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 16
-              BlockParametersNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: ParametersNode?
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: BlockLocalVariableNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              locals_size = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_locals = stack.slice!(-locals_size, locals_size) #: Array[BlockLocalVariableNode]
+              field_locals.freeze if freeze
+              field_parameters = stack.pop #: ParametersNode?
+              value = BlockParametersNode.new(source, node_id, location, flags, field_parameters, field_locals, field_opening_loc, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 17
-              BreakNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_arguments = stack.pop #: ArgumentsNode?
+              value = BreakNode.new(source, node_id, location, flags, field_arguments, field_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 18
-              CallAndWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-                load_constant(constant_pool, encoding),
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_message_loc = load_optional_location(freeze)
+              field_read_name = load_constant(constant_pool, encoding)
+              field_write_name = load_constant(constant_pool, encoding)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_receiver = stack.pop #: Prism::node?
+              value = CallAndWriteNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_message_loc, field_read_name, field_write_name, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 19
-              CallNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_optional_location(freeze),
-                load_constant(constant_pool, encoding),
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: (BlockNode | BlockArgumentNode)?
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_message_loc = load_optional_location(freeze)
+              field_opening_loc = load_optional_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_equal_loc = load_optional_location(freeze)
+              field_block = stack.pop #: (BlockNode | BlockArgumentNode)?
+              field_arguments = stack.pop #: ArgumentsNode?
+              field_receiver = stack.pop #: Prism::node?
+              value = CallNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_name, field_message_loc, field_opening_loc, field_arguments, field_closing_loc, field_equal_loc, field_block)
+              value.freeze if freeze
+              stack << value
             when 20
-              CallOperatorWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-                load_constant(constant_pool, encoding),
-                load_constant(constant_pool, encoding),
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_message_loc = load_optional_location(freeze)
+              field_read_name = load_constant(constant_pool, encoding)
+              field_write_name = load_constant(constant_pool, encoding)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_binary_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_receiver = stack.pop #: Prism::node?
+              value = CallOperatorWriteNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_message_loc, field_read_name, field_write_name, field_binary_operator, field_binary_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 21
-              CallOrWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-                load_constant(constant_pool, encoding),
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_message_loc = load_optional_location(freeze)
+              field_read_name = load_constant(constant_pool, encoding)
+              field_write_name = load_constant(constant_pool, encoding)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_receiver = stack.pop #: Prism::node?
+              value = CallOrWriteNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_message_loc, field_read_name, field_write_name, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 22
-              CallTargetNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_call_operator_loc = load_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_message_loc = load_location(freeze)
+              field_receiver = stack.pop #: Prism::node
+              value = CallTargetNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_name, field_message_loc)
+              value.freeze if freeze
+              stack << value
             when 23
-              CapturePatternNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_node(constant_pool, encoding, freeze), #: LocalVariableTargetNode
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_target = stack.pop #: LocalVariableTargetNode
+              field_value = stack.pop #: Prism::node
+              value = CapturePatternNode.new(source, node_id, location, flags, field_value, field_target, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 24
-              CaseMatchNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: InNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
-                load_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              conditions_size = load_varuint
+              field_case_keyword_loc = load_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_else_clause = stack.pop #: ElseNode?
+              field_conditions = stack.slice!(-conditions_size, conditions_size) #: Array[InNode]
+              field_conditions.freeze if freeze
+              field_predicate = stack.pop #: Prism::node?
+              value = CaseMatchNode.new(source, node_id, location, flags, field_predicate, field_conditions, field_else_clause, field_case_keyword_loc, field_end_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 25
-              CaseNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: WhenNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
-                load_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              conditions_size = load_varuint
+              field_case_keyword_loc = load_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_else_clause = stack.pop #: ElseNode?
+              field_conditions = stack.slice!(-conditions_size, conditions_size) #: Array[WhenNode]
+              field_conditions.freeze if freeze
+              field_predicate = stack.pop #: Prism::node?
+              value = CaseNode.new(source, node_id, location, flags, field_predicate, field_conditions, field_else_clause, field_case_keyword_loc, field_end_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 26
-              ClassNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: (ConstantReadNode | ConstantPathNode)
-                load_optional_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
-                load_location(freeze),
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_class_keyword_loc = load_location(freeze)
+              field_inheritance_operator_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_body = stack.pop #: (StatementsNode | BeginNode)?
+              field_superclass = stack.pop #: Prism::node?
+              field_constant_path = stack.pop #: (ConstantReadNode | ConstantPathNode)
+              value = ClassNode.new(source, node_id, location, flags, field_locals, field_class_keyword_loc, field_constant_path, field_inheritance_operator_loc, field_superclass, field_body, field_end_keyword_loc, field_name)
+              value.freeze if freeze
+              stack << value
             when 27
-              ClassVariableAndWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = ClassVariableAndWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 28
-              ClassVariableOperatorWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_binary_operator_loc = load_location(freeze)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_value = stack.pop #: Prism::node
+              value = ClassVariableOperatorWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_binary_operator_loc, field_value, field_binary_operator)
+              value.freeze if freeze
+              stack << value
             when 29
-              ClassVariableOrWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = ClassVariableOrWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 30
-              ClassVariableReadNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = ClassVariableReadNode.new(source, node_id, location, flags, field_name)
+              value.freeze if freeze
+              stack << value
             when 31
-              ClassVariableTargetNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = ClassVariableTargetNode.new(source, node_id, location, flags, field_name)
+              value.freeze if freeze
+              stack << value
             when 32
-              ClassVariableWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = ClassVariableWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_value, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 33
-              ConstantAndWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = ConstantAndWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 34
-              ConstantOperatorWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_binary_operator_loc = load_location(freeze)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_value = stack.pop #: Prism::node
+              value = ConstantOperatorWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_binary_operator_loc, field_value, field_binary_operator)
+              value.freeze if freeze
+              stack << value
             when 35
-              ConstantOrWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = ConstantOrWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 36
-              ConstantPathAndWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: ConstantPathNode
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_target = stack.pop #: ConstantPathNode
+              value = ConstantPathAndWriteNode.new(source, node_id, location, flags, field_target, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 37
-              ConstantPathNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_optional_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_optional_constant(constant_pool, encoding)
+              field_delimiter_loc = load_location(freeze)
+              field_name_loc = load_location(freeze)
+              field_parent = stack.pop #: Prism::node?
+              value = ConstantPathNode.new(source, node_id, location, flags, field_parent, field_name, field_delimiter_loc, field_name_loc)
+              value.freeze if freeze
+              stack << value
             when 38
-              ConstantPathOperatorWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: ConstantPathNode
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_binary_operator_loc = load_location(freeze)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_value = stack.pop #: Prism::node
+              field_target = stack.pop #: ConstantPathNode
+              value = ConstantPathOperatorWriteNode.new(source, node_id, location, flags, field_target, field_binary_operator_loc, field_value, field_binary_operator)
+              value.freeze if freeze
+              stack << value
             when 39
-              ConstantPathOrWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: ConstantPathNode
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_target = stack.pop #: ConstantPathNode
+              value = ConstantPathOrWriteNode.new(source, node_id, location, flags, field_target, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 40
-              ConstantPathTargetNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_optional_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_optional_constant(constant_pool, encoding)
+              field_delimiter_loc = load_location(freeze)
+              field_name_loc = load_location(freeze)
+              field_parent = stack.pop #: Prism::node?
+              value = ConstantPathTargetNode.new(source, node_id, location, flags, field_parent, field_name, field_delimiter_loc, field_name_loc)
+              value.freeze if freeze
+              stack << value
             when 41
-              ConstantPathWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: ConstantPathNode
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_target = stack.pop #: ConstantPathNode
+              value = ConstantPathWriteNode.new(source, node_id, location, flags, field_target, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 42
-              ConstantReadNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = ConstantReadNode.new(source, node_id, location, flags, field_name)
+              value.freeze if freeze
+              stack << value
             when 43
-              ConstantTargetNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = ConstantTargetNode.new(source, node_id, location, flags, field_name)
+              value.freeze if freeze
+              stack << value
             when 44
-              ConstantWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = ConstantWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_value, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 45
-              load_uint32
-              DefNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_optional_node(constant_pool, encoding, freeze), #: ParametersNode?
-                load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
-                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
-                load_location(freeze),
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_def_keyword_loc = load_location(freeze)
+              field_operator_loc = load_optional_location(freeze)
+              field_lparen_loc = load_optional_location(freeze)
+              field_rparen_loc = load_optional_location(freeze)
+              field_equal_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_body = stack.pop #: (StatementsNode | BeginNode)?
+              field_parameters = stack.pop #: ParametersNode?
+              field_receiver = stack.pop #: Prism::node?
+              value = DefNode.new(source, node_id, location, flags, field_name, field_name_loc, field_receiver, field_parameters, field_body, field_locals, field_def_keyword_loc, field_operator_loc, field_lparen_loc, field_rparen_loc, field_equal_loc, field_end_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 46
-              DefinedNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_optional_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_lparen_loc = load_optional_location(freeze)
+              field_rparen_loc = load_optional_location(freeze)
+              field_keyword_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = DefinedNode.new(source, node_id, location, flags, field_lparen_loc, field_value, field_rparen_loc, field_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 47
-              ElseNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_else_keyword_loc = load_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              value = ElseNode.new(source, node_id, location, flags, field_else_keyword_loc, field_statements, field_end_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 48
-              EmbeddedStatementsNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              value = EmbeddedStatementsNode.new(source, node_id, location, flags, field_opening_loc, field_statements, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 49
-              EmbeddedVariableNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: (InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_variable = stack.pop #: (InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
+              value = EmbeddedVariableNode.new(source, node_id, location, flags, field_operator_loc, field_variable)
+              value.freeze if freeze
+              stack << value
             when 50
-              EnsureNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_ensure_keyword_loc = load_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              value = EnsureNode.new(source, node_id, location, flags, field_ensure_keyword_loc, field_statements, field_end_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 51
-              ErrorRecoveryNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_unexpected = stack.pop #: Prism::node?
+              value = ErrorRecoveryNode.new(source, node_id, location, flags, field_unexpected)
+              value.freeze if freeze
+              stack << value
             when 52
-              FalseNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              value = FalseNode.new(source, node_id, location, flags)
+              value.freeze if freeze
+              stack << value
             when 53
-              FindPatternNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: (ConstantPathNode | ConstantReadNode)?
-                load_node(constant_pool, encoding, freeze), #: SplatNode
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: Prism::node
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_node(constant_pool, encoding, freeze), #: SplatNode
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              requireds_size = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_right = stack.pop #: SplatNode
+              field_requireds = stack.slice!(-requireds_size, requireds_size) #: Array[Prism::node]
+              field_requireds.freeze if freeze
+              field_left = stack.pop #: SplatNode
+              field_constant = stack.pop #: (ConstantPathNode | ConstantReadNode)?
+              value = FindPatternNode.new(source, node_id, location, flags, field_constant, field_left, field_requireds, field_right, field_opening_loc, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 54
-              FlipFlopNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_right = stack.pop #: Prism::node?
+              field_left = stack.pop #: Prism::node?
+              value = FlipFlopNode.new(source, node_id, location, flags, field_left, field_right, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 55
-              FloatNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_double,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_value = load_double
+              value = FloatNode.new(source, node_id, location, flags, field_value)
+              value.freeze if freeze
+              stack << value
             when 56
-              ForNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode)
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                load_location(freeze),
-                load_location(freeze),
-                load_optional_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_for_keyword_loc = load_location(freeze)
+              field_in_keyword_loc = load_location(freeze)
+              field_do_keyword_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              field_collection = stack.pop #: Prism::node
+              field_index = stack.pop #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode)
+              value = ForNode.new(source, node_id, location, flags, field_index, field_collection, field_statements, field_for_keyword_loc, field_in_keyword_loc, field_do_keyword_loc, field_end_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 57
-              ForwardingArgumentsNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              value = ForwardingArgumentsNode.new(source, node_id, location, flags)
+              value.freeze if freeze
+              stack << value
             when 58
-              ForwardingParameterNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              value = ForwardingParameterNode.new(source, node_id, location, flags)
+              value.freeze if freeze
+              stack << value
             when 59
-              ForwardingSuperNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: BlockNode?
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_block = stack.pop #: BlockNode?
+              value = ForwardingSuperNode.new(source, node_id, location, flags, field_keyword_loc, field_block)
+              value.freeze if freeze
+              stack << value
             when 60
-              GlobalVariableAndWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = GlobalVariableAndWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 61
-              GlobalVariableOperatorWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_binary_operator_loc = load_location(freeze)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_value = stack.pop #: Prism::node
+              value = GlobalVariableOperatorWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_binary_operator_loc, field_value, field_binary_operator)
+              value.freeze if freeze
+              stack << value
             when 62
-              GlobalVariableOrWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = GlobalVariableOrWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 63
-              GlobalVariableReadNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = GlobalVariableReadNode.new(source, node_id, location, flags, field_name)
+              value.freeze if freeze
+              stack << value
             when 64
-              GlobalVariableTargetNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = GlobalVariableTargetNode.new(source, node_id, location, flags, field_name)
+              value.freeze if freeze
+              stack << value
             when 65
-              GlobalVariableWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = GlobalVariableWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_value, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 66
-              HashNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: AssocNode | AssocSplatNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              elements_size = load_varuint
+              field_closing_loc = load_location(freeze)
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[AssocNode | AssocSplatNode]
+              field_elements.freeze if freeze
+              value = HashNode.new(source, node_id, location, flags, field_opening_loc, field_elements, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 67
-              HashPatternNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: (ConstantPathNode | ConstantReadNode)?
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: AssocNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_node(constant_pool, encoding, freeze), #: (AssocSplatNode | NoKeywordsParameterNode)?
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              elements_size = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_rest = stack.pop #: (AssocSplatNode | NoKeywordsParameterNode)?
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[AssocNode]
+              field_elements.freeze if freeze
+              field_constant = stack.pop #: (ConstantPathNode | ConstantReadNode)?
+              value = HashPatternNode.new(source, node_id, location, flags, field_constant, field_elements, field_rest, field_opening_loc, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 68
-              IfNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_optional_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                load_optional_node(constant_pool, encoding, freeze), #: (ElseNode | IfNode)?
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_if_keyword_loc = load_optional_location(freeze)
+              field_then_keyword_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_subsequent = stack.pop #: (ElseNode | IfNode)?
+              field_statements = stack.pop #: StatementsNode?
+              field_predicate = stack.pop #: Prism::node
+              value = IfNode.new(source, node_id, location, flags, field_if_keyword_loc, field_predicate, field_then_keyword_loc, field_statements, field_subsequent, field_end_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 69
-              ImaginaryNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: (FloatNode | IntegerNode | RationalNode)
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_numeric = stack.pop #: (FloatNode | IntegerNode | RationalNode)
+              value = ImaginaryNode.new(source, node_id, location, flags, field_numeric)
+              value.freeze if freeze
+              stack << value
             when 70
-              ImplicitNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: (LocalVariableReadNode | CallNode | ConstantReadNode | LocalVariableTargetNode)
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_value = stack.pop #: (LocalVariableReadNode | CallNode | ConstantReadNode | LocalVariableTargetNode)
+              value = ImplicitNode.new(source, node_id, location, flags, field_value)
+              value.freeze if freeze
+              stack << value
             when 71
-              ImplicitRestNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              value = ImplicitRestNode.new(source, node_id, location, flags)
+              value.freeze if freeze
+              stack << value
             when 72
-              InNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                load_location(freeze),
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_in_keyword_loc = load_location(freeze)
+              field_then_keyword_loc = load_optional_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              field_pattern = stack.pop #: Prism::node
+              value = InNode.new(source, node_id, location, flags, field_pattern, field_statements, field_in_keyword_loc, field_then_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 73
-              IndexAndWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_optional_location(freeze),
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_block = stack.pop #: BlockArgumentNode?
+              field_arguments = stack.pop #: ArgumentsNode?
+              field_receiver = stack.pop #: Prism::node?
+              value = IndexAndWriteNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_opening_loc, field_arguments, field_closing_loc, field_block, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 74
-              IndexOperatorWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_optional_location(freeze),
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_binary_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_block = stack.pop #: BlockArgumentNode?
+              field_arguments = stack.pop #: ArgumentsNode?
+              field_receiver = stack.pop #: Prism::node?
+              value = IndexOperatorWriteNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_opening_loc, field_arguments, field_closing_loc, field_block, field_binary_operator, field_binary_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 75
-              IndexOrWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_optional_location(freeze),
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_block = stack.pop #: BlockArgumentNode?
+              field_arguments = stack.pop #: ArgumentsNode?
+              field_receiver = stack.pop #: Prism::node?
+              value = IndexOrWriteNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_opening_loc, field_arguments, field_closing_loc, field_block, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 76
-              IndexTargetNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_block = stack.pop #: BlockArgumentNode?
+              field_arguments = stack.pop #: ArgumentsNode?
+              field_receiver = stack.pop #: Prism::node
+              value = IndexTargetNode.new(source, node_id, location, flags, field_receiver, field_opening_loc, field_arguments, field_closing_loc, field_block)
+              value.freeze if freeze
+              stack << value
             when 77
-              InstanceVariableAndWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = InstanceVariableAndWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 78
-              InstanceVariableOperatorWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_binary_operator_loc = load_location(freeze)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_value = stack.pop #: Prism::node
+              value = InstanceVariableOperatorWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_binary_operator_loc, field_value, field_binary_operator)
+              value.freeze if freeze
+              stack << value
             when 79
-              InstanceVariableOrWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = InstanceVariableOrWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 80
-              InstanceVariableReadNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = InstanceVariableReadNode.new(source, node_id, location, flags, field_name)
+              value.freeze if freeze
+              stack << value
             when 81
-              InstanceVariableTargetNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = InstanceVariableTargetNode.new(source, node_id, location, flags, field_name)
+              value.freeze if freeze
+              stack << value
             when 82
-              InstanceVariableWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = InstanceVariableWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_value, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 83
-              IntegerNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_integer,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_value = load_integer
+              value = IntegerNode.new(source, node_id, location, flags, field_value)
+              value.freeze if freeze
+              stack << value
             when 84
-              InterpolatedMatchLastLineNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              parts_size = load_varuint
+              field_closing_loc = load_location(freeze)
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts.freeze if freeze
+              value = InterpolatedMatchLastLineNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 85
-              InterpolatedRegularExpressionNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              parts_size = load_varuint
+              field_closing_loc = load_location(freeze)
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts.freeze if freeze
+              value = InterpolatedRegularExpressionNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 86
-              InterpolatedStringNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_location(freeze),
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode | InterpolatedStringNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              parts_size = load_varuint
+              field_closing_loc = load_optional_location(freeze)
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode | InterpolatedStringNode]
+              field_parts.freeze if freeze
+              value = InterpolatedStringNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 87
-              InterpolatedSymbolNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_location(freeze),
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              parts_size = load_varuint
+              field_closing_loc = load_optional_location(freeze)
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts.freeze if freeze
+              value = InterpolatedSymbolNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 88
-              InterpolatedXStringNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              parts_size = load_varuint
+              field_closing_loc = load_location(freeze)
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts.freeze if freeze
+              value = InterpolatedXStringNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 89
-              ItLocalVariableReadNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              value = ItLocalVariableReadNode.new(source, node_id, location, flags)
+              value.freeze if freeze
+              stack << value
             when 90
-              ItParametersNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              value = ItParametersNode.new(source, node_id, location, flags)
+              value.freeze if freeze
+              stack << value
             when 91
-              KeywordHashNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: AssocNode | AssocSplatNode
-                end.tap { |nodes| nodes.freeze if freeze },
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              elements_size = load_varuint
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[AssocNode | AssocSplatNode]
+              field_elements.freeze if freeze
+              value = KeywordHashNode.new(source, node_id, location, flags, field_elements)
+              value.freeze if freeze
+              stack << value
             when 92
-              KeywordRestParameterNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_constant(constant_pool, encoding),
-                load_optional_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_optional_constant(constant_pool, encoding)
+              field_name_loc = load_optional_location(freeze)
+              field_operator_loc = load_location(freeze)
+              value = KeywordRestParameterNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 93
-              LambdaNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
-                load_location(freeze),
-                load_location(freeze),
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
-                load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_operator_loc = load_location(freeze)
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_body = stack.pop #: (StatementsNode | BeginNode)?
+              field_parameters = stack.pop #: (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
+              value = LambdaNode.new(source, node_id, location, flags, field_locals, field_operator_loc, field_opening_loc, field_closing_loc, field_parameters, field_body)
+              value.freeze if freeze
+              stack << value
             when 94
-              LocalVariableAndWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_constant(constant_pool, encoding),
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_depth = load_varuint
+              field_value = stack.pop #: Prism::node
+              value = LocalVariableAndWriteNode.new(source, node_id, location, flags, field_name_loc, field_operator_loc, field_value, field_name, field_depth)
+              value.freeze if freeze
+              stack << value
             when 95
-              LocalVariableOperatorWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_constant(constant_pool, encoding),
-                load_constant(constant_pool, encoding),
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name_loc = load_location(freeze)
+              field_binary_operator_loc = load_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_depth = load_varuint
+              field_value = stack.pop #: Prism::node
+              value = LocalVariableOperatorWriteNode.new(source, node_id, location, flags, field_name_loc, field_binary_operator_loc, field_value, field_name, field_binary_operator, field_depth)
+              value.freeze if freeze
+              stack << value
             when 96
-              LocalVariableOrWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_constant(constant_pool, encoding),
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_depth = load_varuint
+              field_value = stack.pop #: Prism::node
+              value = LocalVariableOrWriteNode.new(source, node_id, location, flags, field_name_loc, field_operator_loc, field_value, field_name, field_depth)
+              value.freeze if freeze
+              stack << value
             when 97
-              LocalVariableReadNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_depth = load_varuint
+              value = LocalVariableReadNode.new(source, node_id, location, flags, field_name, field_depth)
+              value.freeze if freeze
+              stack << value
             when 98
-              LocalVariableTargetNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_depth = load_varuint
+              value = LocalVariableTargetNode.new(source, node_id, location, flags, field_name, field_depth)
+              value.freeze if freeze
+              stack << value
             when 99
-              LocalVariableWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_varuint,
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_depth = load_varuint
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = LocalVariableWriteNode.new(source, node_id, location, flags, field_name, field_depth, field_name_loc, field_value, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 100
-              MatchLastLineNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_location(freeze),
-                load_location(freeze),
-                load_string(encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              field_content_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_unescaped = load_string(encoding)
+              value = MatchLastLineNode.new(source, node_id, location, flags, field_opening_loc, field_content_loc, field_closing_loc, field_unescaped)
+              value.freeze if freeze
+              stack << value
             when 101
-              MatchPredicateNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_pattern = stack.pop #: Prism::node
+              field_value = stack.pop #: Prism::node
+              value = MatchPredicateNode.new(source, node_id, location, flags, field_value, field_pattern, field_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 102
-              MatchRequiredNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_pattern = stack.pop #: Prism::node
+              field_value = stack.pop #: Prism::node
+              value = MatchRequiredNode.new(source, node_id, location, flags, field_value, field_pattern, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 103
-              MatchWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: CallNode
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode
-                end.tap { |nodes| nodes.freeze if freeze },
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              targets_size = load_varuint
+              field_targets = stack.slice!(-targets_size, targets_size) #: Array[LocalVariableTargetNode]
+              field_targets.freeze if freeze
+              field_call = stack.pop #: CallNode
+              value = MatchWriteNode.new(source, node_id, location, flags, field_call, field_targets)
+              value.freeze if freeze
+              stack << value
             when 104
-              ModuleNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: (ConstantReadNode | ConstantPathNode)
-                load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
-                load_location(freeze),
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_module_keyword_loc = load_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_body = stack.pop #: (StatementsNode | BeginNode)?
+              field_constant_path = stack.pop #: (ConstantReadNode | ConstantPathNode)
+              value = ModuleNode.new(source, node_id, location, flags, field_locals, field_module_keyword_loc, field_constant_path, field_body, field_end_keyword_loc, field_name)
+              value.freeze if freeze
+              stack << value
             when 105
-              MultiTargetNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_node(constant_pool, encoding, freeze), #: (ImplicitRestNode | SplatNode)?
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              lefts_size = load_varuint
+              rights_size = load_varuint
+              field_lparen_loc = load_optional_location(freeze)
+              field_rparen_loc = load_optional_location(freeze)
+              field_rights = stack.slice!(-rights_size, rights_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
+              field_rights.freeze if freeze
+              field_rest = stack.pop #: (ImplicitRestNode | SplatNode)?
+              field_lefts = stack.slice!(-lefts_size, lefts_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
+              field_lefts.freeze if freeze
+              value = MultiTargetNode.new(source, node_id, location, flags, field_lefts, field_rest, field_rights, field_lparen_loc, field_rparen_loc)
+              value.freeze if freeze
+              stack << value
             when 106
-              MultiWriteNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_node(constant_pool, encoding, freeze), #: (ImplicitRestNode | SplatNode)?
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              lefts_size = load_varuint
+              rights_size = load_varuint
+              field_lparen_loc = load_optional_location(freeze)
+              field_rparen_loc = load_optional_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_rights = stack.slice!(-rights_size, rights_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
+              field_rights.freeze if freeze
+              field_rest = stack.pop #: (ImplicitRestNode | SplatNode)?
+              field_lefts = stack.slice!(-lefts_size, lefts_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
+              field_lefts.freeze if freeze
+              value = MultiWriteNode.new(source, node_id, location, flags, field_lefts, field_rest, field_rights, field_lparen_loc, field_rparen_loc, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 107
-              NextNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_arguments = stack.pop #: ArgumentsNode?
+              value = NextNode.new(source, node_id, location, flags, field_arguments, field_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 108
-              NilNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              value = NilNode.new(source, node_id, location, flags)
+              value.freeze if freeze
+              stack << value
             when 109
-              NoBlockParameterNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_keyword_loc = load_location(freeze)
+              value = NoBlockParameterNode.new(source, node_id, location, flags, field_operator_loc, field_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 110
-              NoKeywordsParameterNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_keyword_loc = load_location(freeze)
+              value = NoKeywordsParameterNode.new(source, node_id, location, flags, field_operator_loc, field_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 111
-              NumberedParametersNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                (io.getbyte or raise),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_maximum = (io.getbyte or raise)
+              value = NumberedParametersNode.new(source, node_id, location, flags, field_maximum)
+              value.freeze if freeze
+              stack << value
             when 112
-              NumberedReferenceReadNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_number = load_varuint
+              value = NumberedReferenceReadNode.new(source, node_id, location, flags, field_number)
+              value.freeze if freeze
+              stack << value
             when 113
-              OptionalKeywordParameterNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = OptionalKeywordParameterNode.new(source, node_id, location, flags, field_name, field_name_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 114
-              OptionalParameterNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = OptionalParameterNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
+              value.freeze if freeze
+              stack << value
             when 115
-              OrNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_right = stack.pop #: Prism::node
+              field_left = stack.pop #: Prism::node
+              value = OrNode.new(source, node_id, location, flags, field_left, field_right, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 116
-              ParametersNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: RequiredParameterNode | MultiTargetNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: OptionalParameterNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_node(constant_pool, encoding, freeze), #: (RestParameterNode | ImplicitRestNode)?
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: RequiredParameterNode | MultiTargetNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: RequiredKeywordParameterNode | OptionalKeywordParameterNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_node(constant_pool, encoding, freeze), #: (KeywordRestParameterNode | ForwardingParameterNode | NoKeywordsParameterNode)?
-                load_optional_node(constant_pool, encoding, freeze), #: (BlockParameterNode | NoBlockParameterNode)?
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              requireds_size = load_varuint
+              optionals_size = load_varuint
+              posts_size = load_varuint
+              keywords_size = load_varuint
+              field_block = stack.pop #: (BlockParameterNode | NoBlockParameterNode)?
+              field_keyword_rest = stack.pop #: (KeywordRestParameterNode | ForwardingParameterNode | NoKeywordsParameterNode)?
+              field_keywords = stack.slice!(-keywords_size, keywords_size) #: Array[RequiredKeywordParameterNode | OptionalKeywordParameterNode]
+              field_keywords.freeze if freeze
+              field_posts = stack.slice!(-posts_size, posts_size) #: Array[RequiredParameterNode | MultiTargetNode]
+              field_posts.freeze if freeze
+              field_rest = stack.pop #: (RestParameterNode | ImplicitRestNode)?
+              field_optionals = stack.slice!(-optionals_size, optionals_size) #: Array[OptionalParameterNode]
+              field_optionals.freeze if freeze
+              field_requireds = stack.slice!(-requireds_size, requireds_size) #: Array[RequiredParameterNode | MultiTargetNode]
+              field_requireds.freeze if freeze
+              value = ParametersNode.new(source, node_id, location, flags, field_requireds, field_optionals, field_rest, field_posts, field_keywords, field_keyword_rest, field_block)
+              value.freeze if freeze
+              stack << value
             when 117
-              ParenthesesNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_body = stack.pop #: Prism::node?
+              value = ParenthesesNode.new(source, node_id, location, flags, field_body, field_opening_loc, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 118
-              PinnedExpressionNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-                load_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_lparen_loc = load_location(freeze)
+              field_rparen_loc = load_location(freeze)
+              field_expression = stack.pop #: Prism::node
+              value = PinnedExpressionNode.new(source, node_id, location, flags, field_expression, field_operator_loc, field_lparen_loc, field_rparen_loc)
+              value.freeze if freeze
+              stack << value
             when 119
-              PinnedVariableNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: (LocalVariableReadNode | InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode | ItLocalVariableReadNode)
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_variable = stack.pop #: (LocalVariableReadNode | InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode | ItLocalVariableReadNode)
+              value = PinnedVariableNode.new(source, node_id, location, flags, field_variable, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 120
-              PostExecutionNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                load_location(freeze),
-                load_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              value = PostExecutionNode.new(source, node_id, location, flags, field_statements, field_keyword_loc, field_opening_loc, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 121
-              PreExecutionNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                load_location(freeze),
-                load_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              value = PreExecutionNode.new(source, node_id, location, flags, field_statements, field_keyword_loc, field_opening_loc, field_closing_loc)
+              value.freeze if freeze
+              stack << value
             when 122
-              ProgramNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
-                load_node(constant_pool, encoding, freeze), #: StatementsNode
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_statements = stack.pop #: StatementsNode
+              value = ProgramNode.new(source, node_id, location, flags, field_locals, field_statements)
+              value.freeze if freeze
+              stack << value
             when 123
-              RangeNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_right = stack.pop #: Prism::node?
+              field_left = stack.pop #: Prism::node?
+              value = RangeNode.new(source, node_id, location, flags, field_left, field_right, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 124
-              RationalNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_integer,
-                load_integer,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_numerator = load_integer
+              field_denominator = load_integer
+              value = RationalNode.new(source, node_id, location, flags, field_numerator, field_denominator)
+              value.freeze if freeze
+              stack << value
             when 125
-              RedoNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              value = RedoNode.new(source, node_id, location, flags)
+              value.freeze if freeze
+              stack << value
             when 126
-              RegularExpressionNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_location(freeze),
-                load_location(freeze),
-                load_string(encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              field_content_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_unescaped = load_string(encoding)
+              value = RegularExpressionNode.new(source, node_id, location, flags, field_opening_loc, field_content_loc, field_closing_loc, field_unescaped)
+              value.freeze if freeze
+              stack << value
             when 127
-              RequiredKeywordParameterNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              value = RequiredKeywordParameterNode.new(source, node_id, location, flags, field_name, field_name_loc)
+              value.freeze if freeze
+              stack << value
             when 128
-              RequiredParameterNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_constant(constant_pool, encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = RequiredParameterNode.new(source, node_id, location, flags, field_name)
+              value.freeze if freeze
+              stack << value
             when 129
-              RescueModifierNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_rescue_expression = stack.pop #: Prism::node
+              field_expression = stack.pop #: Prism::node
+              value = RescueModifierNode.new(source, node_id, location, flags, field_expression, field_keyword_loc, field_rescue_expression)
+              value.freeze if freeze
+              stack << value
             when 130
-              RescueNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: Prism::node
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode)?
-                load_optional_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                load_optional_node(constant_pool, encoding, freeze), #: RescueNode?
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              exceptions_size = load_varuint
+              field_operator_loc = load_optional_location(freeze)
+              field_then_keyword_loc = load_optional_location(freeze)
+              field_subsequent = stack.pop #: RescueNode?
+              field_statements = stack.pop #: StatementsNode?
+              field_reference = stack.pop #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode)?
+              field_exceptions = stack.slice!(-exceptions_size, exceptions_size) #: Array[Prism::node]
+              field_exceptions.freeze if freeze
+              value = RescueNode.new(source, node_id, location, flags, field_keyword_loc, field_exceptions, field_operator_loc, field_reference, field_then_keyword_loc, field_statements, field_subsequent)
+              value.freeze if freeze
+              stack << value
             when 131
-              RestParameterNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_constant(constant_pool, encoding),
-                load_optional_location(freeze),
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_name = load_optional_constant(constant_pool, encoding)
+              field_name_loc = load_optional_location(freeze)
+              field_operator_loc = load_location(freeze)
+              value = RestParameterNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc)
+              value.freeze if freeze
+              stack << value
             when 132
-              RetryNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              value = RetryNode.new(source, node_id, location, flags)
+              value.freeze if freeze
+              stack << value
             when 133
-              ReturnNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_arguments = stack.pop #: ArgumentsNode?
+              value = ReturnNode.new(source, node_id, location, flags, field_keyword_loc, field_arguments)
+              value.freeze if freeze
+              stack << value
             when 134
-              SelfNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              value = SelfNode.new(source, node_id, location, flags)
+              value.freeze if freeze
+              stack << value
             when 135
-              ShareableConstantNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_node(constant_pool, encoding, freeze), #: (ConstantWriteNode | ConstantAndWriteNode | ConstantOrWriteNode | ConstantOperatorWriteNode | ConstantPathWriteNode | ConstantPathAndWriteNode | ConstantPathOrWriteNode | ConstantPathOperatorWriteNode)
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_write = stack.pop #: (ConstantWriteNode | ConstantAndWriteNode | ConstantOrWriteNode | ConstantOperatorWriteNode | ConstantPathWriteNode | ConstantPathAndWriteNode | ConstantPathOrWriteNode | ConstantPathOperatorWriteNode)
+              value = ShareableConstantNode.new(source, node_id, location, flags, field_write)
+              value.freeze if freeze
+              stack << value
             when 136
-              SingletonClassNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) { load_constant(constant_pool, encoding) }.tap { |constants| constants.freeze if freeze },
-                load_location(freeze),
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_class_keyword_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_body = stack.pop #: (StatementsNode | BeginNode)?
+              field_expression = stack.pop #: Prism::node
+              value = SingletonClassNode.new(source, node_id, location, flags, field_locals, field_class_keyword_loc, field_operator_loc, field_expression, field_body, field_end_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 137
-              SourceEncodingNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              value = SourceEncodingNode.new(source, node_id, location, flags)
+              value.freeze if freeze
+              stack << value
             when 138
-              SourceFileNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_string(encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_filepath = load_string(encoding)
+              value = SourceFileNode.new(source, node_id, location, flags, field_filepath)
+              value.freeze if freeze
+              stack << value
             when 139
-              SourceLineNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              value = SourceLineNode.new(source, node_id, location, flags)
+              value.freeze if freeze
+              stack << value
             when 140
-              SplatNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_expression = stack.pop #: Prism::node?
+              value = SplatNode.new(source, node_id, location, flags, field_operator_loc, field_expression)
+              value.freeze if freeze
+              stack << value
             when 141
-              StatementsNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: Prism::node
-                end.tap { |nodes| nodes.freeze if freeze },
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              body_size = load_varuint
+              field_body = stack.slice!(-body_size, body_size) #: Array[Prism::node]
+              field_body.freeze if freeze
+              value = StatementsNode.new(source, node_id, location, flags, field_body)
+              value.freeze if freeze
+              stack << value
             when 142
-              StringNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_location(freeze),
-                load_location(freeze),
-                load_optional_location(freeze),
-                load_string(encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_content_loc = load_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_unescaped = load_string(encoding)
+              value = StringNode.new(source, node_id, location, flags, field_opening_loc, field_content_loc, field_closing_loc, field_unescaped)
+              value.freeze if freeze
+              stack << value
             when 143
-              SuperNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_optional_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                load_optional_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: (BlockNode | BlockArgumentNode)?
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_lparen_loc = load_optional_location(freeze)
+              field_rparen_loc = load_optional_location(freeze)
+              field_block = stack.pop #: (BlockNode | BlockArgumentNode)?
+              field_arguments = stack.pop #: ArgumentsNode?
+              value = SuperNode.new(source, node_id, location, flags, field_keyword_loc, field_lparen_loc, field_arguments, field_rparen_loc, field_block)
+              value.freeze if freeze
+              stack << value
             when 144
-              SymbolNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_optional_location(freeze),
-                load_location(freeze),
-                load_optional_location(freeze),
-                load_string(encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_content_loc = load_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_unescaped = load_string(encoding)
+              value = SymbolNode.new(source, node_id, location, flags, field_opening_loc, field_content_loc, field_closing_loc, field_unescaped)
+              value.freeze if freeze
+              stack << value
             when 145
-              TrueNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              value = TrueNode.new(source, node_id, location, flags)
+              value.freeze if freeze
+              stack << value
             when 146
-              UndefNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: SymbolNode | InterpolatedSymbolNode
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              names_size = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_names = stack.slice!(-names_size, names_size) #: Array[SymbolNode | InterpolatedSymbolNode]
+              field_names.freeze if freeze
+              value = UndefNode.new(source, node_id, location, flags, field_names, field_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 147
-              UnlessNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_optional_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_unless_keyword_loc = load_location(freeze)
+              field_then_keyword_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_else_clause = stack.pop #: ElseNode?
+              field_statements = stack.pop #: StatementsNode?
+              field_predicate = stack.pop #: Prism::node
+              value = UnlessNode.new(source, node_id, location, flags, field_unless_keyword_loc, field_predicate, field_then_keyword_loc, field_statements, field_else_clause, field_end_keyword_loc)
+              value.freeze if freeze
+              stack << value
             when 148
-              UntilNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_until_keyword_loc = load_location(freeze)
+              field_do_keyword_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              field_predicate = stack.pop #: Prism::node
+              value = UntilNode.new(source, node_id, location, flags, field_until_keyword_loc, field_do_keyword_loc, field_end_keyword_loc, field_predicate, field_statements)
+              value.freeze if freeze
+              stack << value
             when 149
-              WhenNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                Array.new(load_varuint) do
-                  load_node(constant_pool, encoding, freeze) #: Prism::node
-                end.tap { |nodes| nodes.freeze if freeze },
-                load_optional_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_when_keyword_loc = load_location(freeze)
+              conditions_size = load_varuint
+              field_then_keyword_loc = load_optional_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              field_conditions = stack.slice!(-conditions_size, conditions_size) #: Array[Prism::node]
+              field_conditions.freeze if freeze
+              value = WhenNode.new(source, node_id, location, flags, field_when_keyword_loc, field_conditions, field_then_keyword_loc, field_statements)
+              value.freeze if freeze
+              stack << value
             when 150
-              WhileNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_optional_location(freeze),
-                load_optional_location(freeze),
-                load_node(constant_pool, encoding, freeze), #: Prism::node
-                load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_while_keyword_loc = load_location(freeze)
+              field_do_keyword_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              field_predicate = stack.pop #: Prism::node
+              value = WhileNode.new(source, node_id, location, flags, field_while_keyword_loc, field_do_keyword_loc, field_end_keyword_loc, field_predicate, field_statements)
+              value.freeze if freeze
+              stack << value
             when 151
-              XStringNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_location(freeze),
-                load_location(freeze),
-                load_string(encoding),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              field_content_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_unescaped = load_string(encoding)
+              value = XStringNode.new(source, node_id, location, flags, field_opening_loc, field_content_loc, field_closing_loc, field_unescaped)
+              value.freeze if freeze
+              stack << value
             when 152
-              YieldNode.new(
-                source,
-                node_id,
-                location,
-                load_varuint,
-                load_location(freeze),
-                load_optional_location(freeze),
-                load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                load_optional_location(freeze),
-              )
+              node_id = load_varuint
+              location = load_location(freeze)
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_lparen_loc = load_optional_location(freeze)
+              field_rparen_loc = load_optional_location(freeze)
+              field_arguments = stack.pop #: ArgumentsNode?
+              value = YieldNode.new(source, node_id, location, flags, field_keyword_loc, field_lparen_loc, field_arguments, field_rparen_loc)
+              value.freeze if freeze
+              stack << value
             else
               raise "Unknown node type: #{type}"
             end
+          end
 
-          value.freeze if freeze
-          value
+          raise unless io.pos == finish && stack.length == 1
+          stack.first or raise
         end
       else
         # @rbs skip
-        def load_node(constant_pool, encoding, freeze)
-          @load_node_lambdas[(io.getbyte or raise)].call(constant_pool, encoding, freeze)
+        def load_nodes(constant_pool, encoding, freeze, finish)
+          stack = [] #: Array[node?]
+
+          while io.pos < finish
+            type = (io.getbyte or raise)
+
+            if type == 0
+              stack << nil
+            elsif type == 255
+              io.read(8)
+            else
+              stack << @load_node_lambdas[type].call(constant_pool, encoding, freeze, stack)
+            end
+          end
+
+          raise unless io.pos == finish && stack.length == 1
+          stack.first or raise
         end
 
         # @rbs skip
         def define_load_node_lambdas
           @load_node_lambdas = [
             nil,
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                AliasGlobalVariableNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
-                  load_node(constant_pool, encoding, freeze), #: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_old_name = stack.pop #: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
+              field_new_name = stack.pop #: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
+              value = AliasGlobalVariableNode.new(source, node_id, location, flags, field_new_name, field_old_name, field_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                AliasMethodNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: (SymbolNode | InterpolatedSymbolNode)
-                  load_node(constant_pool, encoding, freeze), #: (SymbolNode | InterpolatedSymbolNode)
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_old_name = stack.pop #: (SymbolNode | InterpolatedSymbolNode)
+              field_new_name = stack.pop #: (SymbolNode | InterpolatedSymbolNode)
+              value = AliasMethodNode.new(source, node_id, location, flags, field_new_name, field_old_name, field_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                AlternationPatternNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_right = stack.pop #: Prism::node
+              field_left = stack.pop #: Prism::node
+              value = AlternationPatternNode.new(source, node_id, location, flags, field_left, field_right, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                AndNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_right = stack.pop #: Prism::node
+              field_left = stack.pop #: Prism::node
+              value = AndNode.new(source, node_id, location, flags, field_left, field_right, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ArgumentsNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: Prism::node
-                  end,
-                )
+              flags = load_varuint
+              arguments_size = load_varuint
+              field_arguments = stack.slice!(-arguments_size, arguments_size) #: Array[Prism::node]
+              field_arguments.freeze if freeze
+              value = ArgumentsNode.new(source, node_id, location, flags, field_arguments)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ArrayNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: Prism::node
-                  end,
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              elements_size = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[Prism::node]
+              field_elements.freeze if freeze
+              value = ArrayNode.new(source, node_id, location, flags, field_elements, field_opening_loc, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ArrayPatternNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: (ConstantPathNode | ConstantReadNode)?
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: Prism::node
-                  end,
-                  load_optional_node(constant_pool, encoding, freeze), #: (ImplicitRestNode | SplatNode)?
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: Prism::node
-                  end,
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              requireds_size = load_varuint
+              posts_size = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_posts = stack.slice!(-posts_size, posts_size) #: Array[Prism::node]
+              field_posts.freeze if freeze
+              field_rest = stack.pop #: (ImplicitRestNode | SplatNode)?
+              field_requireds = stack.slice!(-requireds_size, requireds_size) #: Array[Prism::node]
+              field_requireds.freeze if freeze
+              field_constant = stack.pop #: (ConstantPathNode | ConstantReadNode)?
+              value = ArrayPatternNode.new(source, node_id, location, flags, field_constant, field_requireds, field_rest, field_posts, field_opening_loc, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                AssocNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_optional_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_key = stack.pop #: Prism::node
+              value = AssocNode.new(source, node_id, location, flags, field_key, field_value, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                AssocSplatNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node?
+              value = AssocSplatNode.new(source, node_id, location, flags, field_value, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                BackReferenceReadNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = BackReferenceReadNode.new(source, node_id, location, flags, field_name)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                BeginNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                  load_optional_node(constant_pool, encoding, freeze), #: RescueNode?
-                  load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
-                  load_optional_node(constant_pool, encoding, freeze), #: EnsureNode?
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              field_begin_keyword_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_ensure_clause = stack.pop #: EnsureNode?
+              field_else_clause = stack.pop #: ElseNode?
+              field_rescue_clause = stack.pop #: RescueNode?
+              field_statements = stack.pop #: StatementsNode?
+              value = BeginNode.new(source, node_id, location, flags, field_begin_keyword_loc, field_statements, field_rescue_clause, field_else_clause, field_ensure_clause, field_end_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                BlockArgumentNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_expression = stack.pop #: Prism::node?
+              value = BlockArgumentNode.new(source, node_id, location, flags, field_expression, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                BlockLocalVariableNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = BlockLocalVariableNode.new(source, node_id, location, flags, field_name)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                BlockNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
-                  load_optional_node(constant_pool, encoding, freeze), #: (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
-                  load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
-                  load_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_body = stack.pop #: (StatementsNode | BeginNode)?
+              field_parameters = stack.pop #: (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
+              value = BlockNode.new(source, node_id, location, flags, field_locals, field_parameters, field_body, field_opening_loc, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                BlockParameterNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_constant(constant_pool, encoding),
-                  load_optional_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_name = load_optional_constant(constant_pool, encoding)
+              field_name_loc = load_optional_location(freeze)
+              field_operator_loc = load_location(freeze)
+              value = BlockParameterNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                BlockParametersNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: ParametersNode?
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: BlockLocalVariableNode
-                  end,
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              locals_size = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_locals = stack.slice!(-locals_size, locals_size) #: Array[BlockLocalVariableNode]
+              field_locals.freeze if freeze
+              field_parameters = stack.pop #: ParametersNode?
+              value = BlockParametersNode.new(source, node_id, location, flags, field_parameters, field_locals, field_opening_loc, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                BreakNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_arguments = stack.pop #: ArgumentsNode?
+              value = BreakNode.new(source, node_id, location, flags, field_arguments, field_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                CallAndWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                  load_constant(constant_pool, encoding),
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_message_loc = load_optional_location(freeze)
+              field_read_name = load_constant(constant_pool, encoding)
+              field_write_name = load_constant(constant_pool, encoding)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_receiver = stack.pop #: Prism::node?
+              value = CallAndWriteNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_message_loc, field_read_name, field_write_name, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                CallNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_optional_location(freeze),
-                  load_constant(constant_pool, encoding),
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: (BlockNode | BlockArgumentNode)?
-                )
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_message_loc = load_optional_location(freeze)
+              field_opening_loc = load_optional_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_equal_loc = load_optional_location(freeze)
+              field_block = stack.pop #: (BlockNode | BlockArgumentNode)?
+              field_arguments = stack.pop #: ArgumentsNode?
+              field_receiver = stack.pop #: Prism::node?
+              value = CallNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_name, field_message_loc, field_opening_loc, field_arguments, field_closing_loc, field_equal_loc, field_block)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                CallOperatorWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                  load_constant(constant_pool, encoding),
-                  load_constant(constant_pool, encoding),
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_message_loc = load_optional_location(freeze)
+              field_read_name = load_constant(constant_pool, encoding)
+              field_write_name = load_constant(constant_pool, encoding)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_binary_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_receiver = stack.pop #: Prism::node?
+              value = CallOperatorWriteNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_message_loc, field_read_name, field_write_name, field_binary_operator, field_binary_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                CallOrWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                  load_constant(constant_pool, encoding),
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_message_loc = load_optional_location(freeze)
+              field_read_name = load_constant(constant_pool, encoding)
+              field_write_name = load_constant(constant_pool, encoding)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_receiver = stack.pop #: Prism::node?
+              value = CallOrWriteNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_message_loc, field_read_name, field_write_name, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                CallTargetNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_call_operator_loc = load_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_message_loc = load_location(freeze)
+              field_receiver = stack.pop #: Prism::node
+              value = CallTargetNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_name, field_message_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                CapturePatternNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_node(constant_pool, encoding, freeze), #: LocalVariableTargetNode
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_target = stack.pop #: LocalVariableTargetNode
+              field_value = stack.pop #: Prism::node
+              value = CapturePatternNode.new(source, node_id, location, flags, field_value, field_target, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                CaseMatchNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: InNode
-                  end,
-                  load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
-                  load_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              conditions_size = load_varuint
+              field_case_keyword_loc = load_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_else_clause = stack.pop #: ElseNode?
+              field_conditions = stack.slice!(-conditions_size, conditions_size) #: Array[InNode]
+              field_conditions.freeze if freeze
+              field_predicate = stack.pop #: Prism::node?
+              value = CaseMatchNode.new(source, node_id, location, flags, field_predicate, field_conditions, field_else_clause, field_case_keyword_loc, field_end_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                CaseNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: WhenNode
-                  end,
-                  load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
-                  load_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              conditions_size = load_varuint
+              field_case_keyword_loc = load_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_else_clause = stack.pop #: ElseNode?
+              field_conditions = stack.slice!(-conditions_size, conditions_size) #: Array[WhenNode]
+              field_conditions.freeze if freeze
+              field_predicate = stack.pop #: Prism::node?
+              value = CaseNode.new(source, node_id, location, flags, field_predicate, field_conditions, field_else_clause, field_case_keyword_loc, field_end_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ClassNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: (ConstantReadNode | ConstantPathNode)
-                  load_optional_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
-                  load_location(freeze),
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_class_keyword_loc = load_location(freeze)
+              field_inheritance_operator_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_body = stack.pop #: (StatementsNode | BeginNode)?
+              field_superclass = stack.pop #: Prism::node?
+              field_constant_path = stack.pop #: (ConstantReadNode | ConstantPathNode)
+              value = ClassNode.new(source, node_id, location, flags, field_locals, field_class_keyword_loc, field_constant_path, field_inheritance_operator_loc, field_superclass, field_body, field_end_keyword_loc, field_name)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ClassVariableAndWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = ClassVariableAndWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ClassVariableOperatorWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_binary_operator_loc = load_location(freeze)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_value = stack.pop #: Prism::node
+              value = ClassVariableOperatorWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_binary_operator_loc, field_value, field_binary_operator)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ClassVariableOrWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = ClassVariableOrWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ClassVariableReadNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = ClassVariableReadNode.new(source, node_id, location, flags, field_name)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ClassVariableTargetNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = ClassVariableTargetNode.new(source, node_id, location, flags, field_name)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ClassVariableWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = ClassVariableWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_value, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ConstantAndWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = ConstantAndWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ConstantOperatorWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_binary_operator_loc = load_location(freeze)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_value = stack.pop #: Prism::node
+              value = ConstantOperatorWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_binary_operator_loc, field_value, field_binary_operator)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ConstantOrWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = ConstantOrWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ConstantPathAndWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: ConstantPathNode
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_target = stack.pop #: ConstantPathNode
+              value = ConstantPathAndWriteNode.new(source, node_id, location, flags, field_target, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ConstantPathNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_optional_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_name = load_optional_constant(constant_pool, encoding)
+              field_delimiter_loc = load_location(freeze)
+              field_name_loc = load_location(freeze)
+              field_parent = stack.pop #: Prism::node?
+              value = ConstantPathNode.new(source, node_id, location, flags, field_parent, field_name, field_delimiter_loc, field_name_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ConstantPathOperatorWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: ConstantPathNode
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_binary_operator_loc = load_location(freeze)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_value = stack.pop #: Prism::node
+              field_target = stack.pop #: ConstantPathNode
+              value = ConstantPathOperatorWriteNode.new(source, node_id, location, flags, field_target, field_binary_operator_loc, field_value, field_binary_operator)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ConstantPathOrWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: ConstantPathNode
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_target = stack.pop #: ConstantPathNode
+              value = ConstantPathOrWriteNode.new(source, node_id, location, flags, field_target, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ConstantPathTargetNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_optional_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_name = load_optional_constant(constant_pool, encoding)
+              field_delimiter_loc = load_location(freeze)
+              field_name_loc = load_location(freeze)
+              field_parent = stack.pop #: Prism::node?
+              value = ConstantPathTargetNode.new(source, node_id, location, flags, field_parent, field_name, field_delimiter_loc, field_name_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ConstantPathWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: ConstantPathNode
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_target = stack.pop #: ConstantPathNode
+              value = ConstantPathWriteNode.new(source, node_id, location, flags, field_target, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ConstantReadNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = ConstantReadNode.new(source, node_id, location, flags, field_name)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ConstantTargetNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = ConstantTargetNode.new(source, node_id, location, flags, field_name)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ConstantWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = ConstantWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_value, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              load_uint32
-              value =
-                DefNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_optional_node(constant_pool, encoding, freeze), #: ParametersNode?
-                  load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
-                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
-                  load_location(freeze),
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_def_keyword_loc = load_location(freeze)
+              field_operator_loc = load_optional_location(freeze)
+              field_lparen_loc = load_optional_location(freeze)
+              field_rparen_loc = load_optional_location(freeze)
+              field_equal_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_body = stack.pop #: (StatementsNode | BeginNode)?
+              field_parameters = stack.pop #: ParametersNode?
+              field_receiver = stack.pop #: Prism::node?
+              value = DefNode.new(source, node_id, location, flags, field_name, field_name_loc, field_receiver, field_parameters, field_body, field_locals, field_def_keyword_loc, field_operator_loc, field_lparen_loc, field_rparen_loc, field_equal_loc, field_end_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                DefinedNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_optional_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_lparen_loc = load_optional_location(freeze)
+              field_rparen_loc = load_optional_location(freeze)
+              field_keyword_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = DefinedNode.new(source, node_id, location, flags, field_lparen_loc, field_value, field_rparen_loc, field_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ElseNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              field_else_keyword_loc = load_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              value = ElseNode.new(source, node_id, location, flags, field_else_keyword_loc, field_statements, field_end_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                EmbeddedStatementsNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              value = EmbeddedStatementsNode.new(source, node_id, location, flags, field_opening_loc, field_statements, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                EmbeddedVariableNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: (InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_variable = stack.pop #: (InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
+              value = EmbeddedVariableNode.new(source, node_id, location, flags, field_operator_loc, field_variable)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                EnsureNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_ensure_keyword_loc = load_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              value = EnsureNode.new(source, node_id, location, flags, field_ensure_keyword_loc, field_statements, field_end_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ErrorRecoveryNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                )
+              flags = load_varuint
+              field_unexpected = stack.pop #: Prism::node?
+              value = ErrorRecoveryNode.new(source, node_id, location, flags, field_unexpected)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                FalseNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                )
+              flags = load_varuint
+              value = FalseNode.new(source, node_id, location, flags)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                FindPatternNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: (ConstantPathNode | ConstantReadNode)?
-                  load_node(constant_pool, encoding, freeze), #: SplatNode
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: Prism::node
-                  end,
-                  load_node(constant_pool, encoding, freeze), #: SplatNode
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              requireds_size = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_right = stack.pop #: SplatNode
+              field_requireds = stack.slice!(-requireds_size, requireds_size) #: Array[Prism::node]
+              field_requireds.freeze if freeze
+              field_left = stack.pop #: SplatNode
+              field_constant = stack.pop #: (ConstantPathNode | ConstantReadNode)?
+              value = FindPatternNode.new(source, node_id, location, flags, field_constant, field_left, field_requireds, field_right, field_opening_loc, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                FlipFlopNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_right = stack.pop #: Prism::node?
+              field_left = stack.pop #: Prism::node?
+              value = FlipFlopNode.new(source, node_id, location, flags, field_left, field_right, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                FloatNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_double,
-                )
+              flags = load_varuint
+              field_value = load_double
+              value = FloatNode.new(source, node_id, location, flags, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ForNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode)
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_optional_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_for_keyword_loc = load_location(freeze)
+              field_in_keyword_loc = load_location(freeze)
+              field_do_keyword_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              field_collection = stack.pop #: Prism::node
+              field_index = stack.pop #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode)
+              value = ForNode.new(source, node_id, location, flags, field_index, field_collection, field_statements, field_for_keyword_loc, field_in_keyword_loc, field_do_keyword_loc, field_end_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ForwardingArgumentsNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                )
+              flags = load_varuint
+              value = ForwardingArgumentsNode.new(source, node_id, location, flags)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ForwardingParameterNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                )
+              flags = load_varuint
+              value = ForwardingParameterNode.new(source, node_id, location, flags)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ForwardingSuperNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: BlockNode?
-                )
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_block = stack.pop #: BlockNode?
+              value = ForwardingSuperNode.new(source, node_id, location, flags, field_keyword_loc, field_block)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                GlobalVariableAndWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = GlobalVariableAndWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                GlobalVariableOperatorWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_binary_operator_loc = load_location(freeze)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_value = stack.pop #: Prism::node
+              value = GlobalVariableOperatorWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_binary_operator_loc, field_value, field_binary_operator)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                GlobalVariableOrWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = GlobalVariableOrWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                GlobalVariableReadNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = GlobalVariableReadNode.new(source, node_id, location, flags, field_name)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                GlobalVariableTargetNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = GlobalVariableTargetNode.new(source, node_id, location, flags, field_name)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                GlobalVariableWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = GlobalVariableWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_value, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                HashNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: AssocNode | AssocSplatNode
-                  end,
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              elements_size = load_varuint
+              field_closing_loc = load_location(freeze)
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[AssocNode | AssocSplatNode]
+              field_elements.freeze if freeze
+              value = HashNode.new(source, node_id, location, flags, field_opening_loc, field_elements, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                HashPatternNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: (ConstantPathNode | ConstantReadNode)?
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: AssocNode
-                  end,
-                  load_optional_node(constant_pool, encoding, freeze), #: (AssocSplatNode | NoKeywordsParameterNode)?
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              elements_size = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_rest = stack.pop #: (AssocSplatNode | NoKeywordsParameterNode)?
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[AssocNode]
+              field_elements.freeze if freeze
+              field_constant = stack.pop #: (ConstantPathNode | ConstantReadNode)?
+              value = HashPatternNode.new(source, node_id, location, flags, field_constant, field_elements, field_rest, field_opening_loc, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                IfNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_optional_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                  load_optional_node(constant_pool, encoding, freeze), #: (ElseNode | IfNode)?
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              field_if_keyword_loc = load_optional_location(freeze)
+              field_then_keyword_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_subsequent = stack.pop #: (ElseNode | IfNode)?
+              field_statements = stack.pop #: StatementsNode?
+              field_predicate = stack.pop #: Prism::node
+              value = IfNode.new(source, node_id, location, flags, field_if_keyword_loc, field_predicate, field_then_keyword_loc, field_statements, field_subsequent, field_end_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ImaginaryNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: (FloatNode | IntegerNode | RationalNode)
-                )
+              flags = load_varuint
+              field_numeric = stack.pop #: (FloatNode | IntegerNode | RationalNode)
+              value = ImaginaryNode.new(source, node_id, location, flags, field_numeric)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ImplicitNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: (LocalVariableReadNode | CallNode | ConstantReadNode | LocalVariableTargetNode)
-                )
+              flags = load_varuint
+              field_value = stack.pop #: (LocalVariableReadNode | CallNode | ConstantReadNode | LocalVariableTargetNode)
+              value = ImplicitNode.new(source, node_id, location, flags, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ImplicitRestNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                )
+              flags = load_varuint
+              value = ImplicitRestNode.new(source, node_id, location, flags)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                InNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                  load_location(freeze),
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              field_in_keyword_loc = load_location(freeze)
+              field_then_keyword_loc = load_optional_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              field_pattern = stack.pop #: Prism::node
+              value = InNode.new(source, node_id, location, flags, field_pattern, field_statements, field_in_keyword_loc, field_then_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                IndexAndWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_optional_location(freeze),
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_block = stack.pop #: BlockArgumentNode?
+              field_arguments = stack.pop #: ArgumentsNode?
+              field_receiver = stack.pop #: Prism::node?
+              value = IndexAndWriteNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_opening_loc, field_arguments, field_closing_loc, field_block, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                IndexOperatorWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_optional_location(freeze),
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_binary_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_block = stack.pop #: BlockArgumentNode?
+              field_arguments = stack.pop #: ArgumentsNode?
+              field_receiver = stack.pop #: Prism::node?
+              value = IndexOperatorWriteNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_opening_loc, field_arguments, field_closing_loc, field_block, field_binary_operator, field_binary_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                IndexOrWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_optional_location(freeze),
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_call_operator_loc = load_optional_location(freeze)
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_block = stack.pop #: BlockArgumentNode?
+              field_arguments = stack.pop #: ArgumentsNode?
+              field_receiver = stack.pop #: Prism::node?
+              value = IndexOrWriteNode.new(source, node_id, location, flags, field_receiver, field_call_operator_loc, field_opening_loc, field_arguments, field_closing_loc, field_block, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                IndexTargetNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: BlockArgumentNode?
-                )
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_block = stack.pop #: BlockArgumentNode?
+              field_arguments = stack.pop #: ArgumentsNode?
+              field_receiver = stack.pop #: Prism::node
+              value = IndexTargetNode.new(source, node_id, location, flags, field_receiver, field_opening_loc, field_arguments, field_closing_loc, field_block)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                InstanceVariableAndWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = InstanceVariableAndWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                InstanceVariableOperatorWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_binary_operator_loc = load_location(freeze)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_value = stack.pop #: Prism::node
+              value = InstanceVariableOperatorWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_binary_operator_loc, field_value, field_binary_operator)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                InstanceVariableOrWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = InstanceVariableOrWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                InstanceVariableReadNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = InstanceVariableReadNode.new(source, node_id, location, flags, field_name)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                InstanceVariableTargetNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = InstanceVariableTargetNode.new(source, node_id, location, flags, field_name)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                InstanceVariableWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = InstanceVariableWriteNode.new(source, node_id, location, flags, field_name, field_name_loc, field_value, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                IntegerNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_integer,
-                )
+              flags = load_varuint
+              field_value = load_integer
+              value = IntegerNode.new(source, node_id, location, flags, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                InterpolatedMatchLastLineNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
-                  end,
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              parts_size = load_varuint
+              field_closing_loc = load_location(freeze)
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts.freeze if freeze
+              value = InterpolatedMatchLastLineNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                InterpolatedRegularExpressionNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
-                  end,
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              parts_size = load_varuint
+              field_closing_loc = load_location(freeze)
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts.freeze if freeze
+              value = InterpolatedRegularExpressionNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                InterpolatedStringNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_location(freeze),
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode | InterpolatedStringNode
-                  end,
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              parts_size = load_varuint
+              field_closing_loc = load_optional_location(freeze)
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode | InterpolatedStringNode]
+              field_parts.freeze if freeze
+              value = InterpolatedStringNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                InterpolatedSymbolNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_location(freeze),
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
-                  end,
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              parts_size = load_varuint
+              field_closing_loc = load_optional_location(freeze)
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts.freeze if freeze
+              value = InterpolatedSymbolNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                InterpolatedXStringNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: StringNode | EmbeddedStatementsNode | EmbeddedVariableNode
-                  end,
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              parts_size = load_varuint
+              field_closing_loc = load_location(freeze)
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts.freeze if freeze
+              value = InterpolatedXStringNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ItLocalVariableReadNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                )
+              flags = load_varuint
+              value = ItLocalVariableReadNode.new(source, node_id, location, flags)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ItParametersNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                )
+              flags = load_varuint
+              value = ItParametersNode.new(source, node_id, location, flags)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                KeywordHashNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: AssocNode | AssocSplatNode
-                  end,
-                )
+              flags = load_varuint
+              elements_size = load_varuint
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[AssocNode | AssocSplatNode]
+              field_elements.freeze if freeze
+              value = KeywordHashNode.new(source, node_id, location, flags, field_elements)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                KeywordRestParameterNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_constant(constant_pool, encoding),
-                  load_optional_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_name = load_optional_constant(constant_pool, encoding)
+              field_name_loc = load_optional_location(freeze)
+              field_operator_loc = load_location(freeze)
+              value = KeywordRestParameterNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                LambdaNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
-                  load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
-                )
+              flags = load_varuint
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_operator_loc = load_location(freeze)
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_body = stack.pop #: (StatementsNode | BeginNode)?
+              field_parameters = stack.pop #: (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
+              value = LambdaNode.new(source, node_id, location, flags, field_locals, field_operator_loc, field_opening_loc, field_closing_loc, field_parameters, field_body)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                LocalVariableAndWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_constant(constant_pool, encoding),
-                  load_varuint,
-                )
+              flags = load_varuint
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_depth = load_varuint
+              field_value = stack.pop #: Prism::node
+              value = LocalVariableAndWriteNode.new(source, node_id, location, flags, field_name_loc, field_operator_loc, field_value, field_name, field_depth)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                LocalVariableOperatorWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_constant(constant_pool, encoding),
-                  load_constant(constant_pool, encoding),
-                  load_varuint,
-                )
+              flags = load_varuint
+              field_name_loc = load_location(freeze)
+              field_binary_operator_loc = load_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_binary_operator = load_constant(constant_pool, encoding)
+              field_depth = load_varuint
+              field_value = stack.pop #: Prism::node
+              value = LocalVariableOperatorWriteNode.new(source, node_id, location, flags, field_name_loc, field_binary_operator_loc, field_value, field_name, field_binary_operator, field_depth)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                LocalVariableOrWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_constant(constant_pool, encoding),
-                  load_varuint,
-                )
+              flags = load_varuint
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_depth = load_varuint
+              field_value = stack.pop #: Prism::node
+              value = LocalVariableOrWriteNode.new(source, node_id, location, flags, field_name_loc, field_operator_loc, field_value, field_name, field_depth)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                LocalVariableReadNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_varuint,
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_depth = load_varuint
+              value = LocalVariableReadNode.new(source, node_id, location, flags, field_name, field_depth)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                LocalVariableTargetNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_varuint,
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_depth = load_varuint
+              value = LocalVariableTargetNode.new(source, node_id, location, flags, field_name, field_depth)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                LocalVariableWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_varuint,
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_depth = load_varuint
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = LocalVariableWriteNode.new(source, node_id, location, flags, field_name, field_depth, field_name_loc, field_value, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                MatchLastLineNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_string(encoding),
-                )
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              field_content_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_unescaped = load_string(encoding)
+              value = MatchLastLineNode.new(source, node_id, location, flags, field_opening_loc, field_content_loc, field_closing_loc, field_unescaped)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                MatchPredicateNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_pattern = stack.pop #: Prism::node
+              field_value = stack.pop #: Prism::node
+              value = MatchPredicateNode.new(source, node_id, location, flags, field_value, field_pattern, field_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                MatchRequiredNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_pattern = stack.pop #: Prism::node
+              field_value = stack.pop #: Prism::node
+              value = MatchRequiredNode.new(source, node_id, location, flags, field_value, field_pattern, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                MatchWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: CallNode
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode
-                  end,
-                )
+              flags = load_varuint
+              targets_size = load_varuint
+              field_targets = stack.slice!(-targets_size, targets_size) #: Array[LocalVariableTargetNode]
+              field_targets.freeze if freeze
+              field_call = stack.pop #: CallNode
+              value = MatchWriteNode.new(source, node_id, location, flags, field_call, field_targets)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ModuleNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: (ConstantReadNode | ConstantPathNode)
-                  load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
-                  load_location(freeze),
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_module_keyword_loc = load_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_name = load_constant(constant_pool, encoding)
+              field_body = stack.pop #: (StatementsNode | BeginNode)?
+              field_constant_path = stack.pop #: (ConstantReadNode | ConstantPathNode)
+              value = ModuleNode.new(source, node_id, location, flags, field_locals, field_module_keyword_loc, field_constant_path, field_body, field_end_keyword_loc, field_name)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                MultiTargetNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode
-                  end,
-                  load_optional_node(constant_pool, encoding, freeze), #: (ImplicitRestNode | SplatNode)?
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode
-                  end,
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              lefts_size = load_varuint
+              rights_size = load_varuint
+              field_lparen_loc = load_optional_location(freeze)
+              field_rparen_loc = load_optional_location(freeze)
+              field_rights = stack.slice!(-rights_size, rights_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
+              field_rights.freeze if freeze
+              field_rest = stack.pop #: (ImplicitRestNode | SplatNode)?
+              field_lefts = stack.slice!(-lefts_size, lefts_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
+              field_lefts.freeze if freeze
+              value = MultiTargetNode.new(source, node_id, location, flags, field_lefts, field_rest, field_rights, field_lparen_loc, field_rparen_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                MultiWriteNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode
-                  end,
-                  load_optional_node(constant_pool, encoding, freeze), #: (ImplicitRestNode | SplatNode)?
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode
-                  end,
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              lefts_size = load_varuint
+              rights_size = load_varuint
+              field_lparen_loc = load_optional_location(freeze)
+              field_rparen_loc = load_optional_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              field_rights = stack.slice!(-rights_size, rights_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
+              field_rights.freeze if freeze
+              field_rest = stack.pop #: (ImplicitRestNode | SplatNode)?
+              field_lefts = stack.slice!(-lefts_size, lefts_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
+              field_lefts.freeze if freeze
+              value = MultiWriteNode.new(source, node_id, location, flags, field_lefts, field_rest, field_rights, field_lparen_loc, field_rparen_loc, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                NextNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_arguments = stack.pop #: ArgumentsNode?
+              value = NextNode.new(source, node_id, location, flags, field_arguments, field_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                NilNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                )
+              flags = load_varuint
+              value = NilNode.new(source, node_id, location, flags)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                NoBlockParameterNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_keyword_loc = load_location(freeze)
+              value = NoBlockParameterNode.new(source, node_id, location, flags, field_operator_loc, field_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                NoKeywordsParameterNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_keyword_loc = load_location(freeze)
+              value = NoKeywordsParameterNode.new(source, node_id, location, flags, field_operator_loc, field_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                NumberedParametersNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  (io.getbyte or raise),
-                )
+              flags = load_varuint
+              field_maximum = (io.getbyte or raise)
+              value = NumberedParametersNode.new(source, node_id, location, flags, field_maximum)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                NumberedReferenceReadNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_varuint,
-                )
+              flags = load_varuint
+              field_number = load_varuint
+              value = NumberedReferenceReadNode.new(source, node_id, location, flags, field_number)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                OptionalKeywordParameterNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = OptionalKeywordParameterNode.new(source, node_id, location, flags, field_name, field_name_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                OptionalParameterNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_value = stack.pop #: Prism::node
+              value = OptionalParameterNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc, field_value)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                OrNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_right = stack.pop #: Prism::node
+              field_left = stack.pop #: Prism::node
+              value = OrNode.new(source, node_id, location, flags, field_left, field_right, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ParametersNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: RequiredParameterNode | MultiTargetNode
-                  end,
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: OptionalParameterNode
-                  end,
-                  load_optional_node(constant_pool, encoding, freeze), #: (RestParameterNode | ImplicitRestNode)?
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: RequiredParameterNode | MultiTargetNode
-                  end,
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: RequiredKeywordParameterNode | OptionalKeywordParameterNode
-                  end,
-                  load_optional_node(constant_pool, encoding, freeze), #: (KeywordRestParameterNode | ForwardingParameterNode | NoKeywordsParameterNode)?
-                  load_optional_node(constant_pool, encoding, freeze), #: (BlockParameterNode | NoBlockParameterNode)?
-                )
+              flags = load_varuint
+              requireds_size = load_varuint
+              optionals_size = load_varuint
+              posts_size = load_varuint
+              keywords_size = load_varuint
+              field_block = stack.pop #: (BlockParameterNode | NoBlockParameterNode)?
+              field_keyword_rest = stack.pop #: (KeywordRestParameterNode | ForwardingParameterNode | NoKeywordsParameterNode)?
+              field_keywords = stack.slice!(-keywords_size, keywords_size) #: Array[RequiredKeywordParameterNode | OptionalKeywordParameterNode]
+              field_keywords.freeze if freeze
+              field_posts = stack.slice!(-posts_size, posts_size) #: Array[RequiredParameterNode | MultiTargetNode]
+              field_posts.freeze if freeze
+              field_rest = stack.pop #: (RestParameterNode | ImplicitRestNode)?
+              field_optionals = stack.slice!(-optionals_size, optionals_size) #: Array[OptionalParameterNode]
+              field_optionals.freeze if freeze
+              field_requireds = stack.slice!(-requireds_size, requireds_size) #: Array[RequiredParameterNode | MultiTargetNode]
+              field_requireds.freeze if freeze
+              value = ParametersNode.new(source, node_id, location, flags, field_requireds, field_optionals, field_rest, field_posts, field_keywords, field_keyword_rest, field_block)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ParenthesesNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_body = stack.pop #: Prism::node?
+              value = ParenthesesNode.new(source, node_id, location, flags, field_body, field_opening_loc, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                PinnedExpressionNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_lparen_loc = load_location(freeze)
+              field_rparen_loc = load_location(freeze)
+              field_expression = stack.pop #: Prism::node
+              value = PinnedExpressionNode.new(source, node_id, location, flags, field_expression, field_operator_loc, field_lparen_loc, field_rparen_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                PinnedVariableNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: (LocalVariableReadNode | InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode | ItLocalVariableReadNode)
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_variable = stack.pop #: (LocalVariableReadNode | InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode | ItLocalVariableReadNode)
+              value = PinnedVariableNode.new(source, node_id, location, flags, field_variable, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                PostExecutionNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              value = PostExecutionNode.new(source, node_id, location, flags, field_statements, field_keyword_loc, field_opening_loc, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                PreExecutionNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_opening_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              value = PreExecutionNode.new(source, node_id, location, flags, field_statements, field_keyword_loc, field_opening_loc, field_closing_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ProgramNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
-                  load_node(constant_pool, encoding, freeze), #: StatementsNode
-                )
+              flags = load_varuint
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_statements = stack.pop #: StatementsNode
+              value = ProgramNode.new(source, node_id, location, flags, field_locals, field_statements)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                RangeNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_right = stack.pop #: Prism::node?
+              field_left = stack.pop #: Prism::node?
+              value = RangeNode.new(source, node_id, location, flags, field_left, field_right, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                RationalNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_integer,
-                  load_integer,
-                )
+              flags = load_varuint
+              field_numerator = load_integer
+              field_denominator = load_integer
+              value = RationalNode.new(source, node_id, location, flags, field_numerator, field_denominator)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                RedoNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                )
+              flags = load_varuint
+              value = RedoNode.new(source, node_id, location, flags)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                RegularExpressionNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_string(encoding),
-                )
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              field_content_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_unescaped = load_string(encoding)
+              value = RegularExpressionNode.new(source, node_id, location, flags, field_opening_loc, field_content_loc, field_closing_loc, field_unescaped)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                RequiredKeywordParameterNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              field_name_loc = load_location(freeze)
+              value = RequiredKeywordParameterNode.new(source, node_id, location, flags, field_name, field_name_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                RequiredParameterNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_constant(constant_pool, encoding),
-                )
+              flags = load_varuint
+              field_name = load_constant(constant_pool, encoding)
+              value = RequiredParameterNode.new(source, node_id, location, flags, field_name)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                RescueModifierNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                )
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_rescue_expression = stack.pop #: Prism::node
+              field_expression = stack.pop #: Prism::node
+              value = RescueModifierNode.new(source, node_id, location, flags, field_expression, field_keyword_loc, field_rescue_expression)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                RescueNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: Prism::node
-                  end,
-                  load_optional_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode)?
-                  load_optional_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                  load_optional_node(constant_pool, encoding, freeze), #: RescueNode?
-                )
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              exceptions_size = load_varuint
+              field_operator_loc = load_optional_location(freeze)
+              field_then_keyword_loc = load_optional_location(freeze)
+              field_subsequent = stack.pop #: RescueNode?
+              field_statements = stack.pop #: StatementsNode?
+              field_reference = stack.pop #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode)?
+              field_exceptions = stack.slice!(-exceptions_size, exceptions_size) #: Array[Prism::node]
+              field_exceptions.freeze if freeze
+              value = RescueNode.new(source, node_id, location, flags, field_keyword_loc, field_exceptions, field_operator_loc, field_reference, field_then_keyword_loc, field_statements, field_subsequent)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                RestParameterNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_constant(constant_pool, encoding),
-                  load_optional_location(freeze),
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_name = load_optional_constant(constant_pool, encoding)
+              field_name_loc = load_optional_location(freeze)
+              field_operator_loc = load_location(freeze)
+              value = RestParameterNode.new(source, node_id, location, flags, field_name, field_name_loc, field_operator_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                RetryNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                )
+              flags = load_varuint
+              value = RetryNode.new(source, node_id, location, flags)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ReturnNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                )
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_arguments = stack.pop #: ArgumentsNode?
+              value = ReturnNode.new(source, node_id, location, flags, field_keyword_loc, field_arguments)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                SelfNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                )
+              flags = load_varuint
+              value = SelfNode.new(source, node_id, location, flags)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                ShareableConstantNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_node(constant_pool, encoding, freeze), #: (ConstantWriteNode | ConstantAndWriteNode | ConstantOrWriteNode | ConstantOperatorWriteNode | ConstantPathWriteNode | ConstantPathAndWriteNode | ConstantPathOrWriteNode | ConstantPathOperatorWriteNode)
-                )
+              flags = load_varuint
+              field_write = stack.pop #: (ConstantWriteNode | ConstantAndWriteNode | ConstantOrWriteNode | ConstantOperatorWriteNode | ConstantPathWriteNode | ConstantPathAndWriteNode | ConstantPathOrWriteNode | ConstantPathOperatorWriteNode)
+              value = ShareableConstantNode.new(source, node_id, location, flags, field_write)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                SingletonClassNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) { load_constant(constant_pool, encoding) },
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_optional_node(constant_pool, encoding, freeze), #: (StatementsNode | BeginNode)?
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              field_locals = Array.new(load_varuint) { load_constant(constant_pool, encoding) }
+              field_locals.freeze if freeze
+              field_class_keyword_loc = load_location(freeze)
+              field_operator_loc = load_location(freeze)
+              field_end_keyword_loc = load_location(freeze)
+              field_body = stack.pop #: (StatementsNode | BeginNode)?
+              field_expression = stack.pop #: Prism::node
+              value = SingletonClassNode.new(source, node_id, location, flags, field_locals, field_class_keyword_loc, field_operator_loc, field_expression, field_body, field_end_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                SourceEncodingNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                )
+              flags = load_varuint
+              value = SourceEncodingNode.new(source, node_id, location, flags)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                SourceFileNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_string(encoding),
-                )
+              flags = load_varuint
+              field_filepath = load_string(encoding)
+              value = SourceFileNode.new(source, node_id, location, flags, field_filepath)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                SourceLineNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                )
+              flags = load_varuint
+              value = SourceLineNode.new(source, node_id, location, flags)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                SplatNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: Prism::node?
-                )
+              flags = load_varuint
+              field_operator_loc = load_location(freeze)
+              field_expression = stack.pop #: Prism::node?
+              value = SplatNode.new(source, node_id, location, flags, field_operator_loc, field_expression)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                StatementsNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: Prism::node
-                  end,
-                )
+              flags = load_varuint
+              body_size = load_varuint
+              field_body = stack.slice!(-body_size, body_size) #: Array[Prism::node]
+              field_body.freeze if freeze
+              value = StatementsNode.new(source, node_id, location, flags, field_body)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                StringNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_location(freeze),
-                  load_location(freeze),
-                  load_optional_location(freeze),
-                  load_string(encoding),
-                )
+              flags = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_content_loc = load_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_unescaped = load_string(encoding)
+              value = StringNode.new(source, node_id, location, flags, field_opening_loc, field_content_loc, field_closing_loc, field_unescaped)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                SuperNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_optional_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                  load_optional_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: (BlockNode | BlockArgumentNode)?
-                )
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_lparen_loc = load_optional_location(freeze)
+              field_rparen_loc = load_optional_location(freeze)
+              field_block = stack.pop #: (BlockNode | BlockArgumentNode)?
+              field_arguments = stack.pop #: ArgumentsNode?
+              value = SuperNode.new(source, node_id, location, flags, field_keyword_loc, field_lparen_loc, field_arguments, field_rparen_loc, field_block)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                SymbolNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_optional_location(freeze),
-                  load_location(freeze),
-                  load_optional_location(freeze),
-                  load_string(encoding),
-                )
+              flags = load_varuint
+              field_opening_loc = load_optional_location(freeze)
+              field_content_loc = load_location(freeze)
+              field_closing_loc = load_optional_location(freeze)
+              field_unescaped = load_string(encoding)
+              value = SymbolNode.new(source, node_id, location, flags, field_opening_loc, field_content_loc, field_closing_loc, field_unescaped)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                TrueNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                )
+              flags = load_varuint
+              value = TrueNode.new(source, node_id, location, flags)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                UndefNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: SymbolNode | InterpolatedSymbolNode
-                  end,
-                  load_location(freeze),
-                )
+              flags = load_varuint
+              names_size = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_names = stack.slice!(-names_size, names_size) #: Array[SymbolNode | InterpolatedSymbolNode]
+              field_names.freeze if freeze
+              value = UndefNode.new(source, node_id, location, flags, field_names, field_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                UnlessNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_optional_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                  load_optional_node(constant_pool, encoding, freeze), #: ElseNode?
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              field_unless_keyword_loc = load_location(freeze)
+              field_then_keyword_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_else_clause = stack.pop #: ElseNode?
+              field_statements = stack.pop #: StatementsNode?
+              field_predicate = stack.pop #: Prism::node
+              value = UnlessNode.new(source, node_id, location, flags, field_unless_keyword_loc, field_predicate, field_then_keyword_loc, field_statements, field_else_clause, field_end_keyword_loc)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                UntilNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                )
+              flags = load_varuint
+              field_until_keyword_loc = load_location(freeze)
+              field_do_keyword_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              field_predicate = stack.pop #: Prism::node
+              value = UntilNode.new(source, node_id, location, flags, field_until_keyword_loc, field_do_keyword_loc, field_end_keyword_loc, field_predicate, field_statements)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                WhenNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  Array.new(load_varuint) do
-                    load_node(constant_pool, encoding, freeze) #: Prism::node
-                  end,
-                  load_optional_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                )
+              flags = load_varuint
+              field_when_keyword_loc = load_location(freeze)
+              conditions_size = load_varuint
+              field_then_keyword_loc = load_optional_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              field_conditions = stack.slice!(-conditions_size, conditions_size) #: Array[Prism::node]
+              field_conditions.freeze if freeze
+              value = WhenNode.new(source, node_id, location, flags, field_when_keyword_loc, field_conditions, field_then_keyword_loc, field_statements)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                WhileNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_optional_location(freeze),
-                  load_optional_location(freeze),
-                  load_node(constant_pool, encoding, freeze), #: Prism::node
-                  load_optional_node(constant_pool, encoding, freeze), #: StatementsNode?
-                )
+              flags = load_varuint
+              field_while_keyword_loc = load_location(freeze)
+              field_do_keyword_loc = load_optional_location(freeze)
+              field_end_keyword_loc = load_optional_location(freeze)
+              field_statements = stack.pop #: StatementsNode?
+              field_predicate = stack.pop #: Prism::node
+              value = WhileNode.new(source, node_id, location, flags, field_while_keyword_loc, field_do_keyword_loc, field_end_keyword_loc, field_predicate, field_statements)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                XStringNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_location(freeze),
-                  load_string(encoding),
-                )
+              flags = load_varuint
+              field_opening_loc = load_location(freeze)
+              field_content_loc = load_location(freeze)
+              field_closing_loc = load_location(freeze)
+              field_unescaped = load_string(encoding)
+              value = XStringNode.new(source, node_id, location, flags, field_opening_loc, field_content_loc, field_closing_loc, field_unescaped)
               value.freeze if freeze
               value
             },
-            -> (constant_pool, encoding, freeze) {
+            -> (constant_pool, encoding, freeze, stack) {
               node_id = load_varuint
               location = load_location(freeze)
-              value =
-                YieldNode.new(
-                  source,
-                  node_id,
-                  location,
-                  load_varuint,
-                  load_location(freeze),
-                  load_optional_location(freeze),
-                  load_optional_node(constant_pool, encoding, freeze), #: ArgumentsNode?
-                  load_optional_location(freeze),
-                )
+              flags = load_varuint
+              field_keyword_loc = load_location(freeze)
+              field_lparen_loc = load_optional_location(freeze)
+              field_rparen_loc = load_optional_location(freeze)
+              field_arguments = stack.pop #: ArgumentsNode?
+              value = YieldNode.new(source, node_id, location, flags, field_keyword_loc, field_lparen_loc, field_arguments, field_rparen_loc)
               value.freeze if freeze
               value
             },
