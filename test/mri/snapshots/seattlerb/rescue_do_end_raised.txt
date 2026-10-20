@@ -52,7 +52,7 @@
                 │   │   │       └── @ SymbolNode (location: (4,2)-(4,9))
                 │   │   │           ├── flags: newline, static_literal, forced_us_ascii_encoding
                 │   │   │           ├── opening_loc: (4,2)-(4,3) = ":"
-                │   │   │           ├── value_loc: (4,3)-(4,9) = "ensure"
+                │   │   │           ├── content_loc: (4,3)-(4,9) = "ensure"
                 │   │   │           ├── closing_loc: ∅
                 │   │   │           └── unescaped: "ensure"
                 │   │   └── end_keyword_loc: (5,0)-(5,3) = "end"

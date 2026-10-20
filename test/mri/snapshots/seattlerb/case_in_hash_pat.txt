@@ -11,7 +11,7 @@
             │   @ SymbolNode (location: (1,5)-(1,7))
             │   ├── flags: static_literal, forced_us_ascii_encoding
             │   ├── opening_loc: (1,5)-(1,6) = ":"
-            │   ├── value_loc: (1,6)-(1,7) = "a"
+            │   ├── content_loc: (1,6)-(1,7) = "a"
             │   ├── closing_loc: ∅
             │   └── unescaped: "a"
             ├── conditions: (length: 1)
@@ -28,7 +28,7 @@
             │       │   │   │   │   @ SymbolNode (location: (2,5)-(2,7))
             │       │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
             │       │   │   │   │   ├── opening_loc: ∅
-            │       │   │   │   │   ├── value_loc: (2,5)-(2,6) = "b"
+            │       │   │   │   │   ├── content_loc: (2,5)-(2,6) = "b"
             │       │   │   │   │   ├── closing_loc: (2,6)-(2,7) = ":"
             │       │   │   │   │   └── unescaped: "b"
             │       │   │   │   ├── value:
@@ -45,7 +45,7 @@
             │       │   │       │   @ SymbolNode (location: (2,13)-(2,15))
             │       │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
             │       │   │       │   ├── opening_loc: ∅
-            │       │   │       │   ├── value_loc: (2,13)-(2,14) = "d"
+            │       │   │       │   ├── content_loc: (2,13)-(2,14) = "d"
             │       │   │       │   ├── closing_loc: (2,14)-(2,15) = ":"
             │       │   │       │   └── unescaped: "d"
             │       │   │       ├── value:
@@ -66,7 +66,7 @@
             │       │       └── @ SymbolNode (location: (3,2)-(3,4))
             │       │           ├── flags: newline, static_literal, forced_us_ascii_encoding
             │       │           ├── opening_loc: (3,2)-(3,3) = ":"
-            │       │           ├── value_loc: (3,3)-(3,4) = "f"
+            │       │           ├── content_loc: (3,3)-(3,4) = "f"
             │       │           ├── closing_loc: ∅
             │       │           └── unescaped: "f"
             │       ├── in_keyword_loc: (2,0)-(2,2) = "in"

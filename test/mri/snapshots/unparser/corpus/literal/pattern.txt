@@ -111,7 +111,7 @@
         │   │   │   │   │       │   @ SymbolNode (location: (6,5)-(6,7))
         │   │   │   │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   │   │       │   ├── opening_loc: ∅
-        │   │   │   │   │       │   ├── value_loc: (6,5)-(6,6) = "x"
+        │   │   │   │   │       │   ├── content_loc: (6,5)-(6,6) = "x"
         │   │   │   │   │       │   ├── closing_loc: (6,6)-(6,7) = ":"
         │   │   │   │   │       │   └── unescaped: "x"
         │   │   │   │   │       ├── value:
@@ -235,7 +235,7 @@
         │   │   │   │   │   │   │   @ SymbolNode (location: (14,4)-(14,6))
         │   │   │   │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   │   │   │   │   ├── opening_loc: ∅
-        │   │   │   │   │   │   │   ├── value_loc: (14,4)-(14,5) = "a"
+        │   │   │   │   │   │   │   ├── content_loc: (14,4)-(14,5) = "a"
         │   │   │   │   │   │   │   ├── closing_loc: (14,5)-(14,6) = ":"
         │   │   │   │   │   │   │   └── unescaped: "a"
         │   │   │   │   │   │   ├── value:
@@ -249,7 +249,7 @@
         │   │   │   │   │       │   @ SymbolNode (location: (14,10)-(14,13))
         │   │   │   │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   │   │       │   ├── opening_loc: ∅
-        │   │   │   │   │       │   ├── value_loc: (14,10)-(14,12) = "aa"
+        │   │   │   │   │       │   ├── content_loc: (14,10)-(14,12) = "aa"
         │   │   │   │   │       │   ├── closing_loc: (14,12)-(14,13) = ":"
         │   │   │   │   │       │   └── unescaped: "aa"
         │   │   │   │   │       ├── value:
@@ -321,7 +321,7 @@
         │   │   │   │   │       │   @ SymbolNode (location: (20,4)-(20,8))
         │   │   │   │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   │   │       │   ├── opening_loc: (20,4)-(20,5) = "\""
-        │   │   │   │   │       │   ├── value_loc: (20,5)-(20,6) = "a"
+        │   │   │   │   │       │   ├── content_loc: (20,5)-(20,6) = "a"
         │   │   │   │   │       │   ├── closing_loc: (20,6)-(20,8) = "\":"
         │   │   │   │   │       │   └── unescaped: "a"
         │   │   │   │   │       ├── value:

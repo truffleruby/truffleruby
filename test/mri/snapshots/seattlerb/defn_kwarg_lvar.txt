@@ -26,7 +26,7 @@
             │   │           @ SymbolNode (location: (1,12)-(1,16))
             │   │           ├── flags: static_literal, forced_us_ascii_encoding
             │   │           ├── opening_loc: (1,12)-(1,13) = ":"
-            │   │           ├── value_loc: (1,13)-(1,16) = "val"
+            │   │           ├── content_loc: (1,13)-(1,16) = "val"
             │   │           ├── closing_loc: ∅
             │   │           └── unescaped: "val"
             │   ├── keyword_rest: ∅

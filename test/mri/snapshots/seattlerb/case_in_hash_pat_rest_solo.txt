@@ -11,7 +11,7 @@
             │   @ SymbolNode (location: (1,5)-(1,7))
             │   ├── flags: static_literal, forced_us_ascii_encoding
             │   ├── opening_loc: (1,5)-(1,6) = ":"
-            │   ├── value_loc: (1,6)-(1,7) = "a"
+            │   ├── content_loc: (1,6)-(1,7) = "a"
             │   ├── closing_loc: ∅
             │   └── unescaped: "a"
             ├── conditions: (length: 1)
@@ -40,7 +40,7 @@
             │       │       └── @ SymbolNode (location: (2,15)-(2,17))
             │       │           ├── flags: newline, static_literal, forced_us_ascii_encoding
             │       │           ├── opening_loc: (2,15)-(2,16) = ":"
-            │       │           ├── value_loc: (2,16)-(2,17) = "d"
+            │       │           ├── content_loc: (2,16)-(2,17) = "d"
             │       │           ├── closing_loc: ∅
             │       │           └── unescaped: "d"
             │       ├── in_keyword_loc: (2,0)-(2,2) = "in"

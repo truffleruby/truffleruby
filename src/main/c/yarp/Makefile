@@ -26,7 +26,7 @@ WASM_EXPORTS := -Wl,--export=malloc,--export=free,--export=pm_buffer_new,--expor
 MAKEDIRS ?= mkdir -p
 RMALL ?= rm -f -r
 
-HEADERS := $(wildcard include/*.h include/*/*.h include/*/*/*.h')
+HEADERS := $(wildcard include/*.h include/*/*.h include/*/*/*.h)
 SOURCES := $(wildcard src/*.c src/*/*.c)
 SHARED_OBJECTS := $(subst src/,build/shared/,$(SOURCES:.c=.o))
 STATIC_OBJECTS := $(subst src/,build/static/,$(SOURCES:.c=.o))

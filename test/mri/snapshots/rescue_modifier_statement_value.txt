@@ -27,14 +27,14 @@
         │       │   @ SymbolNode (location: (1,15)-(1,16))
         │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │       │   ├── opening_loc: ∅
-        │       │   ├── value_loc: (1,15)-(1,16) = "x"
+        │       │   ├── content_loc: (1,15)-(1,16) = "x"
         │       │   ├── closing_loc: ∅
         │       │   └── unescaped: "x"
         │       ├── old_name:
         │       │   @ SymbolNode (location: (1,17)-(1,18))
         │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │       │   ├── opening_loc: ∅
-        │       │   ├── value_loc: (1,17)-(1,18) = "y"
+        │       │   ├── content_loc: (1,17)-(1,18) = "y"
         │       │   ├── closing_loc: ∅
         │       │   └── unescaped: "y"
         │       └── keyword_loc: (1,9)-(1,14) = "alias"
@@ -60,7 +60,7 @@
         │       │   └── @ SymbolNode (location: (2,15)-(2,16))
         │       │       ├── flags: static_literal, forced_us_ascii_encoding
         │       │       ├── opening_loc: ∅
-        │       │       ├── value_loc: (2,15)-(2,16) = "m"
+        │       │       ├── content_loc: (2,15)-(2,16) = "m"
         │       │       ├── closing_loc: ∅
         │       │       └── unescaped: "m"
         │       └── keyword_loc: (2,9)-(2,14) = "undef"
@@ -127,14 +127,14 @@
         │   │   │   @ SymbolNode (location: (5,6)-(5,7))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: ∅
-        │   │   │   ├── value_loc: (5,6)-(5,7) = "x"
+        │   │   │   ├── content_loc: (5,6)-(5,7) = "x"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "x"
         │   │   ├── old_name:
         │   │   │   @ SymbolNode (location: (5,8)-(5,9))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: ∅
-        │   │   │   ├── value_loc: (5,8)-(5,9) = "y"
+        │   │   │   ├── content_loc: (5,8)-(5,9) = "y"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "y"
         │   │   └── keyword_loc: (5,0)-(5,5) = "alias"
@@ -160,7 +160,7 @@
         │   │   │   └── @ SymbolNode (location: (6,6)-(6,7))
         │   │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │       ├── opening_loc: ∅
-        │   │   │       ├── value_loc: (6,6)-(6,7) = "m"
+        │   │   │       ├── content_loc: (6,6)-(6,7) = "m"
         │   │   │       ├── closing_loc: ∅
         │   │   │       └── unescaped: "m"
         │   │   └── keyword_loc: (6,0)-(6,5) = "undef"

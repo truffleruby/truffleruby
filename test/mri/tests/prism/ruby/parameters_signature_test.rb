@@ -51,8 +51,7 @@ module Prism
     end
 
     def test_noblock
-      # FIXME: `compare: RUBY_VERSION >= "4.1"` once builds are available
-      assert_parameters([[:noblock]], "&nil", compare: false)
+      assert_parameters([[:noblock]], "&nil", compare: RUBY_VERSION >= "4.1", version: "4.1")
     end
 
     def test_keyrest_anonymous
@@ -86,9 +85,9 @@ module Prism
 
     private
 
-    def assert_parameters(expected, source, compare: true)
+    def assert_parameters(expected, source, compare: true, version: nil)
       # Compare against our expectation.
-      assert_equal(expected, signature(source))
+      assert_equal(expected, signature(source, version: version))
 
       return unless compare
       # Compare against Ruby's expectation.
@@ -97,8 +96,8 @@ module Prism
       assert_equal(expected, object.method(:m).parameters)
     end
 
-    def signature(source)
-      program = Prism.parse("def m(#{source}); end").value
+    def signature(source, version: nil)
+      program = Prism.parse("def m(#{source}); end", version: version).value
       program.statements.body.first.parameters.signature
     end
   end
