@@ -101,7 +101,7 @@
             │           │   @ SymbolNode (location: (5,11)-(5,13))
             │           │   ├── flags: static_literal, forced_us_ascii_encoding
             │           │   ├── opening_loc: (5,11)-(5,12) = ":"
-            │           │   ├── value_loc: (5,12)-(5,13) = "a"
+            │           │   ├── content_loc: (5,12)-(5,13) = "a"
             │           │   ├── closing_loc: ∅
             │           │   └── unescaped: "a"
             │           └── operator_loc: (5,8)-(5,11) = "..."

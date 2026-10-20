@@ -29,7 +29,7 @@
             │   │       └── @ SymbolNode (location: (1,13)-(1,15))
             │   │           ├── flags: static_literal, forced_us_ascii_encoding
             │   │           ├── opening_loc: (1,13)-(1,14) = ":"
-            │   │           ├── value_loc: (1,14)-(1,15) = "b"
+            │   │           ├── content_loc: (1,14)-(1,15) = "b"
             │   │           ├── closing_loc: ∅
             │   │           └── unescaped: "b"
             │   ├── closing_loc: ∅

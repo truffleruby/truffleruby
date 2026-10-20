@@ -2261,7 +2261,7 @@ module Prism
       flags = [("newline" if node.newline?), ("static_literal" if node.static_literal?), ("forced_utf8_encoding" if node.forced_utf8_encoding?), ("forced_binary_encoding" if node.forced_binary_encoding?), ("forced_us_ascii_encoding" if node.forced_us_ascii_encoding?)].compact
       commands << ["├── flags: #{flags.empty? ? "∅" : flags.join(", ")}\n", indent]
       commands << ["├── opening_loc: #{inspect_location(node.opening_loc)}\n", indent]
-      commands << ["├── value_loc: #{inspect_location(node.value_loc)}\n", indent]
+      commands << ["├── content_loc: #{inspect_location(node.content_loc)}\n", indent]
       commands << ["├── closing_loc: #{inspect_location(node.closing_loc)}\n", indent]
       commands << ["└── unescaped: #{node.unescaped.inspect}\n", indent]
     end

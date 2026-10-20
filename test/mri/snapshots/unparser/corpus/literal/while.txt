@@ -758,7 +758,7 @@
         │           └── @ SymbolNode (location: (63,2)-(63,7))
         │               ├── flags: newline, static_literal, forced_us_ascii_encoding
         │               ├── opening_loc: (63,2)-(63,3) = ":"
-        │               ├── value_loc: (63,3)-(63,7) = "body"
+        │               ├── content_loc: (63,3)-(63,7) = "body"
         │               ├── closing_loc: ∅
         │               └── unescaped: "body"
         ├── @ UntilNode (location: (65,0)-(66,3))
@@ -824,6 +824,6 @@
                     └── @ SymbolNode (location: (72,2)-(72,7))
                         ├── flags: newline, static_literal, forced_us_ascii_encoding
                         ├── opening_loc: (72,2)-(72,3) = ":"
-                        ├── value_loc: (72,3)-(72,7) = "body"
+                        ├── content_loc: (72,3)-(72,7) = "body"
                         ├── closing_loc: ∅
                         └── unescaped: "body"

@@ -30,7 +30,7 @@
             │   │   │   │   @ SymbolNode (location: (1,7)-(1,9))
             │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
             │   │   │   │   ├── opening_loc: ∅
-            │   │   │   │   ├── value_loc: (1,7)-(1,8) = "a"
+            │   │   │   │   ├── content_loc: (1,7)-(1,8) = "a"
             │   │   │   │   ├── closing_loc: (1,8)-(1,9) = ":"
             │   │   │   │   └── unescaped: "a"
             │   │   │   ├── value:
@@ -44,7 +44,7 @@
             │   │       │   @ SymbolNode (location: (1,13)-(1,15))
             │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
             │   │       │   ├── opening_loc: ∅
-            │   │       │   ├── value_loc: (1,13)-(1,14) = "b"
+            │   │       │   ├── content_loc: (1,13)-(1,14) = "b"
             │   │       │   ├── closing_loc: (1,14)-(1,15) = ":"
             │   │       │   └── unescaped: "b"
             │   │       ├── value:

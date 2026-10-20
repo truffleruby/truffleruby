@@ -5360,10 +5360,10 @@ pm_dump_json(pm_buffer_t *buffer, const pm_parser_t *parser, const pm_node_t *no
                 pm_buffer_append_string(buffer, "null", 4);
             }
 
-            // Dump the value_loc field
+            // Dump the content_loc field
             pm_buffer_append_byte(buffer, ',');
-            pm_buffer_append_string(buffer, "\"value_loc\":", 12);
-            pm_dump_json_location(buffer, &cast->value_loc);
+            pm_buffer_append_string(buffer, "\"content_loc\":", 14);
+            pm_dump_json_location(buffer, &cast->content_loc);
 
             // Dump the closing_loc field
             pm_buffer_append_byte(buffer, ',');
