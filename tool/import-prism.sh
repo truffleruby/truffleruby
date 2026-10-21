@@ -70,7 +70,9 @@ git add src/main/c/{prism-gem,yarp} test/mri/{snapshots,tests/prism} lib/mri/pri
 cat <<'EOF'
 
 MANUAL STEPS:
-* Update versions.json
-* Run `jt test gems default-bundled-gems`
-* Commit the result e.g. `git commit -am 'Update Prism version in tests'`
+* Commit the result with message `Import ruby/prism@COMMIT`
+* If the version changed:
+  * Update versions.json
+  * Run `jt --build test gems default-bundled-gems`
+  * Commit the result e.g. `git commit -am 'Update Prism version in tests'`
 EOF
