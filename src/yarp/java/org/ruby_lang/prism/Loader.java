@@ -87,8 +87,8 @@ public class Loader {
         expect((byte) 'S', "incorrect prism header");
         expect((byte) 'M', "incorrect prism header");
 
-        expect((byte) 1, "prism major version does not match");
-        expect((byte) 9, "prism minor version does not match");
+        expect((byte) 2, "prism major version does not match");
+        expect((byte) 0, "prism minor version does not match");
         expect((byte) 0, "prism patch version does not match");
 
         expect((byte) 1, "Loader.java requires no location fields in the serialized output");
@@ -100,6 +100,10 @@ public class Loader {
         this.encodingName = new String(encodingNameBytes, StandardCharsets.US_ASCII);
 
         source.setStartLine(loadVarSInt());
+
+        // Skip the 8-byte hash of the source, which this library does not expose.
+        buffer.getLong();
+
         source.setLineOffsets(loadLineOffsets());
 
         ParseResult.MagicComment[] magicComments = loadMagicComments();

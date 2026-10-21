@@ -20,11 +20,11 @@ module Prism
   module Serialize # :nodoc:
     # The major version of prism that we are expecting to find in the serialized
     # strings.
-    MAJOR_VERSION = 1
+    MAJOR_VERSION = 2
 
     # The minor version of prism that we are expecting to find in the serialized
     # strings.
-    MINOR_VERSION = 9
+    MINOR_VERSION = 0
 
     # The patch version of prism that we are expecting to find in the serialized
     # strings.
@@ -44,9 +44,11 @@ module Prism
                        loader.load_header
       encoding =       loader.load_encoding
       start_line =     loader.load_varsint
+      checksum =       loader.load_uint64
       offsets =        loader.load_line_offsets(freeze)
 
       source.replace_start_line(start_line)
+      source.replace_checksum(checksum)
       source.replace_offsets(offsets)
 
                        loader.load_comments(source.comments, freeze)
@@ -100,9 +102,11 @@ module Prism
       tokens =         loader.load_tokens
       encoding =       loader.load_encoding
       start_line =     loader.load_varsint
+      checksum =       loader.load_uint64
       offsets =        loader.load_line_offsets(freeze)
 
       source.replace_start_line(start_line)
+      source.replace_checksum(checksum)
       source.replace_offsets(offsets)
 
                        loader.load_comments(source.comments, freeze)
@@ -145,16 +149,18 @@ module Prism
       source = Source.for(input, 1, [])
       loader = Loader.new(source, serialized)
 
-                   loader.load_header
-                   loader.load_encoding
-      start_line = loader.load_varsint
-      offsets    = loader.load_line_offsets(freeze)
+                    loader.load_header
+                    loader.load_encoding
+      start_line =  loader.load_varsint
+      checksum =    loader.load_uint64
+      offsets =     loader.load_line_offsets(freeze)
 
       source.replace_start_line(start_line)
+      source.replace_checksum(checksum)
       source.replace_offsets(offsets)
 
-      result =     loader.load_comments(source.comments, freeze)
-      raise unless loader.eof?
+      result =      loader.load_comments(source.comments, freeze)
+      raise unless  loader.eof?
 
       source.deep_freeze if freeze
       result
@@ -175,9 +181,11 @@ module Prism
                        loader.load_header
       encoding =       loader.load_encoding
       start_line =     loader.load_varsint
+      checksum =       loader.load_uint64
       offsets =        loader.load_line_offsets(freeze)
 
       source.replace_start_line(start_line)
+      source.replace_checksum(checksum)
       source.replace_offsets(offsets)
 
                        loader.load_comments(source.comments, freeze)
@@ -863,6 +871,11 @@ module Prism
         (io.read(4) or raise).unpack1("L") #: Integer
       end
 
+      #: () -> Integer
+      def load_uint64
+        (io.read(8) or raise).unpack1("Q") #: Integer
+      end
+
       #: (Encoding encoding) -> String
       def load_string(encoding)
         (io.read(load_varuint) or raise).force_encoding(encoding).freeze
@@ -972,7 +985,7 @@ module Prism
               location = load_location(freeze)
               flags = load_varuint
               arguments_size = load_varuint
-              field_arguments = stack.pop(arguments_size) #: Array[Prism::node]
+              field_arguments = stack.slice!(-arguments_size, arguments_size) #: Array[Prism::node]
               field_arguments.freeze if freeze
               value = ArgumentsNode.new(source, node_id, location, flags, field_arguments)
               value.freeze if freeze
@@ -984,7 +997,7 @@ module Prism
               elements_size = load_varuint
               field_opening_loc = load_optional_location(freeze)
               field_closing_loc = load_optional_location(freeze)
-              field_elements = stack.pop(elements_size) #: Array[Prism::node]
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[Prism::node]
               field_elements.freeze if freeze
               value = ArrayNode.new(source, node_id, location, flags, field_elements, field_opening_loc, field_closing_loc)
               value.freeze if freeze
@@ -997,10 +1010,10 @@ module Prism
               posts_size = load_varuint
               field_opening_loc = load_optional_location(freeze)
               field_closing_loc = load_optional_location(freeze)
-              field_posts = stack.pop(posts_size) #: Array[Prism::node]
+              field_posts = stack.slice!(-posts_size, posts_size) #: Array[Prism::node]
               field_posts.freeze if freeze
               field_rest = stack.pop #: (ImplicitRestNode | SplatNode)?
-              field_requireds = stack.pop(requireds_size) #: Array[Prism::node]
+              field_requireds = stack.slice!(-requireds_size, requireds_size) #: Array[Prism::node]
               field_requireds.freeze if freeze
               field_constant = stack.pop #: (ConstantPathNode | ConstantReadNode)?
               value = ArrayPatternNode.new(source, node_id, location, flags, field_constant, field_requireds, field_rest, field_posts, field_opening_loc, field_closing_loc)
@@ -1093,7 +1106,7 @@ module Prism
               locals_size = load_varuint
               field_opening_loc = load_optional_location(freeze)
               field_closing_loc = load_optional_location(freeze)
-              field_locals = stack.pop(locals_size) #: Array[BlockLocalVariableNode]
+              field_locals = stack.slice!(-locals_size, locals_size) #: Array[BlockLocalVariableNode]
               field_locals.freeze if freeze
               field_parameters = stack.pop #: ParametersNode?
               value = BlockParametersNode.new(source, node_id, location, flags, field_parameters, field_locals, field_opening_loc, field_closing_loc)
@@ -1196,7 +1209,7 @@ module Prism
               field_case_keyword_loc = load_location(freeze)
               field_end_keyword_loc = load_location(freeze)
               field_else_clause = stack.pop #: ElseNode?
-              field_conditions = stack.pop(conditions_size) #: Array[InNode]
+              field_conditions = stack.slice!(-conditions_size, conditions_size) #: Array[InNode]
               field_conditions.freeze if freeze
               field_predicate = stack.pop #: Prism::node?
               value = CaseMatchNode.new(source, node_id, location, flags, field_predicate, field_conditions, field_else_clause, field_case_keyword_loc, field_end_keyword_loc)
@@ -1210,7 +1223,7 @@ module Prism
               field_case_keyword_loc = load_location(freeze)
               field_end_keyword_loc = load_location(freeze)
               field_else_clause = stack.pop #: ElseNode?
-              field_conditions = stack.pop(conditions_size) #: Array[WhenNode]
+              field_conditions = stack.slice!(-conditions_size, conditions_size) #: Array[WhenNode]
               field_conditions.freeze if freeze
               field_predicate = stack.pop #: Prism::node?
               value = CaseNode.new(source, node_id, location, flags, field_predicate, field_conditions, field_else_clause, field_case_keyword_loc, field_end_keyword_loc)
@@ -1510,7 +1523,7 @@ module Prism
               field_opening_loc = load_optional_location(freeze)
               field_closing_loc = load_optional_location(freeze)
               field_right = stack.pop #: SplatNode
-              field_requireds = stack.pop(requireds_size) #: Array[Prism::node]
+              field_requireds = stack.slice!(-requireds_size, requireds_size) #: Array[Prism::node]
               field_requireds.freeze if freeze
               field_left = stack.pop #: SplatNode
               field_constant = stack.pop #: (ConstantPathNode | ConstantReadNode)?
@@ -1640,7 +1653,7 @@ module Prism
               field_opening_loc = load_location(freeze)
               elements_size = load_varuint
               field_closing_loc = load_location(freeze)
-              field_elements = stack.pop(elements_size) #: Array[AssocNode | AssocSplatNode]
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[AssocNode | AssocSplatNode]
               field_elements.freeze if freeze
               value = HashNode.new(source, node_id, location, flags, field_opening_loc, field_elements, field_closing_loc)
               value.freeze if freeze
@@ -1653,7 +1666,7 @@ module Prism
               field_opening_loc = load_optional_location(freeze)
               field_closing_loc = load_optional_location(freeze)
               field_rest = stack.pop #: (AssocSplatNode | NoKeywordsParameterNode)?
-              field_elements = stack.pop(elements_size) #: Array[AssocNode]
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[AssocNode]
               field_elements.freeze if freeze
               field_constant = stack.pop #: (ConstantPathNode | ConstantReadNode)?
               value = HashPatternNode.new(source, node_id, location, flags, field_constant, field_elements, field_rest, field_opening_loc, field_closing_loc)
@@ -1840,7 +1853,7 @@ module Prism
               field_opening_loc = load_location(freeze)
               parts_size = load_varuint
               field_closing_loc = load_location(freeze)
-              field_parts = stack.pop(parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
               field_parts.freeze if freeze
               value = InterpolatedMatchLastLineNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
@@ -1852,7 +1865,7 @@ module Prism
               field_opening_loc = load_location(freeze)
               parts_size = load_varuint
               field_closing_loc = load_location(freeze)
-              field_parts = stack.pop(parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
               field_parts.freeze if freeze
               value = InterpolatedRegularExpressionNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
@@ -1864,7 +1877,7 @@ module Prism
               field_opening_loc = load_optional_location(freeze)
               parts_size = load_varuint
               field_closing_loc = load_optional_location(freeze)
-              field_parts = stack.pop(parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode | InterpolatedStringNode]
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode | InterpolatedStringNode]
               field_parts.freeze if freeze
               value = InterpolatedStringNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
@@ -1876,7 +1889,7 @@ module Prism
               field_opening_loc = load_optional_location(freeze)
               parts_size = load_varuint
               field_closing_loc = load_optional_location(freeze)
-              field_parts = stack.pop(parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
               field_parts.freeze if freeze
               value = InterpolatedSymbolNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
@@ -1888,7 +1901,7 @@ module Prism
               field_opening_loc = load_location(freeze)
               parts_size = load_varuint
               field_closing_loc = load_location(freeze)
-              field_parts = stack.pop(parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
               field_parts.freeze if freeze
               value = InterpolatedXStringNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
@@ -1912,7 +1925,7 @@ module Prism
               location = load_location(freeze)
               flags = load_varuint
               elements_size = load_varuint
-              field_elements = stack.pop(elements_size) #: Array[AssocNode | AssocSplatNode]
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[AssocNode | AssocSplatNode]
               field_elements.freeze if freeze
               value = KeywordHashNode.new(source, node_id, location, flags, field_elements)
               value.freeze if freeze
@@ -2044,7 +2057,7 @@ module Prism
               location = load_location(freeze)
               flags = load_varuint
               targets_size = load_varuint
-              field_targets = stack.pop(targets_size) #: Array[LocalVariableTargetNode]
+              field_targets = stack.slice!(-targets_size, targets_size) #: Array[LocalVariableTargetNode]
               field_targets.freeze if freeze
               field_call = stack.pop #: CallNode
               value = MatchWriteNode.new(source, node_id, location, flags, field_call, field_targets)
@@ -2072,10 +2085,10 @@ module Prism
               rights_size = load_varuint
               field_lparen_loc = load_optional_location(freeze)
               field_rparen_loc = load_optional_location(freeze)
-              field_rights = stack.pop(rights_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
+              field_rights = stack.slice!(-rights_size, rights_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
               field_rights.freeze if freeze
               field_rest = stack.pop #: (ImplicitRestNode | SplatNode)?
-              field_lefts = stack.pop(lefts_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
+              field_lefts = stack.slice!(-lefts_size, lefts_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
               field_lefts.freeze if freeze
               value = MultiTargetNode.new(source, node_id, location, flags, field_lefts, field_rest, field_rights, field_lparen_loc, field_rparen_loc)
               value.freeze if freeze
@@ -2090,10 +2103,10 @@ module Prism
               field_rparen_loc = load_optional_location(freeze)
               field_operator_loc = load_location(freeze)
               field_value = stack.pop #: Prism::node
-              field_rights = stack.pop(rights_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
+              field_rights = stack.slice!(-rights_size, rights_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
               field_rights.freeze if freeze
               field_rest = stack.pop #: (ImplicitRestNode | SplatNode)?
-              field_lefts = stack.pop(lefts_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
+              field_lefts = stack.slice!(-lefts_size, lefts_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
               field_lefts.freeze if freeze
               value = MultiWriteNode.new(source, node_id, location, flags, field_lefts, field_rest, field_rights, field_lparen_loc, field_rparen_loc, field_operator_loc, field_value)
               value.freeze if freeze
@@ -2189,14 +2202,14 @@ module Prism
               keywords_size = load_varuint
               field_block = stack.pop #: (BlockParameterNode | NoBlockParameterNode)?
               field_keyword_rest = stack.pop #: (KeywordRestParameterNode | ForwardingParameterNode | NoKeywordsParameterNode)?
-              field_keywords = stack.pop(keywords_size) #: Array[RequiredKeywordParameterNode | OptionalKeywordParameterNode]
+              field_keywords = stack.slice!(-keywords_size, keywords_size) #: Array[RequiredKeywordParameterNode | OptionalKeywordParameterNode]
               field_keywords.freeze if freeze
-              field_posts = stack.pop(posts_size) #: Array[RequiredParameterNode | MultiTargetNode]
+              field_posts = stack.slice!(-posts_size, posts_size) #: Array[RequiredParameterNode | MultiTargetNode]
               field_posts.freeze if freeze
               field_rest = stack.pop #: (RestParameterNode | ImplicitRestNode)?
-              field_optionals = stack.pop(optionals_size) #: Array[OptionalParameterNode]
+              field_optionals = stack.slice!(-optionals_size, optionals_size) #: Array[OptionalParameterNode]
               field_optionals.freeze if freeze
-              field_requireds = stack.pop(requireds_size) #: Array[RequiredParameterNode | MultiTargetNode]
+              field_requireds = stack.slice!(-requireds_size, requireds_size) #: Array[RequiredParameterNode | MultiTargetNode]
               field_requireds.freeze if freeze
               value = ParametersNode.new(source, node_id, location, flags, field_requireds, field_optionals, field_rest, field_posts, field_keywords, field_keyword_rest, field_block)
               value.freeze if freeze
@@ -2338,7 +2351,7 @@ module Prism
               field_subsequent = stack.pop #: RescueNode?
               field_statements = stack.pop #: StatementsNode?
               field_reference = stack.pop #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode)?
-              field_exceptions = stack.pop(exceptions_size) #: Array[Prism::node]
+              field_exceptions = stack.slice!(-exceptions_size, exceptions_size) #: Array[Prism::node]
               field_exceptions.freeze if freeze
               value = RescueNode.new(source, node_id, location, flags, field_keyword_loc, field_exceptions, field_operator_loc, field_reference, field_then_keyword_loc, field_statements, field_subsequent)
               value.freeze if freeze
@@ -2434,7 +2447,7 @@ module Prism
               location = load_location(freeze)
               flags = load_varuint
               body_size = load_varuint
-              field_body = stack.pop(body_size) #: Array[Prism::node]
+              field_body = stack.slice!(-body_size, body_size) #: Array[Prism::node]
               field_body.freeze if freeze
               value = StatementsNode.new(source, node_id, location, flags, field_body)
               value.freeze if freeze
@@ -2486,7 +2499,7 @@ module Prism
               flags = load_varuint
               names_size = load_varuint
               field_keyword_loc = load_location(freeze)
-              field_names = stack.pop(names_size) #: Array[SymbolNode | InterpolatedSymbolNode]
+              field_names = stack.slice!(-names_size, names_size) #: Array[SymbolNode | InterpolatedSymbolNode]
               field_names.freeze if freeze
               value = UndefNode.new(source, node_id, location, flags, field_names, field_keyword_loc)
               value.freeze if freeze
@@ -2524,7 +2537,7 @@ module Prism
               conditions_size = load_varuint
               field_then_keyword_loc = load_optional_location(freeze)
               field_statements = stack.pop #: StatementsNode?
-              field_conditions = stack.pop(conditions_size) #: Array[Prism::node]
+              field_conditions = stack.slice!(-conditions_size, conditions_size) #: Array[Prism::node]
               field_conditions.freeze if freeze
               value = WhenNode.new(source, node_id, location, flags, field_when_keyword_loc, field_conditions, field_then_keyword_loc, field_statements)
               value.freeze if freeze
@@ -2645,7 +2658,7 @@ module Prism
               location = load_location(freeze)
               flags = load_varuint
               arguments_size = load_varuint
-              field_arguments = stack.pop(arguments_size) #: Array[Prism::node]
+              field_arguments = stack.slice!(-arguments_size, arguments_size) #: Array[Prism::node]
               field_arguments.freeze if freeze
               value = ArgumentsNode.new(source, node_id, location, flags, field_arguments)
               value.freeze if freeze
@@ -2658,7 +2671,7 @@ module Prism
               elements_size = load_varuint
               field_opening_loc = load_optional_location(freeze)
               field_closing_loc = load_optional_location(freeze)
-              field_elements = stack.pop(elements_size) #: Array[Prism::node]
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[Prism::node]
               field_elements.freeze if freeze
               value = ArrayNode.new(source, node_id, location, flags, field_elements, field_opening_loc, field_closing_loc)
               value.freeze if freeze
@@ -2672,10 +2685,10 @@ module Prism
               posts_size = load_varuint
               field_opening_loc = load_optional_location(freeze)
               field_closing_loc = load_optional_location(freeze)
-              field_posts = stack.pop(posts_size) #: Array[Prism::node]
+              field_posts = stack.slice!(-posts_size, posts_size) #: Array[Prism::node]
               field_posts.freeze if freeze
               field_rest = stack.pop #: (ImplicitRestNode | SplatNode)?
-              field_requireds = stack.pop(requireds_size) #: Array[Prism::node]
+              field_requireds = stack.slice!(-requireds_size, requireds_size) #: Array[Prism::node]
               field_requireds.freeze if freeze
               field_constant = stack.pop #: (ConstantPathNode | ConstantReadNode)?
               value = ArrayPatternNode.new(source, node_id, location, flags, field_constant, field_requireds, field_rest, field_posts, field_opening_loc, field_closing_loc)
@@ -2777,7 +2790,7 @@ module Prism
               locals_size = load_varuint
               field_opening_loc = load_optional_location(freeze)
               field_closing_loc = load_optional_location(freeze)
-              field_locals = stack.pop(locals_size) #: Array[BlockLocalVariableNode]
+              field_locals = stack.slice!(-locals_size, locals_size) #: Array[BlockLocalVariableNode]
               field_locals.freeze if freeze
               field_parameters = stack.pop #: ParametersNode?
               value = BlockParametersNode.new(source, node_id, location, flags, field_parameters, field_locals, field_opening_loc, field_closing_loc)
@@ -2888,7 +2901,7 @@ module Prism
               field_case_keyword_loc = load_location(freeze)
               field_end_keyword_loc = load_location(freeze)
               field_else_clause = stack.pop #: ElseNode?
-              field_conditions = stack.pop(conditions_size) #: Array[InNode]
+              field_conditions = stack.slice!(-conditions_size, conditions_size) #: Array[InNode]
               field_conditions.freeze if freeze
               field_predicate = stack.pop #: Prism::node?
               value = CaseMatchNode.new(source, node_id, location, flags, field_predicate, field_conditions, field_else_clause, field_case_keyword_loc, field_end_keyword_loc)
@@ -2903,7 +2916,7 @@ module Prism
               field_case_keyword_loc = load_location(freeze)
               field_end_keyword_loc = load_location(freeze)
               field_else_clause = stack.pop #: ElseNode?
-              field_conditions = stack.pop(conditions_size) #: Array[WhenNode]
+              field_conditions = stack.slice!(-conditions_size, conditions_size) #: Array[WhenNode]
               field_conditions.freeze if freeze
               field_predicate = stack.pop #: Prism::node?
               value = CaseNode.new(source, node_id, location, flags, field_predicate, field_conditions, field_else_clause, field_case_keyword_loc, field_end_keyword_loc)
@@ -3231,7 +3244,7 @@ module Prism
               field_opening_loc = load_optional_location(freeze)
               field_closing_loc = load_optional_location(freeze)
               field_right = stack.pop #: SplatNode
-              field_requireds = stack.pop(requireds_size) #: Array[Prism::node]
+              field_requireds = stack.slice!(-requireds_size, requireds_size) #: Array[Prism::node]
               field_requireds.freeze if freeze
               field_left = stack.pop #: SplatNode
               field_constant = stack.pop #: (ConstantPathNode | ConstantReadNode)?
@@ -3374,7 +3387,7 @@ module Prism
               field_opening_loc = load_location(freeze)
               elements_size = load_varuint
               field_closing_loc = load_location(freeze)
-              field_elements = stack.pop(elements_size) #: Array[AssocNode | AssocSplatNode]
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[AssocNode | AssocSplatNode]
               field_elements.freeze if freeze
               value = HashNode.new(source, node_id, location, flags, field_opening_loc, field_elements, field_closing_loc)
               value.freeze if freeze
@@ -3388,7 +3401,7 @@ module Prism
               field_opening_loc = load_optional_location(freeze)
               field_closing_loc = load_optional_location(freeze)
               field_rest = stack.pop #: (AssocSplatNode | NoKeywordsParameterNode)?
-              field_elements = stack.pop(elements_size) #: Array[AssocNode]
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[AssocNode]
               field_elements.freeze if freeze
               field_constant = stack.pop #: (ConstantPathNode | ConstantReadNode)?
               value = HashPatternNode.new(source, node_id, location, flags, field_constant, field_elements, field_rest, field_opening_loc, field_closing_loc)
@@ -3592,7 +3605,7 @@ module Prism
               field_opening_loc = load_location(freeze)
               parts_size = load_varuint
               field_closing_loc = load_location(freeze)
-              field_parts = stack.pop(parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
               field_parts.freeze if freeze
               value = InterpolatedMatchLastLineNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
@@ -3605,7 +3618,7 @@ module Prism
               field_opening_loc = load_location(freeze)
               parts_size = load_varuint
               field_closing_loc = load_location(freeze)
-              field_parts = stack.pop(parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
               field_parts.freeze if freeze
               value = InterpolatedRegularExpressionNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
@@ -3618,7 +3631,7 @@ module Prism
               field_opening_loc = load_optional_location(freeze)
               parts_size = load_varuint
               field_closing_loc = load_optional_location(freeze)
-              field_parts = stack.pop(parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode | InterpolatedStringNode]
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode | InterpolatedStringNode]
               field_parts.freeze if freeze
               value = InterpolatedStringNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
@@ -3631,7 +3644,7 @@ module Prism
               field_opening_loc = load_optional_location(freeze)
               parts_size = load_varuint
               field_closing_loc = load_optional_location(freeze)
-              field_parts = stack.pop(parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
               field_parts.freeze if freeze
               value = InterpolatedSymbolNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
@@ -3644,7 +3657,7 @@ module Prism
               field_opening_loc = load_location(freeze)
               parts_size = load_varuint
               field_closing_loc = load_location(freeze)
-              field_parts = stack.pop(parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
+              field_parts = stack.slice!(-parts_size, parts_size) #: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
               field_parts.freeze if freeze
               value = InterpolatedXStringNode.new(source, node_id, location, flags, field_opening_loc, field_parts, field_closing_loc)
               value.freeze if freeze
@@ -3671,7 +3684,7 @@ module Prism
               location = load_location(freeze)
               flags = load_varuint
               elements_size = load_varuint
-              field_elements = stack.pop(elements_size) #: Array[AssocNode | AssocSplatNode]
+              field_elements = stack.slice!(-elements_size, elements_size) #: Array[AssocNode | AssocSplatNode]
               field_elements.freeze if freeze
               value = KeywordHashNode.new(source, node_id, location, flags, field_elements)
               value.freeze if freeze
@@ -3815,7 +3828,7 @@ module Prism
               location = load_location(freeze)
               flags = load_varuint
               targets_size = load_varuint
-              field_targets = stack.pop(targets_size) #: Array[LocalVariableTargetNode]
+              field_targets = stack.slice!(-targets_size, targets_size) #: Array[LocalVariableTargetNode]
               field_targets.freeze if freeze
               field_call = stack.pop #: CallNode
               value = MatchWriteNode.new(source, node_id, location, flags, field_call, field_targets)
@@ -3845,10 +3858,10 @@ module Prism
               rights_size = load_varuint
               field_lparen_loc = load_optional_location(freeze)
               field_rparen_loc = load_optional_location(freeze)
-              field_rights = stack.pop(rights_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
+              field_rights = stack.slice!(-rights_size, rights_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
               field_rights.freeze if freeze
               field_rest = stack.pop #: (ImplicitRestNode | SplatNode)?
-              field_lefts = stack.pop(lefts_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
+              field_lefts = stack.slice!(-lefts_size, lefts_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
               field_lefts.freeze if freeze
               value = MultiTargetNode.new(source, node_id, location, flags, field_lefts, field_rest, field_rights, field_lparen_loc, field_rparen_loc)
               value.freeze if freeze
@@ -3864,10 +3877,10 @@ module Prism
               field_rparen_loc = load_optional_location(freeze)
               field_operator_loc = load_location(freeze)
               field_value = stack.pop #: Prism::node
-              field_rights = stack.pop(rights_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
+              field_rights = stack.slice!(-rights_size, rights_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
               field_rights.freeze if freeze
               field_rest = stack.pop #: (ImplicitRestNode | SplatNode)?
-              field_lefts = stack.pop(lefts_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
+              field_lefts = stack.slice!(-lefts_size, lefts_size) #: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
               field_lefts.freeze if freeze
               value = MultiWriteNode.new(source, node_id, location, flags, field_lefts, field_rest, field_rights, field_lparen_loc, field_rparen_loc, field_operator_loc, field_value)
               value.freeze if freeze
@@ -3973,14 +3986,14 @@ module Prism
               keywords_size = load_varuint
               field_block = stack.pop #: (BlockParameterNode | NoBlockParameterNode)?
               field_keyword_rest = stack.pop #: (KeywordRestParameterNode | ForwardingParameterNode | NoKeywordsParameterNode)?
-              field_keywords = stack.pop(keywords_size) #: Array[RequiredKeywordParameterNode | OptionalKeywordParameterNode]
+              field_keywords = stack.slice!(-keywords_size, keywords_size) #: Array[RequiredKeywordParameterNode | OptionalKeywordParameterNode]
               field_keywords.freeze if freeze
-              field_posts = stack.pop(posts_size) #: Array[RequiredParameterNode | MultiTargetNode]
+              field_posts = stack.slice!(-posts_size, posts_size) #: Array[RequiredParameterNode | MultiTargetNode]
               field_posts.freeze if freeze
               field_rest = stack.pop #: (RestParameterNode | ImplicitRestNode)?
-              field_optionals = stack.pop(optionals_size) #: Array[OptionalParameterNode]
+              field_optionals = stack.slice!(-optionals_size, optionals_size) #: Array[OptionalParameterNode]
               field_optionals.freeze if freeze
-              field_requireds = stack.pop(requireds_size) #: Array[RequiredParameterNode | MultiTargetNode]
+              field_requireds = stack.slice!(-requireds_size, requireds_size) #: Array[RequiredParameterNode | MultiTargetNode]
               field_requireds.freeze if freeze
               value = ParametersNode.new(source, node_id, location, flags, field_requireds, field_optionals, field_rest, field_posts, field_keywords, field_keyword_rest, field_block)
               value.freeze if freeze
@@ -4136,7 +4149,7 @@ module Prism
               field_subsequent = stack.pop #: RescueNode?
               field_statements = stack.pop #: StatementsNode?
               field_reference = stack.pop #: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode)?
-              field_exceptions = stack.pop(exceptions_size) #: Array[Prism::node]
+              field_exceptions = stack.slice!(-exceptions_size, exceptions_size) #: Array[Prism::node]
               field_exceptions.freeze if freeze
               value = RescueNode.new(source, node_id, location, flags, field_keyword_loc, field_exceptions, field_operator_loc, field_reference, field_then_keyword_loc, field_statements, field_subsequent)
               value.freeze if freeze
@@ -4243,7 +4256,7 @@ module Prism
               location = load_location(freeze)
               flags = load_varuint
               body_size = load_varuint
-              field_body = stack.pop(body_size) #: Array[Prism::node]
+              field_body = stack.slice!(-body_size, body_size) #: Array[Prism::node]
               field_body.freeze if freeze
               value = StatementsNode.new(source, node_id, location, flags, field_body)
               value.freeze if freeze
@@ -4300,7 +4313,7 @@ module Prism
               flags = load_varuint
               names_size = load_varuint
               field_keyword_loc = load_location(freeze)
-              field_names = stack.pop(names_size) #: Array[SymbolNode | InterpolatedSymbolNode]
+              field_names = stack.slice!(-names_size, names_size) #: Array[SymbolNode | InterpolatedSymbolNode]
               field_names.freeze if freeze
               value = UndefNode.new(source, node_id, location, flags, field_names, field_keyword_loc)
               value.freeze if freeze
@@ -4341,7 +4354,7 @@ module Prism
               conditions_size = load_varuint
               field_then_keyword_loc = load_optional_location(freeze)
               field_statements = stack.pop #: StatementsNode?
-              field_conditions = stack.pop(conditions_size) #: Array[Prism::node]
+              field_conditions = stack.slice!(-conditions_size, conditions_size) #: Array[Prism::node]
               field_conditions.freeze if freeze
               value = WhenNode.new(source, node_id, location, flags, field_when_keyword_loc, field_conditions, field_then_keyword_loc, field_statements)
               value.freeze if freeze

@@ -2516,6 +2516,7 @@ static void
 pm_serialize_metadata(pm_parser_t *parser, pm_buffer_t *buffer) {
     pm_serialize_encoding(parser->encoding, buffer);
     pm_buffer_append_varsint(buffer, parser->start_line);
+    pm_buffer_append_uint64(buffer, pm_parser_checksum(parser));
     pm_serialize_line_offset_list(&parser->line_offsets, buffer);
     pm_serialize_comment_list(&parser->comment_list, buffer);
     pm_serialize_comment_attachments(&parser->comment_attachments, buffer);
@@ -2526,7 +2527,7 @@ pm_serialize_metadata(pm_parser_t *parser, pm_buffer_t *buffer) {
     pm_buffer_append_byte(buffer, (uint8_t) parser->continuable);
 }
 
-#line 462 "prism/templates/src/serialize.c.erb"
+#line 463 "prism/templates/src/serialize.c.erb"
 /**
  * Serialize the metadata, nodes, and constant pool.
  */

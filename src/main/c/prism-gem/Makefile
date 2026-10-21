@@ -23,6 +23,15 @@ WASI_SDK_PATH := /opt/wasi-sdk
 # the rest of the C API along with the wasi-libc code reachable from it.
 WASM_EXPORTS := -Wl,--export=malloc,--export=free,--export=pm_buffer_new,--export=pm_buffer_value,--export=pm_buffer_length,--export=pm_buffer_free,--export=pm_serialize_parse
 
+# Bind the library's own references to its own definitions at link time, so
+# that the functions exported for FFI cannot be interposed by another copy of
+# libprism loaded in the same process (for example the copy built into the
+# interpreter next to the one built by a prism gem, when either copy was loaded
+# with RTLD_GLOBAL). Mach-O and PE do this by default; only ELF needs the flag.
+ifeq ($(SOEXT),so)
+SHARED_LDFLAGS := -Wl,-Bsymbolic
+endif
+
 MAKEDIRS ?= mkdir -p
 RMALL ?= rm -f -r
 
@@ -41,7 +50,7 @@ playground: doc/playground
 
 build/libprism.$(SOEXT): $(SHARED_OBJECTS)
 	$(ECHO) "linking $@ with $(CC)"
-	$(Q) $(CC) $(DEBUG_FLAGS) $(CFLAGS) -shared -o $@ $(SHARED_OBJECTS)
+	$(Q) $(CC) $(DEBUG_FLAGS) $(CFLAGS) -shared $(SHARED_LDFLAGS) -o $@ $(SHARED_OBJECTS)
 
 build/libprism.a: $(STATIC_OBJECTS)
 	$(ECHO) "building $@ with $(AR)"
