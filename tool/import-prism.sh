@@ -65,6 +65,8 @@ cp $PRISM/prism.generated.gemspec "lib/gems/specifications/default/prism-$VERSIO
 rm $PRISM/prism.generated.gemspec
 rm $PRISM/prism.gem
 
+git add src/main/c/{prism-gem,yarp} test/mri/{snapshots,tests/prism} lib/mri/prism src/yarp lib/gems/specifications/default/prism*
+
 cat <<'EOF'
 
 MANUAL STEPS:
