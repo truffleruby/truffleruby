@@ -39,6 +39,7 @@ package org.truffleruby.parser;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import org.ruby_lang.prism.Loader;
+import org.ruby_lang.prism.Nodes.DefNode;
 import org.ruby_lang.prism.ParseResult;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.RubyEncoding;
@@ -74,7 +75,7 @@ public final class YARPLoader extends Loader {
     }
 
     @Override
-    protected boolean loadDefNodesLazily() {
-        return true;
+    protected DefNode loadDefNode(int startOffset, int length) {
+        return createLazyDefNode(startOffset, length);
     }
 }
