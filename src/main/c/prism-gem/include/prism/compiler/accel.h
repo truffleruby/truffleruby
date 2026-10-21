@@ -4,8 +4,6 @@
 #ifndef PRISM_COMPILER_ACCEL_H
 #define PRISM_COMPILER_ACCEL_H
 
-#include "prism/compiler/endianness.h"
-
 /**
  * Platform detection for SIMD/fast-path implementations. At most one of these
  * macros is defined, selecting the best available vectorization strategy.
@@ -19,7 +17,7 @@
 #   define PRISM_HAS_NEON
 #elif (defined(__x86_64__) && defined(__SSE2__)) || (defined(_MSC_VER) && defined(_M_X64))
 #   define PRISM_HAS_SSE2
-#elif defined(PRISM_LITTLE_ENDIAN_COMPTIME)
+#elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #   define PRISM_HAS_SWAR
 #endif
 

@@ -1,3 +1,0 @@
-if def f = foo 1; end
-               ^ expected `then` or `;` or '\n'
-

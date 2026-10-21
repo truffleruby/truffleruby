@@ -1,3 +1,0 @@
-foo(def f = bar 1 rescue z rescue w, y)
-                                   ^ invalid comma
-

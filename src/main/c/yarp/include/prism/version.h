@@ -8,19 +8,15 @@
 
 #include "prism/compiler/exported.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * The major version of the Prism library as an int.
  */
-#define PRISM_VERSION_MAJOR 2
+#define PRISM_VERSION_MAJOR 1
 
 /**
  * The minor version of the Prism library as an int.
  */
-#define PRISM_VERSION_MINOR 0
+#define PRISM_VERSION_MINOR 9
 
 /**
  * The patch version of the Prism library as an int.
@@ -30,7 +26,7 @@ extern "C" {
 /**
  * The version of the Prism library as a constant string.
  */
-#define PRISM_VERSION "2.0.0"
+#define PRISM_VERSION "1.9.0"
 
 /**
  * The prism version and the serialization format.
@@ -38,9 +34,5 @@ extern "C" {
  * @returns The prism version as a constant string.
  */
 PRISM_EXPORTED_FUNCTION const char * pm_version(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

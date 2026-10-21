@@ -27,10 +27,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * This enum represents every type of token in the Ruby source.
  */
@@ -1107,9 +1103,7 @@ typedef struct pm_node {
 
     /**
      * The unique identifier for this node, which is deterministic based on the
-     * source. It is used to identify unique nodes across parses. Nodes created
-     * outside of parsing have no position in the source and can use 0, which
-     * no parsed node uses.
+     * source. It is used to identify unique nodes across parses.
      */
     uint32_t node_id;
 
@@ -10373,9 +10367,5 @@ PRISM_EXPORTED_FUNCTION pm_yield_node_t * pm_yield_node_new(pm_arena_t *arena, u
  * those build systems.
  */
 #define PRISM_SERIALIZE_ONLY_SEMANTICS_FIELDS 1
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

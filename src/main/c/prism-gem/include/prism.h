@@ -6,6 +6,10 @@
 #ifndef PRISM_H
 #define PRISM_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "prism/arena.h"
 #include "prism/ast.h"
 #include "prism/buffer.h"
@@ -119,5 +123,9 @@
  * }
  * ```
  */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

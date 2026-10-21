@@ -12,10 +12,6 @@
 
 #include <stddef.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * An opaque pointer to an arena that is used for allocations.
  */
@@ -37,9 +33,5 @@ PRISM_NODISCARD PRISM_EXPORTED_FUNCTION pm_arena_t * pm_arena_new(void);
  * @param arena The arena to free.
  */
 PRISM_EXPORTED_FUNCTION void pm_arena_free(pm_arena_t *arena) PRISM_NONNULL(1);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

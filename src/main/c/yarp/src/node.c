@@ -51,21 +51,13 @@ pm_node_list_grow(pm_arena_t *arena, pm_node_list_t *list, size_t size) {
 }
 
 /**
- * Slow path for pm_node_list_append_inline: grow the list and append the node.
- * Do not call directly - use pm_node_list_append_inline instead.
+ * Slow path for pm_node_list_append: grow the list and append the node.
+ * Do not call directly - use pm_node_list_append instead.
  */
 void
 pm_node_list_append_slow(pm_arena_t *arena, pm_node_list_t *list, pm_node_t *node) {
     pm_node_list_grow(arena, list, 1);
     list->nodes[list->size++] = node;
-}
-
-/**
- * Append a new node onto the end of the node list.
- */
-void
-pm_node_list_append(pm_arena_t *arena, pm_node_list_t *list, pm_node_t *node) {
-    pm_node_list_append_inline(arena, list, node);
 }
 
 /**
@@ -408,35 +400,33 @@ pm_node_type(pm_node_type_t node_type)
 
 /**
  * Visit each of the nodes in this subtree using the given visitor callback. The
- * callback function will be called for each node in the subtree, and its
- * return value determines whether the walk visits that node's children, skips
- * them, or stops entirely. The data parameter is treated as an opaque pointer
- * and is passed to the visitor callback for consumers to use as they see fit.
+ * callback function will be called for each node in the subtree. If it returns
+ * false, then that node's children will not be visited. If it returns true,
+ * then the children will be visited. The data parameter is treated as an opaque
+ * pointer and is passed to the visitor callback for consumers to use as they
+ * see fit.
  */
-bool
-pm_visit_node(const pm_node_t *node, pm_visit_callback_t visitor, void *data) {
-    pm_visit_result_t result = visitor(node, data);
-    if (result == PM_VISIT_DESCEND) return pm_visit_child_nodes(node, visitor, data);
-    return result != PM_VISIT_STOP;
+void
+pm_visit_node(const pm_node_t *node, bool (*visitor)(const pm_node_t *node, void *data), void *data) {
+    if (visitor(node, data)) pm_visit_child_nodes(node, visitor, data);
 }
 
 /**
  * Visit the children of the given node with the given callback. This is the
  * default behavior for walking the tree that is called from pm_visit_node if
- * the callback returns PM_VISIT_DESCEND. A stop from any child returns false
- * immediately, so that it propagates up through every enclosing call.
+ * the callback returns true.
  */
-bool
-pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *data) {
+void
+pm_visit_child_nodes(const pm_node_t *node, bool (*visitor)(const pm_node_t *node, void *data), void *data) {
     switch (PM_NODE_TYPE(node)) {
         case PM_ALIAS_GLOBAL_VARIABLE_NODE: {
             const pm_alias_global_variable_node_t *cast = (const pm_alias_global_variable_node_t *) node;
 
             // Visit the new_name field
-            if (!pm_visit_node((const pm_node_t *) cast->new_name, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->new_name, visitor, data);
 
             // Visit the old_name field
-            if (!pm_visit_node((const pm_node_t *) cast->old_name, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->old_name, visitor, data);
 
             break;
         }
@@ -444,10 +434,10 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_alias_method_node_t *cast = (const pm_alias_method_node_t *) node;
 
             // Visit the new_name field
-            if (!pm_visit_node((const pm_node_t *) cast->new_name, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->new_name, visitor, data);
 
             // Visit the old_name field
-            if (!pm_visit_node((const pm_node_t *) cast->old_name, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->old_name, visitor, data);
 
             break;
         }
@@ -455,10 +445,10 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_alternation_pattern_node_t *cast = (const pm_alternation_pattern_node_t *) node;
 
             // Visit the left field
-            if (!pm_visit_node((const pm_node_t *) cast->left, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->left, visitor, data);
 
             // Visit the right field
-            if (!pm_visit_node((const pm_node_t *) cast->right, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->right, visitor, data);
 
             break;
         }
@@ -466,10 +456,10 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_and_node_t *cast = (const pm_and_node_t *) node;
 
             // Visit the left field
-            if (!pm_visit_node((const pm_node_t *) cast->left, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->left, visitor, data);
 
             // Visit the right field
-            if (!pm_visit_node((const pm_node_t *) cast->right, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->right, visitor, data);
 
             break;
         }
@@ -479,7 +469,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the arguments field
             const pm_node_list_t *arguments = &cast->arguments;
             for (size_t index = 0; index < arguments->size; index++) {
-                if (!pm_visit_node(arguments->nodes[index], visitor, data)) return false;
+                pm_visit_node(arguments->nodes[index], visitor, data);
             }
 
             break;
@@ -490,7 +480,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the elements field
             const pm_node_list_t *elements = &cast->elements;
             for (size_t index = 0; index < elements->size; index++) {
-                if (!pm_visit_node(elements->nodes[index], visitor, data)) return false;
+                pm_visit_node(elements->nodes[index], visitor, data);
             }
 
             break;
@@ -499,21 +489,25 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_array_pattern_node_t *cast = (const pm_array_pattern_node_t *) node;
 
             // Visit the constant field
-            if (cast->constant != NULL && !pm_visit_node((const pm_node_t *) cast->constant, visitor, data)) return false;
+            if (cast->constant != NULL) {
+                pm_visit_node((const pm_node_t *) cast->constant, visitor, data);
+            }
 
             // Visit the requireds field
             const pm_node_list_t *requireds = &cast->requireds;
             for (size_t index = 0; index < requireds->size; index++) {
-                if (!pm_visit_node(requireds->nodes[index], visitor, data)) return false;
+                pm_visit_node(requireds->nodes[index], visitor, data);
             }
 
             // Visit the rest field
-            if (cast->rest != NULL && !pm_visit_node((const pm_node_t *) cast->rest, visitor, data)) return false;
+            if (cast->rest != NULL) {
+                pm_visit_node((const pm_node_t *) cast->rest, visitor, data);
+            }
 
             // Visit the posts field
             const pm_node_list_t *posts = &cast->posts;
             for (size_t index = 0; index < posts->size; index++) {
-                if (!pm_visit_node(posts->nodes[index], visitor, data)) return false;
+                pm_visit_node(posts->nodes[index], visitor, data);
             }
 
             break;
@@ -522,10 +516,10 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_assoc_node_t *cast = (const pm_assoc_node_t *) node;
 
             // Visit the key field
-            if (!pm_visit_node((const pm_node_t *) cast->key, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->key, visitor, data);
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -533,7 +527,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_assoc_splat_node_t *cast = (const pm_assoc_splat_node_t *) node;
 
             // Visit the value field
-            if (cast->value != NULL && !pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            if (cast->value != NULL) {
+                pm_visit_node((const pm_node_t *) cast->value, visitor, data);
+            }
 
             break;
         }
@@ -543,16 +539,24 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_begin_node_t *cast = (const pm_begin_node_t *) node;
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             // Visit the rescue_clause field
-            if (cast->rescue_clause != NULL && !pm_visit_node((const pm_node_t *) cast->rescue_clause, visitor, data)) return false;
+            if (cast->rescue_clause != NULL) {
+                pm_visit_node((const pm_node_t *) cast->rescue_clause, visitor, data);
+            }
 
             // Visit the else_clause field
-            if (cast->else_clause != NULL && !pm_visit_node((const pm_node_t *) cast->else_clause, visitor, data)) return false;
+            if (cast->else_clause != NULL) {
+                pm_visit_node((const pm_node_t *) cast->else_clause, visitor, data);
+            }
 
             // Visit the ensure_clause field
-            if (cast->ensure_clause != NULL && !pm_visit_node((const pm_node_t *) cast->ensure_clause, visitor, data)) return false;
+            if (cast->ensure_clause != NULL) {
+                pm_visit_node((const pm_node_t *) cast->ensure_clause, visitor, data);
+            }
 
             break;
         }
@@ -560,7 +564,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_block_argument_node_t *cast = (const pm_block_argument_node_t *) node;
 
             // Visit the expression field
-            if (cast->expression != NULL && !pm_visit_node((const pm_node_t *) cast->expression, visitor, data)) return false;
+            if (cast->expression != NULL) {
+                pm_visit_node((const pm_node_t *) cast->expression, visitor, data);
+            }
 
             break;
         }
@@ -570,10 +576,14 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_block_node_t *cast = (const pm_block_node_t *) node;
 
             // Visit the parameters field
-            if (cast->parameters != NULL && !pm_visit_node((const pm_node_t *) cast->parameters, visitor, data)) return false;
+            if (cast->parameters != NULL) {
+                pm_visit_node((const pm_node_t *) cast->parameters, visitor, data);
+            }
 
             // Visit the body field
-            if (cast->body != NULL && !pm_visit_node((const pm_node_t *) cast->body, visitor, data)) return false;
+            if (cast->body != NULL) {
+                pm_visit_node((const pm_node_t *) cast->body, visitor, data);
+            }
 
             break;
         }
@@ -583,12 +593,14 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_block_parameters_node_t *cast = (const pm_block_parameters_node_t *) node;
 
             // Visit the parameters field
-            if (cast->parameters != NULL && !pm_visit_node((const pm_node_t *) cast->parameters, visitor, data)) return false;
+            if (cast->parameters != NULL) {
+                pm_visit_node((const pm_node_t *) cast->parameters, visitor, data);
+            }
 
             // Visit the locals field
             const pm_node_list_t *locals = &cast->locals;
             for (size_t index = 0; index < locals->size; index++) {
-                if (!pm_visit_node(locals->nodes[index], visitor, data)) return false;
+                pm_visit_node(locals->nodes[index], visitor, data);
             }
 
             break;
@@ -597,7 +609,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_break_node_t *cast = (const pm_break_node_t *) node;
 
             // Visit the arguments field
-            if (cast->arguments != NULL && !pm_visit_node((const pm_node_t *) cast->arguments, visitor, data)) return false;
+            if (cast->arguments != NULL) {
+                pm_visit_node((const pm_node_t *) cast->arguments, visitor, data);
+            }
 
             break;
         }
@@ -605,10 +619,12 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_call_and_write_node_t *cast = (const pm_call_and_write_node_t *) node;
 
             // Visit the receiver field
-            if (cast->receiver != NULL && !pm_visit_node((const pm_node_t *) cast->receiver, visitor, data)) return false;
+            if (cast->receiver != NULL) {
+                pm_visit_node((const pm_node_t *) cast->receiver, visitor, data);
+            }
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -616,13 +632,19 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_call_node_t *cast = (const pm_call_node_t *) node;
 
             // Visit the receiver field
-            if (cast->receiver != NULL && !pm_visit_node((const pm_node_t *) cast->receiver, visitor, data)) return false;
+            if (cast->receiver != NULL) {
+                pm_visit_node((const pm_node_t *) cast->receiver, visitor, data);
+            }
 
             // Visit the arguments field
-            if (cast->arguments != NULL && !pm_visit_node((const pm_node_t *) cast->arguments, visitor, data)) return false;
+            if (cast->arguments != NULL) {
+                pm_visit_node((const pm_node_t *) cast->arguments, visitor, data);
+            }
 
             // Visit the block field
-            if (cast->block != NULL && !pm_visit_node((const pm_node_t *) cast->block, visitor, data)) return false;
+            if (cast->block != NULL) {
+                pm_visit_node((const pm_node_t *) cast->block, visitor, data);
+            }
 
             break;
         }
@@ -630,10 +652,12 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_call_operator_write_node_t *cast = (const pm_call_operator_write_node_t *) node;
 
             // Visit the receiver field
-            if (cast->receiver != NULL && !pm_visit_node((const pm_node_t *) cast->receiver, visitor, data)) return false;
+            if (cast->receiver != NULL) {
+                pm_visit_node((const pm_node_t *) cast->receiver, visitor, data);
+            }
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -641,10 +665,12 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_call_or_write_node_t *cast = (const pm_call_or_write_node_t *) node;
 
             // Visit the receiver field
-            if (cast->receiver != NULL && !pm_visit_node((const pm_node_t *) cast->receiver, visitor, data)) return false;
+            if (cast->receiver != NULL) {
+                pm_visit_node((const pm_node_t *) cast->receiver, visitor, data);
+            }
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -652,7 +678,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_call_target_node_t *cast = (const pm_call_target_node_t *) node;
 
             // Visit the receiver field
-            if (!pm_visit_node((const pm_node_t *) cast->receiver, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->receiver, visitor, data);
 
             break;
         }
@@ -660,10 +686,10 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_capture_pattern_node_t *cast = (const pm_capture_pattern_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             // Visit the target field
-            if (!pm_visit_node((const pm_node_t *) cast->target, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->target, visitor, data);
 
             break;
         }
@@ -671,16 +697,20 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_case_match_node_t *cast = (const pm_case_match_node_t *) node;
 
             // Visit the predicate field
-            if (cast->predicate != NULL && !pm_visit_node((const pm_node_t *) cast->predicate, visitor, data)) return false;
+            if (cast->predicate != NULL) {
+                pm_visit_node((const pm_node_t *) cast->predicate, visitor, data);
+            }
 
             // Visit the conditions field
             const pm_node_list_t *conditions = &cast->conditions;
             for (size_t index = 0; index < conditions->size; index++) {
-                if (!pm_visit_node(conditions->nodes[index], visitor, data)) return false;
+                pm_visit_node(conditions->nodes[index], visitor, data);
             }
 
             // Visit the else_clause field
-            if (cast->else_clause != NULL && !pm_visit_node((const pm_node_t *) cast->else_clause, visitor, data)) return false;
+            if (cast->else_clause != NULL) {
+                pm_visit_node((const pm_node_t *) cast->else_clause, visitor, data);
+            }
 
             break;
         }
@@ -688,16 +718,20 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_case_node_t *cast = (const pm_case_node_t *) node;
 
             // Visit the predicate field
-            if (cast->predicate != NULL && !pm_visit_node((const pm_node_t *) cast->predicate, visitor, data)) return false;
+            if (cast->predicate != NULL) {
+                pm_visit_node((const pm_node_t *) cast->predicate, visitor, data);
+            }
 
             // Visit the conditions field
             const pm_node_list_t *conditions = &cast->conditions;
             for (size_t index = 0; index < conditions->size; index++) {
-                if (!pm_visit_node(conditions->nodes[index], visitor, data)) return false;
+                pm_visit_node(conditions->nodes[index], visitor, data);
             }
 
             // Visit the else_clause field
-            if (cast->else_clause != NULL && !pm_visit_node((const pm_node_t *) cast->else_clause, visitor, data)) return false;
+            if (cast->else_clause != NULL) {
+                pm_visit_node((const pm_node_t *) cast->else_clause, visitor, data);
+            }
 
             break;
         }
@@ -705,13 +739,17 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_class_node_t *cast = (const pm_class_node_t *) node;
 
             // Visit the constant_path field
-            if (!pm_visit_node((const pm_node_t *) cast->constant_path, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->constant_path, visitor, data);
 
             // Visit the superclass field
-            if (cast->superclass != NULL && !pm_visit_node((const pm_node_t *) cast->superclass, visitor, data)) return false;
+            if (cast->superclass != NULL) {
+                pm_visit_node((const pm_node_t *) cast->superclass, visitor, data);
+            }
 
             // Visit the body field
-            if (cast->body != NULL && !pm_visit_node((const pm_node_t *) cast->body, visitor, data)) return false;
+            if (cast->body != NULL) {
+                pm_visit_node((const pm_node_t *) cast->body, visitor, data);
+            }
 
             break;
         }
@@ -719,7 +757,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_class_variable_and_write_node_t *cast = (const pm_class_variable_and_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -727,7 +765,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_class_variable_operator_write_node_t *cast = (const pm_class_variable_operator_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -735,7 +773,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_class_variable_or_write_node_t *cast = (const pm_class_variable_or_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -747,7 +785,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_class_variable_write_node_t *cast = (const pm_class_variable_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -755,7 +793,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_constant_and_write_node_t *cast = (const pm_constant_and_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -763,7 +801,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_constant_operator_write_node_t *cast = (const pm_constant_operator_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -771,7 +809,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_constant_or_write_node_t *cast = (const pm_constant_or_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -779,10 +817,10 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_constant_path_and_write_node_t *cast = (const pm_constant_path_and_write_node_t *) node;
 
             // Visit the target field
-            if (!pm_visit_node((const pm_node_t *) cast->target, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->target, visitor, data);
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -790,7 +828,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_constant_path_node_t *cast = (const pm_constant_path_node_t *) node;
 
             // Visit the parent field
-            if (cast->parent != NULL && !pm_visit_node((const pm_node_t *) cast->parent, visitor, data)) return false;
+            if (cast->parent != NULL) {
+                pm_visit_node((const pm_node_t *) cast->parent, visitor, data);
+            }
 
             break;
         }
@@ -798,10 +838,10 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_constant_path_operator_write_node_t *cast = (const pm_constant_path_operator_write_node_t *) node;
 
             // Visit the target field
-            if (!pm_visit_node((const pm_node_t *) cast->target, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->target, visitor, data);
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -809,10 +849,10 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_constant_path_or_write_node_t *cast = (const pm_constant_path_or_write_node_t *) node;
 
             // Visit the target field
-            if (!pm_visit_node((const pm_node_t *) cast->target, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->target, visitor, data);
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -820,7 +860,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_constant_path_target_node_t *cast = (const pm_constant_path_target_node_t *) node;
 
             // Visit the parent field
-            if (cast->parent != NULL && !pm_visit_node((const pm_node_t *) cast->parent, visitor, data)) return false;
+            if (cast->parent != NULL) {
+                pm_visit_node((const pm_node_t *) cast->parent, visitor, data);
+            }
 
             break;
         }
@@ -828,10 +870,10 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_constant_path_write_node_t *cast = (const pm_constant_path_write_node_t *) node;
 
             // Visit the target field
-            if (!pm_visit_node((const pm_node_t *) cast->target, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->target, visitor, data);
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -843,7 +885,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_constant_write_node_t *cast = (const pm_constant_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -851,13 +893,19 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_def_node_t *cast = (const pm_def_node_t *) node;
 
             // Visit the receiver field
-            if (cast->receiver != NULL && !pm_visit_node((const pm_node_t *) cast->receiver, visitor, data)) return false;
+            if (cast->receiver != NULL) {
+                pm_visit_node((const pm_node_t *) cast->receiver, visitor, data);
+            }
 
             // Visit the parameters field
-            if (cast->parameters != NULL && !pm_visit_node((const pm_node_t *) cast->parameters, visitor, data)) return false;
+            if (cast->parameters != NULL) {
+                pm_visit_node((const pm_node_t *) cast->parameters, visitor, data);
+            }
 
             // Visit the body field
-            if (cast->body != NULL && !pm_visit_node((const pm_node_t *) cast->body, visitor, data)) return false;
+            if (cast->body != NULL) {
+                pm_visit_node((const pm_node_t *) cast->body, visitor, data);
+            }
 
             break;
         }
@@ -865,7 +913,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_defined_node_t *cast = (const pm_defined_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -873,7 +921,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_else_node_t *cast = (const pm_else_node_t *) node;
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             break;
         }
@@ -881,7 +931,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_embedded_statements_node_t *cast = (const pm_embedded_statements_node_t *) node;
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             break;
         }
@@ -889,7 +941,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_embedded_variable_node_t *cast = (const pm_embedded_variable_node_t *) node;
 
             // Visit the variable field
-            if (!pm_visit_node((const pm_node_t *) cast->variable, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->variable, visitor, data);
 
             break;
         }
@@ -897,7 +949,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_ensure_node_t *cast = (const pm_ensure_node_t *) node;
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             break;
         }
@@ -905,7 +959,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_error_recovery_node_t *cast = (const pm_error_recovery_node_t *) node;
 
             // Visit the unexpected field
-            if (cast->unexpected != NULL && !pm_visit_node((const pm_node_t *) cast->unexpected, visitor, data)) return false;
+            if (cast->unexpected != NULL) {
+                pm_visit_node((const pm_node_t *) cast->unexpected, visitor, data);
+            }
 
             break;
         }
@@ -915,19 +971,21 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_find_pattern_node_t *cast = (const pm_find_pattern_node_t *) node;
 
             // Visit the constant field
-            if (cast->constant != NULL && !pm_visit_node((const pm_node_t *) cast->constant, visitor, data)) return false;
+            if (cast->constant != NULL) {
+                pm_visit_node((const pm_node_t *) cast->constant, visitor, data);
+            }
 
             // Visit the left field
-            if (!pm_visit_node((const pm_node_t *) cast->left, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->left, visitor, data);
 
             // Visit the requireds field
             const pm_node_list_t *requireds = &cast->requireds;
             for (size_t index = 0; index < requireds->size; index++) {
-                if (!pm_visit_node(requireds->nodes[index], visitor, data)) return false;
+                pm_visit_node(requireds->nodes[index], visitor, data);
             }
 
             // Visit the right field
-            if (!pm_visit_node((const pm_node_t *) cast->right, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->right, visitor, data);
 
             break;
         }
@@ -935,10 +993,14 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_flip_flop_node_t *cast = (const pm_flip_flop_node_t *) node;
 
             // Visit the left field
-            if (cast->left != NULL && !pm_visit_node((const pm_node_t *) cast->left, visitor, data)) return false;
+            if (cast->left != NULL) {
+                pm_visit_node((const pm_node_t *) cast->left, visitor, data);
+            }
 
             // Visit the right field
-            if (cast->right != NULL && !pm_visit_node((const pm_node_t *) cast->right, visitor, data)) return false;
+            if (cast->right != NULL) {
+                pm_visit_node((const pm_node_t *) cast->right, visitor, data);
+            }
 
             break;
         }
@@ -948,13 +1010,15 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_for_node_t *cast = (const pm_for_node_t *) node;
 
             // Visit the index field
-            if (!pm_visit_node((const pm_node_t *) cast->index, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->index, visitor, data);
 
             // Visit the collection field
-            if (!pm_visit_node((const pm_node_t *) cast->collection, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->collection, visitor, data);
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             break;
         }
@@ -966,7 +1030,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_forwarding_super_node_t *cast = (const pm_forwarding_super_node_t *) node;
 
             // Visit the block field
-            if (cast->block != NULL && !pm_visit_node((const pm_node_t *) cast->block, visitor, data)) return false;
+            if (cast->block != NULL) {
+                pm_visit_node((const pm_node_t *) cast->block, visitor, data);
+            }
 
             break;
         }
@@ -974,7 +1040,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_global_variable_and_write_node_t *cast = (const pm_global_variable_and_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -982,7 +1048,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_global_variable_operator_write_node_t *cast = (const pm_global_variable_operator_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -990,7 +1056,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_global_variable_or_write_node_t *cast = (const pm_global_variable_or_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1002,7 +1068,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_global_variable_write_node_t *cast = (const pm_global_variable_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1012,7 +1078,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the elements field
             const pm_node_list_t *elements = &cast->elements;
             for (size_t index = 0; index < elements->size; index++) {
-                if (!pm_visit_node(elements->nodes[index], visitor, data)) return false;
+                pm_visit_node(elements->nodes[index], visitor, data);
             }
 
             break;
@@ -1021,16 +1087,20 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_hash_pattern_node_t *cast = (const pm_hash_pattern_node_t *) node;
 
             // Visit the constant field
-            if (cast->constant != NULL && !pm_visit_node((const pm_node_t *) cast->constant, visitor, data)) return false;
+            if (cast->constant != NULL) {
+                pm_visit_node((const pm_node_t *) cast->constant, visitor, data);
+            }
 
             // Visit the elements field
             const pm_node_list_t *elements = &cast->elements;
             for (size_t index = 0; index < elements->size; index++) {
-                if (!pm_visit_node(elements->nodes[index], visitor, data)) return false;
+                pm_visit_node(elements->nodes[index], visitor, data);
             }
 
             // Visit the rest field
-            if (cast->rest != NULL && !pm_visit_node((const pm_node_t *) cast->rest, visitor, data)) return false;
+            if (cast->rest != NULL) {
+                pm_visit_node((const pm_node_t *) cast->rest, visitor, data);
+            }
 
             break;
         }
@@ -1038,13 +1108,17 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_if_node_t *cast = (const pm_if_node_t *) node;
 
             // Visit the predicate field
-            if (!pm_visit_node((const pm_node_t *) cast->predicate, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->predicate, visitor, data);
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             // Visit the subsequent field
-            if (cast->subsequent != NULL && !pm_visit_node((const pm_node_t *) cast->subsequent, visitor, data)) return false;
+            if (cast->subsequent != NULL) {
+                pm_visit_node((const pm_node_t *) cast->subsequent, visitor, data);
+            }
 
             break;
         }
@@ -1052,7 +1126,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_imaginary_node_t *cast = (const pm_imaginary_node_t *) node;
 
             // Visit the numeric field
-            if (!pm_visit_node((const pm_node_t *) cast->numeric, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->numeric, visitor, data);
 
             break;
         }
@@ -1060,7 +1134,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_implicit_node_t *cast = (const pm_implicit_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1070,10 +1144,12 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_in_node_t *cast = (const pm_in_node_t *) node;
 
             // Visit the pattern field
-            if (!pm_visit_node((const pm_node_t *) cast->pattern, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->pattern, visitor, data);
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             break;
         }
@@ -1081,16 +1157,22 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_index_and_write_node_t *cast = (const pm_index_and_write_node_t *) node;
 
             // Visit the receiver field
-            if (cast->receiver != NULL && !pm_visit_node((const pm_node_t *) cast->receiver, visitor, data)) return false;
+            if (cast->receiver != NULL) {
+                pm_visit_node((const pm_node_t *) cast->receiver, visitor, data);
+            }
 
             // Visit the arguments field
-            if (cast->arguments != NULL && !pm_visit_node((const pm_node_t *) cast->arguments, visitor, data)) return false;
+            if (cast->arguments != NULL) {
+                pm_visit_node((const pm_node_t *) cast->arguments, visitor, data);
+            }
 
             // Visit the block field
-            if (cast->block != NULL && !pm_visit_node((const pm_node_t *) cast->block, visitor, data)) return false;
+            if (cast->block != NULL) {
+                pm_visit_node((const pm_node_t *) cast->block, visitor, data);
+            }
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1098,16 +1180,22 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_index_operator_write_node_t *cast = (const pm_index_operator_write_node_t *) node;
 
             // Visit the receiver field
-            if (cast->receiver != NULL && !pm_visit_node((const pm_node_t *) cast->receiver, visitor, data)) return false;
+            if (cast->receiver != NULL) {
+                pm_visit_node((const pm_node_t *) cast->receiver, visitor, data);
+            }
 
             // Visit the arguments field
-            if (cast->arguments != NULL && !pm_visit_node((const pm_node_t *) cast->arguments, visitor, data)) return false;
+            if (cast->arguments != NULL) {
+                pm_visit_node((const pm_node_t *) cast->arguments, visitor, data);
+            }
 
             // Visit the block field
-            if (cast->block != NULL && !pm_visit_node((const pm_node_t *) cast->block, visitor, data)) return false;
+            if (cast->block != NULL) {
+                pm_visit_node((const pm_node_t *) cast->block, visitor, data);
+            }
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1115,16 +1203,22 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_index_or_write_node_t *cast = (const pm_index_or_write_node_t *) node;
 
             // Visit the receiver field
-            if (cast->receiver != NULL && !pm_visit_node((const pm_node_t *) cast->receiver, visitor, data)) return false;
+            if (cast->receiver != NULL) {
+                pm_visit_node((const pm_node_t *) cast->receiver, visitor, data);
+            }
 
             // Visit the arguments field
-            if (cast->arguments != NULL && !pm_visit_node((const pm_node_t *) cast->arguments, visitor, data)) return false;
+            if (cast->arguments != NULL) {
+                pm_visit_node((const pm_node_t *) cast->arguments, visitor, data);
+            }
 
             // Visit the block field
-            if (cast->block != NULL && !pm_visit_node((const pm_node_t *) cast->block, visitor, data)) return false;
+            if (cast->block != NULL) {
+                pm_visit_node((const pm_node_t *) cast->block, visitor, data);
+            }
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1132,13 +1226,17 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_index_target_node_t *cast = (const pm_index_target_node_t *) node;
 
             // Visit the receiver field
-            if (!pm_visit_node((const pm_node_t *) cast->receiver, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->receiver, visitor, data);
 
             // Visit the arguments field
-            if (cast->arguments != NULL && !pm_visit_node((const pm_node_t *) cast->arguments, visitor, data)) return false;
+            if (cast->arguments != NULL) {
+                pm_visit_node((const pm_node_t *) cast->arguments, visitor, data);
+            }
 
             // Visit the block field
-            if (cast->block != NULL && !pm_visit_node((const pm_node_t *) cast->block, visitor, data)) return false;
+            if (cast->block != NULL) {
+                pm_visit_node((const pm_node_t *) cast->block, visitor, data);
+            }
 
             break;
         }
@@ -1146,7 +1244,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_instance_variable_and_write_node_t *cast = (const pm_instance_variable_and_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1154,7 +1252,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_instance_variable_operator_write_node_t *cast = (const pm_instance_variable_operator_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1162,7 +1260,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_instance_variable_or_write_node_t *cast = (const pm_instance_variable_or_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1174,7 +1272,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_instance_variable_write_node_t *cast = (const pm_instance_variable_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1186,7 +1284,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the parts field
             const pm_node_list_t *parts = &cast->parts;
             for (size_t index = 0; index < parts->size; index++) {
-                if (!pm_visit_node(parts->nodes[index], visitor, data)) return false;
+                pm_visit_node(parts->nodes[index], visitor, data);
             }
 
             break;
@@ -1197,7 +1295,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the parts field
             const pm_node_list_t *parts = &cast->parts;
             for (size_t index = 0; index < parts->size; index++) {
-                if (!pm_visit_node(parts->nodes[index], visitor, data)) return false;
+                pm_visit_node(parts->nodes[index], visitor, data);
             }
 
             break;
@@ -1208,7 +1306,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the parts field
             const pm_node_list_t *parts = &cast->parts;
             for (size_t index = 0; index < parts->size; index++) {
-                if (!pm_visit_node(parts->nodes[index], visitor, data)) return false;
+                pm_visit_node(parts->nodes[index], visitor, data);
             }
 
             break;
@@ -1219,7 +1317,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the parts field
             const pm_node_list_t *parts = &cast->parts;
             for (size_t index = 0; index < parts->size; index++) {
-                if (!pm_visit_node(parts->nodes[index], visitor, data)) return false;
+                pm_visit_node(parts->nodes[index], visitor, data);
             }
 
             break;
@@ -1230,7 +1328,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the parts field
             const pm_node_list_t *parts = &cast->parts;
             for (size_t index = 0; index < parts->size; index++) {
-                if (!pm_visit_node(parts->nodes[index], visitor, data)) return false;
+                pm_visit_node(parts->nodes[index], visitor, data);
             }
 
             break;
@@ -1245,7 +1343,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the elements field
             const pm_node_list_t *elements = &cast->elements;
             for (size_t index = 0; index < elements->size; index++) {
-                if (!pm_visit_node(elements->nodes[index], visitor, data)) return false;
+                pm_visit_node(elements->nodes[index], visitor, data);
             }
 
             break;
@@ -1256,10 +1354,14 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_lambda_node_t *cast = (const pm_lambda_node_t *) node;
 
             // Visit the parameters field
-            if (cast->parameters != NULL && !pm_visit_node((const pm_node_t *) cast->parameters, visitor, data)) return false;
+            if (cast->parameters != NULL) {
+                pm_visit_node((const pm_node_t *) cast->parameters, visitor, data);
+            }
 
             // Visit the body field
-            if (cast->body != NULL && !pm_visit_node((const pm_node_t *) cast->body, visitor, data)) return false;
+            if (cast->body != NULL) {
+                pm_visit_node((const pm_node_t *) cast->body, visitor, data);
+            }
 
             break;
         }
@@ -1267,7 +1369,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_local_variable_and_write_node_t *cast = (const pm_local_variable_and_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1275,7 +1377,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_local_variable_operator_write_node_t *cast = (const pm_local_variable_operator_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1283,7 +1385,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_local_variable_or_write_node_t *cast = (const pm_local_variable_or_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1295,7 +1397,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_local_variable_write_node_t *cast = (const pm_local_variable_write_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1305,10 +1407,10 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_match_predicate_node_t *cast = (const pm_match_predicate_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             // Visit the pattern field
-            if (!pm_visit_node((const pm_node_t *) cast->pattern, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->pattern, visitor, data);
 
             break;
         }
@@ -1316,10 +1418,10 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_match_required_node_t *cast = (const pm_match_required_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             // Visit the pattern field
-            if (!pm_visit_node((const pm_node_t *) cast->pattern, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->pattern, visitor, data);
 
             break;
         }
@@ -1327,12 +1429,12 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_match_write_node_t *cast = (const pm_match_write_node_t *) node;
 
             // Visit the call field
-            if (!pm_visit_node((const pm_node_t *) cast->call, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->call, visitor, data);
 
             // Visit the targets field
             const pm_node_list_t *targets = &cast->targets;
             for (size_t index = 0; index < targets->size; index++) {
-                if (!pm_visit_node(targets->nodes[index], visitor, data)) return false;
+                pm_visit_node(targets->nodes[index], visitor, data);
             }
 
             break;
@@ -1341,10 +1443,12 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_module_node_t *cast = (const pm_module_node_t *) node;
 
             // Visit the constant_path field
-            if (!pm_visit_node((const pm_node_t *) cast->constant_path, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->constant_path, visitor, data);
 
             // Visit the body field
-            if (cast->body != NULL && !pm_visit_node((const pm_node_t *) cast->body, visitor, data)) return false;
+            if (cast->body != NULL) {
+                pm_visit_node((const pm_node_t *) cast->body, visitor, data);
+            }
 
             break;
         }
@@ -1354,16 +1458,18 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the lefts field
             const pm_node_list_t *lefts = &cast->lefts;
             for (size_t index = 0; index < lefts->size; index++) {
-                if (!pm_visit_node(lefts->nodes[index], visitor, data)) return false;
+                pm_visit_node(lefts->nodes[index], visitor, data);
             }
 
             // Visit the rest field
-            if (cast->rest != NULL && !pm_visit_node((const pm_node_t *) cast->rest, visitor, data)) return false;
+            if (cast->rest != NULL) {
+                pm_visit_node((const pm_node_t *) cast->rest, visitor, data);
+            }
 
             // Visit the rights field
             const pm_node_list_t *rights = &cast->rights;
             for (size_t index = 0; index < rights->size; index++) {
-                if (!pm_visit_node(rights->nodes[index], visitor, data)) return false;
+                pm_visit_node(rights->nodes[index], visitor, data);
             }
 
             break;
@@ -1374,20 +1480,22 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the lefts field
             const pm_node_list_t *lefts = &cast->lefts;
             for (size_t index = 0; index < lefts->size; index++) {
-                if (!pm_visit_node(lefts->nodes[index], visitor, data)) return false;
+                pm_visit_node(lefts->nodes[index], visitor, data);
             }
 
             // Visit the rest field
-            if (cast->rest != NULL && !pm_visit_node((const pm_node_t *) cast->rest, visitor, data)) return false;
+            if (cast->rest != NULL) {
+                pm_visit_node((const pm_node_t *) cast->rest, visitor, data);
+            }
 
             // Visit the rights field
             const pm_node_list_t *rights = &cast->rights;
             for (size_t index = 0; index < rights->size; index++) {
-                if (!pm_visit_node(rights->nodes[index], visitor, data)) return false;
+                pm_visit_node(rights->nodes[index], visitor, data);
             }
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1395,7 +1503,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_next_node_t *cast = (const pm_next_node_t *) node;
 
             // Visit the arguments field
-            if (cast->arguments != NULL && !pm_visit_node((const pm_node_t *) cast->arguments, visitor, data)) return false;
+            if (cast->arguments != NULL) {
+                pm_visit_node((const pm_node_t *) cast->arguments, visitor, data);
+            }
 
             break;
         }
@@ -1413,7 +1523,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_optional_keyword_parameter_node_t *cast = (const pm_optional_keyword_parameter_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1421,7 +1531,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_optional_parameter_node_t *cast = (const pm_optional_parameter_node_t *) node;
 
             // Visit the value field
-            if (!pm_visit_node((const pm_node_t *) cast->value, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->value, visitor, data);
 
             break;
         }
@@ -1429,10 +1539,10 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_or_node_t *cast = (const pm_or_node_t *) node;
 
             // Visit the left field
-            if (!pm_visit_node((const pm_node_t *) cast->left, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->left, visitor, data);
 
             // Visit the right field
-            if (!pm_visit_node((const pm_node_t *) cast->right, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->right, visitor, data);
 
             break;
         }
@@ -1442,35 +1552,41 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the requireds field
             const pm_node_list_t *requireds = &cast->requireds;
             for (size_t index = 0; index < requireds->size; index++) {
-                if (!pm_visit_node(requireds->nodes[index], visitor, data)) return false;
+                pm_visit_node(requireds->nodes[index], visitor, data);
             }
 
             // Visit the optionals field
             const pm_node_list_t *optionals = &cast->optionals;
             for (size_t index = 0; index < optionals->size; index++) {
-                if (!pm_visit_node(optionals->nodes[index], visitor, data)) return false;
+                pm_visit_node(optionals->nodes[index], visitor, data);
             }
 
             // Visit the rest field
-            if (cast->rest != NULL && !pm_visit_node((const pm_node_t *) cast->rest, visitor, data)) return false;
+            if (cast->rest != NULL) {
+                pm_visit_node((const pm_node_t *) cast->rest, visitor, data);
+            }
 
             // Visit the posts field
             const pm_node_list_t *posts = &cast->posts;
             for (size_t index = 0; index < posts->size; index++) {
-                if (!pm_visit_node(posts->nodes[index], visitor, data)) return false;
+                pm_visit_node(posts->nodes[index], visitor, data);
             }
 
             // Visit the keywords field
             const pm_node_list_t *keywords = &cast->keywords;
             for (size_t index = 0; index < keywords->size; index++) {
-                if (!pm_visit_node(keywords->nodes[index], visitor, data)) return false;
+                pm_visit_node(keywords->nodes[index], visitor, data);
             }
 
             // Visit the keyword_rest field
-            if (cast->keyword_rest != NULL && !pm_visit_node((const pm_node_t *) cast->keyword_rest, visitor, data)) return false;
+            if (cast->keyword_rest != NULL) {
+                pm_visit_node((const pm_node_t *) cast->keyword_rest, visitor, data);
+            }
 
             // Visit the block field
-            if (cast->block != NULL && !pm_visit_node((const pm_node_t *) cast->block, visitor, data)) return false;
+            if (cast->block != NULL) {
+                pm_visit_node((const pm_node_t *) cast->block, visitor, data);
+            }
 
             break;
         }
@@ -1478,7 +1594,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_parentheses_node_t *cast = (const pm_parentheses_node_t *) node;
 
             // Visit the body field
-            if (cast->body != NULL && !pm_visit_node((const pm_node_t *) cast->body, visitor, data)) return false;
+            if (cast->body != NULL) {
+                pm_visit_node((const pm_node_t *) cast->body, visitor, data);
+            }
 
             break;
         }
@@ -1486,7 +1604,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_pinned_expression_node_t *cast = (const pm_pinned_expression_node_t *) node;
 
             // Visit the expression field
-            if (!pm_visit_node((const pm_node_t *) cast->expression, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->expression, visitor, data);
 
             break;
         }
@@ -1494,7 +1612,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_pinned_variable_node_t *cast = (const pm_pinned_variable_node_t *) node;
 
             // Visit the variable field
-            if (!pm_visit_node((const pm_node_t *) cast->variable, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->variable, visitor, data);
 
             break;
         }
@@ -1502,7 +1620,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_post_execution_node_t *cast = (const pm_post_execution_node_t *) node;
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             break;
         }
@@ -1510,7 +1630,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_pre_execution_node_t *cast = (const pm_pre_execution_node_t *) node;
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             break;
         }
@@ -1518,7 +1640,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_program_node_t *cast = (const pm_program_node_t *) node;
 
             // Visit the statements field
-            if (!pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
 
             break;
         }
@@ -1526,10 +1648,14 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_range_node_t *cast = (const pm_range_node_t *) node;
 
             // Visit the left field
-            if (cast->left != NULL && !pm_visit_node((const pm_node_t *) cast->left, visitor, data)) return false;
+            if (cast->left != NULL) {
+                pm_visit_node((const pm_node_t *) cast->left, visitor, data);
+            }
 
             // Visit the right field
-            if (cast->right != NULL && !pm_visit_node((const pm_node_t *) cast->right, visitor, data)) return false;
+            if (cast->right != NULL) {
+                pm_visit_node((const pm_node_t *) cast->right, visitor, data);
+            }
 
             break;
         }
@@ -1547,10 +1673,10 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_rescue_modifier_node_t *cast = (const pm_rescue_modifier_node_t *) node;
 
             // Visit the expression field
-            if (!pm_visit_node((const pm_node_t *) cast->expression, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->expression, visitor, data);
 
             // Visit the rescue_expression field
-            if (!pm_visit_node((const pm_node_t *) cast->rescue_expression, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->rescue_expression, visitor, data);
 
             break;
         }
@@ -1560,17 +1686,23 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the exceptions field
             const pm_node_list_t *exceptions = &cast->exceptions;
             for (size_t index = 0; index < exceptions->size; index++) {
-                if (!pm_visit_node(exceptions->nodes[index], visitor, data)) return false;
+                pm_visit_node(exceptions->nodes[index], visitor, data);
             }
 
             // Visit the reference field
-            if (cast->reference != NULL && !pm_visit_node((const pm_node_t *) cast->reference, visitor, data)) return false;
+            if (cast->reference != NULL) {
+                pm_visit_node((const pm_node_t *) cast->reference, visitor, data);
+            }
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             // Visit the subsequent field
-            if (cast->subsequent != NULL && !pm_visit_node((const pm_node_t *) cast->subsequent, visitor, data)) return false;
+            if (cast->subsequent != NULL) {
+                pm_visit_node((const pm_node_t *) cast->subsequent, visitor, data);
+            }
 
             break;
         }
@@ -1582,7 +1714,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_return_node_t *cast = (const pm_return_node_t *) node;
 
             // Visit the arguments field
-            if (cast->arguments != NULL && !pm_visit_node((const pm_node_t *) cast->arguments, visitor, data)) return false;
+            if (cast->arguments != NULL) {
+                pm_visit_node((const pm_node_t *) cast->arguments, visitor, data);
+            }
 
             break;
         }
@@ -1592,7 +1726,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_shareable_constant_node_t *cast = (const pm_shareable_constant_node_t *) node;
 
             // Visit the write field
-            if (!pm_visit_node((const pm_node_t *) cast->write, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->write, visitor, data);
 
             break;
         }
@@ -1600,10 +1734,12 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_singleton_class_node_t *cast = (const pm_singleton_class_node_t *) node;
 
             // Visit the expression field
-            if (!pm_visit_node((const pm_node_t *) cast->expression, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->expression, visitor, data);
 
             // Visit the body field
-            if (cast->body != NULL && !pm_visit_node((const pm_node_t *) cast->body, visitor, data)) return false;
+            if (cast->body != NULL) {
+                pm_visit_node((const pm_node_t *) cast->body, visitor, data);
+            }
 
             break;
         }
@@ -1617,7 +1753,9 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_splat_node_t *cast = (const pm_splat_node_t *) node;
 
             // Visit the expression field
-            if (cast->expression != NULL && !pm_visit_node((const pm_node_t *) cast->expression, visitor, data)) return false;
+            if (cast->expression != NULL) {
+                pm_visit_node((const pm_node_t *) cast->expression, visitor, data);
+            }
 
             break;
         }
@@ -1627,7 +1765,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the body field
             const pm_node_list_t *body = &cast->body;
             for (size_t index = 0; index < body->size; index++) {
-                if (!pm_visit_node(body->nodes[index], visitor, data)) return false;
+                pm_visit_node(body->nodes[index], visitor, data);
             }
 
             break;
@@ -1638,10 +1776,14 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_super_node_t *cast = (const pm_super_node_t *) node;
 
             // Visit the arguments field
-            if (cast->arguments != NULL && !pm_visit_node((const pm_node_t *) cast->arguments, visitor, data)) return false;
+            if (cast->arguments != NULL) {
+                pm_visit_node((const pm_node_t *) cast->arguments, visitor, data);
+            }
 
             // Visit the block field
-            if (cast->block != NULL && !pm_visit_node((const pm_node_t *) cast->block, visitor, data)) return false;
+            if (cast->block != NULL) {
+                pm_visit_node((const pm_node_t *) cast->block, visitor, data);
+            }
 
             break;
         }
@@ -1655,7 +1797,7 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the names field
             const pm_node_list_t *names = &cast->names;
             for (size_t index = 0; index < names->size; index++) {
-                if (!pm_visit_node(names->nodes[index], visitor, data)) return false;
+                pm_visit_node(names->nodes[index], visitor, data);
             }
 
             break;
@@ -1664,13 +1806,17 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_unless_node_t *cast = (const pm_unless_node_t *) node;
 
             // Visit the predicate field
-            if (!pm_visit_node((const pm_node_t *) cast->predicate, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->predicate, visitor, data);
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             // Visit the else_clause field
-            if (cast->else_clause != NULL && !pm_visit_node((const pm_node_t *) cast->else_clause, visitor, data)) return false;
+            if (cast->else_clause != NULL) {
+                pm_visit_node((const pm_node_t *) cast->else_clause, visitor, data);
+            }
 
             break;
         }
@@ -1678,10 +1824,12 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_until_node_t *cast = (const pm_until_node_t *) node;
 
             // Visit the predicate field
-            if (!pm_visit_node((const pm_node_t *) cast->predicate, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->predicate, visitor, data);
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             break;
         }
@@ -1691,11 +1839,13 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             // Visit the conditions field
             const pm_node_list_t *conditions = &cast->conditions;
             for (size_t index = 0; index < conditions->size; index++) {
-                if (!pm_visit_node(conditions->nodes[index], visitor, data)) return false;
+                pm_visit_node(conditions->nodes[index], visitor, data);
             }
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             break;
         }
@@ -1703,10 +1853,12 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_while_node_t *cast = (const pm_while_node_t *) node;
 
             // Visit the predicate field
-            if (!pm_visit_node((const pm_node_t *) cast->predicate, visitor, data)) return false;
+            pm_visit_node((const pm_node_t *) cast->predicate, visitor, data);
 
             // Visit the statements field
-            if (cast->statements != NULL && !pm_visit_node((const pm_node_t *) cast->statements, visitor, data)) return false;
+            if (cast->statements != NULL) {
+                pm_visit_node((const pm_node_t *) cast->statements, visitor, data);
+            }
 
             break;
         }
@@ -1716,15 +1868,15 @@ pm_visit_child_nodes(const pm_node_t *node, pm_visit_callback_t visitor, void *d
             const pm_yield_node_t *cast = (const pm_yield_node_t *) node;
 
             // Visit the arguments field
-            if (cast->arguments != NULL && !pm_visit_node((const pm_node_t *) cast->arguments, visitor, data)) return false;
+            if (cast->arguments != NULL) {
+                pm_visit_node((const pm_node_t *) cast->arguments, visitor, data);
+            }
 
             break;
         }
         case PM_SCOPE_NODE:
             break;
     }
-
-    return true;
 }
 
 /**

@@ -15,10 +15,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * A scope of locals surrounding the code that is being parsed.
  */
@@ -339,8 +335,7 @@ PRISM_EXPORTED_FUNCTION const pm_string_t * pm_options_scope_local(const pm_opti
 
 /**
  * Return a mutable pointer to the local at the given index within the given
- * scope, for setting the local's name with pm_string_init. The parser copies
- * the name when it is created, so its bytes must remain valid until then.
+ * scope.
  *
  * @param scope The scope struct to get the local from.
  * @param index The index of the local to get.
@@ -355,9 +350,5 @@ PRISM_EXPORTED_FUNCTION pm_string_t * pm_options_scope_local_mut(pm_options_scop
  * @param forwarding The forwarding value to set.
  */
 PRISM_EXPORTED_FUNCTION void pm_options_scope_forwarding_set(pm_options_scope_t *scope, uint8_t forwarding) PRISM_NONNULL(1);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

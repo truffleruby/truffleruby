@@ -1,3 +1,0 @@
-x = def f = foo 1 rescue z, y
-                          ^ invalid comma
-

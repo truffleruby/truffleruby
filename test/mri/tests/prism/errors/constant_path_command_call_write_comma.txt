@@ -1,3 +1,0 @@
-x = Foo::Bar { }, q
-                ^ invalid comma
-

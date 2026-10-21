@@ -1,10 +1,10 @@
-@ ProgramNode (location: (1,0)-(17,34))
+@ ProgramNode (location: (1,0)-(11,35))
 ├── flags: ∅
-├── locals: [:x, :y]
+├── locals: []
 └── statements:
-    @ StatementsNode (location: (1,0)-(17,34))
+    @ StatementsNode (location: (1,0)-(11,35))
     ├── flags: ∅
-    └── body: (length: 9)
+    └── body: (length: 6)
         ├── @ DefNode (location: (1,0)-(1,18))
         │   ├── flags: newline
         │   ├── name: :f
@@ -334,273 +334,84 @@
         │   ├── closing_loc: (9,38)-(9,39) = ")"
         │   ├── equal_loc: ∅
         │   └── block: ∅
-        ├── @ CallNode (location: (11,0)-(11,35))
-        │   ├── flags: newline, ignore_visibility
-        │   ├── receiver: ∅
-        │   ├── call_operator_loc: ∅
-        │   ├── name: :baz
-        │   ├── message_loc: (11,0)-(11,3) = "baz"
-        │   ├── opening_loc: ∅
-        │   ├── arguments:
-        │   │   @ ArgumentsNode (location: (11,4)-(11,35))
-        │   │   ├── flags: ∅
-        │   │   └── arguments: (length: 1)
-        │   │       └── @ DefNode (location: (11,4)-(11,35))
-        │   │           ├── flags: ∅
-        │   │           ├── name: :f
-        │   │           ├── name_loc: (11,8)-(11,9) = "f"
-        │   │           ├── receiver: ∅
-        │   │           ├── parameters: ∅
-        │   │           ├── body:
-        │   │           │   @ StatementsNode (location: (11,12)-(11,35))
-        │   │           │   ├── flags: ∅
-        │   │           │   └── body: (length: 1)
-        │   │           │       └── @ RescueModifierNode (location: (11,12)-(11,35))
-        │   │           │           ├── flags: ∅
-        │   │           │           ├── expression:
-        │   │           │           │   @ RescueModifierNode (location: (11,12)-(11,22))
-        │   │           │           │   ├── flags: ∅
-        │   │           │           │   ├── expression:
-        │   │           │           │   │   @ CallNode (location: (11,12)-(11,13))
-        │   │           │           │   │   ├── flags: variable_call, ignore_visibility
-        │   │           │           │   │   ├── receiver: ∅
-        │   │           │           │   │   ├── call_operator_loc: ∅
-        │   │           │           │   │   ├── name: :a
-        │   │           │           │   │   ├── message_loc: (11,12)-(11,13) = "a"
-        │   │           │           │   │   ├── opening_loc: ∅
-        │   │           │           │   │   ├── arguments: ∅
-        │   │           │           │   │   ├── closing_loc: ∅
-        │   │           │           │   │   ├── equal_loc: ∅
-        │   │           │           │   │   └── block: ∅
-        │   │           │           │   ├── keyword_loc: (11,14)-(11,20) = "rescue"
-        │   │           │           │   └── rescue_expression:
-        │   │           │           │       @ CallNode (location: (11,21)-(11,22))
-        │   │           │           │       ├── flags: variable_call, ignore_visibility
-        │   │           │           │       ├── receiver: ∅
-        │   │           │           │       ├── call_operator_loc: ∅
-        │   │           │           │       ├── name: :b
-        │   │           │           │       ├── message_loc: (11,21)-(11,22) = "b"
-        │   │           │           │       ├── opening_loc: ∅
-        │   │           │           │       ├── arguments: ∅
-        │   │           │           │       ├── closing_loc: ∅
-        │   │           │           │       ├── equal_loc: ∅
-        │   │           │           │       └── block: ∅
-        │   │           │           ├── keyword_loc: (11,23)-(11,29) = "rescue"
-        │   │           │           └── rescue_expression:
-        │   │           │               @ CallNode (location: (11,30)-(11,35))
-        │   │           │               ├── flags: ignore_visibility
-        │   │           │               ├── receiver: ∅
-        │   │           │               ├── call_operator_loc: ∅
-        │   │           │               ├── name: :c
-        │   │           │               ├── message_loc: (11,30)-(11,31) = "c"
-        │   │           │               ├── opening_loc: ∅
-        │   │           │               ├── arguments: ∅
-        │   │           │               ├── closing_loc: ∅
-        │   │           │               ├── equal_loc: ∅
-        │   │           │               └── block:
-        │   │           │                   @ BlockNode (location: (11,32)-(11,35))
-        │   │           │                   ├── flags: ∅
-        │   │           │                   ├── locals: []
-        │   │           │                   ├── parameters: ∅
-        │   │           │                   ├── body: ∅
-        │   │           │                   ├── opening_loc: (11,32)-(11,33) = "{"
-        │   │           │                   └── closing_loc: (11,34)-(11,35) = "}"
-        │   │           ├── locals: []
-        │   │           ├── def_keyword_loc: (11,4)-(11,7) = "def"
-        │   │           ├── operator_loc: ∅
-        │   │           ├── lparen_loc: ∅
-        │   │           ├── rparen_loc: ∅
-        │   │           ├── equal_loc: (11,10)-(11,11) = "="
-        │   │           └── end_keyword_loc: ∅
-        │   ├── closing_loc: ∅
-        │   ├── equal_loc: ∅
-        │   └── block: ∅
-        ├── @ RescueModifierNode (location: (13,0)-(13,22))
-        │   ├── flags: newline
-        │   ├── expression:
-        │   │   @ CallNode (location: (13,0)-(13,1))
-        │   │   ├── flags: variable_call, ignore_visibility
-        │   │   ├── receiver: ∅
-        │   │   ├── call_operator_loc: ∅
-        │   │   ├── name: :a
-        │   │   ├── message_loc: (13,0)-(13,1) = "a"
-        │   │   ├── opening_loc: ∅
-        │   │   ├── arguments: ∅
-        │   │   ├── closing_loc: ∅
-        │   │   ├── equal_loc: ∅
-        │   │   └── block: ∅
-        │   ├── keyword_loc: (13,2)-(13,8) = "rescue"
-        │   └── rescue_expression:
-        │       @ DefNode (location: (13,9)-(13,22))
-        │       ├── flags: ∅
-        │       ├── name: :f
-        │       ├── name_loc: (13,13)-(13,14) = "f"
-        │       ├── receiver: ∅
-        │       ├── parameters: ∅
-        │       ├── body:
-        │       │   @ StatementsNode (location: (13,17)-(13,22))
-        │       │   ├── flags: ∅
-        │       │   └── body: (length: 1)
-        │       │       └── @ CallNode (location: (13,17)-(13,22))
-        │       │           ├── flags: ignore_visibility
-        │       │           ├── receiver: ∅
-        │       │           ├── call_operator_loc: ∅
-        │       │           ├── name: :foo
-        │       │           ├── message_loc: (13,17)-(13,20) = "foo"
-        │       │           ├── opening_loc: ∅
-        │       │           ├── arguments:
-        │       │           │   @ ArgumentsNode (location: (13,21)-(13,22))
-        │       │           │   ├── flags: ∅
-        │       │           │   └── arguments: (length: 1)
-        │       │           │       └── @ IntegerNode (location: (13,21)-(13,22))
-        │       │           │           ├── flags: static_literal, decimal
-        │       │           │           └── value: 1
-        │       │           ├── closing_loc: ∅
-        │       │           ├── equal_loc: ∅
-        │       │           └── block: ∅
-        │       ├── locals: []
-        │       ├── def_keyword_loc: (13,9)-(13,12) = "def"
-        │       ├── operator_loc: ∅
-        │       ├── lparen_loc: ∅
-        │       ├── rparen_loc: ∅
-        │       ├── equal_loc: (13,15)-(13,16) = "="
-        │       └── end_keyword_loc: ∅
-        ├── @ LocalVariableWriteNode (location: (15,0)-(15,25))
-        │   ├── flags: newline
-        │   ├── name: :x
-        │   ├── depth: 0
-        │   ├── name_loc: (15,0)-(15,1) = "x"
-        │   ├── value:
-        │   │   @ ArrayNode (location: (15,4)-(15,25))
-        │   │   ├── flags: ∅
-        │   │   ├── elements: (length: 2)
-        │   │   │   ├── @ DefNode (location: (15,4)-(15,22))
-        │   │   │   │   ├── flags: ∅
-        │   │   │   │   ├── name: :f
-        │   │   │   │   ├── name_loc: (15,8)-(15,9) = "f"
-        │   │   │   │   ├── receiver: ∅
-        │   │   │   │   ├── parameters: ∅
-        │   │   │   │   ├── body:
-        │   │   │   │   │   @ StatementsNode (location: (15,12)-(15,22))
-        │   │   │   │   │   ├── flags: ∅
-        │   │   │   │   │   └── body: (length: 1)
-        │   │   │   │   │       └── @ RescueModifierNode (location: (15,12)-(15,22))
-        │   │   │   │   │           ├── flags: ∅
-        │   │   │   │   │           ├── expression:
-        │   │   │   │   │           │   @ IntegerNode (location: (15,12)-(15,13))
-        │   │   │   │   │           │   ├── flags: static_literal, decimal
-        │   │   │   │   │           │   └── value: 1
-        │   │   │   │   │           ├── keyword_loc: (15,14)-(15,20) = "rescue"
-        │   │   │   │   │           └── rescue_expression:
-        │   │   │   │   │               @ CallNode (location: (15,21)-(15,22))
-        │   │   │   │   │               ├── flags: variable_call, ignore_visibility
-        │   │   │   │   │               ├── receiver: ∅
-        │   │   │   │   │               ├── call_operator_loc: ∅
-        │   │   │   │   │               ├── name: :z
-        │   │   │   │   │               ├── message_loc: (15,21)-(15,22) = "z"
-        │   │   │   │   │               ├── opening_loc: ∅
-        │   │   │   │   │               ├── arguments: ∅
-        │   │   │   │   │               ├── closing_loc: ∅
-        │   │   │   │   │               ├── equal_loc: ∅
-        │   │   │   │   │               └── block: ∅
-        │   │   │   │   ├── locals: []
-        │   │   │   │   ├── def_keyword_loc: (15,4)-(15,7) = "def"
-        │   │   │   │   ├── operator_loc: ∅
-        │   │   │   │   ├── lparen_loc: ∅
-        │   │   │   │   ├── rparen_loc: ∅
-        │   │   │   │   ├── equal_loc: (15,10)-(15,11) = "="
-        │   │   │   │   └── end_keyword_loc: ∅
-        │   │   │   └── @ CallNode (location: (15,24)-(15,25))
-        │   │   │       ├── flags: variable_call, ignore_visibility
-        │   │   │       ├── receiver: ∅
-        │   │   │       ├── call_operator_loc: ∅
-        │   │   │       ├── name: :y
-        │   │   │       ├── message_loc: (15,24)-(15,25) = "y"
-        │   │   │       ├── opening_loc: ∅
-        │   │   │       ├── arguments: ∅
-        │   │   │       ├── closing_loc: ∅
-        │   │   │       ├── equal_loc: ∅
-        │   │   │       └── block: ∅
-        │   │   ├── opening_loc: ∅
-        │   │   └── closing_loc: ∅
-        │   └── operator_loc: (15,2)-(15,3) = "="
-        └── @ LocalVariableWriteNode (location: (17,0)-(17,34))
-            ├── flags: newline
-            ├── name: :x
-            ├── depth: 0
-            ├── name_loc: (17,0)-(17,1) = "x"
-            ├── value:
-            │   @ ArrayNode (location: (17,4)-(17,34))
+        └── @ CallNode (location: (11,0)-(11,35))
+            ├── flags: newline, ignore_visibility
+            ├── receiver: ∅
+            ├── call_operator_loc: ∅
+            ├── name: :baz
+            ├── message_loc: (11,0)-(11,3) = "baz"
+            ├── opening_loc: ∅
+            ├── arguments:
+            │   @ ArgumentsNode (location: (11,4)-(11,35))
             │   ├── flags: ∅
-            │   ├── elements: (length: 2)
-            │   │   ├── @ LocalVariableWriteNode (location: (17,4)-(17,31))
-            │   │   │   ├── flags: ∅
-            │   │   │   ├── name: :y
-            │   │   │   ├── depth: 0
-            │   │   │   ├── name_loc: (17,4)-(17,5) = "y"
-            │   │   │   ├── value:
-            │   │   │   │   @ DefNode (location: (17,8)-(17,31))
-            │   │   │   │   ├── flags: ∅
-            │   │   │   │   ├── name: :f
-            │   │   │   │   ├── name_loc: (17,12)-(17,13) = "f"
-            │   │   │   │   ├── receiver: ∅
-            │   │   │   │   ├── parameters: ∅
-            │   │   │   │   ├── body:
-            │   │   │   │   │   @ StatementsNode (location: (17,16)-(17,31))
-            │   │   │   │   │   ├── flags: ∅
-            │   │   │   │   │   └── body: (length: 1)
-            │   │   │   │   │       └── @ RescueModifierNode (location: (17,16)-(17,31))
-            │   │   │   │   │           ├── flags: ∅
-            │   │   │   │   │           ├── expression:
-            │   │   │   │   │           │   @ CallNode (location: (17,16)-(17,22))
-            │   │   │   │   │           │   ├── flags: ignore_visibility
-            │   │   │   │   │           │   ├── receiver: ∅
-            │   │   │   │   │           │   ├── call_operator_loc: ∅
-            │   │   │   │   │           │   ├── name: :foo
-            │   │   │   │   │           │   ├── message_loc: (17,16)-(17,19) = "foo"
-            │   │   │   │   │           │   ├── opening_loc: (17,19)-(17,20) = "("
-            │   │   │   │   │           │   ├── arguments:
-            │   │   │   │   │           │   │   @ ArgumentsNode (location: (17,20)-(17,21))
-            │   │   │   │   │           │   │   ├── flags: ∅
-            │   │   │   │   │           │   │   └── arguments: (length: 1)
-            │   │   │   │   │           │   │       └── @ IntegerNode (location: (17,20)-(17,21))
-            │   │   │   │   │           │   │           ├── flags: static_literal, decimal
-            │   │   │   │   │           │   │           └── value: 1
-            │   │   │   │   │           │   ├── closing_loc: (17,21)-(17,22) = ")"
-            │   │   │   │   │           │   ├── equal_loc: ∅
-            │   │   │   │   │           │   └── block: ∅
-            │   │   │   │   │           ├── keyword_loc: (17,23)-(17,29) = "rescue"
-            │   │   │   │   │           └── rescue_expression:
-            │   │   │   │   │               @ CallNode (location: (17,30)-(17,31))
-            │   │   │   │   │               ├── flags: variable_call, ignore_visibility
-            │   │   │   │   │               ├── receiver: ∅
-            │   │   │   │   │               ├── call_operator_loc: ∅
-            │   │   │   │   │               ├── name: :z
-            │   │   │   │   │               ├── message_loc: (17,30)-(17,31) = "z"
-            │   │   │   │   │               ├── opening_loc: ∅
-            │   │   │   │   │               ├── arguments: ∅
-            │   │   │   │   │               ├── closing_loc: ∅
-            │   │   │   │   │               ├── equal_loc: ∅
-            │   │   │   │   │               └── block: ∅
-            │   │   │   │   ├── locals: []
-            │   │   │   │   ├── def_keyword_loc: (17,8)-(17,11) = "def"
-            │   │   │   │   ├── operator_loc: ∅
-            │   │   │   │   ├── lparen_loc: ∅
-            │   │   │   │   ├── rparen_loc: ∅
-            │   │   │   │   ├── equal_loc: (17,14)-(17,15) = "="
-            │   │   │   │   └── end_keyword_loc: ∅
-            │   │   │   └── operator_loc: (17,6)-(17,7) = "="
-            │   │   └── @ CallNode (location: (17,33)-(17,34))
-            │   │       ├── flags: variable_call, ignore_visibility
-            │   │       ├── receiver: ∅
-            │   │       ├── call_operator_loc: ∅
-            │   │       ├── name: :w
-            │   │       ├── message_loc: (17,33)-(17,34) = "w"
-            │   │       ├── opening_loc: ∅
-            │   │       ├── arguments: ∅
-            │   │       ├── closing_loc: ∅
-            │   │       ├── equal_loc: ∅
-            │   │       └── block: ∅
-            │   ├── opening_loc: ∅
-            │   └── closing_loc: ∅
-            └── operator_loc: (17,2)-(17,3) = "="
+            │   └── arguments: (length: 1)
+            │       └── @ DefNode (location: (11,4)-(11,35))
+            │           ├── flags: ∅
+            │           ├── name: :f
+            │           ├── name_loc: (11,8)-(11,9) = "f"
+            │           ├── receiver: ∅
+            │           ├── parameters: ∅
+            │           ├── body:
+            │           │   @ StatementsNode (location: (11,12)-(11,35))
+            │           │   ├── flags: ∅
+            │           │   └── body: (length: 1)
+            │           │       └── @ RescueModifierNode (location: (11,12)-(11,35))
+            │           │           ├── flags: ∅
+            │           │           ├── expression:
+            │           │           │   @ RescueModifierNode (location: (11,12)-(11,22))
+            │           │           │   ├── flags: ∅
+            │           │           │   ├── expression:
+            │           │           │   │   @ CallNode (location: (11,12)-(11,13))
+            │           │           │   │   ├── flags: variable_call, ignore_visibility
+            │           │           │   │   ├── receiver: ∅
+            │           │           │   │   ├── call_operator_loc: ∅
+            │           │           │   │   ├── name: :a
+            │           │           │   │   ├── message_loc: (11,12)-(11,13) = "a"
+            │           │           │   │   ├── opening_loc: ∅
+            │           │           │   │   ├── arguments: ∅
+            │           │           │   │   ├── closing_loc: ∅
+            │           │           │   │   ├── equal_loc: ∅
+            │           │           │   │   └── block: ∅
+            │           │           │   ├── keyword_loc: (11,14)-(11,20) = "rescue"
+            │           │           │   └── rescue_expression:
+            │           │           │       @ CallNode (location: (11,21)-(11,22))
+            │           │           │       ├── flags: variable_call, ignore_visibility
+            │           │           │       ├── receiver: ∅
+            │           │           │       ├── call_operator_loc: ∅
+            │           │           │       ├── name: :b
+            │           │           │       ├── message_loc: (11,21)-(11,22) = "b"
+            │           │           │       ├── opening_loc: ∅
+            │           │           │       ├── arguments: ∅
+            │           │           │       ├── closing_loc: ∅
+            │           │           │       ├── equal_loc: ∅
+            │           │           │       └── block: ∅
+            │           │           ├── keyword_loc: (11,23)-(11,29) = "rescue"
+            │           │           └── rescue_expression:
+            │           │               @ CallNode (location: (11,30)-(11,35))
+            │           │               ├── flags: ignore_visibility
+            │           │               ├── receiver: ∅
+            │           │               ├── call_operator_loc: ∅
+            │           │               ├── name: :c
+            │           │               ├── message_loc: (11,30)-(11,31) = "c"
+            │           │               ├── opening_loc: ∅
+            │           │               ├── arguments: ∅
+            │           │               ├── closing_loc: ∅
+            │           │               ├── equal_loc: ∅
+            │           │               └── block:
+            │           │                   @ BlockNode (location: (11,32)-(11,35))
+            │           │                   ├── flags: ∅
+            │           │                   ├── locals: []
+            │           │                   ├── parameters: ∅
+            │           │                   ├── body: ∅
+            │           │                   ├── opening_loc: (11,32)-(11,33) = "{"
+            │           │                   └── closing_loc: (11,34)-(11,35) = "}"
+            │           ├── locals: []
+            │           ├── def_keyword_loc: (11,4)-(11,7) = "def"
+            │           ├── operator_loc: ∅
+            │           ├── lparen_loc: ∅
+            │           ├── rparen_loc: ∅
+            │           ├── equal_loc: (11,10)-(11,11) = "="
+            │           └── end_keyword_loc: ∅
+            ├── closing_loc: ∅
+            ├── equal_loc: ∅
+            └── block: ∅

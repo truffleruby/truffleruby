@@ -1,7 +1,0 @@
-def f = not 1
-
-def f = not foo 1
-
-def f = not not foo 1
-
-if def f = not 1; end

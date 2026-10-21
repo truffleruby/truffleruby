@@ -20,10 +20,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  * A list of offsets of the start of lines in a string. The offsets are assumed
  * to be sorted/inserted in ascending order.
@@ -61,9 +57,5 @@ typedef struct {
  * @returns The line and column of the given offset.
  */
 PRISM_EXPORTED_FUNCTION pm_line_column_t pm_line_offset_list_line_column(const pm_line_offset_list_t *list, uint32_t cursor, int32_t start_line) PRISM_NONNULL(1);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

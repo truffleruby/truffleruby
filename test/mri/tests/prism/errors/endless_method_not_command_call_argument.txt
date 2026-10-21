@@ -1,6 +1,0 @@
-foo(a, def f = not foo 1)
-                       ^ unexpected integer; expected a `)` to close the arguments
-                       ^ unexpected integer, expecting end-of-input
-                        ^ unexpected ')', expecting end-of-input
-                        ^ unexpected ')', ignoring it
-

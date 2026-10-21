@@ -5,11 +5,8 @@
 #include "prism/internal/diagnostic.h"
 #include "prism/internal/encoding.h"
 #include "prism/internal/magic_comments.h"
-#include "prism/internal/xxh3.h"
 
-#include <assert.h>
 #include <stdlib.h>
-#include <string.h>
 
 /**
  * Register a callback that will be called whenever prism changes the encoding
@@ -107,19 +104,6 @@ pm_parser_constant_find(const pm_parser_t *parser, const uint8_t *start, size_t 
 }
 
 /**
- * Add a constant to the parser's constant pool, copying its bytes into the
- * parser's arena only if the constant is not already there.
- */
-pm_constant_id_t
-pm_parser_constant_insert(pm_parser_t *parser, const uint8_t *start, size_t length) {
-    pm_constant_id_t id = pm_constant_pool_find(&parser->constant_pool, start, length);
-    if (id != PM_CONSTANT_ID_UNSET) return id;
-
-    const uint8_t *copy = (const uint8_t *) pm_arena_memdup(&parser->metadata_arena, start, length, PRISM_ALIGNOF(uint8_t));
-    return pm_constant_pool_insert_constant(&parser->metadata_arena, &parser->constant_pool, copy, length);
-}
-
-/**
  * Returns the frozen string literal value of the parser.
  */
 int8_t
@@ -145,22 +129,6 @@ pm_parser_line_offsets(const pm_parser_t *parser) {
 const pm_location_t *
 pm_parser_data_loc(const pm_parser_t *parser) {
     return &parser->data_loc;
-}
-
-/**
- * Returns the checksum of the source code that was parsed.
- */
-uint64_t
-pm_parser_checksum(const pm_parser_t *parser) {
-    const uint8_t *end = parser->end;
-
-    if (parser->data_loc.length != 0) {
-        const uint8_t *cursor = parser->start + parser->data_loc.start;
-        const uint8_t *newline = memchr(cursor, '\n', (size_t) (end - cursor));
-        if (newline != NULL) end = newline + 1;
-    }
-
-    return pm_xxh3(parser->start, (size_t) (end - parser->start));
 }
 
 /**
@@ -200,14 +168,6 @@ pm_comment_type(const pm_comment_t *comment) {
 }
 
 /**
- * Returns the comment that follows the given comment.
- */
-const pm_comment_t *
-pm_comment_next(const pm_comment_t *comment) {
-    return (const pm_comment_t *) comment->node.next;
-}
-
-/**
  * Returns the number of comments associated with the given parser.
  */
 size_t
@@ -216,11 +176,17 @@ pm_parser_comments_size(const pm_parser_t *parser) {
 }
 
 /**
- * Returns the first comment associated with the given parser.
+ * Iterates over the comments associated with the given parser and calls the
+ * given callback for each comment.
  */
-const pm_comment_t *
-pm_parser_comments_first(const pm_parser_t *parser) {
-    return (const pm_comment_t *) parser->comment_list.head;
+void
+pm_parser_comments_each(const pm_parser_t *parser, pm_comment_callback_t callback, void *data) {
+    const pm_list_node_t *current = parser->comment_list.head;
+    while (current != NULL) {
+        const pm_comment_t *comment = (const pm_comment_t *) current;
+        callback(comment, data);
+        current = current->next;
+    }
 }
 
 /**
@@ -287,14 +253,6 @@ pm_magic_comment_value(const pm_magic_comment_t *magic_comment) {
 }
 
 /**
- * Returns the magic comment that follows the given magic comment.
- */
-const pm_magic_comment_t *
-pm_magic_comment_next(const pm_magic_comment_t *magic_comment) {
-    return (const pm_magic_comment_t *) magic_comment->node.next;
-}
-
-/**
  * Returns the number of magic comments associated with the given parser.
  */
 size_t
@@ -303,11 +261,17 @@ pm_parser_magic_comments_size(const pm_parser_t *parser) {
 }
 
 /**
- * Returns the first magic comment associated with the given parser.
+ * Iterates over the magic comments associated with the given parser and calls
+ * the given callback for each magic comment.
  */
-const pm_magic_comment_t *
-pm_parser_magic_comments_first(const pm_parser_t *parser) {
-    return (const pm_magic_comment_t *) parser->magic_comment_list.head;
+void
+pm_parser_magic_comments_each(const pm_parser_t *parser, pm_magic_comment_callback_t callback, void *data) {
+    const pm_list_node_t *current = parser->magic_comment_list.head;
+    while (current != NULL) {
+        const pm_magic_comment_t *magic_comment = (const pm_magic_comment_t *) current;
+        callback(magic_comment, data);
+        current = current->next;
+    }
 }
 
 /**
@@ -326,20 +290,32 @@ pm_parser_warnings_size(const pm_parser_t *parser) {
     return parser->warning_list.size;
 }
 
-/**
- * Returns the first error associated with the given parser.
- */
-const pm_diagnostic_t *
-pm_parser_errors_first(const pm_parser_t *parser) {
-    return (const pm_diagnostic_t *) parser->error_list.head;
+static inline void
+pm_parser_diagnostics_each(const pm_list_t *list, pm_diagnostic_callback_t callback, void *data) {
+    const pm_list_node_t *current = list->head;
+    while (current != NULL) {
+        const pm_diagnostic_t *diagnostic = (const pm_diagnostic_t *) current;
+        callback(diagnostic, data);
+        current = current->next;
+    }
 }
 
 /**
- * Returns the first warning associated with the given parser.
+ * Iterates over the errors associated with the given parser and calls the
+ * given callback for each error.
  */
-const pm_diagnostic_t *
-pm_parser_warnings_first(const pm_parser_t *parser) {
-    return (const pm_diagnostic_t *) parser->warning_list.head;
+void
+pm_parser_errors_each(const pm_parser_t *parser, pm_diagnostic_callback_t callback, void *data) {
+    pm_parser_diagnostics_each(&parser->error_list, callback, data);
+}
+
+/**
+ * Iterates over the warnings associated with the given parser and calls the
+ * given callback for each warning.
+ */
+void
+pm_parser_warnings_each(const pm_parser_t *parser, pm_diagnostic_callback_t callback, void *data) {
+    pm_parser_diagnostics_each(&parser->warning_list, callback, data);
 }
 
 /**
@@ -352,13 +328,15 @@ pm_parser_constants_size(const pm_parser_t *parser) {
 }
 
 /**
- * Returns the constant at the given index in the constant pool associated with
- * the given parser.
+ * Iterates over the constants in the constant pool associated with the given
+ * parser and calls the given callback for each constant.
  */
-const pm_constant_t *
-pm_parser_constant_at(const pm_parser_t *parser, size_t index) {
-    assert(index < parser->constant_pool.size);
-    return &parser->constant_pool.constants[index];
+void
+pm_parser_constants_each(const pm_parser_t *parser, pm_constant_callback_t callback, void *data) {
+    for (uint32_t index = 0; index < parser->constant_pool.size; index++) {
+        const pm_constant_t *constant = &parser->constant_pool.constants[index];
+        callback(constant, data);
+    }
 }
 
 /**

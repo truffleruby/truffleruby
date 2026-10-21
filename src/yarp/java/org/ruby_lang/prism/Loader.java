@@ -28,15 +28,6 @@ public class Loader {
         throw new AbstractMethodError("Loader.bytesToName(String) is not implemented");
     }
 
-    /**
-     * Whether to skip the bodies of DefNodes while loading. A lazily loaded
-     * DefNode has a null body until it is replaced with DefNode#getNonLazy(),
-     * which loads the whole DefNode again from the serialized output.
-     */
-    protected boolean loadDefNodesLazily() {
-        return false;
-    }
-
     private static final class ConstantPool {
 
         private final Loader loader;
@@ -87,8 +78,8 @@ public class Loader {
         expect((byte) 'S', "incorrect prism header");
         expect((byte) 'M', "incorrect prism header");
 
-        expect((byte) 2, "prism major version does not match");
-        expect((byte) 0, "prism minor version does not match");
+        expect((byte) 1, "prism major version does not match");
+        expect((byte) 9, "prism minor version does not match");
         expect((byte) 0, "prism patch version does not match");
 
         expect((byte) 1, "Loader.java requires no location fields in the serialized output");
@@ -100,10 +91,6 @@ public class Loader {
         this.encodingName = new String(encodingNameBytes, StandardCharsets.US_ASCII);
 
         source.setStartLine(loadVarSInt());
-
-        // Skip the 8-byte hash of the source, which this library does not expose.
-        buffer.getLong();
-
         source.setLineOffsets(loadLineOffsets());
 
         ParseResult.MagicComment[] magicComments = loadMagicComments();
@@ -118,7 +105,7 @@ public class Loader {
 
         Nodes.Node node;
         if (errors.length == 0) {
-            node = loadNodes(constantPoolBufferOffset, -1);
+            node = loadNode();
 
             int left = constantPoolBufferOffset - buffer.position();
             if (left != 0) {
@@ -201,6 +188,15 @@ public class Loader {
         }
 
         return warnings;
+    }
+
+    private Nodes.Node loadOptionalNode() {
+        if (buffer.get(buffer.position()) != 0) {
+            return loadNode();
+        } else {
+            buffer.position(buffer.position() + 1); // continue after the 0 byte
+            return null;
+        }
     }
 
     private String loadConstant() {
@@ -320,563 +316,345 @@ public class Loader {
         return negative ? result.negate() : result;
     }
 
-    private static final int LAZY_MARKER = 255;
+    private Nodes.Node loadNode() {
+        int type = buffer.get() & 0xFF;
+        int startOffset = loadVarUInt();
+        int length = loadVarUInt();
 
-    /**
-     * The stack of nodes that have been loaded but not yet attached to their
-     * parent, along with the lazy subtrees that are pending.
-     */
-    private static final class NodeStack {
-
-        private Nodes.Node[] nodes = new Nodes.Node[64];
-        private int size = 0;
-
-        /** For each pending lazy subtree, its marker position, start, and end. */
-        private int[] lazy = new int[3 * 8];
-        private int lazySize = 0;
-
-        void push(Nodes.Node node) {
-            if (size == nodes.length) {
-                nodes = java.util.Arrays.copyOf(nodes, size * 2);
-            }
-            nodes[size++] = node;
-        }
-
-        Nodes.Node pop() {
-            Nodes.Node node = nodes[--size];
-            nodes[size] = null;
-            return node;
-        }
-
-        void pushLazy(int marker, int start, int end) {
-            if (lazySize * 3 == lazy.length) {
-                lazy = java.util.Arrays.copyOf(lazy, lazy.length * 2);
-            }
-            lazy[lazySize * 3] = marker;
-            lazy[lazySize * 3 + 1] = start;
-            lazy[lazySize * 3 + 2] = end;
-            lazySize++;
-        }
-
-        /**
-         * Returns the marker position of the most recently pushed lazy
-         * subtree, or -1 if there is none. That subtree always belongs to the
-         * node whose record is being loaded, because the lazy subtrees of its
-         * descendants are popped when their own records are loaded.
-         */
-        int popLazy() {
-            return lazySize == 0 ? -1 : lazy[--lazySize * 3];
+        switch (type) {
+            case 1:
+                return new Nodes.AliasGlobalVariableNode(startOffset, length, loadNode(), loadNode());
+            case 2:
+                return new Nodes.AliasMethodNode(startOffset, length, loadNode(), loadNode());
+            case 3:
+                return new Nodes.AlternationPatternNode(startOffset, length, loadNode(), loadNode());
+            case 4:
+                return new Nodes.AndNode(startOffset, length, loadNode(), loadNode());
+            case 5:
+                return new Nodes.ArgumentsNode(startOffset, length, loadFlags(), loadNodes());
+            case 6:
+                return new Nodes.ArrayNode(startOffset, length, loadFlags(), loadNodes());
+            case 7:
+                return new Nodes.ArrayPatternNode(startOffset, length, loadOptionalNode(), loadNodes(), loadOptionalNode(), loadNodes());
+            case 8:
+                return new Nodes.AssocNode(startOffset, length, loadNode(), loadNode());
+            case 9:
+                return new Nodes.AssocSplatNode(startOffset, length, loadOptionalNode());
+            case 10:
+                return new Nodes.BackReferenceReadNode(startOffset, length, loadConstant());
+            case 11:
+                return new Nodes.BeginNode(startOffset, length, (Nodes.StatementsNode) loadOptionalNode(), (Nodes.RescueNode) loadOptionalNode(), (Nodes.ElseNode) loadOptionalNode(), (Nodes.EnsureNode) loadOptionalNode());
+            case 12:
+                return new Nodes.BlockArgumentNode(startOffset, length, loadOptionalNode());
+            case 13:
+                return new Nodes.BlockLocalVariableNode(startOffset, length, loadFlags(), loadConstant());
+            case 14:
+                return new Nodes.BlockNode(startOffset, length, loadConstants(), loadOptionalNode(), loadOptionalNode());
+            case 15:
+                return new Nodes.BlockParameterNode(startOffset, length, loadFlags(), loadOptionalConstant());
+            case 16:
+                return new Nodes.BlockParametersNode(startOffset, length, (Nodes.ParametersNode) loadOptionalNode(), loadBlockLocalVariableNodes());
+            case 17:
+                return new Nodes.BreakNode(startOffset, length, (Nodes.ArgumentsNode) loadOptionalNode());
+            case 18:
+                return new Nodes.CallAndWriteNode(startOffset, length, loadFlags(), loadOptionalNode(), loadConstant(), loadConstant(), loadNode());
+            case 19:
+                return new Nodes.CallNode(startOffset, length, loadFlags(), loadOptionalNode(), loadConstant(), (Nodes.ArgumentsNode) loadOptionalNode(), loadOptionalNode());
+            case 20:
+                return new Nodes.CallOperatorWriteNode(startOffset, length, loadFlags(), loadOptionalNode(), loadConstant(), loadConstant(), loadConstant(), loadNode());
+            case 21:
+                return new Nodes.CallOrWriteNode(startOffset, length, loadFlags(), loadOptionalNode(), loadConstant(), loadConstant(), loadNode());
+            case 22:
+                return new Nodes.CallTargetNode(startOffset, length, loadFlags(), loadNode(), loadConstant());
+            case 23:
+                return new Nodes.CapturePatternNode(startOffset, length, loadNode(), (Nodes.LocalVariableTargetNode) loadNode());
+            case 24:
+                return new Nodes.CaseMatchNode(startOffset, length, loadOptionalNode(), loadInNodes(), (Nodes.ElseNode) loadOptionalNode());
+            case 25:
+                return new Nodes.CaseNode(startOffset, length, loadOptionalNode(), loadWhenNodes(), (Nodes.ElseNode) loadOptionalNode());
+            case 26:
+                return new Nodes.ClassNode(startOffset, length, loadConstants(), loadNode(), loadOptionalNode(), loadOptionalNode(), loadConstant());
+            case 27:
+                return new Nodes.ClassVariableAndWriteNode(startOffset, length, loadConstant(), loadNode());
+            case 28:
+                return new Nodes.ClassVariableOperatorWriteNode(startOffset, length, loadConstant(), loadNode(), loadConstant());
+            case 29:
+                return new Nodes.ClassVariableOrWriteNode(startOffset, length, loadConstant(), loadNode());
+            case 30:
+                return new Nodes.ClassVariableReadNode(startOffset, length, loadConstant());
+            case 31:
+                return new Nodes.ClassVariableTargetNode(startOffset, length, loadConstant());
+            case 32:
+                return new Nodes.ClassVariableWriteNode(startOffset, length, loadConstant(), loadNode());
+            case 33:
+                return new Nodes.ConstantAndWriteNode(startOffset, length, loadConstant(), loadNode());
+            case 34:
+                return new Nodes.ConstantOperatorWriteNode(startOffset, length, loadConstant(), loadNode(), loadConstant());
+            case 35:
+                return new Nodes.ConstantOrWriteNode(startOffset, length, loadConstant(), loadNode());
+            case 36:
+                return new Nodes.ConstantPathAndWriteNode(startOffset, length, (Nodes.ConstantPathNode) loadNode(), loadNode());
+            case 37:
+                return new Nodes.ConstantPathNode(startOffset, length, loadOptionalNode(), loadOptionalConstant());
+            case 38:
+                return new Nodes.ConstantPathOperatorWriteNode(startOffset, length, (Nodes.ConstantPathNode) loadNode(), loadNode(), loadConstant());
+            case 39:
+                return new Nodes.ConstantPathOrWriteNode(startOffset, length, (Nodes.ConstantPathNode) loadNode(), loadNode());
+            case 40:
+                return new Nodes.ConstantPathTargetNode(startOffset, length, loadOptionalNode(), loadOptionalConstant());
+            case 41:
+                return new Nodes.ConstantPathWriteNode(startOffset, length, (Nodes.ConstantPathNode) loadNode(), loadNode());
+            case 42:
+                return new Nodes.ConstantReadNode(startOffset, length, loadConstant());
+            case 43:
+                return new Nodes.ConstantTargetNode(startOffset, length, loadConstant());
+            case 44:
+                return new Nodes.ConstantWriteNode(startOffset, length, loadConstant(), loadNode());
+            case 45:
+                return loadDefNode(startOffset, length);
+            case 46:
+                return new Nodes.DefinedNode(startOffset, length, loadNode());
+            case 47:
+                return new Nodes.ElseNode(startOffset, length, (Nodes.StatementsNode) loadOptionalNode());
+            case 48:
+                return new Nodes.EmbeddedStatementsNode(startOffset, length, (Nodes.StatementsNode) loadOptionalNode());
+            case 49:
+                return new Nodes.EmbeddedVariableNode(startOffset, length, loadNode());
+            case 50:
+                return new Nodes.EnsureNode(startOffset, length, (Nodes.StatementsNode) loadOptionalNode());
+            case 51:
+                return new Nodes.ErrorRecoveryNode(startOffset, length, loadOptionalNode());
+            case 52:
+                return new Nodes.FalseNode(startOffset, length);
+            case 53:
+                return new Nodes.FindPatternNode(startOffset, length, loadOptionalNode(), (Nodes.SplatNode) loadNode(), loadNodes(), (Nodes.SplatNode) loadNode());
+            case 54:
+                return new Nodes.FlipFlopNode(startOffset, length, loadFlags(), loadOptionalNode(), loadOptionalNode());
+            case 55:
+                return new Nodes.FloatNode(startOffset, length, buffer.getDouble());
+            case 56:
+                return new Nodes.ForNode(startOffset, length, loadNode(), loadNode(), (Nodes.StatementsNode) loadOptionalNode());
+            case 57:
+                return new Nodes.ForwardingArgumentsNode(startOffset, length);
+            case 58:
+                return new Nodes.ForwardingParameterNode(startOffset, length);
+            case 59:
+                return new Nodes.ForwardingSuperNode(startOffset, length, (Nodes.BlockNode) loadOptionalNode());
+            case 60:
+                return new Nodes.GlobalVariableAndWriteNode(startOffset, length, loadConstant(), loadNode());
+            case 61:
+                return new Nodes.GlobalVariableOperatorWriteNode(startOffset, length, loadConstant(), loadNode(), loadConstant());
+            case 62:
+                return new Nodes.GlobalVariableOrWriteNode(startOffset, length, loadConstant(), loadNode());
+            case 63:
+                return new Nodes.GlobalVariableReadNode(startOffset, length, loadConstant());
+            case 64:
+                return new Nodes.GlobalVariableTargetNode(startOffset, length, loadConstant());
+            case 65:
+                return new Nodes.GlobalVariableWriteNode(startOffset, length, loadConstant(), loadNode());
+            case 66:
+                return new Nodes.HashNode(startOffset, length, loadNodes());
+            case 67:
+                return new Nodes.HashPatternNode(startOffset, length, loadOptionalNode(), loadAssocNodes(), loadOptionalNode());
+            case 68:
+                return new Nodes.IfNode(startOffset, length, loadNode(), (Nodes.StatementsNode) loadOptionalNode(), loadOptionalNode());
+            case 69:
+                return new Nodes.ImaginaryNode(startOffset, length, loadNode());
+            case 70:
+                return new Nodes.ImplicitNode(startOffset, length, loadNode());
+            case 71:
+                return new Nodes.ImplicitRestNode(startOffset, length);
+            case 72:
+                return new Nodes.InNode(startOffset, length, loadNode(), (Nodes.StatementsNode) loadOptionalNode());
+            case 73:
+                return new Nodes.IndexAndWriteNode(startOffset, length, loadFlags(), loadOptionalNode(), (Nodes.ArgumentsNode) loadOptionalNode(), (Nodes.BlockArgumentNode) loadOptionalNode(), loadNode());
+            case 74:
+                return new Nodes.IndexOperatorWriteNode(startOffset, length, loadFlags(), loadOptionalNode(), (Nodes.ArgumentsNode) loadOptionalNode(), (Nodes.BlockArgumentNode) loadOptionalNode(), loadConstant(), loadNode());
+            case 75:
+                return new Nodes.IndexOrWriteNode(startOffset, length, loadFlags(), loadOptionalNode(), (Nodes.ArgumentsNode) loadOptionalNode(), (Nodes.BlockArgumentNode) loadOptionalNode(), loadNode());
+            case 76:
+                return new Nodes.IndexTargetNode(startOffset, length, loadFlags(), loadNode(), (Nodes.ArgumentsNode) loadOptionalNode(), (Nodes.BlockArgumentNode) loadOptionalNode());
+            case 77:
+                return new Nodes.InstanceVariableAndWriteNode(startOffset, length, loadConstant(), loadNode());
+            case 78:
+                return new Nodes.InstanceVariableOperatorWriteNode(startOffset, length, loadConstant(), loadNode(), loadConstant());
+            case 79:
+                return new Nodes.InstanceVariableOrWriteNode(startOffset, length, loadConstant(), loadNode());
+            case 80:
+                return new Nodes.InstanceVariableReadNode(startOffset, length, loadConstant());
+            case 81:
+                return new Nodes.InstanceVariableTargetNode(startOffset, length, loadConstant());
+            case 82:
+                return new Nodes.InstanceVariableWriteNode(startOffset, length, loadConstant(), loadNode());
+            case 83:
+                return new Nodes.IntegerNode(startOffset, length, loadFlags(), loadInteger());
+            case 84:
+                return new Nodes.InterpolatedMatchLastLineNode(startOffset, length, loadFlags(), loadNodes());
+            case 85:
+                return new Nodes.InterpolatedRegularExpressionNode(startOffset, length, loadFlags(), loadNodes());
+            case 86:
+                return new Nodes.InterpolatedStringNode(startOffset, length, loadFlags(), loadNodes());
+            case 87:
+                return new Nodes.InterpolatedSymbolNode(startOffset, length, loadNodes());
+            case 88:
+                return new Nodes.InterpolatedXStringNode(startOffset, length, loadNodes());
+            case 89:
+                return new Nodes.ItLocalVariableReadNode(startOffset, length);
+            case 90:
+                return new Nodes.ItParametersNode(startOffset, length);
+            case 91:
+                return new Nodes.KeywordHashNode(startOffset, length, loadFlags(), loadNodes());
+            case 92:
+                return new Nodes.KeywordRestParameterNode(startOffset, length, loadFlags(), loadOptionalConstant());
+            case 93:
+                return new Nodes.LambdaNode(startOffset, length, loadConstants(), loadOptionalNode(), loadOptionalNode());
+            case 94:
+                return new Nodes.LocalVariableAndWriteNode(startOffset, length, loadNode(), loadConstant(), loadVarUInt());
+            case 95:
+                return new Nodes.LocalVariableOperatorWriteNode(startOffset, length, loadNode(), loadConstant(), loadConstant(), loadVarUInt());
+            case 96:
+                return new Nodes.LocalVariableOrWriteNode(startOffset, length, loadNode(), loadConstant(), loadVarUInt());
+            case 97:
+                return new Nodes.LocalVariableReadNode(startOffset, length, loadConstant(), loadVarUInt());
+            case 98:
+                return new Nodes.LocalVariableTargetNode(startOffset, length, loadConstant(), loadVarUInt());
+            case 99:
+                return new Nodes.LocalVariableWriteNode(startOffset, length, loadConstant(), loadVarUInt(), loadNode());
+            case 100:
+                return new Nodes.MatchLastLineNode(startOffset, length, loadFlags(), loadString());
+            case 101:
+                return new Nodes.MatchPredicateNode(startOffset, length, loadNode(), loadNode());
+            case 102:
+                return new Nodes.MatchRequiredNode(startOffset, length, loadNode(), loadNode());
+            case 103:
+                return new Nodes.MatchWriteNode(startOffset, length, (Nodes.CallNode) loadNode(), loadLocalVariableTargetNodes());
+            case 104:
+                return new Nodes.ModuleNode(startOffset, length, loadConstants(), loadNode(), loadOptionalNode(), loadConstant());
+            case 105:
+                return new Nodes.MultiTargetNode(startOffset, length, loadNodes(), loadOptionalNode(), loadNodes());
+            case 106:
+                return new Nodes.MultiWriteNode(startOffset, length, loadNodes(), loadOptionalNode(), loadNodes(), loadNode());
+            case 107:
+                return new Nodes.NextNode(startOffset, length, (Nodes.ArgumentsNode) loadOptionalNode());
+            case 108:
+                return new Nodes.NilNode(startOffset, length);
+            case 109:
+                return new Nodes.NoBlockParameterNode(startOffset, length);
+            case 110:
+                return new Nodes.NoKeywordsParameterNode(startOffset, length);
+            case 111:
+                return new Nodes.NumberedParametersNode(startOffset, length, buffer.get());
+            case 112:
+                return new Nodes.NumberedReferenceReadNode(startOffset, length, loadVarUInt());
+            case 113:
+                return new Nodes.OptionalKeywordParameterNode(startOffset, length, loadFlags(), loadConstant(), loadNode());
+            case 114:
+                return new Nodes.OptionalParameterNode(startOffset, length, loadFlags(), loadConstant(), loadNode());
+            case 115:
+                return new Nodes.OrNode(startOffset, length, loadNode(), loadNode());
+            case 116:
+                return new Nodes.ParametersNode(startOffset, length, loadNodes(), loadOptionalParameterNodes(), loadOptionalNode(), loadNodes(), loadNodes(), loadOptionalNode(), loadOptionalNode());
+            case 117:
+                return new Nodes.ParenthesesNode(startOffset, length, loadFlags(), loadOptionalNode());
+            case 118:
+                return new Nodes.PinnedExpressionNode(startOffset, length, loadNode());
+            case 119:
+                return new Nodes.PinnedVariableNode(startOffset, length, loadNode());
+            case 120:
+                return new Nodes.PostExecutionNode(startOffset, length, (Nodes.StatementsNode) loadOptionalNode());
+            case 121:
+                return new Nodes.PreExecutionNode(startOffset, length, (Nodes.StatementsNode) loadOptionalNode());
+            case 122:
+                return new Nodes.ProgramNode(startOffset, length, loadConstants(), (Nodes.StatementsNode) loadNode());
+            case 123:
+                return new Nodes.RangeNode(startOffset, length, loadFlags(), loadOptionalNode(), loadOptionalNode());
+            case 124:
+                return new Nodes.RationalNode(startOffset, length, loadFlags(), loadInteger(), loadInteger());
+            case 125:
+                return new Nodes.RedoNode(startOffset, length);
+            case 126:
+                return new Nodes.RegularExpressionNode(startOffset, length, loadFlags(), loadString());
+            case 127:
+                return new Nodes.RequiredKeywordParameterNode(startOffset, length, loadFlags(), loadConstant());
+            case 128:
+                return new Nodes.RequiredParameterNode(startOffset, length, loadFlags(), loadConstant());
+            case 129:
+                return new Nodes.RescueModifierNode(startOffset, length, loadNode(), loadNode());
+            case 130:
+                return new Nodes.RescueNode(startOffset, length, loadNodes(), loadOptionalNode(), (Nodes.StatementsNode) loadOptionalNode(), (Nodes.RescueNode) loadOptionalNode());
+            case 131:
+                return new Nodes.RestParameterNode(startOffset, length, loadFlags(), loadOptionalConstant());
+            case 132:
+                return new Nodes.RetryNode(startOffset, length);
+            case 133:
+                return new Nodes.ReturnNode(startOffset, length, (Nodes.ArgumentsNode) loadOptionalNode());
+            case 134:
+                return new Nodes.SelfNode(startOffset, length);
+            case 135:
+                return new Nodes.ShareableConstantNode(startOffset, length, loadFlags(), loadNode());
+            case 136:
+                return new Nodes.SingletonClassNode(startOffset, length, loadConstants(), loadNode(), loadOptionalNode());
+            case 137:
+                return new Nodes.SourceEncodingNode(startOffset, length);
+            case 138:
+                return new Nodes.SourceFileNode(startOffset, length, loadFlags(), loadString());
+            case 139:
+                return new Nodes.SourceLineNode(startOffset, length);
+            case 140:
+                return new Nodes.SplatNode(startOffset, length, loadOptionalNode());
+            case 141:
+                return new Nodes.StatementsNode(startOffset, length, loadNodes());
+            case 142:
+                return new Nodes.StringNode(startOffset, length, loadFlags(), loadString());
+            case 143:
+                return new Nodes.SuperNode(startOffset, length, (Nodes.ArgumentsNode) loadOptionalNode(), loadOptionalNode());
+            case 144:
+                return new Nodes.SymbolNode(startOffset, length, loadFlags(), loadString());
+            case 145:
+                return new Nodes.TrueNode(startOffset, length);
+            case 146:
+                return new Nodes.UndefNode(startOffset, length, loadNodes());
+            case 147:
+                return new Nodes.UnlessNode(startOffset, length, loadNode(), (Nodes.StatementsNode) loadOptionalNode(), (Nodes.ElseNode) loadOptionalNode());
+            case 148:
+                return new Nodes.UntilNode(startOffset, length, loadFlags(), loadNode(), (Nodes.StatementsNode) loadOptionalNode());
+            case 149:
+                return new Nodes.WhenNode(startOffset, length, loadNodes(), (Nodes.StatementsNode) loadOptionalNode());
+            case 150:
+                return new Nodes.WhileNode(startOffset, length, loadFlags(), loadNode(), (Nodes.StatementsNode) loadOptionalNode());
+            case 151:
+                return new Nodes.XStringNode(startOffset, length, loadFlags(), loadString());
+            case 152:
+                return new Nodes.YieldNode(startOffset, length, (Nodes.ArgumentsNode) loadOptionalNode());
+            default:
+                throw new Error("Unknown node type: " + type);
         }
     }
 
-    /**
-     * Loads the nodes serialized from the current position, stopping at the
-     * given offset once a single root remains, and returns that root. Nodes
-     * are serialized in post-order, so the children of each node are the
-     * topmost values on the stack, in field order, by the time its record is
-     * loaded. The lazy marker at eagerMarker, if any, is loaded eagerly even
-     * when DefNodes are loaded lazily.
-     */
-    private Nodes.Node loadNodes(int end, int eagerMarker) {
-        boolean lazy = loadDefNodesLazily();
-        NodeStack stack = new NodeStack();
-
-        while (buffer.position() < end || stack.size != 1) {
-            if (stack.lazySize > 0 && buffer.position() == stack.lazy[stack.lazySize * 3 - 2]) {
-                buffer.position(stack.lazy[stack.lazySize * 3 - 1]);
-                continue;
-            }
-
-            int type = buffer.get() & 0xFF;
-            switch (type) {
-                case 0:
-                    stack.push(null);
-                    break;
-                case LAZY_MARKER: {
-                    int marker = buffer.position() - 1;
-                    int skip = buffer.getInt();
-                    int length = buffer.getInt();
-                    if (lazy && marker != eagerMarker) {
-                        int start = buffer.position() + skip;
-                        stack.pushLazy(marker, start, start + length);
-                    }
-                    break;
-                }
-                case 1:
-                    stack.push(loadAliasGlobalVariableNode(stack));
-                    break;
-                case 2:
-                    stack.push(loadAliasMethodNode(stack));
-                    break;
-                case 3:
-                    stack.push(loadAlternationPatternNode(stack));
-                    break;
-                case 4:
-                    stack.push(loadAndNode(stack));
-                    break;
-                case 5:
-                    stack.push(loadArgumentsNode(stack));
-                    break;
-                case 6:
-                    stack.push(loadArrayNode(stack));
-                    break;
-                case 7:
-                    stack.push(loadArrayPatternNode(stack));
-                    break;
-                case 8:
-                    stack.push(loadAssocNode(stack));
-                    break;
-                case 9:
-                    stack.push(loadAssocSplatNode(stack));
-                    break;
-                case 10:
-                    stack.push(loadBackReferenceReadNode(stack));
-                    break;
-                case 11:
-                    stack.push(loadBeginNode(stack));
-                    break;
-                case 12:
-                    stack.push(loadBlockArgumentNode(stack));
-                    break;
-                case 13:
-                    stack.push(loadBlockLocalVariableNode(stack));
-                    break;
-                case 14:
-                    stack.push(loadBlockNode(stack));
-                    break;
-                case 15:
-                    stack.push(loadBlockParameterNode(stack));
-                    break;
-                case 16:
-                    stack.push(loadBlockParametersNode(stack));
-                    break;
-                case 17:
-                    stack.push(loadBreakNode(stack));
-                    break;
-                case 18:
-                    stack.push(loadCallAndWriteNode(stack));
-                    break;
-                case 19:
-                    stack.push(loadCallNode(stack));
-                    break;
-                case 20:
-                    stack.push(loadCallOperatorWriteNode(stack));
-                    break;
-                case 21:
-                    stack.push(loadCallOrWriteNode(stack));
-                    break;
-                case 22:
-                    stack.push(loadCallTargetNode(stack));
-                    break;
-                case 23:
-                    stack.push(loadCapturePatternNode(stack));
-                    break;
-                case 24:
-                    stack.push(loadCaseMatchNode(stack));
-                    break;
-                case 25:
-                    stack.push(loadCaseNode(stack));
-                    break;
-                case 26:
-                    stack.push(loadClassNode(stack));
-                    break;
-                case 27:
-                    stack.push(loadClassVariableAndWriteNode(stack));
-                    break;
-                case 28:
-                    stack.push(loadClassVariableOperatorWriteNode(stack));
-                    break;
-                case 29:
-                    stack.push(loadClassVariableOrWriteNode(stack));
-                    break;
-                case 30:
-                    stack.push(loadClassVariableReadNode(stack));
-                    break;
-                case 31:
-                    stack.push(loadClassVariableTargetNode(stack));
-                    break;
-                case 32:
-                    stack.push(loadClassVariableWriteNode(stack));
-                    break;
-                case 33:
-                    stack.push(loadConstantAndWriteNode(stack));
-                    break;
-                case 34:
-                    stack.push(loadConstantOperatorWriteNode(stack));
-                    break;
-                case 35:
-                    stack.push(loadConstantOrWriteNode(stack));
-                    break;
-                case 36:
-                    stack.push(loadConstantPathAndWriteNode(stack));
-                    break;
-                case 37:
-                    stack.push(loadConstantPathNode(stack));
-                    break;
-                case 38:
-                    stack.push(loadConstantPathOperatorWriteNode(stack));
-                    break;
-                case 39:
-                    stack.push(loadConstantPathOrWriteNode(stack));
-                    break;
-                case 40:
-                    stack.push(loadConstantPathTargetNode(stack));
-                    break;
-                case 41:
-                    stack.push(loadConstantPathWriteNode(stack));
-                    break;
-                case 42:
-                    stack.push(loadConstantReadNode(stack));
-                    break;
-                case 43:
-                    stack.push(loadConstantTargetNode(stack));
-                    break;
-                case 44:
-                    stack.push(loadConstantWriteNode(stack));
-                    break;
-                case 45:
-                    stack.push(loadDefNode(stack));
-                    break;
-                case 46:
-                    stack.push(loadDefinedNode(stack));
-                    break;
-                case 47:
-                    stack.push(loadElseNode(stack));
-                    break;
-                case 48:
-                    stack.push(loadEmbeddedStatementsNode(stack));
-                    break;
-                case 49:
-                    stack.push(loadEmbeddedVariableNode(stack));
-                    break;
-                case 50:
-                    stack.push(loadEnsureNode(stack));
-                    break;
-                case 51:
-                    stack.push(loadErrorRecoveryNode(stack));
-                    break;
-                case 52:
-                    stack.push(loadFalseNode(stack));
-                    break;
-                case 53:
-                    stack.push(loadFindPatternNode(stack));
-                    break;
-                case 54:
-                    stack.push(loadFlipFlopNode(stack));
-                    break;
-                case 55:
-                    stack.push(loadFloatNode(stack));
-                    break;
-                case 56:
-                    stack.push(loadForNode(stack));
-                    break;
-                case 57:
-                    stack.push(loadForwardingArgumentsNode(stack));
-                    break;
-                case 58:
-                    stack.push(loadForwardingParameterNode(stack));
-                    break;
-                case 59:
-                    stack.push(loadForwardingSuperNode(stack));
-                    break;
-                case 60:
-                    stack.push(loadGlobalVariableAndWriteNode(stack));
-                    break;
-                case 61:
-                    stack.push(loadGlobalVariableOperatorWriteNode(stack));
-                    break;
-                case 62:
-                    stack.push(loadGlobalVariableOrWriteNode(stack));
-                    break;
-                case 63:
-                    stack.push(loadGlobalVariableReadNode(stack));
-                    break;
-                case 64:
-                    stack.push(loadGlobalVariableTargetNode(stack));
-                    break;
-                case 65:
-                    stack.push(loadGlobalVariableWriteNode(stack));
-                    break;
-                case 66:
-                    stack.push(loadHashNode(stack));
-                    break;
-                case 67:
-                    stack.push(loadHashPatternNode(stack));
-                    break;
-                case 68:
-                    stack.push(loadIfNode(stack));
-                    break;
-                case 69:
-                    stack.push(loadImaginaryNode(stack));
-                    break;
-                case 70:
-                    stack.push(loadImplicitNode(stack));
-                    break;
-                case 71:
-                    stack.push(loadImplicitRestNode(stack));
-                    break;
-                case 72:
-                    stack.push(loadInNode(stack));
-                    break;
-                case 73:
-                    stack.push(loadIndexAndWriteNode(stack));
-                    break;
-                case 74:
-                    stack.push(loadIndexOperatorWriteNode(stack));
-                    break;
-                case 75:
-                    stack.push(loadIndexOrWriteNode(stack));
-                    break;
-                case 76:
-                    stack.push(loadIndexTargetNode(stack));
-                    break;
-                case 77:
-                    stack.push(loadInstanceVariableAndWriteNode(stack));
-                    break;
-                case 78:
-                    stack.push(loadInstanceVariableOperatorWriteNode(stack));
-                    break;
-                case 79:
-                    stack.push(loadInstanceVariableOrWriteNode(stack));
-                    break;
-                case 80:
-                    stack.push(loadInstanceVariableReadNode(stack));
-                    break;
-                case 81:
-                    stack.push(loadInstanceVariableTargetNode(stack));
-                    break;
-                case 82:
-                    stack.push(loadInstanceVariableWriteNode(stack));
-                    break;
-                case 83:
-                    stack.push(loadIntegerNode(stack));
-                    break;
-                case 84:
-                    stack.push(loadInterpolatedMatchLastLineNode(stack));
-                    break;
-                case 85:
-                    stack.push(loadInterpolatedRegularExpressionNode(stack));
-                    break;
-                case 86:
-                    stack.push(loadInterpolatedStringNode(stack));
-                    break;
-                case 87:
-                    stack.push(loadInterpolatedSymbolNode(stack));
-                    break;
-                case 88:
-                    stack.push(loadInterpolatedXStringNode(stack));
-                    break;
-                case 89:
-                    stack.push(loadItLocalVariableReadNode(stack));
-                    break;
-                case 90:
-                    stack.push(loadItParametersNode(stack));
-                    break;
-                case 91:
-                    stack.push(loadKeywordHashNode(stack));
-                    break;
-                case 92:
-                    stack.push(loadKeywordRestParameterNode(stack));
-                    break;
-                case 93:
-                    stack.push(loadLambdaNode(stack));
-                    break;
-                case 94:
-                    stack.push(loadLocalVariableAndWriteNode(stack));
-                    break;
-                case 95:
-                    stack.push(loadLocalVariableOperatorWriteNode(stack));
-                    break;
-                case 96:
-                    stack.push(loadLocalVariableOrWriteNode(stack));
-                    break;
-                case 97:
-                    stack.push(loadLocalVariableReadNode(stack));
-                    break;
-                case 98:
-                    stack.push(loadLocalVariableTargetNode(stack));
-                    break;
-                case 99:
-                    stack.push(loadLocalVariableWriteNode(stack));
-                    break;
-                case 100:
-                    stack.push(loadMatchLastLineNode(stack));
-                    break;
-                case 101:
-                    stack.push(loadMatchPredicateNode(stack));
-                    break;
-                case 102:
-                    stack.push(loadMatchRequiredNode(stack));
-                    break;
-                case 103:
-                    stack.push(loadMatchWriteNode(stack));
-                    break;
-                case 104:
-                    stack.push(loadModuleNode(stack));
-                    break;
-                case 105:
-                    stack.push(loadMultiTargetNode(stack));
-                    break;
-                case 106:
-                    stack.push(loadMultiWriteNode(stack));
-                    break;
-                case 107:
-                    stack.push(loadNextNode(stack));
-                    break;
-                case 108:
-                    stack.push(loadNilNode(stack));
-                    break;
-                case 109:
-                    stack.push(loadNoBlockParameterNode(stack));
-                    break;
-                case 110:
-                    stack.push(loadNoKeywordsParameterNode(stack));
-                    break;
-                case 111:
-                    stack.push(loadNumberedParametersNode(stack));
-                    break;
-                case 112:
-                    stack.push(loadNumberedReferenceReadNode(stack));
-                    break;
-                case 113:
-                    stack.push(loadOptionalKeywordParameterNode(stack));
-                    break;
-                case 114:
-                    stack.push(loadOptionalParameterNode(stack));
-                    break;
-                case 115:
-                    stack.push(loadOrNode(stack));
-                    break;
-                case 116:
-                    stack.push(loadParametersNode(stack));
-                    break;
-                case 117:
-                    stack.push(loadParenthesesNode(stack));
-                    break;
-                case 118:
-                    stack.push(loadPinnedExpressionNode(stack));
-                    break;
-                case 119:
-                    stack.push(loadPinnedVariableNode(stack));
-                    break;
-                case 120:
-                    stack.push(loadPostExecutionNode(stack));
-                    break;
-                case 121:
-                    stack.push(loadPreExecutionNode(stack));
-                    break;
-                case 122:
-                    stack.push(loadProgramNode(stack));
-                    break;
-                case 123:
-                    stack.push(loadRangeNode(stack));
-                    break;
-                case 124:
-                    stack.push(loadRationalNode(stack));
-                    break;
-                case 125:
-                    stack.push(loadRedoNode(stack));
-                    break;
-                case 126:
-                    stack.push(loadRegularExpressionNode(stack));
-                    break;
-                case 127:
-                    stack.push(loadRequiredKeywordParameterNode(stack));
-                    break;
-                case 128:
-                    stack.push(loadRequiredParameterNode(stack));
-                    break;
-                case 129:
-                    stack.push(loadRescueModifierNode(stack));
-                    break;
-                case 130:
-                    stack.push(loadRescueNode(stack));
-                    break;
-                case 131:
-                    stack.push(loadRestParameterNode(stack));
-                    break;
-                case 132:
-                    stack.push(loadRetryNode(stack));
-                    break;
-                case 133:
-                    stack.push(loadReturnNode(stack));
-                    break;
-                case 134:
-                    stack.push(loadSelfNode(stack));
-                    break;
-                case 135:
-                    stack.push(loadShareableConstantNode(stack));
-                    break;
-                case 136:
-                    stack.push(loadSingletonClassNode(stack));
-                    break;
-                case 137:
-                    stack.push(loadSourceEncodingNode(stack));
-                    break;
-                case 138:
-                    stack.push(loadSourceFileNode(stack));
-                    break;
-                case 139:
-                    stack.push(loadSourceLineNode(stack));
-                    break;
-                case 140:
-                    stack.push(loadSplatNode(stack));
-                    break;
-                case 141:
-                    stack.push(loadStatementsNode(stack));
-                    break;
-                case 142:
-                    stack.push(loadStringNode(stack));
-                    break;
-                case 143:
-                    stack.push(loadSuperNode(stack));
-                    break;
-                case 144:
-                    stack.push(loadSymbolNode(stack));
-                    break;
-                case 145:
-                    stack.push(loadTrueNode(stack));
-                    break;
-                case 146:
-                    stack.push(loadUndefNode(stack));
-                    break;
-                case 147:
-                    stack.push(loadUnlessNode(stack));
-                    break;
-                case 148:
-                    stack.push(loadUntilNode(stack));
-                    break;
-                case 149:
-                    stack.push(loadWhenNode(stack));
-                    break;
-                case 150:
-                    stack.push(loadWhileNode(stack));
-                    break;
-                case 151:
-                    stack.push(loadXStringNode(stack));
-                    break;
-                case 152:
-                    stack.push(loadYieldNode(stack));
-                    break;
-                default:
-                    throw new Error("Unknown node type: " + type);
-            }
-        }
-
-        return stack.pop();
+    // Can be overridden to use createLazyDefNode instead
+    protected Nodes.DefNode loadDefNode(int startOffset, int length) {
+        return createDefNode(startOffset, length);
     }
 
-    Nodes.DefNode loadNonLazyDefNode(int lazyPosition) {
+    protected Nodes.DefNode createLazyDefNode(int startOffset, int length) {
+        int bufferPosition = buffer.position();
+        int serializedLength = buffer.getInt();
+        // Load everything except the body and locals, because the name, receiver, parameters are still needed for lazily defining the method
+        Nodes.DefNode lazyDefNode = new Nodes.DefNode(startOffset, length, -bufferPosition, this, loadConstant(), loadOptionalNode(), (Nodes.ParametersNode) loadOptionalNode(), null, Nodes.EMPTY_IDENTIFIER_ARRAY);
+        buffer.position(bufferPosition + serializedLength); // skip past the serialized DefNode
+        return lazyDefNode;
+    }
+
+    protected Nodes.DefNode createDefNode(int startOffset, int length) {
+        return new Nodes.DefNode(startOffset, length, buffer.getInt(), null, loadConstant(), loadOptionalNode(), (Nodes.ParametersNode) loadOptionalNode(), loadOptionalNode(), loadConstants());
+    }
+
+    Nodes.DefNode createDefNodeFromSavedPosition(int startOffset, int length, int bufferPosition) {
         Nodes.DefNode node;
         // This method mutates the buffer position and may be called from different threads so we must synchronize
         synchronized (this) {
-            buffer.position(lazyPosition + 1);
-            int skip = buffer.getInt();
-            int length = buffer.getInt();
-            int end = buffer.position() + skip + length;
-
-            buffer.position(lazyPosition);
-            node = (Nodes.DefNode) loadNodes(end, lazyPosition);
+            buffer.position(bufferPosition);
+            node = createDefNode(startOffset, length);
         }
 
         MarkNewlinesVisitor visitor = new MarkNewlinesVisitor(source);
@@ -885,1348 +663,100 @@ public class Loader {
         return node;
     }
 
-    private Nodes.AliasGlobalVariableNode loadAliasGlobalVariableNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_old_name = stack.pop();
-        var field_new_name = stack.pop();
-        return new Nodes.AliasGlobalVariableNode(startOffset, length, field_new_name, field_old_name);
-    }
-
-    private Nodes.AliasMethodNode loadAliasMethodNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_old_name = stack.pop();
-        var field_new_name = stack.pop();
-        return new Nodes.AliasMethodNode(startOffset, length, field_new_name, field_old_name);
-    }
-
-    private Nodes.AlternationPatternNode loadAlternationPatternNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_right = stack.pop();
-        var field_left = stack.pop();
-        return new Nodes.AlternationPatternNode(startOffset, length, field_left, field_right);
-    }
-
-    private Nodes.AndNode loadAndNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_right = stack.pop();
-        var field_left = stack.pop();
-        return new Nodes.AndNode(startOffset, length, field_left, field_right);
-    }
-
-    private Nodes.ArgumentsNode loadArgumentsNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        int argumentsSize = loadVarUInt();
-        var field_arguments = popNodes(stack, argumentsSize);
-        return new Nodes.ArgumentsNode(startOffset, length, flags, field_arguments);
-    }
-
-    private Nodes.ArrayNode loadArrayNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        int elementsSize = loadVarUInt();
-        var field_elements = popNodes(stack, elementsSize);
-        return new Nodes.ArrayNode(startOffset, length, flags, field_elements);
-    }
-
-    private Nodes.ArrayPatternNode loadArrayPatternNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int requiredsSize = loadVarUInt();
-        int postsSize = loadVarUInt();
-        var field_posts = popNodes(stack, postsSize);
-        var field_rest = stack.pop();
-        var field_requireds = popNodes(stack, requiredsSize);
-        var field_constant = stack.pop();
-        return new Nodes.ArrayPatternNode(startOffset, length, field_constant, field_requireds, field_rest, field_posts);
-    }
-
-    private Nodes.AssocNode loadAssocNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_value = stack.pop();
-        var field_key = stack.pop();
-        return new Nodes.AssocNode(startOffset, length, field_key, field_value);
-    }
-
-    private Nodes.AssocSplatNode loadAssocSplatNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_value = stack.pop();
-        return new Nodes.AssocSplatNode(startOffset, length, field_value);
-    }
-
-    private Nodes.BackReferenceReadNode loadBackReferenceReadNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        return new Nodes.BackReferenceReadNode(startOffset, length, field_name);
-    }
-
-    private Nodes.BeginNode loadBeginNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_ensure_clause = (Nodes.EnsureNode) stack.pop();
-        var field_else_clause = (Nodes.ElseNode) stack.pop();
-        var field_rescue_clause = (Nodes.RescueNode) stack.pop();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        return new Nodes.BeginNode(startOffset, length, field_statements, field_rescue_clause, field_else_clause, field_ensure_clause);
-    }
-
-    private Nodes.BlockArgumentNode loadBlockArgumentNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_expression = stack.pop();
-        return new Nodes.BlockArgumentNode(startOffset, length, field_expression);
-    }
-
-    private Nodes.BlockLocalVariableNode loadBlockLocalVariableNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_name = loadConstant();
-        return new Nodes.BlockLocalVariableNode(startOffset, length, flags, field_name);
-    }
-
-    private Nodes.BlockNode loadBlockNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_locals = loadConstants();
-        var field_body = stack.pop();
-        var field_parameters = stack.pop();
-        return new Nodes.BlockNode(startOffset, length, field_locals, field_parameters, field_body);
-    }
-
-    private Nodes.BlockParameterNode loadBlockParameterNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_name = loadOptionalConstant();
-        return new Nodes.BlockParameterNode(startOffset, length, flags, field_name);
-    }
-
-    private Nodes.BlockParametersNode loadBlockParametersNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int localsSize = loadVarUInt();
-        var field_locals = popBlockLocalVariableNodes(stack, localsSize);
-        var field_parameters = (Nodes.ParametersNode) stack.pop();
-        return new Nodes.BlockParametersNode(startOffset, length, field_parameters, field_locals);
-    }
-
-    private Nodes.BreakNode loadBreakNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_arguments = (Nodes.ArgumentsNode) stack.pop();
-        return new Nodes.BreakNode(startOffset, length, field_arguments);
-    }
-
-    private Nodes.CallAndWriteNode loadCallAndWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_read_name = loadConstant();
-        var field_write_name = loadConstant();
-        var field_value = stack.pop();
-        var field_receiver = stack.pop();
-        return new Nodes.CallAndWriteNode(startOffset, length, flags, field_receiver, field_read_name, field_write_name, field_value);
-    }
-
-    private Nodes.CallNode loadCallNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_name = loadConstant();
-        var field_block = stack.pop();
-        var field_arguments = (Nodes.ArgumentsNode) stack.pop();
-        var field_receiver = stack.pop();
-        return new Nodes.CallNode(startOffset, length, flags, field_receiver, field_name, field_arguments, field_block);
-    }
-
-    private Nodes.CallOperatorWriteNode loadCallOperatorWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_read_name = loadConstant();
-        var field_write_name = loadConstant();
-        var field_binary_operator = loadConstant();
-        var field_value = stack.pop();
-        var field_receiver = stack.pop();
-        return new Nodes.CallOperatorWriteNode(startOffset, length, flags, field_receiver, field_read_name, field_write_name, field_binary_operator, field_value);
-    }
-
-    private Nodes.CallOrWriteNode loadCallOrWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_read_name = loadConstant();
-        var field_write_name = loadConstant();
-        var field_value = stack.pop();
-        var field_receiver = stack.pop();
-        return new Nodes.CallOrWriteNode(startOffset, length, flags, field_receiver, field_read_name, field_write_name, field_value);
-    }
-
-    private Nodes.CallTargetNode loadCallTargetNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_name = loadConstant();
-        var field_receiver = stack.pop();
-        return new Nodes.CallTargetNode(startOffset, length, flags, field_receiver, field_name);
-    }
-
-    private Nodes.CapturePatternNode loadCapturePatternNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_target = (Nodes.LocalVariableTargetNode) stack.pop();
-        var field_value = stack.pop();
-        return new Nodes.CapturePatternNode(startOffset, length, field_value, field_target);
-    }
-
-    private Nodes.CaseMatchNode loadCaseMatchNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int conditionsSize = loadVarUInt();
-        var field_else_clause = (Nodes.ElseNode) stack.pop();
-        var field_conditions = popInNodes(stack, conditionsSize);
-        var field_predicate = stack.pop();
-        return new Nodes.CaseMatchNode(startOffset, length, field_predicate, field_conditions, field_else_clause);
-    }
-
-    private Nodes.CaseNode loadCaseNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int conditionsSize = loadVarUInt();
-        var field_else_clause = (Nodes.ElseNode) stack.pop();
-        var field_conditions = popWhenNodes(stack, conditionsSize);
-        var field_predicate = stack.pop();
-        return new Nodes.CaseNode(startOffset, length, field_predicate, field_conditions, field_else_clause);
-    }
-
-    private Nodes.ClassNode loadClassNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_locals = loadConstants();
-        var field_name = loadConstant();
-        var field_body = stack.pop();
-        var field_superclass = stack.pop();
-        var field_constant_path = stack.pop();
-        return new Nodes.ClassNode(startOffset, length, field_locals, field_constant_path, field_superclass, field_body, field_name);
-    }
-
-    private Nodes.ClassVariableAndWriteNode loadClassVariableAndWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.ClassVariableAndWriteNode(startOffset, length, field_name, field_value);
-    }
-
-    private Nodes.ClassVariableOperatorWriteNode loadClassVariableOperatorWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_binary_operator = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.ClassVariableOperatorWriteNode(startOffset, length, field_name, field_value, field_binary_operator);
-    }
-
-    private Nodes.ClassVariableOrWriteNode loadClassVariableOrWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.ClassVariableOrWriteNode(startOffset, length, field_name, field_value);
-    }
-
-    private Nodes.ClassVariableReadNode loadClassVariableReadNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        return new Nodes.ClassVariableReadNode(startOffset, length, field_name);
-    }
-
-    private Nodes.ClassVariableTargetNode loadClassVariableTargetNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        return new Nodes.ClassVariableTargetNode(startOffset, length, field_name);
-    }
-
-    private Nodes.ClassVariableWriteNode loadClassVariableWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.ClassVariableWriteNode(startOffset, length, field_name, field_value);
-    }
-
-    private Nodes.ConstantAndWriteNode loadConstantAndWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.ConstantAndWriteNode(startOffset, length, field_name, field_value);
-    }
-
-    private Nodes.ConstantOperatorWriteNode loadConstantOperatorWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_binary_operator = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.ConstantOperatorWriteNode(startOffset, length, field_name, field_value, field_binary_operator);
-    }
-
-    private Nodes.ConstantOrWriteNode loadConstantOrWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.ConstantOrWriteNode(startOffset, length, field_name, field_value);
-    }
-
-    private Nodes.ConstantPathAndWriteNode loadConstantPathAndWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_value = stack.pop();
-        var field_target = (Nodes.ConstantPathNode) stack.pop();
-        return new Nodes.ConstantPathAndWriteNode(startOffset, length, field_target, field_value);
-    }
-
-    private Nodes.ConstantPathNode loadConstantPathNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadOptionalConstant();
-        var field_parent = stack.pop();
-        return new Nodes.ConstantPathNode(startOffset, length, field_parent, field_name);
-    }
-
-    private Nodes.ConstantPathOperatorWriteNode loadConstantPathOperatorWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_binary_operator = loadConstant();
-        var field_value = stack.pop();
-        var field_target = (Nodes.ConstantPathNode) stack.pop();
-        return new Nodes.ConstantPathOperatorWriteNode(startOffset, length, field_target, field_value, field_binary_operator);
-    }
-
-    private Nodes.ConstantPathOrWriteNode loadConstantPathOrWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_value = stack.pop();
-        var field_target = (Nodes.ConstantPathNode) stack.pop();
-        return new Nodes.ConstantPathOrWriteNode(startOffset, length, field_target, field_value);
-    }
-
-    private Nodes.ConstantPathTargetNode loadConstantPathTargetNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadOptionalConstant();
-        var field_parent = stack.pop();
-        return new Nodes.ConstantPathTargetNode(startOffset, length, field_parent, field_name);
-    }
-
-    private Nodes.ConstantPathWriteNode loadConstantPathWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_value = stack.pop();
-        var field_target = (Nodes.ConstantPathNode) stack.pop();
-        return new Nodes.ConstantPathWriteNode(startOffset, length, field_target, field_value);
-    }
-
-    private Nodes.ConstantReadNode loadConstantReadNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        return new Nodes.ConstantReadNode(startOffset, length, field_name);
-    }
-
-    private Nodes.ConstantTargetNode loadConstantTargetNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        return new Nodes.ConstantTargetNode(startOffset, length, field_name);
-    }
-
-    private Nodes.ConstantWriteNode loadConstantWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.ConstantWriteNode(startOffset, length, field_name, field_value);
-    }
-
-    private Nodes.DefNode loadDefNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_locals = loadConstants();
-        int lazyPosition = stack.popLazy();
-        var field_body = lazyPosition == -1 ? stack.pop() : null;
-        var field_parameters = (Nodes.ParametersNode) stack.pop();
-        var field_receiver = stack.pop();
-        return new Nodes.DefNode(startOffset, length, lazyPosition, lazyPosition == -1 ? null : this, field_name, field_receiver, field_parameters, field_body, field_locals);
-    }
-
-    private Nodes.DefinedNode loadDefinedNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_value = stack.pop();
-        return new Nodes.DefinedNode(startOffset, length, field_value);
-    }
-
-    private Nodes.ElseNode loadElseNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        return new Nodes.ElseNode(startOffset, length, field_statements);
-    }
-
-    private Nodes.EmbeddedStatementsNode loadEmbeddedStatementsNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        return new Nodes.EmbeddedStatementsNode(startOffset, length, field_statements);
-    }
-
-    private Nodes.EmbeddedVariableNode loadEmbeddedVariableNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_variable = stack.pop();
-        return new Nodes.EmbeddedVariableNode(startOffset, length, field_variable);
-    }
-
-    private Nodes.EnsureNode loadEnsureNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        return new Nodes.EnsureNode(startOffset, length, field_statements);
-    }
-
-    private Nodes.ErrorRecoveryNode loadErrorRecoveryNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_unexpected = stack.pop();
-        return new Nodes.ErrorRecoveryNode(startOffset, length, field_unexpected);
-    }
-
-    private Nodes.FalseNode loadFalseNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.FalseNode(startOffset, length);
-    }
-
-    private Nodes.FindPatternNode loadFindPatternNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int requiredsSize = loadVarUInt();
-        var field_right = (Nodes.SplatNode) stack.pop();
-        var field_requireds = popNodes(stack, requiredsSize);
-        var field_left = (Nodes.SplatNode) stack.pop();
-        var field_constant = stack.pop();
-        return new Nodes.FindPatternNode(startOffset, length, field_constant, field_left, field_requireds, field_right);
-    }
-
-    private Nodes.FlipFlopNode loadFlipFlopNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_right = stack.pop();
-        var field_left = stack.pop();
-        return new Nodes.FlipFlopNode(startOffset, length, flags, field_left, field_right);
-    }
-
-    private Nodes.FloatNode loadFloatNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_value = buffer.getDouble();
-        return new Nodes.FloatNode(startOffset, length, field_value);
-    }
-
-    private Nodes.ForNode loadForNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        var field_collection = stack.pop();
-        var field_index = stack.pop();
-        return new Nodes.ForNode(startOffset, length, field_index, field_collection, field_statements);
-    }
-
-    private Nodes.ForwardingArgumentsNode loadForwardingArgumentsNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.ForwardingArgumentsNode(startOffset, length);
-    }
-
-    private Nodes.ForwardingParameterNode loadForwardingParameterNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.ForwardingParameterNode(startOffset, length);
-    }
-
-    private Nodes.ForwardingSuperNode loadForwardingSuperNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_block = (Nodes.BlockNode) stack.pop();
-        return new Nodes.ForwardingSuperNode(startOffset, length, field_block);
-    }
-
-    private Nodes.GlobalVariableAndWriteNode loadGlobalVariableAndWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.GlobalVariableAndWriteNode(startOffset, length, field_name, field_value);
-    }
-
-    private Nodes.GlobalVariableOperatorWriteNode loadGlobalVariableOperatorWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_binary_operator = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.GlobalVariableOperatorWriteNode(startOffset, length, field_name, field_value, field_binary_operator);
-    }
-
-    private Nodes.GlobalVariableOrWriteNode loadGlobalVariableOrWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.GlobalVariableOrWriteNode(startOffset, length, field_name, field_value);
-    }
-
-    private Nodes.GlobalVariableReadNode loadGlobalVariableReadNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        return new Nodes.GlobalVariableReadNode(startOffset, length, field_name);
-    }
-
-    private Nodes.GlobalVariableTargetNode loadGlobalVariableTargetNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        return new Nodes.GlobalVariableTargetNode(startOffset, length, field_name);
-    }
-
-    private Nodes.GlobalVariableWriteNode loadGlobalVariableWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.GlobalVariableWriteNode(startOffset, length, field_name, field_value);
-    }
-
-    private Nodes.HashNode loadHashNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int elementsSize = loadVarUInt();
-        var field_elements = popNodes(stack, elementsSize);
-        return new Nodes.HashNode(startOffset, length, field_elements);
-    }
-
-    private Nodes.HashPatternNode loadHashPatternNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int elementsSize = loadVarUInt();
-        var field_rest = stack.pop();
-        var field_elements = popAssocNodes(stack, elementsSize);
-        var field_constant = stack.pop();
-        return new Nodes.HashPatternNode(startOffset, length, field_constant, field_elements, field_rest);
-    }
-
-    private Nodes.IfNode loadIfNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_subsequent = stack.pop();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        var field_predicate = stack.pop();
-        return new Nodes.IfNode(startOffset, length, field_predicate, field_statements, field_subsequent);
-    }
-
-    private Nodes.ImaginaryNode loadImaginaryNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_numeric = stack.pop();
-        return new Nodes.ImaginaryNode(startOffset, length, field_numeric);
-    }
-
-    private Nodes.ImplicitNode loadImplicitNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_value = stack.pop();
-        return new Nodes.ImplicitNode(startOffset, length, field_value);
-    }
-
-    private Nodes.ImplicitRestNode loadImplicitRestNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.ImplicitRestNode(startOffset, length);
-    }
-
-    private Nodes.InNode loadInNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        var field_pattern = stack.pop();
-        return new Nodes.InNode(startOffset, length, field_pattern, field_statements);
-    }
-
-    private Nodes.IndexAndWriteNode loadIndexAndWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_value = stack.pop();
-        var field_block = (Nodes.BlockArgumentNode) stack.pop();
-        var field_arguments = (Nodes.ArgumentsNode) stack.pop();
-        var field_receiver = stack.pop();
-        return new Nodes.IndexAndWriteNode(startOffset, length, flags, field_receiver, field_arguments, field_block, field_value);
-    }
-
-    private Nodes.IndexOperatorWriteNode loadIndexOperatorWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_binary_operator = loadConstant();
-        var field_value = stack.pop();
-        var field_block = (Nodes.BlockArgumentNode) stack.pop();
-        var field_arguments = (Nodes.ArgumentsNode) stack.pop();
-        var field_receiver = stack.pop();
-        return new Nodes.IndexOperatorWriteNode(startOffset, length, flags, field_receiver, field_arguments, field_block, field_binary_operator, field_value);
-    }
-
-    private Nodes.IndexOrWriteNode loadIndexOrWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_value = stack.pop();
-        var field_block = (Nodes.BlockArgumentNode) stack.pop();
-        var field_arguments = (Nodes.ArgumentsNode) stack.pop();
-        var field_receiver = stack.pop();
-        return new Nodes.IndexOrWriteNode(startOffset, length, flags, field_receiver, field_arguments, field_block, field_value);
-    }
-
-    private Nodes.IndexTargetNode loadIndexTargetNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_block = (Nodes.BlockArgumentNode) stack.pop();
-        var field_arguments = (Nodes.ArgumentsNode) stack.pop();
-        var field_receiver = stack.pop();
-        return new Nodes.IndexTargetNode(startOffset, length, flags, field_receiver, field_arguments, field_block);
-    }
-
-    private Nodes.InstanceVariableAndWriteNode loadInstanceVariableAndWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.InstanceVariableAndWriteNode(startOffset, length, field_name, field_value);
-    }
-
-    private Nodes.InstanceVariableOperatorWriteNode loadInstanceVariableOperatorWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_binary_operator = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.InstanceVariableOperatorWriteNode(startOffset, length, field_name, field_value, field_binary_operator);
-    }
-
-    private Nodes.InstanceVariableOrWriteNode loadInstanceVariableOrWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.InstanceVariableOrWriteNode(startOffset, length, field_name, field_value);
-    }
-
-    private Nodes.InstanceVariableReadNode loadInstanceVariableReadNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        return new Nodes.InstanceVariableReadNode(startOffset, length, field_name);
-    }
-
-    private Nodes.InstanceVariableTargetNode loadInstanceVariableTargetNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        return new Nodes.InstanceVariableTargetNode(startOffset, length, field_name);
-    }
-
-    private Nodes.InstanceVariableWriteNode loadInstanceVariableWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.InstanceVariableWriteNode(startOffset, length, field_name, field_value);
-    }
-
-    private Nodes.IntegerNode loadIntegerNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_value = loadInteger();
-        return new Nodes.IntegerNode(startOffset, length, flags, field_value);
-    }
-
-    private Nodes.InterpolatedMatchLastLineNode loadInterpolatedMatchLastLineNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        int partsSize = loadVarUInt();
-        var field_parts = popNodes(stack, partsSize);
-        return new Nodes.InterpolatedMatchLastLineNode(startOffset, length, flags, field_parts);
-    }
-
-    private Nodes.InterpolatedRegularExpressionNode loadInterpolatedRegularExpressionNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        int partsSize = loadVarUInt();
-        var field_parts = popNodes(stack, partsSize);
-        return new Nodes.InterpolatedRegularExpressionNode(startOffset, length, flags, field_parts);
-    }
-
-    private Nodes.InterpolatedStringNode loadInterpolatedStringNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        int partsSize = loadVarUInt();
-        var field_parts = popNodes(stack, partsSize);
-        return new Nodes.InterpolatedStringNode(startOffset, length, flags, field_parts);
-    }
-
-    private Nodes.InterpolatedSymbolNode loadInterpolatedSymbolNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int partsSize = loadVarUInt();
-        var field_parts = popNodes(stack, partsSize);
-        return new Nodes.InterpolatedSymbolNode(startOffset, length, field_parts);
-    }
-
-    private Nodes.InterpolatedXStringNode loadInterpolatedXStringNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int partsSize = loadVarUInt();
-        var field_parts = popNodes(stack, partsSize);
-        return new Nodes.InterpolatedXStringNode(startOffset, length, field_parts);
-    }
-
-    private Nodes.ItLocalVariableReadNode loadItLocalVariableReadNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.ItLocalVariableReadNode(startOffset, length);
-    }
-
-    private Nodes.ItParametersNode loadItParametersNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.ItParametersNode(startOffset, length);
-    }
-
-    private Nodes.KeywordHashNode loadKeywordHashNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        int elementsSize = loadVarUInt();
-        var field_elements = popNodes(stack, elementsSize);
-        return new Nodes.KeywordHashNode(startOffset, length, flags, field_elements);
-    }
-
-    private Nodes.KeywordRestParameterNode loadKeywordRestParameterNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_name = loadOptionalConstant();
-        return new Nodes.KeywordRestParameterNode(startOffset, length, flags, field_name);
-    }
-
-    private Nodes.LambdaNode loadLambdaNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_locals = loadConstants();
-        var field_body = stack.pop();
-        var field_parameters = stack.pop();
-        return new Nodes.LambdaNode(startOffset, length, field_locals, field_parameters, field_body);
-    }
-
-    private Nodes.LocalVariableAndWriteNode loadLocalVariableAndWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_depth = loadVarUInt();
-        var field_value = stack.pop();
-        return new Nodes.LocalVariableAndWriteNode(startOffset, length, field_value, field_name, field_depth);
-    }
-
-    private Nodes.LocalVariableOperatorWriteNode loadLocalVariableOperatorWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_binary_operator = loadConstant();
-        var field_depth = loadVarUInt();
-        var field_value = stack.pop();
-        return new Nodes.LocalVariableOperatorWriteNode(startOffset, length, field_value, field_name, field_binary_operator, field_depth);
-    }
-
-    private Nodes.LocalVariableOrWriteNode loadLocalVariableOrWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_depth = loadVarUInt();
-        var field_value = stack.pop();
-        return new Nodes.LocalVariableOrWriteNode(startOffset, length, field_value, field_name, field_depth);
-    }
-
-    private Nodes.LocalVariableReadNode loadLocalVariableReadNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_depth = loadVarUInt();
-        return new Nodes.LocalVariableReadNode(startOffset, length, field_name, field_depth);
-    }
-
-    private Nodes.LocalVariableTargetNode loadLocalVariableTargetNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_depth = loadVarUInt();
-        return new Nodes.LocalVariableTargetNode(startOffset, length, field_name, field_depth);
-    }
-
-    private Nodes.LocalVariableWriteNode loadLocalVariableWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_name = loadConstant();
-        var field_depth = loadVarUInt();
-        var field_value = stack.pop();
-        return new Nodes.LocalVariableWriteNode(startOffset, length, field_name, field_depth, field_value);
-    }
-
-    private Nodes.MatchLastLineNode loadMatchLastLineNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_unescaped = loadString();
-        return new Nodes.MatchLastLineNode(startOffset, length, flags, field_unescaped);
-    }
-
-    private Nodes.MatchPredicateNode loadMatchPredicateNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_pattern = stack.pop();
-        var field_value = stack.pop();
-        return new Nodes.MatchPredicateNode(startOffset, length, field_value, field_pattern);
-    }
-
-    private Nodes.MatchRequiredNode loadMatchRequiredNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_pattern = stack.pop();
-        var field_value = stack.pop();
-        return new Nodes.MatchRequiredNode(startOffset, length, field_value, field_pattern);
-    }
-
-    private Nodes.MatchWriteNode loadMatchWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int targetsSize = loadVarUInt();
-        var field_targets = popLocalVariableTargetNodes(stack, targetsSize);
-        var field_call = (Nodes.CallNode) stack.pop();
-        return new Nodes.MatchWriteNode(startOffset, length, field_call, field_targets);
-    }
-
-    private Nodes.ModuleNode loadModuleNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_locals = loadConstants();
-        var field_name = loadConstant();
-        var field_body = stack.pop();
-        var field_constant_path = stack.pop();
-        return new Nodes.ModuleNode(startOffset, length, field_locals, field_constant_path, field_body, field_name);
-    }
-
-    private Nodes.MultiTargetNode loadMultiTargetNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int leftsSize = loadVarUInt();
-        int rightsSize = loadVarUInt();
-        var field_rights = popNodes(stack, rightsSize);
-        var field_rest = stack.pop();
-        var field_lefts = popNodes(stack, leftsSize);
-        return new Nodes.MultiTargetNode(startOffset, length, field_lefts, field_rest, field_rights);
-    }
-
-    private Nodes.MultiWriteNode loadMultiWriteNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int leftsSize = loadVarUInt();
-        int rightsSize = loadVarUInt();
-        var field_value = stack.pop();
-        var field_rights = popNodes(stack, rightsSize);
-        var field_rest = stack.pop();
-        var field_lefts = popNodes(stack, leftsSize);
-        return new Nodes.MultiWriteNode(startOffset, length, field_lefts, field_rest, field_rights, field_value);
-    }
-
-    private Nodes.NextNode loadNextNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_arguments = (Nodes.ArgumentsNode) stack.pop();
-        return new Nodes.NextNode(startOffset, length, field_arguments);
-    }
-
-    private Nodes.NilNode loadNilNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.NilNode(startOffset, length);
-    }
-
-    private Nodes.NoBlockParameterNode loadNoBlockParameterNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.NoBlockParameterNode(startOffset, length);
-    }
-
-    private Nodes.NoKeywordsParameterNode loadNoKeywordsParameterNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.NoKeywordsParameterNode(startOffset, length);
-    }
-
-    private Nodes.NumberedParametersNode loadNumberedParametersNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_maximum = buffer.get();
-        return new Nodes.NumberedParametersNode(startOffset, length, field_maximum);
-    }
-
-    private Nodes.NumberedReferenceReadNode loadNumberedReferenceReadNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_number = loadVarUInt();
-        return new Nodes.NumberedReferenceReadNode(startOffset, length, field_number);
-    }
-
-    private Nodes.OptionalKeywordParameterNode loadOptionalKeywordParameterNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.OptionalKeywordParameterNode(startOffset, length, flags, field_name, field_value);
-    }
-
-    private Nodes.OptionalParameterNode loadOptionalParameterNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_name = loadConstant();
-        var field_value = stack.pop();
-        return new Nodes.OptionalParameterNode(startOffset, length, flags, field_name, field_value);
-    }
-
-    private Nodes.OrNode loadOrNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_right = stack.pop();
-        var field_left = stack.pop();
-        return new Nodes.OrNode(startOffset, length, field_left, field_right);
-    }
-
-    private Nodes.ParametersNode loadParametersNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int requiredsSize = loadVarUInt();
-        int optionalsSize = loadVarUInt();
-        int postsSize = loadVarUInt();
-        int keywordsSize = loadVarUInt();
-        var field_block = stack.pop();
-        var field_keyword_rest = stack.pop();
-        var field_keywords = popNodes(stack, keywordsSize);
-        var field_posts = popNodes(stack, postsSize);
-        var field_rest = stack.pop();
-        var field_optionals = popOptionalParameterNodes(stack, optionalsSize);
-        var field_requireds = popNodes(stack, requiredsSize);
-        return new Nodes.ParametersNode(startOffset, length, field_requireds, field_optionals, field_rest, field_posts, field_keywords, field_keyword_rest, field_block);
-    }
-
-    private Nodes.ParenthesesNode loadParenthesesNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_body = stack.pop();
-        return new Nodes.ParenthesesNode(startOffset, length, flags, field_body);
-    }
-
-    private Nodes.PinnedExpressionNode loadPinnedExpressionNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_expression = stack.pop();
-        return new Nodes.PinnedExpressionNode(startOffset, length, field_expression);
-    }
-
-    private Nodes.PinnedVariableNode loadPinnedVariableNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_variable = stack.pop();
-        return new Nodes.PinnedVariableNode(startOffset, length, field_variable);
-    }
-
-    private Nodes.PostExecutionNode loadPostExecutionNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        return new Nodes.PostExecutionNode(startOffset, length, field_statements);
-    }
-
-    private Nodes.PreExecutionNode loadPreExecutionNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        return new Nodes.PreExecutionNode(startOffset, length, field_statements);
-    }
-
-    private Nodes.ProgramNode loadProgramNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_locals = loadConstants();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        return new Nodes.ProgramNode(startOffset, length, field_locals, field_statements);
-    }
-
-    private Nodes.RangeNode loadRangeNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_right = stack.pop();
-        var field_left = stack.pop();
-        return new Nodes.RangeNode(startOffset, length, flags, field_left, field_right);
-    }
-
-    private Nodes.RationalNode loadRationalNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_numerator = loadInteger();
-        var field_denominator = loadInteger();
-        return new Nodes.RationalNode(startOffset, length, flags, field_numerator, field_denominator);
-    }
-
-    private Nodes.RedoNode loadRedoNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.RedoNode(startOffset, length);
-    }
-
-    private Nodes.RegularExpressionNode loadRegularExpressionNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_unescaped = loadString();
-        return new Nodes.RegularExpressionNode(startOffset, length, flags, field_unescaped);
-    }
-
-    private Nodes.RequiredKeywordParameterNode loadRequiredKeywordParameterNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_name = loadConstant();
-        return new Nodes.RequiredKeywordParameterNode(startOffset, length, flags, field_name);
-    }
-
-    private Nodes.RequiredParameterNode loadRequiredParameterNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_name = loadConstant();
-        return new Nodes.RequiredParameterNode(startOffset, length, flags, field_name);
-    }
-
-    private Nodes.RescueModifierNode loadRescueModifierNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_rescue_expression = stack.pop();
-        var field_expression = stack.pop();
-        return new Nodes.RescueModifierNode(startOffset, length, field_expression, field_rescue_expression);
-    }
-
-    private Nodes.RescueNode loadRescueNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int exceptionsSize = loadVarUInt();
-        var field_subsequent = (Nodes.RescueNode) stack.pop();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        var field_reference = stack.pop();
-        var field_exceptions = popNodes(stack, exceptionsSize);
-        return new Nodes.RescueNode(startOffset, length, field_exceptions, field_reference, field_statements, field_subsequent);
-    }
-
-    private Nodes.RestParameterNode loadRestParameterNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_name = loadOptionalConstant();
-        return new Nodes.RestParameterNode(startOffset, length, flags, field_name);
-    }
-
-    private Nodes.RetryNode loadRetryNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.RetryNode(startOffset, length);
-    }
-
-    private Nodes.ReturnNode loadReturnNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_arguments = (Nodes.ArgumentsNode) stack.pop();
-        return new Nodes.ReturnNode(startOffset, length, field_arguments);
-    }
-
-    private Nodes.SelfNode loadSelfNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.SelfNode(startOffset, length);
-    }
-
-    private Nodes.ShareableConstantNode loadShareableConstantNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_write = stack.pop();
-        return new Nodes.ShareableConstantNode(startOffset, length, flags, field_write);
-    }
-
-    private Nodes.SingletonClassNode loadSingletonClassNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_locals = loadConstants();
-        var field_body = stack.pop();
-        var field_expression = stack.pop();
-        return new Nodes.SingletonClassNode(startOffset, length, field_locals, field_expression, field_body);
-    }
-
-    private Nodes.SourceEncodingNode loadSourceEncodingNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.SourceEncodingNode(startOffset, length);
-    }
-
-    private Nodes.SourceFileNode loadSourceFileNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_filepath = loadString();
-        return new Nodes.SourceFileNode(startOffset, length, flags, field_filepath);
-    }
-
-    private Nodes.SourceLineNode loadSourceLineNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.SourceLineNode(startOffset, length);
-    }
-
-    private Nodes.SplatNode loadSplatNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_expression = stack.pop();
-        return new Nodes.SplatNode(startOffset, length, field_expression);
-    }
-
-    private Nodes.StatementsNode loadStatementsNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int bodySize = loadVarUInt();
-        var field_body = popNodes(stack, bodySize);
-        return new Nodes.StatementsNode(startOffset, length, field_body);
-    }
-
-    private Nodes.StringNode loadStringNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_unescaped = loadString();
-        return new Nodes.StringNode(startOffset, length, flags, field_unescaped);
-    }
-
-    private Nodes.SuperNode loadSuperNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_block = stack.pop();
-        var field_arguments = (Nodes.ArgumentsNode) stack.pop();
-        return new Nodes.SuperNode(startOffset, length, field_arguments, field_block);
-    }
-
-    private Nodes.SymbolNode loadSymbolNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_unescaped = loadString();
-        return new Nodes.SymbolNode(startOffset, length, flags, field_unescaped);
-    }
-
-    private Nodes.TrueNode loadTrueNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        return new Nodes.TrueNode(startOffset, length);
-    }
-
-    private Nodes.UndefNode loadUndefNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int namesSize = loadVarUInt();
-        var field_names = popNodes(stack, namesSize);
-        return new Nodes.UndefNode(startOffset, length, field_names);
-    }
-
-    private Nodes.UnlessNode loadUnlessNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_else_clause = (Nodes.ElseNode) stack.pop();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        var field_predicate = stack.pop();
-        return new Nodes.UnlessNode(startOffset, length, field_predicate, field_statements, field_else_clause);
-    }
-
-    private Nodes.UntilNode loadUntilNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        var field_predicate = stack.pop();
-        return new Nodes.UntilNode(startOffset, length, flags, field_predicate, field_statements);
-    }
-
-    private Nodes.WhenNode loadWhenNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        int conditionsSize = loadVarUInt();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        var field_conditions = popNodes(stack, conditionsSize);
-        return new Nodes.WhenNode(startOffset, length, field_conditions, field_statements);
-    }
-
-    private Nodes.WhileNode loadWhileNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_statements = (Nodes.StatementsNode) stack.pop();
-        var field_predicate = stack.pop();
-        return new Nodes.WhileNode(startOffset, length, flags, field_predicate, field_statements);
-    }
-
-    private Nodes.XStringNode loadXStringNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        short flags = loadFlags();
-        var field_unescaped = loadString();
-        return new Nodes.XStringNode(startOffset, length, flags, field_unescaped);
-    }
-
-    private Nodes.YieldNode loadYieldNode(NodeStack stack) {
-        int startOffset = loadVarUInt();
-        int length = loadVarUInt();
-        var field_arguments = (Nodes.ArgumentsNode) stack.pop();
-        return new Nodes.YieldNode(startOffset, length, field_arguments);
-    }
-
     private static final Nodes.Node[] EMPTY_Node_ARRAY = {};
 
-    private static Nodes.Node[] popNodes(NodeStack stack, int length) {
+    private Nodes.Node[] loadNodes() {
+        int length = loadVarUInt();
         if (length == 0) {
             return EMPTY_Node_ARRAY;
         }
         Nodes.Node[] nodes = new Nodes.Node[length];
-        for (int i = length - 1; i >= 0; i--) {
-            nodes[i] = stack.pop();
+        for (int i = 0; i < length; i++) {
+            nodes[i] = loadNode();
         }
         return nodes;
     }
 
     private static final Nodes.BlockLocalVariableNode[] EMPTY_BlockLocalVariableNode_ARRAY = {};
 
-    private static Nodes.BlockLocalVariableNode[] popBlockLocalVariableNodes(NodeStack stack, int length) {
+    private Nodes.BlockLocalVariableNode[] loadBlockLocalVariableNodes() {
+        int length = loadVarUInt();
         if (length == 0) {
             return EMPTY_BlockLocalVariableNode_ARRAY;
         }
         Nodes.BlockLocalVariableNode[] nodes = new Nodes.BlockLocalVariableNode[length];
-        for (int i = length - 1; i >= 0; i--) {
-            nodes[i] = (Nodes.BlockLocalVariableNode) stack.pop();
+        for (int i = 0; i < length; i++) {
+            nodes[i] = (Nodes.BlockLocalVariableNode) loadNode();
         }
         return nodes;
     }
 
     private static final Nodes.InNode[] EMPTY_InNode_ARRAY = {};
 
-    private static Nodes.InNode[] popInNodes(NodeStack stack, int length) {
+    private Nodes.InNode[] loadInNodes() {
+        int length = loadVarUInt();
         if (length == 0) {
             return EMPTY_InNode_ARRAY;
         }
         Nodes.InNode[] nodes = new Nodes.InNode[length];
-        for (int i = length - 1; i >= 0; i--) {
-            nodes[i] = (Nodes.InNode) stack.pop();
+        for (int i = 0; i < length; i++) {
+            nodes[i] = (Nodes.InNode) loadNode();
         }
         return nodes;
     }
 
     private static final Nodes.WhenNode[] EMPTY_WhenNode_ARRAY = {};
 
-    private static Nodes.WhenNode[] popWhenNodes(NodeStack stack, int length) {
+    private Nodes.WhenNode[] loadWhenNodes() {
+        int length = loadVarUInt();
         if (length == 0) {
             return EMPTY_WhenNode_ARRAY;
         }
         Nodes.WhenNode[] nodes = new Nodes.WhenNode[length];
-        for (int i = length - 1; i >= 0; i--) {
-            nodes[i] = (Nodes.WhenNode) stack.pop();
+        for (int i = 0; i < length; i++) {
+            nodes[i] = (Nodes.WhenNode) loadNode();
         }
         return nodes;
     }
 
     private static final Nodes.AssocNode[] EMPTY_AssocNode_ARRAY = {};
 
-    private static Nodes.AssocNode[] popAssocNodes(NodeStack stack, int length) {
+    private Nodes.AssocNode[] loadAssocNodes() {
+        int length = loadVarUInt();
         if (length == 0) {
             return EMPTY_AssocNode_ARRAY;
         }
         Nodes.AssocNode[] nodes = new Nodes.AssocNode[length];
-        for (int i = length - 1; i >= 0; i--) {
-            nodes[i] = (Nodes.AssocNode) stack.pop();
+        for (int i = 0; i < length; i++) {
+            nodes[i] = (Nodes.AssocNode) loadNode();
         }
         return nodes;
     }
 
     private static final Nodes.LocalVariableTargetNode[] EMPTY_LocalVariableTargetNode_ARRAY = {};
 
-    private static Nodes.LocalVariableTargetNode[] popLocalVariableTargetNodes(NodeStack stack, int length) {
+    private Nodes.LocalVariableTargetNode[] loadLocalVariableTargetNodes() {
+        int length = loadVarUInt();
         if (length == 0) {
             return EMPTY_LocalVariableTargetNode_ARRAY;
         }
         Nodes.LocalVariableTargetNode[] nodes = new Nodes.LocalVariableTargetNode[length];
-        for (int i = length - 1; i >= 0; i--) {
-            nodes[i] = (Nodes.LocalVariableTargetNode) stack.pop();
+        for (int i = 0; i < length; i++) {
+            nodes[i] = (Nodes.LocalVariableTargetNode) loadNode();
         }
         return nodes;
     }
 
     private static final Nodes.OptionalParameterNode[] EMPTY_OptionalParameterNode_ARRAY = {};
 
-    private static Nodes.OptionalParameterNode[] popOptionalParameterNodes(NodeStack stack, int length) {
+    private Nodes.OptionalParameterNode[] loadOptionalParameterNodes() {
+        int length = loadVarUInt();
         if (length == 0) {
             return EMPTY_OptionalParameterNode_ARRAY;
         }
         Nodes.OptionalParameterNode[] nodes = new Nodes.OptionalParameterNode[length];
-        for (int i = length - 1; i >= 0; i--) {
-            nodes[i] = (Nodes.OptionalParameterNode) stack.pop();
+        for (int i = 0; i < length; i++) {
+            nodes[i] = (Nodes.OptionalParameterNode) loadNode();
         }
         return nodes;
     }

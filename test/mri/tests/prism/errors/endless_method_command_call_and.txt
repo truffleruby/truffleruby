@@ -1,3 +1,0 @@
-a and def f = foo 1
-                  ^ unexpected integer, expecting end-of-input
-
