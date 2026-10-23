@@ -133,7 +133,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-22.04-arm, macos-14]
+        os: [ubuntu-22.04, ubuntu-22.04-arm, macos-15]
     steps:
     - name: Clone TruffleRuby
       uses: actions/checkout@v7
