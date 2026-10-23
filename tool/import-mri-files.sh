@@ -76,6 +76,7 @@ rm -f exe/ruby exe/typeprof
 ruby tool/patch_launchers.rb
 
 # *.c
+cp "$RUBY_SOURCE_DIR/range.c" src/main/c/cext
 cp "$RUBY_SOURCE_DIR/st.c" src/main/c/cext
 cp "$RUBY_SOURCE_DIR/missing/strlcpy.c" src/main/c/cext
 
