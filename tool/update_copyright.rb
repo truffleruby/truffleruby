@@ -94,6 +94,7 @@ OTHER_COPYRIGHTS = [
   /Copyright \(c\) \d{4}, Brian Shirai/, # rubysl-socket
   /Copyright \(c\) \d{4}, \d{4} Todd C\. Miller <Todd\.Miller@courtesan\.com>/, # strlcpy.c
   /Copyright \(C\) \d{4} Koichi Sasada/, # id.h
+  /Copyright \(C\) \d{4}-\d{4} Yukihiro Matsumoto/, # MRI C files: range.c
   /Ruby is copyrighted free software by Yukihiro Matsumoto/, # MRI license
   /Copyright(?:::)?\s+\(C\)\s+\d{4}\s+Network Applied Communication Laboratory, Inc\./, # MRI stdlibs: thread, timeout
   /\* BEGIN LICENSE BLOCK \**\s*\n\s*\*\s*Version: EPL 2\.0\/GPL 2\.0\/LGPL 2\.1/,

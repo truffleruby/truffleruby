@@ -5,10 +5,13 @@ New features:
 
 Bug fixes:
 
+* Fix `rb_range_beg_len()` raising `TypeError` for beginless and endless ranges (@nirvdrum).
+
 
 Compatibility:
 
 * `IO#read` now coerces the `length` parameter to `Integer` (#4456, @andrykonchin).
+* `rb_range_values()` now matches CRuby: it returns false for `Enumerator::ArithmeticSequence` and for range-like objects without `#exclude_end?`, and accepts range-like objects with private methods. The implementation is now imported from CRuby (@nirvdrum).
 
 Performance:
 

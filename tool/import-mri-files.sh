@@ -40,6 +40,7 @@ find lib/mri -name '.document' -delete
 
 # *.c
 cp "$RUBY_SOURCE_DIR/st.c" src/main/c/cext
+cp "$RUBY_SOURCE_DIR/range.c" src/main/c/cext
 cp "$RUBY_SOURCE_DIR/missing/strlcpy.c" src/main/c/cext
 
 # Copy core library Ruby files
