@@ -12,6 +12,7 @@ Compatibility:
 
 Performance:
 
+* Reduce C extension overhead for ID-based C API calls such as `rb_funcall()`, `rb_ivar_get()`, and `rb_block_call()` by avoiding a separate `ID2SYM()` upcall (@nirvdrum).
 
 Incompatible Changes:
 

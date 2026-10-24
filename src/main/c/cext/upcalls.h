@@ -1088,8 +1088,8 @@ static inline VALUE rb_tr_up_send2_at(VALUE v0, VALUE v1, VALUE v2) {
   return result;
 }
 
-extern int (*rb_tr_up_impl_send2_b_const_defined_p)(VALUE v0, VALUE v1, VALUE v2);
-static inline int rb_tr_up_send2_b_const_defined_p(VALUE v0, VALUE v1, VALUE v2) {
+extern int (*rb_tr_up_impl_send2_b_const_defined_p)(VALUE v0, ID v1, VALUE v2);
+static inline int rb_tr_up_send2_b_const_defined_p(VALUE v0, ID v1, VALUE v2) {
   int result = rb_tr_up_impl_send2_b_const_defined_p(v0, v1, v2);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1115,8 +1115,8 @@ static inline VALUE rb_tr_up_send2_compatible_p(VALUE v0, VALUE v1, VALUE v2) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_send2_const_get)(VALUE v0, VALUE v1, VALUE v2);
-static inline VALUE rb_tr_up_send2_const_get(VALUE v0, VALUE v1, VALUE v2) {
+extern VALUE (*rb_tr_up_impl_send2_const_get)(VALUE v0, ID v1, VALUE v2);
+static inline VALUE rb_tr_up_send2_const_get(VALUE v0, ID v1, VALUE v2) {
   VALUE result = rb_tr_up_impl_send2_const_get(v0, v1, v2);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1263,8 +1263,8 @@ static inline int rb_tr_up_rb_absint_singlebit_p(VALUE v0) {
   return result;
 }
 
-extern void (*rb_tr_up_impl_rb_alias)(VALUE v0, VALUE v1, VALUE v2);
-static inline void rb_tr_up_rb_alias(VALUE v0, VALUE v1, VALUE v2) {
+extern void (*rb_tr_up_impl_rb_alias)(VALUE v0, ID v1, ID v2);
+static inline void rb_tr_up_rb_alias(VALUE v0, ID v1, ID v2) {
   rb_tr_up_impl_rb_alias(v0, v1, v2);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1280,8 +1280,8 @@ static inline VALUE rb_tr_up_rb_any_to_s(VALUE v0) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_apply)(VALUE v0, VALUE v1, VALUE v2);
-static inline VALUE rb_tr_up_rb_apply(VALUE v0, VALUE v1, VALUE v2) {
+extern VALUE (*rb_tr_up_impl_rb_apply)(VALUE v0, ID v1, VALUE v2);
+static inline VALUE rb_tr_up_rb_apply(VALUE v0, ID v1, VALUE v2) {
   VALUE result = rb_tr_up_impl_rb_apply(v0, v1, v2);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1343,8 +1343,8 @@ static inline int rb_tr_up_rb_ascii8bit_encindex(void) {
   return result;
 }
 
-extern void (*rb_tr_up_impl_rb_attr)(VALUE v0, VALUE v1, int v2, int v3, int v4);
-static inline void rb_tr_up_rb_attr(VALUE v0, VALUE v1, int v2, int v3, int v4) {
+extern void (*rb_tr_up_impl_rb_attr)(VALUE v0, ID v1, int v2, int v3, int v4);
+static inline void rb_tr_up_rb_attr(VALUE v0, ID v1, int v2, int v3, int v4) {
   rb_tr_up_impl_rb_attr(v0, v1, v2, v3, v4);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1387,8 +1387,8 @@ static inline VALUE rb_tr_up_rb_big_sign(VALUE v0) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_block_call)(VALUE v0, VALUE v1, VALUE v2, const void *v3, const void *v4);
-static inline VALUE rb_tr_up_rb_block_call(VALUE v0, VALUE v1, VALUE v2, const void *v3, const void *v4) {
+extern VALUE (*rb_tr_up_impl_rb_block_call)(VALUE v0, ID v1, VALUE v2, const void *v3, const void *v4);
+static inline VALUE rb_tr_up_rb_block_call(VALUE v0, ID v1, VALUE v2, const void *v3, const void *v4) {
   VALUE result = rb_tr_up_impl_rb_block_call(v0, v1, v2, v3, v4);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1466,8 +1466,8 @@ static inline void rb_tr_up_rb_check_frozen(VALUE v0) {
   }
 }
 
-extern VALUE (*rb_tr_up_impl_rb_check_funcall)(VALUE v0, VALUE v1, VALUE v2);
-static inline VALUE rb_tr_up_rb_check_funcall(VALUE v0, VALUE v1, VALUE v2) {
+extern VALUE (*rb_tr_up_impl_rb_check_funcall)(VALUE v0, ID v1, VALUE v2);
+static inline VALUE rb_tr_up_rb_check_funcall(VALUE v0, ID v1, VALUE v2) {
   VALUE result = rb_tr_up_impl_rb_check_funcall(v0, v1, v2);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1618,8 +1618,8 @@ static inline VALUE rb_tr_up_rb_complex_set_real(VALUE v0, VALUE v1) {
   return result;
 }
 
-extern int (*rb_tr_up_impl_rb_const_defined)(VALUE v0, VALUE v1);
-static inline int rb_tr_up_rb_const_defined(VALUE v0, VALUE v1) {
+extern int (*rb_tr_up_impl_rb_const_defined)(VALUE v0, ID v1);
+static inline int rb_tr_up_rb_const_defined(VALUE v0, ID v1) {
   int result = rb_tr_up_impl_rb_const_defined(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1627,8 +1627,8 @@ static inline int rb_tr_up_rb_const_defined(VALUE v0, VALUE v1) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_const_get)(VALUE v0, VALUE v1);
-static inline VALUE rb_tr_up_rb_const_get(VALUE v0, VALUE v1) {
+extern VALUE (*rb_tr_up_impl_rb_const_get)(VALUE v0, ID v1);
+static inline VALUE rb_tr_up_rb_const_get(VALUE v0, ID v1) {
   VALUE result = rb_tr_up_impl_rb_const_get(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1636,8 +1636,8 @@ static inline VALUE rb_tr_up_rb_const_get(VALUE v0, VALUE v1) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_const_get_from)(VALUE v0, VALUE v1);
-static inline VALUE rb_tr_up_rb_const_get_from(VALUE v0, VALUE v1) {
+extern VALUE (*rb_tr_up_impl_rb_const_get_from)(VALUE v0, ID v1);
+static inline VALUE rb_tr_up_rb_const_get_from(VALUE v0, ID v1) {
   VALUE result = rb_tr_up_impl_rb_const_get_from(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1645,8 +1645,8 @@ static inline VALUE rb_tr_up_rb_const_get_from(VALUE v0, VALUE v1) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_const_remove)(VALUE v0, VALUE v1);
-static inline VALUE rb_tr_up_rb_const_remove(VALUE v0, VALUE v1) {
+extern VALUE (*rb_tr_up_impl_rb_const_remove)(VALUE v0, ID v1);
+static inline VALUE rb_tr_up_rb_const_remove(VALUE v0, ID v1) {
   VALUE result = rb_tr_up_impl_rb_const_remove(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1654,8 +1654,8 @@ static inline VALUE rb_tr_up_rb_const_remove(VALUE v0, VALUE v1) {
   return result;
 }
 
-extern void (*rb_tr_up_impl_rb_const_set)(VALUE v0, VALUE v1, VALUE v2);
-static inline void rb_tr_up_rb_const_set(VALUE v0, VALUE v1, VALUE v2) {
+extern void (*rb_tr_up_impl_rb_const_set)(VALUE v0, ID v1, VALUE v2);
+static inline void rb_tr_up_rb_const_set(VALUE v0, ID v1, VALUE v2) {
   rb_tr_up_impl_rb_const_set(v0, v1, v2);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1723,8 +1723,8 @@ static inline void rb_tr_up_rb_cv_set(VALUE v0, VALUE v1, VALUE v2) {
   }
 }
 
-extern VALUE (*rb_tr_up_impl_rb_cvar_defined)(VALUE v0, VALUE v1);
-static inline VALUE rb_tr_up_rb_cvar_defined(VALUE v0, VALUE v1) {
+extern VALUE (*rb_tr_up_impl_rb_cvar_defined)(VALUE v0, ID v1);
+static inline VALUE rb_tr_up_rb_cvar_defined(VALUE v0, ID v1) {
   VALUE result = rb_tr_up_impl_rb_cvar_defined(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1732,8 +1732,8 @@ static inline VALUE rb_tr_up_rb_cvar_defined(VALUE v0, VALUE v1) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_cvar_get)(VALUE v0, VALUE v1);
-static inline VALUE rb_tr_up_rb_cvar_get(VALUE v0, VALUE v1) {
+extern VALUE (*rb_tr_up_impl_rb_cvar_get)(VALUE v0, ID v1);
+static inline VALUE rb_tr_up_rb_cvar_get(VALUE v0, ID v1) {
   VALUE result = rb_tr_up_impl_rb_cvar_get(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1741,8 +1741,8 @@ static inline VALUE rb_tr_up_rb_cvar_get(VALUE v0, VALUE v1) {
   return result;
 }
 
-extern void (*rb_tr_up_impl_rb_cvar_set)(VALUE v0, VALUE v1, VALUE v2);
-static inline void rb_tr_up_rb_cvar_set(VALUE v0, VALUE v1, VALUE v2) {
+extern void (*rb_tr_up_impl_rb_cvar_set)(VALUE v0, ID v1, VALUE v2);
+static inline void rb_tr_up_rb_cvar_set(VALUE v0, ID v1, VALUE v2) {
   rb_tr_up_impl_rb_cvar_set(v0, v1, v2);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -1820,16 +1820,16 @@ static inline void rb_tr_up_rb_define_alloc_func(VALUE v0, const void *v1) {
   }
 }
 
-extern void (*rb_tr_up_impl_rb_define_attr)(VALUE v0, VALUE v1, int v2, int v3);
-static inline void rb_tr_up_rb_define_attr(VALUE v0, VALUE v1, int v2, int v3) {
+extern void (*rb_tr_up_impl_rb_define_attr)(VALUE v0, ID v1, int v2, int v3);
+static inline void rb_tr_up_rb_define_attr(VALUE v0, ID v1, int v2, int v3) {
   rb_tr_up_impl_rb_define_attr(v0, v1, v2, v3);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
   }
 }
 
-extern VALUE (*rb_tr_up_impl_rb_define_class_under)(VALUE v0, VALUE v1, VALUE v2);
-static inline VALUE rb_tr_up_rb_define_class_under(VALUE v0, VALUE v1, VALUE v2) {
+extern VALUE (*rb_tr_up_impl_rb_define_class_under)(VALUE v0, ID v1, VALUE v2);
+static inline VALUE rb_tr_up_rb_define_class_under(VALUE v0, ID v1, VALUE v2) {
   VALUE result = rb_tr_up_impl_rb_define_class_under(v0, v1, v2);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -2334,8 +2334,8 @@ static inline VALUE rb_tr_up_rb_fs(void) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_funcall_with_block)(VALUE v0, VALUE v1, const void *v2, long v3, VALUE v4);
-static inline VALUE rb_tr_up_rb_funcall_with_block(VALUE v0, VALUE v1, const void *v2, long v3, VALUE v4) {
+extern VALUE (*rb_tr_up_impl_rb_funcall_with_block)(VALUE v0, ID v1, const void *v2, long v3, VALUE v4);
+static inline VALUE rb_tr_up_rb_funcall_with_block(VALUE v0, ID v1, const void *v2, long v3, VALUE v4) {
   VALUE result = rb_tr_up_impl_rb_funcall_with_block(v0, v1, v2, v3, v4);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -2343,8 +2343,8 @@ static inline VALUE rb_tr_up_rb_funcall_with_block(VALUE v0, VALUE v1, const voi
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_funcall_with_block_keywords)(VALUE v0, VALUE v1, const void *v2, long v3, VALUE v4);
-static inline VALUE rb_tr_up_rb_funcall_with_block_keywords(VALUE v0, VALUE v1, const void *v2, long v3, VALUE v4) {
+extern VALUE (*rb_tr_up_impl_rb_funcall_with_block_keywords)(VALUE v0, ID v1, const void *v2, long v3, VALUE v4);
+static inline VALUE rb_tr_up_rb_funcall_with_block_keywords(VALUE v0, ID v1, const void *v2, long v3, VALUE v4) {
   VALUE result = rb_tr_up_impl_rb_funcall_with_block_keywords(v0, v1, v2, v3, v4);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -2352,8 +2352,8 @@ static inline VALUE rb_tr_up_rb_funcall_with_block_keywords(VALUE v0, VALUE v1, 
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_funcallv)(VALUE v0, VALUE v1, const void *v2, long v3);
-static inline VALUE rb_tr_up_rb_funcallv(VALUE v0, VALUE v1, const void *v2, long v3) {
+extern VALUE (*rb_tr_up_impl_rb_funcallv)(VALUE v0, ID v1, const void *v2, long v3);
+static inline VALUE rb_tr_up_rb_funcallv(VALUE v0, ID v1, const void *v2, long v3) {
   VALUE result = rb_tr_up_impl_rb_funcallv(v0, v1, v2, v3);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -2361,8 +2361,8 @@ static inline VALUE rb_tr_up_rb_funcallv(VALUE v0, VALUE v1, const void *v2, lon
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_funcallv_keywords)(VALUE v0, VALUE v1, const void *v2, long v3);
-static inline VALUE rb_tr_up_rb_funcallv_keywords(VALUE v0, VALUE v1, const void *v2, long v3) {
+extern VALUE (*rb_tr_up_impl_rb_funcallv_keywords)(VALUE v0, ID v1, const void *v2, long v3);
+static inline VALUE rb_tr_up_rb_funcallv_keywords(VALUE v0, ID v1, const void *v2, long v3) {
   VALUE result = rb_tr_up_impl_rb_funcallv_keywords(v0, v1, v2, v3);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -2370,8 +2370,8 @@ static inline VALUE rb_tr_up_rb_funcallv_keywords(VALUE v0, VALUE v1, const void
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_funcallv_public)(VALUE v0, VALUE v1, const void *v2, long v3);
-static inline VALUE rb_tr_up_rb_funcallv_public(VALUE v0, VALUE v1, const void *v2, long v3) {
+extern VALUE (*rb_tr_up_impl_rb_funcallv_public)(VALUE v0, ID v1, const void *v2, long v3);
+static inline VALUE rb_tr_up_rb_funcallv_public(VALUE v0, ID v1, const void *v2, long v3) {
   VALUE result = rb_tr_up_impl_rb_funcallv_public(v0, v1, v2, v3);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -2552,8 +2552,8 @@ static inline long rb_tr_up_rb_hash_start(long v0) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_id2str)(VALUE v0);
-static inline VALUE rb_tr_up_rb_id2str(VALUE v0) {
+extern VALUE (*rb_tr_up_impl_rb_id2str)(ID v0);
+static inline VALUE rb_tr_up_rb_id2str(ID v0) {
   VALUE result = rb_tr_up_impl_rb_id2str(v0);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -2561,8 +2561,8 @@ static inline VALUE rb_tr_up_rb_id2str(VALUE v0) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_id_attrset)(VALUE v0);
-static inline VALUE rb_tr_up_rb_id_attrset(VALUE v0) {
+extern VALUE (*rb_tr_up_impl_rb_id_attrset)(ID v0);
+static inline VALUE rb_tr_up_rb_id_attrset(ID v0) {
   VALUE result = rb_tr_up_impl_rb_id_attrset(v0);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -2732,8 +2732,8 @@ static inline VALUE rb_tr_up_rb_io_puts(VALUE v0, VALUE v1) {
   return result;
 }
 
-extern int (*rb_tr_up_impl_rb_is_class_id)(VALUE v0);
-static inline int rb_tr_up_rb_is_class_id(VALUE v0) {
+extern int (*rb_tr_up_impl_rb_is_class_id)(ID v0);
+static inline int rb_tr_up_rb_is_class_id(ID v0) {
   int result = rb_tr_up_impl_rb_is_class_id(v0);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -2741,8 +2741,8 @@ static inline int rb_tr_up_rb_is_class_id(VALUE v0) {
   return result;
 }
 
-extern int (*rb_tr_up_impl_rb_is_const_id)(VALUE v0);
-static inline int rb_tr_up_rb_is_const_id(VALUE v0) {
+extern int (*rb_tr_up_impl_rb_is_const_id)(ID v0);
+static inline int rb_tr_up_rb_is_const_id(ID v0) {
   int result = rb_tr_up_impl_rb_is_const_id(v0);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -2750,8 +2750,8 @@ static inline int rb_tr_up_rb_is_const_id(VALUE v0) {
   return result;
 }
 
-extern int (*rb_tr_up_impl_rb_is_instance_id)(VALUE v0);
-static inline int rb_tr_up_rb_is_instance_id(VALUE v0) {
+extern int (*rb_tr_up_impl_rb_is_instance_id)(ID v0);
+static inline int rb_tr_up_rb_is_instance_id(ID v0) {
   int result = rb_tr_up_impl_rb_is_instance_id(v0);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -2785,8 +2785,8 @@ static inline VALUE rb_tr_up_rb_ivar_count(VALUE v0) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_ivar_defined)(VALUE v0, VALUE v1);
-static inline VALUE rb_tr_up_rb_ivar_defined(VALUE v0, VALUE v1) {
+extern VALUE (*rb_tr_up_impl_rb_ivar_defined)(VALUE v0, ID v1);
+static inline VALUE rb_tr_up_rb_ivar_defined(VALUE v0, ID v1) {
   VALUE result = rb_tr_up_impl_rb_ivar_defined(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -2802,8 +2802,8 @@ static inline void rb_tr_up_rb_ivar_foreach(VALUE v0, const void *v1, const void
   }
 }
 
-extern VALUE (*rb_tr_up_impl_rb_ivar_get)(VALUE v0, VALUE v1);
-static inline VALUE rb_tr_up_rb_ivar_get(VALUE v0, VALUE v1) {
+extern VALUE (*rb_tr_up_impl_rb_ivar_get)(VALUE v0, ID v1);
+static inline VALUE rb_tr_up_rb_ivar_get(VALUE v0, ID v1) {
   VALUE result = rb_tr_up_impl_rb_ivar_get(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -2820,8 +2820,8 @@ static inline VALUE rb_tr_up_rb_ivar_lookup(VALUE v0, VALUE v1, VALUE v2) {
   return result;
 }
 
-extern void (*rb_tr_up_impl_rb_ivar_set)(VALUE v0, VALUE v1, VALUE v2);
-static inline void rb_tr_up_rb_ivar_set(VALUE v0, VALUE v1, VALUE v2) {
+extern void (*rb_tr_up_impl_rb_ivar_set)(VALUE v0, ID v1, VALUE v2);
+static inline void rb_tr_up_rb_ivar_set(VALUE v0, ID v1, VALUE v2) {
   rb_tr_up_impl_rb_ivar_set(v0, v1, v2);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -3095,8 +3095,8 @@ static inline long rb_tr_up_rb_num2ulong(VALUE v0) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_num_coerce_bin)(VALUE v0, VALUE v1, VALUE v2);
-static inline VALUE rb_tr_up_rb_num_coerce_bin(VALUE v0, VALUE v1, VALUE v2) {
+extern VALUE (*rb_tr_up_impl_rb_num_coerce_bin)(VALUE v0, VALUE v1, ID v2);
+static inline VALUE rb_tr_up_rb_num_coerce_bin(VALUE v0, VALUE v1, ID v2) {
   VALUE result = rb_tr_up_impl_rb_num_coerce_bin(v0, v1, v2);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -3104,8 +3104,8 @@ static inline VALUE rb_tr_up_rb_num_coerce_bin(VALUE v0, VALUE v1, VALUE v2) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_num_coerce_cmp)(VALUE v0, VALUE v1, VALUE v2);
-static inline VALUE rb_tr_up_rb_num_coerce_cmp(VALUE v0, VALUE v1, VALUE v2) {
+extern VALUE (*rb_tr_up_impl_rb_num_coerce_cmp)(VALUE v0, VALUE v1, ID v2);
+static inline VALUE rb_tr_up_rb_num_coerce_cmp(VALUE v0, VALUE v1, ID v2) {
   VALUE result = rb_tr_up_impl_rb_num_coerce_cmp(v0, v1, v2);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -3113,8 +3113,8 @@ static inline VALUE rb_tr_up_rb_num_coerce_cmp(VALUE v0, VALUE v1, VALUE v2) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_num_coerce_relop)(VALUE v0, VALUE v1, VALUE v2);
-static inline VALUE rb_tr_up_rb_num_coerce_relop(VALUE v0, VALUE v1, VALUE v2) {
+extern VALUE (*rb_tr_up_impl_rb_num_coerce_relop)(VALUE v0, VALUE v1, ID v2);
+static inline VALUE rb_tr_up_rb_num_coerce_relop(VALUE v0, VALUE v1, ID v2) {
   VALUE result = rb_tr_up_impl_rb_num_coerce_relop(v0, v1, v2);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -3256,8 +3256,8 @@ static inline VALUE rb_tr_up_rb_obj_method(VALUE v0, VALUE v1) {
   return result;
 }
 
-extern int (*rb_tr_up_impl_rb_obj_method_arity)(VALUE v0, VALUE v1);
-static inline int rb_tr_up_rb_obj_method_arity(VALUE v0, VALUE v1) {
+extern int (*rb_tr_up_impl_rb_obj_method_arity)(VALUE v0, ID v1);
+static inline int rb_tr_up_rb_obj_method_arity(VALUE v0, ID v1) {
   int result = rb_tr_up_impl_rb_obj_method_arity(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -3454,8 +3454,8 @@ static inline VALUE rb_tr_up_rb_rescue2(const void *v0, const void *v1, const vo
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_respond_to)(VALUE v0, VALUE v1);
-static inline VALUE rb_tr_up_rb_respond_to(VALUE v0, VALUE v1) {
+extern VALUE (*rb_tr_up_impl_rb_respond_to)(VALUE v0, ID v1);
+static inline VALUE rb_tr_up_rb_respond_to(VALUE v0, ID v1) {
   VALUE result = rb_tr_up_impl_rb_respond_to(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -3765,8 +3765,8 @@ static inline VALUE rb_tr_up_rb_struct_define_under_no_splat(VALUE v0, VALUE v1,
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_rb_struct_getmember)(VALUE v0, VALUE v1);
-static inline VALUE rb_tr_up_rb_struct_getmember(VALUE v0, VALUE v1) {
+extern VALUE (*rb_tr_up_impl_rb_struct_getmember)(VALUE v0, ID v1);
+static inline VALUE rb_tr_up_rb_struct_getmember(VALUE v0, ID v1) {
   VALUE result = rb_tr_up_impl_rb_struct_getmember(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
@@ -4170,8 +4170,8 @@ static inline VALUE rb_tr_up_rb_ulong2num(long v0) {
   return result;
 }
 
-extern void (*rb_tr_up_impl_rb_undef)(VALUE v0, VALUE v1);
-static inline void rb_tr_up_rb_undef(VALUE v0, VALUE v1) {
+extern void (*rb_tr_up_impl_rb_undef)(VALUE v0, ID v1);
+static inline void rb_tr_up_rb_undef(VALUE v0, ID v1) {
   rb_tr_up_impl_rb_undef(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
