@@ -1115,6 +1115,7 @@ public final class CoreLibrary {
             "/core/truffle/queue_operations.rb",
             "/core/pathname.rb",
             "/core/ruby.rb",
+            "/core/box.rb",
             "/core/main.rb",
             "/core/post.rb",
             POST_BOOT_FILE

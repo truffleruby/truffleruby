@@ -79,6 +79,29 @@ describe "Interop special forms" do
     pm.log.should.include?([:polyglot_read_member, 'bar'])
   end
 
+  it description['::NAME', :readMember, ['"NAME"']] do
+    pfo, pm, l = proxy[TruffleInteropSpecs::PolyglotMember.new]
+    pfo['Foo'] = 42
+    pfo::Foo.should == 42
+    -> { pfo::Bar }.should.raise(NameError)
+    l.log.should.include?(['readMember', 'Foo'])
+    l.log.should.include?(['readMember', 'Bar'])
+    pm.log.should.include?([:polyglot_read_member, 'Foo'])
+    pm.log.should.include?([:polyglot_read_member, 'Bar'])
+  end
+
+  defined_constant_doc = doc['::NAME', 'sends `isMemberReadable(foreign_object, "NAME")` for `defined?(foreign_object::NAME)`']
+  it defined_constant_doc do
+    pfo, pm, l = proxy[TruffleInteropSpecs::PolyglotMember.new]
+    pfo['Foo'] = 42
+    defined?(pfo::Foo).should == "constant"
+    defined?(pfo::Bar).should == nil
+    l.log.should.include?(['isMemberReadable', 'Foo'])
+    l.log.should.include?(['isMemberReadable', 'Bar'])
+    pm.log.should.include?([:polyglot_member_readable?, 'Foo'])
+    pm.log.should.include?([:polyglot_member_readable?, 'Bar'])
+  end
+
   it description['[index]', :readArrayElement, [:index]] do
     pfo, pa, l  = proxy[TruffleInteropSpecs::PolyglotArray.new]
     pfo[0].should == nil
