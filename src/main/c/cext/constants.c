@@ -13,31 +13,31 @@
 // Accessing Ruby constants, rb_const_*
 
 int rb_const_defined(VALUE module, ID name) {
-  return rb_tr_up_rb_const_defined(module, ID2SYM(name));
+  return rb_tr_up_rb_const_defined(module, name);
 }
 
 int rb_const_defined_at(VALUE module, ID name) {
-  return rb_tr_up_send2_b_const_defined_p(module, ID2SYM(name), Qfalse);
+  return rb_tr_up_send2_b_const_defined_p(module, name, Qfalse);
 }
 
 VALUE rb_const_get(VALUE module, ID name) {
-  return rb_tr_up_rb_const_get(module, ID2SYM(name));
+  return rb_tr_up_rb_const_get(module, name);
 }
 
 VALUE rb_const_get_at(VALUE module, ID name) {
-  return rb_tr_up_send2_const_get(module, ID2SYM(name), Qfalse);
+  return rb_tr_up_send2_const_get(module, name, Qfalse);
 }
 
 VALUE rb_const_get_from(VALUE module, ID name) {
-  return rb_tr_up_rb_const_get_from(module, ID2SYM(name));
+  return rb_tr_up_rb_const_get_from(module, name);
 }
 
 VALUE rb_const_remove(VALUE module, ID name) {
-  return rb_tr_up_rb_const_remove(module, ID2SYM(name));
+  return rb_tr_up_rb_const_remove(module, name);
 }
 
 void rb_const_set(VALUE module, ID name, VALUE value) {
-  rb_tr_up_rb_const_set(module, ID2SYM(name), value);
+  rb_tr_up_rb_const_set(module, name, value);
 }
 
 void rb_define_const(VALUE module, const char *name, VALUE value) {

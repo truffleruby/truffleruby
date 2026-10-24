@@ -22,31 +22,31 @@ VALUE rb_iterate(VALUE (*function)(VALUE), VALUE arg1, rb_block_call_func_t bloc
 }
 
 int rb_respond_to(VALUE object, ID name) {
-  return rb_tr_up_rb_respond_to(object, ID2SYM(name));
+  return rb_tr_up_rb_respond_to(object, name);
 }
 
 VALUE rb_funcallv(VALUE object, ID name, int args_count, const VALUE *args) {
-  return rb_tr_up_rb_funcallv(object, ID2SYM(name), args, args_count);
+  return rb_tr_up_rb_funcallv(object, name, args, args_count);
 }
 
 VALUE rb_funcallv_kw(VALUE object, ID name, int args_count, const VALUE *args, int kw_splat) {
   if (kw_splat && args_count > 0) {
-    return rb_tr_up_rb_funcallv_keywords(object, ID2SYM(name), args, args_count);
+    return rb_tr_up_rb_funcallv_keywords(object, name, args, args_count);
   } else {
     return rb_funcallv(object, name, args_count, args);
   }
 }
 
 VALUE rb_funcallv_public(VALUE object, ID name, int args_count, const VALUE *args) {
-  return rb_tr_up_rb_funcallv_public(object, ID2SYM(name), args, args_count);
+  return rb_tr_up_rb_funcallv_public(object, name, args, args_count);
 }
 
 VALUE rb_check_funcall(VALUE object, ID name, int args_count, const VALUE *args) {
-  return rb_tr_up_rb_check_funcall(object, ID2SYM(name), rb_ary_new_from_values(args_count, args));
+  return rb_tr_up_rb_check_funcall(object, name, rb_ary_new_from_values(args_count, args));
 }
 
 VALUE rb_apply(VALUE object, ID name, VALUE args) {
-  return rb_tr_up_rb_apply(object, ID2SYM(name), args);
+  return rb_tr_up_rb_apply(object, name, args);
 }
 
 VALUE rb_block_call(VALUE object, ID name, int args_count, const VALUE *args, rb_block_call_func_t block_call_func, VALUE data) {
@@ -55,7 +55,7 @@ VALUE rb_block_call(VALUE object, ID name, int args_count, const VALUE *args, rb
   } else if (block_call_func == NULL) {
     return rb_funcallv(object, name, args_count, args);
   } else {
-    return rb_tr_up_rb_block_call(object, ID2SYM(name), rb_ary_new4(args_count, args), block_call_func, (void*)data);
+    return rb_tr_up_rb_block_call(object, name, rb_ary_new4(args_count, args), block_call_func, (void*)data);
   }
 }
 
@@ -104,12 +104,12 @@ VALUE rb_yield(VALUE value) {
 }
 
 VALUE rb_funcall_with_block(VALUE recv, ID mid, int argc, const VALUE *argv, VALUE pass_procval) {
-  return rb_tr_up_rb_funcall_with_block(recv, ID2SYM(mid), argv, argc, pass_procval);
+  return rb_tr_up_rb_funcall_with_block(recv, mid, argv, argc, pass_procval);
 }
 
 VALUE rb_funcall_with_block_kw(VALUE recv, ID mid, int argc, const VALUE *argv, VALUE procval, int kw_splat) {
   if (kw_splat && argc > 0) {
-    return rb_tr_up_rb_funcall_with_block_keywords(recv, ID2SYM(mid), argv, argc, procval);
+    return rb_tr_up_rb_funcall_with_block_keywords(recv, mid, argv, argc, procval);
   } else {
     return rb_funcall_with_block(recv, mid, argc, argv, procval);
   }
@@ -186,7 +186,7 @@ int rb_sourceline(void) {
 }
 
 int rb_obj_method_arity(VALUE object, ID id) {
-  return rb_tr_up_rb_obj_method_arity(object, ID2SYM(id));
+  return rb_tr_up_rb_obj_method_arity(object, id);
 }
 
 VALUE rb_obj_method(VALUE object, VALUE id) {
