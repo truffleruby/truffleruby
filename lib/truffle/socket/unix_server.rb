@@ -30,7 +30,7 @@
 class UNIXServer < UNIXSocket
   def initialize(path)
     @no_reverse_lookup = Primitive.class(self).do_not_reverse_lookup
-    @path              = Truffle::Type.check_null_safe(path)
+    @path              = Truffle::Type.coerce_to_path_keep_encoding(path)
 
     fd = Truffle::Socket::Foreign.socket(Socket::AF_UNIX, Socket::SOCK_STREAM, 0)
 
@@ -52,7 +52,7 @@ class UNIXServer < UNIXSocket
   end
 
   def accept
-    Truffle::Socket.accept(self, UNIXSocket, true)
+    Truffle::Socket.accept(self, UNIXSocket, true, true)
   end
 
   private def __accept_nonblock(exception)

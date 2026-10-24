@@ -242,6 +242,11 @@ module Truffle
         return 1 unless io.__send__(:buffer_empty?)
       end
 
+      poll_descriptor(io, event_mask, timeout)
+    end
+
+    # Like #poll but only waits for the descriptor to become ready, ignoring any data in the IO's read buffer.
+    def self.poll_descriptor(io, event_mask, timeout)
       if timeout
         unless Primitive.is_a? timeout, Numeric
           raise TypeError, 'Timeout must be numeric'
@@ -253,7 +258,7 @@ module Truffle
         timeout_ms = Primitive.convert_with_to_int((timeout * 1_000).to_i)
         while timeout_ms > 2147483647 # INT_MAX
           timeout_ms -= 2147483000
-          ret = poll(io, event_mask, 2147483)
+          ret = poll_descriptor(io, event_mask, 2147483)
           return ret unless Primitive.false?(ret)
         end
 
