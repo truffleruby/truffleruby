@@ -114,6 +114,7 @@ class Thread
       raise ArgumentError, 'tried to create Proc object without a block' unless block_given?
 
       thread = Primitive.thread_allocate(self)
+      Truffle::ThreadOperations.inherit_ractor(thread)
       Primitive.thread_initialize(thread)
       thread
     end
@@ -138,6 +139,7 @@ class Thread
       Primitive.fiber_set_storage(root_fiber, inherited_storage)
     end
 
+    Truffle::ThreadOperations.inherit_ractor(self)
     Primitive.thread_initialize(self)
   end
 

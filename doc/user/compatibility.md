@@ -72,9 +72,10 @@ The implementation should be fairly complete and passes all the specs of the `ff
 
 ### Ractor
 
-`Ractor` is currently not implemented on TruffleRuby.
-Threads are run in parallel on TruffleRuby and Threads are far more compatible with gems than `Ractor`, so `Ractor` is not so useful on TruffleRuby.
-Nevertheless, to run a program relying on Ractor on TruffleRuby you can use the [ractor-shim gem](https://github.com/eregon/ractor-shim) and it will run those Ractors in parallel.
+`Ractor` is implemented on top of `Thread` on TruffleRuby: each `Ractor` runs its block in a new `Thread` and Ractors run in parallel like Threads do on TruffleRuby.
+There is no isolation between Ractors: objects are shared and never copied or moved between Ractors, `Ractor.make_shareable(object)` returns `object` as is and `Ractor.shareable?(object)` is always `true`.
+This is enough to run programs using the `Ractor` API (`Ractor.new`, `Ractor::Port`, `Ractor#send`, `Ractor.receive`, `Ractor.select`, `Ractor#value`, `Ractor#monitor`, etc) to communicate between Ractors, but programs cannot rely on Ractor isolation on TruffleRuby.
+Threads are run in parallel on TruffleRuby and Threads are far more compatible with gems than `Ractor`, so using Threads directly is generally preferable on TruffleRuby.
 
 ### Internal MRI functionality
 
