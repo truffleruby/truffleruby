@@ -18,17 +18,17 @@ VALUE rb_obj_instance_variables(VALUE object) {
 
 #undef rb_iv_get
 VALUE rb_iv_get(VALUE object, const char *name) {
-  return rb_tr_up_rb_ivar_get(object, ID2SYM(rb_intern(name)));
+  return rb_tr_up_rb_ivar_get(object, rb_intern(name));
 }
 
 #undef rb_iv_set
 VALUE rb_iv_set(VALUE object, const char *name, VALUE value) {
-  rb_tr_up_rb_ivar_set(object, ID2SYM(rb_intern(name)), value);
+  rb_tr_up_rb_ivar_set(object, rb_intern(name), value);
   return value;
 }
 
 VALUE rb_ivar_defined(VALUE object, ID id) {
-  return rb_tr_up_rb_ivar_defined(object, ID2SYM(id));
+  return rb_tr_up_rb_ivar_defined(object, id);
 }
 
 st_index_t rb_ivar_count(VALUE object) {
@@ -36,11 +36,11 @@ st_index_t rb_ivar_count(VALUE object) {
 }
 
 VALUE rb_ivar_get(VALUE object, ID name) {
-  return rb_tr_up_rb_ivar_get(object, ID2SYM(name));
+  return rb_tr_up_rb_ivar_get(object, name);
 }
 
 VALUE rb_ivar_set(VALUE object, ID name, VALUE value) {
-  rb_tr_up_rb_ivar_set(object, ID2SYM(name), value);
+  rb_tr_up_rb_ivar_set(object, name, value);
   return value;
 }
 

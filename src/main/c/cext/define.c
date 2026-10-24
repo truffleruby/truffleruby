@@ -26,7 +26,7 @@ VALUE rb_define_class_under(VALUE module, const char *name, VALUE superclass) {
 }
 
 VALUE rb_define_class_id_under(VALUE module, ID name, VALUE superclass) {
-  return rb_tr_up_rb_define_class_under(module, ID2SYM(name), superclass);
+  return rb_tr_up_rb_define_class_under(module, name, superclass);
 }
 
 VALUE rb_define_module(const char *name) {
@@ -87,7 +87,7 @@ void rb_define_alias(VALUE module, const char *new_name, const char *old_name) {
 }
 
 void rb_alias(VALUE module, ID new_name, ID old_name) {
-  rb_tr_up_rb_alias(module, ID2SYM(new_name), ID2SYM(old_name));
+  rb_tr_up_rb_alias(module, new_name, old_name);
 }
 
 void rb_undef_method(VALUE module, const char *name) {
@@ -95,11 +95,11 @@ void rb_undef_method(VALUE module, const char *name) {
 }
 
 void rb_undef(VALUE module, ID name) {
-  rb_tr_up_rb_undef(module, ID2SYM(name));
+  rb_tr_up_rb_undef(module, name);
 }
 
 void rb_attr(VALUE ruby_class, ID name, int read, int write, int ex) {
-  rb_tr_up_rb_attr(ruby_class, ID2SYM(name), read, write, ex);
+  rb_tr_up_rb_attr(ruby_class, name, read, write, ex);
 }
 
 void rb_define_alloc_func(VALUE ruby_class, rb_alloc_func_t alloc_function) {
