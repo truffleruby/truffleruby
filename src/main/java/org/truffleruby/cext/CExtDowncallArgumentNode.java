@@ -56,7 +56,9 @@ public abstract class CExtDowncallArgumentNode extends RubyBaseNode {
     static long doValueWrapper(ValueWrapper value,
             @Bind Node node,
             @Cached WrapperToHandleNode wrapperToHandleNode) {
-        return wrapperToHandleNode.execute(node, value);
+        /* The wrapped object stays strongly reachable through the caller's Ruby frame (which wrapped it with
+         * Primitive.cext_wrap in the same frame), so reading the weak reference here is safe. */
+        return wrapperToHandleNode.execute(node, value.getObject(), value);
     }
 
     @Specialization
