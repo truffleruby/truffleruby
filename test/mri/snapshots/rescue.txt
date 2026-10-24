@@ -456,7 +456,7 @@
         │   │   │           │                   │   @ SymbolNode (location: (29,4)-(29,6))
         │   │   │           │                   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │           │                   │   ├── opening_loc: ∅
-        │   │   │           │                   │   ├── value_loc: (29,4)-(29,5) = "b"
+        │   │   │           │                   │   ├── content_loc: (29,4)-(29,5) = "b"
         │   │   │           │                   │   ├── closing_loc: (29,5)-(29,6) = ":"
         │   │   │           │                   │   └── unescaped: "b"
         │   │   │           │                   ├── value:

@@ -143,7 +143,7 @@
         │   │           │                   │   @ SymbolNode (location: (5,11)-(5,15))
         │   │           │                   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │           │                   │   ├── opening_loc: (5,11)-(5,12) = ":"
-        │   │           │                   │   ├── value_loc: (5,12)-(5,15) = "key"
+        │   │           │                   │   ├── content_loc: (5,12)-(5,15) = "key"
         │   │           │                   │   ├── closing_loc: ∅
         │   │           │                   │   └── unescaped: "key"
         │   │           │                   ├── value:
@@ -201,14 +201,14 @@
         │   │           │                   │   │       │   @ SymbolNode (location: (7,13)-(7,17))
         │   │           │                   │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │           │                   │   │       │   ├── opening_loc: ∅
-        │   │           │                   │   │       │   ├── value_loc: (7,13)-(7,16) = "baz"
+        │   │           │                   │   │       │   ├── content_loc: (7,13)-(7,16) = "baz"
         │   │           │                   │   │       │   ├── closing_loc: (7,16)-(7,17) = ":"
         │   │           │                   │   │       │   └── unescaped: "baz"
         │   │           │                   │   │       ├── value:
         │   │           │                   │   │       │   @ SymbolNode (location: (7,18)-(7,22))
         │   │           │                   │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │           │                   │   │       │   ├── opening_loc: (7,18)-(7,19) = ":"
-        │   │           │                   │   │       │   ├── value_loc: (7,19)-(7,22) = "bat"
+        │   │           │                   │   │       │   ├── content_loc: (7,19)-(7,22) = "bat"
         │   │           │                   │   │       │   ├── closing_loc: ∅
         │   │           │                   │   │       │   └── unescaped: "bat"
         │   │           │                   │   │       └── operator_loc: ∅
@@ -272,7 +272,7 @@
         │   │                   │   │           │   └── @ SymbolNode (location: (9,13)-(9,16))
         │   │                   │   │           │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │                   │   │           │       ├── opening_loc: ∅
-        │   │                   │   │           │       ├── value_loc: (9,13)-(9,16) = "baz"
+        │   │                   │   │           │       ├── content_loc: (9,13)-(9,16) = "baz"
         │   │                   │   │           │       ├── closing_loc: ∅
         │   │                   │   │           │       └── unescaped: "baz"
         │   │                   │   │           ├── opening_loc: (9,10)-(9,13) = "%i["

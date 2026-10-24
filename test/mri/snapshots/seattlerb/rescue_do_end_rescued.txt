@@ -54,7 +54,7 @@
                 │   │   │       └── @ SymbolNode (location: (4,2)-(4,9))
                 │   │   │           ├── flags: newline, static_literal, forced_us_ascii_encoding
                 │   │   │           ├── opening_loc: (4,2)-(4,3) = ":"
-                │   │   │           ├── value_loc: (4,3)-(4,9) = "rescue"
+                │   │   │           ├── content_loc: (4,3)-(4,9) = "rescue"
                 │   │   │           ├── closing_loc: ∅
                 │   │   │           └── unescaped: "rescue"
                 │   │   └── subsequent: ∅
@@ -69,7 +69,7 @@
                 │   │   │       └── @ SymbolNode (location: (6,2)-(6,7))
                 │   │   │           ├── flags: newline, static_literal, forced_us_ascii_encoding
                 │   │   │           ├── opening_loc: (6,2)-(6,3) = ":"
-                │   │   │           ├── value_loc: (6,3)-(6,7) = "else"
+                │   │   │           ├── content_loc: (6,3)-(6,7) = "else"
                 │   │   │           ├── closing_loc: ∅
                 │   │   │           └── unescaped: "else"
                 │   │   └── end_keyword_loc: (7,0)-(7,6) = "ensure"
@@ -84,7 +84,7 @@
                 │   │   │       └── @ SymbolNode (location: (8,2)-(8,9))
                 │   │   │           ├── flags: newline, static_literal, forced_us_ascii_encoding
                 │   │   │           ├── opening_loc: (8,2)-(8,3) = ":"
-                │   │   │           ├── value_loc: (8,3)-(8,9) = "ensure"
+                │   │   │           ├── content_loc: (8,3)-(8,9) = "ensure"
                 │   │   │           ├── closing_loc: ∅
                 │   │   │           └── unescaped: "ensure"
                 │   │   └── end_keyword_loc: (9,0)-(9,3) = "end"

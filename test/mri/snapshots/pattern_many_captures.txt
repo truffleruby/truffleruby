@@ -1,0 +1,459 @@
+@ ProgramNode (location: (1,0)-(9,138))
+├── flags: ∅
+├── locals: [:a, :b, :c, :d, :e, :f, :g, :h, :i, :j, :k, :l, :m, :n, :o, :a1, :b1, :c1, :d1, :e1, :f1, :g1, :h1, :i1, :j1, :k1, :l1, :m1, :p1, :p2, :p3, :p4, :p5, :p6, :p7, :p8, :p9, :p10, :p11, :p12, :p13, :p14, :p15]
+└── statements:
+    @ StatementsNode (location: (1,0)-(9,138))
+    ├── flags: ∅
+    └── body: (length: 3)
+        ├── @ CaseMatchNode (location: (1,0)-(3,3))
+        │   ├── flags: newline
+        │   ├── predicate:
+        │   │   @ CallNode (location: (1,5)-(1,10))
+        │   │   ├── flags: variable_call, ignore_visibility
+        │   │   ├── receiver: ∅
+        │   │   ├── call_operator_loc: ∅
+        │   │   ├── name: :value
+        │   │   ├── message_loc: (1,5)-(1,10) = "value"
+        │   │   ├── opening_loc: ∅
+        │   │   ├── arguments: ∅
+        │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
+        │   │   └── block: ∅
+        │   ├── conditions: (length: 1)
+        │   │   └── @ InNode (location: (2,0)-(2,48))
+        │   │       ├── flags: ∅
+        │   │       ├── pattern:
+        │   │       │   @ ArrayPatternNode (location: (2,3)-(2,48))
+        │   │       │   ├── flags: ∅
+        │   │       │   ├── constant: ∅
+        │   │       │   ├── requireds: (length: 15)
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,4)-(2,5))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :a
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,7)-(2,8))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :b
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,10)-(2,11))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :c
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,13)-(2,14))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :d
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,16)-(2,17))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :e
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,19)-(2,20))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :f
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,22)-(2,23))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :g
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,25)-(2,26))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :h
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,28)-(2,29))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :i
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,31)-(2,32))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :j
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,34)-(2,35))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :k
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,37)-(2,38))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :l
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,40)-(2,41))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :m
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   ├── @ LocalVariableTargetNode (location: (2,43)-(2,44))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── name: :n
+        │   │       │   │   │   └── depth: 0
+        │   │       │   │   └── @ LocalVariableTargetNode (location: (2,46)-(2,47))
+        │   │       │   │       ├── flags: ∅
+        │   │       │   │       ├── name: :o
+        │   │       │   │       └── depth: 0
+        │   │       │   ├── rest: ∅
+        │   │       │   ├── posts: (length: 0)
+        │   │       │   ├── opening_loc: (2,3)-(2,4) = "["
+        │   │       │   └── closing_loc: (2,47)-(2,48) = "]"
+        │   │       ├── statements: ∅
+        │   │       ├── in_keyword_loc: (2,0)-(2,2) = "in"
+        │   │       └── then_keyword_loc: ∅
+        │   ├── else_clause: ∅
+        │   ├── case_keyword_loc: (1,0)-(1,4) = "case"
+        │   └── end_keyword_loc: (3,0)-(3,3) = "end"
+        ├── @ CaseMatchNode (location: (5,0)-(7,3))
+        │   ├── flags: newline
+        │   ├── predicate:
+        │   │   @ CallNode (location: (5,5)-(5,10))
+        │   │   ├── flags: variable_call, ignore_visibility
+        │   │   ├── receiver: ∅
+        │   │   ├── call_operator_loc: ∅
+        │   │   ├── name: :value
+        │   │   ├── message_loc: (5,5)-(5,10) = "value"
+        │   │   ├── opening_loc: ∅
+        │   │   ├── arguments: ∅
+        │   │   ├── closing_loc: ∅
+        │   │   ├── equal_loc: ∅
+        │   │   └── block: ∅
+        │   ├── conditions: (length: 1)
+        │   │   └── @ InNode (location: (6,0)-(6,68))
+        │   │       ├── flags: ∅
+        │   │       ├── pattern:
+        │   │       │   @ HashPatternNode (location: (6,3)-(6,68))
+        │   │       │   ├── flags: ∅
+        │   │       │   ├── constant: ∅
+        │   │       │   ├── elements: (length: 13)
+        │   │       │   │   ├── @ AssocNode (location: (6,4)-(6,7))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── key:
+        │   │       │   │   │   │   @ SymbolNode (location: (6,4)-(6,7))
+        │   │       │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   │   │   │   ├── opening_loc: ∅
+        │   │       │   │   │   │   ├── content_loc: (6,4)-(6,6) = "a1"
+        │   │       │   │   │   │   ├── closing_loc: (6,6)-(6,7) = ":"
+        │   │       │   │   │   │   └── unescaped: "a1"
+        │   │       │   │   │   ├── value:
+        │   │       │   │   │   │   @ ImplicitNode (location: (6,4)-(6,6))
+        │   │       │   │   │   │   ├── flags: ∅
+        │   │       │   │   │   │   └── value:
+        │   │       │   │   │   │       @ LocalVariableTargetNode (location: (6,4)-(6,6))
+        │   │       │   │   │   │       ├── flags: ∅
+        │   │       │   │   │   │       ├── name: :a1
+        │   │       │   │   │   │       └── depth: 0
+        │   │       │   │   │   └── operator_loc: ∅
+        │   │       │   │   ├── @ AssocNode (location: (6,9)-(6,12))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── key:
+        │   │       │   │   │   │   @ SymbolNode (location: (6,9)-(6,12))
+        │   │       │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   │   │   │   ├── opening_loc: ∅
+        │   │       │   │   │   │   ├── content_loc: (6,9)-(6,11) = "b1"
+        │   │       │   │   │   │   ├── closing_loc: (6,11)-(6,12) = ":"
+        │   │       │   │   │   │   └── unescaped: "b1"
+        │   │       │   │   │   ├── value:
+        │   │       │   │   │   │   @ ImplicitNode (location: (6,9)-(6,11))
+        │   │       │   │   │   │   ├── flags: ∅
+        │   │       │   │   │   │   └── value:
+        │   │       │   │   │   │       @ LocalVariableTargetNode (location: (6,9)-(6,11))
+        │   │       │   │   │   │       ├── flags: ∅
+        │   │       │   │   │   │       ├── name: :b1
+        │   │       │   │   │   │       └── depth: 0
+        │   │       │   │   │   └── operator_loc: ∅
+        │   │       │   │   ├── @ AssocNode (location: (6,14)-(6,17))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── key:
+        │   │       │   │   │   │   @ SymbolNode (location: (6,14)-(6,17))
+        │   │       │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   │   │   │   ├── opening_loc: ∅
+        │   │       │   │   │   │   ├── content_loc: (6,14)-(6,16) = "c1"
+        │   │       │   │   │   │   ├── closing_loc: (6,16)-(6,17) = ":"
+        │   │       │   │   │   │   └── unescaped: "c1"
+        │   │       │   │   │   ├── value:
+        │   │       │   │   │   │   @ ImplicitNode (location: (6,14)-(6,16))
+        │   │       │   │   │   │   ├── flags: ∅
+        │   │       │   │   │   │   └── value:
+        │   │       │   │   │   │       @ LocalVariableTargetNode (location: (6,14)-(6,16))
+        │   │       │   │   │   │       ├── flags: ∅
+        │   │       │   │   │   │       ├── name: :c1
+        │   │       │   │   │   │       └── depth: 0
+        │   │       │   │   │   └── operator_loc: ∅
+        │   │       │   │   ├── @ AssocNode (location: (6,19)-(6,22))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── key:
+        │   │       │   │   │   │   @ SymbolNode (location: (6,19)-(6,22))
+        │   │       │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   │   │   │   ├── opening_loc: ∅
+        │   │       │   │   │   │   ├── content_loc: (6,19)-(6,21) = "d1"
+        │   │       │   │   │   │   ├── closing_loc: (6,21)-(6,22) = ":"
+        │   │       │   │   │   │   └── unescaped: "d1"
+        │   │       │   │   │   ├── value:
+        │   │       │   │   │   │   @ ImplicitNode (location: (6,19)-(6,21))
+        │   │       │   │   │   │   ├── flags: ∅
+        │   │       │   │   │   │   └── value:
+        │   │       │   │   │   │       @ LocalVariableTargetNode (location: (6,19)-(6,21))
+        │   │       │   │   │   │       ├── flags: ∅
+        │   │       │   │   │   │       ├── name: :d1
+        │   │       │   │   │   │       └── depth: 0
+        │   │       │   │   │   └── operator_loc: ∅
+        │   │       │   │   ├── @ AssocNode (location: (6,24)-(6,27))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── key:
+        │   │       │   │   │   │   @ SymbolNode (location: (6,24)-(6,27))
+        │   │       │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   │   │   │   ├── opening_loc: ∅
+        │   │       │   │   │   │   ├── content_loc: (6,24)-(6,26) = "e1"
+        │   │       │   │   │   │   ├── closing_loc: (6,26)-(6,27) = ":"
+        │   │       │   │   │   │   └── unescaped: "e1"
+        │   │       │   │   │   ├── value:
+        │   │       │   │   │   │   @ ImplicitNode (location: (6,24)-(6,26))
+        │   │       │   │   │   │   ├── flags: ∅
+        │   │       │   │   │   │   └── value:
+        │   │       │   │   │   │       @ LocalVariableTargetNode (location: (6,24)-(6,26))
+        │   │       │   │   │   │       ├── flags: ∅
+        │   │       │   │   │   │       ├── name: :e1
+        │   │       │   │   │   │       └── depth: 0
+        │   │       │   │   │   └── operator_loc: ∅
+        │   │       │   │   ├── @ AssocNode (location: (6,29)-(6,32))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── key:
+        │   │       │   │   │   │   @ SymbolNode (location: (6,29)-(6,32))
+        │   │       │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   │   │   │   ├── opening_loc: ∅
+        │   │       │   │   │   │   ├── content_loc: (6,29)-(6,31) = "f1"
+        │   │       │   │   │   │   ├── closing_loc: (6,31)-(6,32) = ":"
+        │   │       │   │   │   │   └── unescaped: "f1"
+        │   │       │   │   │   ├── value:
+        │   │       │   │   │   │   @ ImplicitNode (location: (6,29)-(6,31))
+        │   │       │   │   │   │   ├── flags: ∅
+        │   │       │   │   │   │   └── value:
+        │   │       │   │   │   │       @ LocalVariableTargetNode (location: (6,29)-(6,31))
+        │   │       │   │   │   │       ├── flags: ∅
+        │   │       │   │   │   │       ├── name: :f1
+        │   │       │   │   │   │       └── depth: 0
+        │   │       │   │   │   └── operator_loc: ∅
+        │   │       │   │   ├── @ AssocNode (location: (6,34)-(6,37))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── key:
+        │   │       │   │   │   │   @ SymbolNode (location: (6,34)-(6,37))
+        │   │       │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   │   │   │   ├── opening_loc: ∅
+        │   │       │   │   │   │   ├── content_loc: (6,34)-(6,36) = "g1"
+        │   │       │   │   │   │   ├── closing_loc: (6,36)-(6,37) = ":"
+        │   │       │   │   │   │   └── unescaped: "g1"
+        │   │       │   │   │   ├── value:
+        │   │       │   │   │   │   @ ImplicitNode (location: (6,34)-(6,36))
+        │   │       │   │   │   │   ├── flags: ∅
+        │   │       │   │   │   │   └── value:
+        │   │       │   │   │   │       @ LocalVariableTargetNode (location: (6,34)-(6,36))
+        │   │       │   │   │   │       ├── flags: ∅
+        │   │       │   │   │   │       ├── name: :g1
+        │   │       │   │   │   │       └── depth: 0
+        │   │       │   │   │   └── operator_loc: ∅
+        │   │       │   │   ├── @ AssocNode (location: (6,39)-(6,42))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── key:
+        │   │       │   │   │   │   @ SymbolNode (location: (6,39)-(6,42))
+        │   │       │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   │   │   │   ├── opening_loc: ∅
+        │   │       │   │   │   │   ├── content_loc: (6,39)-(6,41) = "h1"
+        │   │       │   │   │   │   ├── closing_loc: (6,41)-(6,42) = ":"
+        │   │       │   │   │   │   └── unescaped: "h1"
+        │   │       │   │   │   ├── value:
+        │   │       │   │   │   │   @ ImplicitNode (location: (6,39)-(6,41))
+        │   │       │   │   │   │   ├── flags: ∅
+        │   │       │   │   │   │   └── value:
+        │   │       │   │   │   │       @ LocalVariableTargetNode (location: (6,39)-(6,41))
+        │   │       │   │   │   │       ├── flags: ∅
+        │   │       │   │   │   │       ├── name: :h1
+        │   │       │   │   │   │       └── depth: 0
+        │   │       │   │   │   └── operator_loc: ∅
+        │   │       │   │   ├── @ AssocNode (location: (6,44)-(6,47))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── key:
+        │   │       │   │   │   │   @ SymbolNode (location: (6,44)-(6,47))
+        │   │       │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   │   │   │   ├── opening_loc: ∅
+        │   │       │   │   │   │   ├── content_loc: (6,44)-(6,46) = "i1"
+        │   │       │   │   │   │   ├── closing_loc: (6,46)-(6,47) = ":"
+        │   │       │   │   │   │   └── unescaped: "i1"
+        │   │       │   │   │   ├── value:
+        │   │       │   │   │   │   @ ImplicitNode (location: (6,44)-(6,46))
+        │   │       │   │   │   │   ├── flags: ∅
+        │   │       │   │   │   │   └── value:
+        │   │       │   │   │   │       @ LocalVariableTargetNode (location: (6,44)-(6,46))
+        │   │       │   │   │   │       ├── flags: ∅
+        │   │       │   │   │   │       ├── name: :i1
+        │   │       │   │   │   │       └── depth: 0
+        │   │       │   │   │   └── operator_loc: ∅
+        │   │       │   │   ├── @ AssocNode (location: (6,49)-(6,52))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── key:
+        │   │       │   │   │   │   @ SymbolNode (location: (6,49)-(6,52))
+        │   │       │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   │   │   │   ├── opening_loc: ∅
+        │   │       │   │   │   │   ├── content_loc: (6,49)-(6,51) = "j1"
+        │   │       │   │   │   │   ├── closing_loc: (6,51)-(6,52) = ":"
+        │   │       │   │   │   │   └── unescaped: "j1"
+        │   │       │   │   │   ├── value:
+        │   │       │   │   │   │   @ ImplicitNode (location: (6,49)-(6,51))
+        │   │       │   │   │   │   ├── flags: ∅
+        │   │       │   │   │   │   └── value:
+        │   │       │   │   │   │       @ LocalVariableTargetNode (location: (6,49)-(6,51))
+        │   │       │   │   │   │       ├── flags: ∅
+        │   │       │   │   │   │       ├── name: :j1
+        │   │       │   │   │   │       └── depth: 0
+        │   │       │   │   │   └── operator_loc: ∅
+        │   │       │   │   ├── @ AssocNode (location: (6,54)-(6,57))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── key:
+        │   │       │   │   │   │   @ SymbolNode (location: (6,54)-(6,57))
+        │   │       │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   │   │   │   ├── opening_loc: ∅
+        │   │       │   │   │   │   ├── content_loc: (6,54)-(6,56) = "k1"
+        │   │       │   │   │   │   ├── closing_loc: (6,56)-(6,57) = ":"
+        │   │       │   │   │   │   └── unescaped: "k1"
+        │   │       │   │   │   ├── value:
+        │   │       │   │   │   │   @ ImplicitNode (location: (6,54)-(6,56))
+        │   │       │   │   │   │   ├── flags: ∅
+        │   │       │   │   │   │   └── value:
+        │   │       │   │   │   │       @ LocalVariableTargetNode (location: (6,54)-(6,56))
+        │   │       │   │   │   │       ├── flags: ∅
+        │   │       │   │   │   │       ├── name: :k1
+        │   │       │   │   │   │       └── depth: 0
+        │   │       │   │   │   └── operator_loc: ∅
+        │   │       │   │   ├── @ AssocNode (location: (6,59)-(6,62))
+        │   │       │   │   │   ├── flags: ∅
+        │   │       │   │   │   ├── key:
+        │   │       │   │   │   │   @ SymbolNode (location: (6,59)-(6,62))
+        │   │       │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   │   │   │   ├── opening_loc: ∅
+        │   │       │   │   │   │   ├── content_loc: (6,59)-(6,61) = "l1"
+        │   │       │   │   │   │   ├── closing_loc: (6,61)-(6,62) = ":"
+        │   │       │   │   │   │   └── unescaped: "l1"
+        │   │       │   │   │   ├── value:
+        │   │       │   │   │   │   @ ImplicitNode (location: (6,59)-(6,61))
+        │   │       │   │   │   │   ├── flags: ∅
+        │   │       │   │   │   │   └── value:
+        │   │       │   │   │   │       @ LocalVariableTargetNode (location: (6,59)-(6,61))
+        │   │       │   │   │   │       ├── flags: ∅
+        │   │       │   │   │   │       ├── name: :l1
+        │   │       │   │   │   │       └── depth: 0
+        │   │       │   │   │   └── operator_loc: ∅
+        │   │       │   │   └── @ AssocNode (location: (6,64)-(6,67))
+        │   │       │   │       ├── flags: ∅
+        │   │       │   │       ├── key:
+        │   │       │   │       │   @ SymbolNode (location: (6,64)-(6,67))
+        │   │       │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
+        │   │       │   │       │   ├── opening_loc: ∅
+        │   │       │   │       │   ├── content_loc: (6,64)-(6,66) = "m1"
+        │   │       │   │       │   ├── closing_loc: (6,66)-(6,67) = ":"
+        │   │       │   │       │   └── unescaped: "m1"
+        │   │       │   │       ├── value:
+        │   │       │   │       │   @ ImplicitNode (location: (6,64)-(6,66))
+        │   │       │   │       │   ├── flags: ∅
+        │   │       │   │       │   └── value:
+        │   │       │   │       │       @ LocalVariableTargetNode (location: (6,64)-(6,66))
+        │   │       │   │       │       ├── flags: ∅
+        │   │       │   │       │       ├── name: :m1
+        │   │       │   │       │       └── depth: 0
+        │   │       │   │       └── operator_loc: ∅
+        │   │       │   ├── rest: ∅
+        │   │       │   ├── opening_loc: (6,3)-(6,4) = "{"
+        │   │       │   └── closing_loc: (6,67)-(6,68) = "}"
+        │   │       ├── statements: ∅
+        │   │       ├── in_keyword_loc: (6,0)-(6,2) = "in"
+        │   │       └── then_keyword_loc: ∅
+        │   ├── else_clause: ∅
+        │   ├── case_keyword_loc: (5,0)-(5,4) = "case"
+        │   └── end_keyword_loc: (7,0)-(7,3) = "end"
+        └── @ MatchWriteNode (location: (9,0)-(9,138))
+            ├── flags: newline
+            ├── call:
+            │   @ CallNode (location: (9,0)-(9,138))
+            │   ├── flags: ∅
+            │   ├── receiver:
+            │   │   @ RegularExpressionNode (location: (9,0)-(9,128))
+            │   │   ├── flags: static_literal, forced_us_ascii_encoding
+            │   │   ├── opening_loc: (9,0)-(9,1) = "/"
+            │   │   ├── content_loc: (9,1)-(9,127) = "(?<p1>.)(?<p2>.)(?<p3>.)(?<p4>.)(?<p5>.)(?<p6>.)(?<p7>.)(?<p8>.)(?<p9>.)(?<p10>.)(?<p11>.)(?<p12>.)(?<p13>.)(?<p14>.)(?<p15>.)"
+            │   │   ├── closing_loc: (9,127)-(9,128) = "/"
+            │   │   └── unescaped: "(?<p1>.)(?<p2>.)(?<p3>.)(?<p4>.)(?<p5>.)(?<p6>.)(?<p7>.)(?<p8>.)(?<p9>.)(?<p10>.)(?<p11>.)(?<p12>.)(?<p13>.)(?<p14>.)(?<p15>.)"
+            │   ├── call_operator_loc: ∅
+            │   ├── name: :=~
+            │   ├── message_loc: (9,129)-(9,131) = "=~"
+            │   ├── opening_loc: ∅
+            │   ├── arguments:
+            │   │   @ ArgumentsNode (location: (9,132)-(9,138))
+            │   │   ├── flags: ∅
+            │   │   └── arguments: (length: 1)
+            │   │       └── @ CallNode (location: (9,132)-(9,138))
+            │   │           ├── flags: variable_call, ignore_visibility
+            │   │           ├── receiver: ∅
+            │   │           ├── call_operator_loc: ∅
+            │   │           ├── name: :string
+            │   │           ├── message_loc: (9,132)-(9,138) = "string"
+            │   │           ├── opening_loc: ∅
+            │   │           ├── arguments: ∅
+            │   │           ├── closing_loc: ∅
+            │   │           ├── equal_loc: ∅
+            │   │           └── block: ∅
+            │   ├── closing_loc: ∅
+            │   ├── equal_loc: ∅
+            │   └── block: ∅
+            └── targets: (length: 15)
+                ├── @ LocalVariableTargetNode (location: (9,4)-(9,6))
+                │   ├── flags: ∅
+                │   ├── name: :p1
+                │   └── depth: 0
+                ├── @ LocalVariableTargetNode (location: (9,12)-(9,14))
+                │   ├── flags: ∅
+                │   ├── name: :p2
+                │   └── depth: 0
+                ├── @ LocalVariableTargetNode (location: (9,20)-(9,22))
+                │   ├── flags: ∅
+                │   ├── name: :p3
+                │   └── depth: 0
+                ├── @ LocalVariableTargetNode (location: (9,28)-(9,30))
+                │   ├── flags: ∅
+                │   ├── name: :p4
+                │   └── depth: 0
+                ├── @ LocalVariableTargetNode (location: (9,36)-(9,38))
+                │   ├── flags: ∅
+                │   ├── name: :p5
+                │   └── depth: 0
+                ├── @ LocalVariableTargetNode (location: (9,44)-(9,46))
+                │   ├── flags: ∅
+                │   ├── name: :p6
+                │   └── depth: 0
+                ├── @ LocalVariableTargetNode (location: (9,52)-(9,54))
+                │   ├── flags: ∅
+                │   ├── name: :p7
+                │   └── depth: 0
+                ├── @ LocalVariableTargetNode (location: (9,60)-(9,62))
+                │   ├── flags: ∅
+                │   ├── name: :p8
+                │   └── depth: 0
+                ├── @ LocalVariableTargetNode (location: (9,68)-(9,70))
+                │   ├── flags: ∅
+                │   ├── name: :p9
+                │   └── depth: 0
+                ├── @ LocalVariableTargetNode (location: (9,76)-(9,79))
+                │   ├── flags: ∅
+                │   ├── name: :p10
+                │   └── depth: 0
+                ├── @ LocalVariableTargetNode (location: (9,85)-(9,88))
+                │   ├── flags: ∅
+                │   ├── name: :p11
+                │   └── depth: 0
+                ├── @ LocalVariableTargetNode (location: (9,94)-(9,97))
+                │   ├── flags: ∅
+                │   ├── name: :p12
+                │   └── depth: 0
+                ├── @ LocalVariableTargetNode (location: (9,103)-(9,106))
+                │   ├── flags: ∅
+                │   ├── name: :p13
+                │   └── depth: 0
+                ├── @ LocalVariableTargetNode (location: (9,112)-(9,115))
+                │   ├── flags: ∅
+                │   ├── name: :p14
+                │   └── depth: 0
+                └── @ LocalVariableTargetNode (location: (9,121)-(9,124))
+                    ├── flags: ∅
+                    ├── name: :p15
+                    └── depth: 0

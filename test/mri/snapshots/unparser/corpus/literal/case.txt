@@ -269,7 +269,7 @@
         │   │               └── @ SymbolNode (location: (20,2)-(20,8))
         │   │                   ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   │                   ├── opening_loc: (20,2)-(20,3) = ":"
-        │   │                   ├── value_loc: (20,3)-(20,8) = "other"
+        │   │                   ├── content_loc: (20,3)-(20,8) = "other"
         │   │                   ├── closing_loc: ∅
         │   │                   └── unescaped: "other"
         │   ├── else_clause: ∅
@@ -317,7 +317,7 @@
         │   │               └── @ SymbolNode (location: (24,2)-(24,8))
         │   │                   ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   │                   ├── opening_loc: (24,2)-(24,3) = ":"
-        │   │                   ├── value_loc: (24,3)-(24,8) = "value"
+        │   │                   ├── content_loc: (24,3)-(24,8) = "value"
         │   │                   ├── closing_loc: ∅
         │   │                   └── unescaped: "value"
         │   ├── else_clause: ∅
@@ -380,7 +380,7 @@
         │   │   │       └── @ SymbolNode (location: (30,2)-(30,6))
         │   │   │           ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   │   │           ├── opening_loc: (30,2)-(30,3) = ":"
-        │   │   │           ├── value_loc: (30,3)-(30,6) = "foo"
+        │   │   │           ├── content_loc: (30,3)-(30,6) = "foo"
         │   │   │           ├── closing_loc: ∅
         │   │   │           └── unescaped: "foo"
         │   │   └── end_keyword_loc: (31,0)-(31,3) = "end"

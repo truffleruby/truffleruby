@@ -191,13 +191,13 @@
             │           │       ├── @ SymbolNode (location: (14,4)-(14,6))
             │           │       │   ├── flags: static_literal, forced_us_ascii_encoding
             │           │       │   ├── opening_loc: (14,4)-(14,5) = ":"
-            │           │       │   ├── value_loc: (14,5)-(14,6) = "a"
+            │           │       │   ├── content_loc: (14,5)-(14,6) = "a"
             │           │       │   ├── closing_loc: ∅
             │           │       │   └── unescaped: "a"
             │           │       └── @ SymbolNode (location: (14,8)-(14,10))
             │           │           ├── flags: static_literal, forced_us_ascii_encoding
             │           │           ├── opening_loc: (14,8)-(14,9) = ":"
-            │           │           ├── value_loc: (14,9)-(14,10) = "b"
+            │           │           ├── content_loc: (14,9)-(14,10) = "b"
             │           │           ├── closing_loc: ∅
             │           │           └── unescaped: "b"
             │           ├── closing_loc: ∅

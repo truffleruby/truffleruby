@@ -201,7 +201,7 @@
         ├── @ SymbolNode (location: (54,0)-(54,7))
         │   ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   ├── opening_loc: (54,0)-(54,3) = "%s["
-        │   ├── value_loc: (54,3)-(54,6) = "abc"
+        │   ├── content_loc: (54,3)-(54,6) = "abc"
         │   ├── closing_loc: (54,6)-(54,7) = "]"
         │   └── unescaped: "abc"
         ├── @ StringNode (location: (56,0)-(56,6))

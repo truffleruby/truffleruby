@@ -42,7 +42,7 @@
         │   │   └── @ SymbolNode (location: (4,3)-(5,1))
         │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       ├── opening_loc: ∅
-        │   │       ├── value_loc: (4,3)-(5,1) = "a\\\r\nb"
+        │   │       ├── content_loc: (4,3)-(5,1) = "a\\\r\nb"
         │   │       ├── closing_loc: ∅
         │   │       └── unescaped: "a\nb"
         │   ├── opening_loc: (4,0)-(4,3) = "%I{"

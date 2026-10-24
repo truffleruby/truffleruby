@@ -11,14 +11,14 @@
         │   │   @ SymbolNode (location: (1,6)-(1,10))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: (1,6)-(1,7) = ":"
-        │   │   ├── value_loc: (1,7)-(1,10) = "foo"
+        │   │   ├── content_loc: (1,7)-(1,10) = "foo"
         │   │   ├── closing_loc: ∅
         │   │   └── unescaped: "foo"
         │   ├── old_name:
         │   │   @ SymbolNode (location: (1,11)-(1,15))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: (1,11)-(1,12) = ":"
-        │   │   ├── value_loc: (1,12)-(1,15) = "bar"
+        │   │   ├── content_loc: (1,12)-(1,15) = "bar"
         │   │   ├── closing_loc: ∅
         │   │   └── unescaped: "bar"
         │   └── keyword_loc: (1,0)-(1,5) = "alias"
@@ -28,14 +28,14 @@
         │   │   @ SymbolNode (location: (3,6)-(3,13))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: (3,6)-(3,9) = "%s["
-        │   │   ├── value_loc: (3,9)-(3,12) = "abc"
+        │   │   ├── content_loc: (3,9)-(3,12) = "abc"
         │   │   ├── closing_loc: (3,12)-(3,13) = "]"
         │   │   └── unescaped: "abc"
         │   ├── old_name:
         │   │   @ SymbolNode (location: (3,14)-(3,21))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: (3,14)-(3,17) = "%s["
-        │   │   ├── value_loc: (3,17)-(3,20) = "def"
+        │   │   ├── content_loc: (3,17)-(3,20) = "def"
         │   │   ├── closing_loc: (3,20)-(3,21) = "]"
         │   │   └── unescaped: "def"
         │   └── keyword_loc: (3,0)-(3,5) = "alias"
@@ -45,14 +45,14 @@
         │   │   @ SymbolNode (location: (5,6)-(5,12))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: (5,6)-(5,8) = ":'"
-        │   │   ├── value_loc: (5,8)-(5,11) = "abc"
+        │   │   ├── content_loc: (5,8)-(5,11) = "abc"
         │   │   ├── closing_loc: (5,11)-(5,12) = "'"
         │   │   └── unescaped: "abc"
         │   ├── old_name:
         │   │   @ SymbolNode (location: (5,13)-(5,19))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: (5,13)-(5,15) = ":'"
-        │   │   ├── value_loc: (5,15)-(5,18) = "def"
+        │   │   ├── content_loc: (5,15)-(5,18) = "def"
         │   │   ├── closing_loc: (5,18)-(5,19) = "'"
         │   │   └── unescaped: "def"
         │   └── keyword_loc: (5,0)-(5,5) = "alias"
@@ -85,7 +85,7 @@
         │   │   @ SymbolNode (location: (7,17)-(7,23))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: (7,17)-(7,19) = ":'"
-        │   │   ├── value_loc: (7,19)-(7,22) = "def"
+        │   │   ├── content_loc: (7,19)-(7,22) = "def"
         │   │   ├── closing_loc: (7,22)-(7,23) = "'"
         │   │   └── unescaped: "def"
         │   └── keyword_loc: (7,0)-(7,5) = "alias"
@@ -106,14 +106,14 @@
         │   │   @ SymbolNode (location: (11,6)-(11,9))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: ∅
-        │   │   ├── value_loc: (11,6)-(11,9) = "foo"
+        │   │   ├── content_loc: (11,6)-(11,9) = "foo"
         │   │   ├── closing_loc: ∅
         │   │   └── unescaped: "foo"
         │   ├── old_name:
         │   │   @ SymbolNode (location: (11,10)-(11,13))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: ∅
-        │   │   ├── value_loc: (11,10)-(11,13) = "bar"
+        │   │   ├── content_loc: (11,10)-(11,13) = "bar"
         │   │   ├── closing_loc: ∅
         │   │   └── unescaped: "bar"
         │   └── keyword_loc: (11,0)-(11,5) = "alias"
@@ -134,14 +134,14 @@
         │   │   @ SymbolNode (location: (15,6)-(15,9))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: ∅
-        │   │   ├── value_loc: (15,6)-(15,9) = "foo"
+        │   │   ├── content_loc: (15,6)-(15,9) = "foo"
         │   │   ├── closing_loc: ∅
         │   │   └── unescaped: "foo"
         │   ├── old_name:
         │   │   @ SymbolNode (location: (15,10)-(15,12))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: ∅
-        │   │   ├── value_loc: (15,10)-(15,12) = "if"
+        │   │   ├── content_loc: (15,10)-(15,12) = "if"
         │   │   ├── closing_loc: ∅
         │   │   └── unescaped: "if"
         │   └── keyword_loc: (15,0)-(15,5) = "alias"
@@ -151,14 +151,14 @@
         │   │   @ SymbolNode (location: (17,6)-(17,9))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: ∅
-        │   │   ├── value_loc: (17,6)-(17,9) = "foo"
+        │   │   ├── content_loc: (17,6)-(17,9) = "foo"
         │   │   ├── closing_loc: ∅
         │   │   └── unescaped: "foo"
         │   ├── old_name:
         │   │   @ SymbolNode (location: (17,10)-(17,13))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: ∅
-        │   │   ├── value_loc: (17,10)-(17,13) = "<=>"
+        │   │   ├── content_loc: (17,10)-(17,13) = "<=>"
         │   │   ├── closing_loc: ∅
         │   │   └── unescaped: "<=>"
         │   └── keyword_loc: (17,0)-(17,5) = "alias"
@@ -168,14 +168,14 @@
         │   │   @ SymbolNode (location: (19,6)-(19,9))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: (19,6)-(19,7) = ":"
-        │   │   ├── value_loc: (19,7)-(19,9) = "=="
+        │   │   ├── content_loc: (19,7)-(19,9) = "=="
         │   │   ├── closing_loc: ∅
         │   │   └── unescaped: "=="
         │   ├── old_name:
         │   │   @ SymbolNode (location: (19,10)-(19,15))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: (19,10)-(19,11) = ":"
-        │   │   ├── value_loc: (19,11)-(19,15) = "eql?"
+        │   │   ├── content_loc: (19,11)-(19,15) = "eql?"
         │   │   ├── closing_loc: ∅
         │   │   └── unescaped: "eql?"
         │   └── keyword_loc: (19,0)-(19,5) = "alias"
@@ -185,14 +185,14 @@
         │   │   @ SymbolNode (location: (21,6)-(21,7))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: ∅
-        │   │   ├── value_loc: (21,6)-(21,7) = "A"
+        │   │   ├── content_loc: (21,6)-(21,7) = "A"
         │   │   ├── closing_loc: ∅
         │   │   └── unescaped: "A"
         │   ├── old_name:
         │   │   @ SymbolNode (location: (21,8)-(21,9))
         │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   ├── opening_loc: ∅
-        │   │   ├── value_loc: (21,8)-(21,9) = "B"
+        │   │   ├── content_loc: (21,8)-(21,9) = "B"
         │   │   ├── closing_loc: ∅
         │   │   └── unescaped: "B"
         │   └── keyword_loc: (21,0)-(21,5) = "alias"
@@ -202,14 +202,14 @@
             │   @ SymbolNode (location: (23,6)-(23,8))
             │   ├── flags: static_literal, forced_us_ascii_encoding
             │   ├── opening_loc: (23,6)-(23,7) = ":"
-            │   ├── value_loc: (23,7)-(23,8) = "A"
+            │   ├── content_loc: (23,7)-(23,8) = "A"
             │   ├── closing_loc: ∅
             │   └── unescaped: "A"
             ├── old_name:
             │   @ SymbolNode (location: (23,9)-(23,11))
             │   ├── flags: static_literal, forced_us_ascii_encoding
             │   ├── opening_loc: (23,9)-(23,10) = ":"
-            │   ├── value_loc: (23,10)-(23,11) = "B"
+            │   ├── content_loc: (23,10)-(23,11) = "B"
             │   ├── closing_loc: ∅
             │   └── unescaped: "B"
             └── keyword_loc: (23,0)-(23,5) = "alias"

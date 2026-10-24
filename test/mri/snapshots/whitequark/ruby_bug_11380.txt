@@ -30,7 +30,7 @@
             │       │           └── @ SymbolNode (location: (1,7)-(1,13))
             │       │               ├── flags: newline, static_literal, forced_us_ascii_encoding
             │       │               ├── opening_loc: (1,7)-(1,8) = ":"
-            │       │               ├── value_loc: (1,8)-(1,13) = "hello"
+            │       │               ├── content_loc: (1,8)-(1,13) = "hello"
             │       │               ├── closing_loc: ∅
             │       │               └── unescaped: "hello"
             │       └── @ KeywordHashNode (location: (1,17)-(1,21))
@@ -42,7 +42,7 @@
             │                   │   @ SymbolNode (location: (1,17)-(1,19))
             │                   │   ├── flags: static_literal, forced_us_ascii_encoding
             │                   │   ├── opening_loc: ∅
-            │                   │   ├── value_loc: (1,17)-(1,18) = "a"
+            │                   │   ├── content_loc: (1,17)-(1,18) = "a"
             │                   │   ├── closing_loc: (1,18)-(1,19) = ":"
             │                   │   └── unescaped: "a"
             │                   ├── value:
