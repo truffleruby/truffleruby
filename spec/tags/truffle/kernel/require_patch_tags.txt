@@ -1,0 +1,2 @@
+slow:Kernel#require of a feature with a patch does not apply a patch for a Ruby file to a C extension with the same name
+slow:Kernel#require of a feature with a patch applies a patch again after its original failed to load

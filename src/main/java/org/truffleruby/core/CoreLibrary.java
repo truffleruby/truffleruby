@@ -258,6 +258,12 @@ public final class CoreLibrary {
      * using require_relative and the patch location is not enough to find the correct file. */
     private final ConcurrentMap<String, String> originalRequires;
 
+    /** The inverse of {@link #originalRequires}. While a patch is loading, this maps the expanded path of its original
+     * to the patch's feature. We need that to recognize the patch's require of its original as the one circular require
+     * a patch is allowed to make, even when that path doesn't map back to the patch's feature (e.g., for a C
+     * extension). */
+    private final ConcurrentMap<String, String> patchedOriginals;
+
     private DirectCallNode callNodeToCheckSplittingEnabled;
 
     @TruffleBoundary
@@ -573,6 +579,7 @@ public final class CoreLibrary {
 
         patchFiles = initializePatching(context);
         originalRequires = new ConcurrentHashMap<>();
+        patchedOriginals = new ConcurrentHashMap<>();
     }
 
     @SuppressFBWarnings("SIC")
@@ -930,6 +937,10 @@ public final class CoreLibrary {
 
     public ConcurrentMap<String, String> getOriginalRequires() {
         return originalRequires;
+    }
+
+    public ConcurrentMap<String, String> getPatchedOriginals() {
+        return patchedOriginals;
     }
 
     public boolean isInitializing() {

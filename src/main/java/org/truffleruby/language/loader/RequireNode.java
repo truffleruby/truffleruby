@@ -141,6 +141,7 @@ public abstract class RequireNode extends RubyBaseNode {
         final ReentrantLockFreeingMap<String> fileLocks = getContext().getFeatureLoader().getFileLocks();
         final ConcurrentMap<String, Boolean> patchFiles = getContext().getCoreLibrary().getPatchFiles();
         final ConcurrentMap<String, String> originalRequires = getContext().getCoreLibrary().getOriginalRequires();
+        final ConcurrentMap<String, String> patchedOriginals = getContext().getCoreLibrary().getPatchedOriginals();
 
         String relativeFeature = originalFeature;
         if (new File(originalFeature).isAbsolute()) {
@@ -150,17 +151,37 @@ public abstract class RequireNode extends RubyBaseNode {
                 relativeFeature = StringOperations.getJavaString(relativeFeatureString);
             }
         }
-        Boolean patchLoaded = patchFiles.get(relativeFeature);
-        final boolean isPatched = patchLoaded != null;
+        if (!patchFiles.containsKey(relativeFeature) && isCExtension(expandedPath)) {
+            final PatchedCExtension patched = patchedCExtension(expandedPath, patchFiles);
+            if (patched != null) {
+                relativeFeature = patched.feature;
+                // Use the path that requiring the feature resolves to. That way, every spelling of the C extension
+                // shares one file lock and one entry in $LOADED_FEATURES.
+                expandedPath = patched.resolvedPath;
+                pathString = StringOperations.createUTF8String(getContext(), getLanguage(), expandedPath);
+            }
+        }
+        // The set of patches is fixed at startup, so we only need to check once whether this feature has one. Whether
+        // that patch has been loaded can change (e.g., while waiting on the file lock), so we check that each time.
+        boolean isPatched = patchFiles.containsKey(relativeFeature);
+        boolean loadingOriginalOfPatch = false;
 
         while (true) {
             final ReentrantLock lock = fileLocks.get(expandedPath);
 
             if (lock.isHeldByCurrentThread()) {
-                if (isPatched && !patchLoaded) {
+                // Only a patch for this file can hold its lock while requiring it again, which it does to load its
+                // original.
+                // A patch in lib/patches loads its original with require Primitive.get_original_require(__FILE__),
+                // which passes the original's absolute path. That path doesn't always map back to the patch's feature
+                // (e.g., for a C extension), so the patch registers it while it loads.
+                final String patchFeature = patchedOriginals.get(expandedPath);
+                if (patchFeature != null && !patchFiles.get(patchFeature)) {
                     // it is loading the original of the patched file for the first time
                     // it has to allow this one case of circular require where the first require was the patch
-                    patchLoaded = true;
+                    relativeFeature = patchFeature;
+                    isPatched = true;
+                    loadingOriginalOfPatch = true;
                     patchFiles.put(relativeFeature, true);
                 } else {
                     warnCircularRequire(expandedPath);
@@ -173,23 +194,27 @@ public abstract class RequireNode extends RubyBaseNode {
             }
 
             try {
-                if (isPatched && !patchLoaded) {
-                    String expandedPatchPath = getLanguage().getRubyHome() + "/lib/patches/" + relativeFeature + ".rb";
+                // Check this under the lock, since another thread may have loaded the patch (or failed to) while this
+                // one was waiting.
+                if (isPatched && !patchFiles.get(relativeFeature)) {
+                    String expandedPatchPath = patchPath(relativeFeature);
                     RubyLanguage.LOGGER.config("patch file used: " + expandedPatchPath);
                     originalRequires.put(expandedPatchPath, expandedPath);
+                    patchedOriginals.put(expandedPath, relativeFeature);
                     try {
                         final boolean loaded = parseAndCall(expandedPatchPath, expandedPatchPath);
                         assert loaded;
                     } finally {
                         originalRequires.remove(expandedPatchPath);
+                        patchedOriginals.remove(expandedPath);
                     }
 
-                    final boolean originalLoaded = patchFiles.get(relativeFeature);
-                    if (!originalLoaded) {
+                    // The patch completed, so the feature is loaded. That's true even if the patch rescued an error
+                    // from its original or never loaded it at all.
+                    if (!isFeatureLoaded(pathString)) {
                         addToLoadedFeatures(pathString);
-                        // if original is not loaded make sure we set the patch to loaded
-                        patchFiles.put(relativeFeature, true);
                     }
+                    patchFiles.put(relativeFeature, true);
 
                     return true;
                 }
@@ -198,7 +223,20 @@ public abstract class RequireNode extends RubyBaseNode {
                     return false;
                 }
 
-                if (!parseAndCall(originalFeature, expandedPath)) {
+                final boolean loaded;
+                try {
+                    loaded = parseAndCall(originalFeature, expandedPath);
+                } catch (Throwable t) {
+                    if (loadingOriginalOfPatch) {
+                        // The original failed to load, so mark the patch as not loaded again. Otherwise, the next
+                        // require of the feature would skip the patch and go straight to the original. If the patch
+                        // rescues the error, it gets marked as loaded once it completes.
+                        patchFiles.put(relativeFeature, false);
+                    }
+                    throw t;
+                }
+
+                if (!loaded) {
                     return false;
                 }
 
@@ -209,6 +247,36 @@ public abstract class RequireNode extends RubyBaseNode {
                 fileLocks.unlock(expandedPath, lock);
             }
         }
+    }
+
+    private String patchPath(String feature) {
+        return getLanguage().getRubyHome() + "/lib/patches/" + feature + ".rb";
+    }
+
+    private record PatchedCExtension(String feature, String resolvedPath) {
+    }
+
+    /** Returns the feature of the patch for the C extension at {@code expandedPath}, along with the path that requiring
+     * that feature resolves to, if there's a patch for it. Bootsnap rewrites requires to absolute paths, and code can
+     * require {@code racc/cparse.so} rather than {@code racc/cparse}. Both need to find the patch for the feature
+     * without its extension, even if the path doesn't match the canonicalized {@code $LOAD_PATH} (e.g., because a gem
+     * is installed under a symlink). But, that only applies if requiring the feature resolves to this C extension.
+     * Otherwise, a patch for {@code openssl.rb} would run for an absolute require of the same-named C extension. */
+    private PatchedCExtension patchedCExtension(String expandedPath, ConcurrentMap<String, Boolean> patchFiles) {
+        final FeatureLoader featureLoader = getContext().getFeatureLoader();
+        final String pathWithoutExtension = expandedPath.substring(0,
+                expandedPath.length() - RubyLanguage.CEXT_EXTENSION.length());
+        for (String feature : patchFiles.keySet()) {
+            if (pathWithoutExtension.endsWith(feature) &&
+                    pathWithoutExtension.charAt(pathWithoutExtension.length() - feature.length() - 1) == '/') {
+                final String resolved = featureLoader.findFeature(feature);
+                if (resolved != null && featureLoader.canonicalize(resolved, null)
+                        .equals(featureLoader.canonicalize(expandedPath, null))) {
+                    return new PatchedCExtension(feature, resolved.intern());
+                }
+            }
+        }
+        return null;
     }
 
     private boolean parseAndCall(String feature, String expandedPath) {
