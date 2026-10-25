@@ -14,7 +14,7 @@
         ├── @ SymbolNode (location: (5,0)-(5,7))
         │   ├── flags: newline, static_literal
         │   ├── opening_loc: (5,0)-(5,2) = ":\""
-        │   ├── value_loc: (5,2)-(5,6) = "\\xcd"
+        │   ├── content_loc: (5,2)-(5,6) = "\\xcd"
         │   ├── closing_loc: (5,6)-(5,7) = "\""
         │   └── unescaped: "\xCD"
         ├── @ InterpolatedRegularExpressionNode (location: (7,0)-(7,11))

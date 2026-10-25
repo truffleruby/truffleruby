@@ -1879,7 +1879,7 @@ pm_serialize_node(pm_parser_t *parser, pm_node_t *node, pm_buffer_t *buffer) {
                 pm_buffer_append_byte(buffer, 1);
                 pm_serialize_location(&((pm_symbol_node_t *)node)->opening_loc, buffer);
             }
-            pm_serialize_location(&((pm_symbol_node_t *)node)->value_loc, buffer);
+            pm_serialize_location(&((pm_symbol_node_t *)node)->content_loc, buffer);
             if (((pm_symbol_node_t *)node)->closing_loc.length == 0) {
                 pm_buffer_append_byte(buffer, 0);
             } else {
@@ -2067,6 +2067,34 @@ pm_serialize_comment_list(pm_list_t *list, pm_buffer_t *buffer) {
     }
 }
 
+/**
+ * Serialize the comments attached to each node. This is the number of nodes
+ * that own comments, followed by each of those nodes' id, the number of
+ * comments it owns, and the index of each of those comments in the comment
+ * list.
+ */
+static void
+pm_serialize_comment_attachments(const pm_comment_attachments_t *attachments, pm_buffer_t *buffer) {
+    uint32_t count = 0;
+    for (uint32_t node_id = 0; node_id < attachments->ranges_size; node_id++) {
+        if (attachments->ranges[node_id].length > 0) count++;
+    }
+
+    pm_buffer_append_varuint(buffer, count);
+
+    for (uint32_t node_id = 0; node_id < attachments->ranges_size; node_id++) {
+        pm_comment_range_t range = attachments->ranges[node_id];
+        if (range.length == 0) continue;
+
+        pm_buffer_append_varuint(buffer, node_id);
+        pm_buffer_append_varuint(buffer, range.length);
+
+        for (uint32_t index = 0; index < range.length; index++) {
+            pm_buffer_append_varuint(buffer, attachments->attachments[range.index + index]);
+        }
+    }
+}
+
 static void
 pm_serialize_magic_comment(pm_magic_comment_t *magic_comment, pm_buffer_t *buffer) {
     // serialize key location
@@ -2140,6 +2168,7 @@ pm_serialize_metadata(pm_parser_t *parser, pm_buffer_t *buffer) {
     pm_buffer_append_varsint(buffer, parser->start_line);
     pm_serialize_line_offset_list(&parser->line_offsets, buffer);
     pm_serialize_comment_list(&parser->comment_list, buffer);
+    pm_serialize_comment_attachments(&parser->comment_attachments, buffer);
     pm_serialize_magic_comment_list(&parser->magic_comment_list, buffer);
     pm_serialize_data_loc(parser, buffer);
     pm_serialize_diagnostic_list(&parser->error_list, buffer);
@@ -2147,7 +2176,7 @@ pm_serialize_metadata(pm_parser_t *parser, pm_buffer_t *buffer) {
     pm_buffer_append_byte(buffer, (uint8_t) parser->continuable);
 }
 
-#line 278 "prism/templates/src/serialize.c.erb"
+#line 309 "prism/templates/src/serialize.c.erb"
 /**
  * Serialize the metadata, nodes, and constant pool.
  */

@@ -55,7 +55,7 @@
             │   │       │   @ SymbolNode (location: (6,0)-(6,2))
             │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
             │   │       │   ├── opening_loc: ∅
-            │   │       │   ├── value_loc: (6,0)-(6,1) = "a"
+            │   │       │   ├── content_loc: (6,0)-(6,1) = "a"
             │   │       │   ├── closing_loc: (6,1)-(6,2) = ":"
             │   │       │   └── unescaped: "a"
             │   │       ├── value:

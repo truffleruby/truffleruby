@@ -350,6 +350,8 @@ pm_token_type(pm_token_type_t token_type) {
             return "USTAR_STAR";
         case PM_TOKEN_WORDS_SEP:
             return "WORDS_SEP";
+        case PM_TOKEN_WORDS_SEP_IMPLICIT:
+            return "WORDS_SEP_IMPLICIT";
         case PM_TOKEN_XSTRING_BEGIN:
             return "XSTRING_BEGIN";
         case PM_TOKEN___END__:
@@ -704,6 +706,7 @@ pm_token_str(pm_token_type_t token_type) {
         case PM_TOKEN_USTAR_STAR:
             return "**";
         case PM_TOKEN_WORDS_SEP:
+        case PM_TOKEN_WORDS_SEP_IMPLICIT:
             return "string separator";
         case PM_TOKEN_XSTRING_BEGIN:
             return "backtick string literal";
