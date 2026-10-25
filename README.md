@@ -146,6 +146,7 @@ The minimum Java version for embedding TruffleRuby corresponds to the major of t
 
 | TruffleRuby version | Truffle version | GraalVM versions |
 | --- | --- | --- |
+| 40.1.0 | 25.4.4.1.1 | 25.4.x |
 | 40.0.0 | 25.3.4.1 | 25.3.x |
 | 34.0.0 | 25.0.2 | 21.0.x, 25.0.x |
 | 33.0.0 | 25.0.1 | 21.0.x, 25.0.x |
