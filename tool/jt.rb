@@ -90,7 +90,7 @@ LTS_JDK_VERSION = '21'
 IGV_JDK_VERSION = '21'
 DEFAULT_JDK_VERSION = 'latest'
 
-BOOTSTRAP_GRAALVM_VERSION = '25.3.4.1'
+BOOTSTRAP_GRAALVM_VERSION = '25.4.4.1.1'
 BOOTSTRAP_GRAALVM_EA_BUILD_TAG = nil
 
 # Not yet 'jdk.graal' as we test against 21 and 21 does not know 'jdk.graal'
@@ -2391,7 +2391,7 @@ module Commands
       dir = "#{JDKS_CACHE_DIR}/graalvm-#{tag}"
     else
       version = BOOTSTRAP_GRAALVM_VERSION
-      major, minor, patches = /^(\d+)\.(\d+)\.(\d+(?:\.\d+)?)$/.match(version).captures
+      major, minor, patches = /^(\d+)\.(\d+)\.(\d+(?:\.\d+)*)$/.match(version).captures
       archive_version = "#{major}i#{minor}"
       jdk_version = "#{major}.0.#{patches}"
       if ee?

@@ -2,6 +2,7 @@
 
 New features:
 
+* Updated to GraalVM 25.4.4.1.1 (@eregon).
 
 Bug fixes:
 
