@@ -6,6 +6,8 @@ New features:
 
 Bug fixes:
 
+* Fix `rb_arithmetic_sequence_extract()` setting `exclude_end` to a `VALUE` handle instead of `1` for an `Enumerator::ArithmeticSequence` with an exclusive end (@nirvdrum).
+
 
 Compatibility:
 
