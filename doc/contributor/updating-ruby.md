@@ -183,12 +183,8 @@ That way the Prism `gemspec` is correct.
 
 ## Updating exe/ executables
 
-```
-rm -rf exe
-cp -R ~/.rubies/ruby-$VERSION/bin exe
-rm -f exe/ruby exe/typeprof
-ruby tool/patch_launchers.rb
-```
+The executables in `exe/` are imported by `tool/import-mri-files.sh` from the clean install of MRI,
+like default and bundled gems, and patched with `tool/patch_launchers.rb`.
 
 ## Make other changes
 

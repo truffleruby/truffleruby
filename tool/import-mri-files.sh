@@ -67,6 +67,12 @@ find lib/gems/gems \( -name '*.o' -o -name '*.a' -o -name '*.so' -o -name '*.bun
 rm -f lib/gems/gems/rbs-*/Gemfile.lock
 ruby tool/patch-default-gemspecs.rb
 
+# exe/
+rm -rf exe
+cp -R "$RUBY_INSTALL_DIR/bin" exe
+rm -f exe/ruby exe/typeprof
+ruby tool/patch_launchers.rb
+
 # *.c
 cp "$RUBY_SOURCE_DIR/st.c" src/main/c/cext
 cp "$RUBY_SOURCE_DIR/missing/strlcpy.c" src/main/c/cext
