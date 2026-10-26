@@ -11,6 +11,7 @@ Bug fixes:
 Compatibility:
 
 * `IO#read` now coerces the `length` parameter to `Integer` (#4456, @andrykonchin).
+* Raise `RangeError` instead of `FloatDomainError` when converting NaN, infinite or other out-of-range `Float` values with `rb_num2ulong()`, `Process.uid=` and similar methods (@nirvdrum).
 
 Performance:
 

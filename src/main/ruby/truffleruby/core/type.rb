@@ -107,8 +107,11 @@ module Truffle
           rb_big2ulong(val)
         end
       elsif Primitive.is_a?(val, Float)
-        fval = val.to_int
-        rb_num2ulong(fval)
+        # Like MRI, raise a RangeError rather than the FloatDomainError of Float#to_int. NaN fails both comparisons.
+        unless val >= Truffle::Platform::LONG_MIN && val <= Truffle::Platform::ULONG_MAX
+          raise RangeError, "float #{sprintf('%-.10g', val)} out of range of integer"
+        end
+        rb_num2ulong(val.to_int)
       else
         rb_num2ulong(Primitive.convert_with_to_int(val))
       end
