@@ -65,9 +65,8 @@ mkdir ~/.rubies
 make -j8 install-nodoc
 ```
 
-Use `~/.rubies/ruby-$VERSION-updated-gems` directory as a source for copying a new bundled gem version.
-
-Follow instructions how to update default and bundled gems.
+Then reimport MRI files (see below) with `RUBY_INSTALL_DIR=~/.rubies/ruby-$VERSION-updated-gems`,
+so the new bundled gem version is copied from that installation.
 
 ## Setup
 
@@ -83,6 +82,10 @@ Re-install the target MRI version using the commands, to have a clean set of gem
 rm -rf ~/.rubies/ruby-$VERSION
 ruby-build -d ruby-$VERSION ~/.rubies
 ```
+
+`tool/import-mri-files.sh` copies the default and bundled gems from this installation
+(`~/.rubies/ruby-$VERSION` by default, it must be the same version as the MRI source directory;
+set `RUBY_INSTALL_DIR` to use another installation), so it must not have extra gems installed.
 
 ## Create reference branches
 
@@ -159,30 +162,20 @@ Also reapply our changes to json files, by looking with `git log -p lib/json`.
 
 ## Updating default and bundled gems
 
-You need a clean install (e.g., no extra gems installed) of MRI for this (see [above](#setup)).
+Default and bundled gems under `lib/gems` are imported by `tool/import-mri-files.sh`
+from a clean install of MRI (see [above](#setup)), so they are part of the reference branches
+and the TruffleRuby-specific changes to them (e.g., `ext/*/extconf.rb` of the `debug` and `rbs` gems)
+are re-applied by the `git revert vOld` step like other files.
+For a bundled gem with a C extension whose version changed, this shows as a modify/delete conflict
+on the old version's file: re-apply that patch on the new version's file.
 
+The script removes build artifacts and generated files of gems with C extensions,
+so only "sources" are imported. Check the reference branch commit to ensure nothing else needs to be removed,
+e.g. with
 ```
-export TRUFFLERUBY=$(pwd)
-rm -rf lib/gems/gems
-rm -rf lib/gems/specifications
-
-cd ~/.rubies/ruby-$VERSION
-cp -R lib/ruby/gems/*.0/gems $TRUFFLERUBY/lib/gems
-cp -R lib/ruby/gems/*.0/specifications $TRUFFLERUBY/lib/gems
-
-cd $TRUFFLERUBY
-rm -f lib/gems/gems/**/*.{o,a,so,bundle,mk}(N) lib/gems/gems/**/{Makefile,extconf.h,mkmf.log,depend}(N)
-rm -rf lib/gems/gems/typeprof-* lib/gems/specifications/typeprof-*.gemspec
-rm -f lib/gems/gems/rbs-*/Gemfile.lock(N)
-ruby tool/patch-default-gemspecs.rb
+git show --stat vNew -- lib/gems | grep -Ev '\.(rb|gemspec|md|c|h|rdoc|txt|ja|png|gif|ttf|rhtml|js|css|yaml|yml|json|rake|rbs|erb)\s|/(COPYING|BSDL|LICENSE|LEGAL|MIT-LICENSE|PSFL|Gemfile|Rakefile|console|setup)\s'
 ```
-
-Then review bundled gems with extensions like `lib/gems/gems/debug-*` and `lib/gems/gems/rbs-*`
-to ensure no build artifacts/generated files are committed, only "sources".
-This can be done with e.g.
-```
-git log --stat -1 --color | grep -Ev '\.(rb|gemspec|md|c|h|rdoc|txt|ja|png|gif|ttf|rhtml|js|css|yaml|yml|json|rake|rbs|erb)\s|/(COPYING|BSDL|LICENSE|LEGAL|MIT-LICENSE|PSFL|Gemfile|Rakefile|console|setup)\s'
-```
+and extend the list of files removed in `tool/import-mri-files.sh` if needed.
 
 Update the `ruby/prism` default gem with `tool/import-prism.sh` script.
 See the "Update Prism" section in the [Prism](prism.md) document.
@@ -190,19 +183,16 @@ That way the Prism `gemspec` is correct.
 
 ## Updating exe/ executables
 
-```
-rm -rf exe
-cp -R ~/.rubies/ruby-$VERSION/bin exe
-rm -f exe/ruby exe/typeprof
-ruby tool/patch_launchers.rb
-```
+The executables in `exe/` are imported by `tool/import-mri-files.sh` from the clean install of MRI,
+like default and bundled gems, and patched with `tool/patch_launchers.rb`.
 
 ## Make other changes
 
 Update all of these:
 
-* Re-apply the patch for the `debug` gem, see `git log --follow -p 'lib/gems/gems/debug-*/ext/debug/extconf.rb'`.
-* Re-apply the patch for the `rbs` gem, see `git log --follow -p 'lib/gems/gems/rbs-*/ext/rbs_extension/extconf.rb'`.
+* Check the TruffleRuby patches to the `debug` and `rbs` gems extensions are still applied,
+  see `git log --follow -p 'lib/gems/gems/debug-*/ext/debug/extconf.rb'` and
+  `git log --follow -p 'lib/gems/gems/rbs-*/ext/rbs_extension/extconf.rb'`.
 * Update `.ruby-version`, `TruffleRuby.LANGUAGE_VERSION`
 * IMPORTANT: switch to CRuby n.n.n in the current terminal, e.g., `chruby ruby-$(cat .ruby-version)`
 * Update the `SyntaxVersion` in `YARPTranslatorDriver`

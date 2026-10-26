@@ -15,6 +15,23 @@ fi
 
 topdir=$(cd "$RUBY_SOURCE_DIR" && pwd -P)
 
+# Default and bundled gems are copied from an installed MRI of the same version as $RUBY_SOURCE_DIR
+ruby_version=$(cd "$RUBY_SOURCE_DIR" && ruby -e '
+  api = File.read("include/ruby/version.h")
+  major = api[/^#define RUBY_API_VERSION_MAJOR (\d+)/, 1]
+  minor = api[/^#define RUBY_API_VERSION_MINOR (\d+)/, 1]
+  teeny = File.read("version.h")[/^#define RUBY_VERSION_TEENY (\d+)/, 1]
+  print [major, minor, teeny].join(".")')
+if [ -z "$RUBY_INSTALL_DIR" ]; then
+  RUBY_INSTALL_DIR=$HOME/.rubies/ruby-$ruby_version
+fi
+installed_version=$("$RUBY_INSTALL_DIR/bin/ruby" -e 'print RUBY_VERSION')
+if [ "$installed_version" != "$ruby_version" ]; then
+  echo "$RUBY_INSTALL_DIR is Ruby $installed_version but $RUBY_SOURCE_DIR is Ruby $ruby_version" >&2
+  exit 1
+fi
+gem_dir=$("$RUBY_INSTALL_DIR/bin/ruby" -e 'print Gem.default_dir')
+
 # Generate ext/rbconfig/sizeof/sizes.c and limits.c
 (
   cd "$RUBY_SOURCE_DIR/ext/rbconfig/sizeof"
@@ -37,6 +54,24 @@ rm lib/mri/weakref.rb
 # Files not actually installed in MRI
 find lib/mri -name '*.gemspec' -delete
 find lib/mri -name '.document' -delete
+
+# Default and bundled gems, this assumes a clean install with no extra gems
+rm -rf lib/gems/gems lib/gems/specifications
+cp -R "$gem_dir/gems" lib/gems/gems
+cp -R "$gem_dir/specifications" lib/gems/specifications
+# typeprof does not work on TruffleRuby
+rm -rf lib/gems/gems/typeprof-* lib/gems/specifications/typeprof-*.gemspec
+# Remove build artifacts and generated files of C extensions, we only want sources
+find lib/gems/gems \( -name '*.o' -o -name '*.a' -o -name '*.so' -o -name '*.bundle' -o -name '*.mk' \
+  -o -name Makefile -o -name extconf.h -o -name mkmf.log -o -name depend -o -name debug_version.h \) -delete
+rm -f lib/gems/gems/rbs-*/Gemfile.lock
+ruby tool/patch-default-gemspecs.rb
+
+# exe/
+rm -rf exe
+cp -R "$RUBY_INSTALL_DIR/bin" exe
+rm -f exe/ruby exe/typeprof
+ruby tool/patch_launchers.rb
 
 # *.c
 cp "$RUBY_SOURCE_DIR/st.c" src/main/c/cext
@@ -90,6 +125,8 @@ rm -rf lib/mri/prism
 git checkout -- lib/mri/prism
 rm -rf test/mri/tests/prism
 git checkout -- test/mri/tests/prism
+rm -f lib/gems/specifications/default/prism-*.gemspec
+git checkout -- "lib/gems/specifications/default/prism-*.gemspec"
 
 # Copy from tool/lib to tests/lib
 cp -R "$RUBY_SOURCE_DIR/tool/lib"/* test/mri/tests/lib
