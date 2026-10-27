@@ -23,12 +23,23 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
 
+/** Converts an ID (a static symbol ID or the handle of a dynamic Symbol) to its RubySymbol. There is an inline cache so
+ * e.g. the method name of a rb_funcall() or the ivar name of a rb_ivar_get() is a constant in compiled code, like the
+ * symmetric {@link SymbolToIDNode}. A cached RubySymbol is kept alive by the cache entry, and so is its ValueWrapper
+ * for a dynamic symbol, so the cached handle cannot be freed and reused for another object. */
 @GenerateUncached
 public abstract class IDToSymbolNode extends RubyBaseNode {
 
     public abstract RubySymbol execute(long value);
 
-    @Specialization(guards = "isStaticSymbol(value)")
+    @Specialization(guards = "value == cachedValue", limit = "1")
+    RubySymbol cached(long value,
+            @Cached("value") long cachedValue,
+            @Cached("idToSymbolUncached(cachedValue)") RubySymbol cachedSymbol) {
+        return cachedSymbol;
+    }
+
+    @Specialization(guards = "isStaticSymbol(value)", replaces = "cached")
     RubySymbol unwrapStaticSymbol(long value,
             @Cached InlinedBranchProfile errorProfile) {
         final int index = idToIndex(value);
@@ -44,7 +55,7 @@ public abstract class IDToSymbolNode extends RubyBaseNode {
         return symbol;
     }
 
-    @Specialization(guards = "!isStaticSymbol(value)")
+    @Specialization(guards = "!isStaticSymbol(value)", replaces = "cached")
     RubySymbol unwrapDynamicSymbol(long value,
             @Cached UnwrapNode unwrapNode) {
         return (RubySymbol) unwrapNode.execute(this, value);
@@ -52,6 +63,10 @@ public abstract class IDToSymbolNode extends RubyBaseNode {
 
     public static boolean isStaticSymbol(long value) {
         return CoreSymbols.isStaticSymbol(value);
+    }
+
+    protected static RubySymbol idToSymbolUncached(long value) {
+        return IDToSymbolNodeGen.getUncached().execute(value);
     }
 
 }
