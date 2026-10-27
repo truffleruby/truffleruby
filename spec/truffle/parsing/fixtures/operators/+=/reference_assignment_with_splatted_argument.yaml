@@ -170,7 +170,7 @@ ast: |
                                                                       values = [
                                                                           InlinedAddNodeGen
                                                                               attributes:
-                                                                                  assumptions = [Assumption(valid, name=set_trace_func is not used), Assumption(valid, name=core method is not overridden:), Assumption(valid, name=core method is not overridden:)]
+                                                                                  assumptions = [Assumption(valid, name=no :call TracePoint is enabled), Assumption(valid, name=core method is not overridden:), Assumption(valid, name=core method is not overridden:)]
                                                                                   flags = 0
                                                                                   parameters = RubyCallNodeParameters{methodName='+', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=false, isVCall=false, isSafeNavigation=false, isAttrAssign=false}
                                                                                   sourceCharIndex = 0

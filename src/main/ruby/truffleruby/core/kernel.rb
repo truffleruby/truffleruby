@@ -510,6 +510,34 @@ module Kernel
   end
   module_function :select
 
+  # This method is itself traced by the previous trace func until it is disabled, and by the new one once enabled.
+  # So the previous TracePoint is disabled as early as possible, and no statement follows enabling the new TracePoint.
+  def set_trace_func(proc)
+    TruffleRuby.synchronized(Truffle::KernelOperations) do
+      Primitive.object_ivar_get(Truffle::KernelOperations, :@trace_func_trace_point)&.disable
+      Primitive.object_ivar_set(Truffle::KernelOperations, :@trace_func_trace_point, nil)
+
+      if Primitive.nil?(proc)
+        nil
+      elsif Primitive.is_a?(proc, Proc)
+        trace_point = TracePoint.new(:line, :class, :call) do |tp|
+          if tp.event == :call
+            proc.call(tp.event.to_s, tp.path, tp.lineno, tp.method_id, tp.binding, Primitive.class(tp.self))
+          else
+            proc.call(tp.event.to_s, tp.path, tp.lineno, nil, tp.binding, nil)
+          end
+        end
+        Primitive.object_ivar_set(Truffle::KernelOperations, :@trace_func_trace_point, trace_point)
+        # TracePoint#enable returns false since the TracePoint was not enabled yet, so the proc is returned,
+        # in the same statement to not trace a line event after enabling.
+        trace_point.enable || proc
+      else
+        raise TypeError, 'trace_func needs to be Proc'
+      end
+    end
+  end
+  module_function :set_trace_func
+
   def srand(seed = undefined)
     if Primitive.undefined? seed
       seed = Primitive.thread_randomizer.generate_seed

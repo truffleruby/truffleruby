@@ -41,7 +41,7 @@ public abstract class InlinedReplaceableNode extends RubyContextSourceNode {
         this.parameters = callNodeParameters.withoutNodes();
 
         this.assumptions = new Assumption[1 + assumptions.length];
-        this.assumptions[0] = language.traceFuncUnusedAssumption.getAssumption();
+        this.assumptions[0] = language.callTracingUnusedAssumption.getAssumption();
         ArrayUtils.arraycopy(assumptions, 0, this.assumptions, 1, assumptions.length);
     }
 

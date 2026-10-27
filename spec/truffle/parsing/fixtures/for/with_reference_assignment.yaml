@@ -175,7 +175,7 @@ ast: |
                                                                                                                               sourceLength = 0
                                                                                               InlinedIndexSetNodeGen
                                                                                                   attributes:
-                                                                                                      assumptions = [Assumption(valid, name=set_trace_func is not used)]
+                                                                                                      assumptions = [Assumption(valid, name=no :call TracePoint is enabled)]
                                                                                                       flags = 0
                                                                                                       parameters = RubyCallNodeParameters{methodName='[]=', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=false, isVCall=false, isSafeNavigation=false, isAttrAssign=true}
                                                                                                       sourceCharIndex = -1
@@ -231,7 +231,7 @@ ast: |
                                                                                                       valueNode =
                                                                                                           InlinedIndexGetNodeGen
                                                                                                               attributes:
-                                                                                                                  assumptions = [Assumption(valid, name=set_trace_func is not used)]
+                                                                                                                  assumptions = [Assumption(valid, name=no :call TracePoint is enabled)]
                                                                                                                   flags = 0
                                                                                                                   parameters = RubyCallNodeParameters{methodName='[]', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=false, isVCall=false, isSafeNavigation=false, isAttrAssign=false}
                                                                                                                   sourceCharIndex = 34

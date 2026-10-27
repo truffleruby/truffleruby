@@ -34,8 +34,8 @@ import org.truffleruby.language.RubyNode;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.profiles.BranchProfile;
 
-/** Fires the :class TracePoint and set_trace_func 'class' events at the beginning of a class or module body. The source
- * section of this node is used for the event location. */
+/** Fires the :class TracePoint event at the beginning of a class or module body. The source section of this node is
+ * used for the event location. */
 public final class FireClassTracePointNode extends RubyContextSourceNode {
 
     private final BranchProfile classListenersProfile = BranchProfile.create();
@@ -43,7 +43,7 @@ public final class FireClassTracePointNode extends RubyContextSourceNode {
     @Override
     public Object execute(VirtualFrame frame) {
         final SlowPathTracePoints slowPathTracePoints = getContext().getSlowPathTracePoints();
-        if (slowPathTracePoints.hasClassListeners()) {
+        if (slowPathTracePoints.hasClassTracePoints()) {
             classListenersProfile.enter();
             slowPathTracePoints.fireClassEvent(frame.materialize(), this);
         }

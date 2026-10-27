@@ -31,9 +31,6 @@ package org.truffleruby.core.tracepoint;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.binding.BindingNodes;
-import org.truffleruby.core.binding.RubyBinding;
-import org.truffleruby.core.proc.RubyProc;
-import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.yield.CallBlockNode;
@@ -44,11 +41,11 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-/** The active TracePoints and set_trace_func proc for events which are implemented without Truffle instrumentation.
- * Instead, the code triggering such an event explicitly checks whether there is any active TracePoint or set_trace_func
- * for it and calls them if so. This avoids invalidating compiled code and the memory footprint of instrumentation
- * wrappers when such a TracePoint is enabled or disabled, which matters for events triggered by operations which are
- * anyway slow, like defining a module or class. */
+/** The active TracePoints for events which are implemented without Truffle instrumentation. Instead, the code
+ * triggering such an event explicitly checks whether there is any active TracePoint for it and calls them if so. This
+ * avoids invalidating compiled code and the memory footprint of instrumentation wrappers when such a TracePoint is
+ * enabled or disabled, which matters for events triggered by operations which are anyway slow, like defining a module
+ * or class. */
 public final class SlowPathTracePoints {
 
     private static final RubyTracePoint[] EMPTY = new RubyTracePoint[0];
@@ -56,33 +53,26 @@ public final class SlowPathTracePoints {
     private final RubyContext context;
     private final RubyLanguage language;
 
-    /** Whether there is any active :class TracePoint or set_trace_func. This is a single field so the check on the fast
-     * path is as cheap as possible. */
-    private volatile boolean hasClassListeners = false;
+    /** Whether there is any active :class TracePoint. This is a single field so the check on the fast path is as cheap
+     * as possible. */
+    private volatile boolean hasClassTracePoints = false;
     /** The active :class TracePoints, the most recently enabled first like in CRuby */
     private volatile RubyTracePoint[] classTracePoints = EMPTY;
-    /** The set_trace_func proc, which receives the 'class' event, or null if there is none */
-    private volatile RubyProc classTraceFunc = null;
 
     public SlowPathTracePoints(RubyContext context) {
         this.context = context;
         this.language = context.getLanguageSlow();
     }
 
-    public boolean hasClassListeners() {
-        return hasClassListeners;
-    }
-
-    public synchronized void setClassTraceFunc(RubyProc traceFunc) {
-        this.classTraceFunc = traceFunc;
-        updateHasClassListeners();
+    public boolean hasClassTracePoints() {
+        return hasClassTracePoints;
     }
 
     @TruffleBoundary
     synchronized void add(RubySymbol event, RubyTracePoint tracePoint) {
         if (event == language.coreSymbols.CLASS) {
             classTracePoints = prepend(tracePoint, classTracePoints);
-            updateHasClassListeners();
+            hasClassTracePoints = true;
         } else {
             throw CompilerDirectives.shouldNotReachHere(event.getString());
         }
@@ -92,14 +82,10 @@ public final class SlowPathTracePoints {
     synchronized void remove(RubySymbol event, RubyTracePoint tracePoint) {
         if (event == language.coreSymbols.CLASS) {
             classTracePoints = remove(classTracePoints, tracePoint);
-            updateHasClassListeners();
+            hasClassTracePoints = classTracePoints.length > 0;
         } else {
             throw CompilerDirectives.shouldNotReachHere(event.getString());
         }
-    }
-
-    private void updateHasClassListeners() {
-        hasClassListeners = classTracePoints.length > 0 || classTraceFunc != null;
     }
 
     private static RubyTracePoint[] prepend(RubyTracePoint tracePoint, RubyTracePoint[] tracePoints) {
@@ -121,8 +107,8 @@ public final class SlowPathTracePoints {
         return copy;
     }
 
-    /** Calls the active :class TracePoints and the set_trace_func proc for a class/module body at the given node. The
-     * frame is used for TracePoint#binding, TracePoint#self and the set_trace_func binding. */
+    /** Calls the active :class TracePoints for a class/module body at the given node. The frame is used for
+     * TracePoint#binding, etc. */
     @TruffleBoundary
     public void fireClassEvent(MaterializedFrame frame, RubyNode node) {
         final SourceSection sourceSection = node.getSourceSection();
@@ -133,18 +119,7 @@ public final class SlowPathTracePoints {
 
         final int line = language.getStartLineAdjusted(sourceSection);
 
-        final RubyTracePoint[] tracePoints = classTracePoints;
-        if (tracePoints.length > 0) {
-            fire(tracePoints, language.coreSymbols.CLASS, frame, sourceSection, line);
-        }
-
-        final RubyProc traceFunc = classTraceFunc;
-        if (traceFunc != null) {
-            final RubyString event = language.coreStrings.CLASS.createInstance(context);
-            final RubyBinding binding = BindingNodes.createBinding(context, language, frame, sourceSection);
-            final RubyString path = language.getPathToTStringCache().createPathString(context, source);
-            context.getTraceManager().callTraceFunc(traceFunc, event, path, line, binding);
-        }
+        fire(classTracePoints, language.coreSymbols.CLASS, frame, sourceSection, line);
     }
 
     private void fire(RubyTracePoint[] tracePoints, RubySymbol event, MaterializedFrame frame,

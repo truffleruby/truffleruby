@@ -26,7 +26,10 @@ def check(file)
     expected = f.each_line.map { |line| eval(line) }
   end
 
-  actual = $trace.map do |event, file, line, id, binding, classname, *extra|
+  # Ignore events from the core library, such as from the implementation of set_trace_func
+  actual = $trace.reject { |event, file, *| file.start_with?('<internal:core>') }
+
+  actual = actual.map do |event, file, line, id, binding, classname, *extra|
     raise unless extra.empty?
     file = '/' + File.basename(file)
     [event, file, line, id, binding, classname]

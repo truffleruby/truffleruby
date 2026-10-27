@@ -16,12 +16,9 @@ public final class CoreStrings {
 
     public final CoreString ARGUMENT_OUT_OF_RANGE;
     public final CoreString ASSIGNMENT;
-    public final CoreString CALL;
     public final CoreString CANT_COMPRESS_NEGATIVE;
-    public final CoreString CLASS;
     public final CoreString EVAL_FILENAME_STRING;
     public final CoreString FAILED_TO_ALLOCATE_MEMORY;
-    public final CoreString LINE;
     public final CoreString NEGATIVE_ARRAY_SIZE;
     public final CoreString NEGATIVE_STRING_SIZE;
     public final CoreString ONE_HASH_REQUIRED;
@@ -38,12 +35,9 @@ public final class CoreStrings {
     public CoreStrings(RubyLanguage language) {
         ARGUMENT_OUT_OF_RANGE = new CoreString(language, "argument out of range");
         ASSIGNMENT = new CoreString(language, "assignment");
-        CALL = new CoreString(language, "call");
         CANT_COMPRESS_NEGATIVE = new CoreString(language, "can't compress negative numbers");
-        CLASS = new CoreString(language, "class");
         EVAL_FILENAME_STRING = new CoreString(language, "(eval)");
         FAILED_TO_ALLOCATE_MEMORY = new CoreString(language, "failed to allocate memory");
-        LINE = new CoreString(language, "line");
         NEGATIVE_ARRAY_SIZE = new CoreString(language, "negative array size");
         NEGATIVE_STRING_SIZE = new CoreString(language, "negative string size (or size too big)");
         ONE_HASH_REQUIRED = new CoreString(language, "one hash required");
