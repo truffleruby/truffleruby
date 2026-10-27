@@ -98,12 +98,21 @@ describe "C-API Range function" do
       enum = (10..20).step(5)
       enum.should.kind_of?(Enumerator::ArithmeticSequence)
 
-      @s.rb_arithmetic_sequence_extract(enum).should == [1, 10, 20, 5, false]
+      @s.rb_arithmetic_sequence_extract(enum).should == [1, 10, 20, 5, 0]
+    end
+
+    it "returns 1 for exclude end of an Enumerator::ArithmeticSequence with an exclusive end" do
+      enum = (10...20).step(5)
+      enum.should.kind_of?(Enumerator::ArithmeticSequence)
+
+      @s.rb_arithmetic_sequence_extract(enum).should == [1, 10, 20, 5, 1]
+      @s.rb_arithmetic_sequence_extract(1.step(10, 2)).should == [1, 1, 10, 2, 0]
     end
 
     it "returns begin, end, step, exclude end of an instance of a Range" do
       range = (10..20)
-      @s.rb_arithmetic_sequence_extract(range).should == [1, 10, 20, 1, false]
+      @s.rb_arithmetic_sequence_extract(range).should == [1, 10, 20, 1, 0]
+      @s.rb_arithmetic_sequence_extract(10...20).should == [1, 10, 20, 1, 1]
     end
 
     it "returns begin, end, step, exclude end of a non-Range object with Range properties" do
@@ -118,7 +127,7 @@ describe "C-API Range function" do
         false
       end
 
-      @s.rb_arithmetic_sequence_extract(object).should == [1, 10, 20, 1, false]
+      @s.rb_arithmetic_sequence_extract(object).should == [1, 10, 20, 1, 0]
     end
 
     it "returns failed status if given object is not Enumerator::ArithmeticSequence or Range or Range-like object" do

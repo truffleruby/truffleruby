@@ -53,7 +53,7 @@ VALUE range_spec_rb_arithmetic_sequence_extract(VALUE self, VALUE object) {
   rb_ary_store(ary, 1, components.begin);
   rb_ary_store(ary, 2, components.end);
   rb_ary_store(ary, 3, components.step);
-  rb_ary_store(ary, 4, components.exclude_end ? Qtrue : Qfalse);
+  rb_ary_store(ary, 4, INT2FIX(components.exclude_end));
   return ary;
 }
 

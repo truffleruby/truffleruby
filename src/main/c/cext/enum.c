@@ -28,7 +28,7 @@ int rb_arithmetic_sequence_extract(VALUE obj, rb_arithmetic_sequence_components_
         component->begin       = rb_ivar_get(obj, rb_intern("@begin"));
         component->end         = rb_ivar_get(obj, rb_intern("@end"));
         component->step        = rb_ivar_get(obj, rb_intern("@step"));
-        component->exclude_end = rb_ivar_get(obj, rb_intern("@exclude_end"));
+        component->exclude_end = RTEST(rb_ivar_get(obj, rb_intern("@exclude_end")));
         return 1;
     } else if (rb_range_values(obj, &component->begin, &component->end, &component->exclude_end)) {
         component->step  = INT2FIX(1);
