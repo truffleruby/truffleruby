@@ -85,13 +85,13 @@ Runtime configurations are further detailed in [Deploying TruffleRuby](doc/user/
 
 ## System Compatibility
 
-TruffleRuby is actively tested on the following systems:
+TruffleRuby is actively tested on [the following systems](tool/docker-configs.yaml):
 
-* Oracle Linux 7, 8, 9
-* Ubuntu 18.04, 20.04, 22.04 (all LTS)
-* Fedora 37, 38
-* Debian 10, 11, 12
-* macOS 11 (Big Sur)
+* Oracle Linux 8, 9, 10
+* Fedora 43, 44
+* Ubuntu 20.04, 22.04, 24.04, 26.04 (all LTS)
+* Debian 12, 13
+* macOS 15
 
 Architectures:
 
