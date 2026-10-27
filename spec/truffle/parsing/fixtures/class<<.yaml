@@ -73,17 +73,15 @@ ast: |
                                                                   flags = 0
                                                                   sourceCharIndex = -1
                                                                   sourceLength = 0
-                                  InsideModuleDefinitionNode
+                                  FireClassTracePointNode
                                       attributes:
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 23
-                                      children:
-                                          body =
-                                              IntegerFixnumLiteralNode
-                                                  attributes:
-                                                      flags = 1
-                                                      sourceCharIndex = 17
-                                                      sourceLength = 2
-                                                      value = 42
+                                  IntegerFixnumLiteralNode
+                                      attributes:
+                                          flags = 1
+                                          sourceCharIndex = 17
+                                          sourceLength = 2
+                                          value = 42
                               ]

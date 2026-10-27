@@ -16,13 +16,17 @@ import java.util.Collection;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.binding.BindingNodes;
+import org.truffleruby.core.binding.RubyBinding;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.proc.RubyProc;
+import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.symbol.RubySymbol;
+import org.truffleruby.core.tracepoint.SlowPathTracePoints;
 import org.truffleruby.core.tracepoint.TraceBaseEventNode;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.objects.LogicalClassNode;
+import org.truffleruby.language.yield.CallBlockNode;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -39,9 +43,6 @@ public final class TraceManager {
     }
 
     public static final class CallTag extends Tag {
-    }
-
-    public static final class ClassTag extends Tag {
     }
 
     /** A tag which applies to no Node, but is useful to handle not-yet-implemented TracePoint events. */
@@ -70,6 +71,8 @@ public final class TraceManager {
             }
         }
 
+        context.getSlowPathTracePoints().setClassTraceFunc(traceFunc);
+
         if (traceFunc == null) {
             // Update to a new valid assumption
             language.traceFuncUnusedAssumption.invalidate();
@@ -96,20 +99,6 @@ public final class TraceManager {
                                 traceFunc,
                                 language.coreStrings.LINE.createInstance(context))));
 
-        instruments.add(
-                instrumenter.attachExecutionEventFactory(
-                        SourceSectionFilter
-                                .newBuilder()
-                                .mimeTypeIs(RubyLanguage.MIME_TYPES)
-                                .tagIs(ClassTag.class)
-                                .build(),
-                        eventContext -> new BaseEventEventNode(
-                                context,
-                                language,
-                                eventContext,
-                                traceFunc,
-                                language.coreStrings.CLASS.createInstance(context))));
-
         if (context.getOptions().TRACE_CALLS) {
             instruments.add(
                     instrumenter.attachExecutionEventFactory(
@@ -125,6 +114,22 @@ public final class TraceManager {
                                     eventContext,
                                     traceFunc,
                                     language.coreStrings.CALL.createInstance(context))));
+        }
+    }
+
+    /** Calls the set_trace_func proc for an event implemented without instrumentation, see
+     * {@link SlowPathTracePoints} */
+    @TruffleBoundary
+    public void callTraceFunc(RubyProc traceFunc, RubyString event, RubyString path, int line, RubyBinding binding) {
+        if (isInTraceFunc) {
+            return;
+        }
+
+        isInTraceFunc = true;
+        try {
+            CallBlockNode.yieldUncached(traceFunc, event, path, line, Nil.INSTANCE, binding, Nil.INSTANCE);
+        } finally {
+            isInTraceFunc = false;
         }
     }
 

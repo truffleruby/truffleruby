@@ -75,89 +75,87 @@ ast: |
                                                                   flags = 0
                                                                   sourceCharIndex = -1
                                                                   sourceLength = 0
-                                  InsideModuleDefinitionNode
+                                  FireClassTracePointNode
                                       attributes:
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 38
-                                      children:
-                                          body =
-                                              BlockDefinitionNodeGen
-                                                  attributes:
-                                                      breakID = org.truffleruby.language.control.BreakID@...
-                                                      callTargets = ProcCallTargets(callTargetForProc = null, callTargetForLambda = block in <class:Foo>, altCallTargetCompiler = null)
-                                                      flags = 1
-                                                      frameOnStackMarkerSlot = -1
-                                                      sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = <class:Foo>, blockDepth = 1, parseName = block in <class:Foo>, notes = null, argumentDescriptors = [])
-                                                      sourceCharIndex = 12
-                                                      sourceLength = 22
-                                                      type = LAMBDA
-                                                  call targets:
-                                                      RubyLambdaRootNode
+                                  BlockDefinitionNodeGen
+                                      attributes:
+                                          breakID = org.truffleruby.language.control.BreakID@...
+                                          callTargets = ProcCallTargets(callTargetForProc = null, callTargetForLambda = block in <class:Foo>, altCallTargetCompiler = null)
+                                          flags = 1
+                                          frameOnStackMarkerSlot = -1
+                                          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = <class:Foo>, blockDepth = 1, parseName = block in <class:Foo>, notes = null, argumentDescriptors = [])
+                                          sourceCharIndex = 12
+                                          sourceLength = 22
+                                          type = LAMBDA
+                                      call targets:
+                                          RubyLambdaRootNode
+                                              attributes:
+                                                  arityForCheck = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}
+                                                  breakID = org.truffleruby.language.control.BreakID@...
+                                                  callTarget = block in <class:Foo>
+                                                  checkArityProfile = false
+                                                  frameDescriptor = FrameDescriptor@...{#0:(self)}
+                                                  instrumentationBits = 0
+                                                  keywordArguments = false
+                                                  localReturnProfile = false
+                                                  lock = java.util.concurrent.locks.ReentrantLock@...[Unlocked]
+                                                  matchingBreakProfile = false
+                                                  matchingReturnProfile = false
+                                                  nextProfile = false
+                                                  nonMatchingBreakProfile = false
+                                                  nonMatchingReturnProfile = false
+                                                  polyglotRef = org.truffleruby.RubyLanguage@...
+                                                  redoProfile = false
+                                                  retryProfile = false
+                                                  returnID = org.truffleruby.language.control.ReturnID@...
+                                                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = <class:Foo>, blockDepth = 1, parseName = block in <class:Foo>, notes = null, argumentDescriptors = [])
+                                                  sourceSection = SourceSection(source=<parse_ast> [2:3 - 4:3], index=12, length=22, characters=-> {\n    return 42\n  })
+                                                  split = HEURISTIC
+                                              children:
+                                                  body =
+                                                      SequenceNode
                                                           attributes:
-                                                              arityForCheck = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}
-                                                              breakID = org.truffleruby.language.control.BreakID@...
-                                                              callTarget = block in <class:Foo>
-                                                              checkArityProfile = false
-                                                              frameDescriptor = FrameDescriptor@...{#0:(self)}
-                                                              instrumentationBits = 0
-                                                              keywordArguments = false
-                                                              localReturnProfile = false
-                                                              lock = java.util.concurrent.locks.ReentrantLock@...[Unlocked]
-                                                              matchingBreakProfile = false
-                                                              matchingReturnProfile = false
-                                                              nextProfile = false
-                                                              nonMatchingBreakProfile = false
-                                                              nonMatchingReturnProfile = false
-                                                              polyglotRef = org.truffleruby.RubyLanguage@...
-                                                              redoProfile = false
-                                                              retryProfile = false
-                                                              returnID = org.truffleruby.language.control.ReturnID@...
-                                                              sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = <class:Foo>, blockDepth = 1, parseName = block in <class:Foo>, notes = null, argumentDescriptors = [])
-                                                              sourceSection = SourceSection(source=<parse_ast> [2:3 - 4:3], index=12, length=22, characters=-> {\n    return 42\n  })
-                                                              split = HEURISTIC
+                                                              flags = 12
+                                                              sourceCharIndex = 12
+                                                              sourceLength = 22
                                                           children:
-                                                              body =
-                                                                  SequenceNode
+                                                              body = [
+                                                                  WriteLocalVariableNode
                                                                       attributes:
-                                                                          flags = 12
-                                                                          sourceCharIndex = 12
-                                                                          sourceLength = 22
+                                                                          flags = 0
+                                                                          frameSlot = 0 # (self)
+                                                                          sourceCharIndex = -1
+                                                                          sourceLength = 0
                                                                       children:
-                                                                          body = [
-                                                                              WriteLocalVariableNode
+                                                                          valueNode =
+                                                                              ProfileArgumentNodeGen
                                                                                   attributes:
                                                                                       flags = 0
-                                                                                      frameSlot = 0 # (self)
                                                                                       sourceCharIndex = -1
                                                                                       sourceLength = 0
                                                                                   children:
-                                                                                      valueNode =
-                                                                                          ProfileArgumentNodeGen
+                                                                                      childNode_ =
+                                                                                          ReadSelfNode
                                                                                               attributes:
                                                                                                   flags = 0
                                                                                                   sourceCharIndex = -1
                                                                                                   sourceLength = 0
-                                                                                              children:
-                                                                                                  childNode_ =
-                                                                                                      ReadSelfNode
-                                                                                                          attributes:
-                                                                                                              flags = 0
-                                                                                                              sourceCharIndex = -1
-                                                                                                              sourceLength = 0
-                                                                              DynamicReturnNode
+                                                                  DynamicReturnNode
+                                                                      attributes:
+                                                                          flags = 1
+                                                                          returnID = org.truffleruby.language.control.ReturnID@...
+                                                                          sourceCharIndex = 21
+                                                                          sourceLength = 9
+                                                                      children:
+                                                                          value =
+                                                                              IntegerFixnumLiteralNode
                                                                                   attributes:
-                                                                                      flags = 1
-                                                                                      returnID = org.truffleruby.language.control.ReturnID@...
-                                                                                      sourceCharIndex = 21
-                                                                                      sourceLength = 9
-                                                                                  children:
-                                                                                      value =
-                                                                                          IntegerFixnumLiteralNode
-                                                                                              attributes:
-                                                                                                  flags = 0
-                                                                                                  sourceCharIndex = 28
-                                                                                                  sourceLength = 2
-                                                                                                  value = 42
-                                                                          ]
+                                                                                      flags = 0
+                                                                                      sourceCharIndex = 28
+                                                                                      sourceLength = 2
+                                                                                      value = 42
+                                                              ]
                               ]

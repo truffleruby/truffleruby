@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2026 TruffleRuby contributors.
- * Copyright (c) 2019-2025 Oracle and/or its affiliates.
+ * Copyright (c) 2020-2025 Oracle and/or its affiliates.
  * This code is released under a tri EPL/GPL/LGPL license.
  * You can use it, redistribute it and/or modify it under the terms of the:
  *
@@ -19,52 +19,110 @@ import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.symbol.RubySymbol;
 
-public final class TracePointEvent {
+/** One event of a TracePoint, either implemented with Truffle instrumentation ({@link Instrumented}) or by registering
+ * the TracePoint in {@link SlowPathTracePoints} ({@link SlowPath}). */
+public abstract class TracePointEvent {
 
-    public final Class<? extends Tag> tagClass;
     public final RubySymbol eventSymbol;
 
-    private EventBinding<ExecutionEventNodeFactory> eventBinding;
-
-    public TracePointEvent(Class<? extends Tag> tagClass, RubySymbol eventSymbol) {
-        this.tagClass = tagClass;
+    protected TracePointEvent(RubySymbol eventSymbol) {
         this.eventSymbol = eventSymbol;
     }
 
-    public synchronized boolean hasEventBinding() {
-        return eventBinding != null;
-    }
+    public abstract boolean isEnabled();
 
-    /** Returns whether the event was setup */
-    @TruffleBoundary
-    public synchronized boolean setupEventBinding(RubyContext context, RubyLanguage language,
-            RubyTracePoint tracePoint) {
-        if (eventBinding != null) {
-            return false;
+    /** Returns whether the event was enabled by this call, false if it was already enabled */
+    public abstract boolean enable(RubyContext context, RubyLanguage language, RubyTracePoint tracePoint);
+
+    /** Returns whether the event was disabled by this call, false if it was already disabled */
+    public abstract boolean disable(RubyContext context, RubyTracePoint tracePoint);
+
+    /** A TracePoint event implemented by attaching an instrument on all nodes with the given tag. */
+    public static final class Instrumented extends TracePointEvent {
+
+        private final Class<? extends Tag> tagClass;
+
+        private EventBinding<ExecutionEventNodeFactory> eventBinding;
+
+        public Instrumented(Class<? extends Tag> tagClass, RubySymbol eventSymbol) {
+            super(eventSymbol);
+            this.tagClass = tagClass;
         }
 
-        final SourceSectionFilter sourceSectionFilter = SourceSectionFilter
-                .newBuilder()
-                .mimeTypeIs(RubyLanguage.MIME_TYPES)
-                .tagIs(tagClass)
-                .includeInternal(false)
-                .build();
-        this.eventBinding = context.getInstrumenter().attachExecutionEventFactory(
-                sourceSectionFilter,
-                eventContext -> new TracePointEventNode(context, language, eventContext, tracePoint, eventSymbol));
-        return true;
-    }
+        @Override
+        public synchronized boolean isEnabled() {
+            return eventBinding != null;
+        }
 
-    /** Returns whether the event was disposed */
-    @TruffleBoundary
-    public synchronized boolean diposeEventBinding() {
-        if (eventBinding != null) {
-            this.eventBinding.dispose();
-            this.eventBinding = null;
+        @Override
+        @TruffleBoundary
+        public synchronized boolean enable(RubyContext context, RubyLanguage language, RubyTracePoint tracePoint) {
+            if (eventBinding != null) {
+                return false;
+            }
+
+            final SourceSectionFilter sourceSectionFilter = SourceSectionFilter
+                    .newBuilder()
+                    .mimeTypeIs(RubyLanguage.MIME_TYPES)
+                    .tagIs(tagClass)
+                    .includeInternal(false)
+                    .build();
+            this.eventBinding = context.getInstrumenter().attachExecutionEventFactory(
+                    sourceSectionFilter,
+                    eventContext -> new TracePointEventNode(context, language, eventContext, tracePoint, eventSymbol));
             return true;
-        } else {
-            return false;
         }
+
+        @Override
+        @TruffleBoundary
+        public synchronized boolean disable(RubyContext context, RubyTracePoint tracePoint) {
+            if (eventBinding != null) {
+                this.eventBinding.dispose();
+                this.eventBinding = null;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+    }
+
+    /** A TracePoint event implemented by registering the TracePoint in {@link SlowPathTracePoints}. */
+    public static final class SlowPath extends TracePointEvent {
+
+        private boolean enabled = false;
+
+        public SlowPath(RubySymbol eventSymbol) {
+            super(eventSymbol);
+        }
+
+        @Override
+        public synchronized boolean isEnabled() {
+            return enabled;
+        }
+
+        @Override
+        public synchronized boolean enable(RubyContext context, RubyLanguage language, RubyTracePoint tracePoint) {
+            if (enabled) {
+                return false;
+            }
+
+            context.getSlowPathTracePoints().add(eventSymbol, tracePoint);
+            enabled = true;
+            return true;
+        }
+
+        @Override
+        public synchronized boolean disable(RubyContext context, RubyTracePoint tracePoint) {
+            if (!enabled) {
+                return false;
+            }
+
+            context.getSlowPathTracePoints().remove(eventSymbol, tracePoint);
+            enabled = false;
+            return true;
+        }
+
     }
 
 }

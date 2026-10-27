@@ -10,12 +10,14 @@ Bug fixes:
 
 Compatibility:
 
+* Call the most recently enabled `TracePoint` first when several `TracePoint`s are enabled for the same event, like CRuby (@eregon).
 * `IO#read` now coerces the `length` parameter to `Integer` (#4456, @andrykonchin).
 * Raise `RangeError` instead of `FloatDomainError` when converting NaN, infinite or other out-of-range `Float` values with `rb_num2ulong()`, `Process.uid=` and similar methods (@nirvdrum).
 
 Performance:
 
 * Reduce C extension overhead for ID-based C API calls such as `rb_funcall()`, `rb_ivar_get()`, and `rb_block_call()` by avoiding a separate `ID2SYM()` upcall (@nirvdrum).
+* Enabling or disabling a `:class` `TracePoint` no longer invalidates compiled code and no longer uses Truffle instrumentation, which also reduces memory footprint (#2371, @eregon).
 
 Incompatible Changes:
 

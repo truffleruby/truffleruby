@@ -77,119 +77,109 @@ ast: |
                                                                   flags = 0
                                                                   sourceCharIndex = -1
                                                                   sourceLength = 0
-                                  InsideModuleDefinitionNode
+                                  FireClassTracePointNode
                                       attributes:
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 46
+                                  WriteLocalVariableNode
+                                      attributes:
+                                          flags = 0
+                                          frameSlot = 2 # bar
+                                          sourceCharIndex = 11
+                                          sourceLength = 11
                                       children:
-                                          body =
-                                              SequenceNode
+                                          valueNode =
+                                              StringLiteralNode
+                                                  attributes:
+                                                      encoding = UTF-8
+                                                      flags = 1
+                                                      sourceCharIndex = 17
+                                                      sourceLength = 5
+                                                      tstring = bar
+                                  LiteralMethodDefinitionNode
+                                      attributes:
+                                          callTargetSupplier = org.truffleruby.language.methods.CachedLazyCallTargetSupplier@...
+                                          flags = 1
+                                          isDefSingleton = true
+                                          name = "foo"
+                                          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = foo, blockDepth = 0, parseName = foo, notes = null, argumentDescriptors = [])
+                                          sourceCharIndex = 25
+                                          sourceLength = 17
+                                      children:
+                                          moduleNode =
+                                              SingletonClassNodeGen$SingletonClassASTNodeGen
                                                   attributes:
                                                       flags = 0
-                                                      sourceCharIndex = 11
-                                                      sourceLength = 31
+                                                      sourceCharIndex = -1
+                                                      sourceLength = 0
                                                   children:
-                                                      body = [
-                                                          WriteLocalVariableNode
+                                                      valueNode_ =
+                                                          ReadLocalVariableNode
                                                               attributes:
                                                                   flags = 0
                                                                   frameSlot = 2 # bar
-                                                                  sourceCharIndex = 11
-                                                                  sourceLength = 11
-                                                              children:
-                                                                  valueNode =
-                                                                      StringLiteralNode
-                                                                          attributes:
-                                                                              encoding = UTF-8
-                                                                              flags = 1
-                                                                              sourceCharIndex = 17
-                                                                              sourceLength = 5
-                                                                              tstring = bar
-                                                          LiteralMethodDefinitionNode
-                                                              attributes:
-                                                                  callTargetSupplier = org.truffleruby.language.methods.CachedLazyCallTargetSupplier@...
-                                                                  flags = 1
-                                                                  isDefSingleton = true
-                                                                  name = "foo"
-                                                                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = foo, blockDepth = 0, parseName = foo, notes = null, argumentDescriptors = [])
-                                                                  sourceCharIndex = 25
-                                                                  sourceLength = 17
-                                                              children:
-                                                                  moduleNode =
-                                                                      SingletonClassNodeGen$SingletonClassASTNodeGen
-                                                                          attributes:
-                                                                              flags = 0
-                                                                              sourceCharIndex = -1
-                                                                              sourceLength = 0
-                                                                          children:
-                                                                              valueNode_ =
-                                                                                  ReadLocalVariableNode
-                                                                                      attributes:
-                                                                                          flags = 0
-                                                                                          frameSlot = 2 # bar
-                                                                                          sourceCharIndex = 29
-                                                                                          sourceLength = 3
-                                                                                          type = FRAME_LOCAL
-                                                              call targets:
-                                                                  RubyMethodRootNode
+                                                                  sourceCharIndex = 29
+                                                                  sourceLength = 3
+                                                                  type = FRAME_LOCAL
+                                      call targets:
+                                          RubyMethodRootNode
+                                              attributes:
+                                                  arityForCheck = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}
+                                                  callTarget = foo
+                                                  checkArityProfile = false
+                                                  frameDescriptor = FrameDescriptor@...{#0:(self), #1:%$~_, #2:%method_block_arg}
+                                                  instrumentationBits = 0
+                                                  keywordArguments = false
+                                                  localReturnProfile = false
+                                                  lock = java.util.concurrent.locks.ReentrantLock@...[Unlocked]
+                                                  matchingReturnProfile = false
+                                                  nonMatchingReturnProfile = false
+                                                  polyglotRef = org.truffleruby.RubyLanguage@...
+                                                  retryProfile = false
+                                                  returnID = org.truffleruby.language.control.ReturnID@...
+                                                  sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = foo, blockDepth = 0, parseName = foo, notes = null, argumentDescriptors = [])
+                                                  sourceSection = SourceSection(source=<parse_ast> [3:3 - 4:5], index=25, length=17, characters=def bar.foo\n  end)
+                                                  split = HEURISTIC
+                                              children:
+                                                  body =
+                                                      SequenceNode
+                                                          attributes:
+                                                              flags = 12
+                                                              sourceCharIndex = 25
+                                                              sourceLength = 17
+                                                          children:
+                                                              body = [
+                                                                  WriteLocalVariableNode
                                                                       attributes:
-                                                                          arityForCheck = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}
-                                                                          callTarget = foo
-                                                                          checkArityProfile = false
-                                                                          frameDescriptor = FrameDescriptor@...{#0:(self), #1:%$~_, #2:%method_block_arg}
-                                                                          instrumentationBits = 0
-                                                                          keywordArguments = false
-                                                                          localReturnProfile = false
-                                                                          lock = java.util.concurrent.locks.ReentrantLock@...[Unlocked]
-                                                                          matchingReturnProfile = false
-                                                                          nonMatchingReturnProfile = false
-                                                                          polyglotRef = org.truffleruby.RubyLanguage@...
-                                                                          retryProfile = false
-                                                                          returnID = org.truffleruby.language.control.ReturnID@...
-                                                                          sharedMethodInfo = SharedMethodInfo(staticLexicalScope =  :: null :: Object, arity = Arity{preRequired = 0, optional = 0, hasRest = false, isImplicitRest = false, postRequired = 0, keywordArguments = [], requiredKeywordArgumentsCount = 0, hasKeywordsRest = false}, methodName = foo, blockDepth = 0, parseName = foo, notes = null, argumentDescriptors = [])
-                                                                          sourceSection = SourceSection(source=<parse_ast> [3:3 - 4:5], index=25, length=17, characters=def bar.foo\n  end)
-                                                                          split = HEURISTIC
+                                                                          flags = 0
+                                                                          frameSlot = 0 # (self)
+                                                                          sourceCharIndex = -1
+                                                                          sourceLength = 0
                                                                       children:
-                                                                          body =
-                                                                              SequenceNode
+                                                                          valueNode =
+                                                                              ProfileArgumentNodeGen
                                                                                   attributes:
-                                                                                      flags = 12
-                                                                                      sourceCharIndex = 25
-                                                                                      sourceLength = 17
+                                                                                      flags = 0
+                                                                                      sourceCharIndex = -1
+                                                                                      sourceLength = 0
                                                                                   children:
-                                                                                      body = [
-                                                                                          WriteLocalVariableNode
-                                                                                              attributes:
-                                                                                                  flags = 0
-                                                                                                  frameSlot = 0 # (self)
-                                                                                                  sourceCharIndex = -1
-                                                                                                  sourceLength = 0
-                                                                                              children:
-                                                                                                  valueNode =
-                                                                                                      ProfileArgumentNodeGen
-                                                                                                          attributes:
-                                                                                                              flags = 0
-                                                                                                              sourceCharIndex = -1
-                                                                                                              sourceLength = 0
-                                                                                                          children:
-                                                                                                              childNode_ =
-                                                                                                                  ReadSelfNode
-                                                                                                                      attributes:
-                                                                                                                          flags = 0
-                                                                                                                          sourceCharIndex = -1
-                                                                                                                          sourceLength = 0
-                                                                                          SaveMethodBlockNode
-                                                                                              attributes:
-                                                                                                  flags = 0
-                                                                                                  slot = 2
-                                                                                                  sourceCharIndex = -1
-                                                                                                  sourceLength = 0
-                                                                                          NilLiteralNode
+                                                                                      childNode_ =
+                                                                                          ReadSelfNode
                                                                                               attributes:
                                                                                                   flags = 0
                                                                                                   sourceCharIndex = -1
                                                                                                   sourceLength = 0
-                                                                                      ]
-                                                      ]
+                                                                  SaveMethodBlockNode
+                                                                      attributes:
+                                                                          flags = 0
+                                                                          slot = 2
+                                                                          sourceCharIndex = -1
+                                                                          sourceLength = 0
+                                                                  NilLiteralNode
+                                                                      attributes:
+                                                                          flags = 0
+                                                                          sourceCharIndex = -1
+                                                                          sourceLength = 0
+                                                              ]
                               ]

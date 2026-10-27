@@ -74,25 +74,23 @@ ast: |
                                                                   flags = 0
                                                                   sourceCharIndex = -1
                                                                   sourceLength = 0
-                                  InsideModuleDefinitionNode
+                                  FireClassTracePointNode
                                       attributes:
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 23
+                                  WriteLocalVariableNode
+                                      attributes:
+                                          flags = 0
+                                          frameSlot = 2 # foo
+                                          sourceCharIndex = 11
+                                          sourceLength = 8
                                       children:
-                                          body =
-                                              WriteLocalVariableNode
+                                          valueNode =
+                                              IntegerFixnumLiteralNode
                                                   attributes:
-                                                      flags = 0
-                                                      frameSlot = 2 # foo
-                                                      sourceCharIndex = 11
-                                                      sourceLength = 8
-                                                  children:
-                                                      valueNode =
-                                                          IntegerFixnumLiteralNode
-                                                              attributes:
-                                                                  flags = 1
-                                                                  sourceCharIndex = 17
-                                                                  sourceLength = 2
-                                                                  value = 42
+                                                      flags = 1
+                                                      sourceCharIndex = 17
+                                                      sourceLength = 2
+                                                      value = 42
                               ]
