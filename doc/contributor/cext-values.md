@@ -30,55 +30,83 @@ some semantics that may be obvious but are worth stating anyway:
 Emulating these semantics on TruffleRuby is non-trivial. Although we
 are running under a garbage collector it doesn't know that a `VALUE`
 maps to an object, and neither does it have any mechanism for
-specifying a custom mark function to be used with particular
-objects. As long as `VALUE`s can remain as `ValueWrapper` objects then
-we don't need to do much. Ruby objects maintain a strong reference to
-their associated `ValueWrapper`, and vice versa, so we only really
-need to consider situations where `VALUE`s are converted into native
-handles.
+specifying a custom mark function to be used with particular objects.
+
+Every `VALUE` in native code is a handle (a long). A handle for an
+object is resolved through the handle block map to the object's
+`ValueWrapper`. The `ValueWrapper` is itself the `WeakReference` to
+its object: the object strongly references its wrapper (a plain field
+on `RubyDynamicObject` and `ImmutableRubyObject`), while the wrapper
+only weakly references the object, so the handle map never keeps
+objects alive by itself. For `VALUE`s whose Ruby value is a boxed
+primitive (a Float or a Bignum-range Integer), the box cannot
+reference its wrapper back, so the wrapper references such a box
+strongly instead (see `ValueWrapper#strongRef`).
+
+What must keep things alive are the keep-alive lists described below.
+An entry in such a list is `ValueWrapper#keepAliveObject()`: the
+object itself when it strongly references its wrapper back (keeping
+the wrapper and its handle block alive transitively), otherwise the
+wrapper (keeping its handle block, and the primitive box through
+`strongRef`).
 
 ### Keeping objects alive on the stack
 
 We implement an `ExtensionCallStack` object to keep track of various
 bits of useful information during a call to a C extension. Each stack
-entry contains a `preservedObject`, and an additional potential
-`preservedObjects` list which together will contain all the
-`ValueWrapper`s converted to native handles during the process of a
-call. When a new call is made a new `ExtensionCallStackEntry` is added
-to the stack, and when the call exits that entry is popped off again.
+entry contains a growable `preservedObjects` array holding the
+keep-alive object of every `VALUE` converted to a native handle during
+the call (see `MarkingServiceNodes.KeepAliveNode`). When a new call is
+made a new `ExtensionCallStackEntry` is added to the stack, and when
+the call exits that entry is popped off again, dropping the
+references.
 
 ### Keeping objects alive in structures
 
 We don't have a way to run markers when doing garbage collection, but
 we know we're keeping objects alive during the lifetime of a C call,
-and we can record when the structure is accessed via DATA_PTR (which
+and we can record when the structure is accessed via `DATA_PTR` (which
 should be required for the internal state of that structure to be
-mutated). To do this we keep a list of objects to be marked in a
-similar manner to the objects that should be kept alive, and when we
-exit the C call we'll call those markers.
+mutated). To do this each stack entry keeps a growable
+`markOnExitObjects` array of the data objects whose mark functions
+should run, and when we exit the C call we'll call those markers
+(`MarkingServiceNodes.RunMarkOnExitNode`).
 
 ### Running mark functions
 
 We run markers by recording the object being marked on the extension
 stack, and then calling the marker which will in turn call
 `rb_gc_mark` for the individual `VALUE`s which are held by the
-structure. We'll record those marked objects in a temporary array also
-held on the extension stack, and then attach that to the object
-wrapping the struct when the mark function has finished.
+structure. We'll record the keep-alive objects of those marked
+`VALUE`s in a temporary array also held on the extension stack, and
+then attach that array to the object wrapping the struct when the mark
+function has finished (as the `MARKED_OBJECTS` hidden variable), so
+the marked `VALUE`s stay usable until the next run of the mark
+function.
 
 
 ## Managing the conversion of `VALUE`s to and from native handles
 
 When converted to native, the `ValueWrapper` takes the following long values.
 
-| Represented Value | Handle Bits                         | Comments |
-|-------------------|-------------------------------------|----------|
-| false             | 00000000 00000000 00000000 00000000 | |
-| true              | 00000000 00000000 00000000 00000010 | |
-| nil               | 00000000 00000000 00000000 00000100 | |
-| undefined         | 00000000 00000000 00000000 00000110 | |
-| Integer           | xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxx1 | Lowest mask bit set, small longs only, convert to long using >> 1 |
-| Object            | xxxxxxxx xxxxxxxx xxxxxxxx xxxxx000 | No mask bits set and does not equal 0, value is index into handle map |
+| Represented Value | Low Handle Bits | Comments |
+|-------------------|-----------------|----------|
+| false             | 0000            | |
+| nil               | 0010            | |
+| true              | 0110            | |
+| undefined         | 1010            | |
+| Integer           | xxx1            | Lowest bit set, small longs only, convert to long using >> 1 |
+| Object            | xxx000          | See below |
+
+These match MRI's special constants and tagging (with `USE_FLONUM=false`), see
+`lib/cext/include/ruby/internal/special_consts.h` and `ValueWrapperManager`.
+
+An object handle is of the form (most significant bits first): the 20
+bits `0x0bade`, a 29-bit block index, a 12-bit offset within the block
+and 3 zero bits (so handles are 8-byte aligned like pointers). This
+range is above 2^48 and therefore not a valid memory address on 64-bit
+machines: dereferencing a handle by mistake segfaults immediately
+instead of reading unrelated memory.
 
 The built in objects, `true`, `false`, `nil`, and `undefined` are
 handled specially, and integers are relatively easy because there is a
@@ -86,24 +114,29 @@ well defined mapping from the native representation to the integer and
 vice versa, but to manage objects we need to do a little more work.
 
 When we convert an object `VALUE` to its native representation we need
-to keep the corresponding `ValueWrapper` object alive, and we need to
-record that mapping from handle to `ValueWrapper` somewhere. The
+to record the mapping from handle to `ValueWrapper` somewhere. The
 mapping from `ValueWrapper` to handle must also be stable, so a symbol
-or other immutable object that can outlive a context will need to
-store that mapping somewhere on the `RubyLanguage` object.
+or other immutable object that can outlive a context stores that
+mapping in a process-wide map on the `RubyLanguage` class.
 
 We achieve all this through a combination of handle block maps and
 allocators. We deal with handles in blocks of 4096, and the current
 `RubyFiber` holds onto a `HandleBlockHolder` which in turn holds the
 current block for mutable objects (which cannot outlive the
 `RubyContext`) and immutable objects (which can outlive the
-context). Each fiber will take values from those blocks until they
-becomes exhausted. When that block is exhausted then `RubyLanguage`
-holds a `HandleBlockAllocator` which is responsible for allocating new
-blocks and recycling old ones. These blocks of handles however only
-hold weak references, because we don't want a conversion to native to
-keep the `ValueWrapper` alive longer that it should.
+context). Each fiber will take handles from those blocks until they
+become exhausted. When a block is exhausted then `RubyLanguage` holds
+a `HandleBlockAllocator` which is responsible for allocating new
+blocks and recycling the handle ranges of dead ones.
 
-Conversely the `HandleBlock` _must_ live for as long as there are any
-reachable `ValueWrapper`s in that block, so a `ValueWrapper` keeps a
-strong reference to the `HandleBlock` it is in.
+A `HandleBlock` references its `ValueWrapper`s strongly, and each
+wrapper references its `HandleBlock` strongly (the block must stay
+usable as long as any of its wrappers is reachable). This does not
+keep the wrapped objects alive because the wrapper only references its
+object weakly. Once none of the objects of a block are alive anymore,
+the block and its wrappers form an unreachable cycle which is
+collected together, and a `Cleaner` then returns the block's handle
+range to the `HandleBlockAllocator` for reuse. Blocks for immutable
+objects are process-wide and kept alive forever (see
+`RubyLanguage#keepSharedHandleBlockAlive`), since handles of immutable
+objects like symbols must remain valid across contexts.
