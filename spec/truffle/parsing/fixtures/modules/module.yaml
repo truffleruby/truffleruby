@@ -8,7 +8,7 @@ notes: >
   A module body is represented as a CallTarget, (that will be used to create an internal method),
   stored in ModuleBodyDefinition.
   
-  Expressions inside a module body are represented by InsideModuleDefinitionNode node.
+  The module body starts with a FireClassTracePointNode node for the :class TracePoint event.
 focused_on_node: "org.truffleruby.language.objects.RunModuleDefinitionNode"
 ruby: |
   module Foo
@@ -79,16 +79,14 @@ ast: |
                                                                   flags = 0
                                                                   sourceCharIndex = -1
                                                                   sourceLength = 0
-                                  InsideModuleDefinitionNode
+                                  FireClassTracePointNode
                                       attributes:
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 14
-                                      children:
-                                          body =
-                                              NilLiteralNode
-                                                  attributes:
-                                                      flags = 0
-                                                      sourceCharIndex = -1
-                                                      sourceLength = 0
+                                  NilLiteralNode
+                                      attributes:
+                                          flags = 0
+                                          sourceCharIndex = -1
+                                          sourceLength = 0
                               ]

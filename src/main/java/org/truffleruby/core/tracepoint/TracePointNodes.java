@@ -44,14 +44,14 @@ public abstract class TracePointNodes {
 
     @TruffleBoundary
     public static boolean isEnabled(RubyTracePoint tracePoint) {
-        return tracePoint.events[0].hasEventBinding();
+        return tracePoint.events[0].isEnabled();
     }
 
     @TruffleBoundary
-    public static boolean createEventBindings(RubyContext context, RubyLanguage language, RubyTracePoint tracePoint) {
+    public static boolean enableEvents(RubyContext context, RubyLanguage language, RubyTracePoint tracePoint) {
         final TracePointEvent[] events = tracePoint.events;
         for (TracePointEvent event : events) {
-            if (!event.setupEventBinding(context, language, tracePoint)) {
+            if (!event.enable(context, language, tracePoint)) {
                 return false;
             }
         }
@@ -59,10 +59,10 @@ public abstract class TracePointNodes {
     }
 
     @TruffleBoundary
-    public static boolean disposeEventBindings(RubyTracePoint tracePoint) {
+    public static boolean disableEvents(RubyContext context, RubyTracePoint tracePoint) {
         final TracePointEvent[] events = tracePoint.events;
         for (TracePointEvent event : events) {
-            if (!event.diposeEventBinding()) {
+            if (!event.disable(context, tracePoint)) {
                 return false;
             }
         }
@@ -100,11 +100,11 @@ public abstract class TracePointNodes {
         @TruffleBoundary
         private TracePointEvent createEvents(RubyLanguage language, RubySymbol eventSymbol) {
             if (eventSymbol == language.coreSymbols.LINE) {
-                return new TracePointEvent(TraceManager.LineTag.class, eventSymbol);
+                return new TracePointEvent.Instrumented(TraceManager.LineTag.class, eventSymbol);
             } else if (eventSymbol == language.coreSymbols.CLASS) {
-                return new TracePointEvent(TraceManager.ClassTag.class, eventSymbol);
+                return new TracePointEvent.SlowPath(eventSymbol);
             } else if (eventSymbol == language.coreSymbols.NEVER) {
-                return new TracePointEvent(TraceManager.NeverTag.class, eventSymbol);
+                return new TracePointEvent.Instrumented(TraceManager.NeverTag.class, eventSymbol);
             } else {
                 throw new UnsupportedOperationException(eventSymbol.getString());
             }
@@ -117,19 +117,19 @@ public abstract class TracePointNodes {
 
         @Specialization
         boolean enable(RubyTracePoint tracePoint, Nil block) {
-            boolean setupDone = createEventBindings(getContext(), getLanguage(), tracePoint);
+            boolean setupDone = enableEvents(getContext(), getLanguage(), tracePoint);
             return !setupDone;
         }
 
         @Specialization
         Object enable(RubyTracePoint tracePoint, RubyProc block,
                 @Cached CallBlockNode yieldNode) {
-            final boolean setupDone = createEventBindings(getContext(), getLanguage(), tracePoint);
+            final boolean setupDone = enableEvents(getContext(), getLanguage(), tracePoint);
             try {
                 return yieldNode.yield(this, block);
             } finally {
                 if (setupDone) {
-                    disposeEventBindings(tracePoint);
+                    disableEvents(getContext(), tracePoint);
                 }
             }
         }
@@ -140,18 +140,18 @@ public abstract class TracePointNodes {
 
         @Specialization
         Object disable(RubyTracePoint tracePoint, Nil block) {
-            return disposeEventBindings(tracePoint);
+            return disableEvents(getContext(), tracePoint);
         }
 
         @Specialization
         Object disable(RubyTracePoint tracePoint, RubyProc block,
                 @Cached CallBlockNode yieldNode) {
-            final boolean wasEnabled = disposeEventBindings(tracePoint);
+            final boolean wasEnabled = disableEvents(getContext(), tracePoint);
             try {
                 return yieldNode.yield(this, block);
             } finally {
                 if (wasEnabled) {
-                    createEventBindings(getContext(), getLanguage(), tracePoint);
+                    enableEvents(getContext(), getLanguage(), tracePoint);
                 }
             }
         }

@@ -77,41 +77,39 @@ ast: |
                                                                   flags = 0
                                                                   sourceCharIndex = -1
                                                                   sourceLength = 0
-                                  InsideModuleDefinitionNode
+                                  FireClassTracePointNode
+                                      attributes:
+                                          flags = 0
+                                          sourceCharIndex = 0
+                                          sourceLength = 34
+                                  TryNodeGen
                                       attributes:
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 34
                                       children:
-                                          body =
-                                              TryNodeGen
+                                          rescueParts = [
+                                              RescueStandardErrorNode
                                                   attributes:
+                                                      canOmitBacktrace = true
                                                       flags = 0
-                                                      sourceCharIndex = 0
-                                                      sourceLength = 34
+                                                      sourceCharIndex = 19
+                                                      sourceLength = 11
                                                   children:
-                                                      rescueParts = [
-                                                          RescueStandardErrorNode
+                                                      rescueBody =
+                                                          IntegerFixnumLiteralNode
                                                               attributes:
-                                                                  canOmitBacktrace = true
-                                                                  flags = 0
-                                                                  sourceCharIndex = 19
-                                                                  sourceLength = 11
-                                                              children:
-                                                                  rescueBody =
-                                                                      IntegerFixnumLiteralNode
-                                                                          attributes:
-                                                                              flags = 1
-                                                                              sourceCharIndex = 28
-                                                                              sourceLength = 2
-                                                                              value = 42
-                                                      ]
-                                                      tryPart =
-                                                          StringLiteralNode
-                                                              attributes:
-                                                                  encoding = UTF-8
                                                                   flags = 1
-                                                                  sourceCharIndex = 13
-                                                                  sourceLength = 5
-                                                                  tstring = foo
+                                                                  sourceCharIndex = 28
+                                                                  sourceLength = 2
+                                                                  value = 42
+                                          ]
+                                          tryPart =
+                                              StringLiteralNode
+                                                  attributes:
+                                                      encoding = UTF-8
+                                                      flags = 1
+                                                      sourceCharIndex = 13
+                                                      sourceLength = 5
+                                                      tstring = foo
                               ]

@@ -172,7 +172,6 @@ import static org.truffleruby.language.RubyBaseNode.nil;
 @ProvidedTags({
         CoverageManager.LineTag.class,
         TraceManager.CallTag.class,
-        TraceManager.ClassTag.class,
         TraceManager.LineTag.class,
         TraceManager.NeverTag.class,
         StandardTags.RootTag.class,

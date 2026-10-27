@@ -16,6 +16,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.oracle.truffle.api.strings.TruffleString;
+import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.TStringUtils;
@@ -62,6 +63,12 @@ public final class PathToTStringCache {
         }
 
         return cachedString;
+    }
+
+    /** Creates a new RubyString for the path of the given Source, sharing the cached TruffleString */
+    @TruffleBoundary
+    public RubyString createPathString(RubyContext context, Source source) {
+        return StringOperations.createUTF8String(context, language, getCachedPath(source));
     }
 
 }
