@@ -1756,7 +1756,7 @@ public abstract class CExtNodes {
     public abstract static class Sym2IDNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        Object sym2id(RubySymbol symbol,
+        long sym2id(RubySymbol symbol,
                 @Cached SymbolToIDNode symbolToIDNode) {
             return symbolToIDNode.execute(symbol);
         }

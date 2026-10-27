@@ -40,8 +40,9 @@ import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
 
 /** Converts an argument of a {@code Primitive.cext_invoke_*} native downcall (see CExtInvokePrimitives) to a native
- * long: a VALUE handle for {@link ValueWrapper}s (allocating the handle if needed, like the NFI conversion did), the
- * address for pointers, 0 for nil (NULL), and longs (addresses, handles and plain integers) as-is. */
+ * long: a VALUE handle for {@link ValueWrapper}s (keeping wrappers with a tagged object handle alive until the end of
+ * the current C extension call, see {@link WrapperToHandleNode}), the address for pointers, 0 for nil (NULL), and longs
+ * (addresses, handles and plain integers) as-is. */
 @GenerateUncached
 public abstract class CExtDowncallArgumentNode extends RubyBaseNode {
 

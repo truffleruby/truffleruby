@@ -10,45 +10,50 @@
  */
 package org.truffleruby.cext;
 
-import com.oracle.truffle.api.profiles.InlinedConditionProfile;
+import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.RubyBaseNode;
 
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.GenerateUncached;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.ReportPolymorphism;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.Node;
 
+/** Converts a Symbol to its ID: the static ID for static symbols, and the handle of the ValueWrapper for dynamic
+ * symbols. */
 @GenerateUncached
 @ReportPolymorphism // inline cache (but not working due to single call site in C)
 public abstract class SymbolToIDNode extends RubyBaseNode {
 
-    public abstract Object execute(Object value);
+    public abstract long execute(Object value);
 
-    @Specialization(guards = "symbol == cachedSymbol", limit = "2")
-    Object getIDCached(RubySymbol symbol,
-            @Cached @Shared WrapNode wrapNode,
+    @Specialization(guards = { "symbol == cachedSymbol", "isStaticSymbol(cachedSymbol)" }, limit = "2")
+    long getStaticIDCached(RubySymbol symbol,
             @Cached("symbol") RubySymbol cachedSymbol,
-            @Cached("getID(cachedSymbol, wrapNode)") Object cachedID) {
+            @Cached("cachedSymbol.getId()") long cachedID) {
         return cachedID;
     }
 
-    @Specialization(replaces = "getIDCached")
-    Object getIDUncached(RubySymbol symbol,
-            @Cached @Shared WrapNode wrapNode,
-            @Cached InlinedConditionProfile staticSymbolProfile) {
-        if (staticSymbolProfile.profile(this, symbol.getId() != RubySymbol.UNASSIGNED_ID)) {
-            return symbol.getId();
-        }
-        return wrapNode.execute(symbol);
+    @Specialization(guards = "isStaticSymbol(symbol)", replaces = "getStaticIDCached")
+    long getStaticID(RubySymbol symbol) {
+        return symbol.getId();
     }
 
-    protected Object getID(RubySymbol symbol,
-            WrapNode wrapNode) {
-        if (symbol.getId() != RubySymbol.UNASSIGNED_ID) {
-            return symbol.getId();
-        }
-        return wrapNode.execute(symbol);
+    /** Dynamic symbols are only weakly referenced by the SymbolTable, so this goes through {@link WrapperToHandleNode}
+     * on every call to keep the wrapper (and the symbol) alive until the end of the current C extension call. */
+    @Specialization(guards = "!isStaticSymbol(symbol)")
+    static long getDynamicID(RubySymbol symbol,
+            @Bind Node node,
+            @Cached WrapNode wrapNode,
+            @Cached WrapperToHandleNode wrapperToHandleNode) {
+        return wrapperToHandleNode.execute(node, wrapNode.execute(symbol));
+    }
+
+    @Idempotent
+    protected static boolean isStaticSymbol(RubySymbol symbol) {
+        return symbol.getId() != RubySymbol.UNASSIGNED_ID;
     }
 }

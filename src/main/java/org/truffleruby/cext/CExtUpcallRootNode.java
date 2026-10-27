@@ -37,7 +37,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
@@ -313,17 +312,9 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
 
     abstract static class IDResultNode extends UpcallResultNode {
         @Specialization
-        static Object symbolToID(Object value,
-                @Bind Node node,
-                @Cached SymbolToIDNode symbolToIDNode,
-                @Cached WrapperToHandleNode wrapperToHandleNode,
-                @Cached InlinedConditionProfile longProfile) {
-            final Object id = symbolToIDNode.execute(value);
-            if (longProfile.profile(node, id instanceof Long)) {
-                return id;
-            } else {
-                return wrapperToHandleNode.execute(node, (ValueWrapper) id);
-            }
+        static long symbolToID(RubySymbol symbol,
+                @Cached SymbolToIDNode symbolToIDNode) {
+            return symbolToIDNode.execute(symbol);
         }
     }
 
