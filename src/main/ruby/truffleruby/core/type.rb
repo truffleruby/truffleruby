@@ -82,6 +82,21 @@ module Truffle
       num
     end
 
+    # MRI: NUM2MODET, which is NUM2USHORT or NUM2UINT depending on the size of mode_t.
+    # Not rb_num2ulong, which wraps values above LONG_MAX to negative longs that the range checks would accept.
+    def self.rb_num2mode_t(val)
+      mode = Primitive.rb_num2long(val)
+      mode_t = Truffle::Config['platform.typedef.mode_t']
+      if mode_t == 'ushort'
+        check_ushort(mode)
+      elsif mode_t == 'uint'
+        check_uint(mode)
+      else
+        raise "unsupported mode_t: #{mode_t}"
+      end
+      mode
+    end
+
     def self.rb_num2ulong(val)
       raise TypeError, 'no implicit conversion of nil into Integer' if Primitive.nil? val
 
@@ -92,8 +107,11 @@ module Truffle
           rb_big2ulong(val)
         end
       elsif Primitive.is_a?(val, Float)
-        fval = val.to_int
-        rb_num2ulong(fval)
+        # Like MRI, raise a RangeError rather than the FloatDomainError of Float#to_int. NaN fails both comparisons.
+        unless val >= Truffle::Platform::LONG_MIN && val <= Truffle::Platform::ULONG_MAX
+          raise RangeError, "float #{sprintf('%-.10g', val)} out of range of integer"
+        end
+        rb_num2ulong(val.to_int)
       else
         rb_num2ulong(Primitive.convert_with_to_int(val))
       end
@@ -157,6 +175,13 @@ module Truffle
     def self.check_uint(val)
       unless Primitive.integer_fits_into_uint?(val)
         raise RangeError, "integer #{val} too #{val < 0 ? 'small' : 'big'} to convert to 'uint'"
+      end
+    end
+
+    # Like MRI, also accepts negative values of the signed type, which wrap around.
+    def self.check_ushort(val)
+      unless val >= -0x8000 && val <= 0xffff
+        raise RangeError, "integer #{val} too #{val < 0 ? 'small' : 'big'} to convert to 'ushort'"
       end
     end
 

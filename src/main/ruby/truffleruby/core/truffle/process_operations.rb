@@ -302,7 +302,9 @@ module Truffle
             raise Errno::ENOENT, path unless Dir.exist?(path)
             @options[key] = path
           when :umask
-            @options[key] = value
+            # File.umask treats values outside of 0..0xffff as 0, so keep only the bits umask(2) uses.
+            # This makes -1 mask everything, like CRuby.
+            @options[key] = Truffle::Type.rb_num2mode_t(value) & 0o7777
           when :close_others
             unless Primitive.boolean_or_nil?(value)
               Truffle::Type.rb_bool_expected(value, 'close_others')
@@ -462,8 +464,8 @@ module Truffle
             Process.setpgid(0, pgroup)
           end
 
-          if mask = @options[:mask]
-            File.umask(mask)
+          if umask = @options[:umask]
+            File.umask(umask)
           end
 
           if chdir = @options[:chdir]
