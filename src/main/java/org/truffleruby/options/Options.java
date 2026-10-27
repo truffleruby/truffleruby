@@ -66,8 +66,6 @@ public final class Options {
     public final boolean POLYGLOT_STDIO;
     /** --interop-host=env.isHostLookupAllowed() && true */
     public final boolean HOST_INTEROP;
-    /** --trace-calls=true */
-    public final boolean TRACE_CALLS;
     /** --patching=true */
     public final boolean PATCHING;
     /** --hashing-deterministic=false */
@@ -220,7 +218,6 @@ public final class Options {
         SINGLE_THREADED = !env.isCreateThreadAllowed() || (options.get(OptionsCatalog.SINGLE_THREADED_KEY));
         POLYGLOT_STDIO = options.hasBeenSet(OptionsCatalog.POLYGLOT_STDIO_KEY) ? options.get(OptionsCatalog.POLYGLOT_STDIO_KEY) : EMBEDDED || !NATIVE_PLATFORM;
         HOST_INTEROP = env.isHostLookupAllowed() && (options.get(OptionsCatalog.HOST_INTEROP_KEY));
-        TRACE_CALLS = options.get(OptionsCatalog.TRACE_CALLS_KEY);
         PATCHING = options.get(OptionsCatalog.PATCHING_KEY);
         HASHING_DETERMINISTIC = options.get(OptionsCatalog.HASHING_DETERMINISTIC_KEY);
         VIRTUAL_THREAD_FIBERS = options.get(OptionsCatalog.VIRTUAL_THREAD_FIBERS_KEY);
@@ -330,8 +327,6 @@ public final class Options {
                 return POLYGLOT_STDIO;
             case "ruby.interop-host":
                 return HOST_INTEROP;
-            case "ruby.trace-calls":
-                return TRACE_CALLS;
             case "ruby.patching":
                 return PATCHING;
             case "ruby.hashing-deterministic":

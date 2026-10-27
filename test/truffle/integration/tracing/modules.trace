@@ -1,7 +1,5 @@
 ["line", "/modules.rb", 19, nil, {}, nil]
-["call", "/modules.rb", 19, :"<module:Foo>", {}, Module]
 ["class", "/modules.rb", 19, nil, {}, nil]
 ["line", "/modules.rb", 22, nil, {}, nil]
-["call", "/modules.rb", 22, :"<class:Bar>", {}, Class]
 ["class", "/modules.rb", 22, nil, {}, nil]
 ["line", "/modules.rb", 25, nil, {}, nil]

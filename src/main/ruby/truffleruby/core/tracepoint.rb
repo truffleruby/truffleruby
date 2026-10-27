@@ -19,7 +19,7 @@ class TracePoint
     events = events.map { |event| Primitive.convert_type event, Symbol, :to_sym }
     events.each do |event|
       case event
-      when :line, :class, :never
+      when :line, :class, :call, :never
         # Supported event, keep it and pass it below
       else
         raise ArgumentError, "unknown event: #{event}"
@@ -33,7 +33,11 @@ class TracePoint
 
   def inspect
     if Primitive.trace_point_inside_proc?
-      return "#<TracePoint:#{event} #{path}:#{lineno}>"
+      if event == :call
+        return "#<TracePoint:#{event} '#{method_id}' #{path}:#{lineno}>"
+      else
+        return "#<TracePoint:#{event} #{path}:#{lineno}>"
+      end
     end
 
     state = enabled? ? 'enabled' : 'disabled'

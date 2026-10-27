@@ -96,7 +96,6 @@ EXPERT:
     HOST_INTEROP: [interop-host, boolean, ['env.isHostLookupAllowed() && ', true], Allow interoperability with the host language (Java)]
 
     # Ruby-level features
-    TRACE_CALLS: [trace-calls, boolean, true, 'Support tracing (set_trace_func, TracePoint) of method calls']
     COVERAGE_GLOBAL: [coverage-global, boolean, false, Run coverage for all code and print results on exit]
 
     # Options helpful for debugging, potentially also for user code

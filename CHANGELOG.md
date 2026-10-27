@@ -11,6 +11,7 @@ Bug fixes:
 Compatibility:
 
 * Call the most recently enabled `TracePoint` first when several `TracePoint`s are enabled for the same event, like CRuby (@eregon).
+* Add support for the `:call` `TracePoint` event and `TracePoint#defined_class` (@eregon).
 * `IO#read` now coerces the `length` parameter to `Integer` (#4456, @andrykonchin).
 * Raise `RangeError` instead of `FloatDomainError` when converting NaN, infinite or other out-of-range `Float` values with `rb_num2ulong()`, `Process.uid=` and similar methods (@nirvdrum).
 

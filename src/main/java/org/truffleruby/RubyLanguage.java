@@ -261,6 +261,28 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     private int numberOfContexts = 0;
 
     public final CyclicAssumption traceFuncUnusedAssumption = new CyclicAssumption("set_trace_func is not used");
+    /** How many :call TracePoints are currently enabled, in any context */
+    private int callTracers = 0;
+
+    /** Inlined calls to core methods like Integer#+ are not real calls and would not trigger :call events, so they are
+     * deoptimized to real calls while any :call TracePoint is enabled. */
+    public void startTracingCalls() {
+        synchronized (traceFuncUnusedAssumption) {
+            if (callTracers++ == 0) {
+                // Invalidate current assumption
+                traceFuncUnusedAssumption.getAssumption().invalidate();
+            }
+        }
+    }
+
+    public void stopTracingCalls() {
+        synchronized (traceFuncUnusedAssumption) {
+            if (--callTracers == 0) {
+                // Update to a new valid assumption
+                traceFuncUnusedAssumption.invalidate();
+            }
+        }
+    }
 
     public final CoreMethodAssumptions coreMethodAssumptions;
     public final CoreStrings coreStrings;

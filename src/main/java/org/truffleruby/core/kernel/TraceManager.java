@@ -69,19 +69,15 @@ public final class TraceManager {
             for (EventBinding<?> instrument : instruments) {
                 instrument.dispose();
             }
+            language.stopTracingCalls();
         }
 
         context.getSlowPathTracePoints().setClassTraceFunc(traceFunc);
 
         if (traceFunc == null) {
-            // Update to a new valid assumption
-            language.traceFuncUnusedAssumption.invalidate();
             instruments = null;
             return;
         }
-
-        // Invalidate current assumption
-        language.traceFuncUnusedAssumption.getAssumption().invalidate();
 
         instruments = new ArrayList<>();
 
@@ -99,22 +95,21 @@ public final class TraceManager {
                                 traceFunc,
                                 language.coreStrings.LINE.createInstance(context))));
 
-        if (context.getOptions().TRACE_CALLS) {
-            instruments.add(
-                    instrumenter.attachExecutionEventFactory(
-                            SourceSectionFilter
-                                    .newBuilder()
-                                    .mimeTypeIs(RubyLanguage.MIME_TYPES)
-                                    .tagIs(CallTag.class)
-                                    .includeInternal(false)
-                                    .build(),
-                            eventContext -> new CallEventEventNode(
-                                    context,
-                                    language,
-                                    eventContext,
-                                    traceFunc,
-                                    language.coreStrings.CALL.createInstance(context))));
-        }
+        language.startTracingCalls();
+        instruments.add(
+                instrumenter.attachExecutionEventFactory(
+                        SourceSectionFilter
+                                .newBuilder()
+                                .mimeTypeIs(RubyLanguage.MIME_TYPES)
+                                .tagIs(CallTag.class)
+                                .includeInternal(false)
+                                .build(),
+                        eventContext -> new CallEventEventNode(
+                                context,
+                                language,
+                                eventContext,
+                                traceFunc,
+                                language.coreStrings.CALL.createInstance(context))));
     }
 
     /** Calls the set_trace_func proc for an event implemented without instrumentation, see
