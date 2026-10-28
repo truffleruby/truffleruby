@@ -79,18 +79,25 @@ ast: |
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 22
-                                  WriteLocalVariableNode
+                                  FireEndTracePointNode
                                       attributes:
                                           flags = 0
-                                          frameSlot = 2 # foo
-                                          sourceCharIndex = 10
-                                          sourceLength = 8
+                                          sourceCharIndex = 19
+                                          sourceLength = 3
                                       children:
-                                          valueNode =
-                                              IntegerFixnumLiteralNode
+                                          body =
+                                              WriteLocalVariableNode
                                                   attributes:
-                                                      flags = 1
-                                                      sourceCharIndex = 16
-                                                      sourceLength = 2
-                                                      value = 42
+                                                      flags = 0
+                                                      frameSlot = 2 # foo
+                                                      sourceCharIndex = 10
+                                                      sourceLength = 8
+                                                  children:
+                                                      valueNode =
+                                                          IntegerFixnumLiteralNode
+                                                              attributes:
+                                                                  flags = 1
+                                                                  sourceCharIndex = 16
+                                                                  sourceLength = 2
+                                                                  value = 42
                               ]

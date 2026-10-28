@@ -60,6 +60,7 @@ import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.core.string.TStringWithEncoding;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.core.tracepoint.FireClassTracePointNode;
+import org.truffleruby.core.tracepoint.FireEndTracePointNode;
 import org.truffleruby.debug.ChaosNode;
 import org.truffleruby.language.LexicalScope;
 import org.truffleruby.language.NotProvided;
@@ -3544,9 +3545,17 @@ public class YARPTranslator extends YARPBaseTranslator {
         }
 
         final RubyNode writeSelfNode = loadSelf(language);
-        final RubyNode fireClassTracePoint = new FireClassTracePointNode();
-        assignPositionOnly(moduleNode, fireClassTracePoint); // source location is needed for the :class TracePoint event
-        body = sequence(writeSelfNode, fireClassTracePoint, body);
+        if (moduleNode instanceof Nodes.SingletonClassNode) {
+            // No :class and :end TracePoint events for class << expr, like CRuby
+            body = sequence(writeSelfNode, body);
+        } else {
+            final RubyNode fireClassTracePoint = new FireClassTracePointNode();
+            assignPositionOnly(moduleNode, fireClassTracePoint); // source location is needed for the :class TracePoint event
+            body = new FireEndTracePointNode(body);
+            // The end keyword is the last 3 bytes of the definition, its location is needed for the :end TracePoint event
+            body.unsafeSetSourceSection(moduleNode.endOffset() - 3, 3);
+            body = sequence(writeSelfNode, fireClassTracePoint, body);
+        }
 
         final RubyRootNode rootNode = new RubyRootNode(
                 language,

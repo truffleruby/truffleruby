@@ -43,7 +43,7 @@ public final class FireClassTracePointNode extends RubyContextSourceNode {
     @Override
     public Object execute(VirtualFrame frame) {
         final SlowPathTracePoints slowPathTracePoints = getContext().getSlowPathTracePoints();
-        if (slowPathTracePoints.hasClassTracePoints()) {
+        if (slowPathTracePoints.classTracePoints.any()) {
             classListenersProfile.enter();
             slowPathTracePoints.fireClassEvent(frame.materialize(), this);
         }

@@ -82,34 +82,41 @@ ast: |
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 34
-                                  TryNodeGen
+                                  FireEndTracePointNode
                                       attributes:
                                           flags = 0
-                                          sourceCharIndex = 0
-                                          sourceLength = 34
+                                          sourceCharIndex = 31
+                                          sourceLength = 3
                                       children:
-                                          rescueParts = [
-                                              RescueStandardErrorNode
+                                          body =
+                                              TryNodeGen
                                                   attributes:
-                                                      canOmitBacktrace = true
                                                       flags = 0
-                                                      sourceCharIndex = 19
-                                                      sourceLength = 11
+                                                      sourceCharIndex = 0
+                                                      sourceLength = 34
                                                   children:
-                                                      rescueBody =
-                                                          IntegerFixnumLiteralNode
+                                                      rescueParts = [
+                                                          RescueStandardErrorNode
                                                               attributes:
+                                                                  canOmitBacktrace = true
+                                                                  flags = 0
+                                                                  sourceCharIndex = 19
+                                                                  sourceLength = 11
+                                                              children:
+                                                                  rescueBody =
+                                                                      IntegerFixnumLiteralNode
+                                                                          attributes:
+                                                                              flags = 1
+                                                                              sourceCharIndex = 28
+                                                                              sourceLength = 2
+                                                                              value = 42
+                                                      ]
+                                                      tryPart =
+                                                          StringLiteralNode
+                                                              attributes:
+                                                                  encoding = UTF-8
                                                                   flags = 1
-                                                                  sourceCharIndex = 28
-                                                                  sourceLength = 2
-                                                                  value = 42
-                                          ]
-                                          tryPart =
-                                              StringLiteralNode
-                                                  attributes:
-                                                      encoding = UTF-8
-                                                      flags = 1
-                                                      sourceCharIndex = 13
-                                                      sourceLength = 5
-                                                      tstring = foo
+                                                                  sourceCharIndex = 13
+                                                                  sourceLength = 5
+                                                                  tstring = foo
                               ]

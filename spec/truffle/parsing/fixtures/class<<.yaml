@@ -73,11 +73,6 @@ ast: |
                                                                   flags = 0
                                                                   sourceCharIndex = -1
                                                                   sourceLength = 0
-                                  FireClassTracePointNode
-                                      attributes:
-                                          flags = 0
-                                          sourceCharIndex = 0
-                                          sourceLength = 23
                                   IntegerFixnumLiteralNode
                                       attributes:
                                           flags = 1

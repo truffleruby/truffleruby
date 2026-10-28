@@ -1,7 +1,8 @@
 subject: "class"
 description: "class definition when there are some expressions inside a body"
 notes: >
-  The class body starts with a FireClassTracePointNode node for the :class TracePoint event, followed by the expressions inside the class body.
+  The class body starts with a FireClassTracePointNode node for the :class TracePoint event,
+  followed by the expressions inside the class body wrapped in a FireEndTracePointNode node for the :end TracePoint event.
 focused_on_node: "org.truffleruby.language.objects.RunModuleDefinitionNode"
 ruby: |
   class Foo
@@ -79,16 +80,31 @@ ast: |
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 21
-                                  IntegerFixnumLiteralNode
+                                  FireEndTracePointNode
                                       attributes:
-                                          flags = 1
-                                          sourceCharIndex = 12
-                                          sourceLength = 1
-                                          value = 1
-                                  IntegerFixnumLiteralNode
-                                      attributes:
-                                          flags = 1
-                                          sourceCharIndex = 16
-                                          sourceLength = 1
-                                          value = 2
+                                          flags = 0
+                                          sourceCharIndex = 18
+                                          sourceLength = 3
+                                      children:
+                                          body =
+                                              SequenceNode
+                                                  attributes:
+                                                      flags = 0
+                                                      sourceCharIndex = 12
+                                                      sourceLength = 5
+                                                  children:
+                                                      body = [
+                                                          IntegerFixnumLiteralNode
+                                                              attributes:
+                                                                  flags = 1
+                                                                  sourceCharIndex = 12
+                                                                  sourceLength = 1
+                                                                  value = 1
+                                                          IntegerFixnumLiteralNode
+                                                              attributes:
+                                                                  flags = 1
+                                                                  sourceCharIndex = 16
+                                                                  sourceLength = 1
+                                                                  value = 2
+                                                      ]
                               ]

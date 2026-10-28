@@ -135,6 +135,7 @@ public final class FiberManager {
 
         FiberMessage lastMessage = null;
         try {
+            context.getSlowPathTracePoints().fireFiberStartEvent();
             var descriptorAndArgs = handleMessage(fiber, message, currentNode);
             fiber.status = FiberStatus.RESUMED;
             final Object result = ProcOperations.rootCall(block, descriptorAndArgs.descriptor, descriptorAndArgs.args);
@@ -290,6 +291,7 @@ public final class FiberManager {
             fromFiber.status = FiberStatus.SUSPENDED;
         }
         final FiberMessage message = resumeAndWait(fromFiber, toFiber, operation, descriptor, args, currentNode);
+        context.getSlowPathTracePoints().fireFiberSwitchEvent();
         return handleMessage(fromFiber, message, currentNode);
     }
 

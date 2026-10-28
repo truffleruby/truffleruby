@@ -42,6 +42,7 @@ import org.truffleruby.core.fiber.RubyFiber;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.core.support.PRNGRandomizerNodes;
+import org.truffleruby.core.tracepoint.SlowPathTracePoints;
 import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.interop.InteropNodes;
 import org.truffleruby.interop.TranslateInteropExceptionNode;
@@ -278,8 +279,15 @@ public final class ThreadManager {
      * {@link RubyLanguage#disposeThread(RubyContext, Thread)} runs after this. Note this is NOT guaranteed to run, an
      * exception might happen in the poll() done when the thread enters the context. */
     private void threadMain(RubyThread thread, Node currentNode, Supplier<Object> task) {
+        final SlowPathTracePoints slowPathTracePoints = context.getSlowPathTracePoints();
         try {
-            final Object result = task.get();
+            final Object result;
+            slowPathTracePoints.fireThreadBeginEvent(thread);
+            try {
+                result = task.get();
+            } finally {
+                slowPathTracePoints.fireThreadEndEvent(thread);
+            }
             setThreadValue(thread, result);
             // Handlers in the same order as in FiberManager
         } catch (KillException e) { // handled in uncaughtExceptionHandler()

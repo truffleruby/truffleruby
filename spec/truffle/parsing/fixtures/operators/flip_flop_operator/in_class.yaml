@@ -79,63 +79,78 @@ ast: |
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 40
-                                  InitFlipFlopSlotNode
+                                  FireEndTracePointNode
                                       attributes:
                                           flags = 0
-                                          frameSlot = 3
-                                          sourceCharIndex = -1
-                                          sourceLength = 0
-                                  WriteLocalVariableNode
-                                      attributes:
-                                          flags = 0
-                                          frameSlot = 2 # x
-                                          sourceCharIndex = 12
-                                          sourceLength = 6
+                                          sourceCharIndex = 37
+                                          sourceLength = 3
                                       children:
-                                          valueNode =
-                                              IntegerFixnumLiteralNode
-                                                  attributes:
-                                                      flags = 1
-                                                      sourceCharIndex = 16
-                                                      sourceLength = 2
-                                                      value = 42
-                                  IfNodeGen
-                                      attributes:
-                                          flags = 0
-                                          sourceCharIndex = 21
-                                          sourceLength = 15
-                                      children:
-                                          condition =
-                                              FlipFlopNodeGen
-                                                  attributes:
-                                                      exclusive = false
-                                                      flags = 1
-                                                      frameLevel = 0
-                                                      frameSlot = 3
-                                                      sourceCharIndex = 26
-                                                      sourceLength = 10
-                                                  children:
-                                                      begin =
-                                                          ReadLocalVariableNode
-                                                              attributes:
-                                                                  flags = 0
-                                                                  frameSlot = 2 # x
-                                                                  sourceCharIndex = 27
-                                                                  sourceLength = 1
-                                                                  type = FRAME_LOCAL
-                                                      end =
-                                                          ReadLocalVariableNode
-                                                              attributes:
-                                                                  flags = 0
-                                                                  frameSlot = 2 # x
-                                                                  sourceCharIndex = 34
-                                                                  sourceLength = 1
-                                                                  type = FRAME_LOCAL
-                                          thenBody =
-                                              IntegerFixnumLiteralNode
+                                          body =
+                                              SequenceNode
                                                   attributes:
                                                       flags = 0
-                                                      sourceCharIndex = 21
-                                                      sourceLength = 1
-                                                      value = 1
+                                                      sourceCharIndex = -1
+                                                      sourceLength = 0
+                                                  children:
+                                                      body = [
+                                                          InitFlipFlopSlotNode
+                                                              attributes:
+                                                                  flags = 0
+                                                                  frameSlot = 3
+                                                                  sourceCharIndex = -1
+                                                                  sourceLength = 0
+                                                          WriteLocalVariableNode
+                                                              attributes:
+                                                                  flags = 0
+                                                                  frameSlot = 2 # x
+                                                                  sourceCharIndex = 12
+                                                                  sourceLength = 6
+                                                              children:
+                                                                  valueNode =
+                                                                      IntegerFixnumLiteralNode
+                                                                          attributes:
+                                                                              flags = 1
+                                                                              sourceCharIndex = 16
+                                                                              sourceLength = 2
+                                                                              value = 42
+                                                          IfNodeGen
+                                                              attributes:
+                                                                  flags = 0
+                                                                  sourceCharIndex = 21
+                                                                  sourceLength = 15
+                                                              children:
+                                                                  condition =
+                                                                      FlipFlopNodeGen
+                                                                          attributes:
+                                                                              exclusive = false
+                                                                              flags = 1
+                                                                              frameLevel = 0
+                                                                              frameSlot = 3
+                                                                              sourceCharIndex = 26
+                                                                              sourceLength = 10
+                                                                          children:
+                                                                              begin =
+                                                                                  ReadLocalVariableNode
+                                                                                      attributes:
+                                                                                          flags = 0
+                                                                                          frameSlot = 2 # x
+                                                                                          sourceCharIndex = 27
+                                                                                          sourceLength = 1
+                                                                                          type = FRAME_LOCAL
+                                                                              end =
+                                                                                  ReadLocalVariableNode
+                                                                                      attributes:
+                                                                                          flags = 0
+                                                                                          frameSlot = 2 # x
+                                                                                          sourceCharIndex = 34
+                                                                                          sourceLength = 1
+                                                                                          type = FRAME_LOCAL
+                                                                  thenBody =
+                                                                      IntegerFixnumLiteralNode
+                                                                          attributes:
+                                                                              flags = 0
+                                                                              sourceCharIndex = 21
+                                                                              sourceLength = 1
+                                                                              value = 1
+                                                      ]
                               ]

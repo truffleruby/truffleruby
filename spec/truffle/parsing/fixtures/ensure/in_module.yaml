@@ -82,42 +82,49 @@ ast: |
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 35
-                                  EnsureNodeGen
+                                  FireEndTracePointNode
                                       attributes:
                                           flags = 0
-                                          sourceCharIndex = 0
-                                          sourceLength = 35
+                                          sourceCharIndex = 32
+                                          sourceLength = 3
                                       children:
-                                          ensurePart =
-                                              RubyCallNode
+                                          body =
+                                              EnsureNodeGen
                                                   attributes:
-                                                      descriptor = NoKeywordArgumentsDescriptor
-                                                      dispatchConfig = PRIVATE
-                                                      emptyKeywordsProfile = false
-                                                      flags = 1
-                                                      isAttrAssign = false
-                                                      isSafeNavigation = false
-                                                      isSplatted = false
-                                                      isVCall = true
-                                                      lastArgIsNotHashProfile = false
-                                                      methodName = "bar"
-                                                      notEmptyKeywordsProfile = false
-                                                      notRuby2KeywordsHashProfile = false
-                                                      sourceCharIndex = 28
-                                                      sourceLength = 3
+                                                      flags = 0
+                                                      sourceCharIndex = 0
+                                                      sourceLength = 35
                                                   children:
-                                                      receiver =
-                                                          SelfNode
+                                                      ensurePart =
+                                                          RubyCallNode
                                                               attributes:
-                                                                  flags = 0
-                                                                  sourceCharIndex = -1
-                                                                  sourceLength = 0
-                                          tryPart =
-                                              StringLiteralNode
-                                                  attributes:
-                                                      encoding = UTF-8
-                                                      flags = 1
-                                                      sourceCharIndex = 13
-                                                      sourceLength = 5
-                                                      tstring = foo
+                                                                  descriptor = NoKeywordArgumentsDescriptor
+                                                                  dispatchConfig = PRIVATE
+                                                                  emptyKeywordsProfile = false
+                                                                  flags = 1
+                                                                  isAttrAssign = false
+                                                                  isSafeNavigation = false
+                                                                  isSplatted = false
+                                                                  isVCall = true
+                                                                  lastArgIsNotHashProfile = false
+                                                                  methodName = "bar"
+                                                                  notEmptyKeywordsProfile = false
+                                                                  notRuby2KeywordsHashProfile = false
+                                                                  sourceCharIndex = 28
+                                                                  sourceLength = 3
+                                                              children:
+                                                                  receiver =
+                                                                      SelfNode
+                                                                          attributes:
+                                                                              flags = 0
+                                                                              sourceCharIndex = -1
+                                                                              sourceLength = 0
+                                                      tryPart =
+                                                          StringLiteralNode
+                                                              attributes:
+                                                                  encoding = UTF-8
+                                                                  flags = 1
+                                                                  sourceCharIndex = 13
+                                                                  sourceLength = 5
+                                                                  tstring = foo
                               ]

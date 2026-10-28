@@ -32,12 +32,16 @@ import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.binding.BindingNodes;
 import org.truffleruby.core.symbol.RubySymbol;
+import org.truffleruby.core.thread.RubyThread;
+import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyNode;
+import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.yield.CallBlockNode;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -45,95 +49,187 @@ import com.oracle.truffle.api.source.SourceSection;
  * triggering such an event explicitly checks whether there is any active TracePoint for it and calls them if so. This
  * avoids invalidating compiled code and the memory footprint of instrumentation wrappers when such a TracePoint is
  * enabled or disabled, which matters for events triggered by operations which are anyway slow, like defining a module
- * or class. */
+ * or class, switching fibers or starting a thread. */
 public final class SlowPathTracePoints {
 
-    private static final RubyTracePoint[] EMPTY = new RubyTracePoint[0];
+    /** The active TracePoints for one event, the most recently enabled first like in CRuby */
+    public static final class ActiveTracePoints {
+
+        private static final RubyTracePoint[] EMPTY = new RubyTracePoint[0];
+
+        /** Whether there is any active TracePoint. This is a single field so the check on the fast path is as cheap as
+         * possible. */
+        private volatile boolean any = false;
+        private volatile RubyTracePoint[] tracePoints = EMPTY;
+
+        public boolean any() {
+            return any;
+        }
+
+        synchronized void add(RubyTracePoint tracePoint) {
+            final RubyTracePoint[] copy = new RubyTracePoint[tracePoints.length + 1];
+            copy[0] = tracePoint;
+            System.arraycopy(tracePoints, 0, copy, 1, tracePoints.length);
+            tracePoints = copy;
+            any = true;
+        }
+
+        synchronized void remove(RubyTracePoint tracePoint) {
+            final RubyTracePoint[] copy = new RubyTracePoint[tracePoints.length - 1];
+            int j = 0;
+            for (RubyTracePoint element : tracePoints) {
+                if (element != tracePoint) {
+                    copy[j++] = element;
+                }
+            }
+            assert j == copy.length : "TracePoint was not active";
+            tracePoints = copy;
+            any = copy.length > 0;
+        }
+
+    }
 
     private final RubyContext context;
     private final RubyLanguage language;
 
-    /** Whether there is any active :class TracePoint. This is a single field so the check on the fast path is as cheap
-     * as possible. */
-    private volatile boolean hasClassTracePoints = false;
-    /** The active :class TracePoints, the most recently enabled first like in CRuby */
-    private volatile RubyTracePoint[] classTracePoints = EMPTY;
+    public final ActiveTracePoints classTracePoints = new ActiveTracePoints();
+    public final ActiveTracePoints endTracePoints = new ActiveTracePoints();
+    public final ActiveTracePoints fiberSwitchTracePoints = new ActiveTracePoints();
+    public final ActiveTracePoints threadBeginTracePoints = new ActiveTracePoints();
+    public final ActiveTracePoints threadEndTracePoints = new ActiveTracePoints();
 
     public SlowPathTracePoints(RubyContext context) {
         this.context = context;
         this.language = context.getLanguageSlow();
     }
 
-    public boolean hasClassTracePoints() {
-        return hasClassTracePoints;
-    }
-
     @TruffleBoundary
-    synchronized void add(RubySymbol event, RubyTracePoint tracePoint) {
+    private ActiveTracePoints forEvent(RubySymbol event) {
         if (event == language.coreSymbols.CLASS) {
-            classTracePoints = prepend(tracePoint, classTracePoints);
-            hasClassTracePoints = true;
+            return classTracePoints;
+        } else if (event == language.coreSymbols.END) {
+            return endTracePoints;
+        } else if (event == language.coreSymbols.FIBER_SWITCH) {
+            return fiberSwitchTracePoints;
+        } else if (event == language.coreSymbols.THREAD_BEGIN) {
+            return threadBeginTracePoints;
+        } else if (event == language.coreSymbols.THREAD_END) {
+            return threadEndTracePoints;
         } else {
             throw CompilerDirectives.shouldNotReachHere(event.getString());
         }
     }
 
-    @TruffleBoundary
-    synchronized void remove(RubySymbol event, RubyTracePoint tracePoint) {
-        if (event == language.coreSymbols.CLASS) {
-            classTracePoints = remove(classTracePoints, tracePoint);
-            hasClassTracePoints = classTracePoints.length > 0;
-        } else {
-            throw CompilerDirectives.shouldNotReachHere(event.getString());
-        }
+    void add(RubySymbol event, RubyTracePoint tracePoint) {
+        forEvent(event).add(tracePoint);
     }
 
-    private static RubyTracePoint[] prepend(RubyTracePoint tracePoint, RubyTracePoint[] tracePoints) {
-        final RubyTracePoint[] copy = new RubyTracePoint[tracePoints.length + 1];
-        copy[0] = tracePoint;
-        System.arraycopy(tracePoints, 0, copy, 1, tracePoints.length);
-        return copy;
+    void remove(RubySymbol event, RubyTracePoint tracePoint) {
+        forEvent(event).remove(tracePoint);
     }
 
-    private static RubyTracePoint[] remove(RubyTracePoint[] tracePoints, RubyTracePoint tracePoint) {
-        final RubyTracePoint[] copy = new RubyTracePoint[tracePoints.length - 1];
-        int j = 0;
-        for (RubyTracePoint element : tracePoints) {
-            if (element != tracePoint) {
-                copy[j++] = element;
-            }
-        }
-        assert j == copy.length : "TracePoint was not active";
-        return copy;
-    }
-
-    /** Calls the active :class TracePoints for a class/module body at the given node. The frame is used for
-     * TracePoint#binding, etc. */
+    /** Calls the active :class TracePoints at the beginning of a class/module body at the given node. The frame is used
+     * for TracePoint#binding, etc. */
     @TruffleBoundary
     public void fireClassEvent(MaterializedFrame frame, RubyNode node) {
+        fireModuleBodyEvent(classTracePoints, language.coreSymbols.CLASS, frame, node);
+    }
+
+    /** Calls the active :end TracePoints at the end of a class/module body, the given node is at the end keyword. */
+    @TruffleBoundary
+    public void fireEndEvent(MaterializedFrame frame, RubyNode node) {
+        fireModuleBodyEvent(endTracePoints, language.coreSymbols.END, frame, node);
+    }
+
+    private void fireModuleBodyEvent(ActiveTracePoints tracePoints, RubySymbol event, MaterializedFrame frame,
+            RubyNode node) {
         final SourceSection sourceSection = node.getSourceSection();
-        final Source source = sourceSection.getSource();
-        if (source.isInternal()) {
+        if (sourceSection.getSource().isInternal()) {
             return;
         }
 
-        final int line = language.getStartLineAdjusted(sourceSection);
-
-        fire(classTracePoints, language.coreSymbols.CLASS, frame, sourceSection, line);
+        fire(tracePoints, event, RubyArguments.getSelf(frame), frame, sourceSection);
     }
 
-    private void fire(RubyTracePoint[] tracePoints, RubySymbol event, MaterializedFrame frame,
-            SourceSection sourceSection, int line) {
+    /** Calls the active :fiber_switch TracePoints in a fiber which just started, before running its block. There is no
+     * Ruby frame yet, so there is no location and binding, like in CRuby. */
+    @TruffleBoundary
+    public void fireFiberStartEvent() {
+        if (!fiberSwitchTracePoints.any()) {
+            return;
+        }
+
+        fire(fiberSwitchTracePoints, language.coreSymbols.FIBER_SWITCH, language.getCurrentThread(), Nil.INSTANCE, 0,
+                Nil.INSTANCE);
+    }
+
+    /** Calls the active :fiber_switch TracePoints in a fiber which just gained control back after calling a method
+     * switching fibers. The location is that of the Ruby caller of that method, like in CRuby. However
+     * TracePoint#binding is nil, unlike CRuby: materializing the caller frame here would deoptimize it on every fiber
+     * switch, and the frame would need to be captured before switching away from this fiber. It's also quite odd that
+     * CRuby gives a Binding of the frame of the caller Fiber, not the current one, so we suspect no one uses it. */
+    @TruffleBoundary
+    public void fireFiberSwitchEvent() {
+        if (!fiberSwitchTracePoints.any()) {
+            return;
+        }
+
+        final RubyThread thread = language.getCurrentThread();
+        final Node callerNode = context.getCallStack().getCallerNode();
+        final SourceSection sourceSection = callerNode == null ? null : callerNode.getEncapsulatingSourceSection();
+
+        if (sourceSection != null && sourceSection.isAvailable()) {
+            final Object path = language.getPathToTStringCache().createPathString(context, sourceSection.getSource());
+            final int line = language.getStartLineAdjusted(sourceSection);
+            fire(fiberSwitchTracePoints, language.coreSymbols.FIBER_SWITCH, thread, path, line, Nil.INSTANCE);
+        } else {
+            fire(fiberSwitchTracePoints, language.coreSymbols.FIBER_SWITCH, thread, Nil.INSTANCE, 0, Nil.INSTANCE);
+        }
+    }
+
+    /** Calls the active :thread_begin TracePoints in the given thread, before running its block. There is no Ruby frame
+     * yet, so there is no location and binding, like in CRuby. */
+    @TruffleBoundary
+    public void fireThreadBeginEvent(RubyThread thread) {
+        if (!threadBeginTracePoints.any()) {
+            return;
+        }
+
+        fire(threadBeginTracePoints, language.coreSymbols.THREAD_BEGIN, thread, Nil.INSTANCE, 0, Nil.INSTANCE);
+    }
+
+    /** Calls the active :thread_end TracePoints in the given thread, after running its block. */
+    @TruffleBoundary
+    public void fireThreadEndEvent(RubyThread thread) {
+        if (!threadEndTracePoints.any()) {
+            return;
+        }
+
+        fire(threadEndTracePoints, language.coreSymbols.THREAD_END, thread, Nil.INSTANCE, 0, Nil.INSTANCE);
+    }
+
+    private void fire(ActiveTracePoints tracePoints, RubySymbol event, Object self, MaterializedFrame frame,
+            SourceSection sourceSection) {
+        final Source source = sourceSection.getSource();
+        final Object path = language.getPathToTStringCache().createPathString(context, source);
+        final int line = language.getStartLineAdjusted(sourceSection);
+        final Object binding = BindingNodes.createBinding(context, language, frame, sourceSection);
+        fire(tracePoints, event, self, path, line, binding);
+    }
+
+    private void fire(ActiveTracePoints tracePoints, RubySymbol event, Object self, Object path, int line,
+            Object binding) {
         final TracePointState state = language.getCurrentThread().tracePointState;
         if (state.insideProc) {
             return;
         }
 
-        for (RubyTracePoint tracePoint : tracePoints) {
+        for (RubyTracePoint tracePoint : tracePoints.tracePoints) {
             state.event = event;
-            state.path = language.getPathToTStringCache().createPathString(context, sourceSection.getSource());
+            state.self = self;
+            state.path = path;
             state.line = line;
-            state.binding = BindingNodes.createBinding(context, language, frame, sourceSection);
+            state.binding = binding;
 
             state.insideProc = true;
             try {
@@ -142,7 +238,8 @@ public final class SlowPathTracePoints {
                 state.insideProc = false;
                 // Reset the binding so it can be escaped analyzed. This is also semantically correct
                 // because the TracePoint information is reset outside the TracePoint block in MRI.
-                state.binding = null;
+                state.binding = Nil.INSTANCE;
+                state.self = Nil.INSTANCE;
             }
         }
     }
