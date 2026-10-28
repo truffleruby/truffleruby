@@ -1,0 +1,5 @@
+fails:Addrinfo.getaddrinfo with a Fiber scheduler calls the scheduler's #address_resolve with the host name and uses the addresses it returns
+fails:Addrinfo.getaddrinfo with a Fiber scheduler only keeps the numeric addresses #address_resolve returns
+fails:Addrinfo.getaddrinfo with a Fiber scheduler raises SocketError when #address_resolve returns an empty Array, without resolving the host itself
+fails:Addrinfo.getaddrinfo with a Fiber scheduler raises SocketError when #address_resolve returns nil, without resolving the host itself
+fails:Addrinfo.getaddrinfo with a Fiber scheduler resolves the host itself when the scheduler has no #address_resolve

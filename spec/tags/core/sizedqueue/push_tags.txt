@@ -1,0 +1,2 @@
+fails:SizedQueue#push with Fiber scheduler blocks through the scheduler while the queue is full
+fails:SizedQueue#push with Fiber scheduler raises ClosedQueueError when the queue is closed while it blocks

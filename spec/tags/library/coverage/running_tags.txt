@@ -1,0 +1,3 @@
+fails:Coverage.running? returns false if coverage is not started
+fails:Coverage.running? returns true if coverage is started
+fails:Coverage.running? returns false if coverage was started and stopped

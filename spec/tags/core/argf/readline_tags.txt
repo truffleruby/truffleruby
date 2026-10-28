@@ -2,3 +2,11 @@ fails:ARGF.readline sets $_ global variable with each line read
 fails:ARGF.readline modifies the files when in place edit mode is on
 fails:ARGF.readline modifies and backups two files when in place edit mode is on
 slow:ARGF.readline reads all lines of stdin
+fails:ARGF.readline reads one line of a file without the trailing separator when passed chomp
+fails:ARGF.readline reads up to the limit when passed a separator and a limit
+fails:ARGF.readline reads one separated section without the separator when passed a separator and chomp
+fails:ARGF.readline when reading $stdin and $stdin is not an IO reads each line of $stdin
+fails:ARGF.readline when reading $stdin and $stdin is not an IO passes keywords on to $stdin
+fails:ARGF.readline when reading $stdin and $stdin is not an IO calls readline on $stdin
+fails:ARGF.readline when reading $stdin and $stdin is not an IO raises an EOFError when reaching end of $stdin
+fails:ARGF.readline when reading $stdin and $stdin is not an IO raises NoMethodError when $stdin has no public readline

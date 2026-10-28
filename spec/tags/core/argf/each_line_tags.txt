@@ -1,0 +1,7 @@
+fails:ARGF.each_line with a separator and a limit yields each limited section of all streams
+fails:ARGF.each_line when passed chomp yields each line without the trailing separator
+fails:ARGF.each_line when passed chomp yields each separated section without the separator when also passed a separator and a limit
+fails:ARGF.each_line when reading $stdin and $stdin is not an IO calls each_line on $stdin and yields each line
+fails:ARGF.each_line when reading $stdin and $stdin is not an IO passes the separator, limit and keywords to $stdin.each_line
+fails:ARGF.each_line when no block is given returns an Enumerator that passes chomp to the method
+fails:ARGF.each_line when no block is given returns an Enumerator that passes the separator, limit and chomp to the method

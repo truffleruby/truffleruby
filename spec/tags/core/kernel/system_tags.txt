@@ -23,3 +23,4 @@ slow:Kernel.system raises Errno::ENOENT when `exception: true` is given and the 
 slow:Kernel#system executes with `sh` if the command is executable but not binary and there is no shebang
 slow:Kernel.system executes with `sh` if the command is executable but not binary and there is no shebang
 slow:Kernel#system raises an ArgumentError if :exception option is not a boolean or nil
+fails:Kernel#system with Fiber scheduler raises TypeError when the scheduler's process_wait does not return a Process::Status

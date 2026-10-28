@@ -6,3 +6,9 @@ fails:TCPSocket#initialize using IPv6 when a server is listening on the given ad
 slow:TCPSocket#initialize raises IO::TimeoutError with :connect_timeout when no server is listening on the given address
 slow:TCPSocket#initialize with a running server connects to a server when passed connect_timeout argument
 keep(transient):TCPSocket#initialize raises IO::TimeoutError with :connect_timeout when no server is listening on the given address
+fails:TCPSocket#initialize with Fiber scheduler calls the scheduler's #io_wait with IO::READABLE | IO::WRITABLE and no timeout
+fails:TCPSocket#initialize with Fiber scheduler passes the connect_timeout to #io_wait
+fails:TCPSocket#initialize with Fiber scheduler returns the connected socket once #io_wait returns
+fails:TCPSocket#initialize with Fiber scheduler raises IO::TimeoutError when #io_wait returns false
+fails:TCPSocket#initialize with Fiber scheduler raises Errno::ECONNREFUSED once #io_wait returns when no server is listening
+fails:TCPSocket#initialize with Fiber scheduler does not call the scheduler if the fiber is blocking

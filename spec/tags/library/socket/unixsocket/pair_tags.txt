@@ -1,0 +1,3 @@
+fails:UNIXSocket.pair yields the sockets, returns the block's value and closes them afterwards
+fails:UNIXSocket.pair closes the sockets when the block raises
+fails:UNIXSocket.pair ignores a StandardError from closing a socket and still closes the other one
