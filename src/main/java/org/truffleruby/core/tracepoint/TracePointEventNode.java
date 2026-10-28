@@ -15,11 +15,13 @@ import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.binding.BindingNodes;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.symbol.RubySymbol;
+import org.truffleruby.language.Nil;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 import org.truffleruby.core.thread.RubyThread;
+import org.truffleruby.language.arguments.RubyArguments;
 
 final class TracePointEventNode extends TraceBaseEventNode {
 
@@ -57,6 +59,7 @@ final class TracePointEventNode extends TraceBaseEventNode {
         state.line = getLine();
         state.binding = BindingNodes
                 .createBinding(context, language, frame.materialize(), eventContext.getInstrumentedSourceSection());
+        state.self = RubyArguments.getSelf(frame);
 
         state.insideProc = true;
         try {
@@ -65,7 +68,8 @@ final class TracePointEventNode extends TraceBaseEventNode {
             state.insideProc = false;
             // Reset the binding so it can be escaped analyzed. This is also semantically correct
             // because the TracePoint information is reset outside the TracePoint block in MRI.
-            state.binding = null;
+            state.binding = Nil.INSTANCE;
+            state.self = Nil.INSTANCE;
         }
     }
 

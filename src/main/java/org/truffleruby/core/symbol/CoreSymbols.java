@@ -39,6 +39,10 @@ public final class CoreSymbols {
     public final RubySymbol IMMEDIATE = createRubySymbol("immediate");
     public final RubySymbol LINE = createRubySymbol("line");
     public final RubySymbol NEVER = createRubySymbol("never");
+    public final RubySymbol END = createRubySymbol("end");
+    public final RubySymbol FIBER_SWITCH = createRubySymbol("fiber_switch");
+    public final RubySymbol THREAD_BEGIN = createRubySymbol("thread_begin");
+    public final RubySymbol THREAD_END = createRubySymbol("thread_end");
     public final RubySymbol ON_BLOCKING = createRubySymbol("on_blocking");
     public final RubySymbol DEPRECATED = createRubySymbol("deprecated");
     public final RubySymbol EXPERIMENTAL = createRubySymbol("experimental");

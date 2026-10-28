@@ -87,9 +87,16 @@ ast: |
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 18
-                                  NilLiteralNode
+                                  FireEndTracePointNode
                                       attributes:
                                           flags = 0
-                                          sourceCharIndex = -1
-                                          sourceLength = 0
+                                          sourceCharIndex = 15
+                                          sourceLength = 3
+                                      children:
+                                          body =
+                                              NilLiteralNode
+                                                  attributes:
+                                                      flags = 0
+                                                      sourceCharIndex = -1
+                                                      sourceLength = 0
                               ]

@@ -74,11 +74,6 @@ ast: |
                                                                   flags = 0
                                                                   sourceCharIndex = -1
                                                                   sourceLength = 0
-                                  FireClassTracePointNode
-                                      attributes:
-                                          flags = 0
-                                          sourceCharIndex = 0
-                                          sourceLength = 27
                                   WriteLocalVariableNode
                                       attributes:
                                           flags = 0

@@ -1,7 +1,8 @@
 subject: "module"
 description: "module definition when there are some expressions inside a body"
 notes: >
-  The module body starts with a FireClassTracePointNode node for the :class TracePoint event, followed by the expressions inside the module body.
+  The module body starts with a FireClassTracePointNode node for the :class TracePoint event,
+  followed by the expressions inside the module body wrapped in a FireEndTracePointNode node for the :end TracePoint event.
 focused_on_node: "org.truffleruby.language.objects.RunModuleDefinitionNode"
 ruby: |
   module Foo
@@ -79,16 +80,31 @@ ast: |
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 22
-                                  IntegerFixnumLiteralNode
+                                  FireEndTracePointNode
                                       attributes:
-                                          flags = 1
-                                          sourceCharIndex = 13
-                                          sourceLength = 1
-                                          value = 1
-                                  IntegerFixnumLiteralNode
-                                      attributes:
-                                          flags = 1
-                                          sourceCharIndex = 17
-                                          sourceLength = 1
-                                          value = 2
+                                          flags = 0
+                                          sourceCharIndex = 19
+                                          sourceLength = 3
+                                      children:
+                                          body =
+                                              SequenceNode
+                                                  attributes:
+                                                      flags = 0
+                                                      sourceCharIndex = 13
+                                                      sourceLength = 5
+                                                  children:
+                                                      body = [
+                                                          IntegerFixnumLiteralNode
+                                                              attributes:
+                                                                  flags = 1
+                                                                  sourceCharIndex = 13
+                                                                  sourceLength = 1
+                                                                  value = 1
+                                                          IntegerFixnumLiteralNode
+                                                              attributes:
+                                                                  flags = 1
+                                                                  sourceCharIndex = 17
+                                                                  sourceLength = 1
+                                                                  value = 2
+                                                      ]
                               ]

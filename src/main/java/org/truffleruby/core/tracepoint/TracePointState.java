@@ -10,16 +10,18 @@
  */
 package org.truffleruby.core.tracepoint;
 
-import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.symbol.RubySymbol;
-import org.truffleruby.core.binding.RubyBinding;
+import org.truffleruby.language.Nil;
 
 public final class TracePointState {
 
     boolean insideProc = false;
     RubySymbol event = null;
-    RubyString path = null;
+    /** The RubyString path, or nil for events without a location like :thread_begin */
+    Object path = Nil.INSTANCE;
     int line = 0;
-    RubyBinding binding = null;
+    /** The RubyBinding, or nil for events without a frame like :thread_begin */
+    Object binding = Nil.INSTANCE;
+    Object self = Nil.INSTANCE;
 
 }
