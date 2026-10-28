@@ -67,7 +67,10 @@ public class RubyRootNode extends RubyBaseRootNode {
             body.unsafeSetSourceSection(sourceSection);
         }
 
-        body.unsafeSetIsCall();
+        // The :call event is only for method bodies, not for blocks, module bodies or the top-level script
+        if (sharedMethodInfo.isMethod() && !sharedMethodInfo.isModuleBody()) {
+            body.unsafeSetIsCall();
+        }
         body.unsafeSetIsRoot();
 
         if (language.options.CHECK_CLONE_UNINITIALIZED_CORRECTNESS) {

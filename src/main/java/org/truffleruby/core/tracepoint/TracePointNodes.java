@@ -23,6 +23,7 @@ import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.binding.RubyBinding;
 import org.truffleruby.core.kernel.TraceManager;
 import org.truffleruby.core.klass.RubyClass;
+import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.symbol.RubySymbol;
@@ -103,6 +104,8 @@ public abstract class TracePointNodes {
                 return new TracePointEvent.Instrumented(TraceManager.LineTag.class, eventSymbol);
             } else if (eventSymbol == language.coreSymbols.CLASS) {
                 return new TracePointEvent.SlowPath(eventSymbol);
+            } else if (eventSymbol == language.coreSymbols.CALL) {
+                return new TracePointEvent.Instrumented(TraceManager.CallTag.class, eventSymbol);
             } else if (eventSymbol == language.coreSymbols.NEVER) {
                 return new TracePointEvent.Instrumented(TraceManager.NeverTag.class, eventSymbol);
             } else {
@@ -229,6 +232,16 @@ public abstract class TracePointNodes {
             final RubyBinding binding = getTracePointState().binding;
             final InternalMethod method = RubyArguments.getMethod(binding.getFrame());
             return getSymbol(method.getName());
+        }
+    }
+
+    @CoreMethod(names = "defined_class")
+    public abstract static class DefinedClassNode extends TracePointCoreNode {
+        @Specialization
+        RubyModule definedClass(RubyTracePoint tracePoint) {
+            final RubyBinding binding = getTracePointState().binding;
+            final InternalMethod method = RubyArguments.getMethod(binding.getFrame());
+            return method.getDeclaringModule();
         }
     }
 

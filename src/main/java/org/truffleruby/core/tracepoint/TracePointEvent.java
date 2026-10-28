@@ -17,6 +17,7 @@ import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.api.instrumentation.Tag;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
+import org.truffleruby.core.kernel.TraceManager;
 import org.truffleruby.core.symbol.RubySymbol;
 
 /** One event of a TracePoint, either implemented with Truffle instrumentation ({@link Instrumented}) or by registering
@@ -67,6 +68,9 @@ public abstract class TracePointEvent {
                     .tagIs(tagClass)
                     .includeInternal(false)
                     .build();
+            if (tagClass == TraceManager.CallTag.class) {
+                language.startTracingCalls();
+            }
             this.eventBinding = context.getInstrumenter().attachExecutionEventFactory(
                     sourceSectionFilter,
                     eventContext -> new TracePointEventNode(context, language, eventContext, tracePoint, eventSymbol));
@@ -79,6 +83,9 @@ public abstract class TracePointEvent {
             if (eventBinding != null) {
                 this.eventBinding.dispose();
                 this.eventBinding = null;
+                if (tagClass == TraceManager.CallTag.class) {
+                    context.getLanguageSlow().stopTracingCalls();
+                }
                 return true;
             } else {
                 return false;

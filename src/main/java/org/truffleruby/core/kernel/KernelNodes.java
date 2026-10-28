@@ -1461,22 +1461,6 @@ public abstract class KernelNodes {
         }
     }
 
-    @CoreMethod(names = "set_trace_func", isModuleFunction = true, required = 1)
-    public abstract static class SetTraceFuncNode extends CoreMethodArrayArgumentsNode {
-
-        @Specialization
-        Object setTraceFunc(Nil traceFunc) {
-            getContext().getTraceManager().setTraceFunc(null);
-            return nil;
-        }
-
-        @Specialization
-        RubyProc setTraceFunc(RubyProc traceFunc) {
-            getContext().getTraceManager().setTraceFunc(traceFunc);
-            return traceFunc;
-        }
-    }
-
     @CoreMethod(names = "singleton_class")
     public abstract static class SingletonClassMethodNode extends CoreMethodArrayArgumentsNode {
 
