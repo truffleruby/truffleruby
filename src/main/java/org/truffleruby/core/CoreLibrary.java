@@ -272,8 +272,6 @@ public final class CoreLibrary {
     @TruffleBoundary
     private static SourceSection initCoreSourceSection() {
         final Source.SourceBuilder builder = Source.newBuilder(TruffleRuby.LANGUAGE_ID, "", "(core)");
-        // Set the MIME type explicitly like for other Ruby Sources, otherwise Source#getMimeType() is null
-        builder.mimeType(RubyLanguage.MIME_TYPE);
         builder.internal(false);
 
         final Source source;
@@ -825,7 +823,6 @@ public final class CoreLibrary {
 
         Source source = Source
                 .newBuilder(TruffleRuby.LANGUAGE_ID, new ByteBasedCharSequence(sourceTString), coreSourceName)
-                .mimeType(RubyLanguage.MIME_TYPE)
                 .internal(language.options.CORE_AS_INTERNAL)
                 .build();
 

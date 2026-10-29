@@ -1489,7 +1489,6 @@ public abstract class TruffleDebugNodes {
             }
 
             Source source = Source.newBuilder(TruffleRuby.LANGUAGE_ID, sourceCodeString, "parse_public.rb")
-                    .mimeType(RubyLanguage.MIME_TYPE)
                     .build();
             var env = getContext().getEnv();
 

@@ -56,7 +56,6 @@ public final class MainLoader {
 
         final Source source = Source
                 .newBuilder(TruffleRuby.LANGUAGE_ID, new ByteBasedCharSequence(sourceTString), path)
-                .mimeType(RubyLanguage.MIME_TYPE)
                 .option("ruby.MainScript", "true")
                 .build();
         return new RubySource(source, path, sourceTString);

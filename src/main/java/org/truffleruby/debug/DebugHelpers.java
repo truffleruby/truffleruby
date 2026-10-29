@@ -87,7 +87,6 @@ public abstract class DebugHelpers {
         }
 
         final Source source = Source.newBuilder(TruffleRuby.LANGUAGE_ID, code, "debug-eval")
-                .mimeType(RubyLanguage.MIME_TYPE)
                 .build();
 
         final RootCallTarget callTarget = context
