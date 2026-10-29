@@ -60,6 +60,8 @@ public final class RubyTracePointEvent extends TracePointObject {
     Object self;
     /** The InternalMethod of the frame, or null for events without a frame like :thread_begin */
     InternalMethod method;
+    /** The return value for :return events, nil otherwise */
+    Object returnValue = Nil.INSTANCE;
     /** Whether the TracePoint block for this event is still running, the event data is only accessible then */
     boolean active = true;
 
@@ -93,6 +95,7 @@ public final class RubyTracePointEvent extends TracePointObject {
         binding = Nil.INSTANCE;
         self = Nil.INSTANCE;
         method = null;
+        returnValue = Nil.INSTANCE;
     }
 
     @Override

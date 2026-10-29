@@ -73,9 +73,15 @@ public abstract class TracePointEvent {
             if (tagClass == TraceManager.CCallTag.class) {
                 language.startTracingCCalls();
             }
-            this.eventBinding = context.getInstrumenter().attachExecutionEventFactory(
-                    sourceSectionFilter,
-                    eventContext -> new TracePointEventNode(context, language, eventContext, tracePoint, eventSymbol));
+            final ExecutionEventNodeFactory factory;
+            if (tagClass == TraceManager.ReturnTag.class) {
+                factory = eventContext -> new TracePointReturnEventNode(context, language, eventContext, tracePoint,
+                        eventSymbol);
+            } else {
+                factory = eventContext -> new TracePointEventNode(context, language, eventContext, tracePoint,
+                        eventSymbol);
+            }
+            this.eventBinding = context.getInstrumenter().attachExecutionEventFactory(sourceSectionFilter, factory);
             return true;
         }
 

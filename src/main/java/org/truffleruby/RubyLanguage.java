@@ -174,6 +174,7 @@ import static org.truffleruby.language.RubyBaseNode.nil;
         CoverageManager.LineTag.class,
         TraceManager.CallTag.class,
         TraceManager.CCallTag.class,
+        TraceManager.ReturnTag.class,
         TraceManager.LineTag.class,
         TraceManager.NeverTag.class,
         StandardTags.RootTag.class,

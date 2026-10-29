@@ -30,6 +30,7 @@ public class TraceBaseEventNode extends ExecutionEventNode {
 
     @CompilationFinal private RubyString file;
     @CompilationFinal private int line;
+    @CompilationFinal private int endLine;
 
     @Child private CallBlockNode yieldNode;
 
@@ -54,6 +55,14 @@ public class TraceBaseEventNode extends ExecutionEventNode {
             line = language.getStartLineAdjusted(eventContext.getInstrumentedSourceSection());
         }
         return line;
+    }
+
+    protected int getEndLine() {
+        if (endLine == 0) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            endLine = language.getEndLineAdjusted(eventContext.getInstrumentedSourceSection());
+        }
+        return endLine;
     }
 
     protected Object callBlock(RubyProc block, Object... arguments) {
