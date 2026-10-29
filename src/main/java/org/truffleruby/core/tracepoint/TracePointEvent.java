@@ -13,12 +13,14 @@ package org.truffleruby.core.tracepoint;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.instrumentation.EventBinding;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
+import com.oracle.truffle.api.instrumentation.SourceFilter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.api.instrumentation.Tag;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.kernel.TraceManager;
 import org.truffleruby.core.symbol.RubySymbol;
+import org.truffleruby.shared.TruffleRuby;
 
 /** One event of a TracePoint, either implemented with Truffle instrumentation ({@link Instrumented}) or by registering
  * the TracePoint in {@link SlowPathTracePoints} ({@link SlowPath}). */
@@ -64,7 +66,7 @@ public abstract class TracePointEvent {
 
             final SourceSectionFilter sourceSectionFilter = SourceSectionFilter
                     .newBuilder()
-                    .mimeTypeIs(RubyLanguage.MIME_TYPES)
+                    .sourceFilter(SourceFilter.newBuilder().languageIs(TruffleRuby.LANGUAGE_ID).build())
                     .tagIs(tagClass)
                     .includeInternal(false)
                     .build();

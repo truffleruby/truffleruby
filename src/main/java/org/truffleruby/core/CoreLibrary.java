@@ -272,9 +272,7 @@ public final class CoreLibrary {
     @TruffleBoundary
     private static SourceSection initCoreSourceSection() {
         final Source.SourceBuilder builder = Source.newBuilder(TruffleRuby.LANGUAGE_ID, "", "(core)");
-        // The MIME type must be set explicitly, otherwise Source#getMimeType() is null and
-        // SourceSectionFilter#mimeTypeIs() would exclude Java core methods from instrumentation
-        // (e.g. the :call TracePoint event would not trigger for them).
+        // Set the MIME type explicitly like for other Ruby Sources, otherwise Source#getMimeType() is null
         builder.mimeType(RubyLanguage.MIME_TYPE);
         builder.internal(false);
 

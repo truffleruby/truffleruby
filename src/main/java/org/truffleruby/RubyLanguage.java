@@ -196,9 +196,6 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     }
 
     public static final String MIME_TYPE = "application/x-ruby";
-    /** To avoid some String[] allocations */
-    public static final String[] MIME_TYPES = { MIME_TYPE };
-
 
     public static final String CEXT_EXTENSION = Platform.CEXT_SUFFIX;
 
