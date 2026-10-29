@@ -1,0 +1,4 @@
+fails:Array#| does not call #hash for small arrays
+fails:Array#| uses #hash when the combined size exceeds the small array limit
+fails:Array#union does not call #hash for small arrays
+fails:Array#union uses #hash when the combined size exceeds the small array limit

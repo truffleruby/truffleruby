@@ -1,0 +1,3 @@
+fails:UNIXServer#sysaccept with Fiber scheduler calls the scheduler's #io_wait with IO::READABLE and no timeout
+fails:UNIXServer#sysaccept with Fiber scheduler returns the file descriptor of the connection once #io_wait reports the server readable
+fails:UNIXServer#sysaccept with Fiber scheduler does not call the scheduler if the fiber is blocking

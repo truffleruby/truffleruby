@@ -1,0 +1,1 @@
+fails:BasicSocket#getsockopt using Socket::SO_ERROR returns the error of a refused non-blocking connect that IO.select reported as writable

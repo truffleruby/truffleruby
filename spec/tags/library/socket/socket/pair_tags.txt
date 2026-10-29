@@ -1,0 +1,4 @@
+fails:Socket.pair yields the sockets, returns the block's value and closes them afterwards
+fails:Socket.pair closes the sockets when the block raises
+fails:Socket.pair does not raise when the block closes the sockets itself
+fails:Socket.pair ignores a StandardError from closing a socket and still closes the other one

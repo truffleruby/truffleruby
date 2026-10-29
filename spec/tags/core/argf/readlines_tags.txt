@@ -1,0 +1,5 @@
+fails:ARGF.readlines reads all lines of all files without the trailing separator when passed chomp
+fails:ARGF.readlines reads all limited sections of all files when passed a separator and a limit
+fails:ARGF.readlines when reading $stdin and $stdin is not an IO calls readlines on $stdin
+fails:ARGF.readlines when reading $stdin and $stdin is not an IO passes the separator, limit and keywords to $stdin.readlines
+fails:ARGF.readlines when reading $stdin and $stdin is not an IO raises NoMethodError when $stdin has no public readlines

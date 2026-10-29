@@ -1,0 +1,7 @@
+fails:Coverage.state returns :idle if coverage is not set up
+fails:Coverage.state returns :suspended if coverage is set up but not started
+fails:Coverage.state returns :running if coverage is started
+fails:Coverage.state returns :running if coverage is set up and resumed
+fails:Coverage.state returns :suspended if coverage is suspended
+fails:Coverage.state returns :idle if coverage was started and stopped
+fails:Coverage.state returns :running if the result was taken without stopping

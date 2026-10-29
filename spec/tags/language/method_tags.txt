@@ -3,3 +3,4 @@ fails:warning about not used block argument warns when passing a block argument 
 fails:warning about not used block argument warns only once per call site
 fails:warning about not used block argument can be disabled with :strict_unused_block warning category
 fails:warning about not used block argument can be enabled with :strict_unused_block = true warning category in not verbose mode
+fails:An endless method definition with a setter name is reported as a parse error by Ripper

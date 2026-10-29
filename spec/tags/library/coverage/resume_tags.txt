@@ -1,0 +1,7 @@
+fails:Coverage.resume returns nil
+fails:Coverage.resume starts the coverage measurement that was set up
+fails:Coverage.resume raises a RuntimeError when the coverage measurement is not set up
+fails:Coverage.resume raises a RuntimeError when the coverage measurement is already running
+fails:Coverage.resume counts lines again after the coverage measurement was suspended
+fails:Coverage.resume counts branches again after the coverage measurement was suspended
+fails:Coverage.resume counts method calls again after the coverage measurement was suspended

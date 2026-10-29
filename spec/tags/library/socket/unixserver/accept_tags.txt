@@ -1,2 +1,6 @@
 fails:UNIXServer#accept with a client with data available the returned UNIXSocket is set to nonblocking
 fails:UNIXServer#accept with a client with data available the returned UNIXSocket is set to close on exec
+fails:UNIXServer#accept with Fiber scheduler calls the scheduler's #io_wait with IO::READABLE and no timeout
+fails:UNIXServer#accept with Fiber scheduler returns the connection once #io_wait reports the server readable
+fails:UNIXServer#accept with Fiber scheduler accepts a pending connection without calling #io_wait
+fails:UNIXServer#accept with Fiber scheduler does not call the scheduler if the fiber is blocking

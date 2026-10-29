@@ -1,2 +1,5 @@
 fails:Module#set_temporary_name can update the name when assigned to a constant
 fails:Module#set_temporary_name also updates a name of a nested module
+fails:Module#set_temporary_name updates the name of a nested module each time it is reassigned
+fails:Module#set_temporary_name names a nested module from the temporary name alone when nested into an anonymous module
+fails:Module#set_temporary_name updates the names of nested modules that refer back to the module

@@ -1,0 +1,7 @@
+fails:Coverage.setup returns nil
+fails:Coverage.setup does not start the coverage measurement
+fails:Coverage.setup raises a RuntimeError when the coverage measurement is already set up
+fails:Coverage.setup accepts :all optional argument
+fails:Coverage.setup does not count lines until the coverage measurement is resumed
+fails:Coverage.setup does not count branches until the coverage measurement is resumed
+fails:Coverage.setup does not count method calls until the coverage measurement is resumed

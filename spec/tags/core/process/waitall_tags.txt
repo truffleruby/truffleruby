@@ -1,1 +1,2 @@
 slow:Process.waitall waits for all children and returns an array of pid/status pairs
+fails:Process.waitall with Fiber scheduler waits for each child through the scheduler

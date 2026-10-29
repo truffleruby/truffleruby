@@ -1,0 +1,4 @@
+fails:Thread::Backtrace::Location#source_range returns the precise range for top-level ::constant &&= assignments failing while reading
+fails:Thread::Backtrace::Location#source_range returns the precise range for constant &&= assignments failing while reading
+fails:Thread::Backtrace::Location#source_range returns the precise range for constant &&= assignments failing on the namespace
+fails:Thread::Backtrace::Location#source_range returns the precise range for for loops with an attribute target

@@ -3,3 +3,5 @@ slow:IO#write on STDOUT raises SignalException SIGPIPE if the stream is closed i
 fails:IO.write warns about deprecation given a path with a pipe
 fails:IO#write on a file writes binary data with newline conversion if no encoding is given
 fails:IO#write on a file writes binary data with newline conversion if encoding is ASCII-8BIT
+fails:IO#write with Fiber scheduler waits for the IO to become writable through the scheduler
+fails:IO#write with Fiber scheduler lets another fiber write to the IO while one waits for it to become writable
