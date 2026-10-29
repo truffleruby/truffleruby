@@ -54,8 +54,8 @@ public abstract class RubyNode extends RubyBaseNodeWithExecute implements Instru
 
     private static final byte FLAG_NEWLINE = 0;       // 1<<0 = 1
     private static final byte FLAG_COVERAGE_LINE = 1; // 1<<1 = 2
-    private static final byte FLAG_CALL = 2;          // 1<<2 = 4
-    private static final byte FLAG_ROOT = 3;          // 1<<3 = 8
+    private static final byte FLAG_ROOT = 2;          // 1<<2 = 4
+    private static final byte FLAG_CALL = 3;          // 1<<3 = 8
     private static final byte FLAG_C_CALL = 4;        // 1<<4 = 16
 
     protected static final int NO_SOURCE = -1;

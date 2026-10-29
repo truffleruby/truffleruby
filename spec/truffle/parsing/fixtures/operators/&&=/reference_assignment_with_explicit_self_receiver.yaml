@@ -10,7 +10,7 @@ ruby: |
 ast: |
   SequenceNode
       attributes:
-          flags = 8
+          flags = 4
           sourceCharIndex = 0
           sourceLength = 19
       children:
