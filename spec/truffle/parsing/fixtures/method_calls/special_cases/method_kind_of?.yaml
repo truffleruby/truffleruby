@@ -6,7 +6,7 @@ ruby: |
 ast: |
   InlinedKindOfNodeGen
       attributes:
-          assumptions = [Assumption(valid, name=no :call TracePoint is enabled)]
+          assumptions = [Assumption(valid, name=no :c_call TracePoint is enabled)]
           flags = 0
           parameters = RubyCallNodeParameters{methodName='kind_of?', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=false, isVCall=false, isSafeNavigation=false, isAttrAssign=false}
           sourceCharIndex = 0

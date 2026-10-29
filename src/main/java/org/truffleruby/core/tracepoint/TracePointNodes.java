@@ -20,14 +20,12 @@ import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveNode;
 import org.truffleruby.core.array.ArrayToObjectArrayNode;
 import org.truffleruby.core.array.RubyArray;
-import org.truffleruby.core.binding.RubyBinding;
 import org.truffleruby.core.kernel.TraceManager;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.Nil;
 import org.truffleruby.annotations.Visibility;
-import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.methods.InternalMethod;
 
@@ -108,6 +106,8 @@ public abstract class TracePointNodes {
                 return new TracePointEvent.SlowPath(eventSymbol);
             } else if (eventSymbol == language.coreSymbols.CALL) {
                 return new TracePointEvent.Instrumented(TraceManager.CallTag.class, eventSymbol);
+            } else if (eventSymbol == language.coreSymbols.C_CALL) {
+                return new TracePointEvent.Instrumented(TraceManager.CCallTag.class, eventSymbol);
             } else if (eventSymbol == language.coreSymbols.NEVER) {
                 return new TracePointEvent.Instrumented(TraceManager.NeverTag.class, eventSymbol);
             } else {
@@ -231,12 +231,8 @@ public abstract class TracePointNodes {
     public abstract static class MethodIDNode extends TracePointCoreNode {
         @Specialization
         Object methodId(RubyTracePoint tracePoint) {
-            final Object binding = getTracePointState().binding;
-            if (binding == nil) {
-                return nil;
-            }
-            final InternalMethod method = RubyArguments.getMethod(((RubyBinding) binding).getFrame());
-            if (method.getSharedMethodInfo().isModuleBody()) {
+            final InternalMethod method = getTracePointState().method;
+            if (method == null || method.getSharedMethodInfo().isModuleBody()) {
                 return nil; // like CRuby, module bodies and the top-level have no method
             }
             return getSymbol(method.getName());
@@ -247,12 +243,8 @@ public abstract class TracePointNodes {
     public abstract static class DefinedClassNode extends TracePointCoreNode {
         @Specialization
         Object definedClass(RubyTracePoint tracePoint) {
-            final Object binding = getTracePointState().binding;
-            if (binding == nil) {
-                return nil;
-            }
-            final InternalMethod method = RubyArguments.getMethod(((RubyBinding) binding).getFrame());
-            if (method.getSharedMethodInfo().isModuleBody()) {
+            final InternalMethod method = getTracePointState().method;
+            if (method == null || method.getSharedMethodInfo().isModuleBody()) {
                 return nil; // like CRuby, module bodies and the top-level have no method
             }
             return method.getDeclaringModule();

@@ -16,7 +16,6 @@ import java.util.function.Predicate;
 import org.truffleruby.RubyContext;
 import org.truffleruby.annotations.SuppressFBWarnings;
 import org.truffleruby.collections.Memo;
-import org.truffleruby.core.CoreLibrary;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.backtrace.Backtrace;
@@ -140,6 +139,16 @@ public final class CallStackManager {
         });
     }
 
+    /** The SourceSection of the call site in the closest caller frame which has an available SourceSection, e.g. for
+     * the :c_call TracePoint event */
+    @TruffleBoundary
+    public SourceSection getCallerSourceSection() {
+        return iterateFrames(1, frameInstance -> {
+            final Node callNode = frameInstance.getCallNode();
+            return callNode != null && BacktraceFormatter.isAvailable(callNode.getEncapsulatingSourceSection());
+        }, frameInstance -> frameInstance.getCallNode().getEncapsulatingSourceSection());
+    }
+
     // Internals
 
     private Frame getCallerFrame(Predicate<FrameInstance> filter, FrameAccess frameAccess) {
@@ -203,8 +212,7 @@ public final class CallStackManager {
     }
 
     public static boolean isJavaCore(InternalMethod method) {
-        return method != null &&
-                method.getSharedMethodInfo().getSourceSection() == CoreLibrary.JAVA_CORE_SOURCE_SECTION;
+        return method != null && method.getSharedMethodInfo().isJavaCore();
     }
 
     // Backtraces

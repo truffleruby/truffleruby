@@ -70,8 +70,8 @@ public abstract class TracePointEvent {
                     .tagIs(tagClass)
                     .includeInternal(false)
                     .build();
-            if (tagClass == TraceManager.CallTag.class) {
-                language.startTracingCalls();
+            if (tagClass == TraceManager.CCallTag.class) {
+                language.startTracingCCalls();
             }
             this.eventBinding = context.getInstrumenter().attachExecutionEventFactory(
                     sourceSectionFilter,
@@ -85,8 +85,8 @@ public abstract class TracePointEvent {
             if (eventBinding != null) {
                 this.eventBinding.dispose();
                 this.eventBinding = null;
-                if (tagClass == TraceManager.CallTag.class) {
-                    context.getLanguageSlow().stopTracingCalls();
+                if (tagClass == TraceManager.CCallTag.class) {
+                    context.getLanguageSlow().stopTracingCCalls();
                 }
                 return true;
             } else {

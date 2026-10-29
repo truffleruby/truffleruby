@@ -12,6 +12,7 @@ package org.truffleruby.language.methods;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import org.truffleruby.RubyLanguage;
+import org.truffleruby.core.CoreLibrary;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.core.proc.RubyProc;
@@ -154,6 +155,12 @@ public final class SharedMethodInfo implements DetailedInspectingSupport {
 
     public SourceSection getSourceSection() {
         return sourceSection;
+    }
+
+    /** Whether the SourceSection is {@link CoreLibrary#JAVA_CORE_SOURCE_SECTION}, i.e. this is a core method defined in
+     * Java or an internal RootNode */
+    public boolean isJavaCore() {
+        return sourceSection == CoreLibrary.JAVA_CORE_SOURCE_SECTION;
     }
 
     public LexicalScope getStaticLexicalScope() {

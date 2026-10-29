@@ -19,6 +19,7 @@ import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.nodes.Node;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
+import org.truffleruby.annotations.CoreMethod;
 import org.truffleruby.core.CoreLibrary;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.method.MethodEntry;
@@ -54,9 +55,15 @@ import org.truffleruby.language.methods.InternalMethod;
  * <li>Otherwise, we need to do a method lookup and verify the method that would be called is the standard definition we
  * expect.</li>
  * <p>
- * Every specialization should use {@code assumptions = "assumptions",} to check at least the tracing Assumption. When
- * adding a new node, it is a good idea to add a debug print in the non-inlined method and try calling it with and
- * without a {@code set_trace_func proc{};} before to see if the inlined version is used correctly. */
+ * Every specialization should use {@code assumptions = "assumptions",} to check at least the tracing Assumption
+ * ({@link RubyLanguage#cCallTracingUnusedAssumption}). When adding a new node, it is a good idea to add a debug print
+ * in the non-inlined method and try calling it with and without a {@code set_trace_func proc{};} before to see if the
+ * inlined version is used correctly.
+ * <p>
+ * IMPORTANT: Inlined operations may only target core methods defined in Java (marked by {@link CoreMethod}), never core
+ * methods defined in Ruby. The tracing Assumption is only invalidated for :c_call TracePoints, which is the event
+ * triggered by methods defined in Java, and not for :call TracePoints. An inlined call to a method defined in Ruby
+ * would therefore not trigger its :call event. */
 public final class CoreMethodAssumptions {
 
     final RubyLanguage language;

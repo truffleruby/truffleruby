@@ -59,6 +59,8 @@ public final class CoreMethods {
         if (method == null || method.isUndefined()) {
             throw new AssertionError();
         }
+        // Inlined operations may only target methods defined in Java, see CoreMethodAssumptions
+        assert method.getSharedMethodInfo().isJavaCore() : method;
         return method;
     }
 

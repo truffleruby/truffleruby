@@ -19,7 +19,7 @@ class TracePoint
     events = events.map { |event| Primitive.convert_type event, Symbol, :to_sym }
     events.each do |event|
       case event
-      when :line, :class, :end, :call, :fiber_switch, :thread_begin, :thread_end, :never
+      when :line, :class, :end, :call, :c_call, :fiber_switch, :thread_begin, :thread_end, :never
         # Supported event, keep it and pass it below
       else
         raise ArgumentError, "unknown event: #{event}"
@@ -34,7 +34,7 @@ class TracePoint
   def inspect
     if Primitive.trace_point_inside_proc?
       case event
-      when :call
+      when :call, :c_call
         return "#<TracePoint:#{event} '#{method_id}' #{path}:#{lineno}>"
       when :thread_begin, :thread_end
         return "#<TracePoint:#{event} #{self.self.inspect}>"

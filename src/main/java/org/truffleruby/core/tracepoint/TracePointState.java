@@ -12,6 +12,7 @@ package org.truffleruby.core.tracepoint;
 
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.Nil;
+import org.truffleruby.language.methods.InternalMethod;
 
 public final class TracePointState {
 
@@ -23,5 +24,7 @@ public final class TracePointState {
     /** The RubyBinding, or nil for events without a frame like :thread_begin */
     Object binding = Nil.INSTANCE;
     Object self = Nil.INSTANCE;
+    /** The InternalMethod of the frame, or null for events without a frame like :thread_begin */
+    InternalMethod method = null;
 
 }

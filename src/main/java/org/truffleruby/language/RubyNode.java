@@ -56,6 +56,7 @@ public abstract class RubyNode extends RubyBaseNodeWithExecute implements Instru
     private static final byte FLAG_COVERAGE_LINE = 1; // 1<<1 = 2
     private static final byte FLAG_CALL = 2;          // 1<<2 = 4
     private static final byte FLAG_ROOT = 3;          // 1<<3 = 8
+    private static final byte FLAG_C_CALL = 4;        // 1<<4 = 16
 
     protected static final int NO_SOURCE = -1;
     private static final int UNAVAILABLE_SOURCE_SECTION_LENGTH = -1;
@@ -184,6 +185,10 @@ public abstract class RubyNode extends RubyBaseNodeWithExecute implements Instru
         setFlag(FLAG_CALL);
     }
 
+    public void unsafeSetIsCCall() {
+        setFlag(FLAG_C_CALL);
+    }
+
     public void unsafeSetIsRoot() {
         setFlag(FLAG_ROOT);
     }
@@ -191,9 +196,13 @@ public abstract class RubyNode extends RubyBaseNodeWithExecute implements Instru
     @Override
     public boolean hasTag(Class<? extends Tag> tag) {
         byte flags = getFlags();
-        // NOTE: TraceManager.CallTag for the :call TracePoint event is in the callee like in MRI
+        // NOTE: TraceManager.CallTag/CCallTag for the :call/:c_call TracePoint events are in the callee like in MRI
         if (tag == TraceManager.CallTag.class) {
             return isTag(flags, FLAG_CALL);
+        }
+
+        if (tag == TraceManager.CCallTag.class) {
+            return isTag(flags, FLAG_C_CALL);
         }
 
         if (tag == TraceManager.LineTag.class || tag == StandardTags.StatementTag.class) {
