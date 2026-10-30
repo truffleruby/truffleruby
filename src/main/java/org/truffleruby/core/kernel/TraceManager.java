@@ -27,8 +27,4 @@ public abstract class TraceManager {
      * Ruby */
     public static final class ReturnTag extends Tag {
     }
-
-    /** A tag which applies to no Node, but is useful to handle not-yet-implemented TracePoint events. */
-    public static final class NeverTag extends Tag {
-    }
 }

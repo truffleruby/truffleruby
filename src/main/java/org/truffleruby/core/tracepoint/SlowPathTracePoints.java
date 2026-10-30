@@ -97,6 +97,8 @@ public final class SlowPathTracePoints {
     public final ActiveTracePoints fiberSwitchTracePoints = new ActiveTracePoints();
     public final ActiveTracePoints threadBeginTracePoints = new ActiveTracePoints();
     public final ActiveTracePoints threadEndTracePoints = new ActiveTracePoints();
+    /** For the :never event, which is used for not-yet-implemented events and is never triggered */
+    public final ActiveTracePoints neverTracePoints = new ActiveTracePoints();
 
     public SlowPathTracePoints(RubyContext context) {
         this.context = context;
@@ -115,6 +117,8 @@ public final class SlowPathTracePoints {
             return threadBeginTracePoints;
         } else if (event == language.coreSymbols.THREAD_END) {
             return threadEndTracePoints;
+        } else if (event == language.coreSymbols.NEVER) {
+            return neverTracePoints;
         } else {
             throw CompilerDirectives.shouldNotReachHere(event.getString());
         }

@@ -104,7 +104,8 @@ public abstract class TracePointNodes {
                     eventSymbol == language.coreSymbols.END ||
                     eventSymbol == language.coreSymbols.FIBER_SWITCH ||
                     eventSymbol == language.coreSymbols.THREAD_BEGIN ||
-                    eventSymbol == language.coreSymbols.THREAD_END) {
+                    eventSymbol == language.coreSymbols.THREAD_END ||
+                    eventSymbol == language.coreSymbols.NEVER) {
                 return new TracePointEvent.SlowPath(eventSymbol);
             } else if (eventSymbol == language.coreSymbols.CALL) {
                 return new TracePointEvent.Instrumented(TraceManager.CallTag.class, eventSymbol);
@@ -112,8 +113,6 @@ public abstract class TracePointNodes {
                 return new TracePointEvent.Instrumented(TraceManager.CCallTag.class, eventSymbol);
             } else if (eventSymbol == language.coreSymbols.RETURN) {
                 return new TracePointEvent.Instrumented(TraceManager.ReturnTag.class, eventSymbol);
-            } else if (eventSymbol == language.coreSymbols.NEVER) {
-                return new TracePointEvent.Instrumented(TraceManager.NeverTag.class, eventSymbol);
             } else {
                 throw new UnsupportedOperationException(eventSymbol.getString());
             }
