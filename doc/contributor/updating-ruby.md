@@ -95,7 +95,7 @@ reference branches (in the TruffleRuby repository) that include unmodified MRI s
 Check out the version of Ruby you want to create the branch for in `../ruby`, e.g.:
 
 ```
-git clone --branch v4.0.2 https://github.com/ruby/ruby.git ../ruby
+git clone --branch v4.0.9 https://github.com/ruby/ruby.git ../ruby-4.0.9
 ```
 
 Then create the reference branch in the TruffleRuby repository
