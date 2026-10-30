@@ -14,11 +14,15 @@ module Bundler
     require_relative "resolver/root"
     require_relative "resolver/strategy"
 
+    attr_reader :cooldown_skipped
+
     def initialize(base, gem_version_promoter, most_specific_locked_platform = nil)
       @source_requirements = base.source_requirements
       @base = base
       @gem_version_promoter = gem_version_promoter
       @most_specific_locked_platform = most_specific_locked_platform
+      @cooldown_skipped = []
+      @cooldown_skipped_specs = {}
     end
 
     def start
@@ -35,6 +39,8 @@ module Bundler
     def setup_solver
       root = Resolver::Root.new(name_for_explicit_dependency_source)
       root_version = Resolver::Candidate.new(0)
+
+      @cooldown_skipped_specs = {}
 
       @all_specs = Hash.new do |specs, name|
         source = source_for(name)
@@ -80,7 +86,9 @@ module Bundler
       solver = PubGrub::VersionSolver.new(source: self, root: root, strategy: Strategy.new(self), logger: logger)
       result = solver.solve
       resolved_specs = result.flat_map {|package, version| version.to_specs(package, @most_specific_locked_platform) }
-      SpecSet.new(resolved_specs).specs_with_additional_variants_from(@base.locked_specs)
+      spec_set = SpecSet.new(resolved_specs).specs_with_additional_variants_from(@base.locked_specs)
+      @cooldown_skipped = cooldown_skipped_summary(spec_set)
+      spec_set
     rescue PubGrub::SolveFailure => e
       incompatibility = e.incompatibility
 
@@ -184,6 +192,9 @@ module Bundler
 
         platforms_explanation = specs_matching_other_platforms.any? ? " for any resolution platforms (#{package.platforms.join(", ")})" : ""
         custom_explanation = "#{constraint} could not be found in #{repository_for(package)}#{platforms_explanation}"
+        if hint = cooldown_hint(specs_matching_other_platforms)
+          custom_explanation += " (#{hint})"
+        end
 
         label = "#{name} (#{constraint_string})"
         extended_explanation = other_specs_matching_message(specs_matching_other_platforms, label) if specs_matching_other_platforms.any?
@@ -353,7 +364,29 @@ module Bundler
         message << "\n#{other_specs_matching_message(specs, matching_part)}"
       end
 
+      if hint = cooldown_hint(specs_matching_requirement)
+        message << "\n\n#{hint}."
+      end
+
+      if specs_matching_requirement.any? && (hint = platform_mismatch_hint)
+        message << "\n\n#{hint}"
+      end
+
       raise GemNotFound, message
+    end
+
+    def platform_mismatch_hint
+      locked_platforms = Bundler.locked_gems&.platforms
+      return unless locked_platforms
+
+      local_platform = Bundler.local_platform
+      return if locked_platforms.include?(local_platform)
+      return if locked_platforms.any? {|p| p == Gem::Platform::RUBY }
+
+      "Your current platform (#{local_platform}) is not included in the lockfile's platforms (#{locked_platforms.join(", ")}). " \
+        "Add the current platform to the lockfile with\n`bundle lock --add-platform #{local_platform}` and try again."
+    rescue GemfileNotFound
+      nil
     end
 
     def filtered_versions_for(package)
@@ -378,13 +411,112 @@ module Bundler
     end
 
     def filter_specs(specs, package)
-      filter_remote_specs(filter_prereleases(specs, package), package)
+      filter_remote_specs(filter_cooldown(filter_prereleases(specs, package)), package)
     end
 
     def filter_prereleases(specs, package)
       return specs unless package.ignores_prereleases? && specs.size > 1
 
       specs.reject {|s| s.version.prerelease? }
+    end
+
+    def filter_cooldown(specs)
+      return specs if specs.empty?
+      excluded_versions = cooldown_excluded_versions(specs)
+      return specs if excluded_versions.empty?
+      specs.reject {|s| excluded_versions.include?([s.name, s.version]) }
+    end
+
+    def cooldown_excluded_versions(specs)
+      excluded = {}
+      specs.each do |spec|
+        next unless cooldown_excluded?(spec)
+        excluded[[spec.name, spec.version]] = true
+        (@cooldown_skipped_specs ||= {})[[spec.name, spec.version]] ||= spec
+      end
+      excluded
+    end
+
+    def cooldown_hint(specs)
+      excluded_versions = cooldown_excluded_versions(specs)
+      return nil if excluded_versions.empty?
+      "#{excluded_versions.size} version#{"s" if excluded_versions.size > 1} excluded by the cooldown setting; pass `--cooldown 0` to bypass"
+    end
+
+    def cooldown_excluded?(spec)
+      return false unless spec.respond_to?(:created_at) && spec.created_at
+      return false unless spec.respond_to?(:remote) && spec.remote
+      return false if locked_by_lockfile?(spec)
+      days = spec.remote.effective_cooldown
+      return false if days.nil? || days <= 0
+      (cooldown_now - spec.created_at) < (days * 86_400)
+    end
+
+    # A version already written to the lockfile has been adopted, and cooldown
+    # only governs the adoption of *new* versions, so it must never retract one
+    # the lockfile already pins. Keying this off the locked specs rather than the
+    # prevent-downgrade floor matters because that floor is absent on resolutions
+    # that re-pick a gem from scratch: the auxiliary full update run to compute
+    # `--update` targets, and the from-scratch retries after a conflict unlocks a
+    # gem. In those passes the locked version is the only candidate, so filtering
+    # it out makes an unrelated operation impossible whenever every published
+    # version matching the requirement sits inside the cooldown window.
+    #
+    # Gems named on a `bundle update GEM` command are the exception: the user
+    # asked to move them, so they stay subject to cooldown and a locked-but-fresh
+    # release is pushed back to an older one (or fails loudly when none exists).
+    def locked_by_lockfile?(spec)
+      return false unless defined?(@base) && @base
+      return false if @base.explicitly_unlocked?(spec.name)
+      @base.locked_specs[spec.name].any? {|locked| locked.version == spec.version }
+    end
+
+    def cooldown_now
+      @cooldown_now ||= Time.now
+    end
+
+    # Reports, per gem, the newest version that cooldown kept out of a
+    # successful resolution. A skipped version is only worth reporting when it
+    # is newer than the resolved version and satisfies every requirement the
+    # final resolution places on that gem, so we don't claim a version the
+    # resolver could never have picked anyway.
+    def cooldown_skipped_summary(spec_set)
+      return [] if @cooldown_skipped_specs.empty?
+
+      requirements = Hash.new {|h, name| h[name] = [] }
+      @requirements.each {|dep| requirements[dep.name] << dep.requirement }
+      spec_set.each do |spec|
+        spec.dependencies.each {|dep| requirements[dep.name] << dep.requirement }
+      end
+
+      resolved_versions = {}
+      spec_set.each do |spec|
+        version = resolved_versions[spec.name]
+        resolved_versions[spec.name] = spec.version if version.nil? || spec.version > version
+      end
+
+      newest_skipped = {}
+      @cooldown_skipped_specs.each do |(name, version), spec|
+        resolved = resolved_versions[name]
+        next unless resolved && version > resolved
+        next unless requirements[name].all? {|req| req.satisfied_by?(version) }
+        newest = newest_skipped[name]
+        newest_skipped[name] = spec if newest.nil? || version > newest.version
+      end
+
+      newest_skipped.values.sort_by(&:name).map do |spec|
+        {
+          name: spec.name,
+          version: spec.version,
+          resolved: resolved_versions[spec.name],
+          available_in_days: remaining_cooldown_days(spec),
+        }
+      end
+    end
+
+    def remaining_cooldown_days(spec)
+      remaining = (spec.remote.effective_cooldown * 86_400) - (cooldown_now - spec.created_at)
+      [(remaining / 86_400.0).ceil, 1].max
     end
 
     def filter_remote_specs(specs, package)

@@ -158,6 +158,9 @@ module Bundler
       case config[:ci]
       when "github"
         templates.merge!("github/workflows/main.yml.tt" => ".github/workflows/main.yml")
+        if extension == "rust"
+          templates.merge!("github/workflows/build-gems.yml.tt" => ".github/workflows/build-gems.yml")
+        end
         config[:ignore_paths] << ".github/"
       when "gitlab"
         templates.merge!("gitlab-ci.yml.tt" => ".gitlab-ci.yml")
@@ -228,6 +231,7 @@ module Bundler
         templates.merge!(
           "Cargo.toml.tt" => "Cargo.toml",
           "ext/newgem/Cargo.toml.tt" => "ext/#{name}/Cargo.toml",
+          "ext/newgem/build.rs.tt" => "ext/#{name}/build.rs",
           "ext/newgem/extconf-rust.rb.tt" => "ext/#{name}/extconf.rb",
           "ext/newgem/src/lib.rs.tt" => "ext/#{name}/src/lib.rs",
         )
@@ -252,8 +256,7 @@ module Bundler
 
       if use_git
         Bundler.ui.info "\nInitializing git repo in #{target}"
-        require "shellwords"
-        `git init #{target.to_s.shellescape}`
+        IO.popen(["git", "init", target.to_s], &:read)
 
         config[:git_default_branch] = File.read("#{target}/.git/HEAD").split("/").last.chomp
       end
@@ -284,7 +287,7 @@ module Bundler
       open_editor(options["edit"], target.join("#{name}.gemspec")) if options[:edit]
 
       Bundler.ui.info "\nGem '#{name}' was successfully created. " \
-        "For more information on making a RubyGem visit https://bundler.io/guides/creating_gem.html"
+        "For more information on making a RubyGem visit https://guides.rubygems.org/make-your-own-gem/"
     end
 
     private
@@ -433,6 +436,10 @@ module Bundler
       if /^\d/.match?(name)
         Bundler.ui.error "Invalid gem name #{name} Please give a name which does not start with numbers."
         exit 1
+      end
+
+      if /[A-Z]/.match?(name)
+        Bundler.ui.warn "Gem names with capital letters are not recommended. Please use only lowercase letters, numbers, and hyphens."
       end
 
       constant_name = constant_array.join("::")

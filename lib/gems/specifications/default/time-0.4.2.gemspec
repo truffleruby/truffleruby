@@ -10,14 +10,14 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Tanaka Akira".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-03-17"
+  s.date = "2026-10-23"
   s.description = "Extends the Time class with methods for parsing and conversion.".freeze
   s.email = ["akr@fsij.org".freeze]
   s.files = ["lib/time.rb".freeze]
   s.homepage = "https://github.com/ruby/time".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.4.0".freeze)
-  s.rubygems_version = "4.0.6".freeze
+  s.rubygems_version = "4.0.20".freeze
   s.summary = "Extends the Time class with methods for parsing and conversion.".freeze
 
   s.specification_version = 4

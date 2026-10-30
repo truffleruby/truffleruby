@@ -1,6 +1,0 @@
-{
-  global:
-    Init_openssl;
-    rb_tr_abi_version;
-  local: *;
-};

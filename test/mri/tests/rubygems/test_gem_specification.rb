@@ -991,12 +991,10 @@ dependencies: []
     save_gemspec("a-1", "1", dir_standard_specs) {|s| s.name = "a" }
     save_gemspec("b-1", "1", dir_standard_specs) {|s| s.name = "b" }
 
-    # TODO (nirvdrum 2025-11-23) Why don't we alias the method in `TruffleRuby::ConcurrentMap`?
-    # TruffleRuby: TruffleRuby::ConcurrentMap doesn't have a #length method, so use #size instead
     assert_equal ["a-1"], Gem::Specification.stubs_for("a").map(&:full_name)
-    assert_equal 1, specification_record.instance_variable_get(:@stubs_by_name).size
+    assert_equal 1, specification_record.instance_variable_get(:@stubs_by_name).length
     assert_equal ["b-1"], Gem::Specification.stubs_for("b").map(&:full_name)
-    assert_equal 2, specification_record.instance_variable_get(:@stubs_by_name).size
+    assert_equal 2, specification_record.instance_variable_get(:@stubs_by_name).length
 
     assert_equal(
       Gem::Specification.stubs_for("a").map(&:object_id),
@@ -1580,13 +1578,21 @@ dependencies: []
     ext_spec
 
     _, err = capture_output do
-      refute @ext.contains_requirable_file? "nonexistent"
+      if RUBY_ENGINE == "jruby"
+        refute @ext.ignored?
+      else
+        refute @ext.contains_requirable_file? "nonexistent"
+      end
     end
 
-    expected = "Ignoring ext-1 because its extensions are not built. " \
-               "Try: gem pristine ext --version 1\n"
+    if RUBY_ENGINE == "jruby"
+      assert_equal "", err
+    else
+      expected = "Ignoring ext-1 because its extensions are not built. " \
+                 "Try: gem pristine ext --version 1\n"
 
-    assert_equal expected, err
+      assert_equal expected, err
+    end
   end
 
   def test_contains_requirable_file_eh_extension_java_platform
@@ -3955,7 +3961,11 @@ end
   def test_missing_extensions_eh
     ext_spec
 
-    assert @ext.missing_extensions?
+    if RUBY_ENGINE == "jruby"
+      refute @ext.missing_extensions?
+    else
+      assert @ext.missing_extensions?
+    end
 
     extconf_rb = File.join @ext.gem_dir, @ext.extensions.first
     FileUtils.mkdir_p File.dirname extconf_rb

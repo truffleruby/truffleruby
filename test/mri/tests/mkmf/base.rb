@@ -1,13 +1,11 @@
 # frozen_string_literal: false
 $extmk = true
 require 'rbconfig'
-if RbConfig.respond_to?(:fire_update!) # TruffleRuby: skip fire_update! call
-  RbConfig.fire_update!("top_srcdir", File.expand_path("../..", __dir__))
-  File.foreach(RbConfig::CONFIG["topdir"]+"/Makefile") do |line|
-    if /^CC_WRAPPER\s*=\s*/ =~ line
-      RbConfig.fire_update!('CC_WRAPPER', $'.strip)
-      break
-    end
+RbConfig.fire_update!("top_srcdir", File.expand_path("../..", __dir__))
+File.foreach(RbConfig::CONFIG["topdir"]+"/Makefile") do |line|
+  if /^CC_WRAPPER\s*=\s*/ =~ line
+    RbConfig.fire_update!('CC_WRAPPER', $'.strip)
+    break
   end
 end
 

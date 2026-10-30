@@ -341,8 +341,7 @@ class TestSyntax < Test::Unit::TestCase
     o = KW2.new
     begin
       verbose_bak, $VERBOSE = $VERBOSE, nil
-      r = EnvUtil.suppress_warning { eval "o.kw(**{k1: 22}, **{k1: 23})" } # TruffleRuby: use eval to avoid warning
-      assert_equal([23, 2], r, bug10315)
+      assert_equal([23, 2], eval("o.kw(**{k1: 22}, **{k1: 23})"), bug10315)
     ensure
       $VERBOSE = verbose_bak
     end
@@ -1861,6 +1860,24 @@ eom
   def test_classdef_in_cond
     assert_valid_syntax('while class Foo; tap do end; end; break; end')
     assert_valid_syntax('while class Foo a = tap do end; end; break; end')
+  end
+
+  def test_while_until_conditional_bug_22002
+    @foo = 123 until defined?(@foo)
+    assert_equal(123, @foo)
+
+    @bar = 456 while @bar==nil..true
+    assert_equal(456, @bar)
+
+    while false and @baz
+      @baz = 789
+    end
+    assert_equal(nil, @baz)
+
+    until true || @baz
+      @baz = 789
+    end
+    assert_equal(nil, @baz)
   end
 
   def test_command_with_cmd_brace_block

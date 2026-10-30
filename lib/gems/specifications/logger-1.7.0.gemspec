@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.metadata = { "changelog_uri" => "https://github.com/ruby/logger/releases" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Naotoshi Seo".freeze, "SHIBATA Hiroshi".freeze]
-  s.date = "2026-03-17"
+  s.date = "2026-10-23"
   s.description = "Provides a simple logging utility for outputting messages.".freeze
   s.email = ["sonots@gmail.com".freeze, "hsbt@ruby-lang.org".freeze]
   s.homepage = "https://github.com/ruby/logger".freeze
@@ -18,5 +18,5 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.4.20".freeze
   s.summary = "Provides a simple logging utility for outputting messages.".freeze
 
-  s.installed_by_version = "4.0.6".freeze
+  s.installed_by_version = "4.0.20".freeze
 end

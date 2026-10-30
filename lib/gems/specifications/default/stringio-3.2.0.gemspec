@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.metadata = { "changelog_uri" => "https://github.com/ruby/stringio/releases/tag/v3.2.0" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Nobu Nakada".freeze, "Charles Oliver Nutter".freeze]
-  s.date = "2026-03-17"
+  s.date = "2026-10-23"
   s.description = "Pseudo `IO` class from/to `String`.".freeze
   s.email = ["nobu@ruby-lang.org".freeze, "headius@headius.com".freeze]
   s.extensions = ["ext/stringio/extconf.rb".freeze]
@@ -19,6 +19,6 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/ruby/stringio".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.7".freeze)
-  s.rubygems_version = "4.0.6".freeze
+  s.rubygems_version = "4.0.20".freeze
   s.summary = "Pseudo IO on String".freeze
 end

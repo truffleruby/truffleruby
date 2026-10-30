@@ -11,10 +11,9 @@ require 'cgi/escape'
 # Load or define ERB::Escape#html_escape.
 # We don't build the C extension 'cgi/escape' for JRuby, TruffleRuby, and WASM.
 # miniruby (used by CRuby build scripts) also fails to load erb/escape.so.
-# TruffleRuby: avoid the failing require to not load RubyGems eagerly
-# begin
-#   require 'erb/escape'
-# rescue LoadError
+begin
+  require 'erb/escape'
+rescue LoadError
   # ERB::Escape
   #
   # A subset of ERB::Util. Unlike ERB::Util#html_escape, we expect/hope
@@ -26,7 +25,7 @@ require 'cgi/escape'
     end
     module_function :html_escape
   end
-# end
+end
 
 # ERB::Util
 #

@@ -277,10 +277,6 @@ module Timeout
   # the block will not be interrupted.
   def self.timeout(sec, klass = nil, message = nil, &block)   #:yield: +sec+
     return yield(sec) if sec == nil or sec.zero?
-    if defined?(::TruffleRuby) && Truffle::Boot.single_threaded?
-      Truffle::Debug.log_warning 'threads are disabled, so timeout is being ignored'
-      return yield(sec)
-    end
     raise ArgumentError, "Timeout sec must be a non-negative number" if 0 > sec
 
     message ||= "execution expired"

@@ -616,7 +616,6 @@ RBIMPL_SYMBOL_EXPORT_END()
     RBIMPL_CAST(rb_obj_written((VALUE)(old), (VALUE)(oldv), (VALUE)(young), __FILE__, __LINE__))
 /** @} */
 
-#ifndef TRUFFLERUBY
 #define OBJ_PROMOTED_RAW RB_OBJ_PROMOTED_RAW /**< @old{RB_OBJ_PROMOTED_RAW} */
 #define OBJ_PROMOTED     RB_OBJ_PROMOTED     /**< @old{RB_OBJ_PROMOTED} */
 #define OBJ_WB_UNPROTECT RB_OBJ_WB_UNPROTECT /**< @old{RB_OBJ_WB_UNPROTECT} */
@@ -757,7 +756,6 @@ rb_obj_wb_unprotect(
     rb_gc_writebarrier_unprotect(x);
     return x;
 }
-#endif // TRUFFLERUBY
 
 /**
  * @private
@@ -772,22 +770,6 @@ rb_obj_wb_unprotect(
  * @param[in]   line      C's `__LINE__` of the caller function.
  * @return      a
  */
-#ifdef TRUFFLERUBY
-static inline VALUE
-rb_obj_written(
-    VALUE a,
-    RBIMPL_ATTR_MAYBE_UNUSED()
-    VALUE oldv,
-    RBIMPL_ATTR_MAYBE_UNUSED()
-    VALUE b,
-    RBIMPL_ATTR_MAYBE_UNUSED()
-    const char *filename,
-    RBIMPL_ATTR_MAYBE_UNUSED()
-    int line)
-{
-    return a;
-}
-#else
 static inline VALUE
 rb_obj_written(
     VALUE a,
@@ -809,7 +791,6 @@ rb_obj_written(
 
     return a;
 }
-#endif // TRUFFLERUBY
 
 /**
  * @private
@@ -838,18 +819,11 @@ rb_obj_write(
 
     *slot = b;
 
-#ifndef TRUFFLERUBY
     rb_obj_written(a, RUBY_Qundef /* ignore `oldv' now */, b, filename, line);
-#endif
     return a;
 }
 
 RBIMPL_ATTR_DEPRECATED(("Will be removed soon"))
-#ifdef TRUFFLERUBY
-// For -Werror. Remove the function entirely in 4.0 like upstream.
-static inline void rb_gc_force_recycle(VALUE _obj){ (void)_obj; }
-#else
 static inline void rb_gc_force_recycle(VALUE obj){}
-#endif
 
 #endif /* RBIMPL_GC_H */

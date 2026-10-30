@@ -42,13 +42,6 @@ RBIMPL_SYMBOL_EXPORT_BEGIN()
  */
 VALUE rb_f_sprintf(int argc, const VALUE *argv);
 
-#ifdef TRUFFLERUBY
-// We need to declare rb_vsprintf() before rb_sprintf()
-RBIMPL_ATTR_NONNULL((1))
-RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 1, 0)
-VALUE rb_vsprintf(const char *fmt, va_list ap);
-#endif
-
 RBIMPL_ATTR_NONNULL((1))
 RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 1, 2)
 /**
@@ -86,17 +79,7 @@ RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 1, 2)
  *
  * :FIXME:  We can improve this document.
  */
-#ifdef TRUFFLERUBY
-static inline VALUE rb_sprintf(const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    VALUE result = rb_vsprintf(fmt, args);
-    va_end(args);
-    return result;
-}
-#else
 VALUE rb_sprintf(const char *fmt, ...);
-#endif
 
 RBIMPL_ATTR_NONNULL((1))
 RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 1, 0)
@@ -108,13 +91,6 @@ RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 1, 0)
  * @return     A rendered new instance of ::rb_cString.
  */
 VALUE rb_vsprintf(const char *fmt, va_list ap);
-
-#ifdef TRUFFLERUBY
-// We need to declare rb_str_vcatf() before rb_str_catf()
-RBIMPL_ATTR_NONNULL((2))
-RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 2, 0)
-VALUE rb_str_vcatf(VALUE dst, const char *fmt, va_list ap);
-#endif
 
 RBIMPL_ATTR_NONNULL((2))
 RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 2, 3)
@@ -129,17 +105,7 @@ RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 2, 3)
  * @return      Passed `dst`.
  * @post        `dst` has the rendered output appended to its end.
  */
-#ifdef TRUFFLERUBY
-static inline VALUE rb_str_catf(VALUE dst, const char *fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    VALUE result = rb_str_vcatf(dst, fmt, args);
-    va_end(args);
-    return result;
-}
-#else
 VALUE rb_str_catf(VALUE dst, const char *fmt, ...);
-#endif
 
 RBIMPL_ATTR_NONNULL((2))
 RBIMPL_ATTR_FORMAT(RBIMPL_PRINTF_FORMAT, 2, 0)

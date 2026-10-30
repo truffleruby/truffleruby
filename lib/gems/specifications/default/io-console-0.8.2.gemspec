@@ -10,14 +10,14 @@ Gem::Specification.new do |s|
   s.metadata = { "changelog_uri" => "https://github.com/ruby/io-console/releases", "source_code_url" => "https://github.com/ruby/io-console" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Nobu Nakada".freeze]
-  s.date = "2026-03-17"
+  s.date = "2026-10-23"
   s.description = "add console capabilities to IO instances.".freeze
   s.email = "nobu@ruby-lang.org".freeze
   s.extensions = ["ext/io/console/extconf.rb".freeze]
-  s.files = [".document".freeze, "BSDL".freeze, "COPYING".freeze, "README.md".freeze, "ext/io/console/console.c".freeze, "ext/io/console/extconf.rb".freeze, "ext/io/console/win32_vk.inc".freeze, "lib/io/console.#{Truffle::Platform::DLEXT}".freeze, "lib/io/console/size.rb".freeze]
+  s.files = [".document".freeze, "BSDL".freeze, "COPYING".freeze, "README.md".freeze, "ext/io/console/console.c".freeze, "ext/io/console/extconf.rb".freeze, "ext/io/console/win32_vk.inc".freeze, "io/console.#{Truffle::Platform::DLEXT}".freeze, "lib/console/size.rb".freeze, "lib/lib/io/console/size.rb".freeze]
   s.homepage = "https://github.com/ruby/io-console".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.6.0".freeze)
-  s.rubygems_version = "4.0.6".freeze
+  s.rubygems_version = "4.0.20".freeze
   s.summary = "Console interface".freeze
 end

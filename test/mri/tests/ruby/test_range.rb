@@ -1034,6 +1034,11 @@ class TestRange < Test::Unit::TestCase
     assert_include("a"..."z", "y")
     assert_not_include("a"..."z", "z")
     assert_not_include("a".."z", "cc")
+    assert_not_include("z".."a", "a")
+    assert_not_include("z".."a", "z")
+    assert_not_include("z".."a", "m")
+    assert_include("a".."a", "a")
+    assert_not_include("a"..."a", "a")
     assert_raise(TypeError) {("a"..).include?("c")}
     assert_raise(TypeError) {("a"..).include?("5")}
 
@@ -1473,7 +1478,7 @@ class TestRange < Test::Unit::TestCase
     assert_equal 41, (1...42).count
     assert_equal 0, (42..1).count
     assert_equal 0, (42...1).count
-    # assert_equal 2**100, (1..2**100).count # TruffleRuby: it's too slow
+    assert_equal 2**100, (1..2**100).count
     assert_equal 6, (1...6.3).count
     assert_equal 4, ('a'..'d').count
     assert_equal 3, ('a'...'d').count

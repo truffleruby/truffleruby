@@ -1,0 +1,17 @@
+<%- unless klass.includes.empty? %>
+<div id="includes-section" class="nav-section">
+  <h3>Included Modules</h3>
+
+  <ul class="link-list">
+  <%- klass.includes.each do |inc| %>
+    <li>
+    <%- unless String === inc.module %>
+      <a class="include" href="<%= klass.aref_to inc.module.path %>"><%= inc.module.full_name %></a>
+    <%- else %>
+      <span class="include"><%= inc.name %></span>
+    <%- end %>
+    </li>
+  <%- end %>
+  </ul>
+</div>
+<%- end %>
