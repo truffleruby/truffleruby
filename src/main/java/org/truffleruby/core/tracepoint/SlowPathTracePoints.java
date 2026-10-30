@@ -30,7 +30,6 @@ package org.truffleruby.core.tracepoint;
 
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
-import org.truffleruby.core.binding.BindingNodes;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.core.thread.RubyThread;
 import org.truffleruby.language.Nil;
@@ -161,7 +160,7 @@ public final class SlowPathTracePoints {
         }
 
         fire(fiberSwitchTracePoints, language.coreSymbols.FIBER_SWITCH, language.getCurrentThread(), Nil.INSTANCE, 0,
-                Nil.INSTANCE, null);
+                null, null, null);
     }
 
     /** Calls the active :fiber_switch TracePoints in a fiber which just gained control back after calling a method
@@ -182,10 +181,9 @@ public final class SlowPathTracePoints {
         if (sourceSection != null && sourceSection.isAvailable()) {
             final Object path = language.getPathToTStringCache().createPathString(context, sourceSection.getSource());
             final int line = language.getStartLineAdjusted(sourceSection);
-            fire(fiberSwitchTracePoints, language.coreSymbols.FIBER_SWITCH, thread, path, line, Nil.INSTANCE, null);
+            fire(fiberSwitchTracePoints, language.coreSymbols.FIBER_SWITCH, thread, path, line, null, null, null);
         } else {
-            fire(fiberSwitchTracePoints, language.coreSymbols.FIBER_SWITCH, thread, Nil.INSTANCE, 0, Nil.INSTANCE,
-                    null);
+            fire(fiberSwitchTracePoints, language.coreSymbols.FIBER_SWITCH, thread, Nil.INSTANCE, 0, null, null, null);
         }
     }
 
@@ -197,7 +195,7 @@ public final class SlowPathTracePoints {
             return;
         }
 
-        fire(threadBeginTracePoints, language.coreSymbols.THREAD_BEGIN, thread, Nil.INSTANCE, 0, Nil.INSTANCE, null);
+        fire(threadBeginTracePoints, language.coreSymbols.THREAD_BEGIN, thread, Nil.INSTANCE, 0, null, null, null);
     }
 
     /** Calls the active :thread_end TracePoints in the given thread, after running its block. */
@@ -207,7 +205,7 @@ public final class SlowPathTracePoints {
             return;
         }
 
-        fire(threadEndTracePoints, language.coreSymbols.THREAD_END, thread, Nil.INSTANCE, 0, Nil.INSTANCE, null);
+        fire(threadEndTracePoints, language.coreSymbols.THREAD_END, thread, Nil.INSTANCE, 0, null, null, null);
     }
 
     private void fire(ActiveTracePoints tracePoints, RubySymbol event, Object self, MaterializedFrame frame,
@@ -215,36 +213,27 @@ public final class SlowPathTracePoints {
         final Source source = sourceSection.getSource();
         final Object path = language.getPathToTStringCache().createPathString(context, source);
         final int line = language.getStartLineAdjusted(sourceSection);
-        final Object binding = BindingNodes.createBinding(context, language, frame, sourceSection);
         final InternalMethod method = RubyArguments.getMethod(frame);
-        fire(tracePoints, event, self, path, line, binding, method);
+        fire(tracePoints, event, self, path, line, frame, sourceSection, method);
     }
 
     private void fire(ActiveTracePoints tracePoints, RubySymbol event, Object self, Object path, int line,
-            Object binding, InternalMethod method) {
-        final TracePointState state = language.getCurrentThread().tracePointState;
-        if (state.insideProc) {
+            MaterializedFrame frame, SourceSection sourceSection, InternalMethod method) {
+        final RubyThread thread = language.getCurrentThread();
+        if (thread.insideTracePointProc) {
             return;
         }
 
         for (RubyTracePoint tracePoint : tracePoints.tracePoints) {
-            state.event = event;
-            state.self = self;
-            state.path = path;
-            state.line = line;
-            state.binding = binding;
-            state.method = method;
+            var tracePointEvent = new RubyTracePointEvent(tracePoint, language.tracePointEventShape, event, path,
+                    line, frame, sourceSection, self, method);
 
-            state.insideProc = true;
+            thread.insideTracePointProc = true;
             try {
-                CallBlockNode.yieldUncached(tracePoint.proc, tracePoint);
+                CallBlockNode.yieldUncached(tracePoint.proc, tracePointEvent);
             } finally {
-                state.insideProc = false;
-                // Reset the binding so it can be escaped analyzed. This is also semantically correct
-                // because the TracePoint information is reset outside the TracePoint block in MRI.
-                state.binding = Nil.INSTANCE;
-                state.self = Nil.INSTANCE;
-                state.method = null;
+                thread.insideTracePointProc = false;
+                tracePointEvent.deactivate();
             }
         }
     }

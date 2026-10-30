@@ -31,8 +31,24 @@ class TracePoint
     Primitive.tracepoint_initialize self, events.uniq, handler
   end
 
+  # The object yielded to the block is a new TracePoint object per event, it is equal to its TracePoint
+  def ==(other)
+    Primitive.is_a?(other, TracePoint) &&
+      Primitive.equal?(Primitive.trace_point_owner(self), Primitive.trace_point_owner(other))
+  end
+  alias_method :eql?, :==
+
+  def hash
+    owner = Primitive.trace_point_owner(self)
+    if Primitive.equal?(owner, self)
+      super
+    else
+      owner.hash
+    end
+  end
+
   def inspect
-    if Primitive.trace_point_inside_proc?
+    if Primitive.trace_point_active_event?(self)
       case event
       when :call, :c_call
         return "#<TracePoint:#{event} '#{method_id}' #{path}:#{lineno}>"
