@@ -5,19 +5,6 @@ require "shellwords"
 class TestExtLibs < Test::Unit::TestCase
   @extdir = $".grep(/\/rbconfig\.rb\z/) {break "#$`/ext"}
 
-  if defined?(::TruffleRuby)
-    # Make test_extlibs.rb faster by avoiding one subprocess per extension
-    def self.check_existence(ext, add_msg = nil)
-      return if @excluded.any? {|i| File.fnmatch?(i, ext, File::FNM_CASEFOLD)}
-
-      define_method("test_existence_of_#{ext}") do
-        assert_nothing_raised("extension library `#{ext}' is not found#{add_msg}") do
-          require ext
-        end
-      end
-    end
-  end
-
   def self.check_existence(ext, add_msg = nil)
     return if @excluded.any? {|i| File.fnmatch?(i, ext, File::FNM_CASEFOLD)}
     add_msg = ".  #{add_msg}" if add_msg
@@ -34,7 +21,7 @@ class TestExtLibs < Test::Unit::TestCase
         end
       end;
     end
-  end unless defined?(::TruffleRuby)
+  end
 
   def windows?
     /mswin|mingw/ =~ RUBY_PLATFORM

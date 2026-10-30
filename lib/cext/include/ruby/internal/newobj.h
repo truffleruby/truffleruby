@@ -29,9 +29,7 @@
 #include "ruby/internal/value.h"
 #include "ruby/assert.h"
 
-#ifndef TRUFFLERUBY
 #define OBJSETUP   rb_obj_setup   /**< @old{rb_obj_setup} */
-#endif
 #define CLONESETUP rb_clone_setup /**< @old{rb_clone_setup} */
 #define DUPSETUP   rb_dup_setup   /**< @old{rb_dup_setup} */
 
@@ -111,8 +109,6 @@ void rb_singleton_class_attached(VALUE klass, VALUE obj);
 void rb_copy_generic_ivar(VALUE clone, VALUE obj);
 RBIMPL_SYMBOL_EXPORT_END()
 
-#ifndef TRUFFLERUBY
-
 RBIMPL_ATTR_DEPRECATED(("This is no longer how Object#clone works."))
 /**
  * @deprecated  Not sure exactly  when but at some time,  the implementation of
@@ -150,7 +146,5 @@ rb_dup_setup(VALUE dup, VALUE obj)
     (void)obj;
     return;
 }
-
-#endif // TRUFFLERUBY
 
 #endif /* RBIMPL_NEWOBJ_H */

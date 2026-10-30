@@ -1,4 +1,3 @@
-// For lib/cext/include/internal/bits.h
 #ifndef INTERNAL_COMPILERS_H                             /*-*-C-*-vi:se ft=c:*/
 #define INTERNAL_COMPILERS_H
 /**
