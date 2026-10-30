@@ -50,7 +50,7 @@ ast: |
                   body =
                       SequenceNode
                           attributes:
-                              flags = 8
+                              flags = 4
                               sourceCharIndex = 0
                               sourceLength = 43
                           children:
@@ -106,7 +106,7 @@ ast: |
                                                                   child =
                                                                       InlinedLambdaNodeGen
                                                                           attributes:
-                                                                              assumptions = [Assumption(valid, name=no :call TracePoint is enabled)]
+                                                                              assumptions = [Assumption(valid, name=no :c_call TracePoint is enabled)]
                                                                               flags = 0
                                                                               frameOnStackMarkerSlot = 2
                                                                               parameters = RubyCallNodeParameters{methodName='lambda', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=true, isVCall=false, isSafeNavigation=false, isAttrAssign=false}
@@ -152,7 +152,7 @@ ast: |
                                                                                                   body =
                                                                                                       SequenceNode
                                                                                                           attributes:
-                                                                                                              flags = 8
+                                                                                                              flags = 4
                                                                                                               sourceCharIndex = 20
                                                                                                               sourceLength = 19
                                                                                                           children:

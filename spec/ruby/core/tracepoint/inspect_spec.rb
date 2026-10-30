@@ -82,10 +82,10 @@ describe 'TracePoint#inspect' do
     }
     line = __LINE__ + 2
     tracepoint.enable do
-      [0, 1].max
+      1 + 2
     end
 
-    inspect.should =~ /\A#<TracePoint:c_call [`']max'#{@path_prefix}#{__FILE__}:#{line}>\z/
+    inspect.should =~ /\A#<TracePoint:c_call [`']\+'#{@path_prefix}#{__FILE__}:#{line}>\z/
   end
 
   it 'returns a String showing the event, path and line for a :class event' do

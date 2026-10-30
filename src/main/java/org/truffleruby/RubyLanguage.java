@@ -172,6 +172,7 @@ import static org.truffleruby.language.RubyBaseNode.nil;
 @ProvidedTags({
         CoverageManager.LineTag.class,
         TraceManager.CallTag.class,
+        TraceManager.CCallTag.class,
         TraceManager.LineTag.class,
         TraceManager.NeverTag.class,
         StandardTags.RootTag.class,
@@ -196,9 +197,6 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     }
 
     public static final String MIME_TYPE = "application/x-ruby";
-    /** To avoid some String[] allocations */
-    public static final String[] MIME_TYPES = { MIME_TYPE };
-
 
     public static final String CEXT_EXTENSION = Platform.CEXT_SUFFIX;
 
@@ -260,26 +258,28 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     @CompilationFinal public Optional<RubyContext> contextIfSingleContext;
     private int numberOfContexts = 0;
 
-    public final CyclicAssumption callTracingUnusedAssumption = new CyclicAssumption("no :call TracePoint is enabled");
-    /** How many :call TracePoints are currently enabled, in any context */
-    private int callTracers = 0;
+    public final CyclicAssumption cCallTracingUnusedAssumption = new CyclicAssumption(
+            "no :c_call TracePoint is enabled");
+    /** How many :c_call TracePoints are currently enabled, in any context */
+    private int cCallTracers = 0;
 
-    /** Inlined calls to core methods like Integer#+ are not real calls and would not trigger :call events, so they are
-     * deoptimized to real calls while any :call TracePoint is enabled. */
-    public void startTracingCalls() {
-        synchronized (callTracingUnusedAssumption) {
-            if (callTracers++ == 0) {
+    /** Inlined calls to core methods like Integer#+ are not real calls and would not trigger :c_call events, so they
+     * are deoptimized to real calls while any :c_call TracePoint is enabled. Only :c_call needs this and not :call,
+     * because all inlined core methods are defined in Java. */
+    public void startTracingCCalls() {
+        synchronized (cCallTracingUnusedAssumption) {
+            if (cCallTracers++ == 0) {
                 // Invalidate current assumption
-                callTracingUnusedAssumption.getAssumption().invalidate();
+                cCallTracingUnusedAssumption.getAssumption().invalidate();
             }
         }
     }
 
-    public void stopTracingCalls() {
-        synchronized (callTracingUnusedAssumption) {
-            if (--callTracers == 0) {
+    public void stopTracingCCalls() {
+        synchronized (cCallTracingUnusedAssumption) {
+            if (--cCallTracers == 0) {
                 // Update to a new valid assumption
-                callTracingUnusedAssumption.invalidate();
+                cCallTracingUnusedAssumption.invalidate();
             }
         }
     }

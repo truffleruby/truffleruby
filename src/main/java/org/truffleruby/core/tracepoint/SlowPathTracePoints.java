@@ -36,6 +36,7 @@ import org.truffleruby.core.thread.RubyThread;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.arguments.RubyArguments;
+import org.truffleruby.language.methods.InternalMethod;
 import org.truffleruby.language.yield.CallBlockNode;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -160,7 +161,7 @@ public final class SlowPathTracePoints {
         }
 
         fire(fiberSwitchTracePoints, language.coreSymbols.FIBER_SWITCH, language.getCurrentThread(), Nil.INSTANCE, 0,
-                Nil.INSTANCE);
+                Nil.INSTANCE, null);
     }
 
     /** Calls the active :fiber_switch TracePoints in a fiber which just gained control back after calling a method
@@ -181,9 +182,10 @@ public final class SlowPathTracePoints {
         if (sourceSection != null && sourceSection.isAvailable()) {
             final Object path = language.getPathToTStringCache().createPathString(context, sourceSection.getSource());
             final int line = language.getStartLineAdjusted(sourceSection);
-            fire(fiberSwitchTracePoints, language.coreSymbols.FIBER_SWITCH, thread, path, line, Nil.INSTANCE);
+            fire(fiberSwitchTracePoints, language.coreSymbols.FIBER_SWITCH, thread, path, line, Nil.INSTANCE, null);
         } else {
-            fire(fiberSwitchTracePoints, language.coreSymbols.FIBER_SWITCH, thread, Nil.INSTANCE, 0, Nil.INSTANCE);
+            fire(fiberSwitchTracePoints, language.coreSymbols.FIBER_SWITCH, thread, Nil.INSTANCE, 0, Nil.INSTANCE,
+                    null);
         }
     }
 
@@ -195,7 +197,7 @@ public final class SlowPathTracePoints {
             return;
         }
 
-        fire(threadBeginTracePoints, language.coreSymbols.THREAD_BEGIN, thread, Nil.INSTANCE, 0, Nil.INSTANCE);
+        fire(threadBeginTracePoints, language.coreSymbols.THREAD_BEGIN, thread, Nil.INSTANCE, 0, Nil.INSTANCE, null);
     }
 
     /** Calls the active :thread_end TracePoints in the given thread, after running its block. */
@@ -205,7 +207,7 @@ public final class SlowPathTracePoints {
             return;
         }
 
-        fire(threadEndTracePoints, language.coreSymbols.THREAD_END, thread, Nil.INSTANCE, 0, Nil.INSTANCE);
+        fire(threadEndTracePoints, language.coreSymbols.THREAD_END, thread, Nil.INSTANCE, 0, Nil.INSTANCE, null);
     }
 
     private void fire(ActiveTracePoints tracePoints, RubySymbol event, Object self, MaterializedFrame frame,
@@ -214,11 +216,12 @@ public final class SlowPathTracePoints {
         final Object path = language.getPathToTStringCache().createPathString(context, source);
         final int line = language.getStartLineAdjusted(sourceSection);
         final Object binding = BindingNodes.createBinding(context, language, frame, sourceSection);
-        fire(tracePoints, event, self, path, line, binding);
+        final InternalMethod method = RubyArguments.getMethod(frame);
+        fire(tracePoints, event, self, path, line, binding, method);
     }
 
     private void fire(ActiveTracePoints tracePoints, RubySymbol event, Object self, Object path, int line,
-            Object binding) {
+            Object binding, InternalMethod method) {
         final TracePointState state = language.getCurrentThread().tracePointState;
         if (state.insideProc) {
             return;
@@ -230,6 +233,7 @@ public final class SlowPathTracePoints {
             state.path = path;
             state.line = line;
             state.binding = binding;
+            state.method = method;
 
             state.insideProc = true;
             try {
@@ -240,6 +244,7 @@ public final class SlowPathTracePoints {
                 // because the TracePoint information is reset outside the TracePoint block in MRI.
                 state.binding = Nil.INSTANCE;
                 state.self = Nil.INSTANCE;
+                state.method = null;
             }
         }
     }

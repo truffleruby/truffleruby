@@ -81,7 +81,7 @@ ast: |
                                                                   body =
                                                                       SequenceNode
                                                                           attributes:
-                                                                              flags = 8
+                                                                              flags = 4
                                                                               sourceCharIndex = 0
                                                                               sourceLength = -1
                                                                           children:

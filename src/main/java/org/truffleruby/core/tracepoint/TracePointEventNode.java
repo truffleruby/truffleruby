@@ -17,9 +17,11 @@ import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.Nil;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.profiles.ConditionProfile;
+import com.oracle.truffle.api.source.SourceSection;
 import org.truffleruby.core.thread.RubyThread;
 import org.truffleruby.language.arguments.RubyArguments;
 
@@ -31,6 +33,7 @@ final class TracePointEventNode extends TraceBaseEventNode {
     private final RubyProc proc;
     private final RubySymbol event;
     private final RubyLanguage language;
+    private final boolean cCall;
 
     public TracePointEventNode(
             RubyContext context,
@@ -43,6 +46,7 @@ final class TracePointEventNode extends TraceBaseEventNode {
         this.proc = tracePoint.proc;
         this.event = event;
         this.language = language;
+        this.cCall = event == language.coreSymbols.C_CALL;
     }
 
     @Override
@@ -55,11 +59,18 @@ final class TracePointEventNode extends TraceBaseEventNode {
         }
 
         state.event = event;
-        state.path = getFile();
-        state.line = getLine();
-        state.binding = BindingNodes
-                .createBinding(context, language, frame.materialize(), eventContext.getInstrumentedSourceSection());
+        if (cCall) {
+            // Like CRuby, the location of a :c_call event is the call site and there is no binding
+            setCallerLocation(state);
+            state.binding = Nil.INSTANCE;
+        } else {
+            state.path = getFile();
+            state.line = getLine();
+            state.binding = BindingNodes
+                    .createBinding(context, language, frame.materialize(), eventContext.getInstrumentedSourceSection());
+        }
         state.self = RubyArguments.getSelf(frame);
+        state.method = RubyArguments.getMethod(frame);
 
         state.insideProc = true;
         try {
@@ -70,6 +81,19 @@ final class TracePointEventNode extends TraceBaseEventNode {
             // because the TracePoint information is reset outside the TracePoint block in MRI.
             state.binding = Nil.INSTANCE;
             state.self = Nil.INSTANCE;
+            state.method = null;
+        }
+    }
+
+    @TruffleBoundary
+    private void setCallerLocation(TracePointState state) {
+        final SourceSection callerSourceSection = context.getCallStack().getCallerSourceSection();
+        if (callerSourceSection != null) {
+            state.path = language.getPathToTStringCache().createPathString(context, callerSourceSection.getSource());
+            state.line = language.getStartLineAdjusted(callerSourceSection);
+        } else {
+            state.path = Nil.INSTANCE;
+            state.line = 0;
         }
     }
 

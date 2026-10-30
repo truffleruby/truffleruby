@@ -24,6 +24,7 @@ import com.oracle.truffle.api.TruffleStackTraceElement;
 import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.instrumentation.SourceFilter;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.InteropException;
 import com.oracle.truffle.api.interop.StopIterationException;
@@ -176,10 +177,14 @@ public abstract class TruffleDebugNodes {
                 @Cached RubyStringLibrary strings) {
             final String fileString = StringOperations.getJavaString(file);
 
+            var sourceFilter = SourceFilter.newBuilder()
+                    .languageIs(TruffleRuby.LANGUAGE_ID)
+                    .sourceIs(source -> source != null && RubyLanguage.getPath(source).equals(fileString))
+                    .build();
+
             final SourceSectionFilter filter = SourceSectionFilter
                     .newBuilder()
-                    .mimeTypeIs(RubyLanguage.MIME_TYPES)
-                    .sourceIs(source -> source != null && RubyLanguage.getPath(source).equals(fileString))
+                    .sourceFilter(sourceFilter)
                     .lineIs(line)
                     .tagIs(StandardTags.StatementTag.class)
                     .build();
@@ -1484,7 +1489,6 @@ public abstract class TruffleDebugNodes {
             }
 
             Source source = Source.newBuilder(TruffleRuby.LANGUAGE_ID, sourceCodeString, "parse_public.rb")
-                    .mimeType(RubyLanguage.MIME_TYPE)
                     .build();
             var env = getContext().getEnv();
 

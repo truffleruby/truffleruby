@@ -2940,7 +2940,7 @@ module Commands
   # New files under these directories must use the BSD-3-Clause license,
   # unlike older files which use the tri EPL/GPL/LGPL license.
   BSD3_NEW_FILES_DIRS = %w[src/ lib/truffle/ lib/cext/ spec/truffle/ test/truffle/ tool/]
-  BSD3_NEW_FILES_EXTENSIONS = %w[.java .rb .c .h .cpp .hpp .sh .inc .py]
+  BSD3_NEW_FILES_EXTENSIONS = %w[.java .rb .c .h .cpp .hpp .inc .py]
   # Files imported from other projects keep their original license
   BSD3_NEW_FILES_EXCLUDED = [
     %r{\Alib/cext/include/(?!truffleruby/)},                            # C extension API headers imported from MRI
@@ -3006,7 +3006,7 @@ module Commands
 
         Start each file with a 'Copyright (c) #{Time.now.year} TruffleRuby contributors' line
         followed by the full BSD-3-Clause license text, in a comment.
-        See tool/generate-posix-functions.rb for Ruby/shell files
+        See tool/generate-posix-functions.rb for Ruby files
         and src/main/c/cext/vm.c for C/Java files.
 
         For files imported from other projects which keep their original license,

@@ -50,7 +50,7 @@ ast: |
                   body =
                       SequenceNode
                           attributes:
-                              flags = 8
+                              flags = 4
                               sourceCharIndex = 0
                               sourceLength = 39
                           children:
@@ -125,7 +125,7 @@ ast: |
                                                               body =
                                                                   SequenceNode
                                                                       attributes:
-                                                                          flags = 8
+                                                                          flags = 4
                                                                           sourceCharIndex = 13
                                                                           sourceLength = 22
                                                                       children:

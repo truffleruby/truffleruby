@@ -1,4 +1,3 @@
 fails:TracePoint#inspect returns a String showing the event, method, path and line for a :return event
-fails:TracePoint#inspect returns a String showing the event, method, path and line for a :c_call event
 fails:TracePoint#inspect returns a String showing the event and thread for :thread_begin event
 fails:TracePoint#inspect returns a String showing the event and thread for :thread_end event
