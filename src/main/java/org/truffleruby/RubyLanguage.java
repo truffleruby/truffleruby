@@ -108,6 +108,7 @@ import org.truffleruby.core.thread.RubyBacktraceLocation;
 import org.truffleruby.core.thread.RubyThread;
 import org.truffleruby.core.time.RubyTime;
 import org.truffleruby.core.tracepoint.RubyTracePoint;
+import org.truffleruby.core.tracepoint.RubyTracePointEvent;
 import org.truffleruby.extra.RubyAtomicReference;
 import org.truffleruby.extra.RubyConcurrentMap;
 import org.truffleruby.extra.ffi.RubyPointer;
@@ -377,6 +378,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     public final Shape threadShape = createShape(RubyThread.class);
     public final Shape timeShape = createShape(RubyTime.class);
     public final Shape tracePointShape = createShape(RubyTracePoint.class);
+    public final Shape tracePointEventShape = createShape(RubyTracePointEvent.class);
     public final Shape truffleFFIPointerShape = createShape(RubyPointer.class);
     public final Shape unboundMethodShape = createShape(RubyUnboundMethod.class);
     public final Shape weakMapShape = createShape(RubyWeakMap.class);

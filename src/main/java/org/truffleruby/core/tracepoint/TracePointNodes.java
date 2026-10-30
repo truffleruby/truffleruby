@@ -17,9 +17,9 @@ import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.annotations.Primitive;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
-import org.truffleruby.builtins.PrimitiveNode;
 import org.truffleruby.core.array.ArrayToObjectArrayNode;
 import org.truffleruby.core.array.RubyArray;
+import org.truffleruby.core.binding.BindingNodes;
 import org.truffleruby.core.kernel.TraceManager;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.proc.RubyProc;
@@ -33,6 +33,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.BranchProfile;
+import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import org.truffleruby.language.objects.AllocationTracing;
 import org.truffleruby.language.yield.CallBlockNode;
 
@@ -40,15 +41,16 @@ import org.truffleruby.language.yield.CallBlockNode;
 public abstract class TracePointNodes {
 
     @TruffleBoundary
-    public static boolean isEnabled(RubyTracePoint tracePoint) {
-        return tracePoint.events[0].isEnabled();
+    public static boolean isEnabled(TracePointObject tracePointOrEvent) {
+        return tracePointOrEvent.getTracePoint().events[0].isEnabled();
     }
 
     @TruffleBoundary
-    public static boolean enableEvents(RubyContext context, RubyLanguage language, RubyTracePoint tracePoint) {
-        final TracePointEvent[] events = tracePoint.events;
-        for (TracePointEvent event : events) {
-            if (!event.enable(context, language, tracePoint)) {
+    public static boolean enableEvents(RubyContext context, RubyLanguage language,
+            TracePointObject tracePointOrEvent) {
+        final RubyTracePoint owner = tracePointOrEvent.getTracePoint();
+        for (TracePointEvent event : owner.events) {
+            if (!event.enable(context, language, owner)) {
                 return false;
             }
         }
@@ -56,10 +58,10 @@ public abstract class TracePointNodes {
     }
 
     @TruffleBoundary
-    public static boolean disableEvents(RubyContext context, RubyTracePoint tracePoint) {
-        final TracePointEvent[] events = tracePoint.events;
-        for (TracePointEvent event : events) {
-            if (!event.disable(context, tracePoint)) {
+    public static boolean disableEvents(RubyContext context, TracePointObject tracePointOrEvent) {
+        final RubyTracePoint owner = tracePointOrEvent.getTracePoint();
+        for (TracePointEvent event : owner.events) {
+            if (!event.disable(context, owner)) {
                 return false;
             }
         }
@@ -121,13 +123,13 @@ public abstract class TracePointNodes {
     public abstract static class EnableNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        boolean enable(RubyTracePoint tracePoint, Nil block) {
+        boolean enable(TracePointObject tracePoint, Nil block) {
             boolean setupDone = enableEvents(getContext(), getLanguage(), tracePoint);
             return !setupDone;
         }
 
         @Specialization
-        Object enable(RubyTracePoint tracePoint, RubyProc block,
+        Object enable(TracePointObject tracePoint, RubyProc block,
                 @Cached CallBlockNode yieldNode) {
             final boolean setupDone = enableEvents(getContext(), getLanguage(), tracePoint);
             try {
@@ -144,12 +146,12 @@ public abstract class TracePointNodes {
     public abstract static class DisableNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        Object disable(RubyTracePoint tracePoint, Nil block) {
+        Object disable(TracePointObject tracePoint, Nil block) {
             return disableEvents(getContext(), tracePoint);
         }
 
         @Specialization
-        Object disable(RubyTracePoint tracePoint, RubyProc block,
+        Object disable(TracePointObject tracePoint, RubyProc block,
                 @Cached CallBlockNode yieldNode) {
             final boolean wasEnabled = disableEvents(getContext(), tracePoint);
             try {
@@ -166,7 +168,7 @@ public abstract class TracePointNodes {
     public abstract static class EnabledNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        boolean enabled(RubyTracePoint tracePoint) {
+        boolean enabled(TracePointObject tracePoint) {
             return isEnabled(tracePoint);
         }
     }
@@ -175,63 +177,83 @@ public abstract class TracePointNodes {
 
         private final BranchProfile errorProfile = BranchProfile.create();
 
-        protected TracePointState getTracePointState() {
-            final TracePointState state = getLanguage().getCurrentThread().tracePointState;
-            if (!state.insideProc) {
+        /** The event data is only accessible on the object yielded to the TracePoint block, while the block runs */
+        protected RubyTracePointEvent activeEvent(TracePointObject tracePointOrEvent) {
+            if (tracePointOrEvent instanceof RubyTracePointEvent tracePointEvent && tracePointEvent.active) {
+                return tracePointEvent;
+            } else {
                 errorProfile.enter();
                 throw new RaiseException(getContext(), coreExceptions().runtimeError("access from outside", this));
             }
-            return state;
         }
 
     }
 
-    @Primitive(name = "trace_point_inside_proc?")
-    public abstract static class InsideProcNode extends PrimitiveNode {
+    @Primitive(name = "trace_point_owner")
+    public abstract static class OwnerNode extends PrimitiveArrayArgumentsNode {
         @Specialization
-        Object insideProc() {
-            final TracePointState state = getLanguage().getCurrentThread().tracePointState;
-            return state.insideProc;
+        RubyTracePoint owner(TracePointObject tracePointOrEvent) {
+            return tracePointOrEvent.getTracePoint();
+        }
+    }
+
+    @Primitive(name = "trace_point_active_event?")
+    public abstract static class ActiveEventNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        boolean activeEvent(TracePointObject tracePointOrEvent) {
+            return tracePointOrEvent instanceof RubyTracePointEvent tracePointEvent && tracePointEvent.active;
         }
     }
 
     @CoreMethod(names = "event")
     public abstract static class EventNode extends TracePointCoreNode {
         @Specialization
-        RubySymbol event(RubyTracePoint tracePoint) {
-            return getTracePointState().event;
+        RubySymbol event(TracePointObject tracePoint) {
+            return activeEvent(tracePoint).event;
         }
     }
 
     @CoreMethod(names = "path")
     public abstract static class PathNode extends TracePointCoreNode {
         @Specialization
-        Object path(RubyTracePoint tracePoint) {
-            return getTracePointState().path;
+        Object path(TracePointObject tracePoint) {
+            return activeEvent(tracePoint).path;
         }
     }
 
     @CoreMethod(names = "lineno")
     public abstract static class LineNode extends TracePointCoreNode {
         @Specialization
-        int line(RubyTracePoint tracePoint) {
-            return getTracePointState().line;
+        int line(TracePointObject tracePoint) {
+            return activeEvent(tracePoint).line;
         }
     }
 
     @CoreMethod(names = "binding")
     public abstract static class BindingNode extends TracePointCoreNode {
         @Specialization
-        Object binding(RubyTracePoint tracePoint) {
-            return getTracePointState().binding;
+        Object binding(TracePointObject tracePoint,
+                @Cached InlinedConditionProfile bindingCreatedProfile,
+                @Cached InlinedConditionProfile noFrameProfile) {
+            final RubyTracePointEvent tracePointEvent = activeEvent(tracePoint);
+            // Created lazily, so events whose block does not need the Binding do not allocate it
+            if (bindingCreatedProfile.profile(this, tracePointEvent.binding == null)) {
+                if (noFrameProfile.profile(this, tracePointEvent.frame == null)) {
+                    tracePointEvent.binding = nil;
+                } else {
+                    tracePointEvent.binding = BindingNodes.createBinding(getContext(), getLanguage(),
+                            tracePointEvent.frame, tracePointEvent.sourceSection);
+                }
+            }
+            return tracePointEvent.binding;
         }
     }
 
     @CoreMethod(names = "method_id")
     public abstract static class MethodIDNode extends TracePointCoreNode {
         @Specialization
-        Object methodId(RubyTracePoint tracePoint) {
-            final InternalMethod method = getTracePointState().method;
+        Object methodId(TracePointObject tracePoint) {
+            final InternalMethod method = activeEvent(tracePoint).method;
             if (method == null || method.getSharedMethodInfo().isModuleBody()) {
                 return nil; // like CRuby, module bodies and the top-level have no method
             }
@@ -242,8 +264,8 @@ public abstract class TracePointNodes {
     @CoreMethod(names = "defined_class")
     public abstract static class DefinedClassNode extends TracePointCoreNode {
         @Specialization
-        Object definedClass(RubyTracePoint tracePoint) {
-            final InternalMethod method = getTracePointState().method;
+        Object definedClass(TracePointObject tracePoint) {
+            final InternalMethod method = activeEvent(tracePoint).method;
             if (method == null || method.getSharedMethodInfo().isModuleBody()) {
                 return nil; // like CRuby, module bodies and the top-level have no method
             }
@@ -254,8 +276,8 @@ public abstract class TracePointNodes {
     @CoreMethod(names = "self")
     public abstract static class SelfNode extends TracePointCoreNode {
         @Specialization
-        Object self(RubyTracePoint tracePoint) {
-            return getTracePointState().self;
+        Object self(TracePointObject tracePoint) {
+            return activeEvent(tracePoint).self;
         }
     }
 

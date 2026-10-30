@@ -12,7 +12,6 @@ package org.truffleruby.core.tracepoint;
 
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
-import org.truffleruby.core.binding.BindingNodes;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.Nil;
@@ -52,48 +51,40 @@ final class TracePointEventNode extends TraceBaseEventNode {
     @Override
     protected void onEnter(VirtualFrame frame) {
         final RubyThread rubyThread = RubyLanguage.get(this).getCurrentThread();
-        final TracePointState state = rubyThread.tracePointState;
-
-        if (inTracePointProfile.profile(state.insideProc)) {
+        if (inTracePointProfile.profile(rubyThread.insideTracePointProc)) {
             return;
         }
 
-        state.event = event;
+        // A new object per event passed as the block argument, so the event data, the Binding and the frame can stay
+        // virtual when the block is inlined, see RubyTracePointEvent
+        final RubyTracePointEvent tracePointEvent;
         if (cCall) {
             // Like CRuby, the location of a :c_call event is the call site and there is no binding
-            setCallerLocation(state);
-            state.binding = Nil.INSTANCE;
+            tracePointEvent = new RubyTracePointEvent(tracePoint, language.tracePointEventShape, event, Nil.INSTANCE,
+                    0, null, null, RubyArguments.getSelf(frame), RubyArguments.getMethod(frame));
+            setCallerLocation(tracePointEvent);
         } else {
-            state.path = getFile();
-            state.line = getLine();
-            state.binding = BindingNodes
-                    .createBinding(context, language, frame.materialize(), eventContext.getInstrumentedSourceSection());
+            tracePointEvent = new RubyTracePointEvent(tracePoint, language.tracePointEventShape, event, getFile(),
+                    getLine(), frame.materialize(), eventContext.getInstrumentedSourceSection(),
+                    RubyArguments.getSelf(frame), RubyArguments.getMethod(frame));
         }
-        state.self = RubyArguments.getSelf(frame);
-        state.method = RubyArguments.getMethod(frame);
 
-        state.insideProc = true;
+        rubyThread.insideTracePointProc = true;
         try {
-            callBlock(proc, tracePoint);
+            callBlock(proc, tracePointEvent);
         } finally {
-            state.insideProc = false;
-            // Reset the binding so it can be escaped analyzed. This is also semantically correct
-            // because the TracePoint information is reset outside the TracePoint block in MRI.
-            state.binding = Nil.INSTANCE;
-            state.self = Nil.INSTANCE;
-            state.method = null;
+            rubyThread.insideTracePointProc = false;
+            tracePointEvent.deactivate();
         }
     }
 
     @TruffleBoundary
-    private void setCallerLocation(TracePointState state) {
+    private void setCallerLocation(RubyTracePointEvent tracePointEvent) {
         final SourceSection callerSourceSection = context.getCallStack().getCallerSourceSection();
         if (callerSourceSection != null) {
-            state.path = language.getPathToTStringCache().createPathString(context, callerSourceSection.getSource());
-            state.line = language.getStartLineAdjusted(callerSourceSection);
-        } else {
-            state.path = Nil.INSTANCE;
-            state.line = 0;
+            tracePointEvent.path = language.getPathToTStringCache().createPathString(context,
+                    callerSourceSection.getSource());
+            tracePointEvent.line = language.getStartLineAdjusted(callerSourceSection);
         }
     }
 
