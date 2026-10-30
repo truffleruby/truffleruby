@@ -63,11 +63,12 @@ describe 'TracePoint#inspect' do
       line = __LINE__ + 4
       def trace_point_spec_test_return
         a = 1
-        return a
+        while true
+          return a
+        end
       end
       trace_point_spec_test_return
     end
-    ruby_version_is("3.4") { line -= 1 }
 
     inspect.should =~ /\A#<TracePoint:return [`']trace_point_spec_test_return'#{@path_prefix}#{__FILE__}:#{line}>\z/
   end

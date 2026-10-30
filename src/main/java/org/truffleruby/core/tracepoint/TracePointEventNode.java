@@ -24,14 +24,14 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.truffleruby.core.thread.RubyThread;
 import org.truffleruby.language.arguments.RubyArguments;
 
-final class TracePointEventNode extends TraceBaseEventNode {
+class TracePointEventNode extends TraceBaseEventNode {
 
-    private final ConditionProfile inTracePointProfile = ConditionProfile.create();
+    protected final ConditionProfile inTracePointProfile = ConditionProfile.create();
 
-    private final RubyTracePoint tracePoint;
+    protected final RubyTracePoint tracePoint;
     private final RubyProc proc;
-    private final RubySymbol event;
-    private final RubyLanguage language;
+    protected final RubySymbol event;
+    protected final RubyLanguage language;
     private final boolean cCall;
 
     public TracePointEventNode(
@@ -69,6 +69,11 @@ final class TracePointEventNode extends TraceBaseEventNode {
                     RubyArguments.getSelf(frame), RubyArguments.getMethod(frame));
         }
 
+        callTracePointProc(rubyThread, tracePointEvent);
+    }
+
+    /** Calls the TracePoint proc with the event object, preventing nested events while it runs */
+    protected final void callTracePointProc(RubyThread rubyThread, RubyTracePointEvent tracePointEvent) {
         rubyThread.insideTracePointProc = true;
         try {
             callBlock(proc, tracePointEvent);

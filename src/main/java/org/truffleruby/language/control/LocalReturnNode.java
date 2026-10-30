@@ -25,7 +25,7 @@ public final class LocalReturnNode extends RubyContextSourceNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
-        throw new LocalReturnException(value.execute(frame));
+        throw new LocalReturnException(value.execute(frame), this);
     }
 
     @Override

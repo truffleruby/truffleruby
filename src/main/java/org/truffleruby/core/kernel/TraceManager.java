@@ -23,7 +23,8 @@ public abstract class TraceManager {
     public static final class CCallTag extends Tag {
     }
 
-    /** A tag which applies to no Node, but is useful to handle not-yet-implemented TracePoint events. */
-    public static final class NeverTag extends Tag {
+    /** Applies to the same nodes as {@link CallTag}, as the :return event is for the return of methods defined in
+     * Ruby */
+    public static final class ReturnTag extends Tag {
     }
 }

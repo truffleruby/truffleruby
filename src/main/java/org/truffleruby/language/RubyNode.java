@@ -197,7 +197,7 @@ public abstract class RubyNode extends RubyBaseNodeWithExecute implements Instru
     public boolean hasTag(Class<? extends Tag> tag) {
         byte flags = getFlags();
         // NOTE: TraceManager.CallTag/CCallTag for the :call/:c_call TracePoint events are in the callee like in MRI
-        if (tag == TraceManager.CallTag.class) {
+        if (tag == TraceManager.CallTag.class || tag == TraceManager.ReturnTag.class) {
             return isTag(flags, FLAG_CALL);
         }
 

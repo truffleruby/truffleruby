@@ -28,7 +28,7 @@ public final class DynamicReturnNode extends RubyContextSourceNode {
 
     @Override
     public Object execute(VirtualFrame frame) {
-        throw new DynamicReturnException(returnID, value.execute(frame));
+        throw new DynamicReturnException(returnID, value.execute(frame), this);
     }
 
     @Override

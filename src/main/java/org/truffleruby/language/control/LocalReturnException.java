@@ -10,18 +10,26 @@
  */
 package org.truffleruby.language.control;
 
+import com.oracle.truffle.api.nodes.Node;
 
 @SuppressWarnings("serial")
 public final class LocalReturnException extends RubyControlFlowException {
 
     private final Object value;
+    /** The node of the return expression, used for the :return TracePoint event */
+    private final Node returnNode;
 
-    public LocalReturnException(Object value) {
+    public LocalReturnException(Object value, Node returnNode) {
         this.value = value;
+        this.returnNode = returnNode;
     }
 
     public Object getValue() {
         return value;
+    }
+
+    public Node getReturnNode() {
+        return returnNode;
     }
 
 }

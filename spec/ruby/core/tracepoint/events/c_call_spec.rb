@@ -30,7 +30,7 @@ describe 'TracePoint :c_call event' do
     defined_class.should == singleton_class
     method_id.should == :trace_point_spec_ruby_method
     lineno.should == ruby_method_line
-    self_value.should equal(self)
+    self_value.should.equal?(self)
     binding.should.is_a?(Binding)
   end
 end
