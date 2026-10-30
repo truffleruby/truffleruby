@@ -7,6 +7,7 @@ New features:
 Bug fixes:
 
 * Fix `Process.exec` ignoring the `:umask` option (@nirvdrum).
+* Fix `Socket.tcp` and `Addrinfo#connect` with a timeout returning an unconnected socket on macOS when the connection was refused (@eregon).
 
 Compatibility:
 
