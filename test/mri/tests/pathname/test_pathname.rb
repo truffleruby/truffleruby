@@ -1345,13 +1345,11 @@ class TestPathname < Test::Unit::TestCase
   end
 
   def test_s_glob_3args
-    # Note: truffleruby should behave like CRuby 3.1+, but it's not the case currently
-    expect = (RUBY_VERSION >= "3.1" && RUBY_ENGINE != "truffleruby") ? [Pathname("."), Pathname("f")] : [Pathname("."), Pathname(".."), Pathname("f")]
     with_tmpchdir('rubytest-pathname') {|dir|
       open("f", "w") {|f| f.write "abc" }
       Dir.chdir("/") {
         assert_equal(
-          expect,
+          [Pathname("."), Pathname("f")],
           Pathname.glob("*", File::FNM_DOTMATCH, base: dir).sort)
       }
     }

@@ -1,0 +1,2 @@
+_Init_openssl
+_rb_tr_abi_version

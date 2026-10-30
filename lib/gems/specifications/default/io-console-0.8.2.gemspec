@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.description = "add console capabilities to IO instances.".freeze
   s.email = "nobu@ruby-lang.org".freeze
   s.extensions = ["ext/io/console/extconf.rb".freeze]
-  s.files = [".document".freeze, "BSDL".freeze, "COPYING".freeze, "README.md".freeze, "ext/io/console/console.c".freeze, "ext/io/console/extconf.rb".freeze, "ext/io/console/win32_vk.inc".freeze, "io/console.#{Truffle::Platform::DLEXT}".freeze, "lib/console/size.rb".freeze, "lib/lib/io/console/size.rb".freeze]
+  s.files = [".document".freeze, "BSDL".freeze, "COPYING".freeze, "README.md".freeze, "ext/io/console/console.c".freeze, "ext/io/console/extconf.rb".freeze, "ext/io/console/win32_vk.inc".freeze, "lib/io/console.#{Truffle::Platform::DLEXT}".freeze, "lib/io/console/size.rb".freeze]
   s.homepage = "https://github.com/ruby/io-console".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.6.0".freeze)

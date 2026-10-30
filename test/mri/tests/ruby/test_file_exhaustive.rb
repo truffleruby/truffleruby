@@ -3,7 +3,7 @@ require "test/unit"
 require "fileutils"
 require "tmpdir"
 require "socket"
-require '-test-/file'
+# require '-test-/file'
 
 class TestFileExhaustive < Test::Unit::TestCase
   ROOT_REGEXP = %r'\A(?:[a-z]:(?=(/))|//[^/]+/[^/]+)'i

@@ -185,7 +185,9 @@ CONSTFUNC(st_index_t rb_st_hash_end(st_index_t h));
 CONSTFUNC(st_index_t rb_st_hash_start(st_index_t h));
 #define st_hash_start(h) ((st_index_t)(h))
 
+#ifndef TRUFFLERUBY
 void rb_hash_bulk_insert_into_st_table(long, const VALUE *, VALUE);
+#endif
 
 RUBY_SYMBOL_EXPORT_END
 

@@ -2308,7 +2308,7 @@ class TestIO < Test::Unit::TestCase
 
   def can_seek_data(f)
     if /linux/ =~ RUBY_PLATFORM
-      require "-test-/file"
+      # require "-test-/file"
       # lseek(2)
       case Bug::File::Fs.fsname(f.path)
       when "btrfs"
