@@ -21,12 +21,12 @@ MRI files.
 ## Updating a specific default gem
 
 To update a specific default gem to a newer version than in the MRI release,
-you need to have `git@github.com:eregon/ruby.git` as a remote named `eregon` of `../ruby`.
+you need to have `git@github.com:eregon/ruby.git` as a remote named `eregon` of `../ruby-$VERSION`
+(the MRI source checkout, see [Setup](#setup) below).
 
 Then run:
 ```
-cd truffleruby
-cd ../ruby
+cd ../ruby-$VERSION
 git checkout -b truffleruby-updates-$VERSION vn.n.n
 git cherry-pick 5ca7fd9d2bfc028f41fe563be39e44e6d1e31129
 pushd ../..
@@ -40,6 +40,18 @@ git push -u eregon HEAD
 ```
 to update the default gem in MRI.
 Then follow the instructions below to reimport MRI files.
+
+When updating to a new MRI release which still ships an older version of that gem
+(e.g. a patch release), cherry-pick the resulting `Update to $GEM x.y.z` commit
+from the previous MRI checkout onto the new one instead of redoing the above:
+```
+cd ../ruby-$VERSION
+git fetch ../ruby-$OLD_VERSION HEAD
+git cherry-pick <sha-of-the-"Update to $GEM x.y.z"-commit>
+```
+The TruffleRuby-specific gemspec under `lib/gems/specifications/default` is then
+re-applied like other patches by the `git revert vOld` step below
+(expect a modify/delete conflict on the gemspec of the version shipped by MRI, resolve it with `git rm`).
 
 Also update `versions.json`.
 
@@ -82,17 +94,29 @@ Re-install the target MRI version using the commands, to have a clean set of gem
 rm -rf ~/.rubies/ruby-$VERSION
 ruby-build -d ruby-$VERSION ~/.rubies
 ```
+If `~/.rubies/ruby-$VERSION` is the Ruby used by your shell (and so by `jt`), install a separate copy instead
+and pass it with `RUBY_INSTALL_DIR` when running `tool/import-mri-files.sh`:
+```
+ruby-build $VERSION ~/.rubies/ruby-$VERSION-clean
+export RUBY_INSTALL_DIR=~/.rubies/ruby-$VERSION-clean
+```
 
 `tool/import-mri-files.sh` copies the default and bundled gems from this installation
 (`~/.rubies/ruby-$VERSION` by default, it must be the same version as the MRI source directory;
 set `RUBY_INSTALL_DIR` to use another installation), so it must not have extra gems installed.
+Only gems under `Gem.default_dir` of that installation are copied, gems installed in the
+user gem directory (`~/.gem/ruby/x.y.0`, which `gem list` also shows) do not matter.
 
 ## Create reference branches
 
 For both the current version of Ruby you're using and the new version create
 reference branches (in the TruffleRuby repository) that include unmodified MRI sources.
+Both branches must be created from the current `master`, so that the difference between
+the old version's branch and `master` is exactly the TruffleRuby patches to re-apply.
+Do not reuse the reference branch created for the previous update.
 
-Check out the version of Ruby you want to create the branch for in `../ruby`, e.g.:
+Check out the version of Ruby you want to create the branch for in `../ruby-n.n.n`
+(`tool/import-mri-files.sh` uses `../ruby-$VERSION` when `VERSION` is set, and `../ruby` otherwise), e.g.:
 
 ```
 git clone --branch v4.0.9 https://github.com/ruby/ruby.git ../ruby-4.0.9
@@ -101,10 +125,14 @@ git clone --branch v4.0.9 https://github.com/ruby/ruby.git ../ruby-4.0.9
 Then create the reference branch in the TruffleRuby repository
 
 ```bash
-git checkout -b ruby-n.n.n
+export VERSION=n.n.n
+git checkout -b ruby-$VERSION master
 tool/import-mri-files.sh
-git commit -am 'Import files from MRI n.n.n'
+git add lib/mri lib/gems exe src/main/c src/main/ruby/truffleruby/core/pathname.rb lib/truffle/socket/mri.rb   test/mri/tests test/basictest test/bootstraptest doc/legal lib/cext/include   spec/truffle/capi/ext/internal_id.h tool/known_errors.def tool/id.def
+git commit --no-verify -m "Import files from MRI $VERSION"
 ```
+`--no-verify` is needed if the lint pre-commit hook (`tool/hooks/lint-check.sh`) is installed,
+since unmodified MRI files (e.g. `src/main/c/cext/strlcpy.c`) do not pass our linters.
 
 You can then compare between these two branches and yours. For example to see
 what changes you made on top of the old version, what's changed between the
