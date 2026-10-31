@@ -89,20 +89,14 @@ Set the environment variable `$VERSION` to the target version:
 export VERSION=n.n.n
 ```
 
-Re-install the target MRI version using the commands, to have a clean set of gems:
+Install the target MRI version in a separate directory, to have a clean set of gems:
 ```
-rm -rf ~/.rubies/ruby-$VERSION
-ruby-build -d ruby-$VERSION ~/.rubies
-```
-If `~/.rubies/ruby-$VERSION` is the Ruby used by your shell (and so by `jt`), install a separate copy instead
-and pass it with `RUBY_INSTALL_DIR` when running `tool/import-mri-files.sh`:
-```
+rm -rf ~/.rubies/ruby-$VERSION-clean
 ruby-build $VERSION ~/.rubies/ruby-$VERSION-clean
-export RUBY_INSTALL_DIR=~/.rubies/ruby-$VERSION-clean
 ```
 
 `tool/import-mri-files.sh` copies the default and bundled gems from this installation
-(`~/.rubies/ruby-$VERSION` by default, it must be the same version as the MRI source directory;
+(`~/.rubies/ruby-$VERSION-clean` by default, it must be the same version as the MRI source directory;
 set `RUBY_INSTALL_DIR` to use another installation), so it must not have extra gems installed.
 Only gems under `Gem.default_dir` of that installation are copied, gems installed in the
 user gem directory (`~/.gem/ruby/x.y.0`, which `gem list` also shows) do not matter.

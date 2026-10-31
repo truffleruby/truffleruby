@@ -15,7 +15,8 @@ fi
 
 topdir=$(cd "$RUBY_SOURCE_DIR" && pwd -P)
 
-# Default and bundled gems are copied from an installed MRI of the same version as $RUBY_SOURCE_DIR
+# Default and bundled gems are copied from a clean install of MRI of the same version as $RUBY_SOURCE_DIR,
+# see doc/contributor/updating-ruby.md
 ruby_version=$(cd "$RUBY_SOURCE_DIR" && ruby -e '
   api = File.read("include/ruby/version.h")
   major = api[/^#define RUBY_API_VERSION_MAJOR (\d+)/, 1]
@@ -23,7 +24,7 @@ ruby_version=$(cd "$RUBY_SOURCE_DIR" && ruby -e '
   teeny = File.read("version.h")[/^#define RUBY_VERSION_TEENY (\d+)/, 1]
   print [major, minor, teeny].join(".")')
 if [ -z "$RUBY_INSTALL_DIR" ]; then
-  RUBY_INSTALL_DIR=$HOME/.rubies/ruby-$ruby_version
+  RUBY_INSTALL_DIR=$HOME/.rubies/ruby-$ruby_version-clean
 fi
 installed_version=$("$RUBY_INSTALL_DIR/bin/ruby" -e 'print RUBY_VERSION')
 if [ "$installed_version" != "$ruby_version" ]; then
