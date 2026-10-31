@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Soutaro Matsumoto".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-03-17"
+  s.date = "2026-10-23"
   s.description = "RBS is the language for type signatures for Ruby and standard library definitions.".freeze
   s.email = ["matsumoto@soutaro.com".freeze]
   s.executables = ["rbs".freeze]
@@ -20,10 +20,10 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/ruby/rbs".freeze
   s.licenses = ["BSD-2-Clause".freeze, "Ruby".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 3.1".freeze)
-  s.rubygems_version = "4.0.6".freeze
+  s.rubygems_version = "4.0.20".freeze
   s.summary = "Type signature for Ruby.".freeze
 
-  s.installed_by_version = "4.0.6".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

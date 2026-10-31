@@ -21,13 +21,14 @@ MRI files.
 ## Updating a specific default gem
 
 To update a specific default gem to a newer version than in the MRI release,
-you need to have `git@github.com:eregon/ruby.git` as a remote named `eregon` of `../ruby`.
+you need to have `git@github.com:eregon/ruby.git` as a remote named `eregon` of `../ruby-$VERSION`
+(the MRI source checkout, see [Create reference branches](#create-reference-branches) below;
+the `../ruby-n.n.n` worktrees share their remotes).
 
 Then run:
 ```
-cd truffleruby
-cd ../ruby
-git checkout -b truffleruby-updates-$VERSION vn.n.n
+cd ../ruby-$VERSION
+git checkout truffleruby-updates-$VERSION
 git cherry-pick 5ca7fd9d2bfc028f41fe563be39e44e6d1e31129
 pushd ../..
 git clone git@github.com:ruby/$GEM.git
@@ -40,6 +41,18 @@ git push -u eregon HEAD
 ```
 to update the default gem in MRI.
 Then follow the instructions below to reimport MRI files.
+
+When updating to a new MRI release which still ships an older version of that gem
+(e.g. a patch release), cherry-pick the resulting `Update to $GEM x.y.z` commit
+from the previous MRI worktree onto the new one instead of redoing the above
+(the commit is directly available since the `../ruby-n.n.n` worktrees share the same repository):
+```
+cd ../ruby-$VERSION
+git cherry-pick <sha-of-the-"Update to $GEM x.y.z"-commit>
+```
+The TruffleRuby-specific gemspec under `lib/gems/specifications/default` is then
+re-applied like other patches by the `git revert vOld` step below
+(expect a modify/delete conflict on the gemspec of the version shipped by MRI, resolve it with `git rm`).
 
 Also update `versions.json`.
 
@@ -77,34 +90,54 @@ Set the environment variable `$VERSION` to the target version:
 export VERSION=n.n.n
 ```
 
-Re-install the target MRI version using the commands, to have a clean set of gems:
+Install the target MRI version in a separate directory, to have a clean set of gems:
 ```
-rm -rf ~/.rubies/ruby-$VERSION
-ruby-build -d ruby-$VERSION ~/.rubies
+rm -rf ~/.rubies/ruby-$VERSION-clean
+ruby-build $VERSION ~/.rubies/ruby-$VERSION-clean
 ```
 
 `tool/import-mri-files.sh` copies the default and bundled gems from this installation
-(`~/.rubies/ruby-$VERSION` by default, it must be the same version as the MRI source directory;
+(`~/.rubies/ruby-$VERSION-clean` by default, it must be the same version as the MRI source directory;
 set `RUBY_INSTALL_DIR` to use another installation), so it must not have extra gems installed.
+Only gems under `Gem.default_dir` of that installation are copied, gems installed in the
+user gem directory (`~/.gem/ruby/x.y.0`, which `gem list` also shows) do not matter.
 
 ## Create reference branches
 
 For both the current version of Ruby you're using and the new version create
 reference branches (in the TruffleRuby repository) that include unmodified MRI sources.
+Both branches must be created from the current `master`, so that the difference between
+the old version's branch and `master` is exactly the TruffleRuby patches to re-apply.
+Do not reuse the reference branch created for the previous update.
 
-Check out the version of Ruby you want to create the branch for in `../ruby`, e.g.:
+Check out the version of Ruby you want to create the branch for in `../ruby-n.n.n`
+(`tool/import-mri-files.sh` uses `../ruby-$VERSION`), as a git worktree of the previous version's
+`../ruby-n.n.n` checkout, so that objects and remotes are shared between versions:
 
+```bash
+export VERSION=n.n.n
+git -C ../ruby-$OLD_VERSION fetch origin tag v$VERSION --no-tags
+git -C ../ruby-$OLD_VERSION worktree add -b truffleruby-updates-$VERSION ../ruby-$VERSION v$VERSION
 ```
-git clone --branch v4.0.2 https://github.com/ruby/ruby.git ../ruby
+
+If there is no previous `../ruby-n.n.n` checkout yet, clone it instead:
+```bash
+git clone https://github.com/ruby/ruby.git ../ruby-$VERSION
+git -C ../ruby-$VERSION checkout -b truffleruby-updates-$VERSION v$VERSION
 ```
 
 Then create the reference branch in the TruffleRuby repository
 
 ```bash
-git checkout -b ruby-n.n.n
+git checkout -b ruby-$VERSION master
 tool/import-mri-files.sh
-git commit -am 'Import files from MRI n.n.n'
+git add lib/mri lib/gems exe src/main/c src/main/ruby/truffleruby/core/pathname.rb lib/truffle/socket/mri.rb \
+  test/mri/tests test/basictest test/bootstraptest doc/legal lib/cext/include \
+  spec/truffle/capi/ext/internal_id.h tool/known_errors.def tool/id.def
+git commit --no-verify -m "Import files from MRI $VERSION"
 ```
+`--no-verify` is needed if the lint pre-commit hook (`tool/hooks/lint-check.sh`) is installed,
+since unmodified MRI files (e.g. `src/main/c/cext/strlcpy.c`) do not pass our linters.
 
 You can then compare between these two branches and yours. For example to see
 what changes you made on top of the old version, what's changed between the
@@ -143,7 +176,7 @@ but not for files under `test/mri/tests/cext-ruby`.
 
 ## Update libraries from third-party repos
 
-Look in `../ruby/ext/json/lib/json/version.rb` to see the version of `ruby/json` being used,
+Look in `../ruby-$VERSION/ext/json/lib/json/version.rb` to see the version of `ruby/json` being used,
 compare to `lib/json/lib/json/version.rb` and if different then reimport json:
 ```
 rm -rf lib/json
@@ -200,7 +233,7 @@ Update all of these:
 * Reset `truffleruby-abi-version.h` to `$RUBY_VERSION.1` and `lib/cext/ABI_check.txt` to `1` if `RUBY_VERSION` was updated.
   * use `$TRUFFLERUBY_VERSION.1` in `truffleruby-abi-version.h` instead when on a release branch.
 * Update `versions.json`
-  * run `RUBY_SOURCE_DIR=../ruby tool/update-gem-versions-list.rb`
+  * run `RUBY_SOURCE_DIR=../ruby-$VERSION tool/update-gem-versions-list.rb`
   * Undo the change to the `prism` version
 * Copy and paste the `-h` and `--help` output from CRuby to `RubyLauncher` (instructions are in the end of the file `src/launcher/java/org/truffleruby/launcher/RubyLauncher.java`)
 * This is a good time to get `jt build` working.

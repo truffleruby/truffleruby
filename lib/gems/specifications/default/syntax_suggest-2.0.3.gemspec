@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["schneems".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-03-17"
+  s.date = "2026-10-23"
   s.description = "When you get an \"unexpected end\" in your syntax this gem helps you find it".freeze
   s.email = ["richard.schneeman+foo@gmail.com".freeze]
   s.executables = ["syntax_suggest".freeze]
@@ -18,6 +18,6 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/ruby/syntax_suggest.git".freeze
   s.licenses = ["MIT".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 3.0.0".freeze)
-  s.rubygems_version = "4.0.6".freeze
+  s.rubygems_version = "4.0.20".freeze
   s.summary = "Find syntax errors in your source in a snap".freeze
 end

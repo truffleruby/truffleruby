@@ -42,6 +42,7 @@ module Bundler
     ].freeze
 
     NUMBER_KEYS = %w[
+      cooldown
       jobs
       redirect
       retry
@@ -59,6 +60,7 @@ module Bundler
       bin
       cache_path
       console
+      default_cli_command
       gem.ci
       gem.github_username
       gem.linter
@@ -301,6 +303,10 @@ module Bundler
 
     def app_cache_path
       @app_cache_path ||= self[:cache_path] || "vendor/cache"
+    end
+
+    def installation_parallelization
+      self[:jobs] || processor_count
     end
 
     def validate!

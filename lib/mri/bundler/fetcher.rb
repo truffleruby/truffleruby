@@ -215,7 +215,13 @@ module Bundler
           agent << " #{ruby.engine}/#{ruby.versions_string(engine_version)}"
         end
 
-        agent << " options/#{Bundler.settings.all.join(",")}"
+        # Some settings keys embed a URI (e.g. `mirror.<uri>`) whose userinfo can
+        # carry credentials. Strip the userinfo before advertising the setting
+        # names so we don't leak secrets to every gem source we talk to.
+        options = Bundler.settings.all.map do |key|
+          key.include?("://") ? key.gsub(%r{//[^/@]+@}, "//") : key
+        end
+        agent << " options/#{options.join(",")}"
 
         agent << " ci/#{cis.join(",")}" if cis.any?
 
@@ -241,6 +247,10 @@ module Bundler
 
     def api_fetcher?
       fetchers.first.api_fetcher?
+    end
+
+    def release_resolution_memory!
+      @fetchers&.each(&:release_resolution_memory!)
     end
 
     def gem_remote_fetcher
@@ -314,7 +324,7 @@ module Bundler
         if ssl_client_cert
           pem = File.read(ssl_client_cert)
           con.cert = OpenSSL::X509::Certificate.new(pem)
-          con.key  = OpenSSL::PKey::RSA.new(pem)
+          con.key  = OpenSSL::PKey.read(pem)
         end
 
         con.read_timeout = Fetcher.api_timeout

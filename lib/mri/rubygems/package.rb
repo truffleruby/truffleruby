@@ -164,7 +164,7 @@ class Gem::Package
     return super unless gem.start
     return super unless gem.start.include? "MD5SUM ="
 
-    Gem::Package::Old.new gem
+    Gem::Package::Old.new gem, security_policy
   end
 
   ##
@@ -452,6 +452,8 @@ EOM
           directories << mkdir
         end
 
+        verify_extraction_dir mkdir, destination_dir
+
         if entry.file?
           File.open(destination, "wb") do |out|
             copy_stream(tar.io, out, entry.size)
@@ -469,7 +471,7 @@ EOM
 
     symlinks.each do |name, target, destination, real_destination|
       if File.exist?(real_destination)
-        File.symlink(target, destination)
+        create_symlink(target, destination)
       else
         alert_warning "#{@spec.full_name} ships with a dangling symlink named #{name} pointing to missing #{target} file. Ignoring"
       end
@@ -555,6 +557,15 @@ EOM
       tar = Gem::Package::TarReader.new gzio
 
       yield tar
+    ensure
+      # Consume remaining gzip data to prevent the
+      # "attempt to close unfinished zstream; reset forced" warning
+      # when the GzipReader is closed with unconsumed compressed data.
+      begin
+        IO.copy_stream(gzio, IO::NULL)
+      rescue Zlib::GzipFile::Error, IOError
+        nil
+      end
     end
   end
 
@@ -646,6 +657,20 @@ EOM
   end
 
   private
+
+  ##
+  # Raises an exception unless +dir+, with symlinks resolved, is
+  # +destination_dir+ or a directory inside it.  +destination_dir+ must
+  # already be resolved with File.realpath by the caller.
+
+  def verify_extraction_dir(dir, destination_dir) # :nodoc:
+    real_dir = File.realpath(dir)
+
+    return if real_dir == destination_dir ||
+              normalize_path(real_dir).start_with?(normalize_path(destination_dir + "/"))
+
+    raise Gem::Package::PathError.new(real_dir, destination_dir)
+  end
 
   ##
   # Verifies the +checksums+ against the +digests+.  This check is not
@@ -740,6 +765,21 @@ EOM
     bytes = io.read(limit + 1)
     raise Gem::Package::FormatError, "#{name} is too big (over #{limit} bytes)" if bytes.size > limit
     bytes
+  end
+
+  if Gem.win_platform?
+    # Create a symlink and fallback to copy the file or directory on Windows,
+    # where symlink creation needs special privileges in form of the Developer Mode.
+    def create_symlink(old_name, new_name)
+      File.symlink(old_name, new_name)
+    rescue Errno::EACCES
+      from = File.expand_path(old_name, File.dirname(new_name))
+      FileUtils.cp_r(from, new_name)
+    end
+  else
+    def create_symlink(old_name, new_name)
+      File.symlink(old_name, new_name)
+    end
   end
 end
 

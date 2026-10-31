@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["aycabta".freeze]
-  s.date = "2026-03-17"
+  s.date = "2026-10-23"
   s.description = "This is just a loader for \"readline\". If Ruby has the \"readline-ext\" gem\nthat is a native extension, this gem will load it. If Ruby does not have\nthe \"readline-ext\" gem this gem will load \"reline\", a library that is\ncompatible with the \"readline-ext\" gem and implemented in pure Ruby.\n".freeze
   s.email = ["aycabta@gmail.com".freeze]
   s.homepage = "https://github.com/ruby/readline".freeze
@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.4.20".freeze
   s.summary = "Loader for \"readline\".".freeze
 
-  s.installed_by_version = "4.0.6".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 
