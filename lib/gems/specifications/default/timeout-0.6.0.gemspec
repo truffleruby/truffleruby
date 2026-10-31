@@ -9,13 +9,13 @@ Gem::Specification.new do |s|
   s.metadata = { "changelog_uri" => "https://github.com/ruby/timeout/releases", "homepage_uri" => "https://github.com/ruby/timeout", "source_code_uri" => "https://github.com/ruby/timeout" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Yukihiro Matsumoto".freeze]
-  s.date = "2026-03-17"
+  s.date = "2026-10-23"
   s.description = "Auto-terminate potentially long-running operations in Ruby.".freeze
   s.email = ["matz@ruby-lang.org".freeze]
   s.files = ["lib/timeout.rb".freeze]
   s.homepage = "https://github.com/ruby/timeout".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.6.0".freeze)
-  s.rubygems_version = "4.0.6".freeze
+  s.rubygems_version = "4.0.20".freeze
   s.summary = "Auto-terminate potentially long-running operations in Ruby.".freeze
 end

@@ -13,7 +13,7 @@ test-unit           3.7.5   https://github.com/test-unit/test-unit
 rexml               3.4.4   https://github.com/ruby/rexml
 rss                 0.3.2   https://github.com/ruby/rss
 net-ftp             0.3.9   https://github.com/ruby/net-ftp
-net-imap            0.6.2   https://github.com/ruby/net-imap
+net-imap            0.6.4.1 https://github.com/ruby/net-imap
 net-pop             0.1.2   https://github.com/ruby/net-pop
 net-smtp            0.5.1   https://github.com/ruby/net-smtp
 matrix              0.4.3   https://github.com/ruby/matrix
@@ -39,7 +39,7 @@ ostruct             0.6.3   https://github.com/ruby/ostruct
 pstore              0.2.1   https://github.com/ruby/pstore
 benchmark           0.5.0   https://github.com/ruby/benchmark
 logger              1.7.0   https://github.com/ruby/logger
-rdoc                7.0.3   https://github.com/ruby/rdoc
+rdoc                7.0.4   https://github.com/ruby/rdoc
 win32ole            1.9.2   https://github.com/ruby/win32ole
 irb                 1.16.0  https://github.com/ruby/irb
 reline              0.6.3   https://github.com/ruby/reline

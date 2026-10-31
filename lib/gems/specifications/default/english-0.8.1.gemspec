@@ -9,13 +9,13 @@ Gem::Specification.new do |s|
   s.metadata = { "homepage_uri" => "https://github.com/ruby/English", "source_code_uri" => "https://github.com/ruby/English" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Yukihiro Matsumoto".freeze]
-  s.date = "2026-03-17"
+  s.date = "2026-10-23"
   s.description = "Require 'English.rb' to reference global variables with less cryptic names.".freeze
   s.email = ["matz@ruby-lang.org".freeze]
   s.files = ["lib/English.rb".freeze]
   s.homepage = "https://github.com/ruby/English".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.3.0".freeze)
-  s.rubygems_version = "4.0.6".freeze
+  s.rubygems_version = "4.0.20".freeze
   s.summary = "Require 'English.rb' to reference global variables with less cryptic names.".freeze
 end

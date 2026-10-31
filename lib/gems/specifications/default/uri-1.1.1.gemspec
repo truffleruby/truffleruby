@@ -10,13 +10,13 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Akira Yamada".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-03-17"
+  s.date = "2026-10-23"
   s.description = "URI is a module providing classes to handle Uniform Resource Identifiers".freeze
   s.email = ["akira@ruby-lang.org".freeze]
   s.files = ["lib/uri.rb".freeze, "lib/uri/common.rb".freeze, "lib/uri/file.rb".freeze, "lib/uri/ftp.rb".freeze, "lib/uri/generic.rb".freeze, "lib/uri/http.rb".freeze, "lib/uri/https.rb".freeze, "lib/uri/ldap.rb".freeze, "lib/uri/ldaps.rb".freeze, "lib/uri/mailto.rb".freeze, "lib/uri/rfc2396_parser.rb".freeze, "lib/uri/rfc3986_parser.rb".freeze, "lib/uri/version.rb".freeze, "lib/uri/ws.rb".freeze, "lib/uri/wss.rb".freeze]
   s.homepage = "https://github.com/ruby/uri".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.5".freeze)
-  s.rubygems_version = "4.0.6".freeze
+  s.rubygems_version = "4.0.20".freeze
   s.summary = "URI is a module providing classes to handle Uniform Resource Identifiers".freeze
 end

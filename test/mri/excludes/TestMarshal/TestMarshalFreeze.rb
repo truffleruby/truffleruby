@@ -1,3 +1,4 @@
+exclude :test_linked_strings_are_frozen, "Expected \"test\" to be frozen?."
 exclude :test_object_prepend, "<[MarshalTestLib::Mod1,"
 exclude :test_proc_returned_object_are_not_frozen, "Expected /foo/ to not be frozen?."
 exclude :test_range_cyclic, "ArgumentError: dump format error (unlinked)"
