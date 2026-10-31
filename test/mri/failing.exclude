@@ -62,6 +62,9 @@ cext-ruby/string/test_nofree.rb
 # needs internal/time.h
 cext-ruby/time/test_new.rb
 
+# needs internal/thread.h
+cext-ruby/thread/test_fork_lock.rb
+
 # Other issues
 
 cext-ruby/array/test_to_ary_concat.rb # non-standard extension name and irrelevant
