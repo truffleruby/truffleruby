@@ -5,12 +5,13 @@
 set -x
 set -e
 
+# See doc/contributor/updating-ruby.md
 if [ -z "$RUBY_SOURCE_DIR" ]; then
-  if [ -n "$VERSION" ]; then
-    RUBY_SOURCE_DIR=../ruby-$VERSION
-  else
-    RUBY_SOURCE_DIR=../ruby
+  if [ -z "$VERSION" ]; then
+    echo "Set VERSION to the MRI version to import (the MRI source checkout is then expected at ../ruby-\$VERSION), or set RUBY_SOURCE_DIR" >&2
+    exit 1
   fi
+  RUBY_SOURCE_DIR=../ruby-$VERSION
 fi
 
 topdir=$(cd "$RUBY_SOURCE_DIR" && pwd -P)

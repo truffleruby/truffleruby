@@ -110,7 +110,7 @@ the old version's branch and `master` is exactly the TruffleRuby patches to re-a
 Do not reuse the reference branch created for the previous update.
 
 Check out the version of Ruby you want to create the branch for in `../ruby-n.n.n`
-(`tool/import-mri-files.sh` uses `../ruby-$VERSION` when `VERSION` is set, and `../ruby` otherwise), e.g.:
+(`tool/import-mri-files.sh` uses `../ruby-$VERSION`), e.g.:
 
 ```
 git clone --branch v4.0.9 https://github.com/ruby/ruby.git ../ruby-4.0.9
@@ -165,7 +165,7 @@ but not for files under `test/mri/tests/cext-ruby`.
 
 ## Update libraries from third-party repos
 
-Look in `../ruby/ext/json/lib/json/version.rb` to see the version of `ruby/json` being used,
+Look in `../ruby-$VERSION/ext/json/lib/json/version.rb` to see the version of `ruby/json` being used,
 compare to `lib/json/lib/json/version.rb` and if different then reimport json:
 ```
 rm -rf lib/json
@@ -222,7 +222,7 @@ Update all of these:
 * Reset `truffleruby-abi-version.h` to `$RUBY_VERSION.1` and `lib/cext/ABI_check.txt` to `1` if `RUBY_VERSION` was updated.
   * use `$TRUFFLERUBY_VERSION.1` in `truffleruby-abi-version.h` instead when on a release branch.
 * Update `versions.json`
-  * run `RUBY_SOURCE_DIR=../ruby tool/update-gem-versions-list.rb`
+  * run `RUBY_SOURCE_DIR=../ruby-$VERSION tool/update-gem-versions-list.rb`
   * Undo the change to the `prism` version
 * Copy and paste the `-h` and `--help` output from CRuby to `RubyLauncher` (instructions are in the end of the file `src/launcher/java/org/truffleruby/launcher/RubyLauncher.java`)
 * This is a good time to get `jt build` working.
