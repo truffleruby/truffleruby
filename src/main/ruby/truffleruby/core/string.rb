@@ -1075,6 +1075,8 @@ class String
         raise TypeError, "wrong argument type #{Primitive.class(arg).name} (expected String or Integer)"
       end
     end
+
+    self
   end
 
   def byteindex(str, start = 0)
