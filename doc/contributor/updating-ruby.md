@@ -22,12 +22,13 @@ MRI files.
 
 To update a specific default gem to a newer version than in the MRI release,
 you need to have `git@github.com:eregon/ruby.git` as a remote named `eregon` of `../ruby-$VERSION`
-(the MRI source checkout, see [Setup](#setup) below).
+(the MRI source checkout, see [Create reference branches](#create-reference-branches) below;
+the `../ruby-n.n.n` worktrees share their remotes).
 
 Then run:
 ```
 cd ../ruby-$VERSION
-git checkout -b truffleruby-updates-$VERSION vn.n.n
+git checkout truffleruby-updates-$VERSION
 git cherry-pick 5ca7fd9d2bfc028f41fe563be39e44e6d1e31129
 pushd ../..
 git clone git@github.com:ruby/$GEM.git
@@ -43,10 +44,10 @@ Then follow the instructions below to reimport MRI files.
 
 When updating to a new MRI release which still ships an older version of that gem
 (e.g. a patch release), cherry-pick the resulting `Update to $GEM x.y.z` commit
-from the previous MRI checkout onto the new one instead of redoing the above:
+from the previous MRI worktree onto the new one instead of redoing the above
+(the commit is directly available since the `../ruby-n.n.n` worktrees share the same repository):
 ```
 cd ../ruby-$VERSION
-git fetch ../ruby-$OLD_VERSION HEAD
 git cherry-pick <sha-of-the-"Update to $GEM x.y.z"-commit>
 ```
 The TruffleRuby-specific gemspec under `lib/gems/specifications/default` is then
@@ -110,19 +111,29 @@ the old version's branch and `master` is exactly the TruffleRuby patches to re-a
 Do not reuse the reference branch created for the previous update.
 
 Check out the version of Ruby you want to create the branch for in `../ruby-n.n.n`
-(`tool/import-mri-files.sh` uses `../ruby-$VERSION`), e.g.:
+(`tool/import-mri-files.sh` uses `../ruby-$VERSION`), as a git worktree of the previous version's
+`../ruby-n.n.n` checkout, so that objects and remotes are shared between versions:
 
+```bash
+export VERSION=n.n.n
+git -C ../ruby-$OLD_VERSION fetch origin tag v$VERSION --no-tags
+git -C ../ruby-$OLD_VERSION worktree add -b truffleruby-updates-$VERSION ../ruby-$VERSION v$VERSION
 ```
-git clone --branch v4.0.9 https://github.com/ruby/ruby.git ../ruby-4.0.9
+
+If there is no previous `../ruby-n.n.n` checkout yet, clone it instead:
+```bash
+git clone https://github.com/ruby/ruby.git ../ruby-$VERSION
+git -C ../ruby-$VERSION checkout -b truffleruby-updates-$VERSION v$VERSION
 ```
 
 Then create the reference branch in the TruffleRuby repository
 
 ```bash
-export VERSION=n.n.n
 git checkout -b ruby-$VERSION master
 tool/import-mri-files.sh
-git add lib/mri lib/gems exe src/main/c src/main/ruby/truffleruby/core/pathname.rb lib/truffle/socket/mri.rb   test/mri/tests test/basictest test/bootstraptest doc/legal lib/cext/include   spec/truffle/capi/ext/internal_id.h tool/known_errors.def tool/id.def
+git add lib/mri lib/gems exe src/main/c src/main/ruby/truffleruby/core/pathname.rb lib/truffle/socket/mri.rb \
+  test/mri/tests test/basictest test/bootstraptest doc/legal lib/cext/include \
+  spec/truffle/capi/ext/internal_id.h tool/known_errors.def tool/id.def
 git commit --no-verify -m "Import files from MRI $VERSION"
 ```
 `--no-verify` is needed if the lint pre-commit hook (`tool/hooks/lint-check.sh`) is installed,
