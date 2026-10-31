@@ -78,13 +78,8 @@ public abstract class StringHelperNodes {
 
         @Specialization
         static boolean isSingleByteOptimizable(Node node, AbstractTruffleString string, RubyEncoding encoding,
-                @Cached InlinedConditionProfile asciiOnlyProfile,
                 @Cached(inline = false) TruffleString.GetByteCodeRangeNode getByteCodeRangeNode) {
-            if (asciiOnlyProfile.profile(node, StringGuards.is7Bit(string, encoding, getByteCodeRangeNode))) {
-                return true;
-            } else {
-                return encoding.isSingleByte;
-            }
+            return encoding.isSingleByte || StringGuards.is7Bit(string, encoding, getByteCodeRangeNode);
         }
     }
 
