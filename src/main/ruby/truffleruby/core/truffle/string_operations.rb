@@ -269,15 +269,13 @@ module Truffle
         end
       end
 
-      encoding = str.encoding
-
-      if start < bytesize && !Primitive.string_is_character_head?(encoding, str, start)
+      if start < bytesize && !Primitive.string_is_character_head?(str, start)
         raise IndexError, "offset #{start} does not land on character boundary"
       end
 
       finish = start + len
 
-      if finish < bytesize && !Primitive.string_is_character_head?(encoding, str, finish)
+      if finish < bytesize && !Primitive.string_is_character_head?(str, finish)
         raise IndexError, "offset #{finish} does not land on character boundary"
       end
     end
