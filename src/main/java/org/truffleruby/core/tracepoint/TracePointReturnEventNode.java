@@ -54,6 +54,8 @@ final class TracePointReturnEventNode extends TracePointEventNode {
 
     /** The ReturnID of the method, to know if a DynamicReturnException is a non-local return from this method */
     private final ReturnID returnID;
+    /** Whether this is the :c_return event, for methods defined in Java, otherwise :return */
+    private final boolean cReturn;
 
     public TracePointReturnEventNode(
             RubyContext context,
@@ -64,6 +66,7 @@ final class TracePointReturnEventNode extends TracePointEventNode {
         super(context, language, eventContext, tracePoint, event);
         final RootNode rootNode = eventContext.getInstrumentedNode().getRootNode();
         this.returnID = rootNode instanceof RubyRootNode rubyRootNode ? rubyRootNode.returnID : ReturnID.INVALID;
+        this.cReturn = event == language.coreSymbols.C_RETURN;
     }
 
     @Override
@@ -73,12 +76,21 @@ final class TracePointReturnEventNode extends TracePointEventNode {
 
     @Override
     protected void onReturnValue(VirtualFrame frame, Object result) {
-        // Like CRuby, the line of an implicit return is the line of the `end` of the method
-        fireReturn(frame, result, getEndLine());
+        if (cReturn) {
+            fireReturn(frame, result, 0);
+        } else {
+            // Like CRuby, the line of an implicit return is the line of the `end` of the method
+            fireReturn(frame, result, getEndLine());
+        }
     }
 
     @Override
     protected void onReturnExceptional(VirtualFrame frame, Throwable exception) {
+        if (cReturn) {
+            // Like CRuby, no :c_return event when a method defined in Java exits by an exception
+            return;
+        }
+
         exceptionalReturnProfile.enter();
         if (exception instanceof LocalReturnException localReturn) {
             fireReturn(frame, localReturn.getValue(), getLine(localReturn.getReturnNode()));
@@ -97,9 +109,17 @@ final class TracePointReturnEventNode extends TracePointEventNode {
             return;
         }
 
-        var tracePointEvent = new RubyTracePointEvent(tracePoint, language.tracePointEventShape, event, getFile(),
-                line, frame.materialize(), eventContext.getInstrumentedSourceSection(),
-                RubyArguments.getSelf(frame), RubyArguments.getMethod(frame));
+        final RubyTracePointEvent tracePointEvent;
+        if (cReturn) {
+            // Like CRuby, the location of a :c_return event is the call site and there is no binding
+            tracePointEvent = new RubyTracePointEvent(tracePoint, language.tracePointEventShape, event, Nil.INSTANCE,
+                    0, null, null, RubyArguments.getSelf(frame), RubyArguments.getMethod(frame));
+            setCallerLocation(tracePointEvent);
+        } else {
+            tracePointEvent = new RubyTracePointEvent(tracePoint, language.tracePointEventShape, event, getFile(),
+                    line, frame.materialize(), eventContext.getInstrumentedSourceSection(),
+                    RubyArguments.getSelf(frame), RubyArguments.getMethod(frame));
+        }
         tracePointEvent.returnValue = returnValue;
         callTracePointProc(rubyThread, tracePointEvent);
     }

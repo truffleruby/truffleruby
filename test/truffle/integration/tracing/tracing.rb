@@ -10,12 +10,14 @@
 $trace = []
 
 $trace_proc = proc { |*args|
-  bind = args[4]
+  binding = args[4]
   # Capture the current values of variables at this point in time.
-  capture = Hash[args[4].local_variables.sort.map { |v|
-    [v, args[4].local_variable_get(v)]
-  }]
-  args[4] = capture
+  # The binding is nil for c-call and c-return events.
+  unless binding.nil?
+    args[4] = Hash[binding.local_variables.sort.map { |v|
+      [v, binding.local_variable_get(v)]
+    }]
+  end
   $trace << args
 }
 

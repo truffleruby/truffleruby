@@ -75,16 +75,12 @@ ast: |
                                                                   flags = 0
                                                                   sourceCharIndex = -1
                                                                   sourceLength = 0
-                                  FireClassTracePointNode
+                                  FireClassAndEndTracePointsNode
                                       attributes:
+                                          endKeywordCharIndex = 44
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 47
-                                  FireEndTracePointNode
-                                      attributes:
-                                          flags = 0
-                                          sourceCharIndex = 44
-                                          sourceLength = 3
                                       children:
                                           body =
                                               CatchBreakNode

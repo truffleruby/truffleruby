@@ -113,6 +113,8 @@ public abstract class TracePointNodes {
                 return new TracePointEvent.Instrumented(TraceManager.CCallTag.class, eventSymbol);
             } else if (eventSymbol == language.coreSymbols.RETURN) {
                 return new TracePointEvent.Instrumented(TraceManager.ReturnTag.class, eventSymbol);
+            } else if (eventSymbol == language.coreSymbols.C_RETURN) {
+                return new TracePointEvent.Instrumented(TraceManager.CReturnTag.class, eventSymbol);
             } else {
                 throw new UnsupportedOperationException(eventSymbol.getString());
             }
@@ -290,7 +292,7 @@ public abstract class TracePointNodes {
         @Specialization
         Object returnValue(TracePointObject tracePoint) {
             final RubyTracePointEvent tracePointEvent = activeEvent(tracePoint);
-            if (tracePointEvent.event != coreSymbols().RETURN) {
+            if (tracePointEvent.event != coreSymbols().RETURN && tracePointEvent.event != coreSymbols().C_RETURN) {
                 errorProfile.enter();
                 throw new RaiseException(getContext(),
                         coreExceptions().runtimeError("not supported by this event", this));

@@ -27,4 +27,9 @@ public abstract class TraceManager {
      * Ruby */
     public static final class ReturnTag extends Tag {
     }
+
+    /** Applies to the same nodes as {@link CCallTag}, as the :c_return event is for the return of methods defined in
+     * Java */
+    public static final class CReturnTag extends Tag {
+    }
 }

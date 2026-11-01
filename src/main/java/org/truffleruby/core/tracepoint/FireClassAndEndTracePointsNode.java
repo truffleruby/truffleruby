@@ -31,37 +31,64 @@ package org.truffleruby.core.tracepoint;
 import org.truffleruby.language.RubyContextSourceNode;
 import org.truffleruby.language.RubyNode;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.profiles.BranchProfile;
+import com.oracle.truffle.api.source.SourceSection;
 
-/** Fires the :end TracePoint event at the end of a class or module body, after executing the body. The source section
- * of this node is the end keyword, which is used for the event location. */
-public final class FireEndTracePointNode extends RubyContextSourceNode {
+/** Triggers the :class TracePoint event before the body of a class or module definition, and the :end event after it,
+ * when the body completes normally like in CRuby. The source section of this node is the whole definition, as needed
+ * for the :class event, and the :end event uses the location of the end keyword. */
+public final class FireClassAndEndTracePointsNode extends RubyContextSourceNode {
+
+    private static final int END_KEYWORD_LENGTH = 3;
 
     @Child private RubyNode body;
+    /** The source char index of the end keyword of the definition */
+    private final int endKeywordCharIndex;
 
+    private final BranchProfile classTracePointsProfile = BranchProfile.create();
     private final BranchProfile endTracePointsProfile = BranchProfile.create();
 
-    public FireEndTracePointNode(RubyNode body) {
+    public FireClassAndEndTracePointsNode(RubyNode body, int endKeywordCharIndex) {
         this.body = body;
+        this.endKeywordCharIndex = endKeywordCharIndex;
     }
 
     @Override
     public Object execute(VirtualFrame frame) {
-        final Object value = body.execute(frame);
-
         final SlowPathTracePoints slowPathTracePoints = getContext().getSlowPathTracePoints();
-        if (slowPathTracePoints.endTracePoints.any()) {
-            endTracePointsProfile.enter();
-            slowPathTracePoints.fireEndEvent(frame.materialize(), this);
+        if (slowPathTracePoints.classTracePoints.any()) {
+            classTracePointsProfile.enter();
+            fireClassEvent(slowPathTracePoints, frame.materialize());
         }
 
+        final Object value = body.execute(frame);
+
+        if (slowPathTracePoints.endTracePoints.any()) {
+            endTracePointsProfile.enter();
+            fireEndEvent(slowPathTracePoints, frame.materialize());
+        }
         return value;
+    }
+
+    @TruffleBoundary
+    private void fireClassEvent(SlowPathTracePoints slowPathTracePoints, MaterializedFrame frame) {
+        slowPathTracePoints.fireClassEvent(frame, getSourceSection());
+    }
+
+    @TruffleBoundary
+    private void fireEndEvent(SlowPathTracePoints slowPathTracePoints, MaterializedFrame frame) {
+        final SourceSection endKeywordSourceSection = getSourceSection().getSource().createSection(
+                endKeywordCharIndex,
+                END_KEYWORD_LENGTH);
+        slowPathTracePoints.fireEndEvent(frame, endKeywordSourceSection);
     }
 
     @Override
     public RubyNode cloneUninitialized() {
-        return new FireEndTracePointNode(body.cloneUninitialized()).copyFlags(this);
+        return new FireClassAndEndTracePointsNode(body.cloneUninitialized(), endKeywordCharIndex).copyFlags(this);
     }
 
 }

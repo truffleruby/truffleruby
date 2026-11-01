@@ -76,16 +76,12 @@ ast: |
                                                                   flags = 0
                                                                   sourceCharIndex = -1
                                                                   sourceLength = 0
-                                  FireClassTracePointNode
+                                  FireClassAndEndTracePointsNode
                                       attributes:
+                                          endKeywordCharIndex = 26
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 29
-                                  FireEndTracePointNode
-                                      attributes:
-                                          flags = 0
-                                          sourceCharIndex = 26
-                                          sourceLength = 3
                                       children:
                                           body =
                                               NilLiteralNode
