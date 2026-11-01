@@ -33,7 +33,6 @@ import org.truffleruby.RubyLanguage;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.core.thread.RubyThread;
 import org.truffleruby.language.Nil;
-import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.arguments.RubyArguments;
 import org.truffleruby.language.methods.InternalMethod;
 import org.truffleruby.language.yield.CallBlockNode;
@@ -135,19 +134,18 @@ public final class SlowPathTracePoints {
     /** Calls the active :class TracePoints at the beginning of a class/module body at the given node. The frame is used
      * for TracePoint#binding, etc. */
     @TruffleBoundary
-    public void fireClassEvent(MaterializedFrame frame, RubyNode node) {
-        fireModuleBodyEvent(classTracePoints, language.coreSymbols.CLASS, frame, node);
+    public void fireClassEvent(MaterializedFrame frame, SourceSection sourceSection) {
+        fireModuleBodyEvent(classTracePoints, language.coreSymbols.CLASS, frame, sourceSection);
     }
 
     /** Calls the active :end TracePoints at the end of a class/module body, the given node is at the end keyword. */
     @TruffleBoundary
-    public void fireEndEvent(MaterializedFrame frame, RubyNode node) {
-        fireModuleBodyEvent(endTracePoints, language.coreSymbols.END, frame, node);
+    public void fireEndEvent(MaterializedFrame frame, SourceSection sourceSection) {
+        fireModuleBodyEvent(endTracePoints, language.coreSymbols.END, frame, sourceSection);
     }
 
     private void fireModuleBodyEvent(ActiveTracePoints tracePoints, RubySymbol event, MaterializedFrame frame,
-            RubyNode node) {
-        final SourceSection sourceSection = node.getSourceSection();
+            SourceSection sourceSection) {
         if (sourceSection.getSource().isInternal()) {
             return;
         }
