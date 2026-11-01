@@ -42,6 +42,7 @@ public final class CoreSymbols {
     public final RubySymbol END = createRubySymbol("end");
     public final RubySymbol C_CALL = createRubySymbol("c_call");
     public final RubySymbol RETURN = createRubySymbol("return");
+    public final RubySymbol C_RETURN = createRubySymbol("c_return");
     public final RubySymbol FIBER_SWITCH = createRubySymbol("fiber_switch");
     public final RubySymbol THREAD_BEGIN = createRubySymbol("thread_begin");
     public final RubySymbol THREAD_END = createRubySymbol("thread_end");

@@ -175,6 +175,7 @@ import static org.truffleruby.language.RubyBaseNode.nil;
         TraceManager.CallTag.class,
         TraceManager.CCallTag.class,
         TraceManager.ReturnTag.class,
+        TraceManager.CReturnTag.class,
         TraceManager.LineTag.class,
         StandardTags.RootTag.class,
         StandardTags.StatementTag.class,

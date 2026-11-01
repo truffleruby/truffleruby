@@ -70,11 +70,11 @@ public abstract class TracePointEvent {
                     .tagIs(tagClass)
                     .includeInternal(false)
                     .build();
-            if (tagClass == TraceManager.CCallTag.class) {
+            if (tagClass == TraceManager.CCallTag.class || tagClass == TraceManager.CReturnTag.class) {
                 language.startTracingCCalls();
             }
             final ExecutionEventNodeFactory factory;
-            if (tagClass == TraceManager.ReturnTag.class) {
+            if (tagClass == TraceManager.ReturnTag.class || tagClass == TraceManager.CReturnTag.class) {
                 factory = eventContext -> new TracePointReturnEventNode(context, language, eventContext, tracePoint,
                         eventSymbol);
             } else {
@@ -91,7 +91,7 @@ public abstract class TracePointEvent {
             if (eventBinding != null) {
                 this.eventBinding.dispose();
                 this.eventBinding = null;
-                if (tagClass == TraceManager.CCallTag.class) {
+                if (tagClass == TraceManager.CCallTag.class || tagClass == TraceManager.CReturnTag.class) {
                     context.getLanguageSlow().stopTracingCCalls();
                 }
                 return true;

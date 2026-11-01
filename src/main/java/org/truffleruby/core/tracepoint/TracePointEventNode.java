@@ -84,7 +84,7 @@ class TracePointEventNode extends TraceBaseEventNode {
     }
 
     @TruffleBoundary
-    private void setCallerLocation(RubyTracePointEvent tracePointEvent) {
+    protected void setCallerLocation(RubyTracePointEvent tracePointEvent) {
         final SourceSection callerSourceSection = context.getCallStack().getCallerSourceSection();
         if (callerSourceSection != null) {
             tracePointEvent.path = language.getPathToTStringCache().createPathString(context,

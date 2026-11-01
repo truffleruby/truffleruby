@@ -201,7 +201,7 @@ public abstract class RubyNode extends RubyBaseNodeWithExecute implements Instru
             return isTag(flags, FLAG_CALL);
         }
 
-        if (tag == TraceManager.CCallTag.class) {
+        if (tag == TraceManager.CCallTag.class || tag == TraceManager.CReturnTag.class) {
             return isTag(flags, FLAG_C_CALL);
         }
 
