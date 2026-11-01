@@ -17,6 +17,7 @@ Compatibility:
 * Add support for the `:call` and `:c_call` `TracePoint` events and `TracePoint#defined_class` (@eregon).
 * Add support for the `:return` `TracePoint` event and `TracePoint#return_value` (@eregon).
 * Add support for the `:c_return` `TracePoint` event (@eregon).
+* `Kernel#set_trace_func` now also reports `end`, `return`, `c-call` and `c-return` events (@eregon).
 * Add support for the `:end`, `:fiber_switch`, `:thread_begin` and `:thread_end` `TracePoint` events (#4419, @eregon).
 * `class << expr` no longer triggers the `:class` `TracePoint` event, like CRuby (@eregon).
 * `IO#read` now coerces the `length` parameter to `Integer` (#4456, @andrykonchin).

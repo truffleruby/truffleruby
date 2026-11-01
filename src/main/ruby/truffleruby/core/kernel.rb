@@ -520,12 +520,25 @@ module Kernel
       if Primitive.nil?(proc)
         nil
       elsif Primitive.is_a?(proc, Proc)
-        trace_point = TracePoint.new(:line, :class, :call) do |tp|
-          if tp.event == :call
-            proc.call(tp.event.to_s, tp.path, tp.lineno, tp.method_id, tp.binding, Primitive.class(tp.self))
-          else
-            proc.call(tp.event.to_s, tp.path, tp.lineno, nil, tp.binding, nil)
+        # This block is called for every event, so it must stay small and use as few method calls as possible
+        # to keep the TracePoint overhead low and allow the traced code to be inlined and optimized.
+        # Note that inlined operators (!, ==, etc.) are real calls here since :c_call tracing is enabled.
+        trace_point = TracePoint.new(:line, :class, :end, :call, :return, :c_call, :c_return) do |tp|
+          event = tp.event
+          if Primitive.equal?(event, :c_call)
+            event = :'c-call'
+          elsif Primitive.equal?(event, :c_return)
+            event = :'c-return'
           end
+
+          # Like CRuby, pass the singleton class's attached object instead of the singleton class
+          klass = tp.defined_class
+          unless Primitive.nil?(klass)
+            klass = klass.attached_object if klass.singleton_class?
+          end
+
+          # Symbol#to_s creates a new String for each event, like CRuby
+          proc.call(event.to_s, tp.path, tp.lineno, tp.method_id, tp.binding, klass)
         end
         Primitive.object_ivar_set(Truffle::KernelOperations, :@trace_func_trace_point, trace_point)
         # TracePoint#enable returns false since the TracePoint was not enabled yet, so the proc is returned,
