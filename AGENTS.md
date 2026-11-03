@@ -33,7 +33,6 @@ TruffleRuby uses the `mx` build tool (GraalVM ecosystem) but wraps it behind the
 
 - Ruby >= 3.0 (system Ruby, for running `jt`)
 - Python >= 3.8 (for `mx`)
-- A JVMCI-enabled JDK (if `JAVA_HOME` is set but doesn't have JVMCI, unset it so `jt` downloads a suitable JDK)
 - `make`, `gcc`/`g++`, `cmake`, `git`, `wget`
 
 ### Building
@@ -234,9 +233,10 @@ See `CONTRIBUTING.md` for more details.
 2. Check `src/main/java/org/truffleruby/core/<Class>Nodes.java` for Java implementations
 3. Look for `@CoreMethod(names = "<method_name>")` annotations
 
-## Common Pitfalls
+## JDK
 
-- **JAVA_HOME**: If set to a JDK without JVMCI support, `jt build` will fail. Unset it and let `jt` download a suitable JDK via `jt install jvmci`.
+`jt` ignores `$JAVA_HOME` and always builds with the JVMCI-enabled JDK it downloads itself
+(`jt install jvmci` prints its path).
 
 ## Useful Commands Reference
 
