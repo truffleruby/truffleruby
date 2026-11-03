@@ -86,7 +86,6 @@ JT_SPECS_SPLITTING = ENV['JT_SPECS_SPLITTING'] == 'true' ? true : JT_SPECS_COMPI
 ENV['GEM_HOME'] = File.expand_path(ENV['GEM_HOME']) if ENV['GEM_HOME']
 
 JDK_VERSIONS = %w[latest 21]
-LTS_JDK_VERSION = '21'
 IGV_JDK_VERSION = '21'
 DEFAULT_JDK_VERSION = 'latest'
 
@@ -621,54 +620,24 @@ module Utilities
     end
   end
 
-  def find_java_home
-    @java_home ||= begin
-      mx_env = File.expand_path('~/.mx/env')
-      if File.readable?(mx_env)
-        if line = File.readlines(mx_env).grep(/^JAVA_HOME=/).first
-          java_home = line.strip.split('=', 2).last
-        end
-      end
-      java_home ||= ENV['JAVA_HOME']
-      fix = 'Run `unset JAVA_HOME` and retry to automatically download the correct JDK.'
-
-      if java_home
-        java_home = File.realpath(java_home)
-        if java_home.include?(jvmci_version)
-          return :use_env_java_home
-        end
-
-        java_version_output = `#{java_home}/bin/java -version 2>&1`
-        if java_version_output.include?(jvmci_version)
-          :use_env_java_home
-        elsif java_version_output.include?('jvmci')
-          warn "warning: JAVA_HOME=#{java_home} is not the same JVMCI version as in #{graal_common_json} (#{jvmci_version}).\n#{fix}"
-          :use_env_java_home
-        else
-          raise "$JAVA_HOME does not seem to point to a JVMCI-enabled JDK (`#{java_home}/bin/java -version` does not contain 'jvmci').\n#{fix}"
-        end
-      else
-        install_jvmci("$JAVA_HOME is not set, downloading JDK#{@jdk_version} with JVMCI")
-      end
-    end
+  # The JVMCI JDK used for building with mx, always the one downloaded by `jt install jvmci`.
+  # $JAVA_HOME is intentionally ignored, a wrong value there is a common source of build problems.
+  def jvmci_java_home
+    @jvmci_java_home ||= install_jvmci
   end
 
-  def mx(*args, java_home: find_java_home, primary_suite: nil, **options)
+  # Pass java_home: nil for mx commands which do not need a JDK (e.g. sforceimports)
+  def mx(*args, java_home: jvmci_java_home, primary_suite: nil, **options)
     mx_args = args.dup
 
     env = mx_args.first.is_a?(Hash) ? mx_args.shift : {}
 
-    if java_home == :use_env_java_home
-      # mx reads $JAVA_HOME
-    elsif java_home == :none
+    if java_home
+      # mx accepts a JDK name under ~/.mx/jdks for --java-home
+      mx_args.unshift '--java-home', java_home.delete_prefix("#{JDKS_CACHE_DIR}/")
+    elsif ENV['JAVA_HOME']
       # Make sure $JAVA_HOME is not set, as a wrong value causes mx to abort
       env['JAVA_HOME'] = nil
-    else
-      if java_home.start_with?(JDKS_CACHE_DIR)
-        mx_args.unshift '--java-home', java_home.delete_prefix("#{JDKS_CACHE_DIR}/")
-      else
-        mx_args.unshift '--java-home', java_home
-      end
     end
 
     if primary_suite and Dir.pwd != primary_suite
@@ -885,7 +854,6 @@ module Commands
       recognised environment variables:
 
         RUBY_BIN                                     The TruffleRuby executable to use (normally just bin/truffleruby)
-        JAVA_HOME                                    Path to the JVMCI JDK used for building with mx
         ECLIPSE_EXE                                  Where to find Eclipse
         SYSTEM_RUBY                                  The Ruby interpreter to run 'jt' itself, when using 'bin/jt'
         JT_JDK                                       The default JDK version to use: #{JDK_VERSIONS.join(' or ')}
@@ -961,7 +929,7 @@ module Commands
 
   def env
     puts 'Environment'
-    env_vars = %w[JAVA_HOME PATH RUBY_BIN TRUFFLERUBYOPT RUBYOPT]
+    env_vars = %w[PATH RUBY_BIN TRUFFLERUBYOPT RUBYOPT]
     column_size = env_vars.map(&:size).max
     env_vars.each do |e|
       puts format "%#{column_size}s: %s", e, ENV[e].inspect
@@ -2339,14 +2307,14 @@ module Commands
 
   def igv
     compiler = "#{GRAAL_DIR}/compiler"
-    ENV['TOOLS_JAVA_HOME'] = install_jvmci("Downloading JDK#{IGV_JDK_VERSION} to run IGV", jdk_version: IGV_JDK_VERSION)
+    ENV['TOOLS_JAVA_HOME'] = install_jvmci(jdk_version: IGV_JDK_VERSION, download_message: "Downloading JDK#{IGV_JDK_VERSION} to run IGV")
     mx('igv', chdir: compiler)
   end
 
   def install(name, *options)
     case name
     when 'jvmci'
-      puts install_jvmci("Downloading JDK#{@jdk_version} with JVMCI")
+      puts install_jvmci
     when 'graalvm'
       puts install_graalvm
     when 'eclipse'
@@ -2356,7 +2324,7 @@ module Commands
     end
   end
 
-  private def install_jvmci(download_message, jdk_version: @jdk_version)
+  private def install_jvmci(jdk_version: @jdk_version, download_message: "Downloading JDK#{jdk_version} with JVMCI")
     raise "Unknown JDK version: #{jdk_version}" unless JDK_VERSIONS.include?(jdk_version)
 
     jdk_name = "labsjdk-ce-#{jdk_version}"
@@ -2369,7 +2337,7 @@ module Commands
          '--java-distribution', jdk_name,
          '--to', JDKS_CACHE_DIR,
          '--alias', java_home, # ensure the JDK ends up in the path we expect
-         java_home: :none # avoid recursion
+         java_home: nil # avoid recursion
     end
 
     java_home = "#{java_home}/Contents/Home" if darwin?
@@ -2478,7 +2446,7 @@ module Commands
   private def sforceimports?(mx_base_args)
     return true unless File.directory?(GRAAL_DIR)
 
-    scheckimports_output = mx(*mx_base_args, 'scheckimports', '--ignore-uncommitted', '--warn-only', java_home: :none, primary_suite: TRUFFLERUBY_DIR, capture: :both)
+    scheckimports_output = mx(*mx_base_args, 'scheckimports', '--ignore-uncommitted', '--warn-only', java_home: nil, primary_suite: TRUFFLERUBY_DIR, capture: :both)
 
     unless scheckimports_output.empty?
       # Don't ask to update, just warn.
@@ -2513,7 +2481,7 @@ module Commands
   end
 
   def sforceimports
-    mx('sforceimports', java_home: :none, primary_suite: TRUFFLERUBY_DIR)
+    mx('sforceimports', java_home: nil, primary_suite: TRUFFLERUBY_DIR)
   end
 
   def show_available_memory
