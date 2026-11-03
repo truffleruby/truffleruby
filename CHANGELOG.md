@@ -3,7 +3,7 @@
 New features:
 
 * Updated to Ruby 4.0.9 (@eregon).
-* Updated to GraalVM 25.4.4.1.1 (@eregon).
+* Updated to GraalVM 25.5.5.0.3 (@eregon).
 
 Bug fixes:
 
