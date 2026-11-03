@@ -381,10 +381,25 @@ module Utilities
     name = File.basename url, '.git'
     path = File.expand_path("../#{name}", TRUFFLERUBY_DIR)
     unless Dir.exist? path
-      sh 'git', 'clone', url, path
+      if ENV['CI'] && commit
+        # A shallow clone is much faster and the history is not needed in CI (commit is a branch or tag name)
+        sh 'git', '-c', 'advice.detachedHead=false', 'clone', '--quiet', '--depth', '1', '--branch', commit, url, path
+      else
+        sh 'git', 'clone', url, path
+      end
     end
     sh 'git', 'checkout', '--quiet', commit, chdir: path if commit
     path
+  end
+
+  # Fetches only the graal commit imported by suite.py, which is several times faster than the full clone
+  # done by `mx sforceimports`. The graal history is not needed in CI.
+  def shallow_clone_graal
+    commit = get_truffle_version
+    sh 'git', 'init', '--quiet', GRAAL_DIR
+    sh 'git', 'remote', 'add', 'origin', 'https://github.com/truffleruby/graal.git', chdir: GRAAL_DIR
+    sh 'git', 'fetch', '--quiet', '--depth', '1', 'origin', commit, chdir: GRAAL_DIR
+    sh 'git', '-c', 'advice.detachedHead=false', 'checkout', '--quiet', 'FETCH_HEAD', chdir: GRAAL_DIR
   end
 
   def git_commit
@@ -2481,7 +2496,11 @@ module Commands
   end
 
   def sforceimports
-    mx('sforceimports', java_home: nil, primary_suite: TRUFFLERUBY_DIR)
+    if ENV['CI'] && !File.directory?(GRAAL_DIR)
+      shallow_clone_graal
+    else
+      mx('sforceimports', java_home: nil, primary_suite: TRUFFLERUBY_DIR)
+    end
   end
 
   def show_available_memory
