@@ -182,6 +182,7 @@ See `CONTRIBUTING.md` for more details.
   local files (demo or scratch scripts); describe the workload or change itself instead.
 - Before amending or rebasing a topic branch, check it has not already been merged into
   master; follow-ups to merged work go on a new branch based on latest master.
+- Do not add a `Claude-Session` trailer to commit messages.
 
 ### Java Code
 
