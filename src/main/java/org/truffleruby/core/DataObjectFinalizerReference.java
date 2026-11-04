@@ -30,8 +30,7 @@ public final class DataObjectFinalizerReference
      * the handle is not reused and can still be resolved to {@link #dataStruct} while the object is dead but not yet
      * finalized. The free function of another data object may access that struct, like on CRuby where the slot of a
      * dead object stays accessible until it is swept (e.g., markly clears RTYPEDDATA_DATA() of the cached wrappers of
-     * all nodes when the node tree is freed). See
-     * {@link org.truffleruby.cext.CExtUpcallRootNode.Carrier#DATA_VALUE}.
+     * all nodes when the node tree is freed). See {@link org.truffleruby.cext.CExtUpcallRootNode.Carrier#DATA_VALUE}.
      * <p>
      * While the object is alive, this reference is also reachable from its {@code ValueWrapper#dataFinalizerRef}, so
      * RDATA()/RTYPEDDATA() can find the struct without reading hidden variables of the object. */

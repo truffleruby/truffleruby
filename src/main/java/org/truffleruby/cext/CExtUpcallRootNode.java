@@ -62,8 +62,8 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
     public enum Carrier {
         VALUE, // V: a VALUE handle, converted with UnwrapNode/WrapNode
         /** T: a VALUE handle of a data object (T_DATA), argument only, for RDATA()/RTYPEDDATA(). A data object is
-         * unwrapped to its {@link DataObjectFinalizerReference}, which holds the struct RData/RTypedData address, and is
-         * marked on call exit if its type has a mark function. The handle of a dead data object whose finalizer did
+         * unwrapped to its {@link DataObjectFinalizerReference}, which holds the struct RData/RTypedData address, and
+         * is marked on call exit if its type has a mark function. The handle of a dead data object whose finalizer did
          * not run yet is accepted too, so the free function of a data object can access the struct of other dead
          * objects, like on CRuby where the slot of a dead object stays accessible until it is swept. Other objects are
          * unwrapped like VALUE, for the TypeError. */
