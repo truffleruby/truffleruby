@@ -344,9 +344,7 @@ class Socket < BasicSocket
       sockaddr = sockaddr.to_sockaddr
     end
 
-    status = Truffle::Socket::Foreign.connect(Primitive.io_fd(self), sockaddr)
-
-    Truffle::Socket::Error.connect_error('connect(2)', self) if status < 0
+    Truffle::Socket.connect(self, sockaddr)
 
     0
   end
@@ -359,26 +357,24 @@ class Socket < BasicSocket
     end
 
     status = Truffle::Socket::Foreign.connect(Primitive.io_fd(self), sockaddr)
+    return 0 if status == 0
 
-    if status < 0
-      if exception
-        Truffle::Socket::Error.connect_nonblock('connect(2)')
-      else
-        errno = ::FFI.errno
-        if errno == Errno::EINPROGRESS::Errno
-          :wait_writable
-        elsif errno == Errno::EISCONN::Errno
-          0
-        else
-          Truffle::Socket::Error.connect_nonblock('connect(2)')
-        end
-      end
-    else
+    errno = ::FFI.errno
+
+    if !exception && errno == Errno::EINPROGRESS::Errno
+      :wait_writable
+    elsif !exception && errno == Errno::EISCONN::Errno
       0
+    else
+      message = "connect(2) for #{Truffle::Socket.connect_destination(sockaddr)}"
+      Truffle::Socket::Error.connect_nonblock(message, errno)
     end
   end
 
   def recvfrom(bytes, flags = 0)
+    # See BasicSocket#internal_recv. Checked here because #recvmsg would report itself in the message.
+    raise IOError, 'recv for buffered IO' unless buffer_empty?
+
     message, addr = recvmsg(bytes, flags)
     return nil if Primitive.nil?(message)
 
@@ -386,6 +382,9 @@ class Socket < BasicSocket
   end
 
   private def __recvfrom_nonblock(bytes, flags, buffer, exception)
+    # See #recvfrom.
+    raise IOError, 'recvfrom for buffered IO' unless buffer_empty?
+
     message, addr = recvmsg_nonblock(bytes, flags, exception: exception)
     return nil if Primitive.nil?(message)
 
@@ -404,12 +403,12 @@ class Socket < BasicSocket
   end
 
   def accept
-    Truffle::Socket.accept_and_addrinfo(self, Socket, true)
+    Truffle::Socket.accept_and_addrinfo(self, Socket, true, true)
   end
 
   private def __accept_nonblock(exception)
     self.nonblock = true
-    Truffle::Socket.accept_and_addrinfo(self, Socket, exception)
+    Truffle::Socket.accept_and_addrinfo(self, Socket, exception, false)
   end
 
   def sysaccept

@@ -40,11 +40,14 @@ module Truffle
       attach_function :_bind, :bind, [:int, :pointer, :socklen_t], :int
       attach_function :_connect, :connect, [:int, :pointer, :socklen_t], :int, blocking: true
 
-      attach_function :accept, [:int, :pointer, :pointer], :int, blocking: true
+      attach_function :_accept, :accept, [:int, :pointer, :pointer], :int, blocking: true
+      if Truffle::Platform.linux?
+        attach_function :_accept4, :accept4, [:int, :pointer, :pointer, :int], :int, blocking: true
+      end
       attach_function :close, [:int], :int
       attach_function :shutdown, [:int, :int], :int
       attach_function :listen, [:int, :int], :int
-      attach_function :socket, [:int, :int, :int], :int
+      attach_function :_socket, :socket, [:int, :int, :int], :int
       attach_function :send, [:int, :pointer, :size_t, :int], :ssize_t, blocking: true
 
       attach_function :sendto,
@@ -128,6 +131,47 @@ module Truffle
           end
         ensure
           Primitive.io_thread_buffer_free(sockaddr_p)
+        end
+      end
+
+      # Like CRuby, sockets are close-on-exec and non-blocking, which C extensions taking over the descriptor rely on.
+      # Linux sets both atomically on creation; fcntl(2) afterwards would let a concurrent exec inherit the descriptor.
+      if Truffle::Platform.linux?
+        ATOMIC_DESCRIPTOR_FLAGS = Truffle::Config['platform.socket.SOCK_CLOEXEC'] |
+          Truffle::Config['platform.socket.SOCK_NONBLOCK']
+      else
+        ATOMIC_DESCRIPTOR_FLAGS = nil
+      end
+
+      def self.setup_descriptor(descriptor)
+        descriptor_flags = Truffle::POSIX.fcntl(descriptor, ::File::F_GETFD, 0)
+        if descriptor_flags >= 0
+          Truffle::POSIX.fcntl(descriptor, ::File::F_SETFD, descriptor_flags | ::File::FD_CLOEXEC)
+        end
+
+        status_flags = Truffle::POSIX.fcntl(descriptor, ::File::F_GETFL, 0)
+        if status_flags >= 0
+          Truffle::POSIX.fcntl(descriptor, ::File::F_SETFL, status_flags | ::File::NONBLOCK)
+        end
+
+        descriptor
+      end
+
+      def self.socket(family, type, protocol)
+        if ATOMIC_DESCRIPTOR_FLAGS
+          _socket(family, type | ATOMIC_DESCRIPTOR_FLAGS, protocol)
+        else
+          descriptor = _socket(family, type, protocol)
+          descriptor < 0 ? descriptor : setup_descriptor(descriptor)
+        end
+      end
+
+      def self.accept(descriptor, sockaddr, length)
+        if ATOMIC_DESCRIPTOR_FLAGS
+          _accept4(descriptor, sockaddr, length, ATOMIC_DESCRIPTOR_FLAGS)
+        else
+          new_descriptor = _accept(descriptor, sockaddr, length)
+          new_descriptor < 0 ? new_descriptor : setup_descriptor(new_descriptor)
         end
       end
 
@@ -349,11 +393,14 @@ module Truffle
         pointer = Primitive.io_thread_buffer_allocate(Primitive.pointer_find_type_size(:int) * 2)
         begin
           pointer.clear
+          type |= ATOMIC_DESCRIPTOR_FLAGS if ATOMIC_DESCRIPTOR_FLAGS
           status = _socketpair(family, type, protocol, pointer)
 
           Errno.handle_ffi('socketpair(2)') unless status == 0
 
-          pointer.read_array_of_int(2)
+          descriptors = pointer.read_array_of_int(2)
+          descriptors.each { |descriptor| setup_descriptor(descriptor) } unless ATOMIC_DESCRIPTOR_FLAGS
+          descriptors
         ensure
           Primitive.io_thread_buffer_free(pointer)
         end

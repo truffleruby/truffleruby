@@ -46,14 +46,6 @@ module Truffle
         end
       end
 
-      def self.connect_error(message, socket)
-        if socket.nonblock?
-          connect_nonblock(message)
-        else
-          Errno.handle_ffi(message)
-        end
-      end
-
       # Handles an error for a non-blocking read operation.
       def self.read_nonblock(message)
         errno = ::FFI.errno
@@ -75,8 +67,7 @@ module Truffle
       end
 
       # Handles an error for a non-blocking connect operation.
-      def self.connect_nonblock(message)
-        errno = ::FFI.errno
+      def self.connect_nonblock(message, errno = ::FFI.errno)
         if errno == Errno::EAGAIN::Errno
           raise ::IO::EAGAINWaitWritable, message
         elsif errno == Errno::EINPROGRESS::Errno

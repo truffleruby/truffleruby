@@ -1,2 +1,0 @@
-fails:UDPSocket#initialize sets the socket to nonblock
-fails:UDPSocket#initialize sets the socket to close on exec

@@ -1,5 +1,6 @@
 require_relative '../spec_helper'
 require_relative '../fixtures/classes'
+require_relative '../shared/buffered_receive'
 
 describe "UNIXSocket#recvfrom" do
   before :each do
@@ -170,5 +171,11 @@ describe 'UNIXSocket#recvfrom' do
         @socket.recvfrom(5).should == ['hello', ['AF_UNIX', @path1]]
       end
     end
+  end
+end
+
+platform_is_not :windows do
+  describe "UNIXSocket#recvfrom with buffered IO" do
+    it_behaves_like :socket_buffered_receive, :recvfrom, -> { UNIXSocket.pair }
   end
 end

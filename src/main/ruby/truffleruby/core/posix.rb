@@ -58,9 +58,9 @@ module Truffle::POSIX
     raise 'TruffleRuby currently assumes EAGAIN == EWOULDBLOCK'
   end
 
-  # Used in IO#readpartial and IO::InternalBuffer#fill_read. Reads at least
-  # one byte, blocking if it cannot read anything, but returning whatever it
-  # gets as soon as it gets something.
+  # Used in IO#sysread, IO#readpartial and IO::InternalBuffer#fill_read. Reads
+  # at least one byte, blocking if it cannot read anything, but returning
+  # whatever it gets as soon as it gets something.
 
   def self.read_string_at_least_one_byte(io, count)
     while true
@@ -106,7 +106,7 @@ module Truffle::POSIX
   end
 
   # #read_string (either #read_string_native or #read_string_polyglot) is called
-  # by IO#sysread
+  # by #read_string_at_least_one_byte and #read_string_nonblock
 
   def self.read_string_native(io, length)
     fd = io.fileno
@@ -223,10 +223,15 @@ module Truffle::POSIX
       written = 0
       while written < length
         ret = Truffle::POSIX.write(fd, buffer + written, length - written)
-        if ret < 0
+        if ret >= 0
+          written += ret
+        else
           errno = Errno.errno
           if errno == EAGAIN_ERRNO
-            if continue_on_eagain
+            # A partial write is returned as-is when not asked to continue, but if nothing could be written at all
+            # we always wait for the descriptor to become writable and retry from the same offset, like CRuby does
+            # for descriptors in non-blocking mode.
+            if continue_on_eagain || written == 0
               IO.select([], [io])
             else
               return written
@@ -240,7 +245,6 @@ module Truffle::POSIX
             Errno.handle_errno(errno)
           end
         end
-        written += ret
       end
       written
     ensure
