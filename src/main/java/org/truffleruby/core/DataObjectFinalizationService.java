@@ -72,8 +72,9 @@ public final class DataObjectFinalizationService
 
     @TruffleBoundary
     public DataObjectFinalizerReference addFinalizer(RubyContext context, Object object, Object finalizerCFunction,
-            Object dataStruct, boolean useCExtLock) {
-        final DataObjectFinalizerReference newRef = createRef(object, finalizerCFunction, dataStruct, useCExtLock);
+            Object dataStruct, boolean useCExtLock, boolean hasMarkFunction) {
+        final DataObjectFinalizerReference newRef = createRef(object, finalizerCFunction, dataStruct, useCExtLock,
+                hasMarkFunction);
 
         add(newRef);
         context.getReferenceProcessor().processReferenceQueue(this);
@@ -82,9 +83,9 @@ public final class DataObjectFinalizationService
     }
 
     public DataObjectFinalizerReference createRef(Object object, Object finalizerCFunction, Object dataStruct,
-            boolean useCExtLock) {
+            boolean useCExtLock, boolean hasMarkFunction) {
         return new DataObjectFinalizerReference(object, processingQueue, this, finalizerCFunction, dataStruct,
-                useCExtLock);
+                useCExtLock, hasMarkFunction);
     }
 
     @Override
@@ -98,6 +99,10 @@ public final class DataObjectFinalizationService
 
     @TruffleBoundary
     void processReferenceInternal(RubyContext context, RubyLanguage language, DataObjectFinalizerReference ref) {
-        callTarget.call(ref);
+        try {
+            callTarget.call(ref);
+        } finally {
+            ref.finalized();
+        }
     }
 }

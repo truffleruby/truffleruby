@@ -259,11 +259,20 @@ public abstract class ObjectSpaceNodes {
 
         @Specialization
         Object defineFinalizer(
-                RubyDynamicObject object, Object finalizerCFunction, Object dataStruct, boolean useCExtLock,
+                RubyDynamicObject object,
+                Object finalizerCFunction,
+                Object dataStruct,
+                boolean useCExtLock,
+                boolean hasMarkFunction,
                 @Cached DynamicObject.PutNode putNode) {
+            // The ValueWrapper of a data object links to its DataObjectFinalizerReference, so it must not exist yet
+            assert DynamicObject.GetNode.getUncached().execute(object, Layouts.VALUE_WRAPPER_IDENTIFIER,
+                    null) == null : "the data finalizer must be defined before the object is passed to C";
+
             DataObjectFinalizerReference newRef = getContext()
                     .getDataObjectFinalizationService()
-                    .addFinalizer(getContext(), object, finalizerCFunction, dataStruct, useCExtLock);
+                    .addFinalizer(getContext(), object, finalizerCFunction, dataStruct, useCExtLock,
+                            hasMarkFunction);
 
             putNode.execute(object, Layouts.DATA_OBJECT_FINALIZER_REF_IDENTIFIER, newRef);
 

@@ -14,6 +14,7 @@ import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import org.truffleruby.cext.ValueWrapperManager.HandleBlock;
+import org.truffleruby.core.DataObjectFinalizerReference;
 import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
 import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
 import org.truffleruby.debug.VariableNamesObject;
@@ -42,12 +43,24 @@ public final class ValueWrapper implements TruffleObject {
     /** The handleBlock is held here to keep it alive and prevent the memory freed while wrappers still exist with
      * handles in it. */
     @SuppressWarnings("unused") private final HandleBlock handleBlock;
+    /** For a data object (T_DATA), its finalizer reference which holds the struct RData/RTypedData address, so
+     * RDATA()/RTYPEDDATA() can get it from the wrapper found for the handle. {@code null} otherwise. */
+    public final DataObjectFinalizerReference dataFinalizerRef;
 
     public ValueWrapper(Object object, long handle, HandleBlock handleBlock) {
+        this(object, handle, handleBlock, null);
+    }
+
+    public ValueWrapper(
+            Object object,
+            long handle,
+            HandleBlock handleBlock,
+            DataObjectFinalizerReference dataFinalizerRef) {
         assert (object == null) == ValueWrapperManager.isTaggedLong(handle);
         this.object = object;
         this.handle = handle;
         this.handleBlock = handleBlock;
+        this.dataFinalizerRef = dataFinalizerRef;
     }
 
     public Object getObject() {

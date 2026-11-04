@@ -33,13 +33,17 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.InlinedBranchProfile;
+import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
+import org.truffleruby.core.DataObjectFinalizerReference;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
@@ -57,6 +61,13 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
     /** The kind of a native value in an upcall signature, from the carrier letters in tool/cext-upcalls.rb */
     public enum Carrier {
         VALUE, // V: a VALUE handle, converted with UnwrapNode/WrapNode
+        /** T: a VALUE handle of a data object (T_DATA), argument only, for RDATA()/RTYPEDDATA(). A data object is
+         * unwrapped to its {@link DataObjectFinalizerReference}, which holds the struct RData/RTypedData address, and
+         * is marked on call exit if its type has a mark function. The handle of a dead data object whose finalizer did
+         * not run yet is accepted too, so the free function of a data object can access the struct of other dead
+         * objects, like on CRuby where the slot of a dead object stays accessible until it is swept. Other objects are
+         * unwrapped like VALUE, for the TypeError. */
+        DATA_VALUE,
         WRAPPED, // W: a result which is already a VALUE handle or a ValueWrapper
         INT, // I
         BOOL, // B: Ruby true/false as int 1/0
@@ -69,6 +80,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         static Carrier parse(char carrier) {
             return switch (carrier) {
                 case 'V' -> VALUE;
+                case 'T' -> DATA_VALUE;
                 case 'W' -> WRAPPED;
                 case 'I' -> INT;
                 case 'B' -> BOOL;
@@ -209,6 +221,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         static UpcallArgumentNode create(Carrier carrier) {
             return switch (carrier) {
                 case VALUE -> CExtUpcallRootNodeFactory.ValueArgumentNodeGen.create();
+                case DATA_VALUE -> CExtUpcallRootNodeFactory.DataValueArgumentNodeGen.create();
                 case INT -> new IntArgumentNode();
                 case LONG, POINTER -> new LongArgumentNode();
                 case DOUBLE -> new DoubleArgumentNode();
@@ -250,6 +263,42 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         }
     }
 
+    /** See {@link Carrier#DATA_VALUE} */
+    @ImportStatic(ValueWrapperManager.class)
+    abstract static class DataValueArgumentNode extends UpcallArgumentNode {
+        @Specialization(guards = "isTaggedObject(rawArgument)")
+        Object unwrapTaggedObject(long rawArgument,
+                @Cached InlinedConditionProfile dataObjectProfile,
+                @Cached InlinedConditionProfile markFunctionProfile,
+                @Cached InlinedBranchProfile deadHandleProfile) {
+            final ValueWrapper wrapper = getContext().getValueWrapperManager().getWrapperFromHandleMap(rawArgument,
+                    false, getLanguage());
+            if (wrapper == null) {
+                deadHandleProfile.enter(this);
+                return getContext().getValueWrapperManager().getPendingDataFinalizerOfDeadHandle(rawArgument,
+                        getLanguage());
+            }
+
+            final DataObjectFinalizerReference dataFinalizerRef = wrapper.dataFinalizerRef;
+            if (dataObjectProfile.profile(this, dataFinalizerRef != null)) {
+                if (markFunctionProfile.profile(this, dataFinalizerRef.hasMarkFunction)) {
+                    // The C code can store VALUEs in the struct, so run the marker when the C call exits
+                    getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack.markOnExitObject(wrapper);
+                }
+                return dataFinalizerRef;
+            } else {
+                return wrapper.getObject();
+            }
+        }
+
+        @Specialization(guards = "!isTaggedObject(rawArgument)")
+        static Object unwrap(long rawArgument,
+                @Bind Node node,
+                @Cached UnwrapNode unwrapNode) {
+            return unwrapNode.execute(node, rawArgument);
+        }
+    }
+
     abstract static class IDArgumentNode extends UpcallArgumentNode {
         @Specialization
         static RubySymbol idToSymbol(long rawArgument,
@@ -273,6 +322,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
                 case LONG, POINTER -> CExtUpcallRootNodeFactory.LongResultNodeGen.create();
                 case DOUBLE -> CExtUpcallRootNodeFactory.DoubleResultNodeGen.create();
                 case BOOL -> CExtUpcallRootNodeFactory.BoolResultNodeGen.create();
+                case DATA_VALUE -> throw CompilerDirectives.shouldNotReachHere("argument-only carrier");
             };
         }
 

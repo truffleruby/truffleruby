@@ -41,6 +41,7 @@ import org.truffleruby.annotations.Primitive;
 import org.truffleruby.annotations.Visibility;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
+import org.truffleruby.core.DataObjectFinalizerReference;
 import org.truffleruby.core.MarkingService.ExtensionCallStack;
 import org.truffleruby.core.MarkingServiceNodes;
 import org.truffleruby.core.MarkingServiceNodes.RunMarkOnExitNode;
@@ -307,6 +308,23 @@ public abstract class CExtNodes {
                 @Cached WrapNode wrapNode) {
             ValueWrapper wrapper = wrapNode.execute(object);
             getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack.markOnExitObject(wrapper);
+            return nil;
+        }
+    }
+
+    /** The address of the struct RData/RTypedData of a data object for RDATA() and RTYPEDDATA(), from its
+     * {@link DataObjectFinalizerReference} (see {@link CExtUpcallRootNode.Carrier#DATA_VALUE}), or nil for other
+     * objects. */
+    @Primitive(name = "cext_data_struct")
+    public abstract static class DataStructNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        Object dataStruct(DataObjectFinalizerReference object) {
+            return object.dataStruct;
+        }
+
+        @Fallback
+        Object notDataObject(Object object) {
             return nil;
         }
     }

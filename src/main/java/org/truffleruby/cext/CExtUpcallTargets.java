@@ -1567,17 +1567,6 @@ public abstract class CExtUpcallTargets {
         }
     }
 
-    private static final int INDEX_mark_object_on_call_exit = nextUpcallIndex++;
-
-    @CExtUpcall
-    public static void upcall_mark_object_on_call_exit(long v0) {
-        try {
-            runtime.upcall(INDEX_mark_object_on_call_exit, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-        }
-    }
-
     private static final int INDEX_rb_2scomp_bit_length = nextUpcallIndex++;
 
     @CExtUpcall
@@ -5785,10 +5774,10 @@ public abstract class CExtUpcallTargets {
             "upcall_RB_ENC_CODERANGE", "I(L)", "cext", "RB_ENC_CODERANGE", "I", "V",
             "upcall_RB_FLOAT_TYPE_P", "I(L)", "cext", "RB_FLOAT_TYPE_P", "B", "V",
             "upcall_RB_TYPE_P", "I(LI)", "cext", "RB_TYPE_P", "B", "VI",
-            "upcall_RDATA", "L(L)", "cext", "RDATA", "P", "V",
+            "upcall_RDATA", "L(L)", "cext", "RDATA", "P", "T",
             "upcall_RFLOAT_VALUE", "D(L)", "cext", "RFLOAT_VALUE", "D", "V",
             "upcall_RSTRING_PTR", "L(L)", "cext", "RSTRING_PTR", "L", "V",
-            "upcall_RTYPEDDATA", "L(L)", "cext", "RTYPEDDATA", "P", "V",
+            "upcall_RTYPEDDATA", "L(L)", "cext", "RTYPEDDATA", "P", "T",
             "upcall_RTYPEDDATA_P", "I(L)", "cext", "RTYPEDDATA_P", "B", "V",
             "upcall_SYMBOL_P", "I(L)", "cext", "SYMBOL_P", "B", "V",
             "upcall_ascii8bit_encoding", "L()", "cext", "ascii8bit_encoding", "V", "",
@@ -5906,7 +5895,6 @@ public abstract class CExtUpcallTargets {
             "upcall_send2_open", "L(LLL)", "send", "open", "V", "VVV",
             "upcall_send3_o_aset", "V(LLLL)", "send", "[]=", "O", "VVVV",
             "upcall_make_binary_if_not_ascii_only", "V(L)", "cext", "make_binary_if_not_ascii_only", "O", "V",
-            "upcall_mark_object_on_call_exit", "V(L)", "cext", "mark_object_on_call_exit", "O", "V",
             "upcall_rb_2scomp_bit_length", "I(L)", "cext", "rb_2scomp_bit_length", "I", "V",
             "upcall_rb_Array", "L(L)", "cext", "rb_Array", "V", "V",
             "upcall_rb_Complex", "L(LL)", "cext", "rb_Complex", "V", "VV",

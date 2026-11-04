@@ -162,7 +162,6 @@ void (*rb_tr_up_impl_send2_o_throw)(VALUE v0, VALUE v1, VALUE v2);
 VALUE (*rb_tr_up_impl_send2_open)(VALUE v0, VALUE v1, VALUE v2);
 void (*rb_tr_up_impl_send3_o_aset)(VALUE v0, VALUE v1, VALUE v2, VALUE v3);
 void (*rb_tr_up_impl_make_binary_if_not_ascii_only)(VALUE v0);
-void (*rb_tr_up_impl_mark_object_on_call_exit)(VALUE v0);
 int (*rb_tr_up_impl_rb_2scomp_bit_length)(VALUE v0);
 VALUE (*rb_tr_up_impl_rb_Array)(VALUE v0);
 VALUE (*rb_tr_up_impl_rb_Complex)(VALUE v0, VALUE v1);
@@ -647,7 +646,6 @@ void rb_tr_init_ffm_upcalls(void **upcalls) {
   rb_tr_up_impl_send2_open = (VALUE (*)(VALUE v0, VALUE v1, VALUE v2)) upcalls[i++];
   rb_tr_up_impl_send3_o_aset = (void (*)(VALUE v0, VALUE v1, VALUE v2, VALUE v3)) upcalls[i++];
   rb_tr_up_impl_make_binary_if_not_ascii_only = (void (*)(VALUE v0)) upcalls[i++];
-  rb_tr_up_impl_mark_object_on_call_exit = (void (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_2scomp_bit_length = (int (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_Array = (VALUE (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_Complex = (VALUE (*)(VALUE v0, VALUE v1)) upcalls[i++];
