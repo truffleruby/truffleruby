@@ -19,7 +19,10 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
+import org.truffleruby.Layouts;
+import org.truffleruby.core.DataObjectFinalizerReference;
 import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
@@ -28,6 +31,7 @@ import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.language.ImmutableRubyObject;
 import org.truffleruby.language.NotProvided;
 import org.truffleruby.language.RubyBaseNode;
+import org.truffleruby.language.RubyDynamicObject;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
@@ -104,6 +108,22 @@ public final class ValueWrapperManager {
         }
 
         return block.getWrapper(handle, allowUnregisteredHandle);
+    }
+
+    /** For the handle of a dead data object whose finalizer did not run yet, returns its
+     * {@link DataObjectFinalizerReference} so the struct RData/RTypedData can still be accessed, see
+     * {@link DataObjectWrapperWeakReference}. Throws for any other dead handle. */
+    @TruffleBoundary
+    public DataObjectFinalizerReference getPendingDataFinalizerOfDeadHandle(long handle, RubyLanguage language) {
+        assert isTaggedObject(handle);
+        final HandleBlock block = getBlockFromMap(HandleBlock.getBlockIndex(handle), language);
+        if (block != null) {
+            final DataObjectFinalizerReference ref = block.getPendingDataFinalizer(handle);
+            if (ref != null) {
+                return ref;
+            }
+        }
+        throw CompilerDirectives.shouldNotReachHere("dead handle 0x" + Long.toHexString(handle));
     }
 
     private HandleBlock getBlockFromMap(int index, RubyLanguage language) {
@@ -244,9 +264,12 @@ public final class ValueWrapperManager {
             return getBlockIndex(base);
         }
 
+        private static int getOffset(long handle) {
+            return (int) (handle & OFFSET_MASK) >> ADDRESS_ALIGN_BITS;
+        }
+
         public ValueWrapper getWrapper(long handle, boolean allowUnregisteredHandle) {
-            int offset = (int) (handle & OFFSET_MASK) >> ADDRESS_ALIGN_BITS;
-            ValueWrapperWeakReference reference = wrappers[offset];
+            ValueWrapperWeakReference reference = wrappers[getOffset(handle)];
             if (allowUnregisteredHandle) {
                 return reference == null ? null : reference.get();
             } else {
@@ -273,10 +296,24 @@ public final class ValueWrapperManager {
             return base + count * Pointer.SIZE;
         }
 
-        public void registerWrapper(ValueWrapper wrapper) {
+        public void registerWrapper(ValueWrapper wrapper, DataObjectFinalizerReference dataFinalizerRef) {
             assert wrapper.handle == nextHandle();
-            wrappers[count] = new ValueWrapperWeakReference(wrapper);
+            if (dataFinalizerRef == null) {
+                wrappers[count] = new ValueWrapperWeakReference(wrapper);
+            } else {
+                wrappers[count] = new DataObjectWrapperWeakReference(wrapper, dataFinalizerRef);
+                dataFinalizerRef.setHandleBlock(this);
+            }
             count++;
+        }
+
+        /** See {@link ValueWrapperManager#getPendingDataFinalizerOfDeadHandle(long, RubyLanguage)} */
+        public DataObjectFinalizerReference getPendingDataFinalizer(long handle) {
+            if (wrappers[getOffset(handle)] instanceof DataObjectWrapperWeakReference reference &&
+                    !reference.dataFinalizerRef.isFinalized()) {
+                return reference.dataFinalizerRef;
+            }
+            return null;
         }
 
         public static int getBlockIndex(long handle) {
@@ -292,9 +329,21 @@ public final class ValueWrapperManager {
         }
     }
 
-    public static final class ValueWrapperWeakReference extends WeakReference<ValueWrapper> {
+    public static class ValueWrapperWeakReference extends WeakReference<ValueWrapper> {
         ValueWrapperWeakReference(ValueWrapper referent) {
             super(referent);
+        }
+    }
+
+    /** The handle entry of a data object (T_DATA): the finalizer reference holds the struct RData/RTypedData address
+     * and whether the finalizer ran, so the handle can still be resolved to the struct once the object is dead but not
+     * yet finalized, see {@link DataObjectFinalizerReference#setHandleBlock}. */
+    public static final class DataObjectWrapperWeakReference extends ValueWrapperWeakReference {
+        final DataObjectFinalizerReference dataFinalizerRef;
+
+        DataObjectWrapperWeakReference(ValueWrapper referent, DataObjectFinalizerReference dataFinalizerRef) {
+            super(referent);
+            this.dataFinalizerRef = dataFinalizerRef;
         }
     }
 
@@ -335,14 +384,25 @@ public final class ValueWrapperManager {
 
         public abstract ValueWrapper execute(Node node, Object object);
 
-        @Specialization(guards = "!isSharedObject(object)")
+        @Specialization
+        static ValueWrapper createWrapperForDynamicObject(Node node, RubyDynamicObject object,
+                @Cached DynamicObject.GetNode getNode) {
+            /* The data finalizer of a data object is defined before the object is first passed to C, in
+             * rb_data_object_wrap() and rb_data_typed_object_wrap() in cext.rb, so it is known when the wrapper is
+             * created. */
+            final var dataFinalizerRef = (DataObjectFinalizerReference) getNode.execute(object,
+                    Layouts.DATA_OBJECT_FINALIZER_REF_IDENTIFIER, null);
+            return createWrapper(object, dataFinalizerRef, getContext(node), getLanguage(node), false);
+        }
+
+        @Specialization(guards = { "!isRubyDynamicObject(object)", "!isSharedObject(object)" })
         static ValueWrapper createWrapperOnKnownThread(Node node, Object object) {
-            return createWrapper(object, getContext(node), getLanguage(node), false);
+            return createWrapper(object, null, getContext(node), getLanguage(node), false);
         }
 
         @Specialization(guards = "isSharedObject(object)")
         static ValueWrapper createSharedWrapperOnKnownThread(Node node, Object object) {
-            return createWrapper(object, getContext(node), getLanguage(node), true);
+            return createWrapper(object, null, getContext(node), getLanguage(node), true);
         }
 
         @TruffleBoundary
@@ -350,8 +410,8 @@ public final class ValueWrapperManager {
             keepAlive.add(wrapper);
         }
 
-        protected static ValueWrapper createWrapper(Object object, RubyContext context,
-                RubyLanguage language, boolean shared) {
+        protected static ValueWrapper createWrapper(Object object, DataObjectFinalizerReference dataFinalizerRef,
+                RubyContext context, RubyLanguage language, boolean shared) {
             final HandleBlockHolder holder = getBlockHolder(language);
             HandleBlock block;
             if (shared) {
@@ -372,7 +432,7 @@ public final class ValueWrapperManager {
             }
 
             final ValueWrapper wrapper = new ValueWrapper(object, block.nextHandle(), block);
-            block.registerWrapper(wrapper);
+            block.registerWrapper(wrapper, dataFinalizerRef);
             if (context.getOptions().CEXTS_KEEP_HANDLES_ALIVE) {
                 keepAlive(wrapper);
             }

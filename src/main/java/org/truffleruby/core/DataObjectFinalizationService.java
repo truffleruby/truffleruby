@@ -98,6 +98,10 @@ public final class DataObjectFinalizationService
 
     @TruffleBoundary
     void processReferenceInternal(RubyContext context, RubyLanguage language, DataObjectFinalizerReference ref) {
-        callTarget.call(ref);
+        try {
+            callTarget.call(ref);
+        } finally {
+            ref.finalized();
+        }
     }
 }

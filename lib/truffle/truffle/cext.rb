@@ -1772,13 +1772,11 @@ module Truffle::CExt
     })
   end
 
-  def mark_object_on_call_exit(object)
-    Primitive.cext_mark_object_on_call_exit(object)
-  end
-
+  # The object is marked on call exit if it has a marker, as the C code can store VALUEs in the struct.
+  # The object can also be a dead data object whose finalizer did not run yet, see Primitive.cext_data_struct.
   def RDATA(object)
     # A specialized version of rb_check_type(object, T_DATA)
-    data_struct = Primitive.object_hidden_var_get(object, DATA_STRUCT)
+    data_struct = Primitive.cext_data_struct(object, DATA_STRUCT, DATA_MARKER)
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end
@@ -1787,7 +1785,7 @@ module Truffle::CExt
 
   def RTYPEDDATA(object)
     # A specialized version of rb_check_type(object, T_DATA)
-    data_struct = Primitive.object_hidden_var_get(object, DATA_STRUCT)
+    data_struct = Primitive.cext_data_struct(object, DATA_STRUCT, DATA_MARKER)
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end

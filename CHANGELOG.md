@@ -10,6 +10,7 @@ Bug fixes:
 * Fix `Process.exec` ignoring the `:umask` option (@nirvdrum).
 * Fix `Socket.tcp` and `Addrinfo#connect` with a timeout returning an unconnected socket on macOS when the connection was refused (@eregon).
 * Fix `String#append_as_bytes` to return `self` instead of its arguments (#4502, @taxor03).
+* Fix a `dead handle` internal error when the free function of a C extension data object accesses `RDATA()`/`RTYPEDDATA()` of a dead data object not yet freed (including itself), as the `markly` gem does (@eregon).
 
 Compatibility:
 
