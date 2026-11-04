@@ -66,20 +66,6 @@ module Truffle
       struct_class.layout(*layout_args)
     end
 
-    # Our sockets are non-blocking, so blocking operations wait for the descriptor to become ready and retry, like
-    # CRuby. Like CRuby's rb_io_wait(), this waits on the descriptor alone, ignoring the IO's read buffer: the retried
-    # syscall only reads from the descriptor, so if input got buffered while waiting (e.g., by IO#ungetc or a read in
-    # another thread), IO.select would keep returning immediately while the syscall keeps failing with EAGAIN.
-    def self.wait_readable(socket)
-      socket.__send__(:ensure_open)
-      Truffle::IOOperations.poll_ignore_buffer(socket, ::IO::READABLE, nil)
-    end
-
-    def self.wait_writable(socket)
-      socket.__send__(:ensure_open)
-      Truffle::IOOperations.poll_ignore_buffer(socket, ::IO::WRITABLE, nil)
-    end
-
     # A blocking connect(2) on a non-blocking socket, raising the error recorded in SO_ERROR.
     def self.connect(socket, sockaddr)
       status = Foreign.connect(socket.fileno, sockaddr)
@@ -88,7 +74,7 @@ module Truffle
       errno = ::FFI.errno
 
       if errno == Truffle::POSIX::EAGAIN_ERRNO || errno == Errno::EINPROGRESS::Errno
-        wait_writable(socket)
+        Truffle::IOOperations.wait_writable(socket)
 
         errno = Foreign.getsockopt(Primitive.io_fd(socket), ::Socket::SOL_SOCKET, ::Socket::SO_ERROR).unpack1('i')
         return if errno == 0
@@ -151,7 +137,7 @@ module Truffle
 
           break if fd >= 0 || !blocking || ::FFI.errno != Truffle::POSIX::EAGAIN_ERRNO
 
-          wait_readable(source)
+          Truffle::IOOperations.wait_readable(source)
         end
 
         if fd < 0
@@ -181,7 +167,7 @@ module Truffle
 
         break if fd >= 0 || !blocking || ::FFI.errno != Truffle::POSIX::EAGAIN_ERRNO
 
-        wait_readable(source)
+        Truffle::IOOperations.wait_readable(source)
       end
 
       if fd < 0

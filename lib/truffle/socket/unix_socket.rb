@@ -66,7 +66,7 @@ class UNIXSocket < BasicSocket
 
         break if n_bytes != -1 || ::FFI.errno != Truffle::POSIX::EAGAIN_ERRNO
 
-        Truffle::Socket.wait_readable(self)
+        Truffle::IOOperations.wait_readable(self)
       end
 
       Errno.handle_ffi('recvfrom(2)') if n_bytes == -1
