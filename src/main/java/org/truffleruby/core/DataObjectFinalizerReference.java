@@ -15,9 +15,14 @@ import java.lang.ref.ReferenceQueue;
 import org.truffleruby.cext.ValueWrapperManager.HandleBlock;
 import org.truffleruby.core.ReferenceProcessingService.PhantomProcessingReference;
 
+import com.oracle.truffle.api.interop.TruffleObject;
+
+/** Implements TruffleObject as it is passed to Ruby code, as the argument of the RDATA() and RTYPEDDATA() upcalls, see
+ * {@link org.truffleruby.cext.CExtUpcallRootNode.Carrier#DATA_VALUE}. */
 public final class DataObjectFinalizerReference
         extends
-        PhantomProcessingReference<DataObjectFinalizerReference, Object> {
+        PhantomProcessingReference<DataObjectFinalizerReference, Object>
+        implements TruffleObject {
 
     public final Object finalizerCFunction;
     public final Object dataStruct;
