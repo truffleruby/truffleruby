@@ -259,7 +259,10 @@ public abstract class ObjectSpaceNodes {
 
         @Specialization
         Object defineFinalizer(
-                RubyDynamicObject object, Object finalizerCFunction, Object dataStruct, boolean useCExtLock,
+                RubyDynamicObject object,
+                Object finalizerCFunction,
+                Object dataStruct,
+                boolean useCExtLock,
                 boolean hasMarkFunction,
                 @Cached DynamicObject.PutNode putNode) {
             // The ValueWrapper of a data object links to its DataObjectFinalizerReference, so it must not exist yet
