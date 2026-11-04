@@ -39,6 +39,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
+import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
@@ -60,10 +61,12 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
     /** The kind of a native value in an upcall signature, from the carrier letters in tool/cext-upcalls.rb */
     public enum Carrier {
         VALUE, // V: a VALUE handle, converted with UnwrapNode/WrapNode
-        /** T: a VALUE handle of a data object (T_DATA), argument only. Like VALUE, but also accepts the handle of a
-         * dead data object whose finalizer did not run yet, unwrapped to its {@link DataObjectFinalizerReference}, so
-         * the free function of a data object can access the struct RData/RTypedData of other dead objects, like on
-         * CRuby where the slot of a dead object stays accessible until it is swept. */
+        /** T: a VALUE handle of a data object (T_DATA), argument only, for RDATA()/RTYPEDDATA(). A data object is
+         * unwrapped to its {@link DataObjectFinalizerReference}, which holds the struct RData/RTypedData address, and is
+         * marked on call exit if its type has a mark function. The handle of a dead data object whose finalizer did
+         * not run yet is accepted too, so the free function of a data object can access the struct of other dead
+         * objects, like on CRuby where the slot of a dead object stays accessible until it is swept. Other objects are
+         * unwrapped like VALUE, for the TypeError. */
         DATA_VALUE,
         WRAPPED, // W: a result which is already a VALUE handle or a ValueWrapper
         INT, // I
@@ -265,15 +268,27 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
     abstract static class DataValueArgumentNode extends UpcallArgumentNode {
         @Specialization(guards = "isTaggedObject(rawArgument)")
         Object unwrapTaggedObject(long rawArgument,
+                @Cached InlinedConditionProfile dataObjectProfile,
+                @Cached InlinedConditionProfile markFunctionProfile,
                 @Cached InlinedBranchProfile deadHandleProfile) {
             final ValueWrapper wrapper = getContext().getValueWrapperManager().getWrapperFromHandleMap(rawArgument,
                     false, getLanguage());
-            if (wrapper != null) {
+            if (wrapper == null) {
+                deadHandleProfile.enter(this);
+                return getContext().getValueWrapperManager().getPendingDataFinalizerOfDeadHandle(rawArgument,
+                        getLanguage());
+            }
+
+            final DataObjectFinalizerReference dataFinalizerRef = wrapper.dataFinalizerRef;
+            if (dataObjectProfile.profile(this, dataFinalizerRef != null)) {
+                if (markFunctionProfile.profile(this, dataFinalizerRef.hasMarkFunction)) {
+                    // The C code can store VALUEs in the struct, so run the marker when the C call exits
+                    getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack.markOnExitObject(wrapper);
+                }
+                return dataFinalizerRef;
+            } else {
                 return wrapper.getObject();
             }
-            deadHandleProfile.enter(this);
-            return getContext().getValueWrapperManager().getPendingDataFinalizerOfDeadHandle(rawArgument,
-                    getLanguage());
         }
 
         @Specialization(guards = "!isTaggedObject(rawArgument)")

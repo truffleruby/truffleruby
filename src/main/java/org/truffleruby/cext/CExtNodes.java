@@ -312,35 +312,19 @@ public abstract class CExtNodes {
         }
     }
 
-    /** The address of the struct RData/RTypedData of a data object, or nil if not a data object, for RDATA() and
-     * RTYPEDDATA(). The object can also be the {@link DataObjectFinalizerReference} of a dead data object whose
-     * finalizer did not run yet, see {@link CExtUpcallRootNode.Carrier#DATA_VALUE}. */
+    /** The address of the struct RData/RTypedData of a data object for RDATA() and RTYPEDDATA(), from its
+     * {@link DataObjectFinalizerReference} (see {@link CExtUpcallRootNode.Carrier#DATA_VALUE}), or nil for other
+     * objects. */
     @Primitive(name = "cext_data_struct")
     public abstract static class DataStructNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        Object dataStruct(RubyDynamicObject object, Object dataStructKey, Object dataMarkerKey,
-                @Cached DynamicObject.GetNode getDataStructNode,
-                @Cached DynamicObject.GetNode getDataMarkerNode,
-                @Cached WrapNode wrapNode,
-                @Cached InlinedConditionProfile hasMarkerProfile) {
-            final Object dataStruct = getDataStructNode.execute(object, dataStructKey, nil);
-            // The C code can store VALUEs in the struct, so run the marker when the C call exits
-            if (hasMarkerProfile.profile(this, getDataMarkerNode.execute(object, dataMarkerKey, nil) != nil)) {
-                final ValueWrapper wrapper = wrapNode.execute(object);
-                getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack.markOnExitObject(wrapper);
-            }
-            return dataStruct;
-        }
-
-        @Specialization
-        Object deadDataObject(DataObjectFinalizerReference object, Object dataStructKey, Object dataMarkerKey) {
-            // The object is dead, so nothing to mark
+        Object dataStruct(DataObjectFinalizerReference object) {
             return object.dataStruct;
         }
 
         @Fallback
-        Object notDataObject(Object object, Object dataStructKey, Object dataMarkerKey) {
+        Object notDataObject(Object object) {
             return nil;
         }
     }

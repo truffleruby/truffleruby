@@ -41,10 +41,11 @@
 # Carriers:
 #   V = VALUE (handle, long).  Unwrapped to a Ruby object for the call; the
 #       result is wrapped back to a handle.
-#   T = VALUE of a data object (T_DATA), argument only. Like V, but also accepts
-#       the handle of a dead data object whose free function did not run yet,
-#       which is then unwrapped to its DataObjectFinalizerReference, see
-#       CExtUpcallRootNode.Carrier#DATA_VALUE and Primitive.cext_data_struct.
+#   T = VALUE of a data object (T_DATA), argument only, for RDATA/RTYPEDDATA. A
+#       data object is unwrapped to its DataObjectFinalizerReference (which holds
+#       the struct address) and marked on call exit if its type has a mark
+#       function, also when the object is dead but its free function did not run
+#       yet. See CExtUpcallRootNode.Carrier#DATA_VALUE and Primitive.cext_data_struct.
 #   W = pre-wrapped VALUE result: the Ruby method already returns a wrapped
 #       VALUE (Primitive.cext_wrap), only converted to a handle (return only).
 #   B = Ruby true/false result converted to int 1/0 (return only).

@@ -431,7 +431,7 @@ public final class ValueWrapperManager {
 
             }
 
-            final ValueWrapper wrapper = new ValueWrapper(object, block.nextHandle(), block);
+            final ValueWrapper wrapper = new ValueWrapper(object, block.nextHandle(), block, dataFinalizerRef);
             block.registerWrapper(wrapper, dataFinalizerRef);
             if (context.getOptions().CEXTS_KEEP_HANDLES_ALIVE) {
                 keepAlive(wrapper);
