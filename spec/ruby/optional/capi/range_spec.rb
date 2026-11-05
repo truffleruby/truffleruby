@@ -64,6 +64,29 @@ describe "C-API Range function" do
       fin.should == 20
       excl.should == false
     end
+
+    it "stores the range properties of a non-Range object with private methods" do
+      range_like = Object.new
+      class << range_like
+        private def begin = 10
+        private def end = 20
+        private def exclude_end? = true
+      end
+
+      @s.rb_range_values(range_like).should == [10, 20, true]
+    end
+
+    it "returns false for a non-Range object without #exclude_end?" do
+      range_like = Object.new
+      def range_like.begin = 10
+      def range_like.end = 20
+
+      @s.rb_range_values(range_like).should == false
+    end
+
+    it "returns false for an Enumerator::ArithmeticSequence" do
+      @s.rb_range_values((1..10).step(2)).should == false
+    end
   end
 
   describe "rb_range_beg_len" do
@@ -90,6 +113,30 @@ describe "C-API Range function" do
       r = -5..-1
       begp, lenp, result =  @s.rb_range_beg_len(r, 1, 0)
       result.should == nil
+    end
+
+    it "handles endless ranges" do
+      begp, lenp, result = @s.rb_range_beg_len(eval("(2..)"), 10, 0)
+      result.should == true
+      begp.should == 2
+      lenp.should == 8
+
+      begp, lenp, result = @s.rb_range_beg_len(eval("(2...)"), 10, 0)
+      result.should == true
+      begp.should == 2
+      lenp.should == 8
+    end
+
+    it "handles beginless ranges" do
+      begp, lenp, result = @s.rb_range_beg_len(eval("(..5)"), 10, 0)
+      result.should == true
+      begp.should == 0
+      lenp.should == 6
+
+      begp, lenp, result = @s.rb_range_beg_len(eval("(...5)"), 10, 0)
+      result.should == true
+      begp.should == 0
+      lenp.should == 5
     end
   end
 
