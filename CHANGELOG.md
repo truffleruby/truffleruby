@@ -10,6 +10,7 @@ Bug fixes:
 * Fix `Process.exec` ignoring the `:umask` option (@nirvdrum).
 * Fix `Socket.tcp` and `Addrinfo#connect` with a timeout returning an unconnected socket on macOS when the connection was refused (@eregon).
 * Fix `String#append_as_bytes` to return `self` instead of its arguments (#4502, @taxor03).
+* Fix `rb_range_beg_len()` raising `TypeError` for beginless and endless ranges (#4487, @nirvdrum, @eregon).
 
 Compatibility:
 
@@ -23,6 +24,7 @@ Compatibility:
 * `IO#read` now coerces the `length` parameter to `Integer` (#4456, @andrykonchin).
 * Raise `RangeError` instead of `FloatDomainError` when converting NaN, infinite or other out-of-range `Float` values with `rb_num2ulong()`, `Process.uid=` and similar methods (@nirvdrum).
 * `StringIO#gets`, `#readline`, `#each_line` and `#readlines` no longer split a multi-byte character when given a limit (@ListlessPanda).
+* `rb_range_values()` now returns false for `Enumerator::ArithmeticSequence` and for range-like objects without `#exclude_end?`, and accepts range-like objects with private methods, like CRuby (#4487, @nirvdrum, @eregon).
 
 Performance:
 

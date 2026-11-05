@@ -18,7 +18,9 @@ VALUE range_spec_rb_range_values(VALUE self, VALUE range) {
   VALUE end;
   int excl;
   VALUE ary = rb_ary_new();
-  rb_range_values(range, &beg, &end, &excl);
+  if (!rb_range_values(range, &beg, &end, &excl)) {
+    return Qfalse;
+  }
   rb_ary_store(ary, 0, beg);
   rb_ary_store(ary, 1, end);
   rb_ary_store(ary, 2, excl ? Qtrue : Qfalse);
