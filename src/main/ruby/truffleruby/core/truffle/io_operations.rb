@@ -245,6 +245,20 @@ module Truffle
       poll_ignore_buffer(io, event_mask, timeout)
     end
 
+    # Used internally before retrying a blocking read/write on a non-blocking descriptor after EAGAIN.
+    # Like CRuby's rb_io_wait(), this waits on the descriptor alone and ignores the IO's read buffer,
+    # since the retried syscall only reads from the descriptor. Unlike IO.select, this does not allocate
+    # Arrays or a pollfd buffer for the single descriptor.
+    def self.wait_readable(io)
+      io.__send__(:ensure_open)
+      poll_ignore_buffer(io, IO::READABLE, nil)
+    end
+
+    def self.wait_writable(io)
+      io.__send__(:ensure_open)
+      poll_ignore_buffer(io, IO::WRITABLE, nil)
+    end
+
     # Like #poll but only waits for the descriptor to become ready, ignoring any data in the IO's read buffer.
     def self.poll_ignore_buffer(io, event_mask, timeout)
       if timeout

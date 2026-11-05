@@ -143,7 +143,7 @@ class BasicSocket < IO
 
             break if bytes_sent >= 0 || ::FFI.errno != Truffle::POSIX::EAGAIN_ERRNO
 
-            Truffle::Socket.wait_writable(self)
+            Truffle::IOOperations.wait_writable(self)
           end
         ensure
           addr.pointer.free
@@ -155,7 +155,7 @@ class BasicSocket < IO
 
           break if bytes_sent >= 0 || ::FFI.errno != Truffle::POSIX::EAGAIN_ERRNO
 
-          Truffle::Socket.wait_writable(self)
+          Truffle::IOOperations.wait_writable(self)
         end
       end
     end
@@ -177,7 +177,7 @@ class BasicSocket < IO
 
         break if n_bytes != -1 || !blocking || ::FFI.errno != Truffle::POSIX::EAGAIN_ERRNO
 
-        Truffle::Socket.wait_readable(self)
+        Truffle::IOOperations.wait_readable(self)
       end
 
       if n_bytes == -1
@@ -238,7 +238,7 @@ class BasicSocket < IO
 
           break if msg_size >= 0 || !blocking || ::FFI.errno != Truffle::POSIX::EAGAIN_ERRNO
 
-          Truffle::Socket.wait_readable(self)
+          Truffle::IOOperations.wait_readable(self)
         end
 
         if msg_size < 0
@@ -313,7 +313,7 @@ class BasicSocket < IO
 
         break if num_bytes >= 0 || !blocking || ::FFI.errno != Truffle::POSIX::EAGAIN_ERRNO
 
-        Truffle::Socket.wait_writable(self)
+        Truffle::IOOperations.wait_writable(self)
       end
 
       if num_bytes < 0

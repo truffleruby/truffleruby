@@ -68,7 +68,7 @@ module Truffle::POSIX
       string, errno = read_string(io, count)
       return string if errno == 0
       if errno == EAGAIN_ERRNO
-        IO.select([io])
+        Truffle::IOOperations.wait_readable(io)
       else
         Errno.handle_errno(errno)
       end
@@ -83,7 +83,7 @@ module Truffle::POSIX
       bytes_read, errno = read_to_buffer(io, count, &block)
       return bytes_read if errno == 0
       if errno == EAGAIN_ERRNO
-        IO.select([io])
+        Truffle::IOOperations.wait_readable(io)
       else
         Errno.handle_errno(errno)
       end
@@ -232,7 +232,7 @@ module Truffle::POSIX
             # we always wait for the descriptor to become writable and retry from the same offset, like CRuby does
             # for descriptors in non-blocking mode.
             if continue_on_eagain || written == 0
-              IO.select([], [io])
+              Truffle::IOOperations.wait_writable(io)
             else
               return written
             end
