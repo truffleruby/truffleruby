@@ -29,14 +29,11 @@ struct RTypedData* rb_tr_rtypeddata_create(const rb_data_type_t *data_type, void
   return result;
 }
 
-void rb_tr_setjmp_wrapper_pointer1_to_void(void (*func)(VALUE arg), VALUE arg);
-size_t rb_tr_setjmp_wrapper_pointer1_to_size_t(size_t (*func)(const void *arg), const void *arg);
-
 void rb_tr_rdata_run_marker(struct RData* rdata) {
   void* data = rdata->data;
   RUBY_DATA_FUNC dmark = rdata->dmark;
   if (data != NULL && dmark != NULL) {
-    rb_tr_setjmp_wrapper_pointer1_to_void(dmark, data);
+    rb_tr_run_marker(dmark, data);
   }
 }
 
@@ -44,7 +41,7 @@ void rb_tr_rtypeddata_run_marker(struct RTypedData* rtypeddata) {
   void* data = rtypeddata->data;
   RUBY_DATA_FUNC dmark = RB_TR_RTYPEDDATA_STRUCT_TYPE(rtypeddata)->function.dmark;
   if (data != NULL && dmark != NULL) {
-    rb_tr_setjmp_wrapper_pointer1_to_void(dmark, data);
+    rb_tr_run_marker(dmark, data);
   }
 }
 
