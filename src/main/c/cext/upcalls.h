@@ -2414,14 +2414,6 @@ static inline VALUE rb_tr_up_rb_gc_latest_gc_info(VALUE v0) {
   return result;
 }
 
-extern void (*rb_tr_up_impl_rb_gc_mark)(long v0);
-static inline void rb_tr_up_rb_gc_mark(long v0) {
-  rb_tr_up_impl_rb_gc_mark(v0);
-  if (UNLIKELY(rb_tr_pending_exception)) {
-    rb_tr_longjmp_from_java_exception();
-  }
-}
-
 extern void (*rb_tr_up_impl_rb_gc_register_address)(const void *v0);
 static inline void rb_tr_up_rb_gc_register_address(const void *v0) {
   rb_tr_up_impl_rb_gc_register_address(v0);
@@ -4017,6 +4009,14 @@ static inline int rb_tr_up_rb_tr_flags(VALUE v0) {
 extern void (*rb_tr_up_impl_rb_tr_gc_guard)(long v0);
 static inline void rb_tr_up_rb_tr_gc_guard(long v0) {
   rb_tr_up_impl_rb_tr_gc_guard(v0);
+  if (UNLIKELY(rb_tr_pending_exception)) {
+    rb_tr_longjmp_from_java_exception();
+  }
+}
+
+extern void (*rb_tr_up_impl_rb_tr_gc_mark_values)(const void *v0, long v1);
+static inline void rb_tr_up_rb_tr_gc_mark_values(const void *v0, long v1) {
+  rb_tr_up_impl_rb_tr_gc_mark_values(v0, v1);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
   }
