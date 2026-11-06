@@ -1701,6 +1701,7 @@ class IO
   def printf(fmt, *args)
     fmt = Primitive.convert_with_to_str(fmt)
     write sprintf(fmt, *args)
+    nil
   end
   Primitive.always_split self, :printf
 
