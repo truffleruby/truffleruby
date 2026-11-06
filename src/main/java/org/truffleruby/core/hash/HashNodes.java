@@ -312,7 +312,7 @@ public abstract class HashNodes {
 
         @Specialization
         Object defaultProc(RubyHash hash) {
-            return hash.defaultBlock;
+            return hash.getDefaultProc();
         }
     }
 
@@ -321,7 +321,7 @@ public abstract class HashNodes {
 
         @Specialization
         Object defaultValue(RubyHash hash) {
-            return hash.defaultValue;
+            return hash.getDefaultValue();
         }
     }
 
@@ -384,8 +384,7 @@ public abstract class HashNodes {
         RubyHash initialize(RubyHash hash, NotProvided defaultValue, int capacity, Nil block,
                 @Cached @Shared InlinedBranchProfile capacityUsed) {
             assert HashStoreLibrary.verify(hash);
-            hash.defaultValue = nil;
-            hash.defaultBlock = nil;
+            hash.clearDefault();
             if (capacity > PackedHashStoreLibrary.MAX_ENTRIES) {
                 capacityUsed.enter(this);
                 handleCapacity(hash, capacity);
@@ -398,9 +397,8 @@ public abstract class HashNodes {
                 @Cached @Shared PropagateSharingNode propagateSharingNode,
                 @Cached @Shared InlinedBranchProfile capacityUsed) {
             assert HashStoreLibrary.verify(hash);
-            hash.defaultValue = nil;
             propagateSharingNode.execute(this, hash, block);
-            hash.defaultBlock = block;
+            hash.setDefaultProc(block);
             if (capacity > PackedHashStoreLibrary.MAX_ENTRIES) {
                 capacityUsed.enter(this);
                 handleCapacity(hash, capacity);
@@ -414,8 +412,7 @@ public abstract class HashNodes {
                 @Cached @Shared InlinedBranchProfile capacityUsed) {
             assert HashStoreLibrary.verify(hash);
             propagateSharingNode.execute(this, hash, defaultValue);
-            hash.defaultValue = defaultValue;
-            hash.defaultBlock = nil;
+            hash.setDefaultValue(defaultValue);
             if (capacity > PackedHashStoreLibrary.MAX_ENTRIES) {
                 capacityUsed.enter(this);
                 handleCapacity(hash, capacity);
@@ -533,15 +530,13 @@ public abstract class HashNodes {
         RubyProc setDefaultProc(RubyHash hash, RubyProc defaultProc,
                 @Cached PropagateSharingNode propagateSharingNode) {
             propagateSharingNode.execute(this, hash, defaultProc);
-            hash.defaultValue = nil;
-            hash.defaultBlock = defaultProc;
+            hash.setDefaultProc(defaultProc);
             return defaultProc;
         }
 
         @Specialization
         Object setDefaultProc(RubyHash hash, Nil defaultProc) {
-            hash.defaultValue = nil;
-            hash.defaultBlock = nil;
+            hash.clearDefault();
             return nil;
         }
     }
@@ -554,8 +549,7 @@ public abstract class HashNodes {
                 @Cached PropagateSharingNode propagateSharingNode) {
             propagateSharingNode.execute(this, hash, defaultValue);
 
-            hash.defaultValue = defaultValue;
-            hash.defaultBlock = nil;
+            hash.setDefaultValue(defaultValue);
             return defaultValue;
         }
     }

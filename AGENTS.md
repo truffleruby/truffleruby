@@ -200,11 +200,20 @@ See `CONTRIBUTING.md` for more details.
 - Never hardcode the TruffleRuby version in Java sources; it comes from `suite.py` via `mx`
 - In generated Java files, use `// @formatter:off` / `// @formatter:on` markers instead of
   replicating the Eclipse formatter's line wrapping in the generator
-- In partially evaluated code (`execute*` methods of nodes and what they inline), every branch
-  which is rarely taken must be guarded by a profile, otherwise its code is compiled into the
-  fast path. Use `@Cached InlinedBranchProfile` / `@Cached InlinedConditionProfile` in DSL nodes
-  and `BranchProfile.create()` / `ConditionProfile.create()` fields in plain nodes. See
-  `doc/contributor/code-patterns.md`
+- In partially evaluated code, every branch and condition (`if`, `?:`, `&&`/`||`, `switch`,
+  loop exits) must be guarded by a profile, not only the rarely-taken ones: without a profile the
+  compiler knows nothing about which side is taken and compiles both sides into the fast path.
+  Only conditions on compilation constants (`@CompilationFinal` fields, options, DSL guards) need
+  none, as they fold away. Use `InlinedConditionProfile` / `ConditionProfile` by default,
+  `InlinedBranchProfile` / `BranchProfile` for a branch which is only a slow path, and
+  `InlinedLoopConditionProfile` / `LoopConditionProfile` for loops: `@Cached` inlined profiles in
+  DSL nodes, `*Profile.create()` fields in plain nodes. Partially evaluated code is everything
+  reachable from a node's `execute*` method or `@Specialization` without crossing a
+  `@TruffleBoundary`: this includes helper methods of plain classes (e.g. `ValueWrapper`,
+  `RubyString`, a storage or utility class), not just code in the node itself. Such a helper
+  method takes the profile (and a `Node node`) as parameters from its caller; a caller behind a
+  `@TruffleBoundary` passes `InlinedConditionProfile.getUncached()` and a null node.
+  See `doc/contributor/code-patterns.md`
 
 ### Generator Scripts
 

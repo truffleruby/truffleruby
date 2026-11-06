@@ -56,22 +56,44 @@ However, if the node already uses `@Cached` *and there are guards on the
 `@Cached` values*, consider whether it is useful to have one helper node per
 `Specialization` instantiation or only one for the whole node.
 
-## Profiles for rarely-taken branches in partially evaluated code
+## Profiles for branches in partially evaluated code
 
-Everything reachable from a node's `execute*` method is partially evaluated and
-compiled, including branches that are almost never taken at runtime such as
-slow paths, error paths and checks for debugging/tracing features. Without a
-profile, such a branch is compiled into the fast path and makes it slower and
-bigger. A `BranchProfile`/`ConditionProfile` records in the interpreter whether
-the branch was ever taken, so the compiler can leave it out (and deoptimize if
-it is taken later).
+Everything reachable from a node's `execute*` method or `@Specialization`
+without crossing a `@TruffleBoundary` is partially evaluated and compiled.
+Every branch and condition in that code (`if`, `?:`, `&&`/`||`, `switch`, loop
+exits) must be guarded by a profile. Without one, the compiler knows nothing
+about which side is taken at runtime: it compiles both sides into the fast path
+and cannot specialize the code on the observed behavior, making it slower and
+bigger. A profile records in the interpreter what was observed (which sides were
+taken, how often a loop iterates), so the compiler can leave out an untaken side
+(and deoptimize if it is taken later) and optimize the taken one.
+
+The only conditions which need no profile are those on compilation constants,
+such as `@CompilationFinal` fields, option values and DSL guards, since the
+compiler folds them away.
+
+This applies to helper methods of plain (non-`Node`) classes too, such as
+`ValueWrapper`, `RubyString` or a storage class: a method there is partially
+evaluated whenever it is called from a node and is not a `@TruffleBoundary`, so
+its branches need profiles just like code written in the node.
+
+* Use `InlinedConditionProfile`/`ConditionProfile` by default, it covers both
+  sides of a condition. Use `InlinedBranchProfile`/`BranchProfile` for a branch
+  which is only a slow path (an error path, a check for a debugging/tracing
+  feature), and `InlinedLoopConditionProfile`/`LoopConditionProfile` for loops.
 
 * In a node using the DSL (`@Specialization`), use an inlined profile:
 
 ```java
 @Specialization
 Object foo(Object object,
+        @Cached InlinedConditionProfile emptyProfile,
         @Cached InlinedBranchProfile slowPathProfile) {
+    if (emptyProfile.profile(this, isEmpty(object))) {
+        ...
+    } else {
+        ...
+    }
     if (isSlowPath(object)) {
         slowPathProfile.enter(this);
         ...
@@ -83,10 +105,14 @@ Object foo(Object object,
 * In a plain node (no DSL), use a profile field:
 
 ```java
+private final ConditionProfile emptyProfile = ConditionProfile.create();
 private final BranchProfile slowPathProfile = BranchProfile.create();
 
 @Override
 public Object execute(VirtualFrame frame) {
+    if (emptyProfile.profile(isEmpty())) {
+        ...
+    }
     if (isSlowPath()) {
         slowPathProfile.enter();
         ...
@@ -95,8 +121,28 @@ public Object execute(VirtualFrame frame) {
 }
 ```
 
-* Use `InlinedConditionProfile`/`ConditionProfile` instead when both sides of the
-  condition can be hot.
+* A helper method of a plain class has no node to cache a profile in, so it
+  takes the profile (and the `Node node` an inlined profile needs) as
+  parameters, and each caller passes its own profile. A caller behind a
+  `@TruffleBoundary` (or any other uncached caller) passes
+  `InlinedConditionProfile.getUncached()` and `null` for the node:
+
+```java
+// in a plain class
+public Object keepAliveObject(Node node, InlinedConditionProfile strongRefProfile) {
+    return strongRefProfile.profile(node, strongRef != null) ? this : get();
+}
+
+// in a node
+@Specialization
+static void keepObject(Node node, ValueWrapper wrapper,
+        @Cached InlinedConditionProfile strongRefProfile) {
+    keepAlive(wrapper.keepAliveObject(node, strongRefProfile));
+}
+
+// behind a @TruffleBoundary
+wrapper.keepAliveObject(null, InlinedConditionProfile.getUncached());
+```
 
 * Branches raising a Ruby exception (`RaiseException`) still need a profile,
   since raising is a normal part of program execution. Only for branches which

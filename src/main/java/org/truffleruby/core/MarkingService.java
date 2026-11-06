@@ -10,10 +10,9 @@
  */
 package org.truffleruby.core;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.truffleruby.cext.CapturedException;
-import org.truffleruby.cext.ValueWrapper;
 import org.truffleruby.core.array.ArrayUtils;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -43,17 +42,21 @@ public final class MarkingService {
     protected static final class ExtensionCallStackEntry {
 
         private final ExtensionCallStackEntry previous;
-        /** The wrappers converted to native handles during the current C extension call, kept alive until the entry is
-         * popped. Allocated eagerly since almost every downcall/upcall keeps at least one wrapper alive (e.g. the
-         * receiver). Grown by KeepAliveNode, only preservedObjectsCount elements are set. */
-        ValueWrapper[] preservedObjects = new ValueWrapper[8];
+        /** The objects converted to native handles during the current C extension call, kept alive until the entry is
+         * popped. The objects and not their ValueWrappers, because a ValueWrapper only references its object weakly.
+         * Allocated eagerly since almost every downcall/upcall keeps at least one object alive (e.g. the receiver).
+         * Grown by KeepAliveNode, only preservedObjectsCount elements are set. */
+        Object[] preservedObjects = new Object[8];
         int preservedObjectsCount;
         private final boolean keywordsGiven;
         private Object specialVariables;
         private final Object block;
         private CapturedException capturedException;
-        private ValueWrapper markOnExitObject;
-        private ArrayList<ValueWrapper> markOnExitObjects;
+        /** The objects to run the C mark functions of when the current C extension call exits. Like
+         * {@link #preservedObjects} a growable array, but starting empty since most calls mark nothing. Grown by
+         * {@link ExtensionCallStack#markOnExitObject(Object)}, only markOnExitObjectsCount elements are set. */
+        Object[] markOnExitObjects = ArrayUtils.EMPTY_ARRAY;
+        int markOnExitObjectsCount;
         private Object[] marks = null;
         private int marksIndex = 0;
 
@@ -78,40 +81,32 @@ public final class MarkingService {
             current = new ExtensionCallStackEntry(null, false, specialVariables, block);
         }
 
-        public void markOnExitObject(ValueWrapper value) {
-            if (current.markOnExitObject == null) {
-                current.markOnExitObject = value;
-            } else if (current.markOnExitObject != value) {
-                markOnExitObjectOnList(value);
+        public void markOnExitObject(Object value) {
+            final Object[] markOnExitObjects = current.markOnExitObjects;
+            final int count = current.markOnExitObjectsCount;
+            if (count > 0 && markOnExitObjects[count - 1] == value) {
+                return; // the common case of marking the same object repeatedly during a call
+            }
+            if (count == markOnExitObjects.length) {
+                growMarkOnExitObjects(value);
+            } else {
+                markOnExitObjects[count] = value;
+                current.markOnExitObjectsCount = count + 1;
             }
         }
 
         @TruffleBoundary
-        private void markOnExitObjectOnList(ValueWrapper value) {
-            if (current.markOnExitObjects == null) {
-                current.markOnExitObjects = new ArrayList<>();
-                current.markOnExitObjects.add(current.markOnExitObject);
-            }
-            current.markOnExitObjects.add(value);
-        }
-
-        public ArrayList<ValueWrapper> getMarkOnExitObjects() {
-            assert current.previous != null;
-            assert current.markOnExitObjects != null;
-
-            return current.markOnExitObjects;
+        private void growMarkOnExitObjects(Object value) {
+            final ExtensionCallStackEntry entry = current;
+            final Object[] grown = Arrays
+                    .copyOf(entry.markOnExitObjects, Integer.max(entry.markOnExitObjects.length * 2, 4));
+            grown[entry.markOnExitObjectsCount] = value;
+            entry.markOnExitObjects = grown;
+            entry.markOnExitObjectsCount++;
         }
 
         public boolean hasMarkObjects() {
-            return current.markOnExitObject != null;
-        }
-
-        public boolean hasSingleMarkObject() {
-            return current.markOnExitObject != null && current.markOnExitObjects == null;
-        }
-
-        public ValueWrapper getSingleMarkObject() {
-            return current.markOnExitObject;
+            return current.markOnExitObjectsCount > 0;
         }
 
         public void pop() {

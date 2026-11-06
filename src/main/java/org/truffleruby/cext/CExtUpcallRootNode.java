@@ -292,7 +292,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
                 @Bind Node node,
                 @Cached WrapNode wrapNode,
                 @Cached WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(node, wrapNode.execute(value));
+            return wrapperToHandleNode.execute(node, value, wrapNode.execute(value));
         }
     }
 
@@ -306,7 +306,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         static long wrapperToHandle(ValueWrapper value,
                 @Bind Node node,
                 @Cached WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(node, value);
+            return wrapperToHandleNode.execute(node, value.getObject(), value);
         }
     }
 

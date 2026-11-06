@@ -49,7 +49,7 @@ public abstract class SymbolToIDNode extends RubyBaseNode {
             @Bind Node node,
             @Cached WrapNode wrapNode,
             @Cached WrapperToHandleNode wrapperToHandleNode) {
-        return wrapperToHandleNode.execute(node, wrapNode.execute(symbol));
+        return wrapperToHandleNode.execute(node, symbol, wrapNode.execute(symbol));
     }
 
     @Idempotent
