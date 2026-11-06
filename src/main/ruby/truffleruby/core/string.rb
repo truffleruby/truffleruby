@@ -349,7 +349,8 @@ class String
   Primitive.always_split self, :scan
 
   def split(pattern = nil, limit = undefined, &block)
-    Truffle::Splitter.split(Primitive.dup_as_string_instance(self), pattern, limit, &block)
+    result = Truffle::Splitter.split(Primitive.dup_as_string_instance(self), pattern, limit, &block)
+    block ? self : result
   end
   Primitive.always_split self, :split
 

@@ -26,6 +26,10 @@ describe "IO#printf" do
     File.read(@name).should == "5 cookies"
   end
 
+  it "returns nil" do
+    @io.printf("%d", 5).should == nil
+  end
+
   it "raises IOError on closed stream" do
     -> { IOSpecs.closed_io.printf("stuff") }.should.raise(IOError)
   end

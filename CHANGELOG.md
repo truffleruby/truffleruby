@@ -25,6 +25,7 @@ Compatibility:
 * Raise `RangeError` instead of `FloatDomainError` when converting NaN, infinite or other out-of-range `Float` values with `rb_num2ulong()`, `Process.uid=` and similar methods (@nirvdrum).
 * `StringIO#gets`, `#readline`, `#each_line` and `#readlines` no longer split a multi-byte character when given a limit (@ListlessPanda).
 * `rb_range_values()` now returns false for `Enumerator::ArithmeticSequence` and for range-like objects without `#exclude_end?`, and accepts range-like objects with private methods, like CRuby (#4487, @nirvdrum, @eregon).
+* `String#split` with a block now returns `self`, `IO#printf` returns `nil`, `ARGF.set_encoding` returns `ARGF`, and `IO::Buffer#set_string` and `IO::Buffer#copy` return the number of bytes copied, like CRuby (#4509, @taxor03).
 
 Performance:
 

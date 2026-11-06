@@ -38,4 +38,10 @@ describe "ARGF.set_encoding" do
       @argf.gets.encoding.should == Encoding::EUC_JP
     end
   end
+
+  it "returns ARGF" do
+    argf [@file] do
+      @argf.set_encoding("us-ascii").should.equal?(@argf)
+    end
+  end
 end

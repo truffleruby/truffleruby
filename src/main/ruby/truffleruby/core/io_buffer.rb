@@ -479,14 +479,14 @@ class IO::Buffer
     end
 
     write_string(offset, string)
-    self
+    string.bytesize
   end
 
   def copy(source, offset = 0, source_length = source.size, source_offset = 0)
     check_writable
     string = source.get_string(source_offset, source_length)
     write_string(offset, string)
-    self
+    string.bytesize
   end
 
   def read(io, length = nil, offset = 0)

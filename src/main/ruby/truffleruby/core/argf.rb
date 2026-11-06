@@ -532,6 +532,7 @@ module Truffle
       @encoding_args = args
       @internal = @stream.internal_encoding
       @external = @stream.external_encoding
+      self
     end
 
     #

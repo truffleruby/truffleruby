@@ -514,6 +514,11 @@ describe "String#split with Regexp" do
       returned_object.should == ""
       a.should == []
     end
+
+    it "returns self" do
+      str = +"chunky bacon"
+      str.split(" ") { }.should.equal?(str)
+    end
   end
 
   describe "for a String subclass" do
