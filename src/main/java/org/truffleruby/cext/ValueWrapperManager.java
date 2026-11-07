@@ -10,6 +10,8 @@
  */
 package org.truffleruby.cext;
 
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.lang.ref.Cleaner.Cleanable;
 import java.util.Set;
@@ -56,12 +58,36 @@ public final class ValueWrapperManager {
 
     private volatile HandleBlockWeakReference[] blockMap = new HandleBlockWeakReference[0];
 
+    /** Wrappers whose object was collected are enqueued here, so {@link #clearDeadWrappers()} can clear their slot in
+     * their {@link HandleBlock}, which otherwise would retain them until the whole block is unreachable (forever for
+     * the immortal blocks of shared objects). Process-wide like the shared blocks, as wrappers of shared objects
+     * outlive contexts and language instances. */
+    static final ReferenceQueue<Object> deadWrappers = new ReferenceQueue<>();
+
+    /** Clears the HandleBlock slot of every wrapper whose object was collected since the last call, so the block no
+     * longer retains the dead wrapper (and for a boxed Long/Double, the box it holds strongly). Called whenever a new
+     * block is allocated, which amortizes it over BLOCK_SIZE new wrappers and bounds the retained dead wrappers to
+     * those created since the last block. The slot is never reused since a block's handles are only reused once the
+     * whole block was freed by its cleaner, and clearing races harmlessly with lookups by other fibers: they then see
+     * no wrapper instead of a wrapper with a collected object, which are both reported as a dead handle. */
+    @TruffleBoundary
+    static void clearDeadWrappers() {
+        Reference<?> reference;
+        while ((reference = deadWrappers.poll()) != null) {
+            final ValueWrapper wrapper = (ValueWrapper) reference;
+            if (wrapper.handleBlock != null) {
+                wrapper.handleBlock.clearWrapper(wrapper);
+            }
+        }
+    }
+
     public static HandleBlockHolder getBlockHolder(RubyLanguage language) {
         return language.getCurrentFiber().handleData;
     }
 
     @TruffleBoundary
     public synchronized HandleBlock addToBlockMap(RubyLanguage language) {
+        clearDeadWrappers();
         HandleBlock block = new HandleBlock(language, this, false);
         int blockIndex = block.getIndex();
         HandleBlockWeakReference[] map = growMapIfRequired(blockMap, blockIndex);
@@ -74,6 +100,7 @@ public final class ValueWrapperManager {
     @TruffleBoundary
     public HandleBlock addToSharedBlockMap(RubyLanguage language) {
         synchronized (RubyLanguage.handleBlockAllocator) {
+            clearDeadWrappers();
             HandleBlock block = new HandleBlock(language, this, true);
             int blockIndex = block.getIndex();
             HandleBlockWeakReference[] map = growMapIfRequired(RubyLanguage.handleBlockSharedMap, blockIndex);
@@ -219,7 +246,9 @@ public final class ValueWrapperManager {
      * The block references its wrappers strongly: each {@link ValueWrapper} is itself the weak reference to its object,
      * so the block does not keep wrapped objects alive. Live objects keep their wrapper alive (they reference it
      * strongly), the wrapper keeps its block alive, and once all objects of a block die the block and its wrappers form
-     * an unreachable cycle collected together, which frees the handle range through the block's cleaner. */
+     * an unreachable cycle collected together, which frees the handle range through the block's cleaner. Until then,
+     * the slot of a wrapper whose object died is cleared by {@link ValueWrapperManager#clearDeadWrappers()}, so the
+     * block does not retain dead wrappers. */
     public static final class HandleBlock {
 
         private final long base;
@@ -264,6 +293,13 @@ public final class ValueWrapperManager {
 
         private static int offset(long handle) {
             return (int) (handle & OFFSET_MASK) >> ADDRESS_ALIGN_BITS;
+        }
+
+        /** Clears the slot of a wrapper whose object was collected, see {@link #clearDeadWrappers()} */
+        void clearWrapper(ValueWrapper wrapper) {
+            final int offset = offset(wrapper.handle);
+            assert wrappers[offset] == wrapper;
+            wrappers[offset] = null;
         }
 
         public boolean isFull() {

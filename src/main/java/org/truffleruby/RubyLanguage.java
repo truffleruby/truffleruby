@@ -306,7 +306,8 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
      * instance. So handles of shared objects are allocated by a process-wide allocator (which ensures handles of
      * different language instances never alias) and registered in a process-wide map, and their blocks stay alive for
      * the lifetime of the process ({@link #keepSharedHandleBlockAlive}). The wrappers only reference their object
-     * weakly, so this does not keep shared objects of disposed language instances alive. */
+     * weakly and are cleared from their block once the object died (see ValueWrapperManager#clearDeadWrappers), so this
+     * does not keep shared objects of disposed language instances, nor their wrappers, alive. */
     @SuppressFBWarnings("VO_VOLATILE_REFERENCE_TO_ARRAY") public static volatile ValueWrapperManager.HandleBlockWeakReference[] handleBlockSharedMap = new ValueWrapperManager.HandleBlockWeakReference[0];
     private static final ConcurrentLinkedQueue<ValueWrapperManager.HandleBlock> sharedHandleBlocks = new ConcurrentLinkedQueue<>();
 

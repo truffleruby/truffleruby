@@ -38,21 +38,22 @@ import com.oracle.truffle.api.library.ExportMessage;
  * this needs no pointer interop messages. The language id, display string and the "value" member are provided as we
  * always do, and are useful to inspect a ValueWrapper in the Truffle debugger.
  *
- * The wrapper IS the weak reference to its object, and is itself held strongly by its {@link HandleBlock}, so mapping a
- * handle back to a live object needs no extra WeakReference allocation per wrapper. The weak link must be on this side:
- * the object (which strongly references its wrapper) and the keep-alive lists in
- * {@link org.truffleruby.core.MarkingService} are what keep a wrapped object alive, never the handle map. The wrapper
- * is published to other threads with a compare-and-exchange and read with acquire semantics (see
- * {@link RubyDynamicObject#getValueWrapper()}): {@link #handle} and {@link #handleBlock} are final, but the
- * {@link WeakReference} referent is not, so a plain racy read would not be guaranteed to see it. */
+ * The wrapper IS the weak reference to its object, and is itself held strongly by its {@link HandleBlock} until its
+ * object dies (see {@link ValueWrapperManager#clearDeadWrappers()}), so mapping a handle back to a live object needs no
+ * extra WeakReference allocation per wrapper. The weak link must be on this side: the object (which strongly references
+ * its wrapper) and the keep-alive lists in {@link org.truffleruby.core.MarkingService} are what keep a wrapped object
+ * alive, never the handle map. The wrapper is published to other threads with a compare-and-exchange and read with
+ * acquire semantics (see {@link RubyDynamicObject#getValueWrapper()}): {@link #handle} and {@link #handleBlock} are
+ * final, but the {@link WeakReference} referent is not, so a plain racy read would not be guaranteed to see it. */
 @ExportLibrary(InteropLibrary.class)
 public final class ValueWrapper extends WeakReference<Object> implements TruffleObject {
 
     /** Consider using {@link WrapperToHandleNode} or {@link KeepAliveNode} when passing the handle to C */
     public final long handle;
     /** The handleBlock is held here to keep it alive and prevent the memory freed while wrappers still exist with
-     * handles in it. */
-    @SuppressWarnings("unused") private final HandleBlock handleBlock;
+     * handles in it, and to clear this wrapper's slot in it once the object died (see
+     * {@link ValueWrapperManager#clearDeadWrappers()}). Null for immediates and tagged longs. */
+    final HandleBlock handleBlock;
     /** Objects which do not strongly reference their wrapper back (boxed Long/Double for Bignum-range integer and Float
      * VALUEs, unlike RubyDynamicObject and ImmutableRubyObject) are also referenced strongly here, so keeping the
      * wrapper alive (see {@link #keepAliveObject(Node, InlinedConditionProfile, InlinedConditionProfile)}) keeps such
@@ -61,7 +62,7 @@ public final class ValueWrapper extends WeakReference<Object> implements Truffle
 
     /** The referent is {@code null} if this is a tagged long, otherwise the Ruby object. */
     public ValueWrapper(Object object, long handle, HandleBlock handleBlock) {
-        super(object);
+        super(object, ValueWrapperManager.deadWrappers);
         assert (object == null) == ValueWrapperManager.isTaggedLong(handle);
         this.handle = handle;
         this.handleBlock = handleBlock;
