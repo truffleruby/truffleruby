@@ -133,9 +133,7 @@ public final class CExtFFMLayer {
                 upcalls.writeLong(i * 8L, upcallStubs[i]);
             }
             for (int i = 0; i < constants.length; i++) {
-                /* No need to keep the wrapper alive here like WrapperToHandleNode does: the constants are core classes
-                 * and modules which live as long as the context and strongly reference their cached ValueWrapper. */
-                constantHandles.writeLong(i * 8L, WrapNodeGen.getUncached().execute(constants[i]).handle);
+                constantHandles.writeLong(i * 8L, WrapToHandleNode.executeUncached(constants[i]));
             }
             try {
                 INIT.invokeExact(initFunction, upcalls.getAddress(), constantHandles.getAddress());

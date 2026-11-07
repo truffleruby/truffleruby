@@ -1774,9 +1774,8 @@ public abstract class CExtNodes {
 
         @Specialization
         long wrap(Object value,
-                @Cached WrapNode wrapNode,
-                @Cached ValueWrapperManager.WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(this, wrapNode.execute(value));
+                @Cached WrapToHandleNode wrapToHandleNode) {
+            return wrapToHandleNode.execute(this, value);
         }
     }
 

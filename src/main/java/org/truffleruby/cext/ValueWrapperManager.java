@@ -19,8 +19,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.profiles.InlinedConditionProfile;
-import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.SuppressFBWarnings;
@@ -30,7 +28,6 @@ import org.truffleruby.language.NotProvided;
 import org.truffleruby.language.RubyBaseNode;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -301,27 +298,6 @@ public final class ValueWrapperManager {
     public static final class HandleBlockHolder {
         private HandleBlock handleBlock = null;
         private HandleBlock sharedHandleBlock = null;
-    }
-
-    /** The same conversion as ValueWrapper's asPointer interop message: returns the handle of the wrapper, and keeps
-     * wrappers with a tagged object handle alive until the end of the current C extension call. */
-    @GenerateUncached
-    @GenerateInline
-    @GenerateCached(false)
-    public abstract static class WrapperToHandleNode extends RubyBaseNode {
-
-        public abstract long execute(Node node, ValueWrapper wrapper);
-
-        @Specialization
-        static long wrapperToHandle(Node node, ValueWrapper wrapper,
-                @Cached KeepAliveNode keepAliveNode,
-                @Cached InlinedConditionProfile taggedObjectProfile) {
-            final long handle = wrapper.handle;
-            if (taggedObjectProfile.profile(node, isTaggedObject(handle))) {
-                keepAliveNode.execute(node, wrapper);
-            }
-            return handle;
-        }
     }
 
     /** Creates the ValueWrapper for an object which needs a tagged object handle, allocating the handle eagerly so

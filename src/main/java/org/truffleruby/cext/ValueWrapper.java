@@ -14,7 +14,6 @@ import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import org.truffleruby.cext.ValueWrapperManager.HandleBlock;
-import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
 import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
 import org.truffleruby.debug.VariableNamesObject;
 import org.truffleruby.interop.TranslateInteropExceptionNode;
@@ -29,15 +28,15 @@ import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 
 /** Represents a VALUE in C: wraps a Ruby object and its {@link #handle}, the long the native code sees as the VALUE.
- * ValueWrappers cross the native boundary only as that long (see {@link ValueWrapperManager.WrapperToHandleNode}), so
- * this needs no pointer interop messages. The language id, display string and the "value" member are provided as we
- * always do, and are useful to inspect a ValueWrapper in the Truffle debugger. */
+ * ValueWrappers cross the native boundary only as that long (see {@link WrapToHandleNode}), so this needs no pointer
+ * interop messages. The language id, display string and the "value" member are provided as we always do, and are useful
+ * to inspect a ValueWrapper in the Truffle debugger. */
 @ExportLibrary(InteropLibrary.class)
 public final class ValueWrapper implements TruffleObject {
 
     /** {@code null} if this is a tagged long, otherwise the Ruby object. */
     private final Object object;
-    /** Consider using {@link WrapperToHandleNode} or {@link KeepAliveNode} when passing the handle to C */
+    /** Consider using {@link WrapToHandleNode} or {@link KeepAliveNode} when passing the handle to C */
     public final long handle;
     /** The handleBlock is held here to keep it alive and prevent the memory freed while wrappers still exist with
      * handles in it. */

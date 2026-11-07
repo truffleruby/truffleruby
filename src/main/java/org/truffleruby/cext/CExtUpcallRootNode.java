@@ -39,7 +39,6 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 
 import org.truffleruby.RubyLanguage;
-import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
@@ -56,7 +55,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
 
     /** The kind of a native value in an upcall signature, from the carrier letters in tool/cext-upcalls.rb */
     public enum Carrier {
-        VALUE, // V: a VALUE handle, converted with UnwrapNode/WrapNode
+        VALUE, // V: a VALUE handle, converted with UnwrapNode/WrapToHandleNode
         INT, // I
         BOOL, // B: Ruby true/false as int 1/0
         LONG, // L, also W: a VALUE handle passed through as-is, only distinct from L in the C declaration
@@ -287,9 +286,8 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         @Specialization
         static long wrap(Object value,
                 @Bind Node node,
-                @Cached WrapNode wrapNode,
-                @Cached WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(node, wrapNode.execute(value));
+                @Cached WrapToHandleNode wrapToHandleNode) {
+            return wrapToHandleNode.execute(node, value);
         }
     }
 
