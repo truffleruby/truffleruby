@@ -18,9 +18,9 @@ import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import org.truffleruby.core.string.RubyString;
+import org.truffleruby.core.string.StringHelperNodes;
 import org.truffleruby.core.string.ImmutableRubyString;
 import org.truffleruby.language.RubyBaseNode;
-import org.truffleruby.language.dispatch.DispatchNode;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -42,14 +42,11 @@ public abstract class FreezeHashKeyIfNeededNode extends RubyBaseNode {
     static Object freezeIfNeeded(Node node, RubyString string, boolean compareByIdentity,
             @Cached DynamicObject.GetShapeFlagsNode getShapeFlagsNode,
             @Cached InlinedConditionProfile frozenProfile,
-            @Cached DispatchNode dupNode,
-            @Cached DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
+            @Cached StringHelperNodes.FrozenCopyNode frozenCopyNode) {
         if (frozenProfile.profile(node, (getShapeFlagsNode.execute(string) & FROZEN_FLAG) != 0)) {
             return string;
         } else {
-            final RubyString copy = (RubyString) dupNode.call(string, "dup");
-            setShapeFlagsNode.executeAdd(copy, FROZEN_FLAG);
-            return copy;
+            return frozenCopyNode.execute(node, string);
         }
     }
 
