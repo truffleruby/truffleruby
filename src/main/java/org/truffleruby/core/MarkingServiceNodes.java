@@ -15,6 +15,7 @@ import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.dsl.NonIdempotent;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
+import com.oracle.truffle.api.profiles.InlinedLoopConditionProfile;
 import org.truffleruby.cext.ValueWrapper;
 import org.truffleruby.core.MarkingService.ExtensionCallStack;
 import org.truffleruby.language.RubyBaseNode;
@@ -25,7 +26,6 @@ import java.util.Arrays;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -67,7 +67,7 @@ public abstract class MarkingServiceNodes {
 
         @NonIdempotent
         protected static ExtensionCallStack getStack(Node node) {
-            return getLanguage(node).getCurrentThread().getCurrentFiber().extensionCallStack;
+            return getLanguage(node).getCurrentFiber().extensionCallStack;
         }
     }
 
@@ -82,29 +82,23 @@ public abstract class MarkingServiceNodes {
             // Do nothing.
         }
 
-        @Specialization(guards = "stack.hasSingleMarkObject()")
-        static void markSingleObject(Node node, ExtensionCallStack stack,
-                @Cached(inline = false) @Shared DispatchNode callNode) {
-            ValueWrapper value = stack.getSingleMarkObject();
-            callNode.call(getContext(node).getCoreLibrary().truffleCExtModule, "run_marker", value.getObject());
-        }
-
-        @TruffleBoundary
-        @Specialization(guards = { "stack.hasMarkObjects()", "!stack.hasSingleMarkObject()" })
+        @Specialization(guards = "stack.hasMarkObjects()")
         static void marksToRun(Node node, ExtensionCallStack stack,
-                @Cached(inline = false) @Shared DispatchNode callNode) {
-            // Run the markers...
-            var valuesForMarking = stack.getMarkOnExitObjects();
-            // Push a new stack frame because we should
-            // mutate the list while iterating, and we
-            // don't know what the mark routine might do.
-            stack.push(false, nil, nil);
+                @Cached(inline = false) DispatchNode callNode,
+                @Cached InlinedLoopConditionProfile loopProfile) {
+            // The array and count are captured before running the markers: a mark function registering further
+            // mark-on-exit objects appends them after count (possibly in a grown array) and they are dropped when
+            // the entry is popped, since the mark functions of objects reachable from it already ran.
+            final ValueWrapper[] valuesForMarking = stack.current.markOnExitObjects;
+            final int count = stack.current.markOnExitObjectsCount;
+            int i = 0;
             try {
-                for (var value : valuesForMarking) {
-                    callNode.call(getContext(node).getCoreLibrary().truffleCExtModule, "run_marker", value.getObject());
+                for (; loopProfile.inject(node, i < count); i++) {
+                    callNode.call(getContext(node).getCoreLibrary().truffleCExtModule, "run_marker",
+                            valuesForMarking[i].getObject());
                 }
             } finally {
-                stack.pop();
+                profileAndReportLoopCount(node, loopProfile, i);
             }
         }
     }

@@ -304,9 +304,12 @@ public abstract class CExtNodes {
 
         @Specialization
         Object markOnCallExit(Object object,
-                @Cached WrapNode wrapNode) {
+                @Cached WrapNode wrapNode,
+                @Cached InlinedConditionProfile sameObjectProfile,
+                @Cached InlinedConditionProfile growProfile) {
             ValueWrapper wrapper = wrapNode.execute(object);
-            getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack.markOnExitObject(wrapper);
+            getLanguage().getCurrentFiber().extensionCallStack
+                    .markOnExitObject(wrapper, sameObjectProfile, growProfile, this);
             return nil;
         }
     }
@@ -1805,7 +1808,7 @@ public abstract class CExtNodes {
         Object createNewMarkList(RubyDynamicObject object,
                 @Cached DynamicObject.GetNode getNode) {
             getContext().getMarkingService().startMarking(
-                    getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack,
+                    getLanguage().getCurrentFiber().extensionCallStack,
                     (Object[]) getNode.execute(object, Layouts.MARKED_OBJECTS_IDENTIFIER, null));
             return nil;
         }
@@ -1822,7 +1825,7 @@ public abstract class CExtNodes {
             if (wrappedValue != null) {
                 noExceptionProfile.enter(this);
                 getContext().getMarkingService()
-                        .addMark(getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack, wrappedValue);
+                        .addMark(getLanguage().getCurrentFiber().extensionCallStack, wrappedValue);
             }
             // We do nothing here if the handle cannot be resolved. If we are marking an object
             // which is only reachable via weak refs then the handles of objects it is itself
@@ -1861,7 +1864,7 @@ public abstract class CExtNodes {
                     structOwner,
                     Layouts.MARKED_OBJECTS_IDENTIFIER,
                     getContext().getMarkingService()
-                            .finishMarking(getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack));
+                            .finishMarking(getLanguage().getCurrentFiber().extensionCallStack));
             return nil;
         }
     }
