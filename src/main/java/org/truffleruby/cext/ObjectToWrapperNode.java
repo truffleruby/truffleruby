@@ -51,15 +51,10 @@ public abstract class ObjectToWrapperNode extends RubyBaseNode {
         return new ValueWrapper(null, val, null);
     }
 
-    @Specialization(guards = "!isSmallFixnum(value)")
-    static ValueWrapper wrapNonFixnum(long value,
-            @Cached @Shared CreateWrapperNode createWrapperNode,
-            @Bind Node node) {
-        return createWrapperNode.execute(node, value);
-    }
-
-    @Specialization
-    static ValueWrapper wrapDouble(double value,
+    /** A boxed Long or Double cannot reference a ValueWrapper like RubyDynamicObject and ImmutableRubyObject do, so it
+     * gets a new wrapper every time, which holds the box. */
+    @Specialization(guards = "isNonFixnumLongOrDouble(value)")
+    static ValueWrapper wrapNonFixnumLongOrDouble(Object value,
             @Cached @Shared CreateWrapperNode createWrapperNode,
             @Bind Node node) {
         return createWrapperNode.execute(node, value);
@@ -119,6 +114,10 @@ public abstract class ObjectToWrapperNode extends RubyBaseNode {
             wrapper = value.setValueWrapperIfAbsent(createWrapperNode.execute(node, value));
         }
         return wrapper;
+    }
+
+    protected static boolean isNonFixnumLongOrDouble(Object value) {
+        return (value instanceof Long && !ObjectIDOperations.isSmallFixnum((long) value)) || value instanceof Double;
     }
 
     @Specialization(guards = "isForeignObject(value)")

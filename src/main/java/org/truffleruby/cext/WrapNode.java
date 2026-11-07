@@ -74,15 +74,10 @@ public abstract class WrapNode extends RubyBaseNode {
         return (value << 1) | LONG_TAG;
     }
 
-    @Specialization(guards = "!isSmallFixnum(value)")
-    static long wrapNonFixnum(Node node, long value,
-            @Cached @Shared CreateWrapperNode createWrapperNode,
-            @Cached @Shared KeepAliveNode keepAliveNode) {
-        return keepAlive(node, createWrapperNode.execute(node, value), keepAliveNode);
-    }
-
-    @Specialization
-    static long wrapDouble(Node node, double value,
+    /** A boxed Long or Double cannot reference a ValueWrapper like RubyDynamicObject and ImmutableRubyObject do, so it
+     * gets a new wrapper every time, which holds the box. */
+    @Specialization(guards = "isNonFixnumLongOrDouble(value)")
+    static long wrapNonFixnumLongOrDouble(Node node, Object value,
             @Cached @Shared CreateWrapperNode createWrapperNode,
             @Cached @Shared KeepAliveNode keepAliveNode) {
         return keepAlive(node, createWrapperNode.execute(node, value), keepAliveNode);
@@ -140,6 +135,10 @@ public abstract class WrapNode extends RubyBaseNode {
         throw new RaiseException(
                 getContext(node),
                 coreExceptions(node).argumentError("Attempt to wrap something that isn't an Ruby object", node));
+    }
+
+    protected static boolean isNonFixnumLongOrDouble(Object value) {
+        return (value instanceof Long && !ObjectIDOperations.isSmallFixnum((long) value)) || value instanceof Double;
     }
 
     /** The wrapper of a tagged object handle must be kept alive until the end of the current C extension call, as
