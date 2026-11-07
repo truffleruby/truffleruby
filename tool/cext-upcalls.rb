@@ -41,8 +41,8 @@
 # Carriers:
 #   V = VALUE (handle, long).  Unwrapped to a Ruby object for the call; the
 #       result is wrapped back to a handle.
-#   W = pre-wrapped VALUE result: the Ruby method already returns a wrapped
-#       VALUE (Primitive.cext_wrap), only converted to a handle (return only).
+#   W = VALUE result which is already a handle: the Ruby method returns
+#       Primitive.cext_wrap(...) or a VALUE it got from C, passed as-is (return only).
 #   B = Ruby true/false result converted to int 1/0 (return only).
 #   I = int, L = long, D = double, O = void (return only)
 #   P = native pointer (const void* argument, void* return), including function pointers

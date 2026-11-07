@@ -57,7 +57,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
     /** The kind of a native value in an upcall signature, from the carrier letters in tool/cext-upcalls.rb */
     public enum Carrier {
         VALUE, // V: a VALUE handle, converted with UnwrapNode/WrapNode
-        WRAPPED, // W: a result which is already a VALUE handle or a ValueWrapper
+        WRAPPED, // W: a VALUE result which is already a handle (from Primitive.cext_wrap or from C), passed as-is
         INT, // I
         BOOL, // B: Ruby true/false as int 1/0
         LONG, // L
@@ -267,10 +267,9 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
             return switch (carrier) {
                 case VOID -> new VoidResultNode();
                 case VALUE -> CExtUpcallRootNodeFactory.ValueResultNodeGen.create();
-                case WRAPPED -> CExtUpcallRootNodeFactory.WrappedResultNodeGen.create();
                 case ID -> CExtUpcallRootNodeFactory.IDResultNodeGen.create();
                 case INT -> CExtUpcallRootNodeFactory.IntResultNodeGen.create();
-                case LONG, POINTER -> CExtUpcallRootNodeFactory.LongResultNodeGen.create();
+                case WRAPPED, LONG, POINTER -> CExtUpcallRootNodeFactory.LongResultNodeGen.create();
                 case DOUBLE -> CExtUpcallRootNodeFactory.DoubleResultNodeGen.create();
                 case BOOL -> CExtUpcallRootNodeFactory.BoolResultNodeGen.create();
             };
@@ -293,20 +292,6 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
                 @Cached WrapNode wrapNode,
                 @Cached WrapperToHandleNode wrapperToHandleNode) {
             return wrapperToHandleNode.execute(node, wrapNode.execute(value));
-        }
-    }
-
-    abstract static class WrappedResultNode extends UpcallResultNode {
-        @Specialization
-        static long handle(long value) {
-            return value;
-        }
-
-        @Specialization
-        static long wrapperToHandle(ValueWrapper value,
-                @Bind Node node,
-                @Cached WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(node, value);
         }
     }
 
