@@ -10,7 +10,6 @@
  */
 package org.truffleruby.cext;
 
-import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.RubyBaseNode;
 
@@ -42,14 +41,13 @@ public abstract class SymbolToIDNode extends RubyBaseNode {
         return symbol.getId();
     }
 
-    /** Dynamic symbols are only weakly referenced by the SymbolTable, so this goes through {@link WrapperToHandleNode}
-     * on every call to keep the wrapper (and the symbol) alive until the end of the current C extension call. */
+    /** Dynamic symbols are only weakly referenced by the SymbolTable, so this goes through {@link WrapNode} on every
+     * call to keep the wrapper (and the symbol) alive until the end of the current C extension call. */
     @Specialization(guards = "!isStaticSymbol(symbol)")
     static long getDynamicID(RubySymbol symbol,
             @Bind Node node,
-            @Cached WrapNode wrapNode,
-            @Cached WrapperToHandleNode wrapperToHandleNode) {
-        return wrapperToHandleNode.execute(node, wrapNode.execute(symbol));
+            @Cached WrapNode wrapNode) {
+        return wrapNode.execute(node, symbol);
     }
 
     @Idempotent

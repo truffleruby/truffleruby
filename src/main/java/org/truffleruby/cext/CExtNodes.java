@@ -305,10 +305,10 @@ public abstract class CExtNodes {
 
         @Specialization
         Object markOnCallExit(Object object,
-                @Cached WrapNode wrapNode,
+                @Cached ObjectToWrapperNode objectToWrapperNode,
                 @Cached InlinedConditionProfile sameObjectProfile,
                 @Cached InlinedConditionProfile growProfile) {
-            ValueWrapper wrapper = wrapNode.execute(object);
+            ValueWrapper wrapper = objectToWrapperNode.execute(object);
             getLanguage().getCurrentFiber().extensionCallStack
                     .markOnExitObject(wrapper, sameObjectProfile, growProfile, this);
             return nil;
@@ -1797,9 +1797,8 @@ public abstract class CExtNodes {
 
         @Specialization
         long wrap(Object value,
-                @Cached WrapNode wrapNode,
-                @Cached ValueWrapperManager.WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(this, wrapNode.execute(value));
+                @Cached WrapNode wrapNode) {
+            return wrapNode.execute(this, value);
         }
     }
 
@@ -1817,8 +1816,8 @@ public abstract class CExtNodes {
     public abstract static class CExtToWrapperNode extends PrimitiveArrayArgumentsNode {
         @Specialization
         ValueWrapper toWrapper(long handle,
-                @Cached ToWrapperNode toWrapperNode) {
-            ValueWrapper wrapper = toWrapperNode.execute(this, handle);
+                @Cached HandleToWrapperNode handleToWrapperNode) {
+            ValueWrapper wrapper = handleToWrapperNode.execute(this, handle);
             if (wrapper == null) {
                 CompilerDirectives.transferToInterpreterAndInvalidate();
                 throw CompilerDirectives.shouldNotReachHere("ValueWrapper not found for " + handle);
@@ -1847,8 +1846,8 @@ public abstract class CExtNodes {
         @Specialization
         Object rbGCMark(long handle,
                 @Cached InlinedBranchProfile noExceptionProfile,
-                @Cached ToWrapperNode toWrapperNode) {
-            ValueWrapper wrappedValue = toWrapperNode.execute(this, handle);
+                @Cached HandleToWrapperNode handleToWrapperNode) {
+            ValueWrapper wrappedValue = handleToWrapperNode.execute(this, handle);
             if (wrappedValue != null) {
                 noExceptionProfile.enter(this);
                 getContext().getMarkingService()
@@ -1869,8 +1868,8 @@ public abstract class CExtNodes {
         Object addToMarkList(long handle,
                 @Cached MarkingServiceNodes.KeepAliveNode keepAliveNode,
                 @Cached InlinedBranchProfile noExceptionProfile,
-                @Cached ToWrapperNode toWrapperNode) {
-            ValueWrapper wrappedValue = toWrapperNode.execute(this, handle);
+                @Cached HandleToWrapperNode handleToWrapperNode) {
+            ValueWrapper wrappedValue = handleToWrapperNode.execute(this, handle);
             if (wrappedValue != null) {
                 noExceptionProfile.enter(this);
                 keepAliveNode.execute(this, wrappedValue);

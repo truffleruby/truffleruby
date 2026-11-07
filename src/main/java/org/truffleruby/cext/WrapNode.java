@@ -1,99 +1,108 @@
 /*
- * Copyright (c) 2026 TruffleRuby contributors.
- * Copyright (c) 2018-2025 Oracle and/or its affiliates.
- * This code is released under a tri EPL/GPL/LGPL license.
- * You can use it, redistribute it and/or modify it under the terms of the:
+ * Copyright (c) 2026 TruffleRuby contributors
  *
- * Eclipse Public License version 2.0, or
- * GNU General Public License version 2, or
- * GNU Lesser General Public License version 2.1.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 package org.truffleruby.cext;
 
+import static org.truffleruby.cext.ValueWrapperManager.FALSE_HANDLE;
 import static org.truffleruby.cext.ValueWrapperManager.LONG_TAG;
+import static org.truffleruby.cext.ValueWrapperManager.NIL_HANDLE;
+import static org.truffleruby.cext.ValueWrapperManager.TRUE_HANDLE;
+import static org.truffleruby.cext.ValueWrapperManager.UNDEF_HANDLE;
 
-import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Shared;
+import com.oracle.truffle.api.dsl.GenerateCached;
+import com.oracle.truffle.api.dsl.GenerateInline;
+import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.NeverDefault;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
-import com.oracle.truffle.api.strings.TruffleString;
-import org.truffleruby.core.encoding.Encodings;
+import org.truffleruby.cext.ValueWrapperManager.CreateWrapperNode;
+import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
 import org.truffleruby.language.ImmutableRubyObject;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.NotProvided;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyDynamicObject;
 import org.truffleruby.language.control.RaiseException;
-
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Cached.Shared;
-import com.oracle.truffle.api.dsl.GenerateUncached;
-import com.oracle.truffle.api.dsl.Specialization;
 import org.truffleruby.language.objects.ObjectIDOperations;
 
-import org.truffleruby.cext.ValueWrapperManager.CreateWrapperNode;
-
-@ImportStatic(ObjectIDOperations.class)
+/** Converts a Ruby object to the VALUE handle the native code sees, the reverse of {@link UnwrapNode}. Immediates
+ * (small fixnums, nil, true, false, undef) are encoded in the handle itself, other objects get a tagged object handle
+ * through their {@link ValueWrapper}, kept alive until the end of the current C extension call. Use
+ * {@link ObjectToWrapperNode} only when the ValueWrapper itself is needed. */
 @GenerateUncached
+@GenerateInline
+@GenerateCached(false)
+@ImportStatic(ObjectIDOperations.class)
 public abstract class WrapNode extends RubyBaseNode {
 
-    @NeverDefault
-    public static WrapNode create() {
-        return WrapNodeGen.create();
+    public static long executeUncached(Object value) {
+        return WrapNodeGen.getUncached().execute(null, value);
     }
 
-    public abstract ValueWrapper execute(Object value);
+    public abstract long execute(Node node, Object value);
 
     @Specialization(guards = "isSmallFixnum(value)")
-    ValueWrapper wrapFixnum(long value) {
-        long val = (value << 1) | LONG_TAG;
-        return new ValueWrapper(null, val, null);
+    static long wrapFixnum(long value) {
+        return (value << 1) | LONG_TAG;
     }
 
-    @Specialization(guards = "!isSmallFixnum(value)")
-    static ValueWrapper wrapNonFixnum(long value,
+    /** A boxed Long or Double cannot reference a ValueWrapper like RubyDynamicObject and ImmutableRubyObject do, so it
+     * gets a new wrapper every time, which holds the box. */
+    @Specialization(guards = "isNonFixnumLongOrDouble(value)")
+    static long wrapNonFixnumLongOrDouble(Node node, Object value,
             @Cached @Shared CreateWrapperNode createWrapperNode,
-            @Bind Node node) {
-        return createWrapperNode.execute(node, value);
+            @Cached @Shared KeepAliveNode keepAliveNode) {
+        return keepAlive(node, createWrapperNode.execute(node, value), keepAliveNode);
     }
 
     @Specialization
-    static ValueWrapper wrapDouble(double value,
-            @Cached @Shared CreateWrapperNode createWrapperNode,
-            @Bind Node node) {
-        return createWrapperNode.execute(node, value);
+    static long wrapBoolean(boolean value) {
+        return value ? TRUE_HANDLE : FALSE_HANDLE;
     }
 
     @Specialization
-    ValueWrapper wrapBoolean(boolean value) {
-        return value
-                ? getContext().getValueWrapperManager().trueWrapper
-                : getContext().getValueWrapperManager().falseWrapper;
+    static long wrapUndef(NotProvided value) {
+        return UNDEF_HANDLE;
     }
 
     @Specialization
-    ValueWrapper wrapUndef(NotProvided value) {
-        return getContext().getValueWrapperManager().undefWrapper;
-    }
-
-    @Specialization
-    ValueWrapper wrapWrappedValue(ValueWrapper value,
-            @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-        var message = createString(fromJavaStringNode, "Wrapping wrapped object", Encodings.UTF_8);
-        throw new RaiseException(getContext(), coreExceptions().argumentError(message, this, null));
-    }
-
-    @Specialization
-    ValueWrapper wrapNil(Nil value) {
-        return value.getValueWrapper();
+    static long wrapNil(Nil value) {
+        return NIL_HANDLE;
     }
 
     @Specialization(guards = "!isNil(value)")
-    static ValueWrapper wrapImmutable(ImmutableRubyObject value,
+    static long wrapImmutable(Node node, ImmutableRubyObject value,
             @Cached @Shared InlinedBranchProfile noHandleProfile,
             @Cached @Shared CreateWrapperNode createWrapperNode,
-            @Bind Node node) {
+            @Cached @Shared KeepAliveNode keepAliveNode) {
         ValueWrapper wrapper = value.getValueWrapper();
         if (wrapper == null) {
             noHandleProfile.enter(node);
@@ -102,14 +111,14 @@ public abstract class WrapNode extends RubyBaseNode {
              * HandleBlock, which is harmless. */
             wrapper = value.setValueWrapperIfAbsent(createWrapperNode.execute(node, value));
         }
-        return wrapper;
+        return keepAlive(node, wrapper, keepAliveNode);
     }
 
     @Specialization
-    static ValueWrapper wrapValue(RubyDynamicObject value,
+    static long wrapValue(Node node, RubyDynamicObject value,
             @Cached @Shared InlinedBranchProfile noHandleProfile,
             @Cached @Shared CreateWrapperNode createWrapperNode,
-            @Bind Node node) {
+            @Cached @Shared KeepAliveNode keepAliveNode) {
         ValueWrapper wrapper = value.getValueWrapper();
         if (wrapper == null) {
             noHandleProfile.enter(node);
@@ -118,13 +127,24 @@ public abstract class WrapNode extends RubyBaseNode {
              * HandleBlock, which is harmless. */
             wrapper = value.setValueWrapperIfAbsent(createWrapperNode.execute(node, value));
         }
-        return wrapper;
+        return keepAlive(node, wrapper, keepAliveNode);
     }
 
     @Specialization(guards = "isForeignObject(value)")
-    ValueWrapper wrapNonRubyObject(Object value) {
+    static long wrapNonRubyObject(Node node, Object value) {
         throw new RaiseException(
-                getContext(),
-                coreExceptions().argumentError("Attempt to wrap something that isn't an Ruby object", this));
+                getContext(node),
+                coreExceptions(node).argumentError("Attempt to wrap something that isn't an Ruby object", node));
+    }
+
+    protected static boolean isNonFixnumLongOrDouble(Object value) {
+        return (value instanceof Long && !ObjectIDOperations.isSmallFixnum((long) value)) || value instanceof Double;
+    }
+
+    /** The wrapper of a tagged object handle must be kept alive until the end of the current C extension call, as
+     * nothing else references it (and for boxed Long/Double wrappers, the box) once the handle is in C. */
+    private static long keepAlive(Node node, ValueWrapper wrapper, KeepAliveNode keepAliveNode) {
+        keepAliveNode.execute(node, wrapper);
+        return wrapper.handle;
     }
 }

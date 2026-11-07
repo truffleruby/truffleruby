@@ -39,7 +39,6 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 
 import org.truffleruby.RubyLanguage;
-import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
@@ -287,9 +286,8 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         @Specialization
         static long wrap(Object value,
                 @Bind Node node,
-                @Cached WrapNode wrapNode,
-                @Cached WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(node, wrapNode.execute(value));
+                @Cached WrapNode wrapNode) {
+            return wrapNode.execute(node, value);
         }
     }
 
