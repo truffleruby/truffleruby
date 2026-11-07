@@ -56,6 +56,7 @@ import com.oracle.truffle.api.profiles.LoopConditionProfile;
 
 @ExportLibrary(value = HashStoreLibrary.class, receiverType = Object[].class)
 @GenerateUncached
+@ImportStatic(HashGuards.class)
 public final class PackedHashStoreLibrary {
 
     /** Maximum numbers of entries to be represented as a packed Hash */
@@ -165,10 +166,16 @@ public final class PackedHashStoreLibrary {
     @ExportMessage
     static Object lookupOrDefault(Object[] store, Frame frame, RubyHash hash, Object key, PEBiFunction defaultNode,
             @Cached LookupPackedEntryNode lookupPackedEntryNode,
-            @Cached @Shared HashingNodes.ToHash hashNode) {
+            @Cached @Shared HashingNodes.ToHash hashNode,
+            @CachedLibrary(limit = "hashStrategyLimit()") @Shared HashStoreLibrary hashes,
+            @Cached @Shared InlinedBranchProfile storeChangedProfile,
+            @Bind Node node) {
 
         int hashed = hashNode.execute(key, hash.compareByIdentity);
-        return lookupPackedEntryNode.execute(frame, hash, key, hashed, defaultNode);
+        if (HashStoreLibrary.storeChanged(node, storeChangedProfile, hash, store)) {
+            return hashes.lookupOrDefault(hash.store, frame, hash, key, defaultNode);
+        }
+        return lookupPackedEntryNode.execute(frame, store, hash, key, hashed, defaultNode);
     }
 
     @ImportStatic(HashGuards.class)
@@ -178,11 +185,18 @@ public final class PackedHashStoreLibrary {
         static boolean setFirst(Object[] store, RubyHash hash, Object key, Object value, boolean byIdentity,
                 @Cached @Shared FreezeHashKeyIfNeededNode freezeHashKeyIfNeeded,
                 @Cached @Shared HashingNodes.ToHash hashNode,
+                @CachedLibrary(limit = "hashStrategyLimit()") @Shared HashStoreLibrary hashes,
+                @Cached @Shared InlinedBranchProfile storeChangedProfile,
                 @Bind Node node) {
             assert verify(store, hash);
 
             final Object key2 = freezeHashKeyIfNeeded.executeFreezeIfNeeded(node, key, byIdentity);
-            setHashedKeyValue(store, 0, hashNode.execute(key2, byIdentity), key2, value);
+            final int hashed = hashNode.execute(key2, byIdentity);
+            if (HashStoreLibrary.storeChanged(node, storeChangedProfile, hash, store)) {
+                return hashes.set(hash.store, hash, key2, value, byIdentity);
+            }
+
+            setHashedKeyValue(store, 0, hashed, key2, value);
             hash.size = 1;
             assert verify(store, hash);
             return true;
@@ -193,8 +207,9 @@ public final class PackedHashStoreLibrary {
                 @Cached @Shared FreezeHashKeyIfNeededNode freezeHashKeyIfNeeded,
                 @Cached @Shared HashingNodes.ToHash hashNode,
                 @Cached @Shared CompareHashKeysNode compareHashKeys,
-                @CachedLibrary(limit = "hashStrategyLimit()") HashStoreLibrary hashes,
+                @CachedLibrary(limit = "hashStrategyLimit()") @Shared HashStoreLibrary hashes,
                 @Cached @Shared InlinedConditionProfile withinCapacity,
+                @Cached @Shared InlinedBranchProfile storeChangedProfile,
                 @Bind Node node) {
             assert verify(store, hash);
 
@@ -208,10 +223,17 @@ public final class PackedHashStoreLibrary {
                     final int otherHashed = getHashed(store, n);
                     final Object otherKey = getKey(store, n);
                     if (compareHashKeys.execute(node, byIdentity, key2, hashed, otherKey, otherHashed)) {
+                        if (HashStoreLibrary.storeChanged(node, storeChangedProfile, hash, store)) {
+                            return hashes.set(hash.store, hash, key2, value, byIdentity);
+                        }
                         setValue(store, n, value);
                         return false;
                     }
                 }
+            }
+
+            if (HashStoreLibrary.storeChanged(node, storeChangedProfile, hash, store)) {
+                return hashes.set(hash.store, hash, key2, value, byIdentity);
             }
 
             if (withinCapacity.profile(node, size < MAX_ENTRIES)) {
@@ -241,6 +263,8 @@ public final class PackedHashStoreLibrary {
     static Object delete(Object[] store, RubyHash hash, Object key,
             @Cached @Shared HashingNodes.ToHash hashNode,
             @Cached @Shared CompareHashKeysNode compareHashKeys,
+            @CachedLibrary(limit = "hashStrategyLimit()") @Shared HashStoreLibrary hashes,
+            @Cached @Shared InlinedBranchProfile storeChangedProfile,
             @Bind Node node) {
 
         assert verify(store, hash);
@@ -253,12 +277,19 @@ public final class PackedHashStoreLibrary {
                 final Object otherKey = getKey(store, n);
 
                 if (compareHashKeys.execute(node, hash.compareByIdentity, key, hashed, otherKey, otherHashed)) {
+                    if (HashStoreLibrary.storeChanged(node, storeChangedProfile, hash, store)) {
+                        return hashes.delete(hash.store, hash, key);
+                    }
                     final Object value = getValue(store, n);
                     removeEntry(store, n);
                     hash.size -= 1;
                     return value;
                 }
             }
+        }
+
+        if (HashStoreLibrary.storeChanged(node, storeChangedProfile, hash, store)) {
+            return hashes.delete(hash.store, hash, key);
         }
         assert verify(store, hash);
         return null;
@@ -424,29 +455,28 @@ public final class PackedHashStoreLibrary {
     @ImportStatic(HashGuards.class)
     public abstract static class LookupPackedEntryNode extends RubyBaseNode {
 
-        public abstract Object execute(Frame frame, RubyHash hash, Object key, int hashed, PEBiFunction defaultValue);
+        public abstract Object execute(Frame frame, Object[] store, RubyHash hash, Object key, int hashed,
+                PEBiFunction defaultValue);
 
         @Specialization(
                 guards = {
                         "isCompareByIdentity(hash) == cachedByIdentity",
                         "cachedIndex >= 0",
                         "cachedIndex < hash.size",
-                        "sameKeysAtIndex(node, refEqual, hash, key, hashed, cachedIndex, cachedByIdentity)" },
+                        "sameKeysAtIndex(node, refEqual, store, key, hashed, cachedIndex, cachedByIdentity)" },
                 limit = "1")
-        static Object getConstantIndexPackedArray(RubyHash hash, Object key, int hashed, PEBiFunction defaultValueNode,
+        static Object getConstantIndexPackedArray(
+                Object[] store, RubyHash hash, Object key, int hashed, PEBiFunction defaultValueNode,
                 @Cached ReferenceEqualNode refEqual,
                 @Cached("isCompareByIdentity(hash)") boolean cachedByIdentity,
                 @Bind Node node,
-                @Cached("index(node, refEqual, hash, key, hashed, cachedByIdentity)") int cachedIndex) {
-
-            final Object[] store = (Object[]) hash.store;
+                @Cached("index(node, refEqual, store, hash, key, hashed, cachedByIdentity)") int cachedIndex) {
             return getValue(store, cachedIndex);
         }
 
-        protected static int index(Node node, ReferenceEqualNode refEqual, RubyHash hash, Object key, int hashed,
-                boolean compareByIdentity) {
+        protected static int index(Node node, ReferenceEqualNode refEqual, Object[] store, RubyHash hash, Object key,
+                int hashed, boolean compareByIdentity) {
 
-            final Object[] store = (Object[]) hash.store;
             final int size = hash.size;
             for (int n = 0; n < size; n++) {
                 final int otherHashed = getHashed(store, n);
@@ -458,11 +488,9 @@ public final class PackedHashStoreLibrary {
             return -1;
         }
 
-        protected static boolean sameKeysAtIndex(Node node, ReferenceEqualNode refEqual, RubyHash hash, Object key,
-                int hashed,
-                int cachedIndex, boolean cachedByIdentity) {
+        protected static boolean sameKeysAtIndex(Node node, ReferenceEqualNode refEqual, Object[] store, Object key,
+                int hashed, int cachedIndex, boolean cachedByIdentity) {
 
-            final Object[] store = (Object[]) hash.store;
             final Object otherKey = getKey(store, cachedIndex);
             final int otherHashed = getHashed(store, cachedIndex);
             return sameKeys(node, refEqual, cachedByIdentity, key, hashed, otherKey, otherHashed);
@@ -476,14 +504,14 @@ public final class PackedHashStoreLibrary {
 
         @ExplodeLoop(kind = LoopExplosionKind.FULL_UNROLL_UNTIL_RETURN)
         @Specialization(replaces = "getConstantIndexPackedArray")
-        Object getPackedArray(Frame frame, RubyHash hash, Object key, int hashed, PEBiFunction defaultValueNode,
+        Object getPackedArray(
+                Frame frame, Object[] store, RubyHash hash, Object key, int hashed, PEBiFunction defaultValueNode,
                 @Cached CompareHashKeysNode compareHashKeys,
                 @Cached InlinedBranchProfile notInHashProfile,
                 @Cached InlinedConditionProfile byIdentityProfile,
                 @Bind Node node) {
 
             final boolean compareByIdentity = byIdentityProfile.profile(node, hash.compareByIdentity);
-            final Object[] store = (Object[]) hash.store;
             final int size = hash.size;
             for (int n = 0; n < MAX_ENTRIES; n++) {
                 if (n < size) {

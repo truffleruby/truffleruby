@@ -18,6 +18,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.GenerateUncached;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -26,6 +27,7 @@ import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import org.truffleruby.RubyContext;
@@ -36,6 +38,7 @@ import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.hash.CompareHashKeysNode;
 import org.truffleruby.core.hash.Entry;
 import org.truffleruby.core.hash.FreezeHashKeyIfNeededNode;
+import org.truffleruby.core.hash.HashGuards;
 import org.truffleruby.core.hash.HashLiteralNode;
 import org.truffleruby.core.hash.HashLookupResult;
 import org.truffleruby.core.hash.HashingNodes;
@@ -52,6 +55,7 @@ import java.util.Set;
 
 @ExportLibrary(value = HashStoreLibrary.class)
 @GenerateUncached
+@ImportStatic(HashGuards.class)
 public final class BucketsHashStore {
 
     private final Entry[] entries;
@@ -223,10 +227,15 @@ public final class BucketsHashStore {
     protected Object lookupOrDefault(Frame frame, RubyHash hash, Object key, PEBiFunction defaultNode,
             @Cached @Shared LookupEntryNode lookup,
             @Cached @Exclusive InlinedConditionProfile found,
+            @CachedLibrary(limit = "hashStrategyLimit()") @Shared HashStoreLibrary hashes,
+            @Cached @Shared InlinedBranchProfile storeChangedProfile,
             @Bind Node node) {
 
         final Entry[] entries = this.entries;
         final HashLookupResult hashLookupResult = lookup.execute(hash, entries, key);
+        if (HashStoreLibrary.storeChanged(node, storeChangedProfile, hash, this)) {
+            return hashes.lookupOrDefault(hash.store, frame, hash, key, defaultNode);
+        }
 
         if (found.profile(node, hashLookupResult.getEntry() != null)) {
             return hashLookupResult.getEntry().getValue();
@@ -243,6 +252,8 @@ public final class BucketsHashStore {
             @Cached @Exclusive InlinedConditionProfile bucketCollision,
             @Cached @Exclusive InlinedConditionProfile appending,
             @Cached @Exclusive InlinedConditionProfile resize,
+            @CachedLibrary(limit = "hashStrategyLimit()") @Shared HashStoreLibrary hashes,
+            @Cached @Shared InlinedBranchProfile storeChangedProfile,
             @Bind Node node) {
         assert verify(hash);
 
@@ -250,6 +261,9 @@ public final class BucketsHashStore {
 
         final Entry[] entries = this.entries;
         final HashLookupResult result = lookup.execute(hash, entries, key);
+        if (HashStoreLibrary.storeChanged(node, storeChangedProfile, hash, this)) {
+            return hashes.set(hash.store, hash, key, value, byIdentity);
+        }
         final Entry entry = result.getEntry();
 
         if (missing.profile(node, entry == null)) {
@@ -289,11 +303,16 @@ public final class BucketsHashStore {
     protected Object delete(RubyHash hash, Object key,
             @Cached @Shared LookupEntryNode lookup,
             @Cached @Exclusive InlinedConditionProfile missing,
+            @CachedLibrary(limit = "hashStrategyLimit()") @Shared HashStoreLibrary hashes,
+            @Cached @Shared InlinedBranchProfile storeChangedProfile,
             @Bind Node node) {
         assert verify(hash);
 
         final Entry[] entries = this.entries;
         final HashLookupResult lookupResult = lookup.execute(hash, entries, key);
+        if (HashStoreLibrary.storeChanged(node, storeChangedProfile, hash, this)) {
+            return hashes.delete(hash.store, hash, key);
+        }
         final Entry entry = lookupResult.getEntry();
 
         if (missing.profile(node, entry == null)) {

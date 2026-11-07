@@ -31,6 +31,8 @@ import com.oracle.truffle.api.library.GenerateLibrary.Abstract;
 import com.oracle.truffle.api.library.GenerateLibrary.DefaultExport;
 import com.oracle.truffle.api.library.Library;
 import com.oracle.truffle.api.library.LibraryFactory;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 
 /** Library for accessing and manipulating the storage used for representing hashes. This includes reading, modifying,
@@ -54,6 +56,20 @@ public abstract class HashStoreLibrary extends Library {
     public static boolean verify(RubyHash hash) {
         final Object store = hash.store;
         return FACTORY.getUncached(store).verify(store, hash);
+    }
+
+    /** Calling {@code #hash} or {@code #eql?} on a key runs arbitrary Ruby code, which might change the store of the
+     * Hash: for instance by adding entries to the Hash so it is promoted to a bigger store, or by sharing the Hash with
+     * another Thread, which converts it to a {@link ConcurrentHashStore}. The operation must then not continue with the
+     * old store, as that would read stale entries or lose writes and corrupt {@link RubyHash#size}. Instead the
+     * operation must be redone on the new store, which calls {@code #hash} on the key again. */
+    public static boolean storeChanged(Node node, InlinedBranchProfile storeChangedProfile, RubyHash hash,
+            Object store) {
+        if (hash.store != store) {
+            storeChangedProfile.enter(node);
+            return true;
+        }
+        return false;
     }
 
     /** Looks up the key in the hash and returns the associated value, or the result of calling {@code defaultNode} if
