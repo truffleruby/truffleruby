@@ -200,11 +200,13 @@ See `CONTRIBUTING.md` for more details.
 - Never hardcode the TruffleRuby version in Java sources; it comes from `suite.py` via `mx`
 - In generated Java files, use `// @formatter:off` / `// @formatter:on` markers instead of
   replicating the Eclipse formatter's line wrapping in the generator
-- In partially evaluated code (`execute*` methods of nodes and what they inline), every branch
-  which is rarely taken must be guarded by a profile, otherwise its code is compiled into the
-  fast path. Use `@Cached InlinedBranchProfile` / `@Cached InlinedConditionProfile` in DSL nodes
-  and `BranchProfile.create()` / `ConditionProfile.create()` fields in plain nodes. See
-  `doc/contributor/code-patterns.md`
+- In partially evaluated code, every branch and condition (`if`, `?:`, `&&`/`||`, `switch`, loops)
+  needs a profile, not only rarely-taken ones; only conditions on compilation constants need none.
+  Use `InlinedConditionProfile` by default, `InlinedBranchProfile` for pure slow paths and
+  `InlinedLoopConditionProfile` for loops (the non-inlined variants as fields in plain nodes).
+  This includes helper methods of plain classes called from nodes without a `@TruffleBoundary` in
+  between: they take the `Node` and profiles as parameters, and callers behind a `@TruffleBoundary`
+  pass `InlinedConditionProfile.getUncached()`. See `doc/contributor/code-patterns.md`
 
 ### Generator Scripts
 
