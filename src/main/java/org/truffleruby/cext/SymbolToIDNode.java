@@ -41,13 +41,13 @@ public abstract class SymbolToIDNode extends RubyBaseNode {
         return symbol.getId();
     }
 
-    /** Dynamic symbols are only weakly referenced by the SymbolTable, so this goes through {@link WrapToHandleNode} on
-     * every call to keep the wrapper (and the symbol) alive until the end of the current C extension call. */
+    /** Dynamic symbols are only weakly referenced by the SymbolTable, so this goes through {@link WrapNode} on every
+     * call to keep the wrapper (and the symbol) alive until the end of the current C extension call. */
     @Specialization(guards = "!isStaticSymbol(symbol)")
     static long getDynamicID(RubySymbol symbol,
             @Bind Node node,
-            @Cached WrapToHandleNode wrapToHandleNode) {
-        return wrapToHandleNode.execute(node, symbol);
+            @Cached WrapNode wrapNode) {
+        return wrapNode.execute(node, symbol);
     }
 
     @Idempotent

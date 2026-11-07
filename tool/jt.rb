@@ -2935,7 +2935,8 @@ module Commands
     %r{\Asrc/yarp/},                                                    # imported from prism
     %r{\Asrc/dev\.truffleruby\.shadowed\.},                             # shadowed libraries such as joni
     %r{\Aspec/truffle/capi/ext/internal_id\.h\z},                       # imported from MRI id.h
-    %r{\Asrc/main/java/org/truffleruby/cext/(ToWrapperNode|UnwrapCArrayNode)\.java\z}, # moved out of UnwrapNode.java
+    %r{\Asrc/main/java/org/truffleruby/cext/(HandleToWrapperNode|UnwrapCArrayNode)\.java\z}, # moved out of UnwrapNode.java
+    %r{\Asrc/main/java/org/truffleruby/cext/ObjectToWrapperNode\.java\z},    # renamed from WrapNode.java, whose name is reused
   ]
 
   # The standard BSD-3-Clause license text, as in the headers of

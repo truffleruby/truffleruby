@@ -133,7 +133,7 @@ public final class CExtFFMLayer {
                 upcalls.writeLong(i * 8L, upcallStubs[i]);
             }
             for (int i = 0; i < constants.length; i++) {
-                constantHandles.writeLong(i * 8L, WrapToHandleNode.executeUncached(constants[i]));
+                constantHandles.writeLong(i * 8L, WrapNode.executeUncached(constants[i]));
             }
             try {
                 INIT.invokeExact(initFunction, upcalls.getAddress(), constantHandles.getAddress());

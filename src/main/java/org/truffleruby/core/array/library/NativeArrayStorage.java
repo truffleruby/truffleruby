@@ -20,10 +20,10 @@ import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import org.truffleruby.RubyContext;
-import org.truffleruby.cext.ToWrapperNode;
+import org.truffleruby.cext.HandleToWrapperNode;
 import org.truffleruby.cext.UnwrapNode;
 import org.truffleruby.cext.ValueWrapper;
-import org.truffleruby.cext.WrapToHandleNode;
+import org.truffleruby.cext.WrapNode;
 import org.truffleruby.core.array.ArrayGuards;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.array.library.ArrayStoreLibrary.ArrayAllocator;
@@ -97,9 +97,9 @@ public final class NativeArrayStorage implements ObjectGraphNode {
 
     @ExportMessage
     protected void write(int index, Object value,
-            @Cached WrapToHandleNode wrapToHandleNode,
+            @Cached WrapNode wrapNode,
             @Bind Node node) {
-        writeElement(index, wrapToHandleNode.execute(node, value));
+        writeElement(index, wrapNode.execute(node, value));
     }
 
     @ExportMessage
@@ -291,7 +291,7 @@ public final class NativeArrayStorage implements ObjectGraphNode {
     @TruffleBoundary
     public void preserveMembers() {
         for (int i = 0; i < length; i++) {
-            final ValueWrapper wrapper = ToWrapperNode.executeUncached(readElement(i));
+            final ValueWrapper wrapper = HandleToWrapperNode.executeUncached(readElement(i));
             if (wrapper != null) {
                 /* Preserve the ValueWrapper and not just the unwrapped object: for a Float or Bignum-range integer, the
                  * boxed value does not reference its ValueWrapper back, so preserving only the box would let the
