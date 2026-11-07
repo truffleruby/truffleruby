@@ -11,6 +11,7 @@ Bug fixes:
 * Fix `Socket.tcp` and `Addrinfo#connect` with a timeout returning an unconnected socket on macOS when the connection was refused (@eregon).
 * Fix `String#append_as_bytes` to return `self` instead of its arguments (#4502, @taxor03).
 * Fix `rb_range_beg_len()` raising `TypeError` for beginless and endless ranges (#4487, @nirvdrum, @eregon).
+* Fix `TCPServer.new` raising `IOError` instead of e.g. `Errno::EAFNOSUPPORT` when `socket(2)` fails for every address, such as an IPv6 address when IPv6 is unavailable (@eregon).
 
 Compatibility:
 
