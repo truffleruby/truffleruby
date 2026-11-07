@@ -364,6 +364,10 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     public final Shape nameErrorShape = createShape(RubyNameError.class);
     public final Shape noMethodErrorShape = createShape(RubyNoMethodError.class);
     public final Shape objectRangeShape = createShape(RubyObjectRange.class);
+    public final Shape frozenObjectRangeShape = Shape
+            .newBuilder(objectRangeShape)
+            .shapeFlags(Layouts.FROZEN_FLAG)
+            .build();
     public final Shape procShape = createShape(RubyProc.class);
     public final Shape queueShape = createShape(RubyQueue.class);
     public final Shape prngRandomizerShape = createShape(RubyPRNGRandomizer.class);

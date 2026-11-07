@@ -18,7 +18,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
-import org.truffleruby.core.range.RubyObjectRange;
 import org.truffleruby.language.ImmutableRubyObject;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyDynamicObject;
@@ -37,7 +36,7 @@ public abstract class FreezeNode extends RubyBaseNode {
         return FreezeNodeGen.getUncached().execute(null, object);
     }
 
-    @Specialization(guards = "!isRubyObjectRange(object)")
+    @Specialization
     static Object freeze(Node node, RubyDynamicObject object,
             @Cached DynamicObject.IsSharedNode isSharedNode,
             @Cached InlinedConditionProfile isSharedProfile,
@@ -51,11 +50,6 @@ public abstract class FreezeNode extends RubyBaseNode {
         }
 
         return object;
-    }
-
-    @Specialization
-    static Object freezeRubyObjectRange(RubyObjectRange object) {
-        return object.frozen = true;
     }
 
     @Specialization
