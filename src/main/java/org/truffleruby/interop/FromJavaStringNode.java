@@ -42,9 +42,9 @@ public abstract class FromJavaStringNode extends RubyBaseNode {
     @Specialization(guards = "stringsEquals(cachedValue, value)", limit = "getLimit()")
     static RubyString doCached(Node node, String value,
             @Cached("value") String cachedValue,
-            @Cached(inline = false) @Shared TruffleString.FromJavaStringNode tstringFromJavaStringNode,
+            @Cached @Shared TruffleString.FromJavaStringNode tstringFromJavaStringNode,
             @Cached("getTString(cachedValue, tstringFromJavaStringNode)") TruffleString cachedTString,
-            @Cached(inline = false) @Shared DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
+            @Cached @Shared DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
         var rubyString = createString(node, cachedTString, Encodings.UTF_8);
         setShapeFlagsNode.executeAdd(rubyString, FROZEN_FLAG);
         return rubyString;
@@ -52,8 +52,8 @@ public abstract class FromJavaStringNode extends RubyBaseNode {
 
     @Specialization(replaces = "doCached")
     static RubyString doGeneric(Node node, String value,
-            @Cached(inline = false) @Shared TruffleString.FromJavaStringNode tstringFromJavaStringNode,
-            @Cached(inline = false) @Shared DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
+            @Cached @Shared TruffleString.FromJavaStringNode tstringFromJavaStringNode,
+            @Cached @Shared DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
         var rubyString = createString(node, tstringFromJavaStringNode, value, Encodings.UTF_8);
         setShapeFlagsNode.executeAdd(rubyString, FROZEN_FLAG);
         return rubyString;

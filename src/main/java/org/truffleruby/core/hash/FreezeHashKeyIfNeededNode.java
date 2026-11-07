@@ -42,8 +42,8 @@ public abstract class FreezeHashKeyIfNeededNode extends RubyBaseNode {
     static Object freezeIfNeeded(Node node, RubyString string, boolean compareByIdentity,
             @Cached DynamicObject.GetShapeFlagsNode getShapeFlagsNode,
             @Cached InlinedConditionProfile frozenProfile,
-            @Cached(inline = false) DispatchNode dupNode,
-            @Cached(inline = false) DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
+            @Cached DispatchNode dupNode,
+            @Cached DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
         if (frozenProfile.profile(node, (getShapeFlagsNode.execute(string) & FROZEN_FLAG) != 0)) {
             return string;
         } else {

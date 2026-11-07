@@ -31,7 +31,7 @@ public abstract class LazyDispatchMethodMissingNode extends RubyBaseNode {
 
     @Specialization
     static DispatchMethodMissingNode doLazy(
-            @Cached(inline = false) DispatchMethodMissingNode dispatchMethodMissingNode) {
+            @Cached DispatchMethodMissingNode dispatchMethodMissingNode) {
         return dispatchMethodMissingNode;
     }
 }

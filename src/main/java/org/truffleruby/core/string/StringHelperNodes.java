@@ -78,7 +78,7 @@ public abstract class StringHelperNodes {
 
         @Specialization
         static boolean isSingleByteOptimizable(Node node, AbstractTruffleString string, RubyEncoding encoding,
-                @Cached(inline = false) TruffleString.GetByteCodeRangeNode getByteCodeRangeNode) {
+                @Cached TruffleString.GetByteCodeRangeNode getByteCodeRangeNode) {
             return encoding.isSingleByte || StringGuards.is7Bit(string, encoding, getByteCodeRangeNode);
         }
     }
@@ -158,7 +158,7 @@ public abstract class StringHelperNodes {
 
         @Specialization(guards = { "compatibleEncoding != null", "!a.isEmpty()", "!b.isEmpty()" })
         static boolean equalBytes(AbstractTruffleString a, AbstractTruffleString b, RubyEncoding compatibleEncoding,
-                @Cached(inline = false) TruffleString.EqualNode equalNode) {
+                @Cached TruffleString.EqualNode equalNode) {
             return equalNode.execute(a, b, compatibleEncoding.tencoding);
         }
 
@@ -322,7 +322,7 @@ public abstract class StringHelperNodes {
                 limit = "getDefaultCacheLimit()")
         static Object deleteBangFast(Node node, RubyString string, TStringWithEncoding[] args,
                 @Cached(value = "args", dimensions = 1) TStringWithEncoding[] cachedArgs,
-                @Cached(inline = false) TruffleString.EqualNode equalNode,
+                @Cached TruffleString.EqualNode equalNode,
                 @Cached @Exclusive RubyStringLibrary libString,
                 @Cached("libString.getEncoding($node, string)") RubyEncoding cachedEncoding,
                 @Cached(value = "asciiFilter()", dimensions = 1) boolean[] asciiFilter,
@@ -395,7 +395,7 @@ public abstract class StringHelperNodes {
         @Specialization
         static long hash(Node node, Object string,
                 @Cached RubyStringLibrary strings,
-                @Cached(inline = false) TruffleString.HashCodeNode hashCodeNode) {
+                @Cached TruffleString.HashCodeNode hashCodeNode) {
             int hashCode = hashCodeNode.execute(strings.getTString(node, string), strings.getTEncoding(node, string));
             return getContext(node).getHashing(node).hash(CLASS_SALT, hashCode);
         }
@@ -587,7 +587,7 @@ public abstract class StringHelperNodes {
 
         @Specialization
         static int getCodePoint(Node node, AbstractTruffleString string, RubyEncoding encoding, int byteIndex,
-                @Cached(inline = false) TruffleString.CodePointAtByteIndexNode getCodePointNode,
+                @Cached TruffleString.CodePointAtByteIndexNode getCodePointNode,
                 @Cached InlinedBranchProfile badCodePointProfile) {
             int codePoint = getCodePointNode.execute(string, byteIndex, encoding.tencoding,
                     ErrorHandling.RETURN_NEGATIVE);
@@ -612,7 +612,7 @@ public abstract class StringHelperNodes {
                 @Cached RubyStringLibrary libString,
                 @Cached RubyStringLibrary libOther,
                 @Cached EncodingNodes.CheckStringEncodingNode checkEncodingNode,
-                @Cached(inline = false) TruffleString.ConcatNode concatNode) {
+                @Cached TruffleString.ConcatNode concatNode) {
 
             var left = libString.getTString(node, string);
             var leftEncoding = libString.getEncoding(node, string);
@@ -642,7 +642,7 @@ public abstract class StringHelperNodes {
         @Specialization
         static TruffleString mutable(Node node, RubyString string,
                 @Cached RubyStringLibrary libString,
-                @Cached(inline = false) TruffleString.AsTruffleStringNode asTruffleStringNode) {
+                @Cached TruffleString.AsTruffleStringNode asTruffleStringNode) {
             TruffleString tstring = asTruffleStringNode.execute(string.tstring, libString.getTEncoding(node, string));
             string.setTString(tstring);
             return tstring;
@@ -659,7 +659,7 @@ public abstract class StringHelperNodes {
         static MutableTruffleString toMutable(Node node, RubyString string,
                 @Cached RubyStringLibrary libString,
                 @Cached InlinedConditionProfile isMutableProfile,
-                @Cached(inline = false) MutableTruffleString.AsMutableTruffleStringNode asMutableTruffleStringNode) {
+                @Cached MutableTruffleString.AsMutableTruffleStringNode asMutableTruffleStringNode) {
             var tstring = string.tstring;
             if (isMutableProfile.profile(node, tstring instanceof MutableTruffleString)) {
                 return (MutableTruffleString) tstring;

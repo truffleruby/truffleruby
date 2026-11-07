@@ -236,7 +236,7 @@ public abstract class StringNodes {
         static RubyString multiply(Node node, Object string, int times,
                 @Cached @Shared InlinedBranchProfile tooBigProfile,
                 @Cached @Shared RubyStringLibrary libString,
-                @Cached(inline = false) TruffleString.RepeatNode repeatNode) {
+                @Cached TruffleString.RepeatNode repeatNode) {
             var tstring = libString.getTString(node, string);
             var encoding = libString.getEncoding(node, string);
 
@@ -648,8 +648,8 @@ public abstract class StringNodes {
                 @Bind("libString.getEncoding($node, string)") RubyEncoding selfEncoding,
                 @Bind("libOther.getTString($node, other)") AbstractTruffleString otherTString,
                 @Bind("libOther.getEncoding($node, other)") RubyEncoding otherEncoding,
-                @Cached(inline = false) TruffleString.GetInternalByteArrayNode byteArraySelfNode,
-                @Cached(inline = false) TruffleString.GetInternalByteArrayNode byteArrayOtherNode) {
+                @Cached TruffleString.GetInternalByteArrayNode byteArraySelfNode,
+                @Cached TruffleString.GetInternalByteArrayNode byteArrayOtherNode) {
             // Taken from org.jruby.RubyString#casecmp19.
 
             final RubyEncoding encoding = negotiateCompatibleEncodingNode.execute(node, selfTString, selfEncoding,
@@ -801,7 +801,7 @@ public abstract class StringNodes {
         @Specialization(guards = "args.length == size", limit = "getDefaultCacheLimit()")
         static Object deleteBang(Node node, RubyString string, Object[] args,
                 @Cached @Shared ToStrNode toStrNode,
-                @Cached(inline = false) @Shared AsTruffleStringNode asTruffleStringNode,
+                @Cached @Shared AsTruffleStringNode asTruffleStringNode,
                 @Cached @Shared DeleteBangStringsNode deleteBangStringsNode,
                 @Cached @Shared RubyStringLibrary rubyStringLibrary,
                 @Cached("args.length") int size) {
@@ -813,7 +813,7 @@ public abstract class StringNodes {
         @Specialization(replaces = "deleteBang")
         static Object deleteBangSlow(Node node, RubyString string, Object[] args,
                 @Cached @Shared DeleteBangStringsNode deleteBangStringsNode,
-                @Cached(inline = false) @Shared AsTruffleStringNode asTruffleStringNode,
+                @Cached @Shared AsTruffleStringNode asTruffleStringNode,
                 @Cached @Shared RubyStringLibrary rubyStringLibrary,
                 @Cached @Shared ToStrNode toStrNode) {
             final TStringWithEncoding[] tstrings = argTStringsWithEncsSlow(node, args, toStrNode, asTruffleStringNode,
@@ -1408,7 +1408,7 @@ public abstract class StringNodes {
         @Specialization(guards = { "string != other" })
         static RubyString replace(Node node, RubyString string, RubyString other,
                 @Cached @Exclusive RubyStringLibrary libOther,
-                @Cached(inline = false) AsTruffleStringNode asTruffleStringNode) {
+                @Cached AsTruffleStringNode asTruffleStringNode) {
             var encoding = libOther.getEncoding(node, other);
             TruffleString immutableCopy = asTruffleStringNode.execute(other.tstring, encoding.tencoding);
             string.setTString(immutableCopy, encoding);
@@ -1744,7 +1744,7 @@ public abstract class StringNodes {
                 @Cached RubyStringLibrary libString,
                 @Bind("string.tstring") AbstractTruffleString tstring,
                 @Cached ToMutableTruffleStringNode toMutableTruffleStringNode,
-                @Cached(inline = false) MutableTruffleString.WriteByteNode writeByteNode) {
+                @Cached MutableTruffleString.WriteByteNode writeByteNode) {
             var tencoding = libString.getTEncoding(node, string);
             final int normalizedIndex = checkIndexNode.execute(node, index, tstring.byteLength(tencoding));
 

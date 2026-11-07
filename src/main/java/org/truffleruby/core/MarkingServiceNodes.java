@@ -84,7 +84,7 @@ public abstract class MarkingServiceNodes {
 
         @Specialization(guards = "stack.hasMarkObjects()")
         static void marksToRun(Node node, ExtensionCallStack stack,
-                @Cached(inline = false) DispatchNode callNode,
+                @Cached DispatchNode callNode,
                 @Cached InlinedLoopConditionProfile loopProfile) {
             // The array and count are captured before running the markers: a mark function registering further
             // mark-on-exit objects appends them after count (possibly in a grown array) and they are dropped when

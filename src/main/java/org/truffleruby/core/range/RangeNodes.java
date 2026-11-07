@@ -440,7 +440,7 @@ public abstract class RangeNodes {
 
         @Specialization(guards = { "!standardClass || (!isImplicitLong(begin) || !isImplicitLong(end))" })
         static RubyObjectRange objectRange(Node node, RubyClass rubyClass, Object begin, Object end, boolean excludeEnd,
-                @Cached(inline = false) DispatchNode compare,
+                @Cached DispatchNode compare,
                 @Bind("rubyClass == getRangeClass()") boolean standardClass) {
 
             if (compare.call(begin, "<=>", end) == nil && end != nil && begin != nil) {

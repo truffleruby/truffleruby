@@ -840,7 +840,7 @@ public abstract class IntegerNodes {
 
         @Specialization(guards = "!isRubyNumber(b)")
         static Object equal(Node node, Object a, Object b,
-                @Cached(inline = false) DispatchNode reverseCallNode,
+                @Cached DispatchNode reverseCallNode,
                 @Cached BooleanCastNode booleanCastNode) {
             final Object reversedResult = reverseCallNode.call(b, "==", a);
             return booleanCastNode.execute(node, reversedResult);

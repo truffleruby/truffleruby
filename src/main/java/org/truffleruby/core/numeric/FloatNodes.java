@@ -410,7 +410,7 @@ public abstract class FloatNodes {
 
         @Specialization(guards = "!isRubyNumber(b)")
         Object equal(double a, Object b,
-                @Cached(inline = false) DispatchNode fallbackCallNode) {
+                @Cached DispatchNode fallbackCallNode) {
             return fallbackCallNode.call(a, "equal_fallback", b);
         }
     }

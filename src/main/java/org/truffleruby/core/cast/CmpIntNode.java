@@ -82,8 +82,8 @@ public abstract class CmpIntNode extends RubyBaseNode {
 
     @Specialization(guards = { "!isRubyInteger(value)", "!isNil(value)" })
     static int cmpObject(Node node, Object value, Object receiver, Object other,
-            @Cached(inline = false) DispatchNode gtNode,
-            @Cached(inline = false) DispatchNode ltNode,
+            @Cached DispatchNode gtNode,
+            @Cached DispatchNode ltNode,
             @Cached BooleanCastNode gtCastNode,
             @Cached BooleanCastNode ltCastNode) {
 

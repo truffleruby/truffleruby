@@ -46,7 +46,7 @@ public abstract class ToRubyIntegerNode extends RubyBaseNode {
 
     @Specialization(guards = "!isRubyInteger(object)")
     static Object coerceObject(Node node, Object object,
-            @Cached(inline = false) DispatchNode toIntNode) {
+            @Cached DispatchNode toIntNode) {
         return toIntNode.call(coreLibrary(node).truffleTypeModule, "rb_to_int_fallback", object);
     }
 }

@@ -28,7 +28,7 @@ public abstract class LazyWarningNode extends RubyBaseNode {
 
     @Specialization
     static WarningNode doLazy(
-            @Cached(inline = false) WarningNode warningNode) {
+            @Cached WarningNode warningNode) {
         return warningNode;
     }
 }

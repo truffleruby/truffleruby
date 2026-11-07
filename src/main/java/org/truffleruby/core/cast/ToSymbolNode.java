@@ -70,7 +70,7 @@ public abstract class ToSymbolNode extends RubyBaseNode {
     @Specialization(guards = { "!isRubySymbol(object)", "!isString(object)", "isNotRubyString(object)" })
     static RubySymbol toStr(Node node, Object object,
             @Cached InlinedBranchProfile errorProfile,
-            @Cached(inline = false) DispatchNode toStrNode,
+            @Cached DispatchNode toStrNode,
             @Cached @Exclusive RubyStringLibrary strings,
             @Cached @Exclusive StringToSymbolNode stringToSymbolNode) {
         var coerced = toStrNode.call(

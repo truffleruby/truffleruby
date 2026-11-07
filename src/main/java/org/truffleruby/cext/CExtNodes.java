@@ -980,13 +980,13 @@ public abstract class CExtNodes {
         @Specialization(guards = "name == cachedName", limit = "getDefaultCacheLimit()")
         static Object rbGvGetCached(VirtualFrame frame, Node node, String name,
                 @Cached("name") String cachedName,
-                @Cached(value = "create(cachedName)", inline = false) ReadGlobalVariableNode readGlobalVariableNode) {
+                @Cached("create(cachedName)") ReadGlobalVariableNode readGlobalVariableNode) {
             return readGlobalVariableNode.execute(frame);
         }
 
         @Specialization
         static Object rbGvGetUncached(Node node, String name,
-                @Cached(inline = false) DispatchNode dispatchNode) {
+                @Cached DispatchNode dispatchNode) {
             return dispatchNode.call(coreLibrary(node).topLevelBinding, "eval", name);
         }
     }
@@ -1250,8 +1250,8 @@ public abstract class CExtNodes {
         static Pointer toNative(Node node, RubyString string, boolean inplace,
                 @Cached RubyStringLibrary libString,
                 @Cached InlinedConditionProfile convertProfile,
-                @Cached(inline = false) TruffleString.CopyToNativeMemoryNode copyToNativeMemoryNode,
-                @Cached(inline = false) TruffleString.GetInternalNativePointerNode getInternalNativePointerNode) {
+                @Cached TruffleString.CopyToNativeMemoryNode copyToNativeMemoryNode,
+                @Cached TruffleString.GetInternalNativePointerNode getInternalNativePointerNode) {
             CompilerAsserts.partialEvaluationConstant(inplace);
 
             var tstring = string.tstring;

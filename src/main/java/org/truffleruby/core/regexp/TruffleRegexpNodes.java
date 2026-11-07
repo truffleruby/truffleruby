@@ -141,7 +141,7 @@ public abstract class TruffleRegexpNodes {
         @Specialization
         static RubyEncoding regexpPrepareEncoding(Node node, RubyRegexp regexp, Object matchString,
                 @Cached RubyStringLibrary stringLibrary,
-                @Cached(inline = false) TruffleString.GetByteCodeRangeNode codeRangeNode,
+                @Cached TruffleString.GetByteCodeRangeNode codeRangeNode,
                 @Cached InlinedBranchProfile asciiOnlyProfile,
                 @Cached InlinedBranchProfile asciiIncompatibleFixedRegexpEncodingProfile,
                 @Cached InlinedBranchProfile asciiIncompatibleMatchStringEncodingProfile,
@@ -1066,7 +1066,7 @@ public abstract class TruffleRegexpNodes {
 
         @Specialization
         static MatchInRegionJoniNode doLazy(
-                @Cached(inline = false) MatchInRegionJoniNode matchInRegionNode) {
+                @Cached MatchInRegionJoniNode matchInRegionNode) {
             return matchInRegionNode;
         }
     }
@@ -1083,7 +1083,7 @@ public abstract class TruffleRegexpNodes {
 
         @Specialization
         static TruffleString.SubstringByteIndexNode doLazy(
-                @Cached(inline = false) TruffleString.SubstringByteIndexNode substringByteIndexNode) {
+                @Cached TruffleString.SubstringByteIndexNode substringByteIndexNode) {
             return substringByteIndexNode;
         }
     }
