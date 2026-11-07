@@ -118,6 +118,7 @@ import org.truffleruby.core.format.unpack.ArrayResult;
 import org.truffleruby.core.format.unpack.UnpackCompiler;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.string.StringHelperNodes.SingleByteOptimizableNode;
+import org.truffleruby.core.string.StringHelperNodes.ToFrozenStringNode;
 import org.truffleruby.core.string.StringHelperNodes.ToMutableTruffleStringNode;
 import org.truffleruby.core.support.RubyByteArray;
 import org.truffleruby.core.symbol.RubySymbol;
@@ -149,6 +150,17 @@ import com.oracle.truffle.api.profiles.ConditionProfile;
 public abstract class StringPrimitiveNodes {
 
     // compatibleEncoding is RubyEncoding or Nil in this node
+    /** Returns the String itself if frozen, otherwise a frozen copy, see {@link ToFrozenStringNode} */
+    @Primitive(name = "string_to_frozen")
+    public abstract static class StringToFrozenNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        Object toFrozen(Object string,
+                @Cached ToFrozenStringNode toFrozenStringNode) {
+            return toFrozenStringNode.execute(this, string);
+        }
+    }
+
     @Primitive(name = "string_cmp")
     public abstract static class CompareNode extends PrimitiveArrayArgumentsNode {
 

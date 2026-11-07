@@ -108,9 +108,10 @@ module Truffle
       res = []
       offset = 0
       enc = Primitive.encoding_ensure_compatible_str orig, pattern
+      source = Primitive.string_to_frozen(orig) # the MatchData source must be frozen, see MatchData#string
 
       while index = byte_index(orig, pattern, enc, offset)
-        match = Primitive.matchdata_create_single_group(pattern, orig.dup, index, index + pattern.bytesize)
+        match = Primitive.matchdata_create_single_group(pattern, source, index, index + pattern.bytesize)
         res << match
         break unless global
         offset = gsub_new_offset(orig, match)

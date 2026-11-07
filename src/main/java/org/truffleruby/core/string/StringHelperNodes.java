@@ -399,7 +399,7 @@ public abstract class StringHelperNodes {
         @Specialization(guards = "isPlainString(node, string)")
         static RubyString plainString(Node node, RubyString string,
                 @Cached RubyStringLibrary libString,
-                @Cached(inline = false) TruffleString.AsTruffleStringNode asTruffleStringNode) {
+                @Cached TruffleString.AsTruffleStringNode asTruffleStringNode) {
             final RubyEncoding encoding = libString.getEncoding(node, string);
             final TruffleString tstring = asTruffleStringNode.execute(string.tstring, encoding.tencoding);
             final RubyString copy = new RubyString(
@@ -413,8 +413,8 @@ public abstract class StringHelperNodes {
 
         @Specialization(guards = "!isPlainString(node, string)")
         static RubyString dupAndFreeze(Node node, RubyString string,
-                @Cached(inline = false) DispatchNode dupNode,
-                @Cached(inline = false) DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
+                @Cached DispatchNode dupNode,
+                @Cached DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
             final RubyString copy = (RubyString) dupNode.call(string, "dup");
             setShapeFlagsNode.executeAdd(copy, Layouts.FROZEN_FLAG);
             return copy;
@@ -423,6 +423,33 @@ public abstract class StringHelperNodes {
         static boolean isPlainString(Node node, RubyString string) {
             return string.getShape() == getLanguage(node).stringShape &&
                     string.getMetaClass() == coreLibrary(node).stringClass;
+        }
+    }
+
+    /** Returns a frozen String with the same contents and class: the String itself if it is already frozen, otherwise a
+     * frozen copy. Similar to rb_str_new_frozen() in CRuby. */
+    @GenerateUncached
+    @GenerateInline
+    @GenerateCached(false)
+    public abstract static class ToFrozenStringNode extends RubyBaseNode {
+
+        public abstract Object execute(Node node, Object string);
+
+        @Specialization
+        static ImmutableRubyString immutable(ImmutableRubyString string) {
+            return string;
+        }
+
+        @Specialization
+        static RubyString rubyString(Node node, RubyString string,
+                @Cached DynamicObject.GetShapeFlagsNode getShapeFlagsNode,
+                @Cached InlinedConditionProfile frozenProfile,
+                @Cached FrozenCopyNode frozenCopyNode) {
+            if (frozenProfile.profile(node, (getShapeFlagsNode.execute(string) & Layouts.FROZEN_FLAG) != 0)) {
+                return string;
+            } else {
+                return frozenCopyNode.execute(node, string);
+            }
         }
     }
 

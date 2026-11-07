@@ -11,20 +11,16 @@
 package org.truffleruby.core.hash;
 
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.string.StringHelperNodes;
 import org.truffleruby.core.string.ImmutableRubyString;
 import org.truffleruby.language.RubyBaseNode;
 
 import com.oracle.truffle.api.dsl.Specialization;
-
-import static org.truffleruby.Layouts.FROZEN_FLAG;
 
 @GenerateUncached
 @GenerateInline
@@ -40,14 +36,8 @@ public abstract class FreezeHashKeyIfNeededNode extends RubyBaseNode {
 
     @Specialization(guards = "!compareByIdentity")
     static Object freezeIfNeeded(Node node, RubyString string, boolean compareByIdentity,
-            @Cached DynamicObject.GetShapeFlagsNode getShapeFlagsNode,
-            @Cached InlinedConditionProfile frozenProfile,
-            @Cached StringHelperNodes.FrozenCopyNode frozenCopyNode) {
-        if (frozenProfile.profile(node, (getShapeFlagsNode.execute(string) & FROZEN_FLAG) != 0)) {
-            return string;
-        } else {
-            return frozenCopyNode.execute(node, string);
-        }
+            @Cached StringHelperNodes.ToFrozenStringNode toFrozenStringNode) {
+        return toFrozenStringNode.execute(node, string);
     }
 
     @Specialization(guards = "compareByIdentity")
