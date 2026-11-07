@@ -303,10 +303,8 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         }
 
         @Specialization
-        static long wrapperToHandle(ValueWrapper value,
-                @Bind Node node,
-                @Cached WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(node, value);
+        static long wrapperToHandle(ValueWrapper value) {
+            return value.handle; // Primitive.cext_wrap already kept the wrapper alive for this C extension call
         }
     }
 

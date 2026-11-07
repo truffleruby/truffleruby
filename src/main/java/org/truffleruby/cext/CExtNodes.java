@@ -43,6 +43,7 @@ import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.MarkingService.ExtensionCallStack;
 import org.truffleruby.core.MarkingServiceNodes;
+import org.truffleruby.core.MarkingServiceNodes.KeepAliveNode;
 import org.truffleruby.core.MarkingServiceNodes.RunMarkOnExitNode;
 import org.truffleruby.core.array.ArrayToObjectArrayNode;
 import org.truffleruby.core.array.ArrayUtils;
@@ -1766,13 +1767,24 @@ public abstract class CExtNodes {
 
     }
 
+    /** Wraps a Ruby object as a VALUE for C. This is the only way a ValueWrapper reaches Ruby code, and every such
+     * wrapper is passed to C as a {@code Primitive.cext_invoke_*} downcall argument or returned to C as an upcall
+     * result within the same C extension call. So this is the one place keeping the wrapper alive until the end of that
+     * call, and {@link CExtDowncallArgumentNode} and {@link CExtUpcallRootNode.WrappedResultNode} just read its
+     * handle. */
     @Primitive(name = "cext_wrap")
     public abstract static class WrapValueNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
         ValueWrapper wrap(Object value,
-                @Cached WrapNode wrapNode) {
-            return wrapNode.execute(value);
+                @Cached WrapNode wrapNode,
+                @Cached KeepAliveNode keepAliveNode,
+                @Cached InlinedConditionProfile taggedObjectProfile) {
+            final ValueWrapper wrapper = wrapNode.execute(value);
+            if (taggedObjectProfile.profile(this, ValueWrapperManager.isTaggedObject(wrapper.handle))) {
+                keepAliveNode.execute(this, wrapper);
+            }
+            return wrapper;
         }
     }
 
