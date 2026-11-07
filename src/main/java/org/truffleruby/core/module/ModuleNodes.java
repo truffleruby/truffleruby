@@ -1134,7 +1134,7 @@ public abstract class ModuleNodes {
         @Specialization(guards = "strings.isRubyString(this, name)", limit = "1")
         @TruffleBoundary
         static Object constSourceLocation(Node node, RubyModule module, Object name, boolean inherit,
-                @Cached(inline = false) @Shared TruffleString.FromJavaStringNode fromJavaStringNode,
+                @Cached @Shared TruffleString.FromJavaStringNode fromJavaStringNode,
                 @Cached RubyStringLibrary strings) {
             final ConstantLookupResult lookupResult = ModuleOperations
                     .lookupScopedConstant(getContext(node), module, StringOperations.getJavaString(name), inherit, node,
@@ -1146,7 +1146,7 @@ public abstract class ModuleNodes {
         @Specialization
         @TruffleBoundary
         static Object constSourceLocation(Node node, RubyModule module, RubySymbol name, boolean inherit,
-                @Cached(inline = false) @Shared TruffleString.FromJavaStringNode fromJavaStringNode) {
+                @Cached @Shared TruffleString.FromJavaStringNode fromJavaStringNode) {
             final ConstantLookupResult lookupResult = ModuleOperations
                     .lookupConstantWithInherit(getContext(node), module, name.getString(), inherit, node, true);
 

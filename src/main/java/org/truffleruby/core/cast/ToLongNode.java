@@ -69,7 +69,7 @@ public abstract class ToLongNode extends RubyBaseNode {
 
     @Fallback
     static long coerceObject(Node node, Object object,
-            @Cached(inline = false) DispatchNode toIntNode,
+            @Cached DispatchNode toIntNode,
             @Cached(inline = false) ToLongNode fitNode) {
         final Object coerced = toIntNode
                 .call(coreLibrary(node).truffleTypeModule, "rb_to_int_fallback", object);

@@ -95,7 +95,7 @@ public abstract class CallBlockNode extends RubyBaseNode {
             Object blockArgument,
             ArgumentsDescriptor descriptor,
             Object[] arguments,
-            @Cached(inline = false) IndirectCallNode callNode) {
+            @Cached IndirectCallNode callNode) {
         final Object[] frameArguments = packArguments(declarationContext, block, self, blockArgument, descriptor,
                 arguments);
         return callNode.call(block.callTarget, frameArguments);

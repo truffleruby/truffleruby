@@ -48,7 +48,7 @@ public abstract class ToStringOrSymbolNode extends RubyBaseNode {
 
     @Specialization(guards = { "!isRubySymbol(object)", "isNotRubyString(object)" })
     static Object coerceObject(Node node, Object object,
-            @Cached(inline = false) DispatchNode toStrNode) {
+            @Cached DispatchNode toStrNode) {
         return toStrNode.call(
                 coreLibrary(node).truffleTypeModule,
                 "rb_convert_type_fallback",

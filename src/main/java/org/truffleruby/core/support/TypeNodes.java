@@ -504,7 +504,7 @@ public abstract class TypeNodes {
         @Specialization
         static void check(Node node, Object value,
                 // IsFrozenNode can't be inlined since known bug (GR-45912)
-                @Cached(inline = false) IsFrozenNode isFrozenNode,
+                @Cached IsFrozenNode isFrozenNode,
                 @Cached InlinedBranchProfile errorProfile) {
 
             if (isFrozenNode.execute(value)) {
