@@ -1789,13 +1789,17 @@ public abstract class CExtNodes {
 
     }
 
+    /** Wraps a Ruby object as a VALUE handle for C, kept alive until the end of the current C extension call. The
+     * handle is passed to C as a {@code Primitive.cext_invoke_*} downcall argument or returned to C as an upcall result
+     * within that call. ValueWrappers themselves never reach Ruby code. */
     @Primitive(name = "cext_wrap")
     public abstract static class WrapValueNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        ValueWrapper wrap(Object value,
-                @Cached WrapNode wrapNode) {
-            return wrapNode.execute(value);
+        long wrap(Object value,
+                @Cached WrapNode wrapNode,
+                @Cached ValueWrapperManager.WrapperToHandleNode wrapperToHandleNode) {
+            return wrapperToHandleNode.execute(this, wrapNode.execute(value));
         }
     }
 

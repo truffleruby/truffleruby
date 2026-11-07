@@ -337,7 +337,8 @@ java << "    public static final String[] UPCALLS = {\n"
 UPCALLS.each do |cname, kind, ret, args|
   ruby_name = kind == :send ? SEND_NAMES.fetch(cname) : cname
   java << "            \"upcall_#{cname}\", \"#{ffm_signature(ret, args.chars)}\","
-  java << " \"#{kind}\", \"#{ruby_name}\", \"#{ret}\", \"#{args}\",\n"
+  # W only differs from L in the C declaration (VALUE vs long), the Java side passes both through as-is
+  java << " \"#{kind}\", \"#{ruby_name}\", \"#{ret.tr('W', 'L')}\", \"#{args}\",\n"
 end
 java << "    };\n"
 java << "    // @formatter:on\n"

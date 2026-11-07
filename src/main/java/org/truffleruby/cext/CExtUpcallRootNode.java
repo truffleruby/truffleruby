@@ -57,10 +57,9 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
     /** The kind of a native value in an upcall signature, from the carrier letters in tool/cext-upcalls.rb */
     public enum Carrier {
         VALUE, // V: a VALUE handle, converted with UnwrapNode/WrapNode
-        WRAPPED, // W: a result which is already a VALUE handle or a ValueWrapper
         INT, // I
         BOOL, // B: Ruby true/false as int 1/0
-        LONG, // L
+        LONG, // L, also W: a VALUE handle passed through as-is, only distinct from L in the C declaration
         DOUBLE, // D
         POINTER, // P: a raw long address, including function pointers and VALUE arrays
         ID, // Y: converted from/to a Ruby Symbol
@@ -69,7 +68,6 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         static Carrier parse(char carrier) {
             return switch (carrier) {
                 case 'V' -> VALUE;
-                case 'W' -> WRAPPED;
                 case 'I' -> INT;
                 case 'B' -> BOOL;
                 case 'L' -> LONG;
@@ -267,7 +265,6 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
             return switch (carrier) {
                 case VOID -> new VoidResultNode();
                 case VALUE -> CExtUpcallRootNodeFactory.ValueResultNodeGen.create();
-                case WRAPPED -> CExtUpcallRootNodeFactory.WrappedResultNodeGen.create();
                 case ID -> CExtUpcallRootNodeFactory.IDResultNodeGen.create();
                 case INT -> CExtUpcallRootNodeFactory.IntResultNodeGen.create();
                 case LONG, POINTER -> CExtUpcallRootNodeFactory.LongResultNodeGen.create();
@@ -293,20 +290,6 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
                 @Cached WrapNode wrapNode,
                 @Cached WrapperToHandleNode wrapperToHandleNode) {
             return wrapperToHandleNode.execute(node, wrapNode.execute(value));
-        }
-    }
-
-    abstract static class WrappedResultNode extends UpcallResultNode {
-        @Specialization
-        static long handle(long value) {
-            return value;
-        }
-
-        @Specialization
-        static long wrapperToHandle(ValueWrapper value,
-                @Bind Node node,
-                @Cached WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(node, value);
         }
     }
 
