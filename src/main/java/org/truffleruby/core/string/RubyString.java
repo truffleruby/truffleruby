@@ -43,20 +43,16 @@ import java.util.Objects;
 @ImportStatic(RubyBaseNode.class)
 public final class RubyString extends RubyDynamicObject {
 
-    public boolean frozen;
-    public boolean locked = false;
     public AbstractTruffleString tstring;
     private RubyEncoding encoding;
 
     public RubyString(
             RubyClass rubyClass,
             Shape shape,
-            boolean frozen,
             AbstractTruffleString tstring,
             RubyEncoding rubyEncoding) {
         super(rubyClass, shape);
         assert tstring.isCompatibleToUncached(rubyEncoding.tencoding);
-        this.frozen = frozen;
         this.tstring = Objects.requireNonNull(tstring);
         this.encoding = Objects.requireNonNull(rubyEncoding);
     }
@@ -105,14 +101,6 @@ public final class RubyString extends RubyDynamicObject {
 
     public RubyEncoding getEncodingUnprofiled() {
         return encoding;
-    }
-
-    public void freeze() {
-        frozen = true;
-    }
-
-    public boolean isFrozen() {
-        return frozen;
     }
 
     // region String messages

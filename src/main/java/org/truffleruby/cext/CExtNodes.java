@@ -142,6 +142,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import static org.truffleruby.Layouts.LOCKED_FLAG;
 import static org.truffleruby.language.dispatch.DispatchConfiguration.PRIVATE;
 import static org.truffleruby.language.dispatch.DispatchConfiguration.PUBLIC;
 
@@ -831,15 +832,26 @@ public abstract class CExtNodes {
         @Specialization
         RubyString rbStrLockTmp(RubyString string,
                 @Cached InlinedBranchProfile errorProfile,
-                @Cached TypeNodes.CheckFrozenNode raiseIfFrozenNode) {
+                @Cached TypeNodes.CheckFrozenNode raiseIfFrozenNode,
+                @Cached DynamicObject.IsSharedNode isSharedNode,
+                @Cached InlinedConditionProfile isSharedProfile,
+                @Cached DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
             raiseIfFrozenNode.execute(this, string);
 
-            if (string.locked) {
+            final boolean changed;
+            if (isSharedProfile.profile(this, isSharedNode.execute(string))) {
+                synchronized (string) {
+                    changed = setShapeFlagsNode.executeAdd(string, LOCKED_FLAG);
+                }
+            } else {
+                changed = setShapeFlagsNode.executeAdd(string, LOCKED_FLAG);
+            }
+
+            if (!changed) {
                 errorProfile.enter(this);
                 throw new RaiseException(getContext(),
                         coreExceptions().runtimeError("temporal locking already locked string", this));
             }
-            string.locked = true;
             return string;
         }
 
@@ -856,15 +868,26 @@ public abstract class CExtNodes {
         @Specialization
         RubyString rbStrUnlockTmp(RubyString string,
                 @Cached InlinedBranchProfile errorProfile,
-                @Cached TypeNodes.CheckFrozenNode raiseIfFrozenNode) {
+                @Cached TypeNodes.CheckFrozenNode raiseIfFrozenNode,
+                @Cached DynamicObject.IsSharedNode isSharedNode,
+                @Cached InlinedConditionProfile isSharedProfile,
+                @Cached DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
             raiseIfFrozenNode.execute(this, string);
 
-            if (!string.locked) {
+            final boolean changed;
+            if (isSharedProfile.profile(this, isSharedNode.execute(string))) {
+                synchronized (string) {
+                    changed = setShapeFlagsNode.executeRemove(string, LOCKED_FLAG);
+                }
+            } else {
+                changed = setShapeFlagsNode.executeRemove(string, LOCKED_FLAG);
+            }
+
+            if (!changed) {
                 errorProfile.enter(this);
                 throw new RaiseException(getContext(),
                         coreExceptions().runtimeError("temporal unlocking already unlocked string", this));
             }
-            string.locked = false;
             return string;
         }
 

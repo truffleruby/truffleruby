@@ -20,9 +20,12 @@ import org.truffleruby.core.string.RubyString;
 import org.truffleruby.language.RubyBaseNode;
 
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
+
+import static org.truffleruby.Layouts.FROZEN_FLAG;
 
 @GenerateInline
 @GenerateCached(false)
@@ -40,17 +43,19 @@ public abstract class FromJavaStringNode extends RubyBaseNode {
     static RubyString doCached(Node node, String value,
             @Cached("value") String cachedValue,
             @Cached(inline = false) @Shared TruffleString.FromJavaStringNode tstringFromJavaStringNode,
-            @Cached("getTString(cachedValue, tstringFromJavaStringNode)") TruffleString cachedTString) {
+            @Cached("getTString(cachedValue, tstringFromJavaStringNode)") TruffleString cachedTString,
+            @Cached(inline = false) @Shared DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
         var rubyString = createString(node, cachedTString, Encodings.UTF_8);
-        rubyString.freeze();
+        setShapeFlagsNode.executeAdd(rubyString, FROZEN_FLAG);
         return rubyString;
     }
 
     @Specialization(replaces = "doCached")
     static RubyString doGeneric(Node node, String value,
-            @Cached(inline = false) @Shared TruffleString.FromJavaStringNode tstringFromJavaStringNode) {
+            @Cached(inline = false) @Shared TruffleString.FromJavaStringNode tstringFromJavaStringNode,
+            @Cached(inline = false) @Shared DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
         var rubyString = createString(node, tstringFromJavaStringNode, value, Encodings.UTF_8);
-        rubyString.freeze();
+        setShapeFlagsNode.executeAdd(rubyString, FROZEN_FLAG);
         return rubyString;
     }
 
