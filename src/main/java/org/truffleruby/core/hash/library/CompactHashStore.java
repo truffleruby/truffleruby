@@ -29,6 +29,7 @@ import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.hash.CompareHashKeysNode;
 import org.truffleruby.core.hash.FreezeHashKeyIfNeededNode;
+import org.truffleruby.core.hash.HashGuards;
 import org.truffleruby.core.hash.HashLiteralNode;
 import org.truffleruby.core.hash.HashingNodes;
 import org.truffleruby.core.hash.RubyHash;
@@ -42,6 +43,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.GenerateUncached;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -50,6 +52,7 @@ import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.profiles.InlinedLoopConditionProfile;
 import org.truffleruby.language.objects.shared.SharedObjects;
@@ -60,6 +63,7 @@ import org.truffleruby.language.objects.shared.SharedObjects;
  * We do not currently implement the deletion optimization. */
 @ExportLibrary(value = HashStoreLibrary.class)
 @GenerateUncached
+@ImportStatic(HashGuards.class)
 public final class CompactHashStore {
     //  ---------------------------------------------------------------------------------------------------------------
     // Big Picture:
@@ -167,10 +171,15 @@ public final class CompactHashStore {
             @Cached @Shared GetIndexPosForKeyNode getIndexPosForKeyNode,
             @Cached @Shared HashingNodes.ToHash hashFunction,
             @Cached @Shared InlinedConditionProfile keyNotFound,
+            @CachedLibrary(limit = "hashStrategyLimit()") @Shared HashStoreLibrary hashes,
+            @Cached @Shared InlinedBranchProfile storeChangedProfile,
             @Bind Node node) {
         int keyHash = hashFunction.execute(key, hash.compareByIdentity);
 
         int indexPos = getIndexPosForKeyNode.execute(node, key, keyHash, hash.compareByIdentity, index, kvStore, false);
+        if (HashStoreLibrary.storeChanged(node, storeChangedProfile, hash, this)) {
+            return hashes.lookupOrDefault(hash.store, frame, hash, key, defaultNode);
+        }
         if (keyNotFound.profile(node, indexPos == KEY_NOT_FOUND)) {
             return defaultNode.accept(frame, hash, key);
         }
@@ -185,11 +194,16 @@ public final class CompactHashStore {
             @Cached @Shared GetIndexPosForKeyNode getIndexPosForKeyNode,
             @Cached @Shared FreezeHashKeyIfNeededNode freezeKey,
             @Cached @Shared SetKvAtNode setKv,
+            @CachedLibrary(limit = "hashStrategyLimit()") @Shared HashStoreLibrary hashes,
+            @Cached @Shared InlinedBranchProfile storeChangedProfile,
             @Bind Node node) {
         assert verify(hash);
         var frozenKey = freezeKey.executeFreezeIfNeeded(node, key, byIdentity);
         int keyHash = hashFunction.execute(frozenKey, byIdentity);
         int indexPos = getIndexPosForKeyNode.execute(node, frozenKey, keyHash, byIdentity, index, kvStore, true);
+        if (HashStoreLibrary.storeChanged(node, storeChangedProfile, hash, this)) {
+            return hashes.set(hash.store, hash, frozenKey, value, byIdentity);
+        }
         int keyPos = indexPosToKeyPos(index, indexPos); // can be < 0 if inserting new key
 
         return setKv.execute(node, hash, this, indexPos, keyPos, keyHash, frozenKey, value);
@@ -200,9 +214,14 @@ public final class CompactHashStore {
             @Cached @Shared GetIndexPosForKeyNode getIndexPosForKeyNode,
             @Cached @Shared HashingNodes.ToHash hashFunction,
             @Cached @Shared InlinedConditionProfile keyNotFound,
+            @CachedLibrary(limit = "hashStrategyLimit()") @Shared HashStoreLibrary hashes,
+            @Cached @Shared InlinedBranchProfile storeChangedProfile,
             @Bind Node node) {
         int keyHash = hashFunction.execute(key, hash.compareByIdentity);
         int indexPos = getIndexPosForKeyNode.execute(node, key, keyHash, hash.compareByIdentity, index, kvStore, false);
+        if (HashStoreLibrary.storeChanged(node, storeChangedProfile, hash, this)) {
+            return hashes.delete(hash.store, hash, key);
+        }
         if (keyNotFound.profile(node, indexPos == KEY_NOT_FOUND)) {
             return null;
         }
