@@ -15,6 +15,9 @@ import com.oracle.truffle.api.object.HiddenKey;
 public abstract class Layouts {
 
     public static final int FROZEN_FLAG = 1;
+    /** Only used for RubyString. Set by rb_str_locktmp() and cleared by rb_str_unlocktmp(), while the String bytes are
+     * accessed directly and the String must not be modified, e.g. by IO::Buffer.for(string) or a C extension. */
+    public static final int LOCKED_FLAG = 2;
 
     // Standard identifiers
 

@@ -242,7 +242,6 @@ public abstract class RubyBaseNode extends Node {
         final RubyString instance = new RubyString(
                 coreLibrary(node).stringClass,
                 getLanguage(node).stringShape,
-                false,
                 tstring,
                 encoding);
         AllocationTracing.trace(instance, node);
@@ -260,7 +259,6 @@ public abstract class RubyBaseNode extends Node {
         final RubyString instance = new RubyString(
                 coreLibrary(node).stringClass,
                 getLanguage(node).stringShape,
-                false,
                 copy,
                 encoding);
         AllocationTracing.trace(instance, node);
@@ -271,7 +269,6 @@ public abstract class RubyBaseNode extends Node {
         final RubyString instance = new RubyString(
                 coreLibrary().stringClass,
                 getLanguage().stringShape,
-                false,
                 tstring,
                 encoding);
         AllocationTracing.trace(instance, this);

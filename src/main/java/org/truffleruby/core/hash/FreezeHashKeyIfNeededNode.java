@@ -11,16 +11,20 @@
 package org.truffleruby.core.hash;
 
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.string.ImmutableRubyString;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.dispatch.DispatchNode;
 
 import com.oracle.truffle.api.dsl.Specialization;
+
+import static org.truffleruby.Layouts.FROZEN_FLAG;
 
 @GenerateUncached
 @GenerateInline
@@ -34,20 +38,22 @@ public abstract class FreezeHashKeyIfNeededNode extends RubyBaseNode {
         return string;
     }
 
-    @Specialization(guards = "string.isFrozen()")
-    static Object alreadyFrozen(RubyString string, boolean compareByIdentity) {
-        return string;
+    @Specialization(guards = "!compareByIdentity")
+    static Object freezeIfNeeded(Node node, RubyString string, boolean compareByIdentity,
+            @Cached DynamicObject.GetShapeFlagsNode getShapeFlagsNode,
+            @Cached InlinedConditionProfile frozenProfile,
+            @Cached(inline = false) DispatchNode dupNode,
+            @Cached(inline = false) DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
+        if (frozenProfile.profile(node, (getShapeFlagsNode.execute(string) & FROZEN_FLAG) != 0)) {
+            return string;
+        } else {
+            final RubyString copy = (RubyString) dupNode.call(string, "dup");
+            setShapeFlagsNode.executeAdd(copy, FROZEN_FLAG);
+            return copy;
+        }
     }
 
-    @Specialization(guards = { "!string.isFrozen()", "!compareByIdentity" })
-    static Object dupAndFreeze(RubyString string, boolean compareByIdentity,
-            @Cached(inline = false) DispatchNode dupNode) {
-        final RubyString copy = (RubyString) dupNode.call(string, "dup");
-        copy.freeze();
-        return copy;
-    }
-
-    @Specialization(guards = { "!string.isFrozen()", "compareByIdentity" })
+    @Specialization(guards = "compareByIdentity")
     static Object compareByIdentity(RubyString string, boolean compareByIdentity) {
         return string;
     }

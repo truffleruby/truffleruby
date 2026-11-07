@@ -64,6 +64,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.object.HiddenKey;
 
+import static org.truffleruby.Layouts.FROZEN_FLAG;
+import static org.truffleruby.Layouts.LOCKED_FLAG;
+
 /** All nodes in this class should be Primitive for efficiency (avoiding an extra call and constant lookup) */
 @CoreModule("Truffle::Type")
 public abstract class TypeNodes {
@@ -521,14 +524,17 @@ public abstract class TypeNodes {
 
         @Specialization
         Object check(RubyString value,
+                @Cached DynamicObject.GetShapeFlagsNode getShapeFlagsNode,
                 @Cached InlinedBranchProfile errorProfile) {
-            if (value.locked) {
+            final int flags = getShapeFlagsNode.execute(value);
+            if ((flags & (FROZEN_FLAG | LOCKED_FLAG)) != 0) {
                 errorProfile.enter(this);
-                throw new RaiseException(getContext(),
-                        coreExceptions().runtimeError("can't modify string; temporarily locked", this));
-            } else if (value.frozen) {
-                errorProfile.enter(this);
-                throw new RaiseException(getContext(), coreExceptions().frozenError(value, this));
+                if ((flags & LOCKED_FLAG) != 0) {
+                    throw new RaiseException(getContext(),
+                            coreExceptions().runtimeError("can't modify string; temporarily locked", this));
+                } else {
+                    throw new RaiseException(getContext(), coreExceptions().frozenError(value, this));
+                }
             }
             return value;
         }

@@ -169,7 +169,6 @@ public abstract class StringNodes {
             final RubyString string = new RubyString(
                     rubyClass,
                     getLanguage(node).stringShape,
-                    false,
                     EMPTY_BINARY,
                     Encodings.BINARY);
             AllocationTracing.trace(string, node);

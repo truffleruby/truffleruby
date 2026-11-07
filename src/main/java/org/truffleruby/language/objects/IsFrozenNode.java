@@ -15,7 +15,6 @@ import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.core.range.RubyObjectRange;
-import org.truffleruby.core.string.RubyString;
 import org.truffleruby.language.ImmutableRubyObject;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyDynamicObject;
@@ -33,12 +32,7 @@ public abstract class IsFrozenNode extends RubyBaseNode {
         return true;
     }
 
-    @Specialization
-    boolean isFrozen(RubyString object) {
-        return object.frozen;
-    }
-
-    @Specialization(guards = { "!isRubyObjectRange(object)", "isNotRubyString(object)" })
+    @Specialization(guards = "!isRubyObjectRange(object)")
     boolean isFrozen(RubyDynamicObject object,
             @Cached DynamicObject.GetShapeFlagsNode getShapeFlagsNode) {
         return (getShapeFlagsNode.execute(object) & FROZEN_FLAG) != 0;

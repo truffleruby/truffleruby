@@ -48,7 +48,6 @@ public final class CoreString {
         return new RubyString(
                 context.getCoreLibrary().stringClass,
                 language.stringShape,
-                false,
                 getTruffleString(),
                 Encodings.BINARY);
     }
