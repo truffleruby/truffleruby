@@ -1,0 +1,1 @@
+slow:Process.egid= when ran by a superuser sets the effective group id for the current process if run by a superuser

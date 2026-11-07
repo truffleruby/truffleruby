@@ -34,12 +34,18 @@ class TCPServer < TCPSocket
     remote_addrs = Socket
       .getaddrinfo(host, service, :UNSPEC, :STREAM, 0, Socket::AI_PASSIVE)
 
+    descriptor = -1
+    socket_errno = 0
+
     remote_addrs.each do |addrinfo|
       _, port, address, _, family, socktype, protocol = addrinfo
 
       descriptor = Truffle::Socket::Foreign.socket(family, socktype, protocol)
 
-      next if descriptor < 0
+      if descriptor < 0
+        socket_errno = ::FFI.errno
+        next
+      end
 
       # Truffle: set REUSEADDR *before* bind
       setup(descriptor, nil, true)
@@ -57,6 +63,10 @@ class TCPServer < TCPSocket
         break
       end
     end
+
+    # Truffle: raise if socket(2) failed for every address, like CRuby,
+    # e.g. Errno::EAFNOSUPPORT for an IPv6 address when IPv6 is unavailable.
+    Errno.handle_errno(socket_errno, 'socket(2)') if descriptor < 0
 
     listen(5)
   end

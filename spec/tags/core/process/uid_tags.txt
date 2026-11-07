@@ -1,1 +1,3 @@
 slow:Process.uid returns the correct uid for the user executing this process
+slow:Process.uid= if run by a superuser sets the real user id for the current process
+slow:Process.uid= if run by a superuser sets the real user id if preceded by Process.euid=id
