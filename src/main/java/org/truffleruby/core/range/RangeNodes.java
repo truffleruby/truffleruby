@@ -441,6 +441,7 @@ public abstract class RangeNodes {
         @Specialization(guards = { "!standardClass || (!isImplicitLong(begin) || !isImplicitLong(end))" })
         static RubyObjectRange objectRange(Node node, RubyClass rubyClass, Object begin, Object end, boolean excludeEnd,
                 @Cached DispatchNode compare,
+                @Cached InlinedConditionProfile standardClassProfile,
                 @Bind("rubyClass == getRangeClass()") boolean standardClass) {
 
             if (compare.call(begin, "<=>", end) == nil && end != nil && begin != nil) {
@@ -448,8 +449,16 @@ public abstract class RangeNodes {
                         coreExceptions(node).argumentError("bad value for range", node));
             }
 
-            final Shape shape = getLanguage(node).objectRangeShape;
-            final RubyObjectRange range = new RubyObjectRange(rubyClass, shape, excludeEnd, begin, end, standardClass);
+            // Ranges of the Range class itself are frozen, but not instances of Range subclasses.
+            // Allocate in each branch so the Shape is a constant for each allocation.
+            final RubyObjectRange range;
+            if (standardClassProfile.profile(node, standardClass)) {
+                final Shape shape = getLanguage(node).frozenObjectRangeShape;
+                range = new RubyObjectRange(rubyClass, shape, excludeEnd, begin, end);
+            } else {
+                final Shape shape = getLanguage(node).objectRangeShape;
+                range = new RubyObjectRange(rubyClass, shape, excludeEnd, begin, end);
+            }
             AllocationTracing.trace(range, node);
             return range;
         }
@@ -479,7 +488,7 @@ public abstract class RangeNodes {
         @Specialization
         static RubyObjectRange allocate(Node node, RubyClass rubyClass) {
             final Shape shape = getLanguage(node).objectRangeShape;
-            final RubyObjectRange range = new RubyObjectRange(rubyClass, shape, false, nil, nil, false);
+            final RubyObjectRange range = new RubyObjectRange(rubyClass, shape, false, nil, nil);
             AllocationTracing.trace(range, node);
             return range;
         }
