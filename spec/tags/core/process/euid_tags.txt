@@ -1,0 +1,1 @@
+slow:Process.euid= if run by a superuser sets the effective user id for the current process if run by a superuser

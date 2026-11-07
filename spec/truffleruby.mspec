@@ -5,9 +5,6 @@ require 'rbconfig'
 # Inherit from the default configuration
 load "#{__dir__}/ruby/default.mspec"
 
-# Don't run ruby/spec as root on TruffleRuby
-raise 'ruby/spec is not designed to be run as root on TruffleRuby' if Process.uid == 0
-
 ENV['TRUFFLERUBY_ALLOW_PRIVATE_PRIMITIVES_IN'] = "#{__dir__}/truffle/"
 
 class MSpecScript
