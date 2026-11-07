@@ -524,6 +524,23 @@ describe "Pattern matching" do
         true
       end.should == true
     end
+
+    it "can be wrapped in parentheses" do
+      case [:a, "b"]
+      in [(Symbol | String), *]
+        true
+      end.should == true
+
+      case [[:a, "b"]]
+      in [[(Symbol | String), *] | [] => methods]
+        methods
+      end.should == [:a, "b"]
+
+      case {a: 1}
+      in {a: (1 | 2) => value}
+        value
+      end.should == 1
+    end
   end
 
   describe "AS pattern" do
@@ -1273,6 +1290,28 @@ describe "Pattern matching" do
 
     {a: 1} => a:
     a.should == 1
+  end
+
+  it "supports parentheses around a pattern" do
+    case 1
+    in (1)
+      true
+    end.should == true
+
+    case 2
+    in (Integer => n)
+      n
+    end.should == 2
+
+    case 3
+    in (m)
+      m
+    end.should == 3
+
+    case 4
+    in ((Integer))
+      true
+    end.should == true
   end
 
   it "supports pinning instance variables" do

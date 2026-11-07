@@ -379,6 +379,11 @@ public final class YARPPatternMatchingTranslator extends YARPBaseTranslator {
     }
 
     @Override
+    public RubyNode visitParenthesesNode(Nodes.ParenthesesNode node) { // a parenthesized pattern like `in [(Symbol | String), *]`
+        return node.body.accept(this); // `in ()` is a SyntaxError so body is never null
+    }
+
+    @Override
     public RubyNode visitPinnedVariableNode(Nodes.PinnedVariableNode node) {
         return matchValue(node.variable);
     }
