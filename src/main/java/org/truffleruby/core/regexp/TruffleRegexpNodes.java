@@ -68,6 +68,7 @@ import org.truffleruby.core.regexp.MatchDataNodes.FixupMatchDataStartNode;
 import org.truffleruby.core.regexp.RegexpNodes.ToSNode;
 import org.truffleruby.core.string.ATStringWithEncoding;
 import org.truffleruby.core.string.StringHelperNodes.StringToTruffleStringInplaceNode;
+import org.truffleruby.core.string.StringHelperNodes.ToFrozenStringNode;
 import org.truffleruby.core.string.TStringBuilder;
 import org.truffleruby.core.string.TStringWithEncoding;
 import org.truffleruby.core.string.RubyString;
@@ -963,7 +964,8 @@ public abstract class TruffleRegexpNodes {
         // Ex. x = "abc"; x =~ /(.*)/; x.upcase!
         //
         // Without a private copy, the MatchData's source could be modified to be upcased when it should remain the
-        // same as when the MatchData was created.
+        // same as when the MatchData was created. The copy is frozen (or the string itself is used if already frozen)
+        // so that MatchData#string can return it directly.
         @Specialization
         Object match(
                 RubyRegexp regexp,
@@ -974,7 +976,7 @@ public abstract class TruffleRegexpNodes {
                 boolean onlyMatchAtStart,
                 int start,
                 boolean createMatchData,
-                @Cached LazyDispatchNode stringDupNode,
+                @Cached ToFrozenStringNode toFrozenStringNode,
                 @Cached InlinedConditionProfile createMatchDataProfile,
                 @Cached InlinedConditionProfile mismatchProfile,
                 @Cached InlinedConditionProfile nonZeroStart,
@@ -1000,12 +1002,12 @@ public abstract class TruffleRegexpNodes {
                 final MultiRegion region = getMatcherEagerRegion(matcher);
                 assert assertValidRegion(region);
 
-                var dupedString = stringDupNode.get(this).call(string, "dup");
+                var frozenString = toFrozenStringNode.execute(this, string);
                 RubyMatchData result = new RubyMatchData(
                         coreLibrary().matchDataClass,
                         getLanguage().matchDataShape,
                         regexp,
-                        dupedString,
+                        frozenString,
                         region);
                 AllocationTracing.trace(result, this);
 
@@ -1124,7 +1126,7 @@ public abstract class TruffleRegexpNodes {
                 @Cached RubyStringLibrary libString,
                 @Cached InlinedIntValueProfile groupCountProfile,
                 @Cached LazyDispatchNode warnOnFallbackNode,
-                @Cached LazyDispatchNode stringDupNode,
+                @Cached ToFrozenStringNode toFrozenStringNode,
                 @Cached TranslateInteropExceptionNode translateInteropExceptionNode,
                 @Cached LazyMatchInRegionJoniNode fallbackMatchInRegionJoniNode,
                 @Cached LazyTruffleStringSubstringByteIndexNode substringByteIndexNode,
@@ -1214,8 +1216,8 @@ public abstract class TruffleRegexpNodes {
                         profileAndReportLoopCount(node, loopProfile, groupCount);
                     }
 
-                    var dupedString = stringDupNode.get(node).call(string, "dup");
-                    var matchData = createMatchData(node, regexp, dupedString, region, result);
+                    var frozenString = toFrozenStringNode.execute(node, string);
+                    var matchData = createMatchData(node, regexp, frozenString, region, result);
                     if (nonZeroStart.profile(node, start != 0)) {
                         fixupMatchDataStartNode.execute(node, matchData, start);
                     }

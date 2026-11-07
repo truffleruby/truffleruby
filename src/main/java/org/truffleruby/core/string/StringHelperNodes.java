@@ -39,7 +39,9 @@ import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.control.RaiseException;
+import org.truffleruby.language.dispatch.DispatchNode;
 import org.truffleruby.language.library.RubyStringLibrary;
+import org.truffleruby.language.objects.AllocationTracing;
 
 public abstract class StringHelperNodes {
 
@@ -380,6 +382,74 @@ public abstract class StringHelperNodes {
             return StringSupport.delete_bangCommon19(
                     new ATStringWithEncoding(string.tstring, string.getEncodingUncached()), asciiFilter, nonAsciiFilter,
                     enc, node);
+        }
+    }
+
+    /** Creates a frozen copy of an unfrozen RubyString, equivalent to <code>string.dup.freeze</code> */
+    @GenerateUncached
+    @GenerateInline
+    @GenerateCached(false)
+    public abstract static class FrozenCopyNode extends RubyBaseNode {
+
+        public abstract RubyString execute(Node node, RubyString string);
+
+        /** The common case: a String with no instance variables or hidden properties and no singleton class. The frozen
+         * copy can then be created directly, without dispatching to #dup and #initialize_copy and without a Shape
+         * transition to freeze it. */
+        @Specialization(guards = "isPlainString(node, string)")
+        static RubyString plainString(Node node, RubyString string,
+                @Cached RubyStringLibrary libString,
+                @Cached TruffleString.AsTruffleStringNode asTruffleStringNode) {
+            final RubyEncoding encoding = libString.getEncoding(node, string);
+            final TruffleString tstring = asTruffleStringNode.execute(string.tstring, encoding.tencoding);
+            final RubyString copy = new RubyString(
+                    coreLibrary(node).stringClass,
+                    getLanguage(node).frozenStringShape,
+                    tstring,
+                    encoding);
+            AllocationTracing.trace(copy, node);
+            return copy;
+        }
+
+        @Specialization(guards = "!isPlainString(node, string)")
+        static RubyString dupAndFreeze(Node node, RubyString string,
+                @Cached DispatchNode dupNode,
+                @Cached DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
+            final RubyString copy = (RubyString) dupNode.call(string, "dup");
+            setShapeFlagsNode.executeAdd(copy, Layouts.FROZEN_FLAG);
+            return copy;
+        }
+
+        static boolean isPlainString(Node node, RubyString string) {
+            return string.getShape() == getLanguage(node).stringShape &&
+                    string.getMetaClass() == coreLibrary(node).stringClass;
+        }
+    }
+
+    /** Returns a frozen String with the same contents and class: the String itself if it is already frozen, otherwise a
+     * frozen copy. Similar to rb_str_new_frozen() in CRuby. */
+    @GenerateUncached
+    @GenerateInline
+    @GenerateCached(false)
+    public abstract static class ToFrozenStringNode extends RubyBaseNode {
+
+        public abstract Object execute(Node node, Object string);
+
+        @Specialization
+        static ImmutableRubyString immutable(ImmutableRubyString string) {
+            return string;
+        }
+
+        @Specialization
+        static RubyString rubyString(Node node, RubyString string,
+                @Cached DynamicObject.GetShapeFlagsNode getShapeFlagsNode,
+                @Cached InlinedConditionProfile frozenProfile,
+                @Cached FrozenCopyNode frozenCopyNode) {
+            if (frozenProfile.profile(node, (getShapeFlagsNode.execute(string) & Layouts.FROZEN_FLAG) != 0)) {
+                return string;
+            } else {
+                return frozenCopyNode.execute(node, string);
+            }
         }
     }
 

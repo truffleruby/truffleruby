@@ -372,6 +372,10 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     public final Shape sourceLocationShape = createShape(RubySourceLocation.class);
     public final Shape sourceRangeShape = createShape(RubySourceRange.class);
     public final Shape stringShape = createShape(RubyString.class);
+    public final Shape frozenStringShape = Shape
+            .newBuilder(stringShape)
+            .shapeFlags(Layouts.FROZEN_FLAG)
+            .build();
     public final Shape syntaxErrorShape = createShape(RubySyntaxError.class);
     public final Shape systemCallErrorShape = createShape(RubySystemCallError.class);
     public final Shape systemExitShape = createShape(RubySystemExit.class);
