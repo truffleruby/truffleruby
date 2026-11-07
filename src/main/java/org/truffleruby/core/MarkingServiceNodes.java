@@ -67,7 +67,7 @@ public abstract class MarkingServiceNodes {
 
         @NonIdempotent
         protected static ExtensionCallStack getStack(Node node) {
-            return getLanguage(node).getCurrentThread().getCurrentFiber().extensionCallStack;
+            return getLanguage(node).getCurrentFiber().extensionCallStack;
         }
     }
 
