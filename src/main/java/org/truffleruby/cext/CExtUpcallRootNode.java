@@ -57,10 +57,9 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
     /** The kind of a native value in an upcall signature, from the carrier letters in tool/cext-upcalls.rb */
     public enum Carrier {
         VALUE, // V: a VALUE handle, converted with UnwrapNode/WrapNode
-        WRAPPED, // W: a VALUE result which is already a handle (from Primitive.cext_wrap or from C), passed as-is
         INT, // I
         BOOL, // B: Ruby true/false as int 1/0
-        LONG, // L
+        LONG, // L, also W: a VALUE handle passed through as-is, only distinct from L in the C declaration
         DOUBLE, // D
         POINTER, // P: a raw long address, including function pointers and VALUE arrays
         ID, // Y: converted from/to a Ruby Symbol
@@ -69,7 +68,6 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         static Carrier parse(char carrier) {
             return switch (carrier) {
                 case 'V' -> VALUE;
-                case 'W' -> WRAPPED;
                 case 'I' -> INT;
                 case 'B' -> BOOL;
                 case 'L' -> LONG;
@@ -269,7 +267,7 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
                 case VALUE -> CExtUpcallRootNodeFactory.ValueResultNodeGen.create();
                 case ID -> CExtUpcallRootNodeFactory.IDResultNodeGen.create();
                 case INT -> CExtUpcallRootNodeFactory.IntResultNodeGen.create();
-                case WRAPPED, LONG, POINTER -> CExtUpcallRootNodeFactory.LongResultNodeGen.create();
+                case LONG, POINTER -> CExtUpcallRootNodeFactory.LongResultNodeGen.create();
                 case DOUBLE -> CExtUpcallRootNodeFactory.DoubleResultNodeGen.create();
                 case BOOL -> CExtUpcallRootNodeFactory.BoolResultNodeGen.create();
             };
