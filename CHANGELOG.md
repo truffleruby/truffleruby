@@ -13,6 +13,7 @@ Bug fixes:
 * Fix `rb_range_beg_len()` raising `TypeError` for beginless and endless ranges (#4487, @nirvdrum, @eregon).
 * Fix `TCPServer.new` raising `IOError` instead of e.g. `Errno::EAFNOSUPPORT` when `socket(2)` fails for every address, such as an IPv6 address when IPv6 is unavailable (@eregon).
 * Fix parsing of parenthesized patterns in pattern matching like `in [(Symbol | String), *]` (#4497, @eregon).
+* Fix `Module#define_method` and `UnboundMethod#bind` raising `TypeError` for `Kernel#eql?`, `Kernel#object_id` and `Kernel#send` used on a module, and check the method's owner like CRuby (#4479, @eregon).
 
 Compatibility:
 
