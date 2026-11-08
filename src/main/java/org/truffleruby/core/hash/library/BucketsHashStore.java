@@ -228,7 +228,7 @@ public final class BucketsHashStore {
             @Cached @Shared LookupEntryNode lookup,
             @Cached @Exclusive InlinedConditionProfile found,
             @CachedLibrary(limit = "hashStrategyLimit()") @Shared HashStoreLibrary hashes,
-            @Cached @Shared InlinedBranchProfile storeChangedProfile,
+            @Cached @Exclusive InlinedBranchProfile storeChangedProfile,
             @Bind Node node) {
 
         final Entry[] entries = this.entries;
@@ -253,7 +253,7 @@ public final class BucketsHashStore {
             @Cached @Exclusive InlinedConditionProfile appending,
             @Cached @Exclusive InlinedConditionProfile resize,
             @CachedLibrary(limit = "hashStrategyLimit()") @Shared HashStoreLibrary hashes,
-            @Cached @Shared InlinedBranchProfile storeChangedProfile,
+            @Cached @Exclusive InlinedBranchProfile storeChangedProfile,
             @Bind Node node) {
         assert verify(hash);
 
@@ -304,7 +304,7 @@ public final class BucketsHashStore {
             @Cached @Shared LookupEntryNode lookup,
             @Cached @Exclusive InlinedConditionProfile missing,
             @CachedLibrary(limit = "hashStrategyLimit()") @Shared HashStoreLibrary hashes,
-            @Cached @Shared InlinedBranchProfile storeChangedProfile,
+            @Cached @Exclusive InlinedBranchProfile storeChangedProfile,
             @Bind Node node) {
         assert verify(hash);
 
