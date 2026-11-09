@@ -13,6 +13,7 @@ Bug fixes:
 * Fix `rb_range_beg_len()` raising `TypeError` for beginless and endless ranges (#4487, @nirvdrum, @eregon).
 * Fix `TCPServer.new` raising `IOError` instead of e.g. `Errno::EAFNOSUPPORT` when `socket(2)` fails for every address, such as an IPv6 address when IPv6 is unavailable (@eregon).
 * Fix parsing of parenthesized patterns in pattern matching like `in [(Symbol | String), *]` (#4497, @eregon).
+* Fix `Integer#/` and `Integer#div` returning `0` instead of `-1` for bignum operands of different signs when the divisor is larger in magnitude (#4534, @taxor03).
 
 Compatibility:
 

@@ -81,6 +81,13 @@ describe "Integer#div" do
       (10**50).div(-(10**40 + 1)).should == -10000000000
     end
 
+    it "rounds towards negative infinity when divided by a larger bignum" do
+      @bignum.div(@bignum + 1).should == 0
+      @bignum.div(-(@bignum + 1)).should == -1
+      (-@bignum).div(@bignum + 1).should == -1
+      (-@bignum).div(-(@bignum + 1)).should == 0
+    end
+
     it "handles fixnum_min / -1" do
       (fixnum_min / -1).should == -fixnum_min
       (fixnum_min / -1).should > 0

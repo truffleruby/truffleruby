@@ -459,7 +459,7 @@ public abstract class IntegerNodes {
             final BigInteger aBigInt = a.value;
             final BigInteger bBigInt = b.value;
             final BigInteger result = aBigInt.divide(bBigInt);
-            if (result.signum() == -1 && !aBigInt.mod(bBigInt.abs()).equals(BigInteger.ZERO)) {
+            if (aBigInt.signum() != bBigInt.signum() && !aBigInt.mod(bBigInt.abs()).equals(BigInteger.ZERO)) {
                 return fixnumOrBignumNode.execute(this, result.subtract(BigInteger.ONE));
             } else {
                 return fixnumOrBignumNode.execute(this, result);
