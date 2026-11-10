@@ -660,7 +660,7 @@ public abstract class ThreadNodes {
         @SuppressWarnings("truffle-neverdefault") // GR-43642
         @Specialization(limit = "getCacheLimit()")
         static Object call(
-                RubyThread thread, Object wrapper, Object function, Object arg, long unblocker, long unblockerArg,
+                RubyThread thread, Object wrapper, long function, long arg, long unblocker, long unblockerArg,
                 @CachedLibrary("wrapper") InteropLibrary receivers,
                 @Cached TranslateInteropExceptionNode translateInteropExceptionNode,
                 @Bind Node node,
