@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.nodes.Node;
+import org.truffleruby.core.DataObjectFinalizerReference;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.SuppressFBWarnings;
@@ -26,6 +27,7 @@ import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.language.ImmutableRubyObject;
 import org.truffleruby.language.NotProvided;
 import org.truffleruby.language.RubyBaseNode;
+import org.truffleruby.language.RubyDynamicObject;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateUncached;
@@ -101,6 +103,30 @@ public final class ValueWrapperManager {
         }
 
         return block.getWrapper(handle, allowUnregisteredHandle);
+    }
+
+    /** The handle entry of a tagged object handle, which gives the wrapper if the object is alive and, for a data
+     * object, its {@link DataObjectFinalizerReference}. Returns null if the block of the handle is gone (a dead handle)
+     * and throws for an unregistered handle. */
+    public ValueWrapperWeakReference getEntryFromHandleMap(long handle, RubyLanguage language) {
+        assert isTaggedObject(handle);
+        final HandleBlock block = getBlockFromMap(HandleBlock.getBlockIndex(handle), language);
+        if (block == null) {
+            return null;
+        }
+        return block.getEntry(handle);
+    }
+
+    /** For the handle entry of a dead data object whose finalizer did not run yet, returns its
+     * {@link DataObjectFinalizerReference} so the struct RData/RTypedData can still be accessed, see
+     * {@link DataObjectWrapperWeakReference}. Throws for any other dead handle. */
+    @TruffleBoundary
+    public static DataObjectFinalizerReference pendingDataFinalizerOfDeadHandle(ValueWrapperWeakReference entry,
+            long handle) {
+        if (entry instanceof DataObjectWrapperWeakReference dataEntry && !dataEntry.dataFinalizerRef.isFinalized()) {
+            return dataEntry.dataFinalizerRef;
+        }
+        throw CompilerDirectives.shouldNotReachHere("dead handle 0x" + Long.toHexString(handle));
     }
 
     private HandleBlock getBlockFromMap(int index, RubyLanguage language) {
@@ -241,9 +267,12 @@ public final class ValueWrapperManager {
             return getBlockIndex(base);
         }
 
+        private static int getOffset(long handle) {
+            return (int) (handle & OFFSET_MASK) >> ADDRESS_ALIGN_BITS;
+        }
+
         public ValueWrapper getWrapper(long handle, boolean allowUnregisteredHandle) {
-            int offset = (int) (handle & OFFSET_MASK) >> ADDRESS_ALIGN_BITS;
-            ValueWrapperWeakReference reference = wrappers[offset];
+            ValueWrapperWeakReference reference = wrappers[getOffset(handle)];
             if (allowUnregisteredHandle) {
                 return reference == null ? null : reference.get();
             } else {
@@ -253,6 +282,15 @@ public final class ValueWrapperManager {
                 }
                 return reference.get();
             }
+        }
+
+        public ValueWrapperWeakReference getEntry(long handle) {
+            ValueWrapperWeakReference reference = wrappers[getOffset(handle)];
+            if (reference == null) {
+                CompilerDirectives.transferToInterpreterAndInvalidate();
+                throw unregisteredHandle(handle);
+            }
+            return reference;
         }
 
         @TruffleBoundary
@@ -270,9 +308,14 @@ public final class ValueWrapperManager {
             return base + count * Pointer.SIZE;
         }
 
-        public void registerWrapper(ValueWrapper wrapper) {
+        public void registerWrapper(ValueWrapper wrapper, DataObjectFinalizerReference dataFinalizerRef) {
             assert wrapper.handle == nextHandle();
-            wrappers[count] = new ValueWrapperWeakReference(wrapper);
+            if (dataFinalizerRef == null) {
+                wrappers[count] = new ValueWrapperWeakReference(wrapper);
+            } else {
+                wrappers[count] = new DataObjectWrapperWeakReference(wrapper, dataFinalizerRef);
+                dataFinalizerRef.setHandleBlock(this);
+            }
             count++;
         }
 
@@ -289,9 +332,25 @@ public final class ValueWrapperManager {
         }
     }
 
-    public static final class ValueWrapperWeakReference extends WeakReference<ValueWrapper> {
+    /** A handle entry: the weak reference to the wrapper of the object with that handle. Only
+     * {@link DataObjectWrapperWeakReference} extends it, so an {@code instanceof} check on that final class is enough
+     * to tell the entries of data objects apart in partially evaluated code. */
+    public static class ValueWrapperWeakReference extends WeakReference<ValueWrapper> {
         ValueWrapperWeakReference(ValueWrapper referent) {
             super(referent);
+        }
+    }
+
+    /** The handle entry of a data object (T_DATA): the finalizer reference holds the struct RData/RTypedData address
+     * and whether the finalizer ran, so RDATA()/RTYPEDDATA() find the struct without reading hidden variables of the
+     * object, and the handle can still be resolved to the struct once the object is dead but not yet finalized, see
+     * {@link DataObjectFinalizerReference#setHandleBlock}. */
+    public static final class DataObjectWrapperWeakReference extends ValueWrapperWeakReference {
+        public final DataObjectFinalizerReference dataFinalizerRef;
+
+        DataObjectWrapperWeakReference(ValueWrapper referent, DataObjectFinalizerReference dataFinalizerRef) {
+            super(referent);
+            this.dataFinalizerRef = dataFinalizerRef;
         }
     }
 
@@ -313,12 +372,12 @@ public final class ValueWrapperManager {
 
         @Specialization(guards = "!isSharedObject(object)")
         static ValueWrapper createWrapperOnKnownThread(Node node, Object object) {
-            return createWrapper(object, getContext(node), getLanguage(node), false);
+            return createWrapper(object, null, getContext(node), getLanguage(node), false);
         }
 
         @Specialization(guards = "isSharedObject(object)")
         static ValueWrapper createSharedWrapperOnKnownThread(Node node, Object object) {
-            return createWrapper(object, getContext(node), getLanguage(node), true);
+            return createWrapper(object, null, getContext(node), getLanguage(node), true);
         }
 
         @TruffleBoundary
@@ -326,8 +385,16 @@ public final class ValueWrapperManager {
             keepAlive.add(wrapper);
         }
 
-        protected static ValueWrapper createWrapper(Object object, RubyContext context,
-                RubyLanguage language, boolean shared) {
+        /** The wrapper of a data object (T_DATA), linked to its finalizer reference. It is created when the data
+         * finalizer is defined, right before the object is first passed to C, so creating wrappers for other objects
+         * needs no check for data objects. */
+        public static ValueWrapper createDataObjectWrapper(RubyDynamicObject object,
+                DataObjectFinalizerReference dataFinalizerRef, RubyContext context, RubyLanguage language) {
+            return createWrapper(object, dataFinalizerRef, context, language, false);
+        }
+
+        private static ValueWrapper createWrapper(Object object, DataObjectFinalizerReference dataFinalizerRef,
+                RubyContext context, RubyLanguage language, boolean shared) {
             final HandleBlockHolder holder = getBlockHolder(language);
             HandleBlock block;
             if (shared) {
@@ -348,7 +415,7 @@ public final class ValueWrapperManager {
             }
 
             final ValueWrapper wrapper = new ValueWrapper(object, block.nextHandle(), block);
-            block.registerWrapper(wrapper);
+            block.registerWrapper(wrapper, dataFinalizerRef);
             if (context.getOptions().CEXTS_KEEP_HANDLES_ALIVE) {
                 keepAlive(wrapper);
             }

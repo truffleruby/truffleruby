@@ -30,6 +30,8 @@ import org.truffleruby.core.support.TypeNodes;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.ImmutableRubyObject;
 import org.truffleruby.language.NotProvided;
+import org.truffleruby.cext.ValueWrapper;
+import org.truffleruby.cext.ValueWrapperManager.CreateWrapperNode;
 import org.truffleruby.language.RubyDynamicObject;
 import org.truffleruby.language.RubyGuards;
 import org.truffleruby.language.control.RaiseException;
@@ -259,13 +261,27 @@ public abstract class ObjectSpaceNodes {
 
         @Specialization
         Object defineFinalizer(
-                RubyDynamicObject object, long finalizerCFunction, long dataStruct, boolean useCExtLock,
+                RubyDynamicObject object,
+                long finalizerCFunction,
+                long dataStruct,
+                boolean useCExtLock,
+                boolean hasMarkFunction,
                 @Cached DynamicObject.PutNode putNode) {
             DataObjectFinalizerReference newRef = getContext()
                     .getDataObjectFinalizationService()
-                    .addFinalizer(getContext(), object, finalizerCFunction, dataStruct, useCExtLock);
+                    .addFinalizer(getContext(), object, finalizerCFunction, dataStruct, useCExtLock,
+                            hasMarkFunction);
 
             putNode.execute(object, Layouts.DATA_OBJECT_FINALIZER_REF_IDENTIFIER, newRef);
+
+            /* Create the ValueWrapper of the data object now, linked to its DataObjectFinalizerReference: the object is
+             * about to be passed to C (this is called from rb_data_object_wrap() and rb_data_typed_object_wrap() in
+             * cext.rb), so this only moves the creation a bit earlier, and the generic wrapper creation needs no check
+             * for data objects. */
+            final ValueWrapper wrapper = CreateWrapperNode.createDataObjectWrapper(object, newRef, getContext(),
+                    getLanguage());
+            final ValueWrapper existing = object.setValueWrapperIfAbsent(wrapper);
+            assert existing == wrapper : "the data finalizer must be defined before the object is passed to C";
 
             return nil;
         }
