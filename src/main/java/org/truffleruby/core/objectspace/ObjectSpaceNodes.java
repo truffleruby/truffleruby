@@ -259,7 +259,7 @@ public abstract class ObjectSpaceNodes {
 
         @Specialization
         Object defineFinalizer(
-                RubyDynamicObject object, Object finalizerCFunction, Object dataStruct, boolean useCExtLock,
+                RubyDynamicObject object, long finalizerCFunction, long dataStruct, boolean useCExtLock,
                 @Cached DynamicObject.PutNode putNode) {
             DataObjectFinalizerReference newRef = getContext()
                     .getDataObjectFinalizationService()

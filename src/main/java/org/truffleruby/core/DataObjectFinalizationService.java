@@ -71,8 +71,8 @@ public final class DataObjectFinalizationService
     }
 
     @TruffleBoundary
-    public DataObjectFinalizerReference addFinalizer(RubyContext context, Object object, Object finalizerCFunction,
-            Object dataStruct, boolean useCExtLock) {
+    public DataObjectFinalizerReference addFinalizer(RubyContext context, Object object, long finalizerCFunction,
+            long dataStruct, boolean useCExtLock) {
         final DataObjectFinalizerReference newRef = createRef(object, finalizerCFunction, dataStruct, useCExtLock);
 
         add(newRef);
@@ -81,7 +81,7 @@ public final class DataObjectFinalizationService
         return newRef;
     }
 
-    public DataObjectFinalizerReference createRef(Object object, Object finalizerCFunction, Object dataStruct,
+    public DataObjectFinalizerReference createRef(Object object, long finalizerCFunction, long dataStruct,
             boolean useCExtLock) {
         return new DataObjectFinalizerReference(object, processingQueue, this, finalizerCFunction, dataStruct,
                 useCExtLock);

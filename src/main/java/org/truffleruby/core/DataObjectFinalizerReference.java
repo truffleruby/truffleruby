@@ -18,8 +18,10 @@ public final class DataObjectFinalizerReference
         extends
         PhantomProcessingReference<DataObjectFinalizerReference, Object> {
 
-    public final Object finalizerCFunction;
-    public final Object dataStruct;
+    /** The address of the C function freeing the struct */
+    public final long finalizerCFunction;
+    /** The address of the struct RData/RTypedData */
+    public final long dataStruct;
     /** Run a finalizer with or without c-extension lock. It depends on a context where a finalizer was registered. */
     public final boolean useCExtLock;
 
@@ -27,8 +29,8 @@ public final class DataObjectFinalizerReference
             Object object,
             ReferenceQueue<? super Object> queue,
             DataObjectFinalizationService service,
-            Object finalizerCFunction,
-            Object dataStruct,
+            long finalizerCFunction,
+            long dataStruct,
             boolean useCExtLock) {
         super(object, queue, service);
         this.finalizerCFunction = finalizerCFunction;
