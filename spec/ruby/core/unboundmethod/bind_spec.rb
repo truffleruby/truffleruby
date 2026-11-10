@@ -38,6 +38,18 @@ describe "UnboundMethod#bind" do
     Object.instance_method(:instance_of?).bind(BasicObject.new).call(BasicObject).should == true
   end
 
+  it "allows binding a method aliased in a module from a BasicObject method on any object" do
+    mod = Module.new { alias_method :my_equal?, :equal? }
+    obj = BasicObject.new
+    mod.instance_method(:my_equal?).bind(obj).call(obj).should == true
+  end
+
+  it "raises TypeError if the method was aliased in a subclass and the object is only an instance of the superclass" do
+    parent = Class.new { def foo; end }
+    child = Class.new(parent) { alias_method :bar, :foo }
+    -> { child.instance_method(:bar).bind(parent.new) }.should.raise(TypeError)
+  end
+
   it "returns a callable method" do
     obj = UnboundMethodSpecs::Methods.new
     @normal_um.bind(obj).call.should == obj.foo

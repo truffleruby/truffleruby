@@ -89,8 +89,8 @@ public abstract class UnboundMethodNodes {
             if (!canBindMethodToModuleNode
                     .executeCanBindMethodToModule(this, unboundMethod.method, objectMetaClass)) {
                 errorProfile.enter(this);
-                final RubyModule declaringModule = unboundMethod.method.getDeclaringModule();
-                if (RubyGuards.isSingletonClass(declaringModule)) {
+                final RubyModule owner = unboundMethod.method.getOwner();
+                if (RubyGuards.isSingletonClass(owner)) {
                     throw new RaiseException(getContext(), coreExceptions().typeError(
                             "singleton method called for a different object",
                             this));
@@ -98,7 +98,7 @@ public abstract class UnboundMethodNodes {
                     throw new RaiseException(getContext(), coreExceptions().typeError(
                             Utils.concat(
                                     "bind argument must be an instance of ",
-                                    declaringModule.fields.getName()),
+                                    owner.fields.getName()),
                             this));
                 }
             }

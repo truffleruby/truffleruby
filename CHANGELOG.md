@@ -14,6 +14,7 @@ Bug fixes:
 * Fix `TCPServer.new` raising `IOError` instead of e.g. `Errno::EAFNOSUPPORT` when `socket(2)` fails for every address, such as an IPv6 address when IPv6 is unavailable (@eregon).
 * Fix parsing of parenthesized patterns in pattern matching like `in [(Symbol | String), *]` (#4497, @eregon).
 * Fix `Integer#/` and `Integer#div` returning `0` instead of `-1` for bignum operands of different signs when the divisor is larger in magnitude (#4534, @taxor03).
+* Fix `Module#define_method` and `UnboundMethod#bind` raising `TypeError` for `Kernel#eql?`, `Kernel#object_id` and `Kernel#send` used on a module, and check the method's owner like CRuby (#4479, @eregon).
 
 Compatibility:
 
