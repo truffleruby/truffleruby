@@ -1656,7 +1656,7 @@ public abstract class CExtNodes {
     public abstract static class RbTrMbcCaseFoldNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        static Object rbTrEncMbcCaseFold(int flags, Object string, RubyProc advance, Object p,
+        static Object rbTrEncMbcCaseFold(int flags, Object string, RubyProc advance, long p,
                 @Cached RubyStringLibrary strings,
                 @Cached CallBlockNode callBlockNode,
                 @Cached TruffleString.FromByteArrayNode fromByteArrayNode,
