@@ -3240,17 +3240,6 @@ public abstract class CExtUpcallTargets {
         }
     }
 
-    private static final int INDEX_rb_gc_mark = nextUpcallIndex++;
-
-    @CExtUpcall
-    public static void upcall_rb_gc_mark(long v0) {
-        try {
-            runtime.upcall(INDEX_rb_gc_mark, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-        }
-    }
-
     private static final int INDEX_rb_gc_register_address = nextUpcallIndex++;
 
     @CExtUpcall
@@ -5392,6 +5381,17 @@ public abstract class CExtUpcallTargets {
         }
     }
 
+    private static final int INDEX_rb_tr_gc_mark_values = nextUpcallIndex++;
+
+    @CExtUpcall
+    public static void upcall_rb_tr_gc_mark_values(long v0, long v1) {
+        try {
+            runtime.upcall(INDEX_rb_tr_gc_mark_values, v0, v1);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+        }
+    }
+
     private static final int INDEX_rb_tr_io_create_and_attach_pointer = nextUpcallIndex++;
 
     @CExtUpcall
@@ -6047,7 +6047,6 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_gc_disable", "L()", "cext", "rb_gc_disable", "V", "",
             "upcall_rb_gc_enable", "L()", "cext", "rb_gc_enable", "V", "",
             "upcall_rb_gc_latest_gc_info", "L(L)", "cext", "rb_gc_latest_gc_info", "V", "V",
-            "upcall_rb_gc_mark", "V(L)", "cext", "rb_gc_mark", "O", "L",
             "upcall_rb_gc_register_address", "V(L)", "cext", "rb_gc_register_address", "O", "P",
             "upcall_rb_gc_register_mark_object", "V(L)", "cext", "rb_gc_register_mark_object", "O", "L",
             "upcall_rb_gc_unregister_address", "V(L)", "cext", "rb_gc_unregister_address", "O", "P",
@@ -6228,6 +6227,7 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_tr_enc_mbc_case_fold", "L(ILLL)", "cext", "rb_tr_enc_mbc_case_fold", "V", "IVPP",
             "upcall_rb_tr_flags", "I(L)", "cext", "rb_tr_flags", "I", "V",
             "upcall_rb_tr_gc_guard", "V(L)", "cext", "rb_tr_gc_guard", "O", "L",
+            "upcall_rb_tr_gc_mark_values", "V(LL)", "cext", "rb_tr_gc_mark_values", "O", "PL",
             "upcall_rb_tr_io_create_and_attach_pointer", "L(LL)", "cext", "rb_tr_io_create_and_attach_pointer", "P", "VL",
             "upcall_rb_tr_io_pointer", "L(L)", "cext", "rb_tr_io_pointer", "P", "V",
             "upcall_rb_tr_log_warning", "V(L)", "cext", "rb_tr_log_warning", "O", "V",

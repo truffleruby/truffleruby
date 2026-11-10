@@ -34,6 +34,9 @@
 extern void rb_tr_set_default_alloc_func(VALUE klass, rb_alloc_func_t func);
 extern VALUE rb_tr_default_alloc_func(VALUE klass);
 
+// Run the mark function of a data object, see gc.c
+void rb_tr_run_marker(RUBY_DATA_FUNC dmark, void *data);
+
 // Create a native MutableTruffleString from ptr and len without copying.
 // The returned RubyString is only valid as long as ptr is valid (typically only as long as the caller is on the stack),
 // so this must be only used as an argument to an internal Truffle::CExt method which does not return or store

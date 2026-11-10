@@ -36,6 +36,7 @@ Performance:
 * `TracePoint` blocks now receive a new `TracePoint` object per event holding the event data instead of the `TracePoint` itself, which lets the compiler avoid materializing the traced frame (@eregon).
 * Reduce C extension overhead for ID-based C API calls such as `rb_funcall()`, `rb_ivar_get()`, and `rb_block_call()` by avoiding a separate `ID2SYM()` upcall (@nirvdrum).
 * Enabling or disabling a `:class` `TracePoint` no longer invalidates compiled code and no longer uses Truffle instrumentation, which also reduces memory footprint (#2371, @eregon).
+* C extension mark functions now pass the objects they mark with `rb_gc_mark()` to Ruby in a single upcall instead of one upcall per object, which makes Nokogiri node traversal ~10% faster (@nirvdrum).
 
 Incompatible Changes:
 
