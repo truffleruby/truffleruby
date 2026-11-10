@@ -437,14 +437,7 @@ public abstract class IntegerNodes {
             if (b == 0) {
                 throw new RaiseException(getContext(), coreExceptions().zeroDivisionError(this));
             }
-            final BigInteger bBigInt = BigInteger.valueOf(b);
-            final BigInteger aBigInt = a.value;
-            final BigInteger result = aBigInt.divide(bBigInt);
-            if (result.signum() == -1 && !aBigInt.mod(bBigInt.abs()).equals(BigInteger.ZERO)) {
-                return fixnumOrBignumNode.execute(this, result.subtract(BigInteger.ONE));
-            } else {
-                return fixnumOrBignumNode.execute(this, result);
-            }
+            return fixnumOrBignumNode.execute(this, floorDivide(a.value, BigInteger.valueOf(b)));
         }
 
         @Specialization
@@ -456,13 +449,22 @@ public abstract class IntegerNodes {
         @Specialization
         Object div(RubyBignum a, RubyBignum b,
                 @Cached @Shared FixnumOrBignumNode fixnumOrBignumNode) {
-            final BigInteger aBigInt = a.value;
-            final BigInteger bBigInt = b.value;
-            final BigInteger result = aBigInt.divide(bBigInt);
-            if (aBigInt.signum() != bBigInt.signum() && !aBigInt.mod(bBigInt.abs()).equals(BigInteger.ZERO)) {
-                return fixnumOrBignumNode.execute(this, result.subtract(BigInteger.ONE));
+            return fixnumOrBignumNode.execute(this, floorDivide(a.value, b.value));
+        }
+
+        /** BigInteger#divide truncates, so when the signs differ and the division is inexact the quotient needs to be
+         * adjusted, like in GeneralDivModNode. The remainder is only needed when the signs differ, and then
+         * divideAndRemainder() computes both with a single division. */
+        private static BigInteger floorDivide(BigInteger a, BigInteger b) {
+            if (a.signum() == b.signum()) {
+                return a.divide(b);
+            }
+
+            final BigInteger[] quotientAndRemainder = a.divideAndRemainder(b);
+            if (quotientAndRemainder[1].signum() != 0) {
+                return quotientAndRemainder[0].subtract(BigInteger.ONE);
             } else {
-                return fixnumOrBignumNode.execute(this, result);
+                return quotientAndRemainder[0];
             }
         }
 
@@ -593,12 +595,8 @@ public abstract class IntegerNodes {
                 @Cached @Shared FixnumOrBignumNode fixnumOrBignumNode) {
             if (b == 0) {
                 throw new RaiseException(getContext(), coreExceptions().zeroDivisionError(this));
-            } else if (b < 0) {
-                final BigInteger bigint = BigInteger.valueOf(b);
-                final BigInteger mod = a.value.mod(bigint.negate());
-                return fixnumOrBignumNode.execute(this, mod.add(bigint));
             }
-            return fixnumOrBignumNode.execute(this, a.value.mod(BigInteger.valueOf(b)));
+            return fixnumOrBignumNode.execute(this, floorMod(a.value, BigInteger.valueOf(b)));
         }
 
         @TruffleBoundary // exception throw + BigInteger
@@ -621,15 +619,18 @@ public abstract class IntegerNodes {
         @Specialization
         Object mod(RubyBignum a, RubyBignum b,
                 @Cached @Shared FixnumOrBignumNode fixnumOrBignumNode) {
-            final BigInteger bigint = b.value;
-            final int compare = bigint.compareTo(BigInteger.ZERO);
-            if (compare == 0) {
-                throw new RaiseException(getContext(), coreExceptions().zeroDivisionError(this));
-            } else if (compare < 0) {
-                final BigInteger mod = a.value.mod(bigint.negate());
-                return fixnumOrBignumNode.execute(this, mod.add(bigint));
+            return fixnumOrBignumNode.execute(this, floorMod(a.value, b.value));
+        }
+
+        /** BigInteger#remainder has the sign of the dividend, so when it is non-zero and its sign differs from the
+         * divisor's it needs to be adjusted, like in GeneralDivModNode. */
+        private static BigInteger floorMod(BigInteger a, BigInteger b) {
+            final BigInteger remainder = a.remainder(b);
+            if (remainder.signum() != 0 && remainder.signum() != b.signum()) {
+                return remainder.add(b);
+            } else {
+                return remainder;
             }
-            return fixnumOrBignumNode.execute(this, a.value.mod(b.value));
         }
 
         @Specialization(guards = "!isRubyNumber(b)")

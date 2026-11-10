@@ -16,6 +16,8 @@ Bug fixes:
 * Fix `Integer#/` and `Integer#div` returning `0` instead of `-1` for bignum operands of different signs when the divisor is larger in magnitude (#4534, @taxor03).
 * Fix `Module#define_method` and `UnboundMethod#bind` raising `TypeError` for `Kernel#eql?`, `Kernel#object_id` and `Kernel#send` used on a module, and check the method's owner like CRuby (#4479, @eregon).
 * Fix a `dead handle` internal error when the free function of a C extension data object accesses `RDATA()`/`RTYPEDDATA()` of a dead data object not yet freed (including itself), as the `markly` gem does (@eregon).
+* Fix `Integer#%` returning the divisor instead of `0` for a bignum receiver which is a multiple of a negative divisor (@eregon).
+* Fix `Integer#pow(exponent, modulus)` returning the modulus instead of `0` when the power is a multiple of a negative modulus which fits in 32 bits (@eregon).
 
 Compatibility:
 

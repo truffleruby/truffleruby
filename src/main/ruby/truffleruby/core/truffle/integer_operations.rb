@@ -60,7 +60,7 @@ module Truffle
         exponent >>= 1
       end
 
-      result -= modulus if negative
+      result -= modulus if negative && result != 0
       result
     end
     Primitive.always_split singleton_class, :modular_exponentiation

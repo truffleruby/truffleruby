@@ -97,6 +97,18 @@ describe "Integer#%" do
       (-(@bignum + 10) % -@bignum).should == -10
     end
 
+    it "returns 0 when self is a multiple of the given argument" do
+      (@bignum % 2).should == 0
+      (@bignum % -2).should == 0
+      (-@bignum % 2).should == 0
+      (-@bignum % -2).should == 0
+
+      ((@bignum * 3) % @bignum).should == 0
+      ((@bignum * 3) % -@bignum).should == 0
+      (-(@bignum * 3) % @bignum).should == 0
+      (-(@bignum * 3) % -@bignum).should == 0
+    end
+
     it "raises a ZeroDivisionError when the given argument is 0" do
       -> { @bignum % 0 }.should.raise(ZeroDivisionError)
       -> { -@bignum % 0 }.should.raise(ZeroDivisionError)
