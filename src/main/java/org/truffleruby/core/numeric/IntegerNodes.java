@@ -595,12 +595,8 @@ public abstract class IntegerNodes {
                 @Cached @Shared FixnumOrBignumNode fixnumOrBignumNode) {
             if (b == 0) {
                 throw new RaiseException(getContext(), coreExceptions().zeroDivisionError(this));
-            } else if (b < 0) {
-                final BigInteger bigint = BigInteger.valueOf(b);
-                final BigInteger mod = a.value.mod(bigint.negate());
-                return fixnumOrBignumNode.execute(this, mod.add(bigint));
             }
-            return fixnumOrBignumNode.execute(this, a.value.mod(BigInteger.valueOf(b)));
+            return fixnumOrBignumNode.execute(this, floorMod(a.value, BigInteger.valueOf(b)));
         }
 
         @TruffleBoundary // exception throw + BigInteger
@@ -623,15 +619,18 @@ public abstract class IntegerNodes {
         @Specialization
         Object mod(RubyBignum a, RubyBignum b,
                 @Cached @Shared FixnumOrBignumNode fixnumOrBignumNode) {
-            final BigInteger bigint = b.value;
-            final int compare = bigint.compareTo(BigInteger.ZERO);
-            if (compare == 0) {
-                throw new RaiseException(getContext(), coreExceptions().zeroDivisionError(this));
-            } else if (compare < 0) {
-                final BigInteger mod = a.value.mod(bigint.negate());
-                return fixnumOrBignumNode.execute(this, mod.add(bigint));
+            return fixnumOrBignumNode.execute(this, floorMod(a.value, b.value));
+        }
+
+        /** BigInteger#remainder has the sign of the dividend, so when it is non-zero and its sign differs from the
+         * divisor's it needs to be adjusted, like in GeneralDivModNode. */
+        private static BigInteger floorMod(BigInteger a, BigInteger b) {
+            final BigInteger remainder = a.remainder(b);
+            if (remainder.signum() != 0 && remainder.signum() != b.signum()) {
+                return remainder.add(b);
+            } else {
+                return remainder;
             }
-            return fixnumOrBignumNode.execute(this, a.value.mod(b.value));
         }
 
         @Specialization(guards = "!isRubyNumber(b)")

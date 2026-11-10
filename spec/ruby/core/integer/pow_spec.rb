@@ -29,6 +29,16 @@ describe "Integer#pow" do
       -2.pow(5, -12).should == -8
     end
 
+    it "returns 0 when self raised to the given power is a multiple of a negative modulus" do
+      2.pow(3, -2).should == 0
+      2.pow(3, -8).should == 0
+      -2.pow(3, -8).should == 0
+      6.pow(2, -12).should == 0
+      2.pow(3, -1).should == 0
+      2.pow(0, -1).should == 0
+      2.pow(70, -(2**64)).should == 0
+    end
+
     it "ensures all arguments are integers" do
       -> { 2.pow(5, 12.0) }.should.raise(TypeError, /2nd argument not allowed unless all arguments are integers/)
       -> { 2.pow(5, Rational(12, 1)) }.should.raise(TypeError, /2nd argument not allowed unless all arguments are integers/)
