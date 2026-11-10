@@ -64,7 +64,6 @@ The following standard libraries are unsupported:
 * `debug`: it relies on `RubyVM::InstructionSequence`, use the [VSCode extension](https://www.graalvm.org/tools/vscode/graalvm-extension/polyglot-runtime/#debugging-ruby) or [`--inspect`](tools.md) instead
 * `io/console`: partially implemented
 * `io/wait`: partially implemented
-* `pty`: could be implemented in the future
 
 TruffleRuby provides its own backend implementation for the `ffi` gem, similar to JRuby.
 This should be completely transparent and behave the same as on MRI.

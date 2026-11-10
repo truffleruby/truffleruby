@@ -107,6 +107,20 @@ module Truffle
       end
     end
 
+    # Like Process.spawn, but the child is the leader of a new session, with the given tty as
+    # its controlling terminal and as its stdin, stdout and stderr. Used by PTY.spawn.
+    def self.spawn_with_controlling_terminal(tty, *args)
+      exe = Execute.new
+      begin
+        exe.parse(*args)
+        exe.controlling_terminal(tty)
+        exe.spawn_setup(false)
+        exe.spawn
+      ensure
+        exe.close_files
+      end
+    end
+
     def self.nanoseconds_to_unit(nanoseconds, unit)
       case unit # ordered by expected frequency
       when :float_second, nil
@@ -314,6 +328,14 @@ module Truffle
             raise ArgumentError, "unknown exec option: #{key.inspect}"
           end
         end
+      end
+
+      def controlling_terminal(tty)
+        fd = tty.fileno
+        redirect 0, fd
+        redirect 1, fd
+        redirect 2, fd
+        @options[:ctty] = true
       end
 
       def redirect(child_fd, parent_fd)
@@ -539,6 +561,7 @@ module Truffle
         pgroup = -1
         fds_to_close = []
         chdir = nil
+        ctty = false
 
         options.each_pair do |key, value|
           case key
@@ -570,18 +593,21 @@ module Truffle
             chdir = value
           when :fds_to_close
             value.each { |fd| fds_to_close << fd }
+          when :ctty
+            ctty = value
           else
             raise "Unknown spawn option: #{key}"
           end
         end
 
-        use_helper = chdir || @add_to_env['PATH']
+        use_helper = chdir || ctty || @add_to_env['PATH']
         if use_helper
-          # Go through spawn-helper to change the working dir and then execve()
+          # Go through spawn-helper to change the working dir and/or
+          # start a new session with a controlling terminal, and then execve()
           spawn_helper = "#{Truffle::Boot.ruby_home}/lib/truffle/spawn-helper"
           raise "#{spawn_helper} does not exist!" unless File.exist?(spawn_helper)
           cwd = chdir || Dir.pwd
-          args = [spawn_helper, cwd, command, *args]
+          args = [spawn_helper, ctty ? 'ctty' : '-', cwd, command, *args]
           command = spawn_helper
         end
 

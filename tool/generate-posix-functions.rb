@@ -97,6 +97,7 @@ attach_function :mkfifo, [:string, :mode_t], :int
 attach_function :mmap, [:pointer, :size_t, :int, :int, :int, :off_t], :pointer
 attach_function :munmap, [:pointer, :size_t], :int
 attach_function :truffleposix_open, [:string, :int, :mode_t], :int, method_name: :open
+attach_function :truffleposix_openpty, [:pointer, :pointer, :int], :int
 attach_function :opendir, [:string], :pointer
 attach_function :pipe, [:pointer], :int
 attach_function :read, [:int, :pointer, :size_t], :ssize_t, blocking: true

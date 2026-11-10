@@ -11,17 +11,33 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 
+/* Performs the setup that posix_spawn() cannot do between fork() and exec(), and then execs the given command.
+ * The mode is either "ctty", to start a new session with stdin as its controlling terminal (for PTY.spawn), or "-". */
 int main(int argc, char* argv[]) {
-    if (argc < 4) {
-        fprintf(stderr, "Usage: %s working_directory executable argv0 args...\n", argv[0]);
+    if (argc < 5) {
+        fprintf(stderr, "Usage: %s (ctty|-) working_directory executable argv0 args...\n", argv[0]);
         return EXIT_FAILURE;
     }
 
-    char* working_directory = argv[1];
-    char* executable = argv[2];
-    argv += 3;
+    char* mode = argv[1];
+    char* working_directory = argv[2];
+    char* executable = argv[3];
+    argv += 4;
+
+    if (strcmp(mode, "ctty") == 0) {
+        if (setsid() == -1) {
+            perror("setsid");
+            return EXIT_FAILURE;
+        }
+        if (ioctl(STDIN_FILENO, TIOCSCTTY, 0) == -1) {
+            perror("ioctl(TIOCSCTTY)");
+            return EXIT_FAILURE;
+        }
+    }
 
     int r = chdir(working_directory);
     if (r != 0) {
