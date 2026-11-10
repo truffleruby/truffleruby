@@ -1165,14 +1165,6 @@ static inline void rb_tr_up_make_binary_if_not_ascii_only(VALUE v0) {
   }
 }
 
-extern void (*rb_tr_up_impl_mark_object_on_call_exit)(VALUE v0);
-static inline void rb_tr_up_mark_object_on_call_exit(VALUE v0) {
-  rb_tr_up_impl_mark_object_on_call_exit(v0);
-  if (UNLIKELY(rb_tr_pending_exception)) {
-    rb_tr_longjmp_from_java_exception();
-  }
-}
-
 extern int (*rb_tr_up_impl_rb_2scomp_bit_length)(VALUE v0);
 static inline int rb_tr_up_rb_2scomp_bit_length(VALUE v0) {
   int result = rb_tr_up_impl_rb_2scomp_bit_length(v0);

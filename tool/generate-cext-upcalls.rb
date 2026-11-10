@@ -66,18 +66,18 @@ COPYRIGHT = <<~COPYRIGHT
 COPYRIGHT
 
 C_TYPES = {
-  'V' => 'VALUE', 'W' => 'VALUE', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
+  'V' => 'VALUE', 'T' => 'VALUE', 'W' => 'VALUE', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
   'P' => 'void *', 'Y' => 'ID', 'O' => 'void'
 }.freeze
 
 JAVA_TYPES = {
-  'V' => 'long', 'W' => 'long', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
+  'V' => 'long', 'T' => 'long', 'W' => 'long', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
   'P' => 'long', 'Y' => 'long', 'O' => 'void'
 }.freeze
 
 # Carrier letters for FFM FunctionDescriptors (FFMSupport carrier signature format)
 FFM_CARRIERS = {
-  'V' => 'L', 'W' => 'L', 'I' => 'I', 'B' => 'I', 'L' => 'L', 'D' => 'D',
+  'V' => 'L', 'T' => 'L', 'W' => 'L', 'I' => 'I', 'B' => 'I', 'L' => 'L', 'D' => 'D',
   'P' => 'L', 'Y' => 'L', 'O' => 'V'
 }.freeze
 
