@@ -19,6 +19,13 @@ describe "Complex#fdiv" do
     -> { Complex(20).fdiv('s') }.should.raise(TypeError)
   end
 
+  it "returns Float parts" do
+    Complex(11, 22).fdiv(3).should.eql?(Complex(11.fdiv(3), 22.fdiv(3)))
+    Complex(10, 20).fdiv(2).should.eql?(Complex(5.0, 10.0))
+    Complex(1, 2).fdiv(Rational(1, 3)).should.eql?(Complex(3.0, 6.0))
+    Complex(-30, 40).fdiv(Complex(1, 2)).should.eql?(Complex(10.0, 20.0))
+  end
+
   it "sets the real part to NaN if self's real part is NaN" do
     Complex(nan_value).fdiv(2).real.nan?.should == true
   end

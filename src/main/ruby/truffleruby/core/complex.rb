@@ -117,7 +117,8 @@ class Complex < Numeric
     if Primitive.is_a?(other, Complex)
       self * other.conjugate / other.abs2
     elsif Primitive.is_a?(other, Numeric) && other.real?
-      Complex(real.quo(other), imag.quo(other))
+      Complex(Truffle::ComplexOperations.canonicalize_rational(real.quo(other)),
+              Truffle::ComplexOperations.canonicalize_rational(imag.quo(other)))
     else
       redo_coerced(:quo, other)
     end
@@ -313,7 +314,11 @@ class Complex < Numeric
     raise TypeError, "#{Primitive.class(other)} can't be coerced into Complex" unless Primitive.is_a?(other, Numeric)
 
     # FIXME
-    self / other
+    if Primitive.is_a?(other, Complex)
+      (self * other.conjugate).fdiv(other.abs2)
+    else
+      Complex(real.fdiv(other), imag.fdiv(other))
+    end
   end
 
   private def marshal_dump
