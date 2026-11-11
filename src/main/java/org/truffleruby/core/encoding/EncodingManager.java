@@ -204,10 +204,11 @@ public final class EncodingManager {
         }
     }
 
-    // Should only be used by Primitive.encoding_get_encoding_by_index
+    // Should only be used by Primitive.encoding_get_encoding_by_index.
     @SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
     RubyEncoding getRubyEncoding(int encodingIndex) {
-        return ENCODING_LIST_BY_ENCODING_INDEX[encodingIndex];
+        final RubyEncoding[] encodings = ENCODING_LIST_BY_ENCODING_INDEX;
+        return encodingIndex >= 0 && encodingIndex < encodings.length ? encodings[encodingIndex] : null;
     }
 
     @TruffleBoundary

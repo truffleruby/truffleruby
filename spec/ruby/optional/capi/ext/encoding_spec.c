@@ -128,7 +128,8 @@ static VALUE encoding_spec_rb_enc_isspace(VALUE self, VALUE chr, VALUE encoding)
 }
 
 static VALUE encoding_spec_rb_enc_from_index(VALUE self, VALUE index) {
-  return rb_str_new2(rb_enc_from_index(NUM2INT(index))->name);
+  rb_encoding *enc = rb_enc_from_index(NUM2INT(index));
+  return enc ? rb_str_new2(enc->name) : Qnil;
 }
 
 static VALUE encoding_spec_rb_enc_mbmaxlen(VALUE self, VALUE encoding) {

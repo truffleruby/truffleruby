@@ -50,6 +50,7 @@ Compatibility:
 * `Complex#fdiv` now returns Float parts, like CRuby (#4547, @taxor03).
 * Implement `ENV.fetch_values` from Ruby 4.1 (@makmic, @edcarvio, @composerinteralia).
 * Define `Enumerator::Lazy#each_with_index` on `Enumerator::Lazy` like CRuby 4.0.10 (@eregon).
+* `rb_enc_from_index` now returns `NULL` for an index without an encoding instead of crashing (@nirvdrum).
 
 Performance:
 
