@@ -117,12 +117,26 @@ class Complex < Numeric
     if Primitive.is_a?(other, Complex)
       self * other.conjugate / other.abs2
     elsif Primitive.is_a?(other, Numeric) && other.real?
-      Complex(real.quo(other), imag.quo(other))
+      Complex(Truffle::ComplexOperations.canonicalize_rational(real.quo(other)),
+              Truffle::ComplexOperations.canonicalize_rational(imag.quo(other)))
     else
       redo_coerced(:quo, other)
     end
   end
   alias_method :quo, :/
+
+  # Like #/, but keeps Rational parts with a denominator of 1.
+  # Used by #fdiv and #**, which do not follow CRuby's conversions yet.
+  private def divide_keeping_rationals(other)
+    if Primitive.is_a?(other, Complex)
+      (self * other.conjugate).__send__(:divide_keeping_rationals, other.abs2)
+    elsif Primitive.is_a?(other, Numeric) && other.real?
+      Complex(real.quo(other), imag.quo(other))
+    else
+      b, a = math_coerce(other)
+      Primitive.is_a?(a, Complex) ? a.__send__(:divide_keeping_rationals, b) : a.quo(b)
+    end
+  end
 
   def ** (other)
     if !Primitive.is_a?(other, Float) && other == 0
@@ -151,7 +165,8 @@ class Complex < Numeric
         z
       else
         if defined? Rational
-          (Rational.__send__(:new_already_canonical, 1, 1) / self) ** -other
+          one = Complex.new(Rational.__send__(:new_already_canonical, 1, 1), 0)
+          one.__send__(:divide_keeping_rationals, self) ** -other
         else
           self ** Float(other)
         end
@@ -313,7 +328,7 @@ class Complex < Numeric
     raise TypeError, "#{Primitive.class(other)} can't be coerced into Complex" unless Primitive.is_a?(other, Numeric)
 
     # FIXME
-    self / other
+    divide_keeping_rationals(other)
   end
 
   private def marshal_dump
