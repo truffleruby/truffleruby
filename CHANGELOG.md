@@ -18,6 +18,7 @@ Bug fixes:
 * Fix a `dead handle` internal error when the free function of a C extension data object accesses `RDATA()`/`RTYPEDDATA()` of a dead data object not yet freed (including itself), as the `markly` gem does (@eregon).
 * Fix `Integer#%` returning the divisor instead of `0` for a bignum receiver which is a multiple of a negative divisor (@eregon).
 * Fix `Integer#pow(exponent, modulus)` returning the modulus instead of `0` when the power is a multiple of a negative modulus which fits in 32 bits (@eregon).
+* Fix `Data#with` on an instance of a subclass of a `Data.define` class to return an instance of that subclass and call its `#initialize` (#4541, @taxor03).
 
 Compatibility:
 
