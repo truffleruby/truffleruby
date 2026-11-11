@@ -39,6 +39,7 @@ Performance:
 * `TracePoint` blocks now receive a new `TracePoint` object per event holding the event data instead of the `TracePoint` itself, which lets the compiler avoid materializing the traced frame (@eregon).
 * Reduce C extension overhead for ID-based C API calls such as `rb_funcall()`, `rb_ivar_get()`, and `rb_block_call()` by avoiding a separate `ID2SYM()` upcall (@nirvdrum).
 * Enabling or disabling a `:class` `TracePoint` no longer invalidates compiled code and no longer uses Truffle instrumentation, which also reduces memory footprint (#2371, @eregon).
+* Store encoding properties in the native `rb_encoding` structs to reduce upcalls for common encoding operations (@nirvdrum).
 
 Incompatible Changes:
 

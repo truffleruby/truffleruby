@@ -285,18 +285,6 @@ public abstract class CExtUpcallTargets {
         }
     }
 
-    private static final int INDEX_send0_b_ascii_compatible_p = nextUpcallIndex++;
-
-    @CExtUpcall
-    public static int upcall_send0_b_ascii_compatible_p(long v0) {
-        try {
-            return (int) runtime.upcall(INDEX_send0_b_ascii_compatible_p, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0;
-        }
-    }
-
     private static final int INDEX_send0_b_ascii_only_p = nextUpcallIndex++;
 
     @CExtUpcall
@@ -5787,7 +5775,6 @@ public abstract class CExtUpcallTargets {
             "upcall_send0___allocate__", "L(L)", "send", "__allocate__", "V", "V",
             "upcall_send0_alive_p", "L(L)", "send", "alive?", "V", "V",
             "upcall_send0_ancestors", "L(L)", "send", "ancestors", "V", "V",
-            "upcall_send0_b_ascii_compatible_p", "I(L)", "send", "ascii_compatible?", "B", "V",
             "upcall_send0_b_ascii_only_p", "I(L)", "send", "ascii_only?", "B", "V",
             "upcall_send0_b_dummy_p", "I(L)", "send", "dummy?", "B", "V",
             "upcall_send0_binding", "L(L)", "send", "binding", "V", "V",

@@ -54,7 +54,6 @@ VALUE (*rb_tr_up_impl_ensure_class)(VALUE v0, VALUE v1, VALUE v2);
 VALUE (*rb_tr_up_impl_send0___allocate__)(VALUE v0);
 VALUE (*rb_tr_up_impl_send0_alive_p)(VALUE v0);
 VALUE (*rb_tr_up_impl_send0_ancestors)(VALUE v0);
-int (*rb_tr_up_impl_send0_b_ascii_compatible_p)(VALUE v0);
 int (*rb_tr_up_impl_send0_b_ascii_only_p)(VALUE v0);
 int (*rb_tr_up_impl_send0_b_dummy_p)(VALUE v0);
 VALUE (*rb_tr_up_impl_send0_binding)(VALUE v0);
@@ -538,7 +537,6 @@ void rb_tr_init_ffm_upcalls(void **upcalls) {
   rb_tr_up_impl_send0___allocate__ = (VALUE (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_send0_alive_p = (VALUE (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_send0_ancestors = (VALUE (*)(VALUE v0)) upcalls[i++];
-  rb_tr_up_impl_send0_b_ascii_compatible_p = (int (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_send0_b_ascii_only_p = (int (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_send0_b_dummy_p = (int (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_send0_binding = (VALUE (*)(VALUE v0)) upcalls[i++];

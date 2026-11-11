@@ -99,7 +99,7 @@ module Truffle::CExt
           # The name is stored in the native rb_encoding struct, so it must be converted to native first.
           # The name String is kept alive by the Encoding object.
           name = Primitive.cext_invoke_l_l(RSTRING_PTR_FUNCTION, Primitive.cext_wrap(encoding.name))
-          Primitive.cext_invoke_v_ll(SETUP_ENCODING_FUNCTION, index, name)
+          Primitive.cext_invoke_v_lll(SETUP_ENCODING_FUNCTION, index, name, Primitive.cext_wrap(encoding))
           RB_ENCODING_INITIALIZED[index] = true
         end
       end
