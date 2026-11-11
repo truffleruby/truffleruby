@@ -211,7 +211,6 @@ class Socket < BasicSocket
 
       initial = Truffle::Socket::Foreign::Ifaddrs.new(ptr.read_pointer)
       ifaddrs = []
-      index   = 1
 
       begin
         initial.each_address do |ifaddrs_struct|
@@ -222,10 +221,8 @@ class Socket < BasicSocket
             netmask:   ifaddrs_struct.netmask_to_addrinfo,
             name:      ifaddrs_struct.name,
             flags:     ifaddrs_struct.flags,
-            ifindex:   index
+            ifindex:   Truffle::Socket::Foreign.if_nametoindex(ifaddrs_struct.name)
           )
-
-          index += 1
         end
 
         ifaddrs

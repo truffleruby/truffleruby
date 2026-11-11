@@ -94,14 +94,13 @@ module Truffle
         end
 
         def each_address
-          next_pointer = self.next
+          struct = self
 
-          until next_pointer.null?
-            struct = Primitive.class(self).new(next_pointer)
-
+          while struct
             yield struct
 
             next_pointer = struct.next
+            struct = next_pointer.null? ? nil : Primitive.class(self).new(next_pointer)
           end
         end
 

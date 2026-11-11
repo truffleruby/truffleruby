@@ -29,6 +29,12 @@ describe 'Socket.getifaddrs' do
       end
     end
 
+    it 'has the same interface index as the other entries of its interface' do
+      @ifaddrs.group_by(&:name).each_value do |ifaddrs|
+        ifaddrs.map(&:ifindex).uniq.size.should == 1
+      end
+    end
+
     it 'has an interface name' do
       @ifaddrs.each do |ifaddr|
         ifaddr.name.should.instance_of?(String)
