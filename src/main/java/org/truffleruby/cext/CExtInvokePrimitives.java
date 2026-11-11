@@ -692,6 +692,33 @@ public abstract class CExtInvokePrimitives {
         }
     }
 
+    private static final MethodHandle HANDLE_V_LLLLL = FFMSupport.createDowncallHandle("V(LLLLL)");
+
+    @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)
+    private static void invokeV_LLLLL(long function, long a0, long a1, long a2, long a3, long a4) {
+        try {
+            HANDLE_V_LLLLL.invokeExact(function, a0, a1, a2, a3, a4);
+        } catch (Throwable t) {
+            throw CompilerDirectives.shouldNotReachHere(t);
+        }
+    }
+
+    @Primitive(name = "cext_invoke_v_lllll")
+    public abstract static class InvokeV_LLLLLNode extends CExtInvokeNode {
+        @Specialization
+        Object invoke(long function, Object a0, Object a1, Object a2, Object a3, Object a4,
+                @Cached CExtDowncallArgumentNode arg0Node,
+                @Cached CExtDowncallArgumentNode arg1Node,
+                @Cached CExtDowncallArgumentNode arg2Node,
+                @Cached CExtDowncallArgumentNode arg3Node,
+                @Cached CExtDowncallArgumentNode arg4Node,
+                @Cached InlinedBranchProfile exceptionProfile) {
+            invokeV_LLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4));
+            checkPendingException(exceptionProfile);
+            return nil;
+        }
+    }
+
     private static final MethodHandle HANDLE_V_LI = FFMSupport.createDowncallHandle("V(LI)");
 
     @TruffleBoundary(allowInlining = true, transferToInterpreterOnException = false)

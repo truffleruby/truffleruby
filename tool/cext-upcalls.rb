@@ -77,9 +77,7 @@ module CExtUpcalls
     ["send0___allocate__", :send, "V", "V"],
     ["send0_alive_p", :send, "V", "V"],
     ["send0_ancestors", :send, "V", "V"],
-    ["send0_b_ascii_compatible_p", :send, "B", "V"],
     ["send0_b_ascii_only_p", :send, "B", "V"],
-    ["send0_b_dummy_p", :send, "B", "V"],
     ["send0_binding", :send, "V", "V"],
     ["send0_begin", :send, "V", "V"],
     ["send0_binmode", :send, "V", "V"],
@@ -280,8 +278,6 @@ module CExtUpcalls
     ["rb_enc_left_char_head", :cext, "I", "VVL"],
     ["rb_enc_mbc_to_codepoint", :cext, "I", "V"],
     ["rb_enc_mbclen", :cext, "I", "V"],
-    ["rb_enc_mbmaxlen", :cext, "I", "V"],
-    ["rb_enc_mbminlen", :cext, "I", "V"],
     ["rb_enc_precise_mbclen", :cext, "I", "V"],
     ["rb_enc_set_index", :cext, "O", "VI"],
     ["rb_enc_str_coderange", :cext, "I", "V"],
@@ -547,9 +543,7 @@ module CExtUpcalls
     "send0___allocate__" => "__allocate__",
     "send0_alive_p" => "alive?",
     "send0_ancestors" => "ancestors",
-    "send0_b_ascii_compatible_p" => "ascii_compatible?",
     "send0_b_ascii_only_p" => "ascii_only?",
-    "send0_b_dummy_p" => "dummy?",
     "send0_binding" => "binding",
     "send0_begin" => "begin",
     "send0_binmode" => "binmode",
@@ -666,6 +660,7 @@ module CExtUpcalls
     'V(LL)',     # rb_tr_setjmp_wrapper_pointer1_to_void
     'V(LLL)',    # rb_tr_setjmp_wrapper_pointer2_to_void
     'V(LLLL)',   # rb_tr_setjmp_wrapper_pointer3_to_void
+    'V(LLLLL)',  # rb_tr_setup_encoding
     'V(LI)',     # the ONIGENC_MBC_CASE_FOLD advance_p callback
     'I(LLL)',    # rb_tr_setjmp_wrapper_pointer2_to_int
     'I(LLLL)',   # rb_tr_setjmp_wrapper_pointer3_to_int

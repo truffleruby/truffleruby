@@ -101,6 +101,10 @@ static VALUE encoding_spec_rb_enc_copy(VALUE self, VALUE dest, VALUE src) {
   return dest;
 }
 
+static VALUE encoding_spec_rb_enc_asciicompat(VALUE self, VALUE encoding) {
+  return rb_enc_asciicompat(rb_to_encoding(encoding)) ? Qtrue : Qfalse;
+}
+
 static VALUE encoding_spec_rb_enc_dummy_p(VALUE self, VALUE encoding) {
   return rb_enc_dummy_p(rb_to_encoding(encoding)) ? Qtrue : Qfalse;
 }
@@ -125,6 +129,14 @@ static VALUE encoding_spec_rb_enc_isspace(VALUE self, VALUE chr, VALUE encoding)
 
 static VALUE encoding_spec_rb_enc_from_index(VALUE self, VALUE index) {
   return rb_str_new2(rb_enc_from_index(NUM2INT(index))->name);
+}
+
+static VALUE encoding_spec_rb_enc_mbmaxlen(VALUE self, VALUE encoding) {
+  return INT2NUM(rb_enc_mbmaxlen(rb_to_encoding(encoding)));
+}
+
+static VALUE encoding_spec_rb_enc_mbminlen(VALUE self, VALUE encoding) {
+  return INT2NUM(rb_enc_mbminlen(rb_to_encoding(encoding)));
 }
 
 static VALUE encoding_spec_rb_enc_mbc_to_codepoint(VALUE self, VALUE str) {
@@ -337,6 +349,23 @@ static VALUE encoding_spec_ONIGENC_IS_UNICODE(VALUE self, VALUE encoding) {
   return ONIGENC_IS_UNICODE(rb_to_encoding(encoding)) ? Qtrue : Qfalse;
 }
 
+static VALUE encoding_spec_ONIGENC_MBC_MINLEN(VALUE self, VALUE encoding) {
+  return INT2NUM(ONIGENC_MBC_MINLEN(rb_to_encoding(encoding)));
+}
+
+static VALUE encoding_spec_ONIGENC_MBC_MAXLEN(VALUE self, VALUE encoding) {
+  return INT2NUM(ONIGENC_MBC_MAXLEN(rb_to_encoding(encoding)));
+}
+
+static VALUE encoding_spec_rb_enc_str_asciicompat_p(VALUE self, VALUE str) {
+  return rb_enc_str_asciicompat_p(str) ? Qtrue : Qfalse;
+}
+
+static VALUE encoding_spec_rb_must_asciicompat(VALUE self, VALUE str) {
+  rb_must_asciicompat(str);
+  return Qnil;
+}
+
 void Init_encoding_spec(void) {
   VALUE cls;
   native_rb_encoding_pointer = (rb_encoding**) malloc(sizeof(rb_encoding*));
@@ -357,6 +386,7 @@ void Init_encoding_spec(void) {
   rb_define_method(cls, "rb_filesystem_encindex", encoding_spec_rb_filesystem_encindex, 0);
   rb_define_method(cls, "rb_default_internal_encoding", encoding_spec_rb_default_internal_encoding, 0);
   rb_define_method(cls, "rb_default_external_encoding", encoding_spec_rb_default_external_encoding, 0);
+  rb_define_method(cls, "rb_must_asciicompat", encoding_spec_rb_must_asciicompat, 1);
   rb_define_method(cls, "rb_enc_alias", encoding_spec_rb_enc_alias, 2);
   rb_define_method(cls, "MBCLEN_CHARFOUND_P", encoding_spec_MBCLEN_CHARFOUND_P, 1);
   rb_define_method(cls, "rb_enc_associate", encoding_spec_rb_enc_associate, 2);
@@ -366,12 +396,15 @@ void Init_encoding_spec(void) {
   rb_define_method(cls, "rb_enc_copy", encoding_spec_rb_enc_copy, 2);
   rb_define_method(cls, "rb_enc_codelen", encoding_spec_rb_enc_codelen, 2);
   rb_define_method(cls, "rb_enc_strlen", encoding_spec_rb_enc_strlen, 3);
+  rb_define_method(cls, "rb_enc_asciicompat", encoding_spec_rb_enc_asciicompat, 1);
   rb_define_method(cls, "rb_enc_dummy_p", encoding_spec_rb_enc_dummy_p, 1);
   rb_define_method(cls, "rb_enc_find", encoding_spec_rb_enc_find, 1);
   rb_define_method(cls, "rb_enc_find_index", encoding_spec_rb_enc_find_index, 1);
   rb_define_method(cls, "rb_enc_isalnum", encoding_spec_rb_enc_isalnum, 2);
   rb_define_method(cls, "rb_enc_isspace", encoding_spec_rb_enc_isspace, 2);
   rb_define_method(cls, "rb_enc_from_index", encoding_spec_rb_enc_from_index, 1);
+  rb_define_method(cls, "rb_enc_mbmaxlen", encoding_spec_rb_enc_mbmaxlen, 1);
+  rb_define_method(cls, "rb_enc_mbminlen", encoding_spec_rb_enc_mbminlen, 1);
   rb_define_method(cls, "rb_enc_mbc_to_codepoint", encoding_spec_rb_enc_mbc_to_codepoint, 1);
   rb_define_method(cls, "rb_enc_mbcput", encoding_spec_rb_enc_mbcput, 2);
   rb_define_method(cls, "rb_enc_from_encoding", encoding_spec_rb_enc_from_encoding, 1);
@@ -380,6 +413,7 @@ void Init_encoding_spec(void) {
   rb_define_method(cls, "rb_obj_encoding", encoding_spec_rb_obj_encoding, 1);
   rb_define_method(cls, "rb_enc_get_index", encoding_spec_rb_enc_get_index, 1);
   rb_define_method(cls, "rb_enc_set_index", encoding_spec_rb_enc_set_index, 2);
+  rb_define_method(cls, "rb_enc_str_asciicompat_p", encoding_spec_rb_enc_str_asciicompat_p, 1);
   rb_define_method(cls, "rb_enc_str_coderange", encoding_spec_rb_enc_str_coderange, 1);
   rb_define_method(cls, "rb_enc_str_new_cstr", encoding_spec_rb_enc_str_new_cstr, 2);
   rb_define_method(cls, "rb_enc_str_new_cstr_constant", encoding_spec_rb_enc_str_new_cstr_constant, 1);
@@ -400,6 +434,8 @@ void Init_encoding_spec(void) {
   rb_define_method(cls, "rb_enc_left_char_head", encoding_spec_rb_enc_left_char_head, 2);
   rb_define_method(cls, "rb_define_dummy_encoding", encoding_spec_rb_define_dummy_encoding, 1);
   rb_define_method(cls, "ONIGENC_IS_UNICODE", encoding_spec_ONIGENC_IS_UNICODE, 1);
+  rb_define_method(cls, "ONIGENC_MBC_MINLEN", encoding_spec_ONIGENC_MBC_MINLEN, 1);
+  rb_define_method(cls, "ONIGENC_MBC_MAXLEN", encoding_spec_ONIGENC_MBC_MAXLEN, 1);
 }
 
 #ifdef __cplusplus
