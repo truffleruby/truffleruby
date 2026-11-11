@@ -1020,42 +1020,26 @@ module Truffle::CExt
   end
 
   def rb_enc_get(obj)
-    case obj
-    when Encoding
-      obj
-    when Symbol
-      obj.encoding
-    when String
-      obj.encoding
-    when Regexp
-      obj.encoding
-    else
-      obj.instance_variable_get :@encoding
-    end
+    index = rb_enc_get_index(obj)
+    index >= 0 ? rb_enc_from_index(index) : nil
   end
 
   def rb_enc_get_index(obj)
     enc = case obj
-          when Symbol
+          when String, Symbol, Regexp
             obj.encoding
-          when String
-            obj.encoding
-          when Regexp
-            obj.encoding
+          when Encoding
+            obj
           when File
             obj.internal_encoding || obj.external_encoding
           when NilClass, Integer, Float, TrueClass, FalseClass
-            -1
-          # TODO BJF Mar-9-2017 Handle T_DATA
+            nil
           else
-            if obj.instance_variable_defined?(:@encoding)
-              obj.instance_variable_get(:@encoding)
-            else
-              0
-            end
+            # `rb_enc_set_index` stores the encoding of other objects in `@encoding`.
+            obj.instance_variable_get(:@encoding)
           end
-    enc = rb_enc_to_index(enc) if Primitive.is_a?(enc, Encoding)
-    enc
+
+    Primitive.is_a?(enc, Encoding) ? rb_enc_to_index(enc) : -1
   end
 
   def rb_str_append(str, to_append)

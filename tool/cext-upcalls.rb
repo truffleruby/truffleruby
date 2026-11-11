@@ -271,7 +271,6 @@ module CExtUpcalls
     ["rb_enc_find_index", :cext, "I", "V"],
     ["rb_enc_from_index", :cext, "V", "I"],
     ["rb_enc_from_native_encoding", :cext, "V", "L"],
-    ["rb_enc_get", :cext, "V", "V"],
     ["rb_enc_get_index", :cext, "I", "V"],
     ["rb_enc_isalnum", :cext, "B", "IV"],
     ["rb_enc_isspace", :cext, "B", "IV"],

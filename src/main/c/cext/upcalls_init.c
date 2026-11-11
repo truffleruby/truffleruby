@@ -249,7 +249,6 @@ VALUE (*rb_tr_up_impl_rb_enc_coderange_clear)(VALUE v0);
 int (*rb_tr_up_impl_rb_enc_find_index)(VALUE v0);
 VALUE (*rb_tr_up_impl_rb_enc_from_index)(int v0);
 VALUE (*rb_tr_up_impl_rb_enc_from_native_encoding)(long v0);
-VALUE (*rb_tr_up_impl_rb_enc_get)(VALUE v0);
 int (*rb_tr_up_impl_rb_enc_get_index)(VALUE v0);
 int (*rb_tr_up_impl_rb_enc_isalnum)(int v0, VALUE v1);
 int (*rb_tr_up_impl_rb_enc_isspace)(int v0, VALUE v1);
@@ -732,7 +731,6 @@ void rb_tr_init_ffm_upcalls(void **upcalls) {
   rb_tr_up_impl_rb_enc_find_index = (int (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_enc_from_index = (VALUE (*)(int v0)) upcalls[i++];
   rb_tr_up_impl_rb_enc_from_native_encoding = (VALUE (*)(long v0)) upcalls[i++];
-  rb_tr_up_impl_rb_enc_get = (VALUE (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_enc_get_index = (int (*)(VALUE v0)) upcalls[i++];
   rb_tr_up_impl_rb_enc_isalnum = (int (*)(int v0, VALUE v1)) upcalls[i++];
   rb_tr_up_impl_rb_enc_isspace = (int (*)(int v0, VALUE v1)) upcalls[i++];

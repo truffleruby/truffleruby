@@ -315,6 +315,16 @@ describe "C-API Encoding function" do
       str = "abc".encode Encoding::BINARY
       @s.rb_enc_get(str).should == "ASCII-8BIT"
     end
+
+    it "returns the encoding of an Encoding" do
+      @s.rb_enc_get(Encoding::UTF_8).should == "UTF-8"
+    end
+
+    it "returns NULL for an object without an encoding" do
+      @s.rb_enc_get(nil).should == nil
+      @s.rb_enc_get(1).should == nil
+      @s.rb_enc_get(Object.new).should == nil
+    end
   end
 
   describe "rb_enc_precise_mbclen" do
@@ -354,6 +364,10 @@ describe "C-API Encoding function" do
       @s.rb_enc_get_index(:symbol).should >= 0
     end
 
+    it "returns the index of an Encoding" do
+      @s.rb_enc_get_index(Encoding::UTF_8).should == @s.rb_enc_find_index("UTF-8")
+    end
+
     it "returns -1 as the index of nil" do
       @s.rb_enc_get_index(nil).should == -1
     end
@@ -365,6 +379,17 @@ describe "C-API Encoding function" do
     it "returns -1 for an object without an encoding" do
       obj = Object.new
       @s.rb_enc_get_index(obj).should == -1
+    end
+
+    it "returns -1 for a File opened for writing without an encoding" do
+      name = tmp("rb_enc_get_index_spec")
+      begin
+        File.open(name, "w") do |file|
+          @s.rb_enc_get_index(file).should == -1
+        end
+      ensure
+        rm_r name
+      end
     end
   end
 

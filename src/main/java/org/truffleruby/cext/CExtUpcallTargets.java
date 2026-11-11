@@ -2600,18 +2600,6 @@ public abstract class CExtUpcallTargets {
         }
     }
 
-    private static final int INDEX_rb_enc_get = nextUpcallIndex++;
-
-    @CExtUpcall
-    public static long upcall_rb_enc_get(long v0) {
-        try {
-            return (long) runtime.upcall(INDEX_rb_enc_get, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
     private static final int INDEX_rb_enc_get_index = nextUpcallIndex++;
 
     @CExtUpcall
@@ -5970,7 +5958,6 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_enc_find_index", "I(L)", "cext", "rb_enc_find_index", "I", "V",
             "upcall_rb_enc_from_index", "L(I)", "cext", "rb_enc_from_index", "V", "I",
             "upcall_rb_enc_from_native_encoding", "L(L)", "cext", "rb_enc_from_native_encoding", "V", "L",
-            "upcall_rb_enc_get", "L(L)", "cext", "rb_enc_get", "V", "V",
             "upcall_rb_enc_get_index", "I(L)", "cext", "rb_enc_get_index", "I", "V",
             "upcall_rb_enc_isalnum", "I(IL)", "cext", "rb_enc_isalnum", "B", "IV",
             "upcall_rb_enc_isspace", "I(IL)", "cext", "rb_enc_isspace", "B", "IV",

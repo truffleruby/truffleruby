@@ -3,7 +3,6 @@ fails:C-API Encoding function rb_enc_associate sets the encoding of a String to 
 fails:C-API Encoding function rb_enc_associate_index sets the encoding of a Regexp to the encoding
 fails:C-API Encoding function rb_enc_copy sets the encoding of a Regexp to that of the second argument
 fails:C-API Encoding function rb_enc_from_index returns NULL for the index after the last encoding
-fails:C-API Encoding function rb_enc_get_index returns -1 for an object without an encoding
 fails:C-API Encoding function rb_enc_set_index raises an ArgumentError for a non-encoding capable object
 fails:C-API Encoding function ENCODING_SET raises an ArgumentError for a non-encoding capable object
 slow:C-API Encoding function rb_define_dummy_encoding raises EncodingError if too many encodings
