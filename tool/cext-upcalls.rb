@@ -52,7 +52,8 @@
 #   B = Ruby true/false result converted to int 1/0 (return only).
 #   I = int, L = long, D = double, O = void (return only)
 #   P = native pointer (const void* argument, void* return), including function pointers
-#       and VALUE arrays; passed and returned as a plain long address on the Java side
+#       and VALUE arrays; passed and returned as a plain long address.
+#       Only differs from L in the C declaration, the Java side treats it as L.
 #   Y = Ruby ID (long); converted to/from Symbol on the Java side
 
 module CExtUpcalls
