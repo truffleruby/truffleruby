@@ -163,7 +163,8 @@ static VALUE encoding_spec_rb_enc_from_encoding(VALUE self, VALUE name) {
 }
 
 static VALUE encoding_spec_rb_enc_get(VALUE self, VALUE obj) {
-  return rb_str_new2(rb_enc_get(obj)->name);
+  rb_encoding *enc = rb_enc_get(obj);
+  return enc ? rb_str_new2(enc->name) : Qnil;
 }
 
 static VALUE encoding_spec_rb_enc_precise_mbclen(VALUE self, VALUE str, VALUE offset) {

@@ -121,7 +121,7 @@ int rb_enc_codelen(int c, rb_encoding *enc) {
 }
 
 rb_encoding* rb_enc_get(VALUE object) {
-  return rb_to_encoding(rb_tr_up_rb_enc_get(object));
+  return rb_enc_from_index(rb_enc_get_index(object));
 }
 
 void rb_enc_set_index(VALUE obj, int idx) {

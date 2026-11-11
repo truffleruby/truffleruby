@@ -51,6 +51,7 @@ Compatibility:
 * Implement `ENV.fetch_values` from Ruby 4.1 (@makmic, @edcarvio, @composerinteralia).
 * Define `Enumerator::Lazy#each_with_index` on `Enumerator::Lazy` like CRuby 4.0.10 (@eregon).
 * `rb_enc_from_index` now returns `NULL` for an index without an encoding instead of crashing (@nirvdrum).
+* `rb_enc_get` and `rb_enc_get_index` now handle more cases, including objects without an encoding and `File` objects opened for writing without an encoding (@nirvdrum).
 
 Performance:
 
