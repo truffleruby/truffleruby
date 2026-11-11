@@ -233,6 +233,18 @@ describe "C-API Encoding function" do
     it "returns an Encoding" do
       @s.rb_enc_from_index(0).should.instance_of?(String)
     end
+
+    it "returns NULL for a negative index" do
+      @s.rb_enc_from_index(-1).should == nil
+    end
+
+    it "returns NULL for the index after the last encoding" do
+      @s.rb_enc_from_index(Encoding.list.size).should == nil
+    end
+
+    it "returns NULL for an index larger than the number of encodings" do
+      @s.rb_enc_from_index(1_000_000).should == nil
+    end
   end
 
   describe "rb_enc_mbc_to_codepoint" do
@@ -840,6 +852,11 @@ describe "C-API Encoding function" do
     it "returns the index of the dummy encoding" do
       index = @s.rb_define_dummy_encoding("BAR#{run += 1}")
       index.should == Encoding.list.size - 1
+    end
+
+    it "defines an encoding returned by rb_enc_from_index" do
+      index = @s.rb_define_dummy_encoding("BAZ#{run += 1}")
+      @s.rb_enc_from_index(index).should == "BAZ#{run}"
     end
 
     it "defines a dummy encoding which is not ASCII-compatible" do

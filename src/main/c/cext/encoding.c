@@ -40,6 +40,14 @@ void rb_tr_setup_encoding(long index, char* name, VALUE encoding) {
   enc->ruby_encoding_index = (int) index | (rb_tr_up_send0_b_dummy_p(encoding) ? RB_TR_ENC_DUMMY_FLAG : 0);
 }
 
+/* The number of encodings whose native struct was initialized while loading C extension support. Encodings defined later,
+ * via `rb_define_dummy_encoding`, are initialized lazily through an upcall and will have an index >= this count. */
+static int rb_tr_preinitialized_encodings_count;
+
+void rb_tr_set_preinitialized_encodings_count(long count) {
+  rb_tr_preinitialized_encodings_count = (int) count;
+}
+
 rb_encoding* rb_default_external_encoding(void) {
   VALUE result = rb_tr_up_rb_default_external_encoding();
   if (NIL_P(result)) {
@@ -136,6 +144,9 @@ static rb_encoding *cached_utf8_encoding;
 // Fills the cache eagerly so the getters below need no check.
 // Called on every rb_tr_init() as the encodings are per Ruby context.
 void rb_tr_init_encoding_cache(void) {
+  // Clear the preinitialized encoding count so we don't accidentally return structs initialized by a previous context.
+  rb_tr_preinitialized_encodings_count = 0;
+
   cached_ascii8bit_encoding = rb_to_encoding(rb_tr_up_ascii8bit_encoding());
   cached_usascii_encoding = rb_to_encoding(rb_tr_up_usascii_encoding());
   cached_utf8_encoding = rb_to_encoding(rb_tr_up_utf8_encoding());
@@ -232,6 +243,16 @@ VALUE rb_enc_from_encoding(rb_encoding *encoding) {
 }
 
 rb_encoding* rb_enc_from_index(int index) {
+  if (index < 0 || index >= RB_TR_MAX_ENCODINGS) {
+    return NULL;
+  }
+
+  if (RB_LIKELY(index < rb_tr_preinitialized_encodings_count)) {
+    return &rb_tr_encodings[index];
+  }
+
+  // If we reach here, then the encoding was defined after C extension support was loaded, so its struct is initialized
+  // lazily by the upcall. This should never happen in real world code, but we need to support it for compatibility.
   return rb_to_encoding(rb_tr_up_rb_enc_from_index(index));
 }
 
