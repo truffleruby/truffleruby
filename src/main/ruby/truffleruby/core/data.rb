@@ -137,9 +137,6 @@ class Data
     instance_methods_module.module_eval "#{<<~'RUBY'}", __FILE__, __LINE__+1
       # truffleruby_primitives: true
 
-      ORIGINAL_NEW = klass.method(:new)
-      private_constant :ORIGINAL_NEW
-
       # Keep in sync with #initialize above
       def initialize(**kwargs)
         members_hash = Primitive.class(self)::CLASS_MEMBERS_HASH
@@ -190,7 +187,9 @@ class Data
       def with(**changes)
         return self if changes.empty?
 
-        ORIGINAL_NEW.call(**to_h.merge(changes))
+        instance = Primitive.class(self).send(:__allocate__)
+        instance.send(:initialize, **to_h.merge(changes))
+        instance
       end
 
       def inspect

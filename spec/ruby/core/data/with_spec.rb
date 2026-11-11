@@ -52,4 +52,28 @@ describe "Data#with" do
 
     ScratchPad.recorded.should == [:initialize, [], {amount: 0, unit: "m"}]
   end
+
+  it "returns an instance of the subclass when called on an instance of a subclass" do
+    data = DataSpecs::MeasureSubclass.new(amount: 42, unit: "km")
+    data_copy = data.with(unit: "m")
+
+    data_copy.should.instance_of?(DataSpecs::MeasureSubclass)
+    data_copy.amount.should == 42
+    data_copy.unit.should == "m"
+  end
+
+  it "calls #initialize of the subclass when called on an instance of a subclass" do
+    subclass = Class.new(DataSpecs::Measure) do
+      def initialize(*rest, **kw)
+        super
+        ScratchPad.record [:initialize, rest, kw]
+      end
+    end
+    data = subclass.new(amount: 42, unit: "km")
+    ScratchPad.clear
+
+    data.with(amount: 0)
+
+    ScratchPad.recorded.should == [:initialize, [], {amount: 0, unit: "km"}]
+  end
 end
