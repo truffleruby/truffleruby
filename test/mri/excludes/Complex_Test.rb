@@ -5,7 +5,6 @@ exclude :test_canonicalize_internal, "NoMethodError: undefined method `+' for an
 exclude :test_coerce2, "<=>."
 exclude :test_compsub, "Expected (1+0i) to be an instance of ComplexSub, not Complex."
 exclude :test_conv, "Expected (1+0i) (oid=1464) to be the same as (1+0i) (oid=1480)."
-exclude :test_div, "Expected (1/1) to be integer?."
 exclude :test_expt, "<(-3+4i)> expected but was <(-3.0+4.000000000000002i)>."
 exclude :test_expt_for_special_angle, "Expected NaN to not be nan?."
 exclude :test_fixed_bug, "ArgumentError expected but nothing was raised."

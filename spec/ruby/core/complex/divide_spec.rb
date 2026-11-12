@@ -12,6 +12,11 @@ describe "Complex#/" do
       # remember the floating-point arithmetic
       (c / d).should be_close(Complex(100.2, -30.3), TOLERANCE)
     end
+
+    it "returns Integer parts when they are whole numbers" do
+      (Complex(-30, 40) / Complex(1, 2)).should.eql?(Complex(10, 20))
+      (Complex(2, 3) / Complex(2, 3)).should.eql?(Complex(1, 0))
+    end
   end
 
   describe "with Fixnum" do
@@ -26,6 +31,11 @@ describe "Complex#/" do
 
     it "produces Rational parts" do
       (Complex(5, 9) / 2).should.eql?(Complex(Rational(5,2), Rational(9,2)))
+    end
+
+    it "returns Integer parts when they are whole numbers" do
+      (Complex(20, 40) / 2).should.eql?(Complex(10, 20))
+      (Complex(9, 8) / 4).should.eql?(Complex(Rational(9, 4), 2))
     end
   end
 
