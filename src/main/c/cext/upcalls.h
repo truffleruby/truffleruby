@@ -207,15 +207,6 @@ static inline VALUE rb_tr_up_send0_ancestors(VALUE v0) {
   return result;
 }
 
-extern int (*rb_tr_up_impl_send0_b_ascii_compatible_p)(VALUE v0);
-static inline int rb_tr_up_send0_b_ascii_compatible_p(VALUE v0) {
-  int result = rb_tr_up_impl_send0_b_ascii_compatible_p(v0);
-  if (UNLIKELY(rb_tr_pending_exception)) {
-    rb_tr_longjmp_from_java_exception();
-  }
-  return result;
-}
-
 extern int (*rb_tr_up_impl_send0_b_ascii_only_p)(VALUE v0);
 static inline int rb_tr_up_send0_b_ascii_only_p(VALUE v0) {
   int result = rb_tr_up_impl_send0_b_ascii_only_p(v0);
@@ -1939,15 +1930,6 @@ static inline VALUE rb_tr_up_rb_enc_from_index(int v0) {
 extern VALUE (*rb_tr_up_impl_rb_enc_from_native_encoding)(long v0);
 static inline VALUE rb_tr_up_rb_enc_from_native_encoding(long v0) {
   VALUE result = rb_tr_up_impl_rb_enc_from_native_encoding(v0);
-  if (UNLIKELY(rb_tr_pending_exception)) {
-    rb_tr_longjmp_from_java_exception();
-  }
-  return result;
-}
-
-extern VALUE (*rb_tr_up_impl_rb_enc_get)(VALUE v0);
-static inline VALUE rb_tr_up_rb_enc_get(VALUE v0) {
-  VALUE result = rb_tr_up_impl_rb_enc_get(v0);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
   }

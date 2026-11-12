@@ -285,18 +285,6 @@ public abstract class CExtUpcallTargets {
         }
     }
 
-    private static final int INDEX_send0_b_ascii_compatible_p = nextUpcallIndex++;
-
-    @CExtUpcall
-    public static int upcall_send0_b_ascii_compatible_p(long v0) {
-        try {
-            return (int) runtime.upcall(INDEX_send0_b_ascii_compatible_p, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0;
-        }
-    }
-
     private static final int INDEX_send0_b_ascii_only_p = nextUpcallIndex++;
 
     @CExtUpcall
@@ -2606,18 +2594,6 @@ public abstract class CExtUpcallTargets {
     public static long upcall_rb_enc_from_native_encoding(long v0) {
         try {
             return (long) runtime.upcall(INDEX_rb_enc_from_native_encoding, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
-    private static final int INDEX_rb_enc_get = nextUpcallIndex++;
-
-    @CExtUpcall
-    public static long upcall_rb_enc_get(long v0) {
-        try {
-            return (long) runtime.upcall(INDEX_rb_enc_get, v0);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -5787,7 +5763,6 @@ public abstract class CExtUpcallTargets {
             "upcall_send0___allocate__", "L(L)", "send", "__allocate__", "V", "V",
             "upcall_send0_alive_p", "L(L)", "send", "alive?", "V", "V",
             "upcall_send0_ancestors", "L(L)", "send", "ancestors", "V", "V",
-            "upcall_send0_b_ascii_compatible_p", "I(L)", "send", "ascii_compatible?", "B", "V",
             "upcall_send0_b_ascii_only_p", "I(L)", "send", "ascii_only?", "B", "V",
             "upcall_send0_b_dummy_p", "I(L)", "send", "dummy?", "B", "V",
             "upcall_send0_binding", "L(L)", "send", "binding", "V", "V",
@@ -5983,7 +5958,6 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_enc_find_index", "I(L)", "cext", "rb_enc_find_index", "I", "V",
             "upcall_rb_enc_from_index", "L(I)", "cext", "rb_enc_from_index", "V", "I",
             "upcall_rb_enc_from_native_encoding", "L(L)", "cext", "rb_enc_from_native_encoding", "V", "L",
-            "upcall_rb_enc_get", "L(L)", "cext", "rb_enc_get", "V", "V",
             "upcall_rb_enc_get_index", "I(L)", "cext", "rb_enc_get_index", "I", "V",
             "upcall_rb_enc_isalnum", "I(IL)", "cext", "rb_enc_isalnum", "B", "IV",
             "upcall_rb_enc_isspace", "I(IL)", "cext", "rb_enc_isspace", "B", "IV",

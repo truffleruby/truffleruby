@@ -34,12 +34,15 @@ Compatibility:
 * `StringIO#gets`, `#readline`, `#each_line` and `#readlines` no longer split a multi-byte character when given a limit (@ListlessPanda).
 * `rb_range_values()` now returns false for `Enumerator::ArithmeticSequence` and for range-like objects without `#exclude_end?`, and accepts range-like objects with private methods, like CRuby (#4487, @nirvdrum, @eregon).
 * `String#split` with a block now returns `self`, `IO#printf` returns `nil`, `ARGF.set_encoding` returns `ARGF`, and `IO::Buffer#set_string` and `IO::Buffer#copy` return the number of bytes copied, like CRuby (#4509, @taxor03).
+* `rb_enc_from_index` now returns `NULL` for a negative or very large index instead of crashing (@nirvdrum).
+* `rb_enc_get` and `rb_enc_get_index` now handle more cases, including objects without an encoding and `File` objects opened for writing without an encoding (@nirvdrum).
 
 Performance:
 
 * `TracePoint` blocks now receive a new `TracePoint` object per event holding the event data instead of the `TracePoint` itself, which lets the compiler avoid materializing the traced frame (@eregon).
 * Reduce C extension overhead for ID-based C API calls such as `rb_funcall()`, `rb_ivar_get()`, and `rb_block_call()` by avoiding a separate `ID2SYM()` upcall (@nirvdrum).
 * Enabling or disabling a `:class` `TracePoint` no longer invalidates compiled code and no longer uses Truffle instrumentation, which also reduces memory footprint (#2371, @eregon).
+* Store encoding properties in the native `rb_encoding` structs to reduce upcalls for common encoding operations (@nirvdrum).
 
 Incompatible Changes:
 

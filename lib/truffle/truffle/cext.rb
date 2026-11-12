@@ -96,6 +96,7 @@ module Truffle::CExt
     RTYPEDDATA_RUN_FINALIZER = lib[:rb_tr_rtypeddata_run_finalizer]
     RSTRING_PTR_FUNCTION = lib[:rb_tr_rstring_ptr]
     SETUP_ENCODING_FUNCTION = lib[:rb_tr_setup_encoding]
+    SET_PREINITIALIZED_ENCODINGS_COUNT_FUNCTION = lib[:rb_tr_set_preinitialized_encodings_count]
     RB_ENCODINGS_BASE = lib[:rb_tr_encodings]
     RB_ENCODING_SIZE = Primitive.pointer_read_long(lib[:rb_tr_sizeof_encoding])
     READ_VALUE_POINTER_FUNCTION = lib[:rb_tr_read_VALUE_pointer]
@@ -213,9 +214,10 @@ module Truffle::CExt
     # Creates the FFM upcall stubs and calls rb_tr_init() with them and the constant handles
     Primitive.cext_init_ffm(libtruffleruby, constants)
 
-    # Initialize the native rb_encoding structs of all encodings created so far.
-    # Encodings created later are initialized in rb_encoding_native_address().
-    Encoding.list.each { |encoding| rb_encoding_native_address(encoding) }
+    # Initialize the native rb_encoding structs of all included encodings and note how many encodings there are.
+    encodings = Encoding.list
+    encodings.each { |encoding| rb_encoding_native_address(encoding) }
+    Primitive.cext_invoke_v_l(SET_PREINITIALIZED_ENCODINGS_COUNT_FUNCTION, encodings.size)
 
     Truffle::CExt.cext_start_new_handle_block
   end
@@ -1018,42 +1020,26 @@ module Truffle::CExt
   end
 
   def rb_enc_get(obj)
-    case obj
-    when Encoding
-      obj
-    when Symbol
-      obj.encoding
-    when String
-      obj.encoding
-    when Regexp
-      obj.encoding
-    else
-      obj.instance_variable_get :@encoding
-    end
+    index = rb_enc_get_index(obj)
+    index >= 0 ? rb_enc_from_index(index) : nil
   end
 
   def rb_enc_get_index(obj)
     enc = case obj
-          when Symbol
+          when String, Symbol, Regexp
             obj.encoding
-          when String
-            obj.encoding
-          when Regexp
-            obj.encoding
+          when Encoding
+            obj
           when File
             obj.internal_encoding || obj.external_encoding
           when NilClass, Integer, Float, TrueClass, FalseClass
-            -1
-          # TODO BJF Mar-9-2017 Handle T_DATA
+            nil
           else
-            if obj.instance_variable_defined?(:@encoding)
-              obj.instance_variable_get(:@encoding)
-            else
-              0
-            end
+            # `rb_enc_set_index` stores the encoding of other objects in `@encoding`.
+            obj.instance_variable_get(:@encoding)
           end
-    enc = rb_enc_to_index(enc) if Primitive.is_a?(enc, Encoding)
-    enc
+
+    Primitive.is_a?(enc, Encoding) ? rb_enc_to_index(enc) : -1
   end
 
   def rb_str_append(str, to_append)

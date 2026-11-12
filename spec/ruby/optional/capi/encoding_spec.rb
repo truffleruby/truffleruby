@@ -106,6 +106,46 @@ describe "C-API Encoding function" do
     end
   end
 
+  describe "rb_enc_str_asciicompat_p" do
+    it "returns true for a String in an ASCII-compatible encoding" do
+      @s.rb_enc_str_asciicompat_p("abc").should == true
+      @s.rb_enc_str_asciicompat_p("abc".b).should == true
+    end
+
+    it "returns false for a String in an ASCII-incompatible encoding" do
+      @s.rb_enc_str_asciicompat_p("abc".encode(Encoding::UTF_16LE)).should == false
+    end
+  end
+
+  describe "rb_must_asciicompat" do
+    it "does not raise for a String in an ASCII-compatible encoding" do
+      @s.rb_must_asciicompat("abc").should == nil
+    end
+
+    it "raises Encoding::CompatibilityError for a String in an ASCII-incompatible encoding" do
+      -> {
+        @s.rb_must_asciicompat("abc".encode(Encoding::UTF_16LE))
+      }.should.raise(Encoding::CompatibilityError, "ASCII incompatible encoding: UTF-16LE")
+    end
+  end
+
+  describe "rb_enc_asciicompat" do
+    it "returns true for an ASCII-compatible encoding" do
+      @s.rb_enc_asciicompat(Encoding::UTF_8).should == true
+      @s.rb_enc_asciicompat(Encoding::US_ASCII).should == true
+      @s.rb_enc_asciicompat(Encoding::BINARY).should == true
+    end
+
+    it "returns false for an encoding with characters of more than one byte" do
+      @s.rb_enc_asciicompat(Encoding::UTF_16LE).should == false
+      @s.rb_enc_asciicompat(Encoding::UTF_32BE).should == false
+    end
+
+    it "returns false for a dummy encoding" do
+      @s.rb_enc_asciicompat(Encoding::UTF_7).should == false
+    end
+  end
+
   describe "rb_enc_dummy_p" do
     it "returns true for a dummy encoding" do
       @s.rb_enc_dummy_p(Encoding::UTF_16).should == true
@@ -113,6 +153,22 @@ describe "C-API Encoding function" do
 
     it "returns false for a non-dummy encoding" do
       @s.rb_enc_dummy_p(Encoding::UTF_8).should == false
+    end
+  end
+
+  describe "rb_enc_mbminlen" do
+    it "returns the minimum length of a character in bytes" do
+      @s.rb_enc_mbminlen(Encoding::UTF_8).should == 1
+      @s.rb_enc_mbminlen(Encoding::UTF_16LE).should == 2
+      @s.rb_enc_mbminlen(Encoding::UTF_32BE).should == 4
+    end
+  end
+
+  describe "rb_enc_mbmaxlen" do
+    it "returns the maximum length of a character in bytes" do
+      @s.rb_enc_mbmaxlen(Encoding::US_ASCII).should == 1
+      @s.rb_enc_mbmaxlen(Encoding::UTF_8).should == 4
+      @s.rb_enc_mbmaxlen(Encoding::UTF_32BE).should == 4
     end
   end
 
@@ -176,6 +232,18 @@ describe "C-API Encoding function" do
   describe "rb_enc_from_index" do
     it "returns an Encoding" do
       @s.rb_enc_from_index(0).should.instance_of?(String)
+    end
+
+    it "returns NULL for a negative index" do
+      @s.rb_enc_from_index(-1).should == nil
+    end
+
+    it "returns NULL for the index after the last encoding" do
+      @s.rb_enc_from_index(Encoding.list.size).should == nil
+    end
+
+    it "returns NULL for an index larger than the number of encodings" do
+      @s.rb_enc_from_index(1_000_000).should == nil
     end
   end
 
@@ -247,6 +315,16 @@ describe "C-API Encoding function" do
       str = "abc".encode Encoding::BINARY
       @s.rb_enc_get(str).should == "ASCII-8BIT"
     end
+
+    it "returns the encoding of an Encoding" do
+      @s.rb_enc_get(Encoding::UTF_8).should == "UTF-8"
+    end
+
+    it "returns NULL for an object without an encoding" do
+      @s.rb_enc_get(nil).should == nil
+      @s.rb_enc_get(1).should == nil
+      @s.rb_enc_get(Object.new).should == nil
+    end
   end
 
   describe "rb_enc_precise_mbclen" do
@@ -286,6 +364,10 @@ describe "C-API Encoding function" do
       @s.rb_enc_get_index(:symbol).should >= 0
     end
 
+    it "returns the index of an Encoding" do
+      @s.rb_enc_get_index(Encoding::UTF_8).should == @s.rb_enc_find_index("UTF-8")
+    end
+
     it "returns -1 as the index of nil" do
       @s.rb_enc_get_index(nil).should == -1
     end
@@ -297,6 +379,17 @@ describe "C-API Encoding function" do
     it "returns -1 for an object without an encoding" do
       obj = Object.new
       @s.rb_enc_get_index(obj).should == -1
+    end
+
+    it "returns -1 for a File opened for writing without an encoding" do
+      name = tmp("rb_enc_get_index_spec")
+      begin
+        File.open(name, "w") do |file|
+          @s.rb_enc_get_index(file).should == -1
+        end
+      ensure
+        rm_r name
+      end
     end
   end
 
@@ -786,6 +879,19 @@ describe "C-API Encoding function" do
       index.should == Encoding.list.size - 1
     end
 
+    it "defines an encoding returned by rb_enc_from_index" do
+      index = @s.rb_define_dummy_encoding("BAZ#{run += 1}")
+      @s.rb_enc_from_index(index).should == "BAZ#{run}"
+    end
+
+    it "defines a dummy encoding which is not ASCII-compatible" do
+      @s.rb_define_dummy_encoding("QUX#{run += 1}")
+      enc = Encoding.find("QUX#{run}")
+      @s.rb_enc_dummy_p(enc).should == true
+      @s.rb_enc_asciicompat(enc).should == false
+      @s.rb_enc_mbminlen(enc).should == 1
+    end
+
     it "raises EncodingError if too many encodings" do
       code = <<-RUBY
         require #{extension_path.dump}
@@ -822,6 +928,22 @@ describe "C-API Encoding function" do
     it "is false for the dummy UTF-16 and UTF-32 encodings" do
       @s.should_not.ONIGENC_IS_UNICODE(Encoding::UTF_16)
       @s.should_not.ONIGENC_IS_UNICODE(Encoding::UTF_32)
+    end
+  end
+
+  describe "ONIGENC_MBC_MINLEN" do
+    it "returns the minimum length of a character in bytes" do
+      @s.ONIGENC_MBC_MINLEN(Encoding::UTF_8).should == 1
+      @s.ONIGENC_MBC_MINLEN(Encoding::UTF_16LE).should == 2
+      @s.ONIGENC_MBC_MINLEN(Encoding::UTF_32BE).should == 4
+    end
+  end
+
+  describe "ONIGENC_MBC_MAXLEN" do
+    it "returns the maximum length of a character in bytes" do
+      @s.ONIGENC_MBC_MAXLEN(Encoding::US_ASCII).should == 1
+      @s.ONIGENC_MBC_MAXLEN(Encoding::UTF_8).should == 4
+      @s.ONIGENC_MBC_MAXLEN(Encoding::UTF_32BE).should == 4
     end
   end
 end

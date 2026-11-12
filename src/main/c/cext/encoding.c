@@ -22,13 +22,30 @@ rb_encoding* rb_to_encoding(VALUE encoding) {
 // Must match org.truffleruby.core.encoding.Encodings.MAX_NUMBER_OF_ENCODINGS
 #define RB_TR_MAX_ENCODINGS 256
 
+// Like CRuby's `ENC_DUMMY_FLAG`, set in the `ruby_encoding_index` field of the native struct of dummy encodings.
+#define RB_TR_ENC_DUMMY_FLAG (1<<24)
+
 /* All native rb_encoding structs live in this single block, ordered by the Ruby Encoding's index, so the index can be
  * computed from the address and vice versa without any lookup table (see rb_encoding_from_native() in Ruby). */
 OnigEncodingType rb_tr_encodings[RB_TR_MAX_ENCODINGS];
 const long rb_tr_sizeof_encoding = sizeof(OnigEncodingType);
 
-void rb_tr_setup_encoding(long index, char* name) {
-  rb_tr_encodings[index].name = name;
+// Encodings are immutable, so their properties are stored in the native struct and `rb_enc_mbminlen`,
+// `rb_enc_mbmaxlen`, `rb_enc_dummy_p`, and `rb_enc_asciicompat` need no upcall.
+void rb_tr_setup_encoding(long index, char* name, VALUE encoding) {
+  OnigEncodingType *enc = &rb_tr_encodings[index];
+  enc->name = name;
+  enc->min_enc_len = rb_tr_up_rb_enc_mbminlen(encoding);
+  enc->max_enc_len = rb_tr_up_rb_enc_mbmaxlen(encoding);
+  enc->ruby_encoding_index = (int) index | (rb_tr_up_send0_b_dummy_p(encoding) ? RB_TR_ENC_DUMMY_FLAG : 0);
+}
+
+/* The number of encodings whose native struct was initialized while loading C extension support. Encodings defined later,
+ * via `rb_define_dummy_encoding`, are initialized lazily through an upcall and will have an index >= this count. */
+static int rb_tr_preinitialized_encodings_count;
+
+void rb_tr_set_preinitialized_encodings_count(long count) {
+  rb_tr_preinitialized_encodings_count = (int) count;
 }
 
 rb_encoding* rb_default_external_encoding(void) {
@@ -104,7 +121,7 @@ int rb_enc_codelen(int c, rb_encoding *enc) {
 }
 
 rb_encoding* rb_enc_get(VALUE object) {
-  return rb_to_encoding(rb_tr_up_rb_enc_get(object));
+  return rb_enc_from_index(rb_enc_get_index(object));
 }
 
 void rb_enc_set_index(VALUE obj, int idx) {
@@ -127,6 +144,9 @@ static rb_encoding *cached_utf8_encoding;
 // Fills the cache eagerly so the getters below need no check.
 // Called on every rb_tr_init() as the encodings are per Ruby context.
 void rb_tr_init_encoding_cache(void) {
+  // Clear the preinitialized encoding count so we don't accidentally return structs initialized by a previous context.
+  rb_tr_preinitialized_encodings_count = 0;
+
   cached_ascii8bit_encoding = rb_to_encoding(rb_tr_up_ascii8bit_encoding());
   cached_usascii_encoding = rb_to_encoding(rb_tr_up_usascii_encoding());
   cached_utf8_encoding = rb_to_encoding(rb_tr_up_utf8_encoding());
@@ -145,7 +165,7 @@ rb_encoding* rb_usascii_encoding(void) {
 }
 
 bool rb_enc_asciicompat(rb_encoding *enc) {
-  return rb_tr_up_send0_b_ascii_compatible_p(rb_enc_from_encoding(enc));
+  return rb_enc_mbminlen(enc) == 1 && !rb_enc_dummy_p(enc);
 }
 
 void rb_must_asciicompat(VALUE str) {
@@ -223,6 +243,16 @@ VALUE rb_enc_from_encoding(rb_encoding *encoding) {
 }
 
 rb_encoding* rb_enc_from_index(int index) {
+  if (index < 0 || index >= RB_TR_MAX_ENCODINGS) {
+    return NULL;
+  }
+
+  if (RB_LIKELY(index < rb_tr_preinitialized_encodings_count)) {
+    return &rb_tr_encodings[index];
+  }
+
+  // If we reach here, then the encoding was defined after C extension support was loaded, so its struct is initialized
+  // lazily by the upcall. This should never happen in real world code, but we need to support it for compatibility.
   return rb_to_encoding(rb_tr_up_rb_enc_from_index(index));
 }
 
@@ -331,15 +361,15 @@ char* rb_enc_nth(const char *p, const char *e, long nth, rb_encoding *enc) {
 }
 
 int rb_enc_dummy_p(rb_encoding *enc) {
-  return rb_tr_up_send0_b_dummy_p(rb_enc_from_encoding(enc));
+  return (enc->ruby_encoding_index & RB_TR_ENC_DUMMY_FLAG) != 0;
 }
 
 int rb_enc_mbmaxlen(rb_encoding *enc) {
-  return rb_tr_up_rb_enc_mbmaxlen(rb_enc_from_encoding(enc));
+  return enc->max_enc_len;
 }
 
 int rb_enc_mbminlen(rb_encoding *enc) {
-  return rb_tr_up_rb_enc_mbminlen(rb_enc_from_encoding(enc));
+  return enc->min_enc_len;
 }
 
 int rb_tr_enc_is_unicode(const OnigEncodingType *enc) {
