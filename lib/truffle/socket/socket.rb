@@ -220,8 +220,7 @@ class Socket < BasicSocket
             dstaddr:   ifaddrs_struct.destination_to_addrinfo,
             netmask:   ifaddrs_struct.netmask_to_addrinfo,
             name:      ifaddrs_struct.name,
-            flags:     ifaddrs_struct.flags,
-            ifindex:   Truffle::Socket::Foreign.if_nametoindex(ifaddrs_struct.name)
+            flags:     ifaddrs_struct.flags
           )
         end
 
