@@ -20,3 +20,29 @@ describe "C-API TRUFFLERUBY macro" do
     @s.truffleruby.should == true
   end
 end
+
+describe "C-API T_DATA objects" do
+  before :each do
+    @s = CApiTruffleRubySpecs.new
+  end
+
+  it "can be created for subclasses of Object and BasicObject" do
+    [Object, BasicObject, Class.new, Class.new(BasicObject), Class.new(Numeric)].each do |klass|
+      Kernel.instance_method(:class).bind_call(@s.typed_data_wrap(klass)).should == klass
+      Kernel.instance_method(:class).bind_call(@s.data_wrap(klass)).should == klass
+    end
+  end
+
+  it "have instance variables" do
+    obj = @s.typed_data_wrap(Object)
+    obj.instance_variable_set(:@foo, 42)
+    obj.instance_variable_get(:@foo).should == 42
+  end
+
+  it "cannot be created for classes inheriting from a core class with its own internal representation" do
+    [String, Array, Hash, Exception, Class.new(StandardError), Class.new(Proc), Class.new(Time)].each do |klass|
+      -> { @s.typed_data_wrap(klass) }.should.raise(TypeError, /cannot create a T_DATA object of class/)
+      -> { @s.data_wrap(klass) }.should.raise(TypeError, /cannot create a T_DATA object of class/)
+    end
+  end
+end

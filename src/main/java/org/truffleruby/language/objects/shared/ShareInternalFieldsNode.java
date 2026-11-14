@@ -17,6 +17,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import org.truffleruby.collections.BoundaryIterable;
 import org.truffleruby.core.array.ArrayGuards;
+import org.truffleruby.cext.RubyDataObject;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.array.library.ArrayStoreLibrary;
 import org.truffleruby.core.basicobject.RubyBasicObject;
@@ -73,11 +74,17 @@ public abstract class ShareInternalFieldsNode extends RubyBaseNode {
         /* No extra Java fields for RubyBasicObject */
     }
 
+    @Specialization
+    static void shareCachedDataObject(RubyDataObject object, int depth) {
+        /* No Ruby objects in the extra Java fields of RubyDataObject */
+    }
+
     @Specialization(
             replaces = {
                     "shareArray",
                     "shareCachedQueue",
-                    "shareCachedBasicObject" })
+                    "shareCachedBasicObject",
+                    "shareCachedDataObject" })
     static void shareUncached(RubyDynamicObject object, int depth) {
         SharedObjects.shareInternalFields(object);
     }

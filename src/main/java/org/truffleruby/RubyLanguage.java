@@ -54,6 +54,7 @@ import org.truffleruby.collections.SharedIndicesMap.LanguageArray;
 import org.truffleruby.core.CoreLibrary;
 import org.truffleruby.core.RubyHandle;
 import org.truffleruby.core.array.RubyArray;
+import org.truffleruby.cext.RubyDataObject;
 import org.truffleruby.core.basicobject.RubyBasicObject;
 import org.truffleruby.core.binding.RubyBinding;
 import org.truffleruby.core.encoding.Encodings;
@@ -347,6 +348,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     public final Shape byteArrayShape = createShape(RubyByteArray.class);
     public final Shape concurrentMapShape = createShape(RubyConcurrentMap.class);
     public final Shape conditionVariableShape = createShape(RubyConditionVariable.class);
+    public final Shape dataObjectShape = createShape(RubyDataObject.class, RubyDataObject.LOOKUP);
     public final Shape customRandomizerShape = createShape(RubyCustomRandomizer.class);
     public final Shape digestShape = createShape(RubyDigest.class);
     public final Shape encodingConverterShape = createShape(RubyEncodingConverter.class);

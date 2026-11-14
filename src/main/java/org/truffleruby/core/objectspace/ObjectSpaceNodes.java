@@ -17,7 +17,6 @@ import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.annotations.Primitive;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
-import org.truffleruby.core.DataObjectFinalizerReference;
 import org.truffleruby.core.FinalizerReference;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.klass.RubyClass;
@@ -252,23 +251,6 @@ public abstract class ObjectSpaceNodes {
             }
         }
 
-    }
-
-    @Primitive(name = "objectspace_define_data_finalizer")
-    public abstract static class DefineDataObjectFinalizerNode extends PrimitiveArrayArgumentsNode {
-
-        @Specialization
-        Object defineFinalizer(
-                RubyDynamicObject object, long finalizerCFunction, long dataStruct, boolean useCExtLock,
-                @Cached DynamicObject.PutNode putNode) {
-            DataObjectFinalizerReference newRef = getContext()
-                    .getDataObjectFinalizationService()
-                    .addFinalizer(getContext(), object, finalizerCFunction, dataStruct, useCExtLock);
-
-            putNode.execute(object, Layouts.DATA_OBJECT_FINALIZER_REF_IDENTIFIER, newRef);
-
-            return nil;
-        }
     }
 
     @CoreMethod(names = "undefine_finalizer", isModuleFunction = true, required = 1)

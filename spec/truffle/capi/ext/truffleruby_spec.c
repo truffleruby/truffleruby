@@ -25,10 +25,25 @@ static VALUE truffleruby_spec_truffleruby(VALUE self) {
   #endif
 }
 
+static const rb_data_type_t truffleruby_spec_data_type = {
+  "truffleruby_spec_data",
+  { NULL, RUBY_DEFAULT_FREE, NULL, },
+};
+
+static VALUE truffleruby_spec_typed_data_wrap(VALUE self, VALUE klass) {
+  return TypedData_Wrap_Struct(klass, &truffleruby_spec_data_type, NULL);
+}
+
+static VALUE truffleruby_spec_data_wrap(VALUE self, VALUE klass) {
+  return Data_Wrap_Struct(klass, NULL, NULL, NULL);
+}
+
 void Init_truffleruby_spec(void) {
   VALUE cls;
   cls = rb_define_class("CApiTruffleRubySpecs", rb_cObject);
   rb_define_method(cls, "truffleruby", truffleruby_spec_truffleruby, 0);
+  rb_define_method(cls, "typed_data_wrap", truffleruby_spec_typed_data_wrap, 1);
+  rb_define_method(cls, "data_wrap", truffleruby_spec_data_wrap, 1);
 }
 
 #ifdef __cplusplus

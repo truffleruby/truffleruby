@@ -17,10 +17,6 @@ require_relative 'cext_structs'
 # TODO (eregon, 1 Sep 2022): should we always_split or use separate CallTargets for usages of Primitive.call_with* in this file?
 
 module Truffle::CExt
-  DATA_TYPE = Primitive.object_hidden_var_create :data_type
-  DATA_STRUCT = Primitive.object_hidden_var_create :data_struct # address of the struct RData* or struct RTypedData*, as a long
-  DATA_MARKER = Primitive.object_hidden_var_create :data_marker
-  DATA_MEMSIZER = Primitive.object_hidden_var_create :data_memsizer
   RB_TYPE = Primitive.object_hidden_var_create :rb_type
   ALLOCATOR_FUNC = Primitive.object_hidden_var_create :allocator_func
   RB_IO_STRUCT = Primitive.object_hidden_var_create :rb_io_struct
@@ -351,7 +347,7 @@ module Truffle::CExt
 
   def rb_tr_cached_type(value, type)
     if type == T_NONE
-      if Primitive.object_hidden_var_defined?(value, DATA_STRUCT)
+      if Primitive.data_object?(value)
         T_DATA
       else
         T_OBJECT
@@ -418,13 +414,13 @@ module Truffle::CExt
 
   def rb_check_type(value, type)
     value_type = rb_type(value)
-    if value_type != type || (value_type == T_DATA && Primitive.object_hidden_var_defined?(value, DATA_TYPE))
+    if value_type != type || (value_type == T_DATA && Primitive.data_object_typed?(value))
       raise TypeError, "wrong argument type #{Truffle::Type.to_class_name(value)} (expected #{BUILTIN_TYPES[type]})"
     end
   end
 
   def RTYPEDDATA_P(obj)
-    Primitive.object_hidden_var_defined?(obj, DATA_TYPE)
+    Primitive.data_object_typed?(obj)
   end
 
   def ensure_class(obj, klass, message = 'expected class %s, but object class is %s')
@@ -1778,7 +1774,7 @@ module Truffle::CExt
 
   def RDATA(object)
     # A specialized version of rb_check_type(object, T_DATA)
-    data_struct = Primitive.object_hidden_var_get(object, DATA_STRUCT)
+    data_struct = Primitive.data_object_struct(object)
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end
@@ -1787,7 +1783,7 @@ module Truffle::CExt
 
   def RTYPEDDATA(object)
     # A specialized version of rb_check_type(object, T_DATA)
-    data_struct = Primitive.object_hidden_var_get(object, DATA_STRUCT)
+    data_struct = Primitive.data_object_struct(object)
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end
@@ -1800,36 +1796,24 @@ module Truffle::CExt
     Primitive.cext_invoke_l_l(RDATA_DATA_FUNCTION, rdata)
   end
 
-  private def data_marker(marker_function, struct)
-    if marker_function == 0
-      nil
-    else
-      -> { Primitive.cext_invoke_v_l(marker_function, struct) }
-    end
-  end
+  # The result of the dsize function of a T_DATA object, 0 if it has none
+  def data_memsize(object)
+    return 0 unless Primitive.data_object_typed?(object)
 
-  private def data_sizer(sizer_function, rtypeddata)
-    use_cext_lock = Primitive.use_cext_lock?
-    proc {
-      locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, use_cext_lock)
-      begin
-        Primitive.cext_invoke_l_l(sizer_function, rtypeddata)
-      ensure
-        Primitive.cext_pop_lock_and_frame(locked)
-      end
-    }
+    locked = Primitive.cext_push_lock_and_frame(Primitive.caller_special_variables_if_available, nil, Primitive.data_object_use_cext_lock?(object))
+    begin
+      Primitive.cext_invoke_l_l(RTYPEDDATA_RUN_MEMSIZER, Primitive.data_object_struct(object))
+    ensure
+      Primitive.cext_pop_lock_and_frame(locked)
+    end
   end
 
   def rb_data_object_wrap(ruby_class, data, mark, free)
     ruby_class = Object unless ruby_class
-    object = ruby_class.__send__(:__layout_allocate__)
-    use_cext_lock = Primitive.use_cext_lock?
 
     rdata = Primitive.cext_invoke_l_lll(RDATA_CREATE, mark, free, data)
-    Primitive.object_hidden_var_set object, DATA_STRUCT, rdata
-    Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(RDATA_RUN_MARKER, rdata)
     # Could use a simpler finalizer if free == 0
-    Primitive.objectspace_define_data_finalizer object, RDATA_RUN_FINALIZER, rdata, use_cext_lock
+    object = Primitive.data_object_allocate(ruby_class, rdata, false, RDATA_RUN_FINALIZER, Primitive.use_cext_lock?)
 
     Primitive.cext_mark_object_on_call_exit(object) unless mark == 0
 
@@ -1838,19 +1822,10 @@ module Truffle::CExt
 
   def rb_data_typed_object_wrap(ruby_class, data, data_type, mark, free, size)
     ruby_class = Object unless ruby_class
-    object = ruby_class.__send__(:__layout_allocate__)
-    use_cext_lock = Primitive.use_cext_lock?
 
     rtypeddata = Primitive.cext_invoke_l_ll(RTYPEDDATA_CREATE, data_type, data)
-    Primitive.object_hidden_var_set object, DATA_STRUCT, rtypeddata
-    Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(RTYPEDDATA_RUN_MARKER, rtypeddata)
     # Could use a simpler finalizer if free == 0
-    Primitive.objectspace_define_data_finalizer object, RTYPEDDATA_RUN_FINALIZER, rtypeddata, use_cext_lock
-
-    unless size == 0
-      Primitive.object_hidden_var_set object, DATA_MEMSIZER, data_sizer(RTYPEDDATA_RUN_MEMSIZER, rtypeddata)
-    end
-    Primitive.object_hidden_var_set object, DATA_TYPE, data_type
+    object = Primitive.data_object_allocate(ruby_class, rtypeddata, true, RTYPEDDATA_RUN_FINALIZER, Primitive.use_cext_lock?)
 
     Primitive.cext_mark_object_on_call_exit(object) unless mark == 0
 
@@ -1869,10 +1844,12 @@ module Truffle::CExt
   def run_marker(obj)
     Primitive.array_mark_store(obj) if Primitive.array_store_native?(obj)
 
-    marker = Primitive.object_hidden_var_get obj, DATA_MARKER
-    unless Primitive.nil?(marker)
+    data_struct = Primitive.data_object_struct(obj)
+    if data_struct
       create_mark_list(obj)
-      marker.call
+      # The marker function is read from the native struct as it can change after the object is created
+      marker = Primitive.data_object_typed?(obj) ? RTYPEDDATA_RUN_MARKER : RDATA_RUN_MARKER
+      Primitive.cext_invoke_v_l(marker, data_struct)
       set_mark_list_on_object(obj)
     end
   end

@@ -39,6 +39,7 @@ Performance:
 
 Incompatible Changes:
 
+* Creating a `T_DATA` object with `Data_Wrap_Struct()`, `TypedData_Wrap_Struct()`, etc now raises a `TypeError` if the class inherits from a core class with its own internal representation such as `String`, `Array`, `Hash`, `Exception` or `Proc` (@eregon).
 
 Memory Footprint:
 

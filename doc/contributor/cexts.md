@@ -112,12 +112,21 @@ instead of storing the bytes in the Java heap.
 
 ### Data and typed data
 
-The user data pointer for data and typed data objects needs to be available as a
-right-hand-side value which can be assigned to, so we cannot implement this as a
-function call. Instead, when a data or typed data object is cast to pointers to
-the `RData` or `RTypedData` structures we create a proxy object that pretends to
-be a C pointer but really redirects interop reads and writes from C to read and
-write the data field in the object.
+`T_DATA` objects, created by `rb_data_object_wrap()` and `rb_data_typed_object_wrap()`
+(`Data_Wrap_Struct()`, `TypedData_Wrap_Struct()`, etc), are instances of the Java
+class `RubyDataObject`. This object holds the address of a natively-allocated
+`struct RData` or `struct RTypedData`, which is what `RDATA()` and `RTYPEDDATA()`
+return, so `DATA_PTR(obj)` and e.g. `RDATA(obj)->dmark` can be read and written
+directly from C. The mark, free and size functions are therefore always read from
+the native struct when they are needed.
+
+Since `T_DATA` objects have their own Java class, a class can only have `T_DATA`
+instances if its instances are otherwise plain objects, i.e. if the class does
+not inherit from a core class with its own internal representation such as
+`String`, `Array`, `Hash`, `Exception` or `Proc`. Trying to create a `T_DATA`
+object for such a class raises a `TypeError`. Such objects would not work on
+CRuby either for most core classes, the main exception being `Exception`
+subclasses.
 
 ### `rb_scan_args`
 

@@ -32,7 +32,6 @@ import com.oracle.truffle.api.strings.TruffleString.AsTruffleStringNode;
 import com.oracle.truffle.api.strings.TruffleString.ErrorHandling;
 import org.graalvm.shadowed.org.jcodings.Config;
 import org.graalvm.shadowed.org.jcodings.IntHolder;
-import org.truffleruby.Layouts;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.CoreMethod;
@@ -90,7 +89,6 @@ import org.truffleruby.core.string.ImmutableRubyString;
 import org.truffleruby.language.LazyWarningNode;
 import org.truffleruby.language.LexicalScope;
 import org.truffleruby.language.RubyBaseNode;
-import org.truffleruby.language.RubyDynamicObject;
 import org.truffleruby.language.RubyGuards;
 import org.truffleruby.language.RubyRootNode;
 import org.truffleruby.language.WarningNode;
@@ -118,9 +116,9 @@ import org.truffleruby.language.library.RubyStringLibrary;
 import org.truffleruby.platform.NativeLibrary;
 import org.truffleruby.language.methods.DeclarationContext;
 import org.truffleruby.language.methods.InternalMethod;
+import org.truffleruby.language.methods.LookupMethodNode;
 import org.truffleruby.language.objects.AllocationTracing;
 import org.truffleruby.language.objects.MetaClassNode;
-import org.truffleruby.language.objects.WriteObjectFieldNode;
 import org.truffleruby.language.supercall.CallSuperMethodNode;
 import org.truffleruby.language.yield.CallBlockNode;
 import org.truffleruby.parser.IdentifierType;
@@ -144,6 +142,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import static org.truffleruby.Layouts.LOCKED_FLAG;
 import static org.truffleruby.language.dispatch.DispatchConfiguration.PRIVATE;
+import static org.truffleruby.language.dispatch.DispatchConfiguration.PRIVATE_RETURN_MISSING_IGNORE_REFINEMENTS;
 import static org.truffleruby.language.dispatch.DispatchConfiguration.PUBLIC;
 
 @CoreModule("Truffle::CExt")
@@ -1827,15 +1826,99 @@ public abstract class CExtNodes {
     }
 
 
+    @Primitive(name = "data_object_allocate")
+    public abstract static class DataObjectAllocateNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        RubyDataObject allocate(
+                RubyClass rubyClass, long dataStruct, boolean typed, long finalizerCFunction, boolean useCExtLock,
+                @Cached LookupMethodNode lookupMethodNode,
+                @Cached InlinedBranchProfile errorProfile) {
+            // T_DATA objects have their own layout, so the class must otherwise use the default object layout,
+            // i.e. it must not inherit from a core class with its own layout such as String or Exception.
+            final InternalMethod layoutAllocator = lookupMethodNode.execute(null, rubyClass.getMetaClass(),
+                    "__layout_allocate__", PRIVATE_RETURN_MISSING_IGNORE_REFINEMENTS);
+            if (layoutAllocator == null ||
+                    layoutAllocator.getDeclaringModule() != coreLibrary().basicObjectClass.getMetaClass()) {
+                errorProfile.enter(this);
+                throw new RaiseException(getContext(), coreExceptions().typeError(notObjectLayoutMessage(rubyClass),
+                        this));
+            }
+
+            final RubyDataObject instance = new RubyDataObject(rubyClass, getLanguage().dataObjectShape, dataStruct,
+                    typed, useCExtLock);
+            AllocationTracing.trace(instance, this);
+            // Also frees the native struct, so there is always a finalizer
+            instance.finalizerReference = getContext()
+                    .getDataObjectFinalizationService()
+                    .addFinalizer(getContext(), instance, finalizerCFunction, dataStruct, useCExtLock);
+            return instance;
+        }
+
+        @TruffleBoundary
+        private static String notObjectLayoutMessage(RubyClass rubyClass) {
+            return StringUtils.format(
+                    "cannot create a T_DATA object of class %s, a class can only have T_DATA instances if it does not inherit from a core class with its own internal representation (such as String, Array, Hash, Exception or Proc)",
+                    rubyClass.fields.getName());
+        }
+    }
+
+    @Primitive(name = "data_object?")
+    public abstract static class IsDataObjectNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        boolean isDataObject(Object object) {
+            return object instanceof RubyDataObject;
+        }
+    }
+
+    /** Returns the address of the struct RData or struct RTypedData, or nil if it is not a T_DATA object */
+    @Primitive(name = "data_object_struct")
+    public abstract static class DataObjectStructNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        long dataStruct(RubyDataObject object) {
+            return object.dataStruct;
+        }
+
+        @Fallback
+        Object notDataObject(Object object) {
+            return nil;
+        }
+    }
+
+    /** Whether it is a T_DATA object wrapping a struct RTypedData */
+    @Primitive(name = "data_object_typed?")
+    public abstract static class IsDataObjectTypedNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        boolean isTyped(RubyDataObject object) {
+            return object.typed;
+        }
+
+        @Fallback
+        boolean notDataObject(Object object) {
+            return false;
+        }
+    }
+
+    @Primitive(name = "data_object_use_cext_lock?")
+    public abstract static class DataObjectUseCExtLockNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        boolean useCExtLock(RubyDataObject object) {
+            return object.useCExtLock;
+        }
+    }
+
     @CoreMethod(names = "create_mark_list", onSingleton = true, required = 1)
     public abstract static class NewMarkerList extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        Object createNewMarkList(RubyDynamicObject object,
-                @Cached DynamicObject.GetNode getNode) {
+        Object createNewMarkList(RubyDataObject object) {
             getContext().getMarkingService().startMarking(
                     getLanguage().getCurrentFiber().extensionCallStack,
-                    (Object[]) getNode.execute(object, Layouts.MARKED_OBJECTS_IDENTIFIER, null));
+                    object.markedObjects);
             return nil;
         }
     }
@@ -1883,14 +1966,9 @@ public abstract class CExtNodes {
     public abstract static class SetMarkList extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        Object setMarkList(RubyDynamicObject structOwner,
-                @Cached WriteObjectFieldNode writeMarkedNode) {
-            writeMarkedNode.execute(
-                    this,
-                    structOwner,
-                    Layouts.MARKED_OBJECTS_IDENTIFIER,
-                    getContext().getMarkingService()
-                            .finishMarking(getLanguage().getCurrentFiber().extensionCallStack));
+        Object setMarkList(RubyDataObject structOwner) {
+            structOwner.markedObjects = getContext().getMarkingService()
+                    .finishMarking(getLanguage().getCurrentFiber().extensionCallStack);
             return nil;
         }
     }
