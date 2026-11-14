@@ -567,7 +567,8 @@ class Enumerator
         memo = yielder.memo || offset
         val = Truffle::EnumerableOperations.pack_values(args)
         if block
-          yielder.yield yield(val, memo)
+          yield(val, memo)
+          yielder.yield val
         else
           yielder.yield [val, memo]
         end

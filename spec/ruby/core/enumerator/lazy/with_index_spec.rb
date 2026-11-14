@@ -49,6 +49,11 @@ describe "Enumerator::Lazy#with_index" do
     result.should == [[0,0],[2,1],[4,2]]
   end
 
+  it "passes on the elements and not the block results when given a block" do
+    (0..Float::INFINITY).lazy.with_index { |i, idx| i * idx }.first(3).should == [0, 1, 2]
+    (10..12).lazy.with_index(1) { |i, idx| i * idx }.map { |i| i + 1 }.to_a.should == [11, 12, 13]
+  end
+
   it "resets after a new call to each" do
     enum = (0..2).lazy.with_index.map { |i, idx| [i, idx] }
     result = []
