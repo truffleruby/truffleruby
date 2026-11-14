@@ -29,6 +29,19 @@ describe 'Socket.getifaddrs' do
       end
     end
 
+    it 'has the same interface index as the other entries of its interface' do
+      @ifaddrs.group_by(&:name).each_value do |ifaddrs|
+        ifaddrs.map(&:ifindex).uniq.size.should == 1
+      end
+    end
+
+    it 'has a positive interface index which is different for each interface' do
+      # On Linux an IPv4 address with a label is an entry named like "eth0:1", with the index of "eth0"
+      indexes = @ifaddrs.map { |ifaddr| [ifaddr.name.split(':', 2).first, ifaddr.ifindex] }.uniq
+      indexes.each { |_, index| index.should > 0 }
+      indexes.map(&:last).uniq.size.should == indexes.size
+    end
+
     it 'has an interface name' do
       @ifaddrs.each do |ifaddr|
         ifaddr.name.should.instance_of?(String)
