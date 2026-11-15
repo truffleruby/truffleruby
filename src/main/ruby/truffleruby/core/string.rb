@@ -460,7 +460,7 @@ class String
   end
 
   def b
-    dup.force_encoding(Encoding::BINARY)
+    Primitive.dup_as_string_instance(self).force_encoding(Encoding::BINARY)
   end
 
   def encode(to = undefined, from = undefined, **options)

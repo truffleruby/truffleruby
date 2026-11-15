@@ -21,6 +21,7 @@ Bug fixes:
 * Fix `Data#with` on an instance of a subclass of a `Data.define` class to return an instance of that subclass and call its `#initialize` (#4541, @taxor03).
 * Fix `Enumerator::Lazy#with_index` with a block to pass on the elements instead of the results of the block (#4543, @taxor03).
 * Fix `Socket.getifaddrs` skipping the first entry of `getifaddrs(3)` and returning the position in the list instead of the interface index as `Socket::Ifaddr#ifindex` (#4545, @taxor03).
+* `String#b` now returns a `String` instance when called on a subclass, like CRuby (@nirvdrum).
 
 Compatibility:
 
