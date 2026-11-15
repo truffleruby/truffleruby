@@ -101,6 +101,7 @@ module Truffle
 
       attach_function :getifaddrs, [:pointer], :int, blocking: true
       attach_function :freeifaddrs, [:pointer], :void
+      attach_function :if_nametoindex, [:string], :uint
 
       def self.bind(descriptor, sockaddr)
         sockaddr_p = Primitive.io_thread_buffer_allocate(sockaddr.bytesize)
