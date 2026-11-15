@@ -12,6 +12,8 @@
 module Truffle
   module StringOperations
 
+    STRING_ALLOCATE = String.method(:__allocate__).unbind
+
     # Similar to MRI's Warning::buffer class
     class SimpleStringIO
       attr_reader :string
