@@ -460,7 +460,7 @@ class String
   end
 
   def b
-    dup.force_encoding(Encoding::BINARY)
+    Primitive.dup_as_string_instance(self).force_encoding(Encoding::BINARY)
   end
 
   def encode(to = undefined, from = undefined, **options)
@@ -1271,13 +1271,23 @@ class String
   end
 
   def -@
-    str = frozen? ? self : dup.freeze
-    if Primitive.string_interned?(self)
-      self
-    elsif Primitive.any_instance_variable?(str)
-      str
+    return self if Primitive.string_interned?(self)
+
+    if Primitive.frozen?(self)
+      str = self
+    elsif Primitive.equal?(Primitive.class(self), String)
+      str = Primitive.freeze(Primitive.dup_as_string_instance(self))
     else
+      # Like CRuby's rb_str_dup(), keep the class but not the instance variables or singleton class.
+      str = Truffle::StringOperations::STRING_ALLOCATE.bind_call(Primitive.class(self))
+      Primitive.string_replace(str, self)
+      Primitive.freeze(str)
+    end
+
+    if Primitive.equal?(Primitive.metaclass(str), String) && !Primitive.any_instance_variable?(str)
       Primitive.string_intern(str)
+    else
+      str
     end
   end
   alias_method :dedup, :-@
