@@ -16,52 +16,88 @@ ast: |
           sourceLength = 0
       children:
           condition =
-              RubyCallNode
+              OrNodeGen
                   attributes:
-                      descriptor = NoKeywordArgumentsDescriptor
-                      dispatchConfig = PRIVATE
-                      emptyKeywordsProfile = false
                       flags = 0
-                      isAttrAssign = false
-                      isSafeNavigation = false
-                      isSplatted = false
-                      isVCall = false
-                      lastArgIsNotHashProfile = false
-                      methodName = "when_splat"
-                      notEmptyKeywordsProfile = false
-                      notRuby2KeywordsHashProfile = false
-                      sourceCharIndex = 13
-                      sourceLength = 16
+                      sourceCharIndex = -1
+                      sourceLength = 0
                   children:
-                      arguments = [
-                          ArrayConcatNode
+                      left =
+                          OrNodeGen
                               attributes:
                                   flags = 0
                                   sourceCharIndex = -1
                                   sourceLength = 0
                               children:
-                                  children = [
-                                      ArrayLiteralNode$UninitialisedArrayLiteralNode
+                                  left =
+                                      InlinedCaseEqualNodeGen
                                           attributes:
+                                              assumptions = [Assumption(valid, name=no :c_call TracePoint is enabled)]
                                               flags = 0
-                                              language = org.truffleruby.RubyLanguage@...
-                                              sourceCharIndex = -1
-                                              sourceLength = 0
+                                              integerCaseEqualAssumption = Assumption(valid, name=core method is not overridden:)
+                                              parameters = RubyCallNodeParameters{methodName='===', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=true, isVCall=false, isSafeNavigation=false, isAttrAssign=false}
+                                              sourceCharIndex = 13
+                                              sourceLength = 2
                                           children:
-                                              values = [
+                                              leftNode_ =
                                                   IntegerFixnumLiteralNode
                                                       attributes:
                                                           flags = 0
                                                           sourceCharIndex = 13
                                                           sourceLength = 2
                                                           value = 42
+                                              rightNode_ =
+                                                  ReadLocalVariableNode
+                                                      attributes:
+                                                          flags = 0
+                                                          frameSlot = 2 # %case_0
+                                                          sourceCharIndex = -1
+                                                          sourceLength = 0
+                                                          type = FRAME_LOCAL
+                                  right =
+                                      InlinedCaseEqualNodeGen
+                                          attributes:
+                                              assumptions = [Assumption(valid, name=no :c_call TracePoint is enabled)]
+                                              flags = 0
+                                              integerCaseEqualAssumption = Assumption(valid, name=core method is not overridden:)
+                                              parameters = RubyCallNodeParameters{methodName='===', descriptor=NoKeywordArgumentsDescriptor, isSplatted=false, ignoreVisibility=true, isVCall=false, isSafeNavigation=false, isAttrAssign=false}
+                                              sourceCharIndex = 17
+                                              sourceLength = 6
+                                          children:
+                                              leftNode_ =
                                                   IntegerFixnumLiteralNode
                                                       attributes:
                                                           flags = 0
                                                           sourceCharIndex = 17
                                                           sourceLength = 6
                                                           value = 100500
-                                              ]
+                                              rightNode_ =
+                                                  ReadLocalVariableNode
+                                                      attributes:
+                                                          flags = 0
+                                                          frameSlot = 2 # %case_0
+                                                          sourceCharIndex = -1
+                                                          sourceLength = 0
+                                                          type = FRAME_LOCAL
+                      right =
+                          RubyCallNode
+                              attributes:
+                                  descriptor = NoKeywordArgumentsDescriptor
+                                  dispatchConfig = PRIVATE
+                                  emptyKeywordsProfile = false
+                                  flags = 0
+                                  isAttrAssign = false
+                                  isSafeNavigation = false
+                                  isSplatted = false
+                                  isVCall = false
+                                  lastArgIsNotHashProfile = false
+                                  methodName = "when_splat"
+                                  notEmptyKeywordsProfile = false
+                                  notRuby2KeywordsHashProfile = false
+                                  sourceCharIndex = 25
+                                  sourceLength = 4
+                              children:
+                                  arguments = [
                                       SplatCastNodeGen
                                           attributes:
                                               conversionMethod = :to_a
@@ -95,21 +131,20 @@ ast: |
                                                                       flags = 0
                                                                       sourceCharIndex = -1
                                                                       sourceLength = 0
+                                      ReadLocalVariableNode
+                                          attributes:
+                                              flags = 0
+                                              frameSlot = 2 # %case_0
+                                              sourceCharIndex = -1
+                                              sourceLength = 0
+                                              type = FRAME_LOCAL
                                   ]
-                          ReadLocalVariableNode
-                              attributes:
-                                  flags = 0
-                                  frameSlot = 2 # %case_0
-                                  sourceCharIndex = -1
-                                  sourceLength = 0
-                                  type = FRAME_LOCAL
-                      ]
-                      receiver =
-                          TruffleInternalModuleLiteralNode
-                              attributes:
-                                  flags = 0
-                                  sourceCharIndex = -1
-                                  sourceLength = 0
+                                  receiver =
+                                      TruffleInternalModuleLiteralNode
+                                          attributes:
+                                              flags = 0
+                                              sourceCharIndex = -1
+                                              sourceLength = 0
           elseBody =
               NilLiteralNode
                   attributes:
