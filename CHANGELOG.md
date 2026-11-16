@@ -31,6 +31,8 @@ Bug fixes:
 * Updated the bundled OpenSSL from 3.5.4 to 3.5.9 (@eregon).
 * Fix `Hash#merge` with a block raising `NoMethodError` for an argument which converts with `#to_hash` (#4566, @taxor03).
 * Fix `Regexp.new` and `Regexp.compile` to convert options with `#to_str` into option letters instead of treating them as `true` (#4567, @taxor03).
+* Fix `0 ** n` returning `0` instead of raising `ZeroDivisionError` for a negative Bignum `n` (#4556, @taxor03).
+* Fix `Float#**` returning incorrect results for infinite, NaN, and very large exponents (#4556, @taxor03).
 
 
 Compatibility:
@@ -55,6 +57,9 @@ Compatibility:
 * `rb_enc_from_index` now returns `NULL` for an index without an encoding instead of crashing (@nirvdrum).
 * `rb_enc_get` and `rb_enc_get_index` now handle more cases, including objects without an encoding and `File` objects opened for writing without an encoding (@nirvdrum).
 * `Set#pretty_print` and `Set#pretty_print_cycle` now use the same `Set[1, 2]` format as `Set#inspect`, so `pp` and IRB show sets like CRuby (@0z5a).
+* `Complex#**` with an Integer exponent is now exact for numbers on an axis or a diagonal, like CRuby (#4556, @taxor03).
+* `1 ** n` and `(-1) ** n` now return an Integer for a negative Integer `n`, like CRuby (#4556, @taxor03).
+* `Complex#**` now simplifies a `Rational(n, 1)` or `Complex(x, 0)` exponent first, like CRuby (#4556, @taxor03).
 
 Performance:
 

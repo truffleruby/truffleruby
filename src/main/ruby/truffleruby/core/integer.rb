@@ -49,6 +49,9 @@ class Integer < Numeric
     if (Primitive.is_a?(o, Float) || Primitive.is_a?(o, Rational)) && self < 0 && o != o.round
       return Complex.new(self, 0) ** o
     elsif Primitive.is_a?(o, Integer) && o < 0
+      # Like CRuby's fix_pow(), 1 and -1 raised to a negative power stay Integers
+      return 1 if self == 1
+      return o.even? ? 1 : -1 if self == -1
       return Rational.__send__(:new_already_canonical, self, 1) ** o
     end
 

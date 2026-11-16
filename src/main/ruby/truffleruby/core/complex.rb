@@ -129,6 +129,18 @@ class Complex < Numeric
     if !Primitive.is_a?(other, Float) && other == 0
       return Complex(1)
     end
+    # Like rb_complex_pow() in CRuby, a Rational with a denominator of 1 is replaced by its numerator, and a Complex
+    # with an exact zero imaginary part by its real part
+    if Primitive.is_a?(other, Rational) && other.denominator == 1
+      other = other.numerator
+    elsif Primitive.is_a?(other, Complex) && !Primitive.is_a?(other.imag, Float) && other.imag == 0
+      other = other.real
+    end
+    return self if Primitive.is_a?(other, Integer) && other == 1
+    if Primitive.is_a?(other, Integer)
+      result = pow_for_special_angle(other)
+      return result if result
+    end
     if Primitive.is_a?(other, Complex)
       r, theta = polar
       ore = other.real
@@ -161,6 +173,57 @@ class Complex < Numeric
       x**y
     end
   end
+
+  # Like CRuby's complex_pow_for_special_angle(): when self is on an axis or a diagonal, the result of an Integer
+  # power is computed from the absolute value of the parts, so it is exact and keeps the parts' type,
+  # e.g. Complex(1, 1) ** 2 is (0+2i) and Complex(2, 0) ** -1 is ((1/2)+(0/1)*i). Returns nil otherwise.
+  private def pow_for_special_angle(other)
+    # dir is the angle of self in multiples of 45 degrees
+    if @imag == 0
+      x, dir = @real, 0
+    elsif @real == 0
+      x, dir = @imag, 2
+    elsif @real == @imag
+      x, dir = @real, 1
+    elsif @real == -@imag
+      x, dir = @imag, 3
+    else
+      return nil
+    end
+
+    if x < 0
+      x = -x
+      dir += 4
+    end
+
+    if dir.even?
+      zx = x ** other
+    else
+      # the absolute value of self is x * sqrt(2), so its square is 2 * x * x
+      zx = (2 * x * x) ** (other / 2)
+      zx *= x if other.odd?
+    end
+
+    zr, zi = SPECIAL_ANGLE_DIRECTIONS[(dir * other) % 8].map do |d|
+      case d
+      when 1 then zx
+      when -1 then -zx
+      else
+        if Primitive.is_a?(zx, Float)
+          0.0
+        elsif Primitive.is_a?(zx, Rational)
+          Rational.__send__(:new_already_canonical, 0, 1)
+        else
+          0
+        end
+      end
+    end
+    Complex(zr, zi)
+  end
+
+  # the signs of the real and imaginary parts for each multiple of 45 degrees
+  SPECIAL_ANGLE_DIRECTIONS = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]].freeze
+  private_constant :SPECIAL_ANGLE_DIRECTIONS
 
   def abs
     Math.hypot(@real, @imag)

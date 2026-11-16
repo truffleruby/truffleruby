@@ -8,6 +8,20 @@ describe "Float#**" do
     (9.5 ** 0xffffffff).to_s.should == 'Infinity'
   end
 
+  it "returns 1.0 for 1.0 raised to an infinite, NaN or Bignum power and -1.0 raised to an infinite power" do
+    (1.0 ** Float::INFINITY).should.eql?(1.0)
+    (1.0 ** Float::NAN).should.eql?(1.0)
+    (1.0 ** -Float::INFINITY).should.eql?(1.0)
+    (1.0 ** (2**1100)).should.eql?(1.0)
+    ((-1.0) ** Float::INFINITY).should.eql?(1.0)
+    ((-1.0) ** -Float::INFINITY).should.eql?(1.0)
+  end
+
+  it "returns a Float when negative and raised to a finite power beyond the range of a long" do
+    ((-8.0) ** 1e20).should == Float::INFINITY
+    ((-8.0) ** -1e20).should.eql?(0.0)
+  end
+
   it "returns a complex number when negative and raised to a fractional power" do
     ((-8.0) ** (1.0/3))      .should be_close(Complex(1, 1.73205), TOLERANCE)
     ((-8.0) ** Rational(1,3)).should be_close(Complex(1, 1.73205), TOLERANCE)
