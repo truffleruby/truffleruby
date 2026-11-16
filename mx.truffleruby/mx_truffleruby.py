@@ -254,12 +254,15 @@ class LibSSLBuildTask(mx.NativeBuildTask):
             'no-ssl3',
             'no-shared',
             'no-dso',
+            'no-tests',
             '-fPIC',
         ], cwd=build_dir)
 
         super(LibSSLBuildTask, self).build() # make
 
         mx.run(['make', 'install_sw', 'install_ssldirs'], cwd=build_dir)
+
+        shutil.rmtree(build_dir)
 
     def clean(self, forBuild=False):
         build_dir = self.subject.build_dir
