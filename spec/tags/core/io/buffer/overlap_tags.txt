@@ -1,0 +1,6 @@
+fails:IO::Buffer#and! range checking rejects actual overlap in either address order
+fails:IO::Buffer#and! range checking rejects empty masks even when the destination is empty
+fails:IO::Buffer#or! range checking rejects actual overlap in either address order
+fails:IO::Buffer#or! range checking rejects empty masks even when the destination is empty
+fails:IO::Buffer#xor! range checking rejects actual overlap in either address order
+fails:IO::Buffer#xor! range checking rejects empty masks even when the destination is empty

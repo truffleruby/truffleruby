@@ -10,16 +10,20 @@
  */
 package org.truffleruby.language.control;
 
+import com.oracle.truffle.api.nodes.Node;
 
 @SuppressWarnings("serial")
 public final class DynamicReturnException extends RubyControlFlowException {
 
     private final ReturnID returnID;
     private final Object value;
+    /** The node of the return expression, used for the :return TracePoint event */
+    private final Node returnNode;
 
-    public DynamicReturnException(ReturnID returnID, Object value) {
+    public DynamicReturnException(ReturnID returnID, Object value, Node returnNode) {
         this.returnID = returnID;
         this.value = value;
+        this.returnNode = returnNode;
     }
 
     public ReturnID getReturnID() {
@@ -28,6 +32,10 @@ public final class DynamicReturnException extends RubyControlFlowException {
 
     public Object getValue() {
         return value;
+    }
+
+    public Node getReturnNode() {
+        return returnNode;
     }
 
 }

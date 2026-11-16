@@ -154,7 +154,7 @@
             │           │   │   │   @ SymbolNode (location: (10,4)-(10,12))
             │           │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
             │           │   │   │   ├── opening_loc: ∅
-            │           │   │   │   ├── value_loc: (10,4)-(10,11) = "default"
+            │           │   │   │   ├── content_loc: (10,4)-(10,11) = "default"
             │           │   │   │   ├── closing_loc: (10,11)-(10,12) = ":"
             │           │   │   │   └── unescaped: "default"
             │           │   │   ├── value:

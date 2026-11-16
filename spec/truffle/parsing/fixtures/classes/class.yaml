@@ -8,7 +8,8 @@ notes: >
   A class body is represented as a CallTarget, (that will be used to create an internal method),
   stored in ModuleBodyDefinition.
   
-  Expressions inside a class body are represented by InsideModuleDefinitionNode node.
+  The class body starts with a FireClassTracePointNode node for the :class TracePoint event,
+  and the expressions inside the class body are wrapped in a FireEndTracePointNode node for the :end TracePoint event.
 focused_on_node: "org.truffleruby.language.objects.RunModuleDefinitionNode"
 ruby: |
   class Foo
@@ -54,7 +55,7 @@ ast: |
                   body =
                       SequenceNode
                           attributes:
-                              flags = 12
+                              flags = 4
                               sourceCharIndex = 0
                               sourceLength = 13
                           children:
@@ -79,8 +80,9 @@ ast: |
                                                                   flags = 0
                                                                   sourceCharIndex = -1
                                                                   sourceLength = 0
-                                  InsideModuleDefinitionNode
+                                  FireClassAndEndTracePointsNode
                                       attributes:
+                                          endKeywordCharIndex = 10
                                           flags = 0
                                           sourceCharIndex = 0
                                           sourceLength = 13

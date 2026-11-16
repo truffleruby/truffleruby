@@ -33,7 +33,7 @@ public abstract class ToAryNode extends RubyBaseNode {
 
     @Specialization(guards = "!isRubyArray(object)")
     static RubyArray coerceObject(Node node, Object object,
-            @Cached(inline = false) DispatchNode toAryNode) {
+            @Cached DispatchNode toAryNode) {
         return (RubyArray) toAryNode.call(
                 coreLibrary(node).truffleTypeModule,
                 "rb_convert_type_fallback",

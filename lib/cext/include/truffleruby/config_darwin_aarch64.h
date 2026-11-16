@@ -74,6 +74,7 @@
 #define HAVE_UCONTEXT_H 1
 #define HAVE_UTIME_H 1
 #define HAVE_SYS_EVENT_H 1
+#define HAVE_STDCKDINT_H 1
 #define HAVE_STDATOMIC_H 1
 #define HAVE_TYPEOF 1
 #define restrict __restrict__
@@ -459,6 +460,6 @@
 #define USE_MODULAR_GC 0
 #define USE_YJIT 1
 #define USE_ZJIT 1
-#define RUBY_PLATFORM "arm64-darwin23"
+#define RUBY_PLATFORM "arm64-darwin24"
 #define RB_DEFAULT_PARSER RB_DEFAULT_PARSER_PRISM
 #endif /* INCLUDE_RUBY_CONFIG_H */

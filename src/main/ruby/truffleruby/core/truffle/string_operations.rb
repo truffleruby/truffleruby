@@ -108,9 +108,10 @@ module Truffle
       res = []
       offset = 0
       enc = Primitive.encoding_ensure_compatible_str orig, pattern
+      source = Primitive.string_to_frozen(orig) # the MatchData source must be frozen, see MatchData#string
 
       while index = byte_index(orig, pattern, enc, offset)
-        match = Primitive.matchdata_create_single_group(pattern, orig.dup, index, index + pattern.bytesize)
+        match = Primitive.matchdata_create_single_group(pattern, source, index, index + pattern.bytesize)
         res << match
         break unless global
         offset = gsub_new_offset(orig, match)
@@ -269,15 +270,13 @@ module Truffle
         end
       end
 
-      encoding = str.encoding
-
-      if start < bytesize && !Primitive.string_is_character_head?(encoding, str, start)
+      if start < bytesize && !Primitive.string_is_character_head?(str, start)
         raise IndexError, "offset #{start} does not land on character boundary"
       end
 
       finish = start + len
 
-      if finish < bytesize && !Primitive.string_is_character_head?(encoding, str, finish)
+      if finish < bytesize && !Primitive.string_is_character_head?(str, finish)
         raise IndexError, "offset #{finish} does not land on character boundary"
       end
     end

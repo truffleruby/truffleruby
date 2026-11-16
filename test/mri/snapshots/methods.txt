@@ -902,7 +902,7 @@
         │   │       │   │                   └── @ SymbolNode (location: (99,7)-(99,10))
         │   │       │   │                       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       │   │                       ├── opening_loc: (99,7)-(99,8) = ":"
-        │   │       │   │                       ├── value_loc: (99,8)-(99,10) = "hi"
+        │   │       │   │                       ├── content_loc: (99,8)-(99,10) = "hi"
         │   │       │   │                       ├── closing_loc: ∅
         │   │       │   │                       └── unescaped: "hi"
         │   │       │   ├── subsequent: ∅
@@ -910,7 +910,7 @@
         │   │       └── @ SymbolNode (location: (100,0)-(100,4))
         │   │           ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   │           ├── opening_loc: (100,0)-(100,1) = ":"
-        │   │           ├── value_loc: (100,1)-(100,4) = "bye"
+        │   │           ├── content_loc: (100,1)-(100,4) = "bye"
         │   │           ├── closing_loc: ∅
         │   │           └── unescaped: "bye"
         │   ├── locals: []

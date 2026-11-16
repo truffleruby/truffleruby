@@ -42,7 +42,6 @@ public final class OutputStreamAdapter extends OutputStream {
                 new RubyString(
                         context.getCoreLibrary().stringClass,
                         language.stringShape,
-                        false,
                         TStringUtils.fromByteArray(new byte[]{ (byte) bite }, encoding),
                         encoding));
     }

@@ -470,6 +470,26 @@ describe "Module#define_method" do
     klass.new.instance_of?(klass).should == true
   end
 
+  it "allows an UnboundMethod of a Kernel method to be defined on a module" do
+    mod = Module.new do
+      define_method :my_eql?, Kernel.instance_method(:eql?)
+      define_method :my_object_id, Kernel.instance_method(:object_id)
+      define_method :my_send, Kernel.instance_method(:send)
+    end
+    obj = Object.new.extend(mod)
+    obj.my_eql?(obj).should == true
+    obj.my_object_id.should == obj.object_id
+    obj.my_send(:class).should == Object
+  end
+
+  it "allows an UnboundMethod of a method aliased in a module from a BasicObject method to be defined on another module" do
+    mod = Module.new { alias_method :my_equal?, :equal? }
+    other = Module.new { define_method :my_equal?, mod.instance_method(:my_equal?) }
+    obj = Object.new.extend(other)
+    obj.my_equal?(obj).should == true
+    obj.my_equal?(Object.new).should == false
+  end
+
   it "raises a TypeError when an UnboundMethod from a child class is defined on a parent class" do
     -> {
       ParentClass = Class.new { define_method(:foo) { :bar } }

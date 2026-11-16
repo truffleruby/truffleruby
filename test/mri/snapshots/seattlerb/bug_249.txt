@@ -82,7 +82,7 @@
             │                   │   @ SymbolNode (location: (4,11)-(4,14))
             │                   │   ├── flags: static_literal, forced_us_ascii_encoding
             │                   │   ├── opening_loc: (4,11)-(4,12) = ":"
-            │                   │   ├── value_loc: (4,12)-(4,14) = "at"
+            │                   │   ├── content_loc: (4,12)-(4,14) = "at"
             │                   │   ├── closing_loc: ∅
             │                   │   └── unescaped: "at"
             │                   ├── value:

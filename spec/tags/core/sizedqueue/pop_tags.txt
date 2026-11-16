@@ -1,0 +1,1 @@
+fails:SizedQueue#pop with a timeout returns nil for an empty queue that is closed before the timeout

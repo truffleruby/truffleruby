@@ -1,0 +1,5 @@
+exclude :test_get_string, "IO::Buffer::InvalidatedError expected but nothing was raised."
+exclude :test_operators_raise_on_freed_mask, "IO::Buffer::InvalidatedError expected but nothing was raised."
+exclude :test_operators_raise_on_freed_self, "IO::Buffer::InvalidatedError expected but nothing was raised."
+exclude :test_resize_invalidated_slice, "IO::Buffer::InvalidatedError expected but nothing was raised."
+exclude :test_set_values_invalidated_slice, "[IO::Buffer::InvalidatedError] exception expected, not #<TypeError: TruffleRuby doesn't have a case for the org.truffleruby.core.string.StringPrimitiveNodesFactory$PrimitiveStringSetByteNodeFactory$PrimitiveStringSetByteNodeGen node with values of type String(org.truffleruby.core.string.RubyString) java.lang.Integer=0 #<Class:0x1088>(org.truffleruby.core.basicobject.RubyBasicObject)"

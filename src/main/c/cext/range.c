@@ -16,21 +16,34 @@ VALUE rb_range_new(VALUE beg, VALUE end, int exclude_end) {
   return rb_tr_up_rb_range_new(beg, end, exclude_end);
 }
 
-/* This function cannot be `inline` as the two rb_intern() macros
- * generate static variables, and would produce unwanted
- * warnings. This does mean that the start and end VALUEs will be
- * converted to native handles and back, but this is unlikely to
- * cause a major performance issue. */
+// Imported from CRuby's range.c. CRuby reads the Range's fields directly (RANGE_BEG, RANGE_END, EXCL),
+// we call the methods instead.
 int rb_range_values(VALUE range, VALUE *begp, VALUE *endp, int *exclp) {
-  if (!rb_obj_is_kind_of(range, rb_cRange)) {
-    if (!rb_respond_to(range, rb_intern("begin"))) return Qfalse;
-    if (!rb_respond_to(range, rb_intern("end"))) return Qfalse;
-  }
+    VALUE b, e;
+    int excl;
 
-  *begp = rb_tr_up_send0_begin(range);
-  *endp = rb_tr_up_send0_end(range);
-  *exclp = (int) RTEST(rb_tr_up_send0_exclude_end_p(range));
-  return Qtrue;
+    if (rb_obj_is_kind_of(range, rb_cRange)) {
+        b = rb_tr_up_send0_begin(range);
+        e = rb_tr_up_send0_end(range);
+        excl = RTEST(rb_tr_up_send0_exclude_end_p(range));
+    }
+    else if (RTEST(rb_obj_is_kind_of(range, rb_cArithSeq))) {
+        return (int)Qfalse;
+    }
+    else {
+        VALUE x;
+        b = rb_check_funcall(range, rb_intern("begin"), 0, 0);
+        if (RB_UNDEF_P(b)) return (int)Qfalse;
+        e = rb_check_funcall(range, rb_intern("end"), 0, 0);
+        if (RB_UNDEF_P(e)) return (int)Qfalse;
+        x = rb_check_funcall(range, rb_intern("exclude_end?"), 0, 0);
+        if (RB_UNDEF_P(x)) return (int)Qfalse;
+        excl = RTEST(x);
+    }
+    *begp = b;
+    *endp = e;
+    *exclp = excl;
+    return (int)Qtrue;
 }
 
 // NOTE: this is not a public API function but a helper function from CRuby
@@ -100,51 +113,17 @@ VALUE rb_range_component_beg_len(VALUE b, VALUE e, int excl, long *begp, long *l
 }
 
 VALUE rb_range_beg_len(VALUE range, long *begp, long *lenp, long len, int err) {
-  long beg, end, origbeg, origend;
-  VALUE b, e;
-  int excl;
+    VALUE b, e;
+    int excl;
 
-  if (!rb_range_values(range, &b, &e, &excl)) {
-    return Qfalse;
-  }
-
-  beg = NUM2LONG(b);
-  end = NUM2LONG(e);
-  origbeg = beg;
-  origend = end;
-  if (beg < 0) {
-    beg += len;
-    if (beg < 0) {
-      goto out_of_range;
+    if (!rb_range_values(range, &b, &e, &excl)) {
+        return Qfalse;
     }
-  }
-  if (end < 0) {
-    end += len;
-  }
-  if (!excl) {
-    end++;                        /* include end point */
-  }
-  if (err == 0 || err == 2) {
-    if (beg > len) {
-      goto out_of_range;
-    }
-    if (end > len) {
-      end = len;
-    }
-  }
-  len = end - beg;
-  if (len < 0) {
-    len = 0;
-  }
 
-  *begp = beg;
-  *lenp = len;
-  return Qtrue;
+    VALUE res = rb_range_component_beg_len(b, e, excl, begp, lenp, len, err);
+    if (NIL_P(res) && err) {
+        rb_raise(rb_eRangeError, "%+"PRIsVALUE" out of range", range);
+    }
 
-out_of_range:
-  if (err) {
-    rb_raise(rb_eRangeError, "%ld..%s%ld out of range",
-             origbeg, excl ? "." : "", origend);
-  }
-  return Qnil;
+    return res;
 }

@@ -15,6 +15,7 @@ module Truffle::Platform
 
   LONG_MIN = -0x8000000000000000
   LONG_MAX =  0x7fffffffffffffff
+  ULONG_MAX = 0xffffffffffffffff
 
   # jnr-posix hard codes this value
   PATH_MAX = 1024

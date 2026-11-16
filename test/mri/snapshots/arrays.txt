@@ -98,7 +98,7 @@
         │   │               │   @ SymbolNode (location: (5,1)-(5,3))
         │   │               │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │               │   ├── opening_loc: ∅
-        │   │               │   ├── value_loc: (5,1)-(5,2) = "a"
+        │   │               │   ├── content_loc: (5,1)-(5,2) = "a"
         │   │               │   ├── closing_loc: (5,2)-(5,3) = ":"
         │   │               │   └── unescaped: "a"
         │   │               ├── value:
@@ -108,13 +108,13 @@
         │   │               │   │   ├── @ SymbolNode (location: (5,5)-(5,7))
         │   │               │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │               │   │   │   ├── opening_loc: (5,5)-(5,6) = ":"
-        │   │               │   │   │   ├── value_loc: (5,6)-(5,7) = "b"
+        │   │               │   │   │   ├── content_loc: (5,6)-(5,7) = "b"
         │   │               │   │   │   ├── closing_loc: ∅
         │   │               │   │   │   └── unescaped: "b"
         │   │               │   │   └── @ SymbolNode (location: (5,9)-(5,11))
         │   │               │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │               │   │       ├── opening_loc: (5,9)-(5,10) = ":"
-        │   │               │   │       ├── value_loc: (5,10)-(5,11) = "c"
+        │   │               │   │       ├── content_loc: (5,10)-(5,11) = "c"
         │   │               │   │       ├── closing_loc: ∅
         │   │               │   │       └── unescaped: "c"
         │   │               │   ├── opening_loc: (5,4)-(5,5) = "["
@@ -128,19 +128,19 @@
         │   │   ├── @ SymbolNode (location: (9,1)-(9,3))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: (9,1)-(9,2) = ":"
-        │   │   │   ├── value_loc: (9,2)-(9,3) = "a"
+        │   │   │   ├── content_loc: (9,2)-(9,3) = "a"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "a"
         │   │   ├── @ SymbolNode (location: (9,5)-(9,7))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: (9,5)-(9,6) = ":"
-        │   │   │   ├── value_loc: (9,6)-(9,7) = "b"
+        │   │   │   ├── content_loc: (9,6)-(9,7) = "b"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "b"
         │   │   ├── @ SymbolNode (location: (10,0)-(10,2))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: (10,0)-(10,1) = ":"
-        │   │   │   ├── value_loc: (10,1)-(10,2) = "c"
+        │   │   │   ├── content_loc: (10,1)-(10,2) = "c"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "c"
         │   │   ├── @ IntegerNode (location: (10,3)-(10,4))
@@ -149,7 +149,7 @@
         │   │   └── @ SymbolNode (location: (14,0)-(14,2))
         │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       ├── opening_loc: (14,0)-(14,1) = ":"
-        │   │       ├── value_loc: (14,1)-(14,2) = "d"
+        │   │       ├── content_loc: (14,1)-(14,2) = "d"
         │   │       ├── closing_loc: ∅
         │   │       └── unescaped: "d"
         │   ├── opening_loc: (9,0)-(9,1) = "["
@@ -160,19 +160,19 @@
         │   │   ├── @ SymbolNode (location: (18,1)-(18,3))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: (18,1)-(18,2) = ":"
-        │   │   │   ├── value_loc: (18,2)-(18,3) = "a"
+        │   │   │   ├── content_loc: (18,2)-(18,3) = "a"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "a"
         │   │   ├── @ SymbolNode (location: (18,5)-(18,7))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: (18,5)-(18,6) = ":"
-        │   │   │   ├── value_loc: (18,6)-(18,7) = "b"
+        │   │   │   ├── content_loc: (18,6)-(18,7) = "b"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "b"
         │   │   ├── @ SymbolNode (location: (19,0)-(19,2))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: (19,0)-(19,1) = ":"
-        │   │   │   ├── value_loc: (19,1)-(19,2) = "c"
+        │   │   │   ├── content_loc: (19,1)-(19,2) = "c"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "c"
         │   │   ├── @ IntegerNode (location: (19,3)-(19,4))
@@ -181,7 +181,7 @@
         │   │   └── @ SymbolNode (location: (23,0)-(23,2))
         │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       ├── opening_loc: (23,0)-(23,1) = ":"
-        │   │       ├── value_loc: (23,1)-(23,2) = "d"
+        │   │       ├── content_loc: (23,1)-(23,2) = "d"
         │   │       ├── closing_loc: ∅
         │   │       └── unescaped: "d"
         │   ├── opening_loc: (18,0)-(18,1) = "["
@@ -844,19 +844,19 @@
         │   │   ├── @ SymbolNode (location: (62,3)-(62,6))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: ∅
-        │   │   │   ├── value_loc: (62,3)-(62,6) = "one"
+        │   │   │   ├── content_loc: (62,3)-(62,6) = "one"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "one"
         │   │   ├── @ SymbolNode (location: (62,7)-(62,10))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: ∅
-        │   │   │   ├── value_loc: (62,7)-(62,10) = "two"
+        │   │   │   ├── content_loc: (62,7)-(62,10) = "two"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "two"
         │   │   └── @ SymbolNode (location: (62,11)-(62,16))
         │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       ├── opening_loc: ∅
-        │   │       ├── value_loc: (62,11)-(62,16) = "three"
+        │   │       ├── content_loc: (62,11)-(62,16) = "three"
         │   │       ├── closing_loc: ∅
         │   │       └── unescaped: "three"
         │   ├── opening_loc: (62,0)-(62,3) = "%i#"
@@ -896,19 +896,19 @@
         │   │   ├── @ SymbolNode (location: (69,3)-(69,6))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: ∅
-        │   │   │   ├── value_loc: (69,3)-(69,6) = "one"
+        │   │   │   ├── content_loc: (69,3)-(69,6) = "one"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "one"
         │   │   ├── @ SymbolNode (location: (69,7)-(69,10))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: ∅
-        │   │   │   ├── value_loc: (69,7)-(69,10) = "two"
+        │   │   │   ├── content_loc: (69,7)-(69,10) = "two"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "two"
         │   │   └── @ SymbolNode (location: (69,11)-(69,16))
         │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       ├── opening_loc: ∅
-        │   │       ├── value_loc: (69,11)-(69,16) = "three"
+        │   │       ├── content_loc: (69,11)-(69,16) = "three"
         │   │       ├── closing_loc: ∅
         │   │       └── unescaped: "three"
         │   ├── opening_loc: (69,0)-(69,3) = "%i@"
@@ -948,19 +948,19 @@
         │   │   ├── @ SymbolNode (location: (76,3)-(76,6))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: ∅
-        │   │   │   ├── value_loc: (76,3)-(76,6) = "one"
+        │   │   │   ├── content_loc: (76,3)-(76,6) = "one"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "one"
         │   │   ├── @ SymbolNode (location: (76,7)-(76,10))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: ∅
-        │   │   │   ├── value_loc: (76,7)-(76,10) = "two"
+        │   │   │   ├── content_loc: (76,7)-(76,10) = "two"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "two"
         │   │   └── @ SymbolNode (location: (76,11)-(76,16))
         │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       ├── opening_loc: ∅
-        │   │       ├── value_loc: (76,11)-(76,16) = "three"
+        │   │       ├── content_loc: (76,11)-(76,16) = "three"
         │   │       ├── closing_loc: ∅
         │   │       └── unescaped: "three"
         │   ├── opening_loc: (76,0)-(76,3) = "%i{"

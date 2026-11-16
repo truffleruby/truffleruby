@@ -1,5 +1,5 @@
 suite = {
-    "mxversion": "7.84.1",
+    "mxversion": "7.88.1",
     "name": "truffleruby",
     "version": "40.1.0",
     "release": False,
@@ -21,7 +21,7 @@ suite = {
             {
                 "name": "regex",
                 "subdir": True,
-                "version": "6338ada5df2b1683f4edc9b08e289f41a9d45fd3",
+                "version": "52bb5ee39624a68533dd9ee738cbff45eef013a5",
                 "urls": [
                     {"url": "https://github.com/truffleruby/graal.git", "kind": "git"},
                     {"url": "https://curio.ssw.jku.at/nexus/content/repositories/snapshots", "kind": "binary"},

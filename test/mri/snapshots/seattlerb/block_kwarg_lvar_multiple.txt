@@ -38,7 +38,7 @@
                 │   │   │   │       @ SymbolNode (location: (1,10)-(1,14))
                 │   │   │   │       ├── flags: static_literal, forced_us_ascii_encoding
                 │   │   │   │       ├── opening_loc: (1,10)-(1,11) = ":"
-                │   │   │   │       ├── value_loc: (1,11)-(1,14) = "val"
+                │   │   │   │       ├── content_loc: (1,11)-(1,14) = "val"
                 │   │   │   │       ├── closing_loc: ∅
                 │   │   │   │       └── unescaped: "val"
                 │   │   │   └── @ OptionalKeywordParameterNode (location: (1,16)-(1,26))
@@ -49,7 +49,7 @@
                 │   │   │           @ SymbolNode (location: (1,21)-(1,26))
                 │   │   │           ├── flags: static_literal, forced_us_ascii_encoding
                 │   │   │           ├── opening_loc: (1,21)-(1,22) = ":"
-                │   │   │           ├── value_loc: (1,22)-(1,26) = "val2"
+                │   │   │           ├── content_loc: (1,22)-(1,26) = "val2"
                 │   │   │           ├── closing_loc: ∅
                 │   │   │           └── unescaped: "val2"
                 │   │   ├── keyword_rest: ∅

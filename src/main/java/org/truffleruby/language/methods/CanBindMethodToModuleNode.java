@@ -31,11 +31,11 @@ public abstract class CanBindMethodToModuleNode extends RubyBaseNode {
 
     @Specialization(
             guards = {
-                    "method.getDeclaringModule() == declaringModule",
+                    "method.getOwner() == owner",
                     "module == cachedModule" },
             limit = "getCacheLimit()")
     static boolean canBindMethodToCached(InternalMethod method, RubyModule module,
-            @Cached("method.getDeclaringModule()") RubyModule declaringModule,
+            @Cached("method.getOwner()") RubyModule owner,
             @Cached("module") RubyModule cachedModule,
             @Cached("canBindMethodTo(method, cachedModule)") boolean canBindMethodTo) {
         return canBindMethodTo;

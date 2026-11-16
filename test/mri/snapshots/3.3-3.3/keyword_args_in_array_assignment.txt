@@ -39,14 +39,14 @@
             │       │           │   @ SymbolNode (location: (1,10)-(1,15))
             │       │           │   ├── flags: static_literal, forced_us_ascii_encoding
             │       │           │   ├── opening_loc: ∅
-            │       │           │   ├── value_loc: (1,10)-(1,14) = "axis"
+            │       │           │   ├── content_loc: (1,10)-(1,14) = "axis"
             │       │           │   ├── closing_loc: (1,14)-(1,15) = ":"
             │       │           │   └── unescaped: "axis"
             │       │           ├── value:
             │       │           │   @ SymbolNode (location: (1,16)-(1,18))
             │       │           │   ├── flags: static_literal, forced_us_ascii_encoding
             │       │           │   ├── opening_loc: (1,16)-(1,17) = ":"
-            │       │           │   ├── value_loc: (1,17)-(1,18) = "y"
+            │       │           │   ├── content_loc: (1,17)-(1,18) = "y"
             │       │           │   ├── closing_loc: ∅
             │       │           │   └── unescaped: "y"
             │       │           └── operator_loc: ∅

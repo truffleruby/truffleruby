@@ -1,0 +1,2 @@
+fails:Queue#pop with a timeout returns nil for an empty queue that is closed before the timeout
+fails:Queue#pop with Fiber scheduler blocks through the scheduler while the queue is empty

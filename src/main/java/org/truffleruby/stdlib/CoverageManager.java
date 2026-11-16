@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLongArray;
 
+import com.oracle.truffle.api.instrumentation.SourceFilter;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.RubyLanguage.RubySourceOptions;
 import org.truffleruby.annotations.SuppressFBWarnings;
@@ -33,6 +34,7 @@ import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
+import org.truffleruby.shared.TruffleRuby;
 
 public final class CoverageManager {
 
@@ -75,11 +77,15 @@ public final class CoverageManager {
             return;
         }
 
+        var sourceFilter = SourceFilter.newBuilder()
+                .languageIs(TruffleRuby.LANGUAGE_ID)
+                .sourceIs(source -> source.getOptions(language).get(RubySourceOptions.Coverage))
+                .build();
+
         binding = instrumenter.attachExecutionEventFactory(
                 SourceSectionFilter
                         .newBuilder()
-                        .mimeTypeIs(RubyLanguage.MIME_TYPES)
-                        .sourceIs(source -> source.getOptions(language).get(RubySourceOptions.Coverage))
+                        .sourceFilter(sourceFilter)
                         .tagIs(LineTag.class)
                         .build(),
                 eventContext -> new ExecutionEventNode() {

@@ -349,7 +349,8 @@ class String
   Primitive.always_split self, :scan
 
   def split(pattern = nil, limit = undefined, &block)
-    Truffle::Splitter.split(Primitive.dup_as_string_instance(self), pattern, limit, &block)
+    result = Truffle::Splitter.split(Primitive.dup_as_string_instance(self), pattern, limit, &block)
+    block ? self : result
   end
   Primitive.always_split self, :split
 
@@ -1075,6 +1076,8 @@ class String
         raise TypeError, "wrong argument type #{Primitive.class(arg).name} (expected String or Integer)"
       end
     end
+
+    self
   end
 
   def byteindex(str, start = 0)
@@ -1091,7 +1094,7 @@ class String
       return nil
     end
 
-    if start < bytesize && !Primitive.string_is_character_head?(encoding, self, start)
+    if start < bytesize && !Primitive.string_is_character_head?(self, start)
       raise IndexError, "offset #{start} does not land on character boundary"
     end
 
@@ -1118,7 +1121,7 @@ class String
 
     finish = Primitive.min(finish, bytesize)
 
-    if finish < bytesize && !Primitive.string_is_character_head?(encoding, self, finish)
+    if finish < bytesize && !Primitive.string_is_character_head?(self, finish)
       raise IndexError, "offset #{finish} does not land on character boundary"
     end
 

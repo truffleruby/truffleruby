@@ -29,16 +29,21 @@
 
 class Socket < BasicSocket
   class Ifaddr
-    attr_reader :addr, :broadaddr, :dstaddr, :flags, :ifindex, :name, :netmask
+    attr_reader :addr, :broadaddr, :dstaddr, :flags, :name, :netmask
 
-    def initialize(addr: nil, broadaddr: nil, dstaddr: nil, flags: nil, ifindex: nil, name: nil, netmask: nil)
+    def initialize(addr: nil, broadaddr: nil, dstaddr: nil, flags: nil, name: nil, netmask: nil)
       @addr      = addr
       @broadaddr = broadaddr
       @dstaddr   = dstaddr
       @flags     = flags
-      @ifindex   = ifindex
       @name      = name
       @netmask   = netmask
+    end
+
+    def ifindex
+      index = Truffle::Socket::Foreign.if_nametoindex(@name)
+      raise ArgumentError, "invalid interface name: #{@name}" if index == 0
+      index
     end
 
     def inspect

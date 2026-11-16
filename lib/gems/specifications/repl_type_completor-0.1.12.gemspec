@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["tompng".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-03-17"
+  s.date = "2026-10-23"
   s.description = "Type based completion for REPL.".freeze
   s.email = ["tomoyapenguin@gmail.com".freeze]
   s.homepage = "https://github.com/ruby/repl_type_completor".freeze
@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
   s.rubygems_version = "3.4.20".freeze
   s.summary = "Type based completion for REPL.".freeze
 
-  s.installed_by_version = "4.0.6".freeze
+  s.installed_by_version = "4.0.20".freeze
 
   s.specification_version = 4
 

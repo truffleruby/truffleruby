@@ -29,7 +29,7 @@ public abstract class LazyDispatchNode extends RubyBaseNode {
 
     @Specialization
     static DispatchNode doLazy(
-            @Cached(inline = false) DispatchNode dispatchNode) {
+            @Cached DispatchNode dispatchNode) {
         return dispatchNode;
     }
 }

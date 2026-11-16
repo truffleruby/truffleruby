@@ -11,19 +11,19 @@
             │   ├── @ SymbolNode (location: (1,3)-(1,4))
             │   │   ├── flags: static_literal, forced_us_ascii_encoding
             │   │   ├── opening_loc: ∅
-            │   │   ├── value_loc: (1,3)-(1,4) = "a"
+            │   │   ├── content_loc: (1,3)-(1,4) = "a"
             │   │   ├── closing_loc: ∅
             │   │   └── unescaped: "a"
             │   ├── @ SymbolNode (location: (1,5)-(1,12))
             │   │   ├── flags: static_literal, forced_us_ascii_encoding
             │   │   ├── opening_loc: ∅
-            │   │   ├── value_loc: (1,5)-(1,12) = "b\#{1+1}"
+            │   │   ├── content_loc: (1,5)-(1,12) = "b\#{1+1}"
             │   │   ├── closing_loc: ∅
             │   │   └── unescaped: "b\#{1+1}"
             │   └── @ SymbolNode (location: (1,13)-(1,14))
             │       ├── flags: static_literal, forced_us_ascii_encoding
             │       ├── opening_loc: ∅
-            │       ├── value_loc: (1,13)-(1,14) = "c"
+            │       ├── content_loc: (1,13)-(1,14) = "c"
             │       ├── closing_loc: ∅
             │       └── unescaped: "c"
             ├── opening_loc: (1,0)-(1,3) = "%i("

@@ -3,15 +3,50 @@
 New features:
 
 * Add `Ractor`, implemented on top of `Thread` and without isolation between Ractors (@eregon).
+* Updated to Ruby 4.0.9 (@eregon).
+* Updated to GraalVM 25.5.5.0.3 (@eregon).
 
 Bug fixes:
+
+* Fix `Process.exec` ignoring the `:umask` option (@nirvdrum).
+* Fix `Socket.tcp` and `Addrinfo#connect` with a timeout returning an unconnected socket on macOS when the connection was refused (@eregon).
+* Fix `String#append_as_bytes` to return `self` instead of its arguments (#4502, @taxor03).
+* Fix `rb_range_beg_len()` raising `TypeError` for beginless and endless ranges (#4487, @nirvdrum, @eregon).
+* Fix `TCPServer.new` raising `IOError` instead of e.g. `Errno::EAFNOSUPPORT` when `socket(2)` fails for every address, such as an IPv6 address when IPv6 is unavailable (@eregon).
+* Fix parsing of parenthesized patterns in pattern matching like `in [(Symbol | String), *]` (#4497, @eregon).
+* Fix `Integer#/` and `Integer#div` returning `0` instead of `-1` for bignum operands of different signs when the divisor is larger in magnitude (#4534, @taxor03).
+* Fix `Module#define_method` and `UnboundMethod#bind` raising `TypeError` for `Kernel#eql?`, `Kernel#object_id` and `Kernel#send` used on a module, and check the method's owner like CRuby (#4479, @eregon).
+* Fix a `dead handle` internal error when the free function of a C extension data object accesses `RDATA()`/`RTYPEDDATA()` of a dead data object not yet freed (including itself), as the `markly` gem does (@eregon).
+* Fix `Integer#%` returning the divisor instead of `0` for a bignum receiver which is a multiple of a negative divisor (@eregon).
+* Fix `Integer#pow(exponent, modulus)` returning the modulus instead of `0` when the power is a multiple of a negative modulus which fits in 32 bits (@eregon).
+* Fix `Data#with` on an instance of a subclass of a `Data.define` class to return an instance of that subclass and call its `#initialize` (#4541, @taxor03).
+* Fix `Enumerator::Lazy#with_index` with a block to pass on the elements instead of the results of the block (#4543, @taxor03).
+* Fix `Socket.getifaddrs` skipping the first entry of `getifaddrs(3)` and returning the position in the list instead of the interface index as `Socket::Ifaddr#ifindex` (#4545, @taxor03).
+* Fix `rb_arithmetic_sequence_extract()` setting `exclude_end` to a `VALUE` handle instead of `1` for an `Enumerator::ArithmeticSequence` with an exclusive end (@nirvdrum).
 
 
 Compatibility:
 
+* Call the most recently enabled `TracePoint` first when several `TracePoint`s are enabled for the same event, like CRuby (@eregon).
+* Add support for the `:call` and `:c_call` `TracePoint` events and `TracePoint#defined_class` (@eregon).
+* Add support for the `:return` `TracePoint` event and `TracePoint#return_value` (@eregon).
+* Add support for the `:c_return` `TracePoint` event (@eregon).
+* `Kernel#set_trace_func` now also reports `end`, `return`, `c-call` and `c-return` events (@eregon).
+* Add support for the `:end`, `:fiber_switch`, `:thread_begin` and `:thread_end` `TracePoint` events (#4419, @eregon).
+* `class << expr` no longer triggers the `:class` `TracePoint` event, like CRuby (@eregon).
+* `IO#read` now coerces the `length` parameter to `Integer` (#4456, @andrykonchin).
+* Raise `RangeError` instead of `FloatDomainError` when converting NaN, infinite or other out-of-range `Float` values with `rb_num2ulong()`, `Process.uid=` and similar methods (@nirvdrum).
+* `StringIO#gets`, `#readline`, `#each_line` and `#readlines` no longer split a multi-byte character when given a limit (@ListlessPanda).
+* `rb_range_values()` now returns false for `Enumerator::ArithmeticSequence` and for range-like objects without `#exclude_end?`, and accepts range-like objects with private methods, like CRuby (#4487, @nirvdrum, @eregon).
+* `String#split` with a block now returns `self`, `IO#printf` returns `nil`, `ARGF.set_encoding` returns `ARGF`, and `IO::Buffer#set_string` and `IO::Buffer#copy` return the number of bytes copied, like CRuby (#4509, @taxor03).
+* `Complex#/` and `Complex#quo` now return Integer parts instead of Rationals with a denominator of 1, like CRuby (#4544, @taxor03).
+* `Complex#fdiv` now returns Float parts, like CRuby (#4547, @taxor03).
 
 Performance:
 
+* `TracePoint` blocks now receive a new `TracePoint` object per event holding the event data instead of the `TracePoint` itself, which lets the compiler avoid materializing the traced frame (@eregon).
+* Reduce C extension overhead for ID-based C API calls such as `rb_funcall()`, `rb_ivar_get()`, and `rb_block_call()` by avoiding a separate `ID2SYM()` upcall (@nirvdrum).
+* Enabling or disabling a `:class` `TracePoint` no longer invalidates compiled code and no longer uses Truffle instrumentation, which also reduces memory footprint (#2371, @eregon).
 
 Incompatible Changes:
 
@@ -47,6 +82,9 @@ Bug fixes:
 * Fix issue where environment updates made in native code (e.g., a C extension calling `setenv(3)`) would not be reflected by `ENV` (@nirvdrum).
 * Make `ENV` thread-safe (#4352, @nirvdrum).
 * Fix `TracePoint` events not triggering for code loaded via `eval`, `class_eval` or `ruby -e` (#3095, @andrykonchin).
+* Fix `IO#write` to retry from the same offset after waiting for a non-blocking descriptor to become writable instead of corrupting the written data (@nirvdrum).
+* Fix `IO#sysread` and `IO#syswrite` to wait for a descriptor in non-blocking mode to become ready, like CRuby, instead of raising `Errno::EAGAIN` or returning 0 (@nirvdrum).
+* Raise `IOError` for socket receive operations with buffered input, like CRuby, instead of ignoring the buffered data (@nirvdrum).
 
 Compatibility:
 
@@ -94,7 +132,11 @@ Compatibility:
 * Add `flags` keyword argument to `Dir.glob` as an alternative to the positional argument (#4394, @earlopain).
 * Fix `new` on `Data` subclasses to pass the given block to `#initialize` (@eregon).
 * Fix `ENV` for `BINARY` strings with non-ASCII bytes (@nirvdrum).
-* `StringIO#gets`, `#readline`, `#each_line` and `#readlines` no longer split a multi-byte character when given a limit (@ListlessPanda).
+* Support multiple arguments in `StringIO#write` (@andrykonchin).
+* Support pattern matching on Hash subclasses (#3678, @andrykonchin).
+* Create sockets in non-blocking mode with `FD_CLOEXEC` set and emulate blocking socket operations by waiting for readiness, like CRuby, so C extensions such as `trilogy` can take over the descriptors (@nirvdrum).
+* Accept objects responding to `#to_path` for the path argument of `UNIXSocket.new` and `UNIXServer.new`, preserving the path bytes like CRuby (@nirvdrum).
+* Implement `rb_ractor_local_storage_value_newkey()`, `rb_ractor_local_storage_value()`, `rb_ractor_local_storage_value_lookup()` and `rb_ractor_local_storage_value_set()` (@nirvdrum).
 
 Performance:
 

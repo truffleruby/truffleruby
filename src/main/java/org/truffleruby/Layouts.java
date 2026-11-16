@@ -15,6 +15,9 @@ import com.oracle.truffle.api.object.HiddenKey;
 public abstract class Layouts {
 
     public static final int FROZEN_FLAG = 1;
+    /** Only used for RubyString. Set by rb_str_locktmp() and cleared by rb_str_unlocktmp(), while the String bytes are
+     * accessed directly and the String must not be modified, e.g. by IO::Buffer.for(string) or a C extension. */
+    public static final int LOCKED_FLAG = 2;
 
     // Standard identifiers
 
@@ -24,7 +27,6 @@ public abstract class Layouts {
     public static final HiddenKey FINALIZER_REF_IDENTIFIER = new HiddenKey("finalizerRef"); // FinalizerReference
     public static final HiddenKey DATA_OBJECT_FINALIZER_REF_IDENTIFIER = new HiddenKey("data_object_finalizerRef"); // FinalizerReference
     public static final HiddenKey MARKED_OBJECTS_IDENTIFIER = new HiddenKey("marked_objects"); // Object[]
-    public static final HiddenKey VALUE_WRAPPER_IDENTIFIER = new HiddenKey("value_wrapper"); // ValueWrapper
     public static final HiddenKey ALLOCATION_TRACE_IDENTIFIER = new HiddenKey("allocation_trace"); // AllocationTrace
 
 }

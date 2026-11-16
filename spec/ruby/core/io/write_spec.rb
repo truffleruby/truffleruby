@@ -295,6 +295,75 @@ describe "IO#write" do
       r.read.should == "foobar"
     end
   end
+
+  platform_is_not :windows do
+    it "writes all the data when the write would block" do
+      require 'socket'
+      server, client = UNIXSocket.pair
+      begin
+        # Shrink the send buffer so the write fills it up part way through and
+        # has to wait for the reader before continuing from the right offset.
+        client.setsockopt(Socket::SOL_SOCKET, Socket::SO_SNDBUF, 4096)
+        data = "0123456789abcdef" * (1024 * 64)
+
+        reader = Thread.new { server.read(data.bytesize) }
+
+        client.write(data).should == data.bytesize
+        reader.value.should == data
+      ensure
+        server.close
+        client.close
+      end
+    end
+  end
+end
+
+describe "IO#write with Fiber scheduler" do
+  require_relative '../fiber/fixtures/scheduler'
+  require 'io/nonblock'
+
+  before :each do
+    @r, @w = IO.pipe
+    @w.nonblock = true
+    nil until @w.write_nonblock("x" * 65536, exception: false) == :wait_writable
+    Fiber.set_scheduler(FiberSpecs::LoggingScheduler.new)
+  end
+
+  after :each do
+    Fiber.set_scheduler(nil)
+    @r.close
+    @w.close
+  end
+
+  it "waits for the IO to become writable through the scheduler" do
+    writer = Fiber.schedule { @w.write("y") }
+
+    begin
+      event = Fiber.scheduler.events.last
+      event[:event].should == :io_wait
+      event[:fiber].should == writer
+      io, events, timeout = event[:args]
+      io.fileno.should == @w.fileno
+      events.should == IO::WRITABLE
+      timeout.should == nil
+    ensure
+      # let the writer finish, so closing the pipe does not wait on it
+      nil until @r.read_nonblock(65536, exception: false) == :wait_readable
+      writer.resume(IO::WRITABLE) while writer.alive?
+    end
+  end
+
+  it "lets another fiber write to the IO while one waits for it to become writable" do
+    writers = 2.times.map { Fiber.schedule { @w.write("y") } }
+
+    # the second writer waits on the IO or on the first writer, but through the scheduler
+    waits = Fiber.scheduler.events.select { |e| e[:event] == :io_wait || e[:event] == :block }
+    waits.map { |e| e[:fiber] }.should == writers
+
+    nil until @r.read_nonblock(65536, exception: false) == :wait_readable
+    writers.each { |f| f.resume(IO::WRITABLE) while f.alive? }
+    @r.read_nonblock(2).should == "yy"
+  end
 end
 
 platform_is :windows do

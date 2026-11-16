@@ -99,15 +99,15 @@ VALUE rb_class_new_instance_kw(int argc, const VALUE *argv, VALUE klass, int kw_
 }
 
 VALUE rb_cvar_defined(VALUE klass, ID id) {
-  return rb_tr_up_rb_cvar_defined(klass, ID2SYM(id));
+  return rb_tr_up_rb_cvar_defined(klass, id);
 }
 
 VALUE rb_cvar_get(VALUE klass, ID id) {
-  return rb_tr_up_rb_cvar_get(klass, ID2SYM(id));
+  return rb_tr_up_rb_cvar_get(klass, id);
 }
 
 void rb_cvar_set(VALUE klass, ID id, VALUE val) {
-  rb_tr_up_rb_cvar_set(klass, ID2SYM(id), val);
+  rb_tr_up_rb_cvar_set(klass, id, val);
 }
 
 VALUE rb_cv_get(VALUE klass, const char *name) {
@@ -119,7 +119,7 @@ void rb_cv_set(VALUE klass, const char *name, VALUE val) {
 }
 
 void rb_define_attr(VALUE klass, const char *name, int read, int write) {
-  rb_tr_up_rb_define_attr(klass, ID2SYM(rb_intern(name)), read, write);
+  rb_tr_up_rb_define_attr(klass, rb_intern(name), read, write);
 }
 
 void rb_define_class_variable(VALUE klass, const char *name, VALUE val) {

@@ -9,13 +9,13 @@ Gem::Specification.new do |s|
   s.metadata = { "source_code_uri" => "https://github.com/ruby/fileutils" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Minero Aoki".freeze]
-  s.date = "2026-03-17"
+  s.date = "2026-10-23"
   s.description = "Several file utility methods for copying, moving, removing, etc.".freeze
   s.email = [nil]
   s.files = ["BSDL".freeze, "COPYING".freeze, "README.md".freeze, "Rakefile".freeze, "fileutils.gemspec".freeze, "lib/fileutils.rb".freeze]
   s.homepage = "https://github.com/ruby/fileutils".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.5.0".freeze)
-  s.rubygems_version = "4.0.6".freeze
+  s.rubygems_version = "4.0.20".freeze
   s.summary = "Several file utility methods for copying, moving, removing, etc.".freeze
 end

@@ -131,7 +131,7 @@
         │   │   │   │   @ SymbolNode (location: (11,6)-(11,8))
         │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   │   ├── opening_loc: ∅
-        │   │   │   │   ├── value_loc: (11,6)-(11,7) = "a"
+        │   │   │   │   ├── content_loc: (11,6)-(11,7) = "a"
         │   │   │   │   ├── closing_loc: (11,7)-(11,8) = ":"
         │   │   │   │   └── unescaped: "a"
         │   │   │   ├── value:
@@ -153,7 +153,7 @@
         │   │       │   @ SymbolNode (location: (12,6)-(12,8))
         │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │       │   ├── opening_loc: ∅
-        │   │       │   ├── value_loc: (12,6)-(12,7) = "c"
+        │   │       │   ├── content_loc: (12,6)-(12,7) = "c"
         │   │       │   ├── closing_loc: (12,7)-(12,8) = ":"
         │   │       │   └── unescaped: "c"
         │   │       ├── value:
@@ -180,7 +180,7 @@
         │   │   │   │   @ SymbolNode (location: (18,2)-(18,4))
         │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   │   ├── opening_loc: ∅
-        │   │   │   │   ├── value_loc: (18,2)-(18,3) = "a"
+        │   │   │   │   ├── content_loc: (18,2)-(18,3) = "a"
         │   │   │   │   ├── closing_loc: (18,3)-(18,4) = ":"
         │   │   │   │   └── unescaped: "a"
         │   │   │   ├── value:
@@ -202,7 +202,7 @@
         │   │   │   │   @ SymbolNode (location: (18,8)-(18,10))
         │   │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   │   ├── opening_loc: ∅
-        │   │   │   │   ├── value_loc: (18,8)-(18,9) = "c"
+        │   │   │   │   ├── content_loc: (18,8)-(18,9) = "c"
         │   │   │   │   ├── closing_loc: (18,9)-(18,10) = ":"
         │   │   │   │   └── unescaped: "c"
         │   │   │   ├── value:
@@ -239,7 +239,7 @@
         │   │       │   @ SymbolNode (location: (18,19)-(18,21))
         │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │       │   ├── opening_loc: ∅
-        │   │       │   ├── value_loc: (18,19)-(18,20) = "f"
+        │   │       │   ├── content_loc: (18,19)-(18,20) = "f"
         │   │       │   ├── closing_loc: (18,20)-(18,21) = ":"
         │   │       │   └── unescaped: "f"
         │   │       ├── value:
@@ -266,7 +266,7 @@
         │   │       │   @ SymbolNode (location: (20,2)-(20,6))
         │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │       │   ├── opening_loc: (20,2)-(20,3) = "\""
-        │   │       │   ├── value_loc: (20,3)-(20,4) = "a"
+        │   │       │   ├── content_loc: (20,3)-(20,4) = "a"
         │   │       │   ├── closing_loc: (20,4)-(20,6) = "\":"
         │   │       │   └── unescaped: "a"
         │   │       ├── value:
@@ -343,7 +343,7 @@
         │       │           │   │   │   @ SymbolNode (location: (25,4)-(25,6))
         │       │           │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │       │           │   │   │   ├── opening_loc: ∅
-        │       │           │   │   │   ├── value_loc: (25,4)-(25,5) = "a"
+        │       │           │   │   │   ├── content_loc: (25,4)-(25,5) = "a"
         │       │           │   │   │   ├── closing_loc: (25,5)-(25,6) = ":"
         │       │           │   │   │   └── unescaped: "a"
         │       │           │   │   ├── value:
@@ -361,7 +361,7 @@
         │       │           │   │   │   @ SymbolNode (location: (25,8)-(25,10))
         │       │           │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │       │           │   │   │   ├── opening_loc: ∅
-        │       │           │   │   │   ├── value_loc: (25,8)-(25,9) = "b"
+        │       │           │   │   │   ├── content_loc: (25,8)-(25,9) = "b"
         │       │           │   │   │   ├── closing_loc: (25,9)-(25,10) = ":"
         │       │           │   │   │   └── unescaped: "b"
         │       │           │   │   ├── value:
@@ -379,7 +379,7 @@
         │       │           │   │   │   @ SymbolNode (location: (25,12)-(25,14))
         │       │           │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │       │           │   │   │   ├── opening_loc: ∅
-        │       │           │   │   │   ├── value_loc: (25,12)-(25,13) = "c"
+        │       │           │   │   │   ├── content_loc: (25,12)-(25,13) = "c"
         │       │           │   │   │   ├── closing_loc: (25,13)-(25,14) = ":"
         │       │           │   │   │   └── unescaped: "c"
         │       │           │   │   ├── value:
@@ -404,7 +404,7 @@
         │       │           │       │   @ SymbolNode (location: (25,16)-(25,18))
         │       │           │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │       │           │       │   ├── opening_loc: ∅
-        │       │           │       │   ├── value_loc: (25,16)-(25,17) = "D"
+        │       │           │       │   ├── content_loc: (25,16)-(25,17) = "D"
         │       │           │       │   ├── closing_loc: (25,17)-(25,18) = ":"
         │       │           │       │   └── unescaped: "D"
         │       │           │       ├── value:
@@ -428,7 +428,7 @@
         │   │       │   @ SymbolNode (location: (28,2)-(28,4))
         │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │       │   ├── opening_loc: ∅
-        │   │       │   ├── value_loc: (28,2)-(28,3) = "a"
+        │   │       │   ├── content_loc: (28,2)-(28,3) = "a"
         │   │       │   ├── closing_loc: (28,3)-(28,4) = ":"
         │   │       │   └── unescaped: "a"
         │   │       ├── value:
@@ -447,7 +447,7 @@
         │   │       │   @ SymbolNode (location: (30,2)-(30,5))
         │   │       │   ├── flags: static_literal
         │   │       │   ├── opening_loc: (30,2)-(30,3) = "\""
-        │   │       │   ├── value_loc: (1,0)-(1,0) = ""
+        │   │       │   ├── content_loc: (1,0)-(1,0) = ""
         │   │       │   ├── closing_loc: (30,3)-(30,5) = "\":"
         │   │       │   └── unescaped: ""
         │   │       ├── value:
@@ -465,7 +465,7 @@
             │       │   @ SymbolNode (location: (32,2)-(33,5))
             │       │   ├── flags: static_literal, forced_us_ascii_encoding
             │       │   ├── opening_loc: (32,2)-(32,3) = "\""
-            │       │   ├── value_loc: (32,3)-(33,3) = "foo\nbar"
+            │       │   ├── content_loc: (32,3)-(33,3) = "foo\nbar"
             │       │   ├── closing_loc: (33,3)-(33,5) = "\":"
             │       │   └── unescaped: "foo\nbar"
             │       ├── value:

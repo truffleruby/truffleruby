@@ -67,7 +67,14 @@ public class RubyRootNode extends RubyBaseRootNode {
             body.unsafeSetSourceSection(sourceSection);
         }
 
-        body.unsafeSetIsCall();
+        // The :call/:c_call events are only for method bodies, not for blocks, module bodies or the top-level script
+        if (sharedMethodInfo.isMethod() && !sharedMethodInfo.isModuleBody()) {
+            if (sharedMethodInfo.isJavaCore()) {
+                body.unsafeSetIsCCall(); // core methods defined in Java trigger :c_call, like C methods in CRuby
+            } else {
+                body.unsafeSetIsCall();
+            }
+        }
         body.unsafeSetIsRoot();
 
         if (language.options.CHECK_CLONE_UNINITIALIZED_CORRECTNESS) {

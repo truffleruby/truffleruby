@@ -99,3 +99,6 @@ fails:Public methods on Proc should not include source_range
 fails:Public methods on Proc should not include syntax_tree
 fails:Public methods on UnboundMethod should not include source_range
 fails:Public methods on UnboundMethod should not include syntax_tree
+fails:Public methods on TracePoint should not include ==
+fails:Public methods on TracePoint should not include eql?
+fails:Public methods on TracePoint should not include hash

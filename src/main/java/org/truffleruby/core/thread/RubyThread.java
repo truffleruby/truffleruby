@@ -32,7 +32,6 @@ import org.truffleruby.core.hash.RubyHash;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.support.PRNGRandomizerNodes;
 import org.truffleruby.core.support.RubyPRNGRandomizer;
-import org.truffleruby.core.tracepoint.TracePointState;
 import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.language.RubyDynamicObject;
 import org.truffleruby.language.objects.ObjectGraph;
@@ -57,7 +56,8 @@ public final class RubyThread extends RubyDynamicObject implements ObjectGraphNo
     final RubyHash recursiveObjects;
     final RubyHash recursiveObjectsSingle;
     final RubyPRNGRandomizer randomizer;
-    public final TracePointState tracePointState = new TracePointState();
+    /** Whether a TracePoint block is currently running on this thread, no TracePoint events are triggered then */
+    public boolean insideTracePointProc = false;
     boolean reportOnException;
     boolean abortOnException;
     public volatile Thread thread = null;

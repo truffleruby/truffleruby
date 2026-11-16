@@ -54,16 +54,18 @@ module Prism # :nodoc:
     def self.load_exported_functions_from(header, *functions, callbacks)
       File.foreach("#{INCLUDE_DIR}/#{header}") do |line|
         # We only want to attempt to load exported functions.
-        next unless line.start_with?("PRISM_EXPORTED_FUNCTION ")
+        next unless line.include?("PRISM_EXPORTED_FUNCTION ")
 
         # We only want to load the functions that we are interested in.
         next unless functions.any? { |function| line.include?(function) }
 
+        # Strip leading attributes (PRISM_EXPORTED_FUNCTION, PRISM_NODISCARD, etc.)
+        line = line.sub(/\A(PRISM_\w+(?:\([^)]*\))?)+/, "")
         # Strip trailing attributes (PRISM_NODISCARD, PRISM_NONNULL(...), etc.)
         line = line.sub(/\)(\s+PRISM_\w+(?:\([^)]*\))?)+\s*;/, ");")
 
         # Parse the function declaration.
-        unless /^PRISM_EXPORTED_FUNCTION (?<return_type>.+) (?<name>\w+)\((?<arg_types>.+)\);$/ =~ line
+        unless /^(?<return_type>.+) (?<name>\w+)\((?<arg_types>.+)\);$/ =~ line
           raise "Could not parse #{line}"
         end
 
@@ -184,7 +186,7 @@ module Prism # :nodoc:
     # pointer directly; for files it uses a pm_source_t under the hood.
     class PrismSource # :nodoc:
       PLATFORM_EXPECTS_UTF8 =
-        RbConfig::CONFIG["host_os"].match?(/bccwin|cygwin|djgpp|mingw|mswin|wince|darwin/i)
+        RbConfig::CONFIG["host_os"].match?(/cygwin|mingw|mswin|darwin/i)
 
       attr_reader :pointer, :length
 
@@ -215,12 +217,12 @@ module Prism # :nodoc:
 
       # Yields a PrismSource to the given block, backed by a pm_source_t.
       def self.with_file(filepath, options)
-        unless filepath.is_a?(String)
-          filepath = filepath.to_path if filepath.respond_to?(:to_path)
-          filepath = filepath.to_str if filepath.respond_to?(:to_str)
-        end
+        # File.path applies the same coercion and validation as the C
+        # extension's rb_get_path: it accepts to_path/to_str objects and
+        # rejects paths containing a NUL byte, which would otherwise truncate
+        # the path when it is handed to C as a NUL-terminated string.
+        filepath = File.path(filepath)
         options[:filepath] = filepath
-        raise TypeError unless filepath.is_a?(String)
 
         # On Windows and Mac, it's expected that filepaths will be encoded in
         # UTF-8. If they are not, we need to convert them to UTF-8 before
@@ -563,9 +565,9 @@ module Prism # :nodoc:
       case version
       when "current"
         version_string_to_number(RUBY_VERSION) || raise(CurrentVersionError, RUBY_VERSION)
-      when "latest", nil
+      when "latest"
         0 # Handled in pm_parser_init
-      when "nearest"
+      when "nearest", nil
         dump = version_string_to_number(RUBY_VERSION)
         return dump if dump
         if RUBY_VERSION < "3.3"
@@ -596,7 +598,7 @@ module Prism # :nodoc:
     # The set of options that are understood by the parsing APIs. Note that
     # raise_error is not listed here because it is deleted from the options
     # hash by raise_error_format_type before the options are dumped.
-    DUMP_OPTIONS_KEYS = [:command_line, :encoding, :filepath, :freeze, :frozen_string_literal, :line, :main_script, :partial_script, :scopes, :version].freeze
+    DUMP_OPTIONS_KEYS = [:attach_comments, :command_line, :encoding, :filepath, :freeze, :frozen_string_literal, :line, :main_script, :partial_script, :scopes, :version].freeze
     private_constant :DUMP_OPTIONS_KEYS
 
     # Convert the given options into a serialized options string.
@@ -647,6 +649,9 @@ module Prism # :nodoc:
 
       template << "C"
       values << (options.fetch(:freeze, false) ? 1 : 0)
+
+      template << "C"
+      values << (options.fetch(:attach_comments, false) ? 1 : 0)
 
       template << "L"
       if (scopes = options[:scopes])

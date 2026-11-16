@@ -11,7 +11,7 @@
             │   @ SymbolNode (location: (1,5)-(1,7))
             │   ├── flags: static_literal, forced_us_ascii_encoding
             │   ├── opening_loc: (1,5)-(1,6) = ":"
-            │   ├── value_loc: (1,6)-(1,7) = "a"
+            │   ├── content_loc: (1,6)-(1,7) = "a"
             │   ├── closing_loc: ∅
             │   └── unescaped: "a"
             ├── conditions: (length: 1)
@@ -28,7 +28,7 @@
             │       │   │       │   @ SymbolNode (location: (2,3)-(2,5))
             │       │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
             │       │   │       │   ├── opening_loc: ∅
-            │       │   │       │   ├── value_loc: (2,3)-(2,4) = "b"
+            │       │   │       │   ├── content_loc: (2,3)-(2,4) = "b"
             │       │   │       │   ├── closing_loc: (2,4)-(2,5) = ":"
             │       │   │       │   └── unescaped: "b"
             │       │   │       ├── value:
@@ -55,7 +55,7 @@
             │       │       └── @ SymbolNode (location: (2,21)-(2,23))
             │       │           ├── flags: newline, static_literal, forced_us_ascii_encoding
             │       │           ├── opening_loc: (2,21)-(2,22) = ":"
-            │       │           ├── value_loc: (2,22)-(2,23) = "d"
+            │       │           ├── content_loc: (2,22)-(2,23) = "d"
             │       │           ├── closing_loc: ∅
             │       │           └── unescaped: "d"
             │       ├── in_keyword_loc: (2,0)-(2,2) = "in"

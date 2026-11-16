@@ -24,7 +24,7 @@
         │                       │   @ SymbolNode (location: (1,10)-(1,12))
         │                       │   ├── flags: static_literal, forced_us_ascii_encoding
         │                       │   ├── opening_loc: (1,10)-(1,11) = ":"
-        │                       │   ├── value_loc: (1,11)-(1,12) = "z"
+        │                       │   ├── content_loc: (1,11)-(1,12) = "z"
         │                       │   ├── closing_loc: ∅
         │                       │   └── unescaped: "z"
         │                       ├── value:
@@ -51,7 +51,7 @@
         │                   │   │   @ SymbolNode (location: (3,10)-(3,12))
         │                   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │                   │   │   ├── opening_loc: (3,10)-(3,11) = ":"
-        │                   │   │   ├── value_loc: (3,11)-(3,12) = "z"
+        │                   │   │   ├── content_loc: (3,11)-(3,12) = "z"
         │                   │   │   ├── closing_loc: ∅
         │                   │   │   └── unescaped: "z"
         │                   │   ├── value:
@@ -65,7 +65,7 @@
         │                       │   @ SymbolNode (location: (3,19)-(3,21))
         │                       │   ├── flags: static_literal, forced_us_ascii_encoding
         │                       │   ├── opening_loc: (3,19)-(3,20) = ":"
-        │                       │   ├── value_loc: (3,20)-(3,21) = "w"
+        │                       │   ├── content_loc: (3,20)-(3,21) = "w"
         │                       │   ├── closing_loc: ∅
         │                       │   └── unescaped: "w"
         │                       ├── value:
@@ -100,7 +100,7 @@
         │               │                   │   @ SymbolNode (location: (5,9)-(5,11))
         │               │                   │   ├── flags: static_literal, forced_us_ascii_encoding
         │               │                   │   ├── opening_loc: (5,9)-(5,10) = ":"
-        │               │                   │   ├── value_loc: (5,10)-(5,11) = "z"
+        │               │                   │   ├── content_loc: (5,10)-(5,11) = "z"
         │               │                   │   ├── closing_loc: ∅
         │               │                   │   └── unescaped: "z"
         │               │                   ├── value:
@@ -138,7 +138,7 @@
         │               │                   │   @ SymbolNode (location: (7,9)-(7,11))
         │               │                   │   ├── flags: static_literal, forced_us_ascii_encoding
         │               │                   │   ├── opening_loc: ∅
-        │               │                   │   ├── value_loc: (7,9)-(7,10) = "z"
+        │               │                   │   ├── content_loc: (7,9)-(7,10) = "z"
         │               │                   │   ├── closing_loc: (7,10)-(7,11) = ":"
         │               │                   │   └── unescaped: "z"
         │               │                   ├── value:
@@ -176,7 +176,7 @@
         │               │                   │   @ SymbolNode (location: (9,9)-(9,11))
         │               │                   │   ├── flags: static_literal, forced_us_ascii_encoding
         │               │                   │   ├── opening_loc: ∅
-        │               │                   │   ├── value_loc: (9,9)-(9,10) = "z"
+        │               │                   │   ├── content_loc: (9,9)-(9,10) = "z"
         │               │                   │   ├── closing_loc: (9,10)-(9,11) = ":"
         │               │                   │   └── unescaped: "z"
         │               │                   ├── value:

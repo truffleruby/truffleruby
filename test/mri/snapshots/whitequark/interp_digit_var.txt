@@ -23,7 +23,7 @@
         │   │   └── @ SymbolNode (location: (5,4)-(5,7))
         │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       ├── opening_loc: ∅
-        │   │       ├── value_loc: (5,4)-(5,7) = "\#@1"
+        │   │       ├── content_loc: (5,4)-(5,7) = "\#@1"
         │   │       ├── closing_loc: ∅
         │   │       └── unescaped: "\#@1"
         │   ├── opening_loc: (5,1)-(5,4) = "%I["
@@ -34,7 +34,7 @@
         │   │   └── @ SymbolNode (location: (7,4)-(7,8))
         │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       ├── opening_loc: ∅
-        │   │       ├── value_loc: (7,4)-(7,8) = "\#@@1"
+        │   │       ├── content_loc: (7,4)-(7,8) = "\#@@1"
         │   │       ├── closing_loc: ∅
         │   │       └── unescaped: "\#@@1"
         │   ├── opening_loc: (7,1)-(7,4) = "%I["
@@ -79,7 +79,7 @@
         │   │   └── @ SymbolNode (location: (17,5)-(17,8))
         │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       ├── opening_loc: ∅
-        │   │       ├── value_loc: (17,5)-(17,8) = "\#@1"
+        │   │       ├── content_loc: (17,5)-(17,8) = "\#@1"
         │   │       ├── closing_loc: ∅
         │   │       └── unescaped: "\#@1"
         │   ├── opening_loc: (17,1)-(17,4) = "%i["
@@ -90,7 +90,7 @@
         │   │   └── @ SymbolNode (location: (19,5)-(19,9))
         │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       ├── opening_loc: ∅
-        │   │       ├── value_loc: (19,5)-(19,9) = "\#@@1"
+        │   │       ├── content_loc: (19,5)-(19,9) = "\#@@1"
         │   │       ├── closing_loc: ∅
         │   │       └── unescaped: "\#@@1"
         │   ├── opening_loc: (19,1)-(19,4) = "%i["
@@ -122,13 +122,13 @@
         ├── @ SymbolNode (location: (29,1)-(29,8))
         │   ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   ├── opening_loc: (29,1)-(29,4) = "%s{"
-        │   ├── value_loc: (29,4)-(29,7) = "\#@1"
+        │   ├── content_loc: (29,4)-(29,7) = "\#@1"
         │   ├── closing_loc: (29,7)-(29,8) = "}"
         │   └── unescaped: "\#@1"
         ├── @ SymbolNode (location: (31,1)-(31,9))
         │   ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   ├── opening_loc: (31,1)-(31,4) = "%s{"
-        │   ├── value_loc: (31,4)-(31,8) = "\#@@1"
+        │   ├── content_loc: (31,4)-(31,8) = "\#@@1"
         │   ├── closing_loc: (31,8)-(31,9) = "}"
         │   └── unescaped: "\#@@1"
         ├── @ ArrayNode (location: (33,1)-(33,10))
@@ -204,25 +204,25 @@
         ├── @ SymbolNode (location: (53,1)-(53,7))
         │   ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   ├── opening_loc: (53,1)-(53,3) = ":\""
-        │   ├── value_loc: (53,3)-(53,6) = "\#@1"
+        │   ├── content_loc: (53,3)-(53,6) = "\#@1"
         │   ├── closing_loc: (53,6)-(53,7) = "\""
         │   └── unescaped: "\#@1"
         ├── @ SymbolNode (location: (55,1)-(55,8))
         │   ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   ├── opening_loc: (55,1)-(55,3) = ":\""
-        │   ├── value_loc: (55,3)-(55,7) = "\#@@1"
+        │   ├── content_loc: (55,3)-(55,7) = "\#@@1"
         │   ├── closing_loc: (55,7)-(55,8) = "\""
         │   └── unescaped: "\#@@1"
         ├── @ SymbolNode (location: (57,1)-(57,7))
         │   ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   ├── opening_loc: (57,1)-(57,3) = ":'"
-        │   ├── value_loc: (57,3)-(57,6) = "\#@1"
+        │   ├── content_loc: (57,3)-(57,6) = "\#@1"
         │   ├── closing_loc: (57,6)-(57,7) = "'"
         │   └── unescaped: "\#@1"
         ├── @ SymbolNode (location: (59,1)-(59,8))
         │   ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   ├── opening_loc: (59,1)-(59,3) = ":'"
-        │   ├── value_loc: (59,3)-(59,7) = "\#@@1"
+        │   ├── content_loc: (59,3)-(59,7) = "\#@@1"
         │   ├── closing_loc: (59,7)-(59,8) = "'"
         │   └── unescaped: "\#@@1"
         ├── @ XStringNode (location: (61,1)-(61,6))

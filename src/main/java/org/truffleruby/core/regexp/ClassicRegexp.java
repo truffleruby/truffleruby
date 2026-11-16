@@ -40,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import com.oracle.truffle.api.strings.AbstractTruffleString;
+import com.oracle.truffle.api.strings.InternalByteArray;
 import com.oracle.truffle.api.strings.TruffleStringBuilder;
 import org.graalvm.shadowed.org.jcodings.Encoding;
 import org.graalvm.shadowed.org.jcodings.specific.EUCJPEncoding;
@@ -816,6 +817,91 @@ public final class ClassicRegexp {
         }
     }
 
+    private static final int GROUP_SPANS_WHOLE = 1;
+    private static final int GROUP_CLOSES_EARLY = 0;
+    private static final int GROUP_EXTENT_UNKNOWN = -1;
+
+    /** For a valid regexp source, determines whether the group opened by the '(' at {@code start} closes exactly at
+     * {@code end - 1} ({@link #GROUP_SPANS_WHOLE}) or before that ({@link #GROUP_CLOSES_EARLY}). This lets {@link #toS}
+     * avoid the trial compilation of the group body for a source like {@code (?i:a)|(?i:b)}, where that body
+     * ({@code a)|(?i:b}) is not a valid regexp and the compilation would throw a stack-trace-filling exception. Returns
+     * {@link #GROUP_EXTENT_UNKNOWN} when the scan would be unreliable: encodings whose multi-byte characters can
+     * contain ASCII-looking bytes, or extended mode potentially being enabled, since then ')' can appear inside
+     * #-comments which this scan does not track. */
+    private static int firstGroupExtent(InternalByteArray byteArray, int start, int end, Encoding enc) {
+        if (!(enc.isSingleByte() || enc instanceof UTF8Encoding)) {
+            return GROUP_EXTENT_UNKNOWN;
+        }
+        assert byteArray.get(start) == '(';
+        int depth = 0;
+        boolean inClass = false;
+        int i = start;
+        while (i < end) {
+            final int b = byteArray.get(i) & 0xff;
+            if (b == '\\') {
+                i += 2;
+            } else if (inClass) {
+                if (b == '[' && i + 1 < end && byteArray.get(i + 1) == ':') {
+                    // POSIX bracket like [:alpha:], skip to the closing :]
+                    i += 2;
+                    while (i + 1 < end && !(byteArray.get(i) == ':' && byteArray.get(i + 1) == ']')) {
+                        i++;
+                    }
+                    i += 2;
+                } else {
+                    if (b == ']') {
+                        inClass = false;
+                    }
+                    i++;
+                }
+            } else if (b == '[') {
+                inClass = true;
+                i++;
+            } else if (b == '(') {
+                if (i + 2 < end && byteArray.get(i + 1) == '?') {
+                    if (byteArray.get(i + 2) == '#') {
+                        // (?#...) comment: ends at the first unescaped ')', other bytes are ignored
+                        i += 3;
+                        while (i < end) {
+                            final int c = byteArray.get(i) & 0xff;
+                            i++;
+                            if (c == '\\') {
+                                i++;
+                            } else if (c == ')') {
+                                break;
+                            }
+                        }
+                        continue;
+                    }
+                    // Check the group flags for 'x', which would enable #-comments
+                    int j = i + 2;
+                    while (j < end) {
+                        final int c = byteArray.get(j) & 0xff;
+                        if (c == 'x') {
+                            return GROUP_EXTENT_UNKNOWN;
+                        } else if (c == 'm' || c == 'i' || c == '-') {
+                            j++;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                depth++;
+                i++;
+            } else if (b == ')') {
+                depth--;
+                if (depth == 0) {
+                    return i == end - 1 ? GROUP_SPANS_WHOLE : GROUP_CLOSES_EARLY;
+                }
+                i++;
+            } else {
+                i++;
+            }
+        }
+        // Unbalanced from this scan's point of view: be conservative
+        return GROUP_EXTENT_UNKNOWN;
+    }
+
     @SuppressWarnings("unused")
     public static TStringWithEncoding toS(TStringWithEncoding source, RegexpOptions options) {
         RegexpOptions newOptions = (RegexpOptions) options.clone();
@@ -829,6 +915,8 @@ public final class ClassicRegexp {
 
         do {
             if (len >= 4 && byteArray.get(p) == '(' && byteArray.get(p + 1) == '?') {
+                final int groupStart = p;
+                final int groupEnd = p + len;
                 p += 2;
                 len -= 2;
                 do {
@@ -868,7 +956,9 @@ public final class ClassicRegexp {
                 }
 
                 boolean err = true;
-                if (byteArray.get(p) == ':' && byteArray.get(p + len - 1) == ')') {
+                if (byteArray.get(p) == ':' && byteArray.get(p + len - 1) == ')' &&
+                        firstGroupExtent(byteArray, groupStart, groupEnd,
+                                source.encoding.jcoding) != GROUP_CLOSES_EARLY) {
                     p++;
                     try {
                         new Regex(

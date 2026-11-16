@@ -66,18 +66,18 @@ COPYRIGHT = <<~COPYRIGHT
 COPYRIGHT
 
 C_TYPES = {
-  'V' => 'VALUE', 'W' => 'VALUE', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
+  'V' => 'VALUE', 'T' => 'VALUE', 'W' => 'VALUE', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
   'P' => 'void *', 'Y' => 'ID', 'O' => 'void'
 }.freeze
 
 JAVA_TYPES = {
-  'V' => 'long', 'W' => 'long', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
+  'V' => 'long', 'T' => 'long', 'W' => 'long', 'I' => 'int', 'B' => 'int', 'L' => 'long', 'D' => 'double',
   'P' => 'long', 'Y' => 'long', 'O' => 'void'
 }.freeze
 
 # Carrier letters for FFM FunctionDescriptors (FFMSupport carrier signature format)
 FFM_CARRIERS = {
-  'V' => 'L', 'W' => 'L', 'I' => 'I', 'B' => 'I', 'L' => 'L', 'D' => 'D',
+  'V' => 'L', 'T' => 'L', 'W' => 'L', 'I' => 'I', 'B' => 'I', 'L' => 'L', 'D' => 'D',
   'P' => 'L', 'Y' => 'L', 'O' => 'V'
 }.freeze
 
@@ -337,7 +337,9 @@ java << "    public static final String[] UPCALLS = {\n"
 UPCALLS.each do |cname, kind, ret, args|
   ruby_name = kind == :send ? SEND_NAMES.fetch(cname) : cname
   java << "            \"upcall_#{cname}\", \"#{ffm_signature(ret, args.chars)}\","
-  java << " \"#{kind}\", \"#{ruby_name}\", \"#{ret}\", \"#{args}\",\n"
+  # W and P only differ from L in the C declaration (VALUE and void* vs long),
+  # the Java side passes them all through as-is
+  java << " \"#{kind}\", \"#{ruby_name}\", \"#{ret.tr('WP', 'LL')}\", \"#{args.tr('P', 'L')}\",\n"
 end
 java << "    };\n"
 java << "    // @formatter:on\n"

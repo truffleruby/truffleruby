@@ -1,0 +1,3 @@
+fails:IO#wait_writable with a Fiber scheduler calls the scheduler's #io_wait with IO::WRITABLE and no timeout
+fails:IO#wait_writable with a Fiber scheduler passes the given timeout to the scheduler
+fails:IO#wait_writable with a Fiber scheduler does not call the scheduler if the fiber is blocking

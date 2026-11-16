@@ -26,7 +26,7 @@ require_relative "bundler/build_metadata"
 # or Bundler.setup to setup environment where only specified gems and their
 # specified versions could be used.
 #
-# See {Bundler website}[https://bundler.io/docs.html] for extensive documentation
+# See {Bundler documentation}[https://guides.rubygems.org/command-reference/bundle/] for extensive documentation
 # on gemfiles creation and Bundler usage.
 #
 # As a standard library inside project, Bundler could be used for introspection
@@ -156,6 +156,7 @@ module Bundler
       # Return if all groups are already loaded
       return @setup if defined?(@setup) && @setup
 
+      configure_custom_gemfile
       definition.validate_runtime!
 
       SharedHelpers.print_major_deprecations!
@@ -172,7 +173,7 @@ module Bundler
       self_manager.restart_with_locked_bundler_if_needed
     end
 
-    # Automatically install dependencies if settings[:auto_install] exists.
+    # Automatically install dependencies if <tt>settings[:auto_install]</tt> exists.
     # This is set through config cmd `bundle config set --global auto_install 1`.
     #
     # Note that this method `nil`s out the global Definition object, so it
@@ -526,11 +527,11 @@ module Bundler
     end
 
     def load_gemspec_uncached(file, validate = false)
-      path = Pathname.new(file)
-      contents = read_file(file)
+      path = Pathname.new(file).expand_path
+      contents = read_file(path.to_s)
       spec = eval_gemspec(path, contents)
       return unless spec
-      spec.loaded_from = path.expand_path.to_s
+      spec.loaded_from = path.to_s
       Bundler.rubygems.validate(spec) if validate
       spec
     end
@@ -586,6 +587,15 @@ module Bundler
       Bundler.rubygems.clear_paths
     end
 
+    def configure_custom_gemfile(custom_gemfile = nil)
+      custom_gemfile ||= Bundler.settings[:gemfile]
+
+      if custom_gemfile && !custom_gemfile.empty?
+        Bundler::SharedHelpers.set_env "BUNDLE_GEMFILE", File.expand_path(custom_gemfile)
+        reset_settings_and_root!
+      end
+    end
+
     def self_manager
       @self_manager ||= begin
                           require_relative "bundler/self_manager"
@@ -636,9 +646,19 @@ module Bundler
         eval_yaml_gemspec(path, contents)
       else
         # Eval the gemspec from its parent directory, because some gemspecs
-        # depend on "./" relative paths.
+        # depend on "./" relative paths. The caller expands `path` first, since
+        # expanding it here would resolve against the gemspec directory once
+        # the chdir is active.
         SharedHelpers.chdir(path.dirname.to_s) do
-          eval(contents, TOPLEVEL_BINDING.dup, path.expand_path.to_s)
+          # TOPLEVEL_BINDING always belongs to the main box, so inside a
+          # Ruby::Box use a binding from the box Bundler is loaded in, where
+          # Gem::Specification carries Bundler's own monkey patches.
+          eval_binding = if defined?(Ruby::Box) && Ruby::Box.enabled?
+            Ruby::Box.current.eval("binding")
+          else
+            TOPLEVEL_BINDING.dup
+          end
+          eval(contents, eval_binding, path.to_s)
         end
       end
     rescue ScriptError, StandardError => e

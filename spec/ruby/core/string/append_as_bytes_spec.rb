@@ -7,6 +7,11 @@ describe "String#append_bytes" do
       -> { str.append_as_bytes("\xE2\x82") }.should.raise(FrozenError)
     end
 
+    it "returns self" do
+      str = +"hello"
+      str.append_as_bytes("\xE2\x82", 12).should.equal?(str)
+    end
+
     it "allows creating broken strings in UTF8" do
       str = +"hello"
       str.append_as_bytes("\xE2\x82")

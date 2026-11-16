@@ -123,7 +123,7 @@ public abstract class HashingNodes {
 
         @Fallback
         static int hashOther(Node node, Object value,
-                @Cached(inline = false) DispatchNode callHash,
+                @Cached DispatchNode callHash,
                 @Cached HashCastResultNode cast) {
             return cast.execute(node, callHash.call(value, "hash"));
         }

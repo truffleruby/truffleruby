@@ -10,12 +10,14 @@
 $trace = []
 
 $trace_proc = proc { |*args|
-  bind = args[4]
+  binding = args[4]
   # Capture the current values of variables at this point in time.
-  capture = Hash[args[4].local_variables.sort.map { |v|
-    [v, args[4].local_variable_get(v)]
-  }]
-  args[4] = capture
+  # The binding is nil for c-call and c-return events.
+  unless binding.nil?
+    args[4] = Hash[binding.local_variables.sort.map { |v|
+      [v, binding.local_variable_get(v)]
+    }]
+  end
   $trace << args
 }
 
@@ -26,7 +28,10 @@ def check(file)
     expected = f.each_line.map { |line| eval(line) }
   end
 
-  actual = $trace.map do |event, file, line, id, binding, classname, *extra|
+  # Ignore events from the core library, such as from the implementation of set_trace_func
+  actual = $trace.reject { |event, file, *| file.start_with?('<internal:core>') }
+
+  actual = actual.map do |event, file, line, id, binding, classname, *extra|
     raise unless extra.empty?
     file = '/' + File.basename(file)
     [event, file, line, id, binding, classname]

@@ -3,3 +3,4 @@ fails:Module#autoload after autoloading searches for the constant like the origi
 fails:Module#autoload after autoloading searches for the constant like the original lookup warns once in verbose mode if the constant was defined in a parent scope
 fails:Module#autoload during the autoload after the constant is assigned returns nil in autoload thread and returns the path in other threads for Module#autoload?
 fails:Module#autoload during the autoload after the constant is assigned returns the real constant location in autoload thread and returns the autoload location in other threads for Module#const_source_location
+fails:Module#autoload raises in every thread when two constants autoload the same file and it raises

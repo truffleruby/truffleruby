@@ -40,7 +40,7 @@
             │           │           │   @ SymbolNode (location: (2,57)-(2,63))
             │           │           │   ├── flags: static_literal
             │           │           │   ├── opening_loc: (2,57)-(2,58) = ":"
-            │           │           │   ├── value_loc: (2,58)-(2,63) = "però"
+            │           │           │   ├── content_loc: (2,58)-(2,63) = "però"
             │           │           │   ├── closing_loc: ∅
             │           │           │   └── unescaped: "però"
             │           │           └── operator_loc: (2,55)-(2,56) = "="

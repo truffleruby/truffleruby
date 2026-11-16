@@ -1,1 +1,2 @@
 keep(hangs):IO#read raises IOError when stream is closed by another thread
+fails:IO#read with a Fiber scheduler that implements io_read reads the whole file through the scheduler

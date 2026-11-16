@@ -49,7 +49,7 @@
             │           │       ├── @ SymbolNode (location: (1,23)-(1,27))
             │           │       │   ├── flags: static_literal, forced_us_ascii_encoding
             │           │       │   ├── opening_loc: (1,23)-(1,24) = ":"
-            │           │       │   ├── value_loc: (1,24)-(1,27) = "get"
+            │           │       │   ├── content_loc: (1,24)-(1,27) = "get"
             │           │       │   ├── closing_loc: ∅
             │           │       │   └── unescaped: "get"
             │           │       ├── @ LocalVariableReadNode (location: (1,29)-(1,30))

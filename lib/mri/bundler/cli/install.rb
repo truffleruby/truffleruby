@@ -64,6 +64,7 @@ module Bundler
       end
 
       Bundler::CLI::Common.output_post_install_messages installer.post_install_messages
+      Bundler::CLI::Common.output_cooldown_skipped_summary(definition)
 
       if CLI::Common.clean_after_install?
         require_relative "clean"
@@ -111,6 +112,9 @@ module Bundler
       Bundler.settings.set_command_option_if_given :shebang, options["shebang"]
 
       Bundler.settings.set_command_option_if_given :jobs, options["jobs"]
+
+      Bundler::CLI::Common.validate_cooldown!(options["cooldown"])
+      Bundler.settings.set_command_option_if_given :cooldown, options["cooldown"]
 
       Bundler.settings.set_command_option_if_given :no_prune, options["no-prune"]
 

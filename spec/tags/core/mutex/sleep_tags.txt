@@ -1,0 +1,2 @@
+fails:Mutex#sleep with a Fiber scheduler raises an ArgumentError if passed a negative duration, keeping the lock
+fails:Mutex#sleep with a Fiber scheduler raises a ThreadError when not locked by the current fiber

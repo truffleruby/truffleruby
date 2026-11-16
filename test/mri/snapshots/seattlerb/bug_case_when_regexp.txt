@@ -11,7 +11,7 @@
             │   @ SymbolNode (location: (1,5)-(1,7))
             │   ├── flags: static_literal, forced_us_ascii_encoding
             │   ├── opening_loc: (1,5)-(1,6) = ":"
-            │   ├── value_loc: (1,6)-(1,7) = "x"
+            │   ├── content_loc: (1,6)-(1,7) = "x"
             │   ├── closing_loc: ∅
             │   └── unescaped: "x"
             ├── conditions: (length: 1)

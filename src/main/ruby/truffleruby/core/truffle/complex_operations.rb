@@ -65,6 +65,15 @@ module Truffle
       Complex.rect(real, imag)
     end
 
+    # Like rb_rational_canonicalize() in CRuby, a Rational with a denominator of 1 becomes an Integer
+    def self.canonicalize_rational(value)
+      if Primitive.is_a?(value, Rational) && value.denominator == 1
+        value.numerator
+      else
+        value
+      end
+    end
+
     def self.extract_real(numeric)
       case numeric
       when Integer, Float, Rational

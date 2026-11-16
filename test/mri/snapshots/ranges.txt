@@ -132,7 +132,7 @@
         │   │       │   @ SymbolNode (location: (11,2)-(11,6))
         │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │       │   ├── opening_loc: ∅
-        │   │       │   ├── value_loc: (11,2)-(11,5) = "foo"
+        │   │       │   ├── content_loc: (11,2)-(11,5) = "foo"
         │   │       │   ├── closing_loc: (11,5)-(11,6) = ":"
         │   │       │   └── unescaped: "foo"
         │   │       ├── value:
@@ -191,7 +191,7 @@
         │   │       │   @ SymbolNode (location: (17,2)-(17,6))
         │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │       │   ├── opening_loc: ∅
-        │   │       │   ├── value_loc: (17,2)-(17,5) = "foo"
+        │   │       │   ├── content_loc: (17,2)-(17,5) = "foo"
         │   │       │   ├── closing_loc: (17,5)-(17,6) = ":"
         │   │       │   └── unescaped: "foo"
         │   │       ├── value:

@@ -78,6 +78,13 @@ describe "Integer#/" do
       (0 / -bignum_value).should == 0
     end
 
+    it "rounds towards negative infinity when divided by a larger bignum" do
+      (@bignum / (@bignum + 1)).should == 0
+      (@bignum / -(@bignum + 1)).should == -1
+      (-@bignum / (@bignum + 1)).should == -1
+      (-@bignum / -(@bignum + 1)).should == 0
+    end
+
     it "returns self divided by Float" do
       not_supported_on :opal do
         (bignum_value(88) / 4294967295.0).should be_close(4294967297.0, TOLERANCE)

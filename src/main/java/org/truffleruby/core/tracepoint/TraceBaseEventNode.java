@@ -12,7 +12,6 @@ package org.truffleruby.core.tracepoint;
 
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
-import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.language.yield.CallBlockNode;
@@ -31,6 +30,7 @@ public class TraceBaseEventNode extends ExecutionEventNode {
 
     @CompilationFinal private RubyString file;
     @CompilationFinal private int line;
+    @CompilationFinal private int endLine;
 
     @Child private CallBlockNode yieldNode;
 
@@ -44,8 +44,7 @@ public class TraceBaseEventNode extends ExecutionEventNode {
         if (file == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
             final Source source = eventContext.getInstrumentedSourceSection().getSource();
-            file = new RubyString(context.getCoreLibrary().stringClass, language.stringShape, false,
-                    language.getPathToTStringCache().getCachedPath(source), Encodings.UTF_8);
+            file = language.getPathToTStringCache().createPathString(context, source);
         }
         return file;
     }
@@ -56,6 +55,14 @@ public class TraceBaseEventNode extends ExecutionEventNode {
             line = language.getStartLineAdjusted(eventContext.getInstrumentedSourceSection());
         }
         return line;
+    }
+
+    protected int getEndLine() {
+        if (endLine == 0) {
+            CompilerDirectives.transferToInterpreterAndInvalidate();
+            endLine = language.getEndLineAdjusted(eventContext.getInstrumentedSourceSection());
+        }
+        return endLine;
     }
 
     protected Object callBlock(RubyProc block, Object... arguments) {

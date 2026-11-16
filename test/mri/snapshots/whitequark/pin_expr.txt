@@ -252,7 +252,7 @@
             │       │   │       │   @ SymbolNode (location: (14,15)-(14,19))
             │       │   │       │   ├── flags: static_literal, forced_us_ascii_encoding
             │       │   │       │   ├── opening_loc: ∅
-            │       │   │       │   ├── value_loc: (14,15)-(14,18) = "foo"
+            │       │   │       │   ├── content_loc: (14,15)-(14,18) = "foo"
             │       │   │       │   ├── closing_loc: (14,18)-(14,19) = ":"
             │       │   │       │   └── unescaped: "foo"
             │       │   │       ├── value:

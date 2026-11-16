@@ -21,7 +21,7 @@ VALUE rb_struct_aset(VALUE s, VALUE idx, VALUE val) {
 }
 
 VALUE rb_struct_getmember(VALUE s, ID member) {
-  return rb_tr_up_rb_struct_getmember(s, ID2SYM(member));
+  return rb_tr_up_rb_struct_getmember(s, member);
 }
 
 VALUE rb_tr_struct_define_va_list(const char *name, va_list args) {

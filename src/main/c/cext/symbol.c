@@ -68,24 +68,24 @@ VALUE rb_id2str(ID id) {
     return Qfalse;
   }
 
-  return rb_tr_up_rb_id2str(ID2SYM(id));
+  return rb_tr_up_rb_id2str(id);
 }
 
 ID rb_id_attrset(ID id) {
   VALUE sym = ID2SYM(id);
-  return SYM2ID(rb_tr_up_rb_id_attrset(ID2SYM(id)));
+  return SYM2ID(rb_tr_up_rb_id_attrset(id));
 }
 
 int rb_is_class_id(ID id) {
-  return rb_tr_up_rb_is_class_id(ID2SYM(id));
+  return rb_tr_up_rb_is_class_id(id);
 }
 
 int rb_is_const_id(ID id) {
-  return rb_tr_up_rb_is_const_id(ID2SYM(id));
+  return rb_tr_up_rb_is_const_id(id);
 }
 
 int rb_is_instance_id(ID id) {
-  return rb_tr_up_rb_is_instance_id(ID2SYM(id));
+  return rb_tr_up_rb_is_instance_id(id);
 }
 
 ID rb_check_id(volatile VALUE *namep) {

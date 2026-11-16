@@ -1,0 +1,4 @@
+fails:Array#& does not call #hash for small arrays
+fails:Array#& uses #hash unless both arrays are within the small array limit
+fails:Array#intersection does not call #hash for small arrays
+fails:Array#intersection uses #hash unless both arrays are within the small array limit

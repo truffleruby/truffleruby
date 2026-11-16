@@ -1,0 +1,4 @@
+fails:IO#wait with a Fiber scheduler calls the scheduler's #io_wait with the events and timeout given
+fails:IO#wait with a Fiber scheduler calls the scheduler's #io_wait with IO::READABLE when no events are given
+fails:IO#wait with a Fiber scheduler translates a mode Symbol into the matching events mask
+fails:IO#wait with a Fiber scheduler does not call the scheduler if the fiber is blocking

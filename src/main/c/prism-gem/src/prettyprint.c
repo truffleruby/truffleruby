@@ -8421,11 +8421,11 @@ prettyprint_node(pm_buffer_t *output_buffer, const pm_parser_t *parser, const pm
                 }
             }
 
-            // value_loc
+            // content_loc
             {
                 pm_buffer_concat(output_buffer, prefix_buffer);
-                pm_buffer_append_string(output_buffer, "+-- value_loc:", 14);
-                pm_location_t *location = &cast->value_loc;
+                pm_buffer_append_string(output_buffer, "+-- content_loc:", 16);
+                pm_location_t *location = &cast->content_loc;
                 pm_buffer_append_byte(output_buffer, ' ');
                 prettyprint_location(output_buffer, parser, location);
                 pm_buffer_append_string(output_buffer, " = \"", 4);

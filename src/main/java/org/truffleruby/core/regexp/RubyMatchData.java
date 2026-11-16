@@ -30,6 +30,8 @@ public final class RubyMatchData extends RubyDynamicObject implements ObjectGrap
 
     /** Either a Regexp or a String for the case of String#gsub(String) */
     public Object regexp;
+    /** The matched String. Frozen when the MatchData is exposed to Ruby code, so that MatchData#string can return it
+     * directly. Only StringScanner creates MatchData with an unfrozen String, for internal use. */
     public Object source;
     /** Group bounds as byte offsets. We avoid the abstract Region class because it has virtual methods calls which
      * cannot be inlined by PE. */

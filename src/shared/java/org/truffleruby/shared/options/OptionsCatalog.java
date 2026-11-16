@@ -45,7 +45,6 @@ public final class OptionsCatalog {
     public static final OptionKey<Boolean> SINGLE_THREADED_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> POLYGLOT_STDIO_KEY = new OptionKey<>(EMBEDDED_KEY.getDefaultValue() || !NATIVE_PLATFORM_KEY.getDefaultValue());
     public static final OptionKey<Boolean> HOST_INTEROP_KEY = new OptionKey<>(true);
-    public static final OptionKey<Boolean> TRACE_CALLS_KEY = new OptionKey<>(true);
     public static final OptionKey<Boolean> COVERAGE_GLOBAL_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> CORE_AS_INTERNAL_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> STDLIB_AS_INTERNAL_KEY = new OptionKey<>(false);
@@ -348,14 +347,6 @@ public final class OptionsCatalog {
     public static final OptionDescriptor HOST_INTEROP = OptionDescriptor
             .newBuilder(HOST_INTEROP_KEY, "ruby.interop-host")
             .help("Allow interoperability with the host language (Java)")
-            .category(OptionCategory.EXPERT)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("")
-            .build();
-
-    public static final OptionDescriptor TRACE_CALLS = OptionDescriptor
-            .newBuilder(TRACE_CALLS_KEY, "ruby.trace-calls")
-            .help("Support tracing (set_trace_func, TracePoint) of method calls")
             .category(OptionCategory.EXPERT)
             .stability(OptionStability.EXPERIMENTAL)
             .usageSyntax("")
@@ -1323,8 +1314,6 @@ public final class OptionsCatalog {
                 return POLYGLOT_STDIO;
             case "ruby.interop-host":
                 return HOST_INTEROP;
-            case "ruby.trace-calls":
-                return TRACE_CALLS;
             case "ruby.coverage-global":
                 return COVERAGE_GLOBAL;
             case "ruby.core-as-internal":
@@ -1584,7 +1573,6 @@ public final class OptionsCatalog {
             SINGLE_THREADED,
             POLYGLOT_STDIO,
             HOST_INTEROP,
-            TRACE_CALLS,
             COVERAGE_GLOBAL,
             CORE_AS_INTERNAL,
             STDLIB_AS_INTERNAL,

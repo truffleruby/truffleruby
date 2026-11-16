@@ -33,14 +33,18 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 
 import org.truffleruby.RubyLanguage;
-import org.truffleruby.cext.ValueWrapperManager.WrapperToHandleNode;
+import org.truffleruby.cext.ValueWrapperManager.DataObjectWrapperWeakReference;
+import org.truffleruby.cext.ValueWrapperManager.ValueWrapperWeakReference;
+import org.truffleruby.core.DataObjectFinalizerReference;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.RubyBaseNode;
@@ -58,24 +62,30 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
     /** The kind of a native value in an upcall signature, from the carrier letters in tool/cext-upcalls.rb */
     public enum Carrier {
         VALUE, // V: a VALUE handle, converted with UnwrapNode/WrapNode
-        WRAPPED, // W: a result which is already a VALUE handle or a ValueWrapper
+        /** T: a VALUE handle of a data object (T_DATA), argument only, for RDATA()/RTYPEDDATA(). A data object is
+         * unwrapped to its {@link DataObjectFinalizerReference}, which holds the struct RData/RTypedData address, and
+         * is marked on call exit if its type has a mark function. The handle of a dead data object whose finalizer did
+         * not run yet is accepted too, so the free function of a data object can access the struct of other dead
+         * objects, like on CRuby where the slot of a dead object stays accessible until it is swept. Other objects are
+         * unwrapped like VALUE, for the TypeError. */
+        DATA_VALUE,
         INT, // I
         BOOL, // B: Ruby true/false as int 1/0
-        LONG, // L
+        /** L, also W (a VALUE handle passed through as-is) and P (a raw address, including function pointers and VALUE
+         * arrays): W and P are only distinct from L in the C declaration, so the generator emits them as L here */
+        LONG,
         DOUBLE, // D
-        POINTER, // P: a raw long address, including function pointers and VALUE arrays
         ID, // Y: converted from/to a Ruby Symbol
         VOID; // O
 
         static Carrier parse(char carrier) {
             return switch (carrier) {
                 case 'V' -> VALUE;
-                case 'W' -> WRAPPED;
+                case 'T' -> DATA_VALUE;
                 case 'I' -> INT;
                 case 'B' -> BOOL;
                 case 'L' -> LONG;
                 case 'D' -> DOUBLE;
-                case 'P' -> POINTER;
                 case 'Y' -> ID;
                 case 'O' -> VOID;
                 default -> throw CompilerDirectives.shouldNotReachHere(String.valueOf(carrier));
@@ -210,8 +220,9 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         static UpcallArgumentNode create(Carrier carrier) {
             return switch (carrier) {
                 case VALUE -> CExtUpcallRootNodeFactory.ValueArgumentNodeGen.create();
+                case DATA_VALUE -> CExtUpcallRootNodeFactory.DataValueArgumentNodeGen.create();
                 case INT -> new IntArgumentNode();
-                case LONG, POINTER -> new LongArgumentNode();
+                case LONG -> new LongArgumentNode();
                 case DOUBLE -> new DoubleArgumentNode();
                 case ID -> CExtUpcallRootNodeFactory.IDArgumentNodeGen.create();
                 default -> throw CompilerDirectives.shouldNotReachHere(carrier.name());
@@ -251,6 +262,45 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         }
     }
 
+    /** See {@link Carrier#DATA_VALUE} */
+    @ImportStatic(ValueWrapperManager.class)
+    abstract static class DataValueArgumentNode extends UpcallArgumentNode {
+        @Specialization(guards = "isTaggedObject(rawArgument)")
+        Object unwrapTaggedObject(long rawArgument,
+                @Cached InlinedConditionProfile dataObjectProfile,
+                @Cached InlinedConditionProfile markFunctionProfile,
+                @Cached InlinedConditionProfile sameObjectProfile,
+                @Cached InlinedConditionProfile growProfile,
+                @Cached InlinedBranchProfile deadHandleProfile) {
+            final ValueWrapperWeakReference entry = getContext().getValueWrapperManager()
+                    .getEntryFromHandleMap(rawArgument, getLanguage());
+            final ValueWrapper wrapper = entry == null ? null : entry.get();
+            if (wrapper == null) {
+                deadHandleProfile.enter(this);
+                return ValueWrapperManager.pendingDataFinalizerOfDeadHandle(entry, rawArgument);
+            }
+
+            if (dataObjectProfile.profile(this, entry instanceof DataObjectWrapperWeakReference)) {
+                final DataObjectFinalizerReference dataFinalizerRef = ((DataObjectWrapperWeakReference) entry).dataFinalizerRef;
+                if (markFunctionProfile.profile(this, dataFinalizerRef.hasMarkFunction)) {
+                    // The C code can store VALUEs in the struct, so run the marker when the C call exits
+                    getLanguage().getCurrentFiber().extensionCallStack
+                            .markOnExitObject(wrapper, sameObjectProfile, growProfile, this);
+                }
+                return dataFinalizerRef;
+            } else {
+                return wrapper.getObject();
+            }
+        }
+
+        @Specialization(guards = "!isTaggedObject(rawArgument)")
+        static Object unwrap(long rawArgument,
+                @Bind Node node,
+                @Cached UnwrapNode unwrapNode) {
+            return unwrapNode.execute(node, rawArgument);
+        }
+    }
+
     abstract static class IDArgumentNode extends UpcallArgumentNode {
         @Specialization
         static RubySymbol idToSymbol(long rawArgument,
@@ -268,12 +318,12 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
             return switch (carrier) {
                 case VOID -> new VoidResultNode();
                 case VALUE -> CExtUpcallRootNodeFactory.ValueResultNodeGen.create();
-                case WRAPPED -> CExtUpcallRootNodeFactory.WrappedResultNodeGen.create();
                 case ID -> CExtUpcallRootNodeFactory.IDResultNodeGen.create();
                 case INT -> CExtUpcallRootNodeFactory.IntResultNodeGen.create();
-                case LONG, POINTER -> CExtUpcallRootNodeFactory.LongResultNodeGen.create();
+                case LONG -> CExtUpcallRootNodeFactory.LongResultNodeGen.create();
                 case DOUBLE -> CExtUpcallRootNodeFactory.DoubleResultNodeGen.create();
                 case BOOL -> CExtUpcallRootNodeFactory.BoolResultNodeGen.create();
+                case DATA_VALUE -> throw CompilerDirectives.shouldNotReachHere("argument-only carrier");
             };
         }
 
@@ -291,39 +341,16 @@ public final class CExtUpcallRootNode extends RubyBaseRootNode {
         @Specialization
         static long wrap(Object value,
                 @Bind Node node,
-                @Cached WrapNode wrapNode,
-                @Cached WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(node, wrapNode.execute(value));
-        }
-    }
-
-    abstract static class WrappedResultNode extends UpcallResultNode {
-        @Specialization
-        static long handle(long value) {
-            return value;
-        }
-
-        @Specialization
-        static long wrapperToHandle(ValueWrapper value,
-                @Bind Node node,
-                @Cached WrapperToHandleNode wrapperToHandleNode) {
-            return wrapperToHandleNode.execute(node, value);
+                @Cached WrapNode wrapNode) {
+            return wrapNode.execute(node, value);
         }
     }
 
     abstract static class IDResultNode extends UpcallResultNode {
         @Specialization
-        static Object symbolToID(Object value,
-                @Bind Node node,
-                @Cached SymbolToIDNode symbolToIDNode,
-                @Cached WrapperToHandleNode wrapperToHandleNode,
-                @Cached InlinedConditionProfile longProfile) {
-            final Object id = symbolToIDNode.execute(value);
-            if (longProfile.profile(node, id instanceof Long)) {
-                return id;
-            } else {
-                return wrapperToHandleNode.execute(node, (ValueWrapper) id);
-            }
+        static long symbolToID(RubySymbol symbol,
+                @Cached SymbolToIDNode symbolToIDNode) {
+            return symbolToIDNode.execute(symbol);
         }
     }
 

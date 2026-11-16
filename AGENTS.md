@@ -33,7 +33,6 @@ TruffleRuby uses the `mx` build tool (GraalVM ecosystem) but wraps it behind the
 
 - Ruby >= 3.0 (system Ruby, for running `jt`)
 - Python >= 3.8 (for `mx`)
-- A JVMCI-enabled JDK (if `JAVA_HOME` is set but doesn't have JVMCI, unset it so `jt` downloads a suitable JDK)
 - `make`, `gcc`/`g++`, `cmake`, `git`, `wget`
 
 ### Building
@@ -182,6 +181,7 @@ See `CONTRIBUTING.md` for more details.
   local files (demo or scratch scripts); describe the workload or change itself instead.
 - Before amending or rebasing a topic branch, check it has not already been merged into
   master; follow-ups to merged work go on a new branch based on latest master.
+- Do not add a `Claude-Session` trailer to commit messages.
 
 ### Java Code
 
@@ -200,6 +200,13 @@ See `CONTRIBUTING.md` for more details.
 - Never hardcode the TruffleRuby version in Java sources; it comes from `suite.py` via `mx`
 - In generated Java files, use `// @formatter:off` / `// @formatter:on` markers instead of
   replicating the Eclipse formatter's line wrapping in the generator
+- In partially evaluated code, every branch and condition (`if`, `?:`, `&&`/`||`, `switch`, loops)
+  needs a profile, not only rarely-taken ones; only conditions on compilation constants need none.
+  Use `InlinedConditionProfile` by default, `InlinedBranchProfile` for pure slow paths and
+  `InlinedLoopConditionProfile` for loops (the non-inlined variants as fields in plain nodes).
+  This includes helper methods of plain classes called from nodes without a `@TruffleBoundary` in
+  between: they take the `Node` and profiles as parameters, and callers behind a `@TruffleBoundary`
+  pass `InlinedConditionProfile.getUncached()`. See `doc/contributor/code-patterns.md`
 
 ### Generator Scripts
 
@@ -229,9 +236,10 @@ See `CONTRIBUTING.md` for more details.
 2. Check `src/main/java/org/truffleruby/core/<Class>Nodes.java` for Java implementations
 3. Look for `@CoreMethod(names = "<method_name>")` annotations
 
-## Common Pitfalls
+## JDK
 
-- **JAVA_HOME**: If set to a JDK without JVMCI support, `jt build` will fail. Unset it and let `jt` download a suitable JDK via `jt install jvmci`.
+`jt` ignores `$JAVA_HOME` and always builds with the JVMCI-enabled JDK it downloads itself
+(`jt install jvmci` prints its path).
 
 ## Useful Commands Reference
 

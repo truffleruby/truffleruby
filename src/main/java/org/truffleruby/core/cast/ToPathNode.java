@@ -39,7 +39,7 @@ public abstract class ToPathNode extends RubyBaseNode {
 
     @Specialization(guards = "isNotRubyString(object)")
     static RubyString coerceObject(Node node, Object object,
-            @Cached(inline = false) DispatchNode toPathNode) {
+            @Cached DispatchNode toPathNode) {
         return (RubyString) toPathNode.call(coreLibrary(node).truffleTypeModule, "coerce_to_path", object);
     }
 }

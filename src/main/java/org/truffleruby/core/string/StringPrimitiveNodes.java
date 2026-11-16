@@ -118,6 +118,7 @@ import org.truffleruby.core.format.unpack.ArrayResult;
 import org.truffleruby.core.format.unpack.UnpackCompiler;
 import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.string.StringHelperNodes.SingleByteOptimizableNode;
+import org.truffleruby.core.string.StringHelperNodes.ToFrozenStringNode;
 import org.truffleruby.core.string.StringHelperNodes.ToMutableTruffleStringNode;
 import org.truffleruby.core.support.RubyByteArray;
 import org.truffleruby.core.symbol.RubySymbol;
@@ -149,6 +150,17 @@ import com.oracle.truffle.api.profiles.ConditionProfile;
 public abstract class StringPrimitiveNodes {
 
     // compatibleEncoding is RubyEncoding or Nil in this node
+    /** Returns the String itself if frozen, otherwise a frozen copy, see {@link ToFrozenStringNode} */
+    @Primitive(name = "string_to_frozen")
+    public abstract static class StringToFrozenNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        Object toFrozen(Object string,
+                @Cached ToFrozenStringNode toFrozenStringNode) {
+            return toFrozenStringNode.execute(this, string);
+        }
+    }
+
     @Primitive(name = "string_cmp")
     public abstract static class CompareNode extends PrimitiveArrayArgumentsNode {
 
@@ -268,8 +280,8 @@ public abstract class StringPrimitiveNodes {
                 @Bind("libString.getEncoding($node, string)") RubyEncoding selfEncoding,
                 @Bind("libOther.getTString($node, other)") AbstractTruffleString otherTString,
                 @Bind("libOther.getEncoding($node, other)") RubyEncoding otherEncoding,
-                @Cached(inline = false) TruffleString.GetInternalByteArrayNode byteArraySelfNode,
-                @Cached(inline = false) TruffleString.GetInternalByteArrayNode byteArrayOtherNode) {
+                @Cached TruffleString.GetInternalByteArrayNode byteArraySelfNode,
+                @Cached TruffleString.GetInternalByteArrayNode byteArrayOtherNode) {
             // Taken from org.jruby.RubyString#casecmp19.
 
             final RubyEncoding encoding = negotiateCompatibleEncodingNode.execute(node, selfTString, selfEncoding,
@@ -564,7 +576,7 @@ public abstract class StringPrimitiveNodes {
         @Specialization(guards = { "string != other" })
         static RubyString replace(Node node, RubyString string, RubyString other,
                 @Cached @Exclusive RubyStringLibrary libOther,
-                @Cached(inline = false) AsTruffleStringNode asTruffleStringNode) {
+                @Cached AsTruffleStringNode asTruffleStringNode) {
             var encoding = libOther.getEncoding(node, other);
             TruffleString immutableCopy = asTruffleStringNode.execute(other.tstring, encoding.tencoding);
             string.setTString(immutableCopy, encoding);
@@ -2512,15 +2524,16 @@ public abstract class StringPrimitiveNodes {
 
     }
 
-    @Primitive(name = "string_is_character_head?", lowerFixnum = 2)
+    @Primitive(name = "string_is_character_head?", lowerFixnum = 1)
     public abstract static class IsCharacterHeadPrimitiveNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        boolean isCharacterHead(RubyEncoding enc, Object string, int byteOffset,
+        boolean isCharacterHead(Object string, int byteOffset,
                 @Cached RubyStringLibrary libString,
                 @Cached IsCharacterHeadNode isCharacterHeadNode) {
             var tstring = libString.getTString(this, string);
-            return isCharacterHeadNode.execute(enc, tstring, byteOffset);
+            var encoding = libString.getEncoding(this, string);
+            return isCharacterHeadNode.execute(encoding, tstring, byteOffset);
         }
     }
 

@@ -1,2 +1,3 @@
 fails:Module#name is not nil when assigned to a constant in an anonymous module
 slow:Module#name is set in #const_added callback when a module defined in the top-level scope
+fails:Module#name changes when a class is reachable through a constant path

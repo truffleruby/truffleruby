@@ -57,7 +57,7 @@ public abstract class DurationToNanoSecondsNode extends RubyBaseNode {
 
     @Fallback
     static long duration(Node node, Object duration,
-            @Cached(inline = false) DispatchNode durationToNanoSeconds,
+            @Cached DispatchNode durationToNanoSeconds,
             @Cached @Exclusive InlinedConditionProfile durationLessThanZeroProfile,
             @Cached ToLongNode toLongNode) {
         final Object nanoseconds = durationToNanoSeconds.call(

@@ -45,7 +45,6 @@ public abstract class StringOperations {
         final RubyString instance = new RubyString(
                 context.getCoreLibrary().stringClass,
                 language.stringShape,
-                false,
                 TStringUtils.utf8TString(string),
                 Encodings.UTF_8);
 
@@ -57,7 +56,6 @@ public abstract class StringOperations {
         final RubyString instance = new RubyString(
                 context.getCoreLibrary().stringClass,
                 language.stringShape,
-                false,
                 string,
                 Encodings.UTF_8);
 

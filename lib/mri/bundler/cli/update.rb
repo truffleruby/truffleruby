@@ -66,6 +66,8 @@ module Bundler
       opts["force"] = options[:redownload] if options[:redownload]
 
       Bundler.settings.set_command_option_if_given :jobs, opts["jobs"]
+      Bundler::CLI::Common.validate_cooldown!(options[:cooldown])
+      Bundler.settings.set_command_option_if_given :cooldown, options[:cooldown]
 
       Bundler.definition.validate_runtime!
 
@@ -116,6 +118,7 @@ module Bundler
       Bundler.ui.confirm "Bundle updated!"
       Bundler::CLI::Common.output_without_groups_message(:update)
       Bundler::CLI::Common.output_post_install_messages installer.post_install_messages
+      Bundler::CLI::Common.output_cooldown_skipped_summary
 
       Bundler::CLI::Common.output_fund_metadata_summary
     end

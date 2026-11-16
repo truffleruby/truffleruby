@@ -51,7 +51,7 @@ public abstract class HashCastNode extends RubyBaseNode {
     @Specialization(guards = { "!isRubyHash(object)", "!isNil(object)" })
     static RubyHash cast(Node node, Object object,
             @Cached InlinedBranchProfile errorProfile,
-            @Cached(inline = false) DispatchNode toHashNode) {
+            @Cached DispatchNode toHashNode) {
         final Object result = toHashNode.call(PRIVATE_RETURN_MISSING, object, "to_hash");
 
         if (result == DispatchNode.MISSING) {

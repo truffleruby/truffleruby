@@ -4360,8 +4360,8 @@ module Prism
         table.field("opening_loc", location_inspect(opening_loc))
       end
 
-      # value_loc
-      table.field("value_loc", location_inspect(node.value_loc))
+      # content_loc
+      table.field("content_loc", location_inspect(node.content_loc))
 
       # closing_loc
       unless (closing_loc = node.closing_loc).nil?

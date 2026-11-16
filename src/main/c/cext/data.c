@@ -90,20 +90,16 @@ void* rb_tr_rdata_data(struct RData *rdata) {
   return rdata->data;
 }
 
+// The upcalls also mark the object on call exit if it has a marker.
+// They also work for a dead object whose free function did not run yet,
+// which the free function of another object may access, like on CRuby.
+
 struct RData* rb_tr_rdata(VALUE object) {
-  struct RData* rdata = rb_tr_up_RDATA(object);
-  if (rdata->dmark) {
-    rb_tr_up_mark_object_on_call_exit(object);
-  }
-  return rdata;
+  return rb_tr_up_RDATA(object);
 }
 
 struct RTypedData* rb_tr_rtypeddata(VALUE object) {
-  struct RTypedData* rtypeddata = rb_tr_up_RTYPEDDATA(object);
-  if (RB_TR_RTYPEDDATA_STRUCT_TYPE(rtypeddata)->function.dmark) {
-    rb_tr_up_mark_object_on_call_exit(object);
-  }
-  return rtypeddata;
+  return rb_tr_up_RTYPEDDATA(object);
 }
 
 bool rb_tr_rtypeddata_p(VALUE obj) {

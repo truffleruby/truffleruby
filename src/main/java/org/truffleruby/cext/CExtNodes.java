@@ -41,6 +41,7 @@ import org.truffleruby.annotations.Primitive;
 import org.truffleruby.annotations.Visibility;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
+import org.truffleruby.core.DataObjectFinalizerReference;
 import org.truffleruby.core.MarkingService.ExtensionCallStack;
 import org.truffleruby.core.MarkingServiceNodes;
 import org.truffleruby.core.MarkingServiceNodes.RunMarkOnExitNode;
@@ -142,6 +143,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import static org.truffleruby.Layouts.LOCKED_FLAG;
 import static org.truffleruby.language.dispatch.DispatchConfiguration.PRIVATE;
 import static org.truffleruby.language.dispatch.DispatchConfiguration.PUBLIC;
 
@@ -304,9 +306,29 @@ public abstract class CExtNodes {
 
         @Specialization
         Object markOnCallExit(Object object,
-                @Cached WrapNode wrapNode) {
-            ValueWrapper wrapper = wrapNode.execute(object);
-            getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack.markOnExitObject(wrapper);
+                @Cached ObjectToWrapperNode objectToWrapperNode,
+                @Cached InlinedConditionProfile sameObjectProfile,
+                @Cached InlinedConditionProfile growProfile) {
+            ValueWrapper wrapper = objectToWrapperNode.execute(object);
+            getLanguage().getCurrentFiber().extensionCallStack
+                    .markOnExitObject(wrapper, sameObjectProfile, growProfile, this);
+            return nil;
+        }
+    }
+
+    /** The address of the struct RData/RTypedData of a data object for RDATA() and RTYPEDDATA(), from its
+     * {@link DataObjectFinalizerReference} (see {@link CExtUpcallRootNode.Carrier#DATA_VALUE}), or nil for other
+     * objects. */
+    @Primitive(name = "cext_data_struct")
+    public abstract static class DataStructNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        long dataStruct(DataObjectFinalizerReference object) {
+            return object.dataStruct;
+        }
+
+        @Fallback
+        Object notDataObject(Object object) {
             return nil;
         }
     }
@@ -828,15 +850,26 @@ public abstract class CExtNodes {
         @Specialization
         RubyString rbStrLockTmp(RubyString string,
                 @Cached InlinedBranchProfile errorProfile,
-                @Cached TypeNodes.CheckFrozenNode raiseIfFrozenNode) {
+                @Cached TypeNodes.CheckFrozenNode raiseIfFrozenNode,
+                @Cached DynamicObject.IsSharedNode isSharedNode,
+                @Cached InlinedConditionProfile isSharedProfile,
+                @Cached DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
             raiseIfFrozenNode.execute(this, string);
 
-            if (string.locked) {
+            final boolean changed;
+            if (isSharedProfile.profile(this, isSharedNode.execute(string))) {
+                synchronized (string) {
+                    changed = setShapeFlagsNode.executeAdd(string, LOCKED_FLAG);
+                }
+            } else {
+                changed = setShapeFlagsNode.executeAdd(string, LOCKED_FLAG);
+            }
+
+            if (!changed) {
                 errorProfile.enter(this);
                 throw new RaiseException(getContext(),
                         coreExceptions().runtimeError("temporal locking already locked string", this));
             }
-            string.locked = true;
             return string;
         }
 
@@ -853,15 +886,26 @@ public abstract class CExtNodes {
         @Specialization
         RubyString rbStrUnlockTmp(RubyString string,
                 @Cached InlinedBranchProfile errorProfile,
-                @Cached TypeNodes.CheckFrozenNode raiseIfFrozenNode) {
+                @Cached TypeNodes.CheckFrozenNode raiseIfFrozenNode,
+                @Cached DynamicObject.IsSharedNode isSharedNode,
+                @Cached InlinedConditionProfile isSharedProfile,
+                @Cached DynamicObject.SetShapeFlagsNode setShapeFlagsNode) {
             raiseIfFrozenNode.execute(this, string);
 
-            if (!string.locked) {
+            final boolean changed;
+            if (isSharedProfile.profile(this, isSharedNode.execute(string))) {
+                synchronized (string) {
+                    changed = setShapeFlagsNode.executeRemove(string, LOCKED_FLAG);
+                }
+            } else {
+                changed = setShapeFlagsNode.executeRemove(string, LOCKED_FLAG);
+            }
+
+            if (!changed) {
                 errorProfile.enter(this);
                 throw new RaiseException(getContext(),
                         coreExceptions().runtimeError("temporal unlocking already unlocked string", this));
             }
-            string.locked = false;
             return string;
         }
 
@@ -954,13 +998,13 @@ public abstract class CExtNodes {
         @Specialization(guards = "name == cachedName", limit = "getDefaultCacheLimit()")
         static Object rbGvGetCached(VirtualFrame frame, Node node, String name,
                 @Cached("name") String cachedName,
-                @Cached(value = "create(cachedName)", inline = false) ReadGlobalVariableNode readGlobalVariableNode) {
+                @Cached("create(cachedName)") ReadGlobalVariableNode readGlobalVariableNode) {
             return readGlobalVariableNode.execute(frame);
         }
 
         @Specialization
         static Object rbGvGetUncached(Node node, String name,
-                @Cached(inline = false) DispatchNode dispatchNode) {
+                @Cached DispatchNode dispatchNode) {
             return dispatchNode.call(coreLibrary(node).topLevelBinding, "eval", name);
         }
     }
@@ -1224,8 +1268,8 @@ public abstract class CExtNodes {
         static Pointer toNative(Node node, RubyString string, boolean inplace,
                 @Cached RubyStringLibrary libString,
                 @Cached InlinedConditionProfile convertProfile,
-                @Cached(inline = false) TruffleString.CopyToNativeMemoryNode copyToNativeMemoryNode,
-                @Cached(inline = false) TruffleString.GetInternalNativePointerNode getInternalNativePointerNode) {
+                @Cached TruffleString.CopyToNativeMemoryNode copyToNativeMemoryNode,
+                @Cached TruffleString.GetInternalNativePointerNode getInternalNativePointerNode) {
             CompilerAsserts.partialEvaluationConstant(inplace);
 
             var tstring = string.tstring;
@@ -1612,7 +1656,7 @@ public abstract class CExtNodes {
     public abstract static class RbTrMbcCaseFoldNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        static Object rbTrEncMbcCaseFold(int flags, Object string, RubyProc advance, Object p,
+        static Object rbTrEncMbcCaseFold(int flags, Object string, RubyProc advance, long p,
                 @Cached RubyStringLibrary strings,
                 @Cached CallBlockNode callBlockNode,
                 @Cached TruffleString.FromByteArrayNode fromByteArrayNode,
@@ -1756,20 +1800,23 @@ public abstract class CExtNodes {
     public abstract static class Sym2IDNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        Object sym2id(RubySymbol symbol,
+        long sym2id(RubySymbol symbol,
                 @Cached SymbolToIDNode symbolToIDNode) {
             return symbolToIDNode.execute(symbol);
         }
 
     }
 
+    /** Wraps a Ruby object as a VALUE handle for C, kept alive until the end of the current C extension call. The
+     * handle is passed to C as a {@code Primitive.cext_invoke_*} downcall argument or returned to C as an upcall result
+     * within that call. ValueWrappers themselves never reach Ruby code. */
     @Primitive(name = "cext_wrap")
     public abstract static class WrapValueNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        ValueWrapper wrap(Object value,
+        long wrap(Object value,
                 @Cached WrapNode wrapNode) {
-            return wrapNode.execute(value);
+            return wrapNode.execute(this, value);
         }
     }
 
@@ -1787,8 +1834,8 @@ public abstract class CExtNodes {
     public abstract static class CExtToWrapperNode extends PrimitiveArrayArgumentsNode {
         @Specialization
         ValueWrapper toWrapper(long handle,
-                @Cached ToWrapperNode toWrapperNode) {
-            ValueWrapper wrapper = toWrapperNode.execute(this, handle);
+                @Cached HandleToWrapperNode handleToWrapperNode) {
+            ValueWrapper wrapper = handleToWrapperNode.execute(this, handle);
             if (wrapper == null) {
                 CompilerDirectives.transferToInterpreterAndInvalidate();
                 throw CompilerDirectives.shouldNotReachHere("ValueWrapper not found for " + handle);
@@ -1805,7 +1852,7 @@ public abstract class CExtNodes {
         Object createNewMarkList(RubyDynamicObject object,
                 @Cached DynamicObject.GetNode getNode) {
             getContext().getMarkingService().startMarking(
-                    getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack,
+                    getLanguage().getCurrentFiber().extensionCallStack,
                     (Object[]) getNode.execute(object, Layouts.MARKED_OBJECTS_IDENTIFIER, null));
             return nil;
         }
@@ -1817,12 +1864,12 @@ public abstract class CExtNodes {
         @Specialization
         Object rbGCMark(long handle,
                 @Cached InlinedBranchProfile noExceptionProfile,
-                @Cached ToWrapperNode toWrapperNode) {
-            ValueWrapper wrappedValue = toWrapperNode.execute(this, handle);
+                @Cached HandleToWrapperNode handleToWrapperNode) {
+            ValueWrapper wrappedValue = handleToWrapperNode.execute(this, handle);
             if (wrappedValue != null) {
                 noExceptionProfile.enter(this);
                 getContext().getMarkingService()
-                        .addMark(getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack, wrappedValue);
+                        .addMark(getLanguage().getCurrentFiber().extensionCallStack, wrappedValue);
             }
             // We do nothing here if the handle cannot be resolved. If we are marking an object
             // which is only reachable via weak refs then the handles of objects it is itself
@@ -1839,8 +1886,8 @@ public abstract class CExtNodes {
         Object addToMarkList(long handle,
                 @Cached MarkingServiceNodes.KeepAliveNode keepAliveNode,
                 @Cached InlinedBranchProfile noExceptionProfile,
-                @Cached ToWrapperNode toWrapperNode) {
-            ValueWrapper wrappedValue = toWrapperNode.execute(this, handle);
+                @Cached HandleToWrapperNode handleToWrapperNode) {
+            ValueWrapper wrappedValue = handleToWrapperNode.execute(this, handle);
             if (wrappedValue != null) {
                 noExceptionProfile.enter(this);
                 keepAliveNode.execute(this, wrappedValue);
@@ -1861,7 +1908,7 @@ public abstract class CExtNodes {
                     structOwner,
                     Layouts.MARKED_OBJECTS_IDENTIFIER,
                     getContext().getMarkingService()
-                            .finishMarking(getLanguage().getCurrentThread().getCurrentFiber().extensionCallStack));
+                            .finishMarking(getLanguage().getCurrentFiber().extensionCallStack));
             return nil;
         }
     }

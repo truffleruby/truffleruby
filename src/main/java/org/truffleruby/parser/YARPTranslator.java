@@ -59,6 +59,7 @@ import org.truffleruby.core.string.KCode;
 import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.core.string.TStringWithEncoding;
 import org.truffleruby.core.symbol.RubySymbol;
+import org.truffleruby.core.tracepoint.FireClassAndEndTracePointsNode;
 import org.truffleruby.debug.ChaosNode;
 import org.truffleruby.language.LexicalScope;
 import org.truffleruby.language.NotProvided;
@@ -138,7 +139,6 @@ import org.truffleruby.language.objects.DefineModuleNode;
 import org.truffleruby.language.objects.DefineModuleNodeGen;
 import org.truffleruby.language.objects.DynamicLexicalScopeNode;
 import org.truffleruby.language.objects.GetDynamicLexicalScopeNode;
-import org.truffleruby.language.objects.InsideModuleDefinitionNode;
 import org.truffleruby.language.objects.LexicalScopeNode;
 import org.truffleruby.language.objects.ReadInstanceVariableNode;
 import org.truffleruby.language.objects.RunModuleDefinitionNode;
@@ -3538,11 +3538,17 @@ public class YARPTranslator extends YARPBaseTranslator {
      */
     private ModuleBodyDefinition compileClassNode(Nodes.Node moduleNode, Nodes.Node bodyNode) {
         RubyNode body = translateNodeOrNil(bodyNode);
-        body = new InsideModuleDefinitionNode(body);
-        assignPositionOnly(moduleNode, body); // source location is needed to trigger :class TracePoint event
 
         if (environment.hasFlipFlopStates()) {
             body = sequence(initFlipFlopStates(environment), body);
+        }
+
+        // No :class and :end TracePoint events for class << expr, like CRuby
+        if (!(moduleNode instanceof Nodes.SingletonClassNode)) {
+            // The source location of the node is needed for the :class TracePoint event,
+            // and the end keyword, the last 3 bytes of the definition, for the :end TracePoint event
+            body = new FireClassAndEndTracePointsNode(body, moduleNode.endOffset() - 3);
+            assignPositionOnly(moduleNode, body);
         }
 
         final RubyNode writeSelfNode = loadSelf(language);

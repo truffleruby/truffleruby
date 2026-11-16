@@ -45,7 +45,7 @@
             │   │   │           │                   │   @ SymbolNode (location: (3,10)-(3,18))
             │   │   │           │                   │   ├── flags: static_literal, forced_us_ascii_encoding
             │   │   │           │                   │   ├── opening_loc: ∅
-            │   │   │           │                   │   ├── value_loc: (3,10)-(3,17) = "message"
+            │   │   │           │                   │   ├── content_loc: (3,10)-(3,17) = "message"
             │   │   │           │                   │   ├── closing_loc: (3,17)-(3,18) = ":"
             │   │   │           │                   │   └── unescaped: "message"
             │   │   │           │                   ├── value:
@@ -102,7 +102,7 @@
             │       │           │                   │   @ SymbolNode (location: (5,10)-(5,18))
             │       │           │                   │   ├── flags: static_literal, forced_us_ascii_encoding
             │       │           │                   │   ├── opening_loc: ∅
-            │       │           │                   │   ├── value_loc: (5,10)-(5,17) = "message"
+            │       │           │                   │   ├── content_loc: (5,10)-(5,17) = "message"
             │       │           │                   │   ├── closing_loc: (5,17)-(5,18) = ":"
             │       │           │                   │   └── unescaped: "message"
             │       │           │                   ├── value:

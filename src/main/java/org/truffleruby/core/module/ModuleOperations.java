@@ -61,9 +61,12 @@ public abstract class ModuleOperations {
         return includesModule(ancestors, module);
     }
 
+    /** Whether a method can be bound to instances of module, or defined on module with define_method. Like CRuby, this
+     * is based on the method's owner and not its declaring module: an alias of a BasicObject method defined in Kernel
+     * (e.g. Kernel#eql?) is owned by Kernel and so can be defined on any module. */
     @TruffleBoundary
     public static boolean canBindMethodTo(InternalMethod method, RubyModule module) {
-        final RubyModule origin = method.getDeclaringModule();
+        final RubyModule origin = method.getOwner();
 
         if (!(origin instanceof RubyClass)) { // Module (not Class) methods can always be bound
             return true;

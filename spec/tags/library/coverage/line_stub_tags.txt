@@ -1,0 +1,17 @@
+fails:Coverage.line_stub returns 0 for each line that line coverage counts and nil for the other lines
+fails:Coverage.line_stub returns 0 only for the first line of a call chain that spans several lines
+fails:Coverage.line_stub returns nil for a statement that has no effect
+fails:Coverage.line_stub returns 0 for each elsif condition
+fails:Coverage.line_stub returns 0 for the condition line of an if used as a value
+fails:Coverage.line_stub returns 0 for the condition line of an unless used as a value
+fails:Coverage.line_stub returns nil for each line of an if whose condition is false
+fails:Coverage.line_stub returns 0 only for the then arm of an if whose condition is true
+fails:Coverage.line_stub returns nil for a modifier unless whose condition is true
+fails:Coverage.line_stub returns 0 for the condition line of a modifier if
+fails:Coverage.line_stub returns 0 for the condition line of a modifier unless
+fails:Coverage.line_stub returns 0 for the statement of an interpolated modifier if
+fails:Coverage.line_stub returns an entry for a last line without a newline
+fails:Coverage.line_stub returns an entry for each trailing blank line
+fails:Coverage.line_stub returns an empty Array for an empty file
+fails:Coverage.line_stub does not start the coverage measurement
+fails:Coverage.line_stub returns 0 for the condition line of a ternary used as an argument

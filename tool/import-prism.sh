@@ -65,10 +65,14 @@ cp $PRISM/prism.generated.gemspec "lib/gems/specifications/default/prism-$VERSIO
 rm $PRISM/prism.generated.gemspec
 rm $PRISM/prism.gem
 
+git add src/main/c/{prism-gem,yarp} test/mri/{snapshots,tests/prism} lib/mri/prism src/yarp lib/gems/specifications/default/prism*
+
 cat <<'EOF'
 
 MANUAL STEPS:
-* Update versions.json
-* Run `jt test gems default-bundled-gems`
-* Commit the result e.g. `git commit -am 'Update Prism version in tests'`
+* Commit the result with message `Import ruby/prism@COMMIT`
+* If the version changed:
+  * Update versions.json
+  * Run `jt --build test gems default-bundled-gems`
+  * Commit the result e.g. `git commit -am 'Update Prism version in tests'`
 EOF

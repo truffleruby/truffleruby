@@ -235,7 +235,7 @@
         │   │           │       └── @ SymbolNode (location: (30,4)-(30,8))
         │   │           │           ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   │           │           ├── opening_loc: (30,4)-(30,5) = ":"
-        │   │           │           ├── value_loc: (30,5)-(30,8) = "bar"
+        │   │           │           ├── content_loc: (30,5)-(30,8) = "bar"
         │   │           │           ├── closing_loc: ∅
         │   │           │           └── unescaped: "bar"
         │   │           ├── locals: []

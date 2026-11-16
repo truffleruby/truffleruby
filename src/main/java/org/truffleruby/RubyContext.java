@@ -57,7 +57,7 @@ import org.truffleruby.core.hash.PreInitializationManager;
 import org.truffleruby.core.hash.ReHashable;
 import org.truffleruby.core.inlined.CoreMethods;
 import org.truffleruby.core.kernel.AtExitManager;
-import org.truffleruby.core.kernel.TraceManager;
+import org.truffleruby.core.tracepoint.SlowPathTracePoints;
 import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.core.objectspace.ObjectSpaceManager;
 import org.truffleruby.core.proc.ProcOperations;
@@ -114,7 +114,7 @@ public final class RubyContext {
     private final SafepointManager safepointManager;
     private final CodeLoader codeLoader;
     private final FeatureLoader featureLoader;
-    private final TraceManager traceManager;
+    private final SlowPathTracePoints slowPathTracePoints;
     private final ReferenceProcessor referenceProcessor;
     private final FinalizationService finalizationService;
     private final DataObjectFinalizationService dataObjectFinalizationService;
@@ -250,10 +250,7 @@ public final class RubyContext {
         threadManager.initializeMainThread(Thread.currentThread());
         Metrics.printTime("after-thread-manager");
 
-        Metrics.printTime("before-instruments");
-        final Instrumenter instrumenter = env.lookup(Instrumenter.class);
-        traceManager = new TraceManager(language, this, instrumenter);
-        Metrics.printTime("after-instruments");
+        slowPathTracePoints = new SlowPathTracePoints(this);
 
         Metrics.printTime("after-context-constructor");
     }
@@ -625,8 +622,8 @@ public final class RubyContext {
         return atExitManager;
     }
 
-    public TraceManager getTraceManager() {
-        return traceManager;
+    public SlowPathTracePoints getSlowPathTracePoints() {
+        return slowPathTracePoints;
     }
 
     public SafepointManager getSafepointManager() {

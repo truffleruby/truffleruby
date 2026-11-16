@@ -85,7 +85,7 @@ public abstract class EncodingNodes {
                 @Cached InlinedConditionProfile firstAsciiCompatProfile,
                 @Cached InlinedConditionProfile second7BitProfile,
                 @Cached InlinedConditionProfile secondAsciiCompatProfile,
-                @Cached(inline = false) TruffleString.GetByteCodeRangeNode codeRangeNode) {
+                @Cached TruffleString.GetByteCodeRangeNode codeRangeNode) {
             assert first.isCompatibleToUncached(firstEncoding.tencoding) &&
                     second.isCompatibleToUncached(secondEncoding.tencoding);
 
@@ -169,7 +169,7 @@ public abstract class EncodingNodes {
                 @Cached InlinedConditionProfile stringStringProfile,
                 @Cached InlinedConditionProfile incompatibleProfile,
                 @Cached InlinedConditionProfile objectStringProfile,
-                @Cached(inline = false) TruffleString.GetByteCodeRangeNode codeRangeNode,
+                @Cached TruffleString.GetByteCodeRangeNode codeRangeNode,
                 @Cached NegotiateCompatibleStringEncodingNode negotiateForStringsNode) {
             assert firstEncoding != null;
             assert secondEncoding != null;

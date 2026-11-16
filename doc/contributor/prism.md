@@ -2,9 +2,8 @@
 
 ## Update Prism
 
-* Clone `prism` as a sibling of `truffleruby-ws`.
-* Run `tool/import-prism.sh` in the truffleruby repo.
-* Commit the result with message `Import ruby/prism@COMMIT`
+* Clone `prism` as a sibling of `truffleruby-ws` and checkout the commit to import.
+* Run `tool/import-prism.sh` in the truffleruby repo and follow the printed `MANUAL STEPS`.
 
 ## Print Detailed Prism AST
 

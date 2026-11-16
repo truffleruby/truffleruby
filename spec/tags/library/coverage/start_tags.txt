@@ -1,1 +1,2 @@
 fails:Coverage.start measures coverage within eval
+fails:Coverage.start enables the coverage measurement

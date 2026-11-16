@@ -1701,6 +1701,7 @@ class IO
   def printf(fmt, *args)
     fmt = Primitive.convert_with_to_str(fmt)
     write sprintf(fmt, *args)
+    nil
   end
   Primitive.always_split self, :printf
 
@@ -1715,13 +1716,15 @@ class IO
 
   def read(length = nil, buffer = nil)
     ensure_open_and_readable
+
+    unless Primitive.nil?(length)
+      length = Primitive.rb_num2long(length)
+      raise ArgumentError, "negative length #{length} given" if length < 0
+    end
+
     buffer = Primitive.convert_with_to_str(buffer) if buffer
 
-    case length
-    when 0
-      buffer&.clear
-      return ''.b
-    when nil
+    if Primitive.nil?(length)
       str = IO.read_encode self, read_all
       return str unless buffer
 
@@ -1730,12 +1733,15 @@ class IO
       return buffer.replace(str)
     end
 
+    if length == 0
+      buffer&.clear
+      return ''.b
+    end
+
     if @ibuffer.exhausted?
       buffer.clear if buffer
       return nil
     end
-
-    raise ArgumentError, "negative length #{length} given" if length < 0
 
     str = +''
     needed = length
@@ -2252,8 +2258,7 @@ class IO
       return buffer || ''.b
     end
 
-    str, errno = Truffle::POSIX.read_string(self, number_of_bytes)
-    Errno.handle_errno(errno) unless errno == 0
+    str = Truffle::POSIX.read_string_at_least_one_byte(self, number_of_bytes)
 
     if Primitive.nil? str
       buffer.clear if buffer

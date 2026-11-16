@@ -1,0 +1,8 @@
+fails:Coverage.suspend returns nil
+fails:Coverage.suspend stops the coverage measurement
+fails:Coverage.suspend raises a RuntimeError when the coverage measurement is not running
+fails:Coverage.suspend raises a RuntimeError when the coverage measurement is already suspended
+fails:Coverage.suspend keeps the result so far
+fails:Coverage.suspend stops counting lines
+fails:Coverage.suspend stops counting branches
+fails:Coverage.suspend stops counting method calls

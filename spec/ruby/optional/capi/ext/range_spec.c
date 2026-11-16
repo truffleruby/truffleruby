@@ -18,7 +18,9 @@ VALUE range_spec_rb_range_values(VALUE self, VALUE range) {
   VALUE end;
   int excl;
   VALUE ary = rb_ary_new();
-  rb_range_values(range, &beg, &end, &excl);
+  if (!rb_range_values(range, &beg, &end, &excl)) {
+    return Qfalse;
+  }
   rb_ary_store(ary, 0, beg);
   rb_ary_store(ary, 1, end);
   rb_ary_store(ary, 2, excl ? Qtrue : Qfalse);
@@ -26,8 +28,8 @@ VALUE range_spec_rb_range_values(VALUE self, VALUE range) {
 }
 
 VALUE range_spec_rb_range_beg_len(VALUE self, VALUE range, VALUE lenv, VALUE errv) {
-  long begp = 0;
-  long lenp = 0;
+  rb_len_t begp = 0;
+  rb_len_t lenp = 0;
   long len = FIX2LONG(lenv);
   int err = FIX2INT(errv);
   VALUE ary = rb_ary_new();
@@ -53,14 +55,14 @@ VALUE range_spec_rb_arithmetic_sequence_extract(VALUE self, VALUE object) {
   rb_ary_store(ary, 1, components.begin);
   rb_ary_store(ary, 2, components.end);
   rb_ary_store(ary, 3, components.step);
-  rb_ary_store(ary, 4, components.exclude_end ? Qtrue : Qfalse);
+  rb_ary_store(ary, 4, INT2FIX(components.exclude_end));
   return ary;
 }
 
 VALUE range_spec_rb_arithmetic_sequence_beg_len_step(VALUE self, VALUE aseq, VALUE lenv, VALUE errv) {
-  long begp = 0;
-  long lenp = 0;
-  long stepp = 0;
+  rb_len_t begp = 0;
+  rb_len_t lenp = 0;
+  rb_len_t stepp = 0;
 
   long len = FIX2LONG(lenv);
   int err = FIX2INT(errv);

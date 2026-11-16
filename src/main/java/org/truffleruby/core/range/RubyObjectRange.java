@@ -22,7 +22,6 @@ import org.truffleruby.language.objects.ObjectGraphNode;
 public final class RubyObjectRange extends RubyDynamicObject implements ObjectGraphNode {
 
     public boolean excludedEnd;
-    public boolean frozen;
     public Object begin;
     public Object end;
 
@@ -31,13 +30,11 @@ public final class RubyObjectRange extends RubyDynamicObject implements ObjectGr
             Shape shape,
             boolean excludedEnd,
             Object begin,
-            Object end,
-            boolean frozen) {
+            Object end) {
         super(rubyClass, shape);
         this.excludedEnd = excludedEnd;
         this.begin = begin;
         this.end = end;
-        this.frozen = frozen;
     }
 
     public boolean isBoundless() {

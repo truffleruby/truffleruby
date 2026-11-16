@@ -108,6 +108,7 @@ import org.truffleruby.core.thread.RubyBacktraceLocation;
 import org.truffleruby.core.thread.RubyThread;
 import org.truffleruby.core.time.RubyTime;
 import org.truffleruby.core.tracepoint.RubyTracePoint;
+import org.truffleruby.core.tracepoint.RubyTracePointEvent;
 import org.truffleruby.extra.RubyAtomicReference;
 import org.truffleruby.extra.RubyConcurrentMap;
 import org.truffleruby.extra.ffi.RubyPointer;
@@ -172,9 +173,10 @@ import static org.truffleruby.language.RubyBaseNode.nil;
 @ProvidedTags({
         CoverageManager.LineTag.class,
         TraceManager.CallTag.class,
-        TraceManager.ClassTag.class,
+        TraceManager.CCallTag.class,
+        TraceManager.ReturnTag.class,
+        TraceManager.CReturnTag.class,
         TraceManager.LineTag.class,
-        TraceManager.NeverTag.class,
         StandardTags.RootTag.class,
         StandardTags.StatementTag.class,
         StandardTags.ReadVariableTag.class,
@@ -197,9 +199,6 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     }
 
     public static final String MIME_TYPE = "application/x-ruby";
-    /** To avoid some String[] allocations */
-    public static final String[] MIME_TYPES = { MIME_TYPE };
-
 
     public static final String CEXT_EXTENSION = Platform.CEXT_SUFFIX;
 
@@ -261,7 +260,31 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     @CompilationFinal public Optional<RubyContext> contextIfSingleContext;
     private int numberOfContexts = 0;
 
-    public final CyclicAssumption traceFuncUnusedAssumption = new CyclicAssumption("set_trace_func is not used");
+    public final CyclicAssumption cCallTracingUnusedAssumption = new CyclicAssumption(
+            "no :c_call TracePoint is enabled");
+    /** How many :c_call TracePoints are currently enabled, in any context */
+    private int cCallTracers = 0;
+
+    /** Inlined calls to core methods like Integer#+ are not real calls and would not trigger :c_call events, so they
+     * are deoptimized to real calls while any :c_call TracePoint is enabled. Only :c_call needs this and not :call,
+     * because all inlined core methods are defined in Java. */
+    public void startTracingCCalls() {
+        synchronized (cCallTracingUnusedAssumption) {
+            if (cCallTracers++ == 0) {
+                // Invalidate current assumption
+                cCallTracingUnusedAssumption.getAssumption().invalidate();
+            }
+        }
+    }
+
+    public void stopTracingCCalls() {
+        synchronized (cCallTracingUnusedAssumption) {
+            if (--cCallTracers == 0) {
+                // Update to a new valid assumption
+                cCallTracingUnusedAssumption.invalidate();
+            }
+        }
+    }
 
     public final CoreMethodAssumptions coreMethodAssumptions;
     public final CoreStrings coreStrings;
@@ -341,6 +364,10 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     public final Shape nameErrorShape = createShape(RubyNameError.class);
     public final Shape noMethodErrorShape = createShape(RubyNoMethodError.class);
     public final Shape objectRangeShape = createShape(RubyObjectRange.class);
+    public final Shape frozenObjectRangeShape = Shape
+            .newBuilder(objectRangeShape)
+            .shapeFlags(Layouts.FROZEN_FLAG)
+            .build();
     public final Shape procShape = createShape(RubyProc.class);
     public final Shape queueShape = createShape(RubyQueue.class);
     public final Shape prngRandomizerShape = createShape(RubyPRNGRandomizer.class);
@@ -349,6 +376,10 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     public final Shape sourceLocationShape = createShape(RubySourceLocation.class);
     public final Shape sourceRangeShape = createShape(RubySourceRange.class);
     public final Shape stringShape = createShape(RubyString.class);
+    public final Shape frozenStringShape = Shape
+            .newBuilder(stringShape)
+            .shapeFlags(Layouts.FROZEN_FLAG)
+            .build();
     public final Shape syntaxErrorShape = createShape(RubySyntaxError.class);
     public final Shape systemCallErrorShape = createShape(RubySystemCallError.class);
     public final Shape systemExitShape = createShape(RubySystemExit.class);
@@ -356,6 +387,7 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     public final Shape threadShape = createShape(RubyThread.class);
     public final Shape timeShape = createShape(RubyTime.class);
     public final Shape tracePointShape = createShape(RubyTracePoint.class);
+    public final Shape tracePointEventShape = createShape(RubyTracePointEvent.class);
     public final Shape truffleFFIPointerShape = createShape(RubyPointer.class);
     public final Shape unboundMethodShape = createShape(RubyUnboundMethod.class);
     public final Shape weakMapShape = createShape(RubyWeakMap.class);

@@ -1375,6 +1375,7 @@ pm_serialize_comment_list(pm_list_t *list, pm_buffer_t *buffer) {
     }
 }
 
+
 static void
 pm_serialize_magic_comment(pm_magic_comment_t *magic_comment, pm_buffer_t *buffer) {
     // serialize key location
@@ -1454,7 +1455,7 @@ pm_serialize_metadata(pm_parser_t *parser, pm_buffer_t *buffer) {
     pm_buffer_append_byte(buffer, (uint8_t) parser->continuable);
 }
 
-#line 278 "prism/templates/src/serialize.c.erb"
+#line 309 "prism/templates/src/serialize.c.erb"
 /**
  * Serialize the metadata, nodes, and constant pool.
  */

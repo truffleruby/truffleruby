@@ -181,25 +181,12 @@ module Prism
       location.cached_end_code_units_column(cache)
     end
 
-    # Delegates to [`leading_comments`](rdoc-ref:Location#leading_comments) of the associated location object.
-    #
-    #: () -> Array[Comment]
-    def leading_comments
-      location.leading_comments
-    end
-
-    # Delegates to [`trailing_comments`](rdoc-ref:Location#trailing_comments) of the associated location object.
-    #
-    #: () -> Array[Comment]
-    def trailing_comments
-      location.trailing_comments
-    end
-
-    # Delegates to [`comments`](rdoc-ref:Location#comments) of the associated location object.
+    # The comments attached to this node, ordered by start offset. Comments are
+    # only attached when the source is parsed with the attach_comments option.
     #
     #: () -> Array[Comment]
     def comments
-      location.comments
+      source.comments_for(node_id)
     end
 
     # :section:
@@ -391,14 +378,6 @@ module Prism
       raise NoMethodError, "undefined method `compact_child_nodes' for #{inspect}"
     end
 
-    # Returns an array of child nodes and locations that could potentially have
-    # comments attached to them.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      raise NoMethodError, "undefined method `comment_targets' for #{inspect}"
-    end
-
     # Returns a string representation of the node.
     #
     #: () -> String
@@ -437,8 +416,10 @@ module Prism
 
   # Represents the use of the `alias` keyword to alias a global variable.
   #
-  #     alias $foo $bar
-  #     ^^^^^^^^^^^^^^^
+  # ```rb
+  # alias $foo $bar
+  # ^^^^^^^^^^^^^^^
+  # ```
   class AliasGlobalVariableNode < Node
     # @rbs @new_name: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
     # @rbs @old_name: (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
@@ -500,13 +481,6 @@ module Prism
       [new_name, old_name]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [new_name, old_name, keyword_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> AliasGlobalVariableNode
     #
@@ -561,8 +535,10 @@ module Prism
     #
     # Represents the new name of the global variable that can be used after aliasing.
     #
-    #     alias $foo $bar
-    #           ^^^^
+    # ```rb
+    # alias $foo $bar
+    #       ^^^^
+    # ```
     #
     #: () -> (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
     def new_name
@@ -574,8 +550,10 @@ module Prism
     #
     # Represents the old name of the global variable that can be used before aliasing.
     #
-    #     alias $foo $bar
-    #                ^^^^
+    # ```rb
+    # alias $foo $bar
+    #            ^^^^
+    # ```
     #
     #: () -> (GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
     def old_name
@@ -588,8 +566,10 @@ module Prism
     #
     # The Location of the `alias` keyword.
     #
-    #     alias $foo $bar
-    #     ^^^^^
+    # ```rb
+    # alias $foo $bar
+    # ^^^^^
+    # ```
     #
     #: () -> Location
     def keyword_loc
@@ -632,8 +612,10 @@ module Prism
 
   # Represents the use of the `alias` keyword to alias a method.
   #
-  #     alias foo bar
-  #     ^^^^^^^^^^^^^
+  # ```rb
+  # alias foo bar
+  # ^^^^^^^^^^^^^
+  # ```
   class AliasMethodNode < Node
     # @rbs @new_name: (SymbolNode | InterpolatedSymbolNode)
     # @rbs @old_name: (SymbolNode | InterpolatedSymbolNode)
@@ -695,13 +677,6 @@ module Prism
       [new_name, old_name]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [new_name, old_name, keyword_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> AliasMethodNode
     #
@@ -756,14 +731,16 @@ module Prism
     #
     # Represents the new name of the method that will be aliased.
     #
-    #     alias foo bar
-    #           ^^^
+    # ```rb
+    # alias foo bar
+    #       ^^^
     #
-    #     alias :foo :bar
-    #           ^^^^
+    # alias :foo :bar
+    #       ^^^^
     #
-    #     alias :"#{foo}" :"#{bar}"
-    #           ^^^^^^^^^
+    # alias :"#{foo}" :"#{bar}"
+    #       ^^^^^^^^^
+    # ```
     #
     #: () -> (SymbolNode | InterpolatedSymbolNode)
     def new_name
@@ -775,14 +752,16 @@ module Prism
     #
     # Represents the old name of the method that will be aliased.
     #
-    #     alias foo bar
-    #               ^^^
+    # ```rb
+    # alias foo bar
+    #           ^^^
     #
-    #     alias :foo :bar
-    #                ^^^^
+    # alias :foo :bar
+    #            ^^^^
     #
-    #     alias :"#{foo}" :"#{bar}"
-    #                     ^^^^^^^^^
+    # alias :"#{foo}" :"#{bar}"
+    #                 ^^^^^^^^^
+    # ```
     #
     #: () -> (SymbolNode | InterpolatedSymbolNode)
     def old_name
@@ -795,8 +774,10 @@ module Prism
     #
     # Represents the Location of the `alias` keyword.
     #
-    #     alias foo bar
-    #     ^^^^^
+    # ```rb
+    # alias foo bar
+    # ^^^^^
+    # ```
     #
     #: () -> Location
     def keyword_loc
@@ -839,8 +820,10 @@ module Prism
 
   # Represents an alternation pattern in pattern matching.
   #
-  #     foo => bar | baz
-  #            ^^^^^^^^^
+  # ```rb
+  # foo => bar | baz
+  #        ^^^^^^^^^
+  # ```
   class AlternationPatternNode < Node
     # @rbs @left: Prism::node
     # @rbs @right: Prism::node
@@ -902,13 +885,6 @@ module Prism
       [left, right]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [left, right, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> AlternationPatternNode
     #
@@ -963,8 +939,10 @@ module Prism
     #
     # Represents the left side of the expression.
     #
-    #     foo => bar | baz
-    #            ^^^
+    # ```rb
+    # foo => bar | baz
+    #        ^^^
+    # ```
     #
     #: () -> Prism::node
     def left
@@ -976,8 +954,10 @@ module Prism
     #
     # Represents the right side of the expression.
     #
-    #     foo => bar | baz
-    #                  ^^^
+    # ```rb
+    # foo => bar | baz
+    #              ^^^
+    # ```
     #
     #: () -> Prism::node
     def right
@@ -990,8 +970,10 @@ module Prism
     #
     # Represents the alternation operator Location.
     #
-    #     foo => bar | baz
-    #                ^
+    # ```rb
+    # foo => bar | baz
+    #            ^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -1034,8 +1016,10 @@ module Prism
 
   # Represents the use of the `&&` operator or the `and` keyword.
   #
-  #     left and right
-  #     ^^^^^^^^^^^^^^
+  # ```rb
+  # left and right
+  # ^^^^^^^^^^^^^^
+  # ```
   class AndNode < Node
     # @rbs @left: Prism::node
     # @rbs @right: Prism::node
@@ -1097,13 +1081,6 @@ module Prism
       [left, right]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [left, right, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> AndNode
     #
@@ -1158,11 +1135,13 @@ module Prism
     #
     # Represents the left side of the expression. It can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     left and right
-    #     ^^^^
+    # ```rb
+    # left and right
+    # ^^^^
     #
-    #     1 && 2
-    #     ^
+    # 1 && 2
+    # ^
+    # ```
     #
     #: () -> Prism::node
     def left
@@ -1174,11 +1153,13 @@ module Prism
     #
     # Represents the right side of the expression.
     #
-    #     left && right
-    #             ^^^^^
+    # ```rb
+    # left && right
+    #         ^^^^^
     #
-    #     1 and 2
-    #           ^
+    # 1 and 2
+    #       ^
+    # ```
     #
     #: () -> Prism::node
     def right
@@ -1191,8 +1172,10 @@ module Prism
     #
     # The Location of the `and` keyword or the `&&` operator.
     #
-    #     left and right
-    #          ^^^
+    # ```rb
+    # left and right
+    #      ^^^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -1235,8 +1218,10 @@ module Prism
 
   # Represents a set of arguments to a method or a keyword.
   #
-  #     return foo, bar, baz
-  #            ^^^^^^^^^^^^^
+  # ```rb
+  # return foo, bar, baz
+  #        ^^^^^^^^^^^^^
+  # ```
   class ArgumentsNode < Node
     # @rbs @arguments: Array[Prism::node]
 
@@ -1291,13 +1276,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [*arguments]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*arguments] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -1391,8 +1369,10 @@ module Prism
     #
     # The list of arguments, if present. These can be any [non-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     foo(bar, baz)
-    #         ^^^^^^^^
+    # ```rb
+    # foo(bar, baz)
+    #     ^^^^^^^^
+    # ```
     #
     #: () -> Array[Prism::node]
     def arguments
@@ -1414,8 +1394,10 @@ module Prism
 
   # Represents an array literal. This can be a regular array using brackets or a special array using % like %w or %i.
   #
-  #     [1, 2, 3]
-  #     ^^^^^^^^^
+  # ```rb
+  # [1, 2, 3]
+  # ^^^^^^^^^
+  # ```
   class ArrayNode < Node
     # @rbs @elements: Array[Prism::node]
     # @rbs @opening_loc: Location?
@@ -1474,13 +1456,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [*elements]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*elements, *opening_loc, *closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -1557,10 +1532,12 @@ module Prism
     #
     # Represents the optional source Location for the opening token.
     #
-    #     [1,2,3]                 # "["
-    #     %w[foo bar baz]         # "%w["
-    #     %I(apple orange banana) # "%I("
-    #     foo = 1, 2, 3           # nil
+    # ```rb
+    # [1,2,3]                 # "["
+    # %w[foo bar baz]         # "%w["
+    # %I(apple orange banana) # "%I("
+    # foo = 1, 2, 3           # nil
+    # ```
     #
     #: () -> Location?
     def opening_loc
@@ -1589,10 +1566,12 @@ module Prism
     #
     # Represents the optional source Location for the closing token.
     #
-    #     [1,2,3]                 # "]"
-    #     %w[foo bar baz]         # "]"
-    #     %I(apple orange banana) # ")"
-    #     foo = 1, 2, 3           # nil
+    # ```rb
+    # [1,2,3]                 # "]"
+    # %w[foo bar baz]         # "]"
+    # %I(apple orange banana) # ")"
+    # foo = 1, 2, 3           # nil
+    # ```
     #
     #: () -> Location?
     def closing_loc
@@ -1652,20 +1631,22 @@ module Prism
 
   # Represents an array pattern in pattern matching.
   #
-  #     foo in 1, 2
-  #            ^^^^
+  # ```rb
+  # foo in 1, 2
+  #        ^^^^
   #
-  #     foo in [1, 2]
-  #            ^^^^^^
+  # foo in [1, 2]
+  #        ^^^^^^
   #
-  #     foo in *bar
-  #            ^^^^
+  # foo in *bar
+  #        ^^^^
   #
-  #     foo in Bar[]
-  #            ^^^^^
+  # foo in Bar[]
+  #        ^^^^^
   #
-  #     foo in Bar[1, 2, 3]
-  #            ^^^^^^^^^^^^
+  # foo in Bar[1, 2, 3]
+  #        ^^^^^^^^^^^^
+  # ```
   class ArrayPatternNode < Node
     # @rbs @constant: (ConstantPathNode | ConstantReadNode)?
     # @rbs @requireds: Array[Prism::node]
@@ -1740,13 +1721,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*constant, *requireds, *rest, *posts, *opening_loc, *closing_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> ArrayPatternNode
     #
@@ -1805,14 +1779,16 @@ module Prism
     #
     # Represents the optional constant preceding the Array
     #
-    #     foo in Bar[]
-    #            ^^^
+    # ```rb
+    # foo in Bar[]
+    #        ^^^
     #
-    #     foo in Bar[1, 2, 3]
-    #            ^^^
+    # foo in Bar[1, 2, 3]
+    #        ^^^
     #
-    #     foo in Bar::Baz[1, 2, 3]
-    #            ^^^^^^^^
+    # foo in Bar::Baz[1, 2, 3]
+    #        ^^^^^^^^
+    # ```
     #
     #: () -> (ConstantPathNode | ConstantReadNode)?
     def constant
@@ -1824,8 +1800,10 @@ module Prism
     #
     # Represents the required elements of the array pattern.
     #
-    #     foo in [1, 2]
-    #             ^  ^
+    # ```rb
+    # foo in [1, 2]
+    #         ^  ^
+    # ```
     #
     #: () -> Array[Prism::node]
     def requireds
@@ -1837,8 +1815,10 @@ module Prism
     #
     # Represents the rest element of the array pattern.
     #
-    #     foo in *bar
-    #            ^^^^
+    # ```rb
+    # foo in *bar
+    #        ^^^^
+    # ```
     #
     #: () -> (ImplicitRestNode | SplatNode)?
     def rest
@@ -1850,8 +1830,10 @@ module Prism
     #
     # Represents the elements after the rest element of the array pattern.
     #
-    #     foo in *bar, baz
-    #                  ^^^
+    # ```rb
+    # foo in *bar, baz
+    #              ^^^
+    # ```
     #
     #: () -> Array[Prism::node]
     def posts
@@ -1864,8 +1846,10 @@ module Prism
     #
     # Represents the opening Location of the array pattern.
     #
-    #     foo in [1, 2]
-    #            ^
+    # ```rb
+    # foo in [1, 2]
+    #        ^
+    # ```
     #
     #: () -> Location?
     def opening_loc
@@ -1894,8 +1878,10 @@ module Prism
     #
     # Represents the closing Location of the array pattern.
     #
-    #     foo in [1, 2]
-    #                 ^
+    # ```rb
+    # foo in [1, 2]
+    #             ^
+    # ```
     #
     #: () -> Location?
     def closing_loc
@@ -1958,8 +1944,10 @@ module Prism
 
   # Represents a hash key/value pair.
   #
-  #     { a => b }
-  #       ^^^^^^
+  # ```rb
+  # { a => b }
+  #   ^^^^^^
+  # ```
   class AssocNode < Node
     # @rbs @key: Prism::node
     # @rbs @value: Prism::node
@@ -2021,13 +2009,6 @@ module Prism
       [key, value]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [key, value, *operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> AssocNode
     #
@@ -2082,14 +2063,16 @@ module Prism
     #
     # The key of the association. This can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     { a: b }
-    #       ^
+    # ```rb
+    # { a: b }
+    #   ^
     #
-    #     { foo => bar }
-    #       ^^^
+    # { foo => bar }
+    #   ^^^
     #
-    #     { def a; end => 1 }
-    #       ^^^^^^^^^^
+    # { def a; end => 1 }
+    #   ^^^^^^^^^^
+    # ```
     #
     #: () -> Prism::node
     def key
@@ -2101,11 +2084,13 @@ module Prism
     #
     # The value of the association, if present. This can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     { foo => bar }
-    #              ^^^
+    # ```rb
+    # { foo => bar }
+    #          ^^^
     #
-    #     { x: 1 }
-    #          ^
+    # { x: 1 }
+    #      ^
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -2118,8 +2103,10 @@ module Prism
     #
     # The Location of the `=>` operator, if present.
     #
-    #     { foo => bar }
-    #           ^^
+    # ```rb
+    # { foo => bar }
+    #       ^^
+    # ```
     #
     #: () -> Location?
     def operator_loc
@@ -2167,8 +2154,10 @@ module Prism
 
   # Represents a splat in a hash literal.
   #
-  #     { **foo }
-  #       ^^^^^
+  # ```rb
+  # { **foo }
+  #   ^^^^^
+  # ```
   class AssocSplatNode < Node
     # @rbs @value: Prism::node?
     # @rbs @operator_loc: Location
@@ -2229,13 +2218,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*value, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> AssocSplatNode
     #
@@ -2289,8 +2271,10 @@ module Prism
     #
     # The value to be splatted, if present. Will be missing when keyword rest argument forwarding is used.
     #
-    #     { **foo }
-    #         ^^^
+    # ```rb
+    # { **foo }
+    #     ^^^
+    # ```
     #
     #: () -> Prism::node?
     def value
@@ -2303,8 +2287,10 @@ module Prism
     #
     # The Location of the `**` operator.
     #
-    #     { **x }
-    #       ^^
+    # ```rb
+    # { **x }
+    #   ^^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -2346,8 +2332,10 @@ module Prism
 
   # Represents reading a reference to a field in the previous match.
   #
-  #     $'
-  #     ^^
+  # ```rb
+  # $'
+  # ^^
+  # ```
   class BackReferenceReadNode < Node
     # @rbs @name: Symbol
 
@@ -2403,13 +2391,6 @@ module Prism
       []
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> BackReferenceReadNode
     #
@@ -2461,9 +2442,11 @@ module Prism
     #
     # The name of the back-reference variable, including the leading `$`.
     #
-    #     $& # name `:$&`
+    # ```rb
+    # $& # name `:$&`
     #
-    #     $+ # name `:$+`
+    # $+ # name `:$+`
+    # ```
     #
     #: () -> Symbol
     def name
@@ -2483,10 +2466,12 @@ module Prism
 
   # Represents a begin statement.
   #
-  #     begin
-  #       foo
-  #     end
-  #     ^^^^^
+  # ```rb
+  # begin
+  #   foo
+  # end
+  # ^^^^^
+  # ```
   class BeginNode < Node
     # @rbs @begin_keyword_loc: Location?
     # @rbs @statements: StatementsNode?
@@ -2561,13 +2546,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*begin_keyword_loc, *statements, *rescue_clause, *else_clause, *ensure_clause, *end_keyword_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> BeginNode
     #
@@ -2627,8 +2605,10 @@ module Prism
     #
     # Represents the Location of the `begin` keyword.
     #
-    #     begin x end
-    #     ^^^^^
+    # ```rb
+    # begin x end
+    # ^^^^^
+    # ```
     #
     #: () -> Location?
     def begin_keyword_loc
@@ -2656,8 +2636,10 @@ module Prism
     #
     # Represents the statements within the begin block.
     #
-    #     begin x end
-    #           ^
+    # ```rb
+    # begin x end
+    #       ^
+    # ```
     #
     #: () -> StatementsNode?
     def statements
@@ -2669,8 +2651,10 @@ module Prism
     #
     # Represents the rescue clause within the begin block.
     #
-    #     begin x; rescue y; end
-    #              ^^^^^^^^
+    # ```rb
+    # begin x; rescue y; end
+    #          ^^^^^^^^
+    # ```
     #
     #: () -> RescueNode?
     def rescue_clause
@@ -2682,8 +2666,10 @@ module Prism
     #
     # Represents the else clause within the begin block.
     #
-    #     begin x; rescue y; else z; end
-    #                        ^^^^^^^^^^^
+    # ```rb
+    # begin x; rescue y; else z; end
+    #                    ^^^^^^^^^^^
+    # ```
     #
     #: () -> ElseNode?
     def else_clause
@@ -2695,8 +2681,10 @@ module Prism
     #
     # Represents the ensure clause within the begin block.
     #
-    #     begin x; ensure y; end
-    #              ^^^^^^^^
+    # ```rb
+    # begin x; ensure y; end
+    #          ^^^^^^^^
+    # ```
     #
     #: () -> EnsureNode?
     def ensure_clause
@@ -2709,8 +2697,10 @@ module Prism
     #
     # Represents the Location of the `end` keyword.
     #
-    #     begin x end
-    #             ^^^
+    # ```rb
+    # begin x end
+    #         ^^^
+    # ```
     #
     #: () -> Location?
     def end_keyword_loc
@@ -2771,8 +2761,10 @@ module Prism
 
   # Represents a block argument using `&`.
   #
-  #     bar(&args)
-  #         ^^^^^
+  # ```rb
+  # bar(&args)
+  #     ^^^^^
+  # ```
   class BlockArgumentNode < Node
     # @rbs @expression: Prism::node?
     # @rbs @operator_loc: Location
@@ -2833,13 +2825,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*expression, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> BlockArgumentNode
     #
@@ -2893,8 +2878,10 @@ module Prism
     #
     # The expression that is being passed as a block argument. This can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     foo(&args)
-    #          ^^^^
+    # ```rb
+    # foo(&args)
+    #      ^^^^
+    # ```
     #
     #: () -> Prism::node?
     def expression
@@ -2907,8 +2894,10 @@ module Prism
     #
     # Represents the Location of the `&` operator.
     #
-    #     foo(&args)
-    #         ^
+    # ```rb
+    # foo(&args)
+    #     ^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -2950,8 +2939,10 @@ module Prism
 
   # Represents a block local variable.
   #
-  #     a { |; b| }
-  #            ^
+  # ```rb
+  # a { |; b| }
+  #        ^
+  # ```
   class BlockLocalVariableNode < Node
     # @rbs @name: Symbol
 
@@ -3005,13 +2996,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -3073,8 +3057,10 @@ module Prism
     #
     # The name of the block local variable.
     #
-    #     a { |; b| } # name `:b`
-    #            ^
+    # ```rb
+    # a { |; b| } # name `:b`
+    #        ^
+    # ```
     #
     #: () -> Symbol
     def name
@@ -3095,8 +3081,10 @@ module Prism
 
   # Represents a block of ruby code.
   #
-  #     [1, 2, 3].each { |i| puts x }
-  #                    ^^^^^^^^^^^^^^
+  # ```rb
+  # [1, 2, 3].each { |i| puts x }
+  #                ^^^^^^^^^^^^^^
+  # ```
   class BlockNode < Node
     # @rbs @locals: Array[Symbol]
     # @rbs @parameters: (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
@@ -3165,13 +3153,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*parameters, *body, opening_loc, closing_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> BlockNode
     #
@@ -3229,8 +3210,10 @@ module Prism
     #
     # The local variables declared in the block.
     #
-    #     [1, 2, 3].each { |i| puts x } # locals: [:i]
-    #                       ^
+    # ```rb
+    # [1, 2, 3].each { |i| puts x } # locals: [:i]
+    #                   ^
+    # ```
     #
     #: () -> Array[Symbol]
     def locals
@@ -3242,12 +3225,14 @@ module Prism
     #
     # The parameters of the block.
     #
-    #     [1, 2, 3].each { |i| puts x }
-    #                      ^^^
-    #     [1, 2, 3].each { puts _1 }
-    #                    ^^^^^^^^^^^
-    #     [1, 2, 3].each { puts it }
-    #                    ^^^^^^^^^^^
+    # ```rb
+    # [1, 2, 3].each { |i| puts x }
+    #                  ^^^
+    # [1, 2, 3].each { puts _1 }
+    #                ^^^^^^^^^^^
+    # [1, 2, 3].each { puts it }
+    #                ^^^^^^^^^^^
+    # ```
     #
     #: () -> (BlockParametersNode | NumberedParametersNode | ItParametersNode)?
     def parameters
@@ -3259,8 +3244,10 @@ module Prism
     #
     # The body of the block.
     #
-    #     [1, 2, 3].each { |i| puts x }
-    #                          ^^^^^^
+    # ```rb
+    # [1, 2, 3].each { |i| puts x }
+    #                      ^^^^^^
+    # ```
     #
     #: () -> (StatementsNode | BeginNode)?
     def body
@@ -3273,8 +3260,10 @@ module Prism
     #
     # Represents the Location of the opening `{` or `do`.
     #
-    #     [1, 2, 3].each { |i| puts x }
-    #                    ^
+    # ```rb
+    # [1, 2, 3].each { |i| puts x }
+    #                ^
+    # ```
     #
     #: () -> Location
     def opening_loc
@@ -3298,8 +3287,10 @@ module Prism
     #
     # Represents the Location of the closing `}` or `end`.
     #
-    #     [1, 2, 3].each { |i| puts x }
-    #                                 ^
+    # ```rb
+    # [1, 2, 3].each { |i| puts x }
+    #                             ^
+    # ```
     #
     #: () -> Location
     def closing_loc
@@ -3355,9 +3346,11 @@ module Prism
 
   # Represents a block parameter of a method, block, or lambda definition.
   #
-  #     def a(&b)
-  #           ^^
-  #     end
+  # ```rb
+  # def a(&b)
+  #       ^^
+  # end
+  # ```
   class BlockParameterNode < Node
     # @rbs @name: Symbol?
     # @rbs @name_loc: Location?
@@ -3415,13 +3408,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*name_loc, operator_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -3486,9 +3472,11 @@ module Prism
     #
     # The name of the block parameter.
     #
-    #     def a(&b) # name `:b`
-    #            ^
-    #     end
+    # ```rb
+    # def a(&b) # name `:b`
+    #        ^
+    # end
+    # ```
     #
     #: () -> Symbol?
     def name
@@ -3501,8 +3489,10 @@ module Prism
     #
     # Represents the Location of the block parameter name.
     #
-    #     def a(&b)
-    #            ^
+    # ```rb
+    # def a(&b)
+    #        ^
+    # ```
     #
     #: () -> Location?
     def name_loc
@@ -3531,9 +3521,11 @@ module Prism
     #
     # Represents the Location of the `&` operator.
     #
-    #     def a(&b)
-    #           ^
-    #     end
+    # ```rb
+    # def a(&b)
+    #       ^
+    # end
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -3577,12 +3569,14 @@ module Prism
 
   # Represents a block's parameters declaration.
   #
-  #     -> (a, b = 1; local) { }
-  #        ^^^^^^^^^^^^^^^^^
+  # ```rb
+  # -> (a, b = 1; local) { }
+  #    ^^^^^^^^^^^^^^^^^
   #
-  #     foo do |a, b = 1; local|
-  #            ^^^^^^^^^^^^^^^^^
-  #     end
+  # foo do |a, b = 1; local|
+  #        ^^^^^^^^^^^^^^^^^
+  # end
+  # ```
   class BlockParametersNode < Node
     # @rbs @parameters: ParametersNode?
     # @rbs @locals: Array[BlockLocalVariableNode]
@@ -3649,13 +3643,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*parameters, *locals, *opening_loc, *closing_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> BlockParametersNode
     #
@@ -3712,12 +3699,14 @@ module Prism
     #
     # Represents the parameters of the block.
     #
-    #     -> (a, b = 1; local) { }
-    #         ^^^^^^^^
+    # ```rb
+    # -> (a, b = 1; local) { }
+    #     ^^^^^^^^
     #
-    #     foo do |a, b = 1; local|
-    #             ^^^^^^^^
-    #     end
+    # foo do |a, b = 1; local|
+    #         ^^^^^^^^
+    # end
+    # ```
     #
     #: () -> ParametersNode?
     def parameters
@@ -3729,12 +3718,14 @@ module Prism
     #
     # Represents the local variables of the block.
     #
-    #     -> (a, b = 1; local) { }
-    #                   ^^^^^
+    # ```rb
+    # -> (a, b = 1; local) { }
+    #               ^^^^^
     #
-    #     foo do |a, b = 1; local|
-    #                       ^^^^^
-    #     end
+    # foo do |a, b = 1; local|
+    #                   ^^^^^
+    # end
+    # ```
     #
     #: () -> Array[BlockLocalVariableNode]
     def locals
@@ -3747,12 +3738,14 @@ module Prism
     #
     # Represents the opening Location of the block parameters.
     #
-    #     -> (a, b = 1; local) { }
-    #        ^
+    # ```rb
+    # -> (a, b = 1; local) { }
+    #    ^
     #
-    #     foo do |a, b = 1; local|
-    #            ^
-    #     end
+    # foo do |a, b = 1; local|
+    #        ^
+    # end
+    # ```
     #
     #: () -> Location?
     def opening_loc
@@ -3781,12 +3774,14 @@ module Prism
     #
     # Represents the closing Location of the block parameters.
     #
-    #     -> (a, b = 1; local) { }
-    #                        ^
+    # ```rb
+    # -> (a, b = 1; local) { }
+    #                    ^
     #
-    #     foo do |a, b = 1; local|
-    #                            ^
-    #     end
+    # foo do |a, b = 1; local|
+    #                        ^
+    # end
+    # ```
     #
     #: () -> Location?
     def closing_loc
@@ -3846,8 +3841,10 @@ module Prism
 
   # Represents the use of the `break` keyword.
   #
-  #     break foo
-  #     ^^^^^^^^^
+  # ```rb
+  # break foo
+  # ^^^^^^^^^
+  # ```
   class BreakNode < Node
     # @rbs @arguments: ArgumentsNode?
     # @rbs @keyword_loc: Location
@@ -3908,13 +3905,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*arguments, keyword_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> BreakNode
     #
@@ -3968,8 +3958,10 @@ module Prism
     #
     # The arguments to the break statement, if present. These can be any [non-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     break foo
-    #           ^^^
+    # ```rb
+    # break foo
+    #       ^^^
+    # ```
     #
     #: () -> ArgumentsNode?
     def arguments
@@ -3982,8 +3974,10 @@ module Prism
     #
     # The Location of the `break` keyword.
     #
-    #     break foo
-    #     ^^^^^
+    # ```rb
+    # break foo
+    # ^^^^^
+    # ```
     #
     #: () -> Location
     def keyword_loc
@@ -4025,8 +4019,10 @@ module Prism
 
   # Represents the use of the `&&=` operator on a call.
   #
-  #     foo.bar &&= value
-  #     ^^^^^^^^^^^^^^^^^
+  # ```rb
+  # foo.bar &&= value
+  # ^^^^^^^^^^^^^^^^^
+  # ```
   class CallAndWriteNode < Node
     # @rbs @receiver: Prism::node?
     # @rbs @call_operator_loc: Location?
@@ -4097,13 +4093,6 @@ module Prism
       if (receiver = self.receiver); compact << receiver; end
       compact << value
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*receiver, *call_operator_loc, *message_loc, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -4198,8 +4187,10 @@ module Prism
     #
     # The object that the method is being called on. This can be either `nil` or any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     foo.bar &&= value
-    #     ^^^
+    # ```rb
+    # foo.bar &&= value
+    # ^^^
+    # ```
     #
     #: () -> Prism::node?
     def receiver
@@ -4212,8 +4203,10 @@ module Prism
     #
     # Represents the Location of the call operator.
     #
-    #     foo.bar &&= value
-    #        ^
+    # ```rb
+    # foo.bar &&= value
+    #    ^
+    # ```
     #
     #: () -> Location?
     def call_operator_loc
@@ -4242,8 +4235,10 @@ module Prism
     #
     # Represents the Location of the message.
     #
-    #     foo.bar &&= value
-    #         ^^^
+    # ```rb
+    # foo.bar &&= value
+    #     ^^^
+    # ```
     #
     #: () -> Location?
     def message_loc
@@ -4271,8 +4266,10 @@ module Prism
     #
     # Represents the name of the method being called.
     #
-    #     foo.bar &&= value # read_name `:bar`
-    #         ^^^
+    # ```rb
+    # foo.bar &&= value # read_name `:bar`
+    #     ^^^
+    # ```
     #
     #: () -> Symbol
     def read_name
@@ -4284,8 +4281,10 @@ module Prism
     #
     # Represents the name of the method being written to.
     #
-    #     foo.bar &&= value # write_name `:bar=`
-    #         ^^^
+    # ```rb
+    # foo.bar &&= value # write_name `:bar=`
+    #     ^^^
+    # ```
     #
     #: () -> Symbol
     def write_name
@@ -4298,8 +4297,10 @@ module Prism
     #
     # Represents the Location of the operator.
     #
-    #     foo.bar &&= value
-    #             ^^^
+    # ```rb
+    # foo.bar &&= value
+    #         ^^^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -4322,8 +4323,10 @@ module Prism
     #
     # Represents the value being assigned.
     #
-    #     foo.bar &&= value
-    #                 ^^^^^
+    # ```rb
+    # foo.bar &&= value
+    #             ^^^^^
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -4380,23 +4383,25 @@ module Prism
 
   # Represents a method call, in all of the various forms that can take.
   #
-  #     foo
-  #     ^^^
+  # ```rb
+  # foo
+  # ^^^
   #
-  #     foo()
-  #     ^^^^^
+  # foo()
+  # ^^^^^
   #
-  #     +foo
-  #     ^^^^
+  # +foo
+  # ^^^^
   #
-  #     foo + bar
-  #     ^^^^^^^^^
+  # foo + bar
+  # ^^^^^^^^^
   #
-  #     foo.bar
-  #     ^^^^^^^
+  # foo.bar
+  # ^^^^^^^
   #
-  #     foo&.bar
-  #     ^^^^^^^^
+  # foo&.bar
+  # ^^^^^^^^
+  # ```
   class CallNode < Node
     # @rbs @receiver: Prism::node?
     # @rbs @call_operator_loc: Location?
@@ -4473,13 +4478,6 @@ module Prism
       if (arguments = self.arguments); compact << arguments; end
       if (block = self.block); compact << block; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*receiver, *call_operator_loc, *message_loc, *opening_loc, *arguments, *closing_loc, *equal_loc, *block] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -4578,14 +4576,16 @@ module Prism
     #
     # The object that the method is being called on. This can be either `nil` or any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     foo.bar
-    #     ^^^
+    # ```rb
+    # foo.bar
+    # ^^^
     #
-    #     +foo
-    #      ^^^
+    # +foo
+    #  ^^^
     #
-    #     foo + bar
-    #     ^^^
+    # foo + bar
+    # ^^^
+    # ```
     #
     #: () -> Prism::node?
     def receiver
@@ -4598,11 +4598,13 @@ module Prism
     #
     # Represents the Location of the call operator.
     #
-    #     foo.bar
-    #        ^
+    # ```rb
+    # foo.bar
+    #    ^
     #
-    #     foo&.bar
-    #        ^^
+    # foo&.bar
+    #    ^^
+    # ```
     #
     #: () -> Location?
     def call_operator_loc
@@ -4630,8 +4632,10 @@ module Prism
     #
     # Represents the name of the method being called.
     #
-    #     foo.bar # name `:foo`
-    #     ^^^
+    # ```rb
+    # foo.bar # name `:foo`
+    # ^^^
+    # ```
     #
     #: () -> Symbol
     def name
@@ -4644,8 +4648,10 @@ module Prism
     #
     # Represents the Location of the message.
     #
-    #     foo.bar
-    #         ^^^
+    # ```rb
+    # foo.bar
+    #     ^^^
+    # ```
     #
     #: () -> Location?
     def message_loc
@@ -4674,8 +4680,10 @@ module Prism
     #
     # Represents the Location of the left parenthesis.
     #
-    #     foo(bar)
-    #        ^
+    # ```rb
+    # foo(bar)
+    #    ^
+    # ```
     #
     #: () -> Location?
     def opening_loc
@@ -4703,8 +4711,10 @@ module Prism
     #
     # Represents the arguments to the method call. These can be any [non-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     foo(bar)
-    #         ^^^
+    # ```rb
+    # foo(bar)
+    #     ^^^
+    # ```
     #
     #: () -> ArgumentsNode?
     def arguments
@@ -4717,8 +4727,10 @@ module Prism
     #
     # Represents the Location of the right parenthesis.
     #
-    #     foo(bar)
-    #            ^
+    # ```rb
+    # foo(bar)
+    #        ^
+    # ```
     #
     #: () -> Location?
     def closing_loc
@@ -4747,11 +4759,13 @@ module Prism
     #
     # Represents the Location of the equal sign, in the case that this is an attribute write.
     #
-    #     foo.bar = value
-    #             ^
+    # ```rb
+    # foo.bar = value
+    #         ^
     #
-    #     foo[bar] = value
-    #              ^
+    # foo[bar] = value
+    #          ^
+    # ```
     #
     #: () -> Location?
     def equal_loc
@@ -4779,8 +4793,10 @@ module Prism
     #
     # Represents the block that is being passed to the method.
     #
-    #     foo { |a| a }
-    #         ^^^^^^^^^
+    # ```rb
+    # foo { |a| a }
+    #     ^^^^^^^^^
+    # ```
     #
     #: () -> (BlockNode | BlockArgumentNode)?
     def block
@@ -4859,8 +4875,10 @@ module Prism
 
   # Represents the use of an assignment operator on a call.
   #
-  #     foo.bar += baz
-  #     ^^^^^^^^^^^^^^
+  # ```rb
+  # foo.bar += baz
+  # ^^^^^^^^^^^^^^
+  # ```
   class CallOperatorWriteNode < Node
     # @rbs @receiver: Prism::node?
     # @rbs @call_operator_loc: Location?
@@ -4933,13 +4951,6 @@ module Prism
       if (receiver = self.receiver); compact << receiver; end
       compact << value
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*receiver, *call_operator_loc, *message_loc, binary_operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -5034,8 +5045,10 @@ module Prism
     #
     # The object that the method is being called on. This can be either `nil` or any [non-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     foo.bar += value
-    #     ^^^
+    # ```rb
+    # foo.bar += value
+    # ^^^
+    # ```
     #
     #: () -> Prism::node?
     def receiver
@@ -5048,8 +5061,10 @@ module Prism
     #
     # Represents the Location of the call operator.
     #
-    #     foo.bar += value
-    #        ^
+    # ```rb
+    # foo.bar += value
+    #    ^
+    # ```
     #
     #: () -> Location?
     def call_operator_loc
@@ -5078,8 +5093,10 @@ module Prism
     #
     # Represents the Location of the message.
     #
-    #     foo.bar += value
-    #         ^^^
+    # ```rb
+    # foo.bar += value
+    #     ^^^
+    # ```
     #
     #: () -> Location?
     def message_loc
@@ -5107,8 +5124,10 @@ module Prism
     #
     # Represents the name of the method being called.
     #
-    #     foo.bar += value # read_name `:bar`
-    #         ^^^
+    # ```rb
+    # foo.bar += value # read_name `:bar`
+    #     ^^^
+    # ```
     #
     #: () -> Symbol
     def read_name
@@ -5120,8 +5139,10 @@ module Prism
     #
     # Represents the name of the method being written to.
     #
-    #     foo.bar += value # write_name `:bar=`
-    #         ^^^
+    # ```rb
+    # foo.bar += value # write_name `:bar=`
+    #     ^^^
+    # ```
     #
     #: () -> Symbol
     def write_name
@@ -5133,8 +5154,10 @@ module Prism
     #
     # Represents the binary operator being used.
     #
-    #     foo.bar += value # binary_operator `:+`
-    #             ^
+    # ```rb
+    # foo.bar += value # binary_operator `:+`
+    #         ^
+    # ```
     #
     #: () -> Symbol
     def binary_operator
@@ -5147,8 +5170,10 @@ module Prism
     #
     # Represents the Location of the binary operator.
     #
-    #     foo.bar += value
-    #             ^^
+    # ```rb
+    # foo.bar += value
+    #         ^^
+    # ```
     #
     #: () -> Location
     def binary_operator_loc
@@ -5171,8 +5196,10 @@ module Prism
     #
     # Represents the value being assigned.
     #
-    #     foo.bar += value
-    #                ^^^^^
+    # ```rb
+    # foo.bar += value
+    #            ^^^^^
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -5220,8 +5247,10 @@ module Prism
 
   # Represents the use of the `||=` operator on a call.
   #
-  #     foo.bar ||= value
-  #     ^^^^^^^^^^^^^^^^^
+  # ```rb
+  # foo.bar ||= value
+  # ^^^^^^^^^^^^^^^^^
+  # ```
   class CallOrWriteNode < Node
     # @rbs @receiver: Prism::node?
     # @rbs @call_operator_loc: Location?
@@ -5292,13 +5321,6 @@ module Prism
       if (receiver = self.receiver); compact << receiver; end
       compact << value
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*receiver, *call_operator_loc, *message_loc, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -5393,8 +5415,10 @@ module Prism
     #
     # The object that the method is being called on. This can be either `nil` or any [non-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     foo.bar ||= value
-    #     ^^^
+    # ```rb
+    # foo.bar ||= value
+    # ^^^
+    # ```
     #
     #: () -> Prism::node?
     def receiver
@@ -5407,8 +5431,10 @@ module Prism
     #
     # Represents the Location of the call operator.
     #
-    #     foo.bar ||= value
-    #        ^
+    # ```rb
+    # foo.bar ||= value
+    #    ^
+    # ```
     #
     #: () -> Location?
     def call_operator_loc
@@ -5437,8 +5463,10 @@ module Prism
     #
     # Represents the Location of the message.
     #
-    #     foo.bar ||= value
-    #         ^^^
+    # ```rb
+    # foo.bar ||= value
+    #     ^^^
+    # ```
     #
     #: () -> Location?
     def message_loc
@@ -5466,8 +5494,10 @@ module Prism
     #
     # Represents the name of the method being called.
     #
-    #     foo.bar ||= value # read_name `:bar`
-    #         ^^^
+    # ```rb
+    # foo.bar ||= value # read_name `:bar`
+    #     ^^^
+    # ```
     #
     #: () -> Symbol
     def read_name
@@ -5479,8 +5509,10 @@ module Prism
     #
     # Represents the name of the method being written to.
     #
-    #     foo.bar ||= value # write_name `:bar=`
-    #         ^^^
+    # ```rb
+    # foo.bar ||= value # write_name `:bar=`
+    #     ^^^
+    # ```
     #
     #: () -> Symbol
     def write_name
@@ -5493,8 +5525,10 @@ module Prism
     #
     # Represents the Location of the operator.
     #
-    #     foo.bar ||= value
-    #             ^^^
+    # ```rb
+    # foo.bar ||= value
+    #         ^^^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -5517,8 +5551,10 @@ module Prism
     #
     # Represents the value being assigned.
     #
-    #     foo.bar ||= value
-    #                 ^^^^^
+    # ```rb
+    # foo.bar ||= value
+    #             ^^^^^
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -5575,16 +5611,18 @@ module Prism
 
   # Represents assigning to a method call.
   #
-  #     foo.bar, = 1
+  # ```rb
+  # foo.bar, = 1
+  # ^^^^^^^
+  #
+  # begin
+  # rescue => foo.bar
+  #           ^^^^^^^
+  # end
+  #
+  # for foo.bar in baz do end
   #     ^^^^^^^
-  #
-  #     begin
-  #     rescue => foo.bar
-  #               ^^^^^^^
-  #     end
-  #
-  #     for foo.bar in baz do end
-  #         ^^^^^^^
+  # ```
   class CallTargetNode < Node
     # @rbs @receiver: Prism::node
     # @rbs @call_operator_loc: Location
@@ -5645,13 +5683,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [receiver]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [receiver, call_operator_loc, message_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -5742,8 +5773,10 @@ module Prism
     #
     # The object that the method is being called on. This can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     foo.bar = 1
-    #     ^^^
+    # ```rb
+    # foo.bar = 1
+    # ^^^
+    # ```
     #
     #: () -> Prism::node
     def receiver
@@ -5756,8 +5789,10 @@ module Prism
     #
     # Represents the Location of the call operator.
     #
-    #     foo.bar = 1
-    #        ^
+    # ```rb
+    # foo.bar = 1
+    #    ^
+    # ```
     #
     #: () -> Location
     def call_operator_loc
@@ -5780,8 +5815,10 @@ module Prism
     #
     # Represents the name of the method being called.
     #
-    #     foo.bar = 1 # name `:foo`
-    #     ^^^
+    # ```rb
+    # foo.bar = 1 # name `:foo`
+    # ^^^
+    # ```
     #
     #: () -> Symbol
     def name
@@ -5794,8 +5831,10 @@ module Prism
     #
     # Represents the Location of the message.
     #
-    #     foo.bar = 1
-    #         ^^^
+    # ```rb
+    # foo.bar = 1
+    #     ^^^
+    # ```
     #
     #: () -> Location
     def message_loc
@@ -5850,8 +5889,10 @@ module Prism
 
   # Represents assigning to a local variable in pattern matching.
   #
-  #     foo => [bar => baz]
-  #             ^^^^^^^^^^
+  # ```rb
+  # foo => [bar => baz]
+  #         ^^^^^^^^^^
+  # ```
   class CapturePatternNode < Node
     # @rbs @value: Prism::node
     # @rbs @target: LocalVariableTargetNode
@@ -5913,13 +5954,6 @@ module Prism
       [value, target]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [value, target, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> CapturePatternNode
     #
@@ -5974,8 +6008,10 @@ module Prism
     #
     # Represents the value to capture.
     #
-    #     foo => bar
-    #            ^^^
+    # ```rb
+    # foo => bar
+    #        ^^^
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -5987,8 +6023,10 @@ module Prism
     #
     # Represents the target of the capture.
     #
-    #     foo => bar
-    #     ^^^
+    # ```rb
+    # foo => bar
+    # ^^^
+    # ```
     #
     #: () -> LocalVariableTargetNode
     def target
@@ -6001,8 +6039,10 @@ module Prism
     #
     # Represents the Location of the `=>` operator.
     #
-    #     foo => bar
-    #         ^^
+    # ```rb
+    # foo => bar
+    #     ^^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -6045,10 +6085,12 @@ module Prism
 
   # Represents the use of a case statement for pattern matching.
   #
-  #     case true
-  #     in false
-  #     end
-  #     ^^^^^^^^^
+  # ```rb
+  # case true
+  # in false
+  # end
+  # ^^^^^^^^^
+  # ```
   class CaseMatchNode < Node
     # @rbs @predicate: Prism::node?
     # @rbs @conditions: Array[InNode]
@@ -6119,13 +6161,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*predicate, *conditions, *else_clause, case_keyword_loc, end_keyword_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> CaseMatchNode
     #
@@ -6183,8 +6218,10 @@ module Prism
     #
     # Represents the predicate of the case match. This can be either `nil` or any [non-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     case true; in false; end
-    #          ^^^^
+    # ```rb
+    # case true; in false; end
+    #      ^^^^
+    # ```
     #
     #: () -> Prism::node?
     def predicate
@@ -6196,8 +6233,10 @@ module Prism
     #
     # Represents the conditions of the case match.
     #
-    #     case true; in false; end
-    #                ^^^^^^^^
+    # ```rb
+    # case true; in false; end
+    #            ^^^^^^^^
+    # ```
     #
     #: () -> Array[InNode]
     def conditions
@@ -6209,8 +6248,10 @@ module Prism
     #
     # Represents the else clause of the case match.
     #
-    #     case true; in false; else; end
-    #                          ^^^^^^^^^
+    # ```rb
+    # case true; in false; else; end
+    #                      ^^^^^^^^^
+    # ```
     #
     #: () -> ElseNode?
     def else_clause
@@ -6223,8 +6264,10 @@ module Prism
     #
     # Represents the Location of the `case` keyword.
     #
-    #     case true; in false; end
-    #     ^^^^
+    # ```rb
+    # case true; in false; end
+    # ^^^^
+    # ```
     #
     #: () -> Location
     def case_keyword_loc
@@ -6248,8 +6291,10 @@ module Prism
     #
     # Represents the Location of the `end` keyword.
     #
-    #     case true; in false; end
-    #                          ^^^
+    # ```rb
+    # case true; in false; end
+    #                      ^^^
+    # ```
     #
     #: () -> Location
     def end_keyword_loc
@@ -6305,10 +6350,12 @@ module Prism
 
   # Represents the use of a case statement.
   #
-  #     case true
-  #     when false
-  #     end
-  #     ^^^^^^^^^^
+  # ```rb
+  # case true
+  # when false
+  # end
+  # ^^^^^^^^^^
+  # ```
   class CaseNode < Node
     # @rbs @predicate: Prism::node?
     # @rbs @conditions: Array[WhenNode]
@@ -6379,13 +6426,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*predicate, *conditions, *else_clause, case_keyword_loc, end_keyword_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> CaseNode
     #
@@ -6443,8 +6483,10 @@ module Prism
     #
     # Represents the predicate of the case statement. This can be either `nil` or any [non-void expressions](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     case true; when false; end
-    #          ^^^^
+    # ```rb
+    # case true; when false; end
+    #      ^^^^
+    # ```
     #
     #: () -> Prism::node?
     def predicate
@@ -6456,8 +6498,10 @@ module Prism
     #
     # Represents the conditions of the case statement.
     #
-    #     case true; when false; end
-    #                ^^^^^^^^^^
+    # ```rb
+    # case true; when false; end
+    #            ^^^^^^^^^^
+    # ```
     #
     #: () -> Array[WhenNode]
     def conditions
@@ -6469,8 +6513,10 @@ module Prism
     #
     # Represents the else clause of the case statement.
     #
-    #     case true; when false; else; end
-    #                            ^^^^^^^^^
+    # ```rb
+    # case true; when false; else; end
+    #                        ^^^^^^^^^
+    # ```
     #
     #: () -> ElseNode?
     def else_clause
@@ -6483,8 +6529,10 @@ module Prism
     #
     # Represents the Location of the `case` keyword.
     #
-    #     case true; when false; end
-    #     ^^^^
+    # ```rb
+    # case true; when false; end
+    # ^^^^
+    # ```
     #
     #: () -> Location
     def case_keyword_loc
@@ -6508,8 +6556,10 @@ module Prism
     #
     # Represents the Location of the `end` keyword.
     #
-    #     case true; when false; end
-    #                            ^^^
+    # ```rb
+    # case true; when false; end
+    #                        ^^^
+    # ```
     #
     #: () -> Location
     def end_keyword_loc
@@ -6565,8 +6615,10 @@ module Prism
 
   # Represents a class declaration involving the `class` keyword.
   #
-  #     class Foo end
-  #     ^^^^^^^^^^^^^
+  # ```rb
+  # class Foo end
+  # ^^^^^^^^^^^^^
+  # ```
   class ClassNode < Node
     # @rbs @locals: Array[Symbol]
     # @rbs @class_keyword_loc: Location
@@ -6643,13 +6695,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [class_keyword_loc, constant_path, *inheritance_operator_loc, *superclass, *body, end_keyword_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> ClassNode
     #
@@ -6722,8 +6767,10 @@ module Prism
     #
     # Represents the Location of the `class` keyword.
     #
-    #     class Foo end
-    #     ^^^^^
+    # ```rb
+    # class Foo end
+    # ^^^^^
+    # ```
     #
     #: () -> Location
     def class_keyword_loc
@@ -6757,8 +6804,10 @@ module Prism
     #
     # Represents the Location of the `<` operator.
     #
-    #     class Foo < Bar
-    #               ^
+    # ```rb
+    # class Foo < Bar
+    #           ^
+    # ```
     #
     #: () -> Location?
     def inheritance_operator_loc
@@ -6786,8 +6835,10 @@ module Prism
     #
     # Represents the superclass of the class.
     #
-    #     class Foo < Bar
-    #                 ^^^
+    # ```rb
+    # class Foo < Bar
+    #             ^^^
+    # ```
     #
     #: () -> Prism::node?
     def superclass
@@ -6799,8 +6850,10 @@ module Prism
     #
     # Represents the body of the class.
     #
-    #     class Foo; bar; end
-    #                ^^^
+    # ```rb
+    # class Foo; bar; end
+    #            ^^^
+    # ```
     #
     #: () -> (StatementsNode | BeginNode)?
     def body
@@ -6813,8 +6866,10 @@ module Prism
     #
     # Represents the Location of the `end` keyword.
     #
-    #     class Foo end
-    #               ^^^
+    # ```rb
+    # class Foo end
+    #           ^^^
+    # ```
     #
     #: () -> Location
     def end_keyword_loc
@@ -6837,7 +6892,9 @@ module Prism
     #
     # The name of the class.
     #
-    #     class Foo end # name `:Foo`
+    # ```rb
+    # class Foo end # name `:Foo`
+    # ```
     #
     #: () -> Symbol
     def name
@@ -6895,8 +6952,10 @@ module Prism
 
   # Represents the use of the `&&=` operator for assignment to a class variable.
   #
-  #     @@target &&= value
-  #     ^^^^^^^^^^^^^^^^^^
+  # ```rb
+  # @@target &&= value
+  # ^^^^^^^^^^^^^^^^^^
+  # ```
   class ClassVariableAndWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -6959,13 +7018,6 @@ module Prism
       [value]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, operator_loc, value] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> ClassVariableAndWriteNode
     #
@@ -7021,8 +7073,10 @@ module Prism
     #
     # The name of the class variable, which is a `@@` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#identifiers).
     #
-    #     @@target &&= value # name `:@@target`
-    #     ^^^^^^^^
+    # ```rb
+    # @@target &&= value # name `:@@target`
+    # ^^^^^^^^
+    # ```
     #
     #: () -> Symbol
     def name
@@ -7035,8 +7089,10 @@ module Prism
     #
     # Represents the Location of the variable name.
     #
-    #     @@target &&= value
-    #     ^^^^^^^^
+    # ```rb
+    # @@target &&= value
+    # ^^^^^^^^
+    # ```
     #
     #: () -> Location
     def name_loc
@@ -7060,8 +7116,10 @@ module Prism
     #
     # Represents the Location of the `&&=` operator.
     #
-    #     @@target &&= value
-    #              ^^^
+    # ```rb
+    # @@target &&= value
+    #          ^^^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -7084,8 +7142,10 @@ module Prism
     #
     # Represents the value being assigned. This can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     @@target &&= value
-    #                  ^^^^^
+    # ```rb
+    # @@target &&= value
+    #              ^^^^^
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -7118,8 +7178,10 @@ module Prism
 
   # Represents assigning to a class variable using an operator that isn't `=`.
   #
-  #     @@target += value
-  #     ^^^^^^^^^^^^^^^^^
+  # ```rb
+  # @@target += value
+  # ^^^^^^^^^^^^^^^^^
+  # ```
   class ClassVariableOperatorWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -7182,13 +7244,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, binary_operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -7332,8 +7387,10 @@ module Prism
 
   # Represents the use of the `||=` operator for assignment to a class variable.
   #
-  #     @@target ||= value
-  #     ^^^^^^^^^^^^^^^^^^
+  # ```rb
+  # @@target ||= value
+  # ^^^^^^^^^^^^^^^^^^
+  # ```
   class ClassVariableOrWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -7394,13 +7451,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -7543,8 +7593,10 @@ module Prism
 
   # Represents referencing a class variable.
   #
-  #     @@foo
-  #     ^^^^^
+  # ```rb
+  # @@foo
+  # ^^^^^
+  # ```
   class ClassVariableReadNode < Node
     # @rbs @name: Symbol
 
@@ -7600,13 +7652,6 @@ module Prism
       []
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> ClassVariableReadNode
     #
@@ -7658,9 +7703,11 @@ module Prism
     #
     # The name of the class variable, which is a `@@` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#identifiers).
     #
-    #     @@abc   # name `:@@abc`
+    # ```rb
+    # @@abc   # name `:@@abc`
     #
-    #     @@_test # name `:@@_test`
+    # @@_test # name `:@@_test`
+    # ```
     #
     #: () -> Symbol
     def name
@@ -7680,8 +7727,10 @@ module Prism
 
   # Represents writing to a class variable in a context that doesn't have an explicit value.
   #
-  #     @@foo, @@bar = baz
-  #     ^^^^^  ^^^^^
+  # ```rb
+  # @@foo, @@bar = baz
+  # ^^^^^  ^^^^^
+  # ```
   class ClassVariableTargetNode < Node
     # @rbs @name: Symbol
 
@@ -7735,13 +7784,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -7813,8 +7855,10 @@ module Prism
 
   # Represents writing to a class variable.
   #
-  #     @@foo = 1
-  #     ^^^^^^^^^
+  # ```rb
+  # @@foo = 1
+  # ^^^^^^^^^
+  # ```
   class ClassVariableWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -7877,13 +7921,6 @@ module Prism
       [value]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, value, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> ClassVariableWriteNode
     #
@@ -7939,9 +7976,11 @@ module Prism
     #
     # The name of the class variable, which is a `@@` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#identifiers).
     #
-    #     @@abc = 123     # name `@@abc`
+    # ```rb
+    # @@abc = 123     # name `@@abc`
     #
-    #     @@_test = :test # name `@@_test`
+    # @@_test = :test # name `@@_test`
+    # ```
     #
     #: () -> Symbol
     def name
@@ -7954,8 +7993,10 @@ module Prism
     #
     # The Location of the variable name.
     #
-    #     @@foo = :bar
-    #     ^^^^^
+    # ```rb
+    # @@foo = :bar
+    # ^^^^^
+    # ```
     #
     #: () -> Location
     def name_loc
@@ -7978,11 +8019,13 @@ module Prism
     #
     # The value to write to the class variable. This can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     @@foo = :bar
-    #             ^^^^
+    # ```rb
+    # @@foo = :bar
+    #         ^^^^
     #
-    #     @@_xyz = 123
-    #              ^^^
+    # @@_xyz = 123
+    #          ^^^
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -7995,8 +8038,10 @@ module Prism
     #
     # The Location of the `=` operator.
     #
-    #     @@foo = :bar
-    #           ^
+    # ```rb
+    # @@foo = :bar
+    #       ^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -8040,8 +8085,10 @@ module Prism
 
   # Represents the use of the `&&=` operator for assignment to a constant.
   #
-  #     Target &&= value
-  #     ^^^^^^^^^^^^^^^^
+  # ```rb
+  # Target &&= value
+  # ^^^^^^^^^^^^^^^^
+  # ```
   class ConstantAndWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -8102,13 +8149,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -8251,8 +8291,10 @@ module Prism
 
   # Represents assigning to a constant using an operator that isn't `=`.
   #
-  #     Target += value
-  #     ^^^^^^^^^^^^^^^
+  # ```rb
+  # Target += value
+  # ^^^^^^^^^^^^^^^
+  # ```
   class ConstantOperatorWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -8315,13 +8357,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, binary_operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -8465,8 +8500,10 @@ module Prism
 
   # Represents the use of the `||=` operator for assignment to a constant.
   #
-  #     Target ||= value
-  #     ^^^^^^^^^^^^^^^^
+  # ```rb
+  # Target ||= value
+  # ^^^^^^^^^^^^^^^^
+  # ```
   class ConstantOrWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -8527,13 +8564,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -8676,8 +8706,10 @@ module Prism
 
   # Represents the use of the `&&=` operator for assignment to a constant path.
   #
-  #     Parent::Child &&= value
-  #     ^^^^^^^^^^^^^^^^^^^^^^^
+  # ```rb
+  # Parent::Child &&= value
+  # ^^^^^^^^^^^^^^^^^^^^^^^
+  # ```
   class ConstantPathAndWriteNode < Node
     # @rbs @target: ConstantPathNode
     # @rbs @operator_loc: Location
@@ -8737,13 +8769,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [target, value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [target, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -8862,8 +8887,10 @@ module Prism
 
   # Represents accessing a constant through a path of `::` operators.
   #
-  #     Foo::Bar
-  #     ^^^^^^^^
+  # ```rb
+  # Foo::Bar
+  # ^^^^^^^^
+  # ```
   class ConstantPathNode < Node
     # @rbs @parent: Prism::node?
     # @rbs @name: Symbol?
@@ -8928,13 +8955,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*parent, delimiter_loc, name_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> ConstantPathNode
     #
@@ -8990,14 +9010,16 @@ module Prism
     #
     # The left-hand node of the path, if present. It can be `nil` or any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression). It will be `nil` when the constant lookup is at the root of the module tree.
     #
-    #     Foo::Bar
-    #     ^^^
+    # ```rb
+    # Foo::Bar
+    # ^^^
     #
-    #     self::Test
-    #     ^^^^
+    # self::Test
+    # ^^^^
     #
-    #     a.b::C
-    #     ^^^
+    # a.b::C
+    # ^^^
+    # ```
     #
     #: () -> Prism::node?
     def parent
@@ -9020,11 +9042,13 @@ module Prism
     #
     # The Location of the `::` delimiter.
     #
-    #     ::Foo
-    #     ^^
+    # ```rb
+    # ::Foo
+    # ^^
     #
-    #     One::Two
-    #        ^^
+    # One::Two
+    #    ^^
+    # ```
     #
     #: () -> Location
     def delimiter_loc
@@ -9048,11 +9072,13 @@ module Prism
     #
     # The Location of the name of the constant.
     #
-    #     ::Foo
-    #       ^^^
+    # ```rb
+    # ::Foo
+    #   ^^^
     #
-    #     One::Two
-    #          ^^^
+    # One::Two
+    #      ^^^
+    # ```
     #
     #: () -> Location
     def name_loc
@@ -9096,8 +9122,10 @@ module Prism
 
   # Represents assigning to a constant path using an operator that isn't `=`.
   #
-  #     Parent::Child += value
-  #     ^^^^^^^^^^^^^^^^^^^^^^
+  # ```rb
+  # Parent::Child += value
+  # ^^^^^^^^^^^^^^^^^^^^^^
+  # ```
   class ConstantPathOperatorWriteNode < Node
     # @rbs @target: ConstantPathNode
     # @rbs @binary_operator_loc: Location
@@ -9159,13 +9187,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [target, value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [target, binary_operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -9285,8 +9306,10 @@ module Prism
 
   # Represents the use of the `||=` operator for assignment to a constant path.
   #
-  #     Parent::Child ||= value
-  #     ^^^^^^^^^^^^^^^^^^^^^^^
+  # ```rb
+  # Parent::Child ||= value
+  # ^^^^^^^^^^^^^^^^^^^^^^^
+  # ```
   class ConstantPathOrWriteNode < Node
     # @rbs @target: ConstantPathNode
     # @rbs @operator_loc: Location
@@ -9346,13 +9369,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [target, value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [target, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -9471,8 +9487,10 @@ module Prism
 
   # Represents writing to a constant path in a context that doesn't have an explicit value.
   #
-  #     Foo::Foo, Bar::Bar = baz
-  #     ^^^^^^^^  ^^^^^^^^
+  # ```rb
+  # Foo::Foo, Bar::Bar = baz
+  # ^^^^^^^^  ^^^^^^^^
+  # ```
   class ConstantPathTargetNode < Node
     # @rbs @parent: Prism::node?
     # @rbs @name: Symbol?
@@ -9535,13 +9553,6 @@ module Prism
       compact = [] #: Array[Prism::node]
       if (parent = self.parent); compact << parent; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*parent, delimiter_loc, name_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -9684,14 +9695,16 @@ module Prism
 
   # Represents writing to a constant path.
   #
-  #     ::Foo = 1
-  #     ^^^^^^^^^
+  # ```rb
+  # ::Foo = 1
+  # ^^^^^^^^^
   #
-  #     Foo::Bar = 1
-  #     ^^^^^^^^^^^^
+  # Foo::Bar = 1
+  # ^^^^^^^^^^^^
   #
-  #     ::Foo::Bar = 1
-  #     ^^^^^^^^^^^^^^
+  # ::Foo::Bar = 1
+  # ^^^^^^^^^^^^^^
+  # ```
   class ConstantPathWriteNode < Node
     # @rbs @target: ConstantPathNode
     # @rbs @operator_loc: Location
@@ -9753,13 +9766,6 @@ module Prism
       [target, value]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [target, operator_loc, value] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> ConstantPathWriteNode
     #
@@ -9814,11 +9820,13 @@ module Prism
     #
     # A node representing the constant path being written to.
     #
-    #     Foo::Bar = 1
-    #     ^^^^^^^^
+    # ```rb
+    # Foo::Bar = 1
+    # ^^^^^^^^
     #
-    #     ::Foo = :abc
-    #     ^^^^^
+    # ::Foo = :abc
+    # ^^^^^
+    # ```
     #
     #: () -> ConstantPathNode
     def target
@@ -9831,8 +9839,10 @@ module Prism
     #
     # The Location of the `=` operator.
     #
-    #     ::ABC = 123
-    #           ^
+    # ```rb
+    # ::ABC = 123
+    #       ^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -9855,8 +9865,10 @@ module Prism
     #
     # The value to write to the constant path. It can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     FOO::BAR = :abc
-    #                ^^^^
+    # ```rb
+    # FOO::BAR = :abc
+    #            ^^^^
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -9888,8 +9900,10 @@ module Prism
 
   # Represents referencing a constant.
   #
-  #     Foo
-  #     ^^^
+  # ```rb
+  # Foo
+  # ^^^
+  # ```
   class ConstantReadNode < Node
     # @rbs @name: Symbol
 
@@ -9945,13 +9959,6 @@ module Prism
       []
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> ConstantReadNode
     #
@@ -10003,9 +10010,11 @@ module Prism
     #
     # The name of the [constant](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#constants).
     #
-    #     X              # name `:X`
+    # ```rb
+    # X              # name `:X`
     #
-    #     SOME_CONSTANT  # name `:SOME_CONSTANT`
+    # SOME_CONSTANT  # name `:SOME_CONSTANT`
+    # ```
     #
     #: () -> Symbol
     def name
@@ -10025,8 +10034,10 @@ module Prism
 
   # Represents writing to a constant in a context that doesn't have an explicit value.
   #
-  #     Foo, Bar = baz
-  #     ^^^  ^^^
+  # ```rb
+  # Foo, Bar = baz
+  # ^^^  ^^^
+  # ```
   class ConstantTargetNode < Node
     # @rbs @name: Symbol
 
@@ -10080,13 +10091,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -10158,8 +10162,10 @@ module Prism
 
   # Represents writing to a constant.
   #
-  #     Foo = 1
-  #     ^^^^^^^
+  # ```rb
+  # Foo = 1
+  # ^^^^^^^
+  # ```
   class ConstantWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -10222,13 +10228,6 @@ module Prism
       [value]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, value, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> ConstantWriteNode
     #
@@ -10284,9 +10283,11 @@ module Prism
     #
     # The name of the [constant](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#constants).
     #
-    #     Foo = :bar # name `:Foo`
+    # ```rb
+    # Foo = :bar # name `:Foo`
     #
-    #     XYZ = 1    # name `:XYZ`
+    # XYZ = 1    # name `:XYZ`
+    # ```
     #
     #: () -> Symbol
     def name
@@ -10299,8 +10300,10 @@ module Prism
     #
     # The Location of the constant name.
     #
-    #     FOO = 1
-    #     ^^^
+    # ```rb
+    # FOO = 1
+    # ^^^
+    # ```
     #
     #: () -> Location
     def name_loc
@@ -10323,11 +10326,13 @@ module Prism
     #
     # The value to write to the constant. It can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     FOO = :bar
-    #           ^^^^
+    # ```rb
+    # FOO = :bar
+    #       ^^^^
     #
-    #     MyClass = Class.new
-    #               ^^^^^^^^^
+    # MyClass = Class.new
+    #           ^^^^^^^^^
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -10340,8 +10345,10 @@ module Prism
     #
     # The Location of the `=` operator.
     #
-    #     FOO = :bar
-    #         ^
+    # ```rb
+    # FOO = :bar
+    #     ^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -10385,9 +10392,11 @@ module Prism
 
   # Represents a method definition.
   #
-  #     def method
-  #     end
-  #     ^^^^^^^^^^
+  # ```rb
+  # def method
+  # end
+  # ^^^^^^^^^^
+  # ```
   class DefNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -10470,13 +10479,6 @@ module Prism
       if (parameters = self.parameters); compact << parameters; end
       if (body = self.body); compact << body; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, *receiver, *parameters, *body, def_keyword_loc, *operator_loc, *lparen_loc, *rparen_loc, *equal_loc, *end_keyword_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -10856,8 +10858,10 @@ module Prism
 
   # Represents the use of the `defined?` keyword.
   #
-  #     defined?(a)
-  #     ^^^^^^^^^^^
+  # ```rb
+  # defined?(a)
+  # ^^^^^^^^^^^
+  # ```
   class DefinedNode < Node
     # @rbs @lparen_loc: Location?
     # @rbs @value: Prism::node
@@ -10918,13 +10922,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*lparen_loc, value, *rparen_loc, keyword_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -11111,8 +11108,10 @@ module Prism
 
   # Represents an `else` clause in a `case`, `if`, or `unless` statement.
   #
-  #     if a then b else c end
-  #                 ^^^^^^^^^^
+  # ```rb
+  # if a then b else c end
+  #             ^^^^^^^^^^
+  # ```
   class ElseNode < Node
     # @rbs @else_keyword_loc: Location
     # @rbs @statements: StatementsNode?
@@ -11173,13 +11172,6 @@ module Prism
       compact = [] #: Array[Prism::node]
       if (statements = self.statements); compact << statements; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [else_keyword_loc, *statements, *end_keyword_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -11326,8 +11318,10 @@ module Prism
 
   # Represents an interpolated set of statements.
   #
-  #     "foo #{bar}"
-  #          ^^^^^^
+  # ```rb
+  # "foo #{bar}"
+  #      ^^^^^^
+  # ```
   class EmbeddedStatementsNode < Node
     # @rbs @opening_loc: Location
     # @rbs @statements: StatementsNode?
@@ -11388,13 +11382,6 @@ module Prism
       compact = [] #: Array[Prism::node]
       if (statements = self.statements); compact << statements; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [opening_loc, *statements, closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -11536,8 +11523,10 @@ module Prism
 
   # Represents an interpolated variable.
   #
-  #     "foo #@bar"
-  #          ^^^^^
+  # ```rb
+  # "foo #@bar"
+  #      ^^^^^
+  # ```
   class EmbeddedVariableNode < Node
     # @rbs @operator_loc: Location
     # @rbs @variable: (InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode)
@@ -11594,13 +11583,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [variable]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [operator_loc, variable] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -11707,12 +11689,14 @@ module Prism
 
   # Represents an `ensure` clause in a `begin` statement.
   #
-  #     begin
-  #       foo
-  #     ensure
-  #     ^^^^^^
-  #       bar
-  #     end
+  # ```rb
+  # begin
+  #   foo
+  # ensure
+  # ^^^^^^
+  #   bar
+  # end
+  # ```
   class EnsureNode < Node
     # @rbs @ensure_keyword_loc: Location
     # @rbs @statements: StatementsNode?
@@ -11773,13 +11757,6 @@ module Prism
       compact = [] #: Array[Prism::node]
       if (statements = self.statements); compact << statements; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [ensure_keyword_loc, *statements, end_keyword_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -11978,13 +11955,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*unexpected] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> ErrorRecoveryNode
     #
@@ -12054,8 +12024,10 @@ module Prism
 
   # Represents the use of the literal `false` keyword.
   #
-  #     false
-  #     ^^^^^
+  # ```rb
+  # false
+  # ^^^^^
+  # ```
   class FalseNode < Node
 
     # Initialize a new FalseNode node.
@@ -12107,13 +12079,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -12173,17 +12138,19 @@ module Prism
 
   # Represents a find pattern in pattern matching.
   #
-  #     foo in *bar, baz, *qux
-  #            ^^^^^^^^^^^^^^^
+  # ```rb
+  # foo in *bar, baz, *qux
+  #        ^^^^^^^^^^^^^^^
   #
-  #     foo in [*bar, baz, *qux]
-  #            ^^^^^^^^^^^^^^^^^
+  # foo in [*bar, baz, *qux]
+  #        ^^^^^^^^^^^^^^^^^
   #
-  #     foo in Foo(*bar, baz, *qux)
-  #            ^^^^^^^^^^^^^^^^^^^^
+  # foo in Foo(*bar, baz, *qux)
+  #        ^^^^^^^^^^^^^^^^^^^^
   #
-  #     foo => *bar, baz, *qux
-  #            ^^^^^^^^^^^^^^^
+  # foo => *bar, baz, *qux
+  #        ^^^^^^^^^^^^^^^
+  # ```
   class FindPatternNode < Node
     # @rbs @constant: (ConstantPathNode | ConstantReadNode)?
     # @rbs @left: SplatNode
@@ -12258,13 +12225,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*constant, left, *requireds, right, *opening_loc, *closing_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> FindPatternNode
     #
@@ -12323,8 +12283,10 @@ module Prism
     #
     # Represents the optional constant preceding the pattern
     #
-    #     foo in Foo(*bar, baz, *qux)
-    #            ^^^
+    # ```rb
+    # foo in Foo(*bar, baz, *qux)
+    #        ^^^
+    # ```
     #
     #: () -> (ConstantPathNode | ConstantReadNode)?
     def constant
@@ -12336,11 +12298,13 @@ module Prism
     #
     # Represents the first wildcard node in the pattern.
     #
-    #     foo in *bar, baz, *qux
-    #            ^^^^
+    # ```rb
+    # foo in *bar, baz, *qux
+    #        ^^^^
     #
-    #     foo in Foo(*bar, baz, *qux)
-    #                ^^^^
+    # foo in Foo(*bar, baz, *qux)
+    #            ^^^^
+    # ```
     #
     #: () -> SplatNode
     def left
@@ -12352,11 +12316,13 @@ module Prism
     #
     # Represents the nodes in between the wildcards.
     #
-    #     foo in *bar, baz, *qux
-    #                  ^^^
+    # ```rb
+    # foo in *bar, baz, *qux
+    #              ^^^
     #
-    #     foo in Foo(*bar, baz, 1, *qux)
-    #                      ^^^^^^
+    # foo in Foo(*bar, baz, 1, *qux)
+    #                  ^^^^^^
+    # ```
     #
     #: () -> Array[Prism::node]
     def requireds
@@ -12368,11 +12334,13 @@ module Prism
     #
     # Represents the second wildcard node in the pattern.
     #
-    #     foo in *bar, baz, *qux
-    #                       ^^^^
+    # ```rb
+    # foo in *bar, baz, *qux
+    #                   ^^^^
     #
-    #     foo in Foo(*bar, baz, *qux)
-    #                           ^^^^
+    # foo in Foo(*bar, baz, *qux)
+    #                       ^^^^
+    # ```
     #
     #: () -> SplatNode
     def right
@@ -12385,11 +12353,13 @@ module Prism
     #
     # The Location of the opening brace.
     #
-    #     foo in [*bar, baz, *qux]
-    #            ^
+    # ```rb
+    # foo in [*bar, baz, *qux]
+    #        ^
     #
-    #     foo in Foo(*bar, baz, *qux)
-    #               ^
+    # foo in Foo(*bar, baz, *qux)
+    #           ^
+    # ```
     #
     #: () -> Location?
     def opening_loc
@@ -12418,11 +12388,13 @@ module Prism
     #
     # The Location of the closing brace.
     #
-    #     foo in [*bar, baz, *qux]
-    #                            ^
+    # ```rb
+    # foo in [*bar, baz, *qux]
+    #                        ^
     #
-    #     foo in Foo(*bar, baz, *qux)
-    #                               ^
+    # foo in Foo(*bar, baz, *qux)
+    #                           ^
+    # ```
     #
     #: () -> Location?
     def closing_loc
@@ -12484,8 +12456,10 @@ module Prism
 
   # Represents the use of the `..` or `...` operators to create flip flops.
   #
-  #     baz if foo .. bar
-  #            ^^^^^^^^^^
+  # ```rb
+  # baz if foo .. bar
+  #        ^^^^^^^^^^
+  # ```
   class FlipFlopNode < Node
     # @rbs @left: Prism::node?
     # @rbs @right: Prism::node?
@@ -12548,13 +12522,6 @@ module Prism
       if (left = self.left); compact << left; end
       if (right = self.right); compact << right; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*left, *right, operator_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -12682,8 +12649,10 @@ module Prism
 
   # Represents a floating point number literal.
   #
-  #     1.0
-  #     ^^^
+  # ```rb
+  # 1.0
+  # ^^^
+  # ```
   class FloatNode < Node
     # @rbs @value: Float
 
@@ -12737,13 +12706,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -12815,8 +12777,10 @@ module Prism
 
   # Represents the use of the `for` keyword.
   #
-  #     for i in a end
-  #     ^^^^^^^^^^^^^^
+  # ```rb
+  # for i in a end
+  # ^^^^^^^^^^^^^^
+  # ```
   class ForNode < Node
     # @rbs @index: (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode)
     # @rbs @collection: Prism::node
@@ -12891,13 +12855,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [index, collection, *statements, for_keyword_loc, in_keyword_loc, *do_keyword_loc, end_keyword_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> ForNode
     #
@@ -12959,8 +12916,10 @@ module Prism
     #
     # The index expression for `for` loops.
     #
-    #     for i in a end
-    #         ^
+    # ```rb
+    # for i in a end
+    #     ^
+    # ```
     #
     #: () -> (LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode)
     def index
@@ -12972,8 +12931,10 @@ module Prism
     #
     # The collection to iterate over.
     #
-    #     for i in a end
-    #              ^
+    # ```rb
+    # for i in a end
+    #          ^
+    # ```
     #
     #: () -> Prism::node
     def collection
@@ -12985,10 +12946,12 @@ module Prism
     #
     # Represents the body of statements to execute for each iteration of the loop.
     #
-    #     for i in a
-    #       foo(i)
-    #       ^^^^^^
-    #     end
+    # ```rb
+    # for i in a
+    #   foo(i)
+    #   ^^^^^^
+    # end
+    # ```
     #
     #: () -> StatementsNode?
     def statements
@@ -13001,8 +12964,10 @@ module Prism
     #
     # The Location of the `for` keyword.
     #
-    #     for i in a end
-    #     ^^^
+    # ```rb
+    # for i in a end
+    # ^^^
+    # ```
     #
     #: () -> Location
     def for_keyword_loc
@@ -13026,8 +12991,10 @@ module Prism
     #
     # The Location of the `in` keyword.
     #
-    #     for i in a end
-    #           ^^
+    # ```rb
+    # for i in a end
+    #       ^^
+    # ```
     #
     #: () -> Location
     def in_keyword_loc
@@ -13051,8 +13018,10 @@ module Prism
     #
     # The Location of the `do` keyword, if present.
     #
-    #     for i in a do end
-    #                ^^
+    # ```rb
+    # for i in a do end
+    #            ^^
+    # ```
     #
     #: () -> Location?
     def do_keyword_loc
@@ -13081,8 +13050,10 @@ module Prism
     #
     # The Location of the `end` keyword.
     #
-    #     for i in a end
-    #                ^^^
+    # ```rb
+    # for i in a end
+    #            ^^^
+    # ```
     #
     #: () -> Location
     def end_keyword_loc
@@ -13159,10 +13130,12 @@ module Prism
 
   # Represents forwarding all arguments to this method to another method.
   #
-  #     def foo(...)
-  #       bar(...)
-  #           ^^^
-  #     end
+  # ```rb
+  # def foo(...)
+  #   bar(...)
+  #       ^^^
+  # end
+  # ```
   class ForwardingArgumentsNode < Node
 
     # Initialize a new ForwardingArgumentsNode node.
@@ -13214,13 +13187,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -13280,9 +13246,11 @@ module Prism
 
   # Represents the use of the forwarding parameter in a method, block, or lambda declaration.
   #
-  #     def foo(...)
-  #             ^^^
-  #     end
+  # ```rb
+  # def foo(...)
+  #         ^^^
+  # end
+  # ```
   class ForwardingParameterNode < Node
 
     # Initialize a new ForwardingParameterNode node.
@@ -13334,13 +13302,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -13400,12 +13361,14 @@ module Prism
 
   # Represents the use of the `super` keyword without parentheses or arguments, but which might have a block.
   #
-  #     super
-  #     ^^^^^
+  # ```rb
+  # super
+  # ^^^^^
   #
-  #     super { 123 }
-  #     ^^^^^^^^^^^^^
+  # super { 123 }
+  # ^^^^^^^^^^^^^
   #
+  # ```
   # If it has any other arguments, it would be a `SuperNode` instead.
   class ForwardingSuperNode < Node
     # @rbs @keyword_loc: Location
@@ -13465,13 +13428,6 @@ module Prism
       compact = [] #: Array[Prism::node]
       if (block = self.block); compact << block; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [keyword_loc, *block] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -13582,8 +13538,10 @@ module Prism
 
   # Represents the use of the `&&=` operator for assignment to a global variable.
   #
-  #     $target &&= value
-  #     ^^^^^^^^^^^^^^^^^
+  # ```rb
+  # $target &&= value
+  # ^^^^^^^^^^^^^^^^^
+  # ```
   class GlobalVariableAndWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -13644,13 +13602,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -13793,8 +13744,10 @@ module Prism
 
   # Represents assigning to a global variable using an operator that isn't `=`.
   #
-  #     $target += value
-  #     ^^^^^^^^^^^^^^^^
+  # ```rb
+  # $target += value
+  # ^^^^^^^^^^^^^^^^
+  # ```
   class GlobalVariableOperatorWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -13857,13 +13810,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, binary_operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -14007,8 +13953,10 @@ module Prism
 
   # Represents the use of the `||=` operator for assignment to a global variable.
   #
-  #     $target ||= value
-  #     ^^^^^^^^^^^^^^^^^
+  # ```rb
+  # $target ||= value
+  # ^^^^^^^^^^^^^^^^^
+  # ```
   class GlobalVariableOrWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -14069,13 +14017,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -14218,8 +14159,10 @@ module Prism
 
   # Represents referencing a global variable.
   #
-  #     $foo
-  #     ^^^^
+  # ```rb
+  # $foo
+  # ^^^^
+  # ```
   class GlobalVariableReadNode < Node
     # @rbs @name: Symbol
 
@@ -14275,13 +14218,6 @@ module Prism
       []
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> GlobalVariableReadNode
     #
@@ -14333,9 +14269,11 @@ module Prism
     #
     # The name of the global variable, which is a `$` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#identifier). Alternatively, it can be one of the special global variables designated by a symbol.
     #
-    #     $foo   # name `:$foo`
+    # ```rb
+    # $foo   # name `:$foo`
     #
-    #     $_Test # name `:$_Test`
+    # $_Test # name `:$_Test`
+    # ```
     #
     #: () -> Symbol
     def name
@@ -14355,8 +14293,10 @@ module Prism
 
   # Represents writing to a global variable in a context that doesn't have an explicit value.
   #
-  #     $foo, $bar = baz
-  #     ^^^^  ^^^^
+  # ```rb
+  # $foo, $bar = baz
+  # ^^^^  ^^^^
+  # ```
   class GlobalVariableTargetNode < Node
     # @rbs @name: Symbol
 
@@ -14410,13 +14350,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -14488,8 +14421,10 @@ module Prism
 
   # Represents writing to a global variable.
   #
-  #     $foo = 1
-  #     ^^^^^^^^
+  # ```rb
+  # $foo = 1
+  # ^^^^^^^^
+  # ```
   class GlobalVariableWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -14552,13 +14487,6 @@ module Prism
       [value]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, value, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> GlobalVariableWriteNode
     #
@@ -14614,9 +14542,11 @@ module Prism
     #
     # The name of the global variable, which is a `$` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#identifier). Alternatively, it can be one of the special global variables designated by a symbol.
     #
-    #     $foo = :bar  # name `:$foo`
+    # ```rb
+    # $foo = :bar  # name `:$foo`
     #
-    #     $_Test = 123 # name `:$_Test`
+    # $_Test = 123 # name `:$_Test`
+    # ```
     #
     #: () -> Symbol
     def name
@@ -14629,8 +14559,10 @@ module Prism
     #
     # The Location of the global variable's name.
     #
-    #     $foo = :bar
-    #     ^^^^
+    # ```rb
+    # $foo = :bar
+    # ^^^^
+    # ```
     #
     #: () -> Location
     def name_loc
@@ -14653,11 +14585,13 @@ module Prism
     #
     # The value to write to the global variable. It can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     $foo = :bar
-    #            ^^^^
+    # ```rb
+    # $foo = :bar
+    #        ^^^^
     #
-    #     $-xyz = 123
-    #             ^^^
+    # $-xyz = 123
+    #         ^^^
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -14670,8 +14604,10 @@ module Prism
     #
     # The Location of the `=` operator.
     #
-    #     $foo = :bar
-    #          ^
+    # ```rb
+    # $foo = :bar
+    #      ^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -14715,8 +14651,10 @@ module Prism
 
   # Represents a hash literal.
   #
-  #     { a => b }
-  #     ^^^^^^^^^^
+  # ```rb
+  # { a => b }
+  # ^^^^^^^^^^
+  # ```
   class HashNode < Node
     # @rbs @opening_loc: Location
     # @rbs @elements: Array[AssocNode | AssocSplatNode]
@@ -14777,13 +14715,6 @@ module Prism
       [*elements]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [opening_loc, *elements, closing_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> HashNode
     #
@@ -14840,8 +14771,10 @@ module Prism
     #
     # The Location of the opening brace.
     #
-    #     { a => b }
-    #     ^
+    # ```rb
+    # { a => b }
+    # ^
+    # ```
     #
     #: () -> Location
     def opening_loc
@@ -14864,11 +14797,13 @@ module Prism
     #
     # The elements of the hash. These can be either `AssocNode`s or `AssocSplatNode`s.
     #
-    #     { a: b }
-    #       ^^^^
+    # ```rb
+    # { a: b }
+    #   ^^^^
     #
-    #     { **foo }
-    #       ^^^^^
+    # { **foo }
+    #   ^^^^^
+    # ```
     #
     #: () -> Array[AssocNode | AssocSplatNode]
     def elements
@@ -14881,8 +14816,10 @@ module Prism
     #
     # The Location of the closing brace.
     #
-    #     { a => b }
-    #              ^
+    # ```rb
+    # { a => b }
+    #          ^
+    # ```
     #
     #: () -> Location
     def closing_loc
@@ -14936,17 +14873,19 @@ module Prism
 
   # Represents a hash pattern in pattern matching.
   #
-  #     foo => { a: 1, b: 2 }
-  #            ^^^^^^^^^^^^^^
+  # ```rb
+  # foo => { a: 1, b: 2 }
+  #        ^^^^^^^^^^^^^^
   #
-  #     foo => { a: 1, b: 2, **c }
-  #            ^^^^^^^^^^^^^^^^^^^
+  # foo => { a: 1, b: 2, **c }
+  #        ^^^^^^^^^^^^^^^^^^^
   #
-  #     foo => Bar[a: 1, b: 2]
-  #            ^^^^^^^^^^^^^^^
+  # foo => Bar[a: 1, b: 2]
+  #        ^^^^^^^^^^^^^^^
   #
-  #     foo in { a: 1, b: 2 }
-  #            ^^^^^^^^^^^^^^
+  # foo in { a: 1, b: 2 }
+  #        ^^^^^^^^^^^^^^
+  # ```
   class HashPatternNode < Node
     # @rbs @constant: (ConstantPathNode | ConstantReadNode)?
     # @rbs @elements: Array[AssocNode]
@@ -15017,13 +14956,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*constant, *elements, *rest, *opening_loc, *closing_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> HashPatternNode
     #
@@ -15081,11 +15013,13 @@ module Prism
     #
     # Represents the optional constant preceding the Hash.
     #
-    #     foo => Bar[a: 1, b: 2]
-    #          ^^^
+    # ```rb
+    # foo => Bar[a: 1, b: 2]
+    #      ^^^
     #
-    #     foo => Bar::Baz[a: 1, b: 2]
-    #          ^^^^^^^^
+    # foo => Bar::Baz[a: 1, b: 2]
+    #      ^^^^^^^^
+    # ```
     #
     #: () -> (ConstantPathNode | ConstantReadNode)?
     def constant
@@ -15097,8 +15031,10 @@ module Prism
     #
     # Represents the explicit named hash keys and values.
     #
-    #     foo => { a: 1, b:, ** }
-    #              ^^^^^^^^
+    # ```rb
+    # foo => { a: 1, b:, ** }
+    #          ^^^^^^^^
+    # ```
     #
     #: () -> Array[AssocNode]
     def elements
@@ -15110,14 +15046,16 @@ module Prism
     #
     # Represents the rest of the Hash keys and values. This can be named, unnamed, or explicitly forbidden via `**nil`, this last one results in a `NoKeywordsParameterNode`.
     #
-    #     foo => { a: 1, b:, **c }
-    #                        ^^^
+    # ```rb
+    # foo => { a: 1, b:, **c }
+    #                    ^^^
     #
-    #     foo => { a: 1, b:, ** }
-    #                        ^^
+    # foo => { a: 1, b:, ** }
+    #                    ^^
     #
-    #     foo => { a: 1, b:, **nil }
-    #                        ^^^^^
+    # foo => { a: 1, b:, **nil }
+    #                    ^^^^^
+    # ```
     #
     #: () -> (AssocSplatNode | NoKeywordsParameterNode)?
     def rest
@@ -15130,11 +15068,13 @@ module Prism
     #
     # The Location of the opening brace.
     #
-    #     foo => { a: 1 }
-    #            ^
+    # ```rb
+    # foo => { a: 1 }
+    #        ^
     #
-    #     foo => Bar[a: 1]
-    #               ^
+    # foo => Bar[a: 1]
+    #           ^
+    # ```
     #
     #: () -> Location?
     def opening_loc
@@ -15163,11 +15103,13 @@ module Prism
     #
     # The Location of the closing brace.
     #
-    #     foo => { a: 1 }
-    #                   ^
+    # ```rb
+    # foo => { a: 1 }
+    #               ^
     #
-    #     foo => Bar[a: 1]
-    #                    ^
+    # foo => Bar[a: 1]
+    #                ^
+    # ```
     #
     #: () -> Location?
     def closing_loc
@@ -15228,14 +15170,16 @@ module Prism
 
   # Represents the use of the `if` keyword, either in the block form or the modifier form, or a ternary expression.
   #
-  #     bar if foo
-  #     ^^^^^^^^^^
+  # ```rb
+  # bar if foo
+  # ^^^^^^^^^^
   #
-  #     if foo then bar end
-  #     ^^^^^^^^^^^^^^^^^^^
+  # if foo then bar end
+  # ^^^^^^^^^^^^^^^^^^^
   #
-  #     foo ? bar : baz
-  #     ^^^^^^^^^^^^^^^
+  # foo ? bar : baz
+  # ^^^^^^^^^^^^^^^
+  # ```
   class IfNode < Node
     # @rbs @if_keyword_loc: Location?
     # @rbs @predicate: Prism::node
@@ -15308,13 +15252,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*if_keyword_loc, predicate, *then_keyword_loc, *statements, *subsequent, *end_keyword_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> IfNode
     #
@@ -15375,9 +15312,11 @@ module Prism
     #
     # The Location of the `if` keyword if present.
     #
-    #     bar if foo
-    #         ^^
+    # ```rb
+    # bar if foo
+    #     ^^
     #
+    # ```
     # The `if_keyword_loc` field will be `nil` when the `IfNode` represents a ternary expression.
     #
     #: () -> Location?
@@ -15406,16 +15345,18 @@ module Prism
     #
     # The node for the condition the `IfNode` is testing.
     #
-    #     if foo
+    # ```rb
+    # if foo
+    #    ^^^
+    #   bar
+    # end
+    #
+    # bar if foo
     #        ^^^
-    #       bar
-    #     end
     #
-    #     bar if foo
-    #            ^^^
-    #
-    #     foo ? bar : baz
-    #     ^^^
+    # foo ? bar : baz
+    # ^^^
+    # ```
     #
     #: () -> Prism::node
     def predicate
@@ -15428,11 +15369,13 @@ module Prism
     #
     # The Location of the `then` keyword (if present) or the `?` in a ternary expression, `nil` otherwise.
     #
-    #     if foo then bar end
-    #            ^^^^
+    # ```rb
+    # if foo then bar end
+    #        ^^^^
     #
-    #     a ? b : c
-    #       ^
+    # a ? b : c
+    #   ^
+    # ```
     #
     #: () -> Location?
     def then_keyword_loc
@@ -15460,12 +15403,14 @@ module Prism
     #
     # Represents the body of statements that will be executed when the predicate is evaluated as truthy. Will be `nil` when no body is provided.
     #
-    #     if foo
-    #       bar
-    #       ^^^
-    #       baz
-    #       ^^^
-    #     end
+    # ```rb
+    # if foo
+    #   bar
+    #   ^^^
+    #   baz
+    #   ^^^
+    # end
+    # ```
     #
     #: () -> StatementsNode?
     def statements
@@ -15477,17 +15422,19 @@ module Prism
     #
     # Represents an `ElseNode` or an `IfNode` when there is an `else` or an `elsif` in the `if` statement.
     #
-    #     if foo
-    #       bar
-    #     elsif baz
-    #     ^^^^^^^^^
-    #       qux
-    #       ^^^
-    #     end
-    #     ^^^
+    # ```rb
+    # if foo
+    #   bar
+    # elsif baz
+    # ^^^^^^^^^
+    #   qux
+    #   ^^^
+    # end
+    # ^^^
     #
-    #     if foo then bar else baz end
-    #                     ^^^^^^^^^^^^
+    # if foo then bar else baz end
+    #                 ^^^^^^^^^^^^
+    # ```
     #
     #: () -> (ElseNode | IfNode)?
     def subsequent
@@ -15500,10 +15447,12 @@ module Prism
     #
     # The Location of the `end` keyword if present, `nil` otherwise.
     #
-    #     if foo
-    #       bar
-    #     end
-    #     ^^^
+    # ```rb
+    # if foo
+    #   bar
+    # end
+    # ^^^
+    # ```
     #
     #: () -> Location?
     def end_keyword_loc
@@ -15574,8 +15523,10 @@ module Prism
 
   # Represents an imaginary number literal.
   #
-  #     1.0i
-  #     ^^^^
+  # ```rb
+  # 1.0i
+  # ^^^^
+  # ```
   class ImaginaryNode < Node
     # @rbs @numeric: (FloatNode | IntegerNode | RationalNode)
 
@@ -15630,13 +15581,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [numeric]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [numeric] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -15708,14 +15652,16 @@ module Prism
 
   # Represents a node that is implicitly being added to the tree but doesn't correspond directly to a node in the source.
   #
-  #     { foo: }
-  #       ^^^^
+  # ```rb
+  # { foo: }
+  #   ^^^^
   #
-  #     { Foo: }
-  #       ^^^^
+  # { Foo: }
+  #   ^^^^
   #
-  #     foo in { bar: }
-  #              ^^^^
+  # foo in { bar: }
+  #          ^^^^
+  # ```
   class ImplicitNode < Node
     # @rbs @value: (LocalVariableReadNode | CallNode | ConstantReadNode | LocalVariableTargetNode)
 
@@ -15770,13 +15716,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -15848,17 +15787,19 @@ module Prism
 
   # Represents using a trailing comma to indicate an implicit rest parameter.
   #
-  #     foo { |bar,| }
-  #               ^
+  # ```rb
+  # foo { |bar,| }
+  #           ^
   #
-  #     foo in [bar,]
-  #                ^
-  #
-  #     for foo, in bar do end
+  # foo in [bar,]
   #            ^
   #
-  #     foo, = bar
+  # for foo, in bar do end
   #        ^
+  #
+  # foo, = bar
+  #    ^
+  # ```
   class ImplicitRestNode < Node
 
     # Initialize a new ImplicitRestNode node.
@@ -15910,13 +15851,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -15976,8 +15910,10 @@ module Prism
 
   # Represents the use of the `in` keyword in a case statement.
   #
-  #     case a; in b then c end
-  #             ^^^^^^^^^^^
+  # ```rb
+  # case a; in b then c end
+  #         ^^^^^^^^^^^
+  # ```
   class InNode < Node
     # @rbs @pattern: Prism::node
     # @rbs @statements: StatementsNode?
@@ -16042,13 +15978,6 @@ module Prism
       compact << pattern
       if (statements = self.statements); compact << statements; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [pattern, *statements, in_keyword_loc, *then_keyword_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -16207,8 +16136,10 @@ module Prism
 
   # Represents the use of the `&&=` operator on a call to the `[]` method.
   #
-  #     foo.bar[baz] &&= value
-  #     ^^^^^^^^^^^^^^^^^^^^^^
+  # ```rb
+  # foo.bar[baz] &&= value
+  # ^^^^^^^^^^^^^^^^^^^^^^
+  # ```
   class IndexAndWriteNode < Node
     # @rbs @receiver: Prism::node?
     # @rbs @call_operator_loc: Location?
@@ -16285,13 +16216,6 @@ module Prism
       if (block = self.block); compact << block; end
       compact << value
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*receiver, *call_operator_loc, opening_loc, *arguments, closing_loc, *block, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -16577,8 +16501,10 @@ module Prism
 
   # Represents the use of an assignment operator on a call to `[]`.
   #
-  #     foo.bar[baz] += value
-  #     ^^^^^^^^^^^^^^^^^^^^^
+  # ```rb
+  # foo.bar[baz] += value
+  # ^^^^^^^^^^^^^^^^^^^^^
+  # ```
   class IndexOperatorWriteNode < Node
     # @rbs @receiver: Prism::node?
     # @rbs @call_operator_loc: Location?
@@ -16657,13 +16583,6 @@ module Prism
       if (block = self.block); compact << block; end
       compact << value
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*receiver, *call_operator_loc, opening_loc, *arguments, closing_loc, *block, binary_operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -16950,8 +16869,10 @@ module Prism
 
   # Represents the use of the `||=` operator on a call to `[]`.
   #
-  #     foo.bar[baz] ||= value
-  #     ^^^^^^^^^^^^^^^^^^^^^^
+  # ```rb
+  # foo.bar[baz] ||= value
+  # ^^^^^^^^^^^^^^^^^^^^^^
+  # ```
   class IndexOrWriteNode < Node
     # @rbs @receiver: Prism::node?
     # @rbs @call_operator_loc: Location?
@@ -17028,13 +16949,6 @@ module Prism
       if (block = self.block); compact << block; end
       compact << value
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*receiver, *call_operator_loc, opening_loc, *arguments, closing_loc, *block, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -17320,16 +17234,18 @@ module Prism
 
   # Represents assigning to an index.
   #
-  #     foo[bar], = 1
+  # ```rb
+  # foo[bar], = 1
+  # ^^^^^^^^
+  #
+  # begin
+  # rescue => foo[bar]
+  #           ^^^^^^^^
+  # end
+  #
+  # for foo[bar] in baz do end
   #     ^^^^^^^^
-  #
-  #     begin
-  #     rescue => foo[bar]
-  #               ^^^^^^^^
-  #     end
-  #
-  #     for foo[bar] in baz do end
-  #         ^^^^^^^^
+  # ```
   class IndexTargetNode < Node
     # @rbs @receiver: Prism::node
     # @rbs @opening_loc: Location
@@ -17398,13 +17314,6 @@ module Prism
       if (arguments = self.arguments); compact << arguments; end
       if (block = self.block); compact << block; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [receiver, opening_loc, *arguments, closing_loc, *block] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -17603,8 +17512,10 @@ module Prism
 
   # Represents the use of the `&&=` operator for assignment to an instance variable.
   #
-  #     @target &&= value
-  #     ^^^^^^^^^^^^^^^^^
+  # ```rb
+  # @target &&= value
+  # ^^^^^^^^^^^^^^^^^
+  # ```
   class InstanceVariableAndWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -17665,13 +17576,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -17814,8 +17718,10 @@ module Prism
 
   # Represents assigning to an instance variable using an operator that isn't `=`.
   #
-  #     @target += value
-  #     ^^^^^^^^^^^^^^^^
+  # ```rb
+  # @target += value
+  # ^^^^^^^^^^^^^^^^
+  # ```
   class InstanceVariableOperatorWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -17878,13 +17784,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, binary_operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -18028,8 +17927,10 @@ module Prism
 
   # Represents the use of the `||=` operator for assignment to an instance variable.
   #
-  #     @target ||= value
-  #     ^^^^^^^^^^^^^^^^^
+  # ```rb
+  # @target ||= value
+  # ^^^^^^^^^^^^^^^^^
+  # ```
   class InstanceVariableOrWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -18090,13 +17991,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -18239,8 +18133,10 @@ module Prism
 
   # Represents referencing an instance variable.
   #
-  #     @foo
-  #     ^^^^
+  # ```rb
+  # @foo
+  # ^^^^
+  # ```
   class InstanceVariableReadNode < Node
     # @rbs @name: Symbol
 
@@ -18296,13 +18192,6 @@ module Prism
       []
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> InstanceVariableReadNode
     #
@@ -18354,9 +18243,11 @@ module Prism
     #
     # The name of the instance variable, which is a `@` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#identifiers).
     #
-    #     @x     # name `:@x`
+    # ```rb
+    # @x     # name `:@x`
     #
-    #     @_test # name `:@_test`
+    # @_test # name `:@_test`
+    # ```
     #
     #: () -> Symbol
     def name
@@ -18376,8 +18267,10 @@ module Prism
 
   # Represents writing to an instance variable in a context that doesn't have an explicit value.
   #
-  #     @foo, @bar = baz
-  #     ^^^^  ^^^^
+  # ```rb
+  # @foo, @bar = baz
+  # ^^^^  ^^^^
+  # ```
   class InstanceVariableTargetNode < Node
     # @rbs @name: Symbol
 
@@ -18431,13 +18324,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -18509,8 +18395,10 @@ module Prism
 
   # Represents writing to an instance variable.
   #
-  #     @foo = 1
-  #     ^^^^^^^^
+  # ```rb
+  # @foo = 1
+  # ^^^^^^^^
+  # ```
   class InstanceVariableWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -18573,13 +18461,6 @@ module Prism
       [value]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, value, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> InstanceVariableWriteNode
     #
@@ -18635,9 +18516,11 @@ module Prism
     #
     # The name of the instance variable, which is a `@` followed by an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#identifiers).
     #
-    #     @x = :y       # name `:@x`
+    # ```rb
+    # @x = :y       # name `:@x`
     #
-    #     @_foo = "bar" # name `@_foo`
+    # @_foo = "bar" # name `@_foo`
+    # ```
     #
     #: () -> Symbol
     def name
@@ -18650,8 +18533,10 @@ module Prism
     #
     # The Location of the variable name.
     #
-    #     @_x = 1
-    #     ^^^
+    # ```rb
+    # @_x = 1
+    # ^^^
+    # ```
     #
     #: () -> Location
     def name_loc
@@ -18674,11 +18559,13 @@ module Prism
     #
     # The value to write to the instance variable. It can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     @foo = :bar
-    #            ^^^^
+    # ```rb
+    # @foo = :bar
+    #        ^^^^
     #
-    #     @_x = 1234
-    #           ^^^^
+    # @_x = 1234
+    #       ^^^^
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -18691,8 +18578,10 @@ module Prism
     #
     # The Location of the `=` operator.
     #
-    #     @x = y
-    #        ^
+    # ```rb
+    # @x = y
+    #    ^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -18736,8 +18625,10 @@ module Prism
 
   # Represents an integer number literal.
   #
-  #     1
-  #     ^
+  # ```rb
+  # 1
+  # ^
+  # ```
   class IntegerNode < Node
     # @rbs @value: Integer
 
@@ -18791,13 +18682,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -18902,8 +18786,10 @@ module Prism
 
   # Represents a regular expression literal that contains interpolation that is being used in the predicate of a conditional to implicitly match against the last line read by an IO object.
   #
-  #     if /foo #{bar} baz/ then end
-  #        ^^^^^^^^^^^^^^^^
+  # ```rb
+  # if /foo #{bar} baz/ then end
+  #    ^^^^^^^^^^^^^^^^
+  # ```
   class InterpolatedMatchLastLineNode < Node
     # @rbs @opening_loc: Location
     # @rbs @parts: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
@@ -18962,13 +18848,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [*parts]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [opening_loc, *parts, closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -19200,8 +19079,10 @@ module Prism
 
   # Represents a regular expression literal that contains interpolation.
   #
-  #     /foo #{bar} baz/
-  #     ^^^^^^^^^^^^^^^^
+  # ```rb
+  # /foo #{bar} baz/
+  # ^^^^^^^^^^^^^^^^
+  # ```
   class InterpolatedRegularExpressionNode < Node
     # @rbs @opening_loc: Location
     # @rbs @parts: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
@@ -19260,13 +19141,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [*parts]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [opening_loc, *parts, closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -19498,8 +19372,10 @@ module Prism
 
   # Represents a string literal that contains interpolation.
   #
-  #     "foo #{bar} baz"
-  #     ^^^^^^^^^^^^^^^^
+  # ```rb
+  # "foo #{bar} baz"
+  # ^^^^^^^^^^^^^^^^
+  # ```
   class InterpolatedStringNode < Node
     # @rbs @opening_loc: Location?
     # @rbs @parts: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode | InterpolatedStringNode]
@@ -19558,13 +19434,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [*parts]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*opening_loc, *parts, *closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -19734,8 +19603,10 @@ module Prism
 
   # Represents a symbol literal that contains interpolation.
   #
-  #     :"foo #{bar} baz"
-  #     ^^^^^^^^^^^^^^^^^
+  # ```rb
+  # :"foo #{bar} baz"
+  # ^^^^^^^^^^^^^^^^^
+  # ```
   class InterpolatedSymbolNode < Node
     # @rbs @opening_loc: Location?
     # @rbs @parts: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
@@ -19794,13 +19665,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [*parts]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*opening_loc, *parts, *closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -19953,8 +19817,10 @@ module Prism
 
   # Represents an xstring literal that contains interpolation.
   #
-  #     `foo #{bar} baz`
-  #     ^^^^^^^^^^^^^^^^
+  # ```rb
+  # `foo #{bar} baz`
+  # ^^^^^^^^^^^^^^^^
+  # ```
   class InterpolatedXStringNode < Node
     # @rbs @opening_loc: Location
     # @rbs @parts: Array[StringNode | EmbeddedStatementsNode | EmbeddedVariableNode]
@@ -20013,13 +19879,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [*parts]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [opening_loc, *parts, closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -20162,8 +20021,10 @@ module Prism
 
   # Represents reading from the implicit `it` local variable.
   #
-  #     -> { it }
-  #          ^^
+  # ```rb
+  # -> { it }
+  #      ^^
+  # ```
   class ItLocalVariableReadNode < Node
 
     # Initialize a new ItLocalVariableReadNode node.
@@ -20215,13 +20076,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -20281,8 +20135,10 @@ module Prism
 
   # Represents an implicit set of parameters through the use of the `it` keyword within a block or lambda.
   #
-  #     -> { it + it }
-  #     ^^^^^^^^^^^^^^
+  # ```rb
+  # -> { it + it }
+  # ^^^^^^^^^^^^^^
+  # ```
   class ItParametersNode < Node
 
     # Initialize a new ItParametersNode node.
@@ -20334,13 +20190,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -20400,8 +20249,10 @@ module Prism
 
   # Represents a hash literal without opening and closing braces.
   #
-  #     foo(a: b)
-  #         ^^^^
+  # ```rb
+  # foo(a: b)
+  #     ^^^^
+  # ```
   class KeywordHashNode < Node
     # @rbs @elements: Array[AssocNode | AssocSplatNode]
 
@@ -20456,13 +20307,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [*elements]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*elements] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -20544,9 +20388,11 @@ module Prism
 
   # Represents a keyword rest parameter to a method, block, or lambda definition.
   #
-  #     def a(**b)
-  #           ^^^
-  #     end
+  # ```rb
+  # def a(**b)
+  #       ^^^
+  # end
+  # ```
   class KeywordRestParameterNode < Node
     # @rbs @name: Symbol?
     # @rbs @name_loc: Location?
@@ -20604,13 +20450,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*name_loc, operator_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -20755,8 +20594,10 @@ module Prism
 
   # Represents using a lambda literal (not the lambda method call).
   #
-  #     ->(value) { value * 2 }
-  #     ^^^^^^^^^^^^^^^^^^^^^^^
+  # ```rb
+  # ->(value) { value * 2 }
+  # ^^^^^^^^^^^^^^^^^^^^^^^
+  # ```
   class LambdaNode < Node
     # @rbs @locals: Array[Symbol]
     # @rbs @operator_loc: Location
@@ -20825,13 +20666,6 @@ module Prism
       if (parameters = self.parameters); compact << parameters; end
       if (body = self.body); compact << body; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [operator_loc, opening_loc, closing_loc, *parameters, *body] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -21033,8 +20867,10 @@ module Prism
 
   # Represents the use of the `&&=` operator for assignment to a local variable.
   #
-  #     target &&= value
-  #     ^^^^^^^^^^^^^^^^
+  # ```rb
+  # target &&= value
+  # ^^^^^^^^^^^^^^^^
+  # ```
   class LocalVariableAndWriteNode < Node
     # @rbs @name_loc: Location
     # @rbs @operator_loc: Location
@@ -21097,13 +20933,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -21258,8 +21087,10 @@ module Prism
 
   # Represents assigning to a local variable using an operator that isn't `=`.
   #
-  #     target += value
-  #     ^^^^^^^^^^^^^^^
+  # ```rb
+  # target += value
+  # ^^^^^^^^^^^^^^^
+  # ```
   class LocalVariableOperatorWriteNode < Node
     # @rbs @name_loc: Location
     # @rbs @binary_operator_loc: Location
@@ -21324,13 +21155,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, binary_operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -21486,8 +21310,10 @@ module Prism
 
   # Represents the use of the `||=` operator for assignment to a local variable.
   #
-  #     target ||= value
-  #     ^^^^^^^^^^^^^^^^
+  # ```rb
+  # target ||= value
+  # ^^^^^^^^^^^^^^^^
+  # ```
   class LocalVariableOrWriteNode < Node
     # @rbs @name_loc: Location
     # @rbs @operator_loc: Location
@@ -21550,13 +21376,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -21711,8 +21530,10 @@ module Prism
 
   # Represents reading a local variable. Note that this requires that a local variable of the same name has already been written to in the same scope, otherwise it is parsed as a method call.
   #
-  #     foo
-  #     ^^^
+  # ```rb
+  # foo
+  # ^^^
+  # ```
   class LocalVariableReadNode < Node
     # @rbs @name: Symbol
     # @rbs @depth: Integer
@@ -21770,13 +21591,6 @@ module Prism
       []
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> LocalVariableReadNode
     #
@@ -21829,13 +21643,17 @@ module Prism
     #
     # The name of the local variable, which is an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#identifiers).
     #
-    #     x      # name `:x`
+    # ```rb
+    # x      # name `:x`
     #
-    #     _Test  # name `:_Test`
+    # _Test  # name `:_Test`
     #
+    # ```
     # Note that this can also be an underscore followed by a number for the default block parameters.
     #
-    #     _1     # name `:_1`
+    # ```rb
+    # _1     # name `:_1`
+    # ```
     #
     #: () -> Symbol
     def name
@@ -21847,10 +21665,12 @@ module Prism
     #
     # The number of visible scopes that should be searched to find the origin of this local variable.
     #
-    #     foo = 1; foo # depth 0
+    # ```rb
+    # foo = 1; foo # depth 0
     #
-    #     bar = 2; tap { bar } # depth 1
+    # bar = 2; tap { bar } # depth 1
     #
+    # ```
     # The specific rules for calculating the depth may differ from individual Ruby implementations, as they are not specified by the language. For more information, see [the Prism documentation](https://github.com/ruby/prism/blob/main/docs/local_variable_depth.md).
     #
     #: () -> Integer
@@ -21872,11 +21692,13 @@ module Prism
 
   # Represents writing to a local variable in a context that doesn't have an explicit value.
   #
-  #     foo, bar = baz
-  #     ^^^  ^^^
+  # ```rb
+  # foo, bar = baz
+  # ^^^  ^^^
   #
-  #     foo => baz
-  #            ^^^
+  # foo => baz
+  #        ^^^
+  # ```
   class LocalVariableTargetNode < Node
     # @rbs @name: Symbol
     # @rbs @depth: Integer
@@ -21932,13 +21754,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -22022,8 +21837,10 @@ module Prism
 
   # Represents writing to a local variable.
   #
-  #     foo = 1
-  #     ^^^^^^^
+  # ```rb
+  # foo = 1
+  # ^^^^^^^
+  # ```
   class LocalVariableWriteNode < Node
     # @rbs @name: Symbol
     # @rbs @depth: Integer
@@ -22088,13 +21905,6 @@ module Prism
       [value]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, value, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> LocalVariableWriteNode
     #
@@ -22151,9 +21961,11 @@ module Prism
     #
     # The name of the local variable, which is an [identifier](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#identifiers).
     #
-    #     foo = :bar # name `:foo`
+    # ```rb
+    # foo = :bar # name `:foo`
     #
-    #     abc = 123  # name `:abc`
+    # abc = 123  # name `:abc`
+    # ```
     #
     #: () -> Symbol
     def name
@@ -22165,10 +21977,12 @@ module Prism
     #
     # The number of semantic scopes we have to traverse to find the declaration of this variable.
     #
-    #     foo = 1         # depth 0
+    # ```rb
+    # foo = 1         # depth 0
     #
-    #     tap { foo = 1 } # depth 1
+    # tap { foo = 1 } # depth 1
     #
+    # ```
     # The specific rules for calculating the depth may differ from individual Ruby implementations, as they are not specified by the language. For more information, see [the Prism documentation](https://github.com/ruby/prism/blob/main/docs/local_variable_depth.md).
     #
     #: () -> Integer
@@ -22182,8 +21996,10 @@ module Prism
     #
     # The Location of the variable name.
     #
-    #     foo = :bar
-    #     ^^^
+    # ```rb
+    # foo = :bar
+    # ^^^
+    # ```
     #
     #: () -> Location
     def name_loc
@@ -22206,15 +22022,19 @@ module Prism
     #
     # The value to write to the local variable. It can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     foo = :bar
-    #           ^^^^
+    # ```rb
+    # foo = :bar
+    #       ^^^^
     #
-    #     abc = 1234
-    #           ^^^^
+    # abc = 1234
+    #       ^^^^
     #
+    # ```
     # Note that since the name of a local variable is known before the value is parsed, it is valid for a local variable to appear within the value of its own write.
     #
-    #     foo = foo
+    # ```rb
+    # foo = foo
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -22227,8 +22047,10 @@ module Prism
     #
     # The Location of the `=` operator.
     #
-    #     x = :y
-    #       ^
+    # ```rb
+    # x = :y
+    #   ^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -22273,8 +22095,10 @@ module Prism
 
   # Represents a regular expression literal used in the predicate of a conditional to implicitly match against the last line read by an IO object.
   #
-  #     if /foo/i then end
-  #        ^^^^^^
+  # ```rb
+  # if /foo/i then end
+  #    ^^^^^^
+  # ```
   class MatchLastLineNode < Node
     # @rbs @opening_loc: Location
     # @rbs @content_loc: Location
@@ -22334,13 +22158,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [opening_loc, content_loc, closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -22606,8 +22423,10 @@ module Prism
 
   # Represents the use of the modifier `in` operator.
   #
-  #     foo in bar
-  #     ^^^^^^^^^^
+  # ```rb
+  # foo in bar
+  # ^^^^^^^^^^
+  # ```
   class MatchPredicateNode < Node
     # @rbs @value: Prism::node
     # @rbs @pattern: Prism::node
@@ -22667,13 +22486,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value, pattern]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [value, pattern, keyword_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -22792,8 +22604,10 @@ module Prism
 
   # Represents the use of the `=>` operator.
   #
-  #     foo => bar
-  #     ^^^^^^^^^^
+  # ```rb
+  # foo => bar
+  # ^^^^^^^^^^
+  # ```
   class MatchRequiredNode < Node
     # @rbs @value: Prism::node
     # @rbs @pattern: Prism::node
@@ -22855,13 +22669,6 @@ module Prism
       [value, pattern]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [value, pattern, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> MatchRequiredNode
     #
@@ -22916,8 +22723,10 @@ module Prism
     #
     # Represents the left-hand side of the operator.
     #
-    #     foo => bar
-    #     ^^^
+    # ```rb
+    # foo => bar
+    # ^^^
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -22931,45 +22740,59 @@ module Prism
     #
     # Anything that looks like a local variable name (including `_`) will result in a `LocalVariableTargetNode`.
     #
-    #     foo => a # This is equivalent to writing `a = foo`
-    #            ^
+    # ```rb
+    # foo => a # This is equivalent to writing `a = foo`
+    #        ^
     #
+    # ```
     # Using an explicit `Array` or combining expressions with `,` will result in a `ArrayPatternNode`. This can be preceded by a constant.
     #
-    #     foo => [a]
-    #            ^^^
+    # ```rb
+    # foo => [a]
+    #        ^^^
     #
-    #     foo => a, b
-    #            ^^^^
+    # foo => a, b
+    #        ^^^^
     #
-    #     foo => Bar[a, b]
-    #            ^^^^^^^^^
+    # foo => Bar[a, b]
+    #        ^^^^^^^^^
     #
+    # ```
     # If the array pattern contains at least two wildcard matches, a `FindPatternNode` is created instead.
     #
-    #     foo => *, 1, *a
-    #            ^^^^^
+    # ```rb
+    # foo => *, 1, *a
+    #        ^^^^^
     #
+    # ```
     # Using an explicit `Hash` or a constant with square brackets and hash keys in the square brackets will result in a `HashPatternNode`.
     #
-    #     foo => { a: 1, b: }
+    # ```rb
+    # foo => { a: 1, b: }
     #
-    #     foo => Bar[a: 1, b:]
+    # foo => Bar[a: 1, b:]
     #
-    #     foo => Bar[**]
+    # foo => Bar[**]
     #
+    # ```
     # To use any variable that needs run time evaluation, pinning is required. This results in a `PinnedVariableNode`
     #
-    #     foo => ^a
-    #            ^^
+    # ```rb
+    # foo => ^a
+    #        ^^
     #
+    # ```
     # Similar, any expression can be used with pinning. This results in a `PinnedExpressionNode`.
     #
-    #     foo => ^(a + 1)
+    # ```rb
+    # foo => ^(a + 1)
     #
+    # ```
     # Anything else will result in the regular node for that expression, for example a `ConstantReadNode`.
     #
-    #     foo => CONST
+    # ```rb
+    # foo => CONST
+    # ```
     #
     #: () -> Prism::node
     def pattern
@@ -22982,8 +22805,10 @@ module Prism
     #
     # The Location of the operator.
     #
-    #     foo => bar
-    #         ^^
+    # ```rb
+    # foo => bar
+    #     ^^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -23026,8 +22851,10 @@ module Prism
 
   # Represents writing local variables using a regular expression match with named capture groups.
   #
-  #     /(?<foo>bar)/ =~ baz
-  #     ^^^^^^^^^^^^^^^^^^^^
+  # ```rb
+  # /(?<foo>bar)/ =~ baz
+  # ^^^^^^^^^^^^^^^^^^^^
+  # ```
   class MatchWriteNode < Node
     # @rbs @call: CallNode
     # @rbs @targets: Array[LocalVariableTargetNode]
@@ -23085,13 +22912,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [call, *targets]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [call, *targets] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -23176,8 +22996,10 @@ module Prism
 
   # Represents a module declaration involving the `module` keyword.
   #
-  #     module Foo end
-  #     ^^^^^^^^^^^^^^
+  # ```rb
+  # module Foo end
+  # ^^^^^^^^^^^^^^
+  # ```
   class ModuleNode < Node
     # @rbs @locals: Array[Symbol]
     # @rbs @module_keyword_loc: Location
@@ -23246,13 +23068,6 @@ module Prism
       compact << constant_path
       if (body = self.body); compact << body; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [module_keyword_loc, constant_path, *body, end_keyword_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -23431,13 +23246,17 @@ module Prism
 
   # Represents a multi-target expression.
   #
-  #     a, (b, c) = 1, 2, 3
-  #        ^^^^^^
+  # ```rb
+  # a, (b, c) = 1, 2, 3
+  #    ^^^^^^
   #
+  # ```
   # This can be a part of `MultiWriteNode` as above, or the target of a `for` loop
   #
-  #     for a, b in [[1, 2], [3, 4]]
-  #         ^^^^
+  # ```rb
+  # for a, b in [[1, 2], [3, 4]]
+  #     ^^^^
+  # ```
   class MultiTargetNode < Node
     # @rbs @lefts: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
     # @rbs @rest: (ImplicitRestNode | SplatNode)?
@@ -23508,13 +23327,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*lefts, *rest, *rights, *lparen_loc, *rparen_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> MultiTargetNode
     #
@@ -23572,13 +23384,17 @@ module Prism
     #
     # Represents the targets expressions before a splat node.
     #
-    #     a, (b, c, *) = 1, 2, 3, 4, 5
-    #         ^^^^
+    # ```rb
+    # a, (b, c, *) = 1, 2, 3, 4, 5
+    #     ^^^^
     #
+    # ```
     # The splat node can be absent, in that case all target expressions are in the left field.
     #
-    #     a, (b, c) = 1, 2, 3, 4, 5
-    #         ^^^^
+    # ```rb
+    # a, (b, c) = 1, 2, 3, 4, 5
+    #     ^^^^
+    # ```
     #
     #: () -> Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
     def lefts
@@ -23590,18 +23406,24 @@ module Prism
     #
     # Represents a splat node in the target expression.
     #
-    #     a, (b, *c) = 1, 2, 3, 4
-    #            ^^
+    # ```rb
+    # a, (b, *c) = 1, 2, 3, 4
+    #        ^^
     #
+    # ```
     # The variable can be empty, this results in a `SplatNode` with a `nil` expression field.
     #
-    #     a, (b, *) = 1, 2, 3, 4
-    #            ^
+    # ```rb
+    # a, (b, *) = 1, 2, 3, 4
+    #        ^
     #
+    # ```
     # If the `*` is omitted, this field will contain an `ImplicitRestNode`
     #
-    #     a, (b,) = 1, 2, 3, 4
-    #          ^
+    # ```rb
+    # a, (b,) = 1, 2, 3, 4
+    #      ^
+    # ```
     #
     #: () -> (ImplicitRestNode | SplatNode)?
     def rest
@@ -23613,8 +23435,10 @@ module Prism
     #
     # Represents the targets expressions after a splat node.
     #
-    #     a, (*, b, c) = 1, 2, 3, 4, 5
-    #            ^^^^
+    # ```rb
+    # a, (*, b, c) = 1, 2, 3, 4, 5
+    #        ^^^^
+    # ```
     #
     #: () -> Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode | RequiredParameterNode]
     def rights
@@ -23627,8 +23451,10 @@ module Prism
     #
     # The Location of the opening parenthesis.
     #
-    #     a, (b, c) = 1, 2, 3
-    #        ^
+    # ```rb
+    # a, (b, c) = 1, 2, 3
+    #    ^
+    # ```
     #
     #: () -> Location?
     def lparen_loc
@@ -23657,8 +23483,10 @@ module Prism
     #
     # The Location of the closing parenthesis.
     #
-    #     a, (b, c) = 1, 2, 3
-    #             ^
+    # ```rb
+    # a, (b, c) = 1, 2, 3
+    #         ^
+    # ```
     #
     #: () -> Location?
     def rparen_loc
@@ -23720,8 +23548,10 @@ module Prism
 
   # Represents a write to a multi-target expression.
   #
-  #     a, b, c = 1, 2, 3
-  #     ^^^^^^^^^^^^^^^^^
+  # ```rb
+  # a, b, c = 1, 2, 3
+  # ^^^^^^^^^^^^^^^^^
+  # ```
   class MultiWriteNode < Node
     # @rbs @lefts: Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
     # @rbs @rest: (ImplicitRestNode | SplatNode)?
@@ -23798,13 +23628,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*lefts, *rest, *rights, *lparen_loc, *rparen_loc, operator_loc, value] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> MultiWriteNode
     #
@@ -23865,13 +23688,17 @@ module Prism
     #
     # Represents the targets expressions before a splat node.
     #
-    #     a, b, * = 1, 2, 3, 4, 5
-    #     ^^^^
+    # ```rb
+    # a, b, * = 1, 2, 3, 4, 5
+    # ^^^^
     #
+    # ```
     # The splat node can be absent, in that case all target expressions are in the left field.
     #
-    #     a, b, c = 1, 2, 3, 4, 5
-    #     ^^^^^^^
+    # ```rb
+    # a, b, c = 1, 2, 3, 4, 5
+    # ^^^^^^^
+    # ```
     #
     #: () -> Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
     def lefts
@@ -23883,18 +23710,24 @@ module Prism
     #
     # Represents a splat node in the target expression.
     #
-    #     a, b, *c = 1, 2, 3, 4
-    #           ^^
+    # ```rb
+    # a, b, *c = 1, 2, 3, 4
+    #       ^^
     #
+    # ```
     # The variable can be empty, this results in a `SplatNode` with a `nil` expression field.
     #
-    #     a, b, * = 1, 2, 3, 4
-    #           ^
+    # ```rb
+    # a, b, * = 1, 2, 3, 4
+    #       ^
     #
+    # ```
     # If the `*` is omitted, this field will contain an `ImplicitRestNode`
     #
-    #     a, b, = 1, 2, 3, 4
-    #         ^
+    # ```rb
+    # a, b, = 1, 2, 3, 4
+    #     ^
+    # ```
     #
     #: () -> (ImplicitRestNode | SplatNode)?
     def rest
@@ -23906,8 +23739,10 @@ module Prism
     #
     # Represents the targets expressions after a splat node.
     #
-    #     a, *, b, c = 1, 2, 3, 4, 5
-    #           ^^^^
+    # ```rb
+    # a, *, b, c = 1, 2, 3, 4, 5
+    #       ^^^^
+    # ```
     #
     #: () -> Array[LocalVariableTargetNode | InstanceVariableTargetNode | ClassVariableTargetNode | GlobalVariableTargetNode | ConstantTargetNode | ConstantPathTargetNode | CallTargetNode | IndexTargetNode | MultiTargetNode]
     def rights
@@ -23920,8 +23755,10 @@ module Prism
     #
     # The Location of the opening parenthesis.
     #
-    #     (a, b, c) = 1, 2, 3
-    #     ^
+    # ```rb
+    # (a, b, c) = 1, 2, 3
+    # ^
+    # ```
     #
     #: () -> Location?
     def lparen_loc
@@ -23950,8 +23787,10 @@ module Prism
     #
     # The Location of the closing parenthesis.
     #
-    #     (a, b, c) = 1, 2, 3
-    #             ^
+    # ```rb
+    # (a, b, c) = 1, 2, 3
+    #         ^
+    # ```
     #
     #: () -> Location?
     def rparen_loc
@@ -23980,8 +23819,10 @@ module Prism
     #
     # The Location of the operator.
     #
-    #     a, b, c = 1, 2, 3
-    #             ^
+    # ```rb
+    # a, b, c = 1, 2, 3
+    #         ^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -24004,8 +23845,10 @@ module Prism
     #
     # The value to write to the targets. It can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     a, b, c = 1, 2, 3
-    #               ^^^^^^^
+    # ```rb
+    # a, b, c = 1, 2, 3
+    #           ^^^^^^^
+    # ```
     #
     #: () -> Prism::node
     def value
@@ -24063,8 +23906,10 @@ module Prism
 
   # Represents the use of the `next` keyword.
   #
-  #     next 1
-  #     ^^^^^^
+  # ```rb
+  # next 1
+  # ^^^^^^
+  # ```
   class NextNode < Node
     # @rbs @arguments: ArgumentsNode?
     # @rbs @keyword_loc: Location
@@ -24123,13 +23968,6 @@ module Prism
       compact = [] #: Array[Prism::node]
       if (arguments = self.arguments); compact << arguments; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*arguments, keyword_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -24236,8 +24074,10 @@ module Prism
 
   # Represents the use of the `nil` keyword.
   #
-  #     nil
-  #     ^^^
+  # ```rb
+  # nil
+  # ^^^
+  # ```
   class NilNode < Node
 
     # Initialize a new NilNode node.
@@ -24289,13 +24129,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -24355,9 +24188,11 @@ module Prism
 
   # Represents the use of `&nil` inside method arguments.
   #
-  #     def a(&nil)
-  #           ^^^^
-  #     end
+  # ```rb
+  # def a(&nil)
+  #       ^^^^
+  # end
+  # ```
   class NoBlockParameterNode < Node
     # @rbs @operator_loc: Location
     # @rbs @keyword_loc: Location
@@ -24413,13 +24248,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [operator_loc, keyword_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -24549,9 +24377,11 @@ module Prism
 
   # Represents the use of `**nil` inside method arguments.
   #
-  #     def a(**nil)
-  #           ^^^^^
-  #     end
+  # ```rb
+  # def a(**nil)
+  #       ^^^^^
+  # end
+  # ```
   class NoKeywordsParameterNode < Node
     # @rbs @operator_loc: Location
     # @rbs @keyword_loc: Location
@@ -24607,13 +24437,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [operator_loc, keyword_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -24743,8 +24566,10 @@ module Prism
 
   # Represents an implicit set of parameters through the use of numbered parameters within a block or lambda.
   #
-  #     -> { _1 + _2 }
-  #     ^^^^^^^^^^^^^^
+  # ```rb
+  # -> { _1 + _2 }
+  # ^^^^^^^^^^^^^^
+  # ```
   class NumberedParametersNode < Node
     # @rbs @maximum: Integer
 
@@ -24798,13 +24623,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -24876,8 +24694,10 @@ module Prism
 
   # Represents reading a numbered reference to a capture in the previous match.
   #
-  #     $1
-  #     ^^
+  # ```rb
+  # $1
+  # ^^
+  # ```
   class NumberedReferenceReadNode < Node
     # @rbs @number: Integer
 
@@ -24933,13 +24753,6 @@ module Prism
       []
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> NumberedReferenceReadNode
     #
@@ -24991,11 +24804,13 @@ module Prism
     #
     # The (1-indexed, from the left) number of the capture group. Numbered references that are too large result in this value being `0`.
     #
-    #     $1          # number `1`
+    # ```rb
+    # $1          # number `1`
     #
-    #     $5432       # number `5432`
+    # $5432       # number `5432`
     #
-    #     $4294967296 # number `0`
+    # $4294967296 # number `0`
+    # ```
     #
     #: () -> Integer
     def number
@@ -25015,9 +24830,11 @@ module Prism
 
   # Represents an optional keyword parameter to a method, block, or lambda definition.
   #
-  #     def a(b: 1)
-  #           ^^^^
-  #     end
+  # ```rb
+  # def a(b: 1)
+  #       ^^^^
+  # end
+  # ```
   class OptionalKeywordParameterNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -25076,13 +24893,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -25199,9 +25009,11 @@ module Prism
 
   # Represents an optional parameter to a method, block, or lambda definition.
   #
-  #     def a(b = 1)
-  #           ^^^^^
-  #     end
+  # ```rb
+  # def a(b = 1)
+  #       ^^^^^
+  # end
+  # ```
   class OptionalParameterNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -25262,13 +25074,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [value]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc, operator_loc, value] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -25420,8 +25225,10 @@ module Prism
 
   # Represents the use of the `||` operator or the `or` keyword.
   #
-  #     left or right
-  #     ^^^^^^^^^^^^^
+  # ```rb
+  # left or right
+  # ^^^^^^^^^^^^^
+  # ```
   class OrNode < Node
     # @rbs @left: Prism::node
     # @rbs @right: Prism::node
@@ -25483,13 +25290,6 @@ module Prism
       [left, right]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [left, right, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> OrNode
     #
@@ -25544,11 +25344,13 @@ module Prism
     #
     # Represents the left side of the expression. It can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     left or right
-    #     ^^^^
+    # ```rb
+    # left or right
+    # ^^^^
     #
-    #     1 || 2
-    #     ^
+    # 1 || 2
+    # ^
+    # ```
     #
     #: () -> Prism::node
     def left
@@ -25560,11 +25362,13 @@ module Prism
     #
     # Represents the right side of the expression.
     #
-    #     left || right
-    #             ^^^^^
+    # ```rb
+    # left || right
+    #         ^^^^^
     #
-    #     1 or 2
-    #          ^
+    # 1 or 2
+    #      ^
+    # ```
     #
     #: () -> Prism::node
     def right
@@ -25577,8 +25381,10 @@ module Prism
     #
     # The Location of the `or` keyword or the `||` operator.
     #
-    #     left or right
-    #          ^^
+    # ```rb
+    # left or right
+    #      ^^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -25621,9 +25427,11 @@ module Prism
 
   # Represents the list of parameters on a method, block, or lambda definition.
   #
-  #     def a(b, c, d)
-  #           ^^^^^^^
-  #     end
+  # ```rb
+  # def a(b, c, d)
+  #       ^^^^^^^
+  # end
+  # ```
   class ParametersNode < Node
     # @rbs @requireds: Array[RequiredParameterNode | MultiTargetNode]
     # @rbs @optionals: Array[OptionalParameterNode]
@@ -25704,13 +25512,6 @@ module Prism
       if (keyword_rest = self.keyword_rest); compact << keyword_rest; end
       if (block = self.block); compact << block; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*requireds, *optionals, *rest, *posts, *keywords, *keyword_rest, *block] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -25858,8 +25659,10 @@ module Prism
 
   # Represents a parenthesized expression
   #
-  #     (10 + 34)
-  #     ^^^^^^^^^
+  # ```rb
+  # (10 + 34)
+  # ^^^^^^^^^
+  # ```
   class ParenthesesNode < Node
     # @rbs @body: Prism::node?
     # @rbs @opening_loc: Location
@@ -25920,13 +25723,6 @@ module Prism
       compact = [] #: Array[Prism::node]
       if (body = self.body); compact << body; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*body, opening_loc, closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -26077,8 +25873,10 @@ module Prism
 
   # Represents the use of the `^` operator for pinning an expression in a pattern matching expression.
   #
-  #     foo in ^(bar)
-  #            ^^^^^^
+  # ```rb
+  # foo in ^(bar)
+  #        ^^^^^^
+  # ```
   class PinnedExpressionNode < Node
     # @rbs @expression: Prism::node
     # @rbs @operator_loc: Location
@@ -26141,13 +25939,6 @@ module Prism
       [expression]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [expression, operator_loc, lparen_loc, rparen_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> PinnedExpressionNode
     #
@@ -26205,8 +25996,10 @@ module Prism
     #
     # The expression used in the pinned expression
     #
-    #     foo in ^(bar)
-    #              ^^^
+    # ```rb
+    # foo in ^(bar)
+    #          ^^^
+    # ```
     #
     #: () -> Prism::node
     def expression
@@ -26219,8 +26012,10 @@ module Prism
     #
     # The Location of the `^` operator
     #
-    #     foo in ^(bar)
-    #            ^
+    # ```rb
+    # foo in ^(bar)
+    #        ^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -26244,8 +26039,10 @@ module Prism
     #
     # The Location of the opening parenthesis.
     #
-    #     foo in ^(bar)
-    #             ^
+    # ```rb
+    # foo in ^(bar)
+    #         ^
+    # ```
     #
     #: () -> Location
     def lparen_loc
@@ -26269,8 +26066,10 @@ module Prism
     #
     # The Location of the closing parenthesis.
     #
-    #     foo in ^(bar)
-    #                 ^
+    # ```rb
+    # foo in ^(bar)
+    #             ^
+    # ```
     #
     #: () -> Location
     def rparen_loc
@@ -26334,8 +26133,10 @@ module Prism
 
   # Represents the use of the `^` operator for pinning a variable in a pattern matching expression.
   #
-  #     foo in ^bar
-  #            ^^^^
+  # ```rb
+  # foo in ^bar
+  #        ^^^^
+  # ```
   class PinnedVariableNode < Node
     # @rbs @variable: (LocalVariableReadNode | InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode | ItLocalVariableReadNode)
     # @rbs @operator_loc: Location
@@ -26394,13 +26195,6 @@ module Prism
       [variable]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [variable, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> PinnedVariableNode
     #
@@ -26454,8 +26248,10 @@ module Prism
     #
     # The variable used in the pinned expression
     #
-    #     foo in ^bar
-    #             ^^^
+    # ```rb
+    # foo in ^bar
+    #         ^^^
+    # ```
     #
     #: () -> (LocalVariableReadNode | InstanceVariableReadNode | ClassVariableReadNode | GlobalVariableReadNode | BackReferenceReadNode | NumberedReferenceReadNode | ItLocalVariableReadNode)
     def variable
@@ -26468,8 +26264,10 @@ module Prism
     #
     # The Location of the `^` operator
     #
-    #     foo in ^bar
-    #            ^
+    # ```rb
+    # foo in ^bar
+    #        ^
+    # ```
     #
     #: () -> Location
     def operator_loc
@@ -26511,8 +26309,10 @@ module Prism
 
   # Represents the use of the `END` keyword.
   #
-  #     END { foo }
-  #     ^^^^^^^^^^^
+  # ```rb
+  # END { foo }
+  # ^^^^^^^^^^^
+  # ```
   class PostExecutionNode < Node
     # @rbs @statements: StatementsNode?
     # @rbs @keyword_loc: Location
@@ -26575,13 +26375,6 @@ module Prism
       compact = [] #: Array[Prism::node]
       if (statements = self.statements); compact << statements; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*statements, keyword_loc, opening_loc, closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -26758,8 +26551,10 @@ module Prism
 
   # Represents the use of the `BEGIN` keyword.
   #
-  #     BEGIN { foo }
-  #     ^^^^^^^^^^^^^
+  # ```rb
+  # BEGIN { foo }
+  # ^^^^^^^^^^^^^
+  # ```
   class PreExecutionNode < Node
     # @rbs @statements: StatementsNode?
     # @rbs @keyword_loc: Location
@@ -26822,13 +26617,6 @@ module Prism
       compact = [] #: Array[Prism::node]
       if (statements = self.statements); compact << statements; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*statements, keyword_loc, opening_loc, closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -27062,13 +26850,6 @@ module Prism
       [statements]
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [statements] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> ProgramNode
     #
@@ -27151,11 +26932,13 @@ module Prism
 
   # Represents the use of the `..` or `...` operators.
   #
-  #     1..2
-  #     ^^^^
+  # ```rb
+  # 1..2
+  # ^^^^
   #
-  #     c if a =~ /left/ ... b =~ /right/
-  #          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  # c if a =~ /left/ ... b =~ /right/
+  #      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  # ```
   class RangeNode < Node
     # @rbs @left: Prism::node?
     # @rbs @right: Prism::node?
@@ -27220,13 +27003,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*left, *right, operator_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> RangeNode
     #
@@ -27289,11 +27065,13 @@ module Prism
     #
     # The left-hand side of the range, if present. It can be either `nil` or any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     1...
-    #     ^
+    # ```rb
+    # 1...
+    # ^
     #
-    #     hello...goodbye
-    #     ^^^^^
+    # hello...goodbye
+    # ^^^^^
+    # ```
     #
     #: () -> Prism::node?
     def left
@@ -27305,11 +27083,13 @@ module Prism
     #
     # The right-hand side of the range, if present. It can be either `nil` or any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     ..5
-    #       ^
+    # ```rb
+    # ..5
+    #   ^
     #
-    #     1...foo
-    #         ^^^
+    # 1...foo
+    #     ^^^
+    # ```
     # If neither right-hand or left-hand side was included, this will be an ErrorRecoveryNode.
     #
     #: () -> Prism::node?
@@ -27365,8 +27145,10 @@ module Prism
 
   # Represents a rational number literal.
   #
-  #     1.0r
-  #     ^^^^
+  # ```rb
+  # 1.0r
+  # ^^^^
+  # ```
   class RationalNode < Node
     # @rbs @numerator: Integer
     # @rbs @denominator: Integer
@@ -27422,13 +27204,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -27515,7 +27290,9 @@ module Prism
     #
     # The numerator of the rational number.
     #
-    #     1.5r # numerator 3
+    # ```rb
+    # 1.5r # numerator 3
+    # ```
     #
     #: () -> Integer
     def numerator
@@ -27527,7 +27304,9 @@ module Prism
     #
     # The denominator of the rational number.
     #
-    #     1.5r # denominator 2
+    # ```rb
+    # 1.5r # denominator 2
+    # ```
     #
     #: () -> Integer
     def denominator
@@ -27549,8 +27328,10 @@ module Prism
 
   # Represents the use of the `redo` keyword.
   #
-  #     redo
-  #     ^^^^
+  # ```rb
+  # redo
+  # ^^^^
+  # ```
   class RedoNode < Node
 
     # Initialize a new RedoNode node.
@@ -27602,13 +27383,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -27668,8 +27442,10 @@ module Prism
 
   # Represents a regular expression literal with no interpolation.
   #
-  #     /foo/i
-  #     ^^^^^^
+  # ```rb
+  # /foo/i
+  # ^^^^^^
+  # ```
   class RegularExpressionNode < Node
     # @rbs @opening_loc: Location
     # @rbs @content_loc: Location
@@ -27729,13 +27505,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [opening_loc, content_loc, closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -28001,9 +27770,11 @@ module Prism
 
   # Represents a required keyword parameter to a method, block, or lambda definition.
   #
-  #     def a(b: )
-  #           ^^
-  #     end
+  # ```rb
+  # def a(b: )
+  #       ^^
+  # end
+  # ```
   class RequiredKeywordParameterNode < Node
     # @rbs @name: Symbol
     # @rbs @name_loc: Location
@@ -28059,13 +27830,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [name_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -28170,9 +27934,11 @@ module Prism
 
   # Represents a required parameter to a method, block, or lambda definition.
   #
-  #     def a(b)
-  #           ^
-  #     end
+  # ```rb
+  # def a(b)
+  #       ^
+  # end
+  # ```
   class RequiredParameterNode < Node
     # @rbs @name: Symbol
 
@@ -28226,13 +27992,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -28313,8 +28072,10 @@ module Prism
 
   # Represents an expression modified with a rescue.
   #
-  #     foo rescue nil
-  #     ^^^^^^^^^^^^^^
+  # ```rb
+  # foo rescue nil
+  # ^^^^^^^^^^^^^^
+  # ```
   class RescueModifierNode < Node
     # @rbs @expression: Prism::node
     # @rbs @keyword_loc: Location
@@ -28374,13 +28135,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [expression, rescue_expression]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [expression, keyword_loc, rescue_expression] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -28499,12 +28253,14 @@ module Prism
 
   # Represents a rescue statement.
   #
-  #     begin
-  #     rescue Foo, *splat, Bar => ex
-  #       foo
-  #     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  #     end
+  # ```rb
+  # begin
+  # rescue Foo, *splat, Bar => ex
+  #   foo
+  # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  # end
   #
+  # ```
   # `Foo, *splat, Bar` are in the `exceptions` field. `ex` is in the `reference` field.
   class RescueNode < Node
     # @rbs @keyword_loc: Location
@@ -28580,13 +28336,6 @@ module Prism
       if (statements = self.statements); compact << statements; end
       if (subsequent = self.subsequent); compact << subsequent; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [keyword_loc, *exceptions, *operator_loc, *reference, *then_keyword_loc, *statements, *subsequent] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -28810,9 +28559,11 @@ module Prism
 
   # Represents a rest parameter to a method, block, or lambda definition.
   #
-  #     def a(*b)
-  #           ^^
-  #     end
+  # ```rb
+  # def a(*b)
+  #       ^^
+  # end
+  # ```
   class RestParameterNode < Node
     # @rbs @name: Symbol?
     # @rbs @name_loc: Location?
@@ -28870,13 +28621,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*name_loc, operator_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -29021,8 +28765,10 @@ module Prism
 
   # Represents the use of the `retry` keyword.
   #
-  #     retry
-  #     ^^^^^
+  # ```rb
+  # retry
+  # ^^^^^
+  # ```
   class RetryNode < Node
 
     # Initialize a new RetryNode node.
@@ -29074,13 +28820,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -29140,8 +28879,10 @@ module Prism
 
   # Represents the use of the `return` keyword.
   #
-  #     return 1
-  #     ^^^^^^^^
+  # ```rb
+  # return 1
+  # ^^^^^^^^
+  # ```
   class ReturnNode < Node
     # @rbs @keyword_loc: Location
     # @rbs @arguments: ArgumentsNode?
@@ -29200,13 +28941,6 @@ module Prism
       compact = [] #: Array[Prism::node]
       if (arguments = self.arguments); compact << arguments; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [keyword_loc, *arguments] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -29313,8 +29047,10 @@ module Prism
 
   # Represents the `self` keyword.
   #
-  #     self
-  #     ^^^^
+  # ```rb
+  # self
+  # ^^^^
+  # ```
   class SelfNode < Node
 
     # Initialize a new SelfNode node.
@@ -29366,13 +29102,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -29432,9 +29161,11 @@ module Prism
 
   # This node wraps a constant write to indicate that when the value is written, it should have its shareability state modified.
   #
-  #     # shareable_constant_value: literal
-  #     C = { a: 1 }
-  #     ^^^^^^^^^^^^
+  # ```rb
+  # # shareable_constant_value: literal
+  # C = { a: 1 }
+  # ^^^^^^^^^^^^
+  # ```
   class ShareableConstantNode < Node
     # @rbs @write: (ConstantWriteNode | ConstantAndWriteNode | ConstantOrWriteNode | ConstantOperatorWriteNode | ConstantPathWriteNode | ConstantPathAndWriteNode | ConstantPathOrWriteNode | ConstantPathOperatorWriteNode)
 
@@ -29489,13 +29220,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [write]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [write] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -29592,8 +29316,10 @@ module Prism
 
   # Represents a singleton class declaration involving the `class` keyword.
   #
-  #     class << self end
-  #     ^^^^^^^^^^^^^^^^^
+  # ```rb
+  # class << self end
+  # ^^^^^^^^^^^^^^^^^
+  # ```
   class SingletonClassNode < Node
     # @rbs @locals: Array[Symbol]
     # @rbs @class_keyword_loc: Location
@@ -29662,13 +29388,6 @@ module Prism
       compact << expression
       if (body = self.body); compact << body; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [class_keyword_loc, operator_loc, expression, *body, end_keyword_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -29870,8 +29589,10 @@ module Prism
 
   # Represents the use of the `__ENCODING__` keyword.
   #
-  #     __ENCODING__
-  #     ^^^^^^^^^^^^
+  # ```rb
+  # __ENCODING__
+  # ^^^^^^^^^^^^
+  # ```
   class SourceEncodingNode < Node
 
     # Initialize a new SourceEncodingNode node.
@@ -29923,13 +29644,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -29989,8 +29703,10 @@ module Prism
 
   # Represents the use of the `__FILE__` keyword.
   #
-  #     __FILE__
-  #     ^^^^^^^^
+  # ```rb
+  # __FILE__
+  # ^^^^^^^^
+  # ```
   class SourceFileNode < Node
     # @rbs @filepath: String
 
@@ -30044,13 +29760,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -30155,8 +29864,10 @@ module Prism
 
   # Represents the use of the `__LINE__` keyword.
   #
-  #     __LINE__
-  #     ^^^^^^^^
+  # ```rb
+  # __LINE__
+  # ^^^^^^^^
+  # ```
   class SourceLineNode < Node
 
     # Initialize a new SourceLineNode node.
@@ -30208,13 +29919,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -30274,8 +29978,10 @@ module Prism
 
   # Represents the use of the splat operator.
   #
-  #     [*a]
-  #      ^^
+  # ```rb
+  # [*a]
+  #  ^^
+  # ```
   class SplatNode < Node
     # @rbs @operator_loc: Location
     # @rbs @expression: Prism::node?
@@ -30334,13 +30040,6 @@ module Prism
       compact = [] #: Array[Prism::node]
       if (expression = self.expression); compact << expression; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [operator_loc, *expression] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -30447,8 +30146,10 @@ module Prism
 
   # Represents a set of statements contained within some scope.
   #
-  #     foo; bar; baz
-  #     ^^^^^^^^^^^^^
+  # ```rb
+  # foo; bar; baz
+  # ^^^^^^^^^^^^^
+  # ```
   class StatementsNode < Node
     # @rbs @body: Array[Prism::node]
 
@@ -30503,13 +30204,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [*body]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*body] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -30582,14 +30276,16 @@ module Prism
 
   # Represents a string literal, a string contained within a `%w` list, or plain string content within an interpolated string.
   #
-  #     "foo"
-  #     ^^^^^
+  # ```rb
+  # "foo"
+  # ^^^^^
   #
-  #     %w[foo]
-  #        ^^^
+  # %w[foo]
+  #    ^^^
   #
-  #     "foo #{bar} baz"
-  #      ^^^^      ^^^^
+  # "foo #{bar} baz"
+  #  ^^^^      ^^^^
+  # ```
   class StringNode < Node
     # @rbs @opening_loc: Location?
     # @rbs @content_loc: Location
@@ -30649,13 +30345,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*opening_loc, content_loc, *closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -30875,12 +30564,14 @@ module Prism
 
   # Represents the use of the `super` keyword with parentheses or arguments.
   #
-  #     super()
-  #     ^^^^^^^
+  # ```rb
+  # super()
+  # ^^^^^^^
   #
-  #     super foo, bar
-  #     ^^^^^^^^^^^^^^
+  # super foo, bar
+  # ^^^^^^^^^^^^^^
   #
+  # ```
   # If no arguments are provided (except for a block), it would be a `ForwardingSuperNode` instead.
   class SuperNode < Node
     # @rbs @keyword_loc: Location
@@ -30948,13 +30639,6 @@ module Prism
       if (arguments = self.arguments); compact << arguments; end
       if (block = self.block); compact << block; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [keyword_loc, *lparen_loc, *arguments, *rparen_loc, *block] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -31153,27 +30837,29 @@ module Prism
 
   # Represents a symbol literal or a symbol contained within a `%i` list.
   #
-  #     :foo
-  #     ^^^^
+  # ```rb
+  # :foo
+  # ^^^^
   #
-  #     %i[foo]
-  #        ^^^
+  # %i[foo]
+  #    ^^^
+  # ```
   class SymbolNode < Node
     # @rbs @opening_loc: Location?
-    # @rbs @value_loc: Location
+    # @rbs @content_loc: Location
     # @rbs @closing_loc: Location?
     # @rbs @unescaped: String
 
     # Initialize a new SymbolNode node.
     #
-    #: (Source source, Integer node_id, Location location, Integer flags, Location? opening_loc, Location value_loc, Location? closing_loc, String unescaped) -> void
-    def initialize(source, node_id, location, flags, opening_loc, value_loc, closing_loc, unescaped)
+    #: (Source source, Integer node_id, Location location, Integer flags, Location? opening_loc, Location content_loc, Location? closing_loc, String unescaped) -> void
+    def initialize(source, node_id, location, flags, opening_loc, content_loc, closing_loc, unescaped)
       @source = source
       @node_id = node_id
       @location = location
       @flags = flags
       @opening_loc = opening_loc
-      @value_loc = value_loc
+      @content_loc = content_loc
       @closing_loc = closing_loc
       @unescaped = unescaped
     end
@@ -31219,39 +30905,32 @@ module Prism
       []
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*opening_loc, value_loc, *closing_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> SymbolNode
     #
     # Creates a copy of self with the given fields, using self as the template.
     #
-    #: (?node_id: Integer, ?location: Location, ?flags: Integer, ?opening_loc: Location?, ?value_loc: Location, ?closing_loc: Location?, ?unescaped: String) -> SymbolNode
-    def copy(node_id: self.node_id, location: self.location, flags: self.flags, opening_loc: self.opening_loc, value_loc: self.value_loc, closing_loc: self.closing_loc, unescaped: self.unescaped)
-      SymbolNode.new(source, node_id, location, flags, opening_loc, value_loc, closing_loc, unescaped)
+    #: (?node_id: Integer, ?location: Location, ?flags: Integer, ?opening_loc: Location?, ?content_loc: Location, ?closing_loc: Location?, ?unescaped: String) -> SymbolNode
+    def copy(node_id: self.node_id, location: self.location, flags: self.flags, opening_loc: self.opening_loc, content_loc: self.content_loc, closing_loc: self.closing_loc, unescaped: self.unescaped)
+      SymbolNode.new(source, node_id, location, flags, opening_loc, content_loc, closing_loc, unescaped)
     end
 
     alias deconstruct child_nodes
 
     #: (Array[Symbol]? keys) -> Hash[Symbol, untyped]
     def deconstruct_keys(keys) # :nodoc:
-      (keys || %i[node_id location opening_loc value_loc closing_loc unescaped opening value closing]).each_with_object(
+      (keys || %i[node_id location opening_loc content_loc closing_loc unescaped opening content closing]).each_with_object(
         {} #: Hash[Symbol, untyped]
       ) do |key, deconstructed|
         case key
         when :node_id                 then deconstructed[:node_id] = self.node_id
         when :location                then deconstructed[:location] = self.location
         when :opening_loc             then deconstructed[:opening_loc] = self.opening_loc
-        when :value_loc               then deconstructed[:value_loc] = self.value_loc
+        when :content_loc             then deconstructed[:content_loc] = self.content_loc
         when :closing_loc             then deconstructed[:closing_loc] = self.closing_loc
         when :unescaped               then deconstructed[:unescaped] = self.unescaped
         when :opening                 then deconstructed[:opening] = self.opening
-        when :value                   then deconstructed[:value] = self.value
+        when :content                 then deconstructed[:content] = self.content
         when :closing                 then deconstructed[:closing] = self.closing
         end
       end
@@ -31331,24 +31010,24 @@ module Prism
     end
     # :category: Locations
     # :call-seq:
-    #   value_loc -> Location
+    #   content_loc -> Location
     #
-    # Returns the Location represented by `value_loc`.
+    # Returns the Location represented by `content_loc`.
     #
     #: () -> Location
-    def value_loc
-      location = @value_loc
+    def content_loc
+      location = @content_loc
       return location if location.is_a?(Location)
-      @value_loc = Location.new(source, location >> 32, location & 0xFFFFFFFF)
+      @content_loc = Location.new(source, location >> 32, location & 0xFFFFFFFF)
     end
 
     # :category: Repository
-    # Save the value_loc location using the given saved source so that
+    # Save the content_loc location using the given saved source so that
     # it can be retrieved later.
     #
     #: (_Repository repository) -> Relocation::Entry
-    def save_value_loc(repository)
-      repository.enter(node_id, :value_loc)
+    def save_content_loc(repository)
+      repository.enter(node_id, :content_loc)
     end
 
     # :category: Locations
@@ -31401,13 +31080,13 @@ module Prism
     end
 
     # :call-seq:
-    #   value -> String
+    #   content -> String
     #
-    # Slice the location of value_loc from the source.
+    # Slice the location of content_loc from the source.
     #
     #: () -> String
-    def value
-      value_loc.slice
+    def content
+      content_loc.slice
     end
 
     # :call-seq:
@@ -31427,7 +31106,7 @@ module Prism
       other.is_a?(SymbolNode) &&
         (flags === other.flags) &&
         (opening_loc.nil? == other.opening_loc.nil?) &&
-        (value_loc.nil? == other.value_loc.nil?) &&
+        (content_loc.nil? == other.content_loc.nil?) &&
         (closing_loc.nil? == other.closing_loc.nil?) &&
         (unescaped === other.unescaped)
     end
@@ -31435,8 +31114,10 @@ module Prism
 
   # Represents the use of the literal `true` keyword.
   #
-  #     true
-  #     ^^^^
+  # ```rb
+  # true
+  # ^^^^
+  # ```
   class TrueNode < Node
 
     # Initialize a new TrueNode node.
@@ -31488,13 +31169,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -31554,8 +31228,10 @@ module Prism
 
   # Represents the use of the `undef` keyword.
   #
-  #     undef :foo, :bar, :baz
-  #     ^^^^^^^^^^^^^^^^^^^^^^
+  # ```rb
+  # undef :foo, :bar, :baz
+  # ^^^^^^^^^^^^^^^^^^^^^^
+  # ```
   class UndefNode < Node
     # @rbs @names: Array[SymbolNode | InterpolatedSymbolNode]
     # @rbs @keyword_loc: Location
@@ -31612,13 +31288,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       [*names]
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [*names, keyword_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -31726,11 +31395,13 @@ module Prism
 
   # Represents the use of the `unless` keyword, either in the block form or the modifier form.
   #
-  #     bar unless foo
-  #     ^^^^^^^^^^^^^^
+  # ```rb
+  # bar unless foo
+  # ^^^^^^^^^^^^^^
   #
-  #     unless foo then bar end
-  #     ^^^^^^^^^^^^^^^^^^^^^^^
+  # unless foo then bar end
+  # ^^^^^^^^^^^^^^^^^^^^^^^
+  # ```
   class UnlessNode < Node
     # @rbs @unless_keyword_loc: Location
     # @rbs @predicate: Prism::node
@@ -31803,13 +31474,6 @@ module Prism
       compact
     end
 
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [unless_keyword_loc, predicate, *then_keyword_loc, *statements, *else_clause, *end_keyword_loc] #: Array[Prism::node | Location]
-    end
-
     # :call-seq:
     #   copy(**fields) -> UnlessNode
     #
@@ -31870,11 +31534,13 @@ module Prism
     #
     # The Location of the `unless` keyword.
     #
-    #     unless cond then bar end
-    #     ^^^^^^
+    # ```rb
+    # unless cond then bar end
+    # ^^^^^^
     #
-    #     bar unless cond
-    #         ^^^^^^
+    # bar unless cond
+    #     ^^^^^^
+    # ```
     #
     #: () -> Location
     def unless_keyword_loc
@@ -31897,11 +31563,13 @@ module Prism
     #
     # The condition to be evaluated for the unless expression. It can be any [non-void expression](https://github.com/ruby/prism/blob/main/docs/parsing_rules.md#non-void-expression).
     #
-    #     unless cond then bar end
-    #            ^^^^
+    # ```rb
+    # unless cond then bar end
+    #        ^^^^
     #
-    #     bar unless cond
-    #                ^^^^
+    # bar unless cond
+    #            ^^^^
+    # ```
     #
     #: () -> Prism::node
     def predicate
@@ -31914,8 +31582,10 @@ module Prism
     #
     # The Location of the `then` keyword, if present.
     #
-    #     unless cond then bar end
-    #                 ^^^^
+    # ```rb
+    # unless cond then bar end
+    #             ^^^^
+    # ```
     #
     #: () -> Location?
     def then_keyword_loc
@@ -31944,8 +31614,10 @@ module Prism
     # The body of statements that will executed if the unless condition is
     # falsey. Will be `nil` if no body is provided.
     #
-    #     unless cond then bar end
-    #                      ^^^
+    # ```rb
+    # unless cond then bar end
+    #                  ^^^
+    # ```
     #
     #: () -> StatementsNode?
     def statements
@@ -31957,8 +31629,10 @@ module Prism
     #
     # The else clause of the unless expression, if present.
     #
-    #     unless cond then bar else baz end
-    #                          ^^^^^^^^^^^^
+    # ```rb
+    # unless cond then bar else baz end
+    #                      ^^^^^^^^^^^^
+    # ```
     #
     #: () -> ElseNode?
     def else_clause
@@ -31971,8 +31645,10 @@ module Prism
     #
     # The Location of the `end` keyword, if present.
     #
-    #     unless cond then bar end
-    #                          ^^^
+    # ```rb
+    # unless cond then bar end
+    #                      ^^^
+    # ```
     #
     #: () -> Location?
     def end_keyword_loc
@@ -32043,11 +31719,13 @@ module Prism
 
   # Represents the use of the `until` keyword, either in the block form or the modifier form.
   #
-  #     bar until foo
-  #     ^^^^^^^^^^^^^
+  # ```rb
+  # bar until foo
+  # ^^^^^^^^^^^^^
   #
-  #     until foo do bar end
-  #     ^^^^^^^^^^^^^^^^^^^^
+  # until foo do bar end
+  # ^^^^^^^^^^^^^^^^^^^^
+  # ```
   class UntilNode < Node
     # @rbs @until_keyword_loc: Location
     # @rbs @do_keyword_loc: Location?
@@ -32114,13 +31792,6 @@ module Prism
       compact << predicate
       if (statements = self.statements); compact << statements; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [until_keyword_loc, *do_keyword_loc, *end_keyword_loc, predicate, *statements] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -32328,10 +31999,12 @@ module Prism
 
   # Represents the use of the `when` keyword within a case statement.
   #
-  #     case true
-  #     when true
-  #     ^^^^^^^^^
-  #     end
+  # ```rb
+  # case true
+  # when true
+  # ^^^^^^^^^
+  # end
+  # ```
   class WhenNode < Node
     # @rbs @when_keyword_loc: Location
     # @rbs @conditions: Array[Prism::node]
@@ -32396,13 +32069,6 @@ module Prism
       compact.concat(conditions)
       if (statements = self.statements); compact << statements; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [when_keyword_loc, *conditions, *then_keyword_loc, *statements] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -32562,11 +32228,13 @@ module Prism
 
   # Represents the use of the `while` keyword, either in the block form or the modifier form.
   #
-  #     bar while foo
-  #     ^^^^^^^^^^^^^
+  # ```rb
+  # bar while foo
+  # ^^^^^^^^^^^^^
   #
-  #     while foo do bar end
-  #     ^^^^^^^^^^^^^^^^^^^^
+  # while foo do bar end
+  # ^^^^^^^^^^^^^^^^^^^^
+  # ```
   class WhileNode < Node
     # @rbs @while_keyword_loc: Location
     # @rbs @do_keyword_loc: Location?
@@ -32633,13 +32301,6 @@ module Prism
       compact << predicate
       if (statements = self.statements); compact << statements; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [while_keyword_loc, *do_keyword_loc, *end_keyword_loc, predicate, *statements] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -32847,8 +32508,10 @@ module Prism
 
   # Represents an xstring literal with no interpolation.
   #
-  #     `foo`
-  #     ^^^^^
+  # ```rb
+  # `foo`
+  # ^^^^^
+  # ```
   class XStringNode < Node
     # @rbs @opening_loc: Location
     # @rbs @content_loc: Location
@@ -32908,13 +32571,6 @@ module Prism
     #: () -> Array[node]
     def compact_child_nodes
       []
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [opening_loc, content_loc, closing_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:
@@ -33108,8 +32764,10 @@ module Prism
 
   # Represents the use of the `yield` keyword.
   #
-  #     yield 1
-  #     ^^^^^^^
+  # ```rb
+  # yield 1
+  # ^^^^^^^
+  # ```
   class YieldNode < Node
     # @rbs @keyword_loc: Location
     # @rbs @lparen_loc: Location?
@@ -33172,13 +32830,6 @@ module Prism
       compact = [] #: Array[Prism::node]
       if (arguments = self.arguments); compact << arguments; end
       compact
-    end
-
-    # See Node.comment_targets.
-    #
-    #: () -> Array[node | Location]
-    def comment_targets
-      [keyword_loc, *lparen_loc, *arguments, *rparen_loc] #: Array[Prism::node | Location]
     end
 
     # :call-seq:

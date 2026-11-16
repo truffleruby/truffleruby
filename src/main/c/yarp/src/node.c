@@ -4358,13 +4358,13 @@ pm_super_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm
  * Allocate and initialize a new SymbolNode node.
  */
 pm_symbol_node_t *
-pm_symbol_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t value_loc, pm_location_t closing_loc, pm_string_t unescaped) {
+pm_symbol_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t content_loc, pm_location_t closing_loc, pm_string_t unescaped) {
     pm_symbol_node_t *node = (pm_symbol_node_t *) pm_arena_alloc(arena, sizeof(pm_symbol_node_t), PRISM_ALIGNOF(pm_symbol_node_t));
 
     *node = (pm_symbol_node_t) {
         .base = { .type = PM_SYMBOL_NODE, .flags = flags, .node_id = node_id, .location = location },
         .opening_loc = opening_loc,
-        .value_loc = value_loc,
+        .content_loc = content_loc,
         .closing_loc = closing_loc,
         .unescaped = unescaped
     };

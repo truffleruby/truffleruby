@@ -28,13 +28,13 @@
         │   │   ├── @ SymbolNode (location: (5,0)-(5,3))
         │   │   │   ├── flags: static_literal, forced_us_ascii_encoding
         │   │   │   ├── opening_loc: ∅
-        │   │   │   ├── value_loc: (5,0)-(5,3) = "baz"
+        │   │   │   ├── content_loc: (5,0)-(5,3) = "baz"
         │   │   │   ├── closing_loc: ∅
         │   │   │   └── unescaped: "baz"
         │   │   └── @ SymbolNode (location: (5,4)-(5,7))
         │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       ├── opening_loc: ∅
-        │   │       ├── value_loc: (5,4)-(5,7) = "qux"
+        │   │       ├── content_loc: (5,4)-(5,7) = "qux"
         │   │       ├── closing_loc: ∅
         │   │       └── unescaped: "qux"
         │   ├── opening_loc: (4,0)-(5,0) = "%i\n"
@@ -62,13 +62,13 @@
             │   ├── @ SymbolNode (location: (11,0)-(11,1))
             │   │   ├── flags: static_literal, forced_us_ascii_encoding
             │   │   ├── opening_loc: ∅
-            │   │   ├── value_loc: (11,0)-(11,1) = "c"
+            │   │   ├── content_loc: (11,0)-(11,1) = "c"
             │   │   ├── closing_loc: ∅
             │   │   └── unescaped: "c"
             │   └── @ SymbolNode (location: (11,2)-(11,3))
             │       ├── flags: static_literal, forced_us_ascii_encoding
             │       ├── opening_loc: ∅
-            │       ├── value_loc: (11,2)-(11,3) = "d"
+            │       ├── content_loc: (11,2)-(11,3) = "d"
             │       ├── closing_loc: ∅
             │       └── unescaped: "d"
             ├── opening_loc: (10,0)-(11,0) = "%I\n"

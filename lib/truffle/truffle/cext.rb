@@ -1772,13 +1772,11 @@ module Truffle::CExt
     })
   end
 
-  def mark_object_on_call_exit(object)
-    Primitive.cext_mark_object_on_call_exit(object)
-  end
-
+  # For RDATA() and RTYPEDDATA(), object is the DataObjectFinalizerReference of a data object
+  # (alive, or dead but not yet freed), or a non-data object. See the T carrier in tool/cext-upcalls.rb.
   def RDATA(object)
     # A specialized version of rb_check_type(object, T_DATA)
-    data_struct = Primitive.object_hidden_var_get(object, DATA_STRUCT)
+    data_struct = Primitive.cext_data_struct(object)
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end
@@ -1787,7 +1785,7 @@ module Truffle::CExt
 
   def RTYPEDDATA(object)
     # A specialized version of rb_check_type(object, T_DATA)
-    data_struct = Primitive.object_hidden_var_get(object, DATA_STRUCT)
+    data_struct = Primitive.cext_data_struct(object)
     unless data_struct
       raise TypeError, "wrong argument type #{Primitive.class(object)} (expected T_DATA)"
     end
@@ -1829,7 +1827,7 @@ module Truffle::CExt
     Primitive.object_hidden_var_set object, DATA_STRUCT, rdata
     Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(RDATA_RUN_MARKER, rdata)
     # Could use a simpler finalizer if free == 0
-    Primitive.objectspace_define_data_finalizer object, RDATA_RUN_FINALIZER, rdata, use_cext_lock
+    Primitive.objectspace_define_data_finalizer object, RDATA_RUN_FINALIZER, rdata, use_cext_lock, mark != 0
 
     Primitive.cext_mark_object_on_call_exit(object) unless mark == 0
 
@@ -1845,7 +1843,7 @@ module Truffle::CExt
     Primitive.object_hidden_var_set object, DATA_STRUCT, rtypeddata
     Primitive.object_hidden_var_set object, DATA_MARKER, data_marker(RTYPEDDATA_RUN_MARKER, rtypeddata)
     # Could use a simpler finalizer if free == 0
-    Primitive.objectspace_define_data_finalizer object, RTYPEDDATA_RUN_FINALIZER, rtypeddata, use_cext_lock
+    Primitive.objectspace_define_data_finalizer object, RTYPEDDATA_RUN_FINALIZER, rtypeddata, use_cext_lock, mark != 0
 
     unless size == 0
       Primitive.object_hidden_var_set object, DATA_MEMSIZER, data_sizer(RTYPEDDATA_RUN_MEMSIZER, rtypeddata)

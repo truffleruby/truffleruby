@@ -1,0 +1,17 @@
+fails:Coverage.result with methods: true returns only the methods of each file
+fails:Coverage.result with methods: true returns the methods after the lines when both are enabled
+fails:Coverage.result with methods: true returns the methods after the oneshot lines when both are enabled
+fails:Coverage.result with methods: true returns the counts so far when passed clear: true
+fails:Coverage.result with methods: true sets the counts to 0 when passed clear: true
+fails:Coverage.result with methods: true reports each method by its owner, name and position with how many times it was called
+fails:Coverage.result with methods: true reports a method of several lines from its def to its end
+fails:Coverage.result with methods: true reports a singleton method under the singleton class
+fails:Coverage.result with methods: true reports a module function under both the module and its singleton class
+fails:Coverage.result with methods: true reports a method of a class with a prepended module under the class
+fails:Coverage.result with methods: true counts a call through an alias as a call of the original method
+fails:Coverage.result with methods: true counts a call of a method made private in a subclass as a call of the inherited method
+fails:Coverage.result with methods: true reports a method defined from an UnboundMethod under its original name
+fails:Coverage.result with methods: true counts the calls of a method defined by an eval that is not measured
+fails:Coverage.result with methods: true counts a call that raises in the body of the method
+fails:Coverage.result with methods: true does not count a call that raises an ArgumentError for its arguments
+fails:Coverage.result with methods: true does not count a call that raises while evaluating a default argument

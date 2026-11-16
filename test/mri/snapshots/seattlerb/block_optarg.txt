@@ -36,7 +36,7 @@
                 │   │   │           @ SymbolNode (location: (1,9)-(1,11))
                 │   │   │           ├── flags: static_literal, forced_us_ascii_encoding
                 │   │   │           ├── opening_loc: (1,9)-(1,10) = ":"
-                │   │   │           ├── value_loc: (1,10)-(1,11) = "c"
+                │   │   │           ├── content_loc: (1,10)-(1,11) = "c"
                 │   │   │           ├── closing_loc: ∅
                 │   │   │           └── unescaped: "c"
                 │   │   ├── rest: ∅

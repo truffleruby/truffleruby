@@ -12,15 +12,14 @@ package org.truffleruby.core.tracepoint;
 
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.proc.RubyProc;
-import org.truffleruby.language.RubyDynamicObject;
 
 import com.oracle.truffle.api.object.Shape;
 import org.truffleruby.language.objects.ObjectGraph;
-import org.truffleruby.language.objects.ObjectGraphNode;
 
 import java.util.Set;
 
-public final class RubyTracePoint extends RubyDynamicObject implements ObjectGraphNode {
+/** A TracePoint created by TracePoint.new. The object yielded to its block is a {@link RubyTracePointEvent}. */
+public final class RubyTracePoint extends TracePointObject {
 
     TracePointEvent[] events;
     RubyProc proc;

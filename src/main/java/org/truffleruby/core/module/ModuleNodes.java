@@ -1134,7 +1134,7 @@ public abstract class ModuleNodes {
         @Specialization(guards = "strings.isRubyString(this, name)", limit = "1")
         @TruffleBoundary
         static Object constSourceLocation(Node node, RubyModule module, Object name, boolean inherit,
-                @Cached(inline = false) @Shared TruffleString.FromJavaStringNode fromJavaStringNode,
+                @Cached @Shared TruffleString.FromJavaStringNode fromJavaStringNode,
                 @Cached RubyStringLibrary strings) {
             final ConstantLookupResult lookupResult = ModuleOperations
                     .lookupScopedConstant(getContext(node), module, StringOperations.getJavaString(name), inherit, node,
@@ -1146,7 +1146,7 @@ public abstract class ModuleNodes {
         @Specialization
         @TruffleBoundary
         static Object constSourceLocation(Node node, RubyModule module, RubySymbol name, boolean inherit,
-                @Cached(inline = false) @Shared TruffleString.FromJavaStringNode fromJavaStringNode) {
+                @Cached @Shared TruffleString.FromJavaStringNode fromJavaStringNode) {
             final ConstantLookupResult lookupResult = ModuleOperations
                     .lookupConstantWithInherit(getContext(node), module, name.getString(), inherit, node, true);
 
@@ -1296,14 +1296,14 @@ public abstract class ModuleNodes {
             final InternalMethod internalMethod = method.method;
 
             if (!ModuleOperations.canBindMethodTo(internalMethod, module)) {
-                final RubyModule declaringModule = internalMethod.getDeclaringModule();
-                if (RubyGuards.isSingletonClass(declaringModule)) {
+                final RubyModule owner = internalMethod.getOwner();
+                if (RubyGuards.isSingletonClass(owner)) {
                     throw new RaiseException(getContext(), coreExceptions().typeError(
                             "can't bind singleton method to a different class",
                             this));
                 } else {
                     throw new RaiseException(getContext(), coreExceptions().typeError(
-                            "class must be a subclass of " + declaringModule.fields.getName(),
+                            "class must be a subclass of " + owner.fields.getName(),
                             this));
                 }
             }
@@ -1316,8 +1316,8 @@ public abstract class ModuleNodes {
                 MaterializedFrame callerFrame) {
             final InternalMethod internalMethod = method.method;
             if (!ModuleOperations.canBindMethodTo(internalMethod, module)) {
-                final RubyModule declaringModule = internalMethod.getDeclaringModule();
-                if (RubyGuards.isSingletonClass(declaringModule)) {
+                final RubyModule owner = internalMethod.getOwner();
+                if (RubyGuards.isSingletonClass(owner)) {
                     throw new RaiseException(getContext(), coreExceptions().typeError(
                             "can't bind singleton method to a different class",
                             this));
@@ -1326,7 +1326,7 @@ public abstract class ModuleNodes {
                             getContext(),
                             coreExceptions().typeError(
                                     "bind argument must be a subclass of " +
-                                            declaringModule.fields.getName(),
+                                            owner.fields.getName(),
                                     this));
                 }
             }

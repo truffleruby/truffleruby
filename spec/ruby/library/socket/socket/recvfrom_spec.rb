@@ -1,5 +1,6 @@
 require_relative '../spec_helper'
 require_relative '../fixtures/classes'
+require_relative '../shared/buffered_receive'
 
 describe 'Socket#recvfrom' do
   SocketSpecs.each_ip_protocol do |family, ip_address|
@@ -153,5 +154,11 @@ describe 'Socket#recvfrom' do
         end
       end
     end
+  end
+end
+
+platform_is_not :windows do
+  describe "Socket#recvfrom with buffered IO" do
+    it_behaves_like :socket_buffered_receive, :recvfrom, -> { Socket.pair(:UNIX, :STREAM) }
   end
 end

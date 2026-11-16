@@ -1,0 +1,2 @@
+fails:Array#- does not call #hash for small arrays
+fails:Array#- uses #hash when both arrays exceed the small array limit

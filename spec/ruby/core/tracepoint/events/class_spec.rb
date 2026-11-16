@@ -5,7 +5,7 @@ describe 'TracePoint :class event' do
   before do
     ScratchPad.record []
   end
-  
+
   it 'triggers when a class is defined' do
     TracePoint.new(:class) do |tp|
       next unless TracePointSpec.target_thread?

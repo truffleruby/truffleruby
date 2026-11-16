@@ -1,5 +1,6 @@
 require_relative '../spec_helper'
 require_relative '../fixtures/classes'
+require_relative '../shared/buffered_receive'
 
 describe 'BasicSocket#recvmsg_nonblock' do
   SocketSpecs.each_ip_protocol do |family, ip_address|
@@ -262,6 +263,18 @@ describe 'BasicSocket#recvmsg_nonblock' do
           t.value.should == nil
         end
       end
+    end
+  end
+end
+
+platform_is_not :windows do
+  describe "BasicSocket#recvmsg_nonblock with buffered IO" do
+    describe "for a Socket" do
+      it_behaves_like :socket_buffered_receive, :recvmsg_nonblock, -> { Socket.pair(:UNIX, :STREAM) }
+    end
+
+    describe "for a UNIXSocket" do
+      it_behaves_like :socket_buffered_receive, :recvmsg_nonblock, -> { UNIXSocket.pair }
     end
   end
 end

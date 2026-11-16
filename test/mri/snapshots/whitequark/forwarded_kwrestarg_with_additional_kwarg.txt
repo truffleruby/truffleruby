@@ -53,7 +53,7 @@
             │           │                   │   @ SymbolNode (location: (1,21)-(1,30))
             │           │                   │   ├── flags: static_literal, forced_us_ascii_encoding
             │           │                   │   ├── opening_loc: ∅
-            │           │                   │   ├── value_loc: (1,21)-(1,29) = "from_foo"
+            │           │                   │   ├── content_loc: (1,21)-(1,29) = "from_foo"
             │           │                   │   ├── closing_loc: (1,29)-(1,30) = ":"
             │           │                   │   └── unescaped: "from_foo"
             │           │                   ├── value:

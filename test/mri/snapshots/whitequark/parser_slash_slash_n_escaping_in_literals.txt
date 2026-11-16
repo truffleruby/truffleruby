@@ -17,7 +17,7 @@
         │   │   └── @ SymbolNode (location: (4,3)-(5,1))
         │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       ├── opening_loc: ∅
-        │   │       ├── value_loc: (4,3)-(5,1) = "a\\\nb"
+        │   │       ├── content_loc: (4,3)-(5,1) = "a\\\nb"
         │   │       ├── closing_loc: ∅
         │   │       └── unescaped: "a\nb"
         │   ├── opening_loc: (4,0)-(4,3) = "%I{"
@@ -45,7 +45,7 @@
         │   │   └── @ SymbolNode (location: (13,3)-(14,1))
         │   │       ├── flags: static_literal, forced_us_ascii_encoding
         │   │       ├── opening_loc: ∅
-        │   │       ├── value_loc: (13,3)-(14,1) = "a\\\nb"
+        │   │       ├── content_loc: (13,3)-(14,1) = "a\\\nb"
         │   │       ├── closing_loc: ∅
         │   │       └── unescaped: "a\nb"
         │   ├── opening_loc: (13,0)-(13,3) = "%i{"
@@ -65,7 +65,7 @@
         ├── @ SymbolNode (location: (22,0)-(23,2))
         │   ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   ├── opening_loc: (22,0)-(22,3) = "%s{"
-        │   ├── value_loc: (22,3)-(23,1) = "a\\\nb"
+        │   ├── content_loc: (22,3)-(23,1) = "a\\\nb"
         │   ├── closing_loc: (23,1)-(23,2) = "}"
         │   └── unescaped: "a\\\nb"
         ├── @ ArrayNode (location: (25,0)-(26,2))
@@ -106,13 +106,13 @@
         ├── @ SymbolNode (location: (40,0)-(41,2))
         │   ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   ├── opening_loc: (40,0)-(40,2) = ":\""
-        │   ├── value_loc: (40,2)-(41,1) = "a\\\nb"
+        │   ├── content_loc: (40,2)-(41,1) = "a\\\nb"
         │   ├── closing_loc: (41,1)-(41,2) = "\""
         │   └── unescaped: "ab"
         ├── @ SymbolNode (location: (43,0)-(44,2))
         │   ├── flags: newline, static_literal, forced_us_ascii_encoding
         │   ├── opening_loc: (43,0)-(43,2) = ":'"
-        │   ├── value_loc: (43,2)-(44,1) = "a\\\nb"
+        │   ├── content_loc: (43,2)-(44,1) = "a\\\nb"
         │   ├── closing_loc: (44,1)-(44,2) = "'"
         │   └── unescaped: "a\\\nb"
         ├── @ StringNode (location: (46,0)-(46,9))

@@ -5,7 +5,7 @@ module Bundler
   class EndpointSpecification < Gem::Specification
     include MatchRemoteMetadata
 
-    attr_reader :name, :version, :platform, :checksum
+    attr_reader :name, :version, :platform, :checksum, :created_at
     attr_writer :dependencies
     attr_accessor :remote, :locked_platform
 
@@ -45,6 +45,19 @@ module Bundler
         @remote_specification.require_paths
       elsif _local_specification
         _local_specification.require_paths
+      else
+        super
+      end
+    end
+
+    # `require_paths` is overridden above, but `full_require_paths` (and so
+    # `load_paths`) is computed from `raw_require_paths`, which would otherwise
+    # report the default `lib` for every gem
+    def raw_require_paths
+      if @remote_specification
+        @remote_specification.raw_require_paths
+      elsif _local_specification
+        _local_specification.raw_require_paths
       else
         super
       end
@@ -145,6 +158,7 @@ module Bundler
       unless data
         @required_ruby_version = nil
         @required_rubygems_version = nil
+        @created_at = nil
         return
       end
 
@@ -152,8 +166,13 @@ module Bundler
         next unless v
         case k.to_s
         when "checksum"
+          # Some registries send empty checksum values, treat them as if the
+          # checksum was not included at all
+          checksum = v.last
+          next unless checksum
+
           begin
-            @checksum = Checksum.from_api(v.last, @spec_fetcher.uri)
+            @checksum = Checksum.from_api(checksum, @spec_fetcher.uri)
           rescue ArgumentError => e
             raise ArgumentError, "Invalid checksum for #{full_name}: #{e.message}"
           end
@@ -161,6 +180,15 @@ module Bundler
           @required_rubygems_version = Gem::Requirement.new(v)
         when "ruby"
           @required_ruby_version = Gem::Requirement.new(v)
+        when "created_at"
+          value = v.is_a?(Array) ? v.last : v
+          if value.is_a?(String)
+            @created_at = begin
+              Time.new(value)
+            rescue ArgumentError
+              nil
+            end
+          end
         end
       end
     rescue StandardError => e

@@ -402,7 +402,7 @@ module Prism
       when :super_node
         [LocationField.new(:keyword_loc), OptionalLocationField.new(:lparen_loc), OptionalNodeField.new(:arguments), OptionalLocationField.new(:rparen_loc), OptionalNodeField.new(:block)]
       when :symbol_node
-        [FlagsField.new(:flags, [:forced_utf8_encoding?, :forced_binary_encoding?, :forced_us_ascii_encoding?]), OptionalLocationField.new(:opening_loc), LocationField.new(:value_loc), OptionalLocationField.new(:closing_loc), StringField.new(:unescaped)]
+        [FlagsField.new(:flags, [:forced_utf8_encoding?, :forced_binary_encoding?, :forced_us_ascii_encoding?]), OptionalLocationField.new(:opening_loc), LocationField.new(:content_loc), OptionalLocationField.new(:closing_loc), StringField.new(:unescaped)]
       when :true_node
         []
       when :undef_node

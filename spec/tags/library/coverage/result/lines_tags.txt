@@ -1,0 +1,16 @@
+fails:Coverage.result with lines: true returns how many times each line with code ran and nil for the other lines
+fails:Coverage.result with lines: true counts a Hash literal on the line of the first call among its values
+fails:Coverage.result with lines: true counts no line for a statement that has no effect
+fails:Coverage.result with lines: true for an interpolation counts each line of several interpolated statements
+fails:Coverage.result with lines: true for an interpolation counts a heredoc on the line of its first interpolated call
+fails:Coverage.result with lines: true for an interpolation counts the line of a call interpolated in a heredoc that ends the file
+fails:Coverage.result with lines: true for an interpolation counts the line of a conditional interpolated in a heredoc
+fails:Coverage.result with lines: true for a conditional counts no line of an if whose condition is false
+fails:Coverage.result with lines: true for a conditional counts only the then arm of an if whose condition is true
+fails:Coverage.result with lines: true for a conditional counts only the else arm of an if whose condition is nil
+fails:Coverage.result with lines: true for a conditional counts no line for a modifier unless whose condition is true
+fails:Coverage.result with lines: true for a conditional counts the condition but not the arm of an if on a condition ending in a false literal
+fails:Coverage.result with lines: true for a conditional counts a modifier if on the line of its condition
+fails:Coverage.result with lines: true for a conditional counts a modifier unless on the line of its condition
+fails:Coverage.result with lines: true for a conditional counts the line of an interpolated modifier unless
+fails:Coverage.result with lines: true for a conditional counts the statement of an interpolated modifier if on its own line

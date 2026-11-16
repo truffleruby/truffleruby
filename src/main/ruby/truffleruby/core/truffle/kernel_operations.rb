@@ -19,6 +19,9 @@ module Truffle
       end
     end
 
+    # The enabled TracePoint implementing Kernel#set_trace_func, or nil
+    @trace_func_trace_point = nil
+
     def self.to_enum_with_size(enum, method, size_method)
       enum.to_enum(method) { enum.send(size_method) }
     end

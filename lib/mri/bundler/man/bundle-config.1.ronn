@@ -106,6 +106,11 @@ the environment variable `BUNDLE_LOCAL__RACK`.
 The following is a list of all configuration keys and their purpose. You can
 learn more about their operation in [bundle install(1)](bundle-install.1.html).
 
+* `api_request_size` (`BUNDLE_API_REQUEST_SIZE`):
+   Configure how many dependencies to fetch when resolving the specifications.
+   This configuration is only used when fetchig specifications from RubyGems
+   servers that didn't implement the Compact Index API.
+   Defaults to 100.
 * `auto_install` (`BUNDLE_AUTO_INSTALL`):
    Automatically run `bundle install` when gems are missing.
 * `bin` (`BUNDLE_BIN`):
@@ -128,10 +133,40 @@ learn more about their operation in [bundle install(1)](bundle-install.1.html).
    Defaults to `vendor/cache`.
 * `clean` (`BUNDLE_CLEAN`):
    Whether Bundler should run `bundle clean` automatically after
-   `bundle install`. Defaults to `true` in Bundler 4, as long as `path` is not
+   `bundle install`. Defaults to `true` in Bundler 5, as long as `path` is not
    explicitly configured.
 * `console` (`BUNDLE_CONSOLE`):
    The console that `bundle console` starts. Defaults to `irb`.
+* `cooldown` (`BUNDLE_COOLDOWN`):
+   Number of days a published gem version must age before bundler will
+   resolve to it. Defaults to unset (no cooldown). Pass `0` to disable
+   cooldown for an individual run.
+
+   The effective cooldown for any given gem is resolved from three
+   layers, highest precedence first:
+
+     1. CLI flag `--cooldown N` on `install`, `update`, `add`, and
+        `outdated`.
+     2. This setting (`bundle config set cooldown N` or
+        `BUNDLE_COOLDOWN=N`).
+     3. The per-source `cooldown:` keyword in the Gemfile, such as
+        `source "https://rubygems.org", cooldown: 7`.
+
+   The CLI flag and this setting apply uniformly to every source,
+   including ones declared with their own `cooldown:` value. To keep a
+   private registry permanently exempt while still cooling down public
+   gems, declare `source "https://internal", cooldown: 0` in the
+   Gemfile; remember that `--cooldown N` on the command line will
+   still override it for that single run.
+
+   Cooldown filtering depends on the gem server providing a per-version
+   `created_at` timestamp in the v2 compact-index format. Versions
+   without that metadata - older gem servers, historical entries that
+   predate the v2 cutover on `rubygems.org`, or private registries that
+   still emit the v1 format - are treated as outside the cooldown
+   window and remain resolvable. If you rely on cooldown for
+   supply-chain protection, confirm that the gem server emits
+   `created_at` in its `/info/<gem>` responses.
 * `default_cli_command` (`BUNDLE_DEFAULT_CLI_COMMAND`):
    The command that running `bundle` without arguments should run. Defaults to
    `cli_help` since Bundler 4, but can also be `install` which was the previous
@@ -187,14 +222,16 @@ learn more about their operation in [bundle install(1)](bundle-install.1.html).
 * `init_gems_rb` (`BUNDLE_INIT_GEMS_RB`):
    Generate a `gems.rb` instead of a `Gemfile` when running `bundle init`.
 * `jobs` (`BUNDLE_JOBS`):
-   The number of gems Bundler can install in parallel. Defaults to the number of
-   available processors.
+   The number of gems Bundler can download and install in parallel.
+   Defaults to the number of available processors.
 * `lockfile` (`BUNDLE_LOCKFILE`):
    The path to the lockfile that bundler should use. By default, Bundler adds
    `.lock` to the end of the `gemfile` entry. Can be set to `false` in the
    Gemfile to disable lockfile creation entirely (see gemfile(5)).
 * `lockfile_checksums` (`BUNDLE_LOCKFILE_CHECKSUMS`):
    Whether Bundler should include a checksums section in new lockfiles, to protect from compromised gem sources. Defaults to true.
+   Bundler's own checksum is only included when its `.gem` file is cached, which
+   may not be the case when Bundler is installed as a default gem.
 * `no_install` (`BUNDLE_NO_INSTALL`):
    Whether `bundle package` should skip installing gems.
 * `no_prune` (`BUNDLE_NO_PRUNE`):
@@ -208,17 +245,17 @@ learn more about their operation in [bundle install(1)](bundle-install.1.html).
    The location on disk where all gems in your bundle will be located regardless
    of `$GEM_HOME` or `$GEM_PATH` values. Bundle gems not found in this location
    will be installed by `bundle install`. When not set, Bundler install by
-   default to a `.bundle` directory relative to repository root in Bundler 4,
-   and to the default system path (`Gem.dir`) before Bundler 4. That means that
-   before Bundler 4, Bundler shares this location with Rubygems, and `gem
+   default to a `.bundle` directory relative to repository root in Bundler 5,
+   and to the default system path (`Gem.dir`) before Bundler 5. That means that
+   before Bundler 5, Bundler shares this location with Rubygems, and `gem
    install ...` will have gems installed in the same location and therefore,
    gems installed without `path` set will show up by calling `gem list`. This
-   will not be the case in Bundler 4.
+   will not be the case in Bundler 5.
 * `path.system` (`BUNDLE_PATH__SYSTEM`):
    Whether Bundler will install gems into the default system path (`Gem.dir`).
 * `plugins` (`BUNDLE_PLUGINS`):
    Enable Bundler's experimental plugin system.
-* `prefer_patch` (BUNDLE_PREFER_PATCH):
+* `prefer_patch` (`BUNDLE_PREFER_PATCH`):
    Prefer updating only to next patch version during updates. Makes `bundle update` calls equivalent to `bundler update --patch`.
 * `redirect` (`BUNDLE_REDIRECT`):
    The number of redirects allowed for network requests. Defaults to `5`.

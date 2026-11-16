@@ -532,6 +532,9 @@ typedef enum pm_token_type {
     /** a separator between words in a list */
     PM_TOKEN_WORDS_SEP,
 
+    /** a separator between words in a list that has no source characters */
+    PM_TOKEN_WORDS_SEP_IMPLICIT,
+
     /** the beginning of an execution string */
     PM_TOKEN_XSTRING_BEGIN,
 
@@ -7582,9 +7585,9 @@ typedef struct pm_symbol_node {
     pm_location_t opening_loc;
 
     /**
-     * SymbolNode#value_loc
+     * SymbolNode#content_loc
      */
-    pm_location_t value_loc;
+    pm_location_t content_loc;
 
     /**
      * SymbolNode#closing_loc
@@ -10232,12 +10235,12 @@ PRISM_EXPORTED_FUNCTION pm_super_node_t * pm_super_node_new(pm_arena_t *arena, u
  * @param flags The flags for this node.
  * @param location The location of this node in the source.
  * @param opening_loc The opening_loc field.
- * @param value_loc The value_loc field.
+ * @param content_loc The content_loc field.
  * @param closing_loc The closing_loc field.
  * @param unescaped The unescaped field.
  * @returns The newly allocated and initialized node.
  */
-PRISM_EXPORTED_FUNCTION pm_symbol_node_t * pm_symbol_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t value_loc, pm_location_t closing_loc, pm_string_t unescaped);
+PRISM_EXPORTED_FUNCTION pm_symbol_node_t * pm_symbol_node_new(pm_arena_t *arena, uint32_t node_id, pm_node_flags_t flags, pm_location_t location, pm_location_t opening_loc, pm_location_t content_loc, pm_location_t closing_loc, pm_string_t unescaped);
 
 /**
  * Allocate and initialize a new TrueNode node.

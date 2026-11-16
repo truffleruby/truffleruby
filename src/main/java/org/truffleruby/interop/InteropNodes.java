@@ -65,6 +65,7 @@ import com.oracle.truffle.api.TruffleFile;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateUncached;
+import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.ReportPolymorphism;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -76,6 +77,8 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.LanguageInfo;
 import com.oracle.truffle.api.source.Source;
+
+import static org.truffleruby.Layouts.FROZEN_FLAG;
 
 /** Specs for these methods are in spec/truffle/interop/matrix_spec.rb and in spec/truffle/interop/methods_spec.rb.
  * Splitting: we use {@code split = Split.ALWAYS} for all @CoreMethod using InteropLibrary because
@@ -857,6 +860,7 @@ public abstract class InteropNodes {
                 @CachedLibrary("receiver") InteropLibrary receivers,
                 @Cached TranslateInteropExceptionNode translateInteropException,
                 @Cached TruffleString.SwitchEncodingNode switchEncodingNode,
+                @Cached DynamicObject.SetShapeFlagsNode setShapeFlagsNode,
                 @Bind Node node) {
             final TruffleString truffleString;
             try {
@@ -867,7 +871,7 @@ public abstract class InteropNodes {
 
             var asUTF8 = switchEncodingNode.execute(truffleString, TruffleString.Encoding.UTF_8);
             var rubyString = createString(node, asUTF8, Encodings.UTF_8);
-            rubyString.freeze();
+            setShapeFlagsNode.executeAdd(rubyString, FROZEN_FLAG);
             return rubyString;
         }
     }

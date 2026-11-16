@@ -17,15 +17,15 @@
 // coerce
 
 VALUE rb_num_coerce_bin(VALUE x, VALUE y, ID func) {
-  return rb_tr_up_rb_num_coerce_bin(x, y, ID2SYM(func));
+  return rb_tr_up_rb_num_coerce_bin(x, y, func);
 }
 
 VALUE rb_num_coerce_cmp(VALUE x, VALUE y, ID func) {
-  return rb_tr_up_rb_num_coerce_cmp(x, y, ID2SYM(func));
+  return rb_tr_up_rb_num_coerce_cmp(x, y, func);
 }
 
 VALUE rb_num_coerce_relop(VALUE x, VALUE y, ID func) {
-  return rb_tr_up_rb_num_coerce_relop(x, y, ID2SYM(func));
+  return rb_tr_up_rb_num_coerce_relop(x, y, func);
 }
 
 VALUE rb_check_to_integer(VALUE object, const char *method) {

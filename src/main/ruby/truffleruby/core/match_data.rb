@@ -71,7 +71,7 @@ class MatchData
   alias_method :eql?, :==
 
   def string
-    Primitive.match_data_get_source(self).dup.freeze
+    Primitive.match_data_get_source(self)
   end
 
   def captures

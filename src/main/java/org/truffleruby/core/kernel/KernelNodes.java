@@ -238,7 +238,7 @@ public abstract class KernelNodes {
         @Specialization
         static boolean refEqualOrEql(Node node, Object a, Object b,
                 @Cached ReferenceEqualNode referenceEqual,
-                @Cached(inline = false) DispatchNode eql,
+                @Cached DispatchNode eql,
                 @Cached BooleanCastNode booleanCast) {
             return referenceEqual.execute(node, a, b) || booleanCast.execute(node, eql.call(a, "eql?", b));
         }
@@ -1461,22 +1461,6 @@ public abstract class KernelNodes {
         }
     }
 
-    @CoreMethod(names = "set_trace_func", isModuleFunction = true, required = 1)
-    public abstract static class SetTraceFuncNode extends CoreMethodArrayArgumentsNode {
-
-        @Specialization
-        Object setTraceFunc(Nil traceFunc) {
-            getContext().getTraceManager().setTraceFunc(null);
-            return nil;
-        }
-
-        @Specialization
-        RubyProc setTraceFunc(RubyProc traceFunc) {
-            getContext().getTraceManager().setTraceFunc(traceFunc);
-            return traceFunc;
-        }
-    }
-
     @CoreMethod(names = "singleton_class")
     public abstract static class SingletonClassMethodNode extends CoreMethodArrayArgumentsNode {
 
@@ -1688,8 +1672,7 @@ public abstract class KernelNodes {
                 @Cached("format.asTruffleStringUncached(encoding.tencoding)") TruffleString cachedFormat,
                 @Cached("encoding") RubyEncoding cachedEncoding,
                 @Cached("arguments.length") int cachedArgumentsLength,
-                @Cached(value = "create(compileFormat(cachedFormat, cachedEncoding, arguments, isDebug, node))",
-                        inline = false) DirectCallNode callPackNode,
+                @Cached("create(compileFormat(cachedFormat, cachedEncoding, arguments, isDebug, node))") DirectCallNode callPackNode,
                 @Cached StringHelperNodes.EqualSameEncodingNode equalNode) {
             return (BytesResult) callPackNode.call(new Object[]{ arguments, arguments.length, null });
         }
@@ -1697,7 +1680,7 @@ public abstract class KernelNodes {
         @Specialization(replaces = "formatCached")
         static BytesResult formatUncached(
                 Node node, AbstractTruffleString format, RubyEncoding encoding, Object[] arguments, boolean isDebug,
-                @Cached(inline = false) IndirectCallNode callPackNode) {
+                @Cached IndirectCallNode callPackNode) {
             return (BytesResult) callPackNode.call(
                     compileFormat(format, encoding, arguments, isDebug, node),
                     new Object[]{ arguments, arguments.length, null });

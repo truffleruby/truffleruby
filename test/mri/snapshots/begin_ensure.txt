@@ -189,7 +189,7 @@
             │           │           │   @ SymbolNode (location: (15,11)-(15,13))
             │           │           │   ├── flags: static_literal, forced_us_ascii_encoding
             │           │           │   ├── opening_loc: (15,11)-(15,12) = ":"
-            │           │           │   ├── value_loc: (15,12)-(15,13) = "s"
+            │           │           │   ├── content_loc: (15,12)-(15,13) = "s"
             │           │           │   ├── closing_loc: ∅
             │           │           │   └── unescaped: "s"
             │           │           ├── call_operator_loc: (15,13)-(15,14) = "."

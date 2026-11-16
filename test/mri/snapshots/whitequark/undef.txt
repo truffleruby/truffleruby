@@ -11,13 +11,13 @@
             │   ├── @ SymbolNode (location: (1,6)-(1,9))
             │   │   ├── flags: static_literal, forced_us_ascii_encoding
             │   │   ├── opening_loc: ∅
-            │   │   ├── value_loc: (1,6)-(1,9) = "foo"
+            │   │   ├── content_loc: (1,6)-(1,9) = "foo"
             │   │   ├── closing_loc: ∅
             │   │   └── unescaped: "foo"
             │   ├── @ SymbolNode (location: (1,11)-(1,15))
             │   │   ├── flags: static_literal, forced_us_ascii_encoding
             │   │   ├── opening_loc: (1,11)-(1,12) = ":"
-            │   │   ├── value_loc: (1,12)-(1,15) = "bar"
+            │   │   ├── content_loc: (1,12)-(1,15) = "bar"
             │   │   ├── closing_loc: ∅
             │   │   └── unescaped: "bar"
             │   └── @ InterpolatedSymbolNode (location: (1,17)-(1,27))

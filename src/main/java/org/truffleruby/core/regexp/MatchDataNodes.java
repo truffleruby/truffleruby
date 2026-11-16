@@ -43,6 +43,7 @@ import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.range.RangeNodes;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.string.StringHelperNodes.SingleByteOptimizableNode;
+import org.truffleruby.language.objects.IsFrozenNodeGen;
 import org.truffleruby.core.string.StringSupport;
 import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.core.symbol.RubySymbol;
@@ -223,6 +224,9 @@ public abstract class MatchDataNodes {
         }
     }
 
+    /** The String is stored as is: the caller must pass a frozen String if the MatchData is exposed to Ruby code (see
+     * {@link RubyMatchData#source}). StringScanner passes its unfrozen string to avoid a copy per match, its MatchData
+     * are only used internally. */
     @Primitive(name = "matchdata_create_single_group", lowerFixnum = { 2, 3 }, isPublic = true)
     public abstract static class MatchDataCreateSingleGroupNode extends PrimitiveArrayArgumentsNode {
 
@@ -816,6 +820,7 @@ public abstract class MatchDataNodes {
 
         @Specialization
         Object getSource(RubyMatchData matchData) {
+            assert IsFrozenNodeGen.getUncached().execute(matchData.source) : "MatchData source must be frozen";
             return matchData.source;
         }
     }

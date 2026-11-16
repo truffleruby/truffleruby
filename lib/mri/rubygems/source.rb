@@ -5,7 +5,7 @@ require_relative "text"
 # A Source knows how to list and fetch gems from a RubyGems marshal index.
 #
 # There are other Source subclasses for installed gems, local gems, the
-# bundler dependency API and so-forth.
+# Compact Index API and so-forth.
 
 class Gem::Source
   include Comparable
@@ -108,6 +108,13 @@ class Gem::Source
     fetcher = Gem::RemoteFetcher.fetcher
 
     spec_file_name = name_tuple.spec_name
+
+    # The name tuple comes from a remote index and is not otherwise
+    # validated, so refuse anything that would escape the spec cache
+    # directory when used as a path component.
+    if File.basename(spec_file_name) != spec_file_name
+      raise Gem::Exception, "malformed spec name: #{spec_file_name.inspect}"
+    end
 
     source_uri = enforce_trailing_slash(uri) + "#{Gem::MARSHAL_SPEC_DIR}#{spec_file_name}"
 

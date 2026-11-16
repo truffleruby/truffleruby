@@ -1,0 +1,36 @@
+keep(exits):Coverage.result with branches: true starts the counts over when a file is loaded again
+fails:Coverage.result with branches: true returns only the branches of each file
+fails:Coverage.result with branches: true returns the counts so far when passed clear: true
+fails:Coverage.result with branches: true sets the counts to 0 when passed clear: true
+fails:Coverage.result with branches: true reports the arms of an if with how many times each ran
+fails:Coverage.result with branches: true reports an else arm that spans the whole if when it has none
+fails:Coverage.result with branches: true reports the arms of a ternary
+fails:Coverage.result with branches: true reports a modifier if with an else arm that spans the whole statement
+fails:Coverage.result with branches: true reports the arms of an unless, the else first
+fails:Coverage.result with branches: true reports a modifier unless with an else arm that spans the whole statement
+fails:Coverage.result with branches: true reports the when and else arms of a case
+fails:Coverage.result with branches: true reports an else arm that spans the whole case when its when arms have none
+fails:Coverage.result with branches: true reports the in and else arms of a case
+fails:Coverage.result with branches: true reports an else arm that spans the whole case when its in arms have none
+fails:Coverage.result with branches: true reports the body of a while
+fails:Coverage.result with branches: true reports the body of a modifier while
+fails:Coverage.result with branches: true reports the body of an until
+fails:Coverage.result with branches: true reports the body of a modifier until
+fails:Coverage.result with branches: true reports a safe navigation with both arms spanning the call
+fails:Coverage.result with branches: true ends a safe navigation with arguments after its closing parenthesis
+fails:Coverage.result with branches: true ends a safe navigation before its brace block
+fails:Coverage.result with branches: true ends a safe navigation before its do block
+fails:Coverage.result with branches: true ends an arm that is a call with a brace block after the block
+fails:Coverage.result with branches: true ends an arm that is a call with a do block after the block
+fails:Coverage.result with branches: true ends an arm that is a chain of calls after the block of the last call
+fails:Coverage.result with branches: true reports an arm that is a lambda literal from its arrow to the end of its body
+fails:Coverage.result with branches: true reports an arm that is a character literal
+fails:Coverage.result with branches: true reports an arm that is a heredoc as its opening
+fails:Coverage.result with branches: true reports an arm that is an END block
+fails:Coverage.result with branches: true reports no branch for a conditional on a literal
+fails:Coverage.result with branches: true reports no branch of the code that a literal condition leaves unreachable
+fails:Coverage.result with branches: true reports an elsif as an if that is the else arm of the one before
+fails:Coverage.result with branches: true ends a safe navigation before its empty parentheses
+fails:Coverage.result with branches: true ends a safe navigation before a block argument that is its only argument
+fails:Coverage.result with branches: true ends a safe navigation without parentheses before its block argument
+fails:Coverage.result with branches: true reports no branch for a pattern match outside a case
