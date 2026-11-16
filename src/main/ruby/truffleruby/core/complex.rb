@@ -52,7 +52,7 @@ class Complex < Numeric
   def Complex.generic?(other) # :nodoc:
     Primitive.is_a?(other, Integer) or
     Primitive.is_a?(other, Float) or
-    (defined?(Rational) and Primitive.is_a?(other, Rational))
+    Primitive.is_a?(other, Rational)
   end
 
   def Complex.rect(real, imag = 0)
@@ -151,11 +151,7 @@ class Complex < Numeric
         end
         z
       else
-        if defined? Rational
-          (Rational.__send__(:new_already_canonical, 1, 1) / self) ** -other
-        else
-          self ** Float(other)
-        end
+        (Rational.__send__(:new_already_canonical, 1, 1) / self) ** -other
       end
     elsif Complex.generic?(other)
       r, theta = polar
