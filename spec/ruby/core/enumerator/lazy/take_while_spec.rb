@@ -28,6 +28,22 @@ describe "Enumerator::Lazy#take_while" do
     ret.should_not.equal?(@yieldsmixed)
   end
 
+  it "stops the receiver without raising an exception through its #each" do
+    receiver = Object.new
+    receiver.extend(Enumerable)
+    def receiver.each
+      yield 1
+      yield 2
+      yield 3
+    rescue Exception => e
+      ScratchPad << e
+      raise
+    end
+
+    receiver.lazy.take_while { |x| x < 2 }.to_a.should == [1]
+    ScratchPad.recorded.should == []
+  end
+
   it "sets #size to nil" do
     Enumerator::Lazy.new(Object.new, 100) {}.take_while { true }.size.should == nil
   end
