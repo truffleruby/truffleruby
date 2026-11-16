@@ -39,7 +39,24 @@ module FFI
   class Type
     attr_reader :size, :alignment
 
-    def initialize(size, alignment, nfi_type)
+    # The public form is FFI::Type.new(value), where value is a Type to copy or the Integer id of a native type.
+    # The other form is used by subclasses in this backend.
+    def initialize(size, alignment = nil, nfi_type = nil)
+      if Primitive.nil?(alignment)
+        value = size
+        if Primitive.is_a?(value, FFI::Type)
+          size = value.size
+          alignment = value.alignment
+          nfi_type = value.nfi_type
+        elsif Primitive.is_a?(value, Integer)
+          # Like in the C backend, such a Type has the size and alignment of void
+          size = 1
+          alignment = 1
+        else
+          raise ArgumentError, 'wrong type'
+        end
+      end
+
       @size = size
       @alignment = alignment
       @nfi_type = nfi_type
