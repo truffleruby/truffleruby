@@ -36,7 +36,7 @@ module FFI
   class Function < Pointer
     # @param [Type, Symbol] return_type return type for the function
     # @param [Array<Type, Symbol>] param_types array of parameters types
-    # @param [Proc || FFI::Pointer || FFI::DynamicLibrary::Symbol] the function Proc or native address
+    # @param [#call || FFI::Pointer || FFI::DynamicLibrary::Symbol] the function callable or native address
     # @param [Hash] options see {FFI::FunctionType} for available options
     def initialize(return_type, param_types, function = nil, options = {}, &block)
       function ||= block
@@ -55,7 +55,7 @@ module FFI
         @function = @function_info.nfi_signature.bind(function)
         @native_wrapper = nil
         super(@function)
-      elsif Primitive.is_a?(function, Proc) || Primitive.is_a?(function, Method)
+      elsif function.respond_to?(:call)
         @function = function
         @native_wrapper = create_native_wrapper(@function, @function_info)
         super(@native_wrapper)
