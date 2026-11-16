@@ -9,7 +9,9 @@ ruby_version_is "4.0" do
     describe "Ruby::Box" do
       it "passes its specs when enabled with RUBY_BOX=1" do
         mspec_run = File.expand_path("../../../mspec/bin/mspec-run", __dir__)
-        output = ruby_exe(nil, options: "-W:no-experimental #{mspec_run}", args: __FILE__, env: { "RUBY_BOX" => "1" })
+        # Unset MSPEC_MULTI, otherwise under `mspec -j` the subprocess would wait for files on STDIN
+        env = { "RUBY_BOX" => "1", "MSPEC_MULTI" => nil }
+        output = ruby_exe(nil, options: "-W:no-experimental #{mspec_run}", args: __FILE__, env: env)
         output.should =~ /\b0 failures, 0 errors\b/
       end
     end
