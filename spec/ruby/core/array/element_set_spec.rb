@@ -232,6 +232,34 @@ describe "Array#[]=" do
     ary.should == [1, 1, 2, 3]
   end
 
+  it "calls to_ary on its rhs argument through method_missing for multi-element sets" do
+    obj = mock('to_ary through method_missing')
+    def obj.respond_to_missing?(name, include_private) name == :to_ary || super end
+    def obj.method_missing(name, *args) name == :to_ary ? [7, 8] : super end
+    ary = [1, 2, 3]
+    ary[0, 2] = obj
+    ary.should == [7, 8, 3]
+    ary[1..] = obj
+    ary.should == [7, 7, 8]
+  end
+
+  it "sets the rhs argument as a single element if its to_ary returns nil for multi-element sets" do
+    obj = mock('to_ary returning nil')
+    def obj.to_ary() nil end
+    ary = [1, 2, 3]
+    ary[0, 2] = obj
+    ary.should == [obj, 3]
+  end
+
+  it "raises a TypeError if to_ary on the rhs argument returns neither an Array nor nil for multi-element sets" do
+    obj = mock('to_ary returning an Integer')
+    def obj.to_ary() 5 end
+    ary = [1, 2, 3]
+    -> { ary[0, 2] = obj }.should.raise(TypeError)
+    -> { ary[0..1] = obj }.should.raise(TypeError)
+    ary.should == [1, 2, 3]
+  end
+
   it "does not call to_ary on rhs array subclasses for multi-element sets" do
     ary = []
     ary[0, 0] = ArraySpecs::ToAryArray[5, 6, 7]
