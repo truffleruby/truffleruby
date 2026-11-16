@@ -70,9 +70,20 @@ describe :integer_exponent, shared: true do
       end
     end
 
+    it "returns an Integer for 1 and -1 raised to a negative power" do
+      1.send(@method, -1).should.eql?(1)
+      1.send(@method, -4).should.eql?(1)
+      (-1).send(@method, -1).should.eql?(-1)
+      (-1).send(@method, -2).should.eql?(1)
+      (-1).send(@method, -3).should.eql?(-1)
+      (-1).send(@method, -4611686018427387904).should.eql?(1)
+      (-1).send(@method, -4611686018427387905).should.eql?(-1)
+    end
+
     it "raises a ZeroDivisionError for 0 ** -1" do
       -> { 0.send(@method, -1) }.should.raise(ZeroDivisionError)
       -> { 0.send(@method, Rational(-1, 1)) }.should.raise(ZeroDivisionError)
+      -> { 0.send(@method, -bignum_value) }.should.raise(ZeroDivisionError)
     end
 
     it "returns Float::INFINITY for 0 ** -1.0" do

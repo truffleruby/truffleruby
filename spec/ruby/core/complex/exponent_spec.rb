@@ -39,6 +39,32 @@ describe "Complex#**" do
       # NOTE: Takes way too long...
       #(Complex(2, 1) ** bignum_value)
     end
+
+    it "returns an exact result when self is on an axis or a diagonal" do
+      (Complex(2, 0) ** -1).should.eql?(Complex(Rational(1, 2), Rational(0, 1)))
+      (Complex(0, 3) ** -2).should.eql?(Complex(Rational(-1, 9), Rational(0, 1)))
+      (Complex(3, 0.0) ** 2).should.eql?(Complex(9, 0))
+      (Complex(1.5, 1.5) ** 2).should.eql?(Complex(0.0, 4.5))
+      (Complex(0, 1.0) ** 3).real.should be_positive_zero
+      (Complex(-3, 0) ** 3).should.eql?(Complex(-27, 0))
+      (Complex(1, -1) ** 3).should.eql?(Complex(-2, -2))
+      (Complex(-2, 2) ** -3).should.eql?(Complex(Rational(1, 32), Rational(-1, 32)))
+      (Complex(1.0, 0) ** (2**1100)).should.eql?(Complex(1.0, 0.0))
+    end
+
+    it "raises a ZeroDivisionError for 0 raised to a negative power" do
+      -> { Complex(0, 0) ** -1 }.should.raise(ZeroDivisionError)
+      -> { Complex(0, 0) ** -bignum_value }.should.raise(ZeroDivisionError)
+    end
+  end
+
+  describe "with an Integer-valued Rational or Complex" do
+    it "uses the Integer value" do
+      (Complex(1, 1) ** Rational(2, 1)).should.eql?(Complex(0, 2))
+      (Complex(0, 1) ** Complex(2, 0)).should.eql?(Complex(-1, 0))
+      (Complex(0, 0) ** Complex(2, 0)).should.eql?(Complex(0, 0))
+      (Complex(1, 2) ** Complex(1, 0)).should.eql?(Complex(1, 2))
+    end
   end
 
   describe "with Rational" do
