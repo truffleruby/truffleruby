@@ -81,7 +81,8 @@ describe "Refinement#import_methods" do
       string_refined = Module.new do
         refine String do
           -> {
-            import_methods str_utils, Kernel
+            # Not Kernel, as CRuby prepends a module to Kernel when the first Ractor is created
+            import_methods str_utils, Math
           }.should.raise(ArgumentError)
         end
       end
@@ -267,7 +268,8 @@ describe "Refinement#import_methods" do
       Module.new do
         refine String do
           -> {
-            import_methods Kernel
+            # Not Kernel, as CRuby prepends a module to Kernel when the first Ractor is created
+            import_methods Math
           }.should.raise(ArgumentError)
         end
       end
