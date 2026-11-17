@@ -10,6 +10,8 @@
  */
 package org.truffleruby.language.loader;
 
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
@@ -45,8 +47,19 @@ public final class MainLoader {
         return loadFromBytes("-e", sourceBytes);
     }
 
+    @SuppressWarnings("resource")
     public RubySource loadFromStandardIn() throws IOException {
-        byte[] sourceBytes = System.in.readAllBytes();
+        /* The script ends at the first end-of-file on stdin. On a terminal, that is a Ctrl-D, and what is typed after
+         * it is input for the script, e.g. for $stdin.read, and must not be read here.
+         *
+         * So this reads from the file descriptor directly and does not use System.in: System.in is a
+         * BufferedInputStream, and when a read() returns less than asked it reads again if more input is available().
+         * If more input was already typed after the Ctrl-D, that second read() consumes the end-of-file (a read()
+         * returning 0 bytes) and returns that input instead, so the end of the script is missed.
+         *
+         * The stream is not closed as that would close the file descriptor of stdin. */
+        final var stdin = new FileInputStream(FileDescriptor.in);
+        final byte[] sourceBytes = stdin.readAllBytes();
         return loadFromBytes("-", sourceBytes);
     }
 

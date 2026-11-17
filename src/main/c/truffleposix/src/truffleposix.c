@@ -660,6 +660,43 @@ int truffleposix_open(char* path, int flags, mode_t mode) {
   return open(path, flags, mode);
 }
 
+/* Opens a new pseudo-terminal, stores the master and slave fds in fds[0] and fds[1]
+ * and the path of the slave device in slave_name. Both fds are close-on-exec. */
+int truffleposix_openpty(int* fds, char* slave_name, int slave_name_size) {
+  int master = posix_openpt(O_RDWR | O_NOCTTY);
+  if (master == -1) {
+    return -1;
+  }
+
+  if (fcntl(master, F_SETFD, FD_CLOEXEC) == -1 || grantpt(master) == -1 || unlockpt(master) == -1) {
+    goto error;
+  }
+
+  /* ptsname_r() returns the error number on glibc, and -1 and sets errno on macOS */
+  int error = ptsname_r(master, slave_name, (size_t) slave_name_size);
+  if (error != 0) {
+    if (error > 0) {
+      errno = error;
+    }
+    goto error;
+  }
+
+  int slave = open(slave_name, O_RDWR | O_NOCTTY | O_CLOEXEC);
+  if (slave == -1) {
+    goto error;
+  }
+
+  fds[0] = master;
+  fds[1] = slave;
+  return 0;
+
+error:;
+  int saved_errno = errno;
+  close(master);
+  errno = saved_errno;
+  return -1;
+}
+
 #define CHECK(call, label) if ((error = call) != 0) { perror(#call); goto label; }
 
 pid_t truffleposix_posix_spawn(const char *command, char *const argv[], char *const envp[],

@@ -4,9 +4,12 @@ New features:
 
 * Updated to Ruby 4.0.9 (@eregon).
 * Updated to GraalVM 25.5.5.0.3 (@eregon).
+* Implement the `pty` standard library: `PTY.open`, `PTY.spawn`, `PTY.getpty` and `PTY.check` (@eregon).
 
 Bug fixes:
 
+* Fix `rb_io_gets()` raising `RuntimeError`, which broke `IO#getpass` from `io/console` (@eregon).
+* Fix reading the main script from a terminal reading past the end-of-file (Ctrl-D) when more input was already typed (@eregon).
 * Fix `Process.exec` ignoring the `:umask` option (@nirvdrum).
 * Fix `Socket.tcp` and `Addrinfo#connect` with a timeout returning an unconnected socket on macOS when the connection was refused (@eregon).
 * Fix `String#append_as_bytes` to return `self` instead of its arguments (#4502, @taxor03).
@@ -29,6 +32,7 @@ Bug fixes:
 
 Compatibility:
 
+* Implement `rb_ary_resize()`, which is used by `IO#cursor` from `io/console` (@eregon).
 * Call the most recently enabled `TracePoint` first when several `TracePoint`s are enabled for the same event, like CRuby (@eregon).
 * Add support for the `:call` and `:c_call` `TracePoint` events and `TracePoint#defined_class` (@eregon).
 * Add support for the `:return` `TracePoint` event and `TracePoint#return_value` (@eregon).

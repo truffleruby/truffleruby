@@ -139,6 +139,7 @@ OptParse
 OptionParser
 OrAndXorTest
 OtherCustomException
+PTY
 ParentClass
 Pathname
 Person

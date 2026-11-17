@@ -77,6 +77,10 @@ static VALUE array_spec_rb_ary_delete_at(VALUE self, VALUE array, VALUE index) {
   return rb_ary_delete_at(array, NUM2LONG(index));
 }
 
+static VALUE array_spec_rb_ary_resize(VALUE self, VALUE array, VALUE len) {
+  return rb_ary_resize(array, NUM2LONG(len));
+}
+
 static VALUE array_spec_rb_ary_dup(VALUE self, VALUE array) {
   return rb_ary_dup(array);
 }
@@ -329,6 +333,7 @@ void Init_array_spec(void) {
   rb_define_method(cls, "rb_ary_clear", array_spec_rb_ary_clear, 1);
   rb_define_method(cls, "rb_ary_delete", array_spec_rb_ary_delete, 2);
   rb_define_method(cls, "rb_ary_delete_at", array_spec_rb_ary_delete_at, 2);
+  rb_define_method(cls, "rb_ary_resize", array_spec_rb_ary_resize, 2);
   rb_define_method(cls, "rb_ary_dup", array_spec_rb_ary_dup, 1);
   rb_define_method(cls, "rb_ary_entry", array_spec_rb_ary_entry, 2);
   rb_define_method(cls, "rb_ary_includes", array_spec_rb_ary_includes, 2);

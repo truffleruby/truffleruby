@@ -24,10 +24,6 @@ import org.truffleruby.language.RubyBaseNode;
 @ImportStatic(ArrayGuards.class)
 public abstract class ArrayTruncateNode extends RubyBaseNode {
 
-    public static ArrayTruncateNode create() {
-        return ArrayTruncateNodeGen.create();
-    }
-
     public abstract void execute(RubyArray array, int size);
 
     @Specialization(

@@ -303,6 +303,10 @@ VALUE io_spec_rb_cloexec_fcntl_dupfd(VALUE self, VALUE io, VALUE minfd) {
   return rb_funcall(rb_cIO, rb_intern("for_fd"), 1, INT2FIX(new_fd));
 }
 
+VALUE io_spec_rb_io_gets(VALUE self, VALUE io) {
+  return rb_io_gets(io);
+}
+
 VALUE io_spec_rb_io_close(VALUE self, VALUE io) {
   return rb_io_close(io);
 }
@@ -383,6 +387,7 @@ void Init_io_spec(void) {
   rb_define_method(cls, "rb_io_puts", io_spec_rb_io_puts, 2);
   rb_define_method(cls, "rb_io_write", io_spec_rb_io_write, 2);
   rb_define_method(cls, "rb_io_close", io_spec_rb_io_close, 1);
+  rb_define_method(cls, "rb_io_gets", io_spec_rb_io_gets, 1);
   rb_define_method(cls, "rb_io_check_io", io_spec_rb_io_check_io, 1);
   rb_define_method(cls, "rb_io_check_readable", io_spec_rb_io_check_readable, 1);
   rb_define_method(cls, "rb_io_check_writable", io_spec_rb_io_check_writable, 1);
