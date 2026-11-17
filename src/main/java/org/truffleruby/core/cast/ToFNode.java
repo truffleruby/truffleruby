@@ -24,10 +24,6 @@ public abstract class ToFNode extends RubyBaseNode {
     @Child private DispatchNode toFNode;
 
     @NeverDefault
-    public static ToFNode create() {
-        return ToFNodeGen.create();
-    }
-
     public abstract double executeToDouble(Object value);
 
     @Specialization

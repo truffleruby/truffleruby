@@ -1195,10 +1195,6 @@ public abstract class StringNodes {
 
         protected static final int CLASS_SALT = 54008340; // random number, stops hashes for similar values but different classes being the same, static because we want deterministic hashes
 
-        public static HashNode create() {
-            return StringNodesFactory.HashNodeFactory.create(null);
-        }
-
         public abstract long execute(Object string);
 
         @Specialization
@@ -1757,10 +1753,6 @@ public abstract class StringNodes {
     @CoreMethod(names = { "size", "length" })
     @ImportStatic(StringGuards.class)
     public abstract static class SizeNode extends CoreMethodArrayArgumentsNode {
-
-        public static SizeNode create() {
-            return StringNodesFactory.SizeNodeFactory.create(null);
-        }
 
         public abstract int execute(Object string);
 

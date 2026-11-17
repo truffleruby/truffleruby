@@ -44,10 +44,6 @@ import org.truffleruby.language.dispatch.DispatchNode;
 public abstract class CallForeignMethodNode extends RubyBaseNode {
 
     @NeverDefault
-    public static CallForeignMethodNode create() {
-        return CallForeignMethodNodeGen.create();
-    }
-
     public static CallForeignMethodNode getUncached() {
         return CallForeignMethodNodeGen.getUncached();
     }

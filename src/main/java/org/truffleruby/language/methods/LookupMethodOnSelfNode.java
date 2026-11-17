@@ -24,10 +24,6 @@ import org.truffleruby.language.objects.MetaClassNode;
 public abstract class LookupMethodOnSelfNode extends RubyBaseNode {
 
     @NeverDefault
-    public static LookupMethodOnSelfNode create() {
-        return LookupMethodOnSelfNodeGen.create();
-    }
-
     public InternalMethod lookupProtected(Frame frame, Object self, String name) {
         return execute(frame, self, name, DispatchConfiguration.PROTECTED);
     }

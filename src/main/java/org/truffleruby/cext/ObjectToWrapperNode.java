@@ -39,10 +39,6 @@ import org.truffleruby.cext.ValueWrapperManager.CreateWrapperNode;
 public abstract class ObjectToWrapperNode extends RubyBaseNode {
 
     @NeverDefault
-    public static ObjectToWrapperNode create() {
-        return ObjectToWrapperNodeGen.create();
-    }
-
     public abstract ValueWrapper execute(Object value);
 
     @Specialization(guards = "isSmallFixnum(value)")

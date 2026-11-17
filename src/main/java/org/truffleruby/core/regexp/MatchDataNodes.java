@@ -466,10 +466,6 @@ public abstract class MatchDataNodes {
 
     @CoreMethod(names = "[]", required = 1, optional = 1, lowerFixnum = { 1, 2 })
     public abstract static class GetIndexCoreMethodNode extends CoreMethodArrayArgumentsNode {
-        public static GetIndexCoreMethodNode create(RubyNode... nodes) {
-            return MatchDataNodesFactory.GetIndexCoreMethodNodeFactory.create(nodes);
-        }
-
         @Specialization
         Object getIndex(RubyMatchData matchData, Object index, Object maybeLength,
                 @Cached GetIndexNode getIndexNode) {

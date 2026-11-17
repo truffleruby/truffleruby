@@ -25,10 +25,6 @@ import com.oracle.truffle.api.profiles.IntValueProfile;
 public abstract class ArrayToObjectArrayNode extends RubyBaseNode {
 
     @NeverDefault
-    public static ArrayToObjectArrayNode create() {
-        return ArrayToObjectArrayNodeGen.create();
-    }
-
     public Object[] unsplat(Object[] arguments) {
         assert arguments.length == 1;
         return executeToObjectArray((RubyArray) arguments[0]);
