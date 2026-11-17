@@ -24,6 +24,7 @@ Bug fixes:
 * Fix `rb_arithmetic_sequence_extract()` setting `exclude_end` to a `VALUE` handle instead of `1` for an `Enumerator::ArithmeticSequence` with an exclusive end (@nirvdrum).
 * Fix `Array#[]=` with a start and length or a `Range` inserting a replacement whose `#to_ary` is handled by `#method_missing`, like a `SimpleDelegator` of an Array, as one element instead of splicing its elements, and inserting a replacement whose `#to_ary` returns neither an Array nor `nil` instead of raising a `TypeError` (#4557, @taxor03).
 * Fix `Enumerator::Lazy#take` and `Enumerator::Lazy#take_while` stopping the receiver by raising an internal `Enumerator::Lazy::StopLazyError` through its `#each`, where `rescue Exception` caught it (#4558, @taxor03).
+* Fix `case`/`when` evaluating a splatted value of a `when` clause even when an earlier value of the clause matches (#4559, @taxor03).
 
 
 Compatibility:
