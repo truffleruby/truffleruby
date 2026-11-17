@@ -38,10 +38,14 @@ TruffleRuby uses the `mx` build tool (GraalVM ecosystem) but wraps it behind the
 ### Building
 
 ```bash
-bin/jt build              # Default: JVM-only build (no native image, no Graal compiler)
-bin/jt build --env jvm-ee # JVM with the Graal compiler
-bin/jt build --env native-ee # Native Image build (slower to build)
+bin/jt build -- --warning-as-error              # Default: JVM-only build (no native image, no Graal compiler)
+bin/jt build --env jvm-ee -- --warning-as-error # JVM with the Graal compiler
+bin/jt build --env native-ee -- --warning-as-error # Native Image build (slower to build)
 ```
+
+Always build with `-- --warning-as-error`: CI does, so Java and Truffle DSL warnings
+(e.g. a `@Cached` parameter missing `neverDefault`) fail the build there.
+Building the same way locally catches them before pushing.
 
 The built distribution is placed respectively in `mxbuild/truffleruby-jvm`, `mxbuild/truffleruby-jvm-ee` and `mxbuild/truffleruby-native-ee`.
 
@@ -245,7 +249,7 @@ See `CONTRIBUTING.md` for more details.
 
 | Command | Description |
 |---------|-------------|
-| `bin/jt build` | Build TruffleRuby (default: jvm) |
+| `bin/jt build -- --warning-as-error` | Build TruffleRuby (default: jvm), failing on warnings like CI |
 | `bin/jt test fast` | Run fast spec subset |
 | `bin/jt test spec/ruby/...` | Run specific spec file(s) |
 | `bin/jt test mri test/mri/tests/...` | Run specific MRI test |
