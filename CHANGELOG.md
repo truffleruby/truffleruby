@@ -22,6 +22,7 @@ Bug fixes:
 * Fix `Enumerator::Lazy#with_index` with a block to pass on the elements instead of the results of the block (#4543, @taxor03).
 * Fix `Socket.getifaddrs` skipping the first entry of `getifaddrs(3)` and returning the position in the list instead of the interface index as `Socket::Ifaddr#ifindex` (#4545, @taxor03).
 * Fix `rb_arithmetic_sequence_extract()` setting `exclude_end` to a `VALUE` handle instead of `1` for an `Enumerator::ArithmeticSequence` with an exclusive end (@nirvdrum).
+* Fix `Array#[]=` with a start and length or a `Range` inserting a replacement whose `#to_ary` is handled by `#method_missing`, like a `SimpleDelegator` of an Array, as one element instead of splicing its elements, and inserting a replacement whose `#to_ary` returns neither an Array nor `nil` instead of raising a `TypeError` (#4557, @taxor03).
 
 
 Compatibility:
