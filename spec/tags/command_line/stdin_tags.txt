@@ -1,0 +1,2 @@
+slow:The interpreter when no script is given reads the script from stdin
+slow:The interpreter when no script is given reads the script from a terminal until the first end-of-file and leaves the rest as input for the script

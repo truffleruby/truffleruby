@@ -4,9 +4,11 @@ New features:
 
 * Updated to Ruby 4.0.9 (@eregon).
 * Updated to GraalVM 25.5.5.0.3 (@eregon).
+* Implement the `pty` standard library: `PTY.open`, `PTY.spawn`, `PTY.getpty` and `PTY.check` (@eregon).
 
 Bug fixes:
 
+* Fix reading the main script from a terminal reading past the end-of-file (Ctrl-D) when more input was already typed (@eregon).
 * Fix `Process.exec` ignoring the `:umask` option (@nirvdrum).
 * Fix `Socket.tcp` and `Addrinfo#connect` with a timeout returning an unconnected socket on macOS when the connection was refused (@eregon).
 * Fix `String#append_as_bytes` to return `self` instead of its arguments (#4502, @taxor03).
