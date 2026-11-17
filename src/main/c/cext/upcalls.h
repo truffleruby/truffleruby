@@ -1317,6 +1317,15 @@ static inline VALUE rb_tr_up_rb_ary_new_from_values(const void *v0, long v1) {
   return result;
 }
 
+extern VALUE (*rb_tr_up_impl_rb_ary_resize)(VALUE v0, long v1);
+static inline VALUE rb_tr_up_rb_ary_resize(VALUE v0, long v1) {
+  VALUE result = rb_tr_up_impl_rb_ary_resize(v0, v1);
+  if (UNLIKELY(rb_tr_pending_exception)) {
+    rb_tr_longjmp_from_java_exception();
+  }
+  return result;
+}
+
 extern int (*rb_tr_up_impl_rb_ascii8bit_encindex)(void);
 static inline int rb_tr_up_rb_ascii8bit_encindex(void) {
   int result = rb_tr_up_impl_rb_ascii8bit_encindex();

@@ -202,6 +202,7 @@ module CExtUpcalls
     ["rb_ary_new", :cext, "V", ""],
     ["rb_ary_new_capa", :cext, "V", "L"],
     ["rb_ary_new_from_values", :cext, "V", "PL"],
+    ["rb_ary_resize", :cext, "V", "VL"],
     ["rb_ascii8bit_encindex", :cext, "I", ""],
     ["rb_attr", :cext, "O", "VYIII"],
     ["rb_backref_get", :cext, "V", ""],

@@ -29,6 +29,7 @@ Bug fixes:
 
 Compatibility:
 
+* Implement `rb_ary_resize()`, which is used by `IO#cursor` from `io/console` (@eregon).
 * Call the most recently enabled `TracePoint` first when several `TracePoint`s are enabled for the same event, like CRuby (@eregon).
 * Add support for the `:call` and `:c_call` `TracePoint` events and `TracePoint#defined_class` (@eregon).
 * Add support for the `:return` `TracePoint` event and `TracePoint#return_value` (@eregon).

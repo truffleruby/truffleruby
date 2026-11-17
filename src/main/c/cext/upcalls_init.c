@@ -179,6 +179,7 @@ long (*rb_tr_up_impl_rb_array_len)(VALUE v0);
 VALUE (*rb_tr_up_impl_rb_ary_new)(void);
 VALUE (*rb_tr_up_impl_rb_ary_new_capa)(long v0);
 VALUE (*rb_tr_up_impl_rb_ary_new_from_values)(const void *v0, long v1);
+VALUE (*rb_tr_up_impl_rb_ary_resize)(VALUE v0, long v1);
 int (*rb_tr_up_impl_rb_ascii8bit_encindex)(void);
 void (*rb_tr_up_impl_rb_attr)(VALUE v0, ID v1, int v2, int v3, int v4);
 VALUE (*rb_tr_up_impl_rb_backref_get)(void);
@@ -663,6 +664,7 @@ void rb_tr_init_ffm_upcalls(void **upcalls) {
   rb_tr_up_impl_rb_ary_new = (VALUE (*)(void)) upcalls[i++];
   rb_tr_up_impl_rb_ary_new_capa = (VALUE (*)(long v0)) upcalls[i++];
   rb_tr_up_impl_rb_ary_new_from_values = (VALUE (*)(const void *v0, long v1)) upcalls[i++];
+  rb_tr_up_impl_rb_ary_resize = (VALUE (*)(VALUE v0, long v1)) upcalls[i++];
   rb_tr_up_impl_rb_ascii8bit_encindex = (int (*)(void)) upcalls[i++];
   rb_tr_up_impl_rb_attr = (void (*)(VALUE v0, ID v1, int v2, int v3, int v4)) upcalls[i++];
   rb_tr_up_impl_rb_backref_get = (VALUE (*)(void)) upcalls[i++];

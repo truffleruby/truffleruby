@@ -812,6 +812,17 @@ public abstract class ArrayNodes {
 
     }
 
+    @Primitive(name = "array_truncate", lowerFixnum = 1)
+    public abstract static class ArrayTruncatePrimitiveNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization
+        RubyArray truncate(RubyArray array, int size,
+                @Cached ArrayTruncateNode truncateNode) {
+            truncateNode.execute(array, size);
+            return array;
+        }
+    }
+
     @Primitive(name = "array_each_with_index")
     @ImportStatic(ArrayGuards.class)
     public abstract static class EachWithIndexNode extends PrimitiveArrayArgumentsNode

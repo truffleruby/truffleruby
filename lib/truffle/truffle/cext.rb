@@ -1166,6 +1166,18 @@ module Truffle::CExt
     Hash(value)
   end
 
+  def rb_ary_resize(array, len)
+    Primitive.check_frozen array
+    raise IndexError, "index #{len} too small for array" if len < 0
+    size = array.size
+    if len > size
+      array.fill(nil, size, len - size)
+    elsif len < size
+      Primitive.array_truncate(array, len)
+    end
+    array
+  end
+
   def rb_ary_new
     []
   end

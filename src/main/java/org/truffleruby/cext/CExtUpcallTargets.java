@@ -1770,6 +1770,18 @@ public abstract class CExtUpcallTargets {
         }
     }
 
+    private static final int INDEX_rb_ary_resize = nextUpcallIndex++;
+
+    @CExtUpcall
+    public static long upcall_rb_ary_resize(long v0, long v1) {
+        try {
+            return (long) runtime.upcall(INDEX_rb_ary_resize, v0, v1);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
+        }
+    }
+
     private static final int INDEX_rb_ascii8bit_encindex = nextUpcallIndex++;
 
     @CExtUpcall
@@ -5912,6 +5924,7 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_ary_new", "L()", "cext", "rb_ary_new", "V", "",
             "upcall_rb_ary_new_capa", "L(L)", "cext", "rb_ary_new_capa", "V", "L",
             "upcall_rb_ary_new_from_values", "L(LL)", "cext", "rb_ary_new_from_values", "V", "LL",
+            "upcall_rb_ary_resize", "L(LL)", "cext", "rb_ary_resize", "V", "VL",
             "upcall_rb_ascii8bit_encindex", "I()", "cext", "rb_ascii8bit_encindex", "I", "",
             "upcall_rb_attr", "V(LLIII)", "cext", "rb_attr", "O", "VYIII",
             "upcall_rb_backref_get", "L()", "cext", "rb_backref_get", "V", "",
