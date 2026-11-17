@@ -432,15 +432,6 @@ static inline VALUE rb_tr_up_send0_getbyte(VALUE v0) {
   return result;
 }
 
-extern VALUE (*rb_tr_up_impl_send0_gets)(VALUE v0);
-static inline VALUE rb_tr_up_send0_gets(VALUE v0) {
-  VALUE result = rb_tr_up_impl_send0_gets(v0);
-  if (UNLIKELY(rb_tr_pending_exception)) {
-    rb_tr_longjmp_from_java_exception();
-  }
-  return result;
-}
-
 extern int (*rb_tr_up_impl_send0_i_arity)(VALUE v0);
 static inline int rb_tr_up_send0_i_arity(VALUE v0) {
   int result = rb_tr_up_impl_send0_i_arity(v0);
@@ -2673,6 +2664,15 @@ static inline VALUE rb_tr_up_rb_io_get_write_io(VALUE v0) {
 extern int (*rb_tr_up_impl_rb_io_mode)(VALUE v0);
 static inline int rb_tr_up_rb_io_mode(VALUE v0) {
   int result = rb_tr_up_impl_rb_io_mode(v0);
+  if (UNLIKELY(rb_tr_pending_exception)) {
+    rb_tr_longjmp_from_java_exception();
+  }
+  return result;
+}
+
+extern VALUE (*rb_tr_up_impl_rb_io_gets)(VALUE v0);
+static inline VALUE rb_tr_up_rb_io_gets(VALUE v0) {
+  VALUE result = rb_tr_up_impl_rb_io_gets(v0);
   if (UNLIKELY(rb_tr_pending_exception)) {
     rb_tr_longjmp_from_java_exception();
   }

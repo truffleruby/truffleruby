@@ -1497,6 +1497,12 @@ module Truffle::CExt
     Truffle::IOOperations.print out, args, nil
   end
 
+  def rb_io_gets(io)
+    # Called from Ruby and not directly from C, as IO#gets sets $_ in its caller.
+    # rb_io_gets() does not set $_ for the caller of the C function, and always reads a line, regardless of $/.
+    io.gets("\n")
+  end
+
   def rb_io_puts(out, args)
     Truffle::IOOperations.puts out, args
   end

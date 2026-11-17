@@ -585,18 +585,6 @@ public abstract class CExtUpcallTargets {
         }
     }
 
-    private static final int INDEX_send0_gets = nextUpcallIndex++;
-
-    @CExtUpcall
-    public static long upcall_send0_gets(long v0) {
-        try {
-            return (long) runtime.upcall(INDEX_send0_gets, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
     private static final int INDEX_send0_i_arity = nextUpcallIndex++;
 
     @CExtUpcall
@@ -3595,6 +3583,18 @@ public abstract class CExtUpcallTargets {
         }
     }
 
+    private static final int INDEX_rb_io_gets = nextUpcallIndex++;
+
+    @CExtUpcall
+    public static long upcall_rb_io_gets(long v0) {
+        try {
+            return (long) runtime.upcall(INDEX_rb_io_gets, v0);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
+        }
+    }
+
     private static final int INDEX_rb_io_open_descriptor = nextUpcallIndex++;
 
     @CExtUpcall
@@ -5812,7 +5812,6 @@ public abstract class CExtUpcallTargets {
             "upcall_send0_exclude_end_p", "L(L)", "send", "exclude_end?", "V", "V",
             "upcall_send0_flush", "L(L)", "send", "flush", "V", "V",
             "upcall_send0_getbyte", "L(L)", "send", "getbyte", "V", "V",
-            "upcall_send0_gets", "L(L)", "send", "gets", "V", "V",
             "upcall_send0_i_arity", "I(L)", "send", "arity", "I", "V",
             "upcall_send0_i_bytesize", "I(L)", "send", "bytesize", "I", "V",
             "upcall_send0_imag", "L(L)", "send", "imag", "V", "V",
@@ -6066,6 +6065,7 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_io_get_io", "L(L)", "cext", "rb_io_get_io", "V", "V",
             "upcall_rb_io_get_write_io", "L(L)", "cext", "rb_io_get_write_io", "V", "V",
             "upcall_rb_io_mode", "I(L)", "cext", "rb_io_mode", "I", "V",
+            "upcall_rb_io_gets", "L(L)", "cext", "rb_io_gets", "V", "V",
             "upcall_rb_io_open_descriptor", "L(LLLLLLLLL)", "cext", "rb_io_open_descriptor", "V", "VVVVVVVVV",
             "upcall_rb_io_path", "L(L)", "cext", "rb_io_path", "V", "V",
             "upcall_rb_io_print", "L(LL)", "cext", "rb_io_print", "V", "VV",

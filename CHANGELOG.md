@@ -8,6 +8,7 @@ New features:
 
 Bug fixes:
 
+* Fix `rb_io_gets()` raising `RuntimeError`, which broke `IO#getpass` from `io/console` (@eregon).
 * Fix reading the main script from a terminal reading past the end-of-file (Ctrl-D) when more input was already typed (@eregon).
 * Fix `Process.exec` ignoring the `:umask` option (@nirvdrum).
 * Fix `Socket.tcp` and `Addrinfo#connect` with a timeout returning an unconnected socket on macOS when the connection was refused (@eregon).
