@@ -58,8 +58,4 @@ public abstract class WriteUUStringNode extends FormatNode {
         return output.getBytes();
     }
 
-    protected boolean isEmpty(byte[] bytes) {
-        return bytes.length == 0;
-    }
-
 }

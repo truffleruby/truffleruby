@@ -47,13 +47,4 @@ public final class SafeDoubleParser extends SafeDecimalParser {
         return valueOf(s);
     }
 
-    /** Safe way of getting the double value<br>
-     * prevents BigDecimal from calling Double.parseDouble()
-     * 
-     * @param number
-     * @return the double value */
-    public static double doubleValue(Number number) {
-        return decimalValue(number);
-    }
-
 }

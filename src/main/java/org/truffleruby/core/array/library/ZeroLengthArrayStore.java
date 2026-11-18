@@ -214,20 +214,5 @@ public final class ZeroLengthArrayStore {
             assert capacity == 0;
             return ZERO_LENGTH_STORE;
         }
-
-        @Override
-        public boolean accepts(Object value) {
-            return false;
-        }
-
-        @Override
-        public boolean specializesFor(Object value) {
-            return false;
-        }
-
-        @Override
-        public boolean isDefaultValue(Object value) {
-            return value == null;
-        }
     }
 }

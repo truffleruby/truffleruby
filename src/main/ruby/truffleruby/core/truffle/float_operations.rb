@@ -16,10 +16,6 @@ module Truffle
         ndigits >= Float::DIG + 2 - (exponent > 0 ? exponent / 4 : exponent / 3 - 1)
       end
 
-      def round_underflow?(ndigits, exponent)
-        exponent >= 0 && ndigits >= (Float::DIG + 2) - exponent / 4
-      end
-
       def round_to_n_place(f, ndigits, half)
         case half
         when :up

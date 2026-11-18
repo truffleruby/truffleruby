@@ -35,12 +35,6 @@ public final class TStringWithEncoding extends TStringWithEncodingBase {
     }
 
     @Override
-    public TStringWithEncoding asImmutable() {
-        CompilerAsserts.neverPartOfCompilation("Only behind @TruffleBoundary");
-        return this;
-    }
-
-    @Override
     public TStringWithEncoding forceEncoding(RubyEncoding newEncoding) {
         CompilerAsserts.neverPartOfCompilation("Only behind @TruffleBoundary");
         if (encoding == newEncoding) {

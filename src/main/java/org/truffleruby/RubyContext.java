@@ -29,7 +29,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.TruffleFile;
 import com.oracle.truffle.api.TruffleLanguage.ContextReference;
-import com.oracle.truffle.api.TruffleLogger;
 import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.nodes.EncapsulatingNodeReference;
@@ -54,7 +53,6 @@ import org.truffleruby.core.encoding.TStringUtils;
 import org.truffleruby.core.exception.CoreExceptions;
 import org.truffleruby.core.fiber.FiberManager;
 import org.truffleruby.core.hash.PreInitializationManager;
-import org.truffleruby.core.hash.ReHashable;
 import org.truffleruby.core.inlined.CoreMethods;
 import org.truffleruby.core.kernel.AtExitManager;
 import org.truffleruby.core.tracepoint.SlowPathTracePoints;
@@ -108,7 +106,6 @@ public final class RubyContext {
     @CompilationFinal private PrintStream outStream;
     @CompilationFinal private PrintStream errStream;
 
-    @CompilationFinal public TruffleLogger logger;
     @CompilationFinal private Options options;
 
     private final SafepointManager safepointManager;
@@ -402,7 +399,6 @@ public final class RubyContext {
         this.env = env;
         this.outStream = printStreamFor(env.out());
         this.errStream = printStreamFor(env.err());
-        this.logger = env.getLogger("");
         this.preInitializing = env.isPreInitialization();
     }
 
@@ -561,15 +557,6 @@ public final class RubyContext {
         return hashing;
     }
 
-    /** With context pre-initialization, the random seed must be reset at runtime. So every use of the random seed
-     * through Hashing should provide a way to rehash to take the new random seed in account. */
-    public Hashing getHashing(ReHashable reHashable) {
-        if (isPreInitializing()) {
-            preInitializationManager.addReHashable(reHashable);
-        }
-        return hashing;
-    }
-
     public BacktraceFormatter getDefaultBacktraceFormatter() {
         return defaultBacktraceFormatter;
     }
@@ -672,10 +659,6 @@ public final class RubyContext {
 
     public PreInitializationManager getPreInitializationManager() {
         return preInitializationManager;
-    }
-
-    public TruffleLogger getLogger() {
-        return logger;
     }
 
     public boolean isInitialized() {

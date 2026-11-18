@@ -76,40 +76,6 @@ class SafeDecimalParser {
         return result;
     }
 
-    /** Safe way of getting the double value<br>
-     * prevents BigDecimal from calling Double.parseDouble()
-     * 
-     * @param number
-     * @return the double value */
-    protected static final double decimalValue(Number number) {
-        double result = 0;
-        if (number != null) {
-            if (number instanceof BigDecimal) {
-                result = decimalValue((BigDecimal) number);
-            } else {
-                result = number.doubleValue();
-            }
-        }
-        return result;
-    }
-
-    /** Safe way of getting the double value<br>
-     * Prevents BigDecimal from calling Double.parseDouble()
-     * 
-     * @param bigDecimal
-     * @return the double value */
-    protected static final double decimalValue(BigDecimal bigDecimal) {
-        double result = 0.0;
-        if (bigDecimal != null) {
-            if (isDangerous(bigDecimal)) {
-                result = decimalValueOf(bigDecimal.toString()).doubleValue();
-            } else {
-                result = bigDecimal.doubleValue();
-            }
-        }
-        return result;
-    }
-
     /** Slow parsing of a suspicious value
      * <p>
      * Rounding takes place if the value is inside the bad interval

@@ -1443,8 +1443,6 @@ public abstract class IntegerNodes {
     @CoreMethod(names = { "abs", "magnitude" })
     public abstract static class AbsNode extends CoreMethodArrayArgumentsNode {
 
-        public abstract Object executeAbs(Object a);
-
         @Specialization(rewriteOn = ArithmeticException.class)
         int absIntInBounds(int n) {
             return (n < 0) ? Math.negateExact(n) : n;
@@ -1706,8 +1704,6 @@ public abstract class IntegerNodes {
 
     @Primitive(name = "integer_lower")
     public abstract static class IntegerLowerNode extends PrimitiveArrayArgumentsNode {
-
-        public abstract Object executeLower(Object value);
 
         @Specialization
         int lower(int value) {

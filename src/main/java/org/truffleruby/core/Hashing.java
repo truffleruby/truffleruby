@@ -36,7 +36,6 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
 public final class Hashing {
 
-    public static final Hashing NO_SEED = new Hashing(0);
 
     @CompilationFinal private long seed;
 
@@ -46,10 +45,6 @@ public final class Hashing {
 
     public void patchSeed(long seed) {
         this.seed = seed;
-    }
-
-    public int hash(int value) {
-        return value + (int) seed;
     }
 
     public long hash(long salt, long value) {
@@ -67,20 +62,6 @@ public final class Hashing {
 
     public static long end(long hash) {
         return murmurStep(murmurStep(hash, 10), 17);
-    }
-
-    /* stringHash is not resistant to known Ruby vulnerabilities and so should be used in combination with the context's
-     * Hashing instance. */
-    public static int stringHash(byte[] bytes, int startingHashCode, int offset, int length) {
-        assert offset + length <= bytes.length;
-
-        int hashCode = startingHashCode;
-        final int endIndex = offset + length;
-        for (int i = offset; i < endIndex; i++) {
-            hashCode = 31 * hashCode + bytes[i];
-        }
-
-        return hashCode;
     }
 
     private static long murmur(long h) {

@@ -25,17 +25,6 @@ public final class PreInitializationManager {
 
     private final Set<RubyHash> hashesCreatedDuringPreInit = Collections.newSetFromMap(new WeakHashMap<>());
 
-    public void addReHashable(ReHashable reHashable) {
-        // This might get called multiple times for the same ReHashable,
-        // so only add it if it is not already in the List.
-        for (ReHashable existing : reHashables) {
-            if (reHashable == existing) {
-                return;
-            }
-        }
-        reHashables.add(reHashable);
-    }
-
     @TruffleBoundary
     public void addPreInitHash(RubyHash hash) {
         hashesCreatedDuringPreInit.add(hash);

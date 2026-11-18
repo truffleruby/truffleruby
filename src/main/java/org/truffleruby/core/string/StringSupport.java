@@ -145,31 +145,6 @@ public final class StringSupport {
         return enc.length(bytes, p, e);
     }
 
-    /** This method functions like `StringSupport.encLength`, but differs when an invalid character is encountered
-     * (i.e., a negative byte length). In such cases, it attempts to perform a limited form of error recovery. It checks
-     * the `Encoding`'s minimum length to see if it's small enough to fit within the range [end - p]. If it is, the
-     * method pretends a character with a byte length equal to the `Encoding`'s minimum length was discovered and that
-     * byte length is returned. If the minimum character length can't fit in the range, this method pretends a character
-     * with a byte length corresponding to the size of the range was encountered and the range size is returned. If a
-     * valid character was encountered, its byte length is returned just as would be the case with
-     * `StringSupport.encLength`. Consequently, this method never returns a negative value.
-     *
-     * Ruby allows Strings with a `CR_BROKEN` code range to propagate through to an end user, who may call methods on
-     * that String. This variant of getting a character's length is designed is intended to be used in such cases. E.g.,
-     * if calling `String#each_char` on a String that is `CR_BROKEN`, returning negative values for the character length
-     * would break iteration. In such cases, Ruby just pretends broken byte sequences have some arbitrary, but
-     * deterministic, positive byte length.
-     *
-     * Corresponding MRI method: rb_enc_mbclen */
-    public static int length(Encoding enc, byte[] bytes, int p, int end) {
-        int n = encLength(enc, bytes, p, end);
-        if (MBCLEN_CHARFOUND_P(n) && MBCLEN_CHARFOUND_LEN(n) <= end - p) {
-            return MBCLEN_CHARFOUND_LEN(n);
-        }
-        int min = enc.minLength();
-        return min <= end - p ? min : end - p;
-    }
-
     /** This method functions like `StringSupport.encLength`, but differs when a character sequence is too short. In
      * such cases, it examines the return value from `Encoding#length` and if exceeds the length of the byte sequence,
      * it returns the number of bytes required to make the character valid, but negated. Since the value is negated, the
@@ -194,11 +169,6 @@ public final class StringSupport {
     // MBCLEN_NEEDMORE_P, ONIGENC_MBCLEN_NEEDMORE_P
     public static boolean MBCLEN_NEEDMORE_P(int r) {
         return r < -1;
-    }
-
-    // MBCLEN_NEEDMORE_LEN, ONIGENC_MBCLEN_NEEDMORE_LEN
-    public static int MBCLEN_NEEDMORE_LEN(int r) {
-        return -1 - r;
     }
 
     // MBCLEN_NEEDMORE, ONIGENC_MBCLEN_NEEDMORE
@@ -277,10 +247,6 @@ public final class StringSupport {
         return encoding.mbcToCode(bytes, p, end);
     }
 
-    public static int offset(int start, int end, int charEnd) {
-        return charEnd == -1 ? end - start : Math.min(end, charEnd) - start;
-    }
-
     public static int scanHex(byte[] bytes, int p, int len) {
         return scanHex(bytes, p, len, ASCIIEncoding.INSTANCE);
     }
@@ -334,28 +300,6 @@ public final class StringSupport {
             olen++;
         }
         return olen;
-    }
-
-    public static String escapedCharFormat(int c, boolean isUnicode) {
-        String format;
-        // c comparisons must be unsigned 32-bit
-        if (isUnicode) {
-
-            if ((c & 0xFFFFFFFFL) < 0x7F && Encoding.isAscii(c) && ASCIIEncoding.INSTANCE.isPrint(c)) {
-                format = "%c";
-            } else if (c < 0x10000) {
-                format = "\\u%04X";
-            } else {
-                format = "\\u{%X}";
-            }
-        } else {
-            if ((c & 0xFFFFFFFFL) < 0x100) {
-                format = "\\x%02X";
-            } else {
-                format = "\\x{%X}";
-            }
-        }
-        return format;
     }
 
     /** rb_str_count */

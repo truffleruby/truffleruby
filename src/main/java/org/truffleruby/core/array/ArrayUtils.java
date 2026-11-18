@@ -173,14 +173,6 @@ public abstract class ArrayUtils {
         }
     }
 
-    public static long capacityForOneMore(RubyLanguage language, long current) {
-        if (current < language.options.ARRAY_UNINITIALIZED_SIZE) {
-            return language.options.ARRAY_UNINITIALIZED_SIZE;
-        } else {
-            return current << 1;
-        }
-    }
-
     public static void arraycopy(Object[] src, int srcPos, Object[] dest, int destPos, int length) {
         System.arraycopy(src, srcPos, dest, destPos, length);
     }
@@ -223,11 +215,6 @@ public abstract class ArrayUtils {
         final Object[] copy = new Object[array.length];
         System.arraycopy(array, 0, copy, 0, array.length);
         return copy;
-    }
-
-    public static Object[] shift(Object[] array) {
-        assert array.length > 0;
-        return extractRange(array, 1, array.length);
     }
 
     public static Object[] unshift(Object[] array, Object element) {
@@ -278,11 +265,6 @@ public abstract class ArrayUtils {
     }
 
     @TruffleBoundary
-    public static void sort(Object[] elements, int length) {
-        Arrays.sort(elements, 0, length);
-    }
-
-    @TruffleBoundary
     public static List<Object> asList(Object[] array) {
         return Arrays.asList(array);
     }
@@ -297,15 +279,6 @@ public abstract class ArrayUtils {
             }
         }
         return result.toArray();
-    }
-
-    @TruffleBoundary
-    public static <T, R> Object[] map(T[] array, Function<? super T, ? extends R> mapper) {
-        var result = new Object[array.length];
-        for (int i = 0; i < array.length; i++) {
-            result[i] = mapper.apply(array[i]);
-        }
-        return result;
     }
 
     @TruffleBoundary

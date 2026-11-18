@@ -11,17 +11,12 @@
 package org.truffleruby.processor;
 
 import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 
 public abstract class TruffleRubyProcessor extends AbstractProcessor {
-
-    ProcessingEnvironment getProcessingEnvironment() {
-        return processingEnv;
-    }
 
     @Override
     public SourceVersion getSupportedSourceVersion() {

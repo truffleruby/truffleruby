@@ -119,7 +119,6 @@ public final class CompactHashStore {
 
     // Returned by methods doing array search which don't find what they are looking for
     static final int KEY_NOT_FOUND = -2;
-    static final int HASH_NOT_FOUND = KEY_NOT_FOUND;
 
     public static final float THRESHOLD_LOAD_FACTOR_FOR_INDEX_REBUILD = 0.75f;
 

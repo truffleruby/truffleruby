@@ -99,10 +99,6 @@ public abstract class ArrayLiteralNode extends RubyContextSourceNodeCustomExecut
         return super.isDefined(frame, language, context);
     }
 
-    public int getSize() {
-        return values.length;
-    }
-
     private static final class EmptyArrayLiteralNode extends ArrayLiteralNode {
 
         public EmptyArrayLiteralNode(RubyLanguage language, RubyNode[] values) {

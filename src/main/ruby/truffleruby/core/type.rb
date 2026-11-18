@@ -498,13 +498,6 @@ module Truffle
       end
     end
 
-    def self.coerce_to_bitwise_operand(obj)
-      if Primitive.is_a? obj, Float
-        raise TypeError, "can't convert Float into Integer for bitwise arithmetic"
-      end
-      Primitive.convert_with_to_int obj
-    end
-
     # String helpers
 
     def self.check_null_safe(string)
@@ -518,10 +511,6 @@ module Truffle
 
     def self.external_string(string)
       string.force_encoding Encoding.default_external
-    end
-
-    def self.encode_string(string, enc)
-      string.force_encoding enc
     end
 
     # Misc

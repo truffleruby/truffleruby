@@ -232,20 +232,5 @@ public final class ObjectArrayStore {
         public Object[] allocate(int capacity) {
             return new Object[capacity];
         }
-
-        @Override
-        public boolean accepts(Object value) {
-            return true;
-        }
-
-        @Override
-        public boolean specializesFor(Object value) {
-            return !(value instanceof Integer) && !(value instanceof Long) && !(value instanceof Double);
-        }
-
-        @Override
-        public boolean isDefaultValue(Object value) {
-            return value == null;
-        }
     }
 }

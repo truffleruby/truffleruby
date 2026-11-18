@@ -842,8 +842,6 @@ public abstract class KernelNodes {
     @CoreMethod(names = "hash")
     public abstract static class HashNode extends CoreMethodArrayArgumentsNode {
 
-        public abstract Object execute(Object value);
-
         @Specialization
         long hashBoolean(boolean value) {
             return HashOperations.hashBoolean(value, getContext(), this);
@@ -1459,8 +1457,6 @@ public abstract class KernelNodes {
 
     @CoreMethod(names = "singleton_class")
     public abstract static class SingletonClassMethodNode extends CoreMethodArrayArgumentsNode {
-
-        public abstract RubyClass executeSingletonClass(Object self);
 
         @Specialization
         RubyClass singletonClass(Object self,

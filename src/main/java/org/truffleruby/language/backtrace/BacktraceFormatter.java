@@ -18,6 +18,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
+import org.truffleruby.annotations.Keep;
 import org.truffleruby.annotations.SuppressFBWarnings;
 import org.truffleruby.core.VMPrimitiveNodes.InitStackOverflowClassesEagerlyNode;
 import org.truffleruby.core.array.ArrayHelpers;
@@ -86,6 +87,7 @@ public final class BacktraceFormatter {
     }
 
     /** For debug purposes. */
+    @Keep
     public static boolean isApplicationCode(SourceSection sourceSection) {
         return isUserSourceSection(sourceSection) &&
                 !RubyLanguage.getPath(sourceSection.getSource()).contains("/lib/stdlib/rubygems");

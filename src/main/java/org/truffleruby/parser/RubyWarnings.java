@@ -62,19 +62,6 @@ public final class RubyWarnings implements WarnCallback {
     }
 
     /** Prints a warning, unless $VERBOSE is nil. */
-    public void warn(String fileName, int lineNumber, String message) {
-        if (!warningsEnabled()) {
-            return;
-        }
-
-        StringBuilder buffer = new StringBuilder();
-
-        buffer.append(fileName).append(':').append(lineNumber).append(": ");
-        buffer.append("warning: ").append(message).append('\n');
-        printWarning(buffer.toString());
-    }
-
-    /** Prints a warning, unless $VERBOSE is nil. */
     public void warn(String fileName, String message) {
         if (!warningsEnabled()) {
             return;
@@ -92,13 +79,6 @@ public final class RubyWarnings implements WarnCallback {
     public void warning(String message) {
         if (isVerbose()) {
             warn(null, message);
-        }
-    }
-
-    /** Prints a warning, only if $VERBOSE is true. */
-    public void warning(String fileName, int lineNumber, String message) {
-        if (isVerbose()) {
-            warn(fileName, lineNumber, message);
         }
     }
 

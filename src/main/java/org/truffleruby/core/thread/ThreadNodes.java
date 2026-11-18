@@ -568,8 +568,6 @@ public abstract class ThreadNodes {
     @CoreMethod(names = "status")
     public abstract static class StatusNode extends CoreMethodArrayArgumentsNode {
 
-        @Child private TruffleString.FromJavaStringNode fromJavaStringNode = TruffleString.FromJavaStringNode.create();
-
         @Specialization
         Object status(RubyThread self) {
             // TODO: slightly hackish

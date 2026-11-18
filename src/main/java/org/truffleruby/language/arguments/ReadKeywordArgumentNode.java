@@ -48,10 +48,6 @@ public abstract class ReadKeywordArgumentNode extends RubyContextSourceNode impl
         this.readUserKeywordsHashNode = new ReadUserKeywordsHashNode();
     }
 
-    public RubySymbol getName() {
-        return name;
-    }
-
     @Override
     public final Object execute(VirtualFrame frame) {
         return execute(frame, readUserKeywordsHashNode.execute(frame));

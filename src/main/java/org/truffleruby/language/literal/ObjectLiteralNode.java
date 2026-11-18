@@ -28,10 +28,6 @@ public final class ObjectLiteralNode extends RubyContextSourceNode {
         return object;
     }
 
-    public Object getObject() {
-        return object;
-    }
-
     @Override
     public RubyNode cloneUninitialized() {
         var copy = new ObjectLiteralNode(object);

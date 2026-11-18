@@ -56,8 +56,4 @@ public abstract class LogicalClassNode extends RubyBaseNode {
         return foreignClassNode.execute(this, object);
     }
 
-    protected int getCacheLimit() {
-        return getLanguage().options.CLASS_CACHE;
-    }
-
 }

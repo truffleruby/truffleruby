@@ -334,20 +334,5 @@ public final class SharedArrayStorage implements ObjectGraphNode {
         public SharedArrayStorage allocate(int capacity) {
             return new SharedArrayStorage(storageAllocator.allocate(capacity));
         }
-
-        @Override
-        public boolean accepts(Object value) {
-            return storageAllocator.accepts(value);
-        }
-
-        @Override
-        public boolean specializesFor(Object value) {
-            return storageAllocator.specializesFor(value);
-        }
-
-        @Override
-        public boolean isDefaultValue(Object value) {
-            return storageAllocator.isDefaultValue(value);
-        }
     }
 }

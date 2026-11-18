@@ -36,7 +36,6 @@ import org.truffleruby.language.arguments.ArgumentsDescriptor;
 
 public abstract class RubyGuards {
 
-    private static final long NEGATIVE_ZERO_DOUBLE_BITS = Double.doubleToRawLongBits(-0.0);
 
     // Basic Java types
 
@@ -213,22 +212,6 @@ public abstract class RubyGuards {
 
     public static boolean isNaN(double value) {
         return Double.isNaN(value);
-    }
-
-    public static boolean isInfinity(double value) {
-        return Double.isInfinite(value);
-    }
-
-    public static boolean isFinite(double value) {
-        return Double.isFinite(value);
-    }
-
-    public static boolean isPositive(double value) {
-        return value >= 0;
-    }
-
-    public static boolean isNegativeZero(double value) {
-        return Double.doubleToRawLongBits(value) == NEGATIVE_ZERO_DOUBLE_BITS;
     }
 
     // Composite
