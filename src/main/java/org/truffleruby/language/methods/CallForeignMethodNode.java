@@ -17,7 +17,6 @@ import com.oracle.truffle.api.dsl.GenerateCached;
 import com.oracle.truffle.api.dsl.GenerateInline;
 import com.oracle.truffle.api.dsl.GenerateUncached;
 import com.oracle.truffle.api.dsl.Idempotent;
-import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.dsl.ReportPolymorphism;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.interop.InteropException;
@@ -43,7 +42,6 @@ import org.truffleruby.language.dispatch.DispatchNode;
 @GenerateUncached
 public abstract class CallForeignMethodNode extends RubyBaseNode {
 
-    @NeverDefault
     public static CallForeignMethodNode getUncached() {
         return CallForeignMethodNodeGen.getUncached();
     }

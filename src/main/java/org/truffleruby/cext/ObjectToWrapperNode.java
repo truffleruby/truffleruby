@@ -14,7 +14,6 @@ import static org.truffleruby.cext.ValueWrapperManager.LONG_TAG;
 
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.ImportStatic;
-import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.strings.TruffleString;
@@ -38,7 +37,6 @@ import org.truffleruby.cext.ValueWrapperManager.CreateWrapperNode;
 @GenerateUncached
 public abstract class ObjectToWrapperNode extends RubyBaseNode {
 
-    @NeverDefault
     public abstract ValueWrapper execute(Object value);
 
     @Specialization(guards = "isSmallFixnum(value)")
