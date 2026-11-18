@@ -114,6 +114,17 @@ platform_is_not :windows do
       -> { PTY.spawn("sh", "-c", "echo ran", pgroup: true) }.should.raise(Errno::EPERM)
     end
 
+    it "raises Errno::ENOENT if the interpreter of the command does not exist" do
+      script = tmp("pty_spawn_bad_shebang.sh")
+      touch(script) { |f| f.puts "#!/nonexistent/pty_spawn_interpreter" }
+      File.chmod(0755, script)
+      begin
+        -> { PTY.spawn(script) }.should.raise(Errno::ENOENT)
+      ensure
+        rm_r script
+      end
+    end
+
     it "is a module function" do
       PTY.private_instance_methods(false).should.include?(:spawn)
       PTY.private_instance_methods(false).should.include?(:getpty)

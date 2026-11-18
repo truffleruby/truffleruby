@@ -538,15 +538,8 @@ module Truffle
       def spawn
         log_command 'spawn'
 
-        # Check if the command exists before posix_spawn to avoid zombie processes
-        # if posix_spawn returned a pid (e.g. on Linux) but the command is not found/executable.
-        # Also sets $? like MRI does when spawn raises.
-        begin
-          @command = resolve_in_path(@command)
-        rescue Errno::ENOENT, Errno::EACCES
-          Primitive.thread_set_return_code Process::Status.new(-1, 127, nil, nil)
-          raise
-        end
+        # posix_spawn() does not search in PATH
+        @command = resolve_in_path(@command)
 
         pid = posix_spawn @command, @argv, @env_array, @options
         if pid == -Errno::ENOEXEC::Errno
@@ -556,6 +549,10 @@ module Truffle
         end
         raise SystemCallError.new("posix_spawn #{@command}", -pid) if pid < 0
         pid
+      rescue SystemCallError
+        # Set $? like MRI does when spawn raises
+        Primitive.thread_set_return_code Process::Status.new(-1, 127, nil, nil)
+        raise
       end
 
       def posix_spawn(command, args, env_array, options)
@@ -609,11 +606,26 @@ module Truffle
           spawn_helper = "#{Truffle::Boot.ruby_home}/lib/truffle/spawn-helper"
           raise "#{spawn_helper} does not exist!" unless File.exist?(spawn_helper)
           cwd = chdir || Dir.pwd
-          args = [spawn_helper, ctty || '-', cwd, command, *args]
+
+          # posix_spawn() succeeds as soon as spawn-helper is executed, so spawn-helper reports a failure through a pipe.
+          # Both ends are close-on-exec in this process, so the read end is at end-of-file
+          # once spawn-helper executed the command, and no other child process inherits the pipe.
+          #
+          # spawn-helper gets the write end through a redirect, as a redirected fd is not close-on-exec in the child.
+          # It is redirected to the fd number it has in this process (status_w.fileno),
+          # because any other number might be an fd which the command should inherit.
+          # The source of the redirect is a copy of the write end (status_w_copy),
+          # because redirecting an fd to itself does not work reliably (see #redirect).
+          status_r, status_w = IO.pipe
+          status_w_copy = status_w.dup
+          redirects = [*redirects, status_w.fileno, status_w_copy.fileno]
+
+          helper_command = command
+          args = [spawn_helper, status_w.fileno.to_s, ctty || '-', cwd, command, *args]
           command = spawn_helper
         end
 
-        Truffle::POSIX.with_array_of_ints(redirects) do |redirects_ptr|
+        pid = Truffle::POSIX.with_array_of_ints(redirects) do |redirects_ptr|
           Truffle::POSIX.with_array_of_strings_pointer(args) do |argv|
             Truffle::POSIX.with_array_of_strings_pointer(env_array) do |env|
               Truffle::POSIX.with_array_of_ints(fds_to_close) do |fds_to_close_ptr|
@@ -622,6 +634,33 @@ module Truffle
               end
             end
           end
+        end
+
+        if use_helper
+          status_w.close
+          status_w_copy.close
+          failure = pid > 0 ? status_r.read : nil
+          status_r.close
+          if failure and !failure.empty?
+            step, errno = failure.unpack('ii')
+            # Reap spawn-helper
+            Truffle::ProcessOperations.wait(pid, 0, false, false)
+            raise SystemCallError.new(spawn_helper_failure(step, ctty, cwd, helper_command), errno)
+          end
+        end
+
+        pid
+      end
+
+      # The steps are in the same order as enum step in spawn-helper.c
+      def spawn_helper_failure(step, tty, cwd, command)
+        case step
+        when 0 then 'setsid'
+        when 1 then tty
+        when 2 then 'ioctl(TIOCSCTTY)'
+        when 3 then 'seteuid'
+        when 4 then cwd
+        else command
         end
       end
 
