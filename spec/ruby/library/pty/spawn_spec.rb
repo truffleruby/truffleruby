@@ -1,4 +1,5 @@
 require_relative '../../spec_helper'
+require_relative '../../core/process/fixtures/common'
 
 platform_is_not :windows do
   require 'pty'
@@ -95,8 +96,27 @@ platform_is_not :windows do
       spawn_and_read({ "PTY_SPEC_VAR" => "value" }, "echo $PTY_SPEC_VAR").should == "value\r\n"
     end
 
-    it "accepts [command, argv0]" do
-      spawn_and_read(["sh", "argv0"], "-c", "echo $0").should == "argv0\r\n"
+    guard_not -> { ProcessSpecs.busybox_sh? } do
+      it "accepts [command, argv0]" do
+        spawn_and_read(["sh", "argv0"], "-c", "echo $0").should == "argv0\r\n"
+      end
+    end
+
+    it "gives precedence to the redirections in options over the pty" do
+      spawn_and_read("sh", "-c", "echo to-stderr >&2; echo to-stdout", err: File::NULL).should == "to-stdout\r\n"
+    end
+
+    it "makes the pty the controlling terminal of the command even if stdin is redirected" do
+      spawn_and_read("sh", "-c", ": < /dev/tty && echo ok", in: File::NULL).should == "ok\r\n"
+    end
+
+    it "raises Errno::EPERM for the pgroup option as the command is a session leader" do
+      -> { PTY.spawn("sh", "-c", "echo ran", pgroup: true) }.should.raise(Errno::EPERM)
+    end
+
+    it "is a module function" do
+      PTY.private_instance_methods(false).should.include?(:spawn)
+      PTY.private_instance_methods(false).should.include?(:getpty)
     end
 
     it "raises Errno::ENOENT if the command does not exist" do

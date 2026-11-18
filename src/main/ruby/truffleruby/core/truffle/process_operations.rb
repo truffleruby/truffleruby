@@ -331,11 +331,13 @@ module Truffle
       end
 
       def controlling_terminal(tty)
+        # The child is a session leader, so its process group cannot be changed
+        raise Errno::EPERM, 'setpgid' if (@options[:pgroup] || -1) >= 0
+
+        # Before the redirects given in options, so those take precedence
         fd = tty.fileno
-        redirect 0, fd
-        redirect 1, fd
-        redirect 2, fd
-        @options[:ctty] = true
+        (@options[:redirect_fd] ||= []).unshift(0, fd, 1, fd, 2, fd)
+        @options[:ctty] = tty.path
       end
 
       def redirect(child_fd, parent_fd)
@@ -561,7 +563,7 @@ module Truffle
         pgroup = -1
         fds_to_close = []
         chdir = nil
-        ctty = false
+        ctty = nil
 
         options.each_pair do |key, value|
           case key
@@ -607,7 +609,7 @@ module Truffle
           spawn_helper = "#{Truffle::Boot.ruby_home}/lib/truffle/spawn-helper"
           raise "#{spawn_helper} does not exist!" unless File.exist?(spawn_helper)
           cwd = chdir || Dir.pwd
-          args = [spawn_helper, ctty ? 'ctty' : '-', cwd, command, *args]
+          args = [spawn_helper, ctty || '-', cwd, command, *args]
           command = spawn_helper
         end
 
