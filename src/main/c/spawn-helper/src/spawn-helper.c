@@ -20,58 +20,63 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-/* Exit statuses, like a shell and env(1) */
-#define EXIT_SETUP_FAILED 125
-#define EXIT_CANNOT_EXECUTE 126
-#define EXIT_NOT_FOUND 127
+/* The steps which can fail, reported to the parent process. Keep in sync with process_operations.rb. */
+enum step { STEP_SETSID, STEP_OPEN_TTY, STEP_TIOCSCTTY, STEP_SETEUID, STEP_CHDIR, STEP_EXEC };
 
-static void setup_failed(const char* what) {
-    perror(what);
-    exit(EXIT_SETUP_FAILED);
+/* Reports the failed step and errno to the parent process, which raises the corresponding exception. */
+static void fail(int status_fd, enum step step) {
+    int message[2] = { step, errno };
+    ssize_t written = write(status_fd, message, sizeof(message));
+    (void) written;
+    _exit(EXIT_FAILURE);
 }
 
 /* Performs the setup that posix_spawn() cannot do between fork() and exec(), and then execs the given command.
+ * status_fd is the write end of a pipe to report a failure to the parent process,
+ * it is closed by a successful exec so the parent process knows the command was executed.
  * tty is either the path of a terminal, to start a new session with it as controlling terminal (for PTY.spawn),
- * or "-".
- * posix_spawn() already succeeded when this runs, so a failure here cannot be reported as an exception by spawn:
- * it is printed on stderr and seen as the exit status of the process. */
+ * or "-". */
 int main(int argc, char* argv[]) {
-    if (argc < 5) {
-        fprintf(stderr, "Usage: %s (tty|-) working_directory executable argv0 args...\n", argv[0]);
-        return EXIT_SETUP_FAILED;
+    if (argc < 6) {
+        fprintf(stderr, "Usage: %s status_fd (tty|-) working_directory executable argv0 args...\n", argv[0]);
+        return EXIT_FAILURE;
     }
 
-    char* tty = argv[1];
-    char* working_directory = argv[2];
-    char* executable = argv[3];
-    argv += 4;
+    int status_fd = atoi(argv[1]);
+    char* tty = argv[2];
+    char* working_directory = argv[3];
+    char* executable = argv[4];
+    argv += 5;
+
+    if (fcntl(status_fd, F_SETFD, FD_CLOEXEC) == -1) {
+        perror("fcntl(status_fd, F_SETFD, FD_CLOEXEC)");
+        return EXIT_FAILURE;
+    }
 
     if (strcmp(tty, "-") != 0) {
         if (setsid() == -1) {
-            setup_failed("setsid");
+            fail(status_fd, STEP_SETSID);
         }
         int tty_fd = open(tty, O_RDWR | O_NOCTTY);
         if (tty_fd == -1) {
-            setup_failed(tty);
+            fail(status_fd, STEP_OPEN_TTY);
         }
         if (ioctl(tty_fd, TIOCSCTTY, 0) == -1) {
-            setup_failed("ioctl(TIOCSCTTY)");
+            fail(status_fd, STEP_TIOCSCTTY);
         }
         close(tty_fd);
         /* Like CRuby, drop privileges once the terminal is acquired */
         if (seteuid(getuid()) == -1) {
-            setup_failed("seteuid");
+            fail(status_fd, STEP_SETEUID);
         }
     }
 
     if (chdir(working_directory) == -1) {
-        setup_failed(working_directory);
+        fail(status_fd, STEP_CHDIR);
     }
 
     execvp(executable, argv);
 
     /* execvp only returns on failure */
-    int status = errno == ENOENT ? EXIT_NOT_FOUND : EXIT_CANNOT_EXECUTE;
-    perror(executable);
-    return status;
+    fail(status_fd, STEP_EXEC);
 }

@@ -31,6 +31,7 @@ Bug fixes:
 
 Compatibility:
 
+* `Process.spawn` with the `:chdir` option now raises if the command cannot be executed, instead of returning the pid of a process which fails (@eregon).
 * Fix `rb_io_gets()` raising `RuntimeError`, which broke `IO#getpass` from `io/console` (@eregon).
 * Implement `rb_ary_resize()`, which is used by `IO#cursor` from `io/console` (@eregon).
 * Call the most recently enabled `TracePoint` first when several `TracePoint`s are enabled for the same event, like CRuby (@eregon).
