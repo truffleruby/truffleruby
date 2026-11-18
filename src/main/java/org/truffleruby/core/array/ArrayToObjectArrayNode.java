@@ -10,7 +10,6 @@
  */
 package org.truffleruby.core.array;
 
-import com.oracle.truffle.api.dsl.NeverDefault;
 import org.truffleruby.core.array.library.ArrayStoreLibrary;
 import org.truffleruby.language.RubyBaseNode;
 
@@ -23,11 +22,6 @@ import com.oracle.truffle.api.profiles.IntValueProfile;
 
 @ImportStatic(ArrayGuards.class)
 public abstract class ArrayToObjectArrayNode extends RubyBaseNode {
-
-    @NeverDefault
-    public static ArrayToObjectArrayNode create() {
-        return ArrayToObjectArrayNodeGen.create();
-    }
 
     public Object[] unsplat(Object[] arguments) {
         assert arguments.length == 1;

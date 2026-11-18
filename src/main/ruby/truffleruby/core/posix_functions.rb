@@ -262,6 +262,12 @@ module Truffle::POSIX
     Primitive.posix_invoke_i_lL(MUNMAP_FUNCTION, a_address, b)
   end
 
+  def self.truffleposix_openpty(a, b, c)
+    a_address = a.address
+    b_address = b.address
+    Primitive.posix_invoke_i_lli(TRUFFLEPOSIX_OPENPTY_FUNCTION, a_address, b_address, c)
+  end
+
   def self.opendir(a)
     a_posix_string = Primitive.io_thread_buffer_allocate(a.bytesize + 1)
     begin
@@ -1004,6 +1010,7 @@ module Truffle::POSIX
     generated_posix_resolve_function(:MMAP_FUNCTION, :mmap, :tpe_mmap)
     generated_posix_resolve_function(:MUNMAP_FUNCTION, :munmap, :tpe_munmap)
     generated_posix_resolve_function(:OPEN_FUNCTION, :open, :tpe_open)
+    generated_posix_resolve_function(:TRUFFLEPOSIX_OPENPTY_FUNCTION, :truffleposix_openpty, :tpe_truffleposix_openpty)
     generated_posix_resolve_function(:OPENDIR_FUNCTION, :opendir, :tpe_opendir)
     generated_posix_resolve_function(:PIPE_FUNCTION, :pipe, :tpe_pipe)
     generated_posix_resolve_function(:READ_FUNCTION, :read, :tpe_read)

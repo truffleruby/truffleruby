@@ -299,7 +299,7 @@ VALUE rb_io_close(VALUE io) {
 }
 
 VALUE rb_io_gets(VALUE io) {
-  return rb_tr_up_send0_gets(io);
+  return rb_tr_up_rb_io_gets(io);
 }
 
 VALUE rb_io_print(int argc, const VALUE *argv, VALUE out) {

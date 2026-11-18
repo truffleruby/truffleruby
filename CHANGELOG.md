@@ -5,9 +5,12 @@ New features:
 * Updated to Ruby 4.0.9 (@eregon).
 * Updated to GraalVM 25.5.5.0.3 (@eregon).
 * Added `Ruby::Box`, which is always enabled and where each box is a `Polyglot::InnerContext` (@eregon).
+* Implement the `pty` standard library: `PTY.open`, `PTY.spawn`, `PTY.getpty` and `PTY.check` (@eregon).
 
 Bug fixes:
 
+* Fix `rb_io_gets()` raising `RuntimeError`, which broke `IO#getpass` from `io/console` (@eregon).
+* Fix reading the main script from a terminal reading past the end-of-file (Ctrl-D) when more input was already typed (@eregon).
 * Fix `Process.exec` ignoring the `:umask` option (@nirvdrum).
 * Fix `Socket.tcp` and `Addrinfo#connect` with a timeout returning an unconnected socket on macOS when the connection was refused (@eregon).
 * Fix `String#append_as_bytes` to return `self` instead of its arguments (#4502, @taxor03).
@@ -23,10 +26,14 @@ Bug fixes:
 * Fix `Enumerator::Lazy#with_index` with a block to pass on the elements instead of the results of the block (#4543, @taxor03).
 * Fix `Socket.getifaddrs` skipping the first entry of `getifaddrs(3)` and returning the position in the list instead of the interface index as `Socket::Ifaddr#ifindex` (#4545, @taxor03).
 * Fix `rb_arithmetic_sequence_extract()` setting `exclude_end` to a `VALUE` handle instead of `1` for an `Enumerator::ArithmeticSequence` with an exclusive end (@nirvdrum).
+* Fix `Array#[]=` with a start and length or a `Range` inserting a replacement whose `#to_ary` is handled by `#method_missing`, like a `SimpleDelegator` of an Array, as one element instead of splicing its elements, and inserting a replacement whose `#to_ary` returns neither an Array nor `nil` instead of raising a `TypeError` (#4557, @taxor03).
+* Fix `Enumerator::Lazy#take` and `Enumerator::Lazy#take_while` stopping the receiver by raising an internal `Enumerator::Lazy::StopLazyError` through its `#each`, where `rescue Exception` caught it (#4558, @taxor03).
+* Fix `case`/`when` evaluating a splatted value of a `when` clause even when an earlier value of the clause matches (#4559, @taxor03).
 
 
 Compatibility:
 
+* Implement `rb_ary_resize()`, which is used by `IO#cursor` from `io/console` (@eregon).
 * Call the most recently enabled `TracePoint` first when several `TracePoint`s are enabled for the same event, like CRuby (@eregon).
 * Add support for the `:call` and `:c_call` `TracePoint` events and `TracePoint#defined_class` (@eregon).
 * Add support for the `:return` `TracePoint` event and `TracePoint#return_value` (@eregon).

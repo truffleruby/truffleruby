@@ -31,10 +31,6 @@ import com.oracle.truffle.api.library.CachedLibrary;
 @ReportPolymorphism // for ArrayStoreLibrary
 public abstract class ArrayCopyCompatibleRangeNode extends RubyBaseNode {
 
-    public static ArrayCopyCompatibleRangeNode create() {
-        return ArrayCopyCompatibleRangeNodeGen.create();
-    }
-
     public abstract void execute(Object dstStore, Object srcStore, int dstStart, int srcStart, int length);
 
     protected boolean noopGuard(Object dstStore, Object srcStore, int dstStart, int srcStart, int length) {

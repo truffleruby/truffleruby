@@ -28,6 +28,23 @@ describe "Enumerator::Lazy#take" do
     ret.should_not.equal?(@yieldsmixed)
   end
 
+  it "stops the receiver without raising an exception through its #each" do
+    receiver = Object.new
+    receiver.extend(Enumerable)
+    def receiver.each
+      yield 1
+      yield 2
+      yield 3
+    rescue Exception => e
+      ScratchPad << e
+      raise
+    end
+
+    receiver.lazy.take(2).to_a.should == [1, 2]
+    receiver.lazy.take(1).first(5).should == [1]
+    ScratchPad.recorded.should == []
+  end
+
   it "sets given count to size if the given count is less than old size" do
     Enumerator::Lazy.new(Object.new, 100) {}.take(20).size.should == 20
     Enumerator::Lazy.new(Object.new, 100) {}.take(200).size.should == 100

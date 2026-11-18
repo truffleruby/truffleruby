@@ -772,6 +772,8 @@ module Commands
                                               it is also linked in your ruby manager (if found) under the same name,
                                               by default it is the name of the mx env file,
                                               the named build stays until it is rebuilt or deleted manually
+              --no-warning-as-error           do not fail the build on Java and Truffle DSL compilation warnings
+                                              (by default `--warning-as-error` is passed to `mx build`, like in CI)
             mx options:                       options passed directly to mx
               -d                              start the Java debugger and enables assertions when running truffleruby to configure C extensions
             mx build options                  options passed to the 'build' command of mx
@@ -2552,8 +2554,13 @@ module Commands
       options = ['--extra-image-builder-argument=rubyvm:-J-XX:MaxRAMPercentage=100', '--extra-image-builder-argument=rubyvm:--parallelism=1', *options]
     end
 
+    warning_as_error = !options.delete('--no-warning-as-error')
+
     mx_options, mx_build_options = args_split(options)
     mx_args = mx_base_args + mx_options
+    if warning_as_error and !mx_build_options.include?('--warning-as-error')
+      mx_build_options = ['--warning-as-error', *mx_build_options]
+    end
 
     mx(os_env, *mx_args, 'build', *mx_build_options, primary_suite: TRUFFLERUBY_DIR)
 

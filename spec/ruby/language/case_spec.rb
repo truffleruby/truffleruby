@@ -225,6 +225,26 @@ describe "The 'case'-construct" do
     end.should == "foo"
   end
 
+  it "evaluates the values and splats of a when clause from left to right until one matches" do
+    calls = []
+    a = -> { calls << :a; ['x'] }
+    b = -> { calls << :b; 'f' }
+    c = -> { calls << :c; ['y'] }
+
+    case 'f'
+    when *a.call, b.call, *c.call
+      "foo"
+    end.should == "foo"
+    calls.should == [:a, :b]
+
+    calls.clear
+    case 'f'
+    when 'f', *c.call
+      "foo"
+    end.should == "foo"
+    calls.should == []
+  end
+
   it "takes an expanded array before additional listed values" do
     case 'f'
     when *['a', 'b', 'c', 'd'], 'f'

@@ -585,18 +585,6 @@ public abstract class CExtUpcallTargets {
         }
     }
 
-    private static final int INDEX_send0_gets = nextUpcallIndex++;
-
-    @CExtUpcall
-    public static long upcall_send0_gets(long v0) {
-        try {
-            return (long) runtime.upcall(INDEX_send0_gets, v0);
-        } catch (Throwable t) {
-            reportException(runtime, t);
-            return 0L;
-        }
-    }
-
     private static final int INDEX_send0_i_arity = nextUpcallIndex++;
 
     @CExtUpcall
@@ -1776,6 +1764,18 @@ public abstract class CExtUpcallTargets {
     public static long upcall_rb_ary_new_from_values(long v0, long v1) {
         try {
             return (long) runtime.upcall(INDEX_rb_ary_new_from_values, v0, v1);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
+        }
+    }
+
+    private static final int INDEX_rb_ary_resize = nextUpcallIndex++;
+
+    @CExtUpcall
+    public static long upcall_rb_ary_resize(long v0, long v1) {
+        try {
+            return (long) runtime.upcall(INDEX_rb_ary_resize, v0, v1);
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0L;
@@ -3592,6 +3592,18 @@ public abstract class CExtUpcallTargets {
         } catch (Throwable t) {
             reportException(runtime, t);
             return 0;
+        }
+    }
+
+    private static final int INDEX_rb_io_gets = nextUpcallIndex++;
+
+    @CExtUpcall
+    public static long upcall_rb_io_gets(long v0) {
+        try {
+            return (long) runtime.upcall(INDEX_rb_io_gets, v0);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
         }
     }
 
@@ -5812,7 +5824,6 @@ public abstract class CExtUpcallTargets {
             "upcall_send0_exclude_end_p", "L(L)", "send", "exclude_end?", "V", "V",
             "upcall_send0_flush", "L(L)", "send", "flush", "V", "V",
             "upcall_send0_getbyte", "L(L)", "send", "getbyte", "V", "V",
-            "upcall_send0_gets", "L(L)", "send", "gets", "V", "V",
             "upcall_send0_i_arity", "I(L)", "send", "arity", "I", "V",
             "upcall_send0_i_bytesize", "I(L)", "send", "bytesize", "I", "V",
             "upcall_send0_imag", "L(L)", "send", "imag", "V", "V",
@@ -5913,6 +5924,7 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_ary_new", "L()", "cext", "rb_ary_new", "V", "",
             "upcall_rb_ary_new_capa", "L(L)", "cext", "rb_ary_new_capa", "V", "L",
             "upcall_rb_ary_new_from_values", "L(LL)", "cext", "rb_ary_new_from_values", "V", "LL",
+            "upcall_rb_ary_resize", "L(LL)", "cext", "rb_ary_resize", "V", "VL",
             "upcall_rb_ascii8bit_encindex", "I()", "cext", "rb_ascii8bit_encindex", "I", "",
             "upcall_rb_attr", "V(LLIII)", "cext", "rb_attr", "O", "VYIII",
             "upcall_rb_backref_get", "L()", "cext", "rb_backref_get", "V", "",
@@ -6066,6 +6078,7 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_io_get_io", "L(L)", "cext", "rb_io_get_io", "V", "V",
             "upcall_rb_io_get_write_io", "L(L)", "cext", "rb_io_get_write_io", "V", "V",
             "upcall_rb_io_mode", "I(L)", "cext", "rb_io_mode", "I", "V",
+            "upcall_rb_io_gets", "L(L)", "cext", "rb_io_gets", "V", "V",
             "upcall_rb_io_open_descriptor", "L(LLLLLLLLL)", "cext", "rb_io_open_descriptor", "V", "VVVVVVVVV",
             "upcall_rb_io_path", "L(L)", "cext", "rb_io_path", "V", "V",
             "upcall_rb_io_print", "L(LL)", "cext", "rb_io_print", "V", "VV",

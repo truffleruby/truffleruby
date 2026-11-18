@@ -101,6 +101,10 @@ VALUE rb_ary_delete_at(VALUE array, long n) {
   return rb_tr_up_send1_delete_at(array, LONG2NUM(n));
 }
 
+VALUE rb_ary_resize(VALUE array, long len) {
+  return rb_tr_up_rb_ary_resize(array, len);
+}
+
 VALUE rb_ary_includes(VALUE array, VALUE value) {
   return rb_tr_up_send1_include_p(array, value);
 }

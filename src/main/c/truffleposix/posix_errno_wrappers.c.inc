@@ -302,6 +302,12 @@ int tpe_open(int* errno_ptr, char* a, int b, mode_t c) {
   return result;
 }
 
+int tpe_truffleposix_openpty(int* errno_ptr, void* a, void* b, int c) {
+  int result = truffleposix_openpty(a, b, c);
+  *errno_ptr = errno;
+  return result;
+}
+
 void* tpe_opendir(int* errno_ptr, char* a) {
   void* result = opendir(a);
   *errno_ptr = errno;
