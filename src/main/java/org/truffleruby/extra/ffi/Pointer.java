@@ -72,14 +72,6 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         return new Pointer(language, context, UNSAFE.allocateMemory(size), size);
     }
 
-    /** Allocates memory and produces a pointer to it. Clears the memory before returning it. Use {@link #malloc} if you
-     * do not need the memory to be cleared. */
-    public static Pointer calloc(RubyContext context, long size) {
-        final Pointer pointer = malloc(context, size);
-        pointer.writeBytes(0, size, (byte) 0);
-        return pointer;
-    }
-
     /** Includes {@link #enableAutorelease(RubyLanguage)} and avoids locking for it */
     public static Pointer callocAutoRelease(RubyLanguage language, RubyContext context, long size) {
         final Pointer pointer = mallocAutoRelease(language, context, size);
@@ -449,18 +441,6 @@ public final class Pointer implements AutoCloseable, TruffleObject {
 
     public static void rawWriteLong(long address, long value) {
         UNSAFE.putLong(address, value);
-    }
-
-    public static long rawMalloc(long size) {
-        return UNSAFE.allocateMemory(size);
-    }
-
-    public static long rawRealloc(long address, long size) {
-        return UNSAFE.reallocateMemory(address, size);
-    }
-
-    public static void rawFree(long address) {
-        UNSAFE.freeMemory(address);
     }
 
     @SuppressWarnings("restriction")

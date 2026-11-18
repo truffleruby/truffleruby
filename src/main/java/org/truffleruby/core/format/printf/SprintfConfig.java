@@ -193,10 +193,6 @@ public final class SprintfConfig {
     }
 
 
-    public boolean isPrecisionVisited() {
-        return precisionVisited;
-    }
-
     public void setPrecisionVisited(boolean precisionVisited) {
         this.precisionVisited = precisionVisited;
     }

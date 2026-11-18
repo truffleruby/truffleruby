@@ -30,13 +30,6 @@ public abstract class ToStringOrDefaultValueNode extends FormatNode {
     public ToStringOrDefaultValueNode(
             boolean convertNumbersToStrings,
             String conversionMethod,
-            boolean inspectOnConversionFailure) {
-        this(convertNumbersToStrings, conversionMethod, inspectOnConversionFailure, false);
-    }
-
-    public ToStringOrDefaultValueNode(
-            boolean convertNumbersToStrings,
-            String conversionMethod,
             boolean inspectOnConversionFailure,
             boolean specialClassBehaviour) {
         this.convertNumbersToStrings = convertNumbersToStrings;

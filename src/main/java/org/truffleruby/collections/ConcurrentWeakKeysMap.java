@@ -20,9 +20,9 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** A concurrent thread-safe map with weak keys. Keys cannot be null. This map currently assumes keys never need to be
- * re-hashed with ReHashable, which means no Ruby ObjectSpace::WeakKeyMap instance should be part of the pre-initialized
- * context. ConcurrentWeakKeysMap and ConcurrentWeakSet with keys whose hashCode() does not depend on the Ruby random
- * seed are fine as part of the pre-initialized context. */
+ * re-hashed, which means no Ruby ObjectSpace::WeakKeyMap instance should be part of the pre-initialized context.
+ * ConcurrentWeakKeysMap and ConcurrentWeakSet with keys whose hashCode() does not depend on the Ruby random seed are
+ * fine as part of the pre-initialized context. */
 public class ConcurrentWeakKeysMap<Key, Value> {
 
     protected final ConcurrentHashMap<WeakReference<Key>, Value> map = new ConcurrentHashMap<>();

@@ -280,8 +280,7 @@ public final class ConvertBytes {
                 }
 
                 if (overflow) {
-                    throw new ConvertBytes.ERange(
-                            negative ? ConvertBytes.ERange.Kind.Underflow : ConvertBytes.ERange.Kind.Overflow);
+                    throw new ConvertBytes.ERange();
                 }
 
                 if (negative) {
@@ -511,20 +510,8 @@ public final class ConvertBytes {
 
     @SuppressWarnings("serial")
     public static final class ERange extends RuntimeException {
-        public enum Kind {
-            Overflow,
-            Underflow
-        }
-
-        private final Kind kind;
-
-        public ERange(Kind kind) {
+        public ERange() {
             super();
-            this.kind = kind;
-        }
-
-        public Kind getKind() {
-            return kind;
         }
     }
 

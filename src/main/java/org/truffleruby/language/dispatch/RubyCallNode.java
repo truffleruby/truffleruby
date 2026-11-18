@@ -263,10 +263,6 @@ public final class RubyCallNode extends LiteralCallAssignableNode {
         return definedNode.execute(frame, context);
     }
 
-    public String getName() {
-        return methodName;
-    }
-
     public boolean isVCall() {
         return isVCall;
     }
@@ -274,10 +270,6 @@ public final class RubyCallNode extends LiteralCallAssignableNode {
     public boolean hasLiteralBlock() {
         RubyNode unwrappedBlock = RubyNode.unwrapNode(block);
         return unwrappedBlock instanceof BlockDefinitionNode || unwrappedBlock instanceof LambdaToProcNode;
-    }
-
-    public RubyNode[] getArguments() {
-        return arguments;
     }
 
     private RubyNode getLastArgumentNode() {

@@ -41,14 +41,6 @@ public final class RegexpCacheKey {
         this.options = options;
     }
 
-    public RegexpOptions getOptions() {
-        return options;
-    }
-
-    public RubyEncoding getEncoding() {
-        return encoding;
-    }
-
     @Override
     public int hashCode() {
         return Objects.hash(encoding, tstring, options);

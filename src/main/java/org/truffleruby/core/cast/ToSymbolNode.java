@@ -33,14 +33,6 @@ import org.truffleruby.language.library.RubyStringLibrary;
 @ImportStatic(StringOperations.class)
 public abstract class ToSymbolNode extends RubyBaseNode {
 
-    public final RubySymbol executeCached(Object object) {
-        return execute(this, object);
-    }
-
-    public static RubySymbol executeUncached(Object object) {
-        return ToSymbolNodeGen.getUncached().execute(null, object);
-    }
-
     public abstract RubySymbol execute(Node node, Object object);
 
     @Specialization

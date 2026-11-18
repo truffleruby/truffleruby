@@ -20,8 +20,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 public abstract class InlinedEqualNode extends BinaryInlinedOperationNode {
 
-    protected static final String METHOD = "==";
-
     final Assumption integerEqualAssumption;
     final Assumption floatEqualAssumption;
 

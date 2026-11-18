@@ -207,10 +207,6 @@ public final class RubyArguments {
         return (DeclarationContext) frame.getArguments()[ArgumentIndicies.DECLARATION_CONTEXT.ordinal()];
     }
 
-    public static DeclarationContext getDeclarationContext(Object[] rubyArgs) {
-        return (DeclarationContext) rubyArgs[ArgumentIndicies.DECLARATION_CONTEXT.ordinal()];
-    }
-
     public static void setDeclarationContext(Frame frame, DeclarationContext declarationContext) {
         frame.getArguments()[ArgumentIndicies.DECLARATION_CONTEXT.ordinal()] = declarationContext;
     }

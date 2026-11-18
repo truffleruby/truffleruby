@@ -20,8 +20,6 @@ import org.truffleruby.language.dispatch.DispatchNode;
 
 public abstract class ToFNode extends RubyBaseNode {
 
-    @Child private DispatchNode toFNode;
-
     public abstract double executeToDouble(Object value);
 
     @Specialization

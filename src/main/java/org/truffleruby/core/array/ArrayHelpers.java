@@ -56,25 +56,10 @@ public abstract class ArrayHelpers {
         return builder.finish(state, 1);
     }
 
-    /** Returns a Java array of the narrowest possible type holding the {@code objects}. */
-    public static Object specializedJavaArrayOf(ArrayBuilderNode builder, Object... objects) {
-        final ArrayBuilderNode.BuilderState state = builder.start(objects.length);
-        for (Object object : objects) {
-            builder.appendValue(state, 0, object);
-        }
-        return builder.finish(state, objects.length);
-    }
-
     /** Returns a Ruby array backed by a store of the narrowest possible type, holding {@code object}. */
     public static RubyArray specializedRubyArrayOf(RubyContext context, RubyLanguage language, ArrayBuilderNode builder,
             Object object) {
         return createArray(context, language, specializedJavaArrayOf(builder, object), 1);
-    }
-
-    /** Returns a Ruby array backed by a store of the narrowest possible type, holding the {@code objects}. */
-    public static RubyArray specializedRubyArrayOf(RubyContext context, RubyLanguage language, ArrayBuilderNode builder,
-            Object... objects) {
-        return createArray(context, language, specializedJavaArrayOf(builder, objects), objects.length);
     }
 
 }

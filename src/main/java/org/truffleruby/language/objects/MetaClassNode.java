@@ -74,8 +74,4 @@ public abstract class MetaClassNode extends RubyBaseNode {
             @Cached ForeignClassNode foreignClassNode) {
         return foreignClassNode.execute(node, object);
     }
-
-    protected int getCacheLimit() {
-        return getLanguage().options.CLASS_CACHE;
-    }
 }

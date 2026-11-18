@@ -98,11 +98,6 @@ public abstract class ExceptionOperations {
     }
 
     @TruffleBoundary
-    public static String getMessage(Throwable throwable) {
-        return throwable.getMessage();
-    }
-
-    @TruffleBoundary
     public static String messageFieldToString(RubyException exception) {
         Object message = exception.message;
         if (message == null || message == Nil.INSTANCE) {

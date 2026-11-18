@@ -569,20 +569,6 @@ public abstract class FloatNodes {
 
     }
 
-    protected static final class FloatRoundGuards {
-
-        // These are < rather than <=, because we may offset by -1 or +1 to round in the direction that we want
-
-        public static boolean fitsInInteger(double n) {
-            return Integer.MIN_VALUE < n && n < Integer.MAX_VALUE;
-        }
-
-        public static boolean fitsInLong(double n) {
-            return Long.MIN_VALUE < n && n < Long.MAX_VALUE;
-        }
-
-    }
-
     @Primitive(name = "float_ceil")
     public abstract static class FloatCeilPrimitiveNode extends PrimitiveArrayArgumentsNode {
         @Specialization

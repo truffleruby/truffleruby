@@ -38,10 +38,6 @@ import com.oracle.truffle.api.profiles.InlinedConditionProfile;
  * from being garbage collected. */
 public final class MarkingService {
 
-    public static interface MarkerAction {
-        public abstract void mark(Object owner);
-    }
-
     private static final ValueWrapper[] EMPTY_WRAPPERS = new ValueWrapper[0];
 
     protected static final class ExtensionCallStackEntry {

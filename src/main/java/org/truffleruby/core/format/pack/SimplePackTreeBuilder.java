@@ -49,7 +49,6 @@ import org.truffleruby.core.format.write.bytes.WriteHexStringNodeGen;
 import org.truffleruby.core.format.write.bytes.WriteMIMEStringNodeGen;
 import org.truffleruby.core.format.write.bytes.WriteUTF8CharacterNodeGen;
 import org.truffleruby.core.format.write.bytes.WriteUUStringNodeGen;
-import org.truffleruby.language.WarningNode;
 import org.truffleruby.language.control.DeferredRaiseException;
 
 import com.oracle.truffle.api.nodes.Node;
@@ -255,15 +254,6 @@ public final class SimplePackTreeBuilder implements SimplePackListener {
     public void error(String message) throws DeferredRaiseException {
         // TODO CS 29-Oct-16 make this a node so that side effects from previous directives happen
         throw new DeferredRaiseException(c -> c.getCoreExceptions().argumentError(message, currentNode));
-    }
-
-    @Override
-    public void warn(String message) {
-        final WarningNode.UncachedWarningNode warningNode = WarningNode.UncachedWarningNode.INSTANCE;
-
-        if (warningNode.shouldWarn()) {
-            warningNode.warningMessage(currentNode.getSourceSection(), message);
-        }
     }
 
     @Override

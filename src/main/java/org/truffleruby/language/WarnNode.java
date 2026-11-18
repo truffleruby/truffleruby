@@ -11,7 +11,6 @@
 package org.truffleruby.language;
 
 import com.oracle.truffle.api.dsl.NeverDefault;
-import com.oracle.truffle.api.nodes.DenyReplace;
 import com.oracle.truffle.api.strings.TruffleString;
 import com.oracle.truffle.api.strings.TruffleString.FromJavaStringNode;
 import org.truffleruby.RubyContext;
@@ -24,7 +23,6 @@ import org.truffleruby.language.globals.ReadSimpleGlobalVariableNode;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
-
 
 /** Warns if $VERBOSE is true or false, but not nil. Corresponds to Kernel#warn(message, uplevel: 1), but in Java with a
  * given SourceSection. */
@@ -98,20 +96,6 @@ public class WarnNode extends RubyBaseNode {
             return false;
         }
 
-    }
-
-    @DenyReplace
-    public static final class UncachedWarnNode extends AbstractUncachedWarnNode {
-
-        public static final UncachedWarnNode INSTANCE = new UncachedWarnNode();
-
-        UncachedWarnNode() {
-        }
-
-        @Override
-        public boolean shouldWarn() {
-            return coreLibrary().warningsEnabled();
-        }
     }
 
 }

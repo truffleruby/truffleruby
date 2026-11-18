@@ -227,8 +227,4 @@ public abstract class GetConstantNode extends RubyBaseNode {
         return constant == null || ((RubyConstant) constant).isUndefined();
     }
 
-    protected int getCacheLimit() {
-        return getLanguage().options.CONSTANT_CACHE;
-    }
-
 }

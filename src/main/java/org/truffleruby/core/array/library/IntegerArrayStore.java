@@ -346,20 +346,5 @@ public final class IntegerArrayStore {
         public int[] allocate(int capacity) {
             return new int[capacity];
         }
-
-        @Override
-        public boolean accepts(Object value) {
-            return value instanceof Integer;
-        }
-
-        @Override
-        public boolean specializesFor(Object value) {
-            return value instanceof Integer;
-        }
-
-        @Override
-        public boolean isDefaultValue(Object value) {
-            return (int) value == 0;
-        }
     }
 }

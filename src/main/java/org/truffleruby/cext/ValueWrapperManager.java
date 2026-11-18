@@ -259,10 +259,6 @@ public final class ValueWrapperManager {
             };
         }
 
-        public long getBase() {
-            return base;
-        }
-
         public int getIndex() {
             return getBlockIndex(base);
         }
@@ -441,14 +437,6 @@ public final class ValueWrapperManager {
 
     public static boolean isTaggedObject(long handle) {
         return (handle & OBJECT_HANDLE_MASK) == OBJECT_HANDLE_MASK_EXPECTED;
-    }
-
-    public static boolean isMallocAligned(long handle) {
-        return handle != FALSE_HANDLE && (handle & 0b111) == 0;
-    }
-
-    public static boolean isWrapper(Object value) {
-        return value instanceof ValueWrapper;
     }
 
     public static long untagTaggedLong(long handle) {

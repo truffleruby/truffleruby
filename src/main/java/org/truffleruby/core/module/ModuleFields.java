@@ -29,6 +29,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.oracle.truffle.api.object.DynamicObject;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
+import org.truffleruby.annotations.Keep;
 import org.truffleruby.collections.ConcurrentOperations;
 import org.truffleruby.collections.ConcurrentWeakSet;
 import org.truffleruby.core.CoreLibrary;
@@ -67,6 +68,7 @@ import com.oracle.truffle.api.utilities.CyclicAssumption;
 
 public final class ModuleFields extends ModuleChain implements ObjectGraphNode {
 
+    @Keep
     public static void debugModuleChain(RubyModule module) {
         ModuleChain chain = module.fields;
         final StringBuilder builder = new StringBuilder();

@@ -142,11 +142,6 @@ public final class BigIntegerOps {
     }
 
     @TruffleBoundary
-    public static BigInteger shiftRight(long value, int n) {
-        return valueOf(value).shiftRight(n);
-    }
-
-    @TruffleBoundary
     public static BigInteger pow(BigInteger value, int exponent) {
         return value.pow(exponent);
     }
@@ -331,11 +326,6 @@ public final class BigIntegerOps {
     public static Object asUnsignedFixnumOrBignum(long value) {
         // Positive means the initial bit is clear.
         return value >= 0 ? value : BignumOperations.createBignum(negativeValueAsUnsignedBigInteger(value));
-    }
-
-    public static Object asUnsignedPrimitiveOrBigInteger(long value) {
-        // Positive means the initial bit is clear.
-        return value >= 0 ? value : negativeValueAsUnsignedBigInteger(value);
     }
 
     @TruffleBoundary

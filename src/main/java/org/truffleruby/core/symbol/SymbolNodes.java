@@ -113,8 +113,6 @@ public abstract class SymbolNodes {
     @CoreMethod(names = "hash")
     public abstract static class HashNode extends CoreMethodArrayArgumentsNode {
 
-        public abstract long execute(RubySymbol rubySymbol);
-
         @Specialization
         long hash(RubySymbol symbol,
                 @Cached HashSymbolNode hash) {
@@ -238,10 +236,6 @@ public abstract class SymbolNodes {
             return declarationContext != null
                     ? declarationContext.getRefinements()
                     : DeclarationContext.NONE.getRefinements();
-        }
-
-        protected int getCacheLimit() {
-            return getLanguage().options.SYMBOL_TO_PROC_CACHE;
         }
 
     }

@@ -31,7 +31,6 @@ public final class TStringConstants {
             .getInternalByteArrayUncached(TruffleString.Encoding.US_ASCII);
 
     @CompilationFinal(dimensions = 1) public static final byte[] EMPTY_BYTES = new byte[0];
-    @CompilationFinal(dimensions = 1) public static final byte[] NEWLINE_BYTE_ARRAY = new byte[]{ '\n' };
 
     @CompilationFinal(dimensions = 1) public static final TruffleString[] UTF8_SINGLE_BYTE = new TruffleString[256];
     @CompilationFinal(dimensions = 1) public static final TruffleString[] US_ASCII_SINGLE_BYTE = new TruffleString[256];

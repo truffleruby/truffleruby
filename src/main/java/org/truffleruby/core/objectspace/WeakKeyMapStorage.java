@@ -98,13 +98,6 @@ public final class WeakKeyMapStorage extends ConcurrentWeakKeysMap<Object, Objec
             super(key, hashCode);
         }
 
-        public RecordingCompareByRubyHashEqlWeakReference(
-                Object key,
-                ReferenceQueue<? super Object> queue,
-                int hashCode) {
-            super(key, queue, hashCode);
-        }
-
         @Override
         public int hashCode() {
             return super.hashCode();

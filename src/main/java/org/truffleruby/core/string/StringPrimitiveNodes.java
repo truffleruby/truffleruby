@@ -948,10 +948,6 @@ public abstract class StringPrimitiveNodes {
             }
         }
 
-        protected int getCacheLimit() {
-            return getLanguage().options.UNPACK_CACHE;
-        }
-
     }
 
     @Primitive(name = "string_upcase!", raiseIfNotMutable = 0, lowerFixnum = 1)

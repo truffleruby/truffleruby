@@ -23,10 +23,6 @@ import java.util.concurrent.ThreadLocalRandom;
 @NodeChild(value = "valueNode", type = RubyBaseNodeWithExecute.class)
 public abstract class ChaosNode extends RubyContextSourceNode {
 
-    public static ChaosNode create() {
-        return ChaosNodeGen.create(null);
-    }
-
     public static ChaosNode create(RubyBaseNodeWithExecute value) {
         return ChaosNodeGen.create(value);
     }

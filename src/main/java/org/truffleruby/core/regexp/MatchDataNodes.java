@@ -694,8 +694,6 @@ public abstract class MatchDataNodes {
     @CoreMethod(names = "pre_match")
     public abstract static class PreMatchNode extends CoreMethodArrayArgumentsNode {
 
-        public abstract RubyString execute(RubyMatchData matchData);
-
         @Specialization
         RubyString preMatch(RubyMatchData matchData,
                 @Cached InlinedConditionProfile lazyProfile,
@@ -710,8 +708,6 @@ public abstract class MatchDataNodes {
 
     @CoreMethod(names = "post_match")
     public abstract static class PostMatchNode extends CoreMethodArrayArgumentsNode {
-
-        public abstract RubyString execute(RubyMatchData matchData);
 
         @Specialization
         RubyString postMatch(RubyMatchData matchData,

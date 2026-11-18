@@ -44,7 +44,6 @@ public final class OptionsCatalog {
     public static final OptionKey<Boolean> HANDLE_INTERRUPT_KEY = new OptionKey<>(!EMBEDDED_KEY.getDefaultValue());
     public static final OptionKey<Boolean> SINGLE_THREADED_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> POLYGLOT_STDIO_KEY = new OptionKey<>(EMBEDDED_KEY.getDefaultValue() || !NATIVE_PLATFORM_KEY.getDefaultValue());
-    public static final OptionKey<Boolean> HOST_INTEROP_KEY = new OptionKey<>(true);
     public static final OptionKey<Boolean> COVERAGE_GLOBAL_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> CORE_AS_INTERNAL_KEY = new OptionKey<>(false);
     public static final OptionKey<Boolean> STDLIB_AS_INTERNAL_KEY = new OptionKey<>(false);
@@ -118,17 +117,12 @@ public final class OptionsCatalog {
     public static final OptionKey<Integer> CONSTANT_CACHE_KEY = new OptionKey<>(DEFAULT_CACHE_KEY.getDefaultValue());
     public static final OptionKey<Integer> INSTANCE_VARIABLE_CACHE_KEY = new OptionKey<>(DEFAULT_CACHE_KEY.getDefaultValue());
     public static final OptionKey<Integer> BINDING_LOCAL_VARIABLE_CACHE_KEY = new OptionKey<>(DEFAULT_CACHE_KEY.getDefaultValue());
-    public static final OptionKey<Integer> SYMBOL_TO_PROC_CACHE_KEY = new OptionKey<>(DEFAULT_CACHE_KEY.getDefaultValue());
     public static final OptionKey<Integer> PACK_CACHE_KEY = new OptionKey<>(DEFAULT_CACHE_KEY.getDefaultValue());
-    public static final OptionKey<Integer> UNPACK_CACHE_KEY = new OptionKey<>(DEFAULT_CACHE_KEY.getDefaultValue());
     public static final OptionKey<Integer> EVAL_CACHE_KEY = new OptionKey<>(DEFAULT_CACHE_KEY.getDefaultValue());
     public static final OptionKey<Integer> ENCODING_LOADED_CLASSES_CACHE_KEY = new OptionKey<>(DEFAULT_CACHE_KEY.getDefaultValue());
     public static final OptionKey<Integer> INTEROP_CONVERT_CACHE_KEY = new OptionKey<>(DEFAULT_CACHE_KEY.getDefaultValue());
     public static final OptionKey<Integer> TIME_FORMAT_CACHE_KEY = new OptionKey<>(DEFAULT_CACHE_KEY.getDefaultValue());
     public static final OptionKey<Integer> POW_CACHE_KEY = new OptionKey<>(DEFAULT_CACHE_KEY.getDefaultValue());
-    public static final OptionKey<Integer> IDENTITY_CACHE_KEY = new OptionKey<>(1);
-    public static final OptionKey<Integer> CONTEXT_SPECIFIC_IDENTITY_CACHE_KEY = new OptionKey<>(IDENTITY_CACHE_KEY.getDefaultValue());
-    public static final OptionKey<Integer> CLASS_CACHE_KEY = new OptionKey<>(3);
     public static final OptionKey<Integer> ARRAY_DUP_CACHE_KEY = new OptionKey<>(3);
     public static final OptionKey<Integer> ARRAY_STRATEGY_CACHE_KEY = new OptionKey<>(4);
     public static final OptionKey<Integer> ARRAY_UNINITIALIZED_SIZE_KEY = new OptionKey<>(16);
@@ -339,14 +333,6 @@ public final class OptionsCatalog {
     public static final OptionDescriptor POLYGLOT_STDIO = OptionDescriptor
             .newBuilder(POLYGLOT_STDIO_KEY, "ruby.polyglot-stdio")
             .help("Use standard IO streams from the Graal-SDK polyglot API configuration")
-            .category(OptionCategory.EXPERT)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("")
-            .build();
-
-    public static final OptionDescriptor HOST_INTEROP = OptionDescriptor
-            .newBuilder(HOST_INTEROP_KEY, "ruby.interop-host")
-            .help("Allow interoperability with the host language (Java)")
             .category(OptionCategory.EXPERT)
             .stability(OptionStability.EXPERIMENTAL)
             .usageSyntax("")
@@ -936,25 +922,9 @@ public final class OptionsCatalog {
             .usageSyntax("8")
             .build();
 
-    public static final OptionDescriptor SYMBOL_TO_PROC_CACHE = OptionDescriptor
-            .newBuilder(SYMBOL_TO_PROC_CACHE_KEY, "ruby.symbol-to-proc-cache")
-            .help("Symbol#to_proc cache size")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("8")
-            .build();
-
     public static final OptionDescriptor PACK_CACHE = OptionDescriptor
             .newBuilder(PACK_CACHE_KEY, "ruby.pack-cache")
             .help("Array#pack cache size")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("8")
-            .build();
-
-    public static final OptionDescriptor UNPACK_CACHE = OptionDescriptor
-            .newBuilder(UNPACK_CACHE_KEY, "ruby.unpack-cache")
-            .help("String#unpack cache size")
             .category(OptionCategory.INTERNAL)
             .stability(OptionStability.EXPERIMENTAL)
             .usageSyntax("8")
@@ -998,30 +968,6 @@ public final class OptionsCatalog {
             .category(OptionCategory.INTERNAL)
             .stability(OptionStability.EXPERIMENTAL)
             .usageSyntax("8")
-            .build();
-
-    public static final OptionDescriptor IDENTITY_CACHE = OptionDescriptor
-            .newBuilder(IDENTITY_CACHE_KEY, "ruby.identity-cache")
-            .help("Cache size for inline caches comparing by identity for context-independent objects")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("1")
-            .build();
-
-    public static final OptionDescriptor CONTEXT_SPECIFIC_IDENTITY_CACHE = OptionDescriptor
-            .newBuilder(CONTEXT_SPECIFIC_IDENTITY_CACHE_KEY, "ruby.context-identity-cache")
-            .help("Cache size for inline caches comparing by identity for context-specific objects")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("1")
-            .build();
-
-    public static final OptionDescriptor CLASS_CACHE = OptionDescriptor
-            .newBuilder(CLASS_CACHE_KEY, "ruby.class-cache")
-            .help(".class and .metaclass cache size")
-            .category(OptionCategory.INTERNAL)
-            .stability(OptionStability.EXPERIMENTAL)
-            .usageSyntax("3")
             .build();
 
     public static final OptionDescriptor ARRAY_DUP_CACHE = OptionDescriptor
@@ -1312,8 +1258,6 @@ public final class OptionsCatalog {
                 return SINGLE_THREADED;
             case "ruby.polyglot-stdio":
                 return POLYGLOT_STDIO;
-            case "ruby.interop-host":
-                return HOST_INTEROP;
             case "ruby.coverage-global":
                 return COVERAGE_GLOBAL;
             case "ruby.core-as-internal":
@@ -1460,12 +1404,8 @@ public final class OptionsCatalog {
                 return INSTANCE_VARIABLE_CACHE;
             case "ruby.binding-local-variable-cache":
                 return BINDING_LOCAL_VARIABLE_CACHE;
-            case "ruby.symbol-to-proc-cache":
-                return SYMBOL_TO_PROC_CACHE;
             case "ruby.pack-cache":
                 return PACK_CACHE;
-            case "ruby.unpack-cache":
-                return UNPACK_CACHE;
             case "ruby.eval-cache":
                 return EVAL_CACHE;
             case "ruby.encoding-loaded-classes-cache":
@@ -1476,12 +1416,6 @@ public final class OptionsCatalog {
                 return TIME_FORMAT_CACHE;
             case "ruby.integer-pow-cache":
                 return POW_CACHE;
-            case "ruby.identity-cache":
-                return IDENTITY_CACHE;
-            case "ruby.context-identity-cache":
-                return CONTEXT_SPECIFIC_IDENTITY_CACHE;
-            case "ruby.class-cache":
-                return CLASS_CACHE;
             case "ruby.array-dup-cache":
                 return ARRAY_DUP_CACHE;
             case "ruby.array-strategy-cache":
@@ -1572,7 +1506,6 @@ public final class OptionsCatalog {
             HANDLE_INTERRUPT,
             SINGLE_THREADED,
             POLYGLOT_STDIO,
-            HOST_INTEROP,
             COVERAGE_GLOBAL,
             CORE_AS_INTERNAL,
             STDLIB_AS_INTERNAL,
@@ -1646,17 +1579,12 @@ public final class OptionsCatalog {
             CONSTANT_CACHE,
             INSTANCE_VARIABLE_CACHE,
             BINDING_LOCAL_VARIABLE_CACHE,
-            SYMBOL_TO_PROC_CACHE,
             PACK_CACHE,
-            UNPACK_CACHE,
             EVAL_CACHE,
             ENCODING_LOADED_CLASSES_CACHE,
             INTEROP_CONVERT_CACHE,
             TIME_FORMAT_CACHE,
             POW_CACHE,
-            IDENTITY_CACHE,
-            CONTEXT_SPECIFIC_IDENTITY_CACHE,
-            CLASS_CACHE,
             ARRAY_DUP_CACHE,
             ARRAY_STRATEGY_CACHE,
             ARRAY_UNINITIALIZED_SIZE,

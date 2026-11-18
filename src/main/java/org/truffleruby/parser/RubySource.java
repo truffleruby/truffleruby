@@ -91,10 +91,6 @@ public final class RubySource {
         return RubyLanguage.getPath(source);
     }
 
-    public TruffleString getTruffleString() {
-        return code;
-    }
-
     public TStringWithEncoding getTStringWithEncoding() {
         return new TStringWithEncoding(code, encoding);
     }

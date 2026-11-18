@@ -49,8 +49,6 @@ public abstract class ReadLocalNode extends RubyContextSourceNode {
         return frameSlot;
     }
 
-    public abstract int getFrameDepth();
-
     @Override
     public Object isDefined(VirtualFrame frame, RubyLanguage language, RubyContext context) {
         switch (type) {

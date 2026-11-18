@@ -88,13 +88,6 @@ public abstract class RubyBaseNode extends Node {
         // Checkstyle: resume
     }
 
-    protected void profileAndReportLoopCount(LoopConditionProfile loopProfile, long count) {
-        // Checkstyle: stop
-        loopProfile.profileCounted(count);
-        reportLongLoopCount(count);
-        // Checkstyle: resume
-    }
-
     protected static void profileAndReportLoopCount(Node node, InlinedLoopConditionProfile loopProfile, long count) {
         // Checkstyle: stop
         loopProfile.profileCounted(node, count);
@@ -145,10 +138,6 @@ public abstract class RubyBaseNode extends Node {
 
     // Helpers methods for terseness. They are `final` so we ensure they are not needlessly redeclared in subclasses.
 
-    protected final RubyEncoding getLocaleEncoding() {
-        return getContext().getEncodingManager().getLocaleEncoding();
-    }
-
     protected static RubyBignum createBignum(BigInteger value) {
         return BignumOperations.createBignum(value);
     }
@@ -167,10 +156,6 @@ public abstract class RubyBaseNode extends Node {
 
     protected static RubySymbol getSymbol(Node node, AbstractTruffleString name, RubyEncoding encoding) {
         return getLanguage(node).getSymbol(name, encoding);
-    }
-
-    protected final RubySymbol getSymbol(AbstractTruffleString name, RubyEncoding encoding, boolean preserveSymbol) {
-        return getLanguage().getSymbol(name, encoding, preserveSymbol);
     }
 
     protected static RubySymbol getSymbol(Node node, AbstractTruffleString name, RubyEncoding encoding,

@@ -39,11 +39,6 @@ public abstract class StringUtils {
     }
 
     @TruffleBoundary
-    public static String replace(String string, char oldChar, char newChar) {
-        return string.replace(oldChar, newChar);
-    }
-
-    @TruffleBoundary
     public static String replace(String string, CharSequence target, CharSequence replacement) {
         return string.replace(target, replacement);
     }

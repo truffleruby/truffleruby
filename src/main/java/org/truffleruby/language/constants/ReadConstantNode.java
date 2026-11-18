@@ -51,11 +51,6 @@ public final class ReadConstantNode extends RubyContextSourceNode {
                 .lookupAndResolveConstant(LexicalScope.IGNORE, module, name, getLookupConstantNode(), true);
     }
 
-    public Object getConstant(RubyModule module, RubyConstant constant) {
-        return getGetConstantNode()
-                .executeGetConstant(LexicalScope.IGNORE, module, name, constant, getLookupConstantNode(), true);
-    }
-
     private GetConstantNode getGetConstantNode() {
         if (getConstantNode == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
