@@ -183,6 +183,39 @@ describe :regexp_new_string, shared: true do
     end
   end
 
+  it "tries to convert the second argument to a String of flags using #to_str" do
+    obj = mock('mx')
+    obj.should_receive(:to_str).and_return('mx')
+    r = Regexp.send(@method, 'Hi', obj)
+    (r.options & Regexp::IGNORECASE).should == 0
+    (r.options & Regexp::MULTILINE).should_not == 0
+    not_supported_on :opal do
+      (r.options & Regexp::EXTENDED).should_not == 0
+    end
+  end
+
+  it "converts the second argument with #to_str before the first argument" do
+    ScratchPad.record []
+    pattern = Object.new
+    def pattern.to_str
+      ScratchPad << :pattern
+      'Hi'
+    end
+    options = Object.new
+    def options.to_str
+      ScratchPad << :options
+      'i'
+    end
+    Regexp.send(@method, pattern, options)
+    ScratchPad.recorded.should == [:options, :pattern]
+  end
+
+  it "raises an Argument error if the second argument converts with #to_str to unsupported chars" do
+    obj = mock('e')
+    obj.should_receive(:to_str).and_return('e')
+    -> { Regexp.send(@method, 'Hi', obj) }.should.raise(ArgumentError, "unknown regexp option: e")
+  end
+
   it "raises an Argument error if the second argument contains unsupported chars" do
     -> { Regexp.send(@method, 'Hi', 'e') }.should.raise(ArgumentError, "unknown regexp option: e")
     -> { Regexp.send(@method, 'Hi', 'n') }.should.raise(ArgumentError, "unknown regexp option: n")
