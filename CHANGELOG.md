@@ -31,6 +31,7 @@ Bug fixes:
 * Updated the bundled OpenSSL from 3.5.4 to 3.5.9 (@eregon).
 * Fix `Hash#merge` with a block raising `NoMethodError` for an argument which converts with `#to_hash` (#4566, @taxor03).
 * Fix `Regexp.new` and `Regexp.compile` to convert options with `#to_str` into option letters instead of treating them as `true` (#4567, @taxor03).
+* Fix `IO.popen` to convert a command with `#to_ary` into the command and its arguments, and to not modify a given Array command (#4565, @taxor03).
 
 
 Compatibility:
