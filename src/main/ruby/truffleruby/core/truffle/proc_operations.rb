@@ -51,7 +51,7 @@ module Truffle::ProcOperations
     end
   end
 
-  def self.syntax_tree(range, block_owner: false)
+  def self.syntax_tree(range)
     require 'prism'
     return nil unless range&.absolute_path
 
@@ -74,18 +74,6 @@ module Truffle::ProcOperations
 
         node.compact_child_nodes.reverse_each do |child|
           stack << [child, node, depth + 1]
-        end
-      end
-    end
-
-    if block_owner
-      block = candidates.select { |candidate,| Primitive.is_a?(candidate, Prism::BlockNode) }.max_by(&:last)
-      if block
-        owner = block[1]
-        if Primitive.is_a?(owner, Prism::CallNode) ||
-            Primitive.is_a?(owner, Prism::SuperNode) ||
-            Primitive.is_a?(owner, Prism::ForwardingSuperNode)
-          return owner
         end
       end
     end
