@@ -10,9 +10,7 @@
  */
 package org.truffleruby.core.hash;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.WeakHashMap;
 
@@ -20,8 +18,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import org.truffleruby.language.dispatch.DispatchNode;
 
 public final class PreInitializationManager {
-
-    private final List<ReHashable> reHashables = new ArrayList<>();
 
     private final Set<RubyHash> hashesCreatedDuringPreInit = Collections.newSetFromMap(new WeakHashMap<>());
 
@@ -31,11 +27,6 @@ public final class PreInitializationManager {
     }
 
     public void rehash() {
-        for (ReHashable reHashable : reHashables) {
-            reHashable.rehash();
-        }
-        reHashables.clear();
-
         rehashRubyHashes();
     }
 
