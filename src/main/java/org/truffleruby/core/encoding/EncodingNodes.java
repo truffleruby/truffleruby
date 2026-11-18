@@ -234,10 +234,6 @@ public abstract class EncodingNodes {
     @Primitive(name = "encoding_compatible?")
     public abstract static class CompatibleQueryNode extends PrimitiveArrayArgumentsNode {
 
-        public static CompatibleQueryNode create() {
-            return EncodingNodesFactory.CompatibleQueryNodeFactory.create(null);
-        }
-
         @Specialization
         Object isCompatible(Object first, Object second,
                 @Cached NegotiateCompatibleEncodingNode negotiateCompatibleEncodingNode,
@@ -267,10 +263,6 @@ public abstract class EncodingNodes {
     // Like Primitive.encoding_ensure_compatible_str but returns nil if incompatible
     @Primitive(name = "strings_compatible?")
     public abstract static class AreStringsCompatibleNode extends PrimitiveArrayArgumentsNode {
-        public static AreStringsCompatibleNode create() {
-            return EncodingNodesFactory.AreStringsCompatibleNodeFactory.create(null);
-        }
-
         @Specialization
         Object areCompatible(Object first, Object second,
                 @Cached RubyStringLibrary libFirst,

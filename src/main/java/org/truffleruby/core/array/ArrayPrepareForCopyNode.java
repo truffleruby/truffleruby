@@ -35,10 +35,6 @@ import java.util.Arrays;
 @ImportStatic(ArrayGuards.class)
 public abstract class ArrayPrepareForCopyNode extends RubyBaseNode {
 
-    public static ArrayPrepareForCopyNode create() {
-        return ArrayPrepareForCopyNodeGen.create();
-    }
-
     public abstract Object execute(RubyArray dst, RubyArray src, int dstStart, int length);
 
     @ReportPolymorphism.Exclude

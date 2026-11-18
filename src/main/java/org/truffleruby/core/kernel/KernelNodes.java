@@ -842,10 +842,6 @@ public abstract class KernelNodes {
     @CoreMethod(names = "hash")
     public abstract static class HashNode extends CoreMethodArrayArgumentsNode {
 
-        public static HashNode create() {
-            return KernelNodesFactory.HashNodeFactory.create(null);
-        }
-
         public abstract Object execute(Object value);
 
         @Specialization

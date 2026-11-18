@@ -1707,10 +1707,6 @@ public abstract class IntegerNodes {
     @Primitive(name = "integer_lower")
     public abstract static class IntegerLowerNode extends PrimitiveArrayArgumentsNode {
 
-        public static IntegerLowerNode create() {
-            return IntegerNodesFactory.IntegerLowerNodeFactory.create(null);
-        }
-
         public abstract Object executeLower(Object value);
 
         @Specialization
