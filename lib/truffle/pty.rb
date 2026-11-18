@@ -39,16 +39,52 @@ module PTY
     end
   end
 
+  module Operations
+    def self.open_pty
+      # Layout: int fds[2], followed by the path of the slave device
+      Truffle::FFI::MemoryPointer.new(8 + Truffle::Platform::PATH_MAX) do |ptr|
+        name_ptr = ptr + 8
+        ret = Truffle::POSIX.truffleposix_openpty(ptr, name_ptr, Truffle::Platform::PATH_MAX)
+        Errno.handle('openpty') if ret == -1
+        [ptr.get_int(0), ptr.get_int(4), name_ptr.get_string(0).force_encoding(Encoding.filesystem)]
+      end
+    end
+
+    def self.default_shell
+      shell = ENV['SHELL']
+      return shell if shell
+
+      require 'etc'
+      begin
+        user = ENV['USER'] || Etc.getlogin
+        shell = Etc.getpwnam(user).shell if user
+      rescue ArgumentError
+        nil # no such user
+      end
+      shell || '/bin/sh'
+    end
+  end
+  private_constant :Operations
+
   # Allocates a pty and returns [master_io, slave_file], or yields them and closes them after the block.
   def self.open
-    master_fd, slave_fd, slave_name = open_pty
-    # Only the owner can write to the terminal
-    File.chmod(0600, slave_name)
-
+    master_fd, slave_fd, slave_name = Operations.open_pty
     master = IO.for_fd(master_fd, 'r+', path: "masterpty:#{slave_name}")
     master.sync = true
     slave = File.for_fd(slave_fd, 'r+', path: slave_name)
     slave.sync = true
+
+    opened = false
+    begin
+      # Only the owner can write to the terminal
+      slave.chmod(0600)
+      opened = true
+    ensure
+      unless opened
+        master.close
+        slave.close
+      end
+    end
 
     if block_given?
       begin
@@ -65,11 +101,11 @@ module PTY
   # Spawns the command on a newly allocated pty, which is the controlling terminal
   # and the stdin, stdout and stderr of the command.
   # Returns or yields [r, w, pid], where r and w are both the master side of the pty.
-  def self.spawn(*args)
-    args = [default_shell] if args.empty?
+  def spawn(*args)
+    args = [Operations.default_shell] if args.empty?
 
-    master_fd, slave_fd, slave_name = open_pty
-    slave = File.for_fd(slave_fd, 'r+')
+    master_fd, slave_fd, slave_name = Operations.open_pty
+    slave = File.for_fd(slave_fd, 'r+', path: slave_name)
     begin
       pid = Truffle::ProcessOperations.spawn_with_controlling_terminal(slave, *args)
     ensure
@@ -78,7 +114,15 @@ module PTY
     end
 
     r = File.for_fd(master_fd, 'r', path: slave_name)
-    w = File.for_fd(Truffle::POSIX.fcntl(master_fd, Fcntl::F_DUPFD_CLOEXEC, 3), 'w', path: slave_name)
+    w_fd = Truffle::POSIX.fcntl(master_fd, Fcntl::F_DUPFD_CLOEXEC, 3)
+    if w_fd < 0
+      begin
+        Errno.handle('dup')
+      ensure
+        r.close
+      end
+    end
+    w = File.for_fd(w_fd, 'w', path: slave_name)
     w.sync = true
 
     if block_given?
@@ -98,10 +142,8 @@ module PTY
       [r, w, pid]
     end
   end
-
-  class << self
-    alias_method :getpty, :spawn
-  end
+  alias_method :getpty, :spawn
+  module_function :spawn, :getpty
 
   # Returns the Process::Status of the child process pid if it exited or stopped, and nil if it is still running.
   # If raise is true, raises PTY::ChildExited instead of returning the status.
@@ -125,24 +167,4 @@ module PTY
             end
     raise ChildExited.new("pty - #{state}: #{cpid}", status)
   end
-
-  def self.open_pty
-    # Layout: int fds[2], followed by the path of the slave device
-    Truffle::FFI::MemoryPointer.new(8 + Truffle::Platform::PATH_MAX) do |ptr|
-      name_ptr = ptr + 8
-      ret = Truffle::POSIX.truffleposix_openpty(ptr, name_ptr, Truffle::Platform::PATH_MAX)
-      Errno.handle('openpty') if ret == -1
-      [ptr.get_int(0), ptr.get_int(4), name_ptr.get_string(0).force_encoding(Encoding.filesystem)]
-    end
-  end
-  private_class_method :open_pty
-
-  def self.default_shell
-    shell = ENV['SHELL']
-    return shell if shell
-
-    require 'etc'
-    Etc.getpwuid&.shell || '/bin/sh'
-  end
-  private_class_method :default_shell
 end

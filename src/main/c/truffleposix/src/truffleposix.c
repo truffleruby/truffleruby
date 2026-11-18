@@ -663,12 +663,12 @@ int truffleposix_open(char* path, int flags, mode_t mode) {
 /* Opens a new pseudo-terminal, stores the master and slave fds in fds[0] and fds[1]
  * and the path of the slave device in slave_name. Both fds are close-on-exec. */
 int truffleposix_openpty(int* fds, char* slave_name, int slave_name_size) {
-  int master = posix_openpt(O_RDWR | O_NOCTTY);
+  int master = posix_openpt(O_RDWR | O_NOCTTY | O_CLOEXEC);
   if (master == -1) {
     return -1;
   }
 
-  if (fcntl(master, F_SETFD, FD_CLOEXEC) == -1 || grantpt(master) == -1 || unlockpt(master) == -1) {
+  if (grantpt(master) == -1 || unlockpt(master) == -1) {
     goto error;
   }
 
