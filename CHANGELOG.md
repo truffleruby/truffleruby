@@ -28,6 +28,8 @@ Bug fixes:
 * Fix `Array#[]=` with a start and length or a `Range` inserting a replacement whose `#to_ary` is handled by `#method_missing`, like a `SimpleDelegator` of an Array, as one element instead of splicing its elements, and inserting a replacement whose `#to_ary` returns neither an Array nor `nil` instead of raising a `TypeError` (#4557, @taxor03).
 * Fix `Enumerator::Lazy#take` and `Enumerator::Lazy#take_while` stopping the receiver by raising an internal `Enumerator::Lazy::StopLazyError` through its `#each`, where `rescue Exception` caught it (#4558, @taxor03).
 * Fix `case`/`when` evaluating a splatted value of a `when` clause even when an earlier value of the clause matches (#4559, @taxor03).
+* Fix `0 ** n` returning `0` instead of raising `ZeroDivisionError` for a negative Bignum `n` (#4556, @taxor03).
+* Fix `Float#**` with an infinite exponent or one beyond the `Float` range: `1.0 ** n` and `(-1.0) ** n` returned `NaN` instead of `1.0`, and a negative base returned a `Complex` (#4556, @taxor03).
 
 
 Compatibility:
@@ -47,6 +49,9 @@ Compatibility:
 * `String#split` with a block now returns `self`, `IO#printf` returns `nil`, `ARGF.set_encoding` returns `ARGF`, and `IO::Buffer#set_string` and `IO::Buffer#copy` return the number of bytes copied, like CRuby (#4509, @taxor03).
 * `Complex#/` and `Complex#quo` now return Integer parts instead of Rationals with a denominator of 1, like CRuby (#4544, @taxor03).
 * `Complex#fdiv` now returns Float parts, like CRuby (#4547, @taxor03).
+* `Complex#**` with an Integer exponent is now exact for numbers on an axis or a diagonal, like CRuby (#4556, @taxor03).
+* `1 ** n` and `(-1) ** n` now return an Integer for a negative Integer `n`, like CRuby (#4556, @taxor03).
+* `Complex#**` with a `Rational` exponent whose denominator is 1, or a `Complex` exponent whose imaginary part is an exact zero, now uses the Integer or real part as the exponent, like CRuby (#4556, @taxor03).
 
 Performance:
 

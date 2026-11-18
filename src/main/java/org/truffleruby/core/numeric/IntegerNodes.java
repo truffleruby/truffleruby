@@ -1852,10 +1852,6 @@ public abstract class IntegerNodes {
 
         @Specialization
         Object powBignum(long base, RubyBignum exponent) {
-            if (base == 0) {
-                return 0;
-            }
-
             if (base == 1) {
                 return 1;
             }
@@ -1868,8 +1864,14 @@ public abstract class IntegerNodes {
                 }
             }
 
+            // Like fix_pow() in CRuby, a negative exponent is checked before a base of 0, so 0 raised to a negative
+            // Bignum raises a ZeroDivisionError
             if (BigIntegerOps.compare(exponent.value, BigInteger.ZERO) < 0) {
                 return FAILURE;
+            }
+
+            if (base == 0) {
+                return 0;
             }
 
             // b >= 2**63 && (a > 1 || a < -1) => result would be too large
