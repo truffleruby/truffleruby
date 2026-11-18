@@ -29,6 +29,7 @@ Bug fixes:
 * Fix `Enumerator::Lazy#take` and `Enumerator::Lazy#take_while` stopping the receiver by raising an internal `Enumerator::Lazy::StopLazyError` through its `#each`, where `rescue Exception` caught it (#4558, @taxor03).
 * Fix `case`/`when` evaluating a splatted value of a `when` clause even when an earlier value of the clause matches (#4559, @taxor03).
 * Updated the bundled OpenSSL from 3.5.4 to 3.5.9 (@eregon).
+* Fix `Hash#merge` with a block raising `NoMethodError` for an argument which converts with `#to_hash` (#4566, @taxor03).
 
 
 Compatibility:

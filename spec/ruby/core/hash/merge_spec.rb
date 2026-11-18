@@ -40,6 +40,14 @@ describe "Hash#merge" do
     { 3 => 4 }.merge(obj).should == { 1 => 2, 3 => 4 }
   end
 
+  it "tries to convert each passed argument to a hash using #to_hash when passed a block" do
+    obj1 = mock('{a: 2}')
+    obj1.should_receive(:to_hash).and_return({ a: 2 })
+    obj2 = mock('{a: 3, b: 4}')
+    obj2.should_receive(:to_hash).and_return({ a: 3, b: 4 })
+    { a: 1 }.merge(obj1, obj2) { |k, x, y| x + y }.should == { a: 6, b: 4 }
+  end
+
   it "does not call to_hash on hash subclasses" do
     { 3 => 4 }.merge(HashSpecs::ToHashHash[1 => 2]).should == { 1 => 2, 3 => 4 }
   end
