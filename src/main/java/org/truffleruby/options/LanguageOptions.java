@@ -82,12 +82,8 @@ public final class LanguageOptions {
     public final int INSTANCE_VARIABLE_CACHE;
     /** --binding-local-variable-cache=DEFAULT_CACHE */
     public final int BINDING_LOCAL_VARIABLE_CACHE;
-    /** --symbol-to-proc-cache=DEFAULT_CACHE */
-    public final int SYMBOL_TO_PROC_CACHE;
     /** --pack-cache=DEFAULT_CACHE */
     public final int PACK_CACHE;
-    /** --unpack-cache=DEFAULT_CACHE */
-    public final int UNPACK_CACHE;
     /** --eval-cache=DEFAULT_CACHE */
     public final int EVAL_CACHE;
     /** --encoding-loaded-classes-cache=DEFAULT_CACHE */
@@ -98,12 +94,6 @@ public final class LanguageOptions {
     public final int TIME_FORMAT_CACHE;
     /** --integer-pow-cache=DEFAULT_CACHE */
     public final int POW_CACHE;
-    /** --identity-cache=1 */
-    public final int IDENTITY_CACHE;
-    /** --context-identity-cache=!singleContext ? 0 : IDENTITY_CACHE */
-    public final int CONTEXT_SPECIFIC_IDENTITY_CACHE;
-    /** --class-cache=3 */
-    public final int CLASS_CACHE;
     /** --array-dup-cache=3 */
     public final int ARRAY_DUP_CACHE;
     /** --array-strategy-cache=4 */
@@ -161,17 +151,12 @@ public final class LanguageOptions {
         CONSTANT_CACHE = options.hasBeenSet(OptionsCatalog.CONSTANT_CACHE_KEY) ? options.get(OptionsCatalog.CONSTANT_CACHE_KEY) : DEFAULT_CACHE;
         INSTANCE_VARIABLE_CACHE = options.hasBeenSet(OptionsCatalog.INSTANCE_VARIABLE_CACHE_KEY) ? options.get(OptionsCatalog.INSTANCE_VARIABLE_CACHE_KEY) : DEFAULT_CACHE;
         BINDING_LOCAL_VARIABLE_CACHE = options.hasBeenSet(OptionsCatalog.BINDING_LOCAL_VARIABLE_CACHE_KEY) ? options.get(OptionsCatalog.BINDING_LOCAL_VARIABLE_CACHE_KEY) : DEFAULT_CACHE;
-        SYMBOL_TO_PROC_CACHE = options.hasBeenSet(OptionsCatalog.SYMBOL_TO_PROC_CACHE_KEY) ? options.get(OptionsCatalog.SYMBOL_TO_PROC_CACHE_KEY) : DEFAULT_CACHE;
         PACK_CACHE = options.hasBeenSet(OptionsCatalog.PACK_CACHE_KEY) ? options.get(OptionsCatalog.PACK_CACHE_KEY) : DEFAULT_CACHE;
-        UNPACK_CACHE = options.hasBeenSet(OptionsCatalog.UNPACK_CACHE_KEY) ? options.get(OptionsCatalog.UNPACK_CACHE_KEY) : DEFAULT_CACHE;
         EVAL_CACHE = options.hasBeenSet(OptionsCatalog.EVAL_CACHE_KEY) ? options.get(OptionsCatalog.EVAL_CACHE_KEY) : DEFAULT_CACHE;
         ENCODING_LOADED_CLASSES_CACHE = options.hasBeenSet(OptionsCatalog.ENCODING_LOADED_CLASSES_CACHE_KEY) ? options.get(OptionsCatalog.ENCODING_LOADED_CLASSES_CACHE_KEY) : DEFAULT_CACHE;
         INTEROP_CONVERT_CACHE = options.hasBeenSet(OptionsCatalog.INTEROP_CONVERT_CACHE_KEY) ? options.get(OptionsCatalog.INTEROP_CONVERT_CACHE_KEY) : DEFAULT_CACHE;
         TIME_FORMAT_CACHE = options.hasBeenSet(OptionsCatalog.TIME_FORMAT_CACHE_KEY) ? options.get(OptionsCatalog.TIME_FORMAT_CACHE_KEY) : DEFAULT_CACHE;
         POW_CACHE = options.hasBeenSet(OptionsCatalog.POW_CACHE_KEY) ? options.get(OptionsCatalog.POW_CACHE_KEY) : DEFAULT_CACHE;
-        IDENTITY_CACHE = options.get(OptionsCatalog.IDENTITY_CACHE_KEY);
-        CONTEXT_SPECIFIC_IDENTITY_CACHE = !singleContext ? 0 : (options.hasBeenSet(OptionsCatalog.CONTEXT_SPECIFIC_IDENTITY_CACHE_KEY) ? options.get(OptionsCatalog.CONTEXT_SPECIFIC_IDENTITY_CACHE_KEY) : IDENTITY_CACHE);
-        CLASS_CACHE = options.get(OptionsCatalog.CLASS_CACHE_KEY);
         ARRAY_DUP_CACHE = options.get(OptionsCatalog.ARRAY_DUP_CACHE_KEY);
         ARRAY_STRATEGY_CACHE = options.get(OptionsCatalog.ARRAY_STRATEGY_CACHE_KEY);
         ARRAY_UNINITIALIZED_SIZE = options.get(OptionsCatalog.ARRAY_UNINITIALIZED_SIZE_KEY);
@@ -247,12 +232,8 @@ public final class LanguageOptions {
                 return INSTANCE_VARIABLE_CACHE;
             case "ruby.binding-local-variable-cache":
                 return BINDING_LOCAL_VARIABLE_CACHE;
-            case "ruby.symbol-to-proc-cache":
-                return SYMBOL_TO_PROC_CACHE;
             case "ruby.pack-cache":
                 return PACK_CACHE;
-            case "ruby.unpack-cache":
-                return UNPACK_CACHE;
             case "ruby.eval-cache":
                 return EVAL_CACHE;
             case "ruby.encoding-loaded-classes-cache":
@@ -263,12 +244,6 @@ public final class LanguageOptions {
                 return TIME_FORMAT_CACHE;
             case "ruby.integer-pow-cache":
                 return POW_CACHE;
-            case "ruby.identity-cache":
-                return IDENTITY_CACHE;
-            case "ruby.context-identity-cache":
-                return CONTEXT_SPECIFIC_IDENTITY_CACHE;
-            case "ruby.class-cache":
-                return CLASS_CACHE;
             case "ruby.array-dup-cache":
                 return ARRAY_DUP_CACHE;
             case "ruby.array-strategy-cache":
@@ -330,17 +305,12 @@ public final class LanguageOptions {
                one.get(OptionsCatalog.CONSTANT_CACHE_KEY).equals(two.get(OptionsCatalog.CONSTANT_CACHE_KEY)) &&
                one.get(OptionsCatalog.INSTANCE_VARIABLE_CACHE_KEY).equals(two.get(OptionsCatalog.INSTANCE_VARIABLE_CACHE_KEY)) &&
                one.get(OptionsCatalog.BINDING_LOCAL_VARIABLE_CACHE_KEY).equals(two.get(OptionsCatalog.BINDING_LOCAL_VARIABLE_CACHE_KEY)) &&
-               one.get(OptionsCatalog.SYMBOL_TO_PROC_CACHE_KEY).equals(two.get(OptionsCatalog.SYMBOL_TO_PROC_CACHE_KEY)) &&
                one.get(OptionsCatalog.PACK_CACHE_KEY).equals(two.get(OptionsCatalog.PACK_CACHE_KEY)) &&
-               one.get(OptionsCatalog.UNPACK_CACHE_KEY).equals(two.get(OptionsCatalog.UNPACK_CACHE_KEY)) &&
                one.get(OptionsCatalog.EVAL_CACHE_KEY).equals(two.get(OptionsCatalog.EVAL_CACHE_KEY)) &&
                one.get(OptionsCatalog.ENCODING_LOADED_CLASSES_CACHE_KEY).equals(two.get(OptionsCatalog.ENCODING_LOADED_CLASSES_CACHE_KEY)) &&
                one.get(OptionsCatalog.INTEROP_CONVERT_CACHE_KEY).equals(two.get(OptionsCatalog.INTEROP_CONVERT_CACHE_KEY)) &&
                one.get(OptionsCatalog.TIME_FORMAT_CACHE_KEY).equals(two.get(OptionsCatalog.TIME_FORMAT_CACHE_KEY)) &&
                one.get(OptionsCatalog.POW_CACHE_KEY).equals(two.get(OptionsCatalog.POW_CACHE_KEY)) &&
-               one.get(OptionsCatalog.IDENTITY_CACHE_KEY).equals(two.get(OptionsCatalog.IDENTITY_CACHE_KEY)) &&
-               one.get(OptionsCatalog.CONTEXT_SPECIFIC_IDENTITY_CACHE_KEY).equals(two.get(OptionsCatalog.CONTEXT_SPECIFIC_IDENTITY_CACHE_KEY)) &&
-               one.get(OptionsCatalog.CLASS_CACHE_KEY).equals(two.get(OptionsCatalog.CLASS_CACHE_KEY)) &&
                one.get(OptionsCatalog.ARRAY_DUP_CACHE_KEY).equals(two.get(OptionsCatalog.ARRAY_DUP_CACHE_KEY)) &&
                one.get(OptionsCatalog.ARRAY_STRATEGY_CACHE_KEY).equals(two.get(OptionsCatalog.ARRAY_STRATEGY_CACHE_KEY)) &&
                one.get(OptionsCatalog.ARRAY_UNINITIALIZED_SIZE_KEY).equals(two.get(OptionsCatalog.ARRAY_UNINITIALIZED_SIZE_KEY)) &&
@@ -563,24 +533,10 @@ public final class LanguageOptions {
             return false;
         }
 
-        oldValue = oldOptions.SYMBOL_TO_PROC_CACHE;
-        newValue = newOptions.SYMBOL_TO_PROC_CACHE;
-        if (!newValue.equals(oldValue)) {
-            logger.fine("not reusing pre-initialized context: --symbol-to-proc-cache differs, was: " + oldValue + " and is now: " + newValue);
-            return false;
-        }
-
         oldValue = oldOptions.PACK_CACHE;
         newValue = newOptions.PACK_CACHE;
         if (!newValue.equals(oldValue)) {
             logger.fine("not reusing pre-initialized context: --pack-cache differs, was: " + oldValue + " and is now: " + newValue);
-            return false;
-        }
-
-        oldValue = oldOptions.UNPACK_CACHE;
-        newValue = newOptions.UNPACK_CACHE;
-        if (!newValue.equals(oldValue)) {
-            logger.fine("not reusing pre-initialized context: --unpack-cache differs, was: " + oldValue + " and is now: " + newValue);
             return false;
         }
 
@@ -616,27 +572,6 @@ public final class LanguageOptions {
         newValue = newOptions.POW_CACHE;
         if (!newValue.equals(oldValue)) {
             logger.fine("not reusing pre-initialized context: --integer-pow-cache differs, was: " + oldValue + " and is now: " + newValue);
-            return false;
-        }
-
-        oldValue = oldOptions.IDENTITY_CACHE;
-        newValue = newOptions.IDENTITY_CACHE;
-        if (!newValue.equals(oldValue)) {
-            logger.fine("not reusing pre-initialized context: --identity-cache differs, was: " + oldValue + " and is now: " + newValue);
-            return false;
-        }
-
-        oldValue = oldOptions.CONTEXT_SPECIFIC_IDENTITY_CACHE;
-        newValue = newOptions.CONTEXT_SPECIFIC_IDENTITY_CACHE;
-        if (!newValue.equals(oldValue)) {
-            logger.fine("not reusing pre-initialized context: --context-identity-cache differs, was: " + oldValue + " and is now: " + newValue);
-            return false;
-        }
-
-        oldValue = oldOptions.CLASS_CACHE;
-        newValue = newOptions.CLASS_CACHE;
-        if (!newValue.equals(oldValue)) {
-            logger.fine("not reusing pre-initialized context: --class-cache differs, was: " + oldValue + " and is now: " + newValue);
             return false;
         }
 

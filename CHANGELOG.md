@@ -56,6 +56,7 @@ Performance:
 
 Incompatible Changes:
 
+* Remove the experimental options `--interop-host`, `--symbol-to-proc-cache`, `--unpack-cache`, `--identity-cache`, `--context-identity-cache` and `--class-cache`, which had no effect (@eregon).
 
 Memory Footprint:
 
