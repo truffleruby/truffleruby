@@ -30,6 +30,7 @@ Bug fixes:
 * Fix `case`/`when` evaluating a splatted value of a `when` clause even when an earlier value of the clause matches (#4559, @taxor03).
 * Updated the bundled OpenSSL from 3.5.4 to 3.5.9 (@eregon).
 * Fix `Hash#merge` with a block raising `NoMethodError` for an argument which converts with `#to_hash` (#4566, @taxor03).
+* Fix `Regexp.new` and `Regexp.compile` to convert options with `#to_str` into option letters instead of treating them as `true` (#4567, @taxor03).
 
 
 Compatibility:
