@@ -1,7 +1,7 @@
 # frozen_string_literal: false
 require 'test/unit'
-# require '-test-/rb_call_super_kw'
-# require '-test-/iter'
+require '-test-/rb_call_super_kw'
+require '-test-/iter'
 
 class TestKeywordArguments < Test::Unit::TestCase
   def f1(str: "foo", num: 424242)
@@ -477,11 +477,10 @@ class TestKeywordArguments < Test::Unit::TestCase
 
     singleton_class.send(:attr_writer, :y)
     m = method(:y=)
-    # TODO (nirvdrum 2025-11-23) Are these exclusions still needed?
-    # assert_equal_not_same(h, send(:y=, **h))
-    # assert_equal_not_same(h, public_send(:y=, **h))
-    # assert_equal_not_same(h, m.(**h))
-    # assert_equal_not_same(h, m.send(:call, **h))
+    assert_equal_not_same(h, send(:y=, **h))
+    assert_equal_not_same(h, public_send(:y=, **h))
+    assert_equal_not_same(h, m.(**h))
+    assert_equal_not_same(h, m.send(:call, **h))
 
     singleton_class.send(:remove_method, :yo)
     def self.method_missing(_, **kw) kw end
@@ -2838,11 +2837,10 @@ class TestKeywordArguments < Test::Unit::TestCase
     assert_warn(/Skipping set of ruby2_keywords flag for bar \(can only set in method defining module\)/) do
       sc.send(:ruby2_keywords, :bar)
     end
-    # TODO (nirvdrum 2025-11-23) Are these exclusions still needed?
-    # m = Module.new
-    # assert_warn(/Skipping set of ruby2_keywords flag for system \(can only set in method defining module\)/) do
-    #   m.send(:ruby2_keywords, :system)
-    # end
+    m = Module.new
+    assert_warn(/Skipping set of ruby2_keywords flag for system \(can only set in method defining module\)/) do
+      m.send(:ruby2_keywords, :system)
+    end
 
     assert_raise(NameError) { c.send(:ruby2_keywords, "a5e36ccec4f5080a1d5e63f8") }
     assert_raise(NameError) { c.send(:ruby2_keywords, :quux) }
@@ -4189,7 +4187,7 @@ class TestKeywordArguments < Test::Unit::TestCase
       end
     end
 
-    assert_raise_with_message(TypeError, /expected Hash|no implicit conversion of Array into Hash/, bug13015) do
+    assert_raise_with_message(TypeError, /expected Hash/, bug13015) do
       klass.new(d: 4)
     end
   end
@@ -4294,6 +4292,23 @@ class TestKeywordArguments < Test::Unit::TestCase
       assert_equal(expected, victim(k0: 0), '[Bug #22335]')
       kwargs = {k0: 0}
       assert_equal(expected, victim(**kwargs), '[Bug #22335]')
+    RUBY
+  end
+
+  def test_many_kwargs_with_gc_while_tracking_unspecified
+    assert_separately([], <<~'RUBY', timeout: 60)
+      # k32 has a non-static default and is past the keyword bitmask limit,
+      # so leaving it unspecified allocates a set during argument setup.
+      params = (0...32).map { |i| "k#{i}: nil" }
+      eval "def victim(#{params.join(', ')}, k32: Object.new) [k1, k32]; end"
+
+      GC.stress = true
+      # Run twice to cover the first call and the cached fast path. The
+      # string passed as k1 has no other reference.
+      results = 2.times.map { victim(k1: "k" + "1")[0] }
+      GC.stress = false
+
+      assert_equal(["k1", "k1"], results, "[Bug #22500]")
     RUBY
   end
 

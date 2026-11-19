@@ -5,7 +5,6 @@ class TestVM < Test::Unit::TestCase
   def test_at_exit
 
     assert_in_out_err([], <<-"end;", %w[begin end]) # do
-      $: << "#{Dir.pwd}/.ext" if defined?(::TruffleRuby)
       require 'c/vm/at_exit'
       Bug::VM.register_at_exit(false)
       1000.times do

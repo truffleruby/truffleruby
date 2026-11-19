@@ -247,6 +247,18 @@ class TestPack < Test::Unit::TestCase
     end
   end
 
+  def test_format_string_modified_by_to_str
+    fmt = "a" + " " * 1_000_000
+    o = Object.new
+    o.define_singleton_method(:to_str) do
+      fmt.clear
+      "A"
+    end
+    assert_raise_with_message(RuntimeError, /format string modified/) do
+      [o].pack(fmt)
+    end
+  end
+
   def test_unpack_with_block_modifying_string
     # [Bug #22315]
     s = "C" * 4000
@@ -256,6 +268,13 @@ class TestPack < Test::Unit::TestCase
     s = "ABCD"
     assert_raise_with_message(RuntimeError, /string modified/) {
       s.unpack("C*") { s << "E" * 100 }
+    }
+  end
+
+  def test_unpack_with_block_modifying_format
+    fmt = "C" * 1_000_000
+    assert_raise_with_message(RuntimeError, /format string modified/) {
+      ("A" * 4000).unpack(fmt) { fmt.clear }
     }
   end
 
@@ -865,6 +884,19 @@ EXPECTED
     assert_equal "\xDE\xAD\xBE\xEF\xBA\xBE\xF0\x0D\0\0\xBA\xAD\xFA\xCE", buf
 
     assert_equal addr, [buf].pack('p')
+
+    assert_packing_buffer_fail("b*")
+    assert_packing_buffer_fail("B*")
+    assert_packing_buffer_fail("h*")
+    assert_packing_buffer_fail("H*")
+    assert_packing_buffer_fail("u", 16384)
+    assert_packing_buffer_fail("m", 16384)
+    assert_packing_buffer_fail("M", 16384)
+  end
+
+  def assert_packing_buffer_fail(fmt, size = 8192)
+    s = "\x01".b * size
+    assert_raise(ArgumentError) {[s].pack(fmt, buffer: s)}
   end
 
   def test_unpack_with_block

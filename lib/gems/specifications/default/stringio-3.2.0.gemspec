@@ -10,12 +10,12 @@ Gem::Specification.new do |s|
   s.metadata = { "changelog_uri" => "https://github.com/ruby/stringio/releases/tag/v3.2.0" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Nobu Nakada".freeze, "Charles Oliver Nutter".freeze]
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "Pseudo `IO` class from/to `String`.".freeze
   s.email = ["nobu@ruby-lang.org".freeze, "headius@headius.com".freeze]
   s.extensions = ["ext/stringio/extconf.rb".freeze]
   s.extra_rdoc_files = [".document".freeze, ".rdoc_options".freeze, "COPYING".freeze, "LICENSE.txt".freeze, "NEWS.md".freeze, "README.md".freeze, "docs/io.rb".freeze, "ext/stringio/.document".freeze]
-  s.files = [".document".freeze, ".rdoc_options".freeze, "COPYING".freeze, "LICENSE.txt".freeze, "NEWS.md".freeze, "README.md".freeze, "docs/io.rb".freeze, "ext/stringio/.document".freeze, "ext/stringio/extconf.rb".freeze, "ext/stringio/stringio.c".freeze, "lib/docs/io.rb".freeze, "stringio.#{Truffle::Platform::DLEXT}".freeze]
+  s.files = [".document".freeze, ".rdoc_options".freeze, "COPYING".freeze, "LICENSE.txt".freeze, "NEWS.md".freeze, "README.md".freeze, "docs/io.rb".freeze, "ext/stringio/.document".freeze, "ext/stringio/extconf.rb".freeze, "ext/stringio/stringio.c".freeze, "lib/stringio.#{Truffle::Platform::DLEXT}".freeze]
   s.homepage = "https://github.com/ruby/stringio".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.7".freeze)

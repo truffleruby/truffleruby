@@ -1,2 +1,0 @@
-_Init_psych
-_rb_tr_abi_version

@@ -27,10 +27,6 @@
 #include "ruby/internal/dllexport.h"
 #include "ruby/assert.h"
 
-#ifdef TRUFFLERUBY
-#error "Expected defined(NFDBITS) && defined(HAVE_RB_FD_INIT)"
-#endif
-
 /**@cond INTERNAL_MACRO */
 #define rb_fd_zero  rb_fd_zero
 #define rb_fd_clr   rb_fd_clr

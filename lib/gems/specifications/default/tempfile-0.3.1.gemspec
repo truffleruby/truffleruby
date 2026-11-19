@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.metadata = { "homepage_uri" => "https://github.com/ruby/tempfile", "source_code_uri" => "https://github.com/ruby/tempfile" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Yukihiro Matsumoto".freeze]
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "A utility class for managing temporary files.".freeze
   s.email = ["matz@ruby-lang.org".freeze]
   s.files = ["lib/tempfile.rb".freeze]

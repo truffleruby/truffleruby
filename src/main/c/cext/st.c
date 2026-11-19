@@ -1,11 +1,3 @@
-// START: TruffleRuby
-// Needed by lib/cext/include/ruby/st.h
-#include <ruby.h>
-
-RBIMPL_WARNING_IGNORED(-Wunused-function)
-RBIMPL_WARNING_IGNORED(-Wattributes)
-// END: TruffleRuby
-
 /* This is a public domain general purpose hash table package
    originally written by Peter Moore @ UCB.
 
@@ -112,20 +104,16 @@ RBIMPL_WARNING_IGNORED(-Wattributes)
 #include "regint.h"
 #include "st.h"
 #include <assert.h>
-#elif defined RUBY_EXPORT && !defined TRUFFLERUBY
-// TruffleRuby: skip these internal MRI headers which are not available; ruby.h and
-// internal/bits.h below provide everything needed to compile this copy of st.c.
+#elif defined RUBY_EXPORT
 #include "internal.h"
 #include "internal/bits.h"
 #include "internal/hash.h"
 #include "internal/sanitizers.h"
 #include "internal/set_table.h"
+#include "internal/static_assert.h"
 #include "internal/st.h"
 #include "ruby_assert.h"
 #endif
-
-// Needed here for TruffleRuby.
-#include "internal/bits.h"
 
 #include <stdio.h>
 #ifdef HAVE_STDLIB_H
@@ -219,7 +207,7 @@ struct st_features {
 
 /* Features of all possible size tables.  */
 #if SIZEOF_ST_INDEX_T == 8
-#define MAX_POWER2 62
+#define MAX_POWER2 58
 static const struct st_features features[] = {
     {0, 1, 0, 0x0},
     {1, 2, 0, 0x1},
@@ -279,15 +267,12 @@ static const struct st_features features[] = {
     {55, 56, 3, 0x100000000000000},
     {56, 57, 3, 0x200000000000000},
     {57, 58, 3, 0x400000000000000},
-    {58, 59, 3, 0x800000000000000},
-    {59, 60, 3, 0x1000000000000000},
-    {60, 61, 3, 0x2000000000000000},
-    {61, 62, 3, 0x4000000000000000},
-    {62, 63, 3, 0x8000000000000000},
+#define MAX_BINS_WORDS 0x800000000000000
+    {58, 59, 3, MAX_BINS_WORDS},
 };
 
 #else
-#define MAX_POWER2 30
+#define MAX_POWER2 27
 
 static const struct st_features features[] = {
     {0, 1, 0, 0x1},
@@ -317,12 +302,19 @@ static const struct st_features features[] = {
     {24, 25, 2, 0x2000000},
     {25, 26, 2, 0x4000000},
     {26, 27, 2, 0x8000000},
-    {27, 28, 2, 0x10000000},
-    {28, 29, 2, 0x20000000},
-    {29, 30, 2, 0x40000000},
-    {30, 31, 2, 0x80000000},
+#define MAX_BINS_WORDS 0x10000000
+    {27, 28, 2, MAX_BINS_WORDS},
 };
 
+#endif
+
+#ifdef STATIC_ASSERT
+// Ensure MAX_POWER2 result in entries and bins memsize < SIZE_MAX.
+#define MAX_ADDRESSABLE_ENTRIES (SIZE_MAX / sizeof(st_table_entry))
+#define MAX_ENTRIES (((st_index_t) 1)<<MAX_POWER2)
+STATIC_ASSERT(max_power_entries_overflow, MAX_ENTRIES < MAX_ADDRESSABLE_ENTRIES);
+#define MAX_BINS_SIZE (SIZE_MAX - (MAX_ENTRIES * sizeof(st_table_entry)))
+STATIC_ASSERT(max_power_bins_overflow, (MAX_BINS_SIZE / sizeof(st_index_t)) > MAX_BINS_WORDS);
 #endif
 
 /* The reserved hash value and its substitution.  */
@@ -2132,7 +2124,6 @@ st_numhash(st_data_t n)
     return (st_index_t)((n>>s1|(n<<s2)) ^ (n>>s2));
 }
 
-#ifndef TRUFFLERUBY
 #ifdef RUBY
 /* Expand TAB to be suitable for holding SIZ entries in total.
    Pre-existing entries remain not deleted inside of TAB, but its bins
@@ -3236,4 +3227,3 @@ set_compact_table(set_table *tab)
 }
 
 #endif
-#endif /* TRUFFLERUBY */

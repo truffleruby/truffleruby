@@ -37,20 +37,11 @@
  * @param   obj  Arbitrary Ruby object.
  * @return  The passed object casted to ::RBasic.
  */
-#ifndef TRUFFLERUBY
 #define RBASIC(obj)                 RBIMPL_CAST((struct RBasic *)(obj))
-#endif
-
 /** @cond INTERNAL_MACRO */
 #define RBASIC_CLASS                RBASIC_CLASS
 #define RBIMPL_RVALUE_EMBED_LEN_MAX 3
-
-#ifdef TRUFFLERUBY // for bignum.h
-#define RVALUE_EMBED_LEN_MAX        3
-#else
 #define RVALUE_EMBED_LEN_MAX        RVALUE_EMBED_LEN_MAX
-#endif
-
 #define RBIMPL_EMBED_LEN_MAX_OF(T) \
     RBIMPL_CAST((int)(sizeof(VALUE[RBIMPL_RVALUE_EMBED_LEN_MAX]) / (sizeof(T))))
 /** @endcond */
@@ -59,12 +50,10 @@
  * This is an enum because GDB wants it (rather than a macro).  People need not
  * bother.
  */
-#ifndef TRUFFLERUBY
 enum ruby_rvalue_flags {
     /** Max possible number of objects that can be embedded. */
     RVALUE_EMBED_LEN_MAX = RBIMPL_RVALUE_EMBED_LEN_MAX
 };
-#endif
 
 #if (SIZEOF_VALUE < SIZEOF_UINT64_T)
 #define RBASIC_SHAPE_ID_FIELD 1
@@ -79,8 +68,6 @@ struct
 RUBY_ALIGNAS(SIZEOF_VALUE)
 RBasic {
 
-#ifndef TRUFFLERUBY
-    // TruffleRuby: we cannot support writing to the flags field, so don't expose the field
     /**
      * Per-object flags.   Each Ruby object  has its own  characteristics apart
      * from its class.  For instance, whether an object is frozen or not is not
@@ -132,7 +119,6 @@ RBasic {
 #else
 # define RBASIC_INIT {RBIMPL_VALUE_NULL}
 #endif
-#endif // TRUFFLERUBY
 };
 
 RBIMPL_SYMBOL_EXPORT_BEGIN()
@@ -166,9 +152,6 @@ VALUE rb_obj_hide(VALUE obj);
  * @see         rb_obj_hide
  */
 VALUE rb_obj_reveal(VALUE obj, VALUE klass); /* do not use this API to change klass information */
-#ifdef TRUFFLERUBY
-VALUE rb_class_of(VALUE object);
-#endif
 RBIMPL_SYMBOL_EXPORT_END()
 
 RBIMPL_ATTR_PURE_UNLESS_DEBUG()
@@ -183,11 +166,7 @@ static inline VALUE
 RBASIC_CLASS(VALUE obj)
 {
     RBIMPL_ASSERT_OR_ASSUME(! RB_SPECIAL_CONST_P(obj));
-#ifdef TRUFFLERUBY
-    return rb_class_of(obj);
-#else
     return RBASIC(obj)->klass;
-#endif
 }
 
 #endif /* RBIMPL_RBASIC_H */

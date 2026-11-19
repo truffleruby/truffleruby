@@ -1,4 +1,4 @@
-require "c/memory_view"
+require "-test-/memory_view"
 require "rbconfig/sizeof"
 
 class TestMemoryView < Test::Unit::TestCase
@@ -83,6 +83,30 @@ class TestMemoryView < Test::Unit::TestCase
                    {format: 'q', native_size_p: true,  endianness: :little_endian, offset: 50, size: sizeof('long long'), repeat: 1}
                  ],
                  members)
+  end
+
+  def test_rb_memory_view_parse_item_format_with_spaces
+    # Spaces between components are ignored, as in item_size_from_format. A
+    # repeat count still binds to the type char immediately preceding it, so the
+    # spaces only separate whole "cNN" tokens. The member list must be identical
+    # to the same format without spaces; a space must not produce an extra
+    # member. (Formerly the fill pass did not skip spaces, so each space wrote
+    # one rb_memory_view_item_component_t past the allocation.)
+    spaced, spaced_members, spaced_err = MemoryViewTestUtils.parse_item_format("c c2 f3 x2 d")
+    plain,  plain_members,  plain_err  = MemoryViewTestUtils.parse_item_format("cc2f3x2d")
+
+    assert_nil(spaced_err)
+    assert_nil(plain_err)
+    assert_equal(plain, spaced)
+    assert_equal(plain_members, spaced_members)
+
+    # A lone trailing space must not add a member either.
+    total_size, members, err = MemoryViewTestUtils.parse_item_format("c ")
+    assert_nil(err)
+    assert_equal(1, total_size)
+    assert_equal(
+      [{format: 'c', native_size_p: false, endianness: NATIVE_ENDIAN, offset: 0, size: 1, repeat: 1}],
+      members)
   end
 
   def test_rb_memory_view_parse_item_format_with_alignment_signle
@@ -323,7 +347,7 @@ class TestMemoryView < Test::Unit::TestCase
 
   def test_ractor
     assert_in_out_err([], <<-"end;", ["[5, 6]", "[-7, -8]"], [])
-      # require "-test-/memory_view"
+      require "-test-/memory_view"
       require "rbconfig/sizeof"
       $VERBOSE = nil
       r = Ractor.new RbConfig::SIZEOF["short"] do |sizeof_short|

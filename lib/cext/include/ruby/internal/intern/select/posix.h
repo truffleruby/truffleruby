@@ -35,10 +35,6 @@
 #include "ruby/internal/attr/nonnull.h"
 #include "ruby/internal/attr/pure.h"
 
-#ifdef TRUFFLERUBY
-#error "Expected defined(NFDBITS) && defined(HAVE_RB_FD_INIT)"
-#endif
-
 /**
  * The data structure which wraps the  fd_set bitmap used by `select(2)`.  This
  * allows Ruby to use FD sets larger than what has been historically allowed on

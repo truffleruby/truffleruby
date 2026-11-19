@@ -39,13 +39,8 @@ typedef struct rb_thread_cond_struct rb_nativethread_cond_t;
 
 #include <pthread.h>
 typedef pthread_t rb_nativethread_id_t;
-#ifdef TRUFFLERUBY
-typedef VALUE rb_nativethread_lock_t;
-typedef VALUE rb_nativethread_cond_t;
-#else
 typedef pthread_mutex_t rb_nativethread_lock_t;
 typedef pthread_cond_t rb_nativethread_cond_t;
-#endif
 
 #elif defined(__wasi__) // no-thread platforms
 

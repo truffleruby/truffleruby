@@ -10,12 +10,12 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Yukihiro Matsumoto".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "Loads constants defined in the OS fcntl.h C header file".freeze
   s.email = ["matz@ruby-lang.org".freeze]
   s.extensions = ["ext/fcntl/extconf.rb".freeze]
   s.extra_rdoc_files = [".document".freeze, ".rdoc_options".freeze, "BSDL".freeze, "COPYING".freeze, "README.md".freeze]
-  s.files = [".document".freeze, ".rdoc_options".freeze, "BSDL".freeze, "COPYING".freeze, "README.md".freeze, "ext/fcntl/extconf.rb".freeze, "ext/fcntl/fcntl.c".freeze, "fcntl.#{Truffle::Platform::DLEXT}".freeze]
+  s.files = [".document".freeze, ".rdoc_options".freeze, "BSDL".freeze, "COPYING".freeze, "README.md".freeze, "ext/fcntl/extconf.rb".freeze, "ext/fcntl/fcntl.c".freeze, "lib/fcntl.#{Truffle::Platform::DLEXT}".freeze]
   s.homepage = "https://github.com/ruby/fcntl".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.5.0".freeze)
