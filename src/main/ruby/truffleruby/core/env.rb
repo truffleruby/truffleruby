@@ -223,6 +223,12 @@ class << ENV
     absent
   end
 
+  def fetch_values(*keys, &block)
+    keys.map do |key|
+      self.fetch(key, &block)
+    end
+  end
+
   def to_s
     'ENV'
   end
