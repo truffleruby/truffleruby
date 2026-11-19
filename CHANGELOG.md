@@ -49,6 +49,7 @@ Compatibility:
 * `Complex#/` and `Complex#quo` now return Integer parts instead of Rationals with a denominator of 1, like CRuby (#4544, @taxor03).
 * `Complex#fdiv` now returns Float parts, like CRuby (#4547, @taxor03).
 * Implement `ENV.fetch_values` from Ruby 4.1 (@makmic, @edcarvio, @composerinteralia).
+* Define `Enumerator::Lazy#each_with_index` on `Enumerator::Lazy` like CRuby 4.0.10 (@eregon).
 
 Performance:
 

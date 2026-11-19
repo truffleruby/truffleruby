@@ -555,6 +555,12 @@ class Enumerator
     end
     alias_method :collect_concat, :flat_map
 
+    def each_with_index(&block)
+      return super if block
+
+      with_index(0)
+    end
+
     def with_index(offset = 0, &block)
       offset = if Primitive.nil?(offset)
                  0
