@@ -78,9 +78,9 @@ suite = {
             "license": ["MIT"],
         },
 
-        "LIBSSL_3_5_4": {
-            "urls": ["https://github.com/openssl/openssl/releases/download/openssl-3.5.4/openssl-3.5.4.tar.gz"],
-            "digest": "sha256:967311f84955316969bdb1d8d4b983718ef42338639c621ec4c34fddef355e99",
+        "LIBSSL_3_5_9": {
+            "urls": ["https://github.com/openssl/openssl/releases/download/openssl-3.5.9/openssl-3.5.9.tar.gz"],
+            "digest": "sha256:603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a",
             "license": ["Apache-2.0"],
         },
     },
@@ -942,8 +942,8 @@ suite = {
                 "./": [
                     {
                         "source_type": "extracted-dependency",
-                        "dependency": "LIBSSL_3_5_4",
-                        "path": "openssl-3.5.4/*",
+                        "dependency": "LIBSSL_3_5_9",
+                        "path": "openssl-3.5.9/*",
                     },
                 ],
             },
