@@ -102,3 +102,4 @@ fails:Public methods on UnboundMethod should not include syntax_tree
 fails:Public methods on TracePoint should not include ==
 fails:Public methods on TracePoint should not include eql?
 fails:Public methods on TracePoint should not include hash
+fails:Public methods on ENV.singleton_class should not include fetch_values
