@@ -155,14 +155,16 @@ class Regexp
       warn 'flags ignored' unless Primitive.undefined?(opts)
       opts = pattern.options
       pattern = pattern.source
-    else
-      pattern = Primitive.convert_with_to_str(pattern)
     end
 
-    if Primitive.is_a?(opts, Integer)
+    # Like reg_extract_args() in CRuby, the options are converted before the pattern
+    if Primitive.undefined?(opts)
+      opts = 0
+    elsif Primitive.is_a?(opts, Integer)
       opts = opts & (OPTION_MASK | KCODE_MASK) if opts > 0
-    elsif Primitive.is_a?(opts, String)
-      opts = opts.chars.reduce(0) do |result, char|
+    elsif str_opts = Truffle::Type.rb_check_convert_type(opts, String, :to_str)
+      # Like str_to_option() in CRuby, options which convert with #to_str are option letters
+      opts = str_opts.chars.reduce(0) do |result, char|
         case char
         when 'i'
           result | IGNORECASE
@@ -171,10 +173,10 @@ class Regexp
         when 'x'
           result | EXTENDED
         else
-          raise ArgumentError, "unknown regexp option: #{opts}"
+          raise ArgumentError, "unknown regexp option: #{str_opts}"
         end
       end
-    elsif !Primitive.undefined?(opts)
+    else
       # Valid values are true, false, nil.
       # Other values warn but treat as true.
       if Primitive.false?(opts) || Primitive.nil?(opts)
@@ -183,9 +185,9 @@ class Regexp
         warn "expected true or false as ignorecase: #{opts}" unless Primitive.true?(opts)
         opts = IGNORECASE
       end
-    else
-      opts = 0
     end
+
+    pattern = Primitive.convert_with_to_str(pattern)
 
     if encoding
       encoding = Primitive.convert_with_to_str(encoding)
