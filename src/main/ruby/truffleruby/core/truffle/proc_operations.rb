@@ -51,7 +51,7 @@ module Truffle::ProcOperations
     end
   end
 
-  def self.syntax_tree(range, block_owner: false)
+  def self.syntax_tree(range)
     require 'prism'
     return nil unless range&.absolute_path
 
@@ -64,28 +64,16 @@ module Truffle::ProcOperations
     # for a keyword omission such as `target(missing:)`, so visit every branch
     # which contains the range.
     candidates = []
-    stack = [[result.value, nil, 0]]
+    stack = [[result.value, 0]]
     until stack.empty?
-      node, parent, depth = stack.pop
+      node, depth = stack.pop
       if node.start_offset <= start_offset && node.end_offset >= end_offset
         if node.start_offset == start_offset && node.end_offset == end_offset
-          candidates << [node, parent, depth]
+          candidates << [node, depth]
         end
 
         node.compact_child_nodes.reverse_each do |child|
-          stack << [child, node, depth + 1]
-        end
-      end
-    end
-
-    if block_owner
-      block = candidates.select { |candidate,| Primitive.is_a?(candidate, Prism::BlockNode) }.max_by(&:last)
-      if block
-        owner = block[1]
-        if Primitive.is_a?(owner, Prism::CallNode) ||
-            Primitive.is_a?(owner, Prism::SuperNode) ||
-            Primitive.is_a?(owner, Prism::ForwardingSuperNode)
-          return owner
+          stack << [child, depth + 1]
         end
       end
     end
