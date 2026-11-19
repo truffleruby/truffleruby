@@ -189,6 +189,8 @@ RBIMPL_SYMBOL_EXPORT_END()
 
 /** @cond INTERNAL_MACRO */
 
+#ifndef TRUFFLERUBY
+
 /* If we could use constexpr the following macros could be inline functions
  * ... but sadly we cannot. */
 
@@ -530,5 +532,6 @@ rb_scan_args_set(int kw_flag, int argc, const VALUE *argv,
             ((VALUE*[]){__VA_ARGS__})),                       \
         (rb_scan_args_kw)(kw_flag, argc, argvp, fmt, __VA_ARGS__ /**/))
 #endif
+#endif // TRUFFLERUBY
 
 #endif /* RBIMPL_SCAN_ARGS_H */

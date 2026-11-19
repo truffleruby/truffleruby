@@ -6,7 +6,7 @@ class TestMkmfHaveLibrary < TestMkmf
   LIBRARY_NAME = 'mkmftest'
   HEADER_NAME = "#{LIBRARY_NAME}.h"
   FUNC_NAME = 'ruby_mkmftest_foo'
-  ARPREFIX = config_string('LIBRUBY_A') {|lib| lib[/\A\w+/]}
+  ARPREFIX = defined?(::TruffleRuby) ? 'lib' : config_string('LIBRUBY_A') {|lib| lib[/\A\w+/]}
 
   def create_library(libname = LIBRARY_NAME)
     lib = "#{ARPREFIX}#{libname}.#{$LIBEXT}"

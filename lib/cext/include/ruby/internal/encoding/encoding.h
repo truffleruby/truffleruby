@@ -77,6 +77,14 @@ enum ruby_encoding_consts {
  * @param[in]   ecindex  Encoding in encindex format.
  * @post        `obj`'s encoding is `encindex`.
  */
+#ifdef TRUFFLERUBY
+static inline void RB_ENCODING_SET(VALUE obj, int encindex);
+static inline void
+RB_ENCODING_SET_INLINED(VALUE obj, int encindex)
+{
+    RB_ENCODING_SET(obj, encindex);
+}
+#else
 static inline void
 RB_ENCODING_SET_INLINED(VALUE obj, int encindex)
 {
@@ -86,6 +94,7 @@ RB_ENCODING_SET_INLINED(VALUE obj, int encindex)
     RB_FL_UNSET_RAW(obj, RUBY_ENCODING_MASK);
     RB_FL_SET_RAW(obj, f);
 }
+#endif
 
 /**
  * Queries the  encoding of the  passed object.   The encoding must  be smaller
@@ -95,6 +104,14 @@ RB_ENCODING_SET_INLINED(VALUE obj, int encindex)
  * @param[in]  obj  Target object.
  * @return     `obj`'s encoding index.
  */
+#ifdef TRUFFLERUBY
+static inline int RB_ENCODING_GET(VALUE obj);
+static inline int
+RB_ENCODING_GET_INLINED(VALUE obj)
+{
+    return RB_ENCODING_GET(obj);
+}
+#else
 static inline int
 RB_ENCODING_GET_INLINED(VALUE obj)
 {
@@ -102,6 +119,7 @@ RB_ENCODING_GET_INLINED(VALUE obj)
 
     return RBIMPL_CAST((int)ret);
 }
+#endif
 
 #define ENCODING_SET_INLINED(obj,i) RB_ENCODING_SET_INLINED(obj,i) /**< @old{RB_ENCODING_SET_INLINED} */
 #define ENCODING_SET(obj,i) RB_ENCODING_SET(obj,i)                 /**< @old{RB_ENCODING_SET} */
@@ -191,6 +209,13 @@ int rb_enc_get_index(VALUE obj);
  * Implementation wise this is not a verbatim alias of rb_enc_get_index().  But
  * the API is consistent.  Don't bother.
  */
+#ifdef TRUFFLERUBY
+static inline int
+RB_ENCODING_GET(VALUE obj)
+{
+    return rb_enc_get_index(obj);
+}
+#else
 static inline int
 RB_ENCODING_GET(VALUE obj)
 {
@@ -203,6 +228,7 @@ RB_ENCODING_GET(VALUE obj)
         return encindex;
     }
 }
+#endif
 
 /**
  * Destructively assigns an encoding (via its index) to an object.
@@ -428,11 +454,15 @@ rb_enc_name(rb_encoding *enc)
  * @param[in]  enc  An encoding.
  * @return     Its least possible number of bytes except 0.
  */
+#ifdef TRUFFLERUBY
+int rb_enc_mbminlen(rb_encoding *enc);
+#else
 static inline int
 rb_enc_mbminlen(rb_encoding *enc)
 {
     return enc->min_enc_len;
 }
+#endif
 
 /**
  * Queries  the maximum  number  of bytes  that the  passed  encoding needs  to
@@ -443,11 +473,15 @@ rb_enc_mbminlen(rb_encoding *enc)
  * @param[in]  enc  An encoding.
  * @return     Its maximum possible number of bytes of a character.
  */
+#ifdef TRUFFLERUBY
+int rb_enc_mbmaxlen(rb_encoding *enc);
+#else
 static inline int
 rb_enc_mbmaxlen(rb_encoding *enc)
 {
     return enc->max_enc_len;
 }
+#endif
 
 /**
  * Queries the number of bytes of the character at the passed pointer.
@@ -587,6 +621,9 @@ rb_enc_codepoint(const char *p, const char *e, rb_encoding *enc)
  * @param[in]   enc  Encoding of the string.
  * @return      Code point of the character pointed by `p`.
  */
+#ifdef TRUFFLERUBY
+OnigCodePoint rb_enc_mbc_to_codepoint(const char *p, const char *e, rb_encoding *enc);
+#else
 static inline OnigCodePoint
 rb_enc_mbc_to_codepoint(const char *p, const char *e, rb_encoding *enc)
 {
@@ -595,6 +632,7 @@ rb_enc_mbc_to_codepoint(const char *p, const char *e, rb_encoding *enc)
 
     return ONIGENC_MBC_TO_CODE(enc, up, ue);
 }
+#endif
 
 /**
  * Queries the  number of bytes  requested to  represent the passed  code point
@@ -679,6 +717,9 @@ rb_enc_prev_char(const char *s, const char *p, const char *e, rb_encoding *enc)
  * @param[in]  enc        Encoding.
  * @return     Pointer to the head of the character that contains `p`.
  */
+#ifdef TRUFFLERUBY
+char * rb_enc_left_char_head(const char *s, const char *p, const char *e, rb_encoding *enc);
+#else
 static inline char *
 rb_enc_left_char_head(const char *s, const char *p, const char *e, rb_encoding *enc)
 {
@@ -689,6 +730,7 @@ rb_enc_left_char_head(const char *s, const char *p, const char *e, rb_encoding *
 
     return RBIMPL_CAST((char *)ur);
 }
+#endif
 
 /**
  * Queries the  right boundary of a  character.  This function takes  a pointer
@@ -764,6 +806,9 @@ rb_enc_asciicompat_inline(rb_encoding *enc)
  * @retval     0    It is incompatible.
  * @retval     1    It is compatible.
  */
+#ifdef TRUFFLERUBY
+bool rb_enc_asciicompat(rb_encoding *enc);
+#else
 static inline bool
 rb_enc_asciicompat(rb_encoding *enc)
 {
@@ -777,6 +822,7 @@ rb_enc_asciicompat(rb_encoding *enc)
         return true;
     }
 }
+#endif
 
 /**
  * Queries if the passed string is in an ASCII-compatible encoding.

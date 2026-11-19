@@ -1,6 +1,6 @@
 # frozen_string_literal: false
 require 'test/unit'
-require '-test-/iter'
+# require '-test-/iter'
 
 class TestCall < Test::Unit::TestCase
   # These dummy method definitions prevent warnings "the block passed to 'a'..."
