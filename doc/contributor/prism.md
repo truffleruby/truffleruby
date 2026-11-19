@@ -5,6 +5,17 @@
 * Clone `prism` as a sibling of `truffleruby-ws` and checkout the commit to import.
 * Run `tool/import-prism.sh` in the truffleruby repo and follow the printed `MANUAL STEPS`.
 
+## `Prism` and `Ruby::Prism`
+
+There are 3 copies of Prism in TruffleRuby:
+* `src/main/c/yarp` and `src/yarp/java`: the parser used by TruffleRuby itself, which only serializes the fields needed to execute code.
+* The `prism` default gem (`Prism`): `lib/mri/prism.rb`, `lib/mri/prism/` and `src/main/c/prism-gem` (`libprism.so`, used via FFI).
+  A newer version of the `prism` gem can be installed and activated instead, like for any default gem.
+* `Ruby::Prism` (`require "ruby/prism"`, autoloaded): `lib/mri/ruby/prism.rb` and `lib/mri/ruby/prism/`.
+  This is always the Prism built into TruffleRuby, no matter which version of the `prism` gem is activated, see [Bug #22379](https://bugs.ruby-lang.org/issues/22379).
+  `#syntax_tree` returns `Ruby::Prism` nodes.
+  These files are generated from the default gem files by `tool/generate-ruby-prism.rb`, which renames the namespace, and they use the same `libprism.so`.
+
 ## Print Detailed Prism AST
 
 ### Expore the AST interactively

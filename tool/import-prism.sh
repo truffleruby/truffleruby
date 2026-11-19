@@ -46,6 +46,9 @@ copy_c_files_and_makefile src/main/c/prism-gem
 # Copy .rb files
 cp -R $PRISM/lib/* lib/mri
 
+# 3. Generate Ruby::Prism (lib/mri/ruby/prism) from the .rb files of the default gem
+ruby tool/generate-ruby-prism.rb
+
 # Copy Prism tests (and override the ones from the MRI import)
 rm -rf test/mri/tests/prism
 cp -R $PRISM/test/prism test/mri/tests/
@@ -65,7 +68,7 @@ cp $PRISM/prism.generated.gemspec "lib/gems/specifications/default/prism-$VERSIO
 rm $PRISM/prism.generated.gemspec
 rm $PRISM/prism.gem
 
-git add src/main/c/{prism-gem,yarp} test/mri/{snapshots,tests/prism} lib/mri/prism src/yarp lib/gems/specifications/default/prism*
+git add src/main/c/{prism-gem,yarp} test/mri/{snapshots,tests/prism} lib/mri/prism lib/mri/ruby/prism lib/mri/ruby/prism.rb lib/mri/prism.rb src/yarp lib/gems/specifications/default/prism*
 
 cat <<'EOF'
 

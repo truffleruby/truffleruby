@@ -38,6 +38,10 @@ module Ruby
   RELEASE_DATE = RUBY_RELEASE_DATE
   REVISION = RUBY_REVISION
 
+  # The Prism built into TruffleRuby, i.e. the version of Prism which parsed the running code,
+  # independent of which version of the prism gem is activated.
+  autoload :Prism, 'ruby/prism'
+
   class SourceRange
     def inspect
       path = self.absolute_path || self.path
