@@ -48,6 +48,7 @@ Compatibility:
 * `String#split` with a block now returns `self`, `IO#printf` returns `nil`, `ARGF.set_encoding` returns `ARGF`, and `IO::Buffer#set_string` and `IO::Buffer#copy` return the number of bytes copied, like CRuby (#4509, @taxor03).
 * `Complex#/` and `Complex#quo` now return Integer parts instead of Rationals with a denominator of 1, like CRuby (#4544, @taxor03).
 * `Complex#fdiv` now returns Float parts, like CRuby (#4547, @taxor03).
+* Implement `ENV.fetch_values` from Ruby 4.1 (@makmic, @edcarvio, @composerinteralia).
 
 Performance:
 

@@ -19,3 +19,5 @@ spec/ruby/core/method/syntax_tree_spec.rb
 spec/ruby/core/unboundmethod/syntax_tree_spec.rb
 spec/ruby/core/proc/syntax_tree_spec.rb
 spec/ruby/core/thread/backtrace/location/syntax_tree_spec.rb
+
+spec/ruby/core/env/fetch_values_spec.rb
