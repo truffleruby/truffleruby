@@ -87,6 +87,14 @@ ruby_version_is "4.1" do
       [].method(:<<).to_proc.syntax_tree.should == nil
     end
 
+    it "returns nil for a proc created with Method#to_proc of an attr_reader method" do
+      obj = Object.new
+      obj.singleton_class.class_eval do
+        attr_reader :reader
+      end
+      obj.method(:reader).to_proc.syntax_tree.should == nil
+    end
+
     it "returns a LambdaNode for a stabby lambda" do
       node = -> { 42 }.syntax_tree
       node.start_line.should == __LINE__ - 1

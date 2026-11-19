@@ -36,6 +36,19 @@ describe :method_syntax_tree, shared: true do
     node.slice.should == "{ 42 }"
   end
 
+  it "returns nil for a method defined by attr_reader, attr_writer or attr_accessor" do
+    obj = Object.new
+    obj.singleton_class.class_eval do
+      attr_reader :reader
+      attr_writer :writer
+      attr_accessor :accessor
+    end
+
+    [:reader, :writer=, :accessor, :accessor=].each do |name|
+      @object.call(obj.method(name)).syntax_tree.should == nil
+    end
+  end
+
   it "returns a node at the same location as #source_range" do
     obj = Object.new
     def obj.def_method(x, y)

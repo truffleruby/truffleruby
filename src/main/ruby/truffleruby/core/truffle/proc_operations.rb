@@ -51,20 +51,41 @@ module Truffle::ProcOperations
     end
   end
 
-  def self.syntax_tree(range)
+  def self.parse_source_range(range)
     require 'prism'
     return nil unless range&.absolute_path
 
     result = Prism.parse_file(range.absolute_path, raise_error: true)
     start_offset = result.source.byte_offset(range.start_line, range.start_column)
     end_offset = result.source.byte_offset(range.end_line, range.end_column)
+    [result.value, start_offset, end_offset]
+  end
+
+  # The node of a Proc, Method or UnboundMethod is the node defining its body, and there is
+  # at most one such node for a given source range. There is none for e.g. an attr_reader method.
+  def self.callable_syntax_tree(range)
+    root, start_offset, end_offset = parse_source_range(range)
+    return nil unless root
+
+    root.breadth_first_search do |node|
+      node.start_offset == start_offset && node.end_offset == end_offset &&
+        (Primitive.is_a?(node, Prism::DefNode) ||
+          Primitive.is_a?(node, Prism::BlockNode) ||
+          Primitive.is_a?(node, Prism::LambdaNode) ||
+          Primitive.is_a?(node, Prism::ForNode))
+    end
+  end
+
+  def self.location_syntax_tree(range)
+    root, start_offset, end_offset = parse_source_range(range)
+    return nil unless root
 
     # Prism::Node#tunnel only follows one child at each level. Some nodes with
     # the same range are siblings, notably the SymbolNode and implicit CallNode
     # for a keyword omission such as `target(missing:)`, so visit every branch
     # which contains the range.
     candidates = []
-    stack = [[result.value, 0]]
+    stack = [[root, 0]]
     until stack.empty?
       node, depth = stack.pop
       if node.start_offset <= start_offset && node.end_offset >= end_offset
@@ -78,12 +99,12 @@ module Truffle::ProcOperations
       end
     end
 
-    eligible = candidates.select { |candidate,| syntax_tree_location_candidate?(candidate, candidates) }
+    eligible = candidates.select { |candidate,| location_syntax_tree_candidate?(candidate, candidates) }
     eligible = candidates if eligible.empty?
     eligible.max_by(&:last)&.first
   end
 
-  def self.syntax_tree_location_candidate?(node, candidates)
+  def self.location_syntax_tree_candidate?(node, candidates)
     case node
     when Prism::ProgramNode,
         Prism::StatementsNode,
