@@ -28,6 +28,6 @@ class Method
   end
 
   def syntax_tree
-    Truffle::ProcOperations.syntax_tree(source_range)
+    Truffle::ProcOperations.callable_syntax_tree(source_range)
   end
 end
