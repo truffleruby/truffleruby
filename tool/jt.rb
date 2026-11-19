@@ -380,7 +380,12 @@ module Utilities
   def find_or_clone_repo(url, commit = nil)
     name = File.basename url, '.git'
     path = File.expand_path("../#{name}", TRUFFLERUBY_DIR)
-    unless Dir.exist? path
+    if Dir.exist? path
+      # An existing clone might predate the commit, branch or tag, so fetch if it is not known yet
+      if commit && !system('git', 'rev-parse', '--verify', '--quiet', "#{commit}^{commit}", chdir: path, out: File::NULL)
+        sh 'git', 'fetch', '--quiet', '--tags', 'origin', chdir: path
+      end
+    else
       if ENV['CI'] && commit
         # A shallow clone is much faster and the history is not needed in CI (commit is a branch or tag name)
         sh 'git', '-c', 'advice.detachedHead=false', 'clone', '--quiet', '--depth', '1', '--branch', commit, url, path
