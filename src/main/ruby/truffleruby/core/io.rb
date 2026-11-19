@@ -617,14 +617,17 @@ class IO
     cmd, mode = args
     mode ||= 'r'
 
-    if Primitive.is_a?(cmd, Array)
+    # Like rb_io_popen() in CRuby, a command which converts with #to_ary is the command and its arguments,
+    # and the given Array is not modified
+    if cmd_array = Truffle::Type.try_convert(cmd, Array, :to_ary)
+      cmd = cmd_array
       if sub_env = Truffle::Type.try_convert(cmd.first, Hash, :to_hash)
         env = sub_env unless env
-        cmd.shift
+        cmd = cmd.drop(1)
       end
 
       if exec_options = Truffle::Type.try_convert(cmd.last, Hash, :to_hash)
-        cmd.pop
+        cmd = cmd[0...-1]
       end
     end
 
