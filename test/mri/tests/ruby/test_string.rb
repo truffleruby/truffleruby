@@ -1,6 +1,6 @@
 # frozen_string_literal: false
 require 'test/unit'
-require '-test-/string'
+# require '-test-/string'
 
 class TestString < Test::Unit::TestCase
   WIDE_ENCODINGS = [
