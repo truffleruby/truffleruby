@@ -45,4 +45,10 @@ describe :file_stat, shared: true do
       File.send(@method, "fake_file")
     }.should.raise(Errno::ENOENT)
   end
+
+  it "raises an Errno::ENOENT if the file given as an object that has a #to_path method does not exist" do
+    -> {
+      File.send(@method, mock_to_path("fake_file"))
+    }.should.raise(Errno::ENOENT)
+  end
 end
