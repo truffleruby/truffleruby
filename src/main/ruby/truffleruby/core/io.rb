@@ -1048,6 +1048,7 @@ class IO
           @separator = "\n\n"
           @skip = 10
         end
+        @binary_separator = @separator.b
 
         if @limit
           read_to_separator_with_limit(&block)
@@ -1123,7 +1124,7 @@ class IO
           search_offset = last_scan_end - separator_byte_size
           search_offset = 0 if search_offset < 0
 
-          found_byte_index = Primitive.string_byte_index(str, @separator.b, Encoding::BINARY, search_offset)
+          found_byte_index = Primitive.string_byte_index(str, @binary_separator, Encoding::BINARY, search_offset)
 
           if found_byte_index
             offset = found_byte_index + @separator.bytesize
@@ -1171,7 +1172,7 @@ class IO
           str = +''
           wanted = limit
         else
-          if wanted < available
+          if wanted <= available
             str << @buffer.shift(wanted)
             str = @buffer.read_to_char_boundary(@io, str)
 
@@ -1196,8 +1197,8 @@ class IO
       return nil if separator_byte_size == 1
 
       tail_size = Primitive.min(str.bytesize, separator_byte_size - 1)
-      joined = str.byteslice(str.bytesize - tail_size, tail_size).b << @buffer.peek(separator_byte_size - 1)
-      index = Primitive.string_byte_index(joined, @separator.b, Encoding::BINARY, 0)
+      joined = str.byteslice(str.bytesize - tail_size, tail_size) << @buffer.peek(separator_byte_size - 1)
+      index = Primitive.string_byte_index(joined, @binary_separator, Encoding::BINARY, 0)
       index + separator_byte_size - tail_size if index
     end
 
