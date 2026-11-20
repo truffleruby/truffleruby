@@ -113,12 +113,6 @@ public abstract class SymbolNodes {
     @CoreMethod(names = "hash")
     public abstract static class HashNode extends CoreMethodArrayArgumentsNode {
 
-        public static HashNode create() {
-            return SymbolNodesFactory.HashNodeFactory.create(null);
-        }
-
-        public abstract long execute(RubySymbol rubySymbol);
-
         @Specialization
         long hash(RubySymbol symbol,
                 @Cached HashSymbolNode hash) {
@@ -130,10 +124,6 @@ public abstract class SymbolNodes {
     @CoreMethod(names = "to_proc", alwaysInlined = true)
     @ImportStatic(DeclarationContext.class)
     public abstract static class ToProcNode extends AlwaysInlinedMethodNode {
-
-        public static ToProcNode create() {
-            return SymbolNodesFactory.ToProcNodeFactory.create();
-        }
 
         @Specialization(
                 guards = {
@@ -246,10 +236,6 @@ public abstract class SymbolNodes {
             return declarationContext != null
                     ? declarationContext.getRefinements()
                     : DeclarationContext.NONE.getRefinements();
-        }
-
-        protected int getCacheLimit() {
-            return getLanguage().options.SYMBOL_TO_PROC_CACHE;
         }
 
     }

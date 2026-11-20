@@ -51,18 +51,7 @@ CHANGELOG.md
 ```
 This is a GitHub bug, there is never a conflict in `CHANGELOG.md` because `CHANGELOG.md` uses union merge.
 Please do not use the `Resolve conflicts` button as that will create a redundant merge commit.
-Instead such PRs can be merged by using:
-
-```bash
-git checkout master
-git pull
-
-git fetch $REMOTE
-git merge --no-ff $REMOTE/$BRANCH
-# Copy the PR title + PR number as commit message and add `()` around the PR number to look like regular merges with the GitHub UI.
-
-git push
-```
+Instead such PRs can be merged by using `tool/merge PR_NUMBER_OR_URL`.
 
 ## Code of Conduct
 

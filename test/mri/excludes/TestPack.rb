@@ -1,5 +1,6 @@
 exclude :test_ascii_incompatible, "Encoding::CompatibilityError expected but nothing was raised."
 exclude :test_format_string_modified, "RuntimeError expected but nothing was raised."
+exclude :test_format_string_modified_by_to_str, "Exception(RuntimeError) with message matches to /format string modified/."
 exclude :test_invalid_warning, "String contained non ascii characters \"あ\" (java.lang.AssertionError) from org.truffleruby.core.string.StringOperations.encodeAsciiBytes(StringOperations.java:79)"
 exclude :test_length_too_big, "[RangeError] exception expected, not #<ArgumentError: too few arguments>."
 exclude :test_pack_P, "<\"a\"> expected but was <\"abc\">."
@@ -11,4 +12,5 @@ exclude :test_pack_unpack_u, "<no message> (java.lang.UnsupportedOperationExcept
 exclude :test_pack_with_buffer, "<\"\\xB0\\xD4+P V\\x00\\x00\"> expected but was <\"@\\xD4+P V\\x00\\x00\">."
 exclude :test_short_with_block, "Expected [nil] to be nil."
 exclude :test_unpack_with_block, "<[65, 66, 67, 68]> expected but was <[]>."
+exclude :test_unpack_with_block_modifying_format, "Exception(RuntimeError) with message matches to /format string modified/."
 exclude :test_unpack_with_block_modifying_string, "Exception(RuntimeError) with message matches to /string modified/."

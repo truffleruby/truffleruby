@@ -82,30 +82,6 @@ public final class IntHashMap<V> {
         this.table = new Entry[initialCapacity];
     }
 
-    public int size() {
-        return count;
-    }
-
-    public boolean isEmpty() {
-        return count == 0;
-    }
-
-    public boolean contains(Object value) {
-        if (value == null) {
-            throw new NullPointerException();
-        }
-
-        Entry<V> tab[] = table;
-        for (int i = tab.length; i-- > 0;) {
-            for (Entry<V> e = tab[i]; e != null; e = e.next) {
-                if (e.value.equals(value)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     public V get(int key) {
         Entry<V>[] tab = table;
         int hash = key;
@@ -178,26 +154,6 @@ public final class IntHashMap<V> {
         Entry<V> e = new Entry<>(hash, key, value, tab[index]);
         tab[index] = e;
         count++;
-        return null;
-    }
-
-    public V remove(int key) {
-        Entry<V>[] tab = table;
-        int hash = key;
-        int index = (hash & 0x7FFFFFFF) % tab.length;
-        for (Entry<V> e = tab[index], prev = null; e != null; prev = e, e = e.next) {
-            if (e.hash == hash) {
-                if (prev != null) {
-                    prev.next = e.next;
-                } else {
-                    tab[index] = e.next;
-                }
-                count--;
-                V oldValue = e.value;
-                e.value = null;
-                return oldValue;
-            }
-        }
         return null;
     }
 

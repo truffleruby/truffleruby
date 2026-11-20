@@ -80,10 +80,6 @@ public abstract class ArrayIndexNodes {
             return ArrayIndexNodesFactory.ReadNormalizedNodeFactory.create(null);
         }
 
-        public static ReadNormalizedNode create(RubyNode array, RubyNode index) {
-            return ArrayIndexNodesFactory.ReadNormalizedNodeFactory.create(new RubyNode[]{ array, index });
-        }
-
         public abstract Object executeRead(RubyArray array, int index);
 
         @Specialization(

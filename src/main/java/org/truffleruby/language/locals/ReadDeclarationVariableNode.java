@@ -27,7 +27,6 @@ public final class ReadDeclarationVariableNode extends ReadLocalNode {
         this.frameDepth = frameDepth;
     }
 
-    @Override
     public int getFrameDepth() {
         return frameDepth;
     }

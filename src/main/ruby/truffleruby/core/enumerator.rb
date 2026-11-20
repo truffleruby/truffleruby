@@ -340,20 +340,19 @@ class Enumerator
     end
     private(*aliases)
 
-    class StopLazyError < Exception # rubocop:disable Lint/InheritException
-    end
+    # Like rb_iter_break() in CRuby, thrown, not raised, to stop iterating the receiver, so its #each cannot rescue it
+    STOP_LAZY = Object.new.freeze
+    private_constant :STOP_LAZY
 
     def initialize(receiver, size = nil)
       raise ArgumentError, 'Lazy#initialize requires a block' unless block_given?
       Primitive.check_frozen self
 
       super(size) do |yielder, *each_args|
-        begin
+        catch(STOP_LAZY) do
           receiver.each(*each_args) do |*args|
             yield yielder, *args
           end
-        rescue StopLazyError
-          nil
         end
       end
 
@@ -401,9 +400,9 @@ class Enumerator
           yielder.yield(Truffle::EnumerableOperations.pack_values(args))
           taken += 1
           yielder.memo = taken
-          raise StopLazyError unless taken < n
+          throw STOP_LAZY unless taken < n
         else
-          raise StopLazyError
+          throw STOP_LAZY
         end
       end
     end
@@ -436,7 +435,7 @@ class Enumerator
         if yield(*args)
           yielder.yield(Truffle::EnumerableOperations.pack_values(args))
         else
-          raise StopLazyError
+          throw STOP_LAZY
         end
       end
     end
@@ -555,6 +554,12 @@ class Enumerator
       end
     end
     alias_method :collect_concat, :flat_map
+
+    def each_with_index(&block)
+      return super if block
+
+      with_index(0)
+    end
 
     def with_index(offset = 0, &block)
       offset = if Primitive.nil?(offset)

@@ -1,5 +1,6 @@
 exclude :test_cherokee, "<\"ᎠᎡᎢᎣᎤᎥᎦᎧᎨᎩ\"> expected but was <\"ꭰꭱꭲꭳꭴꭵꭶꭷꭸꭹ\">."
 exclude :test_fold_option, "<nil> expected but was <\"ss\">."
 exclude :test_georgian_capitalize, "<\"აბგ\"> expected but was <\"Აბგ\">."
+exclude :test_single_byte_sharp_s_expansion, "ISO-8859-1 upcase 1."
 exclude :test_swapcase, "<\"dZ\"> expected but was <\"ǲ\">."
 exclude :test_titlecase, "<\"ǳ ǆ ǉ ǌ\"> expected but was <\"ǲ ǅ ǈ ǋ\">."

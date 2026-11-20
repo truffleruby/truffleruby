@@ -10,11 +10,11 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Yukihiro Matsumoto".freeze, "UENO Katsuhiro".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "Ruby interface for the zlib compression/decompression library".freeze
   s.email = ["matz@ruby-lang.org".freeze, nil]
   s.extensions = ["ext/zlib/extconf.rb".freeze]
-  s.files = ["BSDL".freeze, "COPYING".freeze, "README.md".freeze, "ext/zlib/extconf.rb".freeze, "ext/zlib/zlib.c".freeze, "zlib.gemspec".freeze, "zlib.#{Truffle::Platform::DLEXT}".freeze]
+  s.files = ["BSDL".freeze, "COPYING".freeze, "README.md".freeze, "ext/zlib/extconf.rb".freeze, "ext/zlib/zlib.c".freeze, "lib/zlib.#{Truffle::Platform::DLEXT}".freeze, "zlib.gemspec".freeze]
   s.homepage = "https://github.com/ruby/zlib".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.5.0".freeze)

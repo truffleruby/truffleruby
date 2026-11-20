@@ -75,19 +75,6 @@ public abstract class ArrayStoreLibrary extends Library {
         }
     }
 
-    /** Return an allocator for storage that can hold {@code value}. */
-    public static ArrayAllocator allocatorForValue(Object value) {
-        if (value instanceof Integer) {
-            return IntegerArrayStore.INTEGER_ARRAY_ALLOCATOR;
-        } else if (value instanceof Long) {
-            return LongArrayStore.LONG_ARRAY_ALLOCATOR;
-        } else if (value instanceof Double) {
-            return DoubleArrayStore.DOUBLE_ARRAY_ALLOCATOR;
-        } else {
-            return ObjectArrayStore.OBJECT_ARRAY_ALLOCATOR;
-        }
-    }
-
     /** Read the value from {@code index} of {@code store}. */
     public abstract Object read(Object store, int index);
 
@@ -254,24 +241,5 @@ public abstract class ArrayStoreLibrary extends Library {
 
         /** Return a new array store with {@code capacity} elements. */
         public abstract Object allocate(int capacity);
-
-        /** Return whether stores returned by this allocator can hold {@code value}. */
-        public abstract boolean accepts(Object value);
-
-        /** Return whether stores returned by this allocator specialize for {@code value}. This differs from
-         * {@link #accepts(Object)} because a store holding objects might accepts a {@code
-         * long}, but does not specialize for that in the way that a store that holds unboxed {@code long}s does. */
-        public abstract boolean specializesFor(Object value);
-
-        /** Return whether {@code value} is the default value for stores returned by this allocator. For primitive
-         * stores the default value will normally be 0, or its numerical equivalent, while stores that hold Objects will
-         * usually default to {@code null}, this may not be true for those interacting with native memory where their
-         * default value will be whatever is represented by a zero value in their implementation. */
-        public abstract boolean isDefaultValue(Object value);
-
-        /** Return whether the allocated storage is good for sharing across threads. */
-        public boolean isShared() {
-            return false;
-        }
     }
 }

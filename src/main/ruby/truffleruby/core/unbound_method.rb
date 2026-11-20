@@ -21,6 +21,6 @@ class UnboundMethod
   Primitive.always_split self, :bind_call
 
   def syntax_tree
-    Truffle::ProcOperations.syntax_tree(source_range, block_owner: true)
+    Truffle::ProcOperations.callable_syntax_tree(source_range)
   end
 end

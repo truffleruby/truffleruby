@@ -325,20 +325,5 @@ public final class DoubleArrayStore {
         public double[] allocate(int capacity) {
             return new double[capacity];
         }
-
-        @Override
-        public boolean accepts(Object value) {
-            return value instanceof Double;
-        }
-
-        @Override
-        public boolean specializesFor(Object value) {
-            return value instanceof Double;
-        }
-
-        @Override
-        public boolean isDefaultValue(Object value) {
-            return (double) value == 0.0;
-        }
     }
 }

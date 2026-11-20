@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.metadata = { "homepage_uri" => "https://github.com/ruby/open-uri", "source_code_uri" => "https://github.com/ruby/open-uri" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Tanaka Akira".freeze]
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "An easy-to-use wrapper for Net::HTTP, Net::HTTPS and Net::FTP.".freeze
   s.email = ["akr@fsij.org".freeze]
   s.files = ["lib/open-uri.rb".freeze]

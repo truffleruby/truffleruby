@@ -717,6 +717,40 @@ describe "C-API IO function" do
     end
   end
 
+  describe "rb_io_gets" do
+    it "reads a line and returns it" do
+      @w_io.write "line 1\nline 2\n"
+      @o.rb_io_gets(@r_io).should == "line 1\n"
+      @o.rb_io_gets(@r_io).should == "line 2\n"
+    end
+
+    it "returns nil at the end of the stream" do
+      @w_io.close
+      @o.rb_io_gets(@r_io).should == nil
+    end
+
+    it "reads a line regardless of $/" do
+      @w_io.write "a.b\nc\n"
+      separator = $/
+      verbose = $VERBOSE
+      begin
+        $VERBOSE = nil
+        $/ = "."
+        @o.rb_io_gets(@r_io).should == "a.b\n"
+      ensure
+        $/ = separator
+        $VERBOSE = verbose
+      end
+    end
+
+    it "does not set $_" do
+      $_ = "before"
+      @w_io.write "line\n"
+      @o.rb_io_gets(@r_io).should == "line\n"
+      $_.should == "before"
+    end
+  end
+
   describe "rb_io_closed_p" do
     it "returns false when io is not closed" do
       @o.rb_io_closed_p(@r_io).should == false

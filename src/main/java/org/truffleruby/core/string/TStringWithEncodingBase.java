@@ -34,8 +34,6 @@ abstract class TStringWithEncodingBase {
         this.encoding = encoding;
     }
 
-    public abstract TStringWithEncoding asImmutable();
-
     public final RubyEncoding getEncoding() {
         return encoding;
     }

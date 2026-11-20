@@ -77,7 +77,6 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.strings.AbstractTruffleString;
-import com.oracle.truffle.api.strings.InternalByteArray;
 import com.oracle.truffle.api.strings.MutableTruffleString;
 import com.oracle.truffle.api.strings.TruffleString;
 import com.oracle.truffle.api.strings.TruffleString.AsTruffleStringNode;
@@ -87,7 +86,6 @@ import com.oracle.truffle.api.strings.TruffleString.ErrorHandling;
 import com.oracle.truffle.api.strings.TruffleString.GetByteCodeRangeNode;
 import com.oracle.truffle.api.strings.TruffleStringIterator;
 import org.graalvm.collections.Pair;
-import org.graalvm.shadowed.org.jcodings.ascii.AsciiTables;
 import org.graalvm.shadowed.org.jcodings.specific.ASCIIEncoding;
 import org.truffleruby.Layouts;
 import org.truffleruby.annotations.CoreMethod;
@@ -413,7 +411,6 @@ public abstract class StringNodes {
         //region Fields
 
         @Child private StringPrimitiveNodes.StringSubstringPrimitiveNode substringNode;
-        @Child private ToLongNode toLongNode;
         @Child private CodePointLengthNode codePointLengthNode;
         private final BranchProfile outOfBounds = BranchProfile.create();
 
@@ -626,102 +623,6 @@ public abstract class StringNodes {
         int byteSize(Object string,
                 @Cached RubyStringLibrary libString) {
             return libString.byteLength(this, string);
-        }
-    }
-
-    @GenerateInline
-    @GenerateCached(false)
-    public abstract static class CaseCmpNode extends RubyBaseNode {
-
-        public abstract Object execute(Node node, Object string, Object other);
-
-        @Specialization(
-                guards = "bothSingleByteOptimizable(node, selfTString, selfEncoding, otherTString, otherEncoding, singleByteOptimizableNode)")
-        static Object caseCmpSingleByte(Node node, Object string, Object other,
-                @Cached @Shared RubyStringLibrary libString,
-                @Cached @Shared RubyStringLibrary libOther,
-                @Cached @Shared InlinedConditionProfile incompatibleEncodingProfile,
-                @Cached @Shared InlinedConditionProfile sameProfile,
-                @Cached @Shared NegotiateCompatibleStringEncodingNode negotiateCompatibleEncodingNode,
-                @Cached @Shared SingleByteOptimizableNode singleByteOptimizableNode,
-                @Bind("libString.getTString($node, string)") AbstractTruffleString selfTString,
-                @Bind("libString.getEncoding($node, string)") RubyEncoding selfEncoding,
-                @Bind("libOther.getTString($node, other)") AbstractTruffleString otherTString,
-                @Bind("libOther.getEncoding($node, other)") RubyEncoding otherEncoding,
-                @Cached TruffleString.GetInternalByteArrayNode byteArraySelfNode,
-                @Cached TruffleString.GetInternalByteArrayNode byteArrayOtherNode) {
-            // Taken from org.jruby.RubyString#casecmp19.
-
-            final RubyEncoding encoding = negotiateCompatibleEncodingNode.execute(node, selfTString, selfEncoding,
-                    otherTString, otherEncoding);
-            if (incompatibleEncodingProfile.profile(node, encoding == null)) {
-                return nil;
-            }
-
-            var selfByteArray = byteArraySelfNode.execute(selfTString, selfEncoding.tencoding);
-            var otherByteArray = byteArrayOtherNode.execute(otherTString, otherEncoding.tencoding);
-
-            if (sameProfile.profile(node, selfTString == otherTString)) {
-                return 0;
-            }
-
-            return caseInsensitiveCmp(selfByteArray, otherByteArray);
-        }
-
-        @Specialization(
-                guards = "!bothSingleByteOptimizable(node, selfTString, selfEncoding, otherTString, otherEncoding, singleByteOptimizableNode)")
-        static Object caseCmp(Node node, Object string, Object other,
-                @Cached @Shared RubyStringLibrary libString,
-                @Cached @Shared RubyStringLibrary libOther,
-                @Cached @Shared InlinedConditionProfile incompatibleEncodingProfile,
-                @Cached @Shared InlinedConditionProfile sameProfile,
-                @Cached @Shared NegotiateCompatibleStringEncodingNode negotiateCompatibleEncodingNode,
-                @Cached @Shared SingleByteOptimizableNode singleByteOptimizableNode,
-                @Bind("libString.getTString($node, string)") AbstractTruffleString selfTString,
-                @Bind("libString.getEncoding($node, string)") RubyEncoding selfEncoding,
-                @Bind("libOther.getTString($node, other)") AbstractTruffleString otherTString,
-                @Bind("libOther.getEncoding($node, other)") RubyEncoding otherEncoding) {
-            // Taken from org.jruby.RubyString#casecmp19
-
-            final RubyEncoding encoding = negotiateCompatibleEncodingNode.execute(node, selfTString, selfEncoding,
-                    otherTString, otherEncoding);
-
-            if (incompatibleEncodingProfile.profile(node, encoding == null)) {
-                return nil;
-            }
-
-            if (sameProfile.profile(node, selfTString == otherTString)) {
-                return 0;
-            }
-
-            return StringSupport.multiByteCasecmp(encoding, selfTString, selfEncoding.tencoding, otherTString,
-                    otherEncoding.tencoding);
-        }
-
-        protected static boolean bothSingleByteOptimizable(Node node, AbstractTruffleString string,
-                RubyEncoding stringEncoding, AbstractTruffleString other, RubyEncoding otherEncoding,
-                SingleByteOptimizableNode singleByteOptimizableNode) {
-            return singleByteOptimizableNode.execute(node, string, stringEncoding) &&
-                    singleByteOptimizableNode.execute(node, other, otherEncoding);
-        }
-
-        @TruffleBoundary
-        private static int caseInsensitiveCmp(InternalByteArray value, InternalByteArray other) {
-            // Taken from org.jruby.util.ByteList#caseInsensitiveCmp.
-            final int size = value.getLength();
-            final int len = Math.min(size, other.getLength());
-
-            for (int offset = -1; ++offset < len;) {
-                int myCharIgnoreCase = AsciiTables.ToLowerCaseTable[value.get(offset) & 0xff] & 0xff;
-                int otherCharIgnoreCase = AsciiTables.ToLowerCaseTable[other.get(offset) & 0xff] & 0xff;
-                if (myCharIgnoreCase < otherCharIgnoreCase) {
-                    return -1;
-                } else if (myCharIgnoreCase > otherCharIgnoreCase) {
-                    return 1;
-                }
-            }
-
-            return size == other.getLength() ? 0 : size == len ? -1 : 1;
         }
     }
 
@@ -1193,14 +1094,6 @@ public abstract class StringNodes {
     @CoreMethod(names = "hash")
     public abstract static class HashNode extends CoreMethodArrayArgumentsNode {
 
-        protected static final int CLASS_SALT = 54008340; // random number, stops hashes for similar values but different classes being the same, static because we want deterministic hashes
-
-        public static HashNode create() {
-            return StringNodesFactory.HashNodeFactory.create(null);
-        }
-
-        public abstract long execute(Object string);
-
         @Specialization
         long hash(Object string,
                 @Cached StringHelperNodes.HashStringNode hash) {
@@ -1391,35 +1284,6 @@ public abstract class StringNodes {
             }
 
             return getCodePointNode.executeGetCodePoint(this, tstring, strings.getEncoding(this, string), 0);
-        }
-    }
-
-    @GenerateInline
-    @GenerateCached(false)
-    public abstract static class ReplaceNode extends RubyBaseNode {
-
-        public abstract RubyString execute(Node node, RubyString string, Object other);
-
-        @Specialization(guards = "string == other")
-        static RubyString replaceStringIsSameAsOther(RubyString string, RubyString other) {
-            return string;
-        }
-
-        @Specialization(guards = { "string != other" })
-        static RubyString replace(Node node, RubyString string, RubyString other,
-                @Cached @Exclusive RubyStringLibrary libOther,
-                @Cached AsTruffleStringNode asTruffleStringNode) {
-            var encoding = libOther.getEncoding(node, other);
-            TruffleString immutableCopy = asTruffleStringNode.execute(other.tstring, encoding.tencoding);
-            string.setTString(immutableCopy, encoding);
-            return string;
-        }
-
-        @Specialization
-        static RubyString replace(Node node, RubyString string, ImmutableRubyString other,
-                @Cached @Exclusive RubyStringLibrary libOther) {
-            string.setTString(other.tstring, libOther.getEncoding(node, other));
-            return string;
         }
     }
 
@@ -1757,12 +1621,6 @@ public abstract class StringNodes {
     @CoreMethod(names = { "size", "length" })
     @ImportStatic(StringGuards.class)
     public abstract static class SizeNode extends CoreMethodArrayArgumentsNode {
-
-        public static SizeNode create() {
-            return StringNodesFactory.SizeNodeFactory.create(null);
-        }
-
-        public abstract int execute(Object string);
 
         @Specialization
         int size(Object string,

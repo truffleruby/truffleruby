@@ -274,13 +274,6 @@ public final class SimpleUnpackTreeBuilder implements SimplePackListener {
     }
 
     @Override
-    public void warn(String message) {
-        // Please implement this method in case it's needed.
-        // The `warn` method is needed in the SimplePackParser class and consequantly was added to the SimplePackListener interface.
-        throw CompilerDirectives.shouldNotReachHere();
-    }
-
-    @Override
     public String packListenerMode() {
         return "unpack";
     }

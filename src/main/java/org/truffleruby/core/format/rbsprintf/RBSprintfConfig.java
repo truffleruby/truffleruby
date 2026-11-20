@@ -56,7 +56,6 @@ public final class RBSprintfConfig {
     private boolean plus = false;
     private boolean minus = false;
     private boolean zero = false;
-    private boolean separator = false;
     private boolean widthStar = false;
     private boolean precisionStar = false;
     private char format;
@@ -98,10 +97,6 @@ public final class RBSprintfConfig {
 
     public Integer getPrecision() {
         return precision;
-    }
-
-    public void setPrecision(int precision) {
-        this.precision = precision;
     }
 
     public void setPrecision(Integer precision) {
@@ -146,14 +141,6 @@ public final class RBSprintfConfig {
 
     public void setZero(boolean zero) {
         this.zero = zero;
-    }
-
-    public boolean isSeparator() {
-        return separator;
-    }
-
-    public void setSeparator(boolean separator) {
-        this.separator = separator;
     }
 
     public FormatArgumentType getFormatArgumentType() {
@@ -240,10 +227,6 @@ public final class RBSprintfConfig {
         this.argWidth = argWidth;
     }
 
-
-    public boolean isPrecisionVisited() {
-        return precisionVisited;
-    }
 
     public void setPrecisionVisited(boolean precisionVisited) {
         this.precisionVisited = precisionVisited;

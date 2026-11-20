@@ -15,6 +15,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
+import org.truffleruby.annotations.Keep;
 import org.truffleruby.language.CallStackManager;
 import org.truffleruby.language.LexicalScope;
 import org.truffleruby.language.Nil;
@@ -36,6 +37,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.source.Source;
 
+@Keep
 public abstract class DebugHelpers {
 
     public static Object eval(String code, Object... arguments) {

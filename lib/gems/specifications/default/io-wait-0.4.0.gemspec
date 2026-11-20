@@ -11,11 +11,11 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Nobu Nakada".freeze, "Charles Oliver Nutter".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "Waits until IO is readable or writable without blocking.".freeze
   s.email = ["nobu@ruby-lang.org".freeze, "headius@headius.com".freeze]
   s.extensions = ["ext/io/wait/extconf.rb".freeze]
-  s.files = ["ext/io/wait/extconf.rb".freeze, "io/wait.#{Truffle::Platform::DLEXT}".freeze]
+  s.files = ["ext/io/wait/extconf.rb".freeze, "lib/io/wait.#{Truffle::Platform::DLEXT}".freeze]
   s.homepage = "https://github.com/ruby/io-wait".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 3.2".freeze)

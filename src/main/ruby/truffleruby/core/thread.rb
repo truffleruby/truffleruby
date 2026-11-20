@@ -349,7 +349,7 @@ end
 
 class Thread::Backtrace::Location
   def syntax_tree
-    Truffle::ProcOperations.syntax_tree(source_range, block_owner: false)
+    Truffle::ProcOperations.location_syntax_tree(source_range)
   end
 
   def inspect

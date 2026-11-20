@@ -712,8 +712,6 @@ public abstract class InteropNodes {
     @CoreMethod(names = "array_element_readable?", onSingleton = true, required = 2, split = Split.ALWAYS)
     public abstract static class IsArrayElementReadableNode extends CoreMethodArrayArgumentsNode {
 
-        public abstract boolean execute(Object receiver, long index);
-
         @Specialization(limit = "getInteropCacheLimit()")
         boolean isArrayElementReadable(Object receiver, long index,
                 @CachedLibrary("receiver") InteropLibrary receivers) {
@@ -723,8 +721,6 @@ public abstract class InteropNodes {
 
     @CoreMethod(names = "array_element_modifiable?", onSingleton = true, required = 2, split = Split.ALWAYS)
     public abstract static class IsArrayElementModifiableNode extends CoreMethodArrayArgumentsNode {
-
-        public abstract boolean execute(Object receiver, long index);
 
         @Specialization(limit = "getInteropCacheLimit()")
         boolean isArrayElementModifiable(Object receiver, long index,
@@ -736,8 +732,6 @@ public abstract class InteropNodes {
     @CoreMethod(names = "array_element_insertable?", onSingleton = true, required = 2, split = Split.ALWAYS)
     public abstract static class IsArrayElementInsertableNode extends CoreMethodArrayArgumentsNode {
 
-        public abstract boolean execute(Object receiver, long index);
-
         @Specialization(limit = "getInteropCacheLimit()")
         boolean isArrayElementInsertable(Object receiver, long index,
                 @CachedLibrary("receiver") InteropLibrary receivers) {
@@ -747,8 +741,6 @@ public abstract class InteropNodes {
 
     @CoreMethod(names = "array_element_removable?", onSingleton = true, required = 2, split = Split.ALWAYS)
     public abstract static class IsArrayElementRemovableNode extends CoreMethodArrayArgumentsNode {
-
-        public abstract boolean execute(Object receiver, long index);
 
         @Specialization(limit = "getInteropCacheLimit()")
         boolean isArrayElementRemovable(Object receiver, long index,
@@ -760,8 +752,6 @@ public abstract class InteropNodes {
     @CoreMethod(names = "array_element_writable?", onSingleton = true, required = 2, split = Split.ALWAYS)
     public abstract static class IsArrayElementWritableNode extends CoreMethodArrayArgumentsNode {
 
-        public abstract boolean execute(Object receiver, long index);
-
         @Specialization(limit = "getInteropCacheLimit()")
         boolean isArrayElementWritable(Object receiver, long index,
                 @CachedLibrary("receiver") InteropLibrary receivers) {
@@ -771,8 +761,6 @@ public abstract class InteropNodes {
 
     @CoreMethod(names = "array_element_existing?", onSingleton = true, required = 2, split = Split.ALWAYS)
     public abstract static class IsArrayElementExistingNode extends CoreMethodArrayArgumentsNode {
-
-        public abstract boolean execute(Object receiver, long index);
 
         @Specialization(limit = "getInteropCacheLimit()")
         boolean isArrayElementExisting(Object receiver, long index,

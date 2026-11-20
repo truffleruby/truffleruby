@@ -135,12 +135,6 @@ public final class TStringCache {
         return bytesToTString.addInCacheIfAbsent(lookupKey.makeCacheable(isLookupKeyImmutable), newTString);
     }
 
-    public boolean contains(TruffleString string, RubyEncoding encoding) {
-        final TBytesKey key = new TBytesKey(TStringUtils.getBytesOrCopy(string, encoding), encoding);
-
-        return bytesToTString.get(key) != null;
-    }
-
     public int getByteArrayReusedCount() {
         return byteArrayReusedCount;
     }

@@ -12,7 +12,6 @@ package org.truffleruby.core.string;
 
 import com.oracle.truffle.api.strings.InternalByteArray;
 import com.oracle.truffle.api.strings.TruffleString;
-import org.graalvm.shadowed.org.jcodings.Encoding;
 import org.truffleruby.collections.ByteArrayBuilder;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.RubyEncoding;
@@ -32,13 +31,6 @@ public final class TStringBuilder extends ByteArrayBuilder {
 
     public static TStringBuilder create(int size) {
         return new TStringBuilder(size);
-    }
-
-    public static TStringBuilder create(byte[] bytes, RubyEncoding encoding) {
-        final TStringBuilder builder = new TStringBuilder(bytes.length);
-        builder.append(bytes);
-        builder.setEncoding(encoding);
-        return builder;
     }
 
     public static TStringBuilder create(RubyString rubyString) {
@@ -70,10 +62,6 @@ public final class TStringBuilder extends ByteArrayBuilder {
 
     public RubyEncoding getRubyEncoding() {
         return encoding;
-    }
-
-    public Encoding getEncoding() {
-        return encoding.jcoding;
     }
 
     public void setEncoding(RubyEncoding encoding) {

@@ -102,10 +102,6 @@ public final class Arity {
         return given >= required && ((hasRest && !isImplicitRest) || given <= required + optional);
     }
 
-    public int getPreRequired() {
-        return preRequired;
-    }
-
     public int getRequired() {
         return preRequired + postRequired;
     }
@@ -118,16 +114,8 @@ public final class Arity {
         return hasRest;
     }
 
-    public boolean isImplicitRest() {
-        return isImplicitRest;
-    }
-
     public boolean acceptsKeywords() {
         return hasKeywords() || hasKeywordsRest();
-    }
-
-    public boolean acceptsPositionalArguments() {
-        return getRequired() > 0 || getOptional() > 0 || hasRest();
     }
 
     public boolean hasKeywords() {

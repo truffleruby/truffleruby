@@ -43,7 +43,6 @@ public final class YARPParametersNodeToDestructureTranslator extends YARPBaseTra
 
     private enum State {
         PRE,
-        OPT,
         POST
     }
 

@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Yukihiro Matsumoto".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "The Singleton module implements the Singleton pattern.".freeze
   s.email = ["matz@ruby-lang.org".freeze]
   s.files = ["lib/singleton.rb".freeze]

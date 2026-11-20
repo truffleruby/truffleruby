@@ -59,12 +59,6 @@ public final class WriteConstantNode extends RubyContextSourceAssignableNode {
         return value;
     }
 
-    public Object execute(VirtualFrame frame, RubyModule module) {
-        final Object value = valueNode.execute(frame);
-        assign(module, value);
-        return value;
-    }
-
     @Override
     public void assign(VirtualFrame frame, Object value) {
         final Object moduleObject = moduleNode.execute(frame);

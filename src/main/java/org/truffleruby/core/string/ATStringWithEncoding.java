@@ -28,7 +28,6 @@ public final class ATStringWithEncoding extends TStringWithEncodingBase {
         super(stringLib.getTString(node, string), stringLib.getEncoding(node, string));
     }
 
-    @Override
     public TStringWithEncoding asImmutable() {
         CompilerAsserts.neverPartOfCompilation("Only behind @TruffleBoundary");
         return new TStringWithEncoding(tstring.asTruffleStringUncached(encoding.tencoding), encoding);

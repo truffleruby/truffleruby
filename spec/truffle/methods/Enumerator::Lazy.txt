@@ -5,6 +5,7 @@ collect_concat
 compact
 drop
 drop_while
+each_with_index
 eager
 enum_for
 filter

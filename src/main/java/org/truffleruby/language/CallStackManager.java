@@ -63,14 +63,6 @@ public final class CallStackManager {
     }
 
     @TruffleBoundary
-    public Frame getNonJavaCoreCallerFrame(FrameAccess frameAccess) {
-        return getCallerFrame(f -> {
-            final Frame frame = f.getFrame(FrameAccess.READ_ONLY);
-            return isRubyFrame(frame) && !isJavaCore(tryGetMethod(frame));
-        }, frameAccess);
-    }
-
-    @TruffleBoundary
     public <R> R iterateFrameNotInModules(Object[] modules, Function<FrameInstance, R> action) {
         final Memo<Boolean> skippedFirstFrameFound = new Memo<>(false);
 
@@ -209,10 +201,6 @@ public final class CallStackManager {
 
     private static InternalMethod tryGetMethod(Frame frame) {
         return RubyArguments.tryGetMethod(frame);
-    }
-
-    public static boolean isJavaCore(InternalMethod method) {
-        return method != null && method.getSharedMethodInfo().isJavaCore();
     }
 
     // Backtraces

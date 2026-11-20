@@ -182,8 +182,6 @@ public abstract class ModuleNodes {
     @CoreMethod(names = "<", required = 1)
     public abstract static class IsSubclassOfNode extends CoreMethodArrayArgumentsNode {
 
-        public abstract Object executeIsSubclassOf(VirtualFrame frame, RubyModule self, Object other);
-
         @TruffleBoundary
         @Specialization
         Object isSubclassOf(RubyModule self, RubyModule other) {
@@ -238,8 +236,6 @@ public abstract class ModuleNodes {
     @CoreMethod(names = ">", required = 1)
     public abstract static class IsSuperclassOfNode extends CoreMethodArrayArgumentsNode {
 
-        public abstract Object executeIsSuperclassOf(VirtualFrame frame, RubyModule self, Object other);
-
         @TruffleBoundary
         @Specialization
         Object isSuperclassOf(RubyModule self, RubyModule other) {
@@ -267,8 +263,6 @@ public abstract class ModuleNodes {
 
     @CoreMethod(names = ">=", required = 1)
     public abstract static class IsSuperclassOfOrEqualToNode extends CoreMethodArrayArgumentsNode {
-
-        public abstract Object executeIsSuperclassOfOrEqualTo(VirtualFrame frame, RubyModule self, Object other);
 
         @TruffleBoundary
         @Specialization

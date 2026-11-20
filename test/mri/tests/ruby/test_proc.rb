@@ -157,6 +157,9 @@ class TestProc < Test::Unit::TestCase
     assert_not_equal(a, b, "[ruby-dev:22601]")
 
     assert_equal(*m_nest{}, "[ruby-core:84583] Feature #14627")
+
+    c = proc { |a, b| }.curry
+    assert_equal(c, c)
   end
 
   def test_hash_equal
@@ -342,6 +345,25 @@ class TestProc < Test::Unit::TestCase
     assert_equal(9, b)
   end
 
+  # Not named test_curry_* so that test_curry_with_trace does not re-run it
+  # under set_trace_func (which would be needlessly slow with GC.stress).
+  def test_proc_curry_keeps_args_alive
+    # The argument array passed down by `curry` must stay alive across the
+    # inner call; otherwise GC may reclaim it while it is still read as argv
+    # and crash with "try to mark T_NONE object". See the RB_GC_GUARD in `curry`.
+    assert_separately([], "#{<<~"begin;"}\n#{<<~'end;'}", timeout: 60)
+    begin;
+      GC.stress = true
+      l = ->(a, b, c) { a + b + c }
+      30.times do
+        l1 = l.curry.call(1)
+        l2 = l1.curry.call(2)
+        assert_equal(6, l2.curry.call(3))
+        assert_equal(6, l1.curry.call(2, 3))
+      end
+    end;
+  end
+
   def test_lambda?
     l = proc {}
     assert_equal(false, l.lambda?)
@@ -491,6 +513,12 @@ class TestProc < Test::Unit::TestCase
       rescue ArgumentError
       end
     RUBY
+  end
+
+  def test_dup_curry_proc
+    pr = proc {|a, b| a + b }.curry.dup
+    assert_equal(3, pr.call(1).call(2))
+    assert_equal(3, pr.call(1, 2))
   end
 
   def test_clone_subclass

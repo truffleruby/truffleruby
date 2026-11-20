@@ -34,17 +34,12 @@ LANGUAGE_OPTIONS:
 - CONSTANT_CACHE
 - INSTANCE_VARIABLE_CACHE
 - BINDING_LOCAL_VARIABLE_CACHE
-- SYMBOL_TO_PROC_CACHE
 - PACK_CACHE
-- UNPACK_CACHE
 - EVAL_CACHE
 - ENCODING_LOADED_CLASSES_CACHE
 - INTEROP_CONVERT_CACHE
 - TIME_FORMAT_CACHE
 - POW_CACHE
-- CONTEXT_SPECIFIC_IDENTITY_CACHE
-- IDENTITY_CACHE
-- CLASS_CACHE
 - ARRAY_DUP_CACHE
 - ARRAY_STRATEGY_CACHE
 # Other
@@ -93,7 +88,6 @@ EXPERT:
     HANDLE_INTERRUPT: [platform-handle-interrupt, boolean, '!EMBEDDED', Handle the interrupt signal and raise an Interrupt exception]
     SINGLE_THREADED: [single-threaded, boolean, ['!env.isCreateThreadAllowed() || ', false], Use only a single thread to be compatible with languages not supporting multithreading]
     POLYGLOT_STDIO: [polyglot-stdio, boolean, EMBEDDED || !NATIVE_PLATFORM, Use standard IO streams from the Graal-SDK polyglot API configuration]
-    HOST_INTEROP: [interop-host, boolean, ['env.isHostLookupAllowed() && ', true], Allow interoperability with the host language (Java)]
 
     # Ruby-level features
     COVERAGE_GLOBAL: [coverage-global, boolean, false, Run coverage for all code and print results on exit]
@@ -202,9 +196,7 @@ INTERNAL: # Options for debugging the TruffleRuby implementation
     CONSTANT_CACHE: [constant-cache, integer, DEFAULT_CACHE, Constant cache size]
     INSTANCE_VARIABLE_CACHE: [instance-variable-cache, integer, DEFAULT_CACHE, Instance variable cache size]
     BINDING_LOCAL_VARIABLE_CACHE: [binding-local-variable-cache, integer, DEFAULT_CACHE, Binding#local_variable_get/set cache size]
-    SYMBOL_TO_PROC_CACHE: [symbol-to-proc-cache, integer, DEFAULT_CACHE, Symbol#to_proc cache size]
     PACK_CACHE: [pack-cache, integer, DEFAULT_CACHE, Array#pack cache size]
-    UNPACK_CACHE: [unpack-cache, integer, DEFAULT_CACHE, String#unpack cache size]
     EVAL_CACHE: [eval-cache, integer, DEFAULT_CACHE, eval cache size]
     ENCODING_LOADED_CLASSES_CACHE: [encoding-loaded-classes-cache, integer, DEFAULT_CACHE, Cache size of encoding operations based on anticipated number of total active encodings]
     INTEROP_CONVERT_CACHE: [interop-convert-cache, integer, DEFAULT_CACHE, Cache size for converting values for interop]
@@ -212,9 +204,6 @@ INTERNAL: # Options for debugging the TruffleRuby implementation
     POW_CACHE: [integer-pow-cache, integer, DEFAULT_CACHE, Cache size for Integer#** with a constant exponent]
 
     # Inline caches with a non-default size. When adding a new option here, update test/truffle/integration/limit-zero.sh
-    IDENTITY_CACHE: [identity-cache, integer, 1, Cache size for inline caches comparing by identity for context-independent objects]
-    CONTEXT_SPECIFIC_IDENTITY_CACHE: [context-identity-cache, integer, ['!singleContext ? 0 : ', IDENTITY_CACHE], Cache size for inline caches comparing by identity for context-specific objects]
-    CLASS_CACHE: [class-cache, integer, 3, .class and .metaclass cache size]
     ARRAY_DUP_CACHE: [array-dup-cache, integer, 3, Cache size for copying small arrays]
     ARRAY_STRATEGY_CACHE: [array-strategy-cache, integer, 4, Cache size for array strategies]
 

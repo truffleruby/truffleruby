@@ -35,20 +35,17 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.truffleruby.core.hash.ReHashable;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 /** A thread-safe cache removing entries when the value is no longer in use.
  *
  * Callers must hold to the returned value. The entry will stay in the map as long as the value is referenced. */
-public class WeakValueCache<Key, Value> implements ReHashable {
+public class WeakValueCache<Key, Value> {
 
-    private ConcurrentHashMap<Key, KeyedReference<Key, Value>> map;
+    private final ConcurrentHashMap<Key, KeyedReference<Key, Value>> map;
     private final ReferenceQueue<Value> deadRefs = new ReferenceQueue<>();
 
     @TruffleBoundary
@@ -173,14 +170,6 @@ public class WeakValueCache<Key, Value> implements ReHashable {
         }
 
         return entries;
-    }
-
-    public void rehash() {
-        final Map<Key, KeyedReference<Key, Value>> oldMap = this.map;
-        this.map = new ConcurrentHashMap<>(oldMap.size());
-        for (Entry<Key, KeyedReference<Key, Value>> entry : oldMap.entrySet()) {
-            map.put(entry.getKey(), entry.getValue());
-        }
     }
 
     protected static final class KeyedReference<Key, Value> extends WeakReference<Value> {

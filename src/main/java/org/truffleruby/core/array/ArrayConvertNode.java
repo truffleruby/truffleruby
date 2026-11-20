@@ -16,10 +16,8 @@ import com.oracle.truffle.api.profiles.ConditionProfile;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.dispatch.DispatchNode;
 
-import static org.truffleruby.language.dispatch.DispatchConfiguration.PRIVATE_RETURN_MISSING;
-
-/** Attempts converting its argument to an array by calling #to_ary, or if that doesn't work, by wrapping it inside a
- * one-element array. */
+/** Like rb_ary_to_ary() in CRuby: converts its argument with rb_check_array_type(), or if it does not convert, wraps it
+ * inside a one-element array. */
 public abstract class ArrayConvertNode extends RubyBaseNode {
 
     public abstract RubyArray execute(Object value);
@@ -34,8 +32,13 @@ public abstract class ArrayConvertNode extends RubyBaseNode {
             @Cached ConditionProfile canCast,
             @Cached ArrayBuilderNode arrayBuilder,
             @Cached DispatchNode toArrayNode) {
-        final Object result = toArrayNode.call(PRIVATE_RETURN_MISSING, object, "to_ary");
-        if (canCast.profile(result instanceof RubyArray)) {
+        final Object result = toArrayNode.call(
+                coreLibrary().truffleTypeModule,
+                "rb_check_convert_type",
+                object,
+                coreLibrary().arrayClass,
+                coreSymbols().TO_ARY);
+        if (canCast.profile(result != nil)) {
             return (RubyArray) result;
         } else {
             return ArrayHelpers.specializedRubyArrayOf(getContext(), getLanguage(), arrayBuilder, object);

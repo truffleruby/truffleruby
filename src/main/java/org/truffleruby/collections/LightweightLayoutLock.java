@@ -13,6 +13,7 @@ package org.truffleruby.collections;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
+import org.truffleruby.annotations.Keep;
 
 import java.lang.invoke.VarHandle;
 import java.util.ArrayList;
@@ -37,10 +38,6 @@ public final class LightweightLayoutLock {
     }
 
     // Read operation
-
-    void startRead() {
-        // Nothing, just there for clarity
-    }
 
     public boolean finishRead(AtomicInteger threadState, InlinedConditionProfile fastPath, Node node) {
         // Prevent data reads to float below
@@ -121,6 +118,7 @@ public final class LightweightLayoutLock {
         return threadState;
     }
 
+    @Keep
     @TruffleBoundary
     public void unregisterThread(AtomicInteger threadState) {
         long stamp = baseLock.writeLock();

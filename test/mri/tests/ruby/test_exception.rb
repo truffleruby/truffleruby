@@ -701,6 +701,18 @@ end.join
     assert_equal(level, e.backtrace.size, feature6216)
   end
 
+  def test_stackoverflow_during_optional_arg_setup
+    # Filling in missing optional arguments of a block call must not
+    # clobber the caller's control frame when the VM stack is exhausted.
+    assert_separately([], "#{<<~"begin;"}\n#{<<~'end;'}", timeout: 60)
+    begin;
+      pr = proc {|a=1,b=1,c=1,d=1,e=1,f=1,g=1,h=1,i=1,j=1| pr.call }
+      40.times do |k|
+        eval((0...k).map { "v#{_1}=0;" }.join + "begin; pr.call; rescue SystemStackError => e; e.backtrace; end")
+      end
+    end;
+  end
+
   def test_machine_stackoverflow
     bug9109 = '[ruby-dev:47804] [Bug #9109]'
     assert_separately([], <<-SRC)
@@ -947,6 +959,37 @@ end.join
       y.join
     end
     assert_equal("caller's cause", e.cause.message)
+  end
+
+  # Thread#raise and Fiber#raise take their implicit cause from errinfo, which
+  # holds throw data while a non-local exit is in flight.  The exception queued
+  # here is delivered when Thread.handle_interrupt returns, and leaving the
+  # block with `break` makes that happen while the break is still unwinding.
+  # The VM calls #exception on the queued object at that point.
+  def assert_cause_not_throw_data(raiser)
+    assert_separately([], "#{<<~"begin;"}\n#{<<~"end;"}")
+    begin;
+      e = nil
+      begin
+        Thread.handle_interrupt(Object => :never) do
+          queued = StandardError.new("queued")
+          Thread.current.raise(queued)
+          queued.define_singleton_method(:exception) {|*| #{raiser}.raise("in flight")}
+          break
+        end
+      rescue => e
+      end
+      assert_equal("in flight", e.message)
+      assert_nil(e.cause)
+    end;
+  end
+
+  def test_cause_thread_raise_not_throw_data
+    assert_cause_not_throw_data("Thread.current")
+  end
+
+  def test_cause_fiber_raise_not_throw_data
+    assert_cause_not_throw_data("Fiber.current")
   end
 
   def test_unknown_option

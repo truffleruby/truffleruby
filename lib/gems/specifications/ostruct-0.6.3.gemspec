@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.metadata = { "changelog_uri" => "https://github.com/ruby/ostruct/releases" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Marc-Andre Lafortune".freeze]
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "Class to build custom data structures, similar to a Hash.".freeze
   s.email = ["ruby-core@marc-andre.ca".freeze]
   s.homepage = "https://github.com/ruby/ostruct".freeze

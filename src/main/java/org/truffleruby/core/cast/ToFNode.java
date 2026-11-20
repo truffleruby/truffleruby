@@ -12,7 +12,6 @@
 package org.truffleruby.core.cast;
 
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.truffleruby.core.numeric.BigIntegerOps;
 import org.truffleruby.core.numeric.RubyBignum;
@@ -20,13 +19,6 @@ import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.dispatch.DispatchNode;
 
 public abstract class ToFNode extends RubyBaseNode {
-
-    @Child private DispatchNode toFNode;
-
-    @NeverDefault
-    public static ToFNode create() {
-        return ToFNodeGen.create();
-    }
 
     public abstract double executeToDouble(Object value);
 

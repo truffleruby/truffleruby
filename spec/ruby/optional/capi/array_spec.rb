@@ -456,6 +456,30 @@ describe "C-API Array function" do
     end
   end
 
+  describe "rb_ary_resize" do
+    it "removes the elements at the end when shrinking and returns the array" do
+      array = [1, 2, 3, 4]
+      @s.rb_ary_resize(array, 2).should.equal?(array)
+      array.should == [1, 2]
+    end
+
+    it "appends nil elements when growing" do
+      array = [1, 2]
+      @s.rb_ary_resize(array, 4).should.equal?(array)
+      array.should == [1, 2, nil, nil]
+    end
+
+    it "does nothing if the array already has that length" do
+      array = [1, 2]
+      @s.rb_ary_resize(array, 2).should.equal?(array)
+      array.should == [1, 2]
+    end
+
+    it "raises a FrozenError if the array is frozen" do
+      -> { @s.rb_ary_resize([1, 2].freeze, 1) }.should.raise(FrozenError)
+    end
+  end
+
   describe "rb_ary_delete_at" do
     before :each do
       @array = [1, 2, 3, 4]

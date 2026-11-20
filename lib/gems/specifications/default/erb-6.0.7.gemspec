@@ -11,12 +11,12 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Masatoshi SEKI".freeze, "Takashi Kokubun".freeze]
   s.bindir = "libexec".freeze
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "An easy to use but powerful templating system for Ruby.".freeze
   s.email = ["seki@ruby-lang.org".freeze, "k0kubun@ruby-lang.org".freeze]
   s.executables = ["erb".freeze]
   s.extensions = ["ext/erb/escape/extconf.rb".freeze]
-  s.files = ["erb/escape.#{Truffle::Platform::DLEXT}".freeze, "ext/erb/escape/extconf.rb".freeze, "lib/erb.rb".freeze, "lib/erb/compiler.rb".freeze, "lib/erb/def_method.rb".freeze, "lib/erb/util.rb".freeze, "lib/erb/version.rb".freeze, "libexec/erb".freeze]
+  s.files = ["ext/erb/escape/extconf.rb".freeze, "lib/erb.rb".freeze, "lib/erb/compiler.rb".freeze, "lib/erb/def_method.rb".freeze, "lib/erb/escape.#{Truffle::Platform::DLEXT}".freeze, "lib/erb/util.rb".freeze, "lib/erb/version.rb".freeze, "libexec/erb".freeze]
   s.homepage = "https://github.com/ruby/erb".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 3.2.0".freeze)

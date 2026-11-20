@@ -42,13 +42,6 @@ public final class Utils {
         }
     }
 
-    /** Performs {@link Objects#equals(Object, Object)} behind a {@link TruffleBoundary} so as to avoid performance
-     * warnings, since {@link Object#equals} is blacklisted. */
-    @TruffleBoundary
-    public static boolean equals(Object a, Object b) {
-        return Objects.equals(a, b);
-    }
-
     /** Performs {@link Objects#toString(Object)} behind a {@link TruffleBoundary} so as to avoid performance warnings,
      * since {@link Object#toString()} is blacklisted. */
     @TruffleBoundary

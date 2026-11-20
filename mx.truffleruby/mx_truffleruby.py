@@ -229,10 +229,19 @@ class LibSSLProject(mx.NativeProject):
 class LibSSLBuildTask(mx.NativeBuildTask):
     def needsBuild(self, newestInput):
         libssl = join(self.subject.install_dir, 'lib/libssl.a')
-        if exists(libssl):
-            return False, f"{libssl} is built"
-        else:
+        if not exists(libssl):
             return (True, f"{libssl} does not exist")
+
+        # Rebuild when the version in suite.py changes
+        library = next(lib for lib in _suite.libs if lib.name.startswith('LIBSSL_'))
+        expected_version = library.name[len('LIBSSL_'):].replace('_', '.')
+        pkgconfig = join(self.subject.install_dir, 'lib/pkgconfig/openssl.pc')
+        with open(pkgconfig) as f:
+            built_version = re.search(r'^Version: (.+)$', f.read(), re.MULTILINE).group(1)
+        if built_version != expected_version:
+            return (True, f"{libssl} is version {built_version} but {expected_version} is expected")
+
+        return False, f"{libssl} is built"
 
     def build(self):
         libssl_sources = mx.distribution('LIBSSL_LAYOUT_DIST').get_output()

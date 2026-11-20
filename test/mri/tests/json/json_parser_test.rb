@@ -178,6 +178,13 @@ class JSONParserTest < Test::Unit::TestCase
     end
   end
 
+  def test_parsse_control_char_and_backslash
+    backslash_and_control_char = "\\\t"
+    assert_raise JSON::ParserError do
+      JSON.parse(%("#{'a' * 30}#{backslash_and_control_char}"), allow_control_characters: true)
+    end
+  end
+
   def test_parse_arrays
     assert_equal([1,2,3], parse('[1,2,3]'))
     assert_equal([1.2,2,3], parse('[1.2,2,3]'))
@@ -350,6 +357,7 @@ class JSONParserTest < Test::Unit::TestCase
     assert_raise(JSON::ParserError) { parse('"\\uD800"') }
     assert_raise(JSON::ParserError) { parse('"\\uD800_________________"') }
     assert_raise(JSON::ParserError) { parse('"\\uD800\\u0041"') }
+    assert_raise(JSON::ParserError) { parse('"\\uD800\\u004') }
   end
 
   def test_parse_big_integers
@@ -409,6 +417,13 @@ class JSONParserTest < Test::Unit::TestCase
         JSON.load('{"a": 1, "a": 2}', -> (obj) { obj == "a" ? fake_key : obj })
       end
     end
+  end
+
+  def test_parse_duplicate_key_escape
+    error = assert_raise(ParserError) do
+      JSON.parse('{"%s%s%s%s":1,"%s%s%s%s":2}', allow_duplicate_key: false)
+    end
+    assert_match "%s%s%s%s", error.message
   end
 
   def test_some_wrong_inputs

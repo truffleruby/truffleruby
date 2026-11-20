@@ -45,7 +45,6 @@ public final class YARPLoadArgumentsTranslator extends YARPBaseTranslator {
 
     private enum State {
         PRE,
-        OPT,
         POST
     }
 

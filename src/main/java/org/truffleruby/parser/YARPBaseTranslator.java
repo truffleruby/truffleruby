@@ -147,10 +147,6 @@ public abstract class YARPBaseTranslator extends AbstractNodeVisitor<RubyNode> {
                 sourceEncoding.tencoding, false);
     }
 
-    protected final TruffleString toTString(String string) {
-        return TStringUtils.fromJavaString(string, sourceEncoding);
-    }
-
     protected final String toString(Nodes.Node node) {
         return TStringUtils.toJavaStringOrThrow(toTString(node), sourceEncoding);
     }

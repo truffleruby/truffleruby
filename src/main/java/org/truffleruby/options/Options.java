@@ -64,8 +64,6 @@ public final class Options {
     public final boolean SINGLE_THREADED;
     /** --polyglot-stdio=EMBEDDED || !NATIVE_PLATFORM */
     public final boolean POLYGLOT_STDIO;
-    /** --interop-host=env.isHostLookupAllowed() && true */
-    public final boolean HOST_INTEROP;
     /** --patching=true */
     public final boolean PATCHING;
     /** --hashing-deterministic=false */
@@ -217,7 +215,6 @@ public final class Options {
         HANDLE_INTERRUPT = options.hasBeenSet(OptionsCatalog.HANDLE_INTERRUPT_KEY) ? options.get(OptionsCatalog.HANDLE_INTERRUPT_KEY) : !EMBEDDED;
         SINGLE_THREADED = !env.isCreateThreadAllowed() || (options.get(OptionsCatalog.SINGLE_THREADED_KEY));
         POLYGLOT_STDIO = options.hasBeenSet(OptionsCatalog.POLYGLOT_STDIO_KEY) ? options.get(OptionsCatalog.POLYGLOT_STDIO_KEY) : EMBEDDED || !NATIVE_PLATFORM;
-        HOST_INTEROP = env.isHostLookupAllowed() && (options.get(OptionsCatalog.HOST_INTEROP_KEY));
         PATCHING = options.get(OptionsCatalog.PATCHING_KEY);
         HASHING_DETERMINISTIC = options.get(OptionsCatalog.HASHING_DETERMINISTIC_KEY);
         VIRTUAL_THREAD_FIBERS = options.get(OptionsCatalog.VIRTUAL_THREAD_FIBERS_KEY);
@@ -325,8 +322,6 @@ public final class Options {
                 return SINGLE_THREADED;
             case "ruby.polyglot-stdio":
                 return POLYGLOT_STDIO;
-            case "ruby.interop-host":
-                return HOST_INTEROP;
             case "ruby.patching":
                 return PATCHING;
             case "ruby.hashing-deterministic":

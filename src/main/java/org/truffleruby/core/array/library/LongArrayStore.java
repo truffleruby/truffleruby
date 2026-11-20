@@ -366,20 +366,5 @@ public final class LongArrayStore {
         public long[] allocate(int capacity) {
             return new long[capacity];
         }
-
-        @Override
-        public boolean accepts(Object value) {
-            return value instanceof Integer || value instanceof Long;
-        }
-
-        @Override
-        public boolean specializesFor(Object value) {
-            return value instanceof Long;
-        }
-
-        @Override
-        public boolean isDefaultValue(Object value) {
-            return (long) value == 0;
-        }
     }
 }

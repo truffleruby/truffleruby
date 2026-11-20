@@ -205,6 +205,12 @@ class TestAst < Test::Unit::TestCase
     end
   end
 
+  def test_parse_incompatible_encoding_string_content
+    assert_raise(SyntaxError) do
+      RubyVM::AbstractSyntaxTree.parse("`\xF8\n\xC0\\u".b)
+    end
+  end
+
   def test_parse_file_raises_syntax_error
     Tempfile.create(%w"test_ast .rb") do |f|
       f.puts "end"
@@ -213,6 +219,17 @@ class TestAst < Test::Unit::TestCase
         RubyVM::AbstractSyntaxTree.parse_file(f.path)
       end
     end
+  end
+
+  def test_cdecl_children_with_toplevel_constant_path
+    # [Bug #21974]
+    children = parse("::Foo = 1").children[2].children
+
+    assert_equal(:COLON3, children[0].type)
+    assert_equal([:Foo], children[0].children)
+    assert_equal(:Foo, children[1])
+    assert_equal(:INTEGER, children[2].type)
+    assert_equal([1], children[2].children)
   end
 
   def assert_parse(code, warning: '')

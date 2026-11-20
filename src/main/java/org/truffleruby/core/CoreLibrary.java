@@ -147,11 +147,9 @@ public final class CoreLibrary {
     public final RubyClass nilClass;
     public final RubyClass noMemoryErrorClass;
     public final RubyClass noMethodErrorClass;
-    public final RubyClass notImplementedErrorClass;
     public final RubyClass numericClass;
     public final RubyClass objectClass;
     public final RubyClass procClass;
-    public final RubyModule processModule;
     public final RubyClass rangeClass;
     public final RubyClass rangeErrorClass;
     public final RubyClass rationalClass;
@@ -167,8 +165,6 @@ public final class CoreLibrary {
     public final RubyClass stopIterationClass;
     public final RubyClass sourceRangeClass;
     public final RubyModule polyglotModule;
-    public final RubyClass polyglotInnerContextClass;
-    public final RubyClass polyglotForeignObjectClass;
     @CompilationFinal(dimensions = 1) public final RubyClass[] polyglotForeignClasses;
     public final RubyClass unsupportedMessageErrorClass;
     public final RubyClass stringClass;
@@ -231,9 +227,7 @@ public final class CoreLibrary {
     public final RubyClass closedQueueErrorClass;
     public final RubyModule warningModule;
     public final RubyClass digestClass;
-    public final RubyClass structClass;
     public final RubyClass weakMapClass;
-    public final RubyClass weakKeyMapClass;
 
     public final RubyArray argv;
     public final RubyBasicObject mainObject;
@@ -243,8 +237,6 @@ public final class CoreLibrary {
     public final BindingLocalVariablesObject interactiveBindingLocalVariablesObject;
     public final RubyClass noMatchingPatternErrorClass;
 
-    @CompilationFinal private RubyClass eagainWaitReadable;
-    @CompilationFinal private RubyClass eagainWaitWritable;
 
     private final Map<String, RubyClass> errnoClasses = new HashMap<>();
     private final Map<Integer, String> errnoValueToNames = new HashMap<>();
@@ -253,7 +245,6 @@ public final class CoreLibrary {
 
     @CompilationFinal private GlobalVariableReader debugReader;
     @CompilationFinal private GlobalVariableReader verboseReader;
-    @CompilationFinal private GlobalVariableReader stdinReader;
     @CompilationFinal private GlobalVariableReader stderrReader;
 
     @CompilationFinal public RubyBinding topLevelBinding;
@@ -342,9 +333,9 @@ public final class CoreLibrary {
         typeErrorClass = defineClass(standardErrorClass, "TypeError");
         zeroDivisionErrorClass = defineClass(standardErrorClass, "ZeroDivisionError");
         polyglotModule = defineModule("Polyglot");
-        polyglotInnerContextClass = defineClass(polyglotModule, objectClass, "InnerContext");
+        defineClass(polyglotModule, objectClass, "InnerContext");
         unsupportedMessageErrorClass = defineClass(polyglotModule, standardErrorClass, "UnsupportedMessageError");
-        polyglotForeignObjectClass = defineClass(polyglotModule, objectClass, "ForeignObject");
+        defineClass(polyglotModule, objectClass, "ForeignObject");
         polyglotForeignClasses = new RubyClass[ForeignClassNode.Trait.COMBINATIONS];
         noMatchingPatternErrorClass = defineClass(standardErrorClass, "NoMatchingPatternError");
 
@@ -377,7 +368,7 @@ public final class CoreLibrary {
         // ScriptError
         RubyClass scriptErrorClass = defineClass(exceptionClass, "ScriptError");
         loadErrorClass = defineClass(scriptErrorClass, "LoadError");
-        notImplementedErrorClass = defineClass(scriptErrorClass, "NotImplementedError");
+        defineClass(scriptErrorClass, "NotImplementedError");
         syntaxErrorClass = defineClass(scriptErrorClass, "SyntaxError");
 
         // SecurityError
@@ -420,7 +411,7 @@ public final class CoreLibrary {
         nilClass = defineClass("NilClass");
         procClass = defineClass("Proc");
 
-        processModule = defineModule("Process");
+        defineModule("Process");
         RubyClass queueClass = defineClass("Queue");
         defineClass(queueClass, "SizedQueue");
         rangeClass = defineClass("Range");
@@ -448,7 +439,7 @@ public final class CoreLibrary {
         unboundMethodClass = defineClass("UnboundMethod");
         ioClass = defineClass("IO");
         defineClass(ioClass, "File");
-        structClass = defineClass("Struct");
+        defineClass("Struct");
 
         defineClass("TracePoint");
 
@@ -463,7 +454,7 @@ public final class CoreLibrary {
         objectSpaceModule = defineModule("ObjectSpace");
 
         weakMapClass = defineClass(objectSpaceModule, objectClass, "WeakMap");
-        weakKeyMapClass = defineClass(objectSpaceModule, objectClass, "WeakKeyMap");
+        defineClass(objectSpaceModule, objectClass, "WeakKeyMap");
 
         // The rest
 
@@ -661,7 +652,6 @@ public final class CoreLibrary {
     private void findGlobalVariableStorage() {
         debugReader = globalVariables.getReader("$DEBUG");
         verboseReader = globalVariables.getReader("$VERBOSE");
-        stdinReader = globalVariables.getReader("$stdin");
         stderrReader = globalVariables.getReader("$stderr");
     }
 
@@ -832,14 +822,6 @@ public final class CoreLibrary {
     private void afterLoadCoreLibrary() {
         // Get some references to things defined in the Ruby core
 
-        eagainWaitReadable = (RubyClass) ioClass.fields
-                .getConstant("EAGAINWaitReadable")
-                .getValue();
-
-        eagainWaitWritable = (RubyClass) ioClass.fields
-                .getConstant("EAGAINWaitWritable")
-                .getValue();
-
         findGlobalVariableStorage();
 
         // Initialize $0 so it is set to a String as RubyGems expect, also when not run from the RubyLauncher
@@ -917,10 +899,6 @@ public final class CoreLibrary {
     /** true only if $VERBOSE is true */
     public boolean isVerbose() {
         return verbosity() == Boolean.TRUE;
-    }
-
-    public Object getStdin() {
-        return stdinReader.getValue();
     }
 
     public Object getStderr() {

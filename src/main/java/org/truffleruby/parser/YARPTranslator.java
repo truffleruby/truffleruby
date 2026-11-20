@@ -23,7 +23,6 @@ import org.truffleruby.RubyContext;
 import org.truffleruby.RubyLanguage;
 import org.truffleruby.annotations.Split;
 import org.truffleruby.builtins.PrimitiveNodeConstructor;
-import org.truffleruby.core.CoreLibrary;
 import org.truffleruby.core.IsNilNode;
 import org.truffleruby.core.array.ArrayConcatNode;
 import org.truffleruby.core.array.ArrayLiteralNode;
@@ -65,7 +64,6 @@ import org.truffleruby.language.LexicalScope;
 import org.truffleruby.language.NotProvided;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.language.RubyRootNode;
-import org.truffleruby.language.RubyTopLevelRootNode;
 import org.truffleruby.language.arguments.ArgumentsDescriptor;
 import org.truffleruby.language.arguments.KeywordArgumentsDescriptor;
 import org.truffleruby.language.arguments.NoKeywordArgumentsDescriptor;
@@ -206,17 +204,6 @@ public class YARPTranslator extends YARPBaseTranslator {
 
     public RubyNode[] getBeginBlocks() {
         return beginBlocks.toArray(RubyNode.EMPTY_ARRAY);
-    }
-
-    /** enter point to translate a program; a single really public method */
-    public RubyRootNode translate(Nodes.Node node) {
-        var body = node.accept(this);
-        var sourceSection = CoreLibrary.JAVA_CORE_SOURCE_SECTION;
-        var sharedMethodInfo = SharedMethodInfo.forMethod(sourceSection, null, Arity.MODULE_BODY, "<main>", "<main>",
-                null, null);
-        var frameDescriptor = TranslatorEnvironment.newFrameDescriptorBuilderForMethod(sharedMethodInfo).build();
-        return new RubyTopLevelRootNode(language, sourceSection, frameDescriptor, sharedMethodInfo, body,
-                Split.HEURISTIC, null, Arity.MODULE_BODY);
     }
 
     @Override
@@ -1000,52 +987,45 @@ public class YARPTranslator extends YARPBaseTranslator {
             for (int n = whenNodes.length - 1; n >= 0; n--) {
                 final Nodes.WhenNode whenNode = whenNodes[n];
                 final Nodes.Node[] whenConditions = whenNode.conditions;
-                boolean containSplatOperator = containYARPSplatNode(whenConditions);
 
-                if (containSplatOperator) {
-                    final RubyNode receiver = new TruffleInternalModuleLiteralNode();
-                    final RubyNode whenConditionNode = translateExpressionsList(whenConditions);
-                    final RubyNode[] arguments = new RubyNode[]{
-                            whenConditionNode,
-                            NodeUtil.cloneNode(readPredicateNode) };
-                    final RubyNode predicateNode = createCallNode(receiver, "when_splat", arguments);
-                    assignPositionOnly(whenConditions, predicateNode);
+                // translate `when` with multiple expressions into a single `if` operator, e.g.
+                //   case x
+                //     when a, *b, c
+                //  is translated into
+                //    if a === x || Truffle::Internal.when_splat(b, x) || c === x
+                // like pm_compile_case_node() in CRuby, the expressions after the first match are not evaluated
 
-                    // create `if` node
-                    final RubyNode thenNode = translateNodeOrNil(whenNode.statements);
-                    final IfElseNode ifNode = IfElseNodeGen.create(predicateNode, thenNode, elseNode);
+                RubyNode predicateNode = null;
 
-                    // this `if` becomes `else` branch of the outer `if`
-                    elseNode = ifNode;
-                } else {
-                    // translate `when` with multiple expressions into a single `if` operator, e.g.
-                    //   case x
-                    //     when a, b, c
-                    //  is translated into
-                    //    if x === a || x === b || x === c
-
-                    RubyNode predicateNode = null;
-
-                    for (var whenCondition : whenConditions) {
+                for (var whenCondition : whenConditions) {
+                    final RubyNode nextPredicateNode;
+                    if (whenCondition instanceof Nodes.SplatNode) {
+                        final RubyNode receiver = new TruffleInternalModuleLiteralNode();
+                        final RubyNode[] arguments = new RubyNode[]{
+                                whenCondition.accept(this),
+                                NodeUtil.cloneNode(readPredicateNode) };
+                        nextPredicateNode = createCallNode(receiver, "when_splat", arguments);
+                        assignPositionOnly(whenCondition, nextPredicateNode);
+                    } else {
                         final RubyNode receiver = whenCondition.accept(this);
                         final RubyNode[] arguments = new RubyNode[]{ NodeUtil.cloneNode(readPredicateNode) };
-                        final RubyNode nextPredicateNode = createCallNode(receiver, "===", arguments);
+                        nextPredicateNode = createCallNode(receiver, "===", arguments);
                         assignPositionAndFlags(whenCondition, nextPredicateNode);
-
-                        if (predicateNode == null) {
-                            predicateNode = nextPredicateNode;
-                        } else {
-                            predicateNode = OrNodeGen.create(predicateNode, nextPredicateNode);
-                        }
                     }
 
-                    // create `if` node
-                    final RubyNode thenNode = translateNodeOrNil(whenNode.statements);
-                    final IfElseNode ifNode = IfElseNodeGen.create(predicateNode, thenNode, elseNode);
-
-                    // this `if` becomes `else` branch of the outer `if`
-                    elseNode = ifNode;
+                    if (predicateNode == null) {
+                        predicateNode = nextPredicateNode;
+                    } else {
+                        predicateNode = OrNodeGen.create(predicateNode, nextPredicateNode);
+                    }
                 }
+
+                // create `if` node
+                final RubyNode thenNode = translateNodeOrNil(whenNode.statements);
+                final IfElseNode ifNode = IfElseNodeGen.create(predicateNode, thenNode, elseNode);
+
+                // this `if` becomes `else` branch of the outer `if`
+                elseNode = ifNode;
             }
 
             final RubyNode ifNode = elseNode;

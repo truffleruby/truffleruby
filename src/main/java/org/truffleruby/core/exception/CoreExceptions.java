@@ -333,21 +333,6 @@ public final class CoreExceptions {
         return ExceptionOperations.createRubyException(context, exceptionClass, errorMessage, currentNode, null);
     }
 
-    @TruffleBoundary
-    public RubyException runtimeError(String message, Node currentNode, Throwable javaThrowable) {
-        RubyClass exceptionClass = context.getCoreLibrary().runtimeErrorClass;
-        RubyString errorMessage = StringOperations.createUTF8String(context, language, message);
-        return ExceptionOperations
-                .createRubyException(context, exceptionClass, errorMessage, currentNode, javaThrowable);
-    }
-
-    @TruffleBoundary
-    public RubyException runtimeError(String message, Backtrace backtrace) {
-        RubyClass exceptionClass = context.getCoreLibrary().runtimeErrorClass;
-        RubyString errorMessage = StringOperations.createUTF8String(context, language, message);
-        return ExceptionOperations.createRubyException(context, exceptionClass, errorMessage, backtrace);
-    }
-
     // SystemStackError
 
     @TruffleBoundary
@@ -427,11 +412,6 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyException negativeLengthError(int length, Node currentNode) {
         return indexError(StringUtils.format("negative length (%d)", length), currentNode);
-    }
-
-    @TruffleBoundary
-    public RubyException indexErrorInvalidIndex(Node currentNode) {
-        return indexError("invalid index", currentNode);
     }
 
     @TruffleBoundary
@@ -549,11 +529,6 @@ public final class CoreExceptions {
     }
 
     @TruffleBoundary
-    public RubyException typeErrorIsNotA(Object value, String expectedType, Node currentNode) {
-        return typeErrorIsNotA(inspectReceiver(value), expectedType, currentNode);
-    }
-
-    @TruffleBoundary
     public RubyException typeErrorIsNotA(String value, String expectedType, Node currentNode) {
         return typeError(value + " is not a " + expectedType, currentNode);
     }
@@ -643,11 +618,6 @@ public final class CoreExceptions {
         return typeError(
                 StringUtils.format("superclass must be an instance of Class (given an instance of %s)", given),
                 currentNode);
-    }
-
-    @TruffleBoundary
-    public RubyException typeErrorInheritUninitializedClass(Node currentNode) {
-        return typeError("can't inherit uninitialized class", currentNode);
     }
 
     @TruffleBoundary
@@ -980,11 +950,6 @@ public final class CoreExceptions {
     @TruffleBoundary
     public RubyException loadErrorCannotLoad(String name, Node currentNode) {
         return loadError(StringUtils.format("cannot load such file -- %s", name), name, currentNode);
-    }
-
-    @TruffleBoundary
-    public RubyException loadError(IOException exception, String path, Node currentNode) {
-        return loadError(BacktraceFormatter.formatJavaThrowableMessage(exception), path, currentNode);
     }
 
     // ZeroDivisionError

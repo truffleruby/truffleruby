@@ -1,7 +1,7 @@
 # Compatibility
 
 TruffleRuby aims to be fully compatible with the standard implementation of
-Ruby, MRI, version 4.0.9, [including C extensions](#c-extension-compatibility).
+Ruby, MRI, version 4.0.10, [including C extensions](#c-extension-compatibility).
 TruffleRuby is still in development, so it is not 100% compatible yet.
 
 TruffleRuby can run Rails and is compatible with many gems, including C extensions.
@@ -64,7 +64,6 @@ The following standard libraries are unsupported:
 * `debug`: it relies on `RubyVM::InstructionSequence`, use the [VSCode extension](https://www.graalvm.org/tools/vscode/graalvm-extension/polyglot-runtime/#debugging-ruby) or [`--inspect`](tools.md) instead
 * `io/console`: partially implemented
 * `io/wait`: partially implemented
-* `pty`: could be implemented in the future
 
 TruffleRuby provides its own backend implementation for the `ffi` gem, similar to JRuby.
 This should be completely transparent and behave the same as on MRI.

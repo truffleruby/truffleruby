@@ -1,6 +1,8 @@
 exclude :test_initialize_connect_timeout, "transient"
 exclude :test_initialize_failure, "Expected /for\\ \"192\\.0\\.2\\.1\"\\ port\\ 8000/ to match \"Address not available - bind(2)\"."
+exclude :test_initialize_invalid_open_timeout_keeps_stdin_open, "[ArgumentError] exception expected, not #<IO::TimeoutError: user specified timeout for localhost:12345>."
 exclude :test_initialize_resolv_timeout_with_connection_failure, "[Errno::ETIMEDOUT] exception expected, not #<ArgumentError: unknown keyword: :test_mode_settings>."
+exclude :test_initialize_v4_hostname_resolution_failure_after_v6_address_family_error, "[Socket::ResolutionError] exception expected, not #<ArgumentError: unknown keyword: :test_mode_settings>."
 exclude :test_initialize_v4_hostname_resolved_earlier, "hangs"
 exclude :test_initialize_v6_hostname_resolution_failed_and_v4_hostname_resolution_is_success, "hangs"
 exclude :test_initialize_v6_hostname_resolved_earlier, "hangs"

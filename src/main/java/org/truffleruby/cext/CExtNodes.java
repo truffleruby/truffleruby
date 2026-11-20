@@ -1681,10 +1681,6 @@ public abstract class CExtNodes {
 
             return createString(node, fromByteArrayNode, result, Encodings.US_ASCII);
         }
-
-        protected int getCacheLimit() {
-            return getLanguage().options.DISPATCH_CACHE;
-        }
     }
 
     @CoreMethod(names = "rb_tr_code_to_mbc", onSingleton = true, required = 2, lowerFixnum = 2)

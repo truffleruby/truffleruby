@@ -17,7 +17,6 @@ import org.truffleruby.parser.ReOptions;
 
 public final class RegexpOptions implements Cloneable, Comparable<RegexpOptions> {
 
-    public static final RegexpOptions NULL_OPTIONS = new RegexpOptions(KCode.NONE, true);
 
     public RegexpOptions() {
         this(KCode.NONE, true);
@@ -111,18 +110,6 @@ public final class RegexpOptions implements Cloneable, Comparable<RegexpOptions>
 
     public boolean canAdaptEncoding() {
         return (options & (FIXED | ENCODINGNONE)) == 0;
-    }
-
-    public KCode getKCode() {
-        return kcode;
-    }
-
-    /** This regexp has an explicit encoding flag or 'nesu' letter associated with it.
-     * 
-     * @param kcode to be set */
-    public RegexpOptions setExplicitKCode(KCode kcode) {
-        int newOptions = options & ~KCODEDEFAULT;
-        return new RegexpOptions(kcode, newOptions);
     }
 
     private RegexpOptions setKCodeDefault(boolean kcodedefault) {
@@ -256,10 +243,6 @@ public final class RegexpOptions implements Cloneable, Comparable<RegexpOptions>
                 .setExtended((joniOptions & ReOptions.RE_OPTION_EXTENDED) != 0)
                 .setFixed((joniOptions & ReOptions.RE_FIXED) != 0)
                 .setOnce((joniOptions & ReOptions.RE_OPTION_ONCE) != 0);
-    }
-
-    public RegexpOptions withoutOnce() {
-        return setOnce(false);
     }
 
     public String toOptionsString() {

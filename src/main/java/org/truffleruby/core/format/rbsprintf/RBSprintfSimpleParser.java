@@ -86,7 +86,6 @@ public final class RBSprintfSimpleParser {
                         break;
                     case '\'':
                         config.checkForFlags();
-                        config.setSeparator(true);
                         i++;
                         break;
                     case '0':

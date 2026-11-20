@@ -40,12 +40,6 @@ public class ByteArrayBuilder {
         return builder;
     }
 
-    public static ByteArrayBuilder createUnsafeBuilder(byte[] wrap) {
-        final ByteArrayBuilder builder = new ByteArrayBuilder();
-        builder.unsafeReplace(wrap, wrap.length);
-        return builder;
-    }
-
     public int getLength() {
         return length;
     }
@@ -98,10 +92,6 @@ public class ByteArrayBuilder {
         append(other.getInternalByteArray(), appendStart, appendLength);
     }
 
-    public void append(TruffleString other, RubyEncoding enc) {
-        append(other.getInternalByteArrayUncached(enc.tencoding));
-    }
-
     public void unsafeReplace(byte[] bytes, int size) {
         this.bytes = bytes;
         this.length = size;
@@ -113,21 +103,8 @@ public class ByteArrayBuilder {
         }
     }
 
-    public byte get(int n) {
-        return bytes[n];
-    }
-
-    public void set(int n, int b) {
-        bytes[n] = (byte) b;
-    }
-
     public byte[] getBytes() {
         return Arrays.copyOf(bytes, length);
-    }
-
-    public void clear() {
-        bytes = EMPTY_BYTES;
-        length = 0;
     }
 
     @Override
@@ -137,10 +114,6 @@ public class ByteArrayBuilder {
 
     public TruffleString toTString(RubyEncoding encoding) {
         return TStringUtils.fromByteArray(getBytes(), encoding);
-    }
-
-    public TStringWithEncoding toTStringWithEnc(RubyEncoding encoding) {
-        return new TStringWithEncoding(TStringUtils.fromByteArray(getBytes(), encoding), encoding);
     }
 
     // TODO CS 14-Feb-17 review all uses of this method

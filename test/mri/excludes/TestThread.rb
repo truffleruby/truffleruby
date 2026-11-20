@@ -20,6 +20,7 @@ exclude :test_thread_interrupt_for_killed_thread, "transient; hangs or very slow
 exclude :test_thread_invalid_name, "[ArgumentError] exception expected, not #<Encoding::CompatibilityError: incompatible character encodings: UTF-32BE and UTF-8>."
 exclude :test_thread_join_current, "test hangs"
 exclude :test_thread_join_main_thread, "test hangs"
+exclude :test_thread_name_native, "<\"foo\"> expected but was <\"Ruby Thread id=\">."
 exclude :test_thread_native_thread_id_across_fork_on_linux, "NoMethodError: undefined method `sym_defined?' for #<Fiddle::Handle:0x8a8>"
 exclude :test_thread_value_in_trap, "transient"
 exclude :test_uninitialized, "ArgumentError: Thread#pending_interrupt? does not support being called for another Thread than the current Thread"

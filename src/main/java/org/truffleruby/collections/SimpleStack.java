@@ -38,10 +38,6 @@ public final class SimpleStack<T> {
         storage[index] = value;
     }
 
-    public T peek() {
-        return (T) storage[index];
-    }
-
     public T pop() {
         T out = (T) storage[index];
         storage[index] = null;

@@ -20,13 +20,6 @@ public final class ArrayGuards {
         return RubyLanguage.getCurrentLanguage().options.ARRAY_STRATEGY_CACHE;
     }
 
-    // Storage strategies
-
-    public static boolean isObjectArray(RubyArray array) {
-        final Object store = array.getStore();
-        return store.getClass() == Object[].class;
-    }
-
     // Higher level properties
 
     public static boolean isEmptyArray(RubyArray array) {

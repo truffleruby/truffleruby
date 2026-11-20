@@ -53,6 +53,12 @@ class TestYJIT < Test::Unit::TestCase
     #assert_in_out_err('--yjit-call-threshold=', '', [], /--yjit-call-threshold needs an argument/)
   end
 
+  def test_exec_mem_size_rejects_sizes_that_overflow_u32
+    # 4095 MiB is the largest size whose byte count fits in u32.
+    assert_in_out_err(%w[--yjit --yjit-exec-mem-size=4095 -e] + ['p RubyVM::YJIT.enabled?'], '', ['true'], [])
+    assert_in_out_err(%w[--yjit-exec-mem-size=4096 -e] + [''], '', [], /invalid YJIT option 'exec-mem-size=4096'/)
+  end
+
   def test_yjit_enable
     args = []
     args << "--disable=yjit" if RubyVM::YJIT.enabled?
@@ -654,6 +660,26 @@ class TestYJIT < Test::Unit::TestCase
       Foo = Struct.new(:foo, :bar)
       foo(Foo.new(123))
       foo(Foo.new(123))
+    RUBY
+  end
+
+  def test_struct_aset_guards_recv_is_not_frozen
+    assert_compiles(<<~RUBY, result: :ok, exits: { opt_send_without_block: 1 })
+      def foo(obj)
+        obj.foo = 123
+      end
+
+      Foo = Struct.new(:foo)
+      obj = Foo.new(123)
+      100.times do
+        foo(obj)
+      end
+      obj.freeze
+      begin
+        foo(obj)
+      rescue FrozenError
+        :ok
+      end
     RUBY
   end
 
@@ -1293,6 +1319,22 @@ class TestYJIT < Test::Unit::TestCase
     RUBY
   end
 
+  def test_invokeblock_ifunc_keywords
+    assert_compiles(<<~'RUBY', result: [[[[], {key: 1}], [[], {key: 2}]], [[[], {key: 3}]]])
+      class Items
+        include Enumerable
+        def each
+          i = 1
+          while i <= 3
+            yield [], key: i
+            i += 1
+          end
+        end
+      end
+      Items.new.each_slice(2).to_a
+    RUBY
+  end
+
   def test_bug_19316
     n = 2 ** 64
     # foo's extra param and the splats are relevant
@@ -1630,6 +1672,43 @@ class TestYJIT < Test::Unit::TestCase
     RUBY
   end
 
+  def test_cfunc_splat_at_vm_stack_limit
+    # A splat into a variadic C function right below the VM stack limit must
+    # side-exit and raise SystemStackError instead of writing the array over
+    # the control frames.
+    assert_separately(["--yjit", "--yjit-call-threshold=1"], <<~'RUBY')
+      class SplatArray < Array
+        def rec(depth, args) = depth == 0 ? push(*args) : rec(depth - 1, args)
+      end
+      ary = SplatArray.new
+      overflows = ->(depth) do
+        ary.rec(depth, [])
+        false
+      rescue SystemStackError
+        true
+      end
+
+      # Find the depth at which the recursion itself overflows the VM stack
+      hi = 1
+      hi *= 2 until overflows[hi]
+      lo = hi / 2
+      while hi - lo > 1
+        mid = (lo + hi) / 2
+        overflows[mid] ? hi = mid : lo = mid
+      end
+
+      # Splat the largest array that stays on the stack at every depth near the limit
+      raised = false
+      args = Array.new(126, nil)
+      (hi - 100).upto(hi + 10) do |depth|
+        ary.rec(depth, args)
+      rescue SystemStackError
+        raised = true
+      end
+      assert_true(raised)
+    RUBY
+  end
+
   def test_byteslice_sp_invalidation
     assert_compiles(<<~'RUBY', result: 'ok', no_send_fallbacks: true)
       "okng".itself.byteslice(0, 2)
@@ -1814,6 +1893,29 @@ class TestYJIT < Test::Unit::TestCase
       f.flush
       assert_separately([{ "BUNDLER_SETUP" => f.path }, "--enable=gems", "--yjit"], "", ignore_stderr: true)
     end
+  end
+
+  def test_invalidate_after_failed_block_series
+    assert_ruby_status(%w[--disable-all --yjit --yjit-call-threshold=2 --yjit-exec-mem-size=1], <<~'RUBY')
+      class A; def m(esc) = esc ? 2 : 1; end
+      class B; eval "def m(esc); a = b = 1; #{'b = a; a = b; ' * 2000}binding if esc; a; end"; end
+      B.new.m(true)
+
+      def call_site(o, esc)
+        v = o.m(false)
+        binding if esc
+        v
+      end
+
+      call_site(A.new, false)
+      call_site(A.new, false)
+
+      i = 0
+      eval "def f#{i += 1}(a) = a + 1; f#{i}(1); f#{i}(1)" while RubyVM::YJIT.runtime_stats[:code_region_size] < 1024 * 1024 - 32 * 1024
+
+      call_site(B.new, false)
+      call_site(A.new, true)
+    RUBY
   end
 
   private
