@@ -30,6 +30,7 @@ Bug fixes:
 * Fix `case`/`when` evaluating a splatted value of a `when` clause even when an earlier value of the clause matches (#4559, @taxor03).
 * Updated the bundled OpenSSL from 3.5.4 to 3.5.9 (@eregon).
 * Fix `IO#gets` with a multi-byte separator and a limit merging lines, or waiting for more input, when the separator's bytes arrive in separate reads (@edcarvio).
+* Fix `IO#gets` with a multi-byte separator matching it against stale bytes past the data read so far, and splitting a non-ASCII separator character (@edcarvio).
 
 
 Compatibility:
