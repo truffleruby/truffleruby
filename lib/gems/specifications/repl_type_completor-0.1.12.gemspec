@@ -10,13 +10,13 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["tompng".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "Type based completion for REPL.".freeze
   s.email = ["tomoyapenguin@gmail.com".freeze]
   s.homepage = "https://github.com/ruby/repl_type_completor".freeze
   s.licenses = ["MIT".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 3.0.0".freeze)
-  s.rubygems_version = "3.4.20".freeze
+  s.rubygems_version = "3.6.7".freeze
   s.summary = "Type based completion for REPL.".freeze
 
   s.installed_by_version = "4.0.20".freeze

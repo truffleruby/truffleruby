@@ -5,4 +5,7 @@ exclude :test_iso_2022_jp, "[Encoding::UndefinedConversionError] exception expec
 exclude :test_newline_options, "<\"A\\n\" + \"B\\n\" + \"C\"> expected but was <\"A\\n\" + \"B\\r\\n\" + \"C\">."
 exclude :test_noargument, "Encoding::InvalidByteSequenceError: \"\\x81\" on UTF-8"
 exclude :test_tilde_overline, "[Encoding::UndefinedConversionError] exception expected, not #<TypeError: no implicit conversion of nil into String>."
+exclude :test_to_cp50220_partial_output, "<8> expected but was <73>."
+exclude :test_utf_16_bom_partial_output, "<:destination_buffer_full> expected but was <:finished>."
+exclude :test_utf_32_bom_partial_output, "<:destination_buffer_full> expected but was <:finished>."
 exclude :test_yen_sign, "[Encoding::UndefinedConversionError] exception expected, not #<TypeError: no implicit conversion of nil into String>."

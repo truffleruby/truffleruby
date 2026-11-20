@@ -10,11 +10,11 @@ Gem::Specification.new do |s|
   s.metadata = { "changelog_uri" => "https://github.com/ruby/date/releases" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Tadayoshi Funaba".freeze]
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "The official date library for Ruby.".freeze
   s.email = [nil]
   s.extensions = ["ext/date/extconf.rb".freeze]
-  s.files = ["BSDL".freeze, "COPYING".freeze, "README.md".freeze, "date_core.#{Truffle::Platform::DLEXT}".freeze, "ext/date/date_core.c".freeze, "ext/date/date_parse.c".freeze, "ext/date/date_strftime.c".freeze, "ext/date/date_strptime.c".freeze, "ext/date/date_tmx.h".freeze, "ext/date/extconf.rb".freeze, "ext/date/prereq.mk".freeze, "ext/date/zonetab.h".freeze, "ext/date/zonetab.list".freeze, "lib/date.rb".freeze, "lib/lib/date.rb".freeze]
+  s.files = ["BSDL".freeze, "COPYING".freeze, "README.md".freeze, "ext/date/date_core.c".freeze, "ext/date/date_parse.c".freeze, "ext/date/date_strftime.c".freeze, "ext/date/date_strptime.c".freeze, "ext/date/date_tmx.h".freeze, "ext/date/extconf.rb".freeze, "ext/date/prereq.mk".freeze, "ext/date/zonetab.h".freeze, "ext/date/zonetab.list".freeze, "lib/date.rb".freeze, "lib/date_core.#{Truffle::Platform::DLEXT}".freeze]
   s.homepage = "https://github.com/ruby/date".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.6.0".freeze)

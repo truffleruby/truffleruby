@@ -9,13 +9,13 @@ Gem::Specification.new do |s|
   s.metadata = { "bug_tracker_uri" => "https://github.com/ruby/mutex_m/issues", "source_code_uri" => "https://github.com/ruby/mutex_m" } if s.respond_to? :metadata=
   s.require_paths = ["lib".freeze]
   s.authors = ["Keiju ISHITSUKA".freeze]
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "Mixin to extend objects to be handled like a Mutex.".freeze
   s.email = ["keiju@ruby-lang.org".freeze]
   s.homepage = "https://github.com/ruby/mutex_m".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.required_ruby_version = Gem::Requirement.new(">= 2.5".freeze)
-  s.rubygems_version = "3.4.20".freeze
+  s.rubygems_version = "3.5.11".freeze
   s.summary = "Mixin to extend objects to be handled like a Mutex.".freeze
 
   s.installed_by_version = "4.0.20".freeze

@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Yuki Nishijima".freeze]
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "The gem that has been saving people from typos since 2014.".freeze
   s.email = ["mail@yukinishijima.net".freeze]
   s.files = ["lib/did_you_mean.rb".freeze, "lib/did_you_mean/core_ext/name_error.rb".freeze, "lib/did_you_mean/experimental.rb".freeze, "lib/did_you_mean/formatter.rb".freeze, "lib/did_you_mean/formatters/plain_formatter.rb".freeze, "lib/did_you_mean/formatters/verbose_formatter.rb".freeze, "lib/did_you_mean/jaro_winkler.rb".freeze, "lib/did_you_mean/levenshtein.rb".freeze, "lib/did_you_mean/spell_checker.rb".freeze, "lib/did_you_mean/spell_checkers/key_error_checker.rb".freeze, "lib/did_you_mean/spell_checkers/method_name_checker.rb".freeze, "lib/did_you_mean/spell_checkers/name_error_checkers.rb".freeze, "lib/did_you_mean/spell_checkers/name_error_checkers/class_name_checker.rb".freeze, "lib/did_you_mean/spell_checkers/name_error_checkers/variable_name_checker.rb".freeze, "lib/did_you_mean/spell_checkers/null_checker.rb".freeze, "lib/did_you_mean/spell_checkers/pattern_key_name_checker.rb".freeze, "lib/did_you_mean/spell_checkers/require_path_checker.rb".freeze, "lib/did_you_mean/tree_spell_checker.rb".freeze, "lib/did_you_mean/verbose.rb".freeze, "lib/did_you_mean/version.rb".freeze]

@@ -732,7 +732,7 @@ class Socket < BasicSocket
       raise ArgumentError, "Cannot specify open_timeout along with connect_timeout or resolv_timeout"
     end
 
-    sock = if fast_fallback && !(host && ip_address?(host))
+    sock = if fast_fallback && !(host && ip_address?(host)) && !(local_port && local_port.to_i != 0)
       tcp_with_fast_fallback(host, port, local_host, local_port, connect_timeout:, resolv_timeout:, open_timeout:)
     else
       tcp_without_fast_fallback(host, port, local_host, local_port, connect_timeout:, resolv_timeout:, open_timeout:)
@@ -775,7 +775,7 @@ class Socket < BasicSocket
 
     if resolving_family_names.size == 1
       family_name = resolving_family_names.first
-      addrinfos = Addrinfo.getaddrinfo(host, port, ADDRESS_FAMILIES[:family_name], :STREAM, timeout: open_timeout || resolv_timeout)
+      addrinfos = Addrinfo.getaddrinfo(host, port, ADDRESS_FAMILIES[family_name], :STREAM, timeout: open_timeout || resolv_timeout)
       resolution_store.add_resolved(family_name, addrinfos)
       hostname_resolution_result = nil
       hostname_resolution_notifier = nil
@@ -992,15 +992,11 @@ class Socket < BasicSocket
       end
     end
   ensure
-    hostname_resolution_threads.each do |thread|
-      thread.exit
-    end
+    hostname_resolution_threads.each(&:exit).each(&:join)
 
     hostname_resolution_result&.close
 
-    connecting_sockets.each_key do |connecting_socket|
-      connecting_socket.close
-    end
+    connecting_sockets.each_key(&:close)
   end
   private_class_method :tcp_with_fast_fallback
 

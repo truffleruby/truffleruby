@@ -496,6 +496,33 @@ class TestProcess < Test::Unit::TestCase
     }
   end if windows? || Encoding.find('locale') == Encoding::UTF_8
 
+  def test_execopts_after_chdir_failure
+    name = "RUBY_EXECOPTS_TEST_CHDIR_ENV"
+    env, ENV[name] = ENV[name], nil
+    stdout = nil
+
+    with_tmpchdir do |d|
+      stdout = STDOUT.dup
+      STDOUT.reopen("parent.out", "w")
+      assert_raise_with_message(Errno::ENOENT, %r"d/notexist") {
+        Process.wait Process.spawn({name => "[Bug #22540]"}, *PWD, out: "child.out", chdir: "d/notexist")
+      }
+      STDOUT.puts "[Bug #22540]"
+      STDOUT.reopen(stdout)
+      stdout.close
+      stdout = nil
+      assert_nil(ENV[name])
+      assert_empty(File.read("child.out"))
+      assert_equal("[Bug #22540]\n", File.read("parent.out"))
+    ensure
+      ENV[name] = env
+      if stdout
+        STDOUT.reopen(stdout)
+        stdout.close
+      end
+    end
+  end
+
   def test_execopts_open_failure
     with_tmpchdir {|d|
       assert_raise_with_message(Errno::ENOENT, %r"d/notexist") {
@@ -1802,46 +1829,29 @@ class TestProcess < Test::Unit::TestCase
 
   def test_spawn_too_long_path
     bug4314 = '[ruby-core:34842]'
-    assert_fail_too_long_path(%w"echo", bug4314)
+    assert_fail_too_long_path(false, bug4314)
   end
 
   def test_aspawn_too_long_path
-    bug4315 = '[ruby-core:34833] #7904 [ruby-core:52628] #11613'
-    assert_fail_too_long_path(%w"echo |", bug4315)
+    bug4315 = '[ruby-core:34833]'
+    assert_fail_too_long_path(true, bug4315)
   end
 
-  def assert_fail_too_long_path((cmd, sep), mesg)
-    sep ||= ""
-    min = 1_000 / (cmd.size + sep.size)
-    cmds = Array.new(min, cmd)
+  def assert_fail_too_long_path(use_shell, mesg)
+    cmd = "a" * 10_000_000
+    cmd.prepend("echo|") if use_shell
     exs = [Errno::ENOENT]
     exs << Errno::EINVAL if windows?
     exs << Errno::E2BIG if defined?(Errno::E2BIG)
     opts = {[STDOUT, STDERR]=>File::NULL}
-    if defined?(Process::RLIMIT_NPROC)
-      opts[:rlimit_nproc] = /openbsd/i =~ RUBY_PLATFORM ? 64 : 128
-    end
-    EnvUtil.suppress_warning do
-      assert_raise(*exs, mesg) do
-        begin
-          loop do
-            Process.spawn(cmds.join(sep), opts)
-            min = [cmds.size, min].max
-            begin
-              cmds *= 100
-            rescue ArgumentError
-              raise NoMemoryError
-            end
-          end
-        rescue NoMemoryError
-          size = cmds.size
-          raise if min >= size - 1
-          min = [min, size /= 2].max
-          cmds[size..-1] = []
-          raise if size < 250
-          retry
-        end
+    begin
+      EnvUtil.suppress_warning do
+        Process.spawn(cmd, opts)
       end
+    rescue => e
+      assert_include(exs, e.class, mesg)
+    else
+      omit "system supports very long command line; skipping"
     end
   end
 

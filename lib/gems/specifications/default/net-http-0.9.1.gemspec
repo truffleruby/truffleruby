@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["NARUSE, Yui".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "HTTP client api for Ruby.".freeze
   s.email = ["naruse@airemix.jp".freeze]
   s.files = ["lib/net/http.rb".freeze, "lib/net/http/exceptions.rb".freeze, "lib/net/http/generic_request.rb".freeze, "lib/net/http/header.rb".freeze, "lib/net/http/proxy_delta.rb".freeze, "lib/net/http/request.rb".freeze, "lib/net/http/requests.rb".freeze, "lib/net/http/response.rb".freeze, "lib/net/http/responses.rb".freeze, "lib/net/http/status.rb".freeze, "lib/net/https.rb".freeze]

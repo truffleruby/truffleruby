@@ -10,6 +10,7 @@ require 'stringio'
 require 'timeout'
 require 'tempfile'
 require 'weakref'
+require "rbconfig/sizeof"
 
 class TestIO < Test::Unit::TestCase
   module Feature
@@ -337,6 +338,27 @@ class TestIO < Test::Unit::TestCase
     end, proc do |r|
       assert_equal("0123456789\n0", r.gets(nil, 12))
       assert_raise(TypeError) { r.gets(3,nil) }
+    end)
+  end
+
+  def test_gets_ff
+    pipe(proc do |w|
+      w.print "ab""\xff""cd".b
+      w.close
+    end, proc do |r|
+      assert_equal "ab\xFFcd", r.gets(nil, 100).b
+      assert_nil r.gets
+      r.close
+    end)
+
+    pipe(proc do |w|
+      w.print "ab\u{1f41e}cd".b
+      w.close
+    end, proc do |r|
+      r.set_encoding(Encoding::UTF_8)
+      assert_equal "ab\u{1f41e}", r.gets(nil, 3)
+      assert_equal "cd", r.gets
+      r.close
     end)
   end
 
@@ -1187,6 +1209,32 @@ class TestIO < Test::Unit::TestCase
     end
   end
 
+  def test_copy_stream_write_tries_to_modify_buffer
+    IO.pipe do |r, w|
+      buffers = Thread::Queue.new
+      chunks = []
+      dst = Object.new
+      dst.define_singleton_method(:write) do |data|
+        chunks << data.dup
+        buffers << data
+        data.bytesize
+      end
+      th = Thread.new { IO.copy_stream(r, dst) }
+      w.write("a" * 6)
+      buf = buffers.pop
+      Thread.pass until th.stop?
+      begin
+        buf.replace("c" * 100_000)
+      rescue RuntimeError
+        # buf may be STR_TMPLOCK
+      end
+      w.write("b" * 6)
+      w.close
+      assert_equal(12, th.value)
+      assert_equal("a" * 6, chunks[0])
+    end
+  end
+
   def test_copy_stream_write_in_binmode
     bug8767 = '[ruby-core:56518] [Bug #8767]'
     mkcdtmpdir {
@@ -1393,10 +1441,6 @@ class TestIO < Test::Unit::TestCase
     args = ['-e', '$>.write($<.read)'] if args.empty?
     ruby = EnvUtil.rubybin
     opts = {}
-    if defined?(Process::RLIMIT_NPROC)
-      lim = Process.getrlimit(Process::RLIMIT_NPROC)[1]
-      opts[:rlimit_nproc] = [lim, 2048].min
-    end
     f = IO.popen([ruby] + args, 'r+', opts)
     pid = f.pid
     yield(f)
@@ -1598,6 +1642,17 @@ class TestIO < Test::Unit::TestCase
     end
   end
 
+  def test_read_with_too_big_length
+    pipe(proc do |w|
+      w.write "foo\n" + "bar" * 100
+      w.close
+    end, proc do |r|
+      r.gets
+      max = 2 ** (RbConfig::SIZEOF['long'] * 8 - 1) - 1
+      assert_raise(ArgumentError) {r.read(max - 1, String.new(encoding: Encoding::UTF_16LE))}
+    end)
+  end
+
   def test_readpartial_buffer_error
     with_pipe do |r, w|
       s = ""
@@ -1608,6 +1663,63 @@ class TestIO < Test::Unit::TestCase
       assert_equal("", s)
     end
   end if /cygwin/ !~ RUBY_PLATFORM
+
+  def test_readpartial_gc_compact
+    # [Bug #22467]
+    omit "fork is not supported" unless Process.respond_to?(:fork)
+    omit "compaction not supported" unless GC.respond_to?(:compact)
+
+    assert_separately(["-rsocket"], <<~RUBY, timeout: 60)
+      begin
+        socket, peer = UNIXSocket.pair
+        delays, delays_in = IO.pipe
+        # The data must come from another process: no thread in this one runs
+        # while it compacts.
+        writer = fork { loop { sleep(delays.read(1).ord / 1000.0); peer.write('x') } }
+
+        buffers = Queue.new
+        reader = Thread.new { loop { socket.readpartial(512, buffers.pop) } }
+        reader.report_on_exception = false
+
+        assert_nothing_raised do
+          20.times do
+            strings = Array.new(200_000) { 'y' * 500 }
+            pinned = {}.compare_by_identity
+            _movable = strings.each_slice(20).map {|slice| pinned[slice[0]] = true; slice[10] }
+            buffers << strings[100_000]
+            strings = nil
+            sleep 0.01
+            delays_in.write(rand(12).chr)
+            GC.compact
+            reader.join(0)
+          end
+        end
+      ensure
+        if writer
+          begin
+            Process.kill(:KILL, writer)
+            Process.waitpid(writer)
+          rescue Errno::ESRCH, Errno::ECHILD
+          end
+        end
+        (reader.kill; reader.join) if reader
+        socket&.close
+        peer&.close
+        delays&.close
+        delays_in&.close
+      end
+    RUBY
+  end
+
+  def test_read_interrupted_by_wakeup
+    with_pipe do |r, w|
+      t = Thread.new { r.read }
+      Thread.pass until t.stop?
+      100_000.times { t.wakeup; w.write("x") }
+      w.close
+      assert_equal(100_000, t.value.size)
+    end
+  end
 
   def test_read
     pipe(proc do |w|
@@ -2477,6 +2589,11 @@ class TestIO < Test::Unit::TestCase
     make_tempfile {|t|
       open(t.path) do |f|
         assert_raise(ArgumentError) { f.sysread(-1) }
+        assert_raise(ArgumentError) { f.sysread(-1, String.new) }
+        buf = +"abc"
+        assert_raise(ArgumentError) { f.pread(-1, 0) }
+        assert_raise(ArgumentError) { f.pread(-1, 0, buf) }
+        assert_equal("abc", buf)
       end
     }
   end
@@ -3089,6 +3206,8 @@ class TestIO < Test::Unit::TestCase
 
   def test_uninitialized
     assert_raise(IOError) { IO.allocate.print "" }
+    assert_raise(IOError) { IO.allocate.external_encoding }
+    assert_raise(IOError) { IO.allocate.internal_encoding }
   end
 
   def test_nofollow
@@ -3688,6 +3807,9 @@ __END__
       msg = /can't modify string; temporarily locked/
       assert_raise_with_message(RuntimeError, msg) do
         buf.replace("")
+      end
+      assert_raise_with_message(RuntimeError, msg) do
+        buf.__send__(:initialize, encoding: Encoding::UTF_16LE)
       end
       assert_predicate(th, :alive?)
       w.write(data)

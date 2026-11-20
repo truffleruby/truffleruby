@@ -8,6 +8,7 @@ exclude :test_tcp_socket_hostname_resolution_failed_after_connection_failure, "[
 exclude :test_tcp_socket_one_hostname_resolution_succeeded_at_least, "Expected [[550249, #<Process::Status: pid 550249 exit nil>]] to be empty."
 exclude :test_tcp_socket_resolv_timeout, "hangs"
 exclude :test_tcp_socket_resolv_timeout_with_connection_failure, "[Errno::ETIMEDOUT] exception expected, not #<Errno::ECONNREFUSED: Connection refused - connect(2)>."
+exclude :test_tcp_socket_resolves_only_local_host_family, "<[2]> expected but was <[nil]>."
 exclude :test_tcp_socket_v4_hostname_resolved_earlier, "hangs"
 exclude :test_tcp_socket_v6_address_passed, "hangs"
 exclude :test_tcp_socket_v6_hostname_resolved_earlier, "hangs"

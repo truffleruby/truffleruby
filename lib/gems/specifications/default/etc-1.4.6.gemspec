@@ -10,12 +10,12 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib".freeze]
   s.authors = ["Yukihiro Matsumoto".freeze]
   s.bindir = "exe".freeze
-  s.date = "2026-10-23"
+  s.date = "2026-11-19"
   s.description = "Provides access to information typically stored in UNIX /etc directory.".freeze
   s.email = ["matz@ruby-lang.org".freeze]
   s.extensions = ["ext/etc/extconf.rb".freeze]
   s.extra_rdoc_files = ["BSDL".freeze, "COPYING".freeze, "ChangeLog".freeze, "README.md".freeze, "ext/etc/constdefs.h".freeze, "ext/etc/etc.c".freeze, "ext/etc/extconf.rb".freeze, "ext/etc/mkconstants.rb".freeze, "test/etc/test_etc.rb".freeze]
-  s.files = ["BSDL".freeze, "COPYING".freeze, "ChangeLog".freeze, "README.md".freeze, "etc.#{Truffle::Platform::DLEXT}".freeze, "ext/etc/constdefs.h".freeze, "ext/etc/etc.c".freeze, "ext/etc/extconf.rb".freeze, "ext/etc/mkconstants.rb".freeze, "test/etc/test_etc.rb".freeze]
+  s.files = ["BSDL".freeze, "COPYING".freeze, "ChangeLog".freeze, "README.md".freeze, "ext/etc/constdefs.h".freeze, "ext/etc/etc.c".freeze, "ext/etc/extconf.rb".freeze, "ext/etc/mkconstants.rb".freeze, "lib/etc.#{Truffle::Platform::DLEXT}".freeze, "test/etc/test_etc.rb".freeze]
   s.homepage = "https://github.com/ruby/etc".freeze
   s.licenses = ["Ruby".freeze, "BSD-2-Clause".freeze]
   s.rdoc_options = ["--main".freeze, "README.md".freeze]
