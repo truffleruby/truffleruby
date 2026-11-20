@@ -33,4 +33,13 @@ describe "Ruby::Prism" do
       p defined?(::Prism)
     RUBY
   end
+
+  it "implements Ripper without loading the prism gem" do
+    ruby_exe(<<~RUBY).should == "true\n[:program, [[:@int, \"1\", [1, 0]]]]\nnil\n"
+      require "ripper"
+      p Ripper.equal?(Ruby::Prism::Translation::Ripper)
+      p Ripper.sexp("1")
+      p defined?(::Prism)
+    RUBY
+  end
 end

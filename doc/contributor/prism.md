@@ -13,7 +13,7 @@ There are 3 copies of Prism in TruffleRuby:
   A newer version of the `prism` gem can be installed and activated instead, like for any default gem.
 * `Ruby::Prism` (`require "ruby/prism"`, autoloaded): `lib/mri/ruby/prism.rb` and `lib/mri/ruby/prism/`.
   This is always the Prism built into TruffleRuby, no matter which version of the `prism` gem is activated, see [Bug #22379](https://bugs.ruby-lang.org/issues/22379).
-  `#syntax_tree` returns `Ruby::Prism` nodes.
+  `#syntax_tree` returns `Ruby::Prism` nodes and `Ripper` is `Ruby::Prism::Translation::Ripper`.
   These files are generated from the default gem files by `tool/generate-ruby-prism.rb`, which renames the namespace, and they use the same `libprism.so`.
 
 ## Print Detailed Prism AST
