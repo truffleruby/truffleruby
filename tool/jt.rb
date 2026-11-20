@@ -2949,6 +2949,7 @@ module Commands
     %r{\Alib/cext/include/(?!truffleruby/)},                            # C extension API headers imported from MRI
     %r{\Asrc/main/c/(?!cext/|truffleposix/|rubysignal/|spawn-helper/)}, # C extensions and libraries imported from MRI and elsewhere
     %r{\Asrc/yarp/},                                                    # imported from prism
+    %r{\Atool/generate-ruby-prism\.rb\z},                               # rewrite logic copied from ruby/ruby, same license
     %r{\Asrc/dev\.truffleruby\.shadowed\.},                             # shadowed libraries such as joni
     %r{\Aspec/truffle/capi/ext/internal_id\.h\z},                       # imported from MRI id.h
     %r{\Asrc/main/java/org/truffleruby/cext/(HandleToWrapperNode|UnwrapCArrayNode)\.java\z}, # moved out of UnwrapNode.java
