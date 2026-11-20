@@ -423,6 +423,19 @@ describe "Process.spawn" do
         Process.wait Process.spawn(ruby_cmd("print Dir.pwd"), chdir: "nonexistent")
       end.should.raise(Errno::ENOENT, "No such file or directory - nonexistent")
     end
+
+    platform_is_not :windows do
+      it "raises an Errno::ENOENT if the interpreter of the command does not exist" do
+        script = tmp("spawn_chdir_bad_shebang.sh")
+        touch(script) { |f| f.puts "#!/nonexistent/spawn_chdir_interpreter" }
+        File.chmod(0755, script)
+        begin
+          -> { Process.spawn(script, chdir: @dir) }.should.raise(Errno::ENOENT)
+        ensure
+          rm_r script
+        end
+      end
+    end
   end
 
   # chdir
