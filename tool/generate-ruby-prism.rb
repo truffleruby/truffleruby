@@ -8,13 +8,18 @@
 # Eclipse Public License version 2.0, or
 # GNU General Public License version 2, or
 # GNU Lesser General Public License version 2.1.
+#
+# The rewrite logic (the `rewrite` method) is copied from prism_rewrite_ruby in tool/sync_default_gems.rb of ruby/ruby:
+# https://github.com/ruby/ruby/blob/2979ed47232036f592dcc24e05c6dab7fa139eb2/tool/sync_default_gems.rb#L409-L423
+# That code is copyright Yukihiro Matsumoto and made available under the terms of the 2-clause BSD licence
+# (doc/legal/ruby-bsdl.txt) or the Ruby licence (doc/legal/ruby-licence.txt).
 
 # Generates lib/mri/ruby/prism.rb and lib/mri/ruby/prism/ from the Ruby files of the prism default gem
 # (lib/mri/prism.rb and lib/mri/prism/), by renaming the Prism namespace to Ruby::Prism.
 #
 # Ruby::Prism is the Prism built into the interpreter, i.e. the version of Prism which parsed the running code,
 # no matter which version of the prism gem is activated. See https://bugs.ruby-lang.org/issues/22379.
-# This is the same rewrite as done by tool/sync_default_gems.rb in ruby/ruby.
+# This is the same rewrite as done by tool/sync_default_gems.rb in ruby/ruby (see the link above).
 
 require 'fileutils'
 
