@@ -108,6 +108,10 @@ describe "IO#gets" do
       @io.gets("la linea").should == "Voici la ligne une.\nQui \303\250 la linea"
     end
 
+    it "reads up to and including a separator that is a multi-byte character" do
+      @io.gets("\303\250").should == "Voici la ligne une.\nQui \303\250"
+    end
+
     it "updates lineno with each invocation" do
       while (@io.gets("la"))
         @io.lineno.should == @count += 1
@@ -144,6 +148,53 @@ describe "IO#gets" do
 
             t.value.bytes.should == "Aquí está la línea tres\r\n\r\n".bytes
             read.read(8).bytes.should == "else\r\n\r\n".bytes
+          end
+        end
+
+        it "should not match the separator against bytes that have not been read yet" do
+          IO.pipe do |read, write|
+            write.write("012345\r\n")
+            read.gets("\r\n").should == "012345\r\n"
+
+            write.write("ab\r\ncd\r")
+            read.gets("\r\n").should == "ab\r\n"
+
+            write.write("\nef\r\n")
+            write.close
+            read.gets("\r\n").should == "cd\r\n"
+            read.gets("\r\n").should == "ef\r\n"
+          end
+        end
+
+        it "should match the separator split between successive reads when passed a limit" do
+          [["\r\n", "\r"], ["\r\n\r\n", "\r\n\r"]].each do |separator, before_split|
+            IO.pipe do |read, write|
+              write.write("Aquí está la línea tres#{before_split}")
+
+              t = Thread.new { read.gets(separator, 100) }
+              Thread.pass until t.stop?
+
+              write.write("#{separator.byteslice(before_split.bytesize..)}else#{separator}")
+              write.close
+
+              t.value.bytes.should == "Aquí está la línea tres#{separator}".bytes
+              read.read.bytes.should == "else#{separator}".bytes
+            end
+          end
+        end
+
+        it "should read only limit bytes when the limit ends inside a separator split between successive reads" do
+          IO.pipe do |read, write|
+            write.write("abc\r")
+
+            t = Thread.new { read.gets("\r\n", 4) }
+            Thread.pass until t.stop?
+
+            write.write("\ndef\r\n")
+            write.close
+
+            t.value.should == "abc\r"
+            read.read.should == "\ndef\r\n"
           end
         end
       end

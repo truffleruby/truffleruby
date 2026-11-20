@@ -191,7 +191,6 @@ public abstract class ByteArrayNodes {
         @Specialization(guards = "!isSingleBytePattern(patternTString, patternEncoding)", limit = "1")
         static Object getByte(RubyByteArray byteArray, Object pattern, int start, int length,
                 @Bind Node node,
-                @Cached TruffleString.CodePointLengthNode codePointLengthNode,
                 @Cached TruffleString.GetInternalByteArrayNode getInternalByteArrayNode,
                 @Cached InlinedConditionProfile noCopyProfile,
                 @Cached InlinedConditionProfile notFoundProfile,
@@ -203,12 +202,14 @@ public abstract class ByteArrayNodes {
             final byte[] patternBytes = TStringUtils.getBytesOrCopy(node, patternTString, patternEncoding,
                     getInternalByteArrayNode, noCopyProfile);
 
-            final int index = ArrayUtils.indexOfWithOrMask(byteArray.bytes, start, length, patternBytes, null);
+            // length is an end index, as for the single-byte pattern, but indexOfWithOrMask takes a length
+            final int index = ArrayUtils.indexOfWithOrMask(byteArray.bytes, start, length - start, patternBytes,
+                    null);
 
             if (notFoundProfile.profile(node, index == -1)) {
                 return nil;
             } else {
-                return index + codePointLengthNode.execute(patternTString, patternEncoding);
+                return index + patternBytes.length;
             }
         }
 
