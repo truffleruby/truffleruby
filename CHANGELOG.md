@@ -35,6 +35,7 @@ Bug fixes:
 * Fix `0 ** n` returning `0` instead of raising `ZeroDivisionError` for a negative Bignum `n` (#4556, @taxor03).
 * Fix `Float#**` returning incorrect results for infinite, NaN, and very large exponents (#4556, @taxor03).
 * Fix `Integer#**` and `Integer#pow` returning `NaN` or raising `FloatDomainError` for an infinite or NaN exponent (@eregon).
+* Fix `IO#gets` with a multi-byte separator and a limit merging lines, or waiting for more input, when the separator's bytes arrive in separate reads (@edcarvio).
 
 
 Compatibility:

@@ -146,6 +146,38 @@ describe "IO#gets" do
             read.read(8).bytes.should == "else\r\n\r\n".bytes
           end
         end
+
+        it "should match the separator split between successive reads when passed a limit" do
+          [["\r\n", "\r"], ["\r\n\r\n", "\r\n\r"]].each do |separator, before_split|
+            IO.pipe do |read, write|
+              write.write("Aquí está la línea tres#{before_split}")
+
+              t = Thread.new { read.gets(separator, 100) }
+              Thread.pass until t.stop?
+
+              write.write("#{separator.byteslice(before_split.bytesize..)}else#{separator}")
+              write.close
+
+              t.value.bytes.should == "Aquí está la línea tres#{separator}".bytes
+              read.read.bytes.should == "else#{separator}".bytes
+            end
+          end
+        end
+
+        it "should read only limit bytes when the limit ends inside a separator split between successive reads" do
+          IO.pipe do |read, write|
+            write.write("abc\r")
+
+            t = Thread.new { read.gets("\r\n", 4) }
+            Thread.pass until t.stop?
+
+            write.write("\ndef\r\n")
+            write.close
+
+            t.value.should == "abc\r"
+            read.read.should == "\ndef\r\n"
+          end
+        end
       end
     end
   end
