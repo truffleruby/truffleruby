@@ -197,6 +197,20 @@ describe "IO#gets" do
             read.read.should == "\ndef\r\n"
           end
         end
+
+        it "should return as soon as limit bytes are read, without waiting for more input" do
+          ["abcd", "abc\r"].each do |data|
+            IO.pipe do |read, write|
+              write.write(data)
+
+              t = Thread.new { read.gets("\r\n", 4) }
+              t.join(10).should == t
+              t.value.should == data
+            ensure
+              t.kill.join
+            end
+          end
+        end
       end
     end
   end
