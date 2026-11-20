@@ -496,7 +496,9 @@ public abstract class EncodingNodes {
     @Primitive(name = "encoding_get_encoding_by_index", lowerFixnum = 0)
     public abstract static class GetEncodingObjectByIndexNode extends PrimitiveArrayArgumentsNode {
 
-        @Specialization(guards = { "isSingleContext()", "index == cachedIndex" }, limit = "getCacheLimit()")
+        // A missing index is never cached, as a later dummy encoding can be defined with that index.
+        @Specialization(guards = { "isSingleContext()", "index == cachedIndex", "cachedEncoding != null" },
+                limit = "getCacheLimit()")
         RubyEncoding getEncoding(int index,
                 @Cached("index") int cachedIndex,
                 @Cached("getContext().getEncodingManager().getRubyEncoding(index)") RubyEncoding cachedEncoding) {
@@ -504,8 +506,9 @@ public abstract class EncodingNodes {
         }
 
         @Specialization(replaces = "getEncoding")
-        RubyEncoding getEncodingUncached(int index) {
-            return getContext().getEncodingManager().getRubyEncoding(index);
+        Object getEncodingUncached(int index) {
+            final RubyEncoding encoding = getContext().getEncodingManager().getRubyEncoding(index);
+            return encoding == null ? nil : encoding;
         }
 
         protected int getCacheLimit() {

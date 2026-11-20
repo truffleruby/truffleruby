@@ -454,15 +454,11 @@ rb_enc_name(rb_encoding *enc)
  * @param[in]  enc  An encoding.
  * @return     Its least possible number of bytes except 0.
  */
-#ifdef TRUFFLERUBY
-int rb_enc_mbminlen(rb_encoding *enc);
-#else
 static inline int
 rb_enc_mbminlen(rb_encoding *enc)
 {
     return enc->min_enc_len;
 }
-#endif
 
 /**
  * Queries  the maximum  number  of bytes  that the  passed  encoding needs  to
@@ -473,15 +469,11 @@ rb_enc_mbminlen(rb_encoding *enc)
  * @param[in]  enc  An encoding.
  * @return     Its maximum possible number of bytes of a character.
  */
-#ifdef TRUFFLERUBY
-int rb_enc_mbmaxlen(rb_encoding *enc);
-#else
 static inline int
 rb_enc_mbmaxlen(rb_encoding *enc)
 {
     return enc->max_enc_len;
 }
-#endif
 
 /**
  * Queries the number of bytes of the character at the passed pointer.
@@ -806,9 +798,6 @@ rb_enc_asciicompat_inline(rb_encoding *enc)
  * @retval     0    It is incompatible.
  * @retval     1    It is compatible.
  */
-#ifdef TRUFFLERUBY
-bool rb_enc_asciicompat(rb_encoding *enc);
-#else
 static inline bool
 rb_enc_asciicompat(rb_encoding *enc)
 {
@@ -822,7 +811,6 @@ rb_enc_asciicompat(rb_encoding *enc)
         return true;
     }
 }
-#endif
 
 /**
  * Queries if the passed string is in an ASCII-compatible encoding.

@@ -50,12 +50,15 @@ Compatibility:
 * `Complex#fdiv` now returns Float parts, like CRuby (#4547, @taxor03).
 * Implement `ENV.fetch_values` from Ruby 4.1 (@makmic, @edcarvio, @composerinteralia).
 * Define `Enumerator::Lazy#each_with_index` on `Enumerator::Lazy` like CRuby 4.0.10 (@eregon).
+* `rb_enc_from_index` now returns `NULL` for an index without an encoding instead of crashing (@nirvdrum).
+* `rb_enc_get` and `rb_enc_get_index` now handle more cases, including objects without an encoding and `File` objects opened for writing without an encoding (@nirvdrum).
 
 Performance:
 
 * `TracePoint` blocks now receive a new `TracePoint` object per event holding the event data instead of the `TracePoint` itself, which lets the compiler avoid materializing the traced frame (@eregon).
 * Reduce C extension overhead for ID-based C API calls such as `rb_funcall()`, `rb_ivar_get()`, and `rb_block_call()` by avoiding a separate `ID2SYM()` upcall (@nirvdrum).
 * Enabling or disabling a `:class` `TracePoint` no longer invalidates compiled code and no longer uses Truffle instrumentation, which also reduces memory footprint (#2371, @eregon).
+* Store encoding properties in the native `rb_encoding` structs to reduce upcalls for common encoding operations (@nirvdrum).
 
 Incompatible Changes:
 
