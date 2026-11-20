@@ -1,0 +1,35 @@
+require_relative '../../spec_helper'
+require_relative '../../fixtures/source_range_helpers'
+
+ruby_version_is "4.1" do
+  describe "Ruby::Prism" do
+    before :each do
+      skip "parse.y" unless syntax_tree_returns_prism_node
+    end
+
+    it "is autoloaded and does not load the prism gem" do
+      ruby_exe(<<~RUBY).should == "ruby/prism\nRuby::Prism::ProgramNode\nnil\ntrue\n"
+        puts Ruby.autoload?(:Prism)
+        puts Ruby::Prism.parse("1 + 2").value.class
+        p defined?(::Prism)
+        p $LOADED_FEATURES.any? { |feature| feature.end_with?("/ruby/prism.rb") }
+      RUBY
+    end
+
+    it "is independent of the Prism module of the prism gem" do
+      ruby_exe(<<~RUBY).should == "false\nPrism::ProgramNode\nRuby::Prism::ProgramNode\n"
+        require "prism"
+        p Prism.equal?(Ruby::Prism)
+        puts Prism.parse("1 + 2").value.class
+        puts Ruby::Prism.parse("1 + 2").value.class
+      RUBY
+    end
+
+    it "is the namespace of the nodes returned by #syntax_tree" do
+      ruby_exe(<<~RUBY).should == "Ruby::Prism::BlockNode\nnil\n"
+        puts proc { 42 }.syntax_tree.class
+        p defined?(::Prism)
+      RUBY
+    end
+  end
+end
