@@ -1065,6 +1065,7 @@ public final class CoreLibrary {
             "/core/signal.rb",
             "/core/symbol.rb",
             "/core/mutex.rb",
+            "/core/ractor.rb",
             "/core/throw_catch.rb",
             "/core/time.rb",
             "/core/rational.rb",

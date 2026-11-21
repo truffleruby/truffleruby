@@ -5,6 +5,7 @@ New features:
 * Updated to Ruby 4.0.10 (@eregon).
 * Updated to GraalVM 25.5.5.0.3 (@eregon).
 * Implement the `pty` standard library: `PTY.open`, `PTY.spawn`, `PTY.getpty` and `PTY.check` (@eregon).
+* Add `Ractor`, implemented on top of `Thread` and without isolation between Ractors (@eregon).
 
 Bug fixes:
 
