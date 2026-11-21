@@ -276,8 +276,8 @@ class Hash
 
     if block_given?
       others.each do |other|
+        other = Primitive.convert_with_to_hash(other)
         other.each do |k, v|
-          other = Primitive.convert_with_to_hash(other)
           if current.include?(k)
             current[k] = yield(k, current[k], v)
           else
