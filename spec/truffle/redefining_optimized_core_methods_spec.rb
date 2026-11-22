@@ -11,6 +11,24 @@ require_relative '../ruby/spec_helper'
 
 # Similar MRI tests are in test/mri/tests/ruby/test_optimization.rb and spec/ruby/core/warning/performance_warning_spec.rb
 describe "Redefining optimized core methods" do
+  it "respects overrides of __method__ and __callee__ at an existing call site" do
+    klass = Class.new do
+      def names
+        [__method__, __callee__]
+      end
+      alias other_names names
+    end
+    obj = klass.new
+    obj.other_names.should == [:names, :other_names]
+
+    klass.class_eval do
+      private
+      def __method__ = :definition
+      def __callee__ = :called
+    end
+    obj.other_names.should == [:definition, :called]
+  end
+
   it "emits performance warning for redefining core classes methods" do
     # Only Integer, Float, NilClass and Symbol classes have optimised methods.
     # They are listed in org.truffleruby.core.inlined.CoreMethodAssumptions.
