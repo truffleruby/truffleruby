@@ -53,6 +53,7 @@ Compatibility:
 * Define `Enumerator::Lazy#each_with_index` on `Enumerator::Lazy` like CRuby 4.0.10 (@eregon).
 * `rb_enc_from_index` now returns `NULL` for an index without an encoding instead of crashing (@nirvdrum).
 * `rb_enc_get` and `rb_enc_get_index` now handle more cases, including objects without an encoding and `File` objects opened for writing without an encoding (@nirvdrum).
+* `Set#pretty_print` and `Set#pretty_print_cycle` now use the same `Set[1, 2]` format as `Set#inspect`, so `pp` and IRB show sets like CRuby (@0z5a).
 
 Performance:
 

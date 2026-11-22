@@ -830,17 +830,29 @@ class Set
   alias to_s inspect
 
   def pretty_print(pp)  # :nodoc:
-    pp.group(1, sprintf('#<%s:', self.class.name), '>') {
-      pp.breakable
-      pp.group(1, '{', '}') {
+    if self.class.equal?(Set) || self.class < CoreSet
+      pp.group(1, "#{self.class.name}[", ']') {
         pp.seplist(self) { |o|
           pp.pp o
         }
       }
-    }
+    else
+      pp.group(1, sprintf('#<%s:', self.class.name), '>') {
+        pp.breakable
+        pp.group(1, '{', '}') {
+          pp.seplist(self) { |o|
+            pp.pp o
+          }
+        }
+      }
+    end
   end
 
   def pretty_print_cycle(pp)    # :nodoc:
-    pp.text sprintf('#<%s: {%s}>', self.class.name, empty? ? '' : '...')
+    if self.class.equal?(Set) || self.class < CoreSet
+      pp.text(empty? ? "#{self.class.name}[]" : "#{self.class.name}[...]")
+    else
+      pp.text sprintf('#<%s: {%s}>', self.class.name, empty? ? '' : '...')
+    end
   end
 end
