@@ -350,19 +350,30 @@ class Enumerator
       initialize_lazy(receiver, size, packs_values: false, &block)
     end
 
-    # packs_values says whether an element of this Lazy is a single value, which
-    # is what a lazy method makes of it (see #chained_lazy): several values
-    # yielded at once are packed into an Array and no value at all is nil.
+    # A source can yield several values at once, e.g. `y.yield 1, 2`. Between the
+    # lazy methods of a chain these values stay separate, so a later block can
+    # still receive them as separate arguments:
+    #
+    #   two = Enumerator.new { |y| y.yield 1, 2 }
+    #   two.lazy.select { true }.map { |*values| values }.to_a # => [[1, 2]]
+    #
+    # They are only combined into one Array at the end of the chain, when it is
+    # iterated by a non-lazy method such as #each, #to_a or #first:
+    #
+    #   two.lazy.select { true }.to_a # => [[1, 2]]
+    #
+    # packs_values is true for a Lazy returned by a lazy method (see #chained_lazy),
+    # which combines the values like that. It is false for a Lazy created by
+    # Enumerator::Lazy.new or Enumerable#lazy, which yields what its block yields.
     private def initialize_lazy(source, size, packs_values:, &block)
       Primitive.check_frozen self
 
       @source = source
-      # Called as @lazy_block.call(yielder, *values) for each element of @source.
+      # Called with a Yielder and the values of each element of @source
       @lazy_block = block
       @packs_values = packs_values
 
-      # The generator behind Enumerator#each, and so behind #to_a, #first and
-      # the like: this is where the values of an element become a single value.
+      # Used by Enumerator#each, and so by every non-lazy method (#to_a, #first, #next, ...)
       generator = Generator.new do |yielder, *each_args|
         each_values(*each_args) do |*values|
           if packs_values
@@ -377,50 +388,41 @@ class Enumerator
       self
     end
 
-    # Iterates the chain and gives each element to the block as the values the
-    # source yielded it with, e.g. `Enumerator.new { |y| y.yield 1, 2 }` and
-    # `[9].each_with_index` yield two values, like Enumerator#next_values and
-    # #peek_values return them. The lazy methods iterate their source with this:
-    # #each would pack several values into an Array (see the generator in
-    # #initialize_lazy) and a block later in the chain could then no longer see
-    # them apart.
+    # Like #each, but yields the values of each element separately instead of
+    # combining them into one Array. This is what a lazy method uses to iterate
+    # the lazy method before it in the chain.
     private def each_values(*each_args, &block)
-      # A Lazy built by Lazy#to_enum or a copy (see #initialize_copy) has no block
-      # of its own, it delegates to a method of its source like any other Enumerator does.
+      # A Lazy returned by Lazy#to_enum or by #dup has no block, so just use #each
       return each(*each_args, &block) if Primitive.nil?(@lazy_block)
 
-      # What the block of a lazy method yields goes to the next method in the chain.
+      # `yielder.yield` in the block of a lazy method calls the next method in the chain
       yielder = Yielder.new(&block)
 
-      # Thrown by the block of #take and #take_while to stop the iteration.
+      # #take and #take_while throw STOP_LAZY to stop iterating
       catch(STOP_LAZY) do
         each_source_values(*each_args) do |*values|
-          # An element yielded with no value at all is nil for a lazy method:
-          # `Enumerator.new { |y| y.yield }.lazy.map { |*a| a }.force` is `[[nil]]`.
+          # A lazy method treats `yield` with no value like `yield nil`:
+          #   Enumerator.new { |y| y.yield }.lazy.map { |*values| values }.to_a # => [[nil]]
           values = [nil] if @packs_values && values.empty?
           @lazy_block.call(yielder, *values)
         end
       end
     end
 
-    # Iterating a Lazy source with #each would pack the values of an element into
-    # an Array, so a lazy method asks it to keep them apart instead. A Lazy built
-    # by Enumerator::Lazy.new iterates its source with #each like any other object.
+    # Iterates @source. A lazy method asks the lazy method before it for separate
+    # values. A Lazy created by Enumerator::Lazy.new always calls #each on its
+    # receiver, like in CRuby, even when the receiver is a Lazy.
     private def each_source_values(*each_args, &block)
-      # @args and @kwargs are only set for the enumerator returned by
-      # Lazy#each(*args) without a block, which can then be chained further.
-      args = @args + each_args
-
       if @packs_values && Primitive.is_a?(@source, Lazy)
-        @source.__send__(:each_values, *args, **@kwargs, &block)
+        @source.__send__(:each_values, *each_args, &block)
       else
-        @source.each(*args, **@kwargs, &block)
+        @source.each(*each_args, &block)
       end
     end
 
-    # A copy, which is also what Lazy#each(*args) without a block returns, is
-    # iterated through #each by the next method in the chain, so that method sees
-    # each element as a single value.
+    # A copy has no block of its own, so #each_values falls back to #each for it.
+    # A lazy method called on a copy then gets each element as a single value,
+    # like in CRuby. Lazy#each(*args) without a block also returns a copy.
     private def initialize_copy(original)
       super
       @lazy_block = nil
@@ -447,12 +449,8 @@ class Enumerator
 
     alias_method :force, :to_a
 
-    # Builds the Lazy returned by a lazy method like #map or #select. Unlike a
-    # Lazy built by Enumerator::Lazy.new or Enumerable#lazy, it packs several
-    # values yielded at once into an Array when it is iterated by anything but
-    # another lazy method. What the method gives its own block is a separate
-    # question: like the eager method, #select packs the values into one value
-    # while #map passes them all on.
+    # Creates the Lazy returned by a lazy method such as #map or #select.
+    # The block is called with a Yielder and the values of each element of self.
     private def chained_lazy(size, &block)
       Lazy.allocate.__send__(:initialize_lazy, self, size, packs_values: true, &block)
     end
@@ -690,7 +688,7 @@ class Enumerator
           end
         end
         if args.size > 1 && !rests.empty?
-          # Like in CRuby, an element which came as several values is passed on as several values
+          # Like in CRuby, values yielded together stay separate from the zipped elements for the next lazy method
           yielder.yield val, *rests
         else
           yielder.yield [val, *rests]

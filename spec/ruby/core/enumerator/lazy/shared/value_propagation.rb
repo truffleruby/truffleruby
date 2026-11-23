@@ -1,7 +1,7 @@
 require_relative '../fixtures/classes'
 
 describe :enumerator_lazy_value_propagation, shared: true do
-  # @lazy_method: a Proc calling the method under test on a lazy enumerator, e.g. -> e { e.take(12) }.
+  # @lazy_method is a Proc calling the method under test on a lazy enumerator, e.g. -> lazy { lazy.take(12) }
 
   before :each do
     @yieldsmixed = EnumeratorLazySpecs::YieldsMixed.new.to_enum.lazy

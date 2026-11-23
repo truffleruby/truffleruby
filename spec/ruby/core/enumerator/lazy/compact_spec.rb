@@ -2,7 +2,7 @@ require_relative '../../../spec_helper'
 require_relative 'fixtures/classes'
 
 describe "Enumerator::Lazy#compact" do
-  # Cannot use shared/value_packing.rb examples: #compact removes an element which is nil.
+  # The shared/value_packing.rb examples need nil elements, which #compact removes.
   describe "value packing of source yields" do
     it "packs a multi-argument source yield into an Array" do
       e = Enumerator.new { |y| y.yield 1, 2 }
@@ -29,8 +29,7 @@ describe "Enumerator::Lazy#compact" do
     Enumerator::Lazy.new(Object.new, 100) {}.compact.size.should == nil
   end
 
-  # Cannot use shared/value_propagation.rb wholesale: #compact removes an element
-  # which is nil, and both YieldsMixed and a yield with no value have such elements.
+  # Not all shared/value_propagation.rb examples apply: some need nil elements, which #compact removes.
   describe "propagating source yields to later methods in the chain" do
     it "passes every value of a multi-value source yield to a splat block later in the chain" do
       args = nil

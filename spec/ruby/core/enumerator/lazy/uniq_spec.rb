@@ -80,8 +80,7 @@ describe 'Enumerator::Lazy#uniq' do
       s.first(100).uniq
   end
 
-  # Cannot use shared/value_propagation.rb wholesale: the repeated yields of
-  # YieldsMixed are dropped by #uniq.
+  # Not all shared/value_propagation.rb examples apply: YieldsMixed yields some elements twice, which #uniq removes.
   describe "propagating source yields to later methods in the chain" do
     it "passes every value of a multi-value source yield to a splat block later in the chain" do
       args = nil
