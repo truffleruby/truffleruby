@@ -41,6 +41,7 @@ Bug fixes:
 * Fix several `IO` methods, `File.new` and `ARGF.lineno=` to convert Integer arguments with `#to_int` (#4589, @taxor03).
 * Fix `File.lstat` raising `TypeError` instead of `Errno::ENOENT` for a missing file given as a `Pathname` (#4591, @taxor03).
 * Fix `rb_hash_foreach()` to iterate the entries directly instead of calling `Hash#each` and `Hash#delete`, which might be overridden (#4586, @eregon).
+* Fix `Integer#ceil`, `#floor`, `#truncate`, `Array#repeated_*` and `Enumerable#max`, `#min` to convert Integer arguments with `#to_int` (#4590, @taxor03).
 
 Compatibility:
 

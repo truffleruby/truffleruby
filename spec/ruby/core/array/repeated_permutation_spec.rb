@@ -20,6 +20,16 @@ describe "Array#repeated_permutation" do
     yielded.sort.should == @permutations
   end
 
+  it "converts the length with #to_int" do
+    length = mock("2")
+    length.should_receive(:to_int).at_least(:once).and_return(2)
+    @numbers.repeated_permutation(length).to_a.sort.should == @permutations
+  end
+
+  it "raises a TypeError for a length that does not convert with #to_int" do
+    -> { @numbers.repeated_permutation("2") {} }.should.raise(TypeError)
+  end
+
   it "yields the empty repeated_permutation ([[]]) when the given length is 0" do
     @numbers.repeated_permutation(0).to_a.should == [[]]
     [].repeated_permutation(0).to_a.should == [[]]

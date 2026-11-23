@@ -24,6 +24,16 @@ describe "Array#repeated_combination" do
                                                         [10, 12, 12], [11, 11, 11], [11, 11, 12], [11, 12, 12], [12, 12, 12]]
   end
 
+  it "converts the length with #to_int" do
+    length = mock("2")
+    length.should_receive(:to_int).at_least(:once).and_return(2)
+    @array.repeated_combination(length).to_a.size.should == 6
+  end
+
+  it "raises a TypeError for a length that does not convert with #to_int" do
+    -> { @array.repeated_combination("2") {} }.should.raise(TypeError)
+  end
+
   it "yields [] when length is 0" do
     @array.repeated_combination(0).to_a.should == [[]] # one repeated_combination of length 0
     [].repeated_combination(0).to_a.should == [[]] # one repeated_combination of length 0

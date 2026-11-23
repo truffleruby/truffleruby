@@ -113,6 +113,14 @@ describe "Enumerable#min" do
         -> { @e_ints.min(-1) }.should.raise(ArgumentError)
       end
     end
+
+    context "that converts with #to_int" do
+      it "returns an array containing the minimum n elements" do
+        n = mock("2")
+        n.should_receive(:to_int).and_return(2)
+        @e_ints.min(n).should == [22, 333]
+      end
+    end
   end
 
   context "that is nil" do

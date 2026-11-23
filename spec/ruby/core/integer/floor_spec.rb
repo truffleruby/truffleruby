@@ -9,5 +9,11 @@ describe "Integer#floor" do
 
   context "with precision" do
     it_behaves_like :integer_floor_precision, :Integer
+
+    it "converts the precision with #to_int" do
+      precision = mock("-1")
+      precision.should_receive(:to_int).and_return(-1)
+      1234.floor(precision).should.eql?(1230)
+    end
   end
 end

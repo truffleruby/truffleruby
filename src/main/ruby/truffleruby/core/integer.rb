@@ -84,6 +84,7 @@ class Integer < Numeric
   end
 
   def ceil(precision = 0)
+    precision = Primitive.rb_num2int(precision)
     return self unless precision < 0
     return 0 if self == 0
 
@@ -129,6 +130,7 @@ class Integer < Numeric
   end
 
   def floor(precision = 0)
+    precision = Primitive.rb_num2int(precision)
     return self unless precision < 0
     x = 10 ** precision.abs
     (self / x) * x
@@ -193,6 +195,7 @@ class Integer < Numeric
   Primitive.always_split self, :downto
 
   def truncate(precision = 0)
+    precision = Primitive.rb_num2int(precision)
     if precision >= 0
       self
     else

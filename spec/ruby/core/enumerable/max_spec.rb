@@ -109,6 +109,14 @@ describe "Enumerable#max" do
         -> { @e_ints.max(-1) }.should.raise(ArgumentError)
       end
     end
+
+    context "that converts with #to_int" do
+      it "returns an array containing the maximum n elements" do
+        n = mock("2")
+        n.should_receive(:to_int).and_return(2)
+        @e_ints.max(n).should == [1010101010, 666666]
+      end
+    end
   end
 
   context "that is nil" do
