@@ -363,20 +363,23 @@ public abstract class KernelNodes {
         }
     }
 
-    @CoreMethod(names = "__callee__", isModuleFunction = true)
-    public abstract static class CalleeNameNode extends CoreMethodArrayArgumentsNode {
+    @GenerateUncached
+    @CoreMethod(names = "__callee__", isModuleFunction = true, alwaysInlined = true)
+    public abstract static class CalleeNameNode extends AlwaysInlinedMethodNode {
 
         @Specialization
-        Object calleeName() {
+        Object calleeName(Frame callerFrame, Object self, Object[] rubyArgs, RootCallTarget target,
+                @Cached ToSymbolNode toSymbolNode,
+                @Cached InlinedConditionProfile moduleBodyProfile) {
+            needCallerFrame(callerFrame, target);
             // the "called name" of a method.
-            final InternalMethod callingMethod = getContext().getCallStack().getCallingMethod();
-            assert callingMethod != null;
+            final InternalMethod callingMethod = RubyArguments.getMethod(callerFrame);
 
-            if (callingMethod.getSharedMethodInfo().isModuleBody()) {
+            if (moduleBodyProfile.profile(this, callingMethod.getSharedMethodInfo().isModuleBody())) {
                 return nil;
             }
 
-            return getSymbol(callingMethod.getName());
+            return toSymbolNode.execute(this, callingMethod.getName());
         }
     }
 
@@ -1192,20 +1195,23 @@ public abstract class KernelNodes {
         }
     }
 
-    @CoreMethod(names = "__method__", isModuleFunction = true)
-    public abstract static class MethodNameNode extends CoreMethodArrayArgumentsNode {
+    @GenerateUncached
+    @CoreMethod(names = "__method__", isModuleFunction = true, alwaysInlined = true)
+    public abstract static class MethodNameNode extends AlwaysInlinedMethodNode {
 
         @Specialization
-        Object methodName() {
+        Object methodName(Frame callerFrame, Object self, Object[] rubyArgs, RootCallTarget target,
+                @Cached ToSymbolNode toSymbolNode,
+                @Cached InlinedConditionProfile moduleBodyProfile) {
+            needCallerFrame(callerFrame, target);
             // the "original/definition name" of the method.
-            final InternalMethod internalMethod = getContext().getCallStack().getCallingMethod();
-            assert internalMethod != null;
+            final var info = RubyArguments.getMethod(callerFrame).getSharedMethodInfo();
 
-            if (internalMethod.getSharedMethodInfo().isModuleBody()) {
+            if (moduleBodyProfile.profile(this, info.isModuleBody())) {
                 return nil;
             }
 
-            return getSymbol(internalMethod.getSharedMethodInfo().getMethodName());
+            return toSymbolNode.execute(this, info.getMethodName());
         }
 
     }

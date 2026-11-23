@@ -96,13 +96,6 @@ public final class CallStackManager {
         }, f -> f.getCallNode());
     }
 
-    // Method
-
-    @TruffleBoundary
-    public InternalMethod getCallingMethod() {
-        return tryGetMethod(getCallerFrame(FrameAccess.READ_ONLY));
-    }
-
     // SourceSection
 
     @TruffleBoundary
