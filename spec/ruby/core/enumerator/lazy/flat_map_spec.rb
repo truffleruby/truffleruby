@@ -81,4 +81,16 @@ describe "Enumerator::Lazy#flat_map" do
     actual = s.lazy.take(3).flat_map{ |x| x }.force
     actual.should == expected
   end
+
+  it "passes a source yield with no value on to the block as nil" do
+    args = nil
+    Enumerator.new { |y| y.yield }.lazy.flat_map { |*a| args = a }.force
+    args.should == [nil]
+  end
+
+  it "passes every value of a multi-value source yield on to the block" do
+    args = nil
+    Enumerator.new { |y| y.yield 1, 2 }.lazy.flat_map { |*a| args = a }.force
+    args.should == [1, 2]
+  end
 end

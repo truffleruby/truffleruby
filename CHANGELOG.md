@@ -67,6 +67,7 @@ Compatibility:
 * `Complex#**` with an Integer exponent is now exact for numbers on an axis or a diagonal, like CRuby (#4556, @taxor03).
 * `1 ** n` and `(-1) ** n` now return an Integer for a negative Integer `n`, like CRuby (#4556, @taxor03).
 * `Complex#**` now simplifies a `Rational(n, 1)` or `Complex(x, 0)` exponent first, like CRuby (#4556, @taxor03).
+* Fix `Enumerator::Lazy#{compact,drop,drop_while,grep,grep_v,reject,select,take,take_while,uniq}` to pass the arguments to blocks of later methods in the chain as-is (#4420, @sampokuokkanen).
 
 Performance:
 

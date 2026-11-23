@@ -344,19 +344,88 @@ class Enumerator
     STOP_LAZY = Object.new.freeze
     private_constant :STOP_LAZY
 
-    def initialize(receiver, size = nil)
-      raise ArgumentError, 'Lazy#initialize requires a block' unless block_given?
+    def initialize(receiver, size = nil, &block)
+      raise ArgumentError, 'Lazy#initialize requires a block' unless block
+
+      initialize_lazy(receiver, size, packs_values: false, &block)
+    end
+
+    # A source can yield several values at once, e.g. `y.yield 1, 2`. Between the
+    # lazy methods of a chain these values stay separate, so a later block can
+    # still receive them as separate arguments:
+    #
+    #   two = Enumerator.new { |y| y.yield 1, 2 }
+    #   two.lazy.select { true }.map { |*values| values }.to_a # => [[1, 2]]
+    #
+    # They are only combined into one Array at the end of the chain, when it is
+    # iterated by a non-lazy method such as #each, #to_a or #first:
+    #
+    #   two.lazy.select { true }.to_a # => [[1, 2]]
+    #
+    # packs_values is true for a Lazy returned by a lazy method (see #chained_lazy),
+    # which combines the values like that. It is false for a Lazy created by
+    # Enumerator::Lazy.new or Enumerable#lazy, which yields what its block yields.
+    private def initialize_lazy(source, size, packs_values:, &block)
       Primitive.check_frozen self
 
-      super(size) do |yielder, *each_args|
-        catch(STOP_LAZY) do
-          receiver.each(*each_args) do |*args|
-            yield yielder, *args
+      @source = source
+      # Called with a Yielder and the values of each element of @source
+      @lazy_block = block
+      @packs_values = packs_values
+
+      # Used by Enumerator#each, and so by every non-lazy method (#to_a, #first, #next, ...)
+      generator = Generator.new do |yielder, *each_args|
+        each_values(*each_args) do |*values|
+          if packs_values
+            yielder.yield Truffle::EnumerableOperations.pack_values(values)
+          else
+            yielder.yield(*values)
           end
         end
       end
+      initialize_internal(generator, size, :each)
 
       self
+    end
+
+    # Like #each, but yields the values of each element separately instead of
+    # combining them into one Array. This is what a lazy method uses to iterate
+    # the lazy method before it in the chain.
+    private def each_values(*each_args, &block)
+      # A Lazy returned by Lazy#to_enum or by #dup has no block, so just use #each
+      return each(*each_args, &block) if Primitive.nil?(@lazy_block)
+
+      # `yielder.yield` in the block of a lazy method calls the next method in the chain
+      yielder = Yielder.new(&block)
+
+      # #take and #take_while throw STOP_LAZY to stop iterating
+      catch(STOP_LAZY) do
+        each_source_values(*each_args) do |*values|
+          # A lazy method treats `yield` with no value like `yield nil`:
+          #   Enumerator.new { |y| y.yield }.lazy.map { |*values| values }.to_a # => [[nil]]
+          values = [nil] if @packs_values && values.empty?
+          @lazy_block.call(yielder, *values)
+        end
+      end
+    end
+
+    # Iterates @source. A lazy method asks the lazy method before it for separate
+    # values. A Lazy created by Enumerator::Lazy.new always calls #each on its
+    # receiver, like in CRuby, even when the receiver is a Lazy.
+    private def each_source_values(*each_args, &block)
+      if @packs_values && Primitive.is_a?(@source, Lazy)
+        @source.__send__(:each_values, *each_args, &block)
+      else
+        @source.each(*each_args, &block)
+      end
+    end
+
+    # A copy has no block of its own, so #each_values falls back to #each for it.
+    # A lazy method called on a copy then gets each element as a single value,
+    # like in CRuby. Lazy#each(*args) without a block also returns a copy.
+    private def initialize_copy(original)
+      super
+      @lazy_block = nil
     end
 
     def to_enum(method_name = :each, *method_args, **method_kwargs, &block)
@@ -380,6 +449,12 @@ class Enumerator
 
     alias_method :force, :to_a
 
+    # Creates the Lazy returned by a lazy method such as #map or #select.
+    # The block is called with a Yielder and the values of each element of self.
+    private def chained_lazy(size, &block)
+      Lazy.allocate.__send__(:initialize_lazy, self, size, packs_values: true, &block)
+    end
+
     def take(n)
       n = Primitive.convert_with_to_int n
       raise ArgumentError, 'attempt to take negative size' if n < 0
@@ -394,10 +469,10 @@ class Enumerator
 
       return to_enum(:cycle, 0).lazy if n.zero?
 
-      Lazy.new(self, set_size) do |yielder, *args|
+      chained_lazy(set_size) do |yielder, *args|
         taken = yielder.memo || 0
         if taken < n
-          yielder.yield(Truffle::EnumerableOperations.pack_values(args))
+          yielder.yield(*args)
           taken += 1
           yielder.memo = taken
           throw STOP_LAZY unless taken < n
@@ -418,12 +493,12 @@ class Enumerator
         set_size = current_size
       end
 
-      Lazy.new(self, set_size) do |yielder, *args|
+      chained_lazy(set_size) do |yielder, *args|
         dropped = yielder.memo || 0
         if dropped < n
           yielder.memo = dropped + 1
         else
-          yielder.yield(Truffle::EnumerableOperations.pack_values(args))
+          yielder.yield(*args)
         end
       end
     end
@@ -431,9 +506,9 @@ class Enumerator
     def take_while
       raise ArgumentError, 'Lazy#take_while requires a block' unless block_given?
 
-      Lazy.new(self, nil) do |yielder, *args|
+      chained_lazy(nil) do |yielder, *args|
         if yield(*args)
-          yielder.yield(Truffle::EnumerableOperations.pack_values(args))
+          yielder.yield(*args)
         else
           throw STOP_LAZY
         end
@@ -443,15 +518,15 @@ class Enumerator
     def drop_while
       raise ArgumentError, 'Lazy#drop_while requires a block' unless block_given?
 
-      Lazy.new(self, nil) do |yielder, *args|
+      chained_lazy(nil) do |yielder, *args|
         succeeding = Primitive.nil?(yielder.memo) ? true : yielder.memo
         if succeeding
           unless yield(*args)
             yielder.memo = false
-            yielder.yield(Truffle::EnumerableOperations.pack_values(args))
+            yielder.yield(*args)
           end
         else
-          yielder.yield(Truffle::EnumerableOperations.pack_values(args))
+          yielder.yield(*args)
         end
       end
     end
@@ -459,7 +534,7 @@ class Enumerator
     def filter_map
       raise ArgumentError, 'Lazy#filter_map requires a block' unless block_given?
 
-      Lazy.new(self, enumerator_size) do |yielder, *args|
+      chained_lazy(enumerator_size) do |yielder, *args|
         result = yield(*args)
         yielder.yield result if result
       end
@@ -468,9 +543,9 @@ class Enumerator
     def select
       raise ArgumentError, 'Lazy#{select,find_all} requires a block' unless block_given?
 
-      Lazy.new(self, nil) do |yielder, *args|
+      chained_lazy(nil) do |yielder, *args|
         val = Truffle::EnumerableOperations.pack_values(args)
-        yielder.yield(val) if yield(val)
+        yielder.yield(*args) if yield(val)
       end
     end
     alias_method :find_all, :select
@@ -479,16 +554,16 @@ class Enumerator
     def reject
       raise ArgumentError, 'Lazy#reject requires a block' unless block_given?
 
-      Lazy.new(self, nil) do |yielder, *args|
+      chained_lazy(nil) do |yielder, *args|
         val = Truffle::EnumerableOperations.pack_values(args)
-        yielder.yield(val) unless yield(val)
+        yielder.yield(*args) unless yield(val)
       end
     end
 
     def grep(pattern, &block)
       sv = block ? Primitive.proc_special_variables(block) : Primitive.caller_special_variables
 
-      Lazy.new(self, nil) do |yielder, *args|
+      chained_lazy(nil) do |yielder, *args|
         Primitive.share_special_variables(sv)
         val = Truffle::EnumerableOperations.pack_values(args)
         matches = pattern === val
@@ -497,7 +572,7 @@ class Enumerator
           if block
             yielder.yield yield(val)
           else
-            yielder.yield val
+            yielder.yield(*args)
           end
         end
       end
@@ -506,7 +581,7 @@ class Enumerator
     def grep_v(pattern, &block)
       s = block ? Primitive.proc_special_variables(block) : Primitive.caller_special_variables
 
-      Lazy.new(self, nil) do |yielder, *args|
+      chained_lazy(nil) do |yielder, *args|
         val = Truffle::EnumerableOperations.pack_values(args)
         matches = pattern === val
         Primitive.regexp_last_match_set(s, $~)
@@ -515,7 +590,7 @@ class Enumerator
           if block
             yielder.yield yield(val)
           else
-            yielder.yield val
+            yielder.yield(*args)
           end
         end
       end
@@ -524,7 +599,7 @@ class Enumerator
     def map
       raise ArgumentError, 'Lazy#{map,collect} requires a block' unless block_given?
 
-      Lazy.new(self, enumerator_size) do |yielder, *args|
+      chained_lazy(enumerator_size) do |yielder, *args|
         yielder.yield yield(*args)
       end
     end
@@ -533,7 +608,7 @@ class Enumerator
     def flat_map
       raise ArgumentError, 'Lazy#{collect_concat,flat_map} requires a block' unless block_given?
 
-      Lazy.new(self, nil) do |yielder, *args|
+      chained_lazy(nil) do |yielder, *args|
         yield_ret = yield(*args)
 
         if Primitive.respond_to?(yield_ret, :force, false) &&
@@ -568,14 +643,14 @@ class Enumerator
                  offset
                end
 
-      Lazy.new(self, enumerator_size) do |yielder, *args|
+      chained_lazy(enumerator_size) do |yielder, *args|
         memo = yielder.memo || offset
         val = Truffle::EnumerableOperations.pack_values(args)
         if block
           yield(val, memo)
           yielder.yield val
         else
-          yielder.yield [val, memo]
+          yielder.yield val, memo
         end
         yielder.memo = Primitive.rb_num2long(memo) + 1
       end
@@ -597,7 +672,7 @@ class Enumerator
         end
       end
 
-      Lazy.new(self, enumerator_size) do |yielder, *args|
+      chained_lazy(enumerator_size) do |yielder, *args|
         index = yielder.memo || 0
         val = Truffle::EnumerableOperations.pack_values(args)
         rests = lists.map do |list|
@@ -612,7 +687,12 @@ class Enumerator
             end
           end
         end
-        yielder.yield [val, *rests]
+        if args.size > 1 && !rests.empty?
+          # Like in CRuby, values yielded together stay separate from the zipped elements for the next lazy method
+          yielder.yield val, *rests
+        else
+          yielder.yield [val, *rests]
+        end
         yielder.memo = index + 1
       end
     end
@@ -626,9 +706,9 @@ class Enumerator
     end
 
     def compact
-      Lazy.new(self, nil) do |yielder, *args|
+      chained_lazy(nil) do |yielder, *args|
         val = Truffle::EnumerableOperations.pack_values(args)
-        yielder.yield(val) unless Primitive.nil?(val)
+        yielder.yield(*args) unless Primitive.nil?(val)
       end
     end
 
@@ -646,21 +726,21 @@ class Enumerator
 
     def uniq
       if block_given?
-        Lazy.new(self, nil) do |yielder, *args|
+        chained_lazy(nil) do |yielder, *args|
           memo = yielder.memo || Set.new
 
           val = Truffle::EnumerableOperations.pack_values(args)
           comp = yield(val)
-          yielder.yield(val) if memo.add?(comp)
+          yielder.yield(*args) if memo.add?(comp)
 
           yielder.memo = memo
         end
       else
-        Lazy.new(self, nil) do |yielder, *args|
+        chained_lazy(nil) do |yielder, *args|
           memo = yielder.memo || Set.new
 
           val = Truffle::EnumerableOperations.pack_values(args)
-          yielder.yield(val) if memo.add?(val)
+          yielder.yield(*args) if memo.add?(val)
 
           yielder.memo = memo
         end
