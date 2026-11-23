@@ -47,6 +47,15 @@ describe "Always-inlined core methods" do
       }.should.raise(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Kernel#binding' }
     end
 
+    it "for #__method__ and #__callee__" do
+      -> {
+        __method__(:wrong)
+      }.should.raise(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Kernel#__method__' }
+      -> {
+        __callee__(:wrong)
+      }.should.raise(ArgumentError) { |e| e.backtrace_locations[0].label.should == 'Kernel#__callee__' }
+    end
+
     it "for #local_variables" do
       -> {
         local_variables(:wrong)
