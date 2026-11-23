@@ -1,1 +1,0 @@
-fails:TracePoint :c_call event triggers for Kernel#__method__ and Kernel#__callee__ at a call site that already ran

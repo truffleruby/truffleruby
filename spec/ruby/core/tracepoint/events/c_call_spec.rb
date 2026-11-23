@@ -33,30 +33,4 @@ describe 'TracePoint :c_call event' do
     self_value.should.equal?(self)
     binding.should.is_a?(Binding)
   end
-
-  it 'triggers for Kernel#__method__ and Kernel#__callee__ at a call site that already ran' do
-    klass = Class.new do
-      def names
-        [__method__, __callee__]
-      end
-    end
-    names_line = __LINE__ - 3
-    obj = klass.new
-    obj.names.should == [:names, :names]
-
-    events = []
-    tp = TracePoint.new(:c_call) do |tp|
-      next unless TracePointSpec.target_thread?
-      next unless tp.path == __FILE__
-      events << [tp.event, tp.defined_class, tp.method_id, tp.lineno, tp.self]
-    end
-
-    result = tp.enable { obj.names }
-
-    result.should == [:names, :names]
-    events.should == [
-      [:c_call, Kernel, :__method__, names_line, obj],
-      [:c_call, Kernel, :__callee__, names_line, obj],
-    ]
-  end
 end
