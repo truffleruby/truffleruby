@@ -200,6 +200,12 @@ public final class CoreMethodAssumptions {
                     return InlinedIsNilNodeGen.create(language, callParameters, self);
                 case "bytesize":
                     return InlinedByteSizeNodeGen.create(language, callParameters, self);
+                case "__method__":
+                case "__callee__":
+                    if (callParameters.isIgnoreVisibility()) {
+                        return InlinedMethodNameNodeGen.create(language, callParameters, self);
+                    }
+                    break;
                 default:
             }
         } else if (n == 2) {
