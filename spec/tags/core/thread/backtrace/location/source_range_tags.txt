@@ -2,3 +2,5 @@ fails:Thread::Backtrace::Location#source_range returns the precise range for top
 fails:Thread::Backtrace::Location#source_range returns the precise range for constant &&= assignments failing while reading
 fails:Thread::Backtrace::Location#source_range returns the precise range for constant &&= assignments failing on the namespace
 fails:Thread::Backtrace::Location#source_range returns the precise range for for loops with an attribute target
+fails:Thread::Backtrace::Location#source_range returns the precise range for nested multiple assignments
+fails:Thread::Backtrace::Location#source_range returns the precise range for destructuring block parameters

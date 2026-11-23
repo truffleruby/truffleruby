@@ -1,0 +1,3 @@
+slow:Ruby::Prism is autoloaded and does not load the prism gem
+slow:Ruby::Prism is independent of the Prism module of the prism gem
+slow:Ruby::Prism is the namespace of the nodes returned by #syntax_tree

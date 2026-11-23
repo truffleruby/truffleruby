@@ -144,6 +144,7 @@ excludes = %w[
   test/truffle/cexts
   test/truffle/ecosystem
   test/truffle/integration/backtraces/fixtures
+  tool/generate-ruby-prism.rb
 ].map { |pattern|
   if pattern.include?('*') or pattern.include?('.')
     pattern
