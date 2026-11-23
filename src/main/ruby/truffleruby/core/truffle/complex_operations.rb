@@ -29,15 +29,10 @@ module Truffle
         return nil if Primitive.nil?(imag)
       end
 
-      if Primitive.is_a?(real, Complex) && !Primitive.is_a?(real.imag, Float) && real.imag == 0
-        real = real.real
-      end
+      real = canonicalize_complex(real)
+      imag = canonicalize_complex(imag)
 
-      if Primitive.is_a?(imag, Complex) && !Primitive.is_a?(imag.imag, Float) && imag.imag == 0
-        imag = imag.real
-      end
-
-      if Primitive.is_a?(real, Complex) && !Primitive.is_a?(imag, Float) && imag == 0
+      if Primitive.is_a?(real, Complex) && exact_zero?(imag)
         return real
       end
 
@@ -69,6 +64,20 @@ module Truffle
     def self.canonicalize_rational(value)
       if Primitive.is_a?(value, Rational) && value.denominator == 1
         value.numerator
+      else
+        value
+      end
+    end
+
+    # Like k_exact_zero_p() in CRuby, true for 0 and Rational(0, 1) but not for 0.0
+    def self.exact_zero?(value)
+      !Primitive.is_a?(value, Float) && value == 0
+    end
+
+    # A Complex with an exact zero imaginary part becomes its real part
+    def self.canonicalize_complex(value)
+      if Primitive.is_a?(value, Complex) && exact_zero?(value.imag)
+        value.real
       else
         value
       end

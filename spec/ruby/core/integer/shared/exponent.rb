@@ -90,6 +90,32 @@ describe :integer_exponent, shared: true do
       0.send(@method, -1.0).should == Float::INFINITY
     end
 
+    it "returns 1.0 for 1 raised to an infinite or NaN power" do
+      1.send(@method, Float::INFINITY).should.eql?(1.0)
+      1.send(@method, -Float::INFINITY).should.eql?(1.0)
+      1.send(@method, Float::NAN).should.eql?(1.0)
+    end
+
+    it "returns 0.0 for 0 raised to a NaN power" do
+      0.send(@method, Float::NAN).should.eql?(0.0)
+    end
+
+    it "returns a Float when negative and raised to an infinite power" do
+      (-1).send(@method, Float::INFINITY).should.eql?(1.0)
+      (-1).send(@method, -Float::INFINITY).should.eql?(1.0)
+      (-2).send(@method, Float::INFINITY).should.eql?(Float::INFINITY)
+      (-2).send(@method, -Float::INFINITY).should.eql?(0.0)
+    end
+
+    it "returns a Complex with NaN parts when negative and raised to a NaN power" do
+      [-1, -2, -bignum_value].each do |base|
+        result = base.send(@method, Float::NAN)
+        result.should.is_a?(Complex)
+        result.real.should.nan?
+        result.imag.should.nan?
+      end
+    end
+
     it "raises a TypeError when given a non-numeric power" do
       -> { 13.send(@method, "10") }.should.raise(TypeError)
       -> { 13.send(@method, :symbol) }.should.raise(TypeError)

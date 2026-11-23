@@ -1838,9 +1838,18 @@ public abstract class IntegerNodes {
 
         @Specialization
         Object powDouble(long base, double exponent,
-                @Cached @Exclusive InlinedConditionProfile complexProfile) {
+                @Cached @Exclusive InlinedConditionProfile complexProfile,
+                @Cached @Exclusive InlinedConditionProfile oneProfile,
+                @Cached @Exclusive InlinedConditionProfile zeroNaNProfile) {
             if (complexProfile.profile(this, base < 0)) {
                 return FAILURE;
+            } else if (oneProfile.profile(this, base == 1)) {
+                // Like fix_pow() in CRuby, 1 raised to any power is 1.0, where Math.pow() returns NaN for an infinite
+                // or NaN exponent
+                return 1.0;
+            } else if (zeroNaNProfile.profile(this, base == 0 && Double.isNaN(exponent))) {
+                // Like fix_pow() in CRuby, which returns 0.0 for 0 raised to any power which is not 0.0 or negative
+                return 0.0;
             } else {
                 return Math.pow(base, exponent);
             }

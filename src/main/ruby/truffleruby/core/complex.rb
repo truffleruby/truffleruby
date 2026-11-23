@@ -126,16 +126,13 @@ class Complex < Numeric
   alias_method :quo, :/
 
   def ** (other)
-    if !Primitive.is_a?(other, Float) && other == 0
+    if Truffle::ComplexOperations.exact_zero?(other)
       return Complex(1)
     end
     # Like rb_complex_pow() in CRuby, a Rational with a denominator of 1 is replaced by its numerator, and a Complex
     # with an exact zero imaginary part by its real part
-    if Primitive.is_a?(other, Rational) && other.denominator == 1
-      other = other.numerator
-    elsif Primitive.is_a?(other, Complex) && !Primitive.is_a?(other.imag, Float) && other.imag == 0
-      other = other.real
-    end
+    other = Truffle::ComplexOperations.canonicalize_rational(other)
+    other = Truffle::ComplexOperations.canonicalize_complex(other)
     return self if Primitive.is_a?(other, Integer) && other == 1
     if Primitive.is_a?(other, Integer)
       result = pow_for_special_angle(other)
@@ -308,22 +305,22 @@ class Complex < Numeric
   end
 
   def to_f
-    raise RangeError, "can't convert #{self} into Float" unless !Primitive.is_a?(imag, Float) && imag == 0
+    raise RangeError, "can't convert #{self} into Float" unless Truffle::ComplexOperations.exact_zero?(imag)
     real.to_f
   end
 
   def to_i
-    raise RangeError, "can't convert #{self} into Integer" unless !Primitive.is_a?(imag, Float) && imag == 0
+    raise RangeError, "can't convert #{self} into Integer" unless Truffle::ComplexOperations.exact_zero?(imag)
     real.to_i
   end
 
   def to_r
-    raise RangeError, "can't convert #{self} into Rational" unless !Primitive.is_a?(imag, Float) && imag == 0
+    raise RangeError, "can't convert #{self} into Rational" unless Truffle::ComplexOperations.exact_zero?(imag)
     real.to_r
   end
 
   def rationalize(eps = nil)
-    raise RangeError, "can't' convert #{self} into Rational" unless !Primitive.is_a?(imag, Float) && imag == 0
+    raise RangeError, "can't' convert #{self} into Rational" unless Truffle::ComplexOperations.exact_zero?(imag)
     real.rationalize(eps)
   end
 
