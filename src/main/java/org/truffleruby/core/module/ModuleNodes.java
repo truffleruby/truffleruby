@@ -37,7 +37,6 @@ import com.oracle.truffle.api.strings.TruffleString.ByteIndexOfStringNode;
 import org.truffleruby.RubyContext;
 import org.truffleruby.annotations.CoreMethod;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
-import org.truffleruby.builtins.CoreMethodNode;
 import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.annotations.Primitive;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
@@ -1613,26 +1612,30 @@ public abstract class ModuleNodes {
 
     @Primitive(name = "caller_nesting")
     public abstract static class CallerNestingNode extends PrimitiveArrayArgumentsNode {
-        @Specialization
-        RubyArray nesting(
-                @Cached NestingNode nestingNode) {
-            return nestingNode.execute();
-        }
-    }
-
-    @CoreMethod(names = "nesting", onSingleton = true)
-    public abstract static class NestingNode extends CoreMethodNode {
-
-        public abstract RubyArray execute();
-
         @TruffleBoundary
         @Specialization
         RubyArray nesting() {
-            final List<RubyModule> modules = new ArrayList<>();
+            final Frame callerFrame = getContext().getCallStack().getCallerFrame(FrameAccess.READ_ONLY);
+            final InternalMethod method = RubyArguments.tryGetMethod(callerFrame);
+            final LexicalScope lexicalScope = method == null ? null : method.getLexicalScope();
+            return createArray(NestingNode.nesting(lexicalScope, coreLibrary().objectClass));
+        }
+    }
 
-            InternalMethod method = getContext().getCallStack().getCallingMethod();
-            LexicalScope lexicalScope = method == null ? null : method.getLexicalScope();
-            RubyClass objectClass = coreLibrary().objectClass;
+    @GenerateUncached
+    @CoreMethod(names = "nesting", onSingleton = true, alwaysInlined = true)
+    public abstract static class NestingNode extends AlwaysInlinedMethodNode {
+
+        @Specialization
+        RubyArray nesting(Frame callerFrame, Object self, Object[] rubyArgs, RootCallTarget target) {
+            needCallerFrame(callerFrame, target);
+            final LexicalScope lexicalScope = RubyArguments.getMethod(callerFrame).getLexicalScope();
+            return createArray(nesting(lexicalScope, coreLibrary().objectClass));
+        }
+
+        @TruffleBoundary
+        static Object[] nesting(LexicalScope lexicalScope, RubyClass objectClass) {
+            final List<RubyModule> modules = new ArrayList<>();
 
             while (lexicalScope != null) {
                 final RubyModule enclosing = lexicalScope.getLiveModule();
@@ -1643,7 +1646,7 @@ public abstract class ModuleNodes {
                 lexicalScope = lexicalScope.getParent();
             }
 
-            return createArray(modules.toArray());
+            return modules.toArray();
         }
     }
 
