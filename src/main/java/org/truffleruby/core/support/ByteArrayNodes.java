@@ -161,7 +161,7 @@ public abstract class ByteArrayNodes {
     public abstract static class LocateNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization(guards = "isSingleBytePattern(patternTString, patternEncoding)", limit = "1")
-        static Object getByteSingleByte(RubyByteArray byteArray, Object pattern, int start, int length,
+        static Object getByteSingleByte(RubyByteArray byteArray, Object pattern, int start, int end,
                 @Bind Node node,
                 @Cached TruffleString.ReadByteNode readByteNode,
                 @Cached InlinedBranchProfile tooSmallStartProfile,
@@ -173,7 +173,7 @@ public abstract class ByteArrayNodes {
             byte[] bytes = byteArray.bytes;
             int searchByte = readByteNode.execute(patternTString, 0, patternEncoding);
 
-            if (start >= length) {
+            if (start >= end) {
                 tooLargeStartProfile.enter(node);
                 return nil;
             }
@@ -183,15 +183,14 @@ public abstract class ByteArrayNodes {
                 start = 0;
             }
 
-            final int index = ArrayUtils.indexOf(bytes, start, length, (byte) searchByte);
+            final int index = ArrayUtils.indexOf(bytes, start, end, (byte) searchByte);
 
             return index == -1 ? nil : index + 1;
         }
 
         @Specialization(guards = "!isSingleBytePattern(patternTString, patternEncoding)", limit = "1")
-        static Object getByte(RubyByteArray byteArray, Object pattern, int start, int length,
+        static Object getByte(RubyByteArray byteArray, Object pattern, int start, int end,
                 @Bind Node node,
-                @Cached TruffleString.CodePointLengthNode codePointLengthNode,
                 @Cached TruffleString.GetInternalByteArrayNode getInternalByteArrayNode,
                 @Cached InlinedConditionProfile noCopyProfile,
                 @Cached InlinedConditionProfile notFoundProfile,
@@ -203,12 +202,12 @@ public abstract class ByteArrayNodes {
             final byte[] patternBytes = TStringUtils.getBytesOrCopy(node, patternTString, patternEncoding,
                     getInternalByteArrayNode, noCopyProfile);
 
-            final int index = ArrayUtils.indexOfWithOrMask(byteArray.bytes, start, length, patternBytes, null);
+            final int index = ArrayUtils.indexOfWithOrMask(byteArray.bytes, start, end - start, patternBytes, null);
 
             if (notFoundProfile.profile(node, index == -1)) {
                 return nil;
             } else {
-                return index + codePointLengthNode.execute(patternTString, patternEncoding);
+                return index + patternBytes.length;
             }
         }
 
