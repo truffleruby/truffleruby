@@ -52,10 +52,10 @@ module Truffle::ProcOperations
   end
 
   def self.parse_source_range(range)
-    require 'prism'
     return nil unless range&.absolute_path
 
-    result = Prism.parse_file(range.absolute_path, raise_error: true)
+    # Ruby::Prism and not the prism gem, so the nodes match the code as it was parsed by TruffleRuby
+    result = Ruby::Prism.parse_file(range.absolute_path, raise_error: true)
     start_offset = result.source.byte_offset(range.start_line, range.start_column)
     end_offset = result.source.byte_offset(range.end_line, range.end_column)
     [result.value, start_offset, end_offset]
@@ -69,10 +69,10 @@ module Truffle::ProcOperations
 
     root.breadth_first_search do |node|
       node.start_offset == start_offset && node.end_offset == end_offset &&
-        (Primitive.is_a?(node, Prism::DefNode) ||
-          Primitive.is_a?(node, Prism::BlockNode) ||
-          Primitive.is_a?(node, Prism::LambdaNode) ||
-          Primitive.is_a?(node, Prism::ForNode))
+        (Primitive.is_a?(node, Ruby::Prism::DefNode) ||
+          Primitive.is_a?(node, Ruby::Prism::BlockNode) ||
+          Primitive.is_a?(node, Ruby::Prism::LambdaNode) ||
+          Primitive.is_a?(node, Ruby::Prism::ForNode))
     end
   end
 
@@ -80,7 +80,7 @@ module Truffle::ProcOperations
     root, start_offset, end_offset = parse_source_range(range)
     return nil unless root
 
-    # Prism::Node#tunnel only follows one child at each level. Some nodes with
+    # Ruby::Prism::Node#tunnel only follows one child at each level. Some nodes with
     # the same range are siblings, notably the SymbolNode and implicit CallNode
     # for a keyword omission such as `target(missing:)`, so visit every branch
     # which contains the range.
@@ -106,26 +106,26 @@ module Truffle::ProcOperations
 
   def self.location_syntax_tree_candidate?(node, candidates)
     case node
-    when Prism::ProgramNode,
-        Prism::StatementsNode,
-        Prism::BeginNode,
-        Prism::EmbeddedStatementsNode,
-        Prism::MatchWriteNode,
-        Prism::ItParametersNode,
-        Prism::NumberedParametersNode,
-        Prism::AssocNode,
-        Prism::AssocSplatNode,
-        Prism::NoKeywordsParameterNode
+    when Ruby::Prism::ProgramNode,
+        Ruby::Prism::StatementsNode,
+        Ruby::Prism::BeginNode,
+        Ruby::Prism::EmbeddedStatementsNode,
+        Ruby::Prism::MatchWriteNode,
+        Ruby::Prism::ItParametersNode,
+        Ruby::Prism::NumberedParametersNode,
+        Ruby::Prism::AssocNode,
+        Ruby::Prism::AssocSplatNode,
+        Ruby::Prism::NoKeywordsParameterNode
       false
-    when Prism::SymbolNode
+    when Ruby::Prism::SymbolNode
       # A symbol can own an observable #=== call, except when it is the
       # structural key of an exact-location hash pattern.
-      candidates.none? { |candidate,| Primitive.is_a?(candidate, Prism::HashPatternNode) }
-    when Prism::SplatNode
+      candidates.none? { |candidate,| Primitive.is_a?(candidate, Ruby::Prism::HashPatternNode) }
+    when Ruby::Prism::SplatNode
       # A splat can own an observable #to_a call, except when the enclosing
       # array or array pattern owns the exact same source range.
       candidates.none? do |candidate,|
-        Primitive.is_a?(candidate, Prism::ArrayNode) || Primitive.is_a?(candidate, Prism::ArrayPatternNode)
+        Primitive.is_a?(candidate, Ruby::Prism::ArrayNode) || Primitive.is_a?(candidate, Ruby::Prism::ArrayPatternNode)
       end
     else
       true

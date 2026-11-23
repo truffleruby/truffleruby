@@ -5,6 +5,7 @@ New features:
 * Updated to Ruby 4.0.10 (@eregon).
 * Updated to GraalVM 25.5.5.0.3 (@eregon).
 * Implement the `pty` standard library: `PTY.open`, `PTY.spawn`, `PTY.getpty` and `PTY.check` (@eregon).
+* Add `Ruby::Prism` from Ruby 4.1, the Prism built into TruffleRuby and independent of the version of the `prism` gem, and return `Ruby::Prism` nodes from `{Proc,Method,UnboundMethod,Thread::Backtrace::Location}#syntax_tree` and use it to implement `Ripper` ([Bug #22379](https://bugs.ruby-lang.org/issues/22379), @eregon).
 
 Bug fixes:
 

@@ -1,0 +1,1 @@
+slow:Ripper is implemented with Ruby::Prism and does not load the prism gem

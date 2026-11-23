@@ -125,6 +125,9 @@ git checkout -- test/mri/excludes
 git checkout -- lib/mri/prism.rb
 rm -rf lib/mri/prism
 git checkout -- lib/mri/prism
+# Ruby::Prism is generated from the above by tool/generate-ruby-prism.rb
+rm -rf lib/mri/ruby/prism.rb lib/mri/ruby/prism
+git checkout -- lib/mri/ruby/prism.rb lib/mri/ruby/prism
 rm -rf test/mri/tests/prism
 git checkout -- test/mri/tests/prism
 rm -f lib/gems/specifications/default/prism-*.gemspec
