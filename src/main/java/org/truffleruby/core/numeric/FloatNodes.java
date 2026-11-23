@@ -156,6 +156,8 @@ public abstract class FloatNodes {
         @Child private DispatchNode complexPowNode;
 
         private final ConditionProfile complexProfile = ConditionProfile.create();
+        private final ConditionProfile oneProfile = ConditionProfile.create();
+        private final ConditionProfile minusOneInfiniteProfile = ConditionProfile.create();
 
         @Specialization(
                 guards = { "exponent == cachedExponent", "cachedExponent >= 0", "cachedExponent < 10" },
@@ -202,11 +204,14 @@ public abstract class FloatNodes {
 
         /** Like pow() in C, which rb_float_pow() in CRuby uses: 1 raised to any power and -1 raised to an infinite
          * power are 1, where Math.pow() returns NaN. */
-        private static double cPow(double base, double exponent) {
-            if (base == 1.0 || (base == -1.0 && Double.isInfinite(exponent))) {
+        private double cPow(double base, double exponent) {
+            if (oneProfile.profile(base == 1.0)) {
                 return 1.0;
+            } else if (minusOneInfiniteProfile.profile(base == -1.0 && Double.isInfinite(exponent))) {
+                return 1.0;
+            } else {
+                return Math.pow(base, exponent);
             }
-            return Math.pow(base, exponent);
         }
 
         @Specialization(guards = "!isRubyNumber(exponent)")

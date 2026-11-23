@@ -46,7 +46,8 @@ class Integer < Numeric
       return pow
     end
 
-    if (Primitive.is_a?(o, Float) || Primitive.is_a?(o, Rational)) && self < 0 && o != o.round
+    # A negative Integer raised to a Float is handled by Float#** below, like rb_float_pow() in CRuby
+    if Primitive.is_a?(o, Rational) && self < 0 && o != o.round
       return Complex.new(self, 0) ** o
     elsif Primitive.is_a?(o, Integer) && o < 0
       # Like CRuby's fix_pow(), 1 and -1 raised to a negative power stay Integers
