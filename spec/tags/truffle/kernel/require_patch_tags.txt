@@ -1,2 +1,8 @@
+slow:Kernel#require of a feature with a patch raises a LoadError for racc/cparse so racc uses its pure-Ruby runtime
+slow:Kernel#require of a feature with a patch applies the patch to an absolute path, as Bootsnap requires
+slow:Kernel#require of a feature with a patch loads racc/cparse if a falsy top-level Racc_No_Extensions is defined
+slow:Kernel#require of a feature with a patch applies the patch again after loading racc/cparse failed
 slow:Kernel#require of a feature with a patch does not apply a patch for a Ruby file to a C extension with the same name
+slow:Kernel#require of a feature with a patch applies the patch to a feature with the .so extension
 slow:Kernel#require of a feature with a patch applies a patch again after its original failed to load
+slow:Kernel#require of a feature with a patch applies the patch to an absolute path through a symlink

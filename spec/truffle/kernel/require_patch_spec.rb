@@ -31,12 +31,13 @@ require_relative '../../ruby/spec_helper'
 describe "Kernel#require of a feature with a patch" do
   before :each do
     @dir = tmp("require_patch")
-    mkdir_p @dir
+    mkdir_p "#{@dir}/racc"
     @dir = File.realpath(@dir)
     @dlext = RbConfig::CONFIG['DLEXT']
 
-    # This isn't a real C extension, so loading it raises. That's how we tell whether the real file was loaded
+    # None of these are real C extensions, so loading one raises. That's how we tell whether the real file was loaded
     # instead of the patch.
+    touch("#{@dir}/racc/cparse.#{@dlext}") { |f| f.write "not a C extension" }
     touch("#{@dir}/digest.#{@dlext}") { |f| f.write "not a C extension" }
 
     # A stand-in for the thread_safe gem's thread_safe.rb. TruffleRuby's patch for it (lib/patches/thread_safe.rb)
@@ -58,6 +59,63 @@ describe "Kernel#require of a feature with a patch" do
         puts "\#{e.class}: \#{e.message}"
       end
     RUBY
+  end
+
+  it "raises a LoadError for racc/cparse so racc uses its pure-Ruby runtime" do
+    out = ruby_exe(<<~RUBY, options: "-I#{@dir}")
+      begin
+        require 'racc/cparse'
+      rescue LoadError => e
+        puts e.message, e.path
+      end
+    RUBY
+    out.should == "TruffleRuby uses the pure-Ruby racc runtime as it is faster than racc/cparse\nracc/cparse\n"
+  end
+
+  it "applies the patch to an absolute path, as Bootsnap requires" do
+    out = require_and_report("FEATURE = '#{@dir}/racc/cparse.#{@dlext}'")
+    out.should.include?("TruffleRuby uses the pure-Ruby racc runtime")
+  end
+
+  it "applies the patch to an absolute path through a symlink" do
+    link = "#{@dir}-link"
+    File.symlink(@dir, link)
+    begin
+      out = ruby_exe(<<~RUBY, options: "-I#{link}")
+        begin
+          require '#{link}/racc/cparse.#{@dlext}'
+        rescue LoadError => e
+          puts e.message
+        end
+      RUBY
+      out.should.include?("TruffleRuby uses the pure-Ruby racc runtime")
+    ensure
+      rm_r link
+    end
+  end
+
+  it "applies the patch to a feature with the .so extension" do
+    out = require_and_report("FEATURE = 'racc/cparse.so'")
+    out.should.include?("TruffleRuby uses the pure-Ruby racc runtime")
+  end
+
+  it "loads racc/cparse if a falsy top-level Racc_No_Extensions is defined" do
+    out = require_and_report("FEATURE = 'racc/cparse'; Racc_No_Extensions = nil")
+    out.should.start_with?("LoadError: ")
+    out.should.include?("#{@dir}/racc/cparse.#{@dlext}")
+  end
+
+  it "applies the patch again after loading racc/cparse failed" do
+    out = require_and_report(<<~RUBY)
+      FEATURE = 'racc/cparse'
+      Racc_No_Extensions = false
+      begin
+        require FEATURE
+      rescue Exception
+      end
+      Object.send(:remove_const, :Racc_No_Extensions)
+    RUBY
+    out.should.include?("TruffleRuby uses the pure-Ruby racc runtime")
   end
 
   it "applies a patch again after its original failed to load" do
