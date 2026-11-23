@@ -177,7 +177,10 @@ public abstract class FloatNodes {
 
         @Specialization
         Object pow(VirtualFrame frame, double base, double exponent) {
-            if (complexProfile.profile(base < 0 && exponent != Math.round(exponent))) {
+            // Like rb_float_pow() in CRuby, which compares the exponent with round(), an infinite exponent or a finite
+            // one beyond the range of a long is not fractional. Math.round() would saturate to Long.MAX_VALUE or
+            // Long.MIN_VALUE for it.
+            if (complexProfile.profile(base < 0 && exponent != Math.rint(exponent))) {
                 if (complexConvertNode == null) {
                     CompilerDirectives.transferToInterpreterAndInvalidate();
                     complexConvertNode = insert(DispatchNode.create());
@@ -188,13 +191,22 @@ public abstract class FloatNodes {
 
                 return complexPowNode.call(aComplex, "**", exponent);
             } else {
-                return Math.pow(base, exponent);
+                return cPow(base, exponent);
             }
         }
 
         @Specialization
         double pow(double base, RubyBignum exponent) {
-            return Math.pow(base, BigIntegerOps.doubleValue(exponent));
+            return cPow(base, BigIntegerOps.doubleValue(exponent));
+        }
+
+        /** Like pow() in C, which rb_float_pow() in CRuby uses: 1 raised to any power and -1 raised to an infinite
+         * power are 1, where Math.pow() returns NaN. */
+        private static double cPow(double base, double exponent) {
+            if (base == 1.0 || (base == -1.0 && Double.isInfinite(exponent))) {
+                return 1.0;
+            }
+            return Math.pow(base, exponent);
         }
 
         @Specialization(guards = "!isRubyNumber(exponent)")
