@@ -291,6 +291,31 @@ describe "IO.popen" do
         io.internal_encoding.should == Encoding::EUC_JP
       end
     end
+
+    it "converts the command with #to_ary" do
+      cmd = mock("command")
+      cmd.should_receive(:to_ary).and_return([*ruby_exe, "-e", "puts ARGV.join(' ')", "a", "b"])
+      IO.popen(cmd) do |io|
+        io.read.should == "a b\n"
+      end
+    end
+
+    it "converts the command with #to_ary handled by #method_missing" do
+      cmd = mock("command")
+      cmd.should_receive(:method_missing).with(:to_ary).and_return([*ruby_exe, "-e", "puts ARGV.join(' ')", "a", "b"])
+      IO.popen(cmd) do |io|
+        io.read.should == "a b\n"
+      end
+    end
+
+    it "does not modify the Array" do
+      cmd = [{"FOO" => "bar"}, *ruby_exe, "-e", "STDERR.puts ENV['FOO']", {err: [:child, :out]}]
+      expected = cmd.dup
+      IO.popen(cmd) do |io|
+        io.read.should == "bar\n"
+      end
+      cmd.should == expected
+    end
   end
 
   describe "options validation" do
