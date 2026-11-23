@@ -1159,6 +1159,7 @@ module Truffle::CExt
   def rb_ary_resize(array, len)
     Primitive.check_frozen array
     raise IndexError, "index #{len} too small for array" if len < 0
+    raise IndexError, "index #{len} too big" unless Truffle::Type.fits_into_int?(len)
     size = array.size
     if len > size
       array.fill(nil, size, len - size)
