@@ -60,9 +60,7 @@ class Rational < Numeric
   end
 
   def **(other)
-    if Primitive.is_a?(other, Rational) && other.denominator == 1
-      other = other.numerator
-    end
+    other = Truffle::ComplexOperations.canonicalize_rational(other)
 
     case other
     when Integer
