@@ -344,7 +344,10 @@ class IO
   end
 
   def self.binread(file, length = nil, offset = 0)
-    raise ArgumentError, "Negative length #{length} given" if !Primitive.nil?(length) && length < 0
+    unless Primitive.nil?(length)
+      length = Primitive.rb_num2long(length)
+      raise ArgumentError, "Negative length #{length} given" if length < 0
+    end
 
     File.open(file, 'r', encoding: 'ascii-8bit:-') do |f|
       f.seek(offset)
@@ -467,7 +470,14 @@ class IO
     when nil
       # do nothing
     else
-      separator = Primitive.convert_with_to_str(separator)
+      # Like extract_getline_args() in CRuby, a single argument that does not convert to a String is the limit
+      str = Truffle::Type.rb_check_convert_type(separator, String, :to_str)
+      if Primitive.nil?(str) && Primitive.undefined?(limit)
+        limit = separator
+        separator = $/
+      else
+        separator = str || Primitive.convert_with_to_str(separator)
+      end
     end
 
     limit = nil if Primitive.undefined?(limit)
@@ -1821,6 +1831,7 @@ class IO
   # If the read buffer is not empty, read_nonblock reads from the
   # buffer like readpartial. In this case, read(2) is not called.
   def read_nonblock(size, buffer = nil, exception: true)
+    size = Primitive.rb_num2long(size)
     raise ArgumentError, 'illegal read size' if size < 0
     Truffle::Type.rb_bool_expected(exception, 'exception')
     ensure_open_and_readable
@@ -1946,6 +1957,7 @@ class IO
   # The later means that readpartial is nonblocking-flag insensitive. It
   # blocks on the situation IO#sysread causes Errno::EAGAIN as if the fd is blocking mode.
   def readpartial(size, buffer = nil)
+    size = Primitive.rb_num2long(size)
     raise ArgumentError, 'negative string size' unless size >= 0
     ensure_open_and_readable
 
@@ -2270,6 +2282,7 @@ class IO
   #  @todo  Improve reading into provided buffer.
   #
   def sysread(number_of_bytes, buffer = nil)
+    number_of_bytes = Primitive.rb_num2long(number_of_bytes)
     raise ArgumentError, 'negative length given' if number_of_bytes < 0
     ensure_open_and_readable
     flush
@@ -2434,6 +2447,7 @@ class IO
       # args.size == 2 and neither are symbols
       # This is the fast path and the new interface:
       events, timeout = *args
+      events = Primitive.rb_num2int(events)
       raise ArgumentError, 'Events must be positive integer!' if events <= 0
       res = Truffle::IOOperations.poll(self, events, timeout)
       # return events as bit mask

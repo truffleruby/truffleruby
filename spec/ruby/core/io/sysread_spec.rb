@@ -20,6 +20,12 @@ describe "IO#sysread on a file" do
     @file.sysread(15).should == "012345678901234"
   end
 
+  it "converts the number of bytes with #to_int" do
+    length = mock("15")
+    length.should_receive(:to_int).and_return(15)
+    @file.sysread(length).should == "012345678901234"
+  end
+
   it "reads the specified number of bytes from the file to the buffer" do
     buf = +"" # empty buffer
     @file.sysread(15, buf).should == buf

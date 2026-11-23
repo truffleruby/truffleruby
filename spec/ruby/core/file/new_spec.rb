@@ -96,6 +96,15 @@ describe "File.new" do
     File.should.exist?(@file)
   end
 
+  it "converts the file descriptor with #to_int" do
+    @fh = File.new(@file)
+    fd = mock("fd")
+    fd.should_receive(:to_int).and_return(@fh.fileno)
+    fh_copy = File.new(fd)
+    fh_copy.autoclose = false
+    fh_copy.fileno.should == @fh.fileno
+  end
+
   it "returns a new read-only File when mode is not specified" do
     @fh = File.new(@file)
 

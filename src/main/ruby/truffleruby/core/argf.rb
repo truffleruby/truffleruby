@@ -320,8 +320,8 @@ module Truffle
     # @todo Should this be public? --rue
     #
     def lineno=(val)
-      @lineno = val
-      @last_lineno = val
+      @lineno = Primitive.rb_num2int(val)
+      @last_lineno = @lineno
     end
 
     #
