@@ -91,4 +91,18 @@ describe "Enumerator::Lazy#zip" do
     s.lazy.zip(s).first(100).should ==
       s.first(100).zip(s)
   end
+
+  it "passes an Array as a single value to a later method in the chain" do
+    args = nil
+    [1].lazy.zip([2]).map { |*a| args = a }.force
+    args.should == [[1, 2]]
+  end
+
+  it "passes multiple values yielded at once and the zipped elements as separate values to a later method in the chain" do
+    args = nil
+    Enumerator.new { |y| y.yield 1, 2 }.lazy.zip([3]).map { |*a| args = a }.force
+    args.should == [[1, 2], 3]
+
+    Enumerator.new { |y| y.yield 1, 2 }.lazy.zip([3]).to_a.should == [[[1, 2], 3]]
+  end
 end

@@ -67,6 +67,7 @@ Compatibility:
 * `Complex#**` with an Integer exponent is now exact for numbers on an axis or a diagonal, like CRuby (#4556, @taxor03).
 * `1 ** n` and `(-1) ** n` now return an Integer for a negative Integer `n`, like CRuby (#4556, @taxor03).
 * `Complex#**` now simplifies a `Rational(n, 1)` or `Complex(x, 0)` exponent first, like CRuby (#4556, @taxor03).
+* Fix `Enumerator::Lazy#{compact,drop,drop_while,grep,grep_v,reject,select,take,take_while,uniq}` to pass the arguments to blocks of later methods in the chain as-is (#4420, @sampokuokkanen).
 
 Performance:
 
@@ -166,7 +167,6 @@ Compatibility:
 * Create sockets in non-blocking mode with `FD_CLOEXEC` set and emulate blocking socket operations by waiting for readiness, like CRuby, so C extensions such as `trilogy` can take over the descriptors (@nirvdrum).
 * Accept objects responding to `#to_path` for the path argument of `UNIXSocket.new` and `UNIXServer.new`, preserving the path bytes like CRuby (@nirvdrum).
 * Implement `rb_ractor_local_storage_value_newkey()`, `rb_ractor_local_storage_value()`, `rb_ractor_local_storage_value_lookup()` and `rb_ractor_local_storage_value_set()` (@nirvdrum).
-* Fix `Enumerator::Lazy#{compact,drop,drop_while,grep,grep_v,reject,select,take,take_while,uniq}` to pass multiple values yielded by the source to the next method in the chain, and all lazy methods to see a source yield with no value as `nil` (#4420, @sampokuokkanen).
 
 Performance:
 

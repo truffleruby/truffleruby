@@ -61,4 +61,27 @@ describe "Enumerator::Lazy#with_index" do
     enum.each { |i, idx| result << [i, idx] }
     result.should == [[0,0], [1,1], [2,2], [0,0], [1,1], [2,2]]
   end
+
+  it "passes the element and the index as two values to a later method in the chain" do
+    args = []
+    (10..11).lazy.with_index.map { |*a| args << a }.force
+    args.should == [[10, 0], [11, 1]]
+
+    args = nil
+    Enumerator.new { |y| y.yield 1, 2 }.lazy.with_index.select { true }.map { |*a| args = a }.force
+    args.should == [[1, 2], 0]
+  end
+
+  it "yields the element and the index as an Array when not followed by a lazy method" do
+    args = nil
+    [10].lazy.with_index.each { |*a| args = a }
+    args.should == [[10, 0]]
+    (10..11).lazy.with_index(1).to_a.should == [[10, 1], [11, 2]]
+  end
+
+  it "passes the element on as a single value when given a block" do
+    args = nil
+    Enumerator.new { |y| y.yield 1, 2 }.lazy.with_index { }.map { |*a| args = a }.force
+    args.should == [[1, 2]]
+  end
 end

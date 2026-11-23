@@ -385,8 +385,8 @@ class Enumerator
     # #initialize_lazy) and a block later in the chain could then no longer see
     # them apart.
     private def each_values(*each_args, &block)
-      # A Lazy built by Lazy#to_enum has no block of its own, it delegates to a
-      # method of its source like any other Enumerator does.
+      # A Lazy built by Lazy#to_enum or a copy (see #initialize_copy) has no block
+      # of its own, it delegates to a method of its source like any other Enumerator does.
       return each(*each_args, &block) if Primitive.nil?(@lazy_block)
 
       # What the block of a lazy method yields goes to the next method in the chain.
@@ -404,17 +404,26 @@ class Enumerator
     end
 
     # Iterating a Lazy source with #each would pack the values of an element into
-    # an Array, so ask it to keep them apart instead.
+    # an Array, so a lazy method asks it to keep them apart instead. A Lazy built
+    # by Enumerator::Lazy.new iterates its source with #each like any other object.
     private def each_source_values(*each_args, &block)
       # @args and @kwargs are only set for the enumerator returned by
       # Lazy#each(*args) without a block, which can then be chained further.
       args = @args + each_args
 
-      if Primitive.is_a?(@source, Lazy)
+      if @packs_values && Primitive.is_a?(@source, Lazy)
         @source.__send__(:each_values, *args, **@kwargs, &block)
       else
         @source.each(*args, **@kwargs, &block)
       end
+    end
+
+    # A copy, which is also what Lazy#each(*args) without a block returns, is
+    # iterated through #each by the next method in the chain, so that method sees
+    # each element as a single value.
+    private def initialize_copy(original)
+      super
+      @lazy_block = nil
     end
 
     def to_enum(method_name = :each, *method_args, **method_kwargs, &block)
@@ -643,7 +652,7 @@ class Enumerator
           yield(val, memo)
           yielder.yield val
         else
-          yielder.yield [val, memo]
+          yielder.yield val, memo
         end
         yielder.memo = Primitive.rb_num2long(memo) + 1
       end
@@ -680,7 +689,12 @@ class Enumerator
             end
           end
         end
-        yielder.yield [val, *rests]
+        if args.size > 1 && !rests.empty?
+          # Like in CRuby, an element which came as several values is passed on as several values
+          yielder.yield val, *rests
+        else
+          yielder.yield [val, *rests]
+        end
         yielder.memo = index + 1
       end
     end
