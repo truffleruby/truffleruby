@@ -85,6 +85,7 @@ class File
     end
 
     def self.lstat(path)
+      path = Truffle::Type.coerce_to_path(path)
       stat = lstat?(path)
       Errno.handle path unless stat
       stat
