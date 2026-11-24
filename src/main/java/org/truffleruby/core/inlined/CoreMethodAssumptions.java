@@ -55,6 +55,12 @@ import org.truffleruby.language.methods.InternalMethod;
  * <li>Otherwise, we need to do a method lookup and verify the method that would be called is the standard definition we
  * expect.</li>
  * <p>
+ * An {@link InlinedOperationNode} should only be used for primitive receivers ({@code int}, {@code long},
+ * {@code double}, {@code boolean}), because in that case the first strategy applies and it avoids the method lookup.
+ * For other receivers the method lookup is needed anyway, so an {@link AlwaysInlinedMethodNode} should be used instead:
+ * it is also executed in the caller without going through a CallTarget and it avoids duplicating the logic of the core
+ * method in two places (the inlined node and the {@link CoreMethod} node).
+ * <p>
  * Every specialization should use {@code assumptions = "assumptions",} to check at least the tracing Assumption
  * ({@link RubyLanguage#cCallTracingUnusedAssumption}). When adding a new node, it is a good idea to add a debug print
  * in the non-inlined method and try calling it with and without a {@code set_trace_func proc{};} before to see if the
