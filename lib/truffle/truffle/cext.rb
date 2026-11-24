@@ -1207,8 +1207,12 @@ module Truffle::CExt
   ST_CHECK = 3
   ST_REPLACE = 4
 
+  # rb_hash_foreach() on CRuby iterates the table directly, so it must not call overridden methods
+  HASH_EACH_PAIR_METHOD = Hash.instance_method :each_pair
+  HASH_DELETE_METHOD = Hash.instance_method :delete
+
   def rb_hash_foreach(hash, func, farg)
-    hash.each do |key, value|
+    HASH_EACH_PAIR_METHOD.bind_call(hash) do |key, value|
       st_result = Primitive.cext_invoke_i_llll(POINTER3_TO_INT_WRAPPER,
         func, Primitive.cext_wrap(key), Primitive.cext_wrap(value), farg)
 
@@ -1216,7 +1220,7 @@ module Truffle::CExt
       when ST_CONTINUE
       when ST_CHECK
       when ST_STOP then break
-      when ST_DELETE then hash.delete(key)
+      when ST_DELETE then HASH_DELETE_METHOD.bind_call(hash, key)
       else raise ArgumentError, "Unknown 'func' return value: #{st_result}"
       end
     end
@@ -1237,7 +1241,7 @@ module Truffle::CExt
       end
     end
   end
-  Primitive.always_split self, :rb_hash_foreach
+  Primitive.always_split self, :rb_set_foreach
 
   def rb_path_to_class(path)
     begin

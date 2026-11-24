@@ -184,6 +184,24 @@ describe "C-API Hash function" do
       out.should == hsh
     end
 
+    it "iterates over the entries without calling overridden #each or #delete" do
+      klass = Class.new(Hash) do
+        def each
+          raise "should not be called"
+        end
+        alias_method :each_pair, :each
+
+        def delete(key)
+          raise "should not be called"
+        end
+      end
+      hsh = klass[{name: "Evan", sign: :libra}]
+
+      @s.rb_hash_foreach(hsh).should == {name: "Evan", sign: :libra}
+      @s.rb_hash_foreach_delete(hsh).should == {name: "Evan", sign: :libra}
+      hsh.should.empty?
+    end
+
     it "stops via the callback" do
       hsh = {name: "Evan", sign: :libra}
 
