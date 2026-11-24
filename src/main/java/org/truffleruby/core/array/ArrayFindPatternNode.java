@@ -101,6 +101,6 @@ public abstract class ArrayFindPatternNode extends RubyContextSourceNode {
                 leftCondition.cloneUninitialized(),
                 (WriteLocalNode) writeRightSlot.cloneUninitialized(),
                 rightCondition.cloneUninitialized(),
-                getValueNode()).copyFlags(this);
+                getValueNode().cloneUninitialized()).copyFlags(this);
     }
 }
