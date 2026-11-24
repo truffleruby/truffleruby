@@ -43,7 +43,6 @@ class MSpecScript
     spec/ruby/core/tracepoint
     spec/ruby/library/coverage
     spec/ruby/optional/capi/tracepoint_spec.rb
-    spec/truffle/debug_spec.rb
   ]
   exclude_instrumentation = get(:instrumentation).map { "^#{_1}" }
 

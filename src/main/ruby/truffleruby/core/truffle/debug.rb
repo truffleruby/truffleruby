@@ -17,19 +17,4 @@ module Truffle::Debug
       $stderr.puts "#{fiber} of #{Primitive.fiber_thread(fiber)}", backtrace, nil
     end
   end
-
-  class Breakpoint
-    def initialize(handle)
-      @handle = handle
-    end
-
-    def remove
-      Truffle::Debug.remove_handle @handle
-    end
-
-  end
-
-  def self.break(file, line, &block)
-    Breakpoint.new(break_handle(File.expand_path(file), line, &block))
-  end
 end

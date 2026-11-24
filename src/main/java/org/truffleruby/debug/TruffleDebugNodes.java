@@ -24,7 +24,6 @@ import com.oracle.truffle.api.TruffleStackTraceElement;
 import com.oracle.truffle.api.exception.AbstractTruffleException;
 import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.MaterializedFrame;
-import com.oracle.truffle.api.instrumentation.SourceFilter;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.InteropException;
 import com.oracle.truffle.api.interop.StopIterationException;
@@ -46,7 +45,6 @@ import org.truffleruby.builtins.CoreMethodNode;
 import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.annotations.Primitive;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
-import org.truffleruby.core.RubyHandle;
 import org.truffleruby.core.array.ArrayGuards;
 import org.truffleruby.core.array.ArrayHelpers;
 import org.truffleruby.core.array.ArrayUtils;
@@ -59,7 +57,6 @@ import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.encoding.TStringUtils;
 import org.truffleruby.core.hash.RubyHash;
-import org.truffleruby.core.proc.RubyProc;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.core.string.TStringWithEncoding;
@@ -81,11 +78,8 @@ import org.truffleruby.language.backtrace.BacktraceFormatter;
 import org.truffleruby.language.library.RubyStringLibrary;
 import org.truffleruby.language.loader.ByteBasedCharSequence;
 import org.truffleruby.language.methods.DeclarationContext;
-import org.truffleruby.annotations.Split;
-import org.truffleruby.language.objects.AllocationTracing;
 import org.truffleruby.language.objects.shared.IsSharedNode;
 import org.truffleruby.language.objects.shared.SharedObjects;
-import org.truffleruby.language.yield.CallBlockNode;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
@@ -94,10 +88,6 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.EventBinding;
-import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
-import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
-import com.oracle.truffle.api.instrumentation.StandardTags;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.InvalidArrayIndexException;
 import com.oracle.truffle.api.interop.TruffleObject;
@@ -165,69 +155,6 @@ public abstract class TruffleDebugNodes {
             byte[] byteArray = TStringUtils.getBytesOrCopy(tstring, rubyEncoding);
             return createString(node, fromByteArrayNode, byteArray, rubyEncoding);
         }
-    }
-
-    @CoreMethod(names = "break_handle", onSingleton = true, required = 2, needsBlock = true, split = Split.NEVER,
-            lowerFixnum = 2)
-    public abstract static class BreakNode extends CoreMethodArrayArgumentsNode {
-
-        @TruffleBoundary
-        @Specialization(guards = "strings.isRubyString(this, file)", limit = "1")
-        RubyHandle setBreak(Object file, int line, RubyProc block,
-                @Cached RubyStringLibrary strings) {
-            final String fileString = StringOperations.getJavaString(file);
-
-            var sourceFilter = SourceFilter.newBuilder()
-                    .languageIs(TruffleRuby.LANGUAGE_ID)
-                    .sourceIs(source -> source != null && RubyLanguage.getPath(source).equals(fileString))
-                    .build();
-
-            final SourceSectionFilter filter = SourceSectionFilter
-                    .newBuilder()
-                    .sourceFilter(sourceFilter)
-                    .lineIs(line)
-                    .tagIs(StandardTags.StatementTag.class)
-                    .build();
-
-            final EventBinding<?> breakpoint = getContext().getInstrumenter().attachExecutionEventFactory(
-                    filter,
-                    eventContext -> new ExecutionEventNode() {
-
-                        @Child private CallBlockNode yieldNode = CallBlockNode.create();
-
-                        @Override
-                        protected void onEnter(VirtualFrame frame) {
-                            yieldNode.yieldCached(
-                                    block,
-                                    BindingNodes.createBinding(
-                                            getContext(),
-                                            getLanguage(),
-                                            frame.materialize(),
-                                            eventContext.getInstrumentedSourceSection()));
-                        }
-
-                    });
-
-            final RubyHandle instance = new RubyHandle(
-                    coreLibrary().handleClass,
-                    getLanguage().handleShape,
-                    breakpoint);
-            AllocationTracing.trace(instance, this);
-            return instance;
-        }
-
-    }
-
-    @CoreMethod(names = "remove_handle", onSingleton = true, required = 1)
-    public abstract static class RemoveNode extends CoreMethodArrayArgumentsNode {
-
-        @TruffleBoundary
-        @Specialization
-        Object remove(RubyHandle handle) {
-            ((EventBinding<?>) handle.object).dispose();
-            return nil;
-        }
-
     }
 
     @CoreMethod(names = "java_class_of", onSingleton = true, required = 1)
