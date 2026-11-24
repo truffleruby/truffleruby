@@ -71,6 +71,19 @@ describe :io_readlines_options_19, shared: true do
       (result ? result : ScratchPad.recorded).should == IOSpecs.lines_space_separator
     end
 
+    it "calls #to_int to convert the object to a limit if it does not convert to a String" do
+      sep = $/
+      limit = mock("io readlines limit")
+      limit.should_receive(:to_int).at_least(1).and_return(10)
+      begin
+        suppress_warning {$/ = " "}
+        result = IO.send(@method, @name, limit, &@object)
+      ensure
+        suppress_warning {$/ = sep}
+      end
+      (result ? result : ScratchPad.recorded).should == IOSpecs.lines_space_separator_limit
+    end
+
     describe "when the object is an Integer" do
       before :each do
         @sep = $/

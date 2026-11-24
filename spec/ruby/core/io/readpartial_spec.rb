@@ -30,6 +30,13 @@ describe "IO#readpartial" do
     @rd.readpartial(1).should == "o"
   end
 
+  it "converts the length with #to_int" do
+    @wr.write("foobar")
+    length = mock("2")
+    length.should_receive(:to_int).and_return(2)
+    @rd.readpartial(length).should == "fo"
+  end
+
   it "reads after ungetc with data in the buffer" do
     @wr.write("foobar")
     c = @rd.getc

@@ -24,6 +24,12 @@ describe "IO.binread" do
     IO.binread(@fname, 5).should == @contents.slice(0..4)
   end
 
+  it "converts the size with #to_int" do
+    length = mock("5")
+    length.should_receive(:to_int).and_return(5)
+    IO.binread(@fname, length).should == @contents.slice(0..4)
+  end
+
   it "reads the contents of a file from an offset of a specific size when specified" do
     IO.binread(@fname, 5, 3).should == @contents.slice(3, 5)
   end

@@ -22,6 +22,15 @@ describe "ARGF.lineno" do
     end
   end
 
+  it "converts the assigned value with #to_int" do
+    argf [@file1, @file2] do
+      lineno = mock("5")
+      lineno.should_receive(:to_int).and_return(5)
+      @argf.lineno = lineno
+      @argf.lineno.should == 5
+    end
+  end
+
   it "aliases to $." do
     script = fixture __FILE__, "lineno.rb"
     out = ruby_exe(script, args: [@file1, @file2])

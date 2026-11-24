@@ -70,6 +70,12 @@ describe "IO#wait" do
       -> { @w.wait(-1, 0) }.should.raise(ArgumentError, "Events must be positive integer!")
     end
 
+    it "converts the events with #to_int" do
+      events = mock("events")
+      events.should_receive(:to_int).and_return(IO::WRITABLE)
+      @w.wait(events, 0).should == IO::WRITABLE
+    end
+
     it "changes thread status to 'sleep' when waits for READABLE event" do
       t = Thread.new { @r.wait(IO::READABLE, 10) }
       sleep 1

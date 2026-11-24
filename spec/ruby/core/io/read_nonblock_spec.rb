@@ -61,6 +61,13 @@ describe "IO#read_nonblock" do
     @read.read_nonblock(4).should == "hell"
   end
 
+  it "converts the number of bytes with #to_int" do
+    @write << "hello"
+    length = mock("4")
+    length.should_receive(:to_int).and_return(4)
+    @read.read_nonblock(length).should == "hell"
+  end
+
   it "reads after ungetc with data in the buffer" do
     @write.write("foobar")
     @read.set_encoding(

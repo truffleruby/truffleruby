@@ -1202,8 +1202,9 @@ class File < IO
   end
 
   def initialize(path_or_fd, mode = nil, perm = nil, **options)
-    if Primitive.is_a?(path_or_fd, Integer)
-      super(path_or_fd, mode, **options)
+    # Like rb_file_initialize() in CRuby, which checks the first argument with rb_check_to_int()
+    if fd = Truffle::Type.rb_check_to_integer(path_or_fd, :to_int)
+      super(fd, mode, **options)
     else
       path = Truffle::Type.coerce_to_path_keep_encoding path_or_fd
       nmode, _binary, _external, _internal, _autoclose, perm = Truffle::IOOperations.normalize_options(mode, perm, options)
