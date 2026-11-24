@@ -26,12 +26,11 @@ if $DEBUG
 end
 
 # Truffle: ConditionVariable is defined in the core library.
-#          Queue and SizedQueue are defined in Java
+#          Queue and SizedQueue are defined in Java.
+#          The Thread::Queue, Thread::SizedQueue, Thread::ConditionVariable, Thread::Mutex and
+#          Thread::ThreadGroup constants are defined in the core library (thread.rb and mutex.rb).
 
 class Thread
-  Queue = ::Queue
-  SizedQueue = ::SizedQueue
-
   class Queue
     def pop(non_block = false, timeout: nil)
       Primitive.queue_pop(
