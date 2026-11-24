@@ -211,7 +211,7 @@ class JT
 
         excludes = %w[fails slow]
 
-        %w[:command_line :security :language :core :tracepoint :library :capi :truffle :truffle_capi].each do |set|
+        %w[:command_line :security :language :core :instrumentation :library :capi :truffle :truffle_capi].each do |set|
           t_excludes = excludes.map { |e| '--excl-tag ' + e }.join(' ')
           lines << "RUN ruby spec/mspec/bin/mspec -t #{ruby_bin}/ruby #{t_excludes} #{set}"
         end

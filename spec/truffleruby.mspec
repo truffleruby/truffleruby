@@ -38,15 +38,18 @@ class MSpecScript
   set :prefix, 'spec/ruby'
 
   # Run separately as they trigger instrumentation and are particularly slow (they instrument all loaded code)
-  set :tracepoint, [
-    "spec/ruby/core/tracepoint",
-    "spec/ruby/optional/capi/tracepoint_spec.rb",
+  set :instrumentation, %w[
+    spec/ruby/core/kernel/set_trace_func_spec.rb
+    spec/ruby/core/tracepoint
+    spec/ruby/library/coverage
+    spec/ruby/optional/capi/tracepoint_spec.rb
+    spec/truffle/debug_spec.rb
   ]
+  exclude_instrumentation = get(:instrumentation).map { "^#{_1}" }
 
   set :core, [
     "spec/ruby/core",
-    # See :tracepoint
-    "^spec/ruby/core/tracepoint",
+    *exclude_instrumentation,
   ]
 
   set :security, [
@@ -55,12 +58,12 @@ class MSpecScript
 
   set :library, [
     "spec/ruby/library",
+    *exclude_instrumentation,
   ]
 
   set :capi, [
     "spec/ruby/optional/capi",
-    # See :tracepoint
-    "^spec/ruby/optional/capi/tracepoint_spec.rb",
+    *exclude_instrumentation,
   ]
 
   set :thread_safety, [
@@ -70,7 +73,8 @@ class MSpecScript
   set :truffle, [
     "spec/truffle",
     # Tested separately
-    "^spec/truffle/capi"
+    "^spec/truffle/capi",
+    *exclude_instrumentation,
   ]
 
   set :truffle_capi, [
@@ -120,7 +124,7 @@ class MSpecScript
     end
   end
 
-  # All specs except C API specs and TracePoint specs
+  # All specs except C API specs and instrumentation specs
   set :files, get(:command_line) + get(:language) + get(:core) + get(:library) + get(:truffle) + get(:security) + get(:thread_safety)
 
   # All C API specs
@@ -132,7 +136,7 @@ class MSpecScript
   # All specs.
   # :next specs are not included as they need to run in a separate process.
   # :cxx specs are not included as they need to run in a separate process.
-  # :tracepoint specs are not included as they should run in a separate process.
+  # :instrumentation specs are not included as they should run in a separate process.
   set :all, get(:files) + get(:cext)
 end
 
