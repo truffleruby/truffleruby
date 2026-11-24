@@ -52,7 +52,6 @@ import org.truffleruby.cext.ValueWrapperManager;
 import org.truffleruby.collections.SharedIndicesMap;
 import org.truffleruby.collections.SharedIndicesMap.LanguageArray;
 import org.truffleruby.core.CoreLibrary;
-import org.truffleruby.core.RubyHandle;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.basicobject.RubyBasicObject;
 import org.truffleruby.core.binding.RubyBinding;
@@ -353,7 +352,6 @@ public final class RubyLanguage extends TruffleLanguage<RubyContext> {
     public final Shape exceptionShape = createShape(RubyException.class);
     public final Shape fiberShape = createShape(RubyFiber.class);
     public final Shape frozenErrorShape = createShape(RubyFrozenError.class);
-    public final Shape handleShape = createShape(RubyHandle.class);
     public final Shape hashShape = createShape(RubyHash.class);
     public final Shape sharedHashShape = hashShape.makeSharedShape();
     public final Shape innerContextShape = createShape(RubyInnerContext.class);

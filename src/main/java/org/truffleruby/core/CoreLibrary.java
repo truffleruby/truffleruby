@@ -222,7 +222,6 @@ public final class CoreLibrary {
     public final RubyClass prngRandomizerClass;
     public final RubyClass secureRandomizerClass;
     public final RubyClass customRandomizerClass;
-    public final RubyClass handleClass;
     public final RubyClass ioClass;
     public final RubyClass closedQueueErrorClass;
     public final RubyModule warningModule;
@@ -529,7 +528,6 @@ public final class CoreLibrary {
         truffleFeatureLoaderModule = defineModule(truffleModule, "FeatureLoader");
         defineModule(truffleModule, "Binding");
         defineModule(truffleModule, "POSIX");
-        handleClass = defineClass(truffleModule, objectClass, "Handle");
         warningModule = defineModule("Warning");
 
         truffleFFIModule = defineModule(truffleModule, "FFI");
