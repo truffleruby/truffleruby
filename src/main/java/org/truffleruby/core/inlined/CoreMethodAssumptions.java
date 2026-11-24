@@ -49,10 +49,10 @@ import org.truffleruby.language.methods.InternalMethod;
  * with two int's).
  * <p>
  * An {@link InlinedOperationNode} should only be used when the class of the receiver is a leaf class (there cannot be
- * instances of a subclass of that class), which is the case for primitive receivers ({@code int}, {@code long},
- * {@code double}, {@code boolean}). Then we only need to check the receiver is an instance of that class and register
- * an Assumption for the given method name (see {@link ModuleFields#registerAssumption}) to check method re-definition,
- * which avoids the method lookup. In such cases the method must be public as we do not check visibility.
+ * instances of a subclass of that class), e.g. Integer, Float, NilClass or Symbol. Then we only need to check the
+ * receiver is an instance of that class and register an Assumption for the given method name (see
+ * {@link ModuleFields#registerAssumption}) to check method re-definition, which avoids the method lookup. In such cases
+ * the method must be public as we do not check visibility.
  * <p>
  * Otherwise, a method lookup is needed to verify the method that would be called is the standard definition we expect.
  * In that case an {@link AlwaysInlinedMethodNode} should be used instead: it is also executed in the caller without
