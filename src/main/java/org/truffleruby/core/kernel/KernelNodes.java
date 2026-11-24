@@ -568,7 +568,7 @@ public abstract class KernelNodes {
             final RubyClass selfMetaClass = metaClassNode.execute(node, object);
             if (isSingletonProfile.profile(node, selfMetaClass.isSingleton)) {
                 final RubyClass newObjectMetaClass = lazySingletonClassNode.get(node).execute(newObject);
-                newObjectMetaClass.fields.initCopy(selfMetaClass);
+                newObjectMetaClass.fields.initCopy(getContext(node), selfMetaClass);
             }
 
             final boolean copyFrozen = freeze instanceof Nil;

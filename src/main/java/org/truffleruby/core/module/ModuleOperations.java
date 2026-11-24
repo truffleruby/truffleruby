@@ -121,7 +121,7 @@ public abstract class ModuleOperations {
     /** NOTE: This method returns false for an undefined RubyConstant */
     public static boolean isConstantDefined(RubyConstant constant) {
         return constant != null && !constant.isUndefined() &&
-                !(constant.isAutoload() && constant.getAutoloadConstant().isAutoloadingThread());
+                !(constant.isAutoload() && constant.getAutoloadConstant().isAutoloadingThreadAndUnset());
     }
 
     /** NOTE: This method might return an undefined RubyConstant */
@@ -132,7 +132,7 @@ public abstract class ModuleOperations {
                     // Cannot cache the lookup of an autoloading constant as the result depends on the calling thread
                     assumptions.add(Assumption.NEVER_VALID);
                 }
-                return !constant.getAutoloadConstant().isAutoloadingThread();
+                return !constant.getAutoloadConstant().isAutoloadingThreadAndUnset();
             } else {
                 return true;
             }

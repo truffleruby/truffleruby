@@ -40,6 +40,8 @@ Bug fixes:
 * Fix `IO#gets` with a separator and a limit waiting for more input when the limit is reached exactly at the end of the data read so far (#4582, @eregon).
 * Fix several `IO` methods, `File.new` and `ARGF.lineno=` to convert Integer arguments with `#to_int` (#4589, @taxor03).
 * Fix `File.lstat` raising `TypeError` instead of `Errno::ENOENT` for a missing file given as a `Pathname` (#4591, @taxor03).
+* Make `autoload` thread-safe: a constant assigned while autoloading is only visible to the thread loading the file, and is published to other threads once the file is fully loaded (#2431, #3040, @eregon).
+* Keep autoload constants as autoloads when loading their file raises an exception, so the next access tries again (@eregon).
 
 
 Compatibility:

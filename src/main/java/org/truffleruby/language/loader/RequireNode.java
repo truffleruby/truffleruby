@@ -27,6 +27,7 @@ import org.truffleruby.core.cast.BooleanCastNode;
 import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.debug.MetricsProfiler.MetricKind;
+import org.truffleruby.language.AutoloadConstant;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyConstant;
 import org.truffleruby.language.WarningNode;
@@ -89,17 +90,19 @@ public abstract class RequireNode extends RubyBaseNode {
         final FeatureLoader featureLoader = getContext().getFeatureLoader();
         final List<RubyConstant> constantsUnfiltered = featureLoader.getAutoloadConstants(expandedPath);
         final List<RubyConstant> alreadyAutoloading = new ArrayList<>();
+        // Whether this #require is the one called by GetConstantNode to autoload a constant
+        boolean requiredByAutoload = false;
         if (!constantsUnfiltered.isEmpty()) {
             var toAutoload = new ArrayList<RubyConstant>();
             for (RubyConstant constant : constantsUnfiltered) {
                 // Do not autoload recursively from the #require call in GetConstantNode
                 if (constant.getAutoloadConstant().isAutoloading()) {
                     alreadyAutoloading.add(constant);
+                    requiredByAutoload |= constant.getAutoloadConstant().isAutoloadingThread();
                 } else {
                     toAutoload.add(constant);
                 }
             }
-
 
             if (getContext().getOptions().LOG_AUTOLOAD && !toAutoload.isEmpty()) {
                 var toAutoloadWithPath = new String[toAutoload.size()];
@@ -121,17 +124,31 @@ public abstract class RequireNode extends RubyBaseNode {
             }
         }
 
+        boolean success = false;
         try {
-            return doRequire(feature, expandedPath, pathString);
+            final boolean result = doRequire(feature, expandedPath, pathString);
+            success = true;
+            return result;
         } finally {
             final List<RubyConstant> releasedConstants = featureLoader.getAutoloadConstants(expandedPath);
             for (RubyConstant constant : releasedConstants) {
-                if (constant.getAutoloadConstant().isAutoloadingThread() && !alreadyAutoloading.contains(constant)) {
-                    final boolean undefined = GetConstantNode
-                            .autoloadUndefineConstantIfStillAutoload(constant);
-                    GetConstantNode.logAutoloadResult(getLanguage(), getContext(), constant, undefined);
+                final AutoloadConstant autoloadConstant = constant.getAutoloadConstant();
+                if (autoloadConstant.isAutoloadingThread() && !alreadyAutoloading.contains(constant)) {
+                    // If the file raised, the constants which were not assigned remain autoload constants.
+                    // Those which were assigned too if the file was loaded to autoload a constant,
+                    // but not if the file was required directly, like in CRuby.
+                    final boolean publish = autoloadConstant.shouldPublish() && (success || !requiredByAutoload);
+                    if (publish) {
+                        autoloadConstant.publish(getContext(), constant);
+                    }
+
+                    if (success || publish) {
+                        final boolean undefined = success &&
+                                GetConstantNode.autoloadUndefineConstantIfStillAutoload(constant);
+                        GetConstantNode.logAutoloadResult(getLanguage(), getContext(), constant, undefined);
+                        featureLoader.removeAutoload(constant);
+                    }
                     GetConstantNode.autoloadConstantStop(constant);
-                    featureLoader.removeAutoload(constant);
                 }
             }
         }

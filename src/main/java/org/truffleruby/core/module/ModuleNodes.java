@@ -631,9 +631,7 @@ public abstract class ModuleNodes {
                 throw new RaiseException(getContext(node), coreExceptions(node).argumentError("empty file name", node));
             }
 
-            final String javaStringFilename = StringOperations.getJavaString(filenameAsPath);
-            module.fields.setAutoloadConstant(getLanguage(node), getContext(node), node, name, filenameAsPath,
-                    javaStringFilename);
+            module.fields.setAutoloadConstant(getLanguage(node), getContext(node), node, name, filenameAsPath);
             return nil;
         }
     }
@@ -1152,7 +1150,15 @@ public abstract class ModuleNodes {
                 return nil;
             }
 
-            final SourceSection sourceSection = lookupResult.getConstant().getSourceSection();
+            final RubyConstant constant = lookupResult.getConstant();
+            final SourceSection sourceSection;
+            if (constant.isAutoload() && constant.getAutoloadConstant().isAutoloadingThreadAndSet()) {
+                // The thread autoloading the constant sees where it was assigned, other threads see the autoload
+                sourceSection = constant.getAutoloadConstant().getUnpublishedValueSourceSection();
+            } else {
+                sourceSection = constant.getSourceSection();
+            }
+
             if (!BacktraceFormatter.isAvailable(sourceSection)) {
                 return createEmptyArray(node);
             } else {
@@ -1470,11 +1476,11 @@ public abstract class ModuleNodes {
         @Specialization(guards = { "!isRubyClass(self)", "!isRubyClass(from)" })
         Object initializeCopyModule(RubyModule self, RubyModule from,
                 @Cached @Shared SingletonClassNode singletonClassNode) {
-            self.fields.initCopy(from);
+            self.fields.initCopy(getContext(), from);
 
             final RubyClass selfMetaClass = singletonClassNode.execute(self);
             final RubyClass fromMetaClass = singletonClassNode.execute(from);
-            selfMetaClass.fields.initCopy(fromMetaClass);
+            selfMetaClass.fields.initCopy(getContext(), fromMetaClass);
 
             return nil;
         }
@@ -1491,7 +1497,7 @@ public abstract class ModuleNodes {
                 throw new RaiseException(getContext(), coreExceptions().typeError("can't copy singleton class", this));
             }
 
-            self.fields.initCopy(from);
+            self.fields.initCopy(getContext(), from);
 
             final RubyClass selfMetaClass = singletonClassNode.execute(self);
             final RubyClass fromMetaClass = from.getMetaClass();
@@ -1499,7 +1505,7 @@ public abstract class ModuleNodes {
             assert fromMetaClass.isSingleton;
             assert self.getMetaClass().isSingleton;
 
-            selfMetaClass.fields.initCopy(fromMetaClass); // copy class methods
+            selfMetaClass.fields.initCopy(getContext(), fromMetaClass); // copy class methods
 
             return nil;
         }

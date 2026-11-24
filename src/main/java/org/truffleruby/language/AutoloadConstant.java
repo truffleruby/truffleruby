@@ -14,6 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.source.SourceSection;
 import org.truffleruby.RubyContext;
 import org.truffleruby.core.mutex.MutexOperations;
 import org.truffleruby.core.string.StringOperations;
@@ -25,7 +26,15 @@ public final class AutoloadConstant {
     private final String autoloadPath;
     private volatile ReentrantLock autoloadLock;
 
-    AutoloadConstant(Object feature) {
+    /** The value assigned to the constant by the thread autoloading it. It is only visible to that thread until the
+     * autoload completes, at which point it is published, i.e., it replaces the autoload constant in the module. That
+     * way other threads never observe a partially-initialized value, e.g. a class with only some of its methods
+     * defined. These 3 fields are only accessed while holding the {@link #autoloadLock}. */
+    private Object unpublishedValue = null;
+    private Node unpublishedValueNode = null;
+    private boolean published = false;
+
+    public AutoloadConstant(Object feature) {
         assert RubyStringLibrary.isRubyStringUncached(feature);
         this.feature = feature;
         this.autoloadPath = StringOperations.getJavaString(this.feature);
@@ -64,6 +73,61 @@ public final class AutoloadConstant {
 
     public boolean isAutoloadingThread() {
         return autoloadLock != null && autoloadLock.isHeldByCurrentThread();
+    }
+
+    /** Whether the current thread is autoloading this constant and did not assign it yet. In that case the constant is
+     * considered missing for that thread. */
+    public boolean isAutoloadingThreadAndUnset() {
+        return isAutoloadingThread() && !hasUnpublishedValue();
+    }
+
+    /** Whether the current thread is autoloading this constant and already assigned it. In that case the constant is
+     * resolved to {@link #getUnpublishedValue()} for that thread. */
+    public boolean isAutoloadingThreadAndSet() {
+        return isAutoloadingThread() && hasUnpublishedValue();
+    }
+
+    public boolean shouldPublish() {
+        return hasUnpublishedValue() && !isPublished();
+    }
+
+    private boolean hasUnpublishedValue() {
+        assert isAutoloadingThread();
+        return unpublishedValue != null;
+    }
+
+    public Object getUnpublishedValue() {
+        assert isAutoloadingThread();
+        return unpublishedValue;
+    }
+
+    public SourceSection getUnpublishedValueSourceSection() {
+        assert isAutoloadingThread();
+        return unpublishedValueNode != null ? unpublishedValueNode.getSourceSection() : null;
+    }
+
+    public void setUnpublishedValue(Object unpublishedValue, Node currentNode) {
+        assert isAutoloadingThread();
+        assert !isPublished();
+        assert RubyGuards.assertIsValidRubyValue(unpublishedValue);
+        this.unpublishedValue = unpublishedValue;
+        this.unpublishedValueNode = currentNode;
+    }
+
+    public boolean isPublished() {
+        assert isAutoloadingThread();
+        return published;
+    }
+
+    /** Replaces the autoload constant by a regular constant with the value assigned during the autoload, which makes it
+     * visible to all threads. */
+    @TruffleBoundary
+    public void publish(RubyContext context, RubyConstant constant) {
+        assert isAutoloadingThread();
+        assert shouldPublish();
+        this.published = true;
+        constant.getDeclaringModule().fields.publishAutoloadedConstant(context, unpublishedValueNode,
+                constant.getName(), this, unpublishedValue);
     }
 
 }

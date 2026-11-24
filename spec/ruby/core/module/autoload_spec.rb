@@ -1051,6 +1051,39 @@ describe "Module#autoload" do
       t2_exc.should == nil
     end
 
+    it "blocks other threads until the file is done loading so no partial modules are seen" do
+      ModuleSpecs::Autoload.autoload :ThreadSafe, fixture(__FILE__, "autoload_thread_safe.rb")
+      @remove << :ThreadSafe
+      barrier = ModuleSpecs::CyclicBarrier.new 2
+      ScratchPad.record(barrier)
+
+      thread = Thread.new { # starts the autoload
+        ModuleSpecs::Autoload::ThreadSafe.foo.should == 42
+      }
+      barrier.await
+      # ThreadSafe should only be published once the whole file is loaded
+      ModuleSpecs::Autoload::ThreadSafe.foo.should == 42
+
+      thread.join
+    end
+
+    it "keeps the constant as an autoload for other threads if the file raises after assigning the constant" do
+      path = fixture(__FILE__, "autoload_assign_then_raise.rb")
+      ModuleSpecs::Autoload.autoload :AssignThenRaise, path
+      @remove << :AssignThenRaise
+      ScratchPad.record []
+
+      -> { ModuleSpecs::Autoload::AssignThenRaise }.should.raise(RuntimeError, "raise after assigning")
+      ScratchPad.recorded.should == ["constant"]
+      ModuleSpecs::Autoload.autoload?(:AssignThenRaise).should == path
+      Thread.new { ModuleSpecs::Autoload.autoload?(:AssignThenRaise) }.value.should == path
+      $LOADED_FEATURES.should_not.include?(path)
+
+      # the file is loaded again
+      -> { ModuleSpecs::Autoload::AssignThenRaise }.should.raise(RuntimeError, "raise after assigning")
+      ScratchPad.recorded.should == ["constant", "constant"]
+    end
+
     # https://bugs.ruby-lang.org/issues/10892
     it "blocks others threads while doing an autoload" do
       file_path     = fixture(__FILE__, "repeated_concurrent_autoload.rb")

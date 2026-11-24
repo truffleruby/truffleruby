@@ -40,9 +40,9 @@ import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.method.MethodEntry;
 import org.truffleruby.core.method.MethodFilter;
 import org.truffleruby.core.string.ImmutableRubyString;
-import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.core.symbol.RubySymbol;
+import org.truffleruby.language.AutoloadConstant;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.PerformanceWarningNode;
 import org.truffleruby.language.RubyConstant;
@@ -234,7 +234,7 @@ public final class ModuleFields extends ModuleChain implements ObjectGraphNode {
     }
 
     @TruffleBoundary
-    public void initCopy(RubyModule from) {
+    public void initCopy(RubyContext context, RubyModule from) {
         // Do not copy name, the copy is an anonymous module
         final ModuleFields fromFields = from.fields;
 
@@ -251,7 +251,11 @@ public final class ModuleFields extends ModuleChain implements ObjectGraphNode {
         for (Entry<String, ConstantEntry> entry : fromFields.constants.entrySet()) {
             final RubyConstant constant = entry.getValue().getConstant();
             if (constant != null) {
-                this.constants.put(entry.getKey(), new ConstantEntry(constant));
+                final RubyConstant copy = constant.copy(rubyModule);
+                this.constants.put(entry.getKey(), new ConstantEntry(copy));
+                if (copy.isAutoload()) {
+                    context.getFeatureLoader().addAutoload(copy);
+                }
             }
         }
 
@@ -426,13 +430,14 @@ public final class ModuleFields extends ModuleChain implements ObjectGraphNode {
             childModule.fields.nameModule(context, rubyModule, name);
         }
 
-        return setConstantInternal(context, currentNode, name, value, false);
+        return setConstantInternal(context, currentNode, name, value, null);
     }
 
     @TruffleBoundary
     public void setAutoloadConstant(RubyLanguage language, RubyContext context, Node currentNode, String name,
-            Object filename, String javaFilename) {
-        RubyConstant autoloadConstant = setConstantInternal(context, currentNode, name, filename, true);
+            Object filename) {
+        RubyConstant autoloadConstant = setConstantInternal(context, currentNode, name, null,
+                new AutoloadConstant(filename));
         if (autoloadConstant == null) {
             return;
         }
@@ -445,7 +450,7 @@ public final class ModuleFields extends ModuleChain implements ObjectGraphNode {
                     filename));
         }
         final ReentrantLockFreeingMap<String> fileLocks = context.getFeatureLoader().getFileLocks();
-        final ReentrantLock lock = fileLocks.get(javaFilename);
+        final ReentrantLock lock = fileLocks.get(autoloadConstant.getAutoloadConstant().getAutoloadPath());
         if (lock.isLocked()) {
             // We need to handle the new autoload constant immediately
             // if Object.autoload(name, filename) is executed from filename.rb
@@ -457,40 +462,55 @@ public final class ModuleFields extends ModuleChain implements ObjectGraphNode {
 
     @TruffleBoundary
     private RubyConstant setConstantInternal(RubyContext context, Node currentNode, String name, Object value,
-            boolean autoload) {
+            AutoloadConstant autoloadConstant) {
         checkFrozen(context, currentNode);
 
         SharedObjects.propagate(context.getLanguageSlow(), rubyModule, value);
 
-        final String autoloadPath = autoload
-                ? StringOperations.getJavaString(value)
-                : null;
+        final boolean autoload = autoloadConstant != null;
+        final String autoloadPath = autoload ? autoloadConstant.getAutoloadPath() : null;
+        boolean published = true;
         RubyConstant previous;
-        RubyConstant newConstant;
+        RubyConstant newConstant = null;
         ConstantEntry previousEntry;
         do {
             previousEntry = constants.get(name);
             previous = previousEntry != null ? previousEntry.getConstant() : null;
-            if (autoload && previous != null) {
-                if (previous.hasValue()) {
-                    // abort, do not set an autoload constant, the constant already has a value
-                    return null;
-                } else if (previous.isAutoload() &&
-                        previous.getAutoloadConstant().getAutoloadPath().equals(autoloadPath)) {
-                    // already an autoload constant with the same path,
-                    // do nothing so we don't replace the AutoloadConstant#autoloadLock which might be already acquired
-                    return null;
+            if (previous != null) {
+                if (autoload) {
+                    if (previous.hasValue()) {
+                        // abort, do not set an autoload constant, the constant already has a value
+                        return null;
+                    } else if (previous.isAutoload() &&
+                            previous.getAutoloadConstant().getAutoloadPath().equals(autoloadPath)) {
+                        // already an autoload constant with the same path,
+                        // do nothing so we don't replace the AutoloadConstant#autoloadLock which might be already acquired
+                        return null;
+                    }
+                } else if (previous.isAutoload()) {
+                    final AutoloadConstant previousAutoload = previous.getAutoloadConstant();
+                    if (previousAutoload.isAutoloadingThread() && !previousAutoload.isPublished()) {
+                        // The constant is assigned while this thread is autoloading it. The value is only visible to
+                        // this thread and is published to other threads once the autoload completes, so they do not
+                        // observe e.g. a partially-defined module. Other threads keep seeing the autoload constant, so
+                        // there is nothing to invalidate.
+                        previousAutoload.setUnpublishedValue(value, currentNode);
+                        published = false;
+                        break;
+                    }
                 }
             }
-            newConstant = newConstant(currentNode, name, value, autoload, previous);
+            newConstant = newConstant(currentNode, name, value, autoloadConstant, previous);
         } while (!ConcurrentOperations.replace(constants, name, previousEntry, new ConstantEntry(newConstant)));
 
-        if (previousEntry != null) {
-            previousEntry.invalidate("set", rubyModule, name);
-        }
+        if (published) {
+            if (previousEntry != null) {
+                previousEntry.invalidate("set", rubyModule, name);
+            }
 
-        if (includedBy != null) {
-            invalidateConstantIncludedBy(name);
+            if (includedBy != null) {
+                invalidateConstantIncludedBy(name);
+            }
         }
 
         if (context.isConstAddedEverDefined()) {
@@ -501,12 +521,38 @@ public final class ModuleFields extends ModuleChain implements ObjectGraphNode {
         return autoload ? newConstant : previous;
     }
 
-    private RubyConstant newConstant(Node currentNode, String name, Object value, boolean autoload,
+    /** Replaces the autoload constant by a regular constant with the value which was assigned during the autoload. Does
+     * nothing if the autoload constant was removed or replaced during the autoload. #const_added was already called
+     * when the value was assigned. */
+    @TruffleBoundary
+    public void publishAutoloadedConstant(RubyContext context, Node assignmentNode, String name,
+            AutoloadConstant autoloadConstant, Object value) {
+        SharedObjects.propagate(context.getLanguageSlow(), rubyModule, value);
+
+        ConstantEntry previousEntry;
+        RubyConstant newConstant;
+        do {
+            previousEntry = constants.get(name);
+            final RubyConstant previous = previousEntry != null ? previousEntry.getConstant() : null;
+            if (previous == null || previous.getAutoloadConstant() != autoloadConstant) {
+                return;
+            }
+            newConstant = newConstant(assignmentNode, name, value, null, previous);
+        } while (!constants.replace(name, previousEntry, new ConstantEntry(newConstant)));
+
+        previousEntry.invalidate("publish autoloaded constant", rubyModule, name);
+
+        if (includedBy != null) {
+            invalidateConstantIncludedBy(name);
+        }
+    }
+
+    private RubyConstant newConstant(Node currentNode, String name, Object value, AutoloadConstant autoloadConstant,
             RubyConstant previous) {
         final boolean isPrivate = previous != null && previous.isPrivate();
         final boolean isDeprecated = previous != null && previous.isDeprecated();
         final SourceSection sourceSection = currentNode != null ? currentNode.getSourceSection() : null;
-        return new RubyConstant(rubyModule, name, value, isPrivate, autoload, isDeprecated, sourceSection);
+        return new RubyConstant(rubyModule, name, value, isPrivate, autoloadConstant, isDeprecated, sourceSection);
     }
 
     @TruffleBoundary

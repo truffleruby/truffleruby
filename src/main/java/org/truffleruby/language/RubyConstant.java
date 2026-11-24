@@ -43,7 +43,7 @@ public final class RubyConstant implements ObjectGraphNode {
             String name,
             Object value,
             boolean isPrivate,
-            boolean autoload,
+            AutoloadConstant autoloadConstant,
             boolean isDeprecated,
             SourceSection sourceSection) {
         this(
@@ -51,7 +51,7 @@ public final class RubyConstant implements ObjectGraphNode {
                 name,
                 value,
                 isPrivate,
-                autoload ? new AutoloadConstant(value) : null,
+                autoloadConstant,
                 false,
                 isDeprecated,
                 sourceSection);
@@ -76,6 +76,14 @@ public final class RubyConstant implements ObjectGraphNode {
         this.autoloadConstant = autoloadConstant;
         this.undefined = undefined;
         this.sourceSection = sourceSection;
+    }
+
+    /** Copies this constant for {@code Module#initialize_copy}. An autoload constant gets its own
+     * {@link AutoloadConstant} as that holds the state of the autoload and is tied to the declaring module. */
+    public RubyConstant copy(RubyModule declaringModule) {
+        var autoloadConstantCopy = isAutoload() ? new AutoloadConstant(autoloadConstant.getFeature()) : null;
+        return new RubyConstant(declaringModule, name, value, isPrivate, autoloadConstantCopy, undefined, isDeprecated,
+                sourceSection);
     }
 
     public RubyModule getDeclaringModule() {
