@@ -154,6 +154,16 @@ describe "Module#const_get" do
     -> { Object.const_get('ConstantSpecs::CS_CONST1') }.should.raise(NameError)
   end
 
+  it "raises a NameError when a later segment of a scoped name would resolve in Object through a class" do
+    # CS_CONST1 is defined in Object, which is excluded for later segments of a scoped name.
+    # ChildA has no custom #const_missing, unlike ClassA which would return the symbol.
+    -> { ConstantSpecs.const_get('ContainerA::ChildA::CS_CONST1') }.should.raise(NameError)
+  end
+
+  it "raises a NameError when a later segment of a scoped name would resolve in Object through a module" do
+    -> { ConstantSpecs.const_get('ModuleA::CS_CONST1') }.should.raise(NameError)
+  end
+
   describe "with statically assigned constants" do
     it "searches the immediate class or module first" do
       ConstantSpecs::ClassA.const_get(:CS_CONST10).should == :const10_10

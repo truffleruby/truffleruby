@@ -929,8 +929,15 @@ public abstract class ModuleNodes {
                 @Cached NameToJavaStringNode nameToJavaStringNode) {
             final var fullName = nameToJavaStringNode.execute(this, fullNameObject);
             final boolean inherit = booleanCastWithDefaultNode.execute(this, inheritObject, true);
-            final ConstantLookupResult constant = ModuleOperations
-                    .lookupScopedConstant(getContext(), module, fullName, inherit, this, checkName);
+            final ConstantLookupResult constant;
+            if (fullNameObject instanceof RubySymbol) {
+                // Like CRuby, a Symbol is not treated as a constant path, so "A::B" is a wrong constant name
+                constant = ModuleOperations
+                        .lookupConstantWithInherit(getContext(), module, fullName, inherit, this, checkName);
+            } else {
+                constant = ModuleOperations
+                        .lookupScopedConstant(getContext(), module, fullName, inherit, this, checkName);
+            }
             return constant.isFound();
         }
     }
@@ -943,6 +950,40 @@ public abstract class ModuleNodes {
                 @Cached ToStringOrSymbolNode toStringOrSymbolNode) {
             var name = toStringOrSymbolNode.execute(this, nameObject);
             return constGetNode.execute(this, module, name, inherit, lookInObject, checkName);
+        }
+    }
+
+    @Primitive(name = "module_const_get_segment")
+    public abstract static class ConstGetSegmentNode extends PrimitiveArrayArgumentsNode {
+
+        /** Lookup one segment of a scoped constant path like "A::B" for Module#const_get. Like CRuby
+         * rb_const_get_from(), the constants of Object itself are not searched. */
+        @Specialization
+        Object getConst(RubyModule module, Object nameObject, boolean inherit, boolean checkName,
+                @Cached GetConstantNode getConstantNode,
+                @Cached NameToJavaStringNode nameToJavaStringNode) {
+            final var name = nameToJavaStringNode.execute(this, nameObject);
+            if (checkName && !Identifiers.isValidConstantName(name)) {
+                throw new RaiseException(
+                        getContext(),
+                        coreExceptions().nameError(
+                                StringUtils.format("wrong constant name %s", name),
+                                module,
+                                name,
+                                this));
+            }
+            final LookupConstantInterface lookup = inherit
+                    ? ConstGetSegmentNode::lookupConstantSegment
+                    : ConstGetNode::lookupConstantNoInherit;
+            return getConstantNode.lookupAndResolveConstant(LexicalScope.IGNORE, module, name, checkName, lookup, true);
+        }
+
+        @TruffleBoundary
+        static RubyConstant lookupConstantSegment(Node node, LexicalScope lexicalScope, RubyModule module,
+                String name, boolean checkName) {
+            return ModuleOperations
+                    .lookupConstantExcludingObject(getContext(node), module, name, new ArrayList<>())
+                    .getConstant();
         }
     }
 
@@ -962,8 +1003,8 @@ public abstract class ModuleNodes {
         static Object getConstant(
                 Node node, RubyModule module, RubySymbol name, boolean inherit, boolean lookInObject, boolean checkName,
                 @Cached @Shared GetConstantNode getConstantNode,
-                @Cached("create(true, false)") @Shared LookupConstantNode lookupConstantNode,
-                @Cached("create(true, true)") @Shared LookupConstantNode lookupConstantLookInObjectNode) {
+                @Cached("create(true, false, false)") @Shared LookupConstantNode lookupConstantNode,
+                @Cached("create(true, true, false)") @Shared LookupConstantNode lookupConstantLookInObjectNode) {
             return getConstant(module, name.getString(), checkName, lookInObject, getConstantNode, lookupConstantNode,
                     lookupConstantLookInObjectNode);
         }
@@ -989,8 +1030,8 @@ public abstract class ModuleNodes {
                 Node node, RubyModule module, Object name, boolean inherit, boolean lookInObject, boolean checkName,
                 @Cached @Shared RubyStringLibrary stringsName,
                 @Cached @Shared GetConstantNode getConstantNode,
-                @Cached("create(true, false)") @Shared LookupConstantNode lookupConstantNode,
-                @Cached("create(true, true)") @Shared LookupConstantNode lookupConstantLookInObjectNode,
+                @Cached("create(true, false, false)") @Shared LookupConstantNode lookupConstantNode,
+                @Cached("create(true, true, false)") @Shared LookupConstantNode lookupConstantLookInObjectNode,
                 @Cached("asTruffleStringUncached(name)") TruffleString cachedTString,
                 @Cached("stringsName.getEncoding(node, name)") RubyEncoding cachedEncoding,
                 @Cached("getJavaString(name)") String cachedString,
@@ -1011,8 +1052,8 @@ public abstract class ModuleNodes {
                 Node node, RubyModule module, Object name, boolean inherit, boolean lookInObject, boolean checkName,
                 @Cached @Shared GetConstantNode getConstantNode,
                 @Cached @Shared ByteIndexOfStringNode byteIndexOfStringNode,
-                @Cached("create(true, false)") @Shared LookupConstantNode lookupConstantNode,
-                @Cached("create(true, true)") @Shared LookupConstantNode lookupConstantLookInObjectNode,
+                @Cached("create(true, false, false)") @Shared LookupConstantNode lookupConstantNode,
+                @Cached("create(true, true, false)") @Shared LookupConstantNode lookupConstantLookInObjectNode,
                 @Cached @Shared RubyStringLibrary stringsName,
                 @Cached @Shared ToJavaStringNode toJavaStringNode) {
             return getConstant(module, toJavaStringNode.execute(node, name), checkName, lookInObject, getConstantNode,

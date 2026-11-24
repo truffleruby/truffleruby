@@ -27,6 +27,7 @@ import org.truffleruby.language.RubyConstant;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.parser.Identifiers;
 
+import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Exclusive;
@@ -38,15 +39,21 @@ public abstract class LookupConstantNode extends LookupConstantBaseNode implemen
 
     private final boolean ignoreVisibility;
     private final boolean lookInObject;
+    private final boolean excludeObject;
 
+    /** Creates a node. {@code excludeObject} takes precedence: it excludes the constants of Object itself, like
+     * rb_const_search() with exclude=TRUE in CRuby. When {@code excludeObject} is false, {@code lookInObject}
+     * additionally searches Object and its included modules. */
     @NeverDefault
-    public static LookupConstantNode create(boolean ignoreVisibility, boolean lookInObject) {
-        return LookupConstantNodeGen.create(ignoreVisibility, lookInObject);
+    public static LookupConstantNode create(
+            boolean ignoreVisibility, boolean lookInObject, boolean excludeObject) {
+        return LookupConstantNodeGen.create(ignoreVisibility, lookInObject, excludeObject);
     }
 
-    public LookupConstantNode(boolean ignoreVisibility, boolean lookInObject) {
+    public LookupConstantNode(boolean ignoreVisibility, boolean lookInObject, boolean excludeObject) {
         this.ignoreVisibility = ignoreVisibility;
         this.lookInObject = lookInObject;
+        this.excludeObject = excludeObject;
     }
 
     public abstract RubyConstant executeLookupConstant(Object module, String name, boolean checkName);
@@ -120,10 +127,13 @@ public abstract class LookupConstantNode extends LookupConstantBaseNode implemen
 
     @TruffleBoundary
     protected ConstantLookupResult doLookup(RubyModule module, String name) {
-        if (lookInObject) {
-            return ModuleOperations.lookupConstantAndObject(getContext(), module, name, new ArrayList<>());
+        var assumptions = new ArrayList<Assumption>();
+        if (excludeObject) {
+            return ModuleOperations.lookupConstantExcludingObject(getContext(), module, name, assumptions);
+        } else if (lookInObject) {
+            return ModuleOperations.lookupConstantAndObject(getContext(), module, name, assumptions);
         } else {
-            return ModuleOperations.lookupConstant(getContext(), module, name);
+            return ModuleOperations.lookupConstant(getContext(), module, name, assumptions);
         }
     }
 

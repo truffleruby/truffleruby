@@ -170,7 +170,8 @@ class Module
               elsif i == 0
                 Primitive.module_const_get res, s, true, true, true
               else
-                Primitive.module_const_get res, s, true, false, true
+                # Like CRuby, a segment after the first does not search the constants of Object itself
+                Primitive.module_const_get_segment res, s, true, true
               end
       else
         raise TypeError, "#{name} does not refer to a class/module"

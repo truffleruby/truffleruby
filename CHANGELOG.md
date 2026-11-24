@@ -9,6 +9,7 @@ New features:
 
 Bug fixes:
 
+* Fix `Module#const_defined?`, `Module#const_get`, `Module#const_source_location` and `MOD::CONST` constant path lookups wrongly finding top-level (Object) constants for segments after the first of a scoped name, and `Module#const_defined?` wrongly accepting a scoped Symbol name (#3901).
 * Fix reading the main script from a terminal reading past the end-of-file (Ctrl-D) when more input was already typed (@eregon).
 * Fix `Process.exec` ignoring the `:umask` option (@nirvdrum).
 * Fix `Socket.tcp` and `Addrinfo#connect` with a timeout returning an unconnected socket on macOS when the connection was refused (@eregon).

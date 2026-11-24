@@ -62,7 +62,8 @@ public final class ReadConstantNode extends RubyContextSourceNode {
     private LookupConstantNode getLookupConstantNode() {
         if (lookupConstantNode == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
-            lookupConstantNode = insert(LookupConstantNode.create(false, false));
+            // Like CRuby vm_get_ev_const(), MOD::CONST does not search the constants of Object itself
+            lookupConstantNode = insert(LookupConstantNode.create(false, false, true));
         }
         return lookupConstantNode;
     }

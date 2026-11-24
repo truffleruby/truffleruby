@@ -919,7 +919,7 @@ public abstract class CExtNodes {
     @CoreMethod(names = "rb_const_get", onSingleton = true, required = 2)
     public abstract static class RbConstGetNode extends CoreMethodArrayArgumentsNode {
 
-        @Child private LookupConstantNode lookupConstantNode = LookupConstantNode.create(true, true);
+        @Child private LookupConstantNode lookupConstantNode = LookupConstantNode.create(true, true, false);
 
         @Specialization
         Object rbConstGet(RubyModule module, Object name,
@@ -936,7 +936,8 @@ public abstract class CExtNodes {
     @CoreMethod(names = "rb_const_get_from", onSingleton = true, required = 2)
     public abstract static class RbConstGetFromNode extends CoreMethodArrayArgumentsNode {
 
-        @Child private LookupConstantNode lookupConstantNode = LookupConstantNode.create(true, false);
+        // Like CRuby rb_const_get_from(), the constants of Object itself are not searched
+        @Child private LookupConstantNode lookupConstantNode = LookupConstantNode.create(true, false, true);
 
         @Specialization
         Object rbConstGetFrom(RubyModule module, Object name,
