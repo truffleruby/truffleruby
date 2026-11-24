@@ -376,7 +376,7 @@ public abstract class ModuleNodes {
 
         @Override
         public RubyNode cloneUninitialized() {
-            return new AliasKeywordNode(newName, oldName).copyFlags(this);
+            return new AliasKeywordNode(newName.cloneUninitialized(), oldName.cloneUninitialized()).copyFlags(this);
         }
 
     }
