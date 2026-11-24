@@ -40,7 +40,7 @@ Bug fixes:
 * Fix `IO#gets` with a separator and a limit waiting for more input when the limit is reached exactly at the end of the data read so far (#4582, @eregon).
 * Fix several `IO` methods, `File.new` and `ARGF.lineno=` to convert Integer arguments with `#to_int` (#4589, @taxor03).
 * Fix `File.lstat` raising `TypeError` instead of `Errno::ENOENT` for a missing file given as a `Pathname` (#4591, @taxor03).
-
+* Fix `rb_hash_foreach()` to iterate the entries directly instead of calling `Hash#each` and `Hash#delete`, which might be overridden (#4586, @eregon).
 
 Compatibility:
 
