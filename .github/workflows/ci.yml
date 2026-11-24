@@ -190,7 +190,7 @@ jobs:
         test:
         - :truffle # ~12min
         - :language :core :cxx # ~3min ~7min ~1min
-        - :command_line :library :cext :security :tracepoint :next # ~5min ~2min ~1.5min ~0.75min ~0.5min ~0.25min
+        - :command_line :library :cext :security :instrumentation :next # ~5min ~2min ~1.5min ~0.75min ~0.5min ~0.25min
         - fast bundle cexts # ~1.5min ~1.5min ~6.5min
         - "'mri --all-cexts'" # ~6min
         - integration basictest # ~10min ~0.5min
