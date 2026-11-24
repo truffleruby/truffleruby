@@ -48,12 +48,16 @@ import org.truffleruby.language.methods.InternalMethod;
  * as possible to save on footprint. In trivial cases it is better to inline the logic directly (e.g. for Integer#==
  * with two int's).
  * <p>
- * Two strategies are used to check method re-definition.
- * <li>If the class is a leaf class (there cannot be instances of a subclass of that class), then we only need to check
- * the receiver is an instance of that class and register an Assumption for the given method name (see
- * {@link ModuleFields#registerAssumption}). In such cases the method must be public as we do not check visibility.</li>
- * <li>Otherwise, we need to do a method lookup and verify the method that would be called is the standard definition we
- * expect.</li>
+ * An {@link InlinedOperationNode} should only be used when the class of the receiver is a leaf class (there cannot be
+ * instances of a subclass of that class), e.g. Integer, Float, NilClass or Symbol. Then we only need to check the
+ * receiver is an instance of that class and register an Assumption for the given method name (see
+ * {@link ModuleFields#registerAssumption}) to check method re-definition, which avoids the method lookup. In such cases
+ * the method must be public as we do not check visibility.
+ * <p>
+ * Otherwise, a method lookup is needed to verify the method that would be called is the standard definition we expect.
+ * In that case an {@link AlwaysInlinedMethodNode} should be used instead: it is also executed in the caller without
+ * going through a CallTarget and it avoids duplicating the logic of the core method in two places (the inlined node and
+ * the {@link CoreMethod} node).
  * <p>
  * Every specialization should use {@code assumptions = "assumptions",} to check at least the tracing Assumption
  * ({@link RubyLanguage#cCallTracingUnusedAssumption}). When adding a new node, it is a good idea to add a debug print

@@ -19,6 +19,7 @@ import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.language.dispatch.RubyCallNodeParameters;
 import org.truffleruby.language.methods.TranslateExceptionNode;
 
+/** See {@link CoreMethodAssumptions} */
 public abstract class InlinedOperationNode extends InlinedReplaceableNode {
 
     public InlinedOperationNode(
