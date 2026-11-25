@@ -239,6 +239,13 @@ describe :time_params_microseconds, shared: true do
     t.usec.should == 123
   end
 
+  it "coerces the microseconds with #to_int" do
+    m = mock(:int)
+    m.should_receive(:to_int).and_return(123)
+    t = Time.send(@method, 2000, 1, 1, 20, 15, 1, m)
+    t.usec.should == 123
+  end
+
   it "raises an ArgumentError for out of range microsecond" do
     -> { Time.send(@method, 2000, 1, 1, 20, 15, 1, 1000000) }.should.raise(ArgumentError)
   end

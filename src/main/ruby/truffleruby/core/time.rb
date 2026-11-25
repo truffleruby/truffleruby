@@ -161,7 +161,7 @@ class Time
   alias_method :ctime, :asctime
 
   def xmlschema(fraction_digits = 0)
-    fraction_digits = fraction_digits.to_i
+    fraction_digits = Primitive.rb_num2long(fraction_digits)
     s = strftime('%FT%T')
     if fraction_digits > 0
       s << strftime(".%#{fraction_digits}N")
@@ -237,6 +237,7 @@ class Time
   end
 
   def round(places = 0)
+    places = Truffle::TimeOperations.ndigits(places)
     original = to_i + subsec.to_r
     rounded = original.round(places)
 
@@ -246,6 +247,7 @@ class Time
   end
 
   def floor(places = 0)
+    places = Truffle::TimeOperations.ndigits(places)
     original = to_i + subsec.to_r
     floored = original.floor(places)
 
@@ -255,6 +257,7 @@ class Time
   end
 
   def ceil(places = 0)
+    places = Truffle::TimeOperations.ndigits(places)
     original = to_i + subsec.to_r
     ceiled = original.ceil(places)
 

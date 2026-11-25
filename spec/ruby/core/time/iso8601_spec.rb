@@ -15,6 +15,13 @@ describe "Time#iso8601" do
       t.iso8601(2).should == "1985-04-12T23:20:50.00+02:00"
     end
 
+    it "converts the number of fraction digits with #to_int" do
+      digits = mock('digits')
+      digits.should_receive(:to_int).and_return(2)
+      t = Time.utc(1985, 4, 12, 23, 20, 50, 521245)
+      t.iso8601(digits).should == "1985-04-12T23:20:50.52Z"
+    end
+
     it "year is always at least 4 digits" do
       t = Time.utc(12, 4, 12)
       t.iso8601.should ==  "0012-04-12T00:00:00Z"

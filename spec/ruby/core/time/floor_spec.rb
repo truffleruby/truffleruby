@@ -17,6 +17,16 @@ describe "Time#floor" do
     @time.floor(7).should == Time.utc(2010, 3, 30, 5, 43, "25.1234567".to_r)
   end
 
+  it "converts the number of decimal places with #to_int" do
+    places = mock('places')
+    places.should_receive(:to_int).and_return(7)
+    @time.floor(places).should == Time.utc(2010, 3, 30, 5, 43, "25.1234567".to_r)
+  end
+
+  it "raises an ArgumentError for a negative number of decimal places" do
+    -> { @time.floor(-1) }.should.raise(ArgumentError, "negative ndigits given")
+  end
+
   it "returns an instance of Time, even if #floor is called on a subclass" do
     subclass = Class.new(Time)
     instance = subclass.at(0)
