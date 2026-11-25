@@ -163,7 +163,7 @@ describe "Module#const_defined?" do
     ConstantSpecs.const_defined?("ClassA::CS_CONST1").should == false
   end
 
-  it "does not exclude Object for later segments when the receiver is Object" do
+  it "does not exclude Object constants for the next segment when the receiver is Object" do
     ConstantSpecs.const_defined?("Object::CS_CONST1").should == true
   end
 

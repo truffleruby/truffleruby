@@ -32,5 +32,4 @@ class Mutex
   end
 end
 
-# Like CRuby, Mutex is defined under Thread (Thread::Mutex) and also accessible as ::Mutex
 Thread::Mutex = ::Mutex

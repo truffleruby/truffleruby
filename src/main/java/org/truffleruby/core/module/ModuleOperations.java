@@ -324,7 +324,9 @@ public abstract class ModuleOperations {
 
     /** Like {@link #lookupConstant(RubyContext, RubyModule, String, ArrayList)} but skips the constants of Object
      * itself, like rb_const_search() with exclude=TRUE in CRuby. Modules included in Object (e.g. Kernel) and
-     * BasicObject are still searched. The exclusion does not apply when the module to search is Object itself. */
+     * BasicObject are still searched. The exclusion does not apply when the module to search is Object itself. Object's
+     * constant entry assumption is still recorded, so that cached lookups are invalidated when the ancestors of Object
+     * change (e.g. Object#include). */
     @TruffleBoundary
     public static ConstantLookupResult lookupConstantExcludingObject(RubyContext context, RubyModule module,
             String name, ArrayList<Assumption> assumptions) {
@@ -345,12 +347,10 @@ public abstract class ModuleOperations {
             if (ancestor == module) {
                 continue;
             }
-            if (ancestor == objectClass) {
-                continue;
-            }
             constantEntry = ancestor.fields.getOrComputeConstantEntry(name);
             assumptions.add(constantEntry.getAssumption());
-            if (constantExists(constantEntry, assumptions)) {
+            // Object's assumption is needed to invalidate this lookup when the ancestors of Object change
+            if (ancestor != objectClass && constantExists(constantEntry, assumptions)) {
                 return new ConstantLookupResult(constantEntry.getConstant(), toArray(assumptions));
             }
         }

@@ -936,7 +936,6 @@ public abstract class CExtNodes {
     @CoreMethod(names = "rb_const_get_from", onSingleton = true, required = 2)
     public abstract static class RbConstGetFromNode extends CoreMethodArrayArgumentsNode {
 
-        // Like CRuby rb_const_get_from(), the constants of Object itself are not searched
         @Child private LookupConstantNode lookupConstantNode = LookupConstantNode.create(true, false, true);
 
         @Specialization

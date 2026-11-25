@@ -953,37 +953,26 @@ public abstract class ModuleNodes {
         }
     }
 
+    /** Lookup one segment of a scoped constant path like "A::B" for Module#const_get. Like CRuby rb_const_get_from(),
+     * the constants of Object itself are not searched. */
     @Primitive(name = "module_const_get_segment")
     public abstract static class ConstGetSegmentNode extends PrimitiveArrayArgumentsNode {
 
-        /** Lookup one segment of a scoped constant path like "A::B" for Module#const_get. Like CRuby
-         * rb_const_get_from(), the constants of Object itself are not searched. */
         @Specialization
         Object getConst(RubyModule module, Object nameObject, boolean inherit, boolean checkName,
                 @Cached GetConstantNode getConstantNode,
-                @Cached NameToJavaStringNode nameToJavaStringNode) {
+                @Cached NameToJavaStringNode nameToJavaStringNode,
+                @Cached("create(true, false, true)") LookupConstantNode lookupConstantNode) {
             final var name = nameToJavaStringNode.execute(this, nameObject);
-            if (checkName && !Identifiers.isValidConstantName(name)) {
-                throw new RaiseException(
-                        getContext(),
-                        coreExceptions().nameError(
-                                StringUtils.format("wrong constant name %s", name),
-                                module,
-                                name,
-                                this));
+            if (inherit) {
+                return getConstantNode
+                        .lookupAndResolveConstant(LexicalScope.IGNORE, module, name, checkName, lookupConstantNode,
+                                true);
+            } else {
+                return getConstantNode
+                        .lookupAndResolveConstant(LexicalScope.IGNORE, module, name, checkName,
+                                ConstGetNode::lookupConstantNoInherit, true);
             }
-            final LookupConstantInterface lookup = inherit
-                    ? ConstGetSegmentNode::lookupConstantSegment
-                    : ConstGetNode::lookupConstantNoInherit;
-            return getConstantNode.lookupAndResolveConstant(LexicalScope.IGNORE, module, name, checkName, lookup, true);
-        }
-
-        @TruffleBoundary
-        static RubyConstant lookupConstantSegment(Node node, LexicalScope lexicalScope, RubyModule module,
-                String name, boolean checkName) {
-            return ModuleOperations
-                    .lookupConstantExcludingObject(getContext(node), module, name, new ArrayList<>())
-                    .getConstant();
         }
     }
 

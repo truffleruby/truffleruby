@@ -337,6 +337,8 @@ class ThreadGroup
   Default = ThreadGroup.new
 end
 
+Thread::ThreadGroup = ::ThreadGroup
+
 Primitive.thread_set_group Thread.current, ThreadGroup::Default
 
 class Thread::Backtrace
@@ -380,14 +382,7 @@ class ConditionVariable
   end
 end
 
-# Like CRuby, these classes are also reachable under Thread:
-# Thread::ConditionVariable, Thread::Queue, Thread::SizedQueue and Thread::ThreadGroup.
-# Thread::Mutex is aliased in mutex.rb since it is defined there, and Thread::Backtrace
-# is defined above.
 Thread::ConditionVariable = ::ConditionVariable
-Thread::Queue = ::Queue
-Thread::SizedQueue = ::SizedQueue
-Thread::ThreadGroup = ::ThreadGroup
 
 Truffle::KernelOperations.define_read_only_global(:$!, -> { Primitive.fiber_get_exception })
 Truffle::KernelOperations.define_read_only_global(:$?, -> { Primitive.thread_get_return_code })

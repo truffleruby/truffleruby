@@ -155,8 +155,7 @@ describe "Module#const_get" do
   end
 
   it "raises a NameError when a later segment of a scoped name would resolve in Object through a class" do
-    # CS_CONST1 is defined in Object, which is excluded for later segments of a scoped name.
-    # ChildA has no custom #const_missing, unlike ClassA which would return the symbol.
+    # CS_CONST1 is defined in Object, which is excluded for later segments of a scoped name
     -> { ConstantSpecs.const_get('ContainerA::ChildA::CS_CONST1') }.should.raise(NameError)
   end
 
