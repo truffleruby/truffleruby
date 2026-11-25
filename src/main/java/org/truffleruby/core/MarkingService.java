@@ -152,15 +152,27 @@ public final class MarkingService {
         stack.current.marksIndex = 0;
     }
 
-    @TruffleBoundary
-    public void addMark(ExtensionCallStack stack, Object obj) {
-        if (stack.current.marks.length == stack.current.marksIndex) {
-            Object[] oldMarks = stack.current.marks;
-            stack.current.marks = new Object[Integer.max(oldMarks.length * 2, 1)];
-            System.arraycopy(oldMarks, 0, stack.current.marks, 0, oldMarks.length);
+    /** Returns the mark list of the mark function running in the current C extension call, with room for
+     * {@code extraMarks} more marks after the {@link #getMarksCount} it already holds. The caller writes the marks to
+     * it and then records how many it holds with {@link #setMarksCount}. */
+    public Object[] ensureMarksCapacity(ExtensionCallStack stack, int extraMarks,
+            InlinedConditionProfile growProfile, Node node) {
+        final ExtensionCallStackEntry entry = stack.current;
+        final int capacity = entry.marksIndex + extraMarks;
+        if (growProfile.profile(node, entry.marks.length < capacity)) {
+            // Not more than needed: the list is reused the next time the mark function of the same object runs,
+            // which most often marks the same number of objects.
+            entry.marks = ArrayUtils.grow(entry.marks, capacity);
         }
-        stack.current.marks[stack.current.marksIndex] = obj;
-        stack.current.marksIndex++;
+        return entry.marks;
+    }
+
+    public int getMarksCount(ExtensionCallStack stack) {
+        return stack.current.marksIndex;
+    }
+
+    public void setMarksCount(ExtensionCallStack stack, int marksCount) {
+        stack.current.marksIndex = marksCount;
     }
 
     @TruffleBoundary

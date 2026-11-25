@@ -59,12 +59,15 @@ exit the C call we'll call those markers.
 
 ### Running mark functions
 
-We run markers by recording the object being marked on the extension
-stack, and then calling the marker which will in turn call
-`rb_gc_mark` for the individual `VALUE`s which are held by the
-structure. We'll record those marked objects in a temporary array also
-held on the extension stack, and then attach that to the object
-wrapping the struct when the mark function has finished.
+We run the marker of each object recorded on the extension stack when the C call exits. `rb_gc_mark` does not call into Ruby for every `VALUE` held by the structure: a mark function such as the one of a `Nokogiri::XML::NodeSet` marks every node it contains, and it runs every time a C call accessed the data of that object. Instead, `rb_tr_run_marker` (in `gc.c`) sets up a buffer for the current native thread before calling the marker, `rb_gc_mark` and its variants (`rb_gc_mark_movable`, `rb_gc_mark_maybe` and `rb_gc_mark_locations`) append the `VALUE` to that buffer, and when the marker returns the whole buffer is passed to Ruby with a single `rb_tr_gc_mark_values` upcall. That upcall resolves the handles to their `ValueWrapper`s and stores them in a temporary array held on the extension stack, which is attached to the object wrapping the struct when the mark function has finished.
+
+The buffer starts on the C stack and moves to the heap if the marker marks more `VALUE`s than fit in it. The previous buffer is saved and restored around each marker, so a marker which causes another marker to run (for example by calling a Ruby method implemented in C which accesses the data of another object) keeps its own marks.
+
+Some consequences of collecting the marks in C:
+
+* Calling `rb_gc_mark` when no marker is running on the current thread does nothing, since there is no buffer to append to. The first such call is logged when running with `--cexts-log-warnings`.
+* If a marker raises an exception, the `VALUE`s it marked before raising are never passed to Ruby, and the object keeps the objects marked by the previous run of its marker.
+* A handle is only resolved to its `ValueWrapper` once the marker has returned, and not when `rb_gc_mark` is called.
 
 
 ## Managing the conversion of `VALUE`s to and from native handles

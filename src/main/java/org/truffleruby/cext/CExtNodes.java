@@ -24,6 +24,7 @@ import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.object.DynamicObject;
 import com.oracle.truffle.api.profiles.InlinedBranchProfile;
 import com.oracle.truffle.api.profiles.InlinedConditionProfile;
+import com.oracle.truffle.api.profiles.InlinedLoopConditionProfile;
 import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import com.oracle.truffle.api.strings.AbstractTruffleString;
 import com.oracle.truffle.api.strings.MutableTruffleString;
@@ -42,6 +43,7 @@ import org.truffleruby.annotations.Visibility;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.DataObjectFinalizerReference;
+import org.truffleruby.core.MarkingService;
 import org.truffleruby.core.MarkingService.ExtensionCallStack;
 import org.truffleruby.core.MarkingServiceNodes;
 import org.truffleruby.core.MarkingServiceNodes.RunMarkOnExitNode;
@@ -1854,22 +1856,39 @@ public abstract class CExtNodes {
         }
     }
 
-    @CoreMethod(names = "rb_gc_mark", onSingleton = true, required = 1)
-    public abstract static class AddToMarkList extends CoreMethodArrayArgumentsNode {
+    /** The VALUEs marked by a single run of a mark function, collected by rb_gc_mark() in C so the whole mark function
+     * needs one upcall. */
+    @CoreMethod(names = "rb_tr_gc_mark_values", onSingleton = true, required = 2, lowerFixnum = 2)
+    public abstract static class MarkValuesNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        Object rbGCMark(long handle,
-                @Cached InlinedBranchProfile noExceptionProfile,
-                @Cached HandleToWrapperNode handleToWrapperNode) {
-            ValueWrapper wrappedValue = handleToWrapperNode.execute(this, handle);
-            if (wrappedValue != null) {
-                noExceptionProfile.enter(this);
-                getContext().getMarkingService()
-                        .addMark(getLanguage().getCurrentFiber().extensionCallStack, wrappedValue);
+        Object markValues(long address, int count,
+                @Cached HandleToWrapperNode handleToWrapperNode,
+                @Cached InlinedLoopConditionProfile loopProfile,
+                @Cached InlinedConditionProfile growProfile,
+                @Cached InlinedConditionProfile resolvedProfile) {
+            final MarkingService markingService = getContext().getMarkingService();
+            final ExtensionCallStack stack = getLanguage().getCurrentFiber().extensionCallStack;
+            // The number of marks is known upfront, so the mark list is sized once and written to directly, instead
+            // of growing it and crossing a boundary for every mark.
+            final Object[] marks = markingService.ensureMarksCapacity(stack, count, growProfile, this);
+            int marksCount = markingService.getMarksCount(stack);
+            int i = 0;
+            try {
+                for (; loopProfile.inject(this, i < count); i++) {
+                    ValueWrapper wrappedValue = handleToWrapperNode.execute(this,
+                            Pointer.rawReadLong(address + i * 8L));
+                    // We do nothing here if the handle cannot be resolved. If we are marking an object
+                    // which is only reachable via weak refs then the handles of objects it is itself
+                    // marking may have already been removed from the handle map.
+                    if (resolvedProfile.profile(this, wrappedValue != null)) {
+                        marks[marksCount++] = wrappedValue;
+                    }
+                }
+            } finally {
+                profileAndReportLoopCount(this, loopProfile, i);
             }
-            // We do nothing here if the handle cannot be resolved. If we are marking an object
-            // which is only reachable via weak refs then the handles of objects it is itself
-            // marking may have already been removed from the handle map.
+            markingService.setMarksCount(stack, marksCount);
             return nil;
         }
 
@@ -2132,11 +2151,16 @@ public abstract class CExtNodes {
         Object popLockAndFrame(boolean unlock,
                 @Cached RunMarkOnExitNode runMarksNode) {
             final ExtensionCallStack extensionStack = getLanguage().getCurrentFiber().extensionCallStack;
-            runMarksNode.execute(this, extensionStack);
-            if (unlock) {
-                MutexOperations.unlockInternal(getContext().getCExtensionsLock());
+            try {
+                runMarksNode.execute(this, extensionStack);
+            } finally {
+                // Also when a mark function raises: otherwise the lock stays held by this thread, and the next
+                // rb_funcall() from C fails to reacquire it after the call since it is already locked.
+                if (unlock) {
+                    MutexOperations.unlockInternal(getContext().getCExtensionsLock());
+                }
+                extensionStack.pop();
             }
-            extensionStack.pop();
             return nil;
         }
     }

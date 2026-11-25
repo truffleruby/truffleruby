@@ -41,6 +41,8 @@ Bug fixes:
 * Fix several `IO` methods, `File.new` and `ARGF.lineno=` to convert Integer arguments with `#to_int` (#4589, @taxor03).
 * Fix `File.lstat` raising `TypeError` instead of `Errno::ENOENT` for a missing file given as a `Pathname` (#4591, @taxor03).
 * Fix `rb_hash_foreach()` to iterate the entries directly instead of calling `Hash#each` and `Hash#delete`, which might be overridden (#4586, @eregon).
+* Fix the C extension lock staying locked, and later calls from C to Ruby raising `ThreadError: deadlock; recursive locking`, after the mark function of a C extension data object raised an exception (@nirvdrum).
+
 
 Compatibility:
 
@@ -78,6 +80,7 @@ Performance:
 * Enabling or disabling a `:class` `TracePoint` no longer invalidates compiled code and no longer uses Truffle instrumentation, which also reduces memory footprint (#2371, @eregon).
 * Store encoding properties in the native `rb_encoding` structs to reduce upcalls for common encoding operations (@nirvdrum).
 * Avoid walking the stack for direct calls to `Kernel#__method__` and `Kernel#__callee__`, as used by Active Record 8.1's generated association methods (@nirvdrum).
+* C extension mark functions now pass the objects they mark with `rb_gc_mark()` to Ruby in a single upcall instead of one upcall per object, which makes Nokogiri node traversal ~10% faster (@nirvdrum).
 
 Incompatible Changes:
 
