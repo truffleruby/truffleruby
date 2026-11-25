@@ -53,4 +53,11 @@ describe "Encoding::Converter#putback" do
     ec.putback(2).should == "a\x00".dup.force_encoding("utf-16le")
     ec.putback.should == ""
   end
+
+  it "calls #to_int to convert the number of bytes to be put back" do
+    max_bytes = mock('max_bytes')
+    max_bytes.should_receive(:to_int).and_return(0)
+    @ec.putback(max_bytes).should == ""
+    @ec.putback.should == 'd'
+  end
 end

@@ -56,6 +56,13 @@ describe "IO#seek" do
     @io.tell.should == 137
   end
 
+  it "calls #to_int to convert the whence argument" do
+    whence = mock('whence')
+    whence.should_receive(:to_int).and_return(IO::SEEK_END)
+    @io.seek(-25, whence)
+    @io.readline.should == "cinco.\n"
+  end
+
   it "moves the read position and clears EOF with SEEK_SET" do
     value = @io.read
     @io.seek(0, IO::SEEK_SET)

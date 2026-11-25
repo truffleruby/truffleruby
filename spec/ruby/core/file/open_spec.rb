@@ -145,6 +145,17 @@ describe "File.open" do
     File.should.exist?(@file)
   end
 
+  it "calls #to_int to convert the permissions" do
+    rm_r @file
+    File.umask(0022)
+    perm = mock('perm')
+    perm.should_receive(:to_int).and_return(0755)
+    File.open(@file, "w", perm) { |fh| }
+    platform_is_not :windows do
+      File.stat(@file).mode.to_s(8).should == "100755"
+    end
+  end
+
   it "creates the file and returns writable descriptor when called with 'w' mode and r-o permissions" do
     # it should be possible to write to such a file via returned descriptor,
     # even though the file permissions are r-r-r.

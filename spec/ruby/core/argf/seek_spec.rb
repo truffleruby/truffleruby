@@ -48,6 +48,15 @@ describe "ARGF.seek" do
       @argf.gets.should == @file2.last[-6..-1]
     end
   end
+
+  it "calls #to_int to convert the whence argument" do
+    argf [@file1_name, @file2_name] do
+      whence = mock('whence')
+      whence.should_receive(:to_int).and_return(IO::SEEK_END)
+      @argf.seek(-6, whence)
+      @argf.gets.should == @file1.last[-6..-1]
+    end
+  end
 end
 
 describe "ARGF.seek" do

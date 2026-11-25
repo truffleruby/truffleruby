@@ -1216,7 +1216,7 @@ public abstract class ArrayNodes {
 
         @Specialization(
                 guards = { "wasProvided(size)", "!isImplicitLong(size)", "wasProvided(fillingValue)" })
-        RubyArray initializeSizeOther(RubyArray array, Object size, Object fillingValue, Nil block,
+        RubyArray initializeSizeOther(RubyArray array, Object size, Object fillingValue, Object block,
                 @Cached @Shared ToIntNode toIntNode) {
             int intSize = toIntNode.execute(size);
             return executeInitialize(array, intSize, fillingValue, block);
@@ -1262,7 +1262,7 @@ public abstract class ArrayNodes {
 
         @Specialization(
                 guards = { "!isImplicitLong(object)", "wasProvided(object)", "!isRubyArray(object)" })
-        RubyArray initialize(RubyArray array, Object object, NotProvided unusedValue, Nil block,
+        RubyArray initialize(RubyArray array, Object object, NotProvided unusedValue, Object block,
                 @Cached KernelNodes.RespondToNode respondToNode,
                 @Cached @Shared ToIntNode toIntNode) {
             RubyArray copy = null;
@@ -1274,10 +1274,10 @@ public abstract class ArrayNodes {
             }
 
             if (copy != null) {
-                return executeInitialize(array, copy, NotProvided.INSTANCE, nil);
+                return executeInitialize(array, copy, NotProvided.INSTANCE, block);
             } else {
                 int size = toIntNode.execute(object);
-                return executeInitialize(array, size, NotProvided.INSTANCE, nil);
+                return executeInitialize(array, size, NotProvided.INSTANCE, block);
             }
         }
 

@@ -36,6 +36,14 @@ describe "Encoding::Converter#replacement=" do
     -> { ec.replacement = nil }.should.raise(TypeError)
   end
 
+  it "calls #to_str to convert the argument" do
+    ec = Encoding::Converter.new("utf-8", "us-ascii")
+    replacement = mock('replacement')
+    replacement.should_receive(:to_str).and_return("!")
+    ec.replacement = replacement
+    ec.replacement.should == "!"
+  end
+
   it "sets #replacement" do
     ec = Encoding::Converter.new("us-ascii", "utf-8")
     ec.replacement.should == "\u{fffd}".dup.force_encoding('utf-8')

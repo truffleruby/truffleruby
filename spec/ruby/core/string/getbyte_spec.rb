@@ -66,4 +66,10 @@ describe "String#getbyte" do
   it "raises a TypeError unless its argument can be coerced into an Integer" do
     -> { "a".getbyte('a') }.should.raise(TypeError)
   end
+
+  it "calls #to_int to convert the index" do
+    index = mock("getbyte index")
+    index.should_receive(:to_int).and_return(1)
+    "hat".getbyte(index).should == 97
+  end
 end

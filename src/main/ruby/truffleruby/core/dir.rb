@@ -92,6 +92,7 @@ class Dir
   alias_method :tell, :pos
 
   def seek(pos)
+    pos = Primitive.rb_num2long(pos)
     ensure_open
     Truffle::POSIX.seekdir(@ptr, pos)
     self

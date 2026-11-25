@@ -104,6 +104,7 @@ module Process
   module_function
 
   def clock_getres(id, unit = :float_second)
+    id = Primitive.rb_num2int(id) unless Primitive.is_a?(id, Symbol)
     res = case id
           when :MACH_ABSOLUTE_TIME_BASED_CLOCK_MONOTONIC,
                CLOCK_MONOTONIC
@@ -154,6 +155,8 @@ module Process
            else
              raise Errno::EINVAL
            end
+    else
+      id = Primitive.rb_num2int(id)
     end
 
     case id
@@ -723,8 +726,8 @@ module Process
       "#<Process::Status: #{self}>"
     end
 
-    def self.wait(pid = -1, flags = nil)
-      Truffle::ProcessOperations.wait(pid, flags, false, false)
+    def self.wait(pid = -1, flags = 0)
+      Truffle::ProcessOperations.wait(pid, Primitive.rb_num2int(flags), false, false)
     end
   end
 

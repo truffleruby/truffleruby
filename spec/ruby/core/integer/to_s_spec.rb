@@ -12,6 +12,12 @@ describe "Integer#to_s" do
         12345.to_s(36).should == "9ix"
       end
 
+      it "calls #to_int to convert the base" do
+        base = mock("to_s base")
+        base.should_receive(:to_int).and_return(16)
+        255.to_s(base).should == "ff"
+      end
+
       it "raises an ArgumentError if the base is less than 2 or higher than 36" do
         -> { 123.to_s(-1) }.should.raise(ArgumentError)
         -> { 123.to_s(0)  }.should.raise(ArgumentError)

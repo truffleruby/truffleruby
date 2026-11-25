@@ -77,6 +77,7 @@ class Random
   end
 
   def self.bytes(length)
+    length = Primitive.rb_num2long(Primitive.convert_with_to_int(length))
     Primitive.randomizer_bytes(Primitive.thread_randomizer, length)
   end
 
@@ -112,6 +113,7 @@ class Random
   # Returns a random binary string.
   # The argument size specified the length of the result string.
   def bytes(length)
+    length = Primitive.rb_num2long(Primitive.convert_with_to_int(length))
     Primitive.randomizer_bytes @randomizer, length
   end
 end
