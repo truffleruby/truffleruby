@@ -2151,11 +2151,16 @@ public abstract class CExtNodes {
         Object popLockAndFrame(boolean unlock,
                 @Cached RunMarkOnExitNode runMarksNode) {
             final ExtensionCallStack extensionStack = getLanguage().getCurrentFiber().extensionCallStack;
-            runMarksNode.execute(this, extensionStack);
-            if (unlock) {
-                MutexOperations.unlockInternal(getContext().getCExtensionsLock());
+            try {
+                runMarksNode.execute(this, extensionStack);
+            } finally {
+                // Also when a mark function raises: otherwise the lock stays held by this thread, and the next
+                // rb_funcall() from C fails to reacquire it after the call since it is already locked.
+                if (unlock) {
+                    MutexOperations.unlockInternal(getContext().getCExtensionsLock());
+                }
+                extensionStack.pop();
             }
-            extensionStack.pop();
             return nil;
         }
     }

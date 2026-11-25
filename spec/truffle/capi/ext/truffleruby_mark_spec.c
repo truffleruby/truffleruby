@@ -37,6 +37,9 @@ extern "C" {
 // More values than fit in the initial mark buffer, so marking needs to grow it
 #define MARKED_VALUES_COUNT 200
 
+// Far enough that the mark buffer already grew when the mark function raises
+#define RAISE_AT_VALUE 150
+
 enum mark_function {
   MARK_WITH_RB_GC_MARK,
   MARK_WITH_RB_GC_MARK_MOVABLE,
@@ -54,6 +57,8 @@ struct marked_values {
 
 static int marking_depth = 0;
 static int nested_marking_observed = 0;
+// Whether the next mark function to reach RAISE_AT_VALUE raises, which resets it
+static int raise_in_mark_function = 0;
 
 static void mark_values(struct marked_values *marked, int from, int to) {
   if (marked->mark_with == MARK_WITH_RB_GC_MARK_LOCATIONS) {
@@ -62,6 +67,12 @@ static void mark_values(struct marked_values *marked, int from, int to) {
   }
 
   for (int i = from; i < to; i++) {
+    if (raise_in_mark_function && i == RAISE_AT_VALUE) {
+      raise_in_mark_function = 0;
+      marking_depth = 0;
+      rb_raise(rb_eRuntimeError, "raised by the mark function");
+    }
+
     switch (marked->mark_with) {
       case MARK_WITH_RB_GC_MARK_MOVABLE:
         rb_gc_mark_movable(marked->values[i]);
@@ -142,6 +153,14 @@ static VALUE mark_spec_access_data(VALUE self, VALUE object) {
   return Qnil;
 }
 
+// The mark function of object runs when this call returns, and it or the mark function of its nested object raises
+static VALUE mark_spec_access_data_raising_in_mark_function(VALUE self, VALUE object) {
+  struct marked_values *marked;
+  TypedData_Get_Struct(object, struct marked_values, &marked_values_type, marked);
+  raise_in_mark_function = 1;
+  return Qnil;
+}
+
 static VALUE mark_spec_marked_values(VALUE self, VALUE object) {
   struct marked_values *marked;
   TypedData_Get_Struct(object, struct marked_values, &marked_values_type, marked);
@@ -164,6 +183,7 @@ void Init_truffleruby_mark_spec(void) {
   VALUE cls = rb_define_class("CApiTruffleRubyMarkSpecs", rb_cObject);
   rb_define_method(cls, "new_marked_values", mark_spec_new_marked_values, -1);
   rb_define_method(cls, "access_data", mark_spec_access_data, 1);
+  rb_define_method(cls, "access_data_raising_in_mark_function", mark_spec_access_data_raising_in_mark_function, 1);
   rb_define_method(cls, "marked_values", mark_spec_marked_values, 1);
   rb_define_method(cls, "nested_marking_observed?", mark_spec_nested_marking_observed, 0);
   rb_define_method(cls, "mark_outside_of_mark_function", mark_spec_mark_outside_of_mark_function, 1);

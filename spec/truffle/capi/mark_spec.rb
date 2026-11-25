@@ -59,6 +59,34 @@ describe "A typed data mark function" do
     @s.should.nested_marking_observed?
     @s.marked_values(outer).should == expected("outer")
   end
+
+  it "can raise an exception, after which the objects marked before are still alive and mark functions still run" do
+    object = @s.new_marked_values("value")
+    -> {
+      @s.access_data_raising_in_mark_function(object)
+    }.should.raise(RuntimeError, "raised by the mark function")
+    3.times { GC.start }
+    @s.marked_values(object).should == expected("value")
+
+    other = @s.new_marked_values("other")
+    @s.access_data(object)
+    3.times { GC.start }
+    @s.marked_values(object).should == expected("value")
+    @s.marked_values(other).should == expected("other")
+  end
+
+  it "propagates an exception raised by a mark function which runs while it is running" do
+    inner = @s.new_marked_values("inner")
+    outer = @s.new_marked_values("outer", inner)
+    -> {
+      @s.access_data_raising_in_mark_function(outer)
+    }.should.raise(RuntimeError, "raised by the mark function")
+
+    @s.access_data(outer)
+    3.times { GC.start }
+    @s.marked_values(outer).should == expected("outer")
+    @s.marked_values(inner).should == expected("inner")
+  end
 end
 
 describe "rb_gc_mark() and its variants" do
