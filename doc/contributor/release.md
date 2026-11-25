@@ -4,9 +4,6 @@ Always release from a release branch (to avoid ever setting `"release": True,` o
 
 The TruffleRuby version to be released is denoted as `$TRUFFLERUBY_VERSION` below.
 
-For patch releases, follow the steps until `Check the CI passes`,
-then backport changes by [following these instructions](release.md#backporting-changes-from-master).
-
 ## Create a cutoff branch
 
 (only for a new major release)
@@ -32,7 +29,7 @@ git checkout -b release/$MAJOR
 
 ## Set release flag to true
 
-(only when creating the release branch)
+(only for a new major release)
 
 In [mx.truffleruby/suite.py](../../mx.truffleruby/suite.py) switch the `"release"` field from `False` to `True`.
 
@@ -43,7 +40,7 @@ git commit -am 'Set release flag to true'
 
 ## Disable the union merge of CHANGELOG.md
 
-(only when creating the release branch)
+(only for a new major release)
 
 ```bash
 git cherry-pick 2a770e3597f7e34b95ef44b07ea79aec401ee35f
@@ -53,7 +50,13 @@ So any backported changelog entry can be reviewed if it is under the correct rel
 
 ## Set the version field
 
+Switch to the release branch if not already on it:
+```bash
+git checkout release/$MAJOR
+```
+
 In [mx.truffleruby/suite.py](../../mx.truffleruby/suite.py), set the `"version"` field to the version you want to release and commit.
+It is usually already correct and there is nothing to do then.
 
 Commit with:
 ```bash
@@ -70,6 +73,22 @@ Commit with:
 ```bash
 git commit -am 'Set ABI version for release branch'
 ```
+
+## Backporting changes from master
+
+(only for minor and patch releases)
+
+For minor releases, merge all changes from `master` with `git merge master`.
+
+For patch releases, either `git cherry-pick -x -m 1 MERGE_COMMIT` the relevant merge commits,
+or merge all changes from `master` with `git merge master`.
+
+Be careful to not add newer releases in [CHANGELOG.md](../../CHANGELOG.md).
+
+You can use `git log --merges release/$MAJOR..master` to get a list of merged PRs in master but not in the release branch.
+
+Sometimes commits are pushed directly to `master` without a PR, for example when only touching docs or the CHANGELOG.
+You can find such commits with `git log --no-merges --first-parent release/$MAJOR..master`.
 
 ## Push the branch
 
@@ -111,10 +130,16 @@ Use the same formatting as the previous release, notably:
 After that also use the `Generate release notes` button and set the correct previous tag to find if any new contributor is not listed in the release.
 Consider adding entries in the release notes for such contributors, possibly under `Other contributions without Changelog entries` if they do not fit somewhere else.
 
-## Sign the Maven Bundle
+## Download the Maven Bundle
 
 Download the `maven-bundle` artifact from the workflow.
 That will download a `.zip`, so extract it once to get the `.tar.gz`.
+
+## Sign the Maven Bundle
+
+If this step cannot be completed it's OK to proceed with the rest.
+
+You need to have `gpg` working for this step to sign files with `gpg -ab`.
 Then run:
 
 ```bash
@@ -123,7 +148,9 @@ jt sign_maven_bundle ~/Downloads/maven-bundle.tar.gz
 
 It will create a `maven-bundle-signed.tar.gz` as sibling to `maven-bundle.tar.gz`.
 
-## Upload Maven Bundle to Maven Central
+## Upload the Maven Bundle to Maven Central
+
+If this step cannot be completed it's OK to proceed with the rest.
 
 Go to https://central.sonatype.com/publishing and use `Publish Component`.
 Upload the `maven-bundle-signed.tar.gz` from the previous step.
@@ -142,6 +169,10 @@ Pass it the `$TRUFFLERUBY_VERSION`.
 
 ## Update Ruby Installers
 
+(this step can be done later)
+
+@eregon usually does this as he can merge PRs to most of the installers.
+
 Follow [the documentation to updating Ruby Installers](updating-ruby-installers.md).
 
 ## Issue Tracker
@@ -156,18 +187,12 @@ Follow [the documentation to updating Ruby Installers](updating-ruby-installers.
 
 ## CI
 
+(this step can be done later)
+
 For major releases, look at the latest [truffleruby-gem-tracker workflow run](https://github.com/truffleruby/truffleruby-gem-tracker/actions) of `Check CIs for TruffleRuby head`
 and consider making PRs to these gems to test on `truffleruby` instead of `truffleruby-head` for improved CI stability.
 
----
+## Create a section in the CHANGELOG for the next version
 
-## Backporting changes from master
-
-Either `git cherry-pick -x -m 1 MERGE_COMMIT` the relevant merge commits,
-or merge all changes from `master` with `git merge master`.
-Be careful to not add newer releases in [CHANGELOG.md](../../CHANGELOG.md).
-
-You can use `git log --merges release/$MAJOR..master` to get a list of merged PRs in master but not in the release branch.
-
-Sometimes commits are pushed directly to `master` without a PR, for example when only touching docs or the CHANGELOG.
-You can find such commits with `git log --no-merges --first-parent release/$MAJOR..master`.
+Make a PR to `master` adding a section in the CHANGELOG for the next version.
+Force-merge it immediately, CI doesn't run on `.md`-only changes anyway.
