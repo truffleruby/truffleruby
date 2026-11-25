@@ -191,6 +191,16 @@ describe "CApiModule" do
     it "resolves autoload constants" do
       @m.rb_const_get_from(CApiModuleSpecs::A, :C).should == 123
     end
+
+    it "does not find a constant defined in Object" do
+      -> {
+        @m.rb_const_get_from(CApiModuleSpecs::B, :Integer)
+      }.should.raise(NameError, /uninitialized constant/)
+    end
+
+    it "finds a constant defined in Object when the module is Object" do
+      @m.rb_const_get_from(Object, :Integer).should == Integer
+    end
   end
 
   describe "rb_const_get_at" do

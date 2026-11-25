@@ -167,6 +167,18 @@ describe "Module#const_defined?" do
     ConstantSpecs.const_defined?("Object::CS_CONST1").should == true
   end
 
+  it "returns false when a later segment of a scoped name is defined in Object, even if also defined in Kernel" do
+    Kernel.const_set(:CS_CONST_SHADOWED, :kernel)
+    Object.const_set(:CS_CONST_SHADOWED, :object)
+    begin
+      # Like CRuby, the search stops at Object and does not continue with Kernel
+      ConstantSpecs.const_defined?("ClassA::CS_CONST_SHADOWED").should == false
+    ensure
+      Kernel.send(:remove_const, :CS_CONST_SHADOWED)
+      Object.send(:remove_const, :CS_CONST_SHADOWED)
+    end
+  end
+
   it "raises a NameError if a Symbol is a scoped constant name" do
     -> { ConstantSpecs.const_defined?(:'ClassA::CS_CONST10') }.should.raise(NameError)
   end

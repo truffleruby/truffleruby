@@ -337,8 +337,6 @@ class ThreadGroup
   Default = ThreadGroup.new
 end
 
-Thread::ThreadGroup = ::ThreadGroup
-
 Primitive.thread_set_group Thread.current, ThreadGroup::Default
 
 class Thread::Backtrace

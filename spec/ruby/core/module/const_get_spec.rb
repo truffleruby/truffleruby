@@ -163,6 +163,18 @@ describe "Module#const_get" do
     -> { ConstantSpecs.const_get('ModuleA::CS_CONST1') }.should.raise(NameError)
   end
 
+  it "raises a NameError when a later segment of a scoped name is defined in Object, even if also defined in Kernel" do
+    Kernel.const_set(:CS_CONST_SHADOWED, :kernel)
+    Object.const_set(:CS_CONST_SHADOWED, :object)
+    begin
+      # Like CRuby, the search stops at Object and does not continue with Kernel
+      -> { ConstantSpecs.const_get('ContainerA::CS_CONST_SHADOWED') }.should.raise(NameError)
+    ensure
+      Kernel.send(:remove_const, :CS_CONST_SHADOWED)
+      Object.send(:remove_const, :CS_CONST_SHADOWED)
+    end
+  end
+
   describe "with statically assigned constants" do
     it "searches the immediate class or module first" do
       ConstantSpecs::ClassA.const_get(:CS_CONST10).should == :const10_10

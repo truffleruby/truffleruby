@@ -62,7 +62,7 @@ public final class ReadConstantNode extends RubyContextSourceNode {
     private LookupConstantNode getLookupConstantNode() {
         if (lookupConstantNode == null) {
             CompilerDirectives.transferToInterpreterAndInvalidate();
-            lookupConstantNode = insert(LookupConstantNode.create(false, false, true));
+            lookupConstantNode = insert(LookupConstantNode.createExcludeObject(false));
         }
         return lookupConstantNode;
     }

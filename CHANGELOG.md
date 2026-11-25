@@ -9,8 +9,9 @@ New features:
 
 Bug fixes:
 
-* Fix `Module#const_defined?`, `Module#const_get`, `Module#const_source_location` and `MOD::CONST` constant path lookups wrongly finding top-level (Object) constants for segments after the first of a scoped name, and `Module#const_defined?` wrongly accepting a scoped Symbol name (#3901).
-* Define `Thread::Mutex`, `Thread::ConditionVariable`, `Thread::Queue`, `Thread::SizedQueue` and `Thread::ThreadGroup` like CRuby, instead of only finding them through Object from a scoped constant path.
+* Fix `Module#const_defined?`, `Module#const_get`, `Module#const_source_location` and `MOD::CONST` constant path lookups wrongly finding top-level (Object) constants for segments after the first of a scoped name, and `Module#const_defined?` wrongly accepting a scoped Symbol name (#3901, @douglasmiller).
+* Report `wrong constant name` for malformed scoped constant paths such as `"A::"` in `Module#const_defined?`, `Module#const_get` and `Module#const_source_location`, like in CRuby, instead of silently returning `false`/`nil` or a misleading `uninitialized constant` error (#3901, @douglasmiller).
+* Define `Thread::Mutex`, `Thread::ConditionVariable`, `Thread::Queue` and `Thread::SizedQueue` like CRuby, instead of only finding them through Object from a scoped constant path (#3901, @douglasmiller).
 * Fix reading the main script from a terminal reading past the end-of-file (Ctrl-D) when more input was already typed (@eregon).
 * Fix `Process.exec` ignoring the `:umask` option (@nirvdrum).
 * Fix `Socket.tcp` and `Addrinfo#connect` with a timeout returning an unconnected socket on macOS when the connection was refused (@eregon).

@@ -23,7 +23,6 @@ import org.truffleruby.RubyLanguage;
 import org.truffleruby.collections.Memo;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.klass.RubyClass;
-import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.language.LexicalScope;
 import org.truffleruby.language.RubyConstant;
 import org.truffleruby.language.constants.ConstantEntry;
@@ -153,6 +152,16 @@ public abstract class ModuleOperations {
     @TruffleBoundary
     public static ConstantLookupResult lookupConstant(RubyContext context, RubyModule module, String name,
             ArrayList<Assumption> assumptions) {
+        return lookupConstant(context, module, name, assumptions, false);
+    }
+
+    /** When {@code excludeObject} is true, the constants of Object itself are not searched, like rb_const_search() with
+     * exclude=TRUE in CRuby: the search stops at Object when it has the constant, and otherwise continues with the
+     * modules included in Object (e.g. Kernel) and BasicObject. The exclusion does not apply when the module to search
+     * is Object itself. */
+    @TruffleBoundary
+    public static ConstantLookupResult lookupConstant(RubyContext context, RubyModule module, String name,
+            ArrayList<Assumption> assumptions, boolean excludeObject) {
         // Look in the current module
         ConstantEntry constantEntry = module.fields.getOrComputeConstantEntry(name);
         assumptions.add(constantEntry.getAssumption());
@@ -161,12 +170,17 @@ public abstract class ModuleOperations {
         }
 
         // Look in ancestors
+        final RubyClass objectClass = context.getCoreLibrary().objectClass;
         for (RubyModule ancestor : module.fields.ancestors()) {
             if (ancestor == module) {
                 continue;
             }
             constantEntry = ancestor.fields.getOrComputeConstantEntry(name);
             assumptions.add(constantEntry.getAssumption());
+            if (ancestor == objectClass && excludeObject && constantExists(constantEntry, assumptions)) {
+                // Like CRuby, stop at Object when it has the constant: Kernel and BasicObject are not searched
+                return new ConstantLookupResult(null, toArray(assumptions));
+            }
             if (constantExists(constantEntry, assumptions)) {
                 return new ConstantLookupResult(constantEntry.getConstant(), toArray(assumptions));
             }
@@ -256,6 +270,11 @@ public abstract class ModuleOperations {
     @TruffleBoundary
     public static ConstantLookupResult lookupScopedConstant(RubyContext context, RubyModule module, String fullName,
             boolean inherit, Node currentNode, boolean checkName) {
+        if (checkName && fullName.endsWith("::")) {
+            throw new RaiseException(context, context.getCoreExceptions().nameErrorWrongConstantName(fullName,
+                    currentNode));
+        }
+
         int start = 0, next;
         if (fullName.startsWith("::")) {
             module = context.getCoreLibrary().objectClass;
@@ -264,6 +283,12 @@ public abstract class ModuleOperations {
 
         while ((next = fullName.indexOf("::", start)) != -1) {
             final String segment = fullName.substring(start, next);
+            if (checkName && segment.isEmpty()) {
+                // Like CRuby, an empty segment is a wrong constant name, reported with the whole name, and is only
+                // detected when the lookup reaches it
+                throw new RaiseException(context,
+                        context.getCoreExceptions().nameErrorWrongConstantName(fullName, currentNode));
+            }
             final ConstantLookupResult constant = lookupScopedConstantSegment(
                     context,
                     module,
@@ -288,13 +313,10 @@ public abstract class ModuleOperations {
 
         final String lastSegment = fullName.substring(start);
         if (checkName && !Identifiers.isValidConstantName(lastSegment)) {
+            // Like CRuby, report only the invalid segment, not the whole name
             throw new RaiseException(
                     context,
-                    context.getCoreExceptions().nameError(
-                            StringUtils.format("wrong constant name %s", fullName),
-                            module,
-                            fullName,
-                            currentNode));
+                    context.getCoreExceptions().nameErrorWrongConstantName(lastSegment, currentNode));
         }
 
         return lookupScopedConstantSegment(context, module, lastSegment, inherit, currentNode, checkName, start > 0);
@@ -306,56 +328,15 @@ public abstract class ModuleOperations {
      * is looked up with the constants of Object itself excluded, like rb_const_search() with exclude=TRUE in CRuby. */
     private static ConstantLookupResult lookupScopedConstantSegment(RubyContext context, RubyModule module,
             String name, boolean inherit, Node currentNode, boolean checkName, boolean excludeObject) {
+        if (checkName && !Identifiers.isValidConstantName(name)) {
+            throw new RaiseException(context,
+                    context.getCoreExceptions().nameErrorWrongConstantName(name, currentNode));
+        }
         if (excludeObject && inherit) {
-            if (checkName && !Identifiers.isValidConstantName(name)) {
-                throw new RaiseException(
-                        context,
-                        context.getCoreExceptions().nameError(
-                                StringUtils.format("wrong constant name %s", name),
-                                module,
-                                name,
-                                currentNode));
-            }
-            return lookupConstantExcludingObject(context, module, name, new ArrayList<>());
+            return lookupConstant(context, module, name, new ArrayList<>(), true);
         } else {
             return lookupConstantWithInherit(context, module, name, inherit, currentNode, checkName);
         }
-    }
-
-    /** Like {@link #lookupConstant(RubyContext, RubyModule, String, ArrayList)} but skips the constants of Object
-     * itself, like rb_const_search() with exclude=TRUE in CRuby. Modules included in Object (e.g. Kernel) and
-     * BasicObject are still searched. The exclusion does not apply when the module to search is Object itself. Object's
-     * constant entry assumption is still recorded, so that cached lookups are invalidated when the ancestors of Object
-     * change (e.g. Object#include). */
-    @TruffleBoundary
-    public static ConstantLookupResult lookupConstantExcludingObject(RubyContext context, RubyModule module,
-            String name, ArrayList<Assumption> assumptions) {
-        if (module == context.getCoreLibrary().objectClass) {
-            return lookupConstant(context, module, name, assumptions);
-        }
-
-        // Look in the current module first, like lookupConstant, so that the module's own constants
-        // take precedence over its prepended modules, like in CRuby
-        ConstantEntry constantEntry = module.fields.getOrComputeConstantEntry(name);
-        assumptions.add(constantEntry.getAssumption());
-        if (constantExists(constantEntry, assumptions)) {
-            return new ConstantLookupResult(constantEntry.getConstant(), toArray(assumptions));
-        }
-
-        final RubyClass objectClass = context.getCoreLibrary().objectClass;
-        for (RubyModule ancestor : module.fields.ancestors()) {
-            if (ancestor == module) {
-                continue;
-            }
-            constantEntry = ancestor.fields.getOrComputeConstantEntry(name);
-            assumptions.add(constantEntry.getAssumption());
-            // Object's assumption is needed to invalidate this lookup when the ancestors of Object change
-            if (ancestor != objectClass && constantExists(constantEntry, assumptions)) {
-                return new ConstantLookupResult(constantEntry.getConstant(), toArray(assumptions));
-            }
-        }
-
-        return new ConstantLookupResult(null, toArray(assumptions));
     }
 
     public static ConstantLookupResult lookupConstantWithInherit(RubyContext context, RubyModule module, String name,
@@ -367,13 +348,8 @@ public abstract class ModuleOperations {
     public static ConstantLookupResult lookupConstantWithInherit(RubyContext context, RubyModule module, String name,
             boolean inherit, Node currentNode, boolean checkName, boolean lookInObject) {
         if (checkName && !Identifiers.isValidConstantName(name)) {
-            throw new RaiseException(
-                    context,
-                    context.getCoreExceptions().nameError(
-                            StringUtils.format("wrong constant name %s", name),
-                            module,
-                            name,
-                            currentNode));
+            throw new RaiseException(context,
+                    context.getCoreExceptions().nameErrorWrongConstantName(name, currentNode));
         }
 
         final ArrayList<Assumption> assumptions = new ArrayList<>();
