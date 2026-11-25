@@ -290,6 +290,14 @@ describe 'BasicSocket#setsockopt' do
 
         @socket.setsockopt(level, name, true).should == 0
       end
+
+      it 'sets an option value which responds to #to_str' do
+        value = mock(:value)
+        value.should_receive(:to_str).and_return([1].pack('i'))
+
+        @socket.setsockopt(:SOCKET, :REUSEADDR, value).should == 0
+        @socket.getsockopt(:SOCKET, :REUSEADDR).bool.should == true
+      end
     end
 
     describe 'using a Socket::Option as the first argument' do

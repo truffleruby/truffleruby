@@ -57,6 +57,9 @@ class UNIXSocket < BasicSocket
   end
 
   def recvfrom(bytes_read, flags = 0, buffer = nil)
+    flags = Primitive.nil?(flags) ? 0 : Primitive.rb_num2int(flags)
+    bytes_read = Primitive.rb_num2int(bytes_read)
+
     # See BasicSocket#internal_recv.
     raise IOError, 'recv for buffered IO' unless buffer_empty?
 

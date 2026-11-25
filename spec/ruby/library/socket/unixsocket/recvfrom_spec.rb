@@ -22,6 +22,19 @@ describe "UNIXSocket#recvfrom" do
     sock.close
   end
 
+  it "converts the length and flags with #to_int" do
+    @client.send("foobar", 0)
+    sock = @server.accept
+    length = mock('length')
+    flags = mock('flags')
+    length.should_receive(:to_int).and_return(3)
+    flags.should_receive(:to_int).and_return(Socket::MSG_PEEK)
+
+    sock.recvfrom(length, flags).first.should == "foo"
+    sock.recvfrom(6).first.should == "foobar"
+    sock.close
+  end
+
   context "when called on a server's socket" do
     platform_is_not :windows do
       it "returns an array containing basic information on the client as second element" do

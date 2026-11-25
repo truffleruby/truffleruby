@@ -20,6 +20,14 @@ describe "Socket#bind on SOCK_DGRAM socket" do
     @sock.bind(@sockaddr).should == 0
   end
 
+  it "converts the sockaddr with #to_str" do
+    sockaddr = mock('sockaddr')
+    sockaddr.should_receive(:to_str).and_return(@sockaddr)
+
+    @sock.bind(sockaddr).should == 0
+    @sock.local_address.ip_address.should == "127.0.0.1"
+  end
+
   it "raises Errno::EINVAL when already bound" do
     @sock.bind(@sockaddr)
 

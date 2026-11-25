@@ -238,6 +238,14 @@ describe 'Socket.getaddrinfo' do
       array[6].should.is_a?(Integer)
     end
 
+    it 'accepts an object responding to #to_int as the address family' do
+      dummy = mock(:dummy)
+
+      dummy.should_receive(:to_int).and_return(Socket::AF_INET6)
+
+      Socket.getaddrinfo(nil, 21, dummy, :STREAM).map { |a| a[4] }.uniq.should == [Socket::AF_INET6]
+    end
+
     it 'accepts an Integer as the socket type' do
       *array, proto = Socket.getaddrinfo(nil, 'ftp', :INET, Socket::SOCK_STREAM)[0]
       array.should == [
@@ -292,6 +300,14 @@ describe 'Socket.getaddrinfo' do
         Socket::SOCK_STREAM,
       ]
       [0, Socket::IPPROTO_TCP].should.include?(proto)
+    end
+
+    it 'accepts an object responding to #to_int as the socket type' do
+      dummy = mock(:dummy)
+
+      dummy.should_receive(:to_int).and_return(Socket::SOCK_STREAM)
+
+      Socket.getaddrinfo(nil, 21, :INET, dummy).map { |a| a[5] }.uniq.should == [Socket::SOCK_STREAM]
     end
 
     platform_is_not :windows do

@@ -25,6 +25,13 @@ describe "Socket::Option.linger" do
     so = Socket::Option.linger(true, 1)
     so.data.should == [1, 1].pack(option_pack)
   end
+
+  it "converts onoff with #to_int" do
+    onoff = mock('onoff')
+    onoff.should_receive(:to_int).and_return(0)
+
+    Socket::Option.linger(onoff, 10).data.should == [0, 10].pack(option_pack)
+  end
 end
 
 describe "Socket::Option#linger" do

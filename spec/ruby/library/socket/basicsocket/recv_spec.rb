@@ -168,6 +168,18 @@ describe 'BasicSocket#recv' do
           @server.recv(2, Socket::MSG_PEEK).should == 'he'
           @server.recv(2).should == 'he'
         end
+
+        it 'converts the length and flags with #to_int' do
+          @client.write('hello')
+
+          length = mock(:length)
+          flags  = mock(:flags)
+          length.should_receive(:to_int).and_return(2)
+          flags.should_receive(:to_int).and_return(Socket::MSG_PEEK)
+
+          @server.recv(length, flags).should == 'he'
+          @server.recv(2).should == 'he'
+        end
       end
     end
   end

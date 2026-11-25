@@ -17,6 +17,27 @@ describe "Socket.getnameinfo" do
     name_info.should == ['127.0.0.1', "3333"]
   end
 
+  it "converts a sockaddr String with #to_str" do
+    sockaddr = mock('sockaddr')
+    sockaddr.should_receive(:to_str).and_return(Socket.sockaddr_in(3333, '127.0.0.1'))
+
+    Socket.getnameinfo(sockaddr, Socket::NI_NUMERICHOST | Socket::NI_NUMERICSERV).should == ['127.0.0.1', "3333"]
+  end
+
+  it "converts a sockaddr Array with #to_ary" do
+    sockaddr = mock('sockaddr')
+    sockaddr.should_receive(:to_ary).and_return(['AF_INET', 3333, '127.0.0.1'])
+
+    Socket.getnameinfo(sockaddr, Socket::NI_NUMERICHOST | Socket::NI_NUMERICSERV).should == ['127.0.0.1', "3333"]
+  end
+
+  it "converts the flags with #to_int" do
+    flags = mock('flags')
+    flags.should_receive(:to_int).and_return(Socket::NI_NUMERICHOST | Socket::NI_NUMERICSERV)
+
+    Socket.getnameinfo(['AF_INET', 3333, '127.0.0.1'], flags).should == ['127.0.0.1', "3333"]
+  end
+
   def should_be_valid_dns_name(name)
     # http://stackoverflow.com/questions/106179/regular-expression-to-match-hostname-or-ip-address
     # ftp://ftp.rfc-editor.org/in-notes/rfc3696.txt

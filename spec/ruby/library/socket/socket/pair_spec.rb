@@ -118,6 +118,44 @@ describe "Socket.pair" do
     end
   end
 
+  describe 'using an object that responds to #to_int' do
+    before do
+      @s1 = @s2 = nil
+    end
+
+    after do
+      @s1.close if @s1
+      @s2.close if @s2
+    end
+
+    it 'converts the address family with #to_int' do
+      family = mock(:family)
+      family.should_receive(:to_int).and_return(Socket::AF_UNIX)
+
+      @s1, @s2 = Socket.pair(family, :STREAM)
+
+      @s1.local_address.afamily.should == Socket::AF_UNIX
+    end
+
+    it 'converts the socket type with #to_int' do
+      type = mock(:type)
+      type.should_receive(:to_int).and_return(Socket::SOCK_DGRAM)
+
+      @s1, @s2 = Socket.pair(:UNIX, type)
+
+      @s1.getsockopt(:SOCKET, :TYPE).int.should == Socket::SOCK_DGRAM
+    end
+
+    it 'converts the protocol with #to_int' do
+      protocol = mock(:protocol)
+      protocol.should_receive(:to_int).and_return(0)
+
+      @s1, @s2 = Socket.pair(:UNIX, :STREAM, protocol)
+
+      @s1.should.instance_of?(Socket)
+    end
+  end
+
   it 'accepts a custom protocol as an Integer as the 3rd argument' do
     s1, s2 = Socket.pair(:UNIX, :STREAM, Socket::IPPROTO_IP)
     s1.should.instance_of?(Socket)

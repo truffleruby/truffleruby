@@ -13,6 +13,13 @@ describe "Socket.sockaddr_un" do
     Socket.unpack_sockaddr_un(sockaddr_un).should == '/tmp/s'
   end
 
+  it "converts the path with #to_str" do
+    path = mock('path')
+    path.should_receive(:to_str).and_return('/tmp/s')
+
+    Socket.sockaddr_un(path).should == Socket.sockaddr_un('/tmp/s')
+  end
+
   it "handles correctly paths with multibyte chars" do
     sockaddr_un = Socket.sockaddr_un('/home/вася/sock')
     path = Socket.unpack_sockaddr_un(sockaddr_un).encode('UTF-8', 'UTF-8')

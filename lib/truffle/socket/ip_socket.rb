@@ -31,6 +31,8 @@ class IPSocket < BasicSocket
   undef_method :getpeereid
 
   def self.getaddress(host)
+    # MRI: raddrinfo_host_str() converts a host which is neither nil nor an Integer with StringValueCStr()
+    host = Primitive.convert_with_to_str(host) unless Primitive.nil?(host) || Primitive.is_a?(host, Integer)
     Truffle::Socket::Foreign.getaddress(host)
   end
 

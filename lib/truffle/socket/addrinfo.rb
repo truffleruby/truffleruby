@@ -98,7 +98,9 @@ class Addrinfo
   end
 
   def initialize(sockaddr, pfamily = nil, socktype = 0, protocol = 0)
-    if Primitive.is_a?(sockaddr, Array)
+    # MRI: rb_check_array_type(), then StringValue()
+    if sockaddr_ary = Truffle::Type.rb_check_convert_type(sockaddr, Array, :to_ary)
+      sockaddr = sockaddr_ary
       @afamily    = Truffle::Socket.address_family(sockaddr[0])
       @ip_port    = sockaddr[1]
       @ip_address = sockaddr[3]
@@ -108,6 +110,7 @@ class Addrinfo
         pfamily = Socket::PF_INET6
       end
     else
+      sockaddr = Primitive.convert_with_to_str(sockaddr)
       @afamily = Truffle::Socket::Foreign::Sockaddr.family_of_string(sockaddr)
       case @afamily
       when Socket::AF_UNIX

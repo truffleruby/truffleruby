@@ -80,4 +80,22 @@ describe 'Socket::Option#initialize' do
       }.should.raise(SocketError)
     end
   end
+
+  describe 'using custom objects' do
+    it 'converts the family with #to_int' do
+      family = mock(:family)
+      family.should_receive(:to_int).and_return(Socket::AF_INET)
+
+      Socket::Option.new(family, :SOCKET, :KEEPALIVE, @bool).family.should == Socket::AF_INET
+    end
+
+    it 'converts the data with #to_str' do
+      data = mock(:data)
+      data.should_receive(:to_str).and_return(@bool)
+
+      opt = Socket::Option.new(:INET, :SOCKET, :KEEPALIVE, data)
+      opt.data.should == @bool
+      opt.bool.should == false
+    end
+  end
 end

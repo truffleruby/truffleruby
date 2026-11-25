@@ -46,6 +46,13 @@ ruby_version_is ""..."4.1" do
         end
       end
 
+      it 'converts the address with #to_str' do
+        addr = mock(:addr)
+        addr.should_receive(:to_str).and_return(@addr)
+
+        suppress_warning { Socket.gethostbyaddr(addr) }[3].should == @addr
+      end
+
       describe 'with an explicit address family' do
         it 'returns an Array when using an Integer as the address family' do
           suppress_warning { Socket.gethostbyaddr(@addr, Socket::AF_INET) }.should.instance_of?(Array)
