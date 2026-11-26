@@ -351,9 +351,12 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         if (!allocated) {
             return false;
         }
+        allocated = false;
 
         if (cleanable != null) {
             cleanable.clean();
+            cleanable = null;
+            autoReleaseState = null;
         } else {
             UNSAFE.freeMemory(address);
         }
@@ -365,6 +368,7 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         if (cleanable != null) {
             throw new UnsupportedOperationException("Calling freeNoAutorelease() on a autorelease Pointer");
         }
+        allocated = false;
         UNSAFE.freeMemory(address);
     }
 
@@ -379,7 +383,7 @@ public final class Pointer implements AutoCloseable, TruffleObject {
 
     @TruffleBoundary
     public synchronized void enableAutorelease(RubyLanguage language) {
-        // There's nothing to release if this Pointer didn't allocate the memory.
+        // There's nothing to release if this Pointer didn't allocate the memory or already freed it.
         if (cleanable != null || !allocated) {
             return;
         }

@@ -265,6 +265,11 @@ module Truffle::FFI
       Primitive.pointer_clear self, total if clear
     end
 
+    def free
+      Primitive.pointer_free(self)
+      self
+    end
+
     def self.new(type, count = 1, clear = true)
       ptr = super(type, count, clear)
 

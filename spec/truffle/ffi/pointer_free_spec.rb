@@ -27,6 +27,31 @@
 
 require_relative '../../ruby/spec_helper'
 
+describe "Truffle::FFI::MemoryPointer#free" do
+  it "frees the memory only once when called in the block of MemoryPointer.new, like the ffi gem" do
+    pointer = Truffle::FFI::MemoryPointer.new(:int, 4) do |ptr|
+      ptr.free
+      ptr
+    end
+    -> { pointer.free.should.equal?(pointer) }.should_not complain
+  end
+
+  it "frees the memory only once when called twice without autorelease" do
+    pointer = Truffle::FFI::MemoryPointer.new(:int, 4)
+    pointer.autorelease = false
+    pointer.free
+    -> { pointer.free.should.equal?(pointer) }.should_not complain
+  end
+
+  it "disables autorelease since there is nothing left to release" do
+    pointer = Truffle::FFI::MemoryPointer.new(:int, 4)
+    pointer.should.autorelease?
+    pointer.free
+    pointer.should_not.autorelease?
+    pointer.free.should.equal?(pointer)
+  end
+end
+
 describe "Truffle::FFI::Pointer#free" do
   it "warns and does not free memory which the pointer did not allocate, like the ffi gem" do
     memory = Truffle::FFI::MemoryPointer.new(:int, 4)
@@ -36,9 +61,24 @@ describe "Truffle::FFI::Pointer#free" do
     -> { pointer.free.should.equal?(pointer) }.should complain(/calling free on non allocated pointer/)
     memory.read_int.should == 42
   end
+
+  it "warns and does not free memory which the pointer already freed, like the ffi gem" do
+    pointer = Truffle::FFI::MemoryPointer.new(:int, 4).slice(0, 4).dup
+    pointer.should.instance_of?(Truffle::FFI::Pointer)
+    pointer.free
+
+    -> { pointer.free.should.equal?(pointer) }.should complain(/calling free on non allocated pointer/)
+  end
 end
 
 describe "Truffle::FFI::Pointer#autorelease=" do
+  it "does nothing once the memory was freed" do
+    pointer = Truffle::FFI::MemoryPointer.new(:int, 4)
+    pointer.free
+    pointer.autorelease = true
+    pointer.should_not.autorelease?
+  end
+
   it "does nothing for a Pointer which did not allocate the memory" do
     pointer = Truffle::FFI::Pointer.new(0x1234)
     pointer.autorelease = true
