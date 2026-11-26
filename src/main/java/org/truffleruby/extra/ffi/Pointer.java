@@ -363,6 +363,28 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         return true;
     }
 
+    public synchronized boolean isAllocated() {
+        return allocated;
+    }
+
+    /** Returns a Pointer to the same address with a different size and hands it the ownership of the memory. If this
+     * Pointer kept the ownership, its autorelease would free the memory once this Pointer is collected, even though the
+     * new Pointer still refers to it. Without autorelease, nothing would ever free the memory. */
+    @TruffleBoundary
+    public synchronized Pointer withSize(RubyLanguage language, long newSize) {
+        final Pointer pointer = new Pointer(address, newSize);
+        if (allocated) {
+            allocated = false;
+            pointer.allocated = true;
+
+            if (cleanable != null) {
+                disableAutorelease();
+                pointer.enableAutoreleaseUnsynchronized(language);
+            }
+        }
+        return pointer;
+    }
+
     @TruffleBoundary
     public synchronized void freeNoAutorelease() {
         if (cleanable != null) {

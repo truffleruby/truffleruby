@@ -85,3 +85,20 @@ describe "Truffle::FFI::Pointer#autorelease=" do
     pointer.should_not.autorelease?
   end
 end
+
+describe "Truffle::FFI::Pointer#total=" do
+  it "keeps the autorelease of the memory" do
+    pointer = Truffle::FFI::MemoryPointer.new(:int, 4)
+    pointer.total = 8
+    pointer.total.should == 8
+    pointer.should.autorelease?
+  end
+
+  it "keeps the ownership of the memory" do
+    pointer = Truffle::FFI::MemoryPointer.new(:int, 4)
+    pointer.autorelease = false
+    pointer.total = 8
+    pointer.autorelease = true
+    pointer.should.autorelease?
+  end
+end
