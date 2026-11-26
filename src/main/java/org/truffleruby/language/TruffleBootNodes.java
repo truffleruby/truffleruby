@@ -109,8 +109,13 @@ public abstract class TruffleBootNodes {
         @Specialization
         int main(int argc, long argv, String kind, String toExecute) {
             return topLevelRaiseHandler.execute(() -> {
-                getContext().nativeArgc = argc;
-                getContext().nativeArgv = argv;
+                // Process.setproctitle writes to argv through native memory, which isn't available with
+                // --platform-native=false. In that case, we leave argv as 0 so setproctitle does nothing, just as it
+                // does when we weren't started by the launcher.
+                if (getContext().getOptions().NATIVE_PLATFORM) {
+                    getContext().nativeArgc = argc;
+                    getContext().nativeArgv = argv;
+                }
                 setArgvGlobals();
 
                 // Need to set $0 before loading required libraries
