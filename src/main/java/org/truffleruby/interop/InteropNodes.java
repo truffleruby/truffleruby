@@ -1798,17 +1798,34 @@ public abstract class InteropNodes {
 
         @TruffleBoundary
         private Object lookupJavaType(String name) {
-            final TruffleLanguage.Env env = getContext().getEnv();
-
-            if (!env.isHostLookupAllowed()) {
-                throw new RaiseException(
-                        getContext(),
-                        getContext().getCoreExceptions().securityError("host access is not allowed", this));
-            }
-
-            return env.lookupHostSymbol(name);
+            checkHostLookupAllowed(getContext(), this);
+            return getContext().getEnv().lookupHostSymbol(name);
         }
 
+    }
+
+    /** Raises {@code SecurityError} unless the embedder allows host class lookup at all. */
+    @TruffleBoundary
+    public static void checkHostLookupAllowed(RubyContext context, Node node) {
+        if (!context.getEnv().isHostLookupAllowed()) {
+            throw new RaiseException(context, context.getCoreExceptions().securityError(
+                    "host access is not allowed", node));
+        }
+    }
+
+    /** Raises unless the embedder allows looking up the given host class. Any primitive that exposes information Ruby
+     * code could otherwise only get through {@code Java.type(className)} should call this first.
+     * {@link #checkHostLookupAllowed} alone isn't enough, since an embedder's {@code allowHostClassLookup} filter can
+     * allow some classes but not others. When the filter rejects the class, Truffle raises its own exception, which is
+     * the same one {@code Java.type(className)} would raise. */
+    @TruffleBoundary
+    public static void checkHostClassLookupAllowed(RubyContext context, String className, Node node) {
+        checkHostLookupAllowed(context, node);
+
+        // Truffle has no way to apply the embedder's filter without also loading the class, so we do a real lookup.
+        // In a native image, that only works for classes registered when the image was built, so any class passed
+        // here must be listed in our reachability-metadata.json.
+        context.getEnv().lookupHostSymbol(className);
     }
 
     @Primitive(name = "java_add_to_classpath")

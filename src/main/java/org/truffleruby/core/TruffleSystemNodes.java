@@ -49,6 +49,7 @@ import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.strings.TruffleString;
 import com.sun.management.ThreadMXBean;
+import org.truffleruby.RubyContext;
 import org.truffleruby.annotations.CoreMethod;
 import org.truffleruby.annotations.SuppressFBWarnings;
 import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
@@ -62,6 +63,7 @@ import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.core.string.StringUtils;
+import org.truffleruby.interop.InteropNodes;
 import org.truffleruby.interop.ToJavaStringNode;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.library.RubyStringLibrary;
@@ -111,12 +113,16 @@ public abstract class TruffleSystemNodes {
         }
     }
 
+    /* The Java system properties describe the host (e.g., the user name, home directory, and class path) and can
+     * include values the embedder set with -D. So, we only expose them to code that could already read them with
+     * Java.type("java.lang.System"). */
+
     @CoreMethod(names = "get_java_properties", onSingleton = true)
     public abstract static class GetJavaPropertiesNode extends CoreMethodArrayArgumentsNode {
         @Specialization
         Object getJavaProperties(
                 @Cached TruffleString.FromJavaStringNode fromJavaStringNode) {
-            String[] properties = getProperties();
+            String[] properties = getProperties(getContext(), this);
             Object[] array = new Object[properties.length];
             for (int i = 0; i < properties.length; i++) {
                 array[i] = createString(fromJavaStringNode, properties[i], Encodings.UTF_8);
@@ -125,7 +131,8 @@ public abstract class TruffleSystemNodes {
         }
 
         @TruffleBoundary
-        private static String[] getProperties() {
+        private static String[] getProperties(RubyContext context, Node node) {
+            InteropNodes.checkHostClassLookupAllowed(context, "java.lang.System", node);
             return System.getProperties().stringPropertyNames().toArray(StringUtils.EMPTY_STRING_ARRAY);
         }
     }
@@ -139,7 +146,7 @@ public abstract class TruffleSystemNodes {
                 @Cached TruffleString.FromJavaStringNode fromJavaStringNode,
                 @Cached ToJavaStringNode toJavaStringNode,
                 @Bind Node node) {
-            String value = getProperty(toJavaStringNode.execute(node, property));
+            String value = getProperty(getContext(node), node, toJavaStringNode.execute(node, property));
             if (value == null) {
                 return nil;
             } else {
@@ -148,7 +155,8 @@ public abstract class TruffleSystemNodes {
         }
 
         @TruffleBoundary
-        private static String getProperty(String key) {
+        private static String getProperty(RubyContext context, Node node, String key) {
+            InteropNodes.checkHostClassLookupAllowed(context, "java.lang.System", node);
             return System.getProperty(key);
         }
     }

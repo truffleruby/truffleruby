@@ -62,6 +62,40 @@ public class ContextPermissionsTest {
     }
 
     @Test
+    public void testJavaPropertiesNoHostAccess() throws Throwable {
+        try (Context context = Context.newBuilder("ruby").build()) {
+            for (String code : JAVA_PROPERTIES_CODE) {
+                RubyTest.assertThrows(
+                        () -> context.eval("ruby", code),
+                        e -> {
+                            assertEquals("host access is not allowed", e.getMessage());
+                            assertEquals("SecurityError", e.getGuestObject().getMetaObject().getMetaQualifiedName());
+                        });
+            }
+        }
+
+        // Host class lookup is allowed, but not for java.lang.System.
+        try (Context context = Context.newBuilder("ruby").allowHostClassLookup("java.lang.String"::equals).build()) {
+            for (String code : JAVA_PROPERTIES_CODE) {
+                RubyTest.assertThrows(
+                        () -> context.eval("ruby", code),
+                        e -> assertEquals("Access to host class java.lang.System is not allowed.", e.getMessage()));
+            }
+        }
+
+        try (Context context = Context.newBuilder("ruby").allowHostClassLookup("java.lang.System"::equals).build()) {
+            assertEquals(
+                    System.getProperty("user.home"),
+                    context.eval("ruby", "Truffle::System.get_java_property('user.home')").asString());
+            assertTrue(context.eval("ruby", "Truffle::System.get_java_properties.include?('user.home')").asBoolean());
+        }
+    }
+
+    private static final String[] JAVA_PROPERTIES_CODE = {
+            "Truffle::System.get_java_property('user.home')",
+            "Truffle::System.get_java_properties" };
+
+    @Test
     public void testNativeNoThreads() throws Throwable {
         try (Context context = Context.newBuilder("ruby").allowNativeAccess(true).build()) {
             Assert.assertEquals(3, context.eval("ruby", "1 + 2").asInt());
