@@ -46,7 +46,8 @@ struct rb_ractor_local_key_struct {
     // element of the array; until then, the array is empty. The indirection is a little awkward, but it lets us
     // register the `Array` as a GC root once, when the key is created, and then store values with ordinary `Array`
     // writes. Rooting each stored `VALUE` directly doesn't work: `rb_gc_register_mark_object` can't be undone, so
-    // every value ever stored would stay alive, and `rb_gc_register_address` only roots the value present at registration.
+    // every value ever stored would stay alive, and TruffleRuby's `rb_gc_register_address` reads the address only
+    // once (when the `Init_` function returns, or at registration outside `Init_`), so later values wouldn't be rooted.
     VALUE value_holder;
 };
 
@@ -108,12 +109,14 @@ rb_ractor_local_key_t rb_ractor_local_storage_value_newkey(void) {
 bool rb_ractor_local_storage_value_lookup(rb_ractor_local_key_t key, VALUE *val) {
   ractor_local_storage_check_value_key(key, "rb_ractor_local_storage_value_lookup");
 
-  // The holder never shrinks, so once it has an element the element stays there.
-  if (RARRAY_LEN(key->value_holder) == 0) {
+  // Qundef is used as a sentinel value indicating no value has been set for the key. Ruby code can't store Qundef.
+  // CRuby's main Ractor uses the same sentinel, so C code setting the value to Qundef reads as unset there too.
+  VALUE value = rb_tr_up_rb_tr_ractor_local_storage_value_lookup(key->value_holder);
+  if (value == Qundef) {
     return false;
   }
 
-  *val = rb_ary_entry(key->value_holder, 0);
+  *val = value;
   return true;
 }
 

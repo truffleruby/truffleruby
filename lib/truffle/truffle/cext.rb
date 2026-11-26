@@ -267,6 +267,11 @@ module Truffle::CExt
     array.size
   end
 
+  # Returns the value stored in the holder Array used by ractor-local storage or `undefined` if not set.
+  def rb_tr_ractor_local_storage_value_lookup(holder)
+    Primitive.array_first_or_undefined(holder)
+  end
+
   def rb_integer_bytes_string(value, num_words, word_length, msw_first, twos_comp, big_endian)
     Truffle::CExt.rb_integer_bytes(value, num_words, word_length, msw_first, twos_comp, big_endian).pack('C*')
   end
