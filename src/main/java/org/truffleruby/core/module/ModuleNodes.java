@@ -924,14 +924,40 @@ public abstract class ModuleNodes {
 
         @TruffleBoundary
         @Specialization
-        boolean isConstDefined(RubyModule module, Object fullNameObject, Object inheritObject, boolean checkName,
-                @Cached BooleanCastWithDefaultNode booleanCastWithDefaultNode,
-                @Cached NameToJavaStringNode nameToJavaStringNode) {
-            final var fullName = nameToJavaStringNode.execute(this, fullNameObject);
+        boolean isConstDefined(RubyModule module, RubySymbol fullName, Object inheritObject, boolean checkName,
+                @Cached @Shared BooleanCastWithDefaultNode booleanCastWithDefaultNode) {
+            // Like CRuby, a Symbol is not treated as a constant path, so "A::B" is a wrong constant name
             final boolean inherit = booleanCastWithDefaultNode.execute(this, inheritObject, true);
-            final ConstantLookupResult constant = ModuleOperations
-                    .lookupScopedConstant(getContext(), module, fullName, inherit, this, checkName);
-            return constant.isFound();
+            return ModuleOperations
+                    .lookupConstantWithInherit(getContext(), module, fullName.getString(), inherit, this, checkName)
+                    .isFound();
+        }
+
+        @TruffleBoundary
+        @Specialization
+        boolean isConstDefined(RubyModule module, RubyString fullName, Object inheritObject, boolean checkName,
+                @Bind Node node,
+                @Cached @Shared BooleanCastWithDefaultNode booleanCastWithDefaultNode,
+                @Cached @Shared NameToJavaStringNode nameToJavaStringNode) {
+            final boolean inherit = booleanCastWithDefaultNode.execute(node, inheritObject, true);
+            return ModuleOperations
+                    .lookupScopedConstant(getContext(node), module, nameToJavaStringNode.execute(node, fullName),
+                            inherit, node, checkName)
+                    .isFound();
+        }
+
+        @TruffleBoundary
+        @Specialization
+        boolean isConstDefined(RubyModule module, Object fullName, Object inheritObject, boolean checkName,
+                @Bind Node node,
+                @Cached @Shared BooleanCastWithDefaultNode booleanCastWithDefaultNode,
+                @Cached @Shared NameToJavaStringNode nameToJavaStringNode) {
+            // An object responding to #to_str is converted and treated like a String
+            final boolean inherit = booleanCastWithDefaultNode.execute(node, inheritObject, true);
+            return ModuleOperations
+                    .lookupScopedConstant(getContext(node), module, nameToJavaStringNode.execute(node, fullName),
+                            inherit, node, checkName)
+                    .isFound();
         }
     }
 
@@ -946,12 +972,30 @@ public abstract class ModuleNodes {
         }
     }
 
+    /** Lookup one segment of a scoped constant path like "A::B" for Module#const_get. Like CRuby rb_const_get_from(),
+     * the constants of Object itself are not searched. */
+    @Primitive(name = "module_const_get_segment")
+    public abstract static class ConstGetSegmentNode extends PrimitiveArrayArgumentsNode {
+
+
+        @Specialization
+        Object getConst(RubyModule module, Object nameObject, boolean checkName,
+                @Cached GetConstantNode getConstantNode,
+                @Cached NameToJavaStringNode nameToJavaStringNode,
+                @Cached("createExcludeObject(true)") LookupConstantNode lookupConstantNode) {
+            final var name = nameToJavaStringNode.execute(this, nameObject);
+            return getConstantNode
+                    .lookupAndResolveConstant(LexicalScope.IGNORE, module, name, checkName, lookupConstantNode, true);
+        }
+    }
+
     @GenerateCached(false)
     @GenerateInline
     @ReportPolymorphism // inline cache
     @ImportStatic(StringOperations.class)
     @SuppressWarnings("truffle-inlining") //TODO [GR-46266] - Remove it when other nodes are converted to DSL inlinable
     public abstract static class ConstGetNode extends RubyBaseNode {
+
 
         public abstract Object execute(Node node, RubyModule module, Object name, boolean inherit,
                 boolean lookInObject, boolean checkName);
@@ -962,8 +1006,8 @@ public abstract class ModuleNodes {
         static Object getConstant(
                 Node node, RubyModule module, RubySymbol name, boolean inherit, boolean lookInObject, boolean checkName,
                 @Cached @Shared GetConstantNode getConstantNode,
-                @Cached("create(true, false)") @Shared LookupConstantNode lookupConstantNode,
-                @Cached("create(true, true)") @Shared LookupConstantNode lookupConstantLookInObjectNode) {
+                @Cached("createIncludeObject(true)") @Shared LookupConstantNode lookupConstantNode,
+                @Cached("createIncludeObjectForModules(true)") @Shared LookupConstantNode lookupConstantLookInObjectNode) {
             return getConstant(module, name.getString(), checkName, lookInObject, getConstantNode, lookupConstantNode,
                     lookupConstantLookInObjectNode);
         }
@@ -989,8 +1033,8 @@ public abstract class ModuleNodes {
                 Node node, RubyModule module, Object name, boolean inherit, boolean lookInObject, boolean checkName,
                 @Cached @Shared RubyStringLibrary stringsName,
                 @Cached @Shared GetConstantNode getConstantNode,
-                @Cached("create(true, false)") @Shared LookupConstantNode lookupConstantNode,
-                @Cached("create(true, true)") @Shared LookupConstantNode lookupConstantLookInObjectNode,
+                @Cached("createIncludeObject(true)") @Shared LookupConstantNode lookupConstantNode,
+                @Cached("createIncludeObjectForModules(true)") @Shared LookupConstantNode lookupConstantLookInObjectNode,
                 @Cached("asTruffleStringUncached(name)") TruffleString cachedTString,
                 @Cached("stringsName.getEncoding(node, name)") RubyEncoding cachedEncoding,
                 @Cached("getJavaString(name)") String cachedString,
@@ -1011,8 +1055,8 @@ public abstract class ModuleNodes {
                 Node node, RubyModule module, Object name, boolean inherit, boolean lookInObject, boolean checkName,
                 @Cached @Shared GetConstantNode getConstantNode,
                 @Cached @Shared ByteIndexOfStringNode byteIndexOfStringNode,
-                @Cached("create(true, false)") @Shared LookupConstantNode lookupConstantNode,
-                @Cached("create(true, true)") @Shared LookupConstantNode lookupConstantLookInObjectNode,
+                @Cached("createIncludeObject(true)") @Shared LookupConstantNode lookupConstantNode,
+                @Cached("createIncludeObjectForModules(true)") @Shared LookupConstantNode lookupConstantLookInObjectNode,
                 @Cached @Shared RubyStringLibrary stringsName,
                 @Cached @Shared ToJavaStringNode toJavaStringNode) {
             return getConstant(module, toJavaStringNode.execute(node, name), checkName, lookInObject, getConstantNode,

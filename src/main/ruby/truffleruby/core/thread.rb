@@ -380,6 +380,8 @@ class ConditionVariable
   end
 end
 
+Thread::ConditionVariable = ::ConditionVariable
+
 Truffle::KernelOperations.define_read_only_global(:$!, -> { Primitive.fiber_get_exception })
 Truffle::KernelOperations.define_read_only_global(:$?, -> { Primitive.thread_get_return_code })
 

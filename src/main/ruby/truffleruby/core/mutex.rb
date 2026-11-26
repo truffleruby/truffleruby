@@ -31,3 +31,5 @@ class Mutex
     raise TypeError, "can't dump #{Primitive.class(self)}"
   end
 end
+
+Thread::Mutex = ::Mutex

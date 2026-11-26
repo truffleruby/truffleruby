@@ -205,6 +205,11 @@ describe "Module#const_source_location" do
     ConstantSpecs.const_source_location("ClassA::CS_CONST10").should == [@constants_fixture_path, ConstantSpecs::ClassA::CS_CONST10_LINE]
   end
 
+  it "returns nil when a later segment of a scoped name would resolve in Object" do
+    # CS_CONST1 is defined in Object, which is excluded for later segments of a scoped name
+    ConstantSpecs.const_source_location("ClassA::CS_CONST1").should == nil
+  end
+
   it "returns updated location from const_set" do
     mod = Module.new
     const_line = __LINE__ + 1

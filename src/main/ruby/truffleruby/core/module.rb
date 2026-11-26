@@ -155,7 +155,7 @@ class Module
                 else
                   false
                 end
-    raise NameError, "wrong constant name #{name}" if names.empty? || names.include?('')
+    raise NameError, "wrong constant name #{name}" if names.empty? || name.end_with?('::')
 
     res = if top_level
             Object
@@ -164,13 +164,17 @@ class Module
           end
 
     names.each_with_index do |s, i|
+      # Like CRuby, an empty segment is a wrong constant name, reported with the whole name,
+      # and is only detected when the lookup reaches it
+      raise NameError, "wrong constant name #{name}" if s.empty?
       if Primitive.is_a?(res, Module)
         res = if !inherit
                 Primitive.module_const_get res, s, false, false, true
               elsif i == 0
                 Primitive.module_const_get res, s, true, true, true
               else
-                Primitive.module_const_get res, s, true, false, true
+                # Like CRuby, a segment after the first does not search the constants of Object itself
+                Primitive.module_const_get_segment res, s, true
               end
       else
         raise TypeError, "#{name} does not refer to a class/module"

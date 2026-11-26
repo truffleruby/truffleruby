@@ -27,6 +27,7 @@ import org.truffleruby.language.RubyConstant;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.parser.Identifiers;
 
+import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Exclusive;
@@ -36,17 +37,44 @@ import com.oracle.truffle.api.dsl.Specialization;
 @ReportPolymorphism // inline cache
 public abstract class LookupConstantNode extends LookupConstantBaseNode implements LookupConstantInterface {
 
-    private final boolean ignoreVisibility;
-    private final boolean lookInObject;
-
-    @NeverDefault
-    public static LookupConstantNode create(boolean ignoreVisibility, boolean lookInObject) {
-        return LookupConstantNodeGen.create(ignoreVisibility, lookInObject);
+    /** How the lookup treats the constants of Object itself. */
+    enum ObjectLookup {
+        /** Search the constants of Object itself like the constants of any other ancestor. */
+        INCLUDED,
+        /** Search the constants of Object for module receivers when not found in the ancestors, like
+         * Module#const_get. */
+        FOR_MODULES,
+        /** Do not search the constants of Object itself, and stop the search there when Object has the constant, like
+         * rb_const_search_from() with exclude in CRuby. */
+        EXCLUDED,
     }
 
-    public LookupConstantNode(boolean ignoreVisibility, boolean lookInObject) {
+    private final boolean ignoreVisibility;
+    private final ObjectLookup objectLookup;
+
+    /** Search the ancestors of the module, including the constants of Object itself. */
+    @NeverDefault
+    public static LookupConstantNode createIncludeObject(boolean ignoreVisibility) {
+        return LookupConstantNodeGen.create(ignoreVisibility, ObjectLookup.INCLUDED);
+    }
+
+    /** Search the ancestors of the module, and additionally the constants of Object for module receivers, like
+     * Module#const_get. */
+    @NeverDefault
+    public static LookupConstantNode createIncludeObjectForModules(boolean ignoreVisibility) {
+        return LookupConstantNodeGen.create(ignoreVisibility, ObjectLookup.FOR_MODULES);
+    }
+
+    /** Search the ancestors of the module but not the constants of Object itself, like rb_const_search_from() with
+     * exclude in CRuby. */
+    @NeverDefault
+    public static LookupConstantNode createExcludeObject(boolean ignoreVisibility) {
+        return LookupConstantNodeGen.create(ignoreVisibility, ObjectLookup.EXCLUDED);
+    }
+
+    public LookupConstantNode(boolean ignoreVisibility, ObjectLookup objectLookup) {
         this.ignoreVisibility = ignoreVisibility;
-        this.lookInObject = lookInObject;
+        this.objectLookup = objectLookup;
     }
 
     public abstract RubyConstant executeLookupConstant(Object module, String name, boolean checkName);
@@ -120,11 +148,12 @@ public abstract class LookupConstantNode extends LookupConstantBaseNode implemen
 
     @TruffleBoundary
     protected ConstantLookupResult doLookup(RubyModule module, String name) {
-        if (lookInObject) {
-            return ModuleOperations.lookupConstantAndObject(getContext(), module, name, new ArrayList<>());
-        } else {
-            return ModuleOperations.lookupConstant(getContext(), module, name);
-        }
+        var assumptions = new ArrayList<Assumption>();
+        return switch (objectLookup) {
+            case EXCLUDED -> ModuleOperations.lookupConstant(getContext(), module, name, assumptions, true);
+            case FOR_MODULES -> ModuleOperations.lookupConstantAndObject(getContext(), module, name, assumptions);
+            case INCLUDED -> ModuleOperations.lookupConstant(getContext(), module, name, assumptions);
+        };
     }
 
     protected boolean isVisible(RubyModule module, ConstantLookupResult constant) {
