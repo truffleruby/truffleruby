@@ -2,7 +2,6 @@
 PRIMITIVES_FOR_DEBUGGING = %w[
   frame_declaration_context_to_string
   java_breakpoint
-  java_get_env
   vm_java_version
 ]
 

@@ -47,7 +47,6 @@ import java.nio.file.NoSuchFileException;
 
 import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.profiles.InlinedConditionProfile;
 import com.oracle.truffle.api.strings.TruffleString;
 import com.sun.management.ThreadMXBean;
 import org.truffleruby.annotations.CoreMethod;
@@ -63,7 +62,6 @@ import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.core.string.StringUtils;
-import org.truffleruby.interop.FromJavaStringNode;
 import org.truffleruby.interop.ToJavaStringNode;
 import org.truffleruby.language.control.RaiseException;
 import org.truffleruby.language.library.RubyStringLibrary;
@@ -76,33 +74,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 @CoreModule("Truffle::System")
 public abstract class TruffleSystemNodes {
-
-    @Primitive(name = "java_get_env")
-    public abstract static class JavaGetEnv extends PrimitiveArrayArgumentsNode {
-
-        @Specialization(guards = "strings.isRubyString(this, name)", limit = "1")
-        static Object javaGetEnv(Object name,
-                @Cached RubyStringLibrary strings,
-                @Cached ToJavaStringNode toJavaStringNode,
-                @Cached FromJavaStringNode fromJavaStringNode,
-                @Cached InlinedConditionProfile nullValueProfile,
-                @Bind Node node) {
-            final String javaName = toJavaStringNode.execute(node, name);
-            final String value = getEnv(javaName);
-
-            if (nullValueProfile.profile(node, value == null)) {
-                return nil;
-            } else {
-                return fromJavaStringNode.executeFromJavaString(node, value);
-            }
-        }
-
-        @TruffleBoundary
-        private static String getEnv(String name) {
-            return System.getenv(name);
-        }
-
-    }
 
     @Primitive(name = "dir_set_truffle_working_directory")
     public abstract static class SetTruffleWorkingDirNode extends PrimitiveArrayArgumentsNode {
