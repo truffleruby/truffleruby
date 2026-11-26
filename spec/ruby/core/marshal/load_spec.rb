@@ -1531,6 +1531,33 @@ describe "Marshal.load" do
       message = "undefined class/module NamespaceTest::SameName"
       -> { Marshal.load(@data) }.should.raise(ArgumentError, message)
     end
+
+    it "does not call #const_missing" do
+      NamespaceTest.should_not_receive(:const_missing)
+      -> { Marshal.load(@data) }.should.raise(ArgumentError)
+    end
+
+    it "does not call #const_missing when an autoload does not define the constant" do
+      NamespaceTest.autoload :AutoloadUndefined, fixture(__FILE__, "autoload_undefined.rb")
+      NamespaceTest.should_not_receive(:const_missing)
+      -> {
+        Marshal.load("\x04\bo:\x25NamespaceTest::AutoloadUndefined\x00")
+      }.should.raise(ArgumentError, "undefined class/module NamespaceTest::AutoloadUndefined")
+    ensure
+      NamespaceTest.send(:remove_const, :AutoloadUndefined) if NamespaceTest.autoload?(:AutoloadUndefined)
+    end
+
+    it "does not look up the constant in the ancestors of the namespace" do
+      -> {
+        Marshal.load("\x04\bo:\x1ANamespaceTest::String\x00")
+      }.should.raise(ArgumentError, "undefined class/module NamespaceTest::String")
+    end
+  end
+
+  it "raises a TypeError when the dumped constant does not refer to a class or module" do
+    -> {
+      Marshal.load("\x04\bo:\eMarshal::MAJOR_VERSION\x00")
+    }.should.raise(TypeError, /does not refer to class\/module/)
   end
 
   it "raises an ArgumentError with full constant name when the dumped constant is missing" do
