@@ -284,6 +284,14 @@ describe "C-API Array function" do
       end
       b.should == [1.5, 2.5, 3.5]
     end
+
+    it "allows the array to grow after its C array was accessed" do
+      a = [1, 2, 3]
+      # Accessing RARRAY_PTR is what moves the elements to native memory.
+      @s.RARRAY_PTR_iterate(a) { |e| }
+      a.concat((4..100).to_a)
+      a.should == (1..100).to_a
+    end
   end
 
   describe "RARRAY_LEN" do

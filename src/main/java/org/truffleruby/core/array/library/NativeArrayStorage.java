@@ -20,6 +20,7 @@ import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import org.truffleruby.RubyContext;
+import org.truffleruby.RubyLanguage;
 import org.truffleruby.cext.HandleToWrapperNode;
 import org.truffleruby.cext.UnwrapNode;
 import org.truffleruby.cext.ValueWrapper;
@@ -111,9 +112,13 @@ public final class NativeArrayStorage implements ObjectGraphNode {
     protected NativeArrayStorage expand(int newCapacity,
             @Bind Node node) {
         final int capacity = this.length;
-        Pointer newPointer = Pointer.malloc(RubyContext.get(node), capacity);
-        newPointer.writeBytes(0, pointer, 0, capacity);
-        newPointer.writeBytes(capacity, newCapacity - capacity, (byte) 0);
+        // The capacities are in elements, while Pointer sizes and offsets are in bytes.
+        final long capacityInBytes = capacity * Pointer.SIZE;
+        final long newCapacityInBytes = newCapacity * Pointer.SIZE;
+        Pointer newPointer = Pointer.mallocAutoRelease(RubyLanguage.get(node), RubyContext.get(node),
+                newCapacityInBytes);
+        newPointer.writeBytes(0, pointer, 0, capacityInBytes);
+        newPointer.writeBytes(capacityInBytes, newCapacityInBytes - capacityInBytes, (byte) 0);
         /* We copy the contents of the marked objects to ensure the references will be kept alive even if the old store
          * becomes unreachable. */
         Object[] newMarkedObjects = ArrayUtils.grow(markedObjects, newCapacity);
