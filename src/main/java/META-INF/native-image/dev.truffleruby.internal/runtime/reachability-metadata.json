@@ -2,7 +2,8 @@
   "comment": [
     "JFR-related classes are registered to enable streaming JFR events with host interop, see spec/truffle/interop/jfr_spec.rb.",
     "Context-related classes are registered to enable embedding TruffleRuby via JNI.",
-    "Resources are registered to be able to load the core library when creating multiple Ruby contexts."
+    "Resources are registered to be able to load the core library when creating multiple Ruby contexts.",
+    "java.lang.System is registered so Truffle::System.get_java_property and get_java_properties can check that the embedder allows looking it up. Its members aren't registered, so an image that wants guest code to call them through Java.type needs to register them itself."
   ],
   "reflection": [
     {
@@ -84,7 +85,8 @@
         { "name": "valueOf", "parameterTypes": ["double"] }
       ]
     },
-    { "type": "java.nio.file.WatchEvent$Modifier" }
+    { "type": "java.nio.file.WatchEvent$Modifier" },
+    { "type": "java.lang.System" }
   ],
   "resources": [
     {
