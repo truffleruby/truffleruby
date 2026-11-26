@@ -63,7 +63,9 @@ public final class Pointer implements AutoCloseable, TruffleObject {
 
     public static Pointer malloc(RubyContext context, long size) {
         checkNativeAccess(context);
-        return new Pointer(context, UNSAFE.allocateMemory(size), size);
+        final Pointer pointer = new Pointer(context, UNSAFE.allocateMemory(size), size);
+        pointer.allocated = true;
+        return pointer;
     }
 
     /** Includes {@link #enableAutorelease(RubyLanguage)} and avoids locking for it */
@@ -82,12 +84,14 @@ public final class Pointer implements AutoCloseable, TruffleObject {
     /** Internal allocation which is not exposed to Ruby code and can be used even if native access is disabled. */
     public static Pointer callocInternal(long size) {
         final Pointer pointer = new Pointer(UNSAFE.allocateMemory(size), size);
+        pointer.allocated = true;
         pointer.writeBytes(0, size, (byte) 0);
         return pointer;
     }
 
     private final long address;
     private final long size;
+    private boolean allocated = false;
     /** Non-null iff autorelease */
     private Cleanable cleanable = null;
     private AutoReleaseState autoReleaseState = null;
@@ -139,6 +143,7 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         checkNativeAccess(context);
         this.address = address;
         this.size = size;
+        this.allocated = true;
         enableAutoreleaseUnsynchronized(language);
     }
 
@@ -342,12 +347,17 @@ public final class Pointer implements AutoCloseable, TruffleObject {
     }
 
     @TruffleBoundary
-    public synchronized void free() {
+    public synchronized boolean free() {
+        if (!allocated) {
+            return false;
+        }
+
         if (cleanable != null) {
             cleanable.clean();
         } else {
             UNSAFE.freeMemory(address);
         }
+        return true;
     }
 
     @TruffleBoundary
@@ -369,7 +379,8 @@ public final class Pointer implements AutoCloseable, TruffleObject {
 
     @TruffleBoundary
     public synchronized void enableAutorelease(RubyLanguage language) {
-        if (cleanable != null) {
+        // There's nothing to release if this Pointer didn't allocate the memory.
+        if (cleanable != null || !allocated) {
             return;
         }
 

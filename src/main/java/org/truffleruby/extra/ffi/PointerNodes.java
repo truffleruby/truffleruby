@@ -219,13 +219,12 @@ public abstract class PointerNodes {
 
     }
 
-    @CoreMethod(names = "free")
-    public abstract static class PointerFreeNode extends CoreMethodArrayArgumentsNode {
+    @Primitive(name = "pointer_free")
+    public abstract static class PointerFreeNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        RubyPointer free(RubyPointer pointer) {
-            pointer.pointer.free();
-            return pointer;
+        boolean free(RubyPointer pointer) {
+            return pointer.pointer.free();
         }
 
     }

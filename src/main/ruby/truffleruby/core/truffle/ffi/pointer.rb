@@ -108,6 +108,13 @@ module Truffle::FFI
       end
     end
 
+    def free
+      unless Primitive.pointer_free(self)
+        warn "calling free on non allocated pointer #{inspect}", uplevel: 1
+      end
+      self
+    end
+
     def null?
       address == 0x0
     end

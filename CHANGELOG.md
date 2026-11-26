@@ -42,6 +42,7 @@ Bug fixes:
 * Fix `File.lstat` raising `TypeError` instead of `Errno::ENOENT` for a missing file given as a `Pathname` (#4591, @taxor03).
 * Fix `rb_hash_foreach()` to iterate the entries directly instead of calling `Hash#each` and `Hash#delete`, which might be overridden (#4586, @eregon).
 * Fix heap corruption when an `Array` grows after a C extension accessed its elements with `RARRAY_PTR()` (@nirvdrum).
+* Fix `FFI::Pointer#free` to warn instead of freeing memory the pointer didn't allocate, like the `ffi` gem (#4615, @nirvdrum).
 
 Compatibility:
 
