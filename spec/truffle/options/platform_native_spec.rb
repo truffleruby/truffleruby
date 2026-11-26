@@ -21,4 +21,8 @@ describe "The --platform-native option" do
   it "when disabled can use reasonable parts of the stdlib" do
     ruby_exe("require 'uri'; p URI('http://foo.com/posts?id=30&limit=5#time=1305298413').query", options: "--experimental-options --platform-native=false --disable-gems").should == "\"id=30&limit=5\"\n"
   end
+
+  it "when disabled makes Process.setproctitle a no-op" do
+    ruby_exe("p Process.setproctitle('title')", options: "--experimental-options --platform-native=false").should == "\"title\"\n"
+  end
 end
