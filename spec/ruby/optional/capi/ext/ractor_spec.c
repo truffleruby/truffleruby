@@ -25,6 +25,11 @@ static VALUE spec_ractor_local_storage_value_lookup(VALUE self) {
   return Qnil;
 }
 
+static VALUE spec_ractor_local_storage_value_lookup_p(VALUE self) {
+  VALUE value = Qundef;
+  return rb_ractor_local_storage_value_lookup(spec_ractor_key, &value) ? Qtrue : Qfalse;
+}
+
 /* Uses a separate key so the "no value stored" cases do not depend on spec
  * ordering. */
 static rb_ractor_local_key_t nonexistent_key;
@@ -41,6 +46,11 @@ static VALUE spec_nonexistent_ractor_local_storage_value_lookup(VALUE self) {
   return Qnil;
 }
 
+static VALUE spec_nonexistent_ractor_local_storage_value_lookup_p(VALUE self) {
+  VALUE value = Qundef;
+  return rb_ractor_local_storage_value_lookup(nonexistent_key, &value) ? Qtrue : Qfalse;
+}
+
 void Init_ractor_spec(void) {
   /* Lets the methods run without the C extension lock on implementations
    * having one, so concurrent accesses to a key are really concurrent. */
@@ -55,6 +65,8 @@ void Init_ractor_spec(void) {
   rb_define_method(rb_mCApiRactorSpecs, "ractor_local_storage_value_lookup", spec_ractor_local_storage_value_lookup, 0);
   rb_define_method(rb_mCApiRactorSpecs, "nonexistent_ractor_local_storage_value", spec_nonexistent_ractor_local_storage_value, 0);
   rb_define_method(rb_mCApiRactorSpecs, "nonexistent_ractor_local_storage_value_lookup", spec_nonexistent_ractor_local_storage_value_lookup, 0);
+  rb_define_method(rb_mCApiRactorSpecs, "ractor_local_storage_value_lookup_p", spec_ractor_local_storage_value_lookup_p, 0);
+  rb_define_method(rb_mCApiRactorSpecs, "nonexistent_ractor_local_storage_value_lookup_p", spec_nonexistent_ractor_local_storage_value_lookup_p, 0);
 }
 
 #ifdef __cplusplus

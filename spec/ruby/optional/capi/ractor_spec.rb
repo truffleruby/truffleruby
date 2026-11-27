@@ -59,5 +59,15 @@ describe "C-API ractor local storage function" do
     it "returns nil when no value is stored" do
       @f.nonexistent_ractor_local_storage_value_lookup.should == nil
     end
+
+    it "returns true for a stored nil" do
+      @f.ractor_local_storage_value_set(nil)
+      @f.ractor_local_storage_value_lookup_p.should == true
+      @f.ractor_local_storage_value_lookup.should == nil
+    end
+
+    it "returns false when no value is stored" do
+      @f.nonexistent_ractor_local_storage_value_lookup_p.should == false
+    end
   end
 end

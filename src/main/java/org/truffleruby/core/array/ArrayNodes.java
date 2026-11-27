@@ -2364,6 +2364,24 @@ public abstract class ArrayNodes {
         }
     }
 
+    @Primitive(name = "array_first_or_undefined")
+    @ImportStatic(ArrayGuards.class)
+    public abstract static class FirstOrUndefinedNode extends PrimitiveArrayArgumentsNode {
+
+        @Specialization(limit = "storageStrategyLimit()")
+        static Object firstOrUndefined(RubyArray array,
+                @Bind("array.getStore()") Object store,
+                @CachedLibrary("store") ArrayStoreLibrary stores,
+                @Cached InlinedConditionProfile emptyProfile,
+                @Bind Node node) {
+            if (emptyProfile.profile(node, array.size == 0)) {
+                return NotProvided.INSTANCE;
+            }
+
+            return stores.read(store, 0);
+        }
+    }
+
     @Primitive(name = "array_mark_store")
     @ImportStatic(ArrayGuards.class)
     public abstract static class MarkNativeStoreNode extends PrimitiveArrayArgumentsNode {

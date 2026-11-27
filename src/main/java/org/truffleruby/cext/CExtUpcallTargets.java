@@ -5391,6 +5391,18 @@ public abstract class CExtUpcallTargets {
         }
     }
 
+    private static final int INDEX_rb_tr_ractor_local_storage_value_lookup = nextUpcallIndex++;
+
+    @CExtUpcall
+    public static long upcall_rb_tr_ractor_local_storage_value_lookup(long v0) {
+        try {
+            return (long) runtime.upcall(INDEX_rb_tr_ractor_local_storage_value_lookup, v0);
+        } catch (Throwable t) {
+            reportException(runtime, t);
+            return 0L;
+        }
+    }
+
     private static final int INDEX_rb_tr_set_default_alloc_func = nextUpcallIndex++;
 
     @CExtUpcall
@@ -6169,6 +6181,7 @@ public abstract class CExtUpcallTargets {
             "upcall_rb_tr_log_warning", "V(L)", "cext", "rb_tr_log_warning", "O", "V",
             "upcall_rb_tr_not_implemented", "V(L)", "cext", "rb_tr_not_implemented", "O", "V",
             "upcall_rb_tr_obj_equal", "L(LL)", "cext", "rb_tr_obj_equal", "V", "VV",
+            "upcall_rb_tr_ractor_local_storage_value_lookup", "L(L)", "cext", "rb_tr_ractor_local_storage_value_lookup", "V", "V",
             "upcall_rb_tr_set_default_alloc_func", "V(LL)", "cext", "rb_tr_set_default_alloc_func", "O", "VL",
             "upcall_rb_tr_set_flags", "V(LL)", "cext", "rb_tr_set_flags", "O", "VL",
             "upcall_rb_tr_sprintf", "L(LLL)", "cext", "rb_tr_sprintf", "V", "VLV",
