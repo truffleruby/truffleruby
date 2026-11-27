@@ -51,6 +51,66 @@ describe "Polyglot::InnerContext" do
     end
   end
 
+  it "reads constants of a module from the inner context with ::" do
+    Polyglot::InnerContext.new do |context|
+      mod = context.eval('ruby', "module InnerContextModule; CONST = 42; class Klass; VERSION = '1.0'; end; end; InnerContextModule")
+      mod::CONST.should == 42
+      mod::Klass::VERSION.should == "1.0"
+      mod::Klass.new.should.is_a?(mod::Klass)
+      -> { mod::UNDEFINED }.should.raise(NameError)
+
+      defined?(mod::CONST).should == "constant"
+      defined?(mod::Klass::VERSION).should == "constant"
+      defined?(mod::UNDEFINED).should == nil
+    end
+  end
+
+  it "reads constants of a module from the inner context with :: like self::NAME" do
+    Polyglot::InnerContext.new do |context|
+      mod = context.eval('ruby', <<~RUBY)
+        module InnerContextIncluded
+          INHERITED = 1
+        end
+
+        module InnerContextConstants
+          include InnerContextIncluded
+          PRIVATE = 2
+          private_constant :PRIVATE
+
+          def self.const_missing(name)
+            raise "const_missing should not be called for \#{name}"
+          end
+        end
+        InnerContextConstants
+      RUBY
+
+      # inherited constants are found
+      mod::INHERITED.should == 1
+      defined?(mod::INHERITED).should == "constant"
+
+      # top-level constants are not found for a module
+      -> { mod::Comparable }.should.raise(NameError)
+      defined?(mod::Comparable).should == nil
+
+      # private constants are not exposed
+      -> { mod::PRIVATE }.should.raise(NameError)
+      defined?(mod::PRIVATE).should == nil
+
+      # const_missing is not called
+      -> { mod::UNDEFINED }.should.raise(NameError)
+      defined?(mod::UNDEFINED).should == nil
+    end
+  end
+
+  it "raises a NameError with the foreign object as receiver for foreign_object::UNDEFINED" do
+    Polyglot::InnerContext.new do |context|
+      mod = context.eval('ruby', "module InnerContextEmpty; end; InnerContextEmpty")
+      -> { mod::UNDEFINED }.should.raise(NameError) { |e|
+        e.receiver.should.equal?(mod)
+      }
+    end
+  end
+
   it "treats exceptions from the inner context as foreign" do
     Polyglot::InnerContext.new do |context|
       -> {

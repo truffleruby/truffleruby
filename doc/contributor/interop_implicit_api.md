@@ -10,6 +10,8 @@ Format: `Ruby code` sends `InteropLibrary message`
 
 - `foreign_object[key]` sends `readHashValue(foreign_object, key)` if `hasHashEntries(foreign_object)`
 - `foreign_object[name]` sends `readMember(foreign_object, name)`
+- `foreign_object::NAME` sends `readMember(foreign_object, "NAME")`
+- `foreign_object::NAME` sends `isMemberReadable(foreign_object, "NAME")` for `defined?(foreign_object::NAME)`
 - `foreign_object[index]` sends `readArrayElement(foreign_object, index)`
 - `foreign_object[key] = value` sends `writeHashEntry(foreign_object, key)` if `hasHashEntries(foreign_object)`
 - `foreign_object[name] = value` sends `writeMember(foreign_object, name, value)`

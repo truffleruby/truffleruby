@@ -95,6 +95,13 @@ module Truffle
       if object.respond_to?(:polyglot_members, true)
         keys = object.__send__(:polyglot_members, internal)
       else
+        is_module = Primitive.is_a?(object, Module)
+        if is_module
+          # The constants which can be read with mod::NAME, see Module#polyglot_read_member.
+          # Passing an argument so that Module.constants(true) is Module#constants.
+          object.constants(true).each { |name| keys << name.to_s }
+        end
+
         add_method_key = proc do |method|
           # do not list methods which cannot be read using interop
           keys << method.to_s if Primitive.respond_to? object, method, true
@@ -111,6 +118,9 @@ module Truffle
           object.protected_methods.each(&add_method_key)
           object.private_methods.each(&add_method_key)
         end
+
+        # a method can have the same name as a constant
+        keys.uniq! if is_module
       end
 
       keys
