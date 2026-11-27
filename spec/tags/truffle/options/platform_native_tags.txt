@@ -1,3 +1,4 @@
 slow:The --platform-native option when disabled can run basic expressions
 slow:The --platform-native option when disabled can use reasonable parts of the stdlib
 slow:The --platform-native option when disabled enables polyglot stdio
+slow:The --platform-native option when disabled makes Process.setproctitle a no-op

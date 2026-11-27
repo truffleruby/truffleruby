@@ -47,6 +47,7 @@ Bug fixes:
 * Fix `FFI::Pointer#total=` on a pointer that owns its memory letting the memory be freed while the pointer still used it (#4615, @nirvdrum).
 * Fix `rb_path2class()` and `rb_path_to_class()` to not call `const_missing`, including when an autoload does not define the constant, like CRuby (@nirvdrum).
 * Fix `Marshal.load` to not call `const_missing` and to not look up constants in the ancestors of a namespace when resolving class and module names (#4617, @nirvdrum).
+* Fix `Process.setproctitle` raising `SecurityError` with `--platform-native=false`. It's now a no-op, just as it is when TruffleRuby isn't started by its launcher (@nirvdrum).
 
 Compatibility:
 
@@ -76,6 +77,7 @@ Compatibility:
 * `1 ** n` and `(-1) ** n` now return an Integer for a negative Integer `n`, like CRuby (#4556, @taxor03).
 * `Complex#**` now simplifies a `Rational(n, 1)` or `Complex(x, 0)` exponent first, like CRuby (#4556, @taxor03).
 * Fix `Enumerator::Lazy#{compact,drop,drop_while,grep,grep_v,reject,select,take,take_while,uniq}` to pass the arguments to blocks of later methods in the chain as-is (#4420, @sampokuokkanen).
+* `Truffle::System.get_java_property` and `Truffle::System.get_java_properties` now raise an exception in a context that isn't allowed to look up the `java.lang.System` host class. The Java system properties expose details about the host (e.g., the user name, home directory, and class path), so they're now only available to code that could already read them through `Java.type` (@nirvdrum).
 
 Performance:
 
