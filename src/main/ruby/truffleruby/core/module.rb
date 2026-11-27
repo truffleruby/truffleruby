@@ -186,17 +186,19 @@ class Module
 
   # Expose constants as interop members, so that they can be read from other languages and contexts.
   # In particular this is used for foreign_module::CONST which sends readMember(foreign_module, "CONST").
-  # The lookup has the same semantics as self::CONST (the constant can be inherited but Object is not searched).
+  # The lookup has the same semantics as self::CONST: the constant can be inherited but Object is not searched,
+  # private constants are not exposed and const_missing is not called.
   private def polyglot_read_member(name)
-    if !name.include?('::') && Primitive.module_const_defined?(self, name, true, false)
-      Primitive.module_const_get(self, name, true, false, false)
-    else
+    value = Primitive.module_scoped_constant_get(self, name)
+    if Primitive.undefined?(value)
       Primitive.dispatch_missing
+    else
+      value
     end
   end
 
   private def polyglot_member_readable?(name)
-    (!name.include?('::') && Primitive.module_const_defined?(self, name, true, false)) || Primitive.dispatch_missing
+    Primitive.module_scoped_constant_defined?(self, name) || Primitive.dispatch_missing
   end
 
   def self.constants(inherited = undefined)

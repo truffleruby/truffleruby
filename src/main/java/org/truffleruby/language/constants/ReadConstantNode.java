@@ -17,7 +17,7 @@ import org.truffleruby.core.module.RubyModule;
 import org.truffleruby.core.string.FrozenStrings;
 import org.truffleruby.interop.ForeignToRubyNode;
 import org.truffleruby.interop.ForeignToRubyNodeGen;
-import org.truffleruby.interop.TranslateInteropExceptionNode;
+import org.truffleruby.interop.TranslateInteropExceptionNodeGen;
 import org.truffleruby.language.LexicalScope;
 import org.truffleruby.language.RubyConstant;
 import org.truffleruby.language.RubyContextSourceNode;
@@ -31,13 +31,17 @@ import com.oracle.truffle.api.interop.InteropException;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.profiles.BranchProfile;
+import com.oracle.truffle.api.profiles.ConditionProfile;
 
 /** Read a literal constant on a given module: MOD::CONST. If the receiver is a foreign object, this reads the member
  * named like the constant instead, so that e.g. constants of a Ruby module from another context can be read. */
 public final class ReadConstantNode extends RubyContextSourceNode {
 
     private final String name;
-    private final BranchProfile notModuleProfile = BranchProfile.create();
+    private final ConditionProfile moduleProfile = ConditionProfile.create();
+    private final ConditionProfile foreignProfile = ConditionProfile.create();
+    private final ConditionProfile definedProfile = ConditionProfile.create();
+    private final BranchProfile interopExceptionProfile = BranchProfile.create();
 
     @Child private RubyNode moduleNode;
     @Child private LookupConstantNode lookupConstantNode;
@@ -53,11 +57,12 @@ public final class ReadConstantNode extends RubyContextSourceNode {
     @Override
     public Object execute(VirtualFrame frame) {
         final Object moduleObject = moduleNode.execute(frame);
-        if (moduleObject instanceof RubyModule module) {
-            return lookupAndGetConstant(module);
+        if (moduleProfile.profile(moduleObject instanceof RubyModule)) {
+            return lookupAndGetConstant((RubyModule) moduleObject);
+        } else if (foreignProfile.profile(RubyGuards.isForeignObject(moduleObject))) {
+            return readForeignMember(moduleObject);
         } else {
-            notModuleProfile.enter();
-            return readForeignMember(checkForeign(moduleObject));
+            throw new RaiseException(getContext(), coreExceptions().typeErrorIsNotAClassModule(moduleObject, this));
         }
     }
 
@@ -82,11 +87,6 @@ public final class ReadConstantNode extends RubyContextSourceNode {
         return lookupConstantNode;
     }
 
-    /** Evaluate the module part of the constant read. */
-    public RubyModule evaluateModule(VirtualFrame frame) {
-        return checkModule(moduleNode.execute(frame));
-    }
-
     /** Whether the module part of this constant read is undefined, without attempting to evaluate it. */
     public boolean isModuleTriviallyUndefined(VirtualFrame frame, RubyLanguage language, RubyContext context) {
         return moduleNode.isDefined(frame, language, context) == nil;
@@ -99,14 +99,15 @@ public final class ReadConstantNode extends RubyContextSourceNode {
         }
         try {
             final Object moduleObject = moduleNode.execute(frame);
-            if (moduleObject instanceof RubyModule module) {
-                final RubyConstant constant = getConstantIfDefined(module);
-                return constant == null ? nil : FrozenStrings.CONSTANT;
-            } else if (RubyGuards.isForeignObject(moduleObject)) {
-                return getInteropLibrary().isMemberReadable(moduleObject, name) ? FrozenStrings.CONSTANT : nil;
+            final boolean defined;
+            if (moduleProfile.profile(moduleObject instanceof RubyModule)) {
+                defined = getConstantIfDefined((RubyModule) moduleObject) != null;
+            } else if (foreignProfile.profile(RubyGuards.isForeignObject(moduleObject))) {
+                defined = getInteropLibrary().isMemberReadable(moduleObject, name);
             } else {
-                return nil;
+                defined = false;
             }
+            return definedProfile.profile(defined) ? FrozenStrings.CONSTANT : nil;
         } catch (RaiseException e) {
             return nil; // MRI swallows all exceptions in defined? (https://bugs.ruby-lang.org/issues/5786)
         }
@@ -136,30 +137,14 @@ public final class ReadConstantNode extends RubyContextSourceNode {
         return new WriteConstantNode(name, NodeUtil.cloneNode(moduleNode), rhs);
     }
 
-    private RubyModule checkModule(Object module) {
-        if (module instanceof RubyModule) {
-            return ((RubyModule) module);
-        } else {
-            notModuleProfile.enter();
-            throw new RaiseException(getContext(), coreExceptions().typeErrorIsNotAClassModule(module, this));
-        }
-    }
-
-    private Object checkForeign(Object object) {
-        if (RubyGuards.isForeignObject(object)) {
-            return object;
-        } else {
-            throw new RaiseException(getContext(), coreExceptions().typeErrorIsNotAClassModule(object, this));
-        }
-    }
-
     /** foreign_object::NAME sends readMember(foreign_object, "NAME") */
     private Object readForeignMember(Object foreign) {
         final Object value;
         try {
             value = getInteropLibrary().readMember(foreign, name);
         } catch (InteropException e) {
-            throw TranslateInteropExceptionNode.executeUncached(e);
+            interopExceptionProfile.enter();
+            throw TranslateInteropExceptionNodeGen.getUncached().execute(this, e, foreign);
         }
         return getForeignToRubyNode().executeCached(value);
     }

@@ -100,6 +100,8 @@ describe "Interop special forms" do
     l.log.should.include?(['isMemberReadable', 'Bar'])
     pm.log.should.include?([:polyglot_member_readable?, 'Foo'])
     pm.log.should.include?([:polyglot_member_readable?, 'Bar'])
+    l.log.should_not.include?(['readMember', 'Foo'])
+    pm.log.should_not.include?([:polyglot_read_member, 'Foo'])
   end
 
   it description['[index]', :readArrayElement, [:index]] do

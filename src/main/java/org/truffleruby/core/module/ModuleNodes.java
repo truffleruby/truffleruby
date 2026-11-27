@@ -74,6 +74,7 @@ import org.truffleruby.interop.ToJavaStringNode;
 import org.truffleruby.language.LazyWarnNode;
 import org.truffleruby.language.LexicalScope;
 import org.truffleruby.language.Nil;
+import org.truffleruby.language.NotProvided;
 import org.truffleruby.language.RubyBaseNode;
 import org.truffleruby.language.RubyConstant;
 import org.truffleruby.language.RubyContextSourceNode;
@@ -943,6 +944,77 @@ public abstract class ModuleNodes {
                 @Cached ToStringOrSymbolNode toStringOrSymbolNode) {
             var name = toStringOrSymbolNode.execute(this, nameObject);
             return constGetNode.execute(this, module, name, inherit, lookInObject, checkName);
+        }
+    }
+
+    /** Looks up a constant with the same semantics as {@code module::NAME}: the constant can be inherited, but
+     * {@code Object} is not searched for modules and private constants are not visible. Returns {@code null} if there
+     * is no such constant, without calling {@code const_missing}. */
+    @GenerateCached(false)
+    @GenerateInline
+    public abstract static class LookupScopedConstantNode extends RubyBaseNode {
+
+        public abstract RubyConstant execute(Node node, RubyModule module, Object name);
+
+        @Specialization
+        static RubyConstant lookup(Node node, RubyModule module, Object nameObject,
+                @Cached NameToJavaStringNode nameToJavaStringNode,
+                @Cached(value = "create(false, false)", inline = false) LookupConstantNode lookupConstantNode,
+                @Cached InlinedConditionProfile validNameProfile,
+                @Cached InlinedBranchProfile errorProfile,
+                @Cached InlinedConditionProfile privateConstantProfile,
+                @Cached InlinedConditionProfile definedProfile) {
+            final String name = nameToJavaStringNode.execute(node, nameObject);
+            if (!validNameProfile.profile(node, Identifiers.isValidConstantName(name))) {
+                return null;
+            }
+
+            final RubyConstant constant;
+            try {
+                constant = lookupConstantNode.executeLookupConstant(module, name, false);
+            } catch (RaiseException e) {
+                errorProfile.enter(node);
+                if (privateConstantProfile.profile(node,
+                        e.getException().getLogicalClass() == coreLibrary(node).nameErrorClass)) {
+                    return null;
+                }
+                throw e;
+            }
+
+            return definedProfile.profile(node, ModuleOperations.isConstantDefined(constant)) ? constant : null;
+        }
+    }
+
+    /** Whether {@code module::NAME} is defined, see {@link LookupScopedConstantNode}. Does not trigger autoload. */
+    @Primitive(name = "module_scoped_constant_defined?")
+    public abstract static class ScopedConstantDefinedNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        boolean isDefined(RubyModule module, Object name,
+                @Cached LookupScopedConstantNode lookupScopedConstantNode) {
+            return lookupScopedConstantNode.execute(this, module, name) != null;
+        }
+    }
+
+    /** Reads {@code module::NAME}, see {@link LookupScopedConstantNode}. Returns undefined if there is no such
+     * constant. */
+    @Primitive(name = "module_scoped_constant_get")
+    public abstract static class ScopedConstantGetNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        Object get(RubyModule module, Object name,
+                @Cached LookupScopedConstantNode lookupScopedConstantNode,
+                @Cached("create(false, false)") LookupConstantNode lookupConstantNode,
+                @Cached GetConstantNode getConstantNode,
+                @Cached InlinedConditionProfile foundProfile,
+                @Cached InlinedConditionProfile resolvedProfile) {
+            final RubyConstant constant = lookupScopedConstantNode.execute(this, module, name);
+            if (foundProfile.profile(this, constant == null)) {
+                return NotProvided.INSTANCE;
+            }
+
+            // null if the constant is an autoload constant which was not defined by the autoload
+            final Object value = getConstantNode.resolveConstant(LexicalScope.IGNORE, module, constant,
+                    lookupConstantNode, false);
+            return resolvedProfile.profile(this, value == null) ? NotProvided.INSTANCE : value;
         }
     }
 

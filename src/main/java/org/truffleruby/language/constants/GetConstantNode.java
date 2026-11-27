@@ -59,6 +59,13 @@ public abstract class GetConstantNode extends RubyBaseNode {
         return executeGetConstant(lexicalScope, module, name, constant, lookupConstantNode, callConstMissing);
     }
 
+    /** Resolves an already looked up constant, i.e. gets its value and autoloads it if needed. */
+    public Object resolveConstant(LexicalScope lexicalScope, RubyModule module, RubyConstant constant,
+            LookupConstantInterface lookupConstantNode, boolean callConstMissing) {
+        return executeGetConstant(lexicalScope, module, constant.getName(), constant, lookupConstantNode,
+                callConstMissing);
+    }
+
     // name is always the same as constant.getName(), but is needed as constant can be null.
     protected abstract Object executeGetConstant(LexicalScope lexicalScope, RubyModule module, String name,
             Object constant, LookupConstantInterface lookupConstantNode, boolean callConstMissing);
