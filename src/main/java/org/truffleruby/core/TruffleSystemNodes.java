@@ -90,7 +90,7 @@ public abstract class TruffleSystemNodes {
                 @Cached InlinedConditionProfile nullValueProfile,
                 @Bind Node node) {
             final String javaName = toJavaStringNode.execute(node, name);
-            final String value = getEnv(javaName);
+            final String value = getEnv(getContext(node), javaName);
 
             if (nullValueProfile.profile(node, value == null)) {
                 return nil;
@@ -99,9 +99,11 @@ public abstract class TruffleSystemNodes {
             }
         }
 
+        /* Unlike ENV, this doesn't need native access, so it works with --platform-native=false. We go through Truffle
+         * rather than System.getenv so the embedder's allowEnvironmentAccess setting still applies. */
         @TruffleBoundary
-        private static String getEnv(String name) {
-            return System.getenv(name);
+        private static String getEnv(RubyContext context, String name) {
+            return context.getEnv().getEnvironment().get(name);
         }
 
     }
