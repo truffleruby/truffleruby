@@ -1244,15 +1244,7 @@ module Truffle::CExt
   Primitive.always_split self, :rb_set_foreach
 
   def rb_path_to_class(path)
-    begin
-      const = Object.const_get(path, false)
-    rescue NameError
-      raise ArgumentError, "undefined class/module #{path}"
-    end
-    unless Primitive.is_a?(const, ::Module)
-      raise TypeError, "#{path} does not refer to class/module"
-    end
-    const
+    Truffle::Type.rb_path_to_class(path)
   end
 
   def rb_proc_new(function, value)

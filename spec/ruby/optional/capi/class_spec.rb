@@ -36,6 +36,33 @@ describe :rb_path_to_class, shared: true do
   it "raises an ArgumentError even if a constant in the path exists on toplevel" do
     -> { @s.send(@method, "CApiClassSpecs::Object") }.should.raise(ArgumentError)
   end
+
+  it "raises an ArgumentError for an empty path" do
+    -> { @s.send(@method, "") }.should.raise(ArgumentError)
+  end
+
+  it "raises an ArgumentError for a path without any constant names" do
+    -> { @s.send(@method, "::") }.should.raise(ArgumentError)
+  end
+
+  it "ignores a single trailing '::'" do
+    @s.send(@method, "CApiClassSpecs::").should == CApiClassSpecs
+  end
+
+  it "raises an ArgumentError for a path with an empty constant name" do
+    -> { @s.send(@method, "CApiClassSpecs::::") }.should.raise(ArgumentError)
+    -> { @s.send(@method, "CApiClassSpecs::::A") }.should.raise(ArgumentError)
+  end
+
+  it "does not call #const_missing" do
+    CApiClassSpecs.should_not_receive(:const_missing)
+    -> { @s.send(@method, "CApiClassSpecs::NotDefined") }.should.raise(ArgumentError)
+  end
+
+  it "does not call #const_missing when an autoload does not define the constant" do
+    CApiClassSpecs::A.should_not_receive(:const_missing)
+    -> { @s.send(@method, "CApiClassSpecs::A::E") }.should.raise(ArgumentError)
+  end
 end
 
 describe "C-API Class function" do
@@ -406,6 +433,10 @@ describe "C-API Class function" do
 
   describe "rb_path_to_class" do
     it_behaves_like :rb_path_to_class, :rb_path_to_class
+
+    it "raises an ArgumentError for a path in an encoding that is not ASCII-compatible" do
+      -> { @s.rb_path_to_class("CApiClassSpecs".encode("UTF-16LE")) }.should.raise(ArgumentError)
+    end
   end
 
   describe "rb_cvar_defined" do
