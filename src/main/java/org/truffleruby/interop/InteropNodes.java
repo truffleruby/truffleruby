@@ -48,6 +48,7 @@ import org.truffleruby.core.string.StringHelperNodes;
 import org.truffleruby.core.string.StringOperations;
 import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.core.symbol.RubySymbol;
+import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.language.Nil;
 import org.truffleruby.language.NotProvided;
 import org.truffleruby.language.RubyBaseNode;
@@ -307,6 +308,7 @@ public abstract class InteropNodes {
                 @Bind Node node,
                 @Cached RubyStringLibrary library,
                 @Cached IndirectCallNode callNode) {
+            Pointer.checkNativeAccess(getContext(node));
             return callNode.call(parse(node, code), EMPTY_ARGUMENTS);
         }
 

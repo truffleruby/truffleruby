@@ -1,3 +1,8 @@
 slow:The --platform-native option when disabled can run basic expressions
 slow:The --platform-native option when disabled can use reasonable parts of the stdlib
 slow:The --platform-native option when disabled enables polyglot stdio
+slow:The --platform-native option when disabled does not allow calling a native function given its address
+slow:The --platform-native option when disabled does not allow reading native memory given its address
+slow:The --platform-native option when disabled does not allow registering a native unblocking function
+slow:The --platform-native option when disabled does not allow evaluating an NFI signature
+slow:The --platform-native option when disabled does not allow sending a signal to the process

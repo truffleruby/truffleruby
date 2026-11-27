@@ -21,4 +21,40 @@ describe "The --platform-native option" do
   it "when disabled can use reasonable parts of the stdlib" do
     ruby_exe("require 'uri'; p URI('http://foo.com/posts?id=30&limit=5#time=1305298413').query", options: "--experimental-options --platform-native=false --disable-gems").should == "\"id=30&limit=5\"\n"
   end
+
+  it "when disabled does not allow calling a native function given its address" do
+    code = <<~RUBY
+      require 'truffle/cext'
+      begin
+        Truffle::CExt.run_data_finalizer(0, 0, false)
+      rescue SecurityError => e
+        puts e.message
+      end
+    RUBY
+    ruby_exe(code, options: "--experimental-options --platform-native=false").should == "native access is not allowed\n"
+  end
+
+  it "when disabled does not allow reading native memory given its address" do
+    code = <<~RUBY
+      require 'truffle/cext'
+      begin
+        Truffle::CExt.rb_ary_new_from_values(8, 1)
+      rescue SecurityError => e
+        puts e.message
+      end
+    RUBY
+    ruby_exe(code, options: "--experimental-options --platform-native=false").should == "native access is not allowed\n"
+  end
+
+  it "when disabled does not allow registering a native unblocking function" do
+    ruby_exe(fixture(__FILE__, 'native_access.rb'), args: 'unblocking_function', options: "--experimental-options --platform-native=false").should == "native access is not allowed\n"
+  end
+
+  it "when disabled does not allow evaluating an NFI signature" do
+    ruby_exe(fixture(__FILE__, 'native_access.rb'), args: 'nfi', options: "--experimental-options --platform-native=false").should == "native access is not allowed\n"
+  end
+
+  it "when disabled does not allow sending a signal to the process" do
+    ruby_exe(fixture(__FILE__, 'native_access.rb'), args: 'signal', options: "--experimental-options --platform-native=false").should == "native access is not allowed\n"
+  end
 end

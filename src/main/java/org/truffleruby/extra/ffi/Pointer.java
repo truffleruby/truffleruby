@@ -472,11 +472,10 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         }
     }
 
-    public static long rawReadLong(long address) {
-        return UNSAFE.getLong(address);
-    }
-
-    public static void rawWriteLong(long address, long value) {
+    /** Writes to an arbitrary address which is not wrapped in a {@link Pointer}, so native access is checked here
+     * instead of when creating the Pointer. */
+    public static void rawWriteLong(RubyContext context, long address, long value) {
+        checkNativeAccess(context);
         UNSAFE.putLong(address, value);
     }
 

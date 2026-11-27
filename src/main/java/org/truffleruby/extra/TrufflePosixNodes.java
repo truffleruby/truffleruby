@@ -464,8 +464,16 @@ public abstract class TrufflePosixNodes {
     @ImportStatic(CoreLibrary.class)
     private abstract static class InvokeNode extends PrimitiveArrayArgumentsNode {
 
+        /** The fiber calling the native function, needed by every invoke primitive for its errno pointer. This also
+         * checks native access, since the function to call is given as an arbitrary address and so the check in
+         * {@link #resolveFunction} when resolving the functions of libtruffleposix is not enough. */
+        RubyFiber getCurrentFiberAndCheckNativeAccess() {
+            Pointer.checkNativeAccess(getContext());
+            return getLanguage().getCurrentFiber();
+        }
+
         long getErrnoPointer() {
-            return getLanguage().getCurrentFiber().posixErrnoAddress;
+            return getCurrentFiberAndCheckNativeAccess().posixErrnoAddress;
         }
     }
 
@@ -1166,7 +1174,7 @@ public abstract class TrufflePosixNodes {
     public abstract static class InvokeI_IIBlockingNode extends PosixBlockingNode<BlockingStateI_II> {
         @Specialization
         int invoke(long function, int a, int b) {
-            RubyFiber currentFiber = getLanguage().getCurrentFiber();
+            RubyFiber currentFiber = getCurrentFiberAndCheckNativeAccess();
             return (int) invokeBlocking(
                     new BlockingStateI_II(function, currentFiber.posixErrnoAddress, currentFiber.rubyThread, a, b));
         }
@@ -1181,7 +1189,7 @@ public abstract class TrufflePosixNodes {
     public abstract static class InvokeI_IIIBlockingNode extends PosixBlockingNode<BlockingStateI_III> {
         @Specialization
         int invoke(long function, int a, int b, int c) {
-            RubyFiber currentFiber = getLanguage().getCurrentFiber();
+            RubyFiber currentFiber = getCurrentFiberAndCheckNativeAccess();
             return (int) invokeBlocking(
                     new BlockingStateI_III(function, currentFiber.posixErrnoAddress, currentFiber.rubyThread, a, b, c));
         }
@@ -1196,7 +1204,7 @@ public abstract class TrufflePosixNodes {
     public abstract static class InvokeI_IILBlockingNode extends PosixBlockingNode<BlockingStateI_IIL> {
         @Specialization
         int invoke(long function, int a, int b, long c) {
-            RubyFiber currentFiber = getLanguage().getCurrentFiber();
+            RubyFiber currentFiber = getCurrentFiberAndCheckNativeAccess();
             return (int) invokeBlocking(
                     new BlockingStateI_IIL(function, currentFiber.posixErrnoAddress, currentFiber.rubyThread, a, b, c));
         }
@@ -1211,14 +1219,14 @@ public abstract class TrufflePosixNodes {
     public abstract static class InvokeI_LUnsignedIIBlockingNode extends PosixBlockingNode<BlockingStateI_LII> {
         @Specialization
         int invokeInt(long function, long a, int b, int c) {
-            RubyFiber currentFiber = getLanguage().getCurrentFiber();
+            RubyFiber currentFiber = getCurrentFiberAndCheckNativeAccess();
             return (int) invokeBlocking(
                     new BlockingStateI_LII(function, currentFiber.posixErrnoAddress, currentFiber.rubyThread, a, b, c));
         }
 
         @Specialization(guards = "fitsIntoUnsignedInteger(b)", replaces = "invokeInt")
         int invoke(long function, long a, long b, int c) {
-            RubyFiber currentFiber = getLanguage().getCurrentFiber();
+            RubyFiber currentFiber = getCurrentFiberAndCheckNativeAccess();
             return (int) invokeBlocking(new BlockingStateI_LII(function, currentFiber.posixErrnoAddress,
                     currentFiber.rubyThread, a, (int) b, c));
         }
@@ -1233,14 +1241,14 @@ public abstract class TrufflePosixNodes {
     public abstract static class InvokeI_LUnsignedLIBlockingNode extends PosixBlockingNode<BlockingStateI_LLI> {
         @Specialization
         int invoke(long function, long a, long b, int c) {
-            RubyFiber currentFiber = getLanguage().getCurrentFiber();
+            RubyFiber currentFiber = getCurrentFiberAndCheckNativeAccess();
             return (int) invokeBlocking(
                     new BlockingStateI_LLI(function, currentFiber.posixErrnoAddress, currentFiber.rubyThread, a, b, c));
         }
 
         @Specialization
         int invoke(long function, long a, RubyBignum b, int c) {
-            RubyFiber currentFiber = getLanguage().getCurrentFiber();
+            RubyFiber currentFiber = getCurrentFiberAndCheckNativeAccess();
             return (int) invokeBlocking(new BlockingStateI_LLI(function, currentFiber.posixErrnoAddress,
                     currentFiber.rubyThread, a, b.toUnsignedLong(), c));
         }
@@ -1255,14 +1263,14 @@ public abstract class TrufflePosixNodes {
     public abstract static class InvokeL_ILUnsignedLBlockingNode extends PosixBlockingNode<BlockingStateL_ILL> {
         @Specialization
         long invoke(long function, int a, long b, long c) {
-            RubyFiber currentFiber = getLanguage().getCurrentFiber();
+            RubyFiber currentFiber = getCurrentFiberAndCheckNativeAccess();
             return (long) invokeBlocking(
                     new BlockingStateL_ILL(function, currentFiber.posixErrnoAddress, currentFiber.rubyThread, a, b, c));
         }
 
         @Specialization
         long invoke(long function, int a, long b, RubyBignum c) {
-            RubyFiber currentFiber = getLanguage().getCurrentFiber();
+            RubyFiber currentFiber = getCurrentFiberAndCheckNativeAccess();
             return (long) invokeBlocking(new BlockingStateL_ILL(function, currentFiber.posixErrnoAddress,
                     currentFiber.rubyThread, a, b, c.toUnsignedLong()));
         }
@@ -1277,14 +1285,14 @@ public abstract class TrufflePosixNodes {
     public abstract static class InvokeL_ILUnsignedLLBlockingNode extends PosixBlockingNode<BlockingStateL_ILLL> {
         @Specialization
         long invoke(long function, int a, long b, long c, long d) {
-            RubyFiber currentFiber = getLanguage().getCurrentFiber();
+            RubyFiber currentFiber = getCurrentFiberAndCheckNativeAccess();
             return (long) invokeBlocking(new BlockingStateL_ILLL(function, currentFiber.posixErrnoAddress,
                     currentFiber.rubyThread, a, b, c, d));
         }
 
         @Specialization
         long invoke(long function, int a, long b, RubyBignum c, long d) {
-            RubyFiber currentFiber = getLanguage().getCurrentFiber();
+            RubyFiber currentFiber = getCurrentFiberAndCheckNativeAccess();
             return (long) invokeBlocking(new BlockingStateL_ILLL(function, currentFiber.posixErrnoAddress,
                     currentFiber.rubyThread, a, b, c.toUnsignedLong(), d));
         }

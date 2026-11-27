@@ -10,7 +10,10 @@
  */
 package org.truffleruby.test.embedding;
 
+import java.lang.foreign.Arena;
+
 import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.io.IOAccess;
 import org.junit.Assert;
@@ -40,24 +43,44 @@ public class ContextPermissionsTest {
             Assert.assertEquals(3, context.eval("ruby", "1 + 2").asInt());
 
             Assert.assertTrue(context.eval("ruby", "defined?(Truffle::FFI::Pointer::NULL).nil?").asBoolean());
-            RubyTest.assertThrows(
-                    () -> context.eval("ruby", "Truffle::FFI::Pointer.allocate"),
-                    e -> {
-                        assertEquals("native access is not allowed", e.getMessage());
-                        assertEquals("SecurityError", e.getGuestObject().getMetaObject().getMetaQualifiedName());
-                    });
-            RubyTest.assertThrows(
-                    () -> context.eval("ruby", "Truffle::FFI::Pointer.new(4)"),
-                    e -> {
-                        assertEquals("native access is not allowed", e.getMessage());
-                        assertEquals("SecurityError", e.getGuestObject().getMetaObject().getMetaQualifiedName());
-                    });
-            RubyTest.assertThrows(
-                    () -> context.eval("ruby", "Truffle::FFI::MemoryPointer.new(4)"),
-                    e -> {
-                        assertEquals("native access is not allowed", e.getMessage());
-                        assertEquals("SecurityError", e.getGuestObject().getMetaObject().getMetaQualifiedName());
-                    });
+            assertNativeAccessDenied(() -> context.eval("ruby", "Truffle::FFI::Pointer.allocate"));
+            assertNativeAccessDenied(() -> context.eval("ruby", "Truffle::FFI::Pointer.new(4)"));
+            assertNativeAccessDenied(() -> context.eval("ruby", "Truffle::FFI::MemoryPointer.new(4)"));
+        }
+    }
+
+    private static void assertNativeAccessDenied(Runnable action) {
+        RubyTest.assertThrows(action, e -> {
+            assertEquals("SecurityError", e.getGuestObject().getMetaObject().getMetaQualifiedName());
+            assertEquals("native access is not allowed", e.getMessage());
+        });
+    }
+
+    @Test
+    public void testCachedNativeStringRespectsRequestingContext() {
+        // Built-in encoding names are immutable Ruby strings owned by the RubyLanguage. Contexts only share a
+        // RubyLanguage, and so these strings and their cached native copies, when they share an Engine with engine
+        // caching enabled.
+        String convert = "Truffle::CExt.string_to_ffi_pointer_inplace(Encoding::UTF_8.name)";
+        try (Engine engine = Engine.newBuilder("ruby").allowExperimentalOptions(true)
+                .option("ruby.experimental-engine-caching", "true").build();
+                Context allowed = Context.newBuilder("ruby").engine(engine).allowNativeAccess(true).build();
+                Context denied = Context.newBuilder("ruby").engine(engine).build()) {
+            assertTrue(allowed.eval("ruby", convert + ".is_a?(Truffle::FFI::Pointer)").asBoolean());
+            assertNativeAccessDenied(() -> denied.eval("ruby", convert));
+        }
+    }
+
+    @Test
+    public void testNativeStringReadersRespectPlatformOption() {
+        try (Arena arena = Arena.ofConfined();
+                Context context = Context.newBuilder("ruby").allowNativeAccess(true).allowExperimentalOptions(true)
+                        .option("ruby.platform-native", "false").build()) {
+            long address = arena.allocateFrom("ruby").address();
+            assertNativeAccessDenied(() -> context.eval("ruby", "-> p { Truffle::CExt.rb_enc_str_new_native(p, 4, 0) }")
+                    .execute(address));
+            assertNativeAccessDenied(() -> context.eval("ruby", "-> p { Truffle::CExt.rb_tr_enc_str_new_cstr(p, 0) }")
+                    .execute(address));
         }
     }
 

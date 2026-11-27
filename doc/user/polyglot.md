@@ -248,8 +248,9 @@ It will also warn when you explicitly do things that may not work well when embe
 This can be turned off even when embedded, with the `embedded` option (`--ruby.embedded=false` from another launcher, or
 `-Dpolyglot.ruby.embedded=false` from a normal Java application).
 
-It is a separate option, but in an embedded configuration you may want to set `allowNativeAccess(false)` in your `Context.Builder`, or use the experimental `--platform-native=false` option, to disable use of the NFI for internal
-functionality.
+Set `allowNativeAccess(false)` on the `Context.Builder` to deny native access to guest code. The experimental Ruby option `--platform-native=false` disables Ruby's native platform operations even when the host permits native access. Neither setting disables trusted implementation code such as the Ruby parser.
+
+Ruby collections, regular expressions, and polyglot standard I/O remain available without native access. Operations that depend on the native platform, including `File.stat` and loading C extensions, are unavailable. RubyGems also depends on native operations; use `--disable-gems` when loading libraries such as `uri` that do not themselves need native access.
 
 Also, the experimental option `--cexts=false` can disable C extensions.
 

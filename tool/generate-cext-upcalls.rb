@@ -387,6 +387,7 @@ invoke_java << <<~JAVA
   import org.truffleruby.annotations.Primitive;
   import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
   import org.truffleruby.core.fiber.RubyFiber;
+  import org.truffleruby.extra.ffi.Pointer;
   import org.truffleruby.platform.FFMSupport;
 
   // @formatter:off
@@ -403,6 +404,12 @@ invoke_java << <<~JAVA
   public abstract class CExtInvokePrimitives {
 
       public abstract static class CExtInvokeNode extends PrimitiveArrayArgumentsNode {
+          /** The function to call is given as an arbitrary address, so native access must be checked for every call
+           * and not only when loading libtruffleruby or a C extension. */
+          protected final void checkNativeAccess() {
+              Pointer.checkNativeAccess(getContext());
+          }
+
           protected final void checkPendingException(InlinedBranchProfile exceptionProfile) {
               final RubyFiber fiber = getLanguage().getCurrentFiber();
               if (fiber.pendingCExtException != null) {
@@ -460,6 +467,7 @@ CExtUpcalls::DOWNCALL_SIGNATURES.each do |signature|
   call_args = ['function'] + args.each_with_index.map do |c, i|
     c == 'L' ? "arg#{i}Node.execute(a#{i})" : "a#{i}"
   end
+  invoke_java << "            checkNativeAccess();\n"
   if ret == 'V'
     invoke_java << "            #{name}(#{call_args.join(', ')});\n"
     invoke_java << "            checkPendingException(exceptionProfile);\n"
