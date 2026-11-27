@@ -173,9 +173,14 @@ public abstract class PointerNodes {
     public abstract static class PointerSetSizeNode extends CoreMethodArrayArgumentsNode {
 
         @Specialization
-        long setSize(RubyPointer pointer, long size) {
+        long setSize(RubyPointer pointer, long size,
+                @Cached InlinedConditionProfile allocatedProfile) {
             final Pointer old = pointer.pointer;
-            pointer.pointer = new Pointer(getContext(), old.getAddress(), size);
+            if (allocatedProfile.profile(this, old.isAllocated())) {
+                pointer.pointer = old.withSize(getLanguage(), size);
+            } else {
+                pointer.pointer = new Pointer(getContext(), old.getAddress(), size);
+            }
             return size;
         }
 
@@ -219,13 +224,12 @@ public abstract class PointerNodes {
 
     }
 
-    @CoreMethod(names = "free")
-    public abstract static class PointerFreeNode extends CoreMethodArrayArgumentsNode {
+    @Primitive(name = "pointer_free")
+    public abstract static class PointerFreeNode extends PrimitiveArrayArgumentsNode {
 
         @Specialization
-        RubyPointer free(RubyPointer pointer) {
-            pointer.pointer.free();
-            return pointer;
+        boolean free(RubyPointer pointer) {
+            return pointer.pointer.free();
         }
 
     }
