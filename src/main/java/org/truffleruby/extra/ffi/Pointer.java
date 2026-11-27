@@ -63,9 +63,7 @@ public final class Pointer implements AutoCloseable, TruffleObject {
 
     public static Pointer malloc(RubyContext context, long size) {
         checkNativeAccess(context);
-        final Pointer pointer = new Pointer(context, UNSAFE.allocateMemory(size), size);
-        pointer.allocated = true;
-        return pointer;
+        return new Pointer(UNSAFE.allocateMemory(size), size, true);
     }
 
     /** Includes {@link #enableAutorelease(RubyLanguage)} and avoids locking for it */
@@ -83,15 +81,16 @@ public final class Pointer implements AutoCloseable, TruffleObject {
 
     /** Internal allocation which is not exposed to Ruby code and can be used even if native access is disabled. */
     public static Pointer callocInternal(long size) {
-        final Pointer pointer = new Pointer(UNSAFE.allocateMemory(size), size);
-        pointer.allocated = true;
+        final Pointer pointer = new Pointer(UNSAFE.allocateMemory(size), size, true);
         pointer.writeBytes(0, size, (byte) 0);
         return pointer;
     }
 
     private final long address;
     private final long size;
-    private boolean allocated = false;
+    /** Whether this Pointer owns the memory, i.e. allocated it and did not free it yet. Always set in the constructor,
+     * so that it is safely published to other threads together with the Pointer. */
+    private boolean allocated;
     /** Non-null iff autorelease */
     private Cleanable cleanable = null;
     private AutoReleaseState autoReleaseState = null;
@@ -120,13 +119,13 @@ public final class Pointer implements AutoCloseable, TruffleObject {
     }
 
     private Pointer() {
-        this.address = 0L;
-        this.size = 0L;
+        this(0L, 0L, false);
     }
 
-    private Pointer(long address, long size) {
+    private Pointer(long address, long size, boolean allocated) {
         this.address = address;
         this.size = size;
+        this.allocated = allocated;
     }
 
     public Pointer(RubyContext context, long address) {
@@ -137,6 +136,7 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         checkNativeAccess(context);
         this.address = address;
         this.size = size;
+        this.allocated = false;
     }
 
     private Pointer(RubyLanguage language, RubyContext context, long address, long size) {
@@ -363,19 +363,21 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         return true;
     }
 
-    public synchronized boolean isAllocated() {
+    /** Not synchronized on purpose: the result might be stale by the time the caller acts on it anyway, so a monitor
+     * would only add overhead. Operations which depend on the ownership recheck it while holding the monitor. */
+    @SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
+    public boolean isAllocated() {
         return allocated;
     }
 
-    /** Returns a Pointer to the same address with a different size and hands it the ownership of the memory. If this
-     * Pointer kept the ownership, its autorelease would free the memory once this Pointer is collected, even though the
-     * new Pointer still refers to it. Without autorelease, nothing would ever free the memory. */
+    /** Returns a Pointer to the same address with a different size and hands it the ownership of the memory. This is
+     * only meant to replace the Pointer of a given {@code RubyPointer} by the returned one, so the ownership stays with
+     * the same Ruby object and this Pointer must no longer be used after the call. */
     @TruffleBoundary
     public synchronized Pointer withSize(RubyLanguage language, long newSize) {
-        final Pointer pointer = new Pointer(address, newSize);
+        final Pointer pointer = new Pointer(address, newSize, allocated);
         if (allocated) {
             allocated = false;
-            pointer.allocated = true;
 
             if (cleanable != null) {
                 disableAutorelease();
