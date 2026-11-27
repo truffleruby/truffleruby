@@ -46,6 +46,7 @@ Bug fixes:
 * Fix `FFI::Pointer#free` to warn instead of freeing memory the pointer didn't allocate, like the `ffi` gem (#4615, @nirvdrum).
 * Fix `FFI::Pointer#total=` on a pointer that owns its memory letting the memory be freed while the pointer still used it (#4615, @nirvdrum).
 * Fix `rb_path2class()` and `rb_path_to_class()` to not call `const_missing`, including when an autoload does not define the constant, like CRuby (@nirvdrum).
+* Fix `Marshal.load` to not call `const_missing` and to not look up constants in the ancestors of a namespace when resolving class and module names (#4617, @nirvdrum).
 
 Compatibility:
 

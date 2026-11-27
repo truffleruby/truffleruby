@@ -618,20 +618,8 @@ module Marshal
     end
 
     def const_lookup(name, type = nil)
-      mod = Object
-
-      parts = String(name).split '::'
-      parts.each do |part|
-        mod = if Truffle::Type.const_exists?(mod, part)
-                Truffle::Type.const_get(mod, part, false)
-              else
-                begin
-                  mod.const_missing(part)
-                rescue NameError
-                  raise ArgumentError, "undefined class/module #{name}"
-                end
-              end
-      end
+      # The name comes from the marshaled data, so it must not call #const_missing or look in ancestors.
+      mod = Truffle::Type.rb_path_to_class(String(name))
 
       if type and not mod.instance_of? type
         raise ArgumentError, "#{name} does not refer to a #{type}"
