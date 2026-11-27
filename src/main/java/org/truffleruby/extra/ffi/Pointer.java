@@ -363,7 +363,10 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         return true;
     }
 
-    public synchronized boolean isAllocated() {
+    /** Not synchronized on purpose: the result might be stale by the time the caller acts on it anyway, so a monitor
+     * would only add overhead. Operations which depend on the ownership recheck it while holding the monitor. */
+    @SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
+    public boolean isAllocated() {
         return allocated;
     }
 
