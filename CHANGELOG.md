@@ -79,9 +79,11 @@ Performance:
 * Enabling or disabling a `:class` `TracePoint` no longer invalidates compiled code and no longer uses Truffle instrumentation, which also reduces memory footprint (#2371, @eregon).
 * Store encoding properties in the native `rb_encoding` structs to reduce upcalls for common encoding operations (@nirvdrum).
 * Avoid walking the stack for direct calls to `Kernel#__method__` and `Kernel#__callee__`, as used by Active Record 8.1's generated association methods (@nirvdrum).
+* Use Racc's pure-Ruby runtime by default to speed up CSS selector parsing in Nokogiri (#3142, @nirvdrum).
 
 Incompatible Changes:
 
+* `require 'racc/cparse'` raises a `LoadError` by default. Define a top-level `Racc_No_Extensions = false` before loading racc to opt back in. Explicitly requiring `racc/cparse.so` still loads the installed extension (#3142, @nirvdrum).
 * Remove the experimental options `--interop-host`, `--symbol-to-proc-cache`, `--unpack-cache`, `--identity-cache`, `--context-identity-cache` and `--class-cache`, which had no effect (@eregon).
 
 Memory Footprint:
