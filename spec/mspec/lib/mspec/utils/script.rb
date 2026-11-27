@@ -67,6 +67,11 @@ class MSpecScript
     @loaded = []
   end
 
+  # Returns the config files loaded by this process, in order.
+  def self.loaded_config_files
+    @loaded_config_files ||= []
+  end
+
   # Returns the config object maintained by the instance's class.
   # See the class methods +set+ and +config+.
   def config
@@ -90,6 +95,7 @@ class MSpecScript
         elsif File.exist? file
           value = Kernel.load(file)
           @loaded << file
+          MSpecScript.loaded_config_files << file
           return value
         end
       end
