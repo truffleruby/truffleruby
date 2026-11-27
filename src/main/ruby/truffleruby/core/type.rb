@@ -250,6 +250,29 @@ module Truffle
       obj
     end
 
+    # MRI: rb_path_to_class
+    # Each constant in the path is looked up only in its enclosing module and #const_missing is never called, so the
+    # path can safely come from untrusted input (e.g., marshaled data).
+    def self.rb_path_to_class(path)
+      raise ArgumentError, 'invalid class path encoding (non ASCII)' unless path.encoding.ascii_compatible?
+
+      if path.empty? || path.start_with?('#')
+        raise ArgumentError, "can't retrieve anonymous class #{path}"
+      end
+
+      # Like MRI, a single trailing '::' is ignored, but any other empty name is undefined.
+      names = path.split('::', -1)
+      names.pop if names.size > 1 && names.last.empty?
+
+      mod = Object
+      names.each do |name|
+        mod = Primitive.module_const_search(mod, name)
+        raise ArgumentError, "undefined class/module #{path}" if Primitive.undefined?(mod)
+        raise TypeError, "#{path} does not refer to class/module" unless Primitive.is_a?(mod, Module)
+      end
+      mod
+    end
+
     def self.rb_bool_expected(value, arg_name)
       return if Primitive.false?(value) || Primitive.true?(value)
 

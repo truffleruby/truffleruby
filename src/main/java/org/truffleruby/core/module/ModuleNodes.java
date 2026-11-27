@@ -946,6 +946,37 @@ public abstract class ModuleNodes {
         }
     }
 
+    /** Looks up a constant in the module itself, like rb_const_search() without recursion in CRuby. Unlike
+     * {@code Module#const_get}, it never calls {@code #const_missing}, not even when an autoload does not define the
+     * constant, so it is safe to use with names from untrusted input. Returns {@code undefined} if the name is not a
+     * valid constant name or the constant is not defined. */
+    @Primitive(name = "module_const_search")
+    public abstract static class ConstSearchNode extends PrimitiveArrayArgumentsNode {
+        @Specialization
+        Object constSearch(RubyModule module, Object nameObject,
+                @Cached NameToJavaStringNode nameToJavaStringNode,
+                @Cached GetConstantNode getConstantNode,
+                @Cached InlinedConditionProfile notFoundProfile) {
+            final String name = nameToJavaStringNode.execute(this, nameObject);
+            final LookupConstantInterface lookup = ConstSearchNode::lookupConstantIfValidName;
+            final Object value = getConstantNode.lookupAndResolveConstant(LexicalScope.IGNORE, module, name, false,
+                    lookup, false);
+            return notFoundProfile.profile(this, value == null) ? FAILURE : value;
+        }
+
+        @TruffleBoundary
+        private static RubyConstant lookupConstantIfValidName(Node node, LexicalScope lexicalScope, RubyModule module,
+                String name, boolean checkName) {
+            if (!Identifiers.isValidConstantName(name)) {
+                return null;
+            }
+
+            return ModuleOperations
+                    .lookupConstantWithInherit(getContext(node), module, name, false, node, false)
+                    .getConstant();
+        }
+    }
+
     @GenerateCached(false)
     @GenerateInline
     @ReportPolymorphism // inline cache

@@ -120,6 +120,7 @@ class CApiClassSpecs
   class A
     C = 1
     autoload :D, File.expand_path('../path_to_class.rb', __FILE__)
+    autoload :E, File.expand_path('../path_to_class_undefined.rb', __FILE__)
 
     class B
     end
