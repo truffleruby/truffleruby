@@ -370,9 +370,9 @@ public final class Pointer implements AutoCloseable, TruffleObject {
         return allocated;
     }
 
-    /** Returns a Pointer to the same address with a different size and hands it the ownership of the memory. If this
-     * Pointer kept the ownership, its autorelease would free the memory once this Pointer is collected, even though the
-     * new Pointer still refers to it. Without autorelease, nothing would ever free the memory. */
+    /** Returns a Pointer to the same address with a different size and hands it the ownership of the memory. This is
+     * only meant to replace the Pointer of a given {@code RubyPointer} by the returned one, so the ownership stays with
+     * the same Ruby object and this Pointer must no longer be used after the call. */
     @TruffleBoundary
     public synchronized Pointer withSize(RubyLanguage language, long newSize) {
         final Pointer pointer = new Pointer(address, newSize, allocated);
