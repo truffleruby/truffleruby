@@ -763,6 +763,7 @@ module Enumerable
   end
 
   def min_n(n, &block)
+    n = Primitive.rb_num2long(n)
     raise ArgumentError, "negative size #{n}" if n < 0
     return [] if n == 0
 
@@ -776,6 +777,7 @@ module Enumerable
   end
 
   def max_n(n, &block)
+    n = Primitive.rb_num2long(n)
     raise ArgumentError, "negative size #{n}" if n < 0
     return [] if n == 0
 

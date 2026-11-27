@@ -931,7 +931,7 @@ class Array
   end
 
   def repeated_combination(combination_size, &block)
-    combination_size = combination_size.to_i
+    combination_size = Primitive.rb_num2long(combination_size)
     unless block_given?
       return to_enum(:repeated_combination, combination_size) do
         repeated_combination_size(combination_size)
@@ -961,7 +961,7 @@ class Array
   private :compile_repeated_combinations
 
   def repeated_permutation(combination_size, &block)
-    combination_size = combination_size.to_i
+    combination_size = Primitive.rb_num2long(combination_size)
     unless block_given?
       return to_enum(:repeated_permutation, combination_size) do
         repeated_permutation_size(combination_size)

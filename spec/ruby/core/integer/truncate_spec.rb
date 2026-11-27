@@ -15,5 +15,11 @@ describe "Integer#truncate" do
       -1832.truncate(-2).should.eql?(-1800)
       -1832.truncate(-3).should.eql?(-1000)
     end
+
+    it "converts the precision with #to_int" do
+      precision = mock("-1")
+      precision.should_receive(:to_int).and_return(-1)
+      1832.truncate(precision).should.eql?(1830)
+    end
   end
 end
