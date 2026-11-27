@@ -42,6 +42,7 @@ import org.truffleruby.annotations.CoreModule;
 import org.truffleruby.annotations.Primitive;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.fiber.RubyFiber;
+import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.platform.FFMSupport;
 
 // @formatter:off
@@ -58,6 +59,12 @@ import org.truffleruby.platform.FFMSupport;
 public abstract class CExtInvokePrimitives {
 
     public abstract static class CExtInvokeNode extends PrimitiveArrayArgumentsNode {
+        /** The function to call is given as an arbitrary address, so native access must be checked for every call
+         * and not only when loading libtruffleruby or a C extension. */
+        protected final void checkNativeAccess() {
+            Pointer.checkNativeAccess(getContext());
+        }
+
         protected final void checkPendingException(InlinedBranchProfile exceptionProfile) {
             final RubyFiber fiber = getLanguage().getCurrentFiber();
             if (fiber.pendingCExtException != null) {
@@ -84,6 +91,7 @@ public abstract class CExtInvokePrimitives {
         long invoke(long function, Object a0,
                 @Cached CExtDowncallArgumentNode arg0Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_L(function, arg0Node.execute(a0));
             checkPendingException(exceptionProfile);
             return result;
@@ -108,6 +116,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg0Node,
                 @Cached CExtDowncallArgumentNode arg1Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LL(function, arg0Node.execute(a0), arg1Node.execute(a1));
             checkPendingException(exceptionProfile);
             return result;
@@ -133,6 +142,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg1Node,
                 @Cached CExtDowncallArgumentNode arg2Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2));
             checkPendingException(exceptionProfile);
             return result;
@@ -159,6 +169,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg2Node,
                 @Cached CExtDowncallArgumentNode arg3Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3));
             checkPendingException(exceptionProfile);
             return result;
@@ -186,6 +197,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg3Node,
                 @Cached CExtDowncallArgumentNode arg4Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4));
             checkPendingException(exceptionProfile);
             return result;
@@ -214,6 +226,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg4Node,
                 @Cached CExtDowncallArgumentNode arg5Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4), arg5Node.execute(a5));
             checkPendingException(exceptionProfile);
             return result;
@@ -243,6 +256,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg5Node,
                 @Cached CExtDowncallArgumentNode arg6Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4), arg5Node.execute(a5), arg6Node.execute(a6));
             checkPendingException(exceptionProfile);
             return result;
@@ -273,6 +287,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg6Node,
                 @Cached CExtDowncallArgumentNode arg7Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLLLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4), arg5Node.execute(a5), arg6Node.execute(a6), arg7Node.execute(a7));
             checkPendingException(exceptionProfile);
             return result;
@@ -304,6 +319,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg7Node,
                 @Cached CExtDowncallArgumentNode arg8Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLLLLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4), arg5Node.execute(a5), arg6Node.execute(a6), arg7Node.execute(a7), arg8Node.execute(a8));
             checkPendingException(exceptionProfile);
             return result;
@@ -336,6 +352,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg8Node,
                 @Cached CExtDowncallArgumentNode arg9Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLLLLLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4), arg5Node.execute(a5), arg6Node.execute(a6), arg7Node.execute(a7), arg8Node.execute(a8), arg9Node.execute(a9));
             checkPendingException(exceptionProfile);
             return result;
@@ -369,6 +386,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg9Node,
                 @Cached CExtDowncallArgumentNode arg10Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLLLLLLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4), arg5Node.execute(a5), arg6Node.execute(a6), arg7Node.execute(a7), arg8Node.execute(a8), arg9Node.execute(a9), arg10Node.execute(a10));
             checkPendingException(exceptionProfile);
             return result;
@@ -403,6 +421,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg10Node,
                 @Cached CExtDowncallArgumentNode arg11Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLLLLLLLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4), arg5Node.execute(a5), arg6Node.execute(a6), arg7Node.execute(a7), arg8Node.execute(a8), arg9Node.execute(a9), arg10Node.execute(a10), arg11Node.execute(a11));
             checkPendingException(exceptionProfile);
             return result;
@@ -438,6 +457,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg11Node,
                 @Cached CExtDowncallArgumentNode arg12Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLLLLLLLLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4), arg5Node.execute(a5), arg6Node.execute(a6), arg7Node.execute(a7), arg8Node.execute(a8), arg9Node.execute(a9), arg10Node.execute(a10), arg11Node.execute(a11), arg12Node.execute(a12));
             checkPendingException(exceptionProfile);
             return result;
@@ -474,6 +494,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg12Node,
                 @Cached CExtDowncallArgumentNode arg13Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLLLLLLLLLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4), arg5Node.execute(a5), arg6Node.execute(a6), arg7Node.execute(a7), arg8Node.execute(a8), arg9Node.execute(a9), arg10Node.execute(a10), arg11Node.execute(a11), arg12Node.execute(a12), arg13Node.execute(a13));
             checkPendingException(exceptionProfile);
             return result;
@@ -511,6 +532,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg13Node,
                 @Cached CExtDowncallArgumentNode arg14Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLLLLLLLLLLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4), arg5Node.execute(a5), arg6Node.execute(a6), arg7Node.execute(a7), arg8Node.execute(a8), arg9Node.execute(a9), arg10Node.execute(a10), arg11Node.execute(a11), arg12Node.execute(a12), arg13Node.execute(a13), arg14Node.execute(a14));
             checkPendingException(exceptionProfile);
             return result;
@@ -549,6 +571,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg14Node,
                 @Cached CExtDowncallArgumentNode arg15Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLLLLLLLLLLLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4), arg5Node.execute(a5), arg6Node.execute(a6), arg7Node.execute(a7), arg8Node.execute(a8), arg9Node.execute(a9), arg10Node.execute(a10), arg11Node.execute(a11), arg12Node.execute(a12), arg13Node.execute(a13), arg14Node.execute(a14), arg15Node.execute(a15));
             checkPendingException(exceptionProfile);
             return result;
@@ -588,6 +611,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg15Node,
                 @Cached CExtDowncallArgumentNode arg16Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLLLLLLLLLLLLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4), arg5Node.execute(a5), arg6Node.execute(a6), arg7Node.execute(a7), arg8Node.execute(a8), arg9Node.execute(a9), arg10Node.execute(a10), arg11Node.execute(a11), arg12Node.execute(a12), arg13Node.execute(a13), arg14Node.execute(a14), arg15Node.execute(a15), arg16Node.execute(a16));
             checkPendingException(exceptionProfile);
             return result;
@@ -611,6 +635,7 @@ public abstract class CExtInvokePrimitives {
         Object invoke(long function, Object a0,
                 @Cached CExtDowncallArgumentNode arg0Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             invokeV_L(function, arg0Node.execute(a0));
             checkPendingException(exceptionProfile);
             return nil;
@@ -635,6 +660,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg0Node,
                 @Cached CExtDowncallArgumentNode arg1Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             invokeV_LL(function, arg0Node.execute(a0), arg1Node.execute(a1));
             checkPendingException(exceptionProfile);
             return nil;
@@ -660,6 +686,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg1Node,
                 @Cached CExtDowncallArgumentNode arg2Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             invokeV_LLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2));
             checkPendingException(exceptionProfile);
             return nil;
@@ -686,6 +713,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg2Node,
                 @Cached CExtDowncallArgumentNode arg3Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             invokeV_LLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3));
             checkPendingException(exceptionProfile);
             return nil;
@@ -713,6 +741,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg3Node,
                 @Cached CExtDowncallArgumentNode arg4Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             invokeV_LLLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3), arg4Node.execute(a4));
             checkPendingException(exceptionProfile);
             return nil;
@@ -736,6 +765,7 @@ public abstract class CExtInvokePrimitives {
         Object invoke(long function, Object a0, int a1,
                 @Cached CExtDowncallArgumentNode arg0Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             invokeV_LI(function, arg0Node.execute(a0), a1);
             checkPendingException(exceptionProfile);
             return nil;
@@ -761,6 +791,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg1Node,
                 @Cached CExtDowncallArgumentNode arg2Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final int result = invokeI_LLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2));
             checkPendingException(exceptionProfile);
             return result;
@@ -787,6 +818,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg2Node,
                 @Cached CExtDowncallArgumentNode arg3Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final int result = invokeI_LLLL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), arg3Node.execute(a3));
             checkPendingException(exceptionProfile);
             return result;
@@ -812,6 +844,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg2Node,
                 @Cached CExtDowncallArgumentNode arg3Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LILL(function, arg0Node.execute(a0), a1, arg2Node.execute(a2), arg3Node.execute(a3));
             checkPendingException(exceptionProfile);
             return result;
@@ -837,6 +870,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg1Node,
                 @Cached CExtDowncallArgumentNode arg2Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLI(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), a3);
             checkPendingException(exceptionProfile);
             return result;
@@ -864,6 +898,7 @@ public abstract class CExtInvokePrimitives {
                 @Cached CExtDowncallArgumentNode arg4Node,
                 @Cached CExtDowncallArgumentNode arg5Node,
                 @Cached InlinedBranchProfile exceptionProfile) {
+            checkNativeAccess();
             final long result = invokeL_LLLILL(function, arg0Node.execute(a0), arg1Node.execute(a1), arg2Node.execute(a2), a3, arg4Node.execute(a4), arg5Node.execute(a5));
             checkPendingException(exceptionProfile);
             return result;

@@ -20,7 +20,8 @@ import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.language.RubyBaseNode;
 
-/** Unwraps a native VALUE[] (an address and a length) to the corresponding Ruby objects */
+/** Unwraps a native VALUE[] (an address and a length) to the corresponding Ruby objects. The array is wrapped in a
+ * {@link Pointer} so native access is checked once per call rather than for every element. */
 @GenerateUncached
 public abstract class UnwrapCArrayNode extends RubyBaseNode {
 
@@ -33,9 +34,10 @@ public abstract class UnwrapCArrayNode extends RubyBaseNode {
     Object[] unwrapCArrayExplode(long address, int size,
             @Cached("size") int cachedSize,
             @Cached @Shared UnwrapNode unwrapNode) {
+        final Pointer pointer = new Pointer(getContext(), address, cachedSize * 8L);
         final Object[] store = new Object[cachedSize];
         for (int i = 0; i < cachedSize; i++) {
-            store[i] = unwrapNode.execute(this, Pointer.rawReadLong(address + i * 8L));
+            store[i] = unwrapNode.execute(this, pointer.readLong(i * 8L));
         }
         return store;
     }
@@ -44,11 +46,12 @@ public abstract class UnwrapCArrayNode extends RubyBaseNode {
     Object[] unwrapCArray(long address, int size,
             @Cached @Shared UnwrapNode unwrapNode,
             @Cached LoopConditionProfile loopProfile) {
+        final Pointer pointer = new Pointer(getContext(), address, size * 8L);
         final Object[] store = new Object[size];
         int i = 0;
         try {
             for (; loopProfile.inject(i < size); i++) {
-                store[i] = unwrapNode.execute(this, Pointer.rawReadLong(address + i * 8L));
+                store[i] = unwrapNode.execute(this, pointer.readLong(i * 8L));
                 TruffleSafepoint.poll(this);
             }
         } finally {

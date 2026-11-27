@@ -87,6 +87,7 @@ import org.truffleruby.core.support.RubyPRNGRandomizer;
 import org.truffleruby.core.symbol.CoreSymbols;
 import org.truffleruby.core.symbol.RubySymbol;
 import org.truffleruby.core.thread.ThreadManager.BlockingCallInterruptible;
+import org.truffleruby.extra.ffi.Pointer;
 import org.truffleruby.interop.ForeignToRubyNode;
 import org.truffleruby.interop.TranslateInteropExceptionNode;
 import org.truffleruby.language.Nil;
@@ -664,6 +665,9 @@ public abstract class ThreadNodes {
                 @Bind Node node,
                 @Cached("new(node, receivers, translateInteropExceptionNode)") BlockingCallInterruptible blockingCallInterruptible) {
             var context = getContext(node);
+            // The unblocker is an arbitrary native function address, called when the thread is interrupted
+            Pointer.checkNativeAccess(context);
+
             final ThreadManager threadManager = context.getThreadManager();
             final Interrupter interrupter;
             if (unblocker == 0) {

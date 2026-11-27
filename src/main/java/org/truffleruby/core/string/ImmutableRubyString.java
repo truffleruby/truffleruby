@@ -88,6 +88,8 @@ public final class ImmutableRubyString extends ImmutableRubyObjectCopyable
 
     @SuppressFBWarnings("IS2_INCONSISTENT_SYNC")
     public Pointer getNativeString(RubyLanguage language, RubyContext context) {
+        // Another context may have already populated this shared string's native cache.
+        Pointer.checkNativeAccess(context);
         if (nativeString == null) {
             return createNativeString(language, context);
         }

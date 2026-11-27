@@ -48,6 +48,7 @@ Bug fixes:
 * Fix `rb_path2class()` and `rb_path_to_class()` to not call `const_missing`, including when an autoload does not define the constant, like CRuby (@nirvdrum).
 * Fix `Marshal.load` to not call `const_missing` and to not look up constants in the ancestors of a namespace when resolving class and module names (#4617, @nirvdrum).
 * Fix `Integer#ceil`, `#floor`, `#truncate`, `Array#repeated_*` and `Enumerable#max`, `#min` to convert Integer arguments with `#to_int` (#4590, @taxor03).
+* Fix calling native functions, reading native memory and sending a signal to the process being possible when native access is disabled with `--platform-native=false` or `allowNativeAccess(false)` (@nirvdrum).
 
 Compatibility:
 

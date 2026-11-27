@@ -131,7 +131,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.ReportPolymorphism;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -1346,70 +1345,72 @@ public abstract class CExtNodes {
                 @Cached StringToNativeNode stringToNativeNode) {
             Pointer pointer = stringToNativeNode.executeToNative(node, string, true);
             int byteLength = libString.getTString(node, string).byteLength(libString.getTEncoding(node, string));
-            Pointer.rawWriteLong(lenPointer, byteLength);
+            Pointer.rawWriteLong(getContext(node), lenPointer, byteLength);
             return pointer.getAddress();
         }
     }
 
     /** A single upcall for rb_enc_str_new(): creates the String with the right Encoding directly, avoiding a separate
      * force_encoding and encoding lookup. Hot for the json parser, which creates every parsed String this way. The
-     * Encoding is looked up from the native rb_encoding address with an inline cache, as C extensions use very few
-     * distinct encodings. */
+     * pointer comes from an arbitrary address, so native access is checked on every request, before the Encoding is
+     * looked up or the native memory is read. */
     @CoreMethod(names = "rb_enc_str_new_native", onSingleton = true, required = 3, lowerFixnum = 2)
     public abstract static class RbEncStrNewNativeNode extends CoreMethodArrayArgumentsNode {
 
-        @Specialization(guards = "rbEncoding == cachedRbEncoding", limit = "4")
-        RubyString encStrNewCached(long pointer, int length, long rbEncoding,
-                @Cached("rbEncoding") long cachedRbEncoding,
-                @Cached("lookupEncoding(rbEncoding)") RubyEncoding cachedEncoding,
-                @Cached @Shared TruffleString.FromNativePointerNode fromNativePointerNode) {
-            var tstring = fromNativePointerNode.execute(pointer, 0, length, cachedEncoding.tencoding, true);
-            return createString(tstring, cachedEncoding);
-        }
-
-        @Specialization(replaces = "encStrNewCached")
-        RubyString encStrNewGeneric(long pointer, int length, long rbEncoding,
-                @Cached DispatchNode dispatchNode,
-                @Cached @Shared TruffleString.FromNativePointerNode fromNativePointerNode) {
-            var encoding = (RubyEncoding) dispatchNode.call(coreLibrary().truffleCExtModule, "rb_encoding_from_native",
-                    rbEncoding);
+        @Specialization
+        RubyString encStrNew(long pointer, int length, long rbEncoding,
+                @Cached LookupEncodingNode lookupEncodingNode,
+                @Cached TruffleString.FromNativePointerNode fromNativePointerNode) {
+            Pointer.checkNativeAccess(getContext());
+            var encoding = lookupEncodingNode.execute(this, rbEncoding);
             var tstring = fromNativePointerNode.execute(pointer, 0, length, encoding.tencoding, true);
             return createString(tstring, encoding);
-        }
-
-        protected RubyEncoding lookupEncoding(long rbEncoding) {
-            return (RubyEncoding) DispatchNode.getUncached().call(
-                    getContext().getCoreLibrary().truffleCExtModule, "rb_encoding_from_native", rbEncoding);
         }
     }
 
     /** A single upcall for rb_str_new_cstr() & similar: reads the zero-terminated C string and creates the String with
-     * the right Encoding in one pass, instead of a strlen() followed by reading the bytes. */
+     * the right Encoding in one pass, instead of a strlen() followed by reading the bytes. As for
+     * {@link RbEncStrNewNativeNode}, native access is checked before reading the pointer or looking up the Encoding. */
     @CoreMethod(names = "rb_tr_enc_str_new_cstr", onSingleton = true, required = 2)
     public abstract static class RbTrEncStrNewCStrNode extends CoreMethodArrayArgumentsNode {
 
-        @Specialization(guards = "rbEncoding == cachedRbEncoding", limit = "4")
-        RubyString encStrNewCStrCached(long pointer, long rbEncoding,
-                @Cached("rbEncoding") long cachedRbEncoding,
-                @Cached("lookupEncoding(rbEncoding)") RubyEncoding cachedEncoding,
-                @Cached @Shared TruffleString.FromZeroTerminatedNativePointerNode fromZeroTerminatedNativePointerNode) {
-            var tstring = fromZeroTerminatedNativePointerNode.execute8Bit(pointer, 0, cachedEncoding.tencoding, true);
-            return createString(tstring, cachedEncoding);
-        }
-
-        @Specialization(replaces = "encStrNewCStrCached")
-        RubyString encStrNewCStrGeneric(long pointer, long rbEncoding,
-                @Cached DispatchNode dispatchNode,
-                @Cached @Shared TruffleString.FromZeroTerminatedNativePointerNode fromZeroTerminatedNativePointerNode) {
-            var encoding = (RubyEncoding) dispatchNode.call(coreLibrary().truffleCExtModule, "rb_encoding_from_native",
-                    rbEncoding);
+        @Specialization
+        RubyString encStrNewCStr(long pointer, long rbEncoding,
+                @Cached LookupEncodingNode lookupEncodingNode,
+                @Cached TruffleString.FromZeroTerminatedNativePointerNode fromZeroTerminatedNativePointerNode) {
+            Pointer.checkNativeAccess(getContext());
+            var encoding = lookupEncodingNode.execute(this, rbEncoding);
             var tstring = fromZeroTerminatedNativePointerNode.execute8Bit(pointer, 0, encoding.tencoding, true);
             return createString(tstring, encoding);
         }
+    }
 
-        protected RubyEncoding lookupEncoding(long rbEncoding) {
+    /** Looks up the {@link RubyEncoding} for an rb_encoding native address. C extensions use very few distinct
+     * encodings, so the lookup is cached. The lookup only computes an index from the address and does not read native
+     * memory, so it does not check native access itself; callers which then read native memory must check it. */
+    @GenerateInline
+    @GenerateCached(false)
+    public abstract static class LookupEncodingNode extends RubyBaseNode {
+
+        public abstract RubyEncoding execute(Node node, long rbEncoding);
+
+        @Specialization(guards = "rbEncoding == cachedRbEncoding", limit = "4")
+        static RubyEncoding lookupCached(Node node, long rbEncoding,
+                @Cached("rbEncoding") long cachedRbEncoding,
+                @Cached("lookupEncoding(node, rbEncoding)") RubyEncoding cachedEncoding) {
+            return cachedEncoding;
+        }
+
+        @Specialization(replaces = "lookupCached")
+        static RubyEncoding lookupGeneric(Node node, long rbEncoding,
+                @Cached DispatchNode dispatchNode) {
+            return (RubyEncoding) dispatchNode.call(coreLibrary(node).truffleCExtModule, "rb_encoding_from_native",
+                    rbEncoding);
+        }
+
+        protected static RubyEncoding lookupEncoding(Node node, long rbEncoding) {
             return (RubyEncoding) DispatchNode.getUncached().call(
-                    getContext().getCoreLibrary().truffleCExtModule, "rb_encoding_from_native", rbEncoding);
+                    getContext(node).getCoreLibrary().truffleCExtModule, "rb_encoding_from_native", rbEncoding);
         }
     }
 

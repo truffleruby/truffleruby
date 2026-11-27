@@ -17,6 +17,7 @@ import org.truffleruby.builtins.CoreMethodArrayArgumentsNode;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.string.ImmutableRubyString;
 import org.truffleruby.core.symbol.RubySymbol;
+import org.truffleruby.extra.ffi.Pointer;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -67,6 +68,9 @@ public abstract class ProcessNodes {
         @TruffleBoundary
         @Specialization
         int raise(RubySymbol signalName) {
+            // Raising a signal affects the whole process, not only this context, like kill() which needs native access
+            Pointer.checkNativeAccess(getContext());
+
             final Signal signal = new Signal(signalName.getString());
             try {
                 Signal.raise(signal);
