@@ -82,6 +82,67 @@ describe "Truffle::Interop.members" do
     Truffle::Interop.members(object).should.include?('foo')
   end
 
+  describe "with a Module" do
+
+    before :each do
+      included = Module.new
+      included.const_set(:INHERITED, :inherited)
+
+      @module = Module.new do
+        include included
+
+        def self.CONST
+        end
+      end
+      @module.const_set(:CONST, 42)
+      @module.const_set(:PRIVATE, :private)
+      @module.private_constant :PRIVATE
+    end
+
+    it "returns the constants which can be read, including inherited ones" do
+      members = Truffle::Interop.members(@module)
+      members.should.include?('CONST')
+      members.should.include?('INHERITED')
+      members.each do |member|
+        Truffle::Interop.member_readable?(@module, member).should == true
+      end
+    end
+
+    it "does not return private constants and top-level constants" do
+      members = Truffle::Interop.members(@module)
+      members.should_not.include?('PRIVATE')
+      members.should_not.include?('Comparable')
+    end
+
+    it "returns the methods of the module" do
+      Truffle::Interop.members(@module).to_set.should >= @module.public_methods.map(&:to_s).to_set
+    end
+
+    it "returns a name only once if it is both a constant and a method" do
+      Truffle::Interop.members(@module).count('CONST').should == 1
+    end
+
+    it "returns the constants of a class but not the ones of Object" do
+      klass = Class.new(Struct.new(:a))
+      klass.const_set(:CONST, 42)
+      members = Truffle::Interop.members(klass)
+      members.should.include?('CONST')
+      members.should_not.include?('Comparable')
+    end
+
+    it "returns the constants of Module" do
+      Module.const_set(:INTEROP_MEMBERS_SPEC, 1)
+      begin
+        members = Truffle::Interop.members(Module)
+        members.should.include?('INTEROP_MEMBERS_SPEC')
+        members.should_not.include?('Comparable')
+      ensure
+        Module.send(:remove_const, :INTEROP_MEMBERS_SPEC)
+      end
+    end
+
+  end
+
   describe "without internal set" do
 
     it "does return the instance variables of a hash" do
