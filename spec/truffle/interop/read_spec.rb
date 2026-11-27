@@ -81,6 +81,16 @@ describe "Truffle::Interop.read" do
       -> { Truffle::Interop.read_member(@module, "UNDEFINED") }.should.raise(NameError)
     end
 
+    it "reports read side effects only for an autoload constant" do
+      @module.autoload :AUTOLOAD, fixture(__FILE__, "autoload_constant_not_loaded.rb")
+      Truffle::Interop.member_readable?(@module, "AUTOLOAD").should == true
+      Truffle::Interop.has_member_read_side_effects?(@module, "AUTOLOAD").should == true
+
+      Truffle::Interop.has_member_read_side_effects?(@module, "CONST").should == false
+      Truffle::Interop.has_member_read_side_effects?(@module, "UNDEFINED").should == false
+      Truffle::Interop.has_member_read_side_effects?(@module, "name").should == false
+    end
+
     it "reads a method of given name that exists" do
       Truffle::Interop.read_member(@module, "name").should == @module.method(:name)
       Truffle::Interop.read_member(@module, "OnlyMethod").should == @module.method(:OnlyMethod)

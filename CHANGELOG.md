@@ -6,6 +6,7 @@ New features:
 * Updated to GraalVM 25.6.5.1 (@eregon).
 * Implement the `pty` standard library: `PTY.open`, `PTY.spawn`, `PTY.getpty` and `PTY.check` (@eregon).
 * Add `Ruby::Prism` from Ruby 4.1, the Prism built into TruffleRuby and independent of the version of the `prism` gem, and return `Ruby::Prism` nodes from `{Proc,Method,UnboundMethod,Thread::Backtrace::Location}#syntax_tree` and use it to implement `Ripper` ([Bug #22379](https://bugs.ruby-lang.org/issues/22379), @eregon).
+* Support `foreign_object::NAME` to read a member of a foreign object, and expose the constants of a Ruby module as interop members, so that `mod::NAME` works for a module from another context like `Polyglot::InnerContext` (@eregon).
 
 Bug fixes:
 

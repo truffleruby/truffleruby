@@ -201,6 +201,11 @@ class Module
     Primitive.module_scoped_constant_defined?(self, name) || Primitive.dispatch_missing
   end
 
+  # Reading an autoload constant loads the autoload file
+  private def polyglot_has_member_read_side_effects?(name)
+    Primitive.module_scoped_constant_defined?(self, name) && !Primitive.nil?(autoload?(name))
+  end
+
   def self.constants(inherited = undefined)
     if Primitive.undefined?(inherited)
       Object.constants
