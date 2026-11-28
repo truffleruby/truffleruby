@@ -63,4 +63,11 @@ describe "IO#sysseek" do
     @io.sysseek(-25, :END)
     @io.sysread(7).should == "cinco.\n"
   end
+
+  it "calls #to_int to convert the whence argument" do
+    whence = mock('whence')
+    whence.should_receive(:to_int).and_return(IO::SEEK_END)
+    @io.sysseek(-25, whence)
+    @io.sysread(7).should == "cinco.\n"
+  end
 end

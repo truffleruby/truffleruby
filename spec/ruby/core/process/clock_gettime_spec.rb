@@ -8,6 +8,12 @@ describe "Process.clock_gettime" do
     end
   end
 
+  it "calls #to_int to convert the clock id" do
+    clock_id = mock('clock_id')
+    clock_id.should_receive(:to_int).and_return(Process::CLOCK_REALTIME)
+    Process.clock_gettime(clock_id).should be_close(Time.now.to_f, TIME_TOLERANCE)
+  end
+
   describe 'time units' do
     it 'handles a fixed set of time units' do
       [:nanosecond, :microsecond, :millisecond, :second].each do |unit|

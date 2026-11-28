@@ -828,7 +828,7 @@ class IO
   def self.sysopen(path, mode = nil, perm = nil)
     path = Truffle::Type.coerce_to_path path
     mode = Truffle::IOOperations.parse_mode(mode || 'r')
-    perm ||= 0666
+    perm = Primitive.nil?(perm) ? 0666 : Truffle::Type.rb_num2mode_t(perm)
 
     fd = Truffle::POSIX.open(path, mode, perm)
     Errno.handle(path) if fd == -1
@@ -2108,11 +2108,12 @@ class IO
   #  f.seek(-13, IO::SEEK_END)   #=> 0
   #  f.readline                  #=> "And so on...\n"
   def seek(amount, whence = SEEK_SET)
+    whence = Truffle::IOOperations.parse_whence(whence)
+    amount = Primitive.rb_num2long(amount)
     flush
     reset_buffering
 
-    whence = Truffle::IOOperations.parse_whence(whence)
-    r = Truffle::POSIX.lseek(Primitive.io_fd(self), Primitive.rb_num2long(amount), whence)
+    r = Truffle::POSIX.lseek(Primitive.io_fd(self), amount, whence)
     Errno.handle if r == -1
     0
   end
@@ -2316,11 +2317,12 @@ class IO
   #  f.sysseek(-13, IO::SEEK_END)   #=> 53
   #  f.sysread(10)                  #=> "And so on."
   def sysseek(amount, whence = SEEK_SET)
+    whence = Truffle::IOOperations.parse_whence(whence)
+    amount = Primitive.rb_num2long(amount)
     ensure_open
     raise IOError, 'sysseek for buffered IO' unless buffer_empty?
 
-    whence = Truffle::IOOperations.parse_whence(whence)
-    r = Truffle::POSIX.lseek(Primitive.io_fd(self), Primitive.rb_num2long(amount), whence)
+    r = Truffle::POSIX.lseek(Primitive.io_fd(self), amount, whence)
     Errno.handle if r == -1
     r
   end

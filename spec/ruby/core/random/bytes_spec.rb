@@ -5,6 +5,12 @@ require_relative 'shared/bytes'
 describe "Random#bytes" do
   it_behaves_like :random_bytes, :bytes, Random.new
 
+  it "converts the length with #to_int" do
+    length = mock('length')
+    length.should_receive(:to_int).and_return(15)
+    Random.new.bytes(length).length.should == 15
+  end
+
   it "returns the same output for a given seed" do
     Random.new(33).bytes(2).should == Random.new(33).bytes(2)
   end
@@ -26,4 +32,10 @@ end
 
 describe "Random.bytes" do
   it_behaves_like :random_bytes, :bytes, Random
+
+  it "converts the length with #to_int" do
+    length = mock('length')
+    length.should_receive(:to_int).and_return(15)
+    Random.bytes(length).length.should == 15
+  end
 end

@@ -27,11 +27,20 @@ describe "MatchData#[]" do
 
     # length argument larger than number of match values is capped to match value length
     /(.)(.)(\d+)(\d)/.match("THX1138.")[3, 10].should == %w|113 8|
+    /(.)(.)(\d+)(\d)/.match("THX1138.")[3, 2**31 - 1].should == %w|113 8|
 
     /(.)(.)(\d+)(\d)/.match("THX1138.")[3, 0].should == []
 
     /(.)(.)(\d+)(\d)/.match("THX1138.")[3, -1].should == nil
     /(.)(.)(\d+)(\d)/.match("THX1138.")[3, -30].should == nil
+  end
+
+  it "calls #to_int to convert the start and the length" do
+    start = mock('start')
+    start.should_receive(:to_int).and_return(1)
+    length = mock('length')
+    length.should_receive(:to_int).and_return(2)
+    /(.)(.)(\d+)(\d)/.match("THX1138.")[start, length].should == %w|H X|
   end
 
   it "supports ranges [start..end]" do

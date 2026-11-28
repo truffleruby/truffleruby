@@ -427,7 +427,7 @@ module Truffle
       when :END then IO::SEEK_END
       when :SET then IO::SEEK_SET
       else
-        mode
+        Primitive.rb_num2int(mode)
       end
     end
 

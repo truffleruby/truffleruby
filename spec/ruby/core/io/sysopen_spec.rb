@@ -42,6 +42,16 @@ describe "IO.sysopen" do
     @fd.should_not.equal?(0)
   end
 
+  it "calls #to_int to convert the permissions" do
+    File.umask(0022)
+    perm = mock('perm')
+    perm.should_receive(:to_int).and_return(0755)
+    @fd = IO.sysopen(@filename, "w", perm)
+    platform_is_not :windows do
+      File.stat(@filename).mode.to_s(8).should == "100755"
+    end
+  end
+
   it "accepts mode & permission that are nil" do
     touch @filename # create the file
     @fd = IO.sysopen(@filename, nil, nil)

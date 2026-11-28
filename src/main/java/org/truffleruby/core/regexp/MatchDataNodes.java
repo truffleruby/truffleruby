@@ -38,6 +38,7 @@ import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.cast.ToIntNode;
+import org.truffleruby.core.cast.ToLongNode;
 import org.truffleruby.core.encoding.RubyEncoding;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.range.RangeNodes;
@@ -311,7 +312,8 @@ public abstract class MatchDataNodes {
             }
 
             int endIndex = index + length;
-            if (tooLargeTotalProfile.profile(this, endIndex > values.length)) {
+            // Not endIndex > values.length, as index + length overflows for a length near Integer.MAX_VALUE
+            if (tooLargeTotalProfile.profile(this, length > values.length - index)) {
                 endIndex = values.length;
             }
 
@@ -467,9 +469,30 @@ public abstract class MatchDataNodes {
     @CoreMethod(names = "[]", required = 1, optional = 1, lowerFixnum = { 1, 2 })
     public abstract static class GetIndexCoreMethodNode extends CoreMethodArrayArgumentsNode {
         @Specialization
-        Object getIndex(RubyMatchData matchData, Object index, Object maybeLength,
-                @Cached GetIndexNode getIndexNode) {
-            return getIndexNode.execute(matchData, index, maybeLength);
+        Object getIndex(RubyMatchData matchData, Object index, NotProvided length,
+                @Cached @Shared GetIndexNode getIndexNode) {
+            return getIndexNode.execute(matchData, index, length);
+        }
+
+        @Specialization
+        Object getIndex(RubyMatchData matchData, int index, int length,
+                @Cached @Shared GetIndexNode getIndexNode) {
+            return getIndexNode.execute(matchData, index, length);
+        }
+
+        @Specialization(guards = { "wasProvided(length)", "!isInteger(index) || !isInteger(length)" })
+        Object getIndexCoerce(RubyMatchData matchData, Object index, Object length,
+                @Cached ToLongNode toLongNode,
+                @Cached @Shared GetIndexNode getIndexNode) {
+            // Like match_aref() in CRuby, which converts both with NUM2LONG()
+            long indexLong = toLongNode.execute(this, index);
+            long lengthLong = toLongNode.execute(this, length);
+            if (lengthLong < 0 || (int) indexLong != indexLong) {
+                return nil;
+            }
+            // A length beyond the number of groups returns all groups from the index
+            int lengthInt = (int) Math.min(lengthLong, Integer.MAX_VALUE);
+            return getIndexNode.execute(matchData, (int) indexLong, lengthInt);
         }
     }
 

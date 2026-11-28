@@ -37,6 +37,17 @@ describe "File.new" do
     File.should.exist?(@file)
   end
 
+  it "calls #to_int to convert the permissions" do
+    rm_r @file
+    File.umask(0011)
+    perm = mock('perm')
+    perm.should_receive(:to_int).and_return(0755)
+    @fh = File.new(@file, @flags, perm)
+    platform_is_not :windows do
+      File.stat(@file).mode.to_s(8).should == "100744"
+    end
+  end
+
   platform_is :darwin do
     it "returns a new File when given a path in a non-UTF-8, ASCII-compatible encoding containing non-ASCII characters" do
       utf8_path = tmp("file_new_utf8_path_\u{3042}.txt")

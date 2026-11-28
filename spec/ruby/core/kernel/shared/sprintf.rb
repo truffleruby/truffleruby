@@ -884,6 +884,12 @@ describe :kernel_sprintf, shared: true do
         @method.call("%1$*2$s", "abc", -10).should == "abc       "
       end
 
+      it "calls #to_int to convert the width specified with $ argument" do
+        width = mock('width')
+        width.should_receive(:to_int).and_return(10)
+        @method.call("%1$*2$b", 10, width).should == "      1010"
+      end
+
       it "raises ArgumentError when is mixed with width" do
         -> {
           @method.call("%*10d", 10, 112)

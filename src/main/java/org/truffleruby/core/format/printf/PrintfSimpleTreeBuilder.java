@@ -22,6 +22,7 @@ import org.truffleruby.core.format.FormatNode;
 import org.truffleruby.core.format.LiteralFormatNode;
 import org.truffleruby.core.format.SharedTreeBuilder;
 import org.truffleruby.core.format.convert.ToNumberWithCoercionNodeGen;
+import org.truffleruby.core.format.convert.ToIntNodeGen;
 import org.truffleruby.core.format.convert.ToIntegerNodeGen;
 import org.truffleruby.core.format.convert.ToStringNodeGen;
 import org.truffleruby.core.format.format.FormatAFloatNodeGen;
@@ -79,7 +80,8 @@ public final class PrintfSimpleTreeBuilder {
                 if (config.isWidthStar()) {
                     widthNode = ReadIntegerNodeGen.create(new SourceNode());
                 } else if (config.isArgWidth()) {
-                    widthNode = ReadArgumentIndexValueNodeGen.create(config.getWidth(), new SourceNode());
+                    widthNode = ToIntNodeGen
+                            .create(ReadArgumentIndexValueNodeGen.create(config.getWidth(), new SourceNode()));
                 } else {
                     widthNode = new LiteralFormatNode(config.getWidth() == null ? DEFAULT : config.getWidth());
                 }
@@ -88,7 +90,8 @@ public final class PrintfSimpleTreeBuilder {
                 if (config.isPrecisionStar()) {
                     precisionNode = ReadIntegerNodeGen.create(new SourceNode());
                 } else if (config.isPrecisionArg()) {
-                    precisionNode = ReadArgumentIndexValueNodeGen.create(config.getPrecision(), new SourceNode());
+                    precisionNode = ToIntNodeGen
+                            .create(ReadArgumentIndexValueNodeGen.create(config.getPrecision(), new SourceNode()));
                 } else {
                     precisionNode = new LiteralFormatNode(
                             config.getPrecision() == null ? DEFAULT : config.getPrecision());

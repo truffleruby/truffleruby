@@ -55,6 +55,12 @@ describe "Array.new with (array)" do
     Array.new(a)
   end
 
+  it "calls #to_ary to convert the value to an array and does not use the given block" do
+    a = mock("array")
+    a.should_receive(:to_ary).and_return([1, 2])
+    Array.new(a) { raise }.should == [1, 2]
+  end
+
   it "raises a TypeError if an Array type argument and a default object" do
     -> { Array.new([1, 2], 1) }.should.raise(TypeError)
   end
@@ -95,6 +101,12 @@ describe "Array.new with (size, object=nil)" do
     obj = mock('1')
     obj.should_receive(:to_int).and_return(1)
     Array.new(obj).should == [nil]
+  end
+
+  it "calls #to_int to convert the size argument to an Integer when a block is given" do
+    obj = mock('3')
+    obj.should_receive(:to_int).and_return(3)
+    Array.new(obj) { |i| i.to_s }.should == ['0', '1', '2']
   end
 
   it "raises a TypeError if the size argument is not an Integer type" do

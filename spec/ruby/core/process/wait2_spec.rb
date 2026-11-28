@@ -43,4 +43,13 @@ describe "Process.wait2" do
       io.write('a')
     end
   end
+
+  it "calls #to_int to convert the flags" do
+    flags = mock('flags')
+    flags.should_receive(:to_int).and_return(Process::WNOHANG)
+    IO.popen(ruby_cmd('STDIN.getbyte'), "w") do |io|
+      Process.wait2(io.pid, flags).should == nil
+      io.write('a')
+    end
+  end
 end

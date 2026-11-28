@@ -1071,6 +1071,8 @@ public abstract class StringNodes {
 
         @Child private TruffleString.ReadByteNode readByteNode = TruffleString.ReadByteNode.create();
 
+        protected abstract Object executeGetByte(Object string, Object index);
+
         @Specialization
         Object getByte(Object string, int index,
                 @Cached InlinedConditionProfile indexOutOfBoundsProfile,
@@ -1087,6 +1089,17 @@ public abstract class StringNodes {
             }
 
             return readByteNode.execute(tstring, normalizedIndex, encoding);
+        }
+
+        @Specialization(guards = "!isInteger(index)")
+        Object getByte(Object string, Object index,
+                @Cached ToLongNode toLongNode) {
+            // Like rb_str_getbyte() in CRuby, which uses NUM2LONG() and returns nil for an index out of bounds
+            long indexLong = toLongNode.execute(this, index);
+            int indexInt = (int) indexLong;
+            return indexInt != indexLong
+                    ? nil
+                    : executeGetByte(string, indexInt);
         }
 
     }

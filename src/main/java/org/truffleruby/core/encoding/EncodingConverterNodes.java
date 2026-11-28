@@ -37,6 +37,7 @@ import org.truffleruby.annotations.Primitive;
 import org.truffleruby.builtins.PrimitiveArrayArgumentsNode;
 import org.truffleruby.core.array.ArrayUtils;
 import org.truffleruby.core.array.RubyArray;
+import org.truffleruby.core.cast.ToIntNode;
 import org.truffleruby.core.cast.ToStrNode;
 import org.truffleruby.core.klass.RubyClass;
 import org.truffleruby.core.string.TStringBuilder;
@@ -44,7 +45,6 @@ import org.truffleruby.core.string.EncodingUtils;
 import org.truffleruby.core.string.RubyString;
 import org.truffleruby.core.string.StringUtils;
 import org.truffleruby.core.symbol.RubySymbol;
-import org.truffleruby.language.NotProvided;
 import org.truffleruby.language.RubyBaseNodeWithExecute;
 import org.truffleruby.language.RubyNode;
 import org.truffleruby.annotations.Visibility;
@@ -290,14 +290,21 @@ public abstract class EncodingConverterNodes {
             return putback(encodingConverter, putbackable < maxBytes ? putbackable : maxBytes, sourceEncodingNode);
         }
 
-        @Specialization
-        RubyString encodingConverterPutback(RubyEncodingConverter encodingConverter, NotProvided maxBytes,
+        @Specialization(guards = "!wasProvided(maybeMaxBytes) || isNil(maybeMaxBytes)")
+        RubyString encodingConverterPutback(RubyEncodingConverter encodingConverter, Object maybeMaxBytes,
                 @Cached @Shared DispatchNode sourceEncodingNode) {
             // Taken from org.jruby.RubyConverter#putback.
 
             final EConv ec = encodingConverter.econv;
 
             return putback(encodingConverter, ec.putbackable(), sourceEncodingNode);
+        }
+
+        @Specialization(guards = { "wasProvided(maxBytes)", "!isNil(maxBytes)", "!isInteger(maxBytes)" })
+        RubyString encodingConverterPutbackCoerce(RubyEncodingConverter encodingConverter, Object maxBytes,
+                @Cached ToIntNode toIntNode,
+                @Cached @Shared DispatchNode sourceEncodingNode) {
+            return encodingConverterPutback(encodingConverter, toIntNode.execute(maxBytes), sourceEncodingNode);
         }
 
         private RubyString putback(RubyEncodingConverter encodingConverter, int n, DispatchNode sourceEncodingNode) {
@@ -447,7 +454,7 @@ public abstract class EncodingConverterNodes {
     @NodeChild(value = "replacement", type = RubyBaseNodeWithExecute.class)
     public abstract static class EncodingConverterSetReplacementNode extends CoreMethodNode {
 
-        @Specialization(guards = "libReplacement.isRubyString(this, replacement)", limit = "1")
+        @Specialization
         static Object setReplacement(RubyEncodingConverter encodingConverter, Object replacement,
                 @Cached InlinedBranchProfile errorProfile,
                 @Cached TruffleString.GetInternalByteArrayNode bytesNode,
@@ -469,7 +476,7 @@ public abstract class EncodingConverterNodes {
                         getContext(node).getCoreExceptions().encodingUndefinedConversionError(node));
             }
 
-            return replacementAsString;
+            return replacement;
         }
 
         @TruffleBoundary

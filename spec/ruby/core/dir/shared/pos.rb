@@ -21,4 +21,14 @@ describe :dir_pos_set, shared: true do
     b.should_not == c
     c.should == a
   end
+
+  it "calls #to_int to convert the position" do
+    pos = @dir.pos
+    a   = @dir.read
+    @dir.read
+    position = mock('position')
+    position.should_receive(:to_int).and_return(pos)
+    @dir.send @method, position
+    @dir.read.should == a
+  end
 end

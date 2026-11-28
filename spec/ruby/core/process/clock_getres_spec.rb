@@ -30,4 +30,10 @@ describe "Process.clock_getres" do
       Process.clock_getres(Process::CLOCK_MONOTONIC, :nanosecond).should <= 10_000_000
     end
   end
+
+  it "calls #to_int to convert the clock id" do
+    clock_id = mock('clock_id')
+    clock_id.should_receive(:to_int).and_return(Process::CLOCK_MONOTONIC)
+    Process.clock_getres(clock_id, :nanosecond).should == Process.clock_getres(Process::CLOCK_MONOTONIC, :nanosecond)
+  end
 end

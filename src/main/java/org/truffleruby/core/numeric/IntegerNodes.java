@@ -40,6 +40,7 @@ import org.truffleruby.core.array.RubyArray;
 import org.truffleruby.core.cast.BigIntegerCastNode;
 import org.truffleruby.core.cast.BooleanCastNode;
 import org.truffleruby.core.cast.FloatToIntegerNode;
+import org.truffleruby.core.cast.ToIntNode;
 import org.truffleruby.core.cast.ToRubyIntegerNode;
 import org.truffleruby.core.encoding.Encodings;
 import org.truffleruby.core.inlined.AlwaysInlinedMethodNode;
@@ -1543,6 +1544,8 @@ public abstract class IntegerNodes {
     @CoreMethod(names = { "to_s", "inspect" }, optional = 1, lowerFixnum = 1)
     public abstract static class ToSNode extends CoreMethodArrayArgumentsNode {
 
+        protected abstract RubyString executeToS(Object n, Object base);
+
         @Specialization
         RubyString defaultBase10(long n, NotProvided base,
                 @Cached @Shared TruffleString.FromLongNode fromLongNode) {
@@ -1589,6 +1592,12 @@ public abstract class IntegerNodes {
                     fromJavaStringNode,
                     BigIntegerOps.toString(value.value, base),
                     Encodings.US_ASCII); // CR_7BIT
+        }
+
+        @Specialization(guards = { "wasProvided(base)", "!isInteger(base)" })
+        RubyString toS(Object n, Object base,
+                @Cached ToIntNode toIntNode) {
+            return executeToS(n, toIntNode.execute(base));
         }
     }
 

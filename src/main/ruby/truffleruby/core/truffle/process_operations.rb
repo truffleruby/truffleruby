@@ -155,7 +155,7 @@ module Truffle
 
     def self.wait(input_pid, flags, set_status, raise_on_error)
       input_pid = Primitive.convert_with_to_int input_pid
-      flags ||= 0
+      flags = Primitive.nil?(flags) ? 0 : Truffle::Type.rb_num2uint(flags)
 
       FFI::MemoryPointer.new(:int, 4) do |ptr|
         pid = Truffle::POSIX.truffleposix_waitpid(input_pid, flags, ptr)
