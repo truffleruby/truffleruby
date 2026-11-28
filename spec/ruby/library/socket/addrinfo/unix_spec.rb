@@ -9,6 +9,13 @@ describe 'Addrinfo.unix' do
     Addrinfo.unix('socket').unix_path.should == 'socket'
   end
 
+  it 'converts the path with #to_str' do
+    path = mock(:path)
+    path.should_receive(:to_str).and_return('socket')
+
+    Addrinfo.unix(path).unix_path.should == 'socket'
+  end
+
   it 'sets the address family' do
     Addrinfo.unix('socket').afamily.should == Socket::AF_UNIX
   end

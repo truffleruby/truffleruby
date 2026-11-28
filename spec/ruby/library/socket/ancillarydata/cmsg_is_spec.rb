@@ -15,6 +15,16 @@ with_feature :ancillary_data do
         @data.cmsg_is?(:IP, :TTL).should == true
       end
 
+      it 'converts the level and type with #to_int' do
+        level = mock(:level)
+        type  = mock(:type)
+
+        level.should_receive(:to_int).and_return(Socket::IPPROTO_IP)
+        type.should_receive(:to_int).and_return(Socket::IP_TTL)
+
+        @data.cmsg_is?(level, type).should == true
+      end
+
       with_feature :pktinfo do
         it 'returns false when comparing with :IP and :PKTINFO' do
           @data.cmsg_is?(:IP, :PKTINFO).should == false

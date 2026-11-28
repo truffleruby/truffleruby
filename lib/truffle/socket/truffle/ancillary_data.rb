@@ -38,12 +38,11 @@ module Truffle
         ::Socket::IPPROTO_UDP  => %w{UDP_ UDP}
       }
 
+      # MRI: rsock_level_arg()
       def self.level(raw_level)
         if Primitive.is_a?(raw_level, Integer)
           raw_level
-        else
-          level = Socket.coerce_to_string(raw_level)
-
+        elsif level = string_arg(raw_level)
           if level == 'SOL_SOCKET' or level == 'SOCKET'
             ::Socket::SOL_SOCKET
 
@@ -53,15 +52,16 @@ module Truffle
               "unknown protocol level: #{level}"
             end
           end
+        else
+          Primitive.rb_num2int(raw_level)
         end
       end
 
+      # MRI: rsock_cmsg_type_arg()
       def self.type(family, level, raw_type)
         if Primitive.is_a?(raw_type, Integer)
           raw_type
-        else
-          type = Socket.coerce_to_string(raw_type)
-
+        elsif type = string_arg(raw_type)
           if family == ::Socket::AF_INET or family == ::Socket::AF_INET6
             prefix, label = LEVEL_PREFIXES[level]
           else
@@ -78,6 +78,18 @@ module Truffle
             raise TypeError,
               "no implicit conversion of #{Primitive.class(type)} into Integer"
           end
+        else
+          Primitive.rb_num2int(raw_type)
+        end
+      end
+
+      # MRI: constant_arg() looks up a Symbol or an object converted with rb_check_string_type() by name,
+      # and converts anything else with NUM2INT(). This returns the name, or nil for the NUM2INT() case.
+      def self.string_arg(arg)
+        if Primitive.is_a?(arg, Symbol)
+          arg.to_s
+        else
+          Truffle::Type.rb_check_convert_type(arg, String, :to_str)
         end
       end
     end

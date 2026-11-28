@@ -255,10 +255,11 @@ module Truffle
       when NilClass
         ::Socket::AF_UNSPEC
       else
-        if family.respond_to?(:to_str)
-          address_family(Primitive.convert_with_to_str(family))
+        # MRI: constant_arg(), which converts with rb_check_string_type() and then NUM2INT()
+        if str = Truffle::Type.rb_check_convert_type(family, String, :to_str)
+          address_family(str)
         else
-          raise SocketError, "unknown socket domain: #{family}"
+          Primitive.rb_num2int(family)
         end
       end
     end
@@ -326,10 +327,11 @@ module Truffle
       when NilClass
         ::Socket::PF_UNSPEC
       else
-        if family.respond_to?(:to_str)
-          protocol_family(Primitive.convert_with_to_str(family))
+        # MRI: constant_arg(), which converts with rb_check_string_type() and then NUM2INT()
+        if str = Truffle::Type.rb_check_convert_type(family, String, :to_str)
+          protocol_family(str)
         else
-          raise SocketError, "unknown socket domain: #{family}"
+          Primitive.rb_num2int(family)
         end
       end
     end
@@ -353,10 +355,11 @@ module Truffle
       when NilClass
         0
       else
-        if type.respond_to?(:to_str)
-          socket_type(Primitive.convert_with_to_str(type))
+        # MRI: constant_arg(), which converts with rb_check_string_type() and then NUM2INT()
+        if str = Truffle::Type.rb_check_convert_type(type, String, :to_str)
+          socket_type(str)
         else
-          raise SocketError, "unknown socket type: #{type}"
+          Primitive.rb_num2int(type)
         end
       end
     end

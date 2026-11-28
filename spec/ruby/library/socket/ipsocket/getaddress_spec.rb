@@ -13,6 +13,13 @@ describe "Socket::IPSocket#getaddress" do
     IPSocket.getaddress('::1').should == '::1'
   end
 
+  it "converts the host with #to_str" do
+    host = mock('host')
+    host.should_receive(:to_str).and_return("127.0.0.1")
+
+    IPSocket.getaddress(host).should == "127.0.0.1"
+  end
+
   it 'returns IPv4 compatible IPv6 addresses' do
     IPSocket.getaddress('::ffff:192.168.1.1').should == '::ffff:192.168.1.1'
   end

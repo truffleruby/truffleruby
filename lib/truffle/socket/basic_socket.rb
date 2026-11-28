@@ -96,15 +96,14 @@ class BasicSocket < IO
         error = Truffle::Socket::Foreign
           .setsockopt(Primitive.io_fd(self), level, optname, pointer, pointer.total)
       end
-    elsif Primitive.is_a?(optval, String)
+    else
+      optval = Primitive.convert_with_to_str(optval)
       Truffle::Socket::Foreign.memory_pointer(optval.bytesize) do |pointer|
         pointer.write_bytes(optval)
 
         error = Truffle::Socket::Foreign
           .setsockopt(Primitive.io_fd(self), level, optname, pointer, optval.bytesize)
       end
-    else
-      raise TypeError, 'socket option should be an Integer, String, true, or false'
     end
 
     Errno.handle_ffi('unable to set socket option') if error < 0
@@ -166,6 +165,9 @@ class BasicSocket < IO
   end
 
   private def internal_recv(bytes_to_read, flags, buffer, exception, blocking)
+    flags = Primitive.rb_num2int(flags)
+    bytes_to_read = Primitive.rb_num2int(bytes_to_read)
+
     # Like CRuby, refuse to receive while the IO has buffered input: recv(2) reads from the descriptor directly, so it
     # would either return data out of order or block although buffered data is available. The messages match CRuby's,
     # which uses "recv" for the blocking variants and "recvfrom" for the non-blocking ones.
@@ -201,6 +203,7 @@ class BasicSocket < IO
   end
 
   def recv(bytes_to_read, flags = 0, buf = nil)
+    flags = 0 if Primitive.nil?(flags)
     internal_recv(bytes_to_read, flags, buf, true, true)
   end
 

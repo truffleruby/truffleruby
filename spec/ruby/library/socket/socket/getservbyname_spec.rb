@@ -22,6 +22,15 @@ describe "Socket#getservbyname" do
     Socket.getservbyname('domain', 'udp').should == 53
   end
 
+  it "converts the service and protocol with #to_str" do
+    service = mock('service')
+    protocol = mock('protocol')
+    service.should_receive(:to_str).and_return('domain')
+    protocol.should_receive(:to_str).and_return('udp')
+
+    Socket.getservbyname(service, protocol).should == 53
+  end
+
   it "returns the port for service 'daytime'" do
     Socket.getservbyname('daytime').should == 13
   end

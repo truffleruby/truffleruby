@@ -101,6 +101,32 @@ with_feature :ancillary_data do
       end
     end
 
+    describe 'using custom objects with a to_int method for the family, level, and type' do
+      before do
+        fmock = mock(:family)
+        lmock = mock(:level)
+        tmock = mock(:type)
+
+        fmock.should_receive(:to_int).and_return(Socket::AF_INET)
+        lmock.should_receive(:to_int).and_return(Socket::IPPROTO_IP)
+        tmock.should_receive(:to_int).and_return(Socket::IP_RECVTTL)
+
+        @data = Socket::AncillaryData.new(fmock, lmock, tmock, 'ugh')
+      end
+
+      it 'sets the address family' do
+        @data.family.should == Socket::AF_INET
+      end
+
+      it 'sets the message level' do
+        @data.level.should == Socket::IPPROTO_IP
+      end
+
+      it 'sets the message type' do
+        @data.type.should == Socket::IP_RECVTTL
+      end
+    end
+
     describe 'using :AF_INET as the family and :SOCKET as the level' do
       it 'sets the type to SCM_RIGHTS when using :RIGHTS as the type argument' do
         Socket::AncillaryData.new(:INET, :SOCKET, :RIGHTS, '').type.should == Socket::SCM_RIGHTS

@@ -12,6 +12,13 @@ describe 'Socket.unpack_sockaddr_un' do
     Socket.unpack_sockaddr_un(addrinfo).should == '/tmp/sock'
   end
 
+  it 'converts the sockaddr with #to_str' do
+    sockaddr = mock('sockaddr')
+    sockaddr.should_receive(:to_str).and_return(Socket.sockaddr_un('/tmp/sock'))
+
+    Socket.unpack_sockaddr_un(sockaddr).should == '/tmp/sock'
+  end
+
   it 'raises an ArgumentError when the sa_family is not AF_UNIX' do
     sockaddr = Socket.sockaddr_in(0, '127.0.0.1')
     -> { Socket.unpack_sockaddr_un(sockaddr) }.should.raise(ArgumentError)

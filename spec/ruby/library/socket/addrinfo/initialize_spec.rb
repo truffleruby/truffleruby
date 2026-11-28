@@ -40,6 +40,15 @@ describe "Addrinfo#initialize" do
       end
     end
 
+    it "converts the sockaddr with #to_str" do
+      sockaddr = mock(:sockaddr)
+      sockaddr.should_receive(:to_str).and_return(Socket.sockaddr_in(25, '127.0.0.1'))
+
+      addrinfo = Addrinfo.new(sockaddr)
+      addrinfo.ip_address.should == '127.0.0.1'
+      addrinfo.ip_port.should == 25
+    end
+
     describe "with a family given" do
       before :each do
         @addrinfo = Addrinfo.new(Socket.sockaddr_in("smtp", "2001:DB8::1"), Socket::PF_INET6)
@@ -162,6 +171,15 @@ describe "Addrinfo#initialize" do
       it "returns the 0 protocol" do
         @addrinfo.protocol.should == 0
       end
+    end
+
+    it "converts the sockaddr with #to_ary" do
+      sockaddr = mock(:sockaddr)
+      sockaddr.should_receive(:to_ary).and_return(["AF_INET", 46102, "localhost", "127.0.0.1"])
+
+      addrinfo = Addrinfo.new(sockaddr)
+      addrinfo.ip_address.should == "127.0.0.1"
+      addrinfo.ip_port.should == 46102
     end
 
     describe 'with a valid IP address' do

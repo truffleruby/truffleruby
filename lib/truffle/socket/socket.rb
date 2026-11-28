@@ -90,11 +90,17 @@ class Socket < BasicSocket
   end
 
   def self.getnameinfo(sockaddr, flags = 0)
+    flags  = Primitive.nil?(flags) ? 0 : Primitive.rb_num2int(flags)
     port   = nil
     host   = nil
     family = Socket::AF_UNSPEC
 
-    if Primitive.is_a?(sockaddr, Array)
+    # MRI: rb_check_sockaddr_string_type(), then rb_check_array_type()
+    if Primitive.is_a?(sockaddr, Addrinfo)
+      sockaddr = sockaddr.to_sockaddr
+    elsif str = Truffle::Type.rb_check_convert_type(sockaddr, String, :to_str)
+      sockaddr = str
+    elsif sockaddr = Truffle::Type.rb_check_convert_type(sockaddr, Array, :to_ary)
       if sockaddr.size == 3
         af, port, host = sockaddr
       elsif sockaddr.size == 4
@@ -116,6 +122,8 @@ class Socket < BasicSocket
 
       sockaddr = Truffle::Socket::Foreign
         .pack_sockaddr_in(host, port, family, Socket::SOCK_STREAM, 0)
+    else
+      raise TypeError, 'expecting String or Array'
     end
 
     _, port, host, _ = Truffle::Socket::Foreign.getnameinfo(sockaddr, flags)
@@ -159,6 +167,8 @@ class Socket < BasicSocket
   end
 
   def self.gethostbyaddr(addr, family = nil)
+    addr = Primitive.convert_with_to_str(addr)
+
     if !family and addr.bytesize == 16
       family = Socket::AF_INET6
     elsif !family
@@ -184,6 +194,8 @@ class Socket < BasicSocket
   end
 
   def self.getservbyname(service, proto = 'tcp')
+    service = Primitive.convert_with_to_str(service)
+    proto = Primitive.convert_with_to_str(proto) unless Primitive.nil?(proto)
     pointer = Truffle::Socket::Foreign.getservbyname(service, proto)
 
     raise SocketError, "no such service #{service}/#{proto}" if pointer.null?
@@ -194,7 +206,11 @@ class Socket < BasicSocket
   end
 
   def self.getservbyport(port, proto = nil)
-    proto ||= 'tcp'
+    port = Primitive.rb_num2long(port)
+    unless port.between?(0, 0xffff)
+      raise RangeError, "integer #{port} too #{port > 0 ? 'big' : 'small'} to convert into `int16_t'"
+    end
+    proto = Primitive.nil?(proto) ? 'tcp' : Primitive.convert_with_to_str(proto)
     pointer = Truffle::Socket::Foreign.getservbyport(port, proto)
 
     raise SocketError, "no such service for port #{port}/#{proto}" if pointer.null?
@@ -237,6 +253,7 @@ class Socket < BasicSocket
 
   def self.unpack_sockaddr_in(addr)
     addr = addr.to_sockaddr if Primitive.is_a?(addr, Addrinfo)
+    addr = Primitive.convert_with_to_str(addr)
     _, address, port = Truffle::Socket::Foreign
       .unpack_sockaddr_in(addr, false)
 
@@ -250,8 +267,9 @@ class Socket < BasicSocket
   end
 
   def self.socketpair(family, type, protocol = 0)
-    family = Truffle::Socket.address_family(family)
-    type   = Truffle::Socket.socket_type(type)
+    family   = Truffle::Socket.address_family(family)
+    type     = Truffle::Socket.socket_type(type)
+    protocol = Primitive.nil?(protocol) ? 0 : Primitive.rb_num2int(protocol)
 
     fd1, fd2 = Truffle::Socket::Foreign.socketpair(family, type, protocol)
 
@@ -271,6 +289,7 @@ class Socket < BasicSocket
 
   if Truffle::Socket.unix_socket_support?
     def self.pack_sockaddr_un(file)
+      file = Primitive.convert_with_to_str(file)
       max_path_size =  Truffle::Config['platform.sockaddr_un.sun_path.size'] - 1
       if file.bytesize > max_path_size
         raise ArgumentError, "too long unix socket path (#{file.bytesize} bytes given but #{max_path_size} bytes max)"
@@ -289,6 +308,7 @@ class Socket < BasicSocket
 
     def self.unpack_sockaddr_un(addr)
       addr = addr.to_sockaddr if Primitive.is_a?(addr, Addrinfo)
+      addr = Primitive.convert_with_to_str(addr)
       struct = Truffle::Socket::Foreign::SockaddrUn.with_sockaddr(addr)
       begin
         unless struct.family == Socket::AF_UNIX
@@ -314,6 +334,7 @@ class Socket < BasicSocket
 
     @family = Truffle::Socket.protocol_family(family)
     socket_type = Truffle::Socket.socket_type(socket_type)
+    protocol = Primitive.nil?(protocol) ? 0 : Primitive.rb_num2int(protocol)
 
     descriptor = Truffle::Socket::Foreign.socket(@family, socket_type, protocol)
 
@@ -327,6 +348,7 @@ class Socket < BasicSocket
     if Primitive.is_a?(addr, Addrinfo)
       addr = addr.to_sockaddr
     end
+    addr = Primitive.convert_with_to_str(addr)
 
     err = Truffle::Socket::Foreign.bind(Primitive.io_fd(self), addr)
 

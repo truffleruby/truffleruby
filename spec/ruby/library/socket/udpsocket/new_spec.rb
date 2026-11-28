@@ -26,6 +26,16 @@ describe 'UDPSocket.new' do
     @socket.should.instance_of?(UDPSocket)
   end
 
+  guard -> { SocketSpecs.ipv6_available? } do
+    it 'using an object that responds to #to_int' do
+      family = mock(:family)
+      family.should_receive(:to_int).and_return(Socket::AF_INET6)
+
+      @socket = UDPSocket.new(family)
+      @socket.local_address.afamily.should == Socket::AF_INET6
+    end
+  end
+
   it "does not use the given block and warns to use UDPSocket::open" do
     -> {
       @socket = UDPSocket.new { raise }

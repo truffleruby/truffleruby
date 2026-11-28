@@ -2,4 +2,3 @@ exclude :test_addrinfo_ip, "Socket::ResolutionError: getaddrinfo: Name or servic
 exclude :test_addrinfo_new_inet, "<2> expected but was <0>."
 exclude :test_addrinfo_new_unix, "NoMethodError: undefined method 'bytesize' for nil"
 exclude :test_ipv6_address_predicates, "ai=Addrinfo.getaddrinfo(\"::0.0.0.2\", nil, :INET6, :DGRAM).fetch(0); ai.ipv4? || .ipv6_v4compat?"
-exclude :test_socket_getnameinfo, "NoMethodError: undefined method 'bytesize' for an instance of Addrinfo"

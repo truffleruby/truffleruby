@@ -12,6 +12,13 @@ describe "Socket.unpack_sockaddr_in" do
     Socket.unpack_sockaddr_in(addrinfo).should == [3333, '127.0.0.1']
   end
 
+  it "converts the sockaddr with #to_str" do
+    sockaddr = mock('sockaddr')
+    sockaddr.should_receive(:to_str).and_return(Socket.sockaddr_in(3333, '127.0.0.1'))
+
+    Socket.unpack_sockaddr_in(sockaddr).should == [3333, '127.0.0.1']
+  end
+
   describe 'using an IPv4 address' do
     it 'returns an Array containing the port and IP address' do
       port = 80

@@ -43,7 +43,8 @@ class Socket < BasicSocket
       linger = Truffle::Socket::Foreign::Linger.new
 
       begin
-        linger.on_off = onoff
+        # MRI: rb_check_to_integer(), which is nil for an object that does not convert with #to_int
+        linger.on_off = Truffle::Type.rb_check_to_integer(onoff, :to_int) || onoff
         linger.linger = secs
 
         new(:UNSPEC, :SOCKET, :LINGER, linger.to_s)
@@ -56,7 +57,7 @@ class Socket < BasicSocket
       @family  = Truffle::Socket.address_family(family)
       @level   = Truffle::Socket::SocketOptions.socket_level(level, @family)
       @optname = Truffle::Socket::SocketOptions.socket_option(@level, optname)
-      @data    = data
+      @data    = Primitive.convert_with_to_str(data)
     end
 
     def unpack(template)

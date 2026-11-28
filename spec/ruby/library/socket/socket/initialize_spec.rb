@@ -57,6 +57,35 @@ describe 'Socket#initialize' do
     end
   end
 
+  describe 'using objects that respond to #to_int' do
+    it 'converts the family with #to_int' do
+      family = mock(:family)
+      family.should_receive(:to_int).and_return(Socket::AF_UNIX)
+
+      @socket = Socket.new(family, :STREAM)
+
+      @socket.local_address.afamily.should == Socket::AF_UNIX
+    end
+
+    it 'converts the socket type with #to_int' do
+      type = mock(:type)
+      type.should_receive(:to_int).and_return(Socket::SOCK_DGRAM)
+
+      @socket = Socket.new(:INET, type)
+
+      @socket.getsockopt(:SOCKET, :TYPE).int.should == Socket::SOCK_DGRAM
+    end
+
+    it 'converts the protocol with #to_int' do
+      protocol = mock(:protocol)
+      protocol.should_receive(:to_int).and_return(Socket::IPPROTO_TCP)
+
+      @socket = Socket.new(:INET, :STREAM, protocol)
+
+      @socket.should.instance_of?(Socket)
+    end
+  end
+
   describe 'using a custom protocol' do
     it 'returns a Socket when using an Integer' do
       @socket = Socket.new(:INET, :STREAM, Socket::IPPROTO_TCP)
