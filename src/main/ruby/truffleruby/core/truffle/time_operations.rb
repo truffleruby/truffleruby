@@ -35,7 +35,7 @@ module Truffle
       if Primitive.is_a?(usec, String)
         nsec = usec.to_i * 1000
       elsif usec
-        nsec = (usec * 1000).to_i
+        nsec = (Truffle::Type.coerce_to_exact_num(usec) * 1000).to_i
       end
 
       compose(time_class, utc_offset, year, month, mday, hour, min, sec, nsec, is_dst)
@@ -96,6 +96,16 @@ module Truffle
       dst_code = is_dst ? 1 : (Primitive.nil?(is_dst) ? -1 : 0)
 
       Primitive.time_s_from_array(time_class, sec, min, hour, mday, month, year, nsec, dst_code, is_utc, utc_offset)
+    end
+
+    # MRI: time_round(), time_floor() and time_ceil() treat nil as 0,
+    # then ndigits_denominator() converts with NUM2LONG() and rejects negative values
+    def self.ndigits(ndigits)
+      return 0 if Primitive.nil?(ndigits)
+
+      ndigits = Primitive.rb_num2long(ndigits)
+      raise ArgumentError, 'negative ndigits given' if ndigits < 0
+      ndigits
     end
 
     # MRI: time_init_parse()

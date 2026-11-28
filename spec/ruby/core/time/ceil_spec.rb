@@ -25,6 +25,16 @@ describe "Time#ceil" do
     @time.ceil(7).should == Time.utc(2010, 3, 30, 5, 43, "25.0123457".to_r)
   end
 
+  it "converts the number of decimal places with #to_int" do
+    places = mock('places')
+    places.should_receive(:to_int).and_return(7)
+    @time.ceil(places).should == Time.utc(2010, 3, 30, 5, 43, "25.0123457".to_r)
+  end
+
+  it "raises an ArgumentError for a negative number of decimal places" do
+    -> { @time.ceil(-1) }.should.raise(ArgumentError, "negative ndigits given")
+  end
+
   it "returns an instance of Time, even if #ceil is called on a subclass" do
     subclass = Class.new(Time)
     instance = subclass.at(0)
